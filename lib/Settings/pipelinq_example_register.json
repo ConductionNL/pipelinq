@@ -566,6 +566,46 @@
                 "@self": {
                     "register": "pipelinq",
                     "schema": "product",
+                    "slug": "product-toner-hp-cf283a"
+                },
+                "name": "Toner HP 83A zwart",
+                "description": "Originele HP-tonercartridge CF283A voor LaserJet Pro, circa 1.500 pagina's",
+                "sku": "TONER-HP-CF283A",
+                "unitPrice": 79.95,
+                "type": "product",
+                "status": "active",
+                "unit": "stuk",
+                "unitOfMeasure": "stuks",
+                "manufacturer": "HP",
+                "weight": 0.9,
+                "stockTracked": true,
+                "taxRate": 21,
+                "vatClass": "high"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "product",
+                    "slug": "product-box-cardboard-s"
+                },
+                "name": "Verzenddoos klein",
+                "description": "Kartonnen verzenddoos, klein formaat, enkelgolf",
+                "sku": "BOX-CARDBOARD-S",
+                "unitPrice": 0.85,
+                "type": "product",
+                "status": "active",
+                "unit": "stuk",
+                "unitOfMeasure": "dozen",
+                "manufacturer": "Smurfit Westrock",
+                "weight": 0.12,
+                "stockTracked": true,
+                "taxRate": 21,
+                "vatClass": "high"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "product",
                     "slug": "product-knippen-fohnen"
                 },
                 "name": "Knippen en Föhnen",
@@ -574,6 +614,7 @@
                 "unitPrice": 42.5,
                 "type": "service",
                 "status": "active",
+                "stockTracked": false,
                 "unit": "behandeling",
                 "taxRate": 21,
                 "vatClass": "high",

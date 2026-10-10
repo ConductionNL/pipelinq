@@ -3,7 +3,7 @@
 	"$id": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"title": "Conduction App Manifest v2",
 	"description": "v2 schema for the JSON-driven page and navigation manifest consumed by @conduction/nextcloud-vue. Introduces a uniform widgets[] array on every page type with a per-slot grid coordinate system, a typed actions[] discriminator, and the required $schema field for version detection. v1 manifests continue to validate against app-manifest.schema.json (unchanged).",
-	"version": "2.72.0",
+	"version": "2.73.0",
 	"type": "object",
 	"required": ["$schema", "version"],
 	"allOf": [
@@ -326,6 +326,11 @@
 						"alt": {
 							"type": "string",
 							"description": "i18n key / alternative text for the logo. Used only when no `name` is set."
+						},
+						"placement": {
+							"type": "string",
+							"enum": ["header", "nav"],
+							"description": "Where the brand block is drawn (screens-brand-block-top-bar). Under `look: \"board\"` the default is `header`: a 237px block at the start of Nextcloud's own header (#header), before the app menu, drawn by CnAppRoot; an app without CnAppNav has it too. Nextcloud offers no extension point there, so when `#header` is absent the block falls back to the navigation. `nav` keeps the block at the top of the app navigation. Ignored without the board look, where the navigation draws the block."
 						}
 					}
 				},

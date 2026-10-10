@@ -402,6 +402,12 @@
 			"schemaSlug": "contact",
 			"urlTemplate": "/apps/pipelinq/contacts/{uuid}",
 			"displayName": "Contact"
+		},
+		{
+			"registerSlug": "pipelinq",
+			"schemaSlug": "crmTask",
+			"urlTemplate": "/apps/pipelinq/tasks/{uuid}",
+			"displayName": "Task"
 		}
 	],
 	"menu": [
@@ -1740,7 +1746,7 @@
 					}
 				],
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
+				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects) with the Related card beside it, as on the contact page (round5-client-related-and-service-list), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
 				"widgets": [
 					{
 						"id": "client-identity",
@@ -1935,6 +1941,12 @@
 						}
 					},
 					{
+						"id": "client-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					},
+					{
 						"id": "client-records",
 						"type": "tabs",
 						"title": "Records",
@@ -1976,7 +1988,7 @@
 					},
 					{
 						"id": "client-quick-contacts",
-						"type": "object-list",
+						"type": "ContactAwareObjectList",
 						"title": "Contacts",
 						"icon": "AccountGroup",
 						"content": {
@@ -2370,7 +2382,15 @@
 						"widgetId": "client-records",
 						"gridX": 0,
 						"gridY": 7,
-						"gridWidth": 12,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": "11",
+						"widgetId": "client-related",
+						"gridX": 8,
+						"gridY": 7,
+						"gridWidth": 4,
 						"gridHeight": 7
 					},
 					{
@@ -3453,6 +3473,7 @@
 							],
 							"limit": 25,
 							"rowRoute": "ContactDetail",
+							"allowCreate": false,
 							"emptyText": "Nobody is linked to this deal yet. Open a contact and add this deal to their leads."
 						}
 					},
@@ -3899,6 +3920,12 @@
 						"icon": "LinkVariant"
 					},
 					{
+						"id": "product-supply",
+						"type": "ProductSupplyWidget",
+						"title": "Supply",
+						"icon": "TruckOutline"
+					},
+					{
 						"id": "product-kpis",
 						"type": "stats-block",
 						"title": "Demand",
@@ -3974,7 +4001,7 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 6
+						"gridHeight": 10
 					},
 					{
 						"id": "5",
@@ -3993,10 +4020,18 @@
 						"gridHeight": 4
 					},
 					{
+						"id": "6",
+						"widgetId": "product-supply",
+						"gridX": 8,
+						"gridY": 6,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
 						"id": "3",
 						"widgetId": "product-lines",
 						"gridX": 0,
-						"gridY": 6,
+						"gridY": 10,
 						"gridWidth": 12,
 						"gridHeight": 5
 					},
@@ -4004,7 +4039,7 @@
 						"id": "4",
 						"widgetId": "product-files",
 						"gridX": 0,
-						"gridY": 11,
+						"gridY": 15,
 						"gridWidth": 12,
 						"gridHeight": 3
 					}

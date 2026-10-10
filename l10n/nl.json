@@ -7434,6 +7434,12 @@
         "Price display": "Prijsweergave",
         "UTM campaign": "UTM-campagne",
         "Sent on": "Verstuurd op",
-        "Published on": "Gepubliceerd op"
+        "Published on": "Gepubliceerd op",
+        "Supply": "Levering",
+        "Yes, {amount}": "Ja, {amount}",
+        "Stock is kept in shillinq, which is not installed": "De voorraad staat in shillinq, en die is niet geïnstalleerd",
+        "No access to stock in shillinq": "Geen toegang tot de voorraad in shillinq",
+        "{onHand} on hand, {reserved} reserved": "{onHand} op voorraad, {reserved} gereserveerd",
+        "Open in shillinq": "Openen in shillinq"
     }
 }

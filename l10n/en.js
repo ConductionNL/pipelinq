@@ -7499,7 +7499,13 @@ OC.L10N.register(
         "Price display": "Price display",
         "UTM campaign": "UTM campaign",
         "Sent on": "Sent on",
-        "Published on": "Published on"
+        "Published on": "Published on",
+        "Supply": "Supply",
+        "Yes, {amount}": "Yes, {amount}",
+        "Stock is kept in shillinq, which is not installed": "Stock is kept in shillinq, which is not installed",
+        "No access to stock in shillinq": "No access to stock in shillinq",
+        "{onHand} on hand, {reserved} reserved": "{onHand} on hand, {reserved} reserved",
+        "Open in shillinq": "Open in shillinq"
     },
     "nplurals=2; plural=(n != 1);"
 )

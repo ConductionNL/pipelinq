@@ -172,6 +172,7 @@ import Tray from 'vue-material-design-icons/Tray.vue'
 import TrayFull from 'vue-material-design-icons/TrayFull.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import Trophy from 'vue-material-design-icons/Trophy.vue'
+import TruckOutline from 'vue-material-design-icons/TruckOutline.vue'
 import ViewColumnOutline from 'vue-material-design-icons/ViewColumnOutline.vue'
 import ViewDashboard from 'vue-material-design-icons/ViewDashboard.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
@@ -300,6 +301,7 @@ export default {
 	OfficeBuilding,
 	OfficeBuildingOutline,
 	Package,
+	TruckOutline,
 	PackageVariant,
 	PackageVariantClosed,
 	PencilOutline,
