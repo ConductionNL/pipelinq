@@ -7477,6 +7477,12 @@
         "The text that goes into the message. You can use {{client.name}}, {{contact.name}}, {{ticket.title}} and {{agent.name}}.": "The text that goes into the message. You can use {{client.name}}, {{contact.name}}, {{ticket.title}} and {{agent.name}}.",
         "Where agents can pick this reply.": "Where agents can pick this reply.",
         "Shown first to clients who asked to be written to in this language. Leave empty for every language.": "Shown first to clients who asked to be written to in this language. Leave empty for every language.",
-        "Switch off to hide this reply from the list without removing it.": "Switch off to hide this reply from the list without removing it."
+        "Switch off to hide this reply from the list without removing it.": "Switch off to hide this reply from the list without removing it.",
+        "Supply": "Supply",
+        "Yes, {amount}": "Yes, {amount}",
+        "Stock is kept in shillinq, which is not installed": "Stock is kept in shillinq, which is not installed",
+        "No access to stock in shillinq": "No access to stock in shillinq",
+        "{onHand} on hand, {reserved} reserved": "{onHand} on hand, {reserved} reserved",
+        "Open in shillinq": "Open in shillinq"
     }
 }

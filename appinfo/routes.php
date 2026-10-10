@@ -241,6 +241,7 @@ return [
         // POS product catalogue resolution (barcode lookup + server-authoritative price).
         ['name' => 'productCatalog#lookupBarcode', 'url' => '/api/products/barcode-lookup', 'verb' => 'POST'],
         ['name' => 'productCatalog#resolvePrice',  'url' => '/api/products/resolve-price',  'verb' => 'POST'],
+        ['name' => 'productStock#show',            'url' => '/api/products/{id}/stock',      'verb' => 'GET'],
 
         // POS receipt operations (camelCase slug matches PosReceiptController class name).
         // receiptTemplate / receiptPrintLog CRUD is handled by OpenRegister's generic

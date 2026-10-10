@@ -109,6 +109,7 @@ import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWid
 //     kind:'section' bodyWidget (ZReportBookkeepingSection). The GL journal
 //     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
 import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
+import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
 import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
 import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
 // --- Reporting dashboards (lib gap: no chart-widget page type). ---
@@ -329,6 +330,7 @@ import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
+import ContactAwareObjectListWidget from './components/widgets/ContactAwareObjectListWidget.js'
 import { sectionWidget } from './components/widgets/sectionWidget.js'
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
 //     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
@@ -839,6 +841,12 @@ const registry = {
 		component: CommunicationHistory,
 		_note: 'Paginated contactmoment feed for an entity; self-fetches by entityType/entityId.',
 	},
+	ProductSupplyWidget: {
+		kind: 'widget',
+		component: ProductSupplyWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Supply card on ProductDetail (board PqProduct): manufacturer, unit, weight, dimensions and the Stock tracked line read live from shillinq via GET /api/products/{id}/stock (products-stock-on-hand).',
+	},
 	BookingsCard: {
 		kind: 'section',
 		component: BookingsCard,
@@ -867,6 +875,12 @@ const registry = {
 	// --- Contact page sections as grid widgets (detail-pages-read-at-a-glance).
 	//     The same components as the section entries above, wrapped so they
 	//     sit in the grid and in tab strips instead of a tail below the grid. ---
+	ContactAwareObjectList: {
+		kind: 'widget',
+		component: ContactAwareObjectListWidget,
+		...PANEL_WIDGET_META,
+		_note: 'CnObjectListWidget whose create goes through POST /api/contacts-sync/create for client and contact, so the required contactsUid is provisioned. The Contacts tab on the client page uses it; a plain object-list POSTs straight to OpenRegister and gets 400 (round5-contact-create-and-task-links).',
+	},
 	ContactRelationshipsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
