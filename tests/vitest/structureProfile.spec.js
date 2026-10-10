@@ -613,7 +613,9 @@ describe('the modules', () => {
 				// Products belongs to the products module, so it stays out
 				// of the menu while only Sales is on.
 				if (!shown.has(entry.id)) continue
-				expect(at(entry.id), entry.id).toBeGreaterThan(at('OrganisationsMenu'))
+				expect(at(entry.id), entry.id).toBeGreaterThan(
+					at('OrganisationsMenu'),
+				)
 			}
 			// The daily entries do not move.
 			const daily = (ids) => ids.filter((id) => !own.has(id)).slice(0, 10)
