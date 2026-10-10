@@ -2323,7 +2323,18 @@
         "The text that goes into the message. You can use {{client.name}}, {{contact.name}}, {{ticket.title}} and {{agent.name}}.": "Der Text, der in die Nachricht kommt. Sie können {{client.name}}, {{contact.name}}, {{ticket.title}} und {{agent.name}} verwenden.",
         "Where agents can pick this reply.": "Wo Mitarbeitende diese Antwort wählen können.",
         "Shown first to clients who asked to be written to in this language. Leave empty for every language.": "Wird zuerst bei Kunden angezeigt, die in dieser Sprache angeschrieben werden möchten. Leer lassen für jede Sprache.",
-        "Switch off to hide this reply from the list without removing it.": "Ausschalten, um diese Antwort aus der Liste auszublenden, ohne sie zu löschen."
+        "Switch off to hide this reply from the list without removing it.": "Ausschalten, um diese Antwort aus der Liste auszublenden, ohne sie zu löschen.",
+        "Supply": "Lieferung",
+        "Stock tracked": "Bestand geführt",
+        "Yes, {amount}": "Ja, {amount}",
+        "Stock is kept in shillinq, which is not installed": "Der Bestand wird in shillinq geführt, das nicht installiert ist",
+        "No access to stock in shillinq": "Kein Zugriff auf den Bestand in shillinq",
+        "{onHand} on hand, {reserved} reserved": "{onHand} vorrätig, {reserved} reserviert",
+        "Open in shillinq": "In shillinq öffnen",
+        "Manufacturer": "Hersteller",
+        "Unit of measure": "Maßeinheit",
+        "Weight": "Gewicht",
+        "Dimensions": "Abmessungen"
     },
     "plurals": null
 }

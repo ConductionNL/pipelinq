@@ -3898,6 +3898,12 @@
 						"icon": "LinkVariant"
 					},
 					{
+						"id": "product-supply",
+						"type": "ProductSupplyWidget",
+						"title": "Supply",
+						"icon": "TruckOutline"
+					},
+					{
 						"id": "product-kpis",
 						"type": "stats-block",
 						"title": "Demand",
@@ -3973,7 +3979,7 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 6
+						"gridHeight": 10
 					},
 					{
 						"id": "5",
@@ -3992,10 +3998,18 @@
 						"gridHeight": 4
 					},
 					{
+						"id": "6",
+						"widgetId": "product-supply",
+						"gridX": 8,
+						"gridY": 6,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
 						"id": "3",
 						"widgetId": "product-lines",
 						"gridX": 0,
-						"gridY": 6,
+						"gridY": 10,
 						"gridWidth": 12,
 						"gridHeight": 5
 					},
@@ -4003,7 +4017,7 @@
 						"id": "4",
 						"widgetId": "product-files",
 						"gridX": 0,
-						"gridY": 11,
+						"gridY": 15,
 						"gridWidth": 12,
 						"gridHeight": 3
 					}
