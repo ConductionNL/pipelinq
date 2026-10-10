@@ -23,7 +23,9 @@
 		"Bookings",
 		"PointOfSale",
 		"SettingsIntegrationsCaption",
-		"MarketingGroup"
+		"MarketingGroup",
+		"Dashboard",
+		"Prospects"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",
@@ -364,9 +366,7 @@
 		"sales": {
 			"label": "Sales",
 			"ids": [
-				"Dashboard",
 				"Leads",
-				"Prospects",
 				"Pipeline"
 			],
 			"menu": [
@@ -417,14 +417,14 @@
 					"order": 80
 				},
 				{
-					"id": "Campaigns",
+					"id": "CampaignsMenu",
 					"label": "Campaigns",
 					"icon": "BullhornOutline",
 					"route": "Campaigns",
 					"order": 81
 				},
 				{
-					"id": "Blasts",
+					"id": "BlastsMenu",
 					"label": "Blasts",
 					"icon": "Email",
 					"route": "Blasts",
