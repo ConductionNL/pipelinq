@@ -61,7 +61,6 @@ import {
 	STRUCTURE_SETTING,
 } from './utils/structureProfile.js'
 import { seedVatClassLabels } from './utils/vatClassLabels.js'
-import { translateWidgetAddLabels } from './utils/widgetAddLabels.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -182,19 +181,16 @@ const { manifest: profiledManifest, homePage } = applyHomePage(
 // Dashboard and detail pages read `@config.<key>` tokens (the reporting
 // currency, the pipeline target) from the `config` initial state; the VAT
 // class labels follow the rates set on the admin page.
-// An object-list widget prints its Add button text as written, so the
-// manifest holds English and it is translated here.
-const mergedManifest = translateWidgetAddLabels(
-	seedVatClassLabels(
-		seedPageAppConfig(
-			structureProfile === STRUCTURE_FULL
-				? profiledManifest
-				: holdUnreachableTours(profiledManifest),
-			loadState('pipelinq', 'config', {}),
-		),
-		loadState('pipelinq', 'config', {}).vat_rates,
-		(text) => t('pipelinq', text),
+// An object-list widget's Add button text stays English source text in the
+// manifest: CnObjectListWidget translates it through the app's translate.
+const mergedManifest = seedVatClassLabels(
+	seedPageAppConfig(
+		structureProfile === STRUCTURE_FULL
+			? profiledManifest
+			: holdUnreachableTours(profiledManifest),
+		loadState('pipelinq', 'config', {}),
 	),
+	loadState('pipelinq', 'config', {}).vat_rates,
 	(text) => t('pipelinq', text),
 )
 
