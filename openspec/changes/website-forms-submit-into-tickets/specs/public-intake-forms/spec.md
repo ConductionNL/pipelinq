@@ -7,7 +7,7 @@
 
 ### Requirement: A public pipelinq form is a fleet form with a pipelinq destination
 
-A public form that feeds pipelinq SHALL be authored in buildiq, hosted by portaliq, and declare a pipelinq destination (`ticket`, `lead`, or a contact plus lead). It SHALL pass OpenRegister's form destination validator before it is published. A submit SHALL create the destination in the request. pipelinq SHALL ship no form builder and no submission store of its own.
+A public form that feeds pipelinq SHALL be authored in buildiq, hosted by portaliq, and declare its own pipelinq destination (`ticket`, `lead`, `contact`, or a contact plus lead); there is no fixed default (decision 181). It SHALL pass OpenRegister's form destination validator before it is published. A submit SHALL create the destination in the request. pipelinq SHALL ship no form builder and no submission store of its own.
 
 #### Scenario: A form into a lead without a title is refused
 - **GIVEN** a form into `lead` that maps no field and no fixed value to the required `title`
@@ -38,5 +38,5 @@ A public form that feeds pipelinq SHALL be authored in buildiq, hosted by portal
 
 ### Requirement: Existing response data migration is a documented follow-up
 
-**Reason**: replaced by the drain of `enquiry` in this change; legacy `intakeSubmission` objects are drained into tickets by the same command.
+**Reason**: replaced by the drain of `enquiry` in this change; legacy `intakeSubmission` objects are drained by the same command into the destination their form names, or reported.
 **Migration**: `occ pipelinq:enquiry:drain --include-intake-submissions`.

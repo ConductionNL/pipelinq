@@ -1,12 +1,12 @@
 # Tasks: website-forms-submit-into-tickets
 
-## 1. Website form into ticket
+## 1. Website form into its destination
 
-- [ ] 1.1 Website form submits into `ticket` through `FormSubmitService`; honeypot, rate limit, allowlist and empty check first
+- [ ] 1.1 Each website form names its destination (ticket, lead, contact, ...); the endpoint submits into it through `FormSubmitService`; honeypot, rate limit, allowlist and empty check first; a form without a destination is not published
   - Spec ref: specs/website-enquiry-intake/spec.md
-  - Files: lib/Service/EnquiryIntakeService.php (becomes the website ticket intake), lib/Controller/EnquiryController.php, appinfo/routes.php
-  - Test: unit test asserting a ticket and no enquiry; honeypot control
-- [ ] 1.2 Ticket reference and `receivedAt` in the answer; same for `PortalRequestService`
+  - Files: lib/Service/EnquiryIntakeService.php (becomes the website form intake), lib/Controller/EnquiryController.php, appinfo/routes.php
+  - Test: unit tests for a ticket form and a lead form, asserting no enquiry; honeypot control
+- [ ] 1.2 Destination reference and `receivedAt` in the answer; same for `PortalRequestService`
 
 ## 2. Landing page into lead
 
@@ -21,7 +21,7 @@
 
 ## 4. Drain and remove
 
-- [ ] 4.1 `occ pipelinq:enquiry:drain` (and `--include-intake-submissions`), report delivered and refused
+- [ ] 4.1 `occ pipelinq:enquiry:drain` (and `--include-intake-submissions`) into the destination of the form for each `source`; report delivered, refused and unmapped
 - [ ] 4.2 Remove `enquiry` (register.d/26-website-enquiry.json), the flow (27-enquiry-to-lead-flow.json) and the old controller paths at zero pending
 
 ## 5. Verification

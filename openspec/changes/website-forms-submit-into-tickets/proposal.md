@@ -5,7 +5,7 @@ depends_on: []
 
 # Proposal: website-forms-submit-into-tickets
 
-pipelinq's half of decision 179 (Ruben, 10 October 2026): "We dont intake to an intake, we intake into a case, or ticket or something else." Cross-app change: `hydra/openspec/changes/form-submits-into-its-destination-object`, architecture in hydra ADR-117. Needs `openregister/form-destination-validator`; the landing-page part needs `portaliq/submit-creates-the-case-directly`.
+pipelinq's half of decision 179 (Ruben, 10 October 2026), with Ruben's answers in decision 181: "We dont intake to an intake, we intake into a case, or ticket or something else." Cross-app change: `hydra/openspec/changes/form-submits-into-its-destination-object`, architecture in hydra ADR-117. Needs `openregister/form-destination-validator`; the landing-page part needs `portaliq/submit-creates-the-case-directly`.
 
 ## Why
 
@@ -19,11 +19,11 @@ The portal request path already does the right thing: it writes a `ticket` direc
 
 ## What changes
 
-1. **Website enquiries become tickets.** The website form submits into `ticket` with `ticketType: request`, channel `website` and `source` from the allowlist (question Q4, recommended option). Spam and closed are ticket states. Turning a ticket into a lead stays a person's decision, as a handoff between two real objects.
+1. **Each website form names its destination** (decision 181, Q4). A published form declares what it creates: a `ticket`, a `lead`, a `contact`, or another pipelinq object. The website endpoint submits into that destination through OpenRegister's submit service, after the honeypot, rate limit, allowlist and empty-message checks. There is no fixed default. Turning a ticket into a lead stays a person's decision, as a handoff between two real objects.
 2. **Landing pages submit into a lead.** The landing-page form's destination is `lead`. Contact matching and the `submit` touchpoint move into pipelinq's lead-create listener, keyed on the nonce as today. `LandingPageProvisioningService` declares the form with a destination, checked by OpenRegister's validator.
-3. **One answer for public forms.** `public-intake-forms` keeps one model: forms are fleet forms (buildiq-authored, portaliq-hosted) with a pipelinq destination. The in-app builder, the `formSubmission` log and the retry queue are removed from the spec. Nextcloud Forms stays a source only through a binding checked against the destination when made (Q6, recommended option).
-4. **References.** The portal request and website ticket answers carry the ticket's human-readable reference and `receivedAt`, not only an id.
-5. **Drain, then remove `enquiry`.** `occ pipelinq:enquiry:drain` turns every open enquiry into a ticket and reports. The `enquiry` schema, the "Enquiry to lead" flow and `EnquiryController` go when the drain reports zero.
+3. **One answer for public forms.** `public-intake-forms` keeps one model: forms are fleet forms (buildiq-authored, portaliq-hosted) with a pipelinq destination. The in-app builder, the `formSubmission` log and the retry queue are removed from the spec. Nextcloud Forms stays a source only through a binding checked against the destination when made (decision 181).
+4. **References.** The portal request and website form answers carry the destination's human-readable reference and `receivedAt`, not only an id.
+5. **Drain, then remove `enquiry`.** `occ pipelinq:enquiry:drain` submits every open enquiry into the destination named by the website form for its `source`, and reports. An enquiry whose source has no form with a destination is reported, not guessed. The `enquiry` schema, the "Enquiry to lead" flow and `EnquiryController` go when the drain reports zero.
 
 ## Rollback
 
