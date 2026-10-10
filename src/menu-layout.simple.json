@@ -82,7 +82,7 @@
 		{
 			"id": "KccWerkplek",
 			"label": "Dashboard",
-			"icon": "HomeOutline",
+			"icon": "ViewDashboardOutline",
 			"order": 10
 		},
 		{
