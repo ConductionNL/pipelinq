@@ -3,7 +3,7 @@
 	"$id": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"title": "Conduction App Manifest v2",
 	"description": "v2 schema for the JSON-driven page and navigation manifest consumed by @conduction/nextcloud-vue. Introduces a uniform widgets[] array on every page type with a per-slot grid coordinate system, a typed actions[] discriminator, and the required $schema field for version detection. v1 manifests continue to validate against app-manifest.schema.json (unchanged).",
-	"version": "2.53.0",
+	"version": "2.73.0",
 	"type": "object",
 	"required": ["$schema", "version"],
 	"allOf": [
@@ -29,6 +29,26 @@
 			"type": "string",
 			"pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$",
 			"description": "Semver of the manifest content. Bump when the manifest changes meaningfully. Used for cache busting and app-builder migration tracking. Distinct from the schema's own version."
+		},
+		"look": {
+			"type": "string",
+			"enum": ["nextcloud", "board"],
+			"default": "nextcloud",
+			"description": "screens-chrome-parity: the look the whole app is drawn in. `nextcloud` (the default) renders exactly as before. `board` moves the app to the look of the screens on identity.conduction.nl: CnAppRoot puts `cn-look-board` on its root and provides `cnLook` to dialogs and other teleported components. A page can override it with `config.look`."
+		},
+		"i18n": {
+			"type": "object",
+			"required": ["sourceLanguage", "languages", "labels"],
+			"additionalProperties": false,
+			"description": "manifest-i18n-labels: translations of the app's labels. Labels are written once, in `sourceLanguage`, and `labels` maps a language to a map of the text as written to its translation. CnAppRoot looks a label up here for the user's language (then its base language, `en_GB` falls back to `en`), then in the host's translate, then shows the text as written; the fallback is per label. `languages` lists the languages translated into (not the source language); every key of `labels` must be one of them. Language codes are Nextcloud language codes (nl, en_GB, pt_BR).",
+			"properties": {
+				"sourceLanguage": { "type": "string", "minLength": 2 },
+				"languages": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 2 } },
+				"labels": {
+					"type": "object",
+					"additionalProperties": { "type": "object", "additionalProperties": { "type": "string" } }
+				}
+			}
 		},
 		"openbuildEditable": {
 			"type": "boolean",
@@ -306,6 +326,11 @@
 						"alt": {
 							"type": "string",
 							"description": "i18n key / alternative text for the logo. Used only when no `name` is set."
+						},
+						"placement": {
+							"type": "string",
+							"enum": ["header", "nav"],
+							"description": "Where the brand block is drawn (screens-brand-block-top-bar). Under `look: \"board\"` the default is `header`: a 237px block at the start of Nextcloud's own header (#header), before the app menu, drawn by CnAppRoot; an app without CnAppNav has it too. Nextcloud offers no extension point there, so when `#header` is absent the block falls back to the navigation. `nav` keeps the block at the top of the app navigation. Ignored without the board look, where the navigation draws the block."
 						}
 					}
 				},
@@ -735,8 +760,8 @@
 		},
 		"sentinelFilterToken": {
 			"type": "string",
-			"pattern": "^@(?:me|now|today|monthStart|quarterStart|yearStart)$|^@today[+-][0-9]+d$",
-			"description": "Filter-value context: relative fetch-time tokens resolved by resolveFilterTokens (@me, @now, @today, @today±Nd, @monthStart, @quarterStart, @yearStart). Mirrors SENTINEL_TOKEN_PATTERNS.filter in src/utils/sentinelTokens.js (byte-equality enforced by a unit test)."
+			"pattern": "^@(?:me(?:\\.(?:displayName|email))?|now|today|monthStart|quarterStart|yearStart)$|^@today[+-][0-9]+d$",
+			"description": "Filter-value context: relative fetch-time tokens resolved by resolveFilterTokens (@me, @me.displayName, @me.email, @now, @today, @today±Nd, @monthStart, @quarterStart, @yearStart). Mirrors SENTINEL_TOKEN_PATTERNS.filter in src/utils/sentinelTokens.js (byte-equality enforced by a unit test)."
 		},
 		"sentinelConfigToken": {
 			"type": "string",
@@ -773,6 +798,11 @@
 			"pattern": "^@total$",
 			"description": "manifest-form-logic: the shared visibleWhen predicate's source-mode collection-total marker, resolved client-side by evaluateVisibleWhen (utils/visibleWhen.js) — NOT one of the four IAppConfig/OpenRegister resolvers, but a pre-existing convention (already documented on $defs.visibleWhen and the banner widget) reachable through the sentinelGuardedValue-guarded pages[].config subtree for the first time via config.fields[].visibleWhen. Mirrors SENTINEL_TOKEN_PATTERNS.visibleWhen."
 		},
+		"sentinelAnswerToken": {
+			"type": "string",
+			"pattern": "^@answer\\.[A-Za-z][A-Za-z0-9_]*$",
+			"description": "form-live-values: another answer in the same form (@answer.<field>), read by a form field's assign rule and resolved client-side by CnFormPage / CnFormDialog. Mirrors SENTINEL_TOKEN_PATTERNS.answer."
+		},
 		"sentinelTokenAny": {
 			"$comment": "Union of every canonical context plus the deprecated-during-window overlay. Single source the shared resolver + gate import.",
 			"anyOf": [
@@ -783,6 +813,7 @@
 				{ "$ref": "#/$defs/sentinelRouteToken" },
 				{ "$ref": "#/$defs/sentinelDeclarativeToken" },
 				{ "$ref": "#/$defs/sentinelVisibleWhenToken" },
+				{ "$ref": "#/$defs/sentinelAnswerToken" },
 				{ "$ref": "#/$defs/sentinelDeprecatedToken" }
 			]
 		},
@@ -1046,6 +1077,52 @@
 					"type": "string",
 					"description": "A second field to group the board into rows by, while the columns stay the stages. Cards with no value for it land in one named row, last, rather than being dropped: grouping by handler and hiding the unassigned work turns a board into a picture of what is already somebody's problem."
 				},
+				"card": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "screens-kanban-parity: the board look's card, by role instead of by list. Each value is a dot-path to a field on the row. Missing, the board look takes the first of `cardFields` as the title and the rest as the sub line. The Nextcloud look ignores it.",
+					"properties": {
+						"title": { "type": "string", "description": "The field that is the card's title, and the link that opens it." },
+						"sub": {
+							"description": "The field, or fields, of the sub line; several are joined by a middle dot and an empty one drops out with its separator.",
+							"oneOf": [
+								{ "type": "string" },
+								{ "type": "array", "items": { "type": "string" } }
+							]
+						},
+						"pill": { "type": "string", "description": "The field shown as a status pill." },
+						"pillColors": {
+							"type": "object",
+							"description": "Pill value to badge variant. A value without an entry takes the default variant.",
+							"additionalProperties": { "type": "string", "enum": ["default", "primary", "success", "warning", "error", "info"] }
+						},
+						"due": { "type": "string", "description": "The date field of the footer's due text, marked by `dueRule`." },
+						"owner": { "type": "string", "description": "The field of the owner shown as an avatar (initials) at the footer's end." }
+					}
+				},
+				"colorField": {
+					"type": "string",
+					"description": "screens-kanban-parity: the key on a column's state that holds its dot colour. Without it the lifecycle state's declared `color` is used, else the secondary text colour."
+				},
+				"sumField": {
+					"type": "string",
+					"description": "screens-kanban-parity: a numeric field whose sum each column shows under its heading, formatted as the field's format declares."
+				},
+				"sumFormat": {
+					"type": "object",
+					"description": "screens-kanban-parity: how the sum is formatted when the field's own schema does not say: `{ style, currency, decimals }`.",
+					"properties": {
+						"style": { "type": "string", "enum": ["number", "currency", "percent", "duration-hours", "decimal"] },
+						"currency": { "type": "string" },
+						"decimals": { "type": "integer", "minimum": 0 }
+					}
+				},
+				"columnLimit": {
+					"type": "integer",
+					"minimum": 0,
+					"default": 0,
+					"description": "screens-kanban-parity: how many cards a column draws before a dashed \"Show N more\" button. 0 draws every card. The count badge keeps showing the column's total."
+				},
 				"dueRule": {
 					"$ref": "#/$defs/dueRule",
 					"description": "Marks late cards. A card whose date is before today gets an error edge and the label 'Overdue'; one due within `soonDays` gets 'Due soon'. Omitted, no card is marked."
@@ -1297,6 +1374,12 @@
 					],
 					"description": "Counter badge in the entry's #counter slot. Positive integer renders as-is; 'auto' resolves from cnMenuCounts (populated by CnAppRoot from useObjectStore totals) for the entry's resolved index-type page (register + schema); an object `{ register, schema, filter? }` is the total of that filtered list."
 				},
+				"counterVariant": {
+					"type": "string",
+					"enum": ["default", "attention"],
+					"default": "default",
+					"description": "screens-chrome-parity: how the entry's `count` reads. `attention` asks for the red attention pill under the board look (unread or overdue work) and maps to the counter bubble's highlighted state without it. `default` is the neutral pill."
+				},
 				"pinned": {
 					"type": "boolean",
 					"default": false,
@@ -1378,6 +1461,7 @@
 						{ "type": "string", "enum": ["auto"] }
 					]
 				},
+				"counterVariant": { "type": "string", "enum": ["default", "attention"], "default": "default" },
 				"pinned": { "type": "boolean", "default": false },
 				"href": { "type": "string" },
 				"action": {
@@ -1906,6 +1990,43 @@
 									"endpointSource": {
 										"$ref": "#/$defs/chartEndpointSource",
 										"description": "Wave 2 (#91): endpoint-bound series/labels — the shared endpoint transport plus the labelsPath / series[] {name, path} response mapping. Exactly one of dataSource | endpointSource (post-schema check)."
+									}
+								}
+							}
+						}
+					}
+				},
+				{
+					"description": "tabs built-in widget (CnTabsWidget): `props.content.tabs[]` entries are a widget id or an object { id?, widgetId, label?, icon?, count?, countField?, unreadKey?, overflow?, visibleWhen? }. `visibleWhen` reuses the shared predicate: a tab whose condition is false is absent from the strip, not empty. LOCAL form reads a field of the page object; the `source` form counts related rows (`@total`) once on mount and after a reported write, and shows the tab disabled while it is pending. A tab without the key always renders.",
+					"if": {
+						"properties": { "widgetKey": { "const": "tabs" } },
+						"required": ["widgetKey"]
+					},
+					"then": {
+						"properties": {
+							"props": {
+								"type": "object",
+								"properties": {
+									"content": {
+										"type": "object",
+										"additionalProperties": true,
+										"properties": {
+											"tabs": {
+												"type": "array",
+												"items": {
+													"oneOf": [
+														{ "type": "string" },
+														{
+															"type": "object",
+															"additionalProperties": true,
+															"properties": {
+																"visibleWhen": { "$ref": "#/$defs/visibleWhen" }
+															}
+														}
+													]
+												}
+											}
+										}
 									}
 								}
 							}
@@ -2989,6 +3110,69 @@
 				}
 			}
 		},
+		"calendarView": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["dateField"],
+			"description": "The calendar view of this list: the current filtered rows on a month by a date field (config.calendar). Index pages only, and only offered when config.viewModes also lists `calendar`. Only the visible month is fetched. It reads and reschedules nothing: dragging an entry to another day is not offered.",
+			"properties": {
+				"dateField": { "type": "string", "minLength": 1, "description": "The date property a row is placed on." },
+				"endDateField": { "type": "string", "minLength": 1, "description": "Optional end date; a row then spans every day from dateField to endDateField." },
+				"titleField": { "type": "string", "minLength": 1, "description": "The property shown on the entry; falls back to title, name or the row key." }
+			}
+		},
+		"formSmartPaste": {
+			"type": "object",
+			"required": ["enabled", "fields"],
+			"additionalProperties": false,
+			"description": "Fill from pasted text on a form page (form-smart-paste). `fields` lists the config.fields[] keys the fill may write; `handler` names a customComponents entry (a function, or { fill, available }) that proposes the values; `hint` is shown above the paste box. Never offered on a public form. Cross-field rules (each field key is declared, handler present when enabled, mode not public) are checked by validateManifestV2().",
+			"properties": {
+				"enabled": { "type": "boolean" },
+				"fields": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+				"hint": { "type": "string" },
+				"handler": { "type": "string", "minLength": 1 }
+			}
+		},
+		"formFieldLiveValues": {
+			"type": "object",
+			"description": "form-live-values: the live-value keys a form field may carry on top of its type, label and key. `assign` is a list of { when, value } rules: the first whose visibleWhen-style `when` holds sets the field when an answer it reads changes (value: a literal, @answer.<field> or a sentinel token); once the user edits the field by hand its rules stop. `default` may be a sentinel token (@me, @me.displayName, @me.email, @today, @now, @object.<field>) resolved once when the form opens; an initial value wins. `calculate.inputs` names the answers a host `calculate` function reads for this read-only field. Other field keys are unchanged.",
+			"properties": {
+				"assign": {
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "object",
+						"required": ["value"],
+						"additionalProperties": false,
+						"properties": {
+							"when": { "$ref": "#/$defs/visibleWhen" },
+							"value": {}
+						}
+					}
+				},
+				"default": {},
+				"calculate": {
+					"type": "object",
+					"required": ["inputs"],
+					"additionalProperties": false,
+					"properties": {
+						"inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+					}
+				}
+			}
+		},
+		"copySettings": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "index-copy-with-relations: what a copy on this index page may take along. `include` lists the link kinds: relationRows (the source's relation rows are re-created on the copy), incoming (the copy is added next to the source in every array-valued reference that points at it; a single-valued reference is never moved) and files (the attached files). The copy dialogs list the included kinds, ticked, and the copy is one request to OpenRegister's copy endpoint. Without `include` a copy carries the fields only.",
+			"properties": {
+				"include": {
+					"type": "array",
+					"uniqueItems": true,
+					"items": { "enum": ["relationRows", "incoming", "files"] }
+				}
+			}
+		},
 		"page": {
 			"type": "object",
 			"required": ["id", "route", "type", "title"],
@@ -3103,8 +3287,97 @@
 					"type": "object",
 					"description": "Type-specific configuration. Shape varies by page type — see v1 schema for per-type config shapes (index, detail, dashboard, logs, settings, chat, files, form, map, custom). Config values under pages[].config may use the closed sentinel vocabulary (see $defs/sentinelTokenAny) — an out-of-vocabulary @-token FAILS validation via the sentinelGuardedValue allOf guard. Carry-forward from v1: register, schema, columns, actions, sidebar, sidebarProps, fields, sections, tabs, content, layout, widgets (dashboard only), cardComponent, columnGroups, etc.",
 					"additionalProperties": true,
-					"allOf": [{ "$ref": "#/$defs/sentinelGuardedValue" }],
+					"allOf": [
+						{ "$ref": "#/$defs/sentinelGuardedValue" },
+						{
+							"$comment": "screens-chrome-parity: a page declares ONE place to save. `saveMode` excludes a section's own `save` (flat or inside a tab) and `autosave`.",
+							"if": { "required": ["saveMode"] },
+							"then": {
+								"not": { "required": ["autosave"], "properties": { "autosave": { "const": true } } },
+								"properties": {
+									"sections": { "type": "array", "items": { "type": "object", "not": { "required": ["save"] } } },
+									"tabs": { "type": "array", "items": { "type": "object", "properties": { "sections": { "type": "array", "items": { "type": "object", "not": { "required": ["save"] } } } } } }
+								}
+							}
+						}
+					],
 					"properties": {
+						"favourite": {
+							"type": "boolean",
+							"description": "Detail pages: the star beside the title. Omitted means automatic: it shows when the object carries @self.favourite. false removes it."
+						},
+						"follow": {
+							"type": "boolean",
+							"description": "Detail pages: the Follow toggle beside the title, with the follower count for a user who may update the record. Omitted means automatic: it shows when the object carries @self.watching. false removes it, and the object read then no longer asks for @self.can."
+						},
+						"showFavouriteColumn": {
+							"type": "boolean",
+							"description": "Index pages: add a first column with a star per row, bound to each row's @self.favourite. Clicking it does not open the row. Default false."
+						},
+						"personalLenses": {
+							"type": "array",
+							"description": "Index pages: personal lenses added to the quick filters, in order. favourite lists the user's favourites, recent the records the user opened last (it owns the order, so column sorting is off), watching the records the user follows, unread the records changed since the user last looked. They combine with every other filter. Default none.",
+							"items": { "enum": ["favourite", "recent", "watching", "unread"] },
+							"uniqueItems": true
+						},
+						"markRead": {
+							"type": "boolean",
+							"description": "Detail pages: send PUT .../read-state once after the object has rendered, when it carries @self.unread, so opening a record marks it read. Default true; false keeps the page from marking anything read."
+						},
+						"lifecycleActions": {
+							"description": "Detail pages: status-gated lifecycle transition buttons (CnLifecycleActions). `inputs` gives the transition dialog hints for server-declared transitions: a map of action name to a list of { field, picker?, fields? }, merged onto the server's declared input with the same `field`. `picker` { filter, excludeSelf, labelField } narrows the records a reference input offers; `fields` names the sub-properties an object input asks for. A hint for a field the server does not declare is ignored with a console warning and never adds an input.",
+							"if": { "type": "object" },
+							"then": { "properties": {
+								"inputs": {
+									"type": "object",
+									"additionalProperties": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"required": ["field"],
+											"properties": {
+												"field": { "type": "string", "minLength": 1 },
+												"picker": {
+													"type": "object",
+													"additionalProperties": false,
+													"properties": {
+														"filter": { "type": "object" },
+														"excludeSelf": { "type": "boolean" },
+														"labelField": { "type": "string" }
+													}
+												},
+												"fields": { "type": "array", "items": { "type": "string" } }
+											}
+										}
+									}
+								}
+							} }
+						},
+						"headerFields": {
+							"type": "array",
+							"description": "Detail pages: fields shown as chips under the title (number, status, assignee, deadline). Each entry is a property key, or an object { key, format, labelField, colorField, warnWhenPast }. `format` is text (default), mono, badge, user or date. A `$ref` value shows `labelField` of the referenced object and falls back to the raw id in mono. An empty value shows no chip; a page without the key shows no row.",
+							"items": {
+								"oneOf": [
+									{ "type": "string", "minLength": 1 },
+									{
+										"type": "object",
+										"required": ["key"],
+										"additionalProperties": false,
+										"properties": {
+											"key": { "type": "string", "minLength": 1 },
+											"format": { "enum": ["text", "mono", "badge", "user", "date"] },
+											"labelField": { "type": "string" },
+											"colorField": { "type": "string" },
+											"warnWhenPast": { "type": "boolean" }
+										}
+									}
+								]
+							}
+						},
+						"searchInFiles": {
+							"type": "boolean",
+							"description": "Index pages: show an \"Also search inside files\" switch beside the search box. On, the list query carries `_content_search=true` with a search term, and a row found through an attached file shows \"Found in {file}\". Default false."
+						},
 						"entitySource": {
 							"type": "string",
 							"enum": ["flows", "tasks"],
@@ -3653,6 +3926,21 @@
 							"type": "string",
 							"description": "type='index': accessible name and tooltip for the split pane's close button. Defaults to \"Close\". Maps to CnIndexPage `splitCloseLabel`."
 						},
+						"look": {
+							"type": "string",
+							"enum": ["nextcloud", "board"],
+							"description": "screens-chrome-parity: draw this page in the `nextcloud` or the `board` look, over the manifest's root `look`. The nearest value wins: the page root carries `cn-look-board` or `cn-look-nextcloud`, and `cnLook` is re-provided to the page's descendants."
+						},
+						"saveMode": {
+							"type": "string",
+							"enum": ["section", "page"],
+							"description": "type='settings' (screens-chrome-parity): where the page saves. `section` ends each section that has fields in its own Save button and draws no page save bar. `page` draws one Save as the last header button and a Changes card listing the changed fields; no section draws a save button. Absent, the page keeps the save bar under the last section. Cannot be combined with `autosave` or with a section that declares its own `save`. Maps to CnSettingsPage `saveMode`."
+						},
+						"autosave": {
+							"type": "boolean",
+							"default": false,
+							"description": "type='settings' (screens-chrome-parity): the page saves on change. It draws no save button and its description ends with \"Changes are saved automatically.\" Cannot be combined with `saveMode`. Maps to CnSettingsPage `autosave`."
+						},
 						"showHeader": {
 							"type": "boolean",
 							"default": true,
@@ -3686,10 +3974,31 @@
 							"minLength": 1,
 							"description": "type='dashboard' | type='detail': the accessible name of the page's view switch, e.g. \"Whose work\"; defaults to \"View\" (view-switch-containers). Maps to `viewsLabel`."
 						},
+						"headerMeta": {
+							"type": "string",
+							"minLength": 1,
+							"description": "type='detail', board look: the meta line on row 2 of the header, after the breadcrumb and a middle dot (screens-detail-page-parity). A field template such as `\"via {channel}\"`: every `{path}` is read from the record, and a line with an empty value is dropped. Maps to CnDetailPage `headerMeta`."
+						},
+						"tabsLabel": {
+							"type": "string",
+							"minLength": 1,
+							"description": "type='detail', board look: the accessible name of the tab list, for example \"Case parts\". Defaults to \"<type> parts\" from the page title (screens-detail-page-parity). Maps to CnDetailPage `tabsLabel`."
+						},
+						"identifierField": {
+							"type": "string",
+							"minLength": 1,
+							"description": "type='detail', board look: the record field (a dotted path, for example `identifier`) that names the record in the last line of the side column's History card (screens-detail-page-parity). Maps to CnDetailPage `identifierField`."
+						},
 						"showWidgetActions": {
 							"type": "boolean",
 							"default": true,
-							"description": "type='dashboard' and type='detail': `false` drops the overflow Actions menu from every widget that does not set `showActions` itself, for a dashboard whose widget headers carry a header link and nothing else (zuiddrecht-pixel-gaps-2), or a record page whose data cards carry none (zuiddrecht-pixel-gaps-3; a card with an Add action keeps it). Maps to CnDashboardPage / CnDetailPage `showWidgetActions`."
+							"description": "type='dashboard' and type='detail': `false` drops the overflow Actions menu from every widget that does not set `showActions` itself, for a dashboard whose widget headers carry a header link and nothing else (zuiddrecht-pixel-gaps-2), or a record page whose data cards carry none (zuiddrecht-pixel-gaps-3; a card with an Add action keeps it). When the key is not set a detail page keeps the menu, except under the board look, where side cards carry none (screens-detail-page-parity). Maps to CnDashboardPage / CnDetailPage `showWidgetActions`."
+						},
+						"kpiRow": {
+							"type": "array",
+							"items": { "type": "string" },
+							"default": [],
+							"description": "type='dashboard': widget ids drawn as a KPI row above the grid, in the listed order, in an auto-fit grid (`repeat(auto-fit, minmax(200px, 1fr))`, gap 16). The named widgets are not GridStack items, so they do not reflow with the grid and are not part of the emitted layout; an id that names no widget is skipped with a development warning (screens-dashboard-parity). Maps to CnDashboardPage `kpiRow`. `dateRange.control` also accepts \"segmented\": the presets as one compact segmented group under the header."
 						},
 						"gridFloat": {
 							"type": "boolean",
@@ -3715,9 +4024,29 @@
 							"default": true,
 							"description": "type='index': `false` drops the actions bar's \"Showing 20 of 258\" line, for a page whose title line already gives the total through `countSubtitle` (zuiddrecht-pixel-gaps-3). Maps to CnIndexPage `showCount`."
 						},
+						"countText": {
+							"type": "string",
+							"minLength": 1,
+							"description": "type='index', board look: the count line under the title, a template with `{shown}` (rows on this page), `{total}` (all rows) and free text, e.g. \"{shown} of {total} open cases in your teams\"; defaults to `countSubtitle`, else \"{shown} of {total}\" (screens-index-list-parity). Maps to CnIndexPage `countText`."
+						},
+						"footerNote": {
+							"type": "string",
+							"minLength": 1,
+							"description": "type='index', board look: free text after the footer's count, e.g. \"click a column header to sort\" (screens-index-list-parity). Maps to CnIndexPage `footerNote`."
+						},
+						"bulkHint": {
+							"type": "string",
+							"minLength": 1,
+							"description": "type='index', board look: the 13px hint after the bulk band's buttons (screens-index-list-parity). Maps to CnIndexPage `bulkHint`."
+						},
+						"cardFields": {
+							"type": "array",
+							"description": "type='index': the property keys the cards view shows as the facts list of each card, in order; defaults to the first four list columns under the board look (screens-card-parity). Maps to CnIndexPage `cardFields`.",
+							"items": { "type": "string", "minLength": 1 }
+						},
 						"headerButtons": {
 							"type": "array",
-							"description": "type='index': buttons beside the page title, as the board's \"Export\" and \"New case\" (zuiddrecht-pixel-gaps-3). `action` is `add` (the Add flow; the label defaults to the Add label), `export` (the export leaf in `format`, else the export dialog), `import`, `refresh`, or the id of a `headerActions` entry. Shown only with `showTitle`; when they show, the actions bar drops its Views and Actions menus, and the Add button and Export menu when a button takes their action. Maps to CnIndexPage `headerButtons`.",
+							"description": "type='index': buttons beside the page title, as the board's \"Export\" and \"New case\" (zuiddrecht-pixel-gaps-3). `action` is `add` (the Add flow; the label defaults to the Add label), `export` (the export leaf in `format`, else the export dialog; under the board look it reads \"Download\" by default), `actions-menu` (the page's header actions as one labelled menu button, absent when the page has none), `import`, `refresh`, or the id of a `headerActions` entry. Under the board look the buttons render in a fixed order whatever the manifest declares: export, actions-menu, other secondary buttons, the buildiq square, then the primary button. Shown only with `showTitle`; when they show, the actions bar drops its Views and Actions menus, and the Add button and Export menu when a button takes their action. Maps to CnIndexPage `headerButtons`.",
 							"items": {
 								"type": "object",
 								"additionalProperties": false,
@@ -3892,6 +4221,62 @@
 				}
 			},
 			"allOf": [
+				{
+					"description": "map-image-layer: on a map page an `image` layer is a picture in flat pixel coordinates and needs a url and its width and height in pixels; markers on such a map read xField and yField.",
+					"if": { "properties": { "type": { "const": "map" } }, "required": ["type"] },
+					"then": {
+						"properties": {
+							"config": {
+								"properties": {
+									"layers": {
+										"items": {
+											"if": { "properties": { "type": { "const": "image" } }, "required": ["type"] },
+											"then": {
+												"required": ["url", "width", "height"],
+												"properties": {
+													"url": { "type": "string", "minLength": 1 },
+													"width": { "type": "number", "exclusiveMinimum": 0 },
+													"height": { "type": "number", "exclusiveMinimum": 0 }
+												}
+											}
+										}
+									},
+									"markers": {
+										"properties": {
+											"xField": { "type": "string", "minLength": 1, "description": "Image maps: the row property holding x, in pixels from the picture's left. Default x." },
+											"yField": { "type": "string", "minLength": 1, "description": "Image maps: the row property holding y, in pixels from the picture's top. Default y." }
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				{
+					"description": "index-calendar-view-mode: config.calendar on an index page is typed by calendarView.",
+					"if": { "properties": { "type": { "const": "index" } }, "required": ["type"] },
+					"then": { "properties": { "config": { "properties": { "calendar": { "$ref": "#/$defs/calendarView" } } } } }
+				},
+				{
+					"description": "index-copy-with-relations: config.copy on an index page is typed by copySettings.",
+					"if": { "properties": { "type": { "const": "index" } }, "required": ["type"] },
+					"then": { "properties": { "config": { "properties": { "copy": { "$ref": "#/$defs/copySettings" } } } } }
+				},
+				{
+					"description": "index-column-order-and-pinning: config.personalColumns on an index page lets people order and pin columns and keeps the layout per user; false keeps show and hide only.",
+					"if": { "properties": { "type": { "const": "index" } }, "required": ["type"] },
+					"then": { "properties": { "config": { "properties": { "personalColumns": { "type": "boolean", "default": true } } } } }
+				},
+				{
+					"description": "form-live-values: config.fields[] on a form page may carry assign, a token default and calculate.",
+					"if": { "properties": { "type": { "const": "form" } }, "required": ["type"] },
+					"then": { "properties": { "config": { "properties": { "fields": { "type": "array", "items": { "$ref": "#/$defs/formFieldLiveValues" } } } } } }
+				},
+				{
+					"description": "form-smart-paste: config.smartPaste on a form page is typed by formSmartPaste.",
+					"if": { "properties": { "type": { "const": "form" } }, "required": ["type"] },
+					"then": { "properties": { "config": { "properties": { "smartPaste": { "$ref": "#/$defs/formSmartPaste" } } } } }
+				},
 				{
 					"description": "splitView, manualOrder, savedViewTree, board and dateAxis are index-page mechanics. splitView emits a second route beside an index route and mounts the detail pane inside CnIndexPage; manualOrder holds a per-user row order for a list. Declared on a detail, dashboard or custom page they would validate and then do nothing, which is the failure this branch refuses out loud (case-page-and-list-as-a-place).",
 					"if": {

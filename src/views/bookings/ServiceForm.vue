@@ -222,10 +222,12 @@
 </template>
 
 <script>
+import { translate } from '@nextcloud/l10n'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import { reportingCurrency } from '../../services/reportingCurrency.js'
 import { serializeStep } from '../../services/serviceSteps.js'
+import { CANCELLATION_POLICY_LABELS, enumOptions } from '../../utils/enumLabels.js'
 
 export default {
 	name: 'ServiceForm',
@@ -271,11 +273,9 @@ export default {
 		},
 
 		cancellationPolicyOptions() {
-			return [
-				{ value: 'free', label: t('pipelinq', 'Free') },
-				{ value: 'charge-deposit', label: t('pipelinq', 'Charge deposit') },
-				{ value: 'always-charge', label: t('pipelinq', 'Always charge') },
-			]
+			return enumOptions(CANCELLATION_POLICY_LABELS, (text) =>
+				translate('pipelinq', text),
+			)
 		},
 	},
 

@@ -78,23 +78,29 @@ class SatisfactionController extends Controller {
 	 * A survey's response rate, with its suppressed and failed counts.
 	 *
 	 * @param string $surveyId The survey's uuid, or '' for every survey.
+	 * @param string $channel  One channel, or '' for every channel.
+	 * @param int    $days     The period in days, 0 for all time.
 	 *
-	 * @return JSONResponse The figures.
+	 * @return JSONResponse The figures, with a per-channel breakdown.
 	 *
 	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	#[NoAdminRequired]
-	public function responseRate(string $surveyId = ''): JSONResponse {
+	public function responseRate(string $surveyId = '', string $channel = '', int $days = 0): JSONResponse {
 		$filters = [];
 		if (trim($surveyId) !== '') {
-			$filters = ['surveyRef' => trim($surveyId)];
+			$filters['surveyRef'] = trim($surveyId);
 		}
 
-		return new JSONResponse(
-			$this->dispatchService->responseRate(
-				invitations: $this->dispatchService->read(filters: $filters)
-			),
-			200
+		if (trim($channel) !== '') {
+			$filters['channel'] = trim($channel);
+		}
+
+		$invitations = $this->dispatchService->withinDays(
+			invitations: $this->dispatchService->read(filters: $filters),
+			days: $days
 		);
+
+		return new JSONResponse($this->dispatchService->responseRate(invitations: $invitations), 200);
 	}//end responseRate()
 }//end class

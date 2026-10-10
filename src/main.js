@@ -181,6 +181,8 @@ const { manifest: profiledManifest, homePage } = applyHomePage(
 // Dashboard and detail pages read `@config.<key>` tokens (the reporting
 // currency, the pipeline target) from the `config` initial state; the VAT
 // class labels follow the rates set on the admin page.
+// An object-list widget's Add button text stays English source text in the
+// manifest: CnObjectListWidget translates it through the app's translate.
 const mergedManifest = seedVatClassLabels(
 	seedPageAppConfig(
 		structureProfile === STRUCTURE_FULL

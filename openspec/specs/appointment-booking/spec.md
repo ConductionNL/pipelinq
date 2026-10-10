@@ -664,3 +664,28 @@ made it, and each `statusHistory` entry with its status and reason. A moment in 
 - GIVEN a user cancels a booking
 - WHEN the user opens the Timeline tab
 - THEN the change shows with its time and the user who made it
+
+### Requirement: A new service keeps the product of its steps (REQ-R3-004)
+
+When a user creates a service with composition steps, every step SHALL be saved
+with the product, quantity and unit the user picked.
+
+#### Scenario: Create a service with a product step
+
+@e2e exclude Asserted in tests/vitest/serviceFormSteps.spec.js on the mounted ServiceForm.
+- GIVEN the New service page
+- WHEN the user adds a step with the product "Implementatie", 8 hours, and saves
+- THEN the saved step SHALL carry the product's id, the quantity 8 and the unit `hour`
+
+### Requirement: Service values read as words (REQ-APT-READABLE-VALUES)
+Every enum on the appointmentService and appointmentResource schemas, and the
+resource type of a service step, MUST declare `x-enum-labels` with an en and an
+nl catalogue entry. The service page MUST show the cancellation policy and each
+step's resource type as their label.
+
+#### Scenario: A saved service
+@e2e exclude Asserted in tests/vitest/readableValues.spec.js on the merged register, the label maps and ServiceDetail.
+- **GIVEN** a service with cancellation policy `free` and a step of resource type `staff`
+- **WHEN** a user opens the service page
+- **THEN** the Policies card MUST read "Free" under Cancellation policy
+- **AND** the composition table MUST read "Staff" under Resource type

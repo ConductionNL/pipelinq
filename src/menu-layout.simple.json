@@ -4,7 +4,7 @@
 		"spdx-copyright": "2026 Conduction B.V.",
 		"description": "The SIMPLE structure profile, and the default one (openspec/changes/simple-structure-profile). `menu-layout.json` is the FULL profile and is untouched: an administrator brings it back with the setting `menu_structure`. Both profiles are built from the same manifest and the same fragments, so nothing is deleted and every page stays routable; this file only decides what the navigation offers first. THE STANDARD KEYS (`removals`, `settingsSection`) go to the library's buildManifest exactly as the full file's do. `relocations` is ABSENT on purpose, and must stay absent rather than become `{}`: the simple menu is flat, and the library's relocation step ends by dropping every entry that has no route, no href, no action and no children, which is what a caption is. THE PROFILE KEYS `menu`, `pages`, `nav` and `tours` are read by src/utils/structureProfile.js. `tours` is the contact centre tour: the sales tour points at Contacts, Products, Leads and Contracts, which this menu lacks, so holdUnreachableTours holds it back and without a tour of its own the user settings had no Walkthrough section (openspec/changes/simple-tour-and-readable-labels). `nav` is merged over the manifest's own `nav`: the brand block at the top of the navigation (PqDashboard, AppZijbalk) names the app, and the instance's name comes from its theming capabilities through `@theming.name` and its mark through `@theming.emblem|@theming.logo` (the active set's emblem from thematiq, the wordmark when the set ships none), so no municipality is written here; an instance that answers nothing shows the app's name alone. `menu` is merged BEFORE the manifest's own menu; buildManifest merges entries by id and the FIRST definition of a key wins, so an entry here that carries only `id` and `order` keeps its label, icon and route from the manifest, and an entry the manifest does not know (the captions, Contact moments, Appointments, Organisations, Modules and more) is added as written. `pages` holds page overlays. THE PIPELINQ KEYS `modules`, `modulesCaption` and `home` are read by src/utils/menuModules.js.",
 		"removalsNote": "The first six are the full profile's own removals, repeated because buildManifest takes ONE list; the spec fails when the two drift. The rest leave the simple menu and stay one step away: `Contacts`, `Tasks` and `OperationalDashboard` have a card on the Modules page, `SlaAttainment` a card on Reports, and `Bookings` is replaced by `AppointmentsMenu`, which opens the same page from the top level. `PointOfSale` and `SettingsIntegrationsCaption` are empty shells in the manifest (a label and no route). The full profile loses the second to the relocation step's clean-up and fills the first with children; this profile has no relocation step, so both are removed by name. The ids of a module that is switched off are added to this list at boot, by applyMenuModules.",
-		"settingsNote": "The first three are the full profile's. `Services` and `Resources` join them: what can be booked and with whom is set-up, the bookings themselves are daily work.",
+		"settingsNote": "The first three are the full profile's. `Services` and `Resources` join them: what can be booked and with whom is set-up, the bookings themselves are daily work. `SavedReplies` too: the team writes them once, agents pick them where they answer.",
 		"viewsNote": "`ContactMomentsMenu` opens the tickets list narrowed to ticketType `interaction`, and `OrganisationsMenu` the clients list narrowed to type `organization`. Both values are enum members of the seeded schema (register.d/99-unify-ticket-supertype.json, pipelinq_register.json), so they are the same on every instance. A filtered list is a view, not a page. Known gap: CnAppNav decides `active` by route name and ignores `query`, so each pair lights up together.",
 		"modulesNote": "A module is a set of menu entries that a municipality does not need and a business does. Every module is OFF in the simple menu until an administrator names it in the setting `menu_modules` (a comma separated list of the keys below). `ids` are the manifest entries that leave the menu while the module is off. `menu` is what joins the profile menu when it is on, under the one caption `modulesCaption` declares. Off or on, every entry has a card on the Modules page (src/manifest.d/98-modules.json), which the footer entry `ModulesMenu` opens. The full profile ignores modules: it shows everything, as before.",
 		"homeNote": "The app opens on `/`, and `/` is the Sales overview. In the simple profile the contact centre dashboard is the start page: `/` redirects to `home.page`, and the page that owned `/` moves to `home.rootMovesTo` so it keeps an address of its own. The full profile has no `home` and keeps `/` as it was."
@@ -42,7 +42,8 @@
 		"SettingsIntegrationsCaption",
 		"ExportJobs",
 		"Services",
-		"Resources"
+		"Resources",
+		"SavedReplies"
 	],
 	"nav": {
 		"brand": {
@@ -208,6 +209,7 @@
 					"id": "go-tickets",
 					"placement": "right",
 					"sinceVersion": "1.1.0",
+					"title": "Questions and reports",
 					"body": "Questions and reports from residents and businesses land here. Open Questions and reports.",
 					"task": "Click Questions and reports in the menu",
 					"target": {
@@ -223,6 +225,7 @@
 					"id": "create-ticket",
 					"placement": "bottom",
 					"sinceVersion": "1.1.0",
+					"title": "Register a question",
 					"allowManualNext": true,
 					"body": "Register a question you took by phone, mail or at the desk.",
 					"task": "Click the add button and save a question",
@@ -243,6 +246,7 @@
 					"id": "go-my-work",
 					"placement": "right",
 					"sinceVersion": "1.1.0",
+					"title": "My Work",
 					"body": "My Work lists the questions assigned to you. Open My Work.",
 					"task": "Click My Work in the menu",
 					"target": {
@@ -258,6 +262,7 @@
 					"id": "go-queue",
 					"placement": "right",
 					"sinceVersion": "1.1.0",
+					"title": "The queue",
 					"body": "The queue holds the questions nobody has picked up yet. Open the queue.",
 					"task": "Click Queue in the menu",
 					"target": {
@@ -273,6 +278,7 @@
 					"id": "go-clients",
 					"placement": "right",
 					"sinceVersion": "1.1.0",
+					"title": "Residents and businesses",
 					"body": "Every question belongs to a resident or a business. Open Residents and businesses.",
 					"task": "Click Residents and businesses in the menu",
 					"target": {
@@ -288,6 +294,7 @@
 					"id": "create-client",
 					"placement": "bottom",
 					"sinceVersion": "1.1.0",
+					"title": "Add a resident or business",
 					"allowManualNext": true,
 					"body": "Add a resident or a business, so you can link their questions to them.",
 					"task": "Click the add button and save a client",

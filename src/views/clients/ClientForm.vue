@@ -23,6 +23,7 @@
 					:inputLabel="t('pipelinq', 'Type')"
 					labelOutside
 					:options="typeOptions"
+					:reduce="(o) => o.value"
 					:placeholder="t('pipelinq', 'Select type')"
 					data-testid="client-type-select" />
 				<p v-if="shownErrors.type" class="field-error" role="alert">
@@ -169,7 +170,7 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { getLanguage } from '@nextcloud/l10n'
+import { getLanguage, translate } from '@nextcloud/l10n'
 import { generateOcsUrl, generateUrl } from '@nextcloud/router'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
@@ -178,6 +179,7 @@ import {
 	INDUSTRY_SECTORS,
 	industryList,
 } from '../../utils/clientFormFields.js'
+import { CLIENT_TYPE_LABELS, enumOptions } from '../../utils/enumLabels.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
@@ -257,7 +259,10 @@ export default {
 				timezone: null,
 			},
 
-			typeOptions: ['person', 'organization'],
+			typeOptions: enumOptions(CLIENT_TYPE_LABELS, (text) =>
+				translate('pipelinq', text),
+			),
+
 			industryOptions: INDUSTRY_SECTORS,
 			languages: [],
 			userOptions: currentUser()

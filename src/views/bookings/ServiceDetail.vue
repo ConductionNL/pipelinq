@@ -131,7 +131,7 @@
 					</div>
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Cancellation policy') }}</label>
-						<span>{{ serviceData.cancellationPolicy || 'free' }}</span>
+						<span>{{ cancellationPolicyLabel }}</span>
 					</div>
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Cancellation window') }}</label>
@@ -173,7 +173,7 @@
 				:durationMinutes="serviceData.durationMinutes"
 				@catalogue="rememberProductNames" />
 			<div v-else-if="!steps.length" class="section-empty">
-				<p>{{ t('pipelinq', 'Single-step service — no composition.') }}</p>
+				<p>{{ t('pipelinq', 'This service has one step.') }}</p>
 			</div>
 			<div v-else class="viewTableContainer">
 				<table class="viewTable">
@@ -194,7 +194,9 @@
 							<td>{{ productName(step.productId) }}</td>
 							<td>{{ stepAmount(step) || '-' }}</td>
 							<td>{{ step.durationMinutes }} min</td>
-							<td>{{ step.resourceType || '-' }}</td>
+							<td>
+								{{ resourceTypeLabel(step.resourceType) || '-' }}
+							</td>
 							<td>{{ step.skillRequired || '-' }}</td>
 							<td>
 								{{
@@ -253,6 +255,7 @@ import {
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { translate } from '@nextcloud/l10n'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
@@ -261,6 +264,11 @@ import ServiceForm from './ServiceForm.vue'
 import { currencyOr } from '../../services/reportingCurrency.js'
 import { stepAmount } from '../../services/serviceSteps.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import {
+	CANCELLATION_POLICY_LABELS,
+	enumLabel,
+	RESOURCE_TYPE_LABELS,
+} from '../../utils/enumLabels.js'
 
 const STATUS_LABELS = {
 	draft: 'Draft',
@@ -322,6 +330,22 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The service's cancellation policy as words; a service without one
+		 * has the schema default, free cancellation.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/changes/round4-readable-values-and-tour-titles/specs/appointment-booking/spec.md
+		 */
+		cancellationPolicyLabel() {
+			return enumLabel(
+				CANCELLATION_POLICY_LABELS,
+				this.serviceData.cancellationPolicy || 'free',
+				(text) => translate('pipelinq', text),
+			)
+		},
+
 		objectStore() {
 			return useObjectStore()
 		},
@@ -449,11 +473,14 @@ export default {
 				cancellationPolicy: {
 					label: t('pipelinq', 'Cancellation policy'),
 					order: 15,
-					enumLabels: {
-						free: t('pipelinq', 'Free'),
-						'charge-deposit': t('pipelinq', 'Charge deposit'),
-						'always-charge': t('pipelinq', 'Always charge'),
-					},
+					enumLabels: Object.fromEntries(
+						Object.entries(CANCELLATION_POLICY_LABELS).map(
+							([value, label]) => [
+								value,
+								translate('pipelinq', label),
+							],
+						),
+					),
 				},
 
 				cancellationHoursBefore: {
@@ -502,6 +529,20 @@ export default {
 
 	methods: {
 		stepAmount,
+
+		/**
+		 * The label for a step's stored resource type (`staff` reads Staff).
+		 *
+		 * @param {string} value The stored resource type.
+		 * @return {string} The label, '' without a value.
+		 *
+		 * @spec openspec/changes/round4-readable-values-and-tour-titles/specs/appointment-booking/spec.md
+		 */
+		resourceTypeLabel(value) {
+			return enumLabel(RESOURCE_TYPE_LABELS, value, (text) =>
+				translate('pipelinq', text),
+			)
+		},
 
 		/**
 		 * The name of a step's product, '-' without one, the id when unknown.

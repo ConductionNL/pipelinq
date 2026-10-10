@@ -98,6 +98,12 @@
 						:label="t('pipelinq', 'Parameter {n}', { n: index + 1 })" />
 				</template>
 				<template v-else>
+					<SavedReplyPicker
+						:key="channel"
+						:channel="channel"
+						:language="language"
+						:values="placeholderValues"
+						@pick="body = $event" />
 					<NcTextArea
 						v-model="body"
 						:label="t('pipelinq', 'Message')"
@@ -129,6 +135,7 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcModal, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
+import SavedReplyPicker from '../components/SavedReplyPicker.vue'
 
 export default {
 	name: 'SendMessageModal',
@@ -138,6 +145,7 @@ export default {
 		NcSelect,
 		NcTextArea,
 		NcTextField,
+		SavedReplyPicker,
 	},
 
 	props: {
@@ -147,6 +155,24 @@ export default {
 		},
 
 		clientId: {
+			type: String,
+			default: '',
+		},
+
+		/** Open on this channel, e.g. `whatsapp` after Send again asked for a template. */
+		initialChannel: {
+			type: String,
+			default: '',
+		},
+
+		/** Placeholder values for a saved reply, e.g. `{'contact.name': 'Jan'}`. */
+		placeholderValues: {
+			type: Object,
+			default: () => ({}),
+		},
+
+		/** The contact's correspondence language; its saved replies sort first. */
+		language: {
 			type: String,
 			default: '',
 		},
@@ -165,7 +191,7 @@ export default {
 	emits: ['sent', 'close'],
 	data() {
 		return {
-			channel: null,
+			channel: this.initialChannel || null,
 			body: '',
 			templateId: null,
 			templateParams: [],

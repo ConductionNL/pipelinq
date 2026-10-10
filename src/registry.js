@@ -120,7 +120,14 @@ import ChannelDistributionSection from './components/rapportage/ChannelDistribut
 //     once and keeps the in-widget filtering (pipeline selector + win/loss
 //     date-range re-fetch) the legacy view had. ---
 import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
+// What the resident reads of a request ticket (portal-resident-view-preview). ---
+import ResidentViewSection from './components/ResidentViewSection.vue'
 import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
+// Customer satisfaction, closed loop (customer-satisfaction-closed-loop): the
+//     client page's satisfaction panel and the Operational dashboard's
+//     response-rate widget. ---
+import ClientSatisfactionSection from './components/satisfaction/ClientSatisfactionSection.vue'
+import SurveyResponseRateWidget from './components/satisfaction/SurveyResponseRateWidget.vue'
 // --- Service Hub — cards-collapse landing page (service-group-cards-collapse,
 //     ADR-044). Replaces the expandable Service nav group with a single
 //     top-level menu item linking to this card grid. ---
@@ -167,6 +174,9 @@ import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
+// Make a letter from a filinq template (work-letter-from-filinq-template): the
+//     header action on ClientDetail and TicketDetail opens this dialog. ---
+import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
 //     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
 //     avg response time) and the mTLS client-certificate expiry countdown. ---
@@ -926,6 +936,17 @@ const registry = {
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
+	ClientSatisfactionSection: {
+		kind: 'section',
+		component: ClientSatisfactionSection,
+		_note: 'Per-client satisfaction panel (customer-satisfaction-closed-loop): NPS, average rating, response count, 90-day trend and the three latest comments from GET /api/satisfaction/client/{clientId}, with an empty state for a client nobody has surveyed.',
+	},
+	SurveyResponseRateWidget: {
+		kind: 'widget',
+		component: SurveyResponseRateWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Satisfaction survey response rate for the Operational dashboard (customer-satisfaction-closed-loop): answered out of delivered, suppressed and failed counted beside the rate, one line per channel, from GET /api/satisfaction/response-rate.',
+	},
 	ClientBillingHandoffSection: {
 		kind: 'section',
 		component: ClientBillingHandoffSection,
@@ -960,12 +981,17 @@ const registry = {
 	CustomerReplySection: {
 		kind: 'section',
 		component: CustomerReplySection,
-		_note: "Answer the customer on a request or complaint (questions-about-a-citizen-dossier REQ-QCD-007, the minimal form of messaging-saved-replies-and-resend D5 without the saved-reply picker): portal replies oldest first, a text area bound to customerMessage, Save answer and Save and wait for a reply (status awaiting_customer). Writes through the object store, so portaliq's change rule pipelinq.question.answered hears the change.",
+		_note: "Answer the customer on a request or complaint (questions-about-a-citizen-dossier REQ-QCD-007, messaging-saved-replies-and-resend D5): portal replies oldest first, a text area bound to customerMessage, a saved reply picker (messaging-saved-replies-and-resend) and Send answer with a waiting-for-the-customer checkbox (status awaiting_customer, PqTicketAntwoord board). Writes through the object store, so portaliq's change rule pipelinq.question.answered hears the change.",
 	},
 	WooConversionSection: {
 		kind: 'section',
 		component: WooConversionSection,
 		_note: '"Convert to Woo request" on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-008, hydra woo-citizen-journey C5): self-fetches GET /api/tickets/{id}/woo-request/availability and renders only when dossiq\'s WooRequestIntake answers and the ticket is an unconverted question about a dossier.',
+	},
+	ResidentViewSection: {
+		kind: 'section',
+		component: ResidentViewSection,
+		_note: 'What the resident sees on a request ticket (portal-resident-view-preview): the resident portal panel and, with portaliq and a client, the organisation portal panel, both from GET /api/tickets/{id}/resident-view, plus the line that everything else stays internal. Renders nothing on complaint and interaction tickets, so it carries its own heading instead of a section title.',
 	},
 	RoutingSuggestionSection: {
 		kind: 'section',
@@ -1207,6 +1233,13 @@ const registry = {
 	//     dialog cannot express. Placement stays declarative; only the form
 	//     body is app-owned. CnAppRoot mounts these and forwards `close`, so
 	//     each dialog routes to its own detail page on success. ---
+	LetterFromTemplateModal: {
+		kind: 'modal',
+		component: LetterFromTemplateModal,
+		propsSchema: null,
+		_note: 'Make a letter. Target of the make-letter header action on ClientDetail and TicketDetail; reads the record id from the route.',
+	},
+
 	LeadCreateDialog: {
 		kind: 'modal',
 		component: LeadCreateDialog,

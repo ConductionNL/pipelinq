@@ -108,6 +108,9 @@ return [
         // Customer 360 consolidated summary (klantbeeld-360-activation) — cross-ticketType/status
         // aggregation the declarative layer can't express; per-object read guard on the client in the body.
         ['name' => 'customer360#summary', 'url' => '/api/customer-360/summary', 'verb' => 'GET'],
+        // Letters from a filinq template (work-letter-from-filinq-template).
+        ['name' => 'letter#templates', 'url' => '/api/letters/templates', 'verb' => 'GET'],
+        ['name' => 'letter#create', 'url' => '/api/clients/{id}/letters', 'verb' => 'POST'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
         // see openspec/changes/migrate-forms-to-forms-leaf.
 
@@ -535,6 +538,7 @@ return [
         // server-side send + composer preflight + consent recording +
         // admin-gated zero-cost provider connectivity test.
         ['name' => 'messaging#send',         'url' => '/api/messaging/send',                    'verb' => 'POST'],
+        ['name' => 'messaging#resend',       'url' => '/api/messaging/messages/{id}/resend',    'verb' => 'POST'],
         ['name' => 'messaging#preflight',    'url' => '/api/messaging/preflight/{contactId}',   'verb' => 'GET'],
         ['name' => 'messaging#consent',      'url' => '/api/messaging/consent',                 'verb' => 'POST'],
         ['name' => 'messaging#testProvider', 'url' => '/api/messaging/providers/{id}/test',     'verb' => 'POST'],
@@ -559,6 +563,8 @@ return [
         ['name' => 'ticketWooRequest#convert',        'url' => '/api/tickets/{id}/woo-request',              'verb' => 'POST'],
         // "Assign to me" on TicketDetail and the Queue (detail-pages-read-at-a-glance).
         ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
+        // What the resident reads of a ticket, for the preview on TicketDetail (portal-resident-view-preview).
+        ['name' => 'residentView#show',               'url' => '/api/tickets/{id}/resident-view',            'verb' => 'GET'],
 
         // Shillinq time-intake billing handoff — real emit side of the
         // time-approval-workflow delegation (time-billing-handoff-emit).
@@ -604,6 +610,8 @@ return [
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'template#index',   'url' => '/api/templates',          'verb' => 'GET'],
         ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
+        // The Blocks editor's preview of unsaved blocks (marketing-block-editor).
+        ['name' => 'template#render',  'url' => '/api/templates/render',   'verb' => 'POST'],
         ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
         ['name' => 'template#validate', 'url' => '/api/templates/{id}/validate', 'verb' => 'POST'],
         ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
