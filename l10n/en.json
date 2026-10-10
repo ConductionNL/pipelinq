@@ -7525,6 +7525,13 @@
         "Stock is kept in shillinq, which is not installed": "Stock is kept in shillinq, which is not installed",
         "No access to stock in shillinq": "No access to stock in shillinq",
         "{onHand} on hand, {reserved} reserved": "{onHand} on hand, {reserved} reserved",
-        "Open in shillinq": "Open in shillinq"
+        "Open in shillinq": "Open in shillinq",
+        "Callback requests": "Callback requests",
+        "Not picked up yet": "Not picked up yet",
+        "Assigned to you": "Assigned to you",
+        "Still to call back": "Still to call back",
+        "No action needed now": "No action needed now",
+        "Start a contact": "Start a contact",
+        "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.": "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact."
     }
 }

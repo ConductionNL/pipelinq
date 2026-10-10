@@ -7440,6 +7440,13 @@
         "Stock is kept in shillinq, which is not installed": "De voorraad staat in shillinq, en die is niet geïnstalleerd",
         "No access to stock in shillinq": "Geen toegang tot de voorraad in shillinq",
         "{onHand} on hand, {reserved} reserved": "{onHand} op voorraad, {reserved} gereserveerd",
-        "Open in shillinq": "Openen in shillinq"
+        "Open in shillinq": "Openen in shillinq",
+        "Callback requests": "Terugbelverzoeken",
+        "Not picked up yet": "Nog niet opgepakt",
+        "Assigned to you": "Aan jou toegewezen",
+        "Still to call back": "Nog terug te bellen",
+        "No action needed now": "Nu geen actie nodig",
+        "Start a contact": "Contact starten",
+        "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.": "Zoek de klant aan de lijn of aan de balie. Verzoeken, taken en eerder contact openen hieronder, met een formulier om dit contact vast te leggen."
     }
 }
