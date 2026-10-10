@@ -7431,7 +7431,7 @@ OC.L10N.register(
         "The block's id within the template.": "The block's id within the template.",
         "The blocks an email template is built from in Blocks mode, in order. Saving renders the HTML and plain text bodies from them.": "The blocks an email template is built from in Blocks mode, in order. Saving renders the HTML and plain text bodies from them.",
         "The kind of block.": "The kind of block.",
-        "{shown} of {total} tickets · customer contact": "{shown} of {total} tickets · customer contact",
+        "{shown} of {total} open tickets · customer contact · sorted by waiting time": "{shown} of {total} open tickets · customer contact · sorted by waiting time",
         "request": "request",
         "complaint": "complaint",
         "interaction": "interaction",

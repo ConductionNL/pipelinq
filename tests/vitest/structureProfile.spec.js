@@ -579,6 +579,9 @@ describe('the modules', () => {
 				seen.add(id)
 			}
 			for (const entry of module.menu) {
+				// An entry the module brings itself (a caption, or a link with
+				// its own label and route) is not in the full menu.
+				if (entry.label) continue
 				expect(known.has(entry.id), `${key}: ${entry.id}`).toBe(true)
 			}
 		}
@@ -597,18 +600,27 @@ describe('the modules', () => {
 					expect(shown.has(id), `${other}: ${id}`).toBe(false)
 				}
 			}
-			// After Relations, under the one caption.
+			// After Relations. Sales and Marketing carry their own caption (the
+			// board groups them as Verkoop and Marketing); the rest sit under
+			// the one Modules caption.
 			const order = section(menu, 'main').map((entry) => entry.id)
 			const at = (id) => order.indexOf(id)
-			expect(at('ModulesCaption')).toBeGreaterThan(at('OrganisationsMenu'))
+			const own = new Set([
+				...simpleFile.modules[key].ids,
+				...simpleFile.modules[key].menu.map((entry) => entry.id),
+			])
 			for (const entry of simpleFile.modules[key].menu) {
-				expect(at(entry.id), entry.id).toBeGreaterThan(at('ModulesCaption'))
+				// Products belongs to the products module, so it stays out
+				// of the menu while only Sales is on.
+				if (!shown.has(entry.id)) continue
+				expect(at(entry.id), entry.id).toBeGreaterThan(
+					at('OrganisationsMenu'),
+				)
 			}
-			// The eight daily entries do not move.
-			expect(order.slice(0, at('ModulesCaption'))).toEqual(
-				section(buildSimple().menu, 'main')
-					.map((entry) => entry.id)
-					.slice(0, 10),
+			// The daily entries do not move.
+			const daily = (ids) => ids.filter((id) => !own.has(id)).slice(0, 10)
+			expect(daily(order)).toEqual(
+				daily(section(buildSimple().menu, 'main').map((entry) => entry.id)),
 			)
 		},
 	)

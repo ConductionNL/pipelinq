@@ -7345,7 +7345,7 @@ OC.L10N.register(
         "The block's id within the template.": "Het id van het blok binnen de sjabloon.",
         "The blocks an email template is built from in Blocks mode, in order. Saving renders the HTML and plain text bodies from them.": "De blokken waaruit een mailsjabloon in blokmodus bestaat, op volgorde. Bij opslaan worden de HTML-tekst en de platte tekst eruit opgebouwd.",
         "The kind of block.": "Het soort blok.",
-        "{shown} of {total} tickets · customer contact": "{shown} van {total} tickets · klantcontact",
+        "{shown} of {total} open tickets · customer contact · sorted by waiting time": "{shown} van {total} open tickets · klantcontact · gesorteerd op wachttijd",
         "{shown} of {total} contacts": "{shown} van {total} contacten",
         "request": "Verzoek",
         "complaint": "Klacht",
