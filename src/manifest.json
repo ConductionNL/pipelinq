@@ -401,6 +401,12 @@
 			"schemaSlug": "contact",
 			"urlTemplate": "/apps/pipelinq/contacts/{uuid}",
 			"displayName": "Contact"
+		},
+		{
+			"registerSlug": "pipelinq",
+			"schemaSlug": "crmTask",
+			"urlTemplate": "/apps/pipelinq/tasks/{uuid}",
+			"displayName": "Task"
 		}
 	],
 	"menu": [
@@ -1981,7 +1987,7 @@
 					},
 					{
 						"id": "client-quick-contacts",
-						"type": "object-list",
+						"type": "ContactAwareObjectList",
 						"title": "Contacts",
 						"icon": "AccountGroup",
 						"content": {
@@ -3466,6 +3472,7 @@
 							],
 							"limit": 25,
 							"rowRoute": "ContactDetail",
+							"allowCreate": false,
 							"emptyText": "Nobody is linked to this deal yet. Open a contact and add this deal to their leads."
 						}
 					},
