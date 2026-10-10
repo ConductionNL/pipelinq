@@ -35,6 +35,16 @@ namespace OCA\Pipelinq\Service;
  */
 class ObjectEventHandlerService {
 	/**
+	 * The field that holds an object's name, per entity type. A type not
+	 * listed here keeps it in `title`.
+	 *
+	 * @var array<string, string>
+	 */
+	private const NAME_FIELDS = [
+		'contact' => 'name',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param SchemaMapService $schemaMapService The schema map service.
@@ -68,7 +78,7 @@ class ObjectEventHandlerService {
 
 		$this->dispatcher->dispatchCreated(
 			entityType: $entityType,
-			title: $this->stringifyTitle(title: ($data['title'] ?? '')),
+			title: $this->displayName(entityType: $entityType, data: $data),
 			objectId: $objectId,
 			assignee: $this->stringifyScalar(value: ($data['assignee'] ?? ''))
 		);
@@ -127,6 +137,25 @@ class ObjectEventHandlerService {
 			);
 		}
 	}//end handleUpdated()
+
+	/**
+	 * The name a person reads for an object, from the field its type keeps it in.
+	 *
+	 * A lead and a request carry a `title`; a contact has no title and keeps
+	 * its name in `name`. Reading `title` for every type handed a contact's
+	 * created event an empty name.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param array  $data       The object data.
+	 *
+	 * @return string The display name, or '' when the object has none.
+	 *
+	 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
+	 */
+	private function displayName(string $entityType, array $data): string {
+		$field = self::NAME_FIELDS[$entityType] ?? 'title';
+		return $this->stringifyTitle(title: ($data[$field] ?? ''));
+	}//end displayName()
 
 	/**
 	 * Coerce a (possibly translatable) title value to a single display string.

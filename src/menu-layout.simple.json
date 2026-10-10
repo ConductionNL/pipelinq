@@ -22,7 +22,10 @@
 		"SlaAttainment",
 		"Bookings",
 		"PointOfSale",
-		"SettingsIntegrationsCaption"
+		"SettingsIntegrationsCaption",
+		"MarketingGroup",
+		"Dashboard",
+		"Prospects"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",
@@ -79,7 +82,7 @@
 		{
 			"id": "KccWerkplek",
 			"label": "Dashboard",
-			"icon": "HomeOutline",
+			"icon": "ViewDashboardOutline",
 			"order": 10
 		},
 		{
@@ -319,7 +322,7 @@
 					"allowManualNext": true,
 					"title": "Sales and more",
 					"body": "Sales, marketing and the other modules open from here. Nothing to switch on now.",
-					"task": "Click Modules and more in the menu",
+					"task": "Open Advanced at the bottom of the menu, then click Modules and more",
 					"target": {
 						"kind": "nav-item",
 						"ref": "Modules"
@@ -332,6 +335,27 @@
 			]
 		}
 	],
+	"pageDefaults": {
+		"index": {
+			"showTitle": true,
+			"showTitleIcon": false,
+			"headerFilters": false,
+			"headerButtons": [
+				{
+					"action": "export",
+					"label": "Download"
+				},
+				{
+					"action": "actions-menu"
+				},
+				{
+					"action": "add",
+					"variant": "primary",
+					"icon": "Plus"
+				}
+			]
+		}
+	},
 	"modulesCaption": {
 		"id": "ModulesCaption",
 		"type": "caption",
@@ -342,28 +366,27 @@
 		"sales": {
 			"label": "Sales",
 			"ids": [
-				"Dashboard",
 				"Leads",
-				"Prospects",
 				"Pipeline"
 			],
 			"menu": [
 				{
-					"id": "Dashboard",
-					"label": "Sales overview",
-					"order": 110
+					"id": "SalesCaption",
+					"type": "caption",
+					"label": "Sales",
+					"order": 60
 				},
 				{
 					"id": "Leads",
-					"order": 111
-				},
-				{
-					"id": "Prospects",
-					"order": 112
+					"order": 61
 				},
 				{
 					"id": "Pipeline",
-					"order": 113
+					"order": 62
+				},
+				{
+					"id": "Products",
+					"order": 63
 				}
 			]
 		},
@@ -388,8 +411,24 @@
 			],
 			"menu": [
 				{
-					"id": "MarketingGroup",
-					"order": 120
+					"id": "MarketingCaption",
+					"type": "caption",
+					"label": "Marketing",
+					"order": 80
+				},
+				{
+					"id": "CampaignsMenu",
+					"label": "Campaigns",
+					"icon": "BullhornOutline",
+					"route": "Campaigns",
+					"order": 81
+				},
+				{
+					"id": "BlastsMenu",
+					"label": "Blasts",
+					"icon": "Email",
+					"route": "Blasts",
+					"order": 82
 				}
 			]
 		},
@@ -425,12 +464,7 @@
 			"ids": [
 				"Products"
 			],
-			"menu": [
-				{
-					"id": "Products",
-					"order": 140
-				}
-			]
+			"menu": []
 		},
 		"contracts": {
 			"label": "Contracts",
@@ -1172,6 +1206,7 @@
 						"title": "New",
 						"content": {
 							"label": "New",
+							"caption": "Not picked up yet",
 							"icon": "TrayFull",
 							"format": {
 								"style": "decimal",
@@ -1200,6 +1235,7 @@
 						"title": "Waiting for me",
 						"content": {
 							"label": "Waiting for me",
+							"caption": "Assigned to you",
 							"icon": "ClipboardAccountOutline",
 							"format": {
 								"style": "decimal",
@@ -1228,9 +1264,10 @@
 					{
 						"id": "simple-callbacks",
 						"type": "stat",
-						"title": "Callbacks",
+						"title": "Callback requests",
 						"content": {
-							"label": "Callbacks",
+							"label": "Callback requests",
+							"caption": "Still to call back",
 							"icon": "Phone",
 							"format": {
 								"style": "decimal",
@@ -1263,6 +1300,7 @@
 						"title": "Waiting for customer",
 						"content": {
 							"label": "Waiting for customer",
+							"caption": "No action needed now",
 							"icon": "AccountClock",
 							"format": {
 								"style": "decimal",
@@ -1371,7 +1409,7 @@
 						"id": "simple-callback-list",
 						"type": "object-list",
 						"hideRefresh": true,
-						"title": "Callbacks",
+						"title": "Callback requests",
 						"content": {
 							"register": "pipelinq",
 							"schema": "crmTask",
@@ -1446,24 +1484,53 @@
 			},
 			"slots": {
 				"widget-simple-availability": "WerkplekHeaderActions",
-				"widget-simple-client-in-focus": "WerkplekClientSelect"
+				"widget-simple-client-in-focus": "WerkplekContactStart"
 			}
 		},
 		{
 			"id": "Tickets",
 			"_note": "The tickets list in the simple structure (openspec/changes/simple-contact-dashboard). No view is dropped: the four the page had keep their filter and gain a count, three join them, five show and the rest sit behind the overflow chip. `Waiting for me`, `New` and `Waiting for customer` use the same filters as the dashboard stats that link here. THE AVATAR IS THE HANDLER'S: `assignee` holds a Nextcloud user id. The design draws the customer's initials, and a ticket holds its client as a reference without a name. THE COLOUR IS ON THE DEADLINE: late or due today is red (`lte 0`), due within two days is amber. How long a ticket has waited cannot be coloured, a date rule counts days until a date and a wait lies in the past.",
 			"config": {
-				"quickFilterMaxVisible": 5,
+				"quickFilterMaxVisible": 6,
 				"columns": [
-					"title",
+					{
+						"key": "title",
+						"label": "Subject"
+					},
+					{
+						"key": "client",
+						"label": "Client",
+						"labelField": "name"
+					},
 					{
 						"key": "ticketType",
-						"label": "Type"
+						"label": "Type",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"request": "primary",
+								"complaint": "error"
+							}
+						}
 					},
 					{
 						"key": "status",
 						"label": "Status",
-						"widget": "statusBadge"
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"new": "primary",
+								"in_progress": "purple",
+								"awaiting_customer": "warning",
+								"resolved": "success",
+								"converted": "teal"
+							}
+						}
+					},
+					"channel",
+					{
+						"key": "occurredAt",
+						"label": "Waiting"
 					},
 					{
 						"key": "assignee",
@@ -1472,36 +1539,31 @@
 						"widgetProps": {
 							"user": true
 						}
-					},
-					"channel",
+					}
+				],
+				"headerButtons": [
 					{
-						"key": "slaDeadline",
-						"label": "Deadline",
-						"widget": "date",
-						"widgetProps": {
-							"variantWhen": [
-								{
-									"op": "lte",
-									"value": 0,
-									"variant": "error"
-								},
-								{
-									"op": "lte",
-									"value": 2,
-									"variant": "warning"
-								}
-							]
-						}
+						"action": "export",
+						"label": "Download"
 					},
-					"occurredAt"
-				]
+					{
+						"action": "actions-menu"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New request"
+					}
+				],
+				"countText": "{shown} of {total} open tickets · customer contact · sorted by waiting time"
 			},
 			"configPatch": {
 				"quickFilters": {
 					"All": {
 						"showCount": true
 					},
-					"Tickets": {
+					"Requests": {
 						"showCount": true
 					},
 					"Complaints": {
@@ -1544,9 +1606,286 @@
 					"All",
 					"Waiting for me",
 					"New",
-					"Tickets",
+					"Waiting for customer",
+					"Requests",
 					"Complaints"
 				]
+			},
+			"title": "Questions and reports"
+		},
+		{
+			"id": "Leads",
+			"config": {
+				"columns": [
+					{
+						"key": "title",
+						"label": "Lead",
+						"secondary": "{source}"
+					},
+					{
+						"key": "stage",
+						"label": "Stage"
+					},
+					{
+						"key": "value",
+						"label": "Value",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 0
+						}
+					},
+					{
+						"key": "qualificationScore",
+						"label": "Win chance",
+						"widget": "lead-win-chance",
+						"sortable": true
+					},
+					{
+						"key": "expectedCloseDate",
+						"label": "Expected close",
+						"widget": "lead-close-date",
+						"sortable": true
+					},
+					{
+						"key": "priority",
+						"label": "Priority",
+						"formatter": "enumText"
+					},
+					{
+						"key": "assignee",
+						"label": "Owner",
+						"widget": "avatar",
+						"widgetProps": {
+							"user": true
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "Contracts",
+			"config": {
+				"addLabel": "New contract",
+				"columns": [
+					{
+						"key": "contractNumber",
+						"label": "Contract number"
+					},
+					{
+						"key": "title",
+						"label": "Title"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "billingInterval",
+						"label": "Billing interval",
+						"formatter": "enumText"
+					},
+					{
+						"key": "valuePerInterval",
+						"label": "Value per interval",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 0
+						}
+					},
+					{
+						"key": "endDate",
+						"label": "End date"
+					}
+				]
+			}
+		},
+		{
+			"id": "Blasts",
+			"config": {
+				"addLabel": "New newsletter",
+				"columns": [
+					{
+						"key": "name",
+						"label": "Newsletter"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "scheduledFor",
+						"label": "Scheduled for"
+					},
+					{
+						"key": "sentAt",
+						"label": "Sent on"
+					},
+					{
+						"key": "channel",
+						"label": "Channel",
+						"formatter": "enumText"
+					}
+				]
+			}
+		},
+		{
+			"id": "Campaigns",
+			"config": {
+				"columns": [
+					{
+						"key": "name",
+						"label": "Name"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "utmCampaign",
+						"label": "UTM campaign"
+					},
+					{
+						"key": "startsAt",
+						"label": "Start date"
+					},
+					{
+						"key": "endsAt",
+						"label": "End date"
+					}
+				]
+			}
+		},
+		{
+			"id": "Articles",
+			"config": {
+				"addLabel": "New article",
+				"columns": [
+					{
+						"key": "title",
+						"label": "Title"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "language",
+						"label": "Language",
+						"formatter": "enumText"
+					},
+					{
+						"key": "publishedAt",
+						"label": "Published on"
+					}
+				]
+			}
+		},
+		{
+			"id": "PosTransactions",
+			"title": "Transactions",
+			"config": {
+				"addLabel": "New transaction",
+				"columns": [
+					{
+						"key": "reference",
+						"label": "Reference"
+					},
+					{
+						"key": "cashier",
+						"label": "Cashier",
+						"formatter": "userDisplayName"
+					},
+					{
+						"key": "terminalId",
+						"label": "Till"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "priceMode",
+						"label": "Price display",
+						"formatter": "enumText"
+					},
+					{
+						"key": "total",
+						"label": "Total",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 2
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "CashShifts",
+			"config": {
+				"columns": [
+					{
+						"key": "reference",
+						"label": "Shift"
+					},
+					{
+						"key": "operator",
+						"label": "Cashier",
+						"formatter": "userDisplayName"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "floatAt",
+						"label": "Opened"
+					},
+					{
+						"key": "closedAt",
+						"label": "Closed"
+					},
+					{
+						"key": "floatAmount",
+						"label": "Opening balance",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 2
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "Contacts",
+			"_note": "The contacts list as its board draws it (PqContacten). Not drawn yet because no field or relation backs it: the chips With open deals and Not in Contacts, the Klant column and the Contacten sync column. The Nextcloud Contacten import dialog (src/dialogs/ContactImportDialog.vue) is not wired to any page yet.",
+			"config": {
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					}
+				],
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New contact"
+					}
+				],
+				"countText": "{shown} of {total} contacts"
 			}
 		}
 	]

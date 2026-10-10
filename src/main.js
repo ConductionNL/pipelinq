@@ -5,7 +5,6 @@ import {
 	buildManifest,
 	CnPageRenderer,
 	defaultPageTypes,
-	mergeManifestDelta,
 	registerBuiltinDashboardWidgets,
 	registerIcons,
 	registerTranslations,
@@ -23,7 +22,6 @@ import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations
 // runtimeChunk, so the barrel's 3-hop re-exports of these functions resolve to
 // `undefined` across the chunk boundary (components, used directly, are fine).
 import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
-import axios from '@nextcloud/axios'
 import { getCapabilities } from '@nextcloud/capabilities'
 import { loadState } from '@nextcloud/initial-state'
 import {
@@ -43,8 +41,10 @@ import simpleMenuLayout from './menu-layout.simple.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
 import { installPageRefreshOnCreate } from './services/pageRefreshOnCreate.js'
+import { loadPersistedOverrides } from './services/persistedOverrides.js'
 import { contactWriteBackPlugin } from './store/plugins/contactWriteBack.js'
 import { initializeStores, registerObjectTypes } from './store/store.js'
+import { translateIndexPageLabels } from './utils/indexPageLabels.js'
 import {
 	applyHomePage,
 	applyMenuModules,
@@ -193,6 +193,8 @@ const mergedManifest = seedVatClassLabels(
 	loadState('pipelinq', 'config', {}).vat_rates,
 	(text) => t('pipelinq', text),
 )
+// The index pages' chips, count line and header buttons, in the same way.
+translateIndexPageLabels(mergedManifest, (text) => t('pipelinq', text))
 
 /**
  * Build the vue-router config from the manifest. Each manifest page
@@ -235,59 +237,6 @@ function routesFromManifest(manifest) {
 	// its v4 replacement.
 	routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
 	return routes
-}
-
-/**
- * Load the persisted buildiq app-override delta and merge it over the
- * build-time manifest (ADR-041 round-trip: App.vue's persistManifestDelta PUTs
- * edits to this store; this loader brings them back at boot). The GET returns
- * the LAYERED delta (shared admin delta ⊕ the calling user's own delta), or
- * `{}` when no override exists. Fail-soft: any error, buildiq not
- * installed, endpoint unreachable, malformed delta — falls back to the
- * build-time manifest, so an override can never prevent the app from booting.
- *
- * @param {object} manifest The build-time merged manifest.
- * @return {Promise<object>} The manifest with persisted overrides applied.
- *
- * @spec exclude Bug fix closing the ADR-041 persist/load round-trip; the
- *               delta contract is owned by buildiq's
- *               layered-versioned-app-deltas specs.
- */
-async function loadPersistedOverrides(manifest) {
-	try {
-		const { data } = await axios.get(
-			generateUrl('/apps/buildiq/api/app-overrides/pipelinq'),
-			{ timeout: 8000 },
-		)
-		if (
-			data !== null
-			&& typeof data === 'object'
-			&& !Array.isArray(data)
-			&& Object.keys(data).length > 0
-		) {
-			const { manifest: merged, orphanedDeltaPaths } = mergeManifestDelta(
-				manifest,
-				data,
-			)
-			if (orphanedDeltaPaths.length > 0) {
-				console.warn(
-					'[pipelinq] Manifest override has orphaned delta paths (base changed since the edit):',
-					orphanedDeltaPaths,
-				)
-			}
-			return merged
-		}
-	} catch (error) {
-		// A 404 is the ordinary "buildiq is not installed" answer, not a fault —
-		// warning on it puts an AxiosError in every console on every boot.
-		if (error?.response?.status !== 404) {
-			console.warn(
-				'[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.',
-				error,
-			)
-		}
-	}
-	return manifest
 }
 
 tryLoadTranslations()

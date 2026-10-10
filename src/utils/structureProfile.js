@@ -84,14 +84,20 @@ export function resolveStructureProfile(raw) {
 /**
  * Apply one page overlay to one built page, without touching the original.
  *
- * @param {object} page The built page.
- * @param {object} overlay `{ id, config?, configPatch?, configAppend?, configOrder? }`.
+ * @param {object} pageIn The built page.
+ * @param {object} overlay `{ id, title?, config?, configPatch?, configAppend?, configOrder? }`.
  *   The order is fixed: replace keys, patch items by name, append, then order.
  * @return {object} A new page object.
  *
  * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-102
  */
-export function applyPageOverlay(page, overlay) {
+export function applyPageOverlay(pageIn, overlay) {
+	// `title` replaces the page's title (the English source text; the library
+	// translates it), so a page can read as its board does without a new page.
+	const page =
+		typeof overlay.title === 'string' && overlay.title !== ''
+			? { ...pageIn, title: overlay.title }
+			: pageIn
 	const config = { ...(page.config || {}), ...(overlay.config || {}) }
 	const patch = overlay.configPatch || {}
 	for (const key of Object.keys(patch)) {
