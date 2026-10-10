@@ -22,7 +22,8 @@
 		"SlaAttainment",
 		"Bookings",
 		"PointOfSale",
-		"SettingsIntegrationsCaption"
+		"SettingsIntegrationsCaption",
+		"MarketingGroup"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",
@@ -370,21 +371,22 @@
 			],
 			"menu": [
 				{
-					"id": "Dashboard",
-					"label": "Sales overview",
-					"order": 110
+					"id": "SalesCaption",
+					"type": "caption",
+					"label": "Sales",
+					"order": 60
 				},
 				{
 					"id": "Leads",
-					"order": 111
-				},
-				{
-					"id": "Prospects",
-					"order": 112
+					"order": 61
 				},
 				{
 					"id": "Pipeline",
-					"order": 113
+					"order": 62
+				},
+				{
+					"id": "Products",
+					"order": 63
 				}
 			]
 		},
@@ -409,8 +411,24 @@
 			],
 			"menu": [
 				{
-					"id": "MarketingGroup",
-					"order": 120
+					"id": "MarketingCaption",
+					"type": "caption",
+					"label": "Marketing",
+					"order": 80
+				},
+				{
+					"id": "Campaigns",
+					"label": "Campaigns",
+					"icon": "BullhornOutline",
+					"route": "Campaigns",
+					"order": 81
+				},
+				{
+					"id": "Blasts",
+					"label": "Blasts",
+					"icon": "Email",
+					"route": "Blasts",
+					"order": 82
 				}
 			]
 		},
@@ -446,12 +464,7 @@
 			"ids": [
 				"Products"
 			],
-			"menu": [
-				{
-					"id": "Products",
-					"order": 140
-				}
-			]
+			"menu": []
 		},
 		"contracts": {
 			"label": "Contracts",
@@ -1518,7 +1531,7 @@
 						"label": "New request"
 					}
 				],
-				"countText": "{shown} of {total} tickets · customer contact"
+				"countText": "{shown} of {total} open tickets · customer contact · sorted by waiting time"
 			},
 			"configPatch": {
 				"quickFilters": {
