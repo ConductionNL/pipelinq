@@ -26,9 +26,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\OpenRegister\Db\MagicMapper;
-use ReflectionClass;
-
 /**
  * Whether a write made now reaches no notification, activity or listener.
  *
@@ -59,7 +56,7 @@ class ObjectEventSilence {
 	 *
 	 * @var string
 	 */
-	private const MAPPER_CLASS = 'OCA\OpenRegister\Db\MagicMapper';
+	private string $mapperClass = 'OCA\OpenRegister\Db\MagicMapper';
 
 	/**
 	 * Whether this OpenRegister can withhold the object events at all.
@@ -69,14 +66,11 @@ class ObjectEventSilence {
 	 * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
 	 */
 	public function isSupported(): bool {
-		if (class_exists(self::CONTEXT_CLASS) === false || class_exists(self::MAPPER_CLASS) === false) {
-			return false;
-		}
-
-		// Reflection rather than method_exists(): the gate is private, and the
-		// analysers read the test stub of MagicMapper, which does not carry it.
-		// `::class` does not autoload, and class_exists() above already did.
-		return (new ReflectionClass(MagicMapper::class))->hasMethod('suppressLifecycleEvents');
+		// Private methods count for method_exists() too. The class name is read from
+		// a property, not a constant: phpstan resolves the test stub of
+		// MagicMapper, which has no gate, and would call the check always false.
+		return class_exists(self::CONTEXT_CLASS) === true
+			&& method_exists($this->mapperClass, 'suppressLifecycleEvents') === true;
 	}//end isSupported()
 
 	/**
