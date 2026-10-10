@@ -68,6 +68,7 @@ import { reactive } from 'vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
+import LeadWinChanceCell from './views/leads/cells/LeadWinChanceCell.vue'
 import { createAppFormatters } from './services/cellFormatters.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
@@ -209,6 +210,7 @@ export default {
 				'lead-close-date': LeadCloseDateCell,
 				'lead-probability': LeadProbabilityCell,
 				'lead-score': LeadScoreCell,
+				'lead-win-chance': LeadWinChanceCell,
 			}
 		},
 

@@ -45,6 +45,7 @@ import registry from './registry.js'
 import { installPageRefreshOnCreate } from './services/pageRefreshOnCreate.js'
 import { contactWriteBackPlugin } from './store/plugins/contactWriteBack.js'
 import { initializeStores, registerObjectTypes } from './store/store.js'
+import { translateIndexPageLabels } from './utils/indexPageLabels.js'
 import {
 	applyHomePage,
 	applyMenuModules,
@@ -193,6 +194,8 @@ const mergedManifest = seedVatClassLabels(
 	loadState('pipelinq', 'config', {}).vat_rates,
 	(text) => t('pipelinq', text),
 )
+// The index pages' chips, count line and header buttons, in the same way.
+translateIndexPageLabels(mergedManifest, (text) => t('pipelinq', text))
 
 /**
  * Build the vue-router config from the manifest. Each manifest page

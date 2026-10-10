@@ -162,20 +162,27 @@ describe('the full profile', () => {
 		expect(count('integrations')).toBe(0)
 	})
 
-	it('holds the header controls back on index pages only, and the simple profile keeps the library default', () => {
+	it('holds the header controls back on index pages only, and the simple profile draws the board header', () => {
 		expect(fullFile.pageDefaults).toEqual({ index: { headerFilters: false } })
-		expect(simpleFile.pageDefaults).toBeUndefined()
+		expect(simpleFile.pageDefaults).toEqual({
+			index: {
+				showTitle: true,
+				showTitleIcon: false,
+				headerFilters: false,
+				headerButtons: [
+					{ action: 'export', label: 'Download' },
+					{ action: 'actions-menu' },
+					{ action: 'add', variant: 'primary', icon: 'Plus' },
+				],
+			},
+		})
 		const simpleIndex = buildSimple().pages.filter(
 			(page) => page.type === 'index',
 		)
 		expect(simpleIndex.length).toBeGreaterThan(0)
 		for (const page of simpleIndex) {
-			const own = buildManifest(manifest(), fragments, {}).pages.find(
-				(item) => item.id === page.id,
-			)
-			expect(page.config?.headerFilters, page.id).toBe(
-				own?.config?.headerFilters,
-			)
+			expect(page.config?.headerFilters, page.id).toBe(false)
+			expect(page.config?.showTitle, page.id).toBe(true)
 		}
 		const unchanged = { pages: [{ id: 'x', type: 'detail', config: {} }] }
 		expect(applyPageDefaults(unchanged, undefined)).toBe(unchanged)
