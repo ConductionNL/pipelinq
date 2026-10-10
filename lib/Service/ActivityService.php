@@ -45,6 +45,17 @@ use Psr\Log\LoggerInterface;
  */
 class ActivityService {
 	/**
+	 * The "created" activity subject per entity type. A type not listed here
+	 * has no pipelinq created activity.
+	 *
+	 * @var array<string, string>
+	 */
+	private const CREATED_SUBJECTS = [
+		'lead' => 'lead_created',
+		'request' => 'request_created',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IManager $activityManager The activity manager.
@@ -61,6 +72,11 @@ class ActivityService {
 	/**
 	 * Publish a created event for a lead or request.
 	 *
+	 * Only the entity types in {@see self::CREATED_SUBJECTS} have a pipelinq
+	 * "created" activity. Any other type publishes nothing: a contact used to
+	 * fall through to `lead_created` and read "Lead created: " with an empty
+	 * name, while OpenRegister already writes "Contact <name> created" for it.
+	 *
 	 * @param string $entityType The entity type.
 	 * @param string $title The entity title.
 	 * @param string $objectId The object ID.
@@ -69,6 +85,7 @@ class ActivityService {
 	 * @return void
 	 *
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
+	 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
 	 */
 	public function publishCreated(
 		string $entityType,
@@ -76,9 +93,9 @@ class ActivityService {
 		string $objectId,
 		?string $affectedUser = null,
 	): void {
-		$type = 'lead_created';
-		if ($entityType === 'request') {
-			$type = 'request_created';
+		$type = self::CREATED_SUBJECTS[$entityType] ?? null;
+		if ($type === null) {
+			return;
 		}
 
 		$this->publish(

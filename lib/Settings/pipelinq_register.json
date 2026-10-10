@@ -276,7 +276,8 @@
           },
           "verifiedBSN": {
             "type": "boolean",
-            "description": "True na succesvolle BRP-lookup; false na retentie-expiratie of art. 17 verwijdering. Beheerd door BrpController/BrpRetentionJob: NIET handmatig setbaar via UI.",
+            "description": "On when the BRP (Personal Records Database) confirmed this person's BSN. You cannot change it yourself.",
+            "x-notes": "True after a successful BRP lookup; false after the retention period expires or an art. 17 erasure. Managed by BrpController/BrpRetentionJob: not settable by hand in the UI.",
             "default": false,
             "title": "BSN verified",
             "facetable": true
@@ -290,7 +291,8 @@
           },
           "secrecy": {
             "type": "boolean",
-            "description": "Afgeleid uit OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). Wanneer true: adresgegevens worden afgeschermd in standaard-views. Alleen via expliciete \"toon adres onder verantwoording\" zichtbaar (met extra audit-entry).",
+            "description": "On when this person asked the BRP to keep their address secret. Their address is then hidden in lists and pages.",
+            "x-notes": "Derived from OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). When true, address data is hidden in the standard views. Visible only through an explicit \"show address under accountability\" action, which writes an extra audit entry.",
             "default": false,
             "title": "Confidentiality",
             "facetable": true

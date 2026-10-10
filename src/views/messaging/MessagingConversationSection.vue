@@ -55,7 +55,7 @@
 				:description="
 					t(
 						'pipelinq',
-						'No contacts linked to this client yet — add a contact to enable messaging.',
+						'No contacts are linked to this client yet. Add a contact to send messages.',
 					)
 				" />
 		</div>
@@ -166,9 +166,11 @@
 
 <script>
 import axios from '@nextcloud/axios'
+import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import SendMessageModal from '../../modals/SendMessageModal.vue'
+import { PAGE_REFRESH_CHANNEL } from '../../services/pageRefreshOnCreate.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const EMPTY_PREFLIGHT = {
@@ -353,6 +355,7 @@ export default {
 	 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 	 */
 	async mounted() {
+		subscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
 		if (this.entityType === 'contact') {
 			await this.resolveContactClient()
 			await Promise.all([
@@ -365,7 +368,26 @@ export default {
 		}
 	},
 
+	beforeUnmount() {
+		unsubscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
+	},
+
 	methods: {
+		/**
+		 * A page refresh, sent too when a contact is created on the page:
+		 * on a client, fetch its contacts again so a contact added on the
+		 * Contacts tab shows here without a reload (round-5 cloud check,
+		 * item 2).
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+		 */
+		async onPageRefresh() {
+			if (this.entityType === 'client') {
+				await this.fetchLinkedContacts()
+			}
+		},
+
 		/**
 		 * @param {string} status The conversation status.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
@@ -451,7 +473,10 @@ export default {
 		},
 
 		/**
+		 * Fetch the client's contacts. A refetch keeps the selected contact when it is still linked.
+		 *
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async fetchLinkedContacts() {
 			this.loadingContacts = true
@@ -462,7 +487,10 @@ export default {
 						client: this.entityId,
 						_limit: 100,
 					})) || []
-				if (this.linkedContacts.length > 0) {
+				const stillLinked = this.linkedContacts.some(
+					(c) => c.id === this.selectedContactId,
+				)
+				if (this.linkedContacts.length > 0 && !stillLinked) {
 					this.selectedContactId = this.linkedContacts[0].id
 				}
 			} catch {
