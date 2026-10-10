@@ -95,6 +95,24 @@ class ContactMomentDraftSchemaTest extends TestCase {
 	}//end testTheQuickLogDraftValidates()
 
 	/**
+	 * The demo drafts in the mock register validate, and are older than seven
+	 * days so the quick log never offers them and removes them when it opens.
+	 *
+	 * @return void
+	 */
+	public function testTheDemoDraftsValidateAndAreExpired(): void {
+		$mock = json_decode((string)file_get_contents(dirname(__DIR__, 3) . '/lib/Settings/pipelinq_mock_register.json'), true);
+		$drafts = array_values(array_filter($mock['components']['objects'], static fn (array $object): bool => ($object['@self']['schema'] ?? '') === 'contactMomentDraft'));
+
+		$this->assertCount(3, $drafts);
+		foreach ($drafts as $draft) {
+			unset($draft['@self']);
+			$this->assertTrue($this->validate(payload: $draft)->isValid());
+			$this->assertLessThan(strtotime('2026-10-01T00:00:00Z'), strtotime($draft['updatedAt']));
+		}
+	}//end testTheDemoDraftsValidateAndAreExpired()
+
+	/**
 	 * Control: a null reference is refused, which is why the quick log leaves
 	 * an empty client or request out instead of writing null.
 	 *

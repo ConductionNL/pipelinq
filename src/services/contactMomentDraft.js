@@ -225,6 +225,7 @@ export class DraftAutosaver {
 	 *
 	 * @param {object|null} payload The draft to write, or null to remove it.
 	 * @return {void}
+	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	schedule(payload) {
 		if (this.stopped) {
@@ -243,6 +244,7 @@ export class DraftAutosaver {
 	 *
 	 * @param {{keepalive: boolean}} [options] Send with keepalive, for a closing tab.
 	 * @return {Promise<void>} Resolves when the write is done.
+	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	async flush({ keepalive = false } = {}) {
 		this.clearTimer()
@@ -277,6 +279,7 @@ export class DraftAutosaver {
 	 * Drop anything pending and write nothing more.
 	 *
 	 * @return {void}
+	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	stop() {
 		this.stopped = true
@@ -288,6 +291,7 @@ export class DraftAutosaver {
 	 * Resume after `stop()`, for a save that failed and keeps the form open.
 	 *
 	 * @return {void}
+	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	resume() {
 		this.stopped = false
@@ -295,6 +299,7 @@ export class DraftAutosaver {
 
 	/**
 	 * @return {void}
+	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	clearTimer() {
 		if (this.timer !== null) {
