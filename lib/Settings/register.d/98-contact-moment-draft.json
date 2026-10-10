@@ -1,0 +1,78 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Contact moment drafts (contact-moments-keep-draft, D1). The contact moment quick log keeps what an agent types as a draft while they type, so a closed tab or an ended session does not lose it. Not a ticket status: no ticket list, queue, SLA or report can count a draft. Private by default (OpenRegister scope private): only the agent who started it, and an administrator, can read, change or remove it. No x-openregister-archival block: OpenRegister makes every schema that declares one refuse user deletes (SCHEMA_ARCHIVAL_IMMUTABLE), and a draft must be removed the moment its contact moment is saved or the agent discards it. The seven day limit is applied by the quick log, which never offers an older draft and removes the agent's expired drafts when it opens. No controller: the quick log reads and writes these through OpenRegister (ADR-022)."
+  },
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "contactMomentDraft"
+        ]
+      }
+    },
+    "schemas": {
+      "contactMomentDraft": {
+        "slug": "contactMomentDraft",
+        "title": "Contact moment draft",
+        "icon": "ContentSaveEditOutline",
+        "version": "1.0.0",
+        "summary": "A contact moment an agent is still typing, kept so it survives a closed tab",
+        "description": "What an agent typed in the contact moment quick log, kept for that agent only until they save the contact moment or throw the draft away.",
+        "required": [
+          "author",
+          "form",
+          "updatedAt"
+        ],
+        "authorization": {
+          "scope": "private",
+          "create": [
+            "authenticated"
+          ],
+          "read": [
+            "authenticated"
+          ],
+          "update": [
+            "authenticated"
+          ],
+          "delete": [
+            "authenticated"
+          ]
+        },
+        "properties": {
+          "author": {
+            "type": "string",
+            "title": "Agent",
+            "description": "The agent who typed the draft.",
+            "maxLength": 255
+          },
+          "client": {
+            "type": "string",
+            "title": "Client",
+            "description": "The client the quick log was opened on.",
+            "maxLength": 255
+          },
+          "request": {
+            "type": "string",
+            "title": "Request",
+            "description": "The request the quick log was opened on.",
+            "maxLength": 255
+          },
+          "form": {
+            "type": "object",
+            "title": "Form",
+            "description": "The quick log fields as they were typed.",
+            "x-notes": "Keys mirror ContactmomentQuickLog's form (title, channel, outcome, client, contact, parentTicket, description, duration, notes); empty fields are left out."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last changed",
+            "description": "When the agent last typed in the draft."
+          }
+        }
+      }
+    }
+  }
+}

@@ -7377,7 +7377,20 @@ OC.L10N.register(
         "Stock is kept in shillinq, which is not installed": "De voorraad staat in shillinq, en die is niet geïnstalleerd",
         "No access to stock in shillinq": "Geen toegang tot de voorraad in shillinq",
         "{onHand} on hand, {reserved} reserved": "{onHand} op voorraad, {reserved} gereserveerd",
-        "Open in shillinq": "Openen in shillinq"
+        "Open in shillinq": "Openen in shillinq",
+        "You have an unsaved contact moment from {time}.": "Je hebt een contactmoment van {time} dat nog niet is opgeslagen.",
+        "Restore draft": "Concept terugzetten",
+        "Discard": "Weggooien",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Je sessie is verlopen. Log opnieuw in op een nieuw tabblad en klik daarna hier op Opslaan.",
+        "Contact moment draft": "Concept-contactmoment",
+        "Contact moments an agent is still typing, kept for that agent only": "Contactmomenten die een medewerker nog aan het typen is, alleen voor die medewerker bewaard",
+        "What an agent typed in the contact moment quick log, kept for that agent only until they save the contact moment or throw the draft away.": "Wat een medewerker in het snelle contactmomentformulier typte, alleen voor die medewerker bewaard tot het contactmoment is opgeslagen of het concept is weggegooid.",
+        "The agent who typed the draft.": "De medewerker die het concept typte.",
+        "The client the quick log was opened on.": "De klant waarop het formulier werd geopend.",
+        "The request the quick log was opened on.": "Het verzoek waarop het formulier werd geopend.",
+        "The quick log fields as they were typed.": "De velden van het formulier zoals ze getypt waren.",
+        "Last changed": "Laatst gewijzigd",
+        "When the agent last typed in the draft.": "Wanneer de medewerker voor het laatst in het concept typte."
     },
     "nplurals=2; plural=(n != 1);"
 )

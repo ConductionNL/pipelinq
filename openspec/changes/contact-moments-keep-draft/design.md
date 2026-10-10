@@ -21,8 +21,16 @@
 `contactMomentDraft` holds `author` (uid), `client`, `request`, `form` (the
 quick log fields as an object) and `updatedAt`. It is not a `ticket` status, so
 no ticket list, Queue, SLA or report can ever count a draft. Its authorization
-block allows read, update and delete to the author only. Its
-`x-openregister-archival` block destroys it seven days after `updatedAt`.
+block is `scope: private`, so read, update and delete are open to the author
+(the object's owner) and to administrators only.
+
+**Amended while building (10 Oct).** No `x-openregister-archival` block.
+OpenRegister makes every schema that declares one refuse user deletes (403
+`SCHEMA_ARCHIVAL_IMMUTABLE`), which would make D3's delete on save, and
+Discard, impossible. The quick log applies the seven days instead: it never
+offers a draft whose `updatedAt` is older than seven days, and removes the
+author's expired drafts each time it opens. A server-side removal for drafts
+nobody opens again is Q-pipelinq-3.
 
 ### D2. Autosave on quiet and on leaving
 
@@ -42,7 +50,9 @@ draft.
 
 When the save or an autosave answers 401, the form keeps its data, shows "Your
 session has ended. Log in again in a new tab, then press Save here", and retries
-on the next Save. The server draft from before the expiry is still there if the
+on the next Save. A 412 counts too: after the agent logs in again in another
+tab, this tab's request token belongs to the old session. The next Save first
+fetches a fresh token from `/csrftoken`, then saves. The server draft from before the expiry is still there if the
 tab closes.
 
 ## Risks

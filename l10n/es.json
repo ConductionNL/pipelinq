@@ -2334,7 +2334,20 @@
         "Manufacturer": "Fabricante",
         "Unit of measure": "Unidad de medida",
         "Weight": "Peso",
-        "Dimensions": "Dimensiones"
+        "Dimensions": "Dimensiones",
+        "You have an unsaved contact moment from {time}.": "Tiene un contacto sin guardar de {time}.",
+        "Restore draft": "Restaurar borrador",
+        "Discard": "Descartar",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Su sesión ha caducado. Inicie sesión de nuevo en una pestaña nueva y luego pulse Guardar aquí.",
+        "Contact moment draft": "Borrador de contacto",
+        "Contact moments an agent is still typing, kept for that agent only": "Contactos que un agente aún está escribiendo, guardados solo para ese agente",
+        "What an agent typed in the contact moment quick log, kept for that agent only until they save the contact moment or throw the draft away.": "Lo que un agente escribió en el registro rápido de contacto, guardado solo para él hasta que guarde el contacto o descarte el borrador.",
+        "The agent who typed the draft.": "El agente que escribió el borrador.",
+        "The client the quick log was opened on.": "El cliente en el que se abrió el registro.",
+        "The request the quick log was opened on.": "La solicitud en la que se abrió el registro.",
+        "The quick log fields as they were typed.": "Los campos del registro tal como se escribieron.",
+        "Last changed": "Último cambio",
+        "When the agent last typed in the draft.": "Cuándo escribió el agente por última vez en el borrador."
     },
     "plurals": null
 }
