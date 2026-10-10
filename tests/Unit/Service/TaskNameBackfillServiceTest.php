@@ -171,7 +171,7 @@ class TaskNameBackfillServiceTest extends TestCase {
 		$this->store[$uuid] = [
 			'id' => $uuid,
 			'subject' => $subject,
-			'type' => 'terugbelverzoek',
+			'type' => 'callbackRequest',
 			'status' => 'open',
 			'assigneeUserId' => 'jan',
 			'deadline' => '2026-10-07 11:40:03',

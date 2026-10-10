@@ -39,7 +39,7 @@ use Throwable;
 /**
  * Saves each task whose name is empty or its uuid, so OpenRegister names it.
  *
- * pipelinq#2376 set `crmTask.configuration.objectNameField = subject`.
+ * Since pipelinq#2376, `crmTask.configuration.objectNameField` is `subject`.
  * OpenRegister computes the name on save, so a task written before that keeps
  * its uuid as its name. Re-saving the task's own data is enough: the save
  * hydrates the name from the subject and changes nothing else.

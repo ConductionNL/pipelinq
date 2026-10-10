@@ -26,6 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Db\MagicMapper;
+use ReflectionClass;
+
 /**
  * Whether a write made now reaches no notification, activity or listener.
  *
@@ -66,14 +69,22 @@ class ObjectEventSilence {
 	 * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
 	 */
 	public function isSupported(): bool {
-		return class_exists(self::CONTEXT_CLASS) === true
-			&& method_exists(self::MAPPER_CLASS, 'suppressLifecycleEvents') === true;
+		if (class_exists(self::CONTEXT_CLASS) === false || class_exists(self::MAPPER_CLASS) === false) {
+			return false;
+		}
+
+		// Reflection rather than method_exists(): the gate is private, and the
+		// analysers read the test stub of MagicMapper, which does not carry it.
+		// `::class` does not autoload, and class_exists() above already did.
+		return (new ReflectionClass(MagicMapper::class))->hasMethod('suppressLifecycleEvents');
 	}//end isSupported()
 
 	/**
 	 * Whether a write made right now has its object events withheld.
 	 *
 	 * @return bool True inside an active system scope on a build that gates the dispatch.
+	 *
+	 * @phpstan-impure The answer depends on OpenRegister's ambient scope, which changes between calls.
 	 *
 	 * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
 	 */
