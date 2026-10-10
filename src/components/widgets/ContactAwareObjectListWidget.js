@@ -38,7 +38,9 @@ export function createPayload(formData, filter) {
 	const payload = { ...(formData || {}) }
 	for (const [key, value] of Object.entries(filter || {})) {
 		const empty =
-			payload[key] === undefined || payload[key] === null || payload[key] === ''
+			payload[key] === undefined
+			|| payload[key] === null
+			|| payload[key] === ''
 		if (value && typeof value !== 'object' && empty) {
 			payload[key] = value
 		}
@@ -76,7 +78,10 @@ export default {
 		async onCreateConfirm(formData) {
 			const schema = this.content?.schema
 			if (!CONTACT_BACKED_SCHEMAS.includes(schema)) {
-				return CnObjectListWidget.methods.onCreateConfirm.call(this, formData)
+				return CnObjectListWidget.methods.onCreateConfirm.call(
+					this,
+					formData,
+				)
 			}
 			const payload = createPayload(formData, this.resolvedFilter)
 			const dialog = this.$refs.createDialog

@@ -32,13 +32,19 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 const createWithContact = vi.fn()
 vi.mock('../../src/services/contactSyncApi.js', () => ({ createWithContact }))
 
-const { default: ContactAwareObjectListWidget } = await import(
-	'../../src/components/widgets/ContactAwareObjectListWidget.js'
-)
+const { default: ContactAwareObjectListWidget } =
+	await import('../../src/components/widgets/ContactAwareObjectListWidget.js')
 
 const ROOT = path.resolve(__dirname, '../..')
-const readJson = (...parts) =>
-	JSON.parse(fs.readFileSync(path.join(ROOT, ...parts), 'utf8'))
+/**
+ * Read a JSON file under the app root.
+ *
+ * @param {...string} parts Path parts.
+ * @return {object} The parsed JSON.
+ */
+function readJson(...parts) {
+	return JSON.parse(fs.readFileSync(path.join(ROOT, ...parts), 'utf8'))
+}
 const manifest = readJson('src', 'manifest.json')
 
 /**

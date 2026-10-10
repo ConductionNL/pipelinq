@@ -330,8 +330,8 @@ import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
-import { sectionWidget } from './components/widgets/sectionWidget.js'
 import ContactAwareObjectListWidget from './components/widgets/ContactAwareObjectListWidget.js'
+import { sectionWidget } from './components/widgets/sectionWidget.js'
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
 //     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
 //     active-interaction form, the summary-driven knowledge base and the client
