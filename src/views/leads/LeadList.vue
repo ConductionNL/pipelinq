@@ -165,7 +165,12 @@ export default {
 						'@self[updated][lt]': `@today-${this.staleThreshold}d`,
 					},
 
-					showCount: true,
+					// The row badge and this list filter both read `@self.updated`.
+					// The count request goes to OpenRegister's aggregation endpoint,
+					// which ignores `@self[updated]` and answered 0, so no count is
+					// shown until the library can send a date filter that endpoint
+					// understands (library-gaps.md).
+					showCount: false,
 				},
 				{
 					label: t('pipelinq', 'Won'),

@@ -1505,7 +1505,8 @@
 				],
 				"headerButtons": [
 					{
-						"action": "export"
+						"action": "export",
+						"label": "Download"
 					},
 					{
 						"action": "actions-menu"
@@ -1513,6 +1514,7 @@
 					{
 						"action": "add",
 						"variant": "primary",
+						"icon": "Plus",
 						"label": "New request"
 					}
 				],
@@ -1819,6 +1821,33 @@
 						}
 					}
 				]
+			}
+		},
+		{
+			"id": "Contacts",
+			"_note": "The contacts list as its board draws it (PqContacten). Not drawn yet because no field or relation backs it: the chips With open deals and Not in Contacts, the Klant column and the Contacten sync column. The Nextcloud Contacten import dialog (src/dialogs/ContactImportDialog.vue) is not wired to any page yet.",
+			"config": {
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					}
+				],
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New contact"
+					}
+				],
+				"countText": "{shown} of {total} contacts"
 			}
 		}
 	]
