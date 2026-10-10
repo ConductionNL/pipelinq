@@ -1494,6 +1494,11 @@
 						"label": "Subject"
 					},
 					{
+						"key": "client",
+						"label": "Klant",
+						"labelField": "name"
+					},
+					{
 						"key": "ticketType",
 						"label": "Type"
 					},
