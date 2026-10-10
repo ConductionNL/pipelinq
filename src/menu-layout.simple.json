@@ -1039,7 +1039,7 @@
 						"id": "s7",
 						"widgetId": "simple-waiting-list",
 						"gridX": 0,
-						"gridY": 5,
+						"gridY": 6,
 						"gridWidth": 8,
 						"gridHeight": 5,
 						"showTitle": true,
@@ -1052,7 +1052,7 @@
 						"id": "s8",
 						"widgetId": "simple-per-channel",
 						"gridX": 0,
-						"gridY": 10,
+						"gridY": 11,
 						"gridWidth": 8,
 						"gridHeight": 4,
 						"showTitle": true,
@@ -1062,7 +1062,7 @@
 						"id": "s9",
 						"widgetId": "simple-callback-list",
 						"gridX": 8,
-						"gridY": 5,
+						"gridY": 6,
 						"gridWidth": 4,
 						"gridHeight": 5,
 						"showTitle": true
@@ -1071,7 +1071,7 @@
 						"id": "s10",
 						"widgetId": "simple-latest-contact",
 						"gridX": 8,
-						"gridY": 10,
+						"gridY": 11,
 						"gridWidth": 4,
 						"gridHeight": 4,
 						"showTitle": true
@@ -1080,7 +1080,7 @@
 						"id": "s11",
 						"widgetId": "simple-client-in-focus",
 						"gridX": 0,
-						"gridY": 14,
+						"gridY": 5,
 						"gridWidth": 12,
 						"gridHeight": 1,
 						"showTitle": false,
@@ -1090,7 +1090,7 @@
 						"id": "wr",
 						"widgetId": "requests",
 						"gridX": 0,
-						"gridY": 15,
+						"gridY": 16,
 						"gridWidth": 8,
 						"gridHeight": 4
 					},
@@ -1098,7 +1098,7 @@
 						"id": "wi",
 						"widgetId": "interaction",
 						"gridX": 8,
-						"gridY": 15,
+						"gridY": 16,
 						"gridWidth": 4,
 						"gridHeight": 8
 					},
@@ -1106,7 +1106,7 @@
 						"id": "wt",
 						"widgetId": "tasks",
 						"gridX": 0,
-						"gridY": 19,
+						"gridY": 20,
 						"gridWidth": 8,
 						"gridHeight": 4
 					},
@@ -1114,7 +1114,7 @@
 						"id": "wk",
 						"widgetId": "knowledge",
 						"gridX": 8,
-						"gridY": 23,
+						"gridY": 24,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -1122,7 +1122,7 @@
 						"id": "wc",
 						"widgetId": "client-cases",
 						"gridX": 0,
-						"gridY": 23,
+						"gridY": 24,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -1130,7 +1130,7 @@
 						"id": "wm",
 						"widgetId": "client-contacts",
 						"gridX": 4,
-						"gridY": 23,
+						"gridY": 24,
 						"gridWidth": 4,
 						"gridHeight": 5
 					}
