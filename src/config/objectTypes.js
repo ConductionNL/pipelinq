@@ -386,6 +386,17 @@ export function objectTypes() {
 				'Replies the team writes once and agents insert when they answer',
 			),
 		},
+		// Contact moment drafts (contact-moments-keep-draft): what an agent is
+		// still typing in the quick log, private to that agent.
+		{
+			slug: 'contactMomentDraft',
+			group: 'core',
+			label: t(APP, 'Contact moment draft'),
+			description: t(
+				APP,
+				'Contact moments an agent is still typing, kept for that agent only',
+			),
+		},
 		{
 			slug: 'channelProvider',
 			group: 'marketing',

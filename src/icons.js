@@ -76,6 +76,7 @@ import ClockAlertOutline from 'vue-material-design-icons/ClockAlertOutline.vue'
 import ClockCheckOutline from 'vue-material-design-icons/ClockCheckOutline.vue'
 import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import ContentSaveEditOutline from 'vue-material-design-icons/ContentSaveEditOutline.vue'
 import Counter from 'vue-material-design-icons/Counter.vue'
 import CreditCardOutline from 'vue-material-design-icons/CreditCardOutline.vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
@@ -242,6 +243,7 @@ export default {
 	ClockCheckOutline,
 	ClockOutline,
 	Cog,
+	ContentSaveEditOutline,
 	Counter,
 	CreditCardOutline,
 	CurrencyEur,

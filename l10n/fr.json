@@ -2334,7 +2334,20 @@
         "Manufacturer": "Fabricant",
         "Unit of measure": "Unité de mesure",
         "Weight": "Poids",
-        "Dimensions": "Dimensions"
+        "Dimensions": "Dimensions",
+        "You have an unsaved contact moment from {time}.": "Vous avez un contact non enregistré du {time}.",
+        "Restore draft": "Restaurer le brouillon",
+        "Discard": "Abandonner",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Votre session a expiré. Reconnectez-vous dans un nouvel onglet, puis cliquez ici sur Enregistrer.",
+        "Contact moment draft": "Brouillon de contact",
+        "Contact moments an agent is still typing, kept for that agent only": "Contacts qu'un agent est encore en train de saisir, conservés pour cet agent seulement",
+        "What an agent typed in the contact moment quick log, kept for that agent only until they save the contact moment or throw the draft away.": "Ce qu'un agent a saisi dans la saisie rapide de contact, conservé pour lui seul jusqu'à l'enregistrement du contact ou l'abandon du brouillon.",
+        "The agent who typed the draft.": "L'agent qui a saisi le brouillon.",
+        "The client the quick log was opened on.": "Le client sur lequel la saisie a été ouverte.",
+        "The request the quick log was opened on.": "La demande sur laquelle la saisie a été ouverte.",
+        "The quick log fields as they were typed.": "Les champs de la saisie tels qu'ils ont été tapés.",
+        "Last changed": "Dernière modification",
+        "When the agent last typed in the draft.": "Quand l'agent a saisi pour la dernière fois dans le brouillon."
     },
     "plurals": null
 }

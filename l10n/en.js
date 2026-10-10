@@ -7463,7 +7463,20 @@ OC.L10N.register(
         "Stock is kept in shillinq, which is not installed": "Stock is kept in shillinq, which is not installed",
         "No access to stock in shillinq": "No access to stock in shillinq",
         "{onHand} on hand, {reserved} reserved": "{onHand} on hand, {reserved} reserved",
-        "Open in shillinq": "Open in shillinq"
+        "Open in shillinq": "Open in shillinq",
+        "You have an unsaved contact moment from {time}.": "You have an unsaved contact moment from {time}.",
+        "Restore draft": "Restore draft",
+        "Discard": "Discard",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Your session has ended. Log in again in a new tab, then press Save here.",
+        "Contact moment draft": "Contact moment draft",
+        "Contact moments an agent is still typing, kept for that agent only": "Contact moments an agent is still typing, kept for that agent only",
+        "What an agent typed in the contact moment quick log, kept for that agent only until they save the contact moment or throw the draft away.": "What an agent typed in the contact moment quick log, kept for that agent only until they save the contact moment or throw the draft away.",
+        "The agent who typed the draft.": "The agent who typed the draft.",
+        "The client the quick log was opened on.": "The client the quick log was opened on.",
+        "The request the quick log was opened on.": "The request the quick log was opened on.",
+        "The quick log fields as they were typed.": "The quick log fields as they were typed.",
+        "Last changed": "Last changed",
+        "When the agent last typed in the draft.": "When the agent last typed in the draft."
     },
     "nplurals=2; plural=(n != 1);"
 )

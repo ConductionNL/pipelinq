@@ -39,7 +39,20 @@ Register every customer interaction (phone, email, chat, desk visit) as a struct
 | channelMetadata | object | No | Channel-specific data |
 | notes | string | No | Internal notes |
 
+## Drafts: a half typed contact moment is kept
+
+While you type in the quick log on a client, the form is kept as a draft two seconds after you stop typing, and again when you close or leave the tab. The next time you open the quick log for that client, it says "You have an unsaved contact moment from" with the time, and offers **Restore draft** or **Discard**.
+
+- A draft is yours. Colleagues never see it, and it never shows in a ticket list, a queue or a report. An administrator can still read it.
+- Saving the contact moment removes the draft. So does Discard.
+- A draft older than seven days is not offered any more. The quick log removes your old drafts when it opens.
+- If your session ends while you type, Save keeps your text on screen and says so. Log in again in a new tab, come back, and press Save again.
+
+The draft is stored in OpenRegister as a `contactMomentDraft` object (`lib/Settings/register.d/98-contact-moment-draft.json`), private by default.
+
 ## Change History
+
+- **2026-10-10**: The quick log keeps a half typed contact moment as a private draft (contact-moments-keep-draft)
 
 - **2026-03-25**: Completed backend service, fixed frontend data flow (feature/65/contactmomenten)
 - **2026-03-22**: Initial implementation of views, store, schema, navigation (archived)
