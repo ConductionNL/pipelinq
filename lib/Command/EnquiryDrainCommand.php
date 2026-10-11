@@ -79,8 +79,10 @@ class EnquiryDrainCommand extends Command {
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-held-website-messages-are-drained-into-the-destination-their-form-names
 	 */
 	protected function configure(): void {
-		$this->setName('pipelinq:enquiry:drain')
-			->setDescription('Submit every open enquiry into the destination its website form names, and report. Read-only unless --apply is given.')
+		$this->setName(name: 'pipelinq:enquiry:drain')
+			->setDescription(
+				description: 'Submit every open enquiry into the destination its website form names, and report. Read-only unless --apply is given.'
+			)
 			->addOption(name: 'apply', mode: InputOption::VALUE_NONE, description: 'Submit and delete the delivered enquiries.')
 			->addOption(
 				name: 'include-intake-submissions',

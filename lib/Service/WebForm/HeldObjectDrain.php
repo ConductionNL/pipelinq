@@ -92,8 +92,8 @@ class HeldObjectDrain {
 	 * @param array<string, mixed> $openFilter  Property filters that select the still-open objects.
 	 * @param bool                 $apply       True to submit and delete; false to report only.
 	 *
-	 * @return array{delivered: array<int, array<string, string>>, refused: array<int, array<string, mixed>>, unmapped: array<int, array<string, string>>, pending: int}
-	 *   The report. `pending` is what is still held after this run.
+	 * @return array<string, mixed> The report: `delivered`, `refused` and `unmapped` lists, and
+	 *   `pending`, what is still held after this run.
 	 *
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-held-website-messages-are-drained-into-the-destination-their-form-names
 	 */
@@ -155,7 +155,12 @@ class HeldObjectDrain {
 			return;
 		}
 
-		$entry = ['id' => $heldId, 'key' => (string)($form['key'] ?? ''), 'destination' => $this->destinationOf(form: $form), 'reference' => (string)$answer['reference']];
+		$entry = [
+			'id' => $heldId,
+			'key' => (string)($form['key'] ?? ''),
+			'destination' => $this->destinationOf(form: $form),
+			'reference' => (string)$answer['reference'],
+		];
 		try {
 			$this->container->get('OCA\OpenRegister\Service\ObjectService')->deleteObject(
 				uuid: $heldId,
