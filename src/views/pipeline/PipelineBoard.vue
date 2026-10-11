@@ -11,7 +11,7 @@
 			:tabs="chipTabs"
 			:counts="chipCounts"
 			:activeIndex="chipIndex"
-			@update:active-index="(value) => (chipIndex = value === null ? 0 : value)" />
+			@update:activeIndex="(value) => (chipIndex = value === null ? 0 : value)" />
 		<div class="pipeline-board__header">
 			<div class="pipeline-board__controls">
 				<NcSelect
