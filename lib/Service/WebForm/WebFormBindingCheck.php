@@ -30,7 +30,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms/spec.md#requirement-a-public-pipelinq-form-is-a-fleet-form-with-a-pipelinq-destination
+ * @spec openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms/spec.md#requirement-a-public-pipelinq-form-names-its-destination-and-is-checked-when-published
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Throwable;
 /**
  * The findings that stop a website form from being published.
  *
- * @spec openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms/spec.md#requirement-a-public-pipelinq-form-is-a-fleet-form-with-a-pipelinq-destination
+ * @spec openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms/spec.md#requirement-a-public-pipelinq-form-names-its-destination-and-is-checked-when-published
  */
 class WebFormBindingCheck {
 
@@ -123,7 +123,7 @@ class WebFormBindingCheck {
 	 *
 	 * @return array<int, array<string, mixed>> The findings: `{ write?, field?, property, code, message }`.
 	 *
-	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms/spec.md#requirement-a-public-pipelinq-form-is-a-fleet-form-with-a-pipelinq-destination
+	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms/spec.md#requirement-a-public-pipelinq-form-names-its-destination-and-is-checked-when-published
 	 */
 	public function findings(array $form): array {
 		if (($form['status'] ?? null) !== WebFormFinder::PUBLISHED) {

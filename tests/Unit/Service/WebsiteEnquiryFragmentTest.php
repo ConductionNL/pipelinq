@@ -137,7 +137,12 @@ class WebsiteEnquiryFragmentTest extends TestCase {
 		$this->assertContains(
 			'enquiry',
 			$slugs,
-			'enquiry must be in SCHEMA_SLUGS or its schema id never reaches app config'
+			'enquiry must stay in SCHEMA_SLUGS until the drain reports zero pending'
+		);
+		$this->assertContains(
+			'webForm',
+			$slugs,
+			'webForm must be in SCHEMA_SLUGS or WebFormFinder never finds a form'
 		);
 	}//end testSchemaSlugIsWiredIntoTheImport()
 }//end class
