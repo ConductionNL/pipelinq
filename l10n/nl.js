@@ -7427,7 +7427,16 @@ OC.L10N.register(
         "Still to call back": "Nog terug te bellen",
         "No action needed now": "Nu geen actie nodig",
         "Start a contact": "Contact starten",
-        "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.": "Zoek de klant aan de lijn of aan de balie. Verzoeken, taken en eerder contact openen hieronder, met een formulier om dit contact vast te leggen."
+        "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.": "Zoek de klant aan de lijn of aan de balie. Verzoeken, taken en eerder contact openen hieronder, met een formulier om dit contact vast te leggen.",
+        "Filter by subject or client": "Filter op onderwerp of klant",
+        "Filter by title or client": "Filter op titel of klant",
+        "Filter by name, email or client": "Filter op naam, e-mail of klant",
+        "A contact is someone you deal with at a client. Residents are clients themselves.": "Een contact is iemand met wie je te maken hebt bij een klant. Inwoners zijn zelf klant.",
+        "Sales pipeline": "Verkooppijplijn",
+        "My leads": "Mijn leads",
+        "Closing this month": "Sluit deze maand",
+        "{shown} of {total} open leads · board per stage": "{shown} van {total} open leads · bord per fase",
+        "Stale leads": "Verouderd"
     },
     "nplurals=2; plural=(n != 1);"
 )
