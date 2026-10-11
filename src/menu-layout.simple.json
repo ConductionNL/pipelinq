@@ -1530,7 +1530,17 @@
 					"channel",
 					{
 						"key": "occurredAt",
-						"label": "Waiting"
+						"label": "Waiting",
+						"widget": "age",
+						"widgetProps": {
+							"variantWhen": [
+								{
+									"op": "gte",
+									"value": 3,
+									"variant": "error"
+								}
+							]
+						}
 					},
 					{
 						"key": "assignee",
@@ -1556,12 +1566,19 @@
 						"label": "New request"
 					}
 				],
-				"countText": "{shown} of {total} open tickets · customer contact · sorted by waiting time"
+				"countText": "{shown} of {total} open tickets · customer contact · sorted by waiting time",
+				"sortKey": "occurredAt",
+				"sortOrder": "asc",
+				"rowTitle": "plain",
+				"searchPlaceholder": "Filter by subject or client"
 			},
 			"configPatch": {
 				"quickFilters": {
 					"All": {
-						"showCount": true
+						"showCount": true,
+						"filter": {
+							"ticketType[ne]": "interaction"
+						}
 					},
 					"Requests": {
 						"showCount": true
@@ -1659,7 +1676,11 @@
 							"user": true
 						}
 					}
-				]
+				],
+				"sortKey": "stageEnteredAt",
+				"sortOrder": "desc",
+				"rowTitle": "plain",
+				"searchPlaceholder": "Filter by title or client"
 			}
 		},
 		{

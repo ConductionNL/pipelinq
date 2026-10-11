@@ -471,7 +471,16 @@ describe('the tickets list', () => {
 
 	it('keeps every view it had, with the same filter, and counts them', () => {
 		for (const old of before.quickFilters) {
-			expect(view(old.label), old.label).toEqual({ ...old, showCount: true })
+			// The board's list leaves contact moments out of All (they have their
+			// own view), so All carries that one filter; every other view is untouched.
+			const expected =
+				old.label === 'All'
+					? { ...old, filter: { 'ticketType[ne]': 'interaction' } }
+					: old
+			expect(view(old.label), old.label).toEqual({
+				...expected,
+				showCount: true,
+			})
 		}
 		expect(simple.quickFilters).toHaveLength(before.quickFilters.length + 3)
 		expect(simple.quickFilters.every((item) => item.showCount)).toBe(true)
@@ -504,7 +513,9 @@ describe('the tickets list', () => {
 
 	it('filters and shows only fields a ticket has', () => {
 		for (const item of simple.quickFilters) {
-			for (const key of Object.keys(item.filter)) {
+			for (const key of Object.keys(item.filter).map((name) =>
+				name.replace(/\[\w+\]$/, ''),
+			)) {
 				expect(SCHEMAS.ticket[key], `${item.label}: ${key}`).toBeTruthy()
 			}
 		}
