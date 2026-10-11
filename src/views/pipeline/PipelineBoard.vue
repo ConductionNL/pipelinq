@@ -3,8 +3,16 @@
 
 <template>
 	<div class="pipeline-board" data-walkthrough-id="pipeline-board">
+		<CnPageHeader
+			:title="t('pipelinq', 'Pipeline')"
+			:description="headerCountLine" />
+		<CnQuickFilterBar
+			class="pipeline-board__chips"
+			:tabs="chipTabs"
+			:counts="chipCounts"
+			:activeIndex="chipIndex"
+			@update:active-index="(value) => (chipIndex = value === null ? 0 : value)" />
 		<div class="pipeline-board__header">
-			<h2>{{ t('pipelinq', 'Pipeline') }}</h2>
 			<div class="pipeline-board__controls">
 				<NcSelect
 					v-model="selectedPipelineId"
@@ -474,7 +482,7 @@
 </template>
 
 <script>
-import { openRowTarget } from '@conduction/nextcloud-vue'
+import { CnPageHeader, CnQuickFilterBar, openRowTarget } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -528,6 +536,8 @@ const DRAG_OPTIONS = {
 export default {
 	name: 'PipelineBoard',
 	components: {
+		CnPageHeader,
+		CnQuickFilterBar,
 		Draggable,
 		NcButton,
 		NcCheckboxRadioSwitch,
@@ -557,6 +567,8 @@ export default {
 			 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
 			 */
 			searchQuery: '',
+			/** Index of the active chip above the board (0 is every open lead). */
+			chipIndex: 0,
 			expandedClosed: null,
 			// The stage a card is being dragged out of, while a drag is on, and
 			// whether it has been over another column since.
@@ -764,11 +776,52 @@ export default {
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
 		 */
 		filteredItems() {
-			if (!this.searchQuery.trim()) return this.allItems
+			const chipped = this.allItems.filter((item) =>
+				this.matchesChip(item, this.chipIndex),
+			)
+			if (!this.searchQuery.trim()) return chipped
 			const query = this.searchQuery.trim().toLowerCase()
-			return this.allItems.filter((i) =>
+			return chipped.filter((i) =>
 				(i.title || '').toLowerCase().includes(query),
 			)
+		},
+
+		/**
+		 * The chips above the board, as the PqPipeline board draws them: every
+		 * open lead, my leads, leads closing this month and stale leads.
+		 *
+		 * @return {Array<{label: string}>}
+		 */
+		chipTabs() {
+			return [
+				{ label: this.t('pipelinq', 'Sales pipeline') },
+				{ label: this.t('pipelinq', 'My leads') },
+				{ label: this.t('pipelinq', 'Closing this month') },
+				{ label: this.t('pipelinq', 'Stale leads') },
+			]
+		},
+
+		/**
+		 * The number on each chip, counted over the leads the pipeline holds.
+		 *
+		 * @return {number[]}
+		 */
+		chipCounts() {
+			return this.chipTabs.map((_, index) =>
+				this.allItems.filter((item) => this.matchesChip(item, index)).length,
+			)
+		},
+
+		/**
+		 * The line under the title: how many leads show, out of how many.
+		 *
+		 * @return {string}
+		 */
+		headerCountLine() {
+			return this.t('pipelinq', '{shown} of {total} open leads · board per stage', {
+				shown: this.filteredItems.length,
+				total: this.allItems.length,
+			})
 		},
 
 		/**
@@ -1505,6 +1558,31 @@ export default {
 			return formatDate(dateStr)
 		},
 
+		/**
+		 * Whether a lead belongs under a chip. Chip 0 keeps every lead.
+		 *
+		 * @param {object} item The lead.
+		 * @param {number} index The chip index.
+		 * @return {boolean}
+		 */
+		matchesChip(item, index) {
+			if (index === 1) {
+				const uid = window.OC?.getCurrentUser?.()?.uid ?? ''
+				return Boolean(uid) && item.assignee === uid
+			}
+			if (index === 2) {
+				const close = item.expectedCloseDate ? new Date(item.expectedCloseDate) : null
+				const now = new Date()
+				return Boolean(close)
+					&& close.getFullYear() === now.getFullYear()
+					&& close.getMonth() === now.getMonth()
+			}
+			if (index === 3) {
+				return this.isItemStale(item)
+			}
+			return true
+		},
+
 		isItemStale(item) {
 			return isStale(item, item._schemaSlug)
 		},
@@ -1546,10 +1624,14 @@ export default {
 
 <style scoped>
 .pipeline-board {
-	padding: 20px;
+	padding: 20px 28px;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+}
+
+.pipeline-board__chips {
+	margin-bottom: 16px;
 }
 
 .pipeline-board__header {

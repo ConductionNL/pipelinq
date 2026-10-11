@@ -7431,7 +7431,12 @@ OC.L10N.register(
         "Filter by subject or client": "Filter op onderwerp of klant",
         "Filter by title or client": "Filter op titel of klant",
         "Filter by name, email or client": "Filter op naam, e-mail of klant",
-        "A contact is someone you deal with at a client. Residents are clients themselves.": "Een contact is iemand met wie je te maken hebt bij een klant. Inwoners zijn zelf klant."
+        "A contact is someone you deal with at a client. Residents are clients themselves.": "Een contact is iemand met wie je te maken hebt bij een klant. Inwoners zijn zelf klant.",
+        "Sales pipeline": "Verkooppijplijn",
+        "My leads": "Mijn leads",
+        "Closing this month": "Sluit deze maand",
+        "{shown} of {total} open leads · board per stage": "{shown} van {total} open leads · bord per fase",
+        "Stale leads": "Verouderd"
     },
     "nplurals=2; plural=(n != 1);"
 )

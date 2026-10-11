@@ -7516,7 +7516,12 @@ OC.L10N.register(
         "Filter by subject or client": "Filter by subject or client",
         "Filter by title or client": "Filter by title or client",
         "Filter by name, email or client": "Filter by name, email or client",
-        "A contact is someone you deal with at a client. Residents are clients themselves.": "A contact is someone you deal with at a client. Residents are clients themselves."
+        "A contact is someone you deal with at a client. Residents are clients themselves.": "A contact is someone you deal with at a client. Residents are clients themselves.",
+        "Sales pipeline": "Sales pipeline",
+        "My leads": "My leads",
+        "Closing this month": "Closing this month",
+        "{shown} of {total} open leads · board per stage": "{shown} of {total} open leads · board per stage",
+        "Stale leads": "Stale leads"
     },
     "nplurals=2; plural=(n != 1);"
 )
