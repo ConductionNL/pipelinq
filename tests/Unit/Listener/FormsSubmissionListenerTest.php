@@ -37,6 +37,7 @@ use OCA\Pipelinq\Service\WebForm\WebFormIntakeService;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeContainer;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeFormSubmitService;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeObjectStore;
+use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\ObjectServiceContract;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeRefusal;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
@@ -53,6 +54,8 @@ use Throwable;
  * A bound Forms answer creates its destination; anything else creates nothing.
  */
 class FormsSubmissionListenerTest extends TestCase {
+
+	use ObjectServiceContract;
 
 	/**
 	 * The submit fake of the last built listener.
@@ -124,7 +127,6 @@ class FormsSubmissionListenerTest extends TestCase {
 		$this->submitter = new FakeFormSubmitService(throw: $throw);
 		$container = new FakeContainer(
 			services: [
-				'OCA\OpenRegister\Service\ObjectService' => new FakeObjectStore(rows: ['40' => [$binding]]),
 				'OCA\OpenRegister\Service\Form\FormSubmitService' => $this->submitter,
 				FormsQuestionReader::QUESTION_MAPPER => $questions,
 				FormsQuestionReader::ANSWER_MAPPER => $answers,
@@ -133,7 +135,7 @@ class FormsSubmissionListenerTest extends TestCase {
 		$users = $this->createMock(IUserManager::class);
 		$users->method('get')->willReturn($this->createMock(IUser::class));
 		$this->logger = $this->createMock(LoggerInterface::class);
-		$finder = new WebFormFinder($config, $container);
+		$finder = new WebFormFinder($config, $this->contractOver(new FakeObjectStore(rows: ['40' => [$binding]])));
 		$intake = new WebFormIntakeService(
 			$finder,
 			$container,

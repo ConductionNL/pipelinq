@@ -32,6 +32,7 @@ use OCA\Pipelinq\Service\WebForm\WebFormBindingCheck;
 use OCA\Pipelinq\Service\WebForm\WebFormFinder;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeContainer;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeObjectStore;
+use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\ObjectServiceContract;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeValidator;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -40,6 +41,8 @@ use PHPUnit\Framework\TestCase;
  * A published form that could never produce a valid destination is named, finding by finding.
  */
 class WebFormBindingCheckTest extends TestCase {
+
+	use ObjectServiceContract;
 
 	/**
 	 * The validator fake of the last built check.
@@ -68,13 +71,12 @@ class WebFormBindingCheckTest extends TestCase {
 				[
 					'OCA\OpenRegister\Service\Form\FormDestinationValidator' => $this->validator,
 					'OCA\OpenRegister\Db\SchemaMapper' => $this->validator,
-					'OCA\OpenRegister\Service\ObjectService' => new FakeObjectStore(rows: ['40' => $storedForms]),
 				],
 				$forms
 			)
 		);
 
-		return new WebFormBindingCheck($container, new WebFormFinder($config, $container), new FormsQuestionReader($container));
+		return new WebFormBindingCheck($container, new WebFormFinder($config, $this->contractOver(new FakeObjectStore(rows: ['40' => $storedForms]))), new FormsQuestionReader($container));
 	}//end check()
 
 	/**
@@ -203,7 +205,7 @@ class WebFormBindingCheckTest extends TestCase {
 	 * @return void
 	 */
 	public function testWritesOf(): void {
-		$finder = new WebFormFinder($this->createMock(IAppConfig::class), new FakeContainer());
+		$finder = new WebFormFinder($this->createMock(IAppConfig::class), $this->contractOver(new FakeObjectStore()));
 		$this->assertSame(
 			[['as' => 'destination', 'register' => 'pipelinq', 'schema' => 'ticket', 'mapping' => ['fields' => []]]],
 			$finder->writesOf(form: ['destination' => ['register' => 'pipelinq', 'schema' => 'ticket'], 'mapping' => ['fields' => []]])

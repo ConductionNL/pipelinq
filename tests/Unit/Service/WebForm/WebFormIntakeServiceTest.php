@@ -34,6 +34,7 @@ use OCA\Pipelinq\Service\WebForm\WebFormSubmitException;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeContainer;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeFormSubmitService;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeObjectStore;
+use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\ObjectServiceContract;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeRefusal;
 use OCP\IAppConfig;
 use OCP\IUser;
@@ -48,6 +49,8 @@ use RuntimeException;
  * A submit creates the object its form names, or is refused, and never writes an enquiry.
  */
 class WebFormIntakeServiceTest extends TestCase {
+
+	use ObjectServiceContract;
 
 	/**
 	 * The webForm schema id in this test's app config.
@@ -134,7 +137,6 @@ class WebFormIntakeServiceTest extends TestCase {
 		$this->submitter = new FakeFormSubmitService(throw: $throw);
 		$container = new FakeContainer(
 			services: [
-				'OCA\OpenRegister\Service\ObjectService' => $this->store,
 				'OCA\OpenRegister\Service\Form\FormSubmitService' => $this->submitter,
 			]
 		);
@@ -145,7 +147,7 @@ class WebFormIntakeServiceTest extends TestCase {
 		$account = new SystemServiceAccount($users, $this->createMock(IUserSession::class), $this->createMock(ISecureRandom::class));
 
 		return new WebFormIntakeService(
-			new WebFormFinder($config, $container),
+			new WebFormFinder($config, $this->contractOver($this->store)),
 			$container,
 			$account,
 			$this->createMock(LoggerInterface::class)
@@ -356,7 +358,7 @@ class WebFormIntakeServiceTest extends TestCase {
 		$container = new FakeContainer();
 		$users = $this->createMock(IUserManager::class);
 		$service = new WebFormIntakeService(
-			new WebFormFinder($config, $container),
+			new WebFormFinder($config, $this->contractOver(new FakeObjectStore())),
 			$container,
 			new SystemServiceAccount($users, $this->createMock(IUserSession::class), $this->createMock(ISecureRandom::class)),
 			$this->createMock(LoggerInterface::class)

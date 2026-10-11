@@ -39,8 +39,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\WebForm;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\SystemServiceAccount;
-use Psr\Container\ContainerInterface;
 use Throwable;
 
 /**
@@ -67,15 +67,15 @@ class HeldObjectDrain {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface   $container Reaches OpenRegister's ObjectService.
-	 * @param WebFormFinder        $finder    Finds the published form for a key.
-	 * @param WebFormIntakeService $intake    Submits into the form's destination.
-	 * @param SystemServiceAccount $account   The account a delivered held object is deleted as.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param WebFormFinder          $finder        Finds the published form for a key.
+	 * @param WebFormIntakeService   $intake        Submits into the form's destination.
+	 * @param SystemServiceAccount   $account       The account a delivered held object is deleted as.
 	 *
 	 * @spec exclude constructor wiring only; it makes no decision a requirement can describe
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly WebFormFinder $finder,
 		private readonly WebFormIntakeService $intake,
 		private readonly SystemServiceAccount $account,
@@ -162,7 +162,7 @@ class HeldObjectDrain {
 			'reference' => (string)$answer['reference'],
 		];
 		try {
-			$this->container->get('OCA\OpenRegister\Service\ObjectService')->deleteObject(
+			$this->objectService->deleteObject(
 				uuid: $heldId,
 				register: $register,
 				schema: $schema,
@@ -209,10 +209,9 @@ class HeldObjectDrain {
 	 * @return array<int, array<string, mixed>> The held objects.
 	 */
 	private function openObjects(string $register, string $schema, array $filter): array {
-		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		$held = [];
 		for ($offset = 0; $offset < self::MAX_ROWS; $offset += self::PAGE_SIZE) {
-			$rows = (array)$objectService->findAll(
+			$rows = (array)$this->objectService->findAll(
 				config: [
 					'filters' => array_merge(['register' => $register, 'schema' => $schema], $filter),
 					'limit' => self::PAGE_SIZE,

@@ -25,8 +25,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service\WebForm;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\WebForm\WebFormFinder;
 use OCA\Pipelinq\Service\WebForm\WebFormSubmitException;
-use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeContainer;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeObjectStore;
+use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\ObjectServiceContract;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -35,6 +35,8 @@ use RuntimeException;
  * Only a form whose own body says published and matches is taken.
  */
 class WebFormFinderTest extends TestCase {
+
+	use ObjectServiceContract;
 
 	/**
 	 * The store of the last built finder.
@@ -57,7 +59,7 @@ class WebFormFinderTest extends TestCase {
 		);
 		$this->store = new FakeObjectStore(rows: ['40' => $rows]);
 
-		return new WebFormFinder($config, new FakeContainer(services: ['OCA\OpenRegister\Service\ObjectService' => $this->store]));
+		return new WebFormFinder($config, $this->contractOver($this->store));
 	}//end finder()
 
 	/**
@@ -151,7 +153,7 @@ class WebFormFinderTest extends TestCase {
 		$config->method('getValueString')->willReturn('');
 
 		$this->expectException(RuntimeException::class);
-		(new WebFormFinder($config, new FakeContainer()))->publishedByKey(key: 'website-support');
+		(new WebFormFinder($config, $this->contractOver(new FakeObjectStore())))->publishedByKey(key: 'website-support');
 	}//end testUnconfiguredThrows()
 
 	/**

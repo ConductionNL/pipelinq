@@ -33,6 +33,7 @@ use OCA\Pipelinq\Service\WebForm\WebFormIntakeService;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeContainer;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeFormSubmitService;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeObjectStore;
+use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\ObjectServiceContract;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeRefusal;
 use OCP\IAppConfig;
 use OCP\IUser;
@@ -48,6 +49,8 @@ use Throwable;
  * Every open enquiry is delivered where its form sends, refused, or reported unmapped; nothing is guessed.
  */
 class HeldObjectDrainTest extends TestCase {
+
+	use ObjectServiceContract;
 
 	/**
 	 * The store of the last built drain.
@@ -94,17 +97,16 @@ class HeldObjectDrainTest extends TestCase {
 		$this->submitter = new FakeFormSubmitService(throw: $submitThrow);
 		$container = new FakeContainer(
 			services: [
-				'OCA\OpenRegister\Service\ObjectService' => $this->store,
 				'OCA\OpenRegister\Service\Form\FormSubmitService' => $this->submitter,
 			]
 		);
 		$users = $this->createMock(IUserManager::class);
 		$users->method('get')->willReturn($this->createMock(IUser::class));
 		$account = new SystemServiceAccount($users, $this->createMock(IUserSession::class), $this->createMock(ISecureRandom::class));
-		$finder = new WebFormFinder($config, $container);
+		$finder = new WebFormFinder($config, $this->contractOver($this->store));
 
 		return new HeldObjectDrain(
-			$container,
+			$this->contractOver($this->store),
 			$finder,
 			new WebFormIntakeService($finder, $container, $account, $this->createMock(LoggerInterface::class)),
 			$account

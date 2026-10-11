@@ -26,9 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\WebForm;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use RuntimeException;
 
 /**
@@ -55,14 +55,14 @@ class WebFormFinder {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig         $appConfig App configuration: the register and webForm schema ids.
-	 * @param ContainerInterface $container Reaches OpenRegister's ObjectService only when a form is read.
+	 * @param IAppConfig             $appConfig     App configuration: the register and webForm schema ids.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 *
 	 * @spec exclude constructor wiring only; it makes no decision a requirement can describe
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 
 	}//end __construct()
@@ -193,8 +193,7 @@ class WebFormFinder {
 			throw new RuntimeException('Pipelinq: the webForm register or schema is not configured.');
 		}
 
-		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		$rows = $objectService->findAll(
+		$rows = $this->objectService->findAll(
 			config: [
 				'filters' => array_merge(
 					['register' => $register, 'schema' => $schema, 'status' => self::PUBLISHED],

@@ -7457,7 +7457,13 @@ OC.L10N.register(
         "The organisation the reporter named.": "De organisatie die de melder noemde.",
         "The form the ticket came from, for example website-support.": "Het formulier waar het ticket vandaan kwam, bijvoorbeeld website-support.",
         "Source page": "Bronpagina",
-        "The page the form was on when it was sent.": "De pagina waarop het formulier stond toen het werd verstuurd."
+        "The page the form was on when it was sent.": "De pagina waarop het formulier stond toen het werd verstuurd.",
+        "The register slug, for example pipelinq.": "De registerslug, bijvoorbeeld pipelinq.",
+        "The schema slug, for example ticket.": "De schemaslug, bijvoorbeeld ticket.",
+        "Fields": "Velden",
+        "Each form field and the property it fills.": "Elk formulierveld en het gegeven dat het vult.",
+        "Fixed values": "Vaste waarden",
+        "The values every submit sets, such as the channel.": "De waarden die elke inzending zet, zoals het kanaal."
     },
     "nplurals=2; plural=(n != 1);"
 )

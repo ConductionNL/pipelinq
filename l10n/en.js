@@ -7542,7 +7542,13 @@ OC.L10N.register(
         "The organisation the reporter named.": "The organisation the reporter named.",
         "The form the ticket came from, for example website-support.": "The form the ticket came from, for example website-support.",
         "Source page": "Source page",
-        "The page the form was on when it was sent.": "The page the form was on when it was sent."
+        "The page the form was on when it was sent.": "The page the form was on when it was sent.",
+        "The register slug, for example pipelinq.": "The register slug, for example pipelinq.",
+        "The schema slug, for example ticket.": "The schema slug, for example ticket.",
+        "Fields": "Fields",
+        "Each form field and the property it fills.": "Each form field and the property it fills.",
+        "Fixed values": "Fixed values",
+        "The values every submit sets, such as the channel.": "The values every submit sets, such as the channel."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -92,18 +92,19 @@ class FakeObjectStore {
 	}//end findAll()
 
 	/**
-	 * Delete one object.
+	 * Delete one object, in the contract's parameter order.
 	 *
-	 * @param string $uuid          The id.
-	 * @param mixed  $register      The register.
-	 * @param mixed  $schema        The schema.
-	 * @param bool   $_rbac         RBAC flag.
-	 * @param bool   $_multitenancy Multitenancy flag.
-	 * @param mixed  $currentUser   The acting user.
+	 * @param string $uuid            The id.
+	 * @param mixed  $register        The register.
+	 * @param mixed  $schema          The schema.
+	 * @param bool   $_rbac           RBAC flag.
+	 * @param bool   $_multitenancy   Multitenancy flag.
+	 * @param bool   $_retentionSweep Retention sweep flag.
+	 * @param mixed  $currentUser     The acting user.
 	 *
 	 * @return bool True.
 	 */
-	public function deleteObject(string $uuid, mixed $register = null, mixed $schema = null, bool $_rbac = true, bool $_multitenancy = true, mixed $currentUser = null): bool {
+	public function deleteObject(string $uuid, mixed $register = null, mixed $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false, mixed $currentUser = null): bool {
 		if ($this->deleteThrow !== null) {
 			throw $this->deleteThrow;
 		}

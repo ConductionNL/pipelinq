@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\WebForm\WebFormBindingCheck;
 use OCA\Pipelinq\Service\WebForm\WebFormFinder;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeContainer;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeObjectStore;
+use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\ObjectServiceContract;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeValidator;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -44,6 +45,8 @@ use Psr\Log\LoggerInterface;
  * A published form with findings is not saved; a valid one, a draft and other objects are.
  */
 class WebFormBindingListenerTest extends TestCase {
+
+	use ObjectServiceContract;
 
 	/**
 	 * The validator fake of the last built listener.
@@ -68,14 +71,13 @@ class WebFormBindingListenerTest extends TestCase {
 		$this->validator = new FakeValidator(findings: $findings);
 		$services = [
 			'OCA\OpenRegister\Db\SchemaMapper' => $this->validator,
-			'OCA\OpenRegister\Service\ObjectService' => new FakeObjectStore(),
 		];
 		if ($withCheck === true) {
 			$services['OCA\OpenRegister\Service\Form\FormDestinationValidator'] = $this->validator;
 		}
 
 		$container = new FakeContainer(services: $services);
-		$finder = new WebFormFinder($config, $container);
+		$finder = new WebFormFinder($config, $this->contractOver(new FakeObjectStore()));
 
 		return new WebFormBindingListener(
 			$finder,

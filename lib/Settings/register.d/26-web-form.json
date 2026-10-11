@@ -16,7 +16,7 @@
       "webForm": {
         "slug": "webForm",
         "title": "Website form",
-        "icon": "FormSelect",
+        "icon": "FormatListChecks",
         "version": "1.0.0",
         "summary": "A public form and the object a submit creates",
         "description": "A form on a website or in Nextcloud Forms, and the pipelinq object each submit creates. The form names its destination and maps its fields onto that object's properties. Only mapped fields reach the object, so the mapping is the list of what a visitor may set. A published form is checked against the destination when it is saved: a form that could never produce a valid object is refused. There is no in-between store: a submit creates the destination in the request, or is refused.",
@@ -71,10 +71,14 @@
             "description": "The object a submit creates: its register and schema, for example pipelinq and ticket.",
             "properties": {
               "register": {
-                "type": "string"
+                "type": "string",
+                "title": "Register",
+                "description": "The register slug, for example pipelinq."
               },
               "schema": {
-                "type": "string"
+                "type": "string",
+                "title": "Schema",
+                "description": "The schema slug, for example ticket."
               }
             }
           },
@@ -95,10 +99,14 @@
                 "type": "array",
                 "items": {
                   "type": "object"
-                }
+                },
+                "title": "Fields",
+                "description": "Each form field and the property it fills."
               },
               "fixed": {
-                "type": "object"
+                "type": "object",
+                "title": "Fixed values",
+                "description": "The values every submit sets, such as the channel."
               }
             }
           },

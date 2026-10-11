@@ -199,8 +199,8 @@ return [
         // the address conduction-website already posts to, its `source` being the
         // form's key; the submit no longer becomes an enquiry. Only the fields the
         // form maps reach the object. See WebFormIntakeService's class docblock.
-        ['name' => 'web_form#submit_by_source', 'url' => '/api/enquiry', 'verb' => 'POST'],
-        ['name' => 'web_form#submit', 'url' => '/api/web-forms/{key}/submit', 'verb' => 'POST', 'requirements' => ['key' => '[a-z0-9][a-z0-9-]{0,99}']],
+        ['name' => 'webForm#submitBySource', 'url' => '/api/enquiry', 'verb' => 'POST'],
+        ['name' => 'webForm#submit', 'url' => '/api/web-forms/{key}/submit', 'verb' => 'POST', 'requirements' => ['key' => '[a-z0-9][a-z0-9-]{0,99}']],
 
         // Schedules API — pending MUST appear before {id} so the slug does not catch "pending".
         ['name' => 'schedules#index',   'url' => '/api/schedules',         'verb' => 'GET'],
