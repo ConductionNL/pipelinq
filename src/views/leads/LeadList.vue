@@ -29,6 +29,8 @@
 		:showTitle="true"
 		:showTitleIcon="false"
 		:headerFilters="false"
+		rowTitle="plain"
+		:searchPlaceholder="t('pipelinq', 'Filter by title or client')"
 		:headerButtons="headerButtons"
 		:headerActions="headerActions"
 		:countText="t('pipelinq', '{shown} of {total} leads')"
