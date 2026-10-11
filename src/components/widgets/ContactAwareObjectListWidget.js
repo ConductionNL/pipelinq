@@ -20,6 +20,7 @@
 
 import { CnObjectListWidget } from '@conduction/nextcloud-vue'
 import { createWithContact } from '../../services/contactSyncApi.js'
+import { OBJECT_CREATED_EVENT } from '../../services/pageRefreshOnCreate.js'
 
 /** Schemas whose objects need a provisioned addressbook contact. */
 export const CONTACT_BACKED_SCHEMAS = ['client', 'contact']
@@ -62,6 +63,32 @@ export function createErrorMessage(error) {
 	return data?.error || data?.message || error?.message || 'error'
 }
 
+/**
+ * Announce a new object on the window, as the library's own create does.
+ *
+ * The contact-first create bypasses the library, so without this nothing on
+ * the page heard about the new contact: the client's Messages card kept
+ * saying no contacts were linked, and the Related card kept saying "No
+ * relations yet" (round-5 cloud check, items 2 and 5).
+ *
+ * @param {string} schema The schema slug.
+ * @param {object} created The created object, or the payload when the API returned none.
+ * @param {Window} [target] The window to dispatch on (injectable for tests); nothing happens without one.
+ * @return {void}
+ * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+ */
+export function announceCreated(schema, created, target = globalThis.window) {
+	if (!target || typeof target.dispatchEvent !== 'function') {
+		return
+	}
+	const object = created || {}
+	target.dispatchEvent(
+		new CustomEvent(OBJECT_CREATED_EVENT, {
+			detail: { ...object, register: 'pipelinq', schema, object },
+		}),
+	)
+}
+
 export default {
 	name: 'ContactAwareObjectListWidget',
 	extends: CnObjectListWidget,
@@ -74,6 +101,7 @@ export default {
 		 * @param {object} formData The confirmed form values.
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/round5-contact-create-and-task-links/specs/client-management/spec.md#requirement-a-contact-person-added-on-a-client-page-is-created
+		 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async onCreateConfirm(formData) {
 			const schema = this.content?.schema
@@ -85,8 +113,9 @@ export default {
 			}
 			const payload = createPayload(formData, this.resolvedFilter)
 			const dialog = this.$refs.createDialog
+			let created
 			try {
-				await createWithContact(schema, payload)
+				created = await createWithContact(schema, payload)
 			} catch (e) {
 				if (dialog) {
 					dialog.setResult({ error: createErrorMessage(e) })
@@ -97,6 +126,7 @@ export default {
 				dialog.setResult({ success: true })
 			}
 			this.$emit('created', payload)
+			announceCreated(schema, created || payload)
 			this.fetchRows()
 		},
 	},

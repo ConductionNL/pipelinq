@@ -24,62 +24,30 @@
 		:schema="schema"
 		:columns="columns"
 		:sidebar="sidebarConfig"
-		:rowClass="rowClassFor"
-		:filter="listFilter"
+		:quickFilters="quickFilters"
+		:quickFilterMaxVisible="6"
+		:showTitle="true"
+		:showTitleIcon="false"
+		:headerFilters="false"
+		:headerButtons="headerButtons"
+		:headerActions="headerActions"
+		:countText="t('pipelinq', '{shown} of {total} leads')"
+		:footerNote="
+			t(
+				'pipelinq',
+				'Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in {days} days is called stale.',
+				{ days: staleThreshold },
+			)
+		"
 		createModal="LeadCreateDialog"
 		rowClickToView
 		@rowClick="openLead"
 		@view="openLead">
-		<template #header-actions>
-			<div class="lead-list__filters">
-				<NcCheckboxRadioSwitch
-					v-model="showStaleOnly"
-					:aria-label="
-						t('pipelinq', 'Stale only (>{days}d)', {
-							days: staleThreshold,
-						})
-					"
-					type="checkbox">
-					{{
-						t('pipelinq', 'Stale only (>{days}d)', {
-							days: staleThreshold,
-						})
-					}}
-				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch
-					v-model="hideClosed"
-					:aria-label="t('pipelinq', 'Hide closed')"
-					type="checkbox">
-					{{ t('pipelinq', 'Hide closed') }}
-				</NcCheckboxRadioSwitch>
-				<NcButton
-					:pressed="callFirst"
-					:title="t('pipelinq', 'Sort by score, highest first')"
-					data-testid="lead-list-call-first"
-					@update:pressed="setCallFirst">
-					<template #icon>
-						<SortDescending :size="20" />
-					</template>
-					{{ t('pipelinq', 'Call first') }}
-				</NcButton>
-			</div>
-		</template>
-
-		<template #column-expectedCloseDate="{ row }">
-			<span :class="{ 'overdue-cell': isLeadOverdue(row, stages) }">
-				{{ row.expectedCloseDate || '-' }}
-				<small v-if="isLeadOverdue(row, stages)" class="overdue-suffix">
-					{{ getOverdueDays(row, stages) }}d {{ t('pipelinq', 'late') }}
-				</small>
-			</span>
-		</template>
 	</CnIndexPage>
 </template>
 
 <script>
 import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
-import { NcButton, NcCheckboxRadioSwitch } from '@nextcloud/vue'
-import SortDescending from 'vue-material-design-icons/SortDescending.vue'
 import { CALL_FIRST_SORT, isCallFirstSort } from '../../services/leadScore.js'
 import {
 	getOverdueDays,
@@ -93,9 +61,6 @@ export default {
 	name: 'LeadList',
 	components: {
 		CnIndexPage,
-		NcButton,
-		NcCheckboxRadioSwitch,
-		SortDescending,
 	},
 
 	data() {
@@ -103,22 +68,43 @@ export default {
 			register: 'pipelinq',
 			schema: 'lead',
 			columns: [
-				'title',
-				'stage',
-				'status',
-				'priority',
-				'value',
-				'expectedCloseDate',
+				{
+					key: 'title',
+					label: t('pipelinq', 'Lead'),
+					secondary: '{source}',
+				},
+				{ key: 'stage', label: t('pipelinq', 'Stage') },
+				{
+					key: 'value',
+					label: t('pipelinq', 'Value'),
+					formatter: 'objectCurrency',
+					formatterOptions: { decimals: 0 },
+				},
 				{
 					key: 'qualificationScore',
-					label: t('pipelinq', 'Score'),
+					label: t('pipelinq', 'Win chance'),
 					sortable: true,
-					widget: 'lead-score',
+					widget: 'lead-win-chance',
+				},
+				{
+					key: 'expectedCloseDate',
+					label: t('pipelinq', 'Expected close'),
+					widget: 'lead-close-date',
+					sortable: true,
+				},
+				{
+					key: 'priority',
+					label: t('pipelinq', 'Priority'),
+					formatter: 'enumText',
+				},
+				{
+					key: 'assignee',
+					label: t('pipelinq', 'Owner'),
+					widget: 'avatar',
+					widgetProps: { user: true },
 				},
 			],
 
-			showStaleOnly: false,
-			hideClosed: true,
 			callFirst: false,
 			// The sort Call first replaced, restored when it is switched off.
 			sortBeforeCallFirst: [],
@@ -152,21 +138,91 @@ export default {
 		},
 
 		/**
-		 * Server-side filter for the stale and hide-closed toggles. Stale means
-		 * not modified within the threshold, matching `isStale`.
+		 * The board's chips: Open (the default), Mine, Stale, Won and Lost, each
+		 * with its count. Stale means not modified within the threshold,
+		 * matching `isStale`.
 		 *
-		 * @return {object}
+		 * @return {Array<object>}
 		 * @spec openspec/specs/lead-management/spec.md
 		 */
-		listFilter() {
-			const filter = {}
-			if (this.hideClosed) {
-				filter.status = 'open'
-			}
-			if (this.showStaleOnly) {
-				filter['@self[updated][lt]'] = `@today-${this.staleThreshold}d`
-			}
-			return filter
+		quickFilters() {
+			return [
+				{
+					label: t('pipelinq', 'Open'),
+					filter: { status: 'open' },
+					default: true,
+					showCount: true,
+				},
+				{
+					label: t('pipelinq', 'Mine'),
+					filter: { status: 'open', assignee: '@me' },
+					showCount: true,
+				},
+				{
+					label: t('pipelinq', 'Out of date'),
+					filter: {
+						status: 'open',
+						'@self[updated][lt]': `@today-${this.staleThreshold}d`,
+					},
+
+					// The row badge and this list filter both read `@self.updated`.
+					// The count request goes to OpenRegister's aggregation endpoint,
+					// which ignores `@self[updated]` and answered 0, so no count is
+					// shown until the library can send a date filter that endpoint
+					// understands (library-gaps.md).
+					showCount: false,
+				},
+				{
+					label: t('pipelinq', 'Won'),
+					filter: { status: 'won' },
+					showCount: true,
+				},
+				{
+					label: t('pipelinq', 'Lost'),
+					filter: { status: 'lost' },
+					showCount: true,
+				},
+			]
+		},
+
+		/**
+		 * The header buttons in the board's order: Download, Actions, New lead.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/changes/round6-board-look/specs/board-look/spec.md
+		 */
+		headerButtons() {
+			return [
+				{ action: 'export', label: t('pipelinq', 'Download') },
+				{ action: 'actions-menu' },
+				{
+					action: 'add',
+					variant: 'primary',
+					icon: 'Plus',
+					label: t('pipelinq', 'New lead'),
+				},
+			]
+		},
+
+		/**
+		 * Call first sits in the Actions menu: it sorts by score, highest first.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+		 */
+		headerActions() {
+			return [
+				{
+					id: 'call-first',
+					label: this.callFirst
+						? t('pipelinq', 'Sort as before')
+						: t('pipelinq', 'Call first'),
+
+					icon: 'SortDescending',
+					handler: () => this.setCallFirst(!this.callFirst),
+				},
+			]
 		},
 
 		/**
@@ -275,14 +331,6 @@ export default {
 </script>
 
 <style scoped>
-.lead-list__filters {
-	display: flex;
-	gap: 16px;
-	align-items: center;
-	flex-wrap: wrap;
-	padding: 8px 0;
-}
-
 /* Overdue row highlighting (REQ-LM-004 Scenario 11). Scoped class applied
    via CnIndexPage's row-class prop. Uses an inset box-shadow (matching the
    library's .cn-table-row--selected accent) rather than border-left, which

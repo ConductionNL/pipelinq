@@ -142,7 +142,7 @@ describe('the dashboard', () => {
 			expect({ ...now, gridY: entry.gridY }, entry.id).toEqual(entry)
 			shifts.add(now.gridY - entry.gridY)
 		}
-		expect([...shifts]).toEqual([15])
+		expect([...shifts]).toEqual([16])
 	})
 
 	it('puts every card in the grid once, and no two cards in one cell', () => {
@@ -168,7 +168,7 @@ describe('the dashboard', () => {
 
 	it('opens with the greeting on the ground, the attention card and four numbers in a row', () => {
 		const top = simple.layout
-			.filter((entry) => entry.gridY < 5)
+			.filter((entry) => entry.gridY < 6)
 			.sort((a, b) => a.gridY - b.gridY || a.gridX - b.gridX)
 			.map((entry) => byId[entry.widgetId].type)
 		expect(top).toEqual([
@@ -179,6 +179,7 @@ describe('the dashboard', () => {
 			'stat',
 			'stat',
 			'stat',
+			'custom',
 		])
 		// PqDashboard has one header: the page header is hidden and the
 		// greeting row carries the kicker date and the heading on the ground.
@@ -197,28 +198,29 @@ describe('the dashboard', () => {
 		const at = (id) => simple.layout.find((entry) => entry.widgetId === id)
 		expect(at('simple-waiting-list')).toMatchObject({
 			gridX: 0,
-			gridY: 5,
+			gridY: 6,
 			gridWidth: 8,
 		})
 		expect(at('simple-per-channel')).toMatchObject({
 			gridX: 0,
-			gridY: 10,
+			gridY: 11,
 			gridWidth: 8,
 		})
 		expect(at('simple-callback-list')).toMatchObject({
 			gridX: 8,
-			gridY: 5,
+			gridY: 6,
 			gridWidth: 4,
 		})
 		expect(at('simple-latest-contact')).toMatchObject({
 			gridX: 8,
-			gridY: 10,
+			gridY: 11,
 			gridWidth: 4,
 		})
-		// The cards the page had start at row 15, under the client in focus
-		// at row 14; the design's end above both.
+		// The cards the page had start at row 16. The board puts the Start a
+		// contact card (row 5) above the lists (amended 10 Oct 2026), so the
+		// design now ends at row 15.
 		for (const id of ['simple-per-channel', 'simple-latest-contact']) {
-			expect(at(id).gridY + at(id).gridHeight, id).toBeLessThanOrEqual(14)
+			expect(at(id).gridY + at(id).gridHeight, id).toBeLessThanOrEqual(15)
 		}
 	})
 
@@ -476,15 +478,15 @@ describe('the tickets list', () => {
 	})
 
 	it('shows five views first and keeps the rest behind the overflow', () => {
-		expect(simple.quickFilterMaxVisible).toBe(5)
+		expect(simple.quickFilterMaxVisible).toBe(6)
 		expect(simple.quickFilters.map((item) => item.label)).toEqual([
 			'All',
 			'Waiting for me',
 			'New',
-			'Tickets',
+			'Waiting for customer',
+			'Requests',
 			'Complaints',
 			'Contactmomenten',
-			'Waiting for customer',
 		])
 		expect(simple.quickFilters.filter((item) => item.default)).toHaveLength(1)
 	})
@@ -522,7 +524,7 @@ describe('the tickets list', () => {
 		}
 	})
 
-	it('shows the handler as an avatar and colours a deadline that is today or past', () => {
+	it('shows the handler as an avatar, last, as the board draws it', () => {
 		const column = (key) =>
 			simple.columns.find(
 				(item) => typeof item === 'object' && item.key === key,
@@ -531,10 +533,8 @@ describe('the tickets list', () => {
 			widget: 'avatar',
 			widgetProps: { user: true },
 		})
-		expect(column('slaDeadline').widgetProps.variantWhen).toEqual([
-			{ op: 'lte', value: 0, variant: 'error' },
-			{ op: 'lte', value: 2, variant: 'warning' },
-		])
+		const last = simple.columns[simple.columns.length - 1]
+		expect(last.key).toBe('assignee')
 		expect(SCHEMAS.ticket.slaDeadline.format).toBe('date-time')
 	})
 })
@@ -606,9 +606,11 @@ describe('the hidden page header loses nothing', () => {
 		expect(simple.slots['widget-simple-availability']).toBe(
 			full.actionsComponent,
 		)
+		// The card wraps the same client picker the full page shows beside its title.
 		expect(simple.slots['widget-simple-client-in-focus']).toBe(
-			full.slots['title-meta'],
+			'WerkplekContactStart',
 		)
+		expect(full.slots['title-meta']).toBe('WerkplekClientSelect')
 		expect(layoutOf('simple-availability')).toMatchObject({
 			gridY: 0,
 			borderless: true,

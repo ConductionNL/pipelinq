@@ -1,6 +1,7 @@
 {
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"version": "1.1.0",
+	"look": "board",
 	"dependencies": [
 		"openregister",
 		{ "id": "openconnector", "required": false, "name": "OpenConnector" },
@@ -2562,7 +2563,7 @@
 				"showViewAction": false,
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Tickets", "filter": { "ticketType": "request" } },
+					{ "label": "Requests", "filter": { "ticketType": "request" } },
 					{
 						"label": "Complaints",
 						"filter": { "ticketType": "complaint" }
@@ -4971,7 +4972,7 @@
 				},
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Tickets", "filter": { "ticketType": "request" } },
+					{ "label": "Requests", "filter": { "ticketType": "request" } },
 					{
 						"label": "Complaints",
 						"filter": { "ticketType": "complaint" }

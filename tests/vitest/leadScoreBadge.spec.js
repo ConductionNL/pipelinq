@@ -146,7 +146,7 @@ describe('callers', () => {
 	it('the Leads list has a sortable score column and a Call first toggle', () => {
 		const list = read('src/views/leads/LeadList.vue')
 		expect(list).toMatch(
-			/key: 'qualificationScore',[\s\S]{0,120}widget: 'lead-score'/,
+			/key: 'qualificationScore',[\s\S]{0,120}widget: 'lead-win-chance'/,
 		)
 		expect(list).toMatch(/Call first/)
 		expect(list).toMatch(/CALL_FIRST_SORT/)

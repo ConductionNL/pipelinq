@@ -3,7 +3,7 @@
 	"$id": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"title": "Conduction App Manifest v2",
 	"description": "v2 schema for the JSON-driven page and navigation manifest consumed by @conduction/nextcloud-vue. Introduces a uniform widgets[] array on every page type with a per-slot grid coordinate system, a typed actions[] discriminator, and the required $schema field for version detection. v1 manifests continue to validate against app-manifest.schema.json (unchanged).",
-	"version": "2.73.0",
+	"version": "2.76.0",
 	"type": "object",
 	"required": ["$schema", "version"],
 	"allOf": [
@@ -760,8 +760,8 @@
 		},
 		"sentinelFilterToken": {
 			"type": "string",
-			"pattern": "^@(?:me(?:\\.(?:displayName|email))?|now|today|monthStart|quarterStart|yearStart)$|^@today[+-][0-9]+d$",
-			"description": "Filter-value context: relative fetch-time tokens resolved by resolveFilterTokens (@me, @me.displayName, @me.email, @now, @today, @today±Nd, @monthStart, @quarterStart, @yearStart). Mirrors SENTINEL_TOKEN_PATTERNS.filter in src/utils/sentinelTokens.js (byte-equality enforced by a unit test)."
+			"pattern": "^@(?:me(?:\\.(?:displayName|email))?|myGroups|now|today|monthStart|quarterStart|yearStart)$|^@today[+-][0-9]+d$",
+			"description": "Filter-value context: relative fetch-time tokens resolved by resolveFilterTokens (@me, @me.displayName, @me.email, @myGroups (the current user's group ids, an IN list), @now, @today, @today±Nd, @monthStart, @quarterStart, @yearStart). Mirrors SENTINEL_TOKEN_PATTERNS.filter in src/utils/sentinelTokens.js (byte-equality enforced by a unit test)."
 		},
 		"sentinelConfigToken": {
 			"type": "string",
@@ -1094,7 +1094,7 @@
 						"pillColors": {
 							"type": "object",
 							"description": "Pill value to badge variant. A value without an entry takes the default variant.",
-							"additionalProperties": { "type": "string", "enum": ["default", "primary", "success", "warning", "error", "info"] }
+							"additionalProperties": { "type": "string", "enum": ["default", "primary", "success", "warning", "error", "info", "purple", "teal"] }
 						},
 						"due": { "type": "string", "description": "The date field of the footer's due text, marked by `dueRule`." },
 						"owner": { "type": "string", "description": "The field of the owner shown as an avatar (initials) at the footer's end." }
@@ -1143,7 +1143,7 @@
 				"colorMap": {
 					"type": "object",
 					"description": "Raw value to badge variant. Keys are matched ignoring case.",
-					"additionalProperties": { "type": "string", "enum": ["default", "primary", "success", "warning", "error", "info"] }
+					"additionalProperties": { "type": "string", "enum": ["default", "primary", "success", "warning", "error", "info", "purple", "teal"] }
 				},
 				"labels": {
 					"type": "object",
@@ -1152,7 +1152,7 @@
 				},
 				"variant": {
 					"type": "string",
-					"enum": ["default", "primary", "success", "warning", "error", "info"],
+					"enum": ["default", "primary", "success", "warning", "error", "info", "purple", "teal"],
 					"default": "default",
 					"description": "Badge variant for a value `colorMap` does not name."
 				}
@@ -3304,19 +3304,23 @@
 					"properties": {
 						"favourite": {
 							"type": "boolean",
-							"description": "Detail pages: the star beside the title. Omitted means automatic: it shows when the object carries @self.favourite. false removes it."
+							"description": "Deprecated and ignored: there is no star any more, a favourite is a follow with notifications off. Kept so existing manifests stay valid; use follow."
 						},
 						"follow": {
 							"type": "boolean",
-							"description": "Detail pages: the Follow toggle beside the title, with the follower count for a user who may update the record. Omitted means automatic: it shows when the object carries @self.watching. false removes it, and the object read then no longer asks for @self.can."
+							"description": "Detail pages: the one Follow control beside the title, with a notifications on/off switch while the user follows and the follower count for a user who may update the record. Omitted means automatic: it shows when the object carries @self.watching. false removes it, and the object read then no longer asks for @self.can."
+						},
+						"showFollowColumn": {
+							"type": "boolean",
+							"description": "Index pages: add a first column with a follow toggle per row, bound to each row's @self.watching. Clicking it does not open the row. Default false."
 						},
 						"showFavouriteColumn": {
 							"type": "boolean",
-							"description": "Index pages: add a first column with a star per row, bound to each row's @self.favourite. Clicking it does not open the row. Default false."
+							"description": "Deprecated alias of showFollowColumn: the star column became the follow column. Default false."
 						},
 						"personalLenses": {
 							"type": "array",
-							"description": "Index pages: personal lenses added to the quick filters, in order. favourite lists the user's favourites, recent the records the user opened last (it owns the order, so column sorting is off), watching the records the user follows, unread the records changed since the user last looked. They combine with every other filter. Default none.",
+							"description": "Index pages: personal lenses added to the quick filters, in order. watching lists the records the user follows (labelled Following), recent the records the user opened last (it owns the order, so column sorting is off), unread the records changed since the user last looked. They combine with every other filter. favourite is a deprecated alias of watching; asking for both gives one tab. Default none.",
 							"items": { "enum": ["favourite", "recent", "watching", "unread"] },
 							"uniqueItems": true
 						},
@@ -3582,7 +3586,7 @@
 						},
 						"columns": {
 							"type": "array",
-							"description": "Table columns (for type='index' and type='logs'). Items may be strings (legacy shorthand) or column objects ({ key, label, sortable?, width?, formatter?, formatterOptions?, widget?, widgetProps?, format?, aggregate? }). `formatter` resolves against cnFormatters (built-ins incl. currency / conditionalPhrase — configured via `formatterOptions`); `widget` resolves against cnCellWidgets (built-ins incl. badge / fkResolve / link / avatar / date).",
+							"description": "Table columns (for type='index' and type='logs'). Items may be strings (legacy shorthand) or column objects ({ key, label, sortable?, width?, formatter?, formatterOptions?, widget?, widgetProps?, format?, aggregate?, colorMap? }). `colorMap` maps an enum column's raw values to a pill tone (default, primary, success, warning, error, info, purple, teal) and wins over the schema property's own `colorMap` / `x-color-map`. `formatter` resolves against cnFormatters (built-ins incl. currency / conditionalPhrase — configured via `formatterOptions`); `widget` resolves against cnCellWidgets (built-ins incl. badge / fkResolve / link / avatar / date).",
 							"items": {
 								"oneOf": [
 									{ "type": "string" },

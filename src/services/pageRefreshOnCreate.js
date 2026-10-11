@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Conduction B.V.
 
 /**
- * Refresh the page's widgets when a line item is created.
+ * Refresh the page's widgets when a line item or a contact is created.
  *
  * The deal page counts its line items in a stats-block widget, which fetches
  * once and then only on the page's Refresh action. Adding a line through the
@@ -23,8 +23,18 @@ export const OBJECT_CREATED_EVENT = 'cn-walkthrough:object-created'
 /** The event-bus channel the page-level Refresh action broadcasts on. */
 export const PAGE_REFRESH_CHANNEL = 'cn:page:refresh'
 
+/** The event-bus channel CnWidgetWrapper's Refresh action broadcasts on; CnRelatedObjectsWidget reloads on it. */
+export const WIDGET_REFRESH_CHANNEL = 'cn:widget:refresh'
+
 /** Schemas whose new objects change a count on the page that shows them. */
-export const REFRESH_ON_CREATE = ['leadProduct']
+export const REFRESH_ON_CREATE = ['leadProduct', 'contact']
+
+/**
+ * Schemas whose new objects also change a card that reloads only on a widget
+ * refresh. A contact added on a client page is a relation of that client, and
+ * the Related card listens on the widget channel, not the page channel.
+ */
+export const WIDGET_REFRESH_ON_CREATE = ['contact']
 
 /**
  * Listen for creates and refresh the page after a line item.
@@ -33,12 +43,16 @@ export const REFRESH_ON_CREATE = ['leadProduct']
  * @param {(channel: string, payload: object) => void} [send] The event-bus emit (injectable for tests).
  * @return {() => void} Removes the listener.
  * @spec openspec/changes/round3-review-points/specs/lead-product-link/spec.md
+ * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
  */
 export function installPageRefreshOnCreate(target, send = emit) {
 	const onCreated = (event) => {
 		const schema = event?.detail?.schema
 		if (REFRESH_ON_CREATE.includes(schema)) {
 			send(PAGE_REFRESH_CHANNEL, {})
+		}
+		if (WIDGET_REFRESH_ON_CREATE.includes(schema)) {
+			send(WIDGET_REFRESH_CHANNEL, {})
 		}
 	}
 	target.addEventListener(OBJECT_CREATED_EVENT, onCreated)

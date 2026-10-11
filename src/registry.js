@@ -329,6 +329,7 @@ import SocialPostFormView from './views/social/SocialPostFormView.vue'
 import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
+import WerkplekContactStart from './views/werkplek/widgets/WerkplekContactStart.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 import ContactAwareObjectListWidget from './components/widgets/ContactAwareObjectListWidget.js'
 import { sectionWidget } from './components/widgets/sectionWidget.js'
@@ -1189,6 +1190,13 @@ const registry = {
 		component: WerkplekClientSelect,
 		...HEADER_ACTIONS_META,
 		_note: 'Workspace title-meta slot: the client in focus, written to @workspace.selectedClient.',
+	},
+
+	WerkplekContactStart: {
+		kind: 'widget',
+		component: WerkplekContactStart,
+		...HEADER_ACTIONS_META,
+		_note: 'Contact centre dashboard: the Start a contact card around the client in focus picker.',
 	},
 
 	// --- xWiki integration (xwiki-integration). ---

@@ -240,4 +240,19 @@ class ActivityServiceTest extends TestCase {
 		// Should not throw.
 		$this->service->publishCreated('lead', 'Test', '123');
 	}//end testPublishHandlesException()
+
+	/**
+	 * A contact has no pipelinq created activity: it used to publish
+	 * `lead_created` with an empty name (round-5 cloud check, item 1).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
+	 */
+	public function testPublishCreatedForContactPublishesNothing(): void {
+		$this->activityManager->expects($this->never())->method('generateEvent');
+		$this->activityManager->expects($this->never())->method('publish');
+
+		$this->service->publishCreated('contact', 'Jan Jansen', '789');
+	}//end testPublishCreatedForContactPublishesNothing()
 }//end class
