@@ -966,7 +966,7 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 9,
-						"gridHeight": 1,
+						"gridHeight": 2,
 						"showTitle": false,
 						"sizeToContent": true
 					},
@@ -976,7 +976,7 @@
 						"gridX": 9,
 						"gridY": 0,
 						"gridWidth": 3,
-						"gridHeight": 1,
+						"gridHeight": 2,
 						"showTitle": false,
 						"borderless": true,
 						"sizeToContent": true
@@ -985,7 +985,7 @@
 						"id": "s2",
 						"widgetId": "simple-first-today",
 						"gridX": 0,
-						"gridY": 1,
+						"gridY": 2,
 						"gridWidth": 12,
 						"gridHeight": 2,
 						"showTitle": false,
@@ -995,9 +995,9 @@
 						"id": "s3",
 						"widgetId": "simple-new",
 						"gridX": 0,
-						"gridY": 3,
+						"gridY": 4,
 						"gridWidth": 3,
-						"gridHeight": 2,
+						"gridHeight": 3,
 						"showTitle": false,
 						"dateChip": false,
 						"sizeToContent": true
@@ -1006,9 +1006,9 @@
 						"id": "s4",
 						"widgetId": "simple-waiting-for-me",
 						"gridX": 3,
-						"gridY": 3,
+						"gridY": 4,
 						"gridWidth": 3,
-						"gridHeight": 2,
+						"gridHeight": 3,
 						"showTitle": false,
 						"dateChip": false,
 						"sizeToContent": true
@@ -1017,9 +1017,9 @@
 						"id": "s5",
 						"widgetId": "simple-callbacks",
 						"gridX": 6,
-						"gridY": 3,
+						"gridY": 4,
 						"gridWidth": 3,
-						"gridHeight": 2,
+						"gridHeight": 3,
 						"showTitle": false,
 						"dateChip": false,
 						"sizeToContent": true
@@ -1028,9 +1028,9 @@
 						"id": "s6",
 						"widgetId": "simple-waiting-for-customer",
 						"gridX": 9,
-						"gridY": 3,
+						"gridY": 4,
 						"gridWidth": 3,
-						"gridHeight": 2,
+						"gridHeight": 3,
 						"showTitle": false,
 						"dateChip": false,
 						"sizeToContent": true
@@ -1039,7 +1039,7 @@
 						"id": "s7",
 						"widgetId": "simple-waiting-list",
 						"gridX": 0,
-						"gridY": 6,
+						"gridY": 9,
 						"gridWidth": 8,
 						"gridHeight": 5,
 						"showTitle": true,
@@ -1052,9 +1052,9 @@
 						"id": "s8",
 						"widgetId": "simple-per-channel",
 						"gridX": 0,
-						"gridY": 11,
+						"gridY": 14,
 						"gridWidth": 8,
-						"gridHeight": 4,
+						"gridHeight": 3,
 						"showTitle": true,
 						"sizeToContent": true
 					},
@@ -1062,7 +1062,7 @@
 						"id": "s9",
 						"widgetId": "simple-callback-list",
 						"gridX": 8,
-						"gridY": 6,
+						"gridY": 9,
 						"gridWidth": 4,
 						"gridHeight": 5,
 						"showTitle": true
@@ -1071,7 +1071,7 @@
 						"id": "s10",
 						"widgetId": "simple-latest-contact",
 						"gridX": 8,
-						"gridY": 11,
+						"gridY": 14,
 						"gridWidth": 4,
 						"gridHeight": 4,
 						"showTitle": true
@@ -1080,9 +1080,9 @@
 						"id": "s11",
 						"widgetId": "simple-client-in-focus",
 						"gridX": 0,
-						"gridY": 5,
+						"gridY": 7,
 						"gridWidth": 12,
-						"gridHeight": 1,
+						"gridHeight": 2,
 						"showTitle": false,
 						"borderless": true
 					},
@@ -1090,7 +1090,7 @@
 						"id": "wr",
 						"widgetId": "requests",
 						"gridX": 0,
-						"gridY": 16,
+						"gridY": 18,
 						"gridWidth": 8,
 						"gridHeight": 4
 					},
@@ -1098,7 +1098,7 @@
 						"id": "wi",
 						"widgetId": "interaction",
 						"gridX": 8,
-						"gridY": 16,
+						"gridY": 18,
 						"gridWidth": 4,
 						"gridHeight": 8
 					},
@@ -1106,7 +1106,7 @@
 						"id": "wt",
 						"widgetId": "tasks",
 						"gridX": 0,
-						"gridY": 20,
+						"gridY": 22,
 						"gridWidth": 8,
 						"gridHeight": 4
 					},
@@ -1114,7 +1114,7 @@
 						"id": "wk",
 						"widgetId": "knowledge",
 						"gridX": 8,
-						"gridY": 24,
+						"gridY": 26,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -1122,7 +1122,7 @@
 						"id": "wc",
 						"widgetId": "client-cases",
 						"gridX": 0,
-						"gridY": 24,
+						"gridY": 26,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -1130,7 +1130,7 @@
 						"id": "wm",
 						"widgetId": "client-contacts",
 						"gridX": 4,
-						"gridY": 24,
+						"gridY": 26,
 						"gridWidth": 4,
 						"gridHeight": 5
 					}
@@ -1366,6 +1366,16 @@
 								{
 									"key": "occurredAt",
 									"label": "Waiting since",
+									"widget": "age",
+									"widgetProps": {
+										"variantWhen": [
+											{
+												"op": "gte",
+												"value": 3,
+												"variant": "error"
+											}
+										]
+									},
 									"format": "date-time"
 								}
 							],
