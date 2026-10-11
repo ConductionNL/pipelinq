@@ -23,7 +23,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes;
 use Throwable;
 
 /**
- * Stored rows by schema id; findAll narrows by schema only, so callers must judge bodies themselves.
+ * Stored rows by schema id; findAll narrows by schema and by property filters on array rows.
  */
 class FakeObjectStore {
 
@@ -64,7 +64,29 @@ class FakeObjectStore {
 	 */
 	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 		$this->queries[] = $config + ['_rbac' => $_rbac];
-		$rows = ($this->rows[(string)($config['filters']['schema'] ?? '')] ?? []);
+		$filters = (array)($config['filters'] ?? []);
+		$rows = ($this->rows[(string)($filters['schema'] ?? '')] ?? []);
+		unset($filters['register'], $filters['schema']);
+		// Property filters narrow as the real store does, on array rows; an
+		// entity row is passed through so callers that judge bodies are tested.
+		$rows = array_values(
+			array_filter(
+				$rows,
+				static function (mixed $row) use ($filters): bool {
+					if (is_array($row) === false) {
+						return true;
+					}
+
+					foreach ($filters as $name => $value) {
+						if ((string)($row[$name] ?? '') !== (string)$value) {
+							return false;
+						}
+					}
+
+					return true;
+				}
+			)
+		);
 
 		return array_slice($rows, (int)($config['offset'] ?? 0), (int)($config['limit'] ?? 1000));
 	}//end findAll()

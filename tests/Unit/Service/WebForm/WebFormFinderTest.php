@@ -82,12 +82,15 @@ class WebFormFinderTest extends TestCase {
 	 * @return void
 	 */
 	public function testStoreRowsThatDoNotMatchAreIgnored(): void {
-		$finder = $this->finder(
-			[
-				['@self' => ['id' => 'f-1'], 'key' => 'website-support', 'status' => 'draft'],
-				['@self' => ['id' => 'f-2'], 'key' => 'website-other', 'status' => 'published'],
-			]
-		);
+		$draft = new ObjectEntity();
+		$draft->setUuid('f-1');
+		$draft->setObject(['key' => 'website-support', 'status' => 'draft']);
+		$other = new ObjectEntity();
+		$other->setUuid('f-2');
+		$other->setObject(['key' => 'website-other', 'status' => 'published']);
+		// Entity rows pass the fake store's filter untouched, as a store that
+		// ignored a filter would hand them back.
+		$finder = $this->finder([$draft, $other]);
 
 		$this->assertNull($finder->publishedByKey(key: 'website-support'));
 	}//end testStoreRowsThatDoNotMatchAreIgnored()

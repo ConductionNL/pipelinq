@@ -93,7 +93,9 @@ class WebFormControllerTest extends TestCase {
 
 		$this->assertSame(201, $response->getStatus());
 		$this->assertSame(['id' => 't-1', 'reference' => 'TICKET-1', 'receivedAt' => '2026-10-11T09:00:00+00:00'], $response->getData());
-		$this->assertSame('https://conduction.nl', $response->getHeaders()['Access-Control-Allow-Origin']);
+		// Read by reflection: Response::getHeaders() reaches the server container for its CSP default.
+		$headers = new \ReflectionProperty(\OCP\AppFramework\Http\Response::class, 'headers');
+		$this->assertSame('https://conduction.nl', $headers->getValue($response)['Access-Control-Allow-Origin']);
 	}//end testSubmitBySourceCreatesAndAnswers201()
 
 	/**
