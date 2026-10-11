@@ -36,14 +36,14 @@
           "title": {
             "type": "string",
             "title": "Title",
-            "description": "The form's name, as admins see it",
+            "description": "The form's name, as admins see it.",
             "maxLength": 255,
             "minLength": 1
           },
           "key": {
             "type": "string",
             "title": "Key",
-            "description": "The name a website sends with each submit (the `source` field), for example website-support. Lowercase letters, digits and dashes.",
+            "description": "The name a website sends with each submit, for example website-support. Lowercase letters, digits and dashes.",
             "pattern": "^[a-z0-9][a-z0-9-]{0,99}$",
             "maxLength": 100,
             "facetable": true
@@ -51,7 +51,7 @@
           "status": {
             "type": "string",
             "title": "Status",
-            "description": "Only a published form takes submits. Publishing runs the destination check.",
+            "description": "Only a published form takes submits. Publishing checks the form against its destination.",
             "enum": [
               "draft",
               "published",
@@ -68,7 +68,7 @@
           "destination": {
             "type": "object",
             "title": "Destination",
-            "description": "Where a submit goes: the register and schema slug of the object it creates, for example pipelinq and ticket.",
+            "description": "The object a submit creates: its register and schema, for example pipelinq and ticket.",
             "properties": {
               "register": {
                 "type": "string"
@@ -80,8 +80,8 @@
           },
           "writes": {
             "type": "array",
-            "title": "Writes",
-            "description": "For a form that creates several objects at once (a contact and a lead): each entry is { as, register, schema, mapping }. Used instead of destination and mapping; all are created or none.",
+            "title": "Several objects",
+            "description": "For a form that creates several objects at once, such as a contact and a lead. All are created, or none.",
             "items": {
               "type": "object"
             }
@@ -89,7 +89,7 @@
           "mapping": {
             "type": "object",
             "title": "Field mapping",
-            "description": "fields: a list of { field, property, type, and the field's own limits such as maxLength }; fixed: property to value, set on every submit (for example channel: website).",
+            "description": "Which form field fills which property of the destination, and the values every submit sets, such as the channel.",
             "properties": {
               "fields": {
                 "type": "array",
@@ -105,7 +105,7 @@
           "fieldFallbacks": {
             "type": "object",
             "title": "Field fallbacks",
-            "description": "field to a list of other fields: when the visitor leaves the field blank, the first filled one of the listed fields is used. For example a title taken from the organisation or name.",
+            "description": "When a visitor leaves a field blank, the first filled field from this list is used. For example, a title from the organisation or the name.",
             "additionalProperties": {
               "type": "array",
               "items": {
@@ -116,7 +116,7 @@
           "requireAnyOf": {
             "type": "array",
             "title": "Required, one of",
-            "description": "Fields of which the visitor must fill at least one, for example a message or an email address. Without it, any one mapped field will do.",
+            "description": "The visitor must fill at least one of these fields, for example a message or an email address.",
             "items": {
               "type": "string"
             }
@@ -134,7 +134,7 @@
           "formsFormId": {
             "type": "integer",
             "title": "Nextcloud Forms form",
-            "description": "When the answers come from Nextcloud Forms: the id of that form. Each field in the mapping is then a question id, and the binding is checked against the form's questions when it is saved.",
+            "description": "The Nextcloud Forms form whose answers this form takes. Its questions are checked against the destination when you save.",
             "minimum": 1
           }
         }
@@ -145,13 +145,13 @@
           "reporterName": {
             "type": "string",
             "title": "Reporter name",
-            "description": "The name the reporter typed, when nobody knows them yet (a website or form submit). Kept as typed; linking a contact stays a person's decision.",
+            "description": "The name the reporter typed, when nobody knows them yet.",
             "maxLength": 255
           },
           "reporterEmail": {
             "type": "string",
             "title": "Reporter email",
-            "description": "The email address the reporter typed. Usually the only way to answer a website submit.",
+            "description": "The email address the reporter typed. Often the only way to answer them.",
             "format": "email",
             "maxLength": 255
           },
@@ -164,20 +164,20 @@
           "reporterOrganisation": {
             "type": "string",
             "title": "Reporter organisation",
-            "description": "The organisation the reporter named, as typed.",
+            "description": "The organisation the reporter named.",
             "maxLength": 255
           },
           "source": {
             "type": "string",
             "title": "Source",
-            "description": "The form a submit came from (its key), for example website-support.",
+            "description": "The form the ticket came from, for example website-support.",
             "maxLength": 100,
             "facetable": true
           },
           "sourceUrl": {
             "type": "string",
             "title": "Source page",
-            "description": "The page the form sat on when it was submitted.",
+            "description": "The page the form was on when it was sent.",
             "maxLength": 2048
           }
         }
@@ -200,13 +200,49 @@
         },
         "mapping": {
           "fields": [
-            { "field": "title", "property": "title", "type": "text", "minLength": 1, "maxLength": 255 },
-            { "field": "message", "property": "description", "type": "textarea", "maxLength": 20000 },
-            { "field": "contactName", "property": "reporterName", "type": "text", "maxLength": 255 },
-            { "field": "contactEmail", "property": "reporterEmail", "type": "email", "maxLength": 255 },
-            { "field": "contactPhone", "property": "reporterPhone", "type": "tel", "maxLength": 64 },
-            { "field": "organisation", "property": "reporterOrganisation", "type": "text", "maxLength": 255 },
-            { "field": "pageUrl", "property": "sourceUrl", "type": "text", "maxLength": 2048 }
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            {
+              "field": "message",
+              "property": "description",
+              "type": "textarea",
+              "maxLength": 20000
+            },
+            {
+              "field": "contactName",
+              "property": "reporterName",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "contactEmail",
+              "property": "reporterEmail",
+              "type": "email",
+              "maxLength": 255
+            },
+            {
+              "field": "contactPhone",
+              "property": "reporterPhone",
+              "type": "tel",
+              "maxLength": 64
+            },
+            {
+              "field": "organisation",
+              "property": "reporterOrganisation",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "pageUrl",
+              "property": "sourceUrl",
+              "type": "text",
+              "maxLength": 2048
+            }
           ],
           "fixed": {
             "ticketType": "request",
@@ -216,9 +252,16 @@
           }
         },
         "fieldFallbacks": {
-          "title": ["organisation", "contactName", "contactEmail"]
+          "title": [
+            "organisation",
+            "contactName",
+            "contactEmail"
+          ]
         },
-        "requireAnyOf": ["message", "contactEmail"]
+        "requireAnyOf": [
+          "message",
+          "contactEmail"
+        ]
       },
       {
         "@self": {
@@ -236,13 +279,49 @@
         },
         "mapping": {
           "fields": [
-            { "field": "title", "property": "title", "type": "text", "minLength": 1, "maxLength": 255 },
-            { "field": "message", "property": "description", "type": "textarea", "maxLength": 20000 },
-            { "field": "contactName", "property": "reporterName", "type": "text", "maxLength": 255 },
-            { "field": "contactEmail", "property": "reporterEmail", "type": "email", "maxLength": 255 },
-            { "field": "contactPhone", "property": "reporterPhone", "type": "tel", "maxLength": 64 },
-            { "field": "organisation", "property": "reporterOrganisation", "type": "text", "maxLength": 255 },
-            { "field": "pageUrl", "property": "sourceUrl", "type": "text", "maxLength": 2048 }
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            {
+              "field": "message",
+              "property": "description",
+              "type": "textarea",
+              "maxLength": 20000
+            },
+            {
+              "field": "contactName",
+              "property": "reporterName",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "contactEmail",
+              "property": "reporterEmail",
+              "type": "email",
+              "maxLength": 255
+            },
+            {
+              "field": "contactPhone",
+              "property": "reporterPhone",
+              "type": "tel",
+              "maxLength": 64
+            },
+            {
+              "field": "organisation",
+              "property": "reporterOrganisation",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "pageUrl",
+              "property": "sourceUrl",
+              "type": "text",
+              "maxLength": 2048
+            }
           ],
           "fixed": {
             "ticketType": "request",
@@ -252,9 +331,16 @@
           }
         },
         "fieldFallbacks": {
-          "title": ["organisation", "contactName", "contactEmail"]
+          "title": [
+            "organisation",
+            "contactName",
+            "contactEmail"
+          ]
         },
-        "requireAnyOf": ["message", "contactEmail"]
+        "requireAnyOf": [
+          "message",
+          "contactEmail"
+        ]
       },
       {
         "@self": {
@@ -272,13 +358,49 @@
         },
         "mapping": {
           "fields": [
-            { "field": "title", "property": "title", "type": "text", "minLength": 1, "maxLength": 255 },
-            { "field": "message", "property": "description", "type": "textarea", "maxLength": 20000 },
-            { "field": "contactName", "property": "reporterName", "type": "text", "maxLength": 255 },
-            { "field": "contactEmail", "property": "reporterEmail", "type": "email", "maxLength": 255 },
-            { "field": "contactPhone", "property": "reporterPhone", "type": "tel", "maxLength": 64 },
-            { "field": "organisation", "property": "reporterOrganisation", "type": "text", "maxLength": 255 },
-            { "field": "pageUrl", "property": "sourceUrl", "type": "text", "maxLength": 2048 }
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            {
+              "field": "message",
+              "property": "description",
+              "type": "textarea",
+              "maxLength": 20000
+            },
+            {
+              "field": "contactName",
+              "property": "reporterName",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "contactEmail",
+              "property": "reporterEmail",
+              "type": "email",
+              "maxLength": 255
+            },
+            {
+              "field": "contactPhone",
+              "property": "reporterPhone",
+              "type": "tel",
+              "maxLength": 64
+            },
+            {
+              "field": "organisation",
+              "property": "reporterOrganisation",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "pageUrl",
+              "property": "sourceUrl",
+              "type": "text",
+              "maxLength": 2048
+            }
           ],
           "fixed": {
             "ticketType": "request",
@@ -288,9 +410,16 @@
           }
         },
         "fieldFallbacks": {
-          "title": ["organisation", "contactName", "contactEmail"]
+          "title": [
+            "organisation",
+            "contactName",
+            "contactEmail"
+          ]
         },
-        "requireAnyOf": ["message", "contactEmail"]
+        "requireAnyOf": [
+          "message",
+          "contactEmail"
+        ]
       }
     ]
   }
