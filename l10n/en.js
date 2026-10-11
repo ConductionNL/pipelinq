@@ -7513,6 +7513,8 @@ OC.L10N.register(
         "No action needed now": "No action needed now",
         "Start a contact": "Start a contact",
         "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.": "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.",
+        "Filter by subject or client": "Filter by subject or client",
+        "Filter by title or client": "Filter by title or client",
         "Website form": "Website form",
         "Unpublished": "Unpublished",
         "The form's name, as admins see it.": "The form's name, as admins see it.",
