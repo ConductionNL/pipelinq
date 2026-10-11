@@ -92,11 +92,15 @@ class FormsSubmissionListener implements IEventListener {
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms/spec.md#requirement-a-nextcloud-forms-form-feeds-pipelinq-only-through-a-checked-binding
 	 */
 	public function handle(Event $event): void {
-		if (is_a($event, self::EVENT) === false || is_callable([$event, 'getWebhookSerializable']) === false) {
+		// Compared by class name, not `is_a()`: Forms is optional, and naming its
+		// class in a type check would make the analysers treat it as required.
+		$classes = array_merge([get_class($event)], array_values(class_parents($event)));
+		$read = [$event, 'getWebhookSerializable'];
+		if (in_array(self::EVENT, $classes, true) === false || is_callable($read) === false) {
 			return;
 		}
 
-		$serialised = (array)$event->getWebhookSerializable();
+		$serialised = (array)call_user_func($read);
 		$formId = (int)(((array)($serialised['form'] ?? []))['id'] ?? 0);
 		$submissionId = (int)(((array)($serialised['submission'] ?? []))['id'] ?? 0);
 		if ($formId <= 0 || $submissionId <= 0) {

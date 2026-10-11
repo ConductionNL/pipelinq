@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Pipelinq\Service\WebForm\WebFormBindingCheck;
@@ -76,15 +77,28 @@ class WebFormBindingListener implements IEventListener {
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms/spec.md#requirement-a-public-pipelinq-form-names-its-destination-and-is-checked-when-published
 	 */
 	public function handle(Event $event): void {
-		$entity = null;
 		if ($event instanceof ObjectCreatingEvent) {
-			$entity = $event->getObject();
-		} else if ($event instanceof ObjectUpdatingEvent) {
-			$entity = $event->getNewObject();
+			$this->judge(entity: $event->getObject(), event: $event);
+			return;
 		}
 
+		if ($event instanceof ObjectUpdatingEvent) {
+			$this->judge(entity: $event->getNewObject(), event: $event);
+		}
+
+	}//end handle()
+
+	/**
+	 * Check one webForm about to be saved; refuse the save on any finding.
+	 *
+	 * @param ObjectEntity                            $entity The object as it will be saved.
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event  The event, to read modified data from and to refuse.
+	 *
+	 * @return void
+	 */
+	private function judge(ObjectEntity $entity, ObjectCreatingEvent|ObjectUpdatingEvent $event): void {
 		$schema = $this->finder->schemaId();
-		if ($entity === null || $schema === '' || (string)$entity->getSchema() !== $schema) {
+		if ($schema === '' || (string)$entity->getSchema() !== $schema) {
 			return;
 		}
 
@@ -116,5 +130,5 @@ class WebFormBindingListener implements IEventListener {
 		);
 		$event->stopPropagation();
 
-	}//end handle()
+	}//end judge()
 }//end class
