@@ -191,7 +191,7 @@ class HeldObjectDrain {
 	private function destinationOf(array $form): string {
 		return implode(
 			',',
-			array_map(static fn (array $write): string => (string)($write['schema'] ?? ''), WebFormBindingCheck::writesOf(form: $form))
+			array_map(static fn (array $write): string => (string)($write['schema'] ?? ''), $this->finder->writesOf(form: $form))
 		);
 
 	}//end destinationOf()

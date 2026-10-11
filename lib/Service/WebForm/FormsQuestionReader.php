@@ -33,7 +33,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\WebForm;
 
-use DateTimeImmutable;
 use DateTimeInterface;
 use Psr\Container\ContainerInterface;
 use Throwable;
@@ -258,7 +257,7 @@ class FormsQuestionReader {
 	 */
 	private function normalise(string $type, string $text): mixed {
 		if ($type === 'datetime') {
-			$moment = DateTimeImmutable::createFromFormat('Y-m-d H:i', $text);
+			$moment = date_create_immutable_from_format('Y-m-d H:i', $text);
 			if ($moment !== false) {
 				return $moment->format(DateTimeInterface::ATOM);
 			}

@@ -165,7 +165,7 @@ class WebFormIntakeService {
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-a-website-form-submits-into-the-destination-it-names
 	 */
 	public function submit(array $form, array $payload, ?string $idempotencyKey = null): array {
-		$writes = WebFormBindingCheck::writesOf(form: $form);
+		$writes = $this->finder->writesOf(form: $form);
 		if ($writes === []) {
 			// Publishing is refused without a destination, so this is a form
 			// changed behind the check: the site owner's problem, not the visitor's.
@@ -255,21 +255,7 @@ class WebFormIntakeService {
 	 */
 	private function cleanValue(mixed $raw): mixed {
 		if (is_array($raw) === true) {
-			$items = [];
-			foreach ($raw as $item) {
-				if (is_scalar($item) === false) {
-					return null;
-				}
-
-				$items[] = $this->cleanValue(raw: $item);
-			}
-
-			$items = array_values(array_filter($items, static fn (mixed $item): bool => $item !== null));
-			if ($items === []) {
-				return null;
-			}
-
-			return $items;
+			return $this->cleanList(raw: $raw);
 		}
 
 		if (is_string($raw) === false) {
@@ -292,6 +278,36 @@ class WebFormIntakeService {
 		return $value;
 
 	}//end cleanValue()
+
+	/**
+	 * A list answer cleaned: kept only when every item is a plain value, blanks dropped.
+	 *
+	 * @param array<mixed> $raw The raw list.
+	 *
+	 * @return array<int, mixed>|null The items, or null when the list is empty or nested.
+	 *
+	 * @throws WebFormSubmitException 400 for an item longer than the limit.
+	 */
+	private function cleanList(array $raw): ?array {
+		$items = [];
+		foreach ($raw as $item) {
+			if (is_scalar($item) === false) {
+				return null;
+			}
+
+			$value = $this->cleanValue(raw: $item);
+			if ($value !== null) {
+				$items[] = $value;
+			}
+		}
+
+		if ($items === []) {
+			return null;
+		}
+
+		return $items;
+
+	}//end cleanList()
 
 	/**
 	 * Fill a blank field from the first filled field its form lists as a fallback.

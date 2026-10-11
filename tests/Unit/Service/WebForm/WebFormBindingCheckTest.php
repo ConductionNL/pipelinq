@@ -198,17 +198,18 @@ class WebFormBindingCheckTest extends TestCase {
 	}//end testEveryWriteIsCheckedAndNamed()
 
 	/**
-	 * writesOf reads `writes` first, else one write from destination and mapping, else none.
+	 * The finder's writesOf reads `writes` first, else one write from destination and mapping, else none.
 	 *
 	 * @return void
 	 */
 	public function testWritesOf(): void {
+		$finder = new WebFormFinder($this->createMock(IAppConfig::class), new FakeContainer());
 		$this->assertSame(
 			[['as' => 'destination', 'register' => 'pipelinq', 'schema' => 'ticket', 'mapping' => ['fields' => []]]],
-			WebFormBindingCheck::writesOf(form: ['destination' => ['register' => 'pipelinq', 'schema' => 'ticket'], 'mapping' => ['fields' => []]])
+			$finder->writesOf(form: ['destination' => ['register' => 'pipelinq', 'schema' => 'ticket'], 'mapping' => ['fields' => []]])
 		);
-		$this->assertSame([], WebFormBindingCheck::writesOf(form: ['destination' => ['schema' => ' ']]));
-		$this->assertSame([['as' => 'a', 'schema' => 'lead']], WebFormBindingCheck::writesOf(form: ['writes' => [['as' => 'a', 'schema' => 'lead'], 'junk']]));
+		$this->assertSame([], $finder->writesOf(form: ['destination' => ['schema' => ' ']]));
+		$this->assertSame([['as' => 'a', 'schema' => 'lead']], $finder->writesOf(form: ['writes' => [['as' => 'a', 'schema' => 'lead'], 'junk']]));
 	}//end testWritesOf()
 
 	/**

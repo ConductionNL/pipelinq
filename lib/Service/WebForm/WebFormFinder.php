@@ -128,6 +128,44 @@ class WebFormFinder {
 	}//end allPublishedByKey()
 
 	/**
+	 * The writes a form declares: its `writes`, or one write from `destination` and `mapping`.
+	 *
+	 * The same reading OpenRegister's FormDefinitionResolver applies, so a form
+	 * stored here means what it would mean there.
+	 *
+	 * @param array<string, mixed> $form The form body.
+	 *
+	 * @return array<int, array<string, mixed>> The writes: `{ as, register, schema, mapping }`.
+	 *
+	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-a-website-form-submits-into-the-destination-it-names
+	 */
+	public function writesOf(array $form): array {
+		if (is_array($form['writes'] ?? null) === true && $form['writes'] !== []) {
+			return array_values(array_filter($form['writes'], 'is_array'));
+		}
+
+		$destination = ($form['destination'] ?? null);
+		if (is_array($destination) === false || trim((string)($destination['schema'] ?? '')) === '') {
+			return [];
+		}
+
+		$mapping = null;
+		if (is_array($form['mapping'] ?? null) === true) {
+			$mapping = $form['mapping'];
+		}
+
+		return [
+			[
+				'as' => 'destination',
+				'register' => ($destination['register'] ?? null),
+				'schema' => $destination['schema'],
+				'mapping' => $mapping,
+			],
+		];
+
+	}//end writesOf()
+
+	/**
 	 * The configured webForm schema id, or an empty string.
 	 *
 	 * @return string The schema id.
