@@ -7514,7 +7514,9 @@ OC.L10N.register(
         "Start a contact": "Start a contact",
         "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.": "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.",
         "Filter by subject or client": "Filter by subject or client",
-        "Filter by title or client": "Filter by title or client"
+        "Filter by title or client": "Filter by title or client",
+        "Filter by name, email or client": "Filter by name, email or client",
+        "A contact is someone you deal with at a client. Residents are clients themselves.": "A contact is someone you deal with at a client. Residents are clients themselves."
     },
     "nplurals=2; plural=(n != 1);"
 )
