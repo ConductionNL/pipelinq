@@ -5,7 +5,23 @@
 	<div class="pipeline-board" data-walkthrough-id="pipeline-board">
 		<CnPageHeader
 			:title="t('pipelinq', 'Pipeline')"
-			:description="headerCountLine" />
+			:description="headerCountLine">
+			<template #extra>
+				<NcButton
+					variant="primary"
+					data-testid="pipeline-new-lead"
+					@click="showLeadCreate = true">
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'New lead') }}
+				</NcButton>
+			</template>
+		</CnPageHeader>
+		<LeadCreateDialog
+			v-if="showLeadCreate"
+			@close="showLeadCreate = false"
+			@created="onLeadCreated" />
 		<CnQuickFilterBar
 			class="pipeline-board__chips"
 			:tabs="chipTabs"
@@ -496,8 +512,10 @@ import {
 import Draggable from 'vuedraggable'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import LeadScoreBadge from '../../components/leadScore/LeadScoreBadge.vue'
+import LeadCreateDialog from '../../dialogs/LeadCreateDialog.vue'
 import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import PipelineCard from './PipelineCard.vue'
 import { compareCallFirst } from '../../services/leadScore.js'
@@ -536,6 +554,8 @@ const DRAG_OPTIONS = {
 export default {
 	name: 'PipelineBoard',
 	components: {
+		LeadCreateDialog,
+		Plus,
 		CnPageHeader,
 		CnQuickFilterBar,
 		Draggable,
@@ -569,6 +589,8 @@ export default {
 			searchQuery: '',
 			/** Index of the active chip above the board (0 is every open lead). */
 			chipIndex: 0,
+			/** Whether the New lead dialog is open. */
+			showLeadCreate: false,
 			expandedClosed: null,
 			// The stage a card is being dragged out of, while a drag is on, and
 			// whether it has been over another column since.
@@ -1581,6 +1603,17 @@ export default {
 				return this.isItemStale(item)
 			}
 			return true
+		},
+
+		/**
+		 * A lead was created from the header: close the dialog and reload the board.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async onLeadCreated() {
+			this.showLeadCreate = false
+			this.allLeads = await this.fetchAllLeads()
+			await this.fetchPipelineItems()
 		},
 
 		isItemStale(item) {
