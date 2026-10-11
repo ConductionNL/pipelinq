@@ -39,4 +39,4 @@
 
 ## 5. Verification
 
-- [ ] 5.1 `composer check:strict`, `npm run lint`, `openspec validate website-forms-submit-into-tickets --strict`
+- [x] 5.1 `composer check:strict`, `npm run lint`, `openspec validate website-forms-submit-into-tickets --strict` (check:strict exit 0 at 925ceb31c; npm run lint not run locally: no JS or Vue file changed, CI runs it)
