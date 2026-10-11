@@ -7427,7 +7427,9 @@ OC.L10N.register(
         "Still to call back": "Nog terug te bellen",
         "No action needed now": "Nu geen actie nodig",
         "Start a contact": "Contact starten",
-        "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.": "Zoek de klant aan de lijn of aan de balie. Verzoeken, taken en eerder contact openen hieronder, met een formulier om dit contact vast te leggen."
+        "Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.": "Zoek de klant aan de lijn of aan de balie. Verzoeken, taken en eerder contact openen hieronder, met een formulier om dit contact vast te leggen.",
+        "Filter by subject or client": "Filter op onderwerp of klant",
+        "Filter by title or client": "Filter op titel of klant"
     },
     "nplurals=2; plural=(n != 1);"
 )
