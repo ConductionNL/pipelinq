@@ -5047,6 +5047,10 @@
 						"closed"
 					]
 				},
+				"_extendNote": "The customer of a ticket is a reference to a client. Extending it gives the row the client's name, which the title column draws as its second line, as the PqWachtrij board does. A ticket without a client shows the title alone.",
+				"extend": [
+					"client"
+				],
 				"quickFilters": [
 					{
 						"label": "All",
@@ -5107,7 +5111,11 @@
 						},
 						"sortable": true
 					},
-					"title",
+					{
+						"key": "title",
+						"secondary": "{client.name}",
+						"sortable": true
+					},
 					"ticketType",
 					"priority",
 					"channel",
