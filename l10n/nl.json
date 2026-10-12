@@ -7490,6 +7490,19 @@
         "My leads": "Mijn leads",
         "Closing this month": "Sluit deze maand",
         "{shown} of {total} open leads · board per stage": "{shown} van {total} open leads · bord per fase",
-        "Stale leads": "Verouderd"
+        "Stale leads": "Verouderd",
+        "Submitter name": "Naam inzender",
+        "The name the visitor typed in the form.": "De naam die de bezoeker in het formulier intypte.",
+        "Submitter email": "E-mail inzender",
+        "The email address the visitor typed. We match the contact on it.": "Het e-mailadres dat de bezoeker intypte. Daarmee zoeken we de contactpersoon.",
+        "Submitter organisation": "Organisatie inzender",
+        "The organisation the visitor named. We match the client on it.": "De organisatie die de bezoeker noemde. Daarmee zoeken we de klant.",
+        "Referrer": "Verwijzende pagina",
+        "The page the visitor came from, when the browser told us.": "De pagina waar de bezoeker vandaan kwam, als de browser dat doorgaf.",
+        "Form page": "Formulierpagina",
+        "The page whose form created this lead.": "De pagina met het formulier waaruit deze lead ontstond.",
+        "When the visitor sent the form.": "Het moment waarop de bezoeker het formulier verstuurde.",
+        "Submission id": "Kenmerk inzending",
+        "The page's own id for this submission. A second lead with the same id is the same submission.": "Het kenmerk dat de pagina aan deze inzending gaf. Een tweede lead met hetzelfde kenmerk is dezelfde inzending."
     }
 }

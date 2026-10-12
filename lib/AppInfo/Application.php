@@ -59,6 +59,7 @@ use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\FormsSubmissionListener;
 use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
 use OCA\Pipelinq\Listener\LeadStageCreatingListener;
+use OCA\Pipelinq\Listener\SubmittedLeadListener;
 use OCA\Pipelinq\Listener\WebFormBindingListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\QuestionAnsweredListener;
@@ -220,6 +221,17 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectCreatingEvent::class,
 			listener: LeadStageCreatingListener::class
+		);
+		// A lead a form created gets its contact and client before it is stored
+		// and its submit touchpoint once it is (decision 179: the submit creates
+		// the lead itself, so nothing relays it afterwards).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: SubmittedLeadListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: SubmittedLeadListener::class
 		);
 		// A published website form is checked against its destination on every
 		// save, and refused on any finding (website-forms-submit-into-tickets,

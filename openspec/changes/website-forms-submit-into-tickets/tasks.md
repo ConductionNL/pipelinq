@@ -12,9 +12,17 @@
 
 ## 2. Landing page into lead
 
-- [ ] 2.1 `LandingPageProvisioningService` declares the form with destination `lead`, validated on provisioning (not built in the decision 179 lane: needs portaliq `submit-creates-the-case-directly`)
-- [ ] 2.2 Move contact matching and the touchpoint from `LandingPageFormSubmittedListener` to a lead-create listener, keyed on the nonce (not built in the decision 179 lane, with 2.1)
-- [ ] 2.3 Remove `LandingPageFormSubmittedEvent` and its listener once portaliq stops relaying
+- [x] 2.1 `LandingPageProvisioningService` declares the form with destination `lead`: `LandingPageRequestedEvent` carries `form.destination` (portaliq validates it on provisioning, portaliq#1497)
+  - Files: lib/Service/Marketing/CampaignFormDestination.php, lib/Service/LandingPageProvisioningService.php (`formFor`), lib/Settings/register.d/98-lead-submitted-by-form.json (submitter and submission properties on `lead`; `pipeline` and `client` marked server-set)
+  - Test: tests/Unit/Service/Marketing/CampaignFormDestinationTest.php (against the composed lead schema as it ships), LandingPageProvisioningServiceTest::testTheRequestNamesTheLeadASubmitCreates
+- [x] 2.2 Contact and client matching and the touchpoint run on the lead's own create events, keyed on the nonce
+  - Files: lib/Service/Marketing/SubmittedLeadIntake.php, lib/Listener/SubmittedLeadListener.php (registered for ObjectCreatingEvent and ObjectCreatedEvent)
+  - Test: tests/Unit/Service/Marketing/SubmittedLeadIntakeTest.php, tests/Unit/Listener/SubmittedLeadListenerTest.php
+- [ ] 2.3 Remove `LandingPageFormSubmittedEvent` and its listener once portaliq stops relaying (after portaliq#1497 lands and its landing drain reports zero)
+- [x] 2.4 Existing forms get their destination once, by a repair step
+  - Files: lib/Service/Marketing/FormDestinationBackfill.php, lib/Repair/NameFormDestinations.php, appinfo/info.xml (post-migration, version bump)
+  - Test: tests/Unit/Service/Marketing/FormDestinationBackfillTest.php, tests/Unit/Repair/NameFormDestinationsTest.php
+- [ ] 2.5 Live: create a campaign landing page, submit its form, read back the lead with its contact and `submit` touchpoint; run `occ maintenance:repair` on an instance with an older form and submit that form (live pass, decision 139)
 
 ## 3. public-intake-forms
 

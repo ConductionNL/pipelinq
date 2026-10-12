@@ -7555,7 +7555,20 @@ OC.L10N.register(
         "My leads": "My leads",
         "Closing this month": "Closing this month",
         "{shown} of {total} open leads · board per stage": "{shown} of {total} open leads · board per stage",
-        "Stale leads": "Stale leads"
+        "Stale leads": "Stale leads",
+        "Submitter name": "Submitter name",
+        "The name the visitor typed in the form.": "The name the visitor typed in the form.",
+        "Submitter email": "Submitter email",
+        "The email address the visitor typed. We match the contact on it.": "The email address the visitor typed. We match the contact on it.",
+        "Submitter organisation": "Submitter organisation",
+        "The organisation the visitor named. We match the client on it.": "The organisation the visitor named. We match the client on it.",
+        "Referrer": "Referrer",
+        "The page the visitor came from, when the browser told us.": "The page the visitor came from, when the browser told us.",
+        "Form page": "Form page",
+        "The page whose form created this lead.": "The page whose form created this lead.",
+        "When the visitor sent the form.": "When the visitor sent the form.",
+        "Submission id": "Submission id",
+        "The page's own id for this submission. A second lead with the same id is the same submission.": "The page's own id for this submission. A second lead with the same id is the same submission."
     },
     "nplurals=2; plural=(n != 1);"
 )
