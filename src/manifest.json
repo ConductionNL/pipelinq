@@ -5143,21 +5143,25 @@
 								"style": "number",
 								"decimals": 0
 							},
-							"endpointSource": {
-								"url": "/apps/openregister/api/objects/pipelinq/ticket",
-								"params": {
-									"_limit": 1,
-									"assignee": "IS NULL",
-									"status_notIn": [
-										"resolved",
-										"completed",
-										"rejected",
-										"converted",
-										"closed"
-									]
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": {
+										"isnull": true
+									},
+									"status": {
+										"notIn": [
+											"resolved",
+											"completed",
+											"rejected",
+											"converted",
+											"closed"
+										]
+									}
 								}
-							},
-							"valueField": "total"
+							}
 						}
 					},
 					{
@@ -5172,27 +5176,30 @@
 								"style": "number",
 								"decimals": 0
 							},
-							"endpointSource": {
-								"url": "/apps/openregister/api/objects/pipelinq/ticket",
-								"params": {
-									"_limit": 1,
-									"assignee": "IS NULL",
-									"status_notIn": [
-										"resolved",
-										"completed",
-										"rejected",
-										"converted",
-										"closed"
-									],
+							"variant": "error",
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": {
+										"isnull": true
+									},
+									"status": {
+										"notIn": [
+											"resolved",
+											"completed",
+											"rejected",
+											"converted",
+											"closed"
+										]
+									},
 									"slaDeadline[lt]": "@now"
 								}
-							},
-							"valueField": "total",
-							"variant": "error"
+							}
 						}
 					}
-				],
-				"_statNote": "The tiles read the list endpoint's total, not the aggregation endpoint: /aggregations/.../value has no null operator (isnull is refused, eq with an empty value matches nothing), so 'assignee is empty' counts 0 there while the list endpoint says 48. The board's third tile (within the deadline) is left out: most queue tickets carry no slaDeadline, so a count of deadlines still ahead is not the board's figure."
+				]
 			}
 		},
 		{
