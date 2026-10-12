@@ -7548,7 +7548,14 @@ OC.L10N.register(
         "Fields": "Fields",
         "Each form field and the property it fills.": "Each form field and the property it fills.",
         "Fixed values": "Fixed values",
-        "The values every submit sets, such as the channel.": "The values every submit sets, such as the channel."
+        "The values every submit sets, such as the channel.": "The values every submit sets, such as the channel.",
+        "Filter by name, email or client": "Filter by name, email or client",
+        "A contact is someone you deal with at a client. Residents are clients themselves.": "A contact is someone you deal with at a client. Residents are clients themselves.",
+        "Sales pipeline": "Sales pipeline",
+        "My leads": "My leads",
+        "Closing this month": "Closing this month",
+        "{shown} of {total} open leads · board per stage": "{shown} of {total} open leads · board per stage",
+        "Stale leads": "Stale leads"
     },
     "nplurals=2; plural=(n != 1);"
 )

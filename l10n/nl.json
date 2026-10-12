@@ -7483,6 +7483,13 @@
         "Fields": "Velden",
         "Each form field and the property it fills.": "Elk formulierveld en het gegeven dat het vult.",
         "Fixed values": "Vaste waarden",
-        "The values every submit sets, such as the channel.": "De waarden die elke inzending zet, zoals het kanaal."
+        "The values every submit sets, such as the channel.": "De waarden die elke inzending zet, zoals het kanaal.",
+        "Filter by name, email or client": "Filter op naam, e-mail of klant",
+        "A contact is someone you deal with at a client. Residents are clients themselves.": "Een contact is iemand met wie je te maken hebt bij een klant. Inwoners zijn zelf klant.",
+        "Sales pipeline": "Verkooppijplijn",
+        "My leads": "Mijn leads",
+        "Closing this month": "Sluit deze maand",
+        "{shown} of {total} open leads · board per stage": "{shown} van {total} open leads · bord per fase",
+        "Stale leads": "Verouderd"
     }
 }

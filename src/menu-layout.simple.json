@@ -1916,7 +1916,22 @@
 						"label": "New contact"
 					}
 				],
-				"countText": "{shown} of {total} contacts"
+				"countText": "{shown} of {total} contacts",
+				"columns": [
+					"name",
+					"email",
+					"phone",
+					"role",
+					{
+						"key": "client",
+						"label": "Client",
+						"labelField": "name"
+					}
+				],
+				"searchPlaceholder": "Filter by name, email or client",
+				"footerNote": "A contact is someone you deal with at a client. Residents are clients themselves.",
+				"sortKey": "@self.created",
+				"sortOrder": "desc"
 			}
 		}
 	]
