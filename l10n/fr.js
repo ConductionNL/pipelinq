@@ -2336,7 +2336,9 @@ OC.L10N.register(
         "Manufacturer": "Fabricant",
         "Unit of measure": "Unité de mesure",
         "Weight": "Poids",
-        "Dimensions": "Dimensions"
+        "Dimensions": "Dimensions",
+        "Preferred name": "Prénom usuel",
+        "The name this person likes to be called, such as Jan for Johannes.": "Le nom par lequel cette personne souhaite être appelée, par exemple Jan pour Johannes."
     },
     "nplurals=2; plural=(n != 1);"
 )

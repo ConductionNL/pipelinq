@@ -7606,6 +7606,8 @@
         "The page whose form created this lead.": "The page whose form created this lead.",
         "When the visitor sent the form.": "When the visitor sent the form.",
         "Submission id": "Submission id",
-        "The page's own id for this submission. A second lead with the same id is the same submission.": "The page's own id for this submission. A second lead with the same id is the same submission."
+        "The page's own id for this submission. A second lead with the same id is the same submission.": "The page's own id for this submission. A second lead with the same id is the same submission.",
+        "Preferred name": "Preferred name",
+        "The name this person likes to be called, such as Jan for Johannes.": "The name this person likes to be called, such as Jan for Johannes."
     }
 }

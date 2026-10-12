@@ -7501,7 +7501,9 @@ OC.L10N.register(
         "The page whose form created this lead.": "De pagina met het formulier waaruit deze lead ontstond.",
         "When the visitor sent the form.": "Het moment waarop de bezoeker het formulier verstuurde.",
         "Submission id": "Kenmerk inzending",
-        "The page's own id for this submission. A second lead with the same id is the same submission.": "Het kenmerk dat de pagina aan deze inzending gaf. Een tweede lead met hetzelfde kenmerk is dezelfde inzending."
+        "The page's own id for this submission. A second lead with the same id is the same submission.": "Het kenmerk dat de pagina aan deze inzending gaf. Een tweede lead met hetzelfde kenmerk is dezelfde inzending.",
+        "Preferred name": "Roepnaam",
+        "The name this person likes to be called, such as Jan for Johannes.": "De naam waarmee deze persoon aangesproken wil worden, zoals Jan voor Johannes."
     },
     "nplurals=2; plural=(n != 1);"
 )
