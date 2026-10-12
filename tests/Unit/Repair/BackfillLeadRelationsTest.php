@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
+use JsonSerializable;
 use OCA\Pipelinq\Repair\BackfillLeadRelations;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -38,6 +39,7 @@ use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * In-memory ObjectService double matching OpenRegister's real signatures.
@@ -316,4 +318,305 @@ class BackfillLeadRelationsTest extends TestCase {
 
 		$this->assertSame([], $this->objects->saves, 'a complete lead must not be saved again');
 	}//end testLeavesCompleteLeadsUntouched()
+
+	/**
+	 * Build the step around a given object service and configuration.
+	 *
+	 * @param object|null          $objectService The ObjectService double, or null when the container cannot supply one.
+	 * @param array<string,string> $config        App config values by key.
+	 * @param LoggerInterface|null $logger        Logger, when a test reads what was logged.
+	 *
+	 * @return BackfillLeadRelations The step under test.
+	 */
+	private function makeStepAround(?object $objectService, array $config, ?LoggerInterface $logger = null): BackfillLeadRelations {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = '') use ($config): string {
+				return ($config[$key] ?? $default);
+			}
+		);
+
+		$container = $this->createMock(ContainerInterface::class);
+		if ($objectService === null) {
+			$container->method('get')->willThrowException(new RuntimeException('openregister is not installed'));
+		} else {
+			$container->method('get')->willReturn($objectService);
+		}
+
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('get')->willReturn(null);
+
+		return new BackfillLeadRelations(
+			$appConfig,
+			$container,
+			$groupManager,
+			($logger ?? $this->createMock(LoggerInterface::class)),
+		);
+	}//end makeStepAround()
+
+	/**
+	 * The configuration of an installed pipelinq.
+	 *
+	 * @return array<string,string> App config values by key.
+	 */
+	private function configured(): array {
+		return [
+			'register' => 'reg',
+			'lead_schema' => 'lead-schema',
+			'pipeline_schema' => 'pipeline-schema',
+		];
+	}//end configured()
+
+	/**
+	 * Collect what the step tells the admin.
+	 *
+	 * @param array<int,string> $infos    Filled with every info line.
+	 * @param array<int,string> $warnings Filled with every warning line.
+	 *
+	 * @return IOutput The output double.
+	 */
+	private function recordingOutput(array &$infos, array &$warnings): IOutput {
+		$output = $this->createMock(IOutput::class);
+		$output->method('info')->willReturnCallback(
+			static function (string $message) use (&$infos): void {
+				$infos[] = $message;
+			}
+		);
+		$output->method('warning')->willReturnCallback(
+			static function (string $message) use (&$warnings): void {
+				$warnings[] = $message;
+			}
+		);
+
+		return $output;
+	}//end recordingOutput()
+
+	/**
+	 * Without a configured register the step does nothing and says so.
+	 *
+	 * @return void
+	 */
+	public function testSkipsWhenTheRegisterIsNotConfigured(): void {
+		$objects = new FakeBackfillObjectService();
+		$objects->store['lead-schema']['l1'] = ['id' => 'l1', 'title' => 'Orphan'];
+		$step = $this->makeStepAround(objectService: $objects, config: ['lead_schema' => 'lead-schema']);
+		$infos = [];
+		$warnings = [];
+
+		$step->run($this->recordingOutput($infos, $warnings));
+
+		$this->assertSame([], $objects->saves);
+		$this->assertCount(1, $infos);
+		$this->assertStringContainsString('not configured', $infos[0]);
+	}//end testSkipsWhenTheRegisterIsNotConfigured()
+
+	/**
+	 * Without OpenRegister the step warns and stops instead of failing the upgrade.
+	 *
+	 * @return void
+	 */
+	public function testSkipsWhenOpenRegisterIsUnavailable(): void {
+		$step = $this->makeStepAround(objectService: null, config: $this->configured());
+		$infos = [];
+		$warnings = [];
+
+		$step->run($this->recordingOutput($infos, $warnings));
+
+		$this->assertSame([], $infos);
+		$this->assertCount(1, $warnings);
+		$this->assertStringContainsString('openregister is not installed', $warnings[0]);
+	}//end testSkipsWhenOpenRegisterIsUnavailable()
+
+	/**
+	 * A failing read is logged and reads as "no leads", never as an exception.
+	 *
+	 * @return void
+	 */
+	public function testAFailingReadIsLoggedAndLeavesNothingToDo(): void {
+		$objects = new class() extends FakeBackfillObjectService {
+
+			/**
+			 * A read that fails, as OpenRegister's does on a missing schema.
+			 *
+			 * @param array<string,mixed> $config        Ignored.
+			 * @param bool                $_rbac         Ignored.
+			 * @param bool                $_multitenancy Ignored.
+			 *
+			 * @return array<int, array<string,mixed>> Never returns.
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				throw new RuntimeException('schema not found');
+			}//end findAll()
+		};
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'BackfillLeadRelations: findAll failed',
+			['schema' => 'lead-schema', 'error' => 'schema not found']
+		);
+		$step = $this->makeStepAround(objectService: $objects, config: $this->configured(), logger: $logger);
+		$infos = [];
+		$warnings = [];
+
+		$step->run($this->recordingOutput($infos, $warnings));
+
+		$this->assertSame(['BackfillLeadRelations: no leads to inspect'], $infos);
+		$this->assertSame([], $objects->saves);
+	}//end testAFailingReadIsLoggedAndLeavesNothingToDo()
+
+	/**
+	 * With no pipeline at all, a lead without one stays stuck and the admin is told.
+	 *
+	 * @return void
+	 */
+	public function testALeadWithNoPipelineToAssignIsReportedStuck(): void {
+		$objects = new FakeBackfillObjectService();
+		$objects->store['lead-schema']['l1'] = ['id' => 'l1', 'title' => 'Orphan'];
+		// No pipeline schema configured: there is nothing to assign.
+		$step = $this->makeStepAround(objectService: $objects, config: ['register' => 'reg', 'lead_schema' => 'lead-schema']);
+		$infos = [];
+		$warnings = [];
+
+		$step->run($this->recordingOutput($infos, $warnings));
+
+		$this->assertSame([], $objects->saves);
+		$this->assertCount(2, $warnings);
+		$this->assertStringContainsString('could not resolve a pipeline for lead "Orphan"', $warnings[0]);
+		$this->assertStringContainsString('1 lead(s) still lack a pipeline', $warnings[1]);
+		$this->assertStringContainsString('0 lead(s) backfilled, 0 already complete, 1 still unresolved', $infos[0]);
+	}//end testALeadWithNoPipelineToAssignIsReportedStuck()
+
+	/**
+	 * A save OpenRegister refuses is logged and counted as stuck; the next lead still runs.
+	 *
+	 * @return void
+	 */
+	public function testARefusedSaveIsCountedAsStuckAndTheRunGoesOn(): void {
+		$objects = new class() extends FakeBackfillObjectService {
+
+			/**
+			 * Refuse the first lead, accept the rest.
+			 *
+			 * @param array<string,mixed> $object        The object data.
+			 * @param array|null          $extend        Ignored.
+			 * @param string|null         $register      Register id.
+			 * @param string|null         $schema        Schema id.
+			 * @param string|null         $uuid          The uuid.
+			 * @param bool                $_rbac         Ignored.
+			 * @param bool                $_multitenancy Ignored.
+			 * @param bool                $silent        Ignored.
+			 * @param bool                $_validation   Ignored.
+			 * @param array|null          $uploadedFiles Ignored.
+			 * @param mixed               $currentUser   Ignored.
+			 *
+			 * @return array<string,mixed> The stored object.
+			 */
+			public function saveObject(
+				array $object,
+				?array $extend = [],
+				?string $register = null,
+				?string $schema = null,
+				?string $uuid = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $silent = false,
+				bool $_validation = true,
+				?array $uploadedFiles = null,
+				mixed $currentUser = null,
+			): array {
+				if ($uuid === 'l1') {
+					throw new RuntimeException('The required property (title) is missing');
+				}
+
+				return parent::saveObject($object, $extend, $register, $schema, $uuid);
+			}//end saveObject()
+		};
+		$objects->store['lead-schema']['l1'] = ['id' => 'l1'];
+		$objects->store['lead-schema']['l2'] = ['id' => 'l2', 'title' => 'Second'];
+		$objects->store['pipeline-schema']['p1'] = ['id' => 'p1', 'title' => 'Sales'];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')->with(
+			'BackfillLeadRelations: failed to save lead',
+			['uuid' => 'l1', 'error' => 'The required property (title) is missing']
+		);
+		$step = $this->makeStepAround(objectService: $objects, config: $this->configured(), logger: $logger);
+		$infos = [];
+		$warnings = [];
+
+		$step->run($this->recordingOutput($infos, $warnings));
+
+		$this->assertCount(1, $objects->saves);
+		$this->assertSame('l2', $objects->saves[0]['id']);
+		$this->assertSame('p1', $objects->saves[0]['pipeline']);
+		$this->assertStringContainsString('1 lead(s) backfilled, 0 already complete, 1 still unresolved', $infos[0]);
+		$this->assertCount(1, $warnings);
+	}//end testARefusedSaveIsCountedAsStuckAndTheRunGoesOn()
+
+	/**
+	 * With no default pipeline the first stored one is used; a pipeline row without an id is passed over.
+	 *
+	 * @return void
+	 */
+	public function testFallsBackToTheFirstPipelineWhenNoneIsTheDefault(): void {
+		$objects = new FakeBackfillObjectService();
+		$objects->store['lead-schema']['l1'] = ['id' => 'l1', 'title' => 'Orphan'];
+		$objects->store['pipeline-schema']['broken'] = ['title' => 'No id'];
+		$objects->store['pipeline-schema']['p1'] = ['id' => 'p1', 'title' => 'Sales'];
+		$objects->store['pipeline-schema']['p2'] = ['id' => 'p2', 'title' => 'Service'];
+		$step = $this->makeStepAround(objectService: $objects, config: $this->configured());
+
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertCount(1, $objects->saves);
+		$this->assertSame('p1', $objects->saves[0]['pipeline']);
+	}//end testFallsBackToTheFirstPipelineWhenNoneIsTheDefault()
+
+	/**
+	 * Rows arrive as entities on a real OpenRegister: they are read through jsonSerialize(),
+	 * and a row that is neither an array nor serialisable, or has no id, is passed over.
+	 *
+	 * @return void
+	 */
+	public function testReadsEntityRowsAndPassesOverUnusableOnes(): void {
+		$entity = new class() implements JsonSerializable {
+
+			/**
+			 * The lead as OpenRegister serialises it.
+			 *
+			 * @return array<string,mixed> The lead.
+			 */
+			public function jsonSerialize(): array {
+				return ['id' => 'l1', 'title' => 'From an entity'];
+			}//end jsonSerialize()
+		};
+		$scalarEntity = new class() implements JsonSerializable {
+
+			/**
+			 * A row that serialises to something that is not a lead.
+			 *
+			 * @return string Not an array.
+			 */
+			public function jsonSerialize(): string {
+				return 'not a row';
+			}//end jsonSerialize()
+		};
+		$objects = new FakeBackfillObjectService();
+		$objects->store['lead-schema'] = [
+			'a' => $entity,
+			'b' => $scalarEntity,
+			'c' => 'a bare string',
+			'd' => ['title' => 'No id'],
+		];
+		$objects->store['pipeline-schema']['p1'] = ['id' => 'p1', 'title' => 'Sales', 'isDefault' => true];
+		$step = $this->makeStepAround(objectService: $objects, config: $this->configured());
+		$infos = [];
+		$warnings = [];
+
+		$step->run($this->recordingOutput($infos, $warnings));
+
+		$this->assertCount(1, $objects->saves);
+		$this->assertSame('l1', $objects->saves[0]['id']);
+		$this->assertSame('p1', $objects->saves[0]['pipeline']);
+		$this->assertStringContainsString('1 lead(s) backfilled, 1 already complete, 0 still unresolved', $infos[0]);
+		$this->assertSame([], $warnings);
+	}//end testReadsEntityRowsAndPassesOverUnusableOnes()
 }//end class
