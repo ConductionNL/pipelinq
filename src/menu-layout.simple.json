@@ -1664,7 +1664,17 @@
 					{
 						"key": "qualificationScore",
 						"label": "Win chance",
-						"widget": "lead-win-chance",
+						"widget": "progress",
+						"widgetProps": {
+							"fallbackFields": ["probability"],
+							"thresholds": { "good": 60, "warn": 30 },
+							"badge": {
+								"label": "Out of date {days} days",
+								"dateField": "@self.updated",
+								"afterDays": 14,
+								"when": { "status": "open" }
+							}
+						},
 						"sortable": true
 					},
 					{
