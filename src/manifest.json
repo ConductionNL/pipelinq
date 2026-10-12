@@ -5016,25 +5016,29 @@
 					{
 						"label": "All",
 						"filter": {},
-						"default": true
+						"default": true,
+						"showCount": true
 					},
 					{
 						"label": "Requests",
 						"filter": {
 							"ticketType": "request"
-						}
+						},
+						"showCount": true
 					},
 					{
 						"label": "Complaints",
 						"filter": {
 							"ticketType": "complaint"
-						}
+						},
+						"showCount": true
 					},
 					{
 						"label": "Contactmomenten",
 						"filter": {
 							"ticketType": "interaction"
-						}
+						},
+						"showCount": true
 					}
 				],
 				"actions": [
@@ -5081,7 +5085,70 @@
 				},
 				"sortKey": "occurredAt",
 				"sortOrder": "asc",
-				"countText": "{shown} of {total} unassigned tickets · customer contact · oldest first"
+				"countText": "{shown} of {total} unassigned tickets · customer contact · oldest first",
+				"statRow": [
+					{
+						"id": "queue-unassigned",
+						"type": "stat",
+						"title": "Unassigned",
+						"content": {
+							"label": "Unassigned",
+							"caption": "tickets nobody has picked up",
+							"icon": "ClipboardTextClockOutline",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/openregister/api/objects/pipelinq/ticket",
+								"params": {
+									"_limit": 1,
+									"assignee": "IS NULL",
+									"status_notIn": [
+										"resolved",
+										"completed",
+										"rejected",
+										"converted",
+										"closed"
+									]
+								}
+							},
+							"valueField": "total"
+						}
+					},
+					{
+						"id": "queue-past-deadline",
+						"type": "stat",
+						"title": "Past the deadline",
+						"content": {
+							"label": "Past the deadline",
+							"caption": "pick these up first",
+							"icon": "AlertCircleOutline",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/openregister/api/objects/pipelinq/ticket",
+								"params": {
+									"_limit": 1,
+									"assignee": "IS NULL",
+									"status_notIn": [
+										"resolved",
+										"completed",
+										"rejected",
+										"converted",
+										"closed"
+									],
+									"slaDeadline[lt]": "@now"
+								}
+							},
+							"valueField": "total",
+							"variant": "error"
+						}
+					}
+				],
+				"_statNote": "The tiles read the list endpoint's total, not the aggregation endpoint: /aggregations/.../value has no null operator (isnull is refused, eq with an empty value matches nothing), so 'assignee is empty' counts 0 there while the list endpoint says 48. The board's third tile (within the deadline) is left out: most queue tickets carry no slaDeadline, so a count of deadlines still ahead is not the board's figure."
 			}
 		},
 		{

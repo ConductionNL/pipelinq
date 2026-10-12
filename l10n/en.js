@@ -7533,7 +7533,12 @@ OC.L10N.register(
         "{shown} of {total} clients": "{shown} of {total} clients",
         "Open tickets": "Open tickets",
         "{shown} of {total} unassigned tickets · customer contact · oldest first": "{shown} of {total} unassigned tickets · customer contact · oldest first",
-        "Take it on": "Take it on"
+        "Take it on": "Take it on",
+        "tickets nobody has picked up": "tickets nobody has picked up",
+        "Within the deadline": "Within the deadline",
+        "deadline still ahead": "deadline still ahead",
+        "Past the deadline": "Past the deadline",
+        "pick these up first": "pick these up first"
     },
     "nplurals=2; plural=(n != 1);"
 )
