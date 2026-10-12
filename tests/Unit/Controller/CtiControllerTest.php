@@ -40,6 +40,7 @@ use OCA\Pipelinq\Service\Cti\Adapter\CallVoipAdapter;
 use OCA\Pipelinq\Service\Cti\Adapter\RingCentralAdapter;
 use OCA\Pipelinq\Service\Cti\AdapterRegistry;
 use OCA\Pipelinq\Service\Cti\CtiAdapterInterface;
+use OCA\Pipelinq\Service\Cti\IncomingCallFinder;
 use OCA\Pipelinq\Service\Cti\Result\CtiCallResult;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
@@ -130,6 +131,8 @@ class CtiControllerTest extends TestCase {
 	 * @param string|null $uid Signed-in uid, or null for anonymous.
 	 * @param ConnectionReportService|null $reports The connection reporter, or a silent double.
 	 * @param IGroupManager|null $groupManager The group manager, or a double that knows no admin.
+	 * @param IncomingCallFinder|null $incomingCalls The incoming-call finder, or a silent double.
+	 * @param bool $privileged Whether the signed-in user is in a privileged group.
 	 *
 	 * @return CtiController The controller.
 	 */
@@ -138,14 +141,17 @@ class CtiControllerTest extends TestCase {
 		?string $uid = 'agent-1',
 		?ConnectionReportService $reports = null,
 		?IGroupManager $groupManager = null,
+		?IncomingCallFinder $incomingCalls = null,
+		bool $privileged = true,
 	): CtiController {
 		return new CtiController($this->request(),
 			$service,
 			$this->session($uid),
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged, 'mayAccess' => true]),
 			$groupManager ?? $this->createMock(originalClassName: IGroupManager::class),
 			$this->createMock(originalClassName: LoggerInterface::class),
 			$reports ?? $this->createMock(originalClassName: ConnectionReportService::class),
+			$incomingCalls ?? $this->createMock(originalClassName: IncomingCallFinder::class),
 		);
 	}//end controller()
 
@@ -242,6 +248,63 @@ class CtiControllerTest extends TestCase {
 
 		$this->controller(service: $service, uid: 'admin', reports: $reports, groupManager: $this->adminGroupManager())->updateConfig();
 	}//end testAFailedSaveReportsNothing()
+
+	// ------------------------------------------------------------------
+	// incomingCall: GET /api/cti/incoming-call
+	// ------------------------------------------------------------------
+
+	/**
+	 * The finder is asked about the signed-in agent, and its answer goes out unchanged.
+	 *
+	 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+	 *
+	 * @return void
+	 */
+	public function testIncomingCallAsksAboutTheSignedInAgent(): void {
+		// A uid in the request must not be read: the line asked about is the session's.
+		$this->params = ['userId' => 'agent-2', 'uid' => 'agent-2'];
+		$answer = ['enabled' => true, 'delayMs' => 0, 'call' => ['id' => 'c1', 'fromNumber' => '+31612345678']];
+		$finder = $this->createMock(originalClassName: IncomingCallFinder::class);
+		$finder->expects($this->once())->method('forAgent')->with('agent-1')->willReturn($answer);
+
+		$response = $this->controller(service: $this->createMock(CtiService::class), uid: 'agent-1', incomingCalls: $finder)->incomingCall();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: $answer, actual: $response->getData());
+	}//end testIncomingCallAsksAboutTheSignedInAgent()
+
+	/**
+	 * An anonymous caller is refused with 401 and the finder is not asked.
+	 *
+	 * @return void
+	 */
+	public function testIncomingCallRejectsAnonymousCaller(): void {
+		$finder = $this->createMock(originalClassName: IncomingCallFinder::class);
+		$finder->expects($this->never())->method('forAgent');
+
+		$response = $this->controller(service: $this->createMock(CtiService::class), uid: null, incomingCalls: $finder)->incomingCall();
+
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $response->getStatus());
+	}//end testIncomingCallRejectsAnonymousCaller()
+
+	/**
+	 * A user outside the privileged groups is refused with 403 and the finder is not asked.
+	 *
+	 * @return void
+	 */
+	public function testIncomingCallRefusesAnUnprivilegedUser(): void {
+		$finder = $this->createMock(originalClassName: IncomingCallFinder::class);
+		$finder->expects($this->never())->method('forAgent');
+
+		$response = $this->controller(
+			service: $this->createMock(CtiService::class),
+			uid: 'visitor',
+			incomingCalls: $finder,
+			privileged: false,
+		)->incomingCall();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+	}//end testIncomingCallRefusesAnUnprivilegedUser()
 
 	// ------------------------------------------------------------------
 	// screenPop — POST /api/cti/screen-pop

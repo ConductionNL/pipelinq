@@ -179,6 +179,7 @@ return [
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
         ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],
         ['name' => 'cti#screenPop',        'url' => '/api/cti/screen-pop',                 'verb' => 'POST'],
+        ['name' => 'cti#incomingCall',     'url' => '/api/cti/incoming-call',              'verb' => 'GET'],
         ['name' => 'cti#clickToDial',      'url' => '/api/cti/click-to-dial',              'verb' => 'POST'],
         ['name' => 'cti#disposition',      'url' => '/api/cti/contactmoment/{id}/disposition', 'verb' => 'POST'],
         ['name' => 'cti#attachRecording',  'url' => '/api/cti/contactmoment/{id}/recording',   'verb' => 'POST'],

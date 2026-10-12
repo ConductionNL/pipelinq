@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\Cti\IncomingCallFinder;
 use OCA\Pipelinq\Service\ConnectionReportService;
 use OCA\Pipelinq\Service\CtiService;
 use OCP\AppFramework\Controller;
@@ -69,6 +70,7 @@ class CtiController extends Controller {
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ConnectionReportService $connectionReports Reports the CTI check to integriq's connection registry.
+	 * @param IncomingCallFinder $incomingCalls Finds the open inbound call on an agent's line.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -78,6 +80,7 @@ class CtiController extends Controller {
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 		private ConnectionReportService $connectionReports,
+		private IncomingCallFinder $incomingCalls,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -197,6 +200,31 @@ class CtiController extends Controller {
 		$result = $this->ctiService->initiateScreenPop($fromNumber);
 		return new JSONResponse($result->toArray());
 	}//end screenPop()
+
+	/**
+	 * The open inbound call on the signed-in agent's own line.
+	 *
+	 * The incoming-call card asks this. The uid comes from the session, never
+	 * from the request, so an agent can only ever ask about their own line.
+	 *
+	 * @return JSONResponse `{enabled, delayMs, call}`; `call` is null when no call is open.
+	 *
+	 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+	 */
+	#[NoAdminRequired]
+	public function incomingCall(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Same posture as screenPop(): a caller's number is CRM data.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
+		return new JSONResponse($this->incomingCalls->forAgent(userId: $user->getUID()));
+	}//end incomingCall()
 
 	/**
 	 * Initiate an outbound click-to-dial.
