@@ -121,26 +121,26 @@ describe('the Related card', () => {
 		expect(withRelated).toEqual(expect.arrayContaining(PAGES_WITH_RELATED))
 	})
 
-	it('has a place in the client page layout that overlaps nothing', () => {
+	it('has a place on the client page: a side card beside the tab strip', () => {
 		const client = page('ClientDetail')
 		const related = client.config.widgets.find((w) => w.type === 'related')
 		expect(related).toBeDefined()
-		const cell = client.config.layout.find((l) => l.widgetId === related.id)
-		expect(cell).toBeDefined()
-		expect(cell.gridHeight).toBeGreaterThanOrEqual(5)
-		for (const other of client.config.layout) {
-			if (other !== cell) {
-				expect(overlaps(cell, other), other.widgetId).toBe(false)
-			}
-		}
+		expect(client.config.sideColumn).toContain(related.id)
+		// A side card is not a grid cell, so it cannot overlap one.
+		expect(
+			client.config.layout.find((l) => l.widgetId === related.id),
+		).toBeUndefined()
 	})
 
-	it('sits beside the Records strip, as on the contact page', () => {
+	it('keeps the grid cells apart', () => {
 		const layout = page('ClientDetail').config.layout
-		const records = layout.find((l) => l.widgetId === 'client-records')
-		const related = layout.find((l) => l.widgetId === 'client-related')
-		expect(related.gridY).toBe(records.gridY)
-		expect(records.gridWidth + related.gridWidth).toBe(12)
+		for (const cell of layout) {
+			for (const other of layout) {
+				if (other !== cell) {
+					expect(overlaps(cell, other), other.widgetId).toBe(false)
+				}
+			}
+		}
 	})
 })
 
