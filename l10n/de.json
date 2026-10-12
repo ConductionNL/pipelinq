@@ -985,6 +985,7 @@
         "Last updated: {time}": "Zuletzt aktualisiert: {time}",
         "Last {n} transactions": "Letzte {n} Transaktionen",
         "Lead": "Lead",
+        "Leave empty to save the lead without a client.": "Leer lassen, um den Lead ohne Kunden zu speichern.",
         "Lead & request assignments": "Lead- und Anfragenzuweisungen",
         "Lead Conversion Rate": "Lead-Konversionsrate",
         "Lead Management": "Lead-Management",
