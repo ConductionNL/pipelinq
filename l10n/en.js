@@ -7603,7 +7603,12 @@ OC.L10N.register(
         "Not this client": "Not this client",
         "Answer and open": "Answer and open",
         "Choose contact": "Choose contact",
-        "The contact is not saved. Try again.": "The contact is not saved. Try again."
+        "The contact is not saved. Try again.": "The contact is not saved. Try again.",
+        "requests + complaints + contactmomenten": "requests + complaints + contactmomenten",
+        "requests with status new": "requests with status new",
+        "open tickets past their deadline": "open tickets past their deadline",
+        "deadline within 24h": "deadline within 24h",
+        "most recent interaction": "most recent interaction"
     },
     "nplurals=2; plural=(n != 1);"
 )

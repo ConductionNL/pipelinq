@@ -7518,7 +7518,12 @@ OC.L10N.register(
         "Not this client": "Niet deze klant",
         "Answer and open": "Opnemen en openen",
         "Choose contact": "Kies contact",
-        "The contact is not saved. Try again.": "Het contact is niet opgeslagen. Probeer het opnieuw."
+        "The contact is not saved. Try again.": "Het contact is niet opgeslagen. Probeer het opnieuw.",
+        "requests + complaints + contactmomenten": "verzoeken, klachten en contactmomenten",
+        "requests with status new": "met status nieuw",
+        "open tickets past their deadline": "open tickets over de termijn",
+        "deadline within 24h": "termijn binnen 24 uur",
+        "most recent interaction": "meest recente contact"
     },
     "nplurals=2; plural=(n != 1);"
 )
