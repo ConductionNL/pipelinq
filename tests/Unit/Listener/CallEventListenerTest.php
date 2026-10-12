@@ -20,7 +20,8 @@ use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-require_once __DIR__ . '/Fixtures/IntegriqCallEvent.php';
+// Declares nothing when integriq's real class is there; needed under the bare bootstrap.
+require_once __DIR__ . '/../../Stubs/Integriq/Event/CallEvent.php';
 
 /**
  * Integriq's call event reaches the call mirror.
