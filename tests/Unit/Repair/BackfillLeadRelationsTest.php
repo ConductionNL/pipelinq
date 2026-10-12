@@ -3,19 +3,17 @@
 /**
  * Unit tests for the BackfillLeadRelations repair step.
  *
- * `lead.pipeline` and `lead.client` became required, and OpenRegister validates
- * required on every save — so a lead without them cannot be edited at all until
- * it is backfilled. These tests cover what the step has to get right:
+ * `lead.pipeline` is required, and OpenRegister validates required on every
+ * save, so a lead without a pipeline cannot be edited at all until it is
+ * backfilled. `lead.client` is optional (decision 207, 12 October 2026). These
+ * tests cover what the step has to get right:
  *
  *   - a lead missing a pipeline is put on the default pipeline
- *   - a lead missing a client is MATCHED to an existing client by name before
- *     any client is created, because minting a second record for a customer
- *     that already exists splits their history
- *   - the longest matching name wins, so "Gemeente Amsterdam" beats "Gemeente"
- *   - a lead matching nothing gets a client created through the contact-first
- *     path, since `contactsUid` is required and only that path mints one
- *   - two leads for the same unknown company share ONE created client
- *   - a lead that already has both is left untouched, so a re-run is a no-op
+ *   - a lead without a client STAYS without one: the step used to match or
+ *     create a client for it, and doing that now would link a deal to a
+ *     customer nobody chose
+ *   - a lead that has a pipeline and a stage is left untouched, client or not,
+ *     so a re-run is a no-op
  *
  * The fakes mirror the REAL OpenRegister ObjectService signatures
  * (`findAll(array $config, bool $_rbac, bool $_multitenancy)` and
@@ -34,8 +32,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
 use OCA\Pipelinq\Repair\BackfillLeadRelations;
-use OCA\Pipelinq\Service\ContactSyncService;
-use OCA\Pipelinq\Service\LeadClientResolver;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\Migration\IOutput;
@@ -118,6 +114,9 @@ class FakeBackfillObjectService {
 
 /**
  * Tests for BackfillLeadRelations.
+ *
+ * @covers \OCA\Pipelinq\Repair\BackfillLeadRelations
+ * @uses   \OCA\Pipelinq\Service\LeadStagePlacer
  */
 class BackfillLeadRelationsTest extends TestCase {
 
@@ -127,13 +126,6 @@ class BackfillLeadRelationsTest extends TestCase {
 	 * @var FakeBackfillObjectService
 	 */
 	private FakeBackfillObjectService $objects;
-
-	/**
-	 * Names passed to client creation, in order.
-	 *
-	 * @var array<int,string>
-	 */
-	private array $created = [];
 
 	/**
 	 * Build the step with the given leads, clients and pipelines.
@@ -174,27 +166,12 @@ class BackfillLeadRelationsTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($this->objects);
 
-		// The resolver is REAL, with only its client-creating collaborator faked.
-		// Mocking the resolver itself would delete the matching rules these
-		// tests exist to check — the mock would answer whatever it was told to.
-		$contactSync = $this->createMock(ContactSyncService::class);
-		$this->created = [];
-		$contactSync->method('createWithContact')->willReturnCallback(
-			function (string $objectType, array $form): array {
-				$this->created[] = $form['name'];
-
-				return ['id' => 'made-' . count($this->created)];
-			}
-		);
-		$resolver = new LeadClientResolver($contactSync, $this->createMock(LoggerInterface::class));
-
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('get')->willReturn(null);
 
 		return new BackfillLeadRelations(
 			$appConfig,
 			$container,
-			$resolver,
 			$groupManager,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -238,86 +215,52 @@ class BackfillLeadRelationsTest extends TestCase {
 	}//end testAssignsTheDefaultPipeline()
 
 	/**
-	 * An existing client is matched by name rather than a new one created.
+	 * A lead without a client keeps none, and no client is made for it.
+	 *
+	 * The lead lacks a pipeline too, so the step does save it: that is what
+	 * makes this able to fail. A lead the step never saves would pass whether
+	 * or not a client leg existed.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
 	 */
-	public function testMatchesAnExistingClientInsteadOfCreatingOne(): void {
+	public function testALeadWithoutAClientKeepsNone(): void {
 		$step = $this->makeStep(
-			leads: [['id' => 'l1', 'title' => 'Gemeente Amsterdam - CRM 2026', 'pipeline' => 'p1']],
+			leads: [['id' => 'l1', 'title' => 'Gemeente Amsterdam - CRM 2026']],
+			// A client whose name occurs in the title: the old step linked it.
 			clients: [['id' => 'c-ams', 'name' => 'Gemeente Amsterdam']],
-			pipelines: [['id' => 'p1', 'title' => 'Sales']]
+			pipelines: [['id' => 'p1', 'title' => 'Sales', 'isDefault' => true]]
 		);
 
 		$step->run($this->createMock(IOutput::class));
 
-		$this->assertSame('c-ams', $this->saved('l1')['client'] ?? null);
-		$this->assertSame([], $this->created, 'no client should be created when one matches');
-	}//end testMatchesAnExistingClientInsteadOfCreatingOne()
+		$saved = $this->saved('l1');
+		$this->assertSame('p1', $saved['pipeline'] ?? null, 'control: the step did save this lead');
+		$this->assertArrayNotHasKey('client', $saved, 'no client may be linked to a lead that has none');
+		$this->assertSame(['c-ams'], array_keys($this->objects->store['client-schema']), 'no client may be created');
+	}//end testALeadWithoutAClientKeepsNone()
 
 	/**
-	 * The longest matching client name wins.
+	 * A lead with a pipeline and no client is complete: it is not saved again.
 	 *
 	 * @return void
-	 */
-	public function testPrefersTheLongestMatchingName(): void {
-		$step = $this->makeStep(
-			leads: [['id' => 'l1', 'title' => 'Gemeente Amsterdam - CRM 2026', 'pipeline' => 'p1']],
-			// The SHORT name is listed last on purpose. With the
-			// longest-wins guard removed, the last match would win and the
-			// assertion below would pass anyway — ordering them the other way
-			// makes this test unable to fail.
-			clients: [
-				['id' => 'c-long', 'name' => 'Gemeente Amsterdam'],
-				['id' => 'c-short', 'name' => 'Gemeente'],
-			],
-			pipelines: [['id' => 'p1', 'title' => 'Sales']]
-		);
-
-		$step->run($this->createMock(IOutput::class));
-
-		$this->assertSame('c-long', $this->saved('l1')['client'] ?? null);
-	}//end testPrefersTheLongestMatchingName()
-
-	/**
-	 * With no match, a client is created through the contact-first path.
 	 *
-	 * @return void
+	 * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
 	 */
-	public function testCreatesAClientWhenNothingMatches(): void {
+	public function testALeadWithoutAClientIsComplete(): void {
 		$step = $this->makeStep(
 			leads: [['id' => 'l1', 'title' => 'Totally New BV', 'pipeline' => 'p1']],
-			clients: [['id' => 'c-other', 'name' => 'Someone Else']],
-			pipelines: [['id' => 'p1', 'title' => 'Sales']]
-		);
-
-		$step->run($this->createMock(IOutput::class));
-
-		$this->assertSame(['Totally New BV'], $this->created);
-		$this->assertSame('made-1', $this->saved('l1')['client'] ?? null);
-	}//end testCreatesAClientWhenNothingMatches()
-
-	/**
-	 * Two leads for the same unknown company share one created client.
-	 *
-	 * @return void
-	 */
-	public function testReusesAClientCreatedEarlierInTheSameRun(): void {
-		$step = $this->makeStep(
-			leads: [
-				['id' => 'l1', 'title' => 'Nieuw Bedrijf', 'pipeline' => 'p1'],
-				['id' => 'l2', 'title' => 'Nieuw Bedrijf', 'pipeline' => 'p1'],
-			],
 			clients: [],
 			pipelines: [['id' => 'p1', 'title' => 'Sales']]
 		);
 
-		$step->run($this->createMock(IOutput::class));
+		$output = $this->createMock(IOutput::class);
+		$output->expects($this->never())->method('warning');
+		$step->run($output);
 
-		$this->assertCount(1, $this->created, 'the second lead must reuse the first created client');
-		$this->assertSame('made-1', $this->saved('l1')['client'] ?? null);
-		$this->assertSame('made-1', $this->saved('l2')['client'] ?? null);
-	}//end testReusesAClientCreatedEarlierInTheSameRun()
+		$this->assertSame([], $this->objects->saves, 'a lead without a client must not be saved again');
+	}//end testALeadWithoutAClientIsComplete()
 
 	/**
 	 * A lead on a pipeline without a stage is put in the first open stage.

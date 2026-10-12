@@ -2023,6 +2023,7 @@
         "Last updated: {time}": "Laatst bijgewerkt: {time}",
         "Last {n} transactions": "Laatste {n} transacties",
         "Lead": "Lead",
+        "Leave empty to save the lead without a client.": "Laat leeg om de lead zonder klant op te slaan.",
         "Lead & request assignments": "Lead- & verzoektoewijzingen",
         "Lead Conversion Rate": "Lead-conversieratio",
         "Lead Management": "Leadbeheer",

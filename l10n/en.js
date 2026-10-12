@@ -2022,6 +2022,7 @@ OC.L10N.register(
         "Last updated: {time}": "Last updated: {time}",
         "Last {n} transactions": "Last {n} transactions",
         "Lead": "Lead",
+        "Leave empty to save the lead without a client.": "Leave empty to save the lead without a client.",
         "Lead & request assignments": "Lead & request assignments",
         "Lead Conversion Rate": "Lead Conversion Rate",
         "Lead Management": "Lead Management",
