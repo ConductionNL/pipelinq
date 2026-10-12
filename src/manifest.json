@@ -5086,11 +5086,366 @@
 		},
 		{
 			"id": "MyWork",
-			"_note": "MyWork.vue is a personal cross-entity worklist: it merges tasks, deals and contactmomenten assigned to the current user into grouped, due-date-coloured sections with entity badges and quick-filter buttons; no single-register 'index' page can aggregate across these schemas.",
 			"route": "/my-work",
-			"type": "custom",
-			"title": "My Work",
-			"component": "MyWorkView"
+			"type": "dashboard",
+			"title": "My work",
+			"_note": "My work as a manifest page (PqMijnWerk). Three grouped lists over the ticket schema for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks, which the old worklist also merged. Week figures are count tiles with date filters. Left out because the library cannot draw or compute them: the Alle/Tickets/Leads/Opvolgingen chip strip with Toon afgerond and Sortering, the share answered within the deadline and the average answer time (ratios, not counts), the Begin hier card (a banner that names one row), saved views (per-user view ids).",
+			"config": {
+				"showRefresh": true,
+				"description": "Tickets, leads and follow-ups that are yours, the most urgent first",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"kpiRow": [
+					"my-answered-week",
+					"my-converted-week",
+					"my-open-tickets"
+				],
+				"widgets": [
+					{
+						"id": "my-open-tickets",
+						"type": "stat",
+						"title": "Open on me",
+						"content": {
+							"label": "Open on me",
+							"caption": "tickets assigned to you",
+							"icon": "ClipboardCheckOutline",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": "@me",
+									"status": {
+										"notIn": [
+											"resolved",
+											"completed",
+											"rejected",
+											"converted",
+											"closed"
+										]
+									}
+								}
+							}
+						}
+					},
+					{
+						"id": "my-answered-week",
+						"type": "stat",
+						"title": "Answered this week",
+						"content": {
+							"label": "Answered this week",
+							"caption": "resolved or completed in 7 days",
+							"icon": "CheckCircleOutline",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": "@me",
+									"status": {
+										"in": [
+											"resolved",
+											"completed"
+										]
+									},
+									"resolvedAt[gte]": "@today-7d"
+								}
+							}
+						}
+					},
+					{
+						"id": "my-converted-week",
+						"type": "stat",
+						"title": "Turned into a case",
+						"content": {
+							"label": "Turned into a case",
+							"caption": "converted in 7 days",
+							"icon": "ArrowRightCircleOutline",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": "@me",
+									"status": "converted",
+									"resolvedAt[gte]": "@today-7d"
+								}
+							}
+						}
+					},
+					{
+						"id": "my-answer-today",
+						"type": "record-list",
+						"title": "Answer today",
+						"headerLink": {
+							"label": "View all my tickets",
+							"route": "Tickets",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": {
+									"in": [
+										"new",
+										"in_progress"
+									]
+								},
+								"slaDeadline[lt]": "@today+1d"
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": "{ticketType} · {channel}",
+							"pill": {
+								"field": "status",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Waiting for customer"
+								},
+								"colorMap": {
+									"new": "info",
+									"in_progress": "warning",
+									"awaiting_customer": "default"
+								}
+							},
+							"trailing": [
+								"{priority}",
+								"Deadline {slaDeadline|date}"
+							],
+							"rowRoute": "TicketDetail",
+							"emptyText": "Nothing here."
+						}
+					},
+					{
+						"id": "my-waiting-on-me",
+						"type": "record-list",
+						"title": "Waiting on me",
+						"headerLink": {
+							"label": "View all my tickets",
+							"route": "Tickets",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": {
+									"in": [
+										"new",
+										"in_progress"
+									]
+								}
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": "{ticketType} · {channel}",
+							"pill": {
+								"field": "status",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Waiting for customer"
+								},
+								"colorMap": {
+									"new": "info",
+									"in_progress": "warning",
+									"awaiting_customer": "default"
+								}
+							},
+							"trailing": [
+								"{priority}",
+								"Deadline {slaDeadline|date}"
+							],
+							"rowRoute": "TicketDetail",
+							"emptyText": "Nothing here."
+						}
+					},
+					{
+						"id": "my-waiting-on-customer",
+						"type": "record-list",
+						"title": "Waiting on the customer",
+						"headerLink": {
+							"label": "View all my tickets",
+							"route": "Tickets",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": "awaiting_customer"
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": "{ticketType} · {channel}",
+							"pill": {
+								"field": "status",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Waiting for customer"
+								},
+								"colorMap": {
+									"new": "info",
+									"in_progress": "warning",
+									"awaiting_customer": "default"
+								}
+							},
+							"trailing": [
+								"{priority}",
+								"Deadline {slaDeadline|date}"
+							],
+							"rowRoute": "TicketDetail",
+							"emptyText": "Nothing here."
+						}
+					},
+					{
+						"id": "my-leads",
+						"type": "record-list",
+						"title": "My leads",
+						"headerLink": {
+							"label": "View all my leads",
+							"route": "Leads",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "lead",
+							"filter": {
+								"assignee": "@me",
+								"status": "open"
+							},
+							"sort": {
+								"field": "expectedCloseDate",
+								"dir": "asc"
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": "{stage}",
+							"trailing": [
+								"Closing {expectedCloseDate|date}"
+							],
+							"rowRoute": "LeadDetail",
+							"emptyText": "No open leads."
+						}
+					},
+					{
+						"id": "my-follow-ups",
+						"type": "record-list",
+						"title": "My follow-ups",
+						"headerLink": {
+							"label": "View all my tasks",
+							"route": "Tasks",
+							"query": {
+								"assigneeUserId": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"assigneeUserId": "@me",
+								"status": "open"
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{subject}",
+							"meta": "{type}",
+							"trailing": [
+								"Deadline {deadline|date}"
+							],
+							"rowRoute": "TaskDetail",
+							"emptyText": "No open follow-ups."
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "my-answer-today",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": "2",
+						"widgetId": "my-waiting-on-me",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": "3",
+						"widgetId": "my-waiting-on-customer",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": "4",
+						"widgetId": "my-leads",
+						"gridX": 0,
+						"gridY": 15,
+						"gridWidth": 6,
+						"gridHeight": 5
+					},
+					{
+						"id": "5",
+						"widgetId": "my-follow-ups",
+						"gridX": 6,
+						"gridY": 15,
+						"gridWidth": 6,
+						"gridHeight": 5
+					}
+				]
+			}
 		},
 		{
 			"id": "SyncSettings",

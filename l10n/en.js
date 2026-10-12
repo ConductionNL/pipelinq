@@ -7533,7 +7533,27 @@ OC.L10N.register(
         "{shown} of {total} clients": "{shown} of {total} clients",
         "Open tickets": "Open tickets",
         "{shown} of {total} unassigned tickets · customer contact · oldest first": "{shown} of {total} unassigned tickets · customer contact · oldest first",
-        "Take it on": "Take it on"
+        "Take it on": "Take it on",
+        "My work": "My work",
+        "Open on me": "Open on me",
+        "tickets assigned to you": "tickets assigned to you",
+        "Answered this week": "Answered this week",
+        "resolved or completed in 7 days": "resolved or completed in 7 days",
+        "Turned into a case": "Turned into a case",
+        "converted in 7 days": "converted in 7 days",
+        "Answer today": "Answer today",
+        "Waiting on me": "Waiting on me",
+        "Waiting on the customer": "Waiting on the customer",
+        "View all my tickets": "View all my tickets",
+        "Nothing here.": "Nothing here.",
+        "View all my leads": "View all my leads",
+        "No open leads.": "No open leads.",
+        "My follow-ups": "My follow-ups",
+        "View all my tasks": "View all my tasks",
+        "No open follow-ups.": "No open follow-ups.",
+        "Closing {expectedCloseDate|date}": "Closing {expectedCloseDate|date}",
+        "Deadline {slaDeadline|date}": "Deadline {slaDeadline|date}",
+        "Tickets, leads and follow-ups that are yours, the most urgent first": "Tickets, leads and follow-ups that are yours, the most urgent first"
     },
     "nplurals=2; plural=(n != 1);"
 )

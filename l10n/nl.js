@@ -7448,7 +7448,27 @@ OC.L10N.register(
         "{shown} of {total} clients": "{shown} van {total} klanten",
         "Open tickets": "Open tickets",
         "{shown} of {total} unassigned tickets · customer contact · oldest first": "{shown} van {total} niet toegewezen tickets · klantcontact · oudste eerst",
-        "Take it on": "In behandeling nemen"
+        "Take it on": "In behandeling nemen",
+        "My work": "Mijn werk",
+        "Open on me": "Open bij mij",
+        "tickets assigned to you": "tickets die aan jou zijn toegewezen",
+        "Answered this week": "Beantwoord deze week",
+        "resolved or completed in 7 days": "opgelost of afgerond in 7 dagen",
+        "Turned into a case": "Omgezet naar een zaak",
+        "converted in 7 days": "omgezet in 7 dagen",
+        "Answer today": "Vandaag beantwoorden",
+        "Waiting on me": "Wacht op mij",
+        "Waiting on the customer": "Wacht op de klant",
+        "View all my tickets": "Al mijn tickets bekijken",
+        "Nothing here.": "Hier staat niets.",
+        "View all my leads": "Al mijn leads bekijken",
+        "No open leads.": "Geen open leads.",
+        "My follow-ups": "Mijn opvolgingen",
+        "View all my tasks": "Al mijn taken bekijken",
+        "No open follow-ups.": "Geen open opvolgingen.",
+        "Closing {expectedCloseDate|date}": "Sluit {expectedCloseDate|date}",
+        "Deadline {slaDeadline|date}": "Uiterlijk {slaDeadline|date}",
+        "Tickets, leads and follow-ups that are yours, the most urgent first": "Tickets, leads en opvolgingen die van jou zijn, het meest urgente eerst"
     },
     "nplurals=2; plural=(n != 1);"
 )

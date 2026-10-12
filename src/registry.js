@@ -295,8 +295,6 @@ import WeeklyReviewView from './views/marketing/WeeklyReview.vue'
 //     + the composer preflight facts, and hosts the SendMessageModal
 //     composer. Same self-fetching-by-props pattern as the sections above. ---
 import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
-// --- MyWork — bespoke per-user surface mixing tasks + leads + requests. ---
-import MyWorkView from './views/MyWork.vue'
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
@@ -399,12 +397,6 @@ const registry = {
 		_note: 'ADR-044 cards-collapse hub for the Service group: seven CnCards linking to the former Service child leaves (Requests/Tasks/Contactmomenten/Complaints/Projects/MyWork/BookingsGroup). Leaf routes stay registered.',
 	},
 
-	// --- MyWork — multi-entity user dashboard. ---
-	MyWorkView: {
-		kind: 'page',
-		component: MyWorkView,
-		_note: 'Personalised work surface mixing tasks + leads + requests for the current user; no single-entity typed page captures multi-entity user dashboard.',
-	},
 	ProspectsView: {
 		kind: 'page',
 		component: ProspectsView,
