@@ -819,6 +819,7 @@ export default {
 		 * open lead, my leads, leads closing this month and stale leads.
 		 *
 		 * @return {Array<{label: string}>}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		chipTabs() {
 			return [
@@ -833,6 +834,7 @@ export default {
 		 * The number on each chip, counted over the leads the pipeline holds.
 		 *
 		 * @return {number[]}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		chipCounts() {
 			return this.chipTabs.map(
@@ -846,6 +848,7 @@ export default {
 		 * The line under the title: how many leads show, out of how many.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		headerCountLine() {
 			return this.t(
@@ -1598,6 +1601,7 @@ export default {
 		 * @param {object} item The lead.
 		 * @param {number} index The chip index.
 		 * @return {boolean}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		matchesChip(item, index) {
 			if (index === 1) {
