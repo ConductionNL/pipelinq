@@ -2416,9 +2416,45 @@
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "client-panels",
+						"widgetId": "client-summary-open-tickets",
 						"gridX": 0,
 						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "client-summary-sla-breached",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "client-summary-sla-at-risk",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "client-summary-last-activity",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3,
+						"showTitle": false
+					},
+					{
+						"id": "9",
+						"widgetId": "client-panels",
+						"gridX": 0,
+						"gridY": 3,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
@@ -2587,8 +2623,7 @@
 					},
 					"variant": "purple"
 				},
-				"headerMeta": "{address}",
-				"_kpiNote": "The five summary tiles (client-summary-*) are declared but not placed: the detail grid collapses to one column below 1000px of its own width and the side column leaves the body about 790px, so five tiles stacked into five full-width cards. They return when the library draws a KPI row beside a side column."
+				"headerMeta": "{address}"
 			}
 		},
 		{
