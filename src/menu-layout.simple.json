@@ -853,6 +853,51 @@
 			"configPatch": {
 				"bodyWidgets": {
 					"customer-reply": null
+				},
+				"widgets": {
+					"ticket-decision-routes": {
+						"content": {
+							"title": "Decisions",
+							"convert": false
+						},
+						"_note": "The simple page offers Convert to case in its Case section below, with or without decidiq. The Decisions tab does not repeat it."
+					},
+					"ticket-panels": {
+						"type": "tabs",
+						"title": "Ticket",
+						"icon": "FileDocument",
+						"content": {
+							"ariaLabel": "Ticket details",
+							"maxVisibleTabs": 5,
+							"moreLabel": "More",
+							"tabs": [
+								{
+									"widgetId": "ticket-data",
+									"label": "Overview"
+								},
+								{
+									"widgetId": "ticket-contactmoments",
+									"label": "Contact moments"
+								},
+								{
+									"widgetId": "ticket-related",
+									"label": "Related"
+								},
+								{
+									"widgetIds": [
+										"ticket-decision-routes",
+										"ticket-decisions"
+									],
+									"label": "Decisions",
+									"visibleWhen": {
+										"appInstalled": "decidiq"
+									}
+								}
+							],
+							"variant": "segmented"
+						},
+						"_note": "The page declares `ticket-panels` itself (overview and decisions). The simple structure gives it the board's four tabs, so this patches the widget instead of appending a second one with the same id."
+					}
 				}
 			},
 			"configAppend": {
@@ -894,36 +939,6 @@
 							"limit": 25,
 							"rowRoute": "TicketDetail",
 							"emptyText": "No contact moments on this ticket yet."
-						}
-					},
-					{
-						"id": "ticket-panels",
-						"type": "tabs",
-						"title": "Ticket",
-						"icon": "FileDocument",
-						"content": {
-							"ariaLabel": "Ticket details",
-							"maxVisibleTabs": 5,
-							"moreLabel": "More",
-							"tabs": [
-								{
-									"widgetId": "ticket-data",
-									"label": "Overview"
-								},
-								{
-									"widgetId": "ticket-contactmoments",
-									"label": "Contact moments"
-								},
-								{
-									"widgetId": "ticket-related",
-									"label": "Related"
-								},
-								{
-									"widgetId": "ticket-decisions",
-									"label": "Decisions"
-								}
-							],
-							"variant": "segmented"
 						}
 					}
 				],

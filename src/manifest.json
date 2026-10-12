@@ -2680,7 +2680,7 @@
 				],
 				"hideEmpty": true,
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_widgetsNote": "Widgets are declared (rather than left to the auto-body) only so the Besluitvorming leaf survives: development added a decidesk-decisions integration widget to RequestDetail (ADR-066) while this change was retiring that page. The relation belongs to the matter, not to whichever of the three names it used to have, so it moves onto the ticket alongside the `decisions` property on the schema. `content.hideEmpty` keeps the data widget type-aware — the page-level `hideEmpty` above only reaches the AUTO-body, which a declared widgets[] replaces.",
+				"_widgetsNote": "Widgets are declared (rather than left to the auto-body) so the page can place them. `content.hideEmpty` keeps the data widget type-aware: the page-level `hideEmpty` above only reaches the auto-body, which a declared widgets[] replaces. The decisions (decidiq's decidesk-decisions leaf, the `decisions` property on the schema) sit in the Decisions tab of `ticket-panels`.",
 				"widgets": [
 					{
 						"id": "ticket-data",
@@ -2692,7 +2692,9 @@
 							"columns": 2,
 							"hideEmpty": true,
 							"overrides": {
-								"assignee": { "formatter": "userDisplayName" }
+								"assignee": {
+									"formatter": "userDisplayName"
+								}
 							}
 						}
 					},
@@ -2703,22 +2705,57 @@
 						"icon": "LinkVariant"
 					},
 					{
+						"id": "ticket-decision-routes",
+						"type": "TicketDecisionRoutesWidget",
+						"title": "Decisions",
+						"icon": "Gavel",
+						"content": {
+							"title": "Decisions"
+						}
+					},
+					{
 						"id": "ticket-decisions",
 						"type": "integration",
 						"integrationId": "decidesk-decisions",
-						"title": "Besluitvorming",
+						"title": "On this ticket",
 						"icon": "Gavel"
+					},
+					{
+						"id": "ticket-panels",
+						"type": "tabs",
+						"title": "Ticket panels",
+						"icon": "ViewDashboard",
+						"_note": "Board PqTicketBesluitvorming: the decisions are a tab beside the overview, not a card at the foot of it. The children stay in `widgets` and are absent from `layout`, because the tabs widget renders them. Without decidiq the Decisions tab is absent.",
+						"content": {
+							"ariaLabel": "Ticket details",
+							"tabs": [
+								{
+									"widgetId": "ticket-data",
+									"label": "Overview"
+								},
+								{
+									"widgetIds": [
+										"ticket-decision-routes",
+										"ticket-decisions"
+									],
+									"label": "Decisions",
+									"visibleWhen": {
+										"appInstalled": "decidiq"
+									}
+								}
+							]
+						}
 					}
 				],
-				"_layoutNote": "A declared widgets[] replaces the auto-body, and the auto-body was also what used to place them — so without an explicit layout every widget mapped to 0 grid cells (ADR-062 rule 8) and the page rendered its widgets unplaced. One cell per widget, in reading order: the two-column data block with Related beside it, then Besluitvorming across the full width beneath them.",
+				"_layoutNote": "A declared widgets[] replaces the auto-body, which also used to place them, so every widget needs a cell. The tab strip (overview and decisions) with Related beside it. The tabs' children have no cell of their own: the strip renders them.",
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "ticket-data",
+						"widgetId": "ticket-panels",
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 5
+						"gridHeight": 6
 					},
 					{
 						"id": "2",
@@ -2726,15 +2763,7 @@
 						"gridX": 8,
 						"gridY": 0,
 						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "3",
-						"widgetId": "ticket-decisions",
-						"gridX": 0,
-						"gridY": 5,
-						"gridWidth": 12,
-						"gridHeight": 4
+						"gridHeight": 6
 					}
 				],
 				"_bodyWidgetsNote": "Woo citizen journey J4 (questions-about-a-citizen-dossier): DossierSnapshotSection shows the dossier a resident asked about, before the body; CustomerReplySection is the answer control (customerMessage, the resident's replies) and WooConversionSection converts a question into a dossiq Woo request, after the data. Each renders nothing when it does not apply. Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
@@ -5105,21 +5134,25 @@
 								"style": "number",
 								"decimals": 0
 							},
-							"endpointSource": {
-								"url": "/apps/openregister/api/objects/pipelinq/ticket",
-								"params": {
-									"_limit": 1,
-									"assignee": "IS NULL",
-									"status_notIn": [
-										"resolved",
-										"completed",
-										"rejected",
-										"converted",
-										"closed"
-									]
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": {
+										"isnull": true
+									},
+									"status": {
+										"notIn": [
+											"resolved",
+											"completed",
+											"rejected",
+											"converted",
+											"closed"
+										]
+									}
 								}
-							},
-							"valueField": "total"
+							}
 						}
 					},
 					{
@@ -5134,27 +5167,30 @@
 								"style": "number",
 								"decimals": 0
 							},
-							"endpointSource": {
-								"url": "/apps/openregister/api/objects/pipelinq/ticket",
-								"params": {
-									"_limit": 1,
-									"assignee": "IS NULL",
-									"status_notIn": [
-										"resolved",
-										"completed",
-										"rejected",
-										"converted",
-										"closed"
-									],
+							"variant": "error",
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": {
+										"isnull": true
+									},
+									"status": {
+										"notIn": [
+											"resolved",
+											"completed",
+											"rejected",
+											"converted",
+											"closed"
+										]
+									},
 									"slaDeadline[lt]": "@now"
 								}
-							},
-							"valueField": "total",
-							"variant": "error"
+							}
 						}
 					}
-				],
-				"_statNote": "The tiles read the list endpoint's total, not the aggregation endpoint: /aggregations/.../value has no null operator (isnull is refused, eq with an empty value matches nothing), so 'assignee is empty' counts 0 there while the list endpoint says 48. The board's third tile (within the deadline) is left out: most queue tickets carry no slaDeadline, so a count of deadlines still ahead is not the board's figure."
+				]
 			}
 		},
 		{

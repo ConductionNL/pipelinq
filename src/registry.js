@@ -137,6 +137,7 @@ import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdo
 // --- Ticket page, simple structure (simple-ticket-page): the conversation to
 //     read, and the Answer dialog that wraps CustomerReplySection. ---
 import TicketConversationSection from './components/TicketConversationSection.vue'
+import TicketDecisionRoutes from './components/tickets/TicketDecisionRoutes.vue'
 import WooConversionSection from './components/WooConversionSection.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
@@ -895,6 +896,20 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: 'ContactRelationships as a grid widget: entityId from the page object, entityType from content (default contact).',
+	},
+	TicketDecisionRoutesWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'TicketDecisionRoutesWidget',
+			TicketDecisionRoutes,
+			({ objectId, content }) => ({
+				ticketId: objectId,
+				hideConvert: content.convert === false,
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: "Head of the ticket page's Decisions tab (ticket-decisions-tab): what the tab holds, the two routes to a decision, and Convert to case. The decision lists are decidiq's leaf, mounted by the manifest.",
 	},
 	ContactChannelsWidget: {
 		kind: 'widget',

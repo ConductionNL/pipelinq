@@ -2337,6 +2337,12 @@ OC.L10N.register(
         "Unit of measure": "Unité de mesure",
         "Weight": "Poids",
         "Dimensions": "Dimensions",
+        "Formal decisions on this ticket, made and signed in decidiq": "Décisions formelles sur ce ticket, prises et signées dans decidiq",
+        "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "Une décision se prépare directement depuis ce ticket comme proposition dans decidiq, ou la demande devient d'abord un dossier dans dossiq. Dans les deux cas, la décision apparaît ici.",
+        "On this ticket": "Sur ce ticket",
+        "Ticket panels": "Volets du ticket",
+        "Ticket details": "Détails du ticket",
+        "Decisions": "Décisions",
         "Preferred name": "Prénom usuel",
         "The name this person likes to be called, such as Jan for Johannes.": "Le nom par lequel cette personne souhaite être appelée, par exemple Jan pour Johannes."
     },

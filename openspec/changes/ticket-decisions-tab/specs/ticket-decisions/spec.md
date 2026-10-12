@@ -8,7 +8,7 @@ A ticket shows the formal decisions on it, including those on the case it became
 
 ### Requirement: The ticket page has a Decisions tab (REQ-TDT-001)
 
-When decidiq is installed, the ticket page SHALL have a tab Decisions beside Overview that shows the heading "Decisions", the line "Formal decisions on this ticket, made and signed in decidiq", and the decisions whose subject is the ticket, through decidiq's `decidesk-decisions` leaf. The tab SHALL offer Create a proposal for this ticket, which creates a proposal in decidiq linked to the ticket, Convert to a case, which opens the existing convert flow, and Open in decidiq. The decisions widget SHALL no longer appear on the Overview. When decidiq is not installed the tab SHALL not show.
+When decidiq is installed, the ticket page SHALL have a tab Decisions beside Overview that shows the heading "Decisions", the line "Formal decisions on this ticket, made and signed in decidiq", and the decisions whose subject is the ticket, through decidiq's `decidesk-decisions` leaf. The tab SHALL offer Create a proposal for this ticket, which creates a proposal in decidiq linked to the ticket, Convert to a case, which opens the existing convert flow, and Open in decidiq. Convert to a case SHALL show once on a ticket page: where the page already offers it in its own Case section (the simple structure), the tab SHALL not repeat it. The decisions widget SHALL no longer appear on the Overview. When decidiq is not installed the tab SHALL not show.
 
 #### Scenario: A handler prepares a proposal
 - GIVEN ticket PQ-2026-0417 with no decision
@@ -16,10 +16,18 @@ When decidiq is installed, the ticket page SHALL have a tab Decisions beside Ove
 - THEN decidiq holds a proposal whose subject is the ticket
 - AND the tab lists it
 
-#### Scenario: The empty state explains the two routes
+#### Scenario: The tab explains the two routes
 - GIVEN a ticket with no decision and no linked case
 - WHEN the Decisions tab opens
-- THEN it reads "No decision linked" and "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here."
+- THEN it reads "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here."
+- AND the list of decisions shows decidiq's own empty line
+
+The two routes show above the list at all times, with or without a decision. The empty line and the labels of Create and Open in decidiq are the leaf's, so decidiq words them.
+
+#### Scenario: Convert to case shows once in the simple structure
+- GIVEN the simple structure, whose ticket page has a Case section with Convert to case
+- WHEN the handler opens the Decisions tab
+- THEN the tab names the two routes and has no second Convert to case
 
 #### Scenario: decidiq is not installed
 - GIVEN an instance without decidiq
