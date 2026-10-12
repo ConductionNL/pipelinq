@@ -552,8 +552,9 @@ The created client MUST carry `type: organization` and the prospect's KVK
 number, and MUST be created through the contact-first path so the required
 `contactsUid` is provisioned — a direct object save is rejected without it.
 
-A lead is NOT created here. A lead now requires a client, so the client has to
-exist first; creating the lead is a separate step from the client itself.
+A lead is NOT created here. Adding a prospect makes a client; creating a lead
+for it is a separate step. A lead does not need a client (decision 207), but a
+lead for this prospect links the client made here.
 
 #### Scenario: Single prospect conversion
 - GIVEN a prospect with fit score 85 in the discovery widget
