@@ -1803,6 +1803,7 @@
 							"columns": 2,
 							"include": [
 								"name",
+								"preferredName",
 								"email",
 								"phone",
 								"address",
@@ -2588,6 +2589,8 @@
 					"variant": "purple"
 				},
 				"headerMeta": "{address}",
+				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip, so an organisation and a person without one show nothing.",
+				"headerFields": ["preferredName"],
 				"_kpiNote": "The five summary tiles (client-summary-*) are declared but not placed: the detail grid collapses to one column below 1000px of its own width and the side column leaves the body about 790px, so five tiles stacked into five full-width cards. They return when the library draws a KPI row beside a side column."
 			}
 		},
@@ -3262,6 +3265,8 @@
 					"variant": "info"
 				},
 				"headerMeta": "{role} at {client.name}",
+				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip.",
+				"headerFields": ["preferredName"],
 				"headerActions": [
 					{
 						"id": "call",
