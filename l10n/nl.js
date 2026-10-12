@@ -7436,7 +7436,8 @@ OC.L10N.register(
         "My leads": "Mijn leads",
         "Closing this month": "Sluit deze maand",
         "{shown} of {total} open leads · board per stage": "{shown} van {total} open leads · bord per fase",
-        "Stale leads": "Verouderd"
+        "Stale leads": "Verouderd",
+        "{role} at {client.name}": "{role} bij {client.name}"
     },
     "nplurals=2; plural=(n != 1);"
 )
