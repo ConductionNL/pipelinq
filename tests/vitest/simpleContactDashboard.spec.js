@@ -179,7 +179,7 @@ describe('the dashboard', () => {
 			'stat',
 			'stat',
 			'stat',
-			'custom',
+			'workspace-filter',
 		])
 		// PqDashboard has one header: the page header is hidden and the
 		// greeting row carries the kicker date and the heading on the ground.
@@ -617,10 +617,15 @@ describe('the hidden page header loses nothing', () => {
 		expect(simple.slots['widget-simple-availability']).toBe(
 			full.actionsComponent,
 		)
-		// The card wraps the same client picker the full page shows beside its title.
-		expect(simple.slots['widget-simple-client-in-focus']).toBe(
-			'WerkplekContactStart',
+		// The card is the library's start card (workspace-filter), not a slot:
+		// it writes the same workspace key the full page's picker writes.
+		const startCard = simple.config.widgets.find(
+			(widget) => widget.id === 'simple-client-in-focus',
 		)
+		expect(startCard.type).toBe('workspace-filter')
+		expect(startCard.content.layout).toBe('start')
+		expect(startCard.content.writes).toBe('@workspace.selectedClient')
+		expect(simple.slots['widget-simple-client-in-focus']).toBeUndefined()
 		expect(full.slots['title-meta']).toBe('WerkplekClientSelect')
 		expect(layoutOf('simple-availability')).toMatchObject({
 			gridY: 0,

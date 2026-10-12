@@ -7438,6 +7438,8 @@ OC.L10N.register(
         "{shown} of {total} open leads · board per stage": "{shown} van {total} open leads · bord per fase",
         "Stale leads": "Verouderd",
         "{role} at {client.name}": "{role} bij {client.name}",
+        "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.": "Zoek de klant aan de lijn of aan de balie. Verzoeken, taken en eerder contact openen hieronder, met een formulier om dit contact vast te leggen.",
+        "Name, phone, email, postcode or client number": "Naam, telefoon, e-mail, postcode of klantnummer",
         "View all {total} open requests": "Alle {total} open verzoeken bekijken",
         "No open requests for this client.": "Geen open verzoeken bij deze klant.",
         "Deadline {deadline|date}": "Uiterlijk {deadline|date}",

@@ -1487,14 +1487,26 @@
 					},
 					{
 						"id": "simple-client-in-focus",
-						"type": "custom",
-						"title": "Client in focus"
+						"type": "workspace-filter",
+						"title": "Start a contact",
+						"showTitle": false,
+						"content": {
+							"layout": "start",
+							"title": "Start a contact",
+							"description": "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.",
+							"writes": "@workspace.selectedClient",
+							"objectSource": {
+								"register": "pipelinq",
+								"schema": "client",
+								"labelField": "name",
+								"placeholder": "Name, phone, email, postcode or client number"
+							}
+						}
 					}
 				]
 			},
 			"slots": {
-				"widget-simple-availability": "WerkplekHeaderActions",
-				"widget-simple-client-in-focus": "WerkplekContactStart"
+				"widget-simple-availability": "WerkplekHeaderActions"
 			}
 		},
 		{
