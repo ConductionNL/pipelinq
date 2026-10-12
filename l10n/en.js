@@ -7524,7 +7524,14 @@ OC.L10N.register(
         "Stale leads": "Stale leads",
         "{role} at {client.name}": "{role} at {client.name}",
         "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.": "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.",
-        "Name, phone, email, postcode or client number": "Name, phone, email, postcode or client number"
+        "Name, phone, email, postcode or client number": "Name, phone, email, postcode or client number",
+        "View all {total} open requests": "View all {total} open requests",
+        "No open requests for this client.": "No open requests for this client.",
+        "Deadline {deadline|date}": "Deadline {deadline|date}",
+        "{count} open ticket": "{count} open ticket",
+        "{count} open tickets": "{count} open tickets",
+        "{shown} of {total} clients": "{shown} of {total} clients",
+        "Open tickets": "Open tickets"
     },
     "nplurals=2; plural=(n != 1);"
 )

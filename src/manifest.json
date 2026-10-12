@@ -1666,11 +1666,21 @@
 							]
 						}
 					},
-					"name": { "readOnly": false },
-					"email": { "readOnly": false },
-					"phone": { "readOnly": false },
-					"correspondenceLanguage": { "widget": "language" },
-					"timezone": { "widget": "timezone" }
+					"name": {
+						"readOnly": false
+					},
+					"email": {
+						"readOnly": false
+					},
+					"phone": {
+						"readOnly": false
+					},
+					"correspondenceLanguage": {
+						"widget": "language"
+					},
+					"timezone": {
+						"widget": "timezone"
+					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
@@ -1683,11 +1693,36 @@
 						"route": "ClientDetail"
 					}
 				],
-				"columns": ["name", "type", "industry", "email", "phone"],
+				"columns": [
+					"name",
+					"type",
+					"industry",
+					"email",
+					"phone",
+					{
+						"key": "openTickets",
+						"label": "Open tickets",
+						"sortable": false,
+						"aggregate": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"op": "count",
+							"where": {
+								"client": "@self.id",
+								"status": {
+									"ne": "closed"
+								}
+							}
+						},
+						"widget": "badge"
+					}
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"rowIcon": "OfficeBuildingOutline",
+				"countText": "{shown} of {total} clients"
 			}
 		},
 		{
@@ -1724,11 +1759,21 @@
 							]
 						}
 					},
-					"name": { "readOnly": false },
-					"email": { "readOnly": false },
-					"phone": { "readOnly": false },
-					"correspondenceLanguage": { "widget": "language" },
-					"timezone": { "widget": "timezone" }
+					"name": {
+						"readOnly": false
+					},
+					"email": {
+						"readOnly": false
+					},
+					"phone": {
+						"readOnly": false
+					},
+					"correspondenceLanguage": {
+						"widget": "language"
+					},
+					"timezone": {
+						"widget": "timezone"
+					}
 				},
 				"headerActions": [
 					{
@@ -1773,7 +1818,11 @@
 						"content": {
 							"title": "Account",
 							"columns": 2,
-							"include": ["type", "industry", "notes"]
+							"include": [
+								"type",
+								"industry",
+								"notes"
+							]
 						}
 					},
 					{
@@ -1945,46 +1994,6 @@
 						"type": "related",
 						"title": "Related",
 						"icon": "LinkVariant"
-					},
-					{
-						"id": "client-records",
-						"type": "tabs",
-						"title": "Records",
-						"icon": "ViewDashboard",
-						"_note": "Everything that hangs off this client, one list at a time. The children stay in `widgets` and out of `layout`, or the tabs widget and the grid would each render them once.",
-						"content": {
-							"ariaLabel": "Client records",
-							"tabs": [
-								{
-									"widgetId": "client-quick-contacts",
-									"label": "Contacts"
-								},
-								{
-									"widgetId": "client-quick-requests",
-									"label": "Requests"
-								},
-								{
-									"widgetId": "client-leads",
-									"label": "Leads"
-								},
-								{
-									"widgetId": "client-contactmoments",
-									"label": "Contact moments"
-								},
-								{
-									"widgetId": "client-complaints",
-									"label": "Complaints"
-								},
-								{
-									"widgetId": "client-contracts",
-									"label": "Contracts"
-								},
-								{
-									"widgetId": "client-projects",
-									"label": "Projects"
-								}
-							]
-						}
 					},
 					{
 						"id": "client-quick-contacts",
@@ -2267,30 +2276,6 @@
 						}
 					},
 					{
-						"id": "client-communication",
-						"type": "tabs",
-						"title": "Communication",
-						"icon": "Email",
-						"_note": "Mail, notes and files for this client behind one strip. Children stay out of `layout` for the same reason as client-records.",
-						"content": {
-							"ariaLabel": "Client communication",
-							"tabs": [
-								{
-									"widgetId": "client-email",
-									"label": "Mail"
-								},
-								{
-									"widgetId": "client-notes",
-									"label": "Notes"
-								},
-								{
-									"widgetId": "client-files",
-									"label": "Files"
-								}
-							]
-						}
-					},
-					{
 						"id": "client-email",
 						"type": "integration",
 						"integrationId": "email",
@@ -2310,96 +2295,133 @@
 						"integrationId": "files",
 						"title": "Files",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "client-open-requests",
+						"type": "record-list",
+						"title": "Open requests",
+						"icon": "ClipboardCheckOutline",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"status": {
+									"ne": "closed"
+								}
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": "{ticketType} · {priority}",
+							"pill": {
+								"field": "status"
+							},
+							"trailing": [
+								"Deadline {deadline|date}"
+							],
+							"rowRoute": "TicketDetail",
+							"headerLink": {
+								"label": "View all {total} open requests",
+								"route": "Tickets"
+							},
+							"emptyText": "No open requests for this client."
+						}
+					},
+					{
+						"id": "client-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "client-channels",
+						"type": "ContactChannelsWidget",
+						"title": "Contact channels",
+						"icon": "CardAccountPhoneOutline",
+						"content": {
+							"entityType": "client",
+							"title": "Contact channels"
+						}
+					},
+					{
+						"id": "client-relationships",
+						"type": "ContactRelationshipsWidget",
+						"title": "Relationships",
+						"icon": "AccountMultipleOutline",
+						"content": {
+							"entityType": "client",
+							"title": "Relationships"
+						}
+					},
+					{
+						"id": "client-panels",
+						"type": "tabs",
+						"title": "Client",
+						"icon": "OfficeBuilding",
+						"_note": "One strip, at most seven tabs (shared relation frame, PqKlant and PqOrganisatie). Overview stacks the data cards and the open requests; Requests holds requests and complaints; Contracts holds contracts and projects. Mail, notes and files moved to the side column. Children stay out of layout, or the tabs widget and the grid would each render them once.",
+						"content": {
+							"ariaLabel": "Client",
+							"tabs": [
+								{
+									"widgetIds": [
+										"client-identity",
+										"client-commercial",
+										"client-open-requests"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "client-quick-contacts",
+									"label": "Contacts",
+									"countFrom": "widget"
+								},
+								{
+									"widgetIds": [
+										"client-quick-requests",
+										"client-complaints"
+									],
+									"label": "Requests",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "client-contactmoments",
+									"label": "Contact moments",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "client-leads",
+									"label": "Leads",
+									"countFrom": "widget"
+								},
+								{
+									"widgetIds": [
+										"client-contracts",
+										"client-projects"
+									],
+									"label": "Contracts"
+								},
+								{
+									"widgetId": "client-history",
+									"label": "History"
+								}
+							]
+						}
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "client-identity",
+						"widgetId": "client-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 3
-					},
-					{
-						"id": "2",
-						"widgetId": "client-kpis-sales",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "3",
-						"widgetId": "client-commercial",
-						"gridX": 0,
-						"gridY": 3,
-						"gridWidth": 8,
-						"gridHeight": 2
-					},
-					{
-						"id": "4",
-						"widgetId": "client-summary-open-tickets",
-						"gridX": 0,
-						"gridY": 5,
-						"gridWidth": 3,
-						"gridHeight": 2
-					},
-					{
-						"id": "5",
-						"widgetId": "client-summary-new-requests",
-						"gridX": 3,
-						"gridY": 5,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "6",
-						"widgetId": "client-summary-sla-breached",
-						"gridX": 5,
-						"gridY": 5,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "7",
-						"widgetId": "client-summary-sla-at-risk",
-						"gridX": 7,
-						"gridY": 5,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "8",
-						"widgetId": "client-summary-last-activity",
-						"gridX": 9,
-						"gridY": 5,
-						"gridWidth": 3,
-						"gridHeight": 2
-					},
-					{
-						"id": "9",
-						"widgetId": "client-records",
-						"gridX": 0,
-						"gridY": 7,
-						"gridWidth": 8,
-						"gridHeight": 7
-					},
-					{
-						"id": "11",
-						"widgetId": "client-related",
-						"gridX": 8,
-						"gridY": 7,
-						"gridWidth": 4,
-						"gridHeight": 7
-					},
-					{
-						"id": "10",
-						"widgetId": "client-communication",
-						"gridX": 0,
-						"gridY": 14,
 						"gridWidth": 12,
-						"gridHeight": 6
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
 				"bodyWidgets": [
@@ -2408,7 +2430,9 @@
 						"component": "PartyIndicatorPanel",
 						"placement": "before-body",
 						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
-						"props": { "partyId": "@objectId" }
+						"props": {
+							"partyId": "@objectId"
+						}
 					},
 					{
 						"id": "contact-links",
@@ -2425,32 +2449,9 @@
 						"id": "log-visit",
 						"component": "LogVisitAction",
 						"placement": "before-body",
-						"props": { "clientId": "@objectId" }
-					},
-					{
-						"id": "relationships",
-						"component": "ContactRelationships",
-						"title": "Relationships",
-						"placement": "end",
 						"props": {
-							"entityId": "@objectId",
-							"entityType": "client",
-							"entityName": "@object.name"
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "channels",
-						"component": "ContactChannelsSection",
-						"title": "Contact channels",
-						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "client"
-						},
-						"colSpan": 6,
-						"card": true
+							"clientId": "@objectId"
+						}
 					},
 					{
 						"id": "messaging-conversation",
@@ -2544,7 +2545,50 @@
 							]
 						}
 					]
-				}
+				},
+				"sideColumn": [
+					"client-kpis-sales",
+					"client-related",
+					"client-channels",
+					"client-relationships",
+					"client-email",
+					"client-notes",
+					"client-files"
+				],
+				"breadcrumb": {
+					"label": "Residents and businesses",
+					"route": "Clients"
+				},
+				"typePill": {
+					"field": "type",
+					"labels": {
+						"person": "Resident",
+						"organization": "Organisation"
+					},
+					"colorMap": {
+						"person": "info",
+						"organization": "teal"
+					}
+				},
+				"statusPill": {
+					"countFrom": {
+						"register": "pipelinq",
+						"schema": "ticket",
+						"filter": {
+							"client": "@objectId",
+							"status": {
+								"ne": "closed"
+							}
+						}
+					},
+					"countLabel": {
+						"one": "{count} open ticket",
+						"other": "{count} open tickets"
+					},
+					"variant": "purple"
+				},
+				"headerMeta": "{address}",
+				"_kpiNote": "The five summary tiles (client-summary-*) are declared but not placed: the detail grid collapses to one column below 1000px of its own width and the side column leaves the body about 790px, so five tiles stacked into five full-width cards. They return when the library draws a KPI row beside a side column."
 			}
 		},
 		{
@@ -2757,11 +2801,21 @@
 				"schema": "contact",
 				"createOverride": "createContactContactAware",
 				"fieldOverrides": {
-					"name": { "readOnly": false },
-					"email": { "readOnly": false },
-					"phone": { "readOnly": false },
-					"correspondenceLanguage": { "widget": "language" },
-					"timezone": { "widget": "timezone" }
+					"name": {
+						"readOnly": false
+					},
+					"email": {
+						"readOnly": false
+					},
+					"phone": {
+						"readOnly": false
+					},
+					"correspondenceLanguage": {
+						"widget": "language"
+					},
+					"timezone": {
+						"widget": "timezone"
+					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
@@ -2774,11 +2828,32 @@
 						"route": "ContactDetail"
 					}
 				],
-				"columns": ["name", "email", "phone", "role"],
+				"columns": [
+					"name",
+					"email",
+					"phone",
+					"role",
+					{
+						"key": "client.name",
+						"label": "Client",
+						"sortable": false
+					}
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"extend": [
+					"client"
+				],
+				"countText": "{shown} of {total} contacts",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					}
+				]
 			}
 		},
 		{

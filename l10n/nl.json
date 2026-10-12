@@ -7459,6 +7459,13 @@
         "Stale leads": "Verouderd",
         "{role} at {client.name}": "{role} bij {client.name}",
         "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.": "Zoek de klant aan de lijn of aan de balie. Verzoeken, taken en eerder contact openen hieronder, met een formulier om dit contact vast te leggen.",
-        "Name, phone, email, postcode or client number": "Naam, telefoon, e-mail, postcode of klantnummer"
+        "Name, phone, email, postcode or client number": "Naam, telefoon, e-mail, postcode of klantnummer",
+        "View all {total} open requests": "Alle {total} open verzoeken bekijken",
+        "No open requests for this client.": "Geen open verzoeken bij deze klant.",
+        "Deadline {deadline|date}": "Uiterlijk {deadline|date}",
+        "{count} open ticket": "{count} open ticket",
+        "{count} open tickets": "{count} open tickets",
+        "{shown} of {total} clients": "{shown} van {total} klanten",
+        "Open tickets": "Open tickets"
     }
 }
