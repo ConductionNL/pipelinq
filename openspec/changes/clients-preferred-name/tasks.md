@@ -10,7 +10,8 @@
   - Verify: Playwright `tests/e2e/preferred-name.spec.ts` sets Jan on contact Johannes Jansen and sees it on ContactDetail
 - [ ] 1.4 CTI screen pop shows the preferred name first for a matched caller
   - Verify: Vitest on the screen pop component with and without a preferred name
-- [ ] 1.5 `TemplateRenderer` variable `preferredName` with the full name fallback
+- [x] 1.5 `TemplateRenderer` variable `preferredName` with the full name fallback
   - Verify: PHPUnit on `render()` with and without the value
+  - Built: `TemplateRenderer::withPreferredName()`, called by `render()`; falls back to `fullName`, then `name`. Test: `TemplateRendererTest::testPreferredNameFallsBackToTheFullName`. Owed: `render()`'s one caller (`BerichtenboxService`) passes the variables it is handed, and no caller hands it the recipient's `preferredName` or `name` yet. Until one does, `{{preferredName}}` renders empty in a sent message.
 - [ ] 1.6 English strings with Dutch translation ("Roepnaam"), user doc section in `docs/Features/client-management.md`
   - Verify: `npm run test:l10n` exit 0; docs build exit 0
