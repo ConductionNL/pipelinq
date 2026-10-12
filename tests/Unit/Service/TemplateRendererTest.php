@@ -169,4 +169,26 @@ class TemplateRendererTest extends TestCase {
 		$rendered = $renderer->render($tpl, ['caseId' => 'Z-1']);
 		$this->assertNull($rendered['deepLink']);
 	}//end testMissingDeepLinkBaseReturnsNull()
+
+	/**
+	 * `{{preferredName}}` is the preferred name, and the full name without one.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-the-preferred-name-is-used-where-a-person-is-addressed-req-cpn-002
+	 */
+	public function testPreferredNameFallsBackToTheFullName(): void {
+		$renderer = $this->buildRenderer();
+		$tpl = ['subject' => 'Uw aanvraag', 'body' => '<p>Beste {{preferredName}},</p>'];
+
+		$with = $renderer->render($tpl, ['preferredName' => 'Jan', 'name' => 'Johannes Jansen']);
+		$without = $renderer->render($tpl, ['name' => 'Johannes Jansen']);
+		$blank = $renderer->render($tpl, ['preferredName' => '  ', 'fullName' => 'Johanna de Wit', 'name' => 'ignored']);
+		$unknown = $renderer->render($tpl, []);
+
+		$this->assertSame('<p>Beste Jan,</p>', $with['body']);
+		$this->assertSame('<p>Beste Johannes Jansen,</p>', $without['body']);
+		$this->assertSame('<p>Beste Johanna de Wit,</p>', $blank['body']);
+		$this->assertSame('<p>Beste ,</p>', $unknown['body']);
+	}//end testPreferredNameFallsBackToTheFullName()
 }//end class

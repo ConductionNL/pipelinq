@@ -273,4 +273,51 @@ class ContactDataBuilderTest extends TestCase {
 			$result['emails']
 		);
 	}//end testBuildContactImportDataTypedEmails()
+
+	/**
+	 * A nickname on the Nextcloud contact arrives as the preferred name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	public function testImportReadsTheNicknameAsThePreferredName(): void {
+		$contact = $this->builder->buildContactImportData(['FN' => 'Johanna de Wit', 'NICKNAME' => ['Hanneke']], 'uid-1', null);
+		$person = $this->builder->buildClientImportData(['FN' => 'Johannes Jansen', 'NICKNAME' => ' Jan '], 'uid-2');
+
+		$this->assertSame('Hanneke', $contact['preferredName']);
+		$this->assertSame('Jan', $person['preferredName']);
+		$this->assertSame('person', $person['type']);
+	}//end testImportReadsTheNicknameAsThePreferredName()
+
+	/**
+	 * A nickname removed in the Contacts app clears the preferred name; a
+	 * contact that never carried one leaves the field out.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	public function testImportClearsOrLeavesThePreferredName(): void {
+		$cleared = $this->builder->buildContactImportData(['FN' => 'Johanna de Wit', 'NICKNAME' => ''], 'uid-1', null);
+		$absent = $this->builder->buildContactImportData(['FN' => 'Johanna de Wit'], 'uid-1', null);
+
+		$this->assertArrayHasKey('preferredName', $cleared);
+		$this->assertSame('', $cleared['preferredName']);
+		$this->assertArrayNotHasKey('preferredName', $absent);
+	}//end testImportClearsOrLeavesThePreferredName()
+
+	/**
+	 * An organisation takes no preferred name from its card.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	public function testImportGivesAnOrganisationNoPreferredName(): void {
+		$organisation = $this->builder->buildClientImportData(['FN' => 'Test Corp', 'ORG' => 'Test Corp', 'NICKNAME' => 'TC'], 'uid-3');
+
+		$this->assertSame('organization', $organisation['type']);
+		$this->assertArrayNotHasKey('preferredName', $organisation);
+	}//end testImportGivesAnOrganisationNoPreferredName()
 }//end class

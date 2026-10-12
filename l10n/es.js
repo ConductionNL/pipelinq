@@ -2342,7 +2342,9 @@ OC.L10N.register(
         "On this ticket": "Sobre este ticket",
         "Ticket panels": "Paneles del ticket",
         "Ticket details": "Detalles del ticket",
-        "Decisions": "Decisiones"
+        "Decisions": "Decisiones",
+        "Preferred name": "Nombre preferido",
+        "The name this person likes to be called, such as Jan for Johannes.": "El nombre con el que esta persona quiere que la llamen, por ejemplo Jan en lugar de Johannes."
     },
     "nplurals=2; plural=(n != 1);"
 )
