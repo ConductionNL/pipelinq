@@ -7590,7 +7590,9 @@ OC.L10N.register(
         "Formal decisions on this ticket, made and signed in decidiq": "Formal decisions on this ticket, made and signed in decidiq",
         "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.",
         "On this ticket": "On this ticket",
-        "Ticket panels": "Ticket panels"
+        "Ticket panels": "Ticket panels",
+        "Preferred name": "Preferred name",
+        "The name this person likes to be called, such as Jan for Johannes.": "The name this person likes to be called, such as Jan for Johannes."
     },
     "nplurals=2; plural=(n != 1);"
 )

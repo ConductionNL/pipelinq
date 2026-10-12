@@ -34,7 +34,23 @@
 				</thead>
 				<tbody>
 					<tr v-for="match in matches" :key="match.id || match.uuid">
-						<td>{{ displayName(match) }}</td>
+						<td>
+							<template v-if="preferredName(match)">
+								<strong
+									class="screen-pop__preferred"
+									data-testid="screen-pop-preferred-name"
+									>{{ preferredName(match) }}</strong
+								>
+								<span
+									class="screen-pop__full-name"
+									data-testid="screen-pop-full-name"
+									>{{ displayName(match) }}</span
+								>
+							</template>
+							<template v-else>
+								{{ displayName(match) }}
+							</template>
+						</td>
 						<td>{{ match.clientName || match.organisation || '—' }}</td>
 						<td>{{ match._matchType || 'contact' }}</td>
 						<td class="screen-pop__actions">
@@ -73,6 +89,24 @@ export default {
 
 	emits: ['close', 'select', 'intake'],
 	methods: {
+		/**
+		 * The name the caller asked to be called by, which the agent says
+		 * first. Empty when they stated none, or when it equals the full name.
+		 *
+		 * @param {object} match A matched contact or client.
+		 * @return {string} The preferred name, or ''.
+		 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-the-preferred-name-is-used-where-a-person-is-addressed-req-cpn-002
+		 */
+		preferredName(match) {
+			const preferred =
+				typeof match.preferredName === 'string'
+					? match.preferredName.trim()
+					: ''
+			return preferred !== '' && preferred !== this.displayName(match)
+				? preferred
+				: ''
+		},
+
 		displayName(match) {
 			return (
 				match.displayName
@@ -105,5 +139,14 @@ export default {
 
 .screen-pop__actions {
 	text-align: end;
+}
+
+.screen-pop__preferred,
+.screen-pop__full-name {
+	display: block;
+}
+
+.screen-pop__full-name {
+	color: var(--color-text-maxcontrast);
 }
 </style>

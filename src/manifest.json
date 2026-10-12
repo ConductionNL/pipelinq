@@ -1803,6 +1803,7 @@
 							"columns": 2,
 							"include": [
 								"name",
+								"preferredName",
 								"email",
 								"phone",
 								"address",
@@ -2419,34 +2420,43 @@
 						"widgetId": "client-summary-open-tickets",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 3,
+						"gridWidth": 4,
 						"gridHeight": 3,
 						"showTitle": false
 					},
 					{
 						"id": "2",
-						"widgetId": "client-summary-sla-breached",
-						"gridX": 3,
+						"widgetId": "client-summary-new-requests",
+						"gridX": 4,
 						"gridY": 0,
-						"gridWidth": 3,
+						"gridWidth": 4,
 						"gridHeight": 3,
 						"showTitle": false
 					},
 					{
 						"id": "3",
-						"widgetId": "client-summary-sla-at-risk",
-						"gridX": 6,
+						"widgetId": "client-summary-sla-breached",
+						"gridX": 8,
 						"gridY": 0,
-						"gridWidth": 3,
+						"gridWidth": 4,
 						"gridHeight": 3,
 						"showTitle": false
 					},
 					{
 						"id": "4",
+						"widgetId": "client-summary-sla-at-risk",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 6,
+						"gridHeight": 3,
+						"showTitle": false
+					},
+					{
+						"id": "5",
 						"widgetId": "client-summary-last-activity",
-						"gridX": 9,
-						"gridY": 0,
-						"gridWidth": 3,
+						"gridX": 6,
+						"gridY": 3,
+						"gridWidth": 6,
 						"gridHeight": 3,
 						"showTitle": false
 					},
@@ -2454,7 +2464,7 @@
 						"id": "9",
 						"widgetId": "client-panels",
 						"gridX": 0,
-						"gridY": 3,
+						"gridY": 6,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
@@ -2623,7 +2633,11 @@
 					},
 					"variant": "purple"
 				},
-				"headerMeta": "{address}"
+				"headerMeta": "{address}",
+				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip, so an organisation and a person without one show nothing.",
+				"headerFields": [
+					"preferredName"
+				]
 			}
 		},
 		{
@@ -3297,6 +3311,8 @@
 					"variant": "info"
 				},
 				"headerMeta": "{role} at {client.name}",
+				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip.",
+				"headerFields": ["preferredName"],
 				"headerActions": [
 					{
 						"id": "call",
