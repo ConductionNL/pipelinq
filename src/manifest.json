@@ -3331,12 +3331,13 @@
 						"type": "data",
 						"title": "Deal",
 						"icon": "HandshakeOutline",
-						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out.",
+						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out. The client sits here too (decision 207): a lead can exist with no client linked, and the Related card only lists a client once there is one, so this field is where a client is read, added and taken off.",
 						"content": {
 							"title": "Deal",
 							"columns": 2,
 							"include": [
 								"title",
+								"client",
 								"value",
 								"status",
 								"stage",
