@@ -7,6 +7,7 @@ Manages persons and organizations as CRM clients, with linked contact persons an
 - `openspec/specs/client-management/spec.md`
 - `openspec/specs/contacts-sync/spec.md`
 - `openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md`
+- `openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md`
 
 ## Features
 
@@ -42,6 +43,16 @@ Two-way sync between Pipelinq clients/contacts and Nextcloud's native Contacts a
 - Sync status indicator: badge showing "Synced with Contacts" on synced entities
 - `contactsUid` field tracks the link between Pipelinq and Contacts records
 - Typed emails and phones map to multiple vCard `EMAIL`/`TEL` properties (with a `TYPE`); social profiles map to `X-SOCIALPROFILE`, both directions
+
+### Preferred name
+
+Record what a person likes to be called. Johannes Jansen answers to Jan, so you write Jan once and every colleague uses it.
+
+- **Where you set it.** The field Preferred name (Roepnaam) on a contact person, and on a client that is a person. An organisation has none.
+- **It follows the Nextcloud contact.** The preferred name is the nickname on the linked Nextcloud contact. Change it in pipelinq and the Contacts app shows it. Change it in the Contacts app and pipelinq picks it up at the next sync. Empty it on either side and it is gone on both.
+- **Use it in a template.** Start a message with `Beste {{preferredName}},`. A person without a preferred name gets their full name there, so a template never greets nobody.
+
+Open a contact person, fill in Preferred name and save. Then check the nickname in the Contacts app.
 
 ### Orphaned Reference Handling (MVP)
 
