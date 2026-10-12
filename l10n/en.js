@@ -7522,7 +7522,14 @@ OC.L10N.register(
         "Closing this month": "Closing this month",
         "{shown} of {total} open leads · board per stage": "{shown} of {total} open leads · board per stage",
         "Stale leads": "Stale leads",
-        "{role} at {client.name}": "{role} at {client.name}"
+        "{role} at {client.name}": "{role} at {client.name}",
+        "View all {total} open requests": "View all {total} open requests",
+        "No open requests for this client.": "No open requests for this client.",
+        "Deadline {deadline|date}": "Deadline {deadline|date}",
+        "{count} open ticket": "{count} open ticket",
+        "{count} open tickets": "{count} open tickets",
+        "{shown} of {total} clients": "{shown} of {total} clients",
+        "Open tickets": "Open tickets"
     },
     "nplurals=2; plural=(n != 1);"
 )

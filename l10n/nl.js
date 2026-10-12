@@ -7437,7 +7437,14 @@ OC.L10N.register(
         "Closing this month": "Sluit deze maand",
         "{shown} of {total} open leads · board per stage": "{shown} van {total} open leads · bord per fase",
         "Stale leads": "Verouderd",
-        "{role} at {client.name}": "{role} bij {client.name}"
+        "{role} at {client.name}": "{role} bij {client.name}",
+        "View all {total} open requests": "Alle {total} open verzoeken bekijken",
+        "No open requests for this client.": "Geen open verzoeken bij deze klant.",
+        "Deadline {deadline|date}": "Uiterlijk {deadline|date}",
+        "{count} open ticket": "{count} open ticket",
+        "{count} open tickets": "{count} open tickets",
+        "{shown} of {total} clients": "{shown} van {total} klanten",
+        "Open tickets": "Open tickets"
     },
     "nplurals=2; plural=(n != 1);"
 )
