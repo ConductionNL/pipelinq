@@ -50,7 +50,9 @@ Record what a person likes to be called. Johannes Jansen answers to Jan, so you 
 
 - **Where you set it.** The field Preferred name (Roepnaam) on a contact person, and on a client that is a person. An organisation has none.
 - **It follows the Nextcloud contact.** The preferred name is the nickname on the linked Nextcloud contact. Change it in pipelinq and the Contacts app shows it. Change it in the Contacts app and pipelinq picks it up at the next sync. Empty it on either side and it is gone on both.
-- **Use it in a template.** Start a message with `Beste {{preferredName}},`. A person without a preferred name gets their full name there, so a template never greets nobody.
+- **You see it under the name.** The page of a contact person or a client shows the preferred name right under the full name. Someone without one shows only their full name.
+- **Greet people by it in a mailing.** Start a campaign template with `Beste {{preferredName}},`. Jan reads "Beste Jan,". A person without a preferred name gets their full name there.
+- **A subscriber you do not know by name gets no name.** Someone who signed up with only an email address is no contact yet, so the greeting stays empty for them. Use a greeting that reads well without a name, or mail only your contacts.
 
 Open a contact person, fill in Preferred name and save. Then check the nickname in the Contacts app.
 

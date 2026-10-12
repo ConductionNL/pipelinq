@@ -6,12 +6,18 @@
 - [x] 1.2 Write `NICKNAME` in `ContactVcardPropertyBuilder::buildProperties()` and read it in both `ContactDataBuilder` import builders
   - Verify: PHPUnit on both directions, including an empty value that clears `NICKNAME`
   - Built: `ContactVcardPropertyBuilder::addPreferredName()` and `ContactDataBuilder::withPreferredName()`. The key is written whenever the object (or the card) carries the field, empty included, so clearing works both ways; an organisation client carries none. Tests: `ContactVcardPropertyBuilderTest`, `ContactDataBuilderTest`.
-- [ ] 1.3 ClientDetail and ContactDetail header show the preferred name
-  - Verify: Playwright `tests/e2e/preferred-name.spec.ts` sets Jan on contact Johannes Jansen and sees it on ContactDetail
-- [ ] 1.4 CTI screen pop shows the preferred name first for a matched caller
+- [x] 1.3 ClientDetail and ContactDetail header show the preferred name
+  - Built as manifest config: `headerFields: ["preferredName"]` on both pages (a chip under the full name, none when the value is empty), and `preferredName` in ClientDetail's `client-identity` field list so it can be filled in. ContactDetail's `contact-data` lists every field. Test: `tests/vitest/preferredName.spec.js`.
+  - Not built: hiding the field row on a client that is an organisation. The data widget has no per-field condition; the row is empty there and the sync writes no nickname for an organisation.
+- [ ] 1.3b Playwright `tests/e2e/preferred-name.spec.ts` sets Jan on contact Johannes Jansen and sees it on ContactDetail (live pass, decision 139: written, not run)
+- [x] 1.4 CTI screen pop shows the preferred name first for a matched caller
   - Verify: Vitest on the screen pop component with and without a preferred name
+  - Built: `ScreenPopModal` shows the preferred name in bold with the full name under it; a caller without one shows the full name only. Test: `tests/vitest/preferredName.spec.js`. The matcher returns whole records, so `preferredName` reaches the modal without a server change.
+  - Found, not fixed here: nothing on development mounts `ScreenPopModal` or calls `ctiApi.screenPop()`. The list of matched callers has no caller until the incoming-call card of board PqInkomendGesprek is built.
 - [x] 1.5 `TemplateRenderer` variable `preferredName` with the full name fallback
   - Verify: PHPUnit on `render()` with and without the value
-  - Built: `TemplateRenderer::withPreferredName()`, called by `render()`; falls back to `fullName`, then `name`. Test: `TemplateRendererTest::testPreferredNameFallsBackToTheFullName`. Owed: `render()`'s one caller (`BerichtenboxService`) passes the variables it is handed, and no caller hands it the recipient's `preferredName` or `name` yet. Until one does, `{{preferredName}}` renders empty in a sent message.
-- [ ] 1.6 English strings with Dutch translation ("Roepnaam"), user doc section in `docs/Features/client-management.md`
+  - Built: `TemplateRenderer::withPreferredName()`, called by `render()`; falls back to `fullName`, then `name`. Test: `TemplateRendererTest::testPreferredNameFallsBackToTheFullName`. `render()`'s one caller (`BerichtenboxService`) passes the variables it is handed; its only caller, `BerichtenboxZaakStatusListener`, knows the recipient by BSN and hands no name, and it cannot fire today (no `zaak_schema` key is written). So this path renders the variable empty until a caller supplies a name.
+- [x] 1.5b A campaign mail fills `{{preferredName}}` from the recipient's record at send time
+  - Built: `Marketing\RecipientNameReader::greetingName()` (contact, then client; preferred name, else full name, else empty), called by `MailTransportService::buildRenderedMail()`, which both the blast and the journey send go through. Escaped in the HTML body. Tests: `RecipientNameReaderTest`, and from the caller `MailTransportServiceTest::testSendOneDeliveryGreetsTheRecipientByTheirPreferredName`.
+- [x] 1.6 English strings with Dutch translation ("Roepnaam"), user doc section in `docs/Features/client-management.md`
   - Verify: `npm run test:l10n` exit 0; docs build exit 0
