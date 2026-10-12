@@ -157,6 +157,7 @@ import ShieldAccountOutline from 'vue-material-design-icons/ShieldAccountOutline
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
+import SortDescending from 'vue-material-design-icons/SortDescending.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import SourceMerge from 'vue-material-design-icons/SourceMerge.vue'
 import Star from 'vue-material-design-icons/Star.vue'
@@ -175,6 +176,7 @@ import Trophy from 'vue-material-design-icons/Trophy.vue'
 import TruckOutline from 'vue-material-design-icons/TruckOutline.vue'
 import ViewColumnOutline from 'vue-material-design-icons/ViewColumnOutline.vue'
 import ViewDashboard from 'vue-material-design-icons/ViewDashboard.vue'
+import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
 import WalletOutline from 'vue-material-design-icons/WalletOutline.vue'
 
@@ -284,6 +286,7 @@ export default {
 	Heart,
 	History,
 	HomeOutline,
+	ViewDashboardOutline,
 	InboxOutline,
 	InformationOutline,
 	Key,
@@ -340,6 +343,7 @@ export default {
 	TrayFull,
 	TrendingUp,
 	Trophy,
+	SortDescending,
 	ViewColumnOutline,
 	ViewDashboard,
 	ViewGridOutline,

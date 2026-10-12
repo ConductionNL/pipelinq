@@ -235,4 +235,113 @@ class ObjectEventHandlerServiceTest extends TestCase {
 
 		$this->service->handleUpdated($newEntity, $oldEntity);
 	}//end testHandleUpdatedDispatchesStageChangeForLead()
+
+	/**
+	 * A contact's created event carries its name, which it keeps in `name`.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
+	 */
+	public function testHandleCreatedPassesContactName(): void {
+		$this->schemaMapService->method('resolveEntityType')->willReturn('contact');
+
+		$entity = new class {
+			public function getSchema(): string {
+				return '101';
+			}
+			public function getObject(): array {
+				return ['name' => 'AUDIT R5 contact', 'client' => 'c-1'];
+			}
+			public function getId(): int {
+				return 7;
+			}
+		};
+
+		$this->dispatcher->expects($this->once())
+			->method('dispatchCreated')
+			->with('contact', 'AUDIT R5 contact', '7', '');
+
+		$this->service->handleCreated($entity);
+	}//end testHandleCreatedPassesContactName()
+
+	/**
+	 * Through the real dispatcher and the real ActivityService, creating a
+	 * contact publishes no pipelinq activity, and creating a lead publishes
+	 * "lead_created" with the lead's title.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
+	 */
+	public function testCreatedActivityThroughRealServices(): void {
+		$activityManager = $this->createMock(\OCP\Activity\IManager::class);
+		$userSession = $this->createMock(\OCP\IUserSession::class);
+		$published = [];
+		$event = $this->createMock(\OCP\Activity\IEvent::class);
+		foreach (['setApp', 'setType', 'setAuthor', 'setTimestamp', 'setObject', 'setAffectedUser'] as $setter) {
+			$event->method($setter)->willReturnSelf();
+		}
+
+		$event->method('setSubject')->willReturnCallback(
+			function (string $subject, array $params) use (&$published, $event) {
+				$published[] = [$subject, $params['title'] ?? null];
+				return $event;
+			}
+		);
+		$activityManager->method('generateEvent')->willReturn($event);
+
+		$activity = new \OCA\Pipelinq\Service\ActivityService(
+			$activityManager,
+			$userSession,
+			$this->createMock(\Psr\Log\LoggerInterface::class)
+		);
+		$dispatcher = new ObjectEventDispatcher(
+			$this->createMock(\OCA\Pipelinq\Service\NotificationService::class),
+			$activity,
+			$userSession
+		);
+		$schemaMap = $this->createMock(SchemaMapService::class);
+		$schemaMap->method('resolveEntityType')->willReturnMap([['contact-schema', 'contact'], ['lead-schema', 'lead']]);
+		$service = new ObjectEventHandlerService($schemaMap, $dispatcher, new ObjectUpdateDiffService());
+
+		$service->handleCreated($this->entity(schema: 'contact-schema', data: ['name' => 'AUDIT R5 contact']));
+		$this->assertSame([], $published);
+
+		$service->handleCreated($this->entity(schema: 'lead-schema', data: ['title' => 'Tender']));
+		$this->assertSame([['lead_created', 'Tender']], $published);
+	}//end testCreatedActivityThroughRealServices()
+
+	/**
+	 * A minimal object entity.
+	 *
+	 * @param string $schema The schema id.
+	 * @param array  $data   The object data.
+	 *
+	 * @return object The entity.
+	 */
+	private function entity(string $schema, array $data): object {
+		return new class ($schema, $data) {
+			/**
+			 * Constructor.
+			 *
+			 * @param string $schema The schema id.
+			 * @param array  $data   The object data.
+			 */
+			public function __construct(private string $schema, private array $data) {
+			}
+
+			public function getSchema(): string {
+				return $this->schema;
+			}
+
+			public function getObject(): array {
+				return $this->data;
+			}
+
+			public function getId(): int {
+				return 1;
+			}
+		};
+	}//end entity()
 }//end class

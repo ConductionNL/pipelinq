@@ -202,7 +202,9 @@ describe('object-list Add buttons', () => {
 	const manifest = readJson('src', 'manifest.json')
 	const labels = []
 	JSON.stringify(manifest, (key, value) => {
-		if (value && value.type === 'object-list' && value.content?.addLabel) {
+		// ContactAwareObjectList extends the library widget and draws the same button.
+		const listTypes = ['object-list', 'ContactAwareObjectList']
+		if (value && listTypes.includes(value.type) && value.content?.addLabel) {
 			labels.push(value.content.addLabel)
 		}
 		return value

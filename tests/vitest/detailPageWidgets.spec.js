@@ -64,20 +64,31 @@ describe('contact detail', () => {
 	const contact = page('ContactDetail')
 
 	it('shows the open deals title once', () => {
-		expect(layoutItem(contact, 'contact-kpis-deals').showTitle).toBe(false)
-		expect(widget(contact, 'contact-kpis-deals').content.label).toBe(
-			'Open deals',
-		)
+		// A side card: the card draws the title, the stat draws none.
+		expect(contact.config.sideColumn).toContain('contact-kpis-deals')
+		expect(widget(contact, 'contact-kpis-deals').content.label).toBeUndefined()
 	})
 
 	it('has no button floating below the grid', () => {
 		expect(contact.config.relationLinks).toBeUndefined()
 	})
 
-	it('gives the related widget room for its items', () => {
-		expect(
-			layoutItem(contact, 'contact-related').gridHeight,
-		).toBeGreaterThanOrEqual(5)
+	it('puts the related records in the side column, not in the grid', () => {
+		expect(contact.config.sideColumn).toContain('contact-related')
+		expect(contact.config.layout.map((item) => item.widgetId)).toEqual(['contact-panels'])
+	})
+
+	it('holds at most seven tabs, History last', () => {
+		const tabs = widget(contact, 'contact-panels').content.tabs
+		expect(tabs.length).toBeLessThanOrEqual(7)
+		expect(tabs[0].widgetIds).toEqual(['contact-data', 'contact-deals'])
+		expect(tabs[tabs.length - 1].widgetId).toBe('contact-history')
+	})
+
+	it('shows channels and relationships as side cards', () => {
+		expect(contact.config.sideColumn).toEqual(
+			expect.arrayContaining(['contact-channels', 'contact-relationships']),
+		)
 	})
 })
 

@@ -202,6 +202,15 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
             <!--
+                After InitializeSettings, which imports 97-task-name.json: the
+                name comes from crmTask's objectNameField, so a save before the
+                import would hydrate the uuid again. Saves inside OpenRegister's
+                system scope, where it withholds the update event, so no
+                assignee is notified and no activity is written. Idempotent:
+                a task that has a name is not saved.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillTaskNames</step>
+            <!--
                 After NormaliseTicketTitle, and for the same reason it runs after
                 the import: this step rewrites rows, and the `direction` property
                 it writes only exists once the register fragment has landed.

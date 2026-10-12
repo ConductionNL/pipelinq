@@ -9,6 +9,7 @@
  * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
  */
 
+import { translate as t } from '@nextcloud/l10n'
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
 import { createUserDisplayNameFormatter } from './userDisplayName.js'
@@ -37,7 +38,14 @@ export function objectCurrency(value, row, _property, options) {
 	const opts = options || {}
 	const decimals = Number.isFinite(opts.decimals) ? opts.decimals : 2
 	const field = opts.currencyField || 'currency'
-	return new Intl.NumberFormat(undefined, {
+	// The reader's own locale (nl-NL reads "€ 120.000"); the browser's when
+	// Nextcloud has none to give.
+	const locale =
+		opts.locale
+		|| (typeof OC !== 'undefined' && OC.getLocale
+			? OC.getLocale().replace('_', '-')
+			: undefined)
+	return new Intl.NumberFormat(locale, {
 		style: 'currency',
 		currency: currencyOr(row?.[field]),
 		minimumFractionDigits: decimals,
@@ -45,9 +53,69 @@ export function objectCurrency(value, row, _property, options) {
 	}).format(num)
 }
 
+/**
+ * An enum value as plain, translated text (no pill), as the boards draw a
+ * priority: `high` reads "Hoog".
+ *
+ * @param {unknown} value The stored value.
+ * @return {string} The translated word, or '' for an empty value.
+ * @spec openspec/changes/round6-board-look/specs/board-look/spec.md
+ */
+export function enumText(value) {
+	if (value === null || value === undefined || value === '') {
+		return ''
+	}
+	const word = String(value)
+	return t('pipelinq', word.charAt(0).toUpperCase() + word.slice(1))
+}
+
+/**
+ * Print a stored enum value as its label: the schema property's
+ * `x-enum-labels` entry, through pipelinq's translate. The library's `badge`
+ * cell widget prints the formatted value and its plain formatter does not
+ * read `x-enum-labels`, so without this a status column shows the stored code
+ * ("active") while the detail page shows "Active". A value with no label
+ * shows as stored.
+ *
+ * @param {unknown} value The stored value.
+ * @param {object} [_row] The row (unused).
+ * @param {object} [property] The schema property.
+ * @return {string} The label.
+ * @spec openspec/changes/round5-client-related-and-service-list/specs/appointment-booking/spec.md
+ */
+export function enumLabel(value, _row, property) {
+	if (value === null || value === undefined || value === '') {
+		return ''
+	}
+	const labels = property?.['x-enum-labels'] || property?.enumLabels || {}
+	const raw = String(value)
+	return Object.hasOwn(labels, raw) ? t('pipelinq', labels[raw]) : raw
+}
+
+/**
+ * Print a boolean as "Yes" or "No", the words the detail pages use. The
+ * library draws true as a check mark in the success colour, which on some
+ * themes is too pale to see, and false as a dash.
+ *
+ * @param {unknown} value The stored value.
+ * @return {string} "Yes", "No", or '' when unset.
+ * @spec openspec/changes/round5-client-related-and-service-list/specs/appointment-booking/spec.md
+ */
+export function yesNo(value) {
+	if (value === null || value === undefined || value === '') {
+		return ''
+	}
+	return value === true || value === 'true' || value === 1
+		? t('pipelinq', 'Yes')
+		: t('pipelinq', 'No')
+}
+
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
+	enumText,
+	enumLabel,
+	yesNo,
 }
 
 /**

@@ -1,6 +1,7 @@
 {
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"version": "1.1.0",
+	"look": "board",
 	"dependencies": [
 		"openregister",
 		{ "id": "openconnector", "required": false, "name": "OpenConnector" },
@@ -401,6 +402,12 @@
 			"schemaSlug": "contact",
 			"urlTemplate": "/apps/pipelinq/contacts/{uuid}",
 			"displayName": "Contact"
+		},
+		{
+			"registerSlug": "pipelinq",
+			"schemaSlug": "crmTask",
+			"urlTemplate": "/apps/pipelinq/tasks/{uuid}",
+			"displayName": "Task"
 		}
 	],
 	"menu": [
@@ -1571,7 +1578,7 @@
 						"gridX": 0,
 						"gridY": 18,
 						"gridWidth": 6,
-						"gridHeight": 4
+						"gridHeight": 6
 					},
 					{
 						"id": "8",
@@ -1579,13 +1586,13 @@
 						"gridX": 6,
 						"gridY": 18,
 						"gridWidth": 6,
-						"gridHeight": 4
+						"gridHeight": 6
 					},
 					{
 						"id": "9",
 						"widgetId": "billing-categories",
 						"gridX": 0,
-						"gridY": 22,
+						"gridY": 24,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -1593,7 +1600,7 @@
 						"id": "12",
 						"widgetId": "report-export",
 						"gridX": 0,
-						"gridY": 26,
+						"gridY": 28,
 						"gridWidth": 12,
 						"gridHeight": 3
 					},
@@ -1601,7 +1608,7 @@
 						"id": "13",
 						"widgetId": "xwiki-knowledge",
 						"gridX": 0,
-						"gridY": 29,
+						"gridY": 31,
 						"gridWidth": 6,
 						"gridHeight": 5
 					},
@@ -1609,7 +1616,7 @@
 						"id": "20",
 						"widgetId": "survey-response-rate",
 						"gridX": 6,
-						"gridY": 29,
+						"gridY": 31,
 						"gridWidth": 6,
 						"gridHeight": 5
 					}
@@ -1659,11 +1666,21 @@
 							]
 						}
 					},
-					"name": { "readOnly": false },
-					"email": { "readOnly": false },
-					"phone": { "readOnly": false },
-					"correspondenceLanguage": { "widget": "language" },
-					"timezone": { "widget": "timezone" }
+					"name": {
+						"readOnly": false
+					},
+					"email": {
+						"readOnly": false
+					},
+					"phone": {
+						"readOnly": false
+					},
+					"correspondenceLanguage": {
+						"widget": "language"
+					},
+					"timezone": {
+						"widget": "timezone"
+					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
@@ -1676,11 +1693,36 @@
 						"route": "ClientDetail"
 					}
 				],
-				"columns": ["name", "type", "industry", "email", "phone"],
+				"columns": [
+					"name",
+					"type",
+					"industry",
+					"email",
+					"phone",
+					{
+						"key": "openTickets",
+						"label": "Open tickets",
+						"sortable": false,
+						"aggregate": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"op": "count",
+							"where": {
+								"client": "@self.id",
+								"status": {
+									"ne": "closed"
+								}
+							}
+						},
+						"widget": "badge"
+					}
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"rowIcon": "OfficeBuildingOutline",
+				"countText": "{shown} of {total} clients"
 			}
 		},
 		{
@@ -1717,11 +1759,21 @@
 							]
 						}
 					},
-					"name": { "readOnly": false },
-					"email": { "readOnly": false },
-					"phone": { "readOnly": false },
-					"correspondenceLanguage": { "widget": "language" },
-					"timezone": { "widget": "timezone" }
+					"name": {
+						"readOnly": false
+					},
+					"email": {
+						"readOnly": false
+					},
+					"phone": {
+						"readOnly": false
+					},
+					"correspondenceLanguage": {
+						"widget": "language"
+					},
+					"timezone": {
+						"widget": "timezone"
+					}
 				},
 				"headerActions": [
 					{
@@ -1739,7 +1791,7 @@
 					}
 				],
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
+				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects) with the Related card beside it, as on the contact page (round5-client-related-and-service-list), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
 				"widgets": [
 					{
 						"id": "client-identity",
@@ -1766,7 +1818,11 @@
 						"content": {
 							"title": "Account",
 							"columns": 2,
-							"include": ["type", "industry", "notes"]
+							"include": [
+								"type",
+								"industry",
+								"notes"
+							]
 						}
 					},
 					{
@@ -1934,48 +1990,14 @@
 						}
 					},
 					{
-						"id": "client-records",
-						"type": "tabs",
-						"title": "Records",
-						"icon": "ViewDashboard",
-						"_note": "Everything that hangs off this client, one list at a time. The children stay in `widgets` and out of `layout`, or the tabs widget and the grid would each render them once.",
-						"content": {
-							"ariaLabel": "Client records",
-							"tabs": [
-								{
-									"widgetId": "client-quick-contacts",
-									"label": "Contacts"
-								},
-								{
-									"widgetId": "client-quick-requests",
-									"label": "Requests"
-								},
-								{
-									"widgetId": "client-leads",
-									"label": "Leads"
-								},
-								{
-									"widgetId": "client-contactmoments",
-									"label": "Contact moments"
-								},
-								{
-									"widgetId": "client-complaints",
-									"label": "Complaints"
-								},
-								{
-									"widgetId": "client-contracts",
-									"label": "Contracts"
-								},
-								{
-									"widgetId": "client-projects",
-									"label": "Projects"
-								}
-							]
-						}
+						"id": "client-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
 					},
 					{
 						"id": "client-quick-contacts",
-						"type": "object-list",
+						"type": "ContactAwareObjectList",
 						"title": "Contacts",
 						"icon": "AccountGroup",
 						"content": {
@@ -2254,30 +2276,6 @@
 						}
 					},
 					{
-						"id": "client-communication",
-						"type": "tabs",
-						"title": "Communication",
-						"icon": "Email",
-						"_note": "Mail, notes and files for this client behind one strip. Children stay out of `layout` for the same reason as client-records.",
-						"content": {
-							"ariaLabel": "Client communication",
-							"tabs": [
-								{
-									"widgetId": "client-email",
-									"label": "Mail"
-								},
-								{
-									"widgetId": "client-notes",
-									"label": "Notes"
-								},
-								{
-									"widgetId": "client-files",
-									"label": "Files"
-								}
-							]
-						}
-					},
-					{
 						"id": "client-email",
 						"type": "integration",
 						"integrationId": "email",
@@ -2297,88 +2295,133 @@
 						"integrationId": "files",
 						"title": "Files",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "client-open-requests",
+						"type": "record-list",
+						"title": "Open requests",
+						"icon": "ClipboardCheckOutline",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"status": {
+									"ne": "closed"
+								}
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": "{ticketType} · {priority}",
+							"pill": {
+								"field": "status"
+							},
+							"trailing": [
+								"Deadline {deadline|date}"
+							],
+							"rowRoute": "TicketDetail",
+							"headerLink": {
+								"label": "View all {total} open requests",
+								"route": "Tickets"
+							},
+							"emptyText": "No open requests for this client."
+						}
+					},
+					{
+						"id": "client-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "client-channels",
+						"type": "ContactChannelsWidget",
+						"title": "Contact channels",
+						"icon": "CardAccountPhoneOutline",
+						"content": {
+							"entityType": "client",
+							"title": "Contact channels"
+						}
+					},
+					{
+						"id": "client-relationships",
+						"type": "ContactRelationshipsWidget",
+						"title": "Relationships",
+						"icon": "AccountMultipleOutline",
+						"content": {
+							"entityType": "client",
+							"title": "Relationships"
+						}
+					},
+					{
+						"id": "client-panels",
+						"type": "tabs",
+						"title": "Client",
+						"icon": "OfficeBuilding",
+						"_note": "One strip, at most seven tabs (shared relation frame, PqKlant and PqOrganisatie). Overview stacks the data cards and the open requests; Requests holds requests and complaints; Contracts holds contracts and projects. Mail, notes and files moved to the side column. Children stay out of layout, or the tabs widget and the grid would each render them once.",
+						"content": {
+							"ariaLabel": "Client",
+							"tabs": [
+								{
+									"widgetIds": [
+										"client-identity",
+										"client-commercial",
+										"client-open-requests"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "client-quick-contacts",
+									"label": "Contacts",
+									"countFrom": "widget"
+								},
+								{
+									"widgetIds": [
+										"client-quick-requests",
+										"client-complaints"
+									],
+									"label": "Requests",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "client-contactmoments",
+									"label": "Contact moments",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "client-leads",
+									"label": "Leads",
+									"countFrom": "widget"
+								},
+								{
+									"widgetIds": [
+										"client-contracts",
+										"client-projects"
+									],
+									"label": "Contracts"
+								},
+								{
+									"widgetId": "client-history",
+									"label": "History"
+								}
+							]
+						}
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "client-identity",
+						"widgetId": "client-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 3
-					},
-					{
-						"id": "2",
-						"widgetId": "client-kpis-sales",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "3",
-						"widgetId": "client-commercial",
-						"gridX": 0,
-						"gridY": 3,
-						"gridWidth": 8,
-						"gridHeight": 2
-					},
-					{
-						"id": "4",
-						"widgetId": "client-summary-open-tickets",
-						"gridX": 0,
-						"gridY": 5,
-						"gridWidth": 3,
-						"gridHeight": 2
-					},
-					{
-						"id": "5",
-						"widgetId": "client-summary-new-requests",
-						"gridX": 3,
-						"gridY": 5,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "6",
-						"widgetId": "client-summary-sla-breached",
-						"gridX": 5,
-						"gridY": 5,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "7",
-						"widgetId": "client-summary-sla-at-risk",
-						"gridX": 7,
-						"gridY": 5,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "8",
-						"widgetId": "client-summary-last-activity",
-						"gridX": 9,
-						"gridY": 5,
-						"gridWidth": 3,
-						"gridHeight": 2
-					},
-					{
-						"id": "9",
-						"widgetId": "client-records",
-						"gridX": 0,
-						"gridY": 7,
 						"gridWidth": 12,
-						"gridHeight": 7
-					},
-					{
-						"id": "10",
-						"widgetId": "client-communication",
-						"gridX": 0,
-						"gridY": 14,
-						"gridWidth": 12,
-						"gridHeight": 6
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
 				"bodyWidgets": [
@@ -2387,7 +2430,9 @@
 						"component": "PartyIndicatorPanel",
 						"placement": "before-body",
 						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
-						"props": { "partyId": "@objectId" }
+						"props": {
+							"partyId": "@objectId"
+						}
 					},
 					{
 						"id": "contact-links",
@@ -2404,32 +2449,9 @@
 						"id": "log-visit",
 						"component": "LogVisitAction",
 						"placement": "before-body",
-						"props": { "clientId": "@objectId" }
-					},
-					{
-						"id": "relationships",
-						"component": "ContactRelationships",
-						"title": "Relationships",
-						"placement": "end",
 						"props": {
-							"entityId": "@objectId",
-							"entityType": "client",
-							"entityName": "@object.name"
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "channels",
-						"component": "ContactChannelsSection",
-						"title": "Contact channels",
-						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "client"
-						},
-						"colSpan": 6,
-						"card": true
+							"clientId": "@objectId"
+						}
 					},
 					{
 						"id": "messaging-conversation",
@@ -2523,7 +2545,50 @@
 							]
 						}
 					]
-				}
+				},
+				"sideColumn": [
+					"client-kpis-sales",
+					"client-related",
+					"client-channels",
+					"client-relationships",
+					"client-email",
+					"client-notes",
+					"client-files"
+				],
+				"breadcrumb": {
+					"label": "Residents and businesses",
+					"route": "Clients"
+				},
+				"typePill": {
+					"field": "type",
+					"labels": {
+						"person": "Resident",
+						"organization": "Organisation"
+					},
+					"colorMap": {
+						"person": "info",
+						"organization": "teal"
+					}
+				},
+				"statusPill": {
+					"countFrom": {
+						"register": "pipelinq",
+						"schema": "ticket",
+						"filter": {
+							"client": "@objectId",
+							"status": {
+								"ne": "closed"
+							}
+						}
+					},
+					"countLabel": {
+						"one": "{count} open ticket",
+						"other": "{count} open tickets"
+					},
+					"variant": "purple"
+				},
+				"headerMeta": "{address}",
+				"_kpiNote": "The five summary tiles (client-summary-*) are declared but not placed: the detail grid collapses to one column below 1000px of its own width and the side column leaves the body about 790px, so five tiles stacked into five full-width cards. They return when the library draws a KPI row beside a side column."
 			}
 		},
 		{
@@ -2542,7 +2607,7 @@
 				"showViewAction": false,
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Tickets", "filter": { "ticketType": "request" } },
+					{ "label": "Requests", "filter": { "ticketType": "request" } },
 					{
 						"label": "Complaints",
 						"filter": { "ticketType": "complaint" }
@@ -2736,11 +2801,21 @@
 				"schema": "contact",
 				"createOverride": "createContactContactAware",
 				"fieldOverrides": {
-					"name": { "readOnly": false },
-					"email": { "readOnly": false },
-					"phone": { "readOnly": false },
-					"correspondenceLanguage": { "widget": "language" },
-					"timezone": { "widget": "timezone" }
+					"name": {
+						"readOnly": false
+					},
+					"email": {
+						"readOnly": false
+					},
+					"phone": {
+						"readOnly": false
+					},
+					"correspondenceLanguage": {
+						"widget": "language"
+					},
+					"timezone": {
+						"widget": "timezone"
+					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
@@ -2753,11 +2828,32 @@
 						"route": "ContactDetail"
 					}
 				],
-				"columns": ["name", "email", "phone", "role"],
+				"columns": [
+					"name",
+					"email",
+					"phone",
+					"role",
+					{
+						"key": "client.name",
+						"label": "Client",
+						"sortable": false
+					}
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"extend": [
+					"client"
+				],
+				"countText": "{shown} of {total} contacts",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					}
+				]
 			}
 		},
 		{
@@ -2770,8 +2866,55 @@
 				"register": "pipelinq",
 				"schema": "contact",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Contact record as a declarative type:detail page. Layout, top to bottom, all inside the grid (pipelinq review E2): the contact's fields with one Open deals KPI and the Related graph beside them; a Records tab strip (deals, requests, contact moments, bookings) with a Profile tab strip beside it (relationships, subscriptions, BSN and BRP); then a Communication tab strip (channels, mail, messages, meetings, files). The former body sections (relationships, channels, messaging, subscriptions, BRP) are grid widgets now, through the sectionWidget() wrappers in registry.js, so nothing renders below the grid. Children of a tabs widget stay out of `layout`, or the tabs widget and the grid would each render them once.",
+				"_note": "Contact person page on the shared relation frame (nextcloud-vue screens-relation-pages, PqContactpersoon, Ruben 11 Oct 2026: at most seven tabs, Kanalen and Relaties as side cards). Header: the type pill, the breadcrumb back to Contacts, the meta line 'role at client' (the page extends client), and Call and Mail as tel:/mailto: links. One tab strip fills the body: Overview (the contact data card and the deals table, as the board draws them), Deals, Requests, Contact moments, Bookings, Files, History. Mail, Messages, Meetings, Subscriptions and BSN and BRP moved to the side column with Channels and Relationships, before History. Children of the tabs widget stay out of layout, or the tabs widget and the grid would each render them once.",
 				"widgets": [
+					{
+						"id": "contact-panels",
+						"type": "tabs",
+						"title": "Contact",
+						"icon": "AccountBoxOutline",
+						"_note": "One strip, at most seven tabs. Overview stacks the data card and the deals table; the list tabs count their list.",
+						"content": {
+							"ariaLabel": "Contact",
+							"tabs": [
+								{
+									"widgetIds": [
+										"contact-data",
+										"contact-deals"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "contact-deals",
+									"label": "Deals",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "contact-requests",
+									"label": "Requests",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "contact-contactmoments",
+									"label": "Contact moments",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "contact-bookings",
+									"label": "Bookings",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "contact-files",
+									"label": "Files"
+								},
+								{
+									"widgetId": "contact-history",
+									"label": "History"
+								}
+							]
+						}
+					},
 					{
 						"id": "contact-data",
 						"type": "data",
@@ -2779,68 +2922,7 @@
 						"icon": "AccountBoxOutline",
 						"content": {
 							"title": "Contact details",
-							"columns": 2
-						}
-					},
-					{
-						"id": "contact-kpis-deals",
-						"type": "stat",
-						"title": "Open deals",
-						"icon": "HandshakeOutline",
-						"_note": "One KPI for the person's open deals: the value in the reporting currency, the count as its caption. It used to be a stats block with the count and an unformatted amount, read as Open deals twice (pipelinq review E2). The endpoint reads under the user's RBAC.",
-						"content": {
-							"label": "Open deals",
-							"icon": "HandshakeOutline",
-							"caption": "{openDealCount} open",
-							"format": {
-								"style": "currency",
-								"currency": "@config.currency",
-								"decimals": 0
-							},
-							"endpointSource": {
-								"url": "/apps/pipelinq/api/analytics/open-deals",
-								"params": {
-									"contact": "@objectId"
-								}
-							},
-							"valueField": "openDealValue",
-							"route": {
-								"name": "Leads"
-							}
-						}
-					},
-					{
-						"id": "contact-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
-					},
-					{
-						"id": "contact-records",
-						"type": "tabs",
-						"title": "Records",
-						"icon": "ViewDashboard",
-						"_note": "What this person is part of, one list at a time. The children stay in `widgets` and out of `layout`, or the tabs widget and the grid would each render them once.",
-						"content": {
-							"ariaLabel": "Contact records",
-							"tabs": [
-								{
-									"widgetId": "contact-deals",
-									"label": "Deals"
-								},
-								{
-									"widgetId": "contact-requests",
-									"label": "Requests"
-								},
-								{
-									"widgetId": "contact-contactmoments",
-									"label": "Contact moments"
-								},
-								{
-									"widgetId": "contact-bookings",
-									"label": "Bookings"
-								}
-							]
+							"columns": 3
 						}
 					},
 					{
@@ -2998,52 +3080,6 @@
 						}
 					},
 					{
-						"id": "contact-communication",
-						"type": "tabs",
-						"title": "Communication",
-						"icon": "Email",
-						"_note": "Channels, mail, messages, meetings and files for this person behind one strip. Children stay out of `layout` for the same reason as contact-records.",
-						"content": {
-							"ariaLabel": "Contact communication",
-							"tabs": [
-								{
-									"widgetId": "contact-channels",
-									"label": "Channels"
-								},
-								{
-									"widgetId": "contact-email",
-									"label": "Mail"
-								},
-								{
-									"widgetId": "contact-messages",
-									"label": "Messages"
-								},
-								{
-									"widgetId": "contact-calendar",
-									"label": "Meetings"
-								},
-								{
-									"widgetId": "contact-files",
-									"label": "Files"
-								}
-							]
-						}
-					},
-					{
-						"id": "contact-email",
-						"type": "integration",
-						"integrationId": "email",
-						"title": "Emails",
-						"icon": "Email"
-					},
-					{
-						"id": "contact-calendar",
-						"type": "integration",
-						"integrationId": "calendar",
-						"title": "Meetings",
-						"icon": "Calendar"
-					},
-					{
 						"id": "contact-files",
 						"type": "integration",
 						"integrationId": "files",
@@ -3051,27 +3087,50 @@
 						"icon": "FolderOutline"
 					},
 					{
-						"id": "contact-profile",
-						"type": "tabs",
-						"title": "Profile",
-						"icon": "AccountDetailsOutline",
-						"_note": "Who this person is connected to and what they signed up for. Children stay out of `layout`.",
+						"id": "contact-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "contact-kpis-deals",
+						"type": "stat",
+						"title": "Open deals",
+						"icon": "HandshakeOutline",
+						"_note": "One KPI for the person's open deals: the value in the reporting currency, the count as its caption. It used to be a stats block with the count and an unformatted amount, read as Open deals twice (pipelinq review E2). The endpoint reads under the user's RBAC. In the side column the card draws the title, so the stat carries no label of its own.",
 						"content": {
-							"ariaLabel": "Contact profile",
-							"tabs": [
-								{
-									"widgetId": "contact-relationships",
-									"label": "Relationships"
-								},
-								{
-									"widgetId": "contact-subscriptions",
-									"label": "Subscriptions"
-								},
-								{
-									"widgetId": "contact-brp",
-									"label": "BSN and BRP"
+							"caption": "{openDealCount} open",
+							"format": {
+								"style": "currency",
+								"currency": "@config.currency",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/analytics/open-deals",
+								"params": {
+									"contact": "@objectId"
 								}
-							]
+							},
+							"valueField": "openDealValue",
+							"route": {
+								"name": "Leads"
+							}
+						}
+					},
+					{
+						"id": "contact-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					},
+					{
+						"id": "contact-channels",
+						"type": "ContactChannelsWidget",
+						"title": "Channels",
+						"icon": "CardAccountPhoneOutline",
+						"content": {
+							"entityType": "contact",
+							"title": "Channels"
 						}
 					},
 					{
@@ -3080,7 +3139,8 @@
 						"title": "Relationships",
 						"icon": "AccountMultipleOutline",
 						"content": {
-							"entityType": "contact"
+							"entityType": "contact",
+							"title": "Relationships"
 						}
 					},
 					{
@@ -3088,7 +3148,9 @@
 						"type": "SubscriptionsWidget",
 						"title": "Subscriptions",
 						"icon": "EmailMultipleOutline",
-						"content": {}
+						"content": {
+							"title": "Subscriptions"
+						}
 					},
 					{
 						"id": "contact-brp",
@@ -3098,13 +3160,11 @@
 						"content": {}
 					},
 					{
-						"id": "contact-channels",
-						"type": "ContactChannelsWidget",
-						"title": "Contact channels",
-						"icon": "CardAccountPhoneOutline",
-						"content": {
-							"entityType": "contact"
-						}
+						"id": "contact-email",
+						"type": "integration",
+						"integrationId": "email",
+						"title": "Emails",
+						"icon": "Email"
 					},
 					{
 						"id": "contact-messages",
@@ -3114,57 +3174,24 @@
 						"content": {
 							"entityType": "contact"
 						}
+					},
+					{
+						"id": "contact-calendar",
+						"type": "integration",
+						"integrationId": "calendar",
+						"title": "Meetings",
+						"icon": "Calendar"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "contact-data",
+						"widgetId": "contact-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 5
-					},
-					{
-						"id": "2",
-						"widgetId": "contact-kpis-deals",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2,
-						"showTitle": false
-					},
-					{
-						"id": "4",
-						"widgetId": "contact-related",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "3",
-						"widgetId": "contact-records",
-						"gridX": 0,
-						"gridY": 5,
-						"gridWidth": 8,
-						"gridHeight": 7
-					},
-					{
-						"id": "6",
-						"widgetId": "contact-profile",
-						"gridX": 8,
-						"gridY": 7,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "5",
-						"widgetId": "contact-communication",
-						"gridX": 0,
-						"gridY": 12,
 						"gridWidth": 12,
-						"gridHeight": 7
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
 				"bodyWidgets": [
@@ -3173,16 +3200,8 @@
 						"component": "PartyIndicatorPanel",
 						"placement": "before-body",
 						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
-						"props": { "partyId": "@objectId" }
-					},
-					{
-						"id": "contact-links",
-						"component": "ContactLinks",
-						"placement": "before-body",
-						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
 						"props": {
-							"phone": "@object.phone",
-							"email": "@object.email"
+							"partyId": "@objectId"
 						}
 					}
 				],
@@ -3201,7 +3220,51 @@
 							]
 						}
 					]
-				}
+				},
+				"extend": [
+					"client"
+				],
+				"breadcrumb": {
+					"label": "Contacts",
+					"route": "Contacts"
+				},
+				"typePill": {
+					"text": "Contact",
+					"variant": "info"
+				},
+				"headerMeta": "{role} at {client.name}",
+				"headerActions": [
+					{
+						"id": "call",
+						"label": "Call",
+						"type": "navigate",
+						"target": "tel:@object.phone",
+						"icon": "PhoneOutline"
+					},
+					{
+						"id": "mail",
+						"label": "Mail",
+						"type": "navigate",
+						"target": "mailto:@object.email",
+						"icon": "EmailOutline"
+					}
+				],
+				"quickActions": [
+					"call",
+					"mail"
+				],
+				"sideColumn": [
+					"contact-kpis-deals",
+					"contact-related",
+					"contact-channels",
+					"contact-relationships",
+					"contact-subscriptions",
+					"contact-brp",
+					"contact-email",
+					"contact-messages",
+					"contact-calendar",
+					"contact-history"
+				]
 			}
 		},
 		{
@@ -3452,6 +3515,7 @@
 							],
 							"limit": 25,
 							"rowRoute": "ContactDetail",
+							"allowCreate": false,
 							"emptyText": "Nobody is linked to this deal yet. Open a contact and add this deal to their leads."
 						}
 					},
@@ -3632,13 +3696,13 @@
 						"gridX": 8,
 						"gridY": 6,
 						"gridWidth": 4,
-						"gridHeight": 4
+						"gridHeight": 5
 					},
 					{
 						"id": "8",
 						"widgetId": "lead-flow-runs",
 						"gridX": 8,
-						"gridY": 10,
+						"gridY": 11,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -3648,7 +3712,7 @@
 						"gridX": 0,
 						"gridY": 8,
 						"gridWidth": 8,
-						"gridHeight": 7
+						"gridHeight": 8
 					}
 				],
 				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2049): RoutingSuggestionSection ranks colleagues whose skills cover the lead category, and writes the chosen colleague into the lead assignee.",
@@ -4949,21 +5013,38 @@
 					]
 				},
 				"quickFilters": [
-					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Tickets", "filter": { "ticketType": "request" } },
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Requests",
+						"filter": {
+							"ticketType": "request"
+						},
+						"showCount": true
+					},
 					{
 						"label": "Complaints",
-						"filter": { "ticketType": "complaint" }
+						"filter": {
+							"ticketType": "complaint"
+						},
+						"showCount": true
 					},
 					{
 						"label": "Contactmomenten",
-						"filter": { "ticketType": "interaction" }
+						"filter": {
+							"ticketType": "interaction"
+						},
+						"showCount": true
 					}
 				],
 				"actions": [
 					{
 						"id": "assign-to-me",
-						"label": "Assign to me",
+						"label": "Take it on",
 						"icon": "AccountArrowLeftOutline",
 						"handler": "assignTicketToMe"
 					},
@@ -4976,18 +5057,98 @@
 					}
 				],
 				"columns": [
-					"ticketType",
+					{
+						"key": "occurredAt",
+						"label": "Waiting",
+						"widget": "age",
+						"widgetProps": {
+							"variantWhen": [
+								{
+									"op": "gte",
+									"value": 2,
+									"variant": "error"
+								}
+							]
+						},
+						"sortable": true
+					},
 					"title",
-					"status",
+					"ticketType",
 					"priority",
 					"channel",
-					"occurredAt"
+					"status"
 				],
 				"emptyText": "Nothing is waiting. Every open ticket has someone on it.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"sortKey": "occurredAt",
+				"sortOrder": "asc",
+				"countText": "{shown} of {total} unassigned tickets · customer contact · oldest first",
+				"statRow": [
+					{
+						"id": "queue-unassigned",
+						"type": "stat",
+						"title": "Unassigned",
+						"content": {
+							"label": "Unassigned",
+							"caption": "tickets nobody has picked up",
+							"icon": "ClipboardTextClockOutline",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/openregister/api/objects/pipelinq/ticket",
+								"params": {
+									"_limit": 1,
+									"assignee": "IS NULL",
+									"status_notIn": [
+										"resolved",
+										"completed",
+										"rejected",
+										"converted",
+										"closed"
+									]
+								}
+							},
+							"valueField": "total"
+						}
+					},
+					{
+						"id": "queue-past-deadline",
+						"type": "stat",
+						"title": "Past the deadline",
+						"content": {
+							"label": "Past the deadline",
+							"caption": "pick these up first",
+							"icon": "AlertCircleOutline",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/openregister/api/objects/pipelinq/ticket",
+								"params": {
+									"_limit": 1,
+									"assignee": "IS NULL",
+									"status_notIn": [
+										"resolved",
+										"completed",
+										"rejected",
+										"converted",
+										"closed"
+									],
+									"slaDeadline[lt]": "@now"
+								}
+							},
+							"valueField": "total",
+							"variant": "error"
+						}
+					}
+				],
+				"_statNote": "The tiles read the list endpoint's total, not the aggregation endpoint: /aggregations/.../value has no null operator (isnull is refused, eq with an empty value matches nothing), so 'assignee is empty' counts 0 there while the list endpoint says 48. The board's third tile (within the deadline) is left out: most queue tickets carry no slaDeadline, so a count of deadlines still ahead is not the board's figure."
 			}
 		},
 		{

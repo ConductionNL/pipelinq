@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "A task is named after its subject (openspec change round5-contact-create-and-task-links). The crmTask schema had no objectNameField, and its title property is `subject`, which OpenRegister's name fallback (name, naam, title, titel) does not look at. So every task's name was its uuid: the activity stream read 'Task <uuid> updated' and the task page heading fell back to the page title 'Task'. A bare field path is enough here because `subject` is a plain string, not a relation. Existing tasks get their name on their next save, like leadProduct in 97-lead-line-names-and-score. No property changes."
+  },
+  "components": {
+    "schemas": {
+      "crmTask": {
+        "slug": "crmTask",
+        "configuration": {
+          "objectNameField": "subject"
+        }
+      }
+    }
+  }
+}

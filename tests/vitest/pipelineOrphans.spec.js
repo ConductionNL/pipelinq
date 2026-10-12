@@ -27,7 +27,12 @@ vi.mock('@nextcloud/vue', () => ({
 	NcSelect: {},
 	NcTextField: {},
 }))
-vi.mock('@conduction/nextcloud-vue', () => ({ openRowTarget: vi.fn() }))
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnPageHeader: {},
+	CnQuickFilterBar: {},
+	openRowTarget: vi.fn(),
+}))
+vi.mock('../../src/dialogs/LeadCreateDialog.vue', () => ({ default: {} }))
 vi.mock('../../src/components/leadScore/LeadScoreBadge.vue', () => ({ default: {} }))
 vi.mock('../../src/dialogs/PipelineFormDialog.vue', () => ({ default: {} }))
 vi.mock('../../src/views/pipeline/PipelineCard.vue', () => ({ default: {} }))
