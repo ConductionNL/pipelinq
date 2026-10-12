@@ -5013,21 +5013,34 @@
 					]
 				},
 				"quickFilters": [
-					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Requests", "filter": { "ticketType": "request" } },
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "Requests",
+						"filter": {
+							"ticketType": "request"
+						}
+					},
 					{
 						"label": "Complaints",
-						"filter": { "ticketType": "complaint" }
+						"filter": {
+							"ticketType": "complaint"
+						}
 					},
 					{
 						"label": "Contactmomenten",
-						"filter": { "ticketType": "interaction" }
+						"filter": {
+							"ticketType": "interaction"
+						}
 					}
 				],
 				"actions": [
 					{
 						"id": "assign-to-me",
-						"label": "Assign to me",
+						"label": "Take it on",
 						"icon": "AccountArrowLeftOutline",
 						"handler": "assignTicketToMe"
 					},
@@ -5040,18 +5053,35 @@
 					}
 				],
 				"columns": [
-					"ticketType",
+					{
+						"key": "occurredAt",
+						"label": "Waiting",
+						"widget": "age",
+						"widgetProps": {
+							"variantWhen": [
+								{
+									"op": "gte",
+									"value": 2,
+									"variant": "error"
+								}
+							]
+						},
+						"sortable": true
+					},
 					"title",
-					"status",
+					"ticketType",
 					"priority",
 					"channel",
-					"occurredAt"
+					"status"
 				],
 				"emptyText": "Nothing is waiting. Every open ticket has someone on it.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"sortKey": "occurredAt",
+				"sortOrder": "asc",
+				"countText": "{shown} of {total} unassigned tickets · customer contact · oldest first"
 			}
 		},
 		{
