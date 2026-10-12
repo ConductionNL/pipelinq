@@ -237,6 +237,28 @@ describe('a call with one match', () => {
 		expect(part(wrapper, 'incoming-call-card').exists()).toBe(false)
 	})
 
+	it('opens the client of a mirrored call and writes no ticket', async () => {
+		// A call from the call mirror (kcc-agent-panel 1b) has no contact
+		// moment in Pipelinq: its id is a mirror row, never a ticket.
+		api.incomingCall.mockResolvedValue({
+			enabled: true,
+			delayMs: 0,
+			call: { ...CALL, id: 'mirror-row-1', source: 'mirror', queueName: '' },
+		})
+		const wrapper = await card()
+		expect(api.screenPop).toHaveBeenCalledWith('+31612345678')
+
+		await part(wrapper, 'incoming-call-open').trigger('click')
+		await flushPromises()
+
+		expect(store.fetchObject).not.toHaveBeenCalled()
+		expect(store.saveObject).not.toHaveBeenCalled()
+		expect(push).toHaveBeenCalledWith({
+			name: 'ClientDetail',
+			params: { id: 'client-sanne' },
+		})
+	})
+
 	it('still opens the client when the link cannot be written', async () => {
 		store.saveObject.mockRejectedValue(new Error('403'))
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})

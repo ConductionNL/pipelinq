@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Cti;
 
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
+use OCA\Pipelinq\Service\Calls\MirroredCallReader;
 use OCA\Pipelinq\Service\Cti\IncomingCallFinder;
 use OCA\Pipelinq\Service\CtiService;
 use OCA\Pipelinq\Service\TicketService;
@@ -39,6 +40,7 @@ use PHPUnit\Framework\TestCase;
  * would match nothing and the card would stay empty for ever.
  *
  * @covers \OCA\Pipelinq\Service\Cti\IncomingCallFinder
+ * @uses   \OCA\Pipelinq\Service\Calls\MirroredCallReader
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
  *
  * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
@@ -71,6 +73,32 @@ class IncomingCallFinderTest extends TestCase {
 	 *
 	 * @return IncomingCallFinder The finder.
 	 */
+	/**
+	 * The agent's open call in the call mirror, or null; `false` means calls are not mirrored here.
+	 *
+	 * @var array<string, string>|false|null
+	 */
+	private array|false|null $mirrored = false;
+
+	/**
+	 * The call mirror's reader.
+	 *
+	 * @return MirroredCallReader The reader.
+	 */
+	private function mirror(): MirroredCallReader {
+		$mirror = $this->createMock(MirroredCallReader::class);
+		$mirror->method('isActive')->willReturn($this->mirrored !== false);
+		$mirror->method('openCallFor')->willReturnCallback(
+			function (string $agentId, ?int $now = null): ?array {
+				$this->assertSame('agent-1', $agentId);
+				$this->assertNotFalse($this->mirrored, 'A mirror that is not active is not read.');
+				return $this->mirrored;
+			}
+		);
+
+		return $mirror;
+	}//end mirror()
+
 	private function finder(array $config, array $rows): IncomingCallFinder {
 		$cti = $this->createMock(CtiService::class);
 		$cti->method('loadConfig')->willReturn($config);
@@ -86,7 +114,7 @@ class IncomingCallFinderTest extends TestCase {
 			}
 		);
 
-		return new IncomingCallFinder($cti, $tickets);
+		return new IncomingCallFinder($cti, $tickets, $this->mirror());
 	}//end finder()
 
 	/**
@@ -126,7 +154,7 @@ class IncomingCallFinderTest extends TestCase {
 		$tickets = $this->createMock(TicketService::class);
 		$tickets->expects($this->never())->method('findByType');
 
-		$answer = (new IncomingCallFinder($cti, $tickets))->forAgent(userId: 'agent-1', now: self::NOW);
+		$answer = (new IncomingCallFinder($cti, $tickets, $this->mirror()))->forAgent(userId: 'agent-1', now: self::NOW);
 
 		$this->assertSame(['enabled' => false, 'delayMs' => 0, 'call' => null], $answer);
 	}//end testNoTelephonyPlatformReadsNothing()
@@ -142,7 +170,7 @@ class IncomingCallFinderTest extends TestCase {
 		$tickets = $this->createMock(TicketService::class);
 		$tickets->expects($this->never())->method('findByType');
 
-		$answer = (new IncomingCallFinder($cti, $tickets))->forAgent(userId: 'agent-1', now: self::NOW);
+		$answer = (new IncomingCallFinder($cti, $tickets, $this->mirror()))->forAgent(userId: 'agent-1', now: self::NOW);
 
 		$this->assertFalse($answer['enabled']);
 		$this->assertNull($answer['call']);
@@ -162,6 +190,7 @@ class IncomingCallFinderTest extends TestCase {
 		$this->assertSame(
 			[
 				'id' => 'c0ffee00-0000-4000-8000-000000000001',
+				'source' => 'pipelinq',
 				'fromNumber' => '+31612345678',
 				'queueName' => 'Vergunningen',
 				'extension' => '201',
@@ -258,7 +287,7 @@ class IncomingCallFinderTest extends TestCase {
 		$tickets = $this->createMock(TicketService::class);
 		$tickets->expects($this->never())->method('findByType');
 
-		$this->assertFalse((new IncomingCallFinder($cti, $tickets))->forAgent(userId: '')['enabled']);
+		$this->assertFalse((new IncomingCallFinder($cti, $tickets, $this->mirror()))->forAgent(userId: '')['enabled']);
 	}//end testAnEmptyUidAsksNothing()
 
 	/**
@@ -288,4 +317,70 @@ class IncomingCallFinderTest extends TestCase {
 		$this->assertContains('inbound', $properties['direction']['enum']);
 		$this->assertArrayNotHasKey('caller_number', $properties, 'Control: an unknown field is absent.');
 	}//end testTheFieldsReadExistOnTheTicketSchema()
+	/**
+	 * A mirrored call shows without a telephony platform in pipelinq, marked as coming from the mirror.
+	 *
+	 * @return void
+	 */
+	public function testAMirroredCallShowsWithoutAPlatformInPipelinq(): void {
+		$this->mirrored = [
+			'id' => 'mirror-row-1',
+			'fromNumber' => '+31612345678',
+			'startedAt' => gmdate('Y-m-d\TH:i:s\Z', (self::NOW - 5)),
+			'answeredAt' => '',
+		];
+		$cti = $this->createMock(CtiService::class);
+		$cti->method('loadConfig')->willReturn([]);
+		$tickets = $this->createMock(TicketService::class);
+		$tickets->expects($this->never())->method('findByType');
+
+		$answer = (new IncomingCallFinder($cti, $tickets, $this->mirror()))->forAgent(userId: 'agent-1', now: self::NOW);
+
+		$this->assertTrue($answer['enabled']);
+		$this->assertSame(
+			[
+				'id' => 'mirror-row-1',
+				'source' => 'mirror',
+				'fromNumber' => '+31612345678',
+				'queueName' => '',
+				'extension' => '',
+				'startedAt' => $this->mirrored['startedAt'],
+				'answeredAt' => '',
+			],
+			$answer['call']
+		);
+	}//end testAMirroredCallShowsWithoutAPlatformInPipelinq()
+
+	/**
+	 * Of pipelinq's own call and a mirrored one, the one that started last shows; the switch turns both off.
+	 *
+	 * @return void
+	 */
+	public function testTheNewerOfTheTwoSourcesWinsAndTheSwitchStopsBoth(): void {
+		$stamp = static fn (int $ago): string => gmdate('Y-m-d\TH:i:s\Z', (self::NOW - $ago));
+		$this->mirrored = ['id' => 'mirror-row-1', 'fromNumber' => '+31201234567', 'startedAt' => $stamp(3), 'answeredAt' => ''];
+
+		$answer = $this->finder(['platform' => 'voys'], [$this->call(['started_at' => $stamp(8)])])->forAgent(userId: 'agent-1', now: self::NOW);
+		$this->assertSame('mirror', $answer['call']['source']);
+
+		$answer = $this->finder(['platform' => 'voys'], [$this->call(['started_at' => $stamp(1)])])->forAgent(userId: 'agent-1', now: self::NOW);
+		$this->assertSame('pipelinq', $answer['call']['source']);
+		$this->assertSame('c0ffee00-0000-4000-8000-000000000001', $answer['call']['id']);
+
+		$this->mirrored = null;
+		$answer = $this->finder(['platform' => 'voys'], [$this->call()])->forAgent(userId: 'agent-1', now: self::NOW);
+		$this->assertSame('pipelinq', $answer['call']['source']);
+
+		// Screen pop off: the mirror is active, and still nothing is read.
+		$this->mirrored = ['id' => 'mirror-row-1', 'fromNumber' => '+31201234567', 'startedAt' => $stamp(3), 'answeredAt' => ''];
+		$cti = $this->createMock(CtiService::class);
+		$cti->method('loadConfig')->willReturn(['platform' => 'voys', 'screen_pop_enabled' => false]);
+		$tickets = $this->createMock(TicketService::class);
+		$tickets->expects($this->never())->method('findByType');
+		$mirror = $this->createMock(MirroredCallReader::class);
+		$mirror->method('isActive')->willReturn(true);
+		$mirror->expects($this->never())->method('openCallFor');
+		$answer = (new IncomingCallFinder($cti, $tickets, $mirror))->forAgent(userId: 'agent-1', now: self::NOW);
+		$this->assertSame(['enabled' => false, 'delayMs' => 0, 'call' => null], $answer);
+	}//end testTheNewerOfTheTwoSourcesWinsAndTheSwitchStopsBoth()
 }//end class

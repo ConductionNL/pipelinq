@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Cti;
 
 use OCA\Pipelinq\Service\CtiService;
+use OCA\Pipelinq\Service\Calls\MirroredCallReader;
 use OCA\Pipelinq\Service\TicketService;
 
 /**
@@ -54,10 +55,12 @@ class IncomingCallFinder {
 	 *
 	 * @param CtiService $ctiService Reads the telephony configuration.
 	 * @param TicketService $ticketService Reads the contactmoments the webhook wrote.
+	 * @param MirroredCallReader $mirror Reads the agent's open call from the call mirror.
 	 */
 	public function __construct(
 		private CtiService $ctiService,
 		private TicketService $ticketService,
+		private MirroredCallReader $mirror,
 	) {
 	}//end __construct()
 
@@ -70,31 +73,91 @@ class IncomingCallFinder {
 	 * @return array{enabled: bool, delayMs: int, call: array<string, string>|null}
 	 *
 	 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+	 * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-the-incoming-call-card-also-shows-a-mirrored-call
 	 */
 	public function forAgent(string $userId, ?int $now = null): array {
 		$config = $this->ctiService->loadConfig();
 		$platform = (string)($config['platform'] ?? '');
-		if ($userId === '' || $platform === '' || ($config['screen_pop_enabled'] ?? true) === false) {
+		$mirrored = $this->mirror->isActive();
+		if ($userId === '' || ($platform === '' && $mirrored === false) || ($config['screen_pop_enabled'] ?? true) === false) {
 			return ['enabled' => false, 'delayMs' => 0, 'call' => null];
 		}
 
-		$rows = $this->ticketService->findByType(
-			ticketType: TicketService::TYPE_CONTACTMOMENT,
-			extraFilters: [
-				'assignee' => $userId,
-				'channel' => 'telephony',
-				'direction' => 'inbound',
-			],
-			limit: self::LOOKBACK,
-			sort: ['started_at' => 'desc'],
-		);
+		$now = ($now ?? time());
+		$own = null;
+		if ($platform !== '') {
+			$rows = $this->ticketService->findByType(
+				ticketType: TicketService::TYPE_CONTACTMOMENT,
+				extraFilters: [
+					'assignee' => $userId,
+					'channel' => 'telephony',
+					'direction' => 'inbound',
+				],
+				limit: self::LOOKBACK,
+				sort: ['started_at' => 'desc'],
+			);
+			$own = $this->newestOpenCall(rows: $rows, userId: $userId, now: $now);
+		}
+
+		$fromMirror = null;
+		if ($mirrored === true) {
+			$fromMirror = $this->mirroredCall(userId: $userId, now: $now);
+		}
 
 		return [
 			'enabled' => true,
 			'delayMs' => max(0, (int)($config['screen_pop_delay_ms'] ?? 0)),
-			'call' => $this->newestOpenCall(rows: $rows, userId: $userId, now: ($now ?? time())),
+			'call' => $this->newer(own: $own, mirrored: $fromMirror),
 		];
 	}//end forAgent()
+
+	/**
+	 * The agent's open call from the call mirror, in the card's shape.
+	 *
+	 * A mirrored call has no contact moment in pipelinq, so `source` tells the
+	 * card there is nothing to link the opened record to.
+	 *
+	 * @param string $userId The agent's user id.
+	 * @param int $now Unix time.
+	 *
+	 * @return array<string, string>|null The call, or null.
+	 */
+	private function mirroredCall(string $userId, int $now): ?array {
+		$call = $this->mirror->openCallFor(agentId: $userId, now: $now);
+		if ($call === null) {
+			return null;
+		}
+
+		return [
+			'id' => $call['id'],
+			'source' => 'mirror',
+			'fromNumber' => $call['fromNumber'],
+			'queueName' => '',
+			'extension' => '',
+			'startedAt' => $call['startedAt'],
+			'answeredAt' => $call['answeredAt'],
+		];
+	}//end mirroredCall()
+
+	/**
+	 * The call that started last, of pipelinq's own and the mirrored one.
+	 *
+	 * @param array<string, string>|null $own The call from pipelinq's own telephony.
+	 * @param array<string, string>|null $mirrored The call from the call mirror.
+	 *
+	 * @return array<string, string>|null The newer call, or null when there is none.
+	 */
+	private function newer(?array $own, ?array $mirrored): ?array {
+		if ($own === null || $mirrored === null) {
+			return ($own ?? $mirrored);
+		}
+
+		if (strtotime($mirrored['startedAt']) > strtotime($own['startedAt'])) {
+			return $mirrored;
+		}
+
+		return $own;
+	}//end newer()
 
 	/**
 	 * Pick the newest call that has not ended and is not stale.
@@ -126,6 +189,7 @@ class IncomingCallFinder {
 			$newestStart = $started;
 			$newest = [
 				'id' => (string)($data['id'] ?? ($data['uuid'] ?? '')),
+				'source' => 'pipelinq',
 				'fromNumber' => (string)($data['from_number'] ?? ''),
 				'queueName' => (string)($data['queue_name'] ?? ''),
 				'extension' => (string)($data['cti_extension'] ?? ''),

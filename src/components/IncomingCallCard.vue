@@ -544,6 +544,11 @@ export default {
 		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		async linkCall(callId, fields) {
+			// A call from the call mirror has no contact moment in Pipelinq,
+			// so there is nothing to write the record onto.
+			if (this.call && this.call.source === 'mirror') {
+				return false
+			}
 			try {
 				const current = await this.objectStore.fetchObject('ticket', callId)
 				if (!current) {
