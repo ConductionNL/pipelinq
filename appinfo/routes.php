@@ -43,6 +43,11 @@ return [
         // Contact-FIRST create — provisions the NC contact and saves the object
         // with the required contactsUid (client-contact unification).
         ['name' => 'contactSync#create', 'url' => '/api/contacts-sync/create', 'verb' => 'POST'],
+        // A mail client's side pane (contact-moments-mail-add-in): sender lookup,
+        // add as contact, log this mail. Called with an app password.
+        ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
+        ['name' => 'mailAddIn#contact', 'url' => '/api/mail-add-in/contact', 'verb' => 'POST'],
+        ['name' => 'mailAddIn#log', 'url' => '/api/mail-add-in/log', 'verb' => 'POST'],
 
         // Email matching (leaf-first email-calendar-sync) — per-user settings + trigger + status.
         // The matching job links Nextcloud Mail messages to CRM entities via the OR `email` leaf.
