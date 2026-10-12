@@ -31,7 +31,7 @@ draft. So:
 - OpenRegister keeps a draft to its owner. The `ticket` schema sets
   `draftsListed: false`, so the agent's own drafts stay out of every ticket
   list, count and facet too. The quick log asks for them with `_drafts=true`.
-- The `ticket` schema sets `draftLifetimeDays: 7`. OpenRegister's one draft
+- The `ticket` schema sets `draftLifetimeDays: 7`, explicitly: OpenRegister's default is 30 days (decision 228). OpenRegister's one draft
   cleanup removes a draft nobody changed for seven days. pipelinq's own daily
   job (decision 145) is not built and not needed.
 - `ticket` carries an `x-openregister-archival` block, which refuses every
