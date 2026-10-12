@@ -1871,7 +1871,6 @@ OC.L10N.register(
         "Incl. VAT": "Incl. VAT",
         "Included with Pipelinq": "Included with Pipelinq",
         "Incoming": "Incoming",
-        "Incoming call — choose contact": "Incoming call — choose contact",
         "Incorrect PIN": "Incorrect PIN",
         "Incremental": "Incremental",
         "Industry": "Industry",
@@ -7592,7 +7591,19 @@ OC.L10N.register(
         "On this ticket": "On this ticket",
         "Ticket panels": "Ticket panels",
         "Preferred name": "Preferred name",
-        "The name this person likes to be called, such as Jan for Johannes.": "The name this person likes to be called, such as Jan for Johannes."
+        "The name this person likes to be called, such as Jan for Johannes.": "The name this person likes to be called, such as Jan for Johannes.",
+        "Incoming call": "Incoming call",
+        "Incoming call: choose contact": "Incoming call: choose contact",
+        "queue {queue}": "queue {queue}",
+        "line {line}": "line {line}",
+        "Found on the number, 1 client": "Found on the number, 1 client",
+        "Found on the number, {count} contacts": "Found on the number, {count} contacts",
+        "No client found on this number": "No client found on this number",
+        "This call is logged as a contact moment. Open the client to see their requests and earlier contact.": "This call is logged as a contact moment. Open the client to see their requests and earlier contact.",
+        "Not this client": "Not this client",
+        "Answer and open": "Answer and open",
+        "Choose contact": "Choose contact",
+        "The contact is not saved. Try again.": "The contact is not saved. Try again."
     },
     "nplurals=2; plural=(n != 1);"
 )
