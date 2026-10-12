@@ -151,6 +151,19 @@ update needs no bespoke transport: nextcloud-vue's `useLiveUpdates`
 subscribes to the `pipelinq-kccCall` collection the way any manifest-driven
 index page would, no new consumer-side plumbing invented for this change.
 
+**Amended 12 October 2026 (decision 231), as built.** integriq dispatches
+`CallEvent` as a typed Nextcloud event (`CtiEventIntake::dispatchFor()`) and
+does not publish it on the CloudEvents fan-out yet. Both apps run in the same
+Nextcloud, so pipelinq listens in process: `CallEventListener`, registered for
+the class name as a plain string and read by its public properties. That drops
+the HTTP hop, the shared secret and the subscription a `POST
+/api/kcc/call-events` sink would need, and a server never calls itself. The
+schema is `mirroredCall` and the classes are named by what they do
+(`CallMirror`, `CallerResolver`): the mirror is generic and takes plain fields,
+so another adapter can feed it. The resolved party is not stored, only its
+name. Retention is pipelinq's own daily job and not an archival block on the
+schema, which would make OpenRegister refuse the delete.
+
 ### D4: identity resolution runs once, at mirror time, not per view
 
 Resolving "In pipelinq" and "Elsewhere" matches on every panel render would

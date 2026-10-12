@@ -51,6 +51,7 @@ use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
+use OCA\Pipelinq\Listener\CallEventListener;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
 use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
@@ -251,6 +252,15 @@ class Application extends App implements IBootstrap {
 			$context->registerEventListener(
 				event: FormsSubmissionListener::EVENT,
 				listener: FormsSubmissionListener::class
+			);
+		}
+		// A call that integriq's telephony adapter reports is mirrored (kcc-agent-panel).
+		// Integriq is optional; the guard keeps an instance without it from
+		// registering anything.
+		if (class_exists(CallEventListener::EVENT) === true) {
+			$context->registerEventListener(
+				event: CallEventListener::EVENT,
+				listener: CallEventListener::class
 			);
 		}
 		// A new task records who created it (round3-review-points).

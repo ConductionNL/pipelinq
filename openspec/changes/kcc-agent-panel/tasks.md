@@ -1,34 +1,32 @@
 # Tasks: kcc-agent-panel
 
 > A shared contact-centre panel fed by integriq's `kcc-cti-adapter`
-> (ADR-032 `kind: code`). Implementation is out of scope for this change
-> (see proposal.md); tasks are recorded so a later change has a plan to
-> pick up, not to be built now.
+> (ADR-032 `kind: code`). The proposal left implementation out of scope.
+> Decision 231 (Ruben, 12 October 2026) started it: the call mirror is generic
+> and lives here, the telephony adapter lives in integriq. Task 1 is built;
+> the page waits for its board.
 
 ## Implementation tasks
 
-### Task 1: Mirror integriq's `CallEvent` into `kccCall`
+### Task 1: Mirror a call event, resolve the caller once, keep it 30 days
 - **spec_ref**: `openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-a-call-event-is-mirrored-and-resolved-once`
-- **files**: `lib/Settings/register.d/<nn>-kcc-agent-panel.json` (new
-  `kccCall` schema, register `pipelinq`), `lib/Controller/KccCallController.php`,
-  `lib/Service/KccCallResolverService.php`, `appinfo/routes.php`
-- **acceptance_criteria**:
-  - `POST /api/kcc/call-events` accepts integriq's CloudEvent shape and
-    persists one `kccCall` per `callId`+`kind`, idempotent on repeat
-    delivery
-  - "In pipelinq" and "Elsewhere" matches (D2/D4) are resolved once, at
-    write time, and stored on the record
-  - `kccCall` rows older than 30 days are dropped by a scheduled job,
-    mirroring integriq's own retention
-- [ ] Implement
-- [ ] Test
+- [x] The mirror: `lib/Service/Calls/CallMirror.php`, schema `mirroredCall` in `lib/Settings/register.d/71-mirrored-call.json` (register `pipelinq`, no user reads it through the object API), slug in `SettingsLoadService`, `appinfo/info.xml` bumped so the import runs
+  - One row per `callId` + `kind` + `sourceId`; a repeated delivery writes nothing. The mirror names no telephony platform: whatever delivers a call hands it plain fields.
+  - The resolved party of the adapter is NOT stored, only its name: a party can carry a citizen service number.
+- [x] The resolver: `lib/Service/Calls/CallerResolver.php` finds the clients and contacts with exactly that E.164 number and their open tickets, once, when the row is written
+- [x] Delivery: `lib/Listener/CallEventListener.php`, registered in `Application::register()` for integriq's `OCA\Integriq\Event\CallEvent` (dispatched by `CtiEventIntake::dispatchFor()` on integriq development). In process, so there is no `POST /api/kcc/call-events`, no secret and no subscription (design D3, amended)
+- [x] Retention: `lib/BackgroundJob/CallMirrorRetentionJob.php`, listed in `appinfo/info.xml`, removes rows 30 days after they were written
+- [x] Tests: `tests/Unit/Service/Calls/CallMirrorTest.php` (the payload against the composed schema with two controls, a repeat, a store that ignores filters, another country's number with the same last nine digits, retention), `tests/Unit/Listener/CallEventListenerTest.php` (from `Application::register()` to the mirror, with integriq's constructor), `tests/Unit/BackgroundJob/CallMirrorRetentionJobTest.php` (from `info.xml` to the purge)
+- [ ] 1a "Elsewhere" matches: a row of another app's schema that implements `ns#Requester` or `ns#Customer` and carries the caller's identifying number (not built: it needs `SemanticHandoffService::implementerLocation()`, which is on pipelinq #2445 and not on development, and a rule for which field of such a schema holds the number)
+- [ ] 1b The incoming-call card also shows a mirrored call: `IncomingCallFinder` reads the newest open `mirroredCall` of the agent beside pipelinq's own telephony (not built: lands after `screen-pop-incoming-call`)
+- [ ] 1c (live pass, decision 139) With integriq installed and a CTI source of the log binding: post a `ringing` event, see one `mirroredCall` row with `occ` or the admin object API; post it again, still one row
 
-### Task 2: The agent panel page
+### Task 2: The agent panel page (UI waits for board PqGesprekspaneel, decision 162)
 - **spec_ref**: `openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-the-panel-shows-the-caller-and-their-open-items`
 - **files**: `src/manifest.json` (page `KccAgentPanel`), a component for the
   live call/identity/items view, `tests/vitest/kccAgentPanel.spec.js`
 - **acceptance_criteria**:
-  - The panel subscribes to the `pipelinq-kccCall` collection and reflects
+  - The panel subscribes to the `pipelinq-mirroredCall` collection and reflects
     a new call without a manual refresh
   - An unmatched caller renders "Unknown caller" and no items, not a hidden
     or errored section
