@@ -7635,7 +7635,16 @@ OC.L10N.register(
         "Could not save the background service account.": "Could not save the background service account.",
         "Pipelinq background service account": "Pipelinq background service account",
         "Incoming calls are logged as %s.": "Incoming calls are logged as %s.",
-        "Until you choose one in the Pipelinq settings, incoming calls are not logged.": "Until you choose one in the Pipelinq settings, incoming calls are not logged."
+        "Until you choose one in the Pipelinq settings, incoming calls are not logged.": "Until you choose one in the Pipelinq settings, incoming calls are not logged.",
+        "The case's reference at its source.": "The case's reference at its source.",
+        "The app or system that holds the case.": "The app or system that holds the case.",
+        "Whether the match is a client or a contact.": "Whether the match is a client or a contact.",
+        "The id of the client or contact.": "The id of the client or contact.",
+        "The client's or contact's name.": "The client's or contact's name.",
+        "The open tickets of this client or contact, at most ten.": "The open tickets of this client or contact, at most ten.",
+        "The ticket's id.": "The ticket's id.",
+        "The ticket's title.": "The ticket's title.",
+        "The ticket's status when the call arrived.": "The ticket's status when the call arrived."
     },
     "nplurals=2; plural=(n != 1);"
 )

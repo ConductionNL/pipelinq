@@ -2389,7 +2389,17 @@
         "Could not save the background service account.": "Impossibile salvare l'account di servizio in background.",
         "Pipelinq background service account": "Account di servizio in background di Pipelinq",
         "Incoming calls are logged as %s.": "Le chiamate in arrivo vengono annotate come %s.",
-        "Until you choose one in the Pipelinq settings, incoming calls are not logged.": "Finché non ne scegli uno nelle impostazioni di Pipelinq, le chiamate in arrivo non vengono annotate."
+        "Until you choose one in the Pipelinq settings, incoming calls are not logged.": "Finché non ne scegli uno nelle impostazioni di Pipelinq, le chiamate in arrivo non vengono annotate.",
+        "Open tickets": "Ticket aperti",
+        "The case's reference at its source.": "Il riferimento della pratica alla sua origine.",
+        "The app or system that holds the case.": "L'app o il sistema che contiene la pratica.",
+        "Whether the match is a client or a contact.": "Se la corrispondenza è un cliente o un contatto.",
+        "The id of the client or contact.": "L'id del cliente o del contatto.",
+        "The client's or contact's name.": "Il nome del cliente o del contatto.",
+        "The open tickets of this client or contact, at most ten.": "I ticket aperti di questo cliente o contatto, al massimo dieci.",
+        "The ticket's id.": "L'id del ticket.",
+        "The ticket's title.": "Il titolo del ticket.",
+        "The ticket's status when the call arrived.": "Lo stato del ticket all'arrivo della chiamata."
     },
     "plurals": null
 }

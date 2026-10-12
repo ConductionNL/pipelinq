@@ -7570,6 +7570,15 @@
         "Could not save the background service account.": "Het achtergrondaccount kon niet worden opgeslagen.",
         "Pipelinq background service account": "Achtergrondaccount van Pipelinq",
         "Incoming calls are logged as %s.": "Inkomende gesprekken worden vastgelegd als %s.",
-        "Until you choose one in the Pipelinq settings, incoming calls are not logged.": "Tot u er een kiest in de instellingen van Pipelinq, worden inkomende gesprekken niet vastgelegd."
+        "Until you choose one in the Pipelinq settings, incoming calls are not logged.": "Tot u er een kiest in de instellingen van Pipelinq, worden inkomende gesprekken niet vastgelegd.",
+        "The case's reference at its source.": "De verwijzing van de zaak bij de bron.",
+        "The app or system that holds the case.": "De app of het systeem waar de zaak staat.",
+        "Whether the match is a client or a contact.": "Of de treffer een klant of een contactpersoon is.",
+        "The id of the client or contact.": "Het id van de klant of contactpersoon.",
+        "The client's or contact's name.": "De naam van de klant of contactpersoon.",
+        "The open tickets of this client or contact, at most ten.": "De open tickets van deze klant of contactpersoon, hooguit tien.",
+        "The ticket's id.": "Het id van het ticket.",
+        "The ticket's title.": "De titel van het ticket.",
+        "The ticket's status when the call arrived.": "De status van het ticket toen het gesprek binnenkwam."
     }
 }

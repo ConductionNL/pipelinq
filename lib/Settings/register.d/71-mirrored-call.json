@@ -104,11 +104,15 @@
                             "additionalProperties": false,
                             "properties": {
                                 "reference": {
+                                    "title": "Reference",
+                                    "description": "The case's reference at its source.",
                                     "type": "string",
                                     "minLength": 1,
                                     "maxLength": 255
                                 },
                                 "source": {
+                                    "title": "Source",
+                                    "description": "The app or system that holds the case.",
                                     "type": "string",
                                     "maxLength": 255
                                 }
@@ -129,6 +133,8 @@
                             "additionalProperties": false,
                             "properties": {
                                 "type": {
+                                    "title": "Type",
+                                    "description": "Whether the match is a client or a contact.",
                                     "type": "string",
                                     "enum": [
                                         "client",
@@ -136,13 +142,19 @@
                                     ]
                                 },
                                 "id": {
+                                    "title": "Id",
+                                    "description": "The id of the client or contact.",
                                     "type": "string",
                                     "minLength": 1
                                 },
                                 "name": {
+                                    "title": "Name",
+                                    "description": "The client's or contact's name.",
                                     "type": "string"
                                 },
                                 "openTickets": {
+                                    "title": "Open tickets",
+                                    "description": "The open tickets of this client or contact, at most ten.",
                                     "type": "array",
                                     "maxItems": 10,
                                     "items": {
@@ -150,12 +162,18 @@
                                         "additionalProperties": false,
                                         "properties": {
                                             "id": {
+                                                "title": "Id",
+                                                "description": "The ticket's id.",
                                                 "type": "string"
                                             },
                                             "title": {
+                                                "title": "Title",
+                                                "description": "The ticket's title.",
                                                 "type": "string"
                                             },
                                             "status": {
+                                                "title": "Status",
+                                                "description": "The ticket's status when the call arrived.",
                                                 "type": "string"
                                             }
                                         }

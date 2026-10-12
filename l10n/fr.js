@@ -2390,7 +2390,17 @@ OC.L10N.register(
         "Could not save the background service account.": "Impossible d'enregistrer le compte de service d'arrière-plan.",
         "Pipelinq background service account": "Compte de service d'arrière-plan de Pipelinq",
         "Incoming calls are logged as %s.": "Les appels entrants sont consignés avec %s.",
-        "Until you choose one in the Pipelinq settings, incoming calls are not logged.": "Tant que vous n'en choisissez pas un dans les paramètres de Pipelinq, les appels entrants ne sont pas consignés."
+        "Until you choose one in the Pipelinq settings, incoming calls are not logged.": "Tant que vous n'en choisissez pas un dans les paramètres de Pipelinq, les appels entrants ne sont pas consignés.",
+        "Open tickets": "Tickets ouverts",
+        "The case's reference at its source.": "La référence du dossier à sa source.",
+        "The app or system that holds the case.": "L'application ou le système qui détient le dossier.",
+        "Whether the match is a client or a contact.": "Si la correspondance est un client ou un contact.",
+        "The id of the client or contact.": "L'identifiant du client ou du contact.",
+        "The client's or contact's name.": "Le nom du client ou du contact.",
+        "The open tickets of this client or contact, at most ten.": "Les tickets ouverts de ce client ou contact, dix au plus.",
+        "The ticket's id.": "L'identifiant du ticket.",
+        "The ticket's title.": "Le titre du ticket.",
+        "The ticket's status when the call arrived.": "Le statut du ticket à l'arrivée de l'appel."
     },
     "nplurals=2; plural=(n != 1);"
 )
