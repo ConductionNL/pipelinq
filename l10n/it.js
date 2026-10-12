@@ -986,6 +986,7 @@ OC.L10N.register(
         "Last updated: {time}": "Ultimo aggiornamento: {time}",
         "Last {n} transactions": "Ultime {n} transazioni",
         "Lead": "Lead",
+        "Leave empty to save the lead without a client.": "Lascia vuoto per salvare il lead senza cliente.",
         "Lead & request assignments": "Assegnazioni di lead e richieste",
         "Lead Conversion Rate": "Tasso di conversione dei lead",
         "Lead Management": "Gestione dei lead",
@@ -2335,7 +2336,13 @@ OC.L10N.register(
         "Manufacturer": "Produttore",
         "Unit of measure": "Unità di misura",
         "Weight": "Peso",
-        "Dimensions": "Dimensioni"
+        "Dimensions": "Dimensioni",
+        "Formal decisions on this ticket, made and signed in decidiq": "Decisioni formali su questo ticket, prese e firmate in decidiq",
+        "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "Una decisione si può preparare direttamente da questo ticket come proposta in decidiq, oppure la richiesta diventa prima un fascicolo in dossiq. In entrambi i casi la decisione compare qui.",
+        "On this ticket": "Su questo ticket",
+        "Ticket panels": "Pannelli del ticket",
+        "Ticket details": "Dettagli del ticket",
+        "Decisions": "Decisioni"
     },
     "nplurals=2; plural=(n != 1);"
 )

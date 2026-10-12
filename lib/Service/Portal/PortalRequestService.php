@@ -294,8 +294,19 @@ class PortalRequestService {
 			]
 		);
 
+		// The answer names the object a person works on by its human-readable
+		// reference and the moment it was received, not only by an id
+		// (website-forms-submit-into-tickets, task 1.2). A ticket without a case
+		// reference answers with its id, as OpenRegister's submit service does.
+		$reference = trim((string)($saved['caseReference'] ?? $saved['reference'] ?? ''));
+		if ($reference === '') {
+			$reference = $requestId;
+		}
+
 		return [
 			'requestId' => $requestId,
+			'reference' => $reference,
+			'receivedAt' => (string)($saved['occurredAt'] ?? $record['occurredAt']),
 			'status' => 'new',
 			'estimatedResponseTime' => '24 uur',
 		];

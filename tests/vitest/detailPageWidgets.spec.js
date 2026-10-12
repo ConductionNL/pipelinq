@@ -75,7 +75,9 @@ describe('contact detail', () => {
 
 	it('puts the related records in the side column, not in the grid', () => {
 		expect(contact.config.sideColumn).toContain('contact-related')
-		expect(contact.config.layout.map((item) => item.widgetId)).toEqual(['contact-panels'])
+		expect(contact.config.layout.map((item) => item.widgetId)).toEqual([
+			'contact-panels',
+		])
 	})
 
 	it('holds at most seven tabs, History last', () => {

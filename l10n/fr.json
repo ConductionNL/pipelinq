@@ -985,6 +985,7 @@
         "Last updated: {time}": "Dernière mise à jour : {time}",
         "Last {n} transactions": "{n} dernières transactions",
         "Lead": "Piste",
+        "Leave empty to save the lead without a client.": "Laissez vide pour enregistrer la piste sans client.",
         "Lead & request assignments": "Attributions de pistes et de demandes",
         "Lead Conversion Rate": "Taux de conversion des pistes",
         "Lead Management": "Gestion des pistes",
@@ -2334,7 +2335,13 @@
         "Manufacturer": "Fabricant",
         "Unit of measure": "Unité de mesure",
         "Weight": "Poids",
-        "Dimensions": "Dimensions"
+        "Dimensions": "Dimensions",
+        "Formal decisions on this ticket, made and signed in decidiq": "Décisions formelles sur ce ticket, prises et signées dans decidiq",
+        "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "Une décision se prépare directement depuis ce ticket comme proposition dans decidiq, ou la demande devient d'abord un dossier dans dossiq. Dans les deux cas, la décision apparaît ici.",
+        "On this ticket": "Sur ce ticket",
+        "Ticket panels": "Volets du ticket",
+        "Ticket details": "Détails du ticket",
+        "Decisions": "Décisions"
     },
     "plurals": null
 }
