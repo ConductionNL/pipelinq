@@ -7507,7 +7507,12 @@ OC.L10N.register(
         "On this ticket": "Over dit ticket",
         "Ticket panels": "Ticketpanelen",
         "Preferred name": "Roepnaam",
-        "The name this person likes to be called, such as Jan for Johannes.": "De naam waarmee deze persoon aangesproken wil worden, zoals Jan voor Johannes."
+        "The name this person likes to be called, such as Jan for Johannes.": "De naam waarmee deze persoon aangesproken wil worden, zoals Jan voor Johannes.",
+        "requests + complaints + contactmomenten": "verzoeken, klachten en contactmomenten",
+        "requests with status new": "met status nieuw",
+        "open tickets past their deadline": "open tickets over de termijn",
+        "deadline within 24h": "termijn binnen 24 uur",
+        "most recent interaction": "meest recente contact"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -7612,6 +7612,11 @@
         "On this ticket": "On this ticket",
         "Ticket panels": "Ticket panels",
         "Preferred name": "Preferred name",
-        "The name this person likes to be called, such as Jan for Johannes.": "The name this person likes to be called, such as Jan for Johannes."
+        "The name this person likes to be called, such as Jan for Johannes.": "The name this person likes to be called, such as Jan for Johannes.",
+        "requests + complaints + contactmomenten": "requests + complaints + contactmomenten",
+        "requests with status new": "requests with status new",
+        "open tickets past their deadline": "open tickets past their deadline",
+        "deadline within 24h": "deadline within 24h",
+        "most recent interaction": "most recent interaction"
     }
 }
