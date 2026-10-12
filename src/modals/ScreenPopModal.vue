@@ -9,7 +9,7 @@
   -->
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'Incoming call — choose contact')"
+		:name="t('pipelinq', 'Incoming call: choose contact')"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">
