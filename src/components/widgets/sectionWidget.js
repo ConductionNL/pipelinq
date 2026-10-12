@@ -25,7 +25,7 @@ import { h } from 'vue'
  * @param {(ctx: {objectId: string, objectData: object, content: object}) => object} mapProps
  *   The section's props from the page context.
  * @param {{card?: boolean}} [options] `card` wraps the section in a titled
- *   card (title from `content.title`), for a widget that sits in the grid on
+ *   card (title from `content.title`, through the page's translate), for a widget that sits in the grid on
  *   its own rather than inside a tab, which already names it.
  * @return {object} A Vue component.
  *
@@ -37,6 +37,11 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 		// The host also passes register, schema, store and the content keys;
 		// none of them belong on the section's root element.
 		inheritAttrs: false,
+		inject: {
+			// The page's translate, so a card title declared in the manifest
+			// (English source) reads in the user's language.
+			cnTranslate: { default: null },
+		},
 		props: {
 			objectId: { type: [String, Number], default: '' },
 			objectData: { type: Object, default: null },
@@ -58,9 +63,11 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 			if (!options.card) {
 				return inner
 			}
+			const title = this.content?.title || ''
+			const translate = typeof this.cnTranslate === 'function' ? this.cnTranslate : (key) => key
 			return h(
 				CnDetailCard,
-				{ title: this.content?.title || '' },
+				{ title: title ? translate(title) : '' },
 				{ default: () => inner },
 			)
 		},

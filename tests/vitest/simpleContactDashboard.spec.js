@@ -142,7 +142,7 @@ describe('the dashboard', () => {
 			expect({ ...now, gridY: entry.gridY }, entry.id).toEqual(entry)
 			shifts.add(now.gridY - entry.gridY)
 		}
-		expect([...shifts]).toEqual([15])
+		expect([...shifts]).toEqual([18])
 	})
 
 	it('puts every card in the grid once, and no two cards in one cell', () => {
@@ -168,7 +168,7 @@ describe('the dashboard', () => {
 
 	it('opens with the greeting on the ground, the attention card and four numbers in a row', () => {
 		const top = simple.layout
-			.filter((entry) => entry.gridY < 5)
+			.filter((entry) => entry.gridY < 9)
 			.sort((a, b) => a.gridY - b.gridY || a.gridX - b.gridX)
 			.map((entry) => byId[entry.widgetId].type)
 		expect(top).toEqual([
@@ -179,6 +179,7 @@ describe('the dashboard', () => {
 			'stat',
 			'stat',
 			'stat',
+			'workspace-filter',
 		])
 		// PqDashboard has one header: the page header is hidden and the
 		// greeting row carries the kicker date and the heading on the ground.
@@ -188,7 +189,7 @@ describe('the dashboard', () => {
 			showDate: true,
 		})
 		const stats = simple.layout.filter(
-			(entry) => byId[entry.widgetId].type === 'stat' && entry.gridY === 3,
+			(entry) => byId[entry.widgetId].type === 'stat' && entry.gridY === 4,
 		)
 		expect(stats.map((entry) => entry.gridWidth)).toEqual([3, 3, 3, 3])
 	})
@@ -197,28 +198,29 @@ describe('the dashboard', () => {
 		const at = (id) => simple.layout.find((entry) => entry.widgetId === id)
 		expect(at('simple-waiting-list')).toMatchObject({
 			gridX: 0,
-			gridY: 5,
+			gridY: 9,
 			gridWidth: 8,
 		})
 		expect(at('simple-per-channel')).toMatchObject({
 			gridX: 0,
-			gridY: 10,
+			gridY: 14,
 			gridWidth: 8,
 		})
 		expect(at('simple-callback-list')).toMatchObject({
 			gridX: 8,
-			gridY: 5,
+			gridY: 9,
 			gridWidth: 4,
 		})
 		expect(at('simple-latest-contact')).toMatchObject({
 			gridX: 8,
-			gridY: 10,
+			gridY: 14,
 			gridWidth: 4,
 		})
-		// The cards the page had start at row 15, under the client in focus
-		// at row 14; the design's end above both.
+		// The cards the page had start at row 18. The board puts the Start a
+		// contact card (row 7) above the lists (amended 10 Oct 2026). Rows are
+		// the heights the grid settles on once the cards size to their content.
 		for (const id of ['simple-per-channel', 'simple-latest-contact']) {
-			expect(at(id).gridY + at(id).gridHeight, id).toBeLessThanOrEqual(14)
+			expect(at(id).gridY + at(id).gridHeight, id).toBeLessThanOrEqual(18)
 		}
 	})
 
@@ -469,7 +471,16 @@ describe('the tickets list', () => {
 
 	it('keeps every view it had, with the same filter, and counts them', () => {
 		for (const old of before.quickFilters) {
-			expect(view(old.label), old.label).toEqual({ ...old, showCount: true })
+			// The board's list leaves contact moments out of All (they have their
+			// own view), so All carries that one filter; every other view is untouched.
+			const expected =
+				old.label === 'All'
+					? { ...old, filter: { 'ticketType[ne]': 'interaction' } }
+					: old
+			expect(view(old.label), old.label).toEqual({
+				...expected,
+				showCount: true,
+			})
 		}
 		expect(simple.quickFilters).toHaveLength(before.quickFilters.length + 3)
 		expect(simple.quickFilters.every((item) => item.showCount)).toBe(true)
@@ -502,7 +513,9 @@ describe('the tickets list', () => {
 
 	it('filters and shows only fields a ticket has', () => {
 		for (const item of simple.quickFilters) {
-			for (const key of Object.keys(item.filter)) {
+			for (const key of Object.keys(item.filter).map((name) =>
+				name.replace(/\[\w+\]$/, ''),
+			)) {
 				expect(SCHEMAS.ticket[key], `${item.label}: ${key}`).toBeTruthy()
 			}
 		}
@@ -604,9 +617,16 @@ describe('the hidden page header loses nothing', () => {
 		expect(simple.slots['widget-simple-availability']).toBe(
 			full.actionsComponent,
 		)
-		expect(simple.slots['widget-simple-client-in-focus']).toBe(
-			full.slots['title-meta'],
+		// The card is the library's start card (workspace-filter), not a slot:
+		// it writes the same workspace key the full page's picker writes.
+		const startCard = simple.config.widgets.find(
+			(widget) => widget.id === 'simple-client-in-focus',
 		)
+		expect(startCard.type).toBe('workspace-filter')
+		expect(startCard.content.layout).toBe('start')
+		expect(startCard.content.writes).toBe('@workspace.selectedClient')
+		expect(simple.slots['widget-simple-client-in-focus']).toBeUndefined()
+		expect(full.slots['title-meta']).toBe('WerkplekClientSelect')
 		expect(layoutOf('simple-availability')).toMatchObject({
 			gridY: 0,
 			borderless: true,

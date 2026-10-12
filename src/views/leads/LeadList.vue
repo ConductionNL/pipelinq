@@ -29,6 +29,8 @@
 		:showTitle="true"
 		:showTitleIcon="false"
 		:headerFilters="false"
+		rowTitle="plain"
+		:searchPlaceholder="t('pipelinq', 'Filter by title or client')"
 		:headerButtons="headerButtons"
 		:headerActions="headerActions"
 		:countText="t('pipelinq', '{shown} of {total} leads')"
@@ -84,7 +86,17 @@ export default {
 					key: 'qualificationScore',
 					label: t('pipelinq', 'Win chance'),
 					sortable: true,
-					widget: 'lead-win-chance',
+					widget: 'progress',
+					widgetProps: {
+						fallbackFields: ['probability'],
+						thresholds: { good: 60, warn: 30 },
+						badge: {
+							label: t('pipelinq', 'Out of date {days} days'),
+							dateField: '@self.updated',
+							afterDays: 14,
+							when: { status: 'open' },
+						},
+					},
 				},
 				{
 					key: 'expectedCloseDate',

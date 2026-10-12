@@ -665,6 +665,8 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px;
 }
 
 .contact-channels-section__group-header h4 {
@@ -696,6 +698,7 @@ export default {
 .contact-channels-section__row {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 8px;
 	padding: 4px 0;
 }
@@ -711,9 +714,12 @@ export default {
 }
 
 .contact-channels-section__value {
-	flex: 1;
+	/* Takes the rest of the row, and drops to its own line when a long
+	   address does not fit beside the kind pill and the actions. */
+	flex: 1 1 10rem;
+	min-width: 0;
 	color: var(--color-main-text);
-	overflow-wrap: break-word;
+	overflow-wrap: anywhere;
 }
 
 .contact-channels-section__badge {
