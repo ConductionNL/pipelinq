@@ -7610,7 +7610,20 @@ OC.L10N.register(
         "Formal decisions on this ticket, made and signed in decidiq": "Formal decisions on this ticket, made and signed in decidiq",
         "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.",
         "On this ticket": "On this ticket",
-        "Ticket panels": "Ticket panels"
+        "Ticket panels": "Ticket panels",
+        " days": " days",
+        "Answer now": "Answer now",
+        "Average answer time": "Average answer time",
+        "Deadline first": "Deadline first",
+        "Newest first": "Newest first",
+        "Saved views": "Saved views",
+        "Sorting": "Sorting",
+        "Start here": "Start here",
+        "This ticket has waited {subject.occurredAt|days} days. The agreement is an answer within 2 working days.": "This ticket has waited {subject.occurredAt|days} days. The agreement is an answer within 2 working days.",
+        "Waiting longest first": "Waiting longest first",
+        "You have no saved views yet. Save a view on the tickets list.": "You have no saved views yet. Save a view on the tickets list.",
+        "agreement: 2 working days": "agreement: 2 working days",
+        "€ {value}": "€ {value}"
     },
     "nplurals=2; plural=(n != 1);"
 )

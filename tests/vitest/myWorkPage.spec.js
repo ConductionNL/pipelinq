@@ -31,7 +31,8 @@ describe('the My work page', () => {
 			.slice()
 			.sort((a, b) => a.gridY - b.gridY)
 			.map((l) => l.widgetId)
-		expect(order.slice(0, 3)).toEqual([
+			.filter((id) => ['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer'].includes(id))
+		expect(order).toEqual([
 			'my-answer-today',
 			'my-waiting-on-me',
 			'my-waiting-on-customer',
@@ -44,15 +45,46 @@ describe('the My work page', () => {
 	it('scopes every list and count to the signed-in user', () => {
 		for (const w of page.config.widgets) {
 			const filter = w.content.filter || w.content.source?.filter
+			if (!filter) continue // the bar, the banner and the saved views carry their own sources
 			const own = filter.assignee ?? filter.assigneeUserId
 			expect(own, w.id).toBe('@me')
 		}
+	})
+
+	it('has a bar with the lens chips, the completed switch and the sort select', () => {
+		const bar = widget('my-lens').content
+		expect(bar.layout).toBe('bar')
+		expect(bar.controls.map((c) => c.style)).toEqual(['chips', 'toggle', 'select'])
+		const chips = bar.controls[0].options.map((o) => o.value)
+		expect(chips).toEqual(['all', 'tickets', 'leads', 'tasks'])
+		expect(page.config.layout.find((l) => l.widgetId === 'my-lens').sizeToContent).toBe(true)
+	})
+
+	it('follows the chips, and lets the controls sort and show completed work', () => {
+		for (const id of ['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer', 'my-leads', 'my-follow-ups']) {
+			const w = widget(id)
+			expect(w.visibleWhen.workspace, id).toBe('lens')
+			expect(w.content.pageControls.sort.key, id).toBe('sort')
+		}
+		expect(widget('my-leads').visibleWhen.value).toEqual(['all', 'leads'])
+		expect(widget('my-follow-ups').visibleWhen.value).toEqual(['all', 'tasks'])
 	})
 
 	it('lists the follow-up tasks assigned to the user', () => {
 		const tasks = widget('my-follow-ups').content
 		expect(tasks.schema).toBe('crmTask')
 		expect(tasks.filter.assigneeUserId).toBe('@me')
+	})
+
+	it('names the customer on each ticket row', () => {
+		const tickets = widget('my-answer-today').content
+		expect(tickets.extend).toContain('client')
+		expect(tickets.avatar).toBe('{client.name}')
+	})
+
+	it('carries the start-here banner and the saved views', () => {
+		expect(widget('my-start-here').type).toBe('banner')
+		expect(widget('my-saved-views').type).toBe('saved-views')
 	})
 
 	it('keeps the grid cells apart', () => {

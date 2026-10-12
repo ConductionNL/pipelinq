@@ -5193,21 +5193,161 @@
 			"route": "/my-work",
 			"type": "dashboard",
 			"title": "My work",
-			"_note": "My work as a manifest page (PqMijnWerk). Three grouped lists over the ticket schema for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks, which the old worklist also merged. Week figures are count tiles with date filters. Left out because the library cannot draw or compute them: the Alle/Tickets/Leads/Opvolgingen chip strip with Toon afgerond and Sortering, the share answered within the deadline and the average answer time (ratios, not counts), the Begin hier card (a banner that names one row), saved views (per-user view ids).",
+			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Not here, each named in the pull request: a priority sort (priority is a string, no numeric rank), the share answered within the deadline (needs a ticket.answeredInTime flag), the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
 			"config": {
 				"showRefresh": true,
+				"showWidgetActions": false,
 				"description": "Tickets, leads and follow-ups that are yours, the most urgent first",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"kpiRow": [
+					"my-open-tickets",
 					"my-answered-week",
 					"my-converted-week",
-					"my-open-tickets"
+					"my-avg-answer"
 				],
 				"widgets": [
+					{
+						"id": "my-lens",
+						"type": "workspace-filter",
+						"title": "Show",
+						"showTitle": false,
+						"content": {
+							"layout": "bar",
+							"controls": [
+								{
+									"style": "chips",
+									"label": "Show",
+									"writes": "@workspace.lens",
+									"urlKey": "lens",
+									"default": "all",
+									"options": [
+										{
+											"value": "all",
+											"label": "All",
+											"countFrom": [
+												{
+													"register": "pipelinq",
+													"schema": "ticket",
+													"filter": {
+														"assignee": "@me",
+														"status": {
+															"notIn": [
+																"resolved",
+																"completed",
+																"rejected",
+																"converted",
+																"closed"
+															]
+														}
+													}
+												},
+												{
+													"register": "pipelinq",
+													"schema": "lead",
+													"filter": {
+														"assignee": "@me",
+														"status": "open"
+													}
+												},
+												{
+													"register": "pipelinq",
+													"schema": "crmTask",
+													"filter": {
+														"assigneeUserId": "@me",
+														"status": "open"
+													}
+												}
+											]
+										},
+										{
+											"value": "tickets",
+											"label": "Tickets",
+											"countFrom": {
+												"register": "pipelinq",
+												"schema": "ticket",
+												"filter": {
+													"assignee": "@me",
+													"status": {
+														"notIn": [
+															"resolved",
+															"completed",
+															"rejected",
+															"converted",
+															"closed"
+														]
+													}
+												}
+											}
+										},
+										{
+											"value": "leads",
+											"label": "Leads",
+											"countFrom": {
+												"register": "pipelinq",
+												"schema": "lead",
+												"filter": {
+													"assignee": "@me",
+													"status": "open"
+												}
+											}
+										},
+										{
+											"value": "tasks",
+											"label": "Follow-ups",
+											"countFrom": {
+												"register": "pipelinq",
+												"schema": "crmTask",
+												"filter": {
+													"assigneeUserId": "@me",
+													"status": "open"
+												}
+											}
+										}
+									]
+								},
+								{
+									"style": "toggle",
+									"label": "Show completed",
+									"writes": "@workspace.showDone",
+									"urlKey": "done",
+									"align": "end"
+								},
+								{
+									"style": "select",
+									"label": "Sorting",
+									"writes": "@workspace.sort",
+									"urlKey": "sort",
+									"default": "deadline",
+									"options": [
+										{
+											"value": "deadline",
+											"label": "Deadline first"
+										},
+										{
+											"value": "waiting",
+											"label": "Waiting longest first"
+										},
+										{
+											"value": "newest",
+											"label": "Newest first"
+										}
+									]
+								}
+							]
+						}
+					},
 					{
 						"id": "my-open-tickets",
 						"type": "stat",
 						"title": "Open on me",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
 						"content": {
 							"label": "Open on me",
 							"caption": "tickets assigned to you",
@@ -5239,6 +5379,14 @@
 						"id": "my-answered-week",
 						"type": "stat",
 						"title": "Answered this week",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
 						"content": {
 							"label": "Answered this week",
 							"caption": "resolved or completed in 7 days",
@@ -5268,6 +5416,14 @@
 						"id": "my-converted-week",
 						"type": "stat",
 						"title": "Turned into a case",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
 						"content": {
 							"label": "Turned into a case",
 							"caption": "converted in 7 days",
@@ -5289,9 +5445,100 @@
 						}
 					},
 					{
+						"id": "my-avg-answer",
+						"type": "stat",
+						"title": "Average answer time",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
+						"content": {
+							"label": "Average answer time",
+							"caption": "agreement: 2 working days",
+							"icon": "TimerOutline",
+							"format": {
+								"style": "decimal",
+								"decimals": 1,
+								"suffix": " days"
+							},
+							"source": {
+								"kind": "elapsed",
+								"register": "pipelinq",
+								"schema": "ticket",
+								"from": "occurredAt",
+								"to": "resolvedAt",
+								"unit": "days",
+								"filter": {
+									"assignee": "@me",
+									"status": {
+										"in": [
+											"resolved",
+											"completed"
+										]
+									},
+									"resolvedAt[gte]": "@today-30d"
+								}
+							}
+						}
+					},
+					{
+						"id": "my-start-here",
+						"type": "banner",
+						"title": "Start here",
+						"showTitle": false,
+						"content": {
+							"layout": "attention",
+							"stacked": true,
+							"variant": "info",
+							"kicker": "Start here",
+							"title": "{subject.title}",
+							"reason": "This ticket has waited {subject.occurredAt|days} days. The agreement is an answer within 2 working days.",
+							"visibleWhen": {
+								"source": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"filter": {
+										"assignee": "@me",
+										"status": "in_progress",
+										"slaDeadline[lt]": "@today+1d"
+									},
+									"order": {
+										"slaDeadline": "asc"
+									}
+								},
+								"field": "id",
+								"op": "notEmpty"
+							},
+							"actions": [
+								{
+									"label": "Answer now",
+									"route": {
+										"name": "TicketDetail",
+										"params": {
+											"id": "@subject.id"
+										}
+									},
+									"primary": true
+								}
+							]
+						}
+					},
+					{
 						"id": "my-answer-today",
 						"type": "record-list",
 						"title": "Answer today",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
 						"headerLink": {
 							"label": "View all my tickets",
 							"route": "Tickets",
@@ -5316,21 +5563,54 @@
 								"field": "slaDeadline",
 								"dir": "asc"
 							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "slaDeadline",
+											"dir": "asc"
+										},
+										"waiting": {
+											"field": "occurredAt",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "occurredAt",
+											"dir": "desc"
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
 							"limit": 5,
 							"presentation": "rows",
+							"extend": [
+								"client"
+							],
+							"avatar": "{client.name}",
 							"title": "{title}",
-							"meta": "{ticketType} · {channel}",
+							"meta": "{client.name} · {channel}",
 							"pill": {
 								"field": "status",
 								"labels": {
 									"new": "New",
 									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer"
+									"awaiting_customer": "Waiting for customer",
+									"resolved": "Resolved",
+									"completed": "Completed"
 								},
 								"colorMap": {
 									"new": "info",
 									"in_progress": "warning",
-									"awaiting_customer": "default"
+									"awaiting_customer": "default",
+									"resolved": "success",
+									"completed": "success"
 								}
 							},
 							"trailing": [
@@ -5338,13 +5618,21 @@
 								"Deadline {slaDeadline|date}"
 							],
 							"rowRoute": "TicketDetail",
-							"emptyText": "Nothing here."
+							"emptyText": "No tickets assigned to you"
 						}
 					},
 					{
 						"id": "my-waiting-on-me",
 						"type": "record-list",
 						"title": "Waiting on me",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
 						"headerLink": {
 							"label": "View all my tickets",
 							"route": "Tickets",
@@ -5368,21 +5656,54 @@
 								"field": "slaDeadline",
 								"dir": "asc"
 							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "slaDeadline",
+											"dir": "asc"
+										},
+										"waiting": {
+											"field": "occurredAt",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "occurredAt",
+											"dir": "desc"
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
 							"limit": 5,
 							"presentation": "rows",
+							"extend": [
+								"client"
+							],
+							"avatar": "{client.name}",
 							"title": "{title}",
-							"meta": "{ticketType} · {channel}",
+							"meta": "{client.name} · {channel}",
 							"pill": {
 								"field": "status",
 								"labels": {
 									"new": "New",
 									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer"
+									"awaiting_customer": "Waiting for customer",
+									"resolved": "Resolved",
+									"completed": "Completed"
 								},
 								"colorMap": {
 									"new": "info",
 									"in_progress": "warning",
-									"awaiting_customer": "default"
+									"awaiting_customer": "default",
+									"resolved": "success",
+									"completed": "success"
 								}
 							},
 							"trailing": [
@@ -5390,13 +5711,21 @@
 								"Deadline {slaDeadline|date}"
 							],
 							"rowRoute": "TicketDetail",
-							"emptyText": "Nothing here."
+							"emptyText": "No tickets assigned to you"
 						}
 					},
 					{
 						"id": "my-waiting-on-customer",
 						"type": "record-list",
 						"title": "Waiting on the customer",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
 						"headerLink": {
 							"label": "View all my tickets",
 							"route": "Tickets",
@@ -5415,21 +5744,48 @@
 								"field": "slaDeadline",
 								"dir": "asc"
 							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "slaDeadline",
+											"dir": "asc"
+										},
+										"waiting": {
+											"field": "occurredAt",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "occurredAt",
+											"dir": "desc"
+										}
+									}
+								}
+							},
 							"limit": 5,
 							"presentation": "rows",
+							"extend": [
+								"client"
+							],
+							"avatar": "{client.name}",
 							"title": "{title}",
-							"meta": "{ticketType} · {channel}",
+							"meta": "{client.name} · {channel}",
 							"pill": {
 								"field": "status",
 								"labels": {
 									"new": "New",
 									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer"
+									"awaiting_customer": "Waiting for customer",
+									"resolved": "Resolved",
+									"completed": "Completed"
 								},
 								"colorMap": {
 									"new": "info",
 									"in_progress": "warning",
-									"awaiting_customer": "default"
+									"awaiting_customer": "default",
+									"resolved": "success",
+									"completed": "success"
 								}
 							},
 							"trailing": [
@@ -5437,13 +5793,34 @@
 								"Deadline {slaDeadline|date}"
 							],
 							"rowRoute": "TicketDetail",
-							"emptyText": "Nothing here."
+							"emptyText": "No tickets assigned to you"
+						}
+					},
+					{
+						"id": "my-saved-views",
+						"type": "saved-views",
+						"title": "Saved views",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"route": "Tickets",
+							"showCounts": true,
+							"limit": 5,
+							"emptyText": "You have no saved views yet. Save a view on the tickets list."
 						}
 					},
 					{
 						"id": "my-leads",
 						"type": "record-list",
 						"title": "My leads",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"leads"
+							]
+						},
 						"headerLink": {
 							"label": "View all my leads",
 							"route": "Leads",
@@ -5462,21 +5839,56 @@
 								"field": "expectedCloseDate",
 								"dir": "asc"
 							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "expectedCloseDate",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "expectedCloseDate",
+											"dir": "desc"
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
 							"limit": 5,
 							"presentation": "rows",
+							"extend": [
+								"client",
+								"pipeline"
+							],
+							"avatar": "{client.name}",
 							"title": "{title}",
-							"meta": "{stage}",
+							"meta": "{client.name} · {pipeline.title} · {stage}",
 							"trailing": [
+								"€ {value}",
 								"Closing {expectedCloseDate|date}"
 							],
 							"rowRoute": "LeadDetail",
-							"emptyText": "No open leads."
+							"emptyText": "No leads assigned to you"
 						}
 					},
 					{
 						"id": "my-follow-ups",
 						"type": "record-list",
 						"title": "My follow-ups",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tasks"
+							]
+						},
 						"headerLink": {
 							"label": "View all my tasks",
 							"route": "Tasks",
@@ -5495,6 +5907,27 @@
 								"field": "deadline",
 								"dir": "asc"
 							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "deadline",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "deadline",
+											"dir": "desc"
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
 							"limit": 5,
 							"presentation": "rows",
 							"title": "{subject}",
@@ -5503,50 +5936,76 @@
 								"Deadline {deadline|date}"
 							],
 							"rowRoute": "TaskDetail",
-							"emptyText": "No open follow-ups."
+							"emptyText": "No follow-ups assigned to you"
 						}
 					}
 				],
 				"layout": [
 					{
-						"id": "1",
-						"widgetId": "my-answer-today",
+						"id": "0",
+						"widgetId": "my-lens",
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 5
+						"gridHeight": 1,
+						"sizeToContent": true
+					},
+					{
+						"id": "1",
+						"widgetId": "my-answer-today",
+						"gridX": 0,
+						"gridY": 1,
+						"gridWidth": 8,
+						"gridHeight": 4
 					},
 					{
 						"id": "2",
-						"widgetId": "my-waiting-on-me",
-						"gridX": 0,
-						"gridY": 5,
-						"gridWidth": 12,
-						"gridHeight": 5
+						"widgetId": "my-start-here",
+						"gridX": 8,
+						"gridY": 1,
+						"gridWidth": 4,
+						"gridHeight": 3,
+						"sizeToContent": true
 					},
 					{
 						"id": "3",
-						"widgetId": "my-waiting-on-customer",
-						"gridX": 0,
-						"gridY": 10,
-						"gridWidth": 12,
-						"gridHeight": 5
+						"widgetId": "my-saved-views",
+						"gridX": 8,
+						"gridY": 4,
+						"gridWidth": 4,
+						"gridHeight": 3
 					},
 					{
 						"id": "4",
-						"widgetId": "my-leads",
+						"widgetId": "my-waiting-on-me",
 						"gridX": 0,
-						"gridY": 15,
-						"gridWidth": 6,
-						"gridHeight": 5
+						"gridY": 5,
+						"gridWidth": 8,
+						"gridHeight": 4
 					},
 					{
 						"id": "5",
+						"widgetId": "my-waiting-on-customer",
+						"gridX": 0,
+						"gridY": 9,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": "6",
+						"widgetId": "my-leads",
+						"gridX": 0,
+						"gridY": 13,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": "7",
 						"widgetId": "my-follow-ups",
 						"gridX": 6,
-						"gridY": 15,
+						"gridY": 13,
 						"gridWidth": 6,
-						"gridHeight": 5
+						"gridHeight": 4
 					}
 				]
 			}

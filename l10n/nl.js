@@ -7525,7 +7525,20 @@ OC.L10N.register(
         "Formal decisions on this ticket, made and signed in decidiq": "Formele besluiten over dit ticket, genomen en ondertekend in decidiq",
         "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "Een besluit kun je direct vanuit dit ticket voorbereiden als voorstel in decidiq, of het verzoek wordt eerst een zaak in dossiq. Hoe dan ook staat het besluit hier.",
         "On this ticket": "Over dit ticket",
-        "Ticket panels": "Ticketpanelen"
+        "Ticket panels": "Ticketpanelen",
+        " days": " dagen",
+        "Answer now": "Nu beantwoorden",
+        "Average answer time": "Gemiddelde antwoordtijd",
+        "Deadline first": "Termijn eerst",
+        "Newest first": "Nieuwste eerst",
+        "Saved views": "Opgeslagen weergaven",
+        "Sorting": "Sortering",
+        "Start here": "Begin hier",
+        "This ticket has waited {subject.occurredAt|days} days. The agreement is an answer within 2 working days.": "Dit ticket wacht al {subject.occurredAt|days} dagen. De afspraak is een antwoord binnen 2 werkdagen.",
+        "Waiting longest first": "Langst wachtend eerst",
+        "You have no saved views yet. Save a view on the tickets list.": "Je hebt nog geen opgeslagen weergaven. Sla een weergave op in de ticketlijst.",
+        "agreement: 2 working days": "afspraak 2 werkdagen",
+        "€ {value}": "€ {value}"
     },
     "nplurals=2; plural=(n != 1);"
 )
