@@ -2342,7 +2342,11 @@ OC.L10N.register(
         "On this ticket": "Sobre este ticket",
         "Ticket panels": "Paneles del ticket",
         "Ticket details": "Detalles del ticket",
-        "Decisions": "Decisiones"
+        "Decisions": "Decisiones",
+        "You have an unsaved contact moment from {time}.": "Tiene un contacto sin guardar de {time}.",
+        "Restore draft": "Restaurar borrador",
+        "Discard": "Descartar",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Su sesión ha caducado. Inicie sesión de nuevo en una pestaña nueva y luego pulse Guardar aquí."
     },
     "nplurals=2; plural=(n != 1);"
 )

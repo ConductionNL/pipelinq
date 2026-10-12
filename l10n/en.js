@@ -7590,7 +7590,11 @@ OC.L10N.register(
         "Formal decisions on this ticket, made and signed in decidiq": "Formal decisions on this ticket, made and signed in decidiq",
         "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.",
         "On this ticket": "On this ticket",
-        "Ticket panels": "Ticket panels"
+        "Ticket panels": "Ticket panels",
+        "You have an unsaved contact moment from {time}.": "You have an unsaved contact moment from {time}.",
+        "Restore draft": "Restore draft",
+        "Discard": "Discard",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Your session has ended. Log in again in a new tab, then press Save here."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -7525,6 +7525,10 @@
         "Formal decisions on this ticket, made and signed in decidiq": "Formele besluiten over dit ticket, genomen en ondertekend in decidiq",
         "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "Een besluit kun je direct vanuit dit ticket voorbereiden als voorstel in decidiq, of het verzoek wordt eerst een zaak in dossiq. Hoe dan ook staat het besluit hier.",
         "On this ticket": "Over dit ticket",
-        "Ticket panels": "Ticketpanelen"
+        "Ticket panels": "Ticketpanelen",
+        "You have an unsaved contact moment from {time}.": "Je hebt een contactmoment van {time} dat nog niet is opgeslagen.",
+        "Restore draft": "Concept terugzetten",
+        "Discard": "Weggooien",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Je sessie is verlopen. Log opnieuw in op een nieuw tabblad en klik daarna hier op Opslaan."
     }
 }
