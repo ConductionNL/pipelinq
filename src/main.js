@@ -52,7 +52,7 @@ import {
 	MODULES_SETTING,
 	resolveMenuModules,
 } from './utils/menuModules.js'
-import { seedPageAppConfig } from './utils/pageAppConfig.js'
+import { pageAppConfig, seedPageAppConfig } from './utils/pageAppConfig.js'
 import {
 	buildProfiledManifest,
 	navTheming,
@@ -179,8 +179,9 @@ const { manifest: profiledManifest, homePage } = applyHomePage(
 // The getting-started tour sends the reader to menu entries the simple menu
 // does not have, so it is held back there. The full structure keeps it.
 // Dashboard and detail pages read `@config.<key>` tokens (the reporting
-// currency, the pipeline target) from the `config` initial state; the VAT
-// class labels follow the rates set on the admin page.
+// currency, the pipeline target) from the `config` initial state, and where
+// the installed case app keeps its cases from `case_target`; the VAT class
+// labels follow the rates set on the admin page.
 // An object-list widget's Add button text stays English source text in the
 // manifest: CnObjectListWidget translates it through the app's translate.
 const mergedManifest = seedVatClassLabels(
@@ -188,7 +189,10 @@ const mergedManifest = seedVatClassLabels(
 		structureProfile === STRUCTURE_FULL
 			? profiledManifest
 			: holdUnreachableTours(profiledManifest),
-		loadState('pipelinq', 'config', {}),
+		pageAppConfig(
+			loadState('pipelinq', 'config', {}),
+			loadState('pipelinq', 'case_target', {}),
+		),
 	),
 	loadState('pipelinq', 'config', {}).vat_rates,
 	(text) => t('pipelinq', text),

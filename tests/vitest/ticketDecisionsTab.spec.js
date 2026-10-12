@@ -14,9 +14,12 @@
  */
 
 import { mount } from '@vue/test-utils'
+import fs from 'fs'
+import path from 'path'
 import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 import manifest from '../../src/manifest.json'
+import { pageAppConfig } from '../../src/utils/pageAppConfig.js'
 
 vi.mock('@nextcloud/l10n', () => ({
 	translate: (app, text) => text,
@@ -80,13 +83,22 @@ describe('the ticket page declares a Decisions tab', () => {
 		const leaf = byId('ticket-case-decisions')
 		expect(leaf.type).toBe('integration')
 		expect(leaf.integrationId).toBe('decidesk-decisions')
-		// A token, so the host mounts nothing on a ticket without a case
+		// Tokens, so the host mounts nothing on a ticket without a case or on
+		// an instance without a case app
 		// (nextcloud-vue CnDetailWidgetHost.widgetPropTokens.spec.js).
 		expect(leaf.props).toEqual({
-			register: 'dossiq',
-			schema: 'case',
+			register: '@config.caseRegister',
+			schema: '@config.caseSchema',
 			objectId: '@object.caseReference',
 		})
+	})
+
+	it("names no other app's register or schema: the case app is looked up", () => {
+		// `caseReference` is app-agnostic (ADR-048), so the widget is too.
+		const leaf = byId('ticket-case-decisions')
+		for (const value of Object.values(leaf.props)) {
+			expect(value.charAt(0), value).toBe('@')
+		}
 	})
 
 	it('shows the decisions in one place: no cell of their own on the overview', () => {
@@ -108,6 +120,45 @@ describe('the ticket page declares a Decisions tab', () => {
 		)
 		expect([...placed, ...children].sort()).toEqual(
 			widgets.map((widget) => widget.id).sort(),
+		)
+	})
+})
+
+describe('where cases live reaches the page as app config', () => {
+	const config = { currency: 'EUR', pipelineTarget: 0 }
+
+	it("adds the installed case app's register and schema", () => {
+		expect(
+			pageAppConfig(config, {
+				caseRegister: 'cases',
+				caseSchema: 'case-file',
+			}),
+		).toEqual({ ...config, caseRegister: 'cases', caseSchema: 'case-file' })
+	})
+
+	it.each([
+		['no case app', {}],
+		['nothing at all', undefined],
+		['a register without a schema', { caseRegister: 'cases' }],
+		['an empty schema', { caseRegister: 'cases', caseSchema: '' }],
+		['a value that is no text', { caseRegister: 'cases', caseSchema: 7 }],
+	])('adds neither key with %s', (label, caseTarget) => {
+		expect(pageAppConfig(config, caseTarget)).toEqual(config)
+	})
+
+	it('does not let the config state stand in for the case target', () => {
+		expect(pageAppConfig({ ...config, caseRegister: 'left-over' }, {})).toEqual(
+			config,
+		)
+	})
+
+	it('hands main.js both states', () => {
+		const main = fs.readFileSync(
+			path.resolve(__dirname, '../../src/main.js'),
+			'utf8',
+		)
+		expect(main).toMatch(
+			/pageAppConfig\(\s*loadState\('pipelinq', 'config', \{\}\),\s*loadState\('pipelinq', 'case_target', \{\}\),\s*\)/,
 		)
 	})
 })

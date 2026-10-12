@@ -2723,10 +2723,10 @@
 						"integrationId": "decidesk-decisions",
 						"title": "On the linked case",
 						"icon": "Gavel",
-						"_note": "The decisions on the case this ticket became (REQ-TDT-002). The same decidiq leaf, mounted for the case: the host resolves `@object.caseReference` (nextcloud-vue#1520) and does not mount the widget on a ticket without a case. Register and schema are dossiq's case, which is what a created proposal is stamped with; the list itself only reads the id.",
+						"_note": "The decisions on the case this ticket became (REQ-TDT-002). The same decidiq leaf, mounted for the case: the host resolves the tokens (nextcloud-vue#1520) and does not mount the widget while one has no value, so a ticket without a case shows no second list. `caseReference` names no app (ADR-048), so neither does this widget: register and schema are whatever the installed case app answers, read on the server (DashboardController, `case_target`) and handed to the page as app config. A created proposal is stamped with them; the list itself only reads the id.",
 						"props": {
-							"register": "dossiq",
-							"schema": "case",
+							"register": "@config.caseRegister",
+							"schema": "@config.caseSchema",
 							"objectId": "@object.caseReference"
 						}
 					},
