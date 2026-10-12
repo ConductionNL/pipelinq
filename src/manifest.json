@@ -2416,49 +2416,9 @@
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "client-summary-open-tickets",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2
-					},
-					{
-						"id": "2",
-						"widgetId": "client-summary-new-requests",
-						"gridX": 3,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "3",
-						"widgetId": "client-summary-sla-breached",
-						"gridX": 5,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "4",
-						"widgetId": "client-summary-sla-at-risk",
-						"gridX": 7,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "5",
-						"widgetId": "client-summary-last-activity",
-						"gridX": 9,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2
-					},
-					{
-						"id": "9",
 						"widgetId": "client-panels",
 						"gridX": 0,
-						"gridY": 2,
+						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
@@ -2627,7 +2587,8 @@
 					},
 					"variant": "purple"
 				},
-				"headerMeta": "{address}"
+				"headerMeta": "{address}",
+				"_kpiNote": "The five summary tiles (client-summary-*) are declared but not placed: the detail grid collapses to one column below 1000px of its own width and the side column leaves the body about 790px, so five tiles stacked into five full-width cards. They return when the library draws a KPI row beside a side column."
 			}
 		},
 		{
