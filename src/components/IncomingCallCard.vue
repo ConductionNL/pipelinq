@@ -204,6 +204,7 @@ export default {
 		/**
 		 * @return {object} The shared object store, used for live hints and for
 		 *   linking the call to the record the agent opens.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -211,6 +212,7 @@ export default {
 
 		/**
 		 * @return {boolean} Whether the card is on screen.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		cardShown() {
 			return (
@@ -222,6 +224,7 @@ export default {
 
 		/**
 		 * @return {object|null} The one matched caller, unless the agent rejected it.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		singleMatch() {
 			if (this.rejected || !this.pop || this.pop.action !== 'navigate') {
@@ -232,6 +235,7 @@ export default {
 
 		/**
 		 * @return {boolean} Whether more than one record matched.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		manyMatches() {
 			return (
@@ -247,6 +251,7 @@ export default {
 		 * when the platform reported it.
 		 *
 		 * @return {string} The summary.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		lineSummary() {
 			const parts = [(this.pop && this.pop.rawNumber) || this.call.fromNumber]
@@ -267,6 +272,7 @@ export default {
 
 		/**
 		 * @return {string} Time since the call started, as m:ss.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		elapsed() {
 			const started = Date.parse(this.call.startedAt)
@@ -278,6 +284,7 @@ export default {
 
 		/**
 		 * @return {number} The store's last live event, watched as a refetch hint.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		liveLastEventAt() {
 			return this.objectStore.liveLastEventAt
@@ -285,6 +292,9 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+		 */
 		liveLastEventAt() {
 			if (this.active) {
 				this.refresh()
@@ -299,6 +309,9 @@ export default {
 		this.refresh()
 	},
 
+	/**
+	 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+	 */
 	beforeUnmount() {
 		this.destroyed = true
 		this.stop()
@@ -389,6 +402,8 @@ export default {
 		/**
 		 * Start watching once: live events on tickets as a hint, and a slow
 		 * poll for an instance without live updates.
+		 *
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		async watch() {
 			if (this.active) {
@@ -413,6 +428,8 @@ export default {
 
 		/**
 		 * Stop watching and clear the card.
+		 *
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		stop() {
 			this.active = false
@@ -427,6 +444,8 @@ export default {
 
 		/**
 		 * Forget the current call and everything shown for it.
+		 *
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		clearCall() {
 			clearInterval(this.tickTimer)
@@ -443,6 +462,8 @@ export default {
 
 		/**
 		 * Close the card for this call. The next call shows again.
+		 *
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		dismiss() {
 			this.handledCallId = this.call.id
@@ -450,6 +471,8 @@ export default {
 
 		/**
 		 * From the chooser to the new-contact form.
+		 *
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		openIntake() {
 			this.chooserOpen = false
@@ -544,6 +567,7 @@ export default {
 		/**
 		 * @param {object} match A matched client or contact.
 		 * @return {string} The name to show.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		displayName(match) {
 			return (
@@ -557,6 +581,7 @@ export default {
 		/**
 		 * @param {object} match A matched client or contact.
 		 * @return {string} Up to two initials for the avatar.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		initials(match) {
 			return this.displayName(match)
@@ -575,6 +600,7 @@ export default {
 		 *
 		 * @param {object} match A matched client or contact.
 		 * @return {string} The line, or ''.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		matchLine(match) {
 			const preferred =
