@@ -176,7 +176,14 @@ describe('callers', () => {
 		expect(widgets('ClientDetail')).toEqual(
 			expect.arrayContaining(['ContactLinks', 'LogVisitAction']),
 		)
-		expect(widgets('ContactDetail')).toContain('ContactLinks')
+		// The contact person page calls and mails from its header instead
+		// (PqContactpersoon on the shared relation frame): tel: and mailto:
+		// links, quick actions, so a phone still reaches them in one tap.
+		const contact = pages.find((p) => p.id === 'ContactDetail').config
+		const targets = contact.headerActions
+			.filter((a) => contact.quickActions.includes(a.id))
+			.map((a) => a.target)
+		expect(targets).toEqual(['tel:@object.phone', 'mailto:@object.email'])
 		expect(pages.find((p) => p.id === 'LeadDetail').actionsComponent).toBe(
 			'LogVisitAction',
 		)

@@ -329,7 +329,6 @@ import SocialPostFormView from './views/social/SocialPostFormView.vue'
 import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
-import WerkplekContactStart from './views/werkplek/widgets/WerkplekContactStart.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 import ContactAwareObjectListWidget from './components/widgets/ContactAwareObjectListWidget.js'
 import { sectionWidget } from './components/widgets/sectionWidget.js'
@@ -892,6 +891,7 @@ const registry = {
 				entityType: content.entityType || 'contact',
 				entityName: objectData.name || '',
 			}),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
 		_note: 'ContactRelationships as a grid widget: entityId from the page object, entityType from content (default contact).',
@@ -905,6 +905,7 @@ const registry = {
 				entityId: objectId,
 				entityType: content.entityType || 'contact',
 			}),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
 		_note: 'ContactChannelsSection as a grid widget.',
@@ -918,6 +919,7 @@ const registry = {
 				entityId: objectId,
 				entityType: content.entityType || 'contact',
 			}),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
 		_note: 'MessagingConversationSection as a grid widget.',
@@ -930,6 +932,7 @@ const registry = {
 			({ objectId }) => ({
 				contactId: objectId,
 			}),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
 		_note: 'SubscriptionsSection bound to the page contact, as a grid widget.',
@@ -1190,13 +1193,6 @@ const registry = {
 		component: WerkplekClientSelect,
 		...HEADER_ACTIONS_META,
 		_note: 'Workspace title-meta slot: the client in focus, written to @workspace.selectedClient.',
-	},
-
-	WerkplekContactStart: {
-		kind: 'widget',
-		component: WerkplekContactStart,
-		...HEADER_ACTIONS_META,
-		_note: 'Contact centre dashboard: the Start a contact card around the client in focus picker.',
 	},
 
 	// --- xWiki integration (xwiki-integration). ---
