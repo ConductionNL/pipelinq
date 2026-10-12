@@ -3,8 +3,8 @@
 ## 1. The call on my line
 - [x] 1.1 `GET /api/cti/incoming-call` answers `{enabled, delayMs, call}` for the signed-in agent
   - spec_ref: `openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012`
-  - Built: `lib/Service/Cti/IncomingCallFinder.php`, `CtiController::incomingCall()`, route in `appinfo/routes.php`. `TicketService::findByType()` takes an optional order, so the finder reads the agent's five newest telephone contact moments and not their whole history.
-  - Tests: `tests/Unit/Service/Cti/IncomingCallFinderTest.php` (no platform and a switched-off screen pop read no ticket; ended, stale, outbound and a colleague's call are not incoming; the fields it filters on exist in the composed ticket schema, with a control), `CtiControllerTest` (the uid is the session's, 401, 403), `TicketServiceTest` (the order reaches the store; without one the query is unchanged).
+  - Built: `lib/Service/Cti/IncomingCallFinder.php`, `IncomingCallController::show()` (its own controller: `CtiController` is at its complexity limit), route in `appinfo/routes.php`. `TicketService::findByType()` takes an optional order, so the finder reads the agent's five newest telephone contact moments and not their whole history.
+  - Tests: `tests/Unit/Service/Cti/IncomingCallFinderTest.php` (no platform and a switched-off screen pop read no ticket; ended, stale, outbound and a colleague's call are not incoming; the fields it filters on exist in the composed ticket schema, with a control), `IncomingCallControllerTest` (the route names the method, the uid is the session's, 401, 403), `TicketServiceTest` (the order reaches the store; without one the query is unchanged).
 
 ## 2. The card
 - [x] 2.1 `src/components/IncomingCallCard.vue`, mounted in `src/App.vue`: number, queue, line and a timer; one match, several matches or none

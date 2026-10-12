@@ -69,7 +69,7 @@ report no error.
 - GIVEN a call rings on the line of agent Noor
 - WHEN agent Daan has pipelinq open
 - THEN Daan sees no card
-- @e2e exclude a server rule with no screen of its own: the endpoint reads the uid from the session and the finder checks the assignee again on every row; covered by `CtiControllerTest::testIncomingCallAsksAboutTheSignedInAgent` and `IncomingCallFinderTest::testEndedStaleAndForeignCallsAreNotIncoming`
+- @e2e exclude a server rule with no screen of its own: the endpoint reads the uid from the session and the finder checks the assignee again on every row; covered by `IncomingCallControllerTest::testTheSignedInAgentIsAskedAbout` and `IncomingCallFinderTest::testEndedStaleAndForeignCallsAreNotIncoming`
 
 #### Scenario: The card goes when the call ends or the agent closes it
 
