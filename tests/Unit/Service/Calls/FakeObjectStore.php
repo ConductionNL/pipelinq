@@ -23,11 +23,64 @@ class FakeObjectStore {
 	public array $rows = [];
 
 	/**
-	 * Every call that did not run in system context.
+	 * Every call: what it did, on which schema, with which access flags, and who was acting.
 	 *
-	 * @var array<int, string>
+	 * @var array<int, array{op: string, schema: string, rbac: bool, multitenancy: bool, as: string|null}>
 	 */
-	public array $userContextCalls = [];
+	public array $calls = [];
+
+	/**
+	 * Answers who is acting when a call arrives; null means nobody is asked.
+	 *
+	 * @var \Closure|null
+	 */
+	public ?\Closure $acting = null;
+
+	/**
+	 * When set, a call with access checks on by anybody else is refused, as OpenRegister would.
+	 *
+	 * @var string|null
+	 */
+	public ?string $onlyFor = null;
+
+	/**
+	 * Keep one call.
+	 *
+	 * @param string $op The operation.
+	 * @param string $schema The schema.
+	 * @param bool $rbac Whether access checks are on.
+	 * @param bool $multitenancy Whether the tenant filter is on.
+	 *
+	 * @return void
+	 */
+	private function record(string $op, string $schema, bool $rbac, bool $multitenancy): void {
+		$as = null;
+		if ($this->acting !== null) {
+			$as = ($this->acting)();
+		}
+
+		$this->calls[] = ['op' => $op, 'schema' => $schema, 'rbac' => $rbac, 'multitenancy' => $multitenancy, 'as' => $as];
+		if ($rbac === true && $this->onlyFor !== null && $as !== $this->onlyFor) {
+			throw new \RuntimeException('Access denied: ' . $op . ' on ' . $schema . ' as ' . ($as ?? 'nobody'));
+		}
+	}//end record()
+
+	/**
+	 * The calls of one kind.
+	 *
+	 * @param string $op The operation.
+	 * @param string|null $schema Only this schema, or every schema.
+	 *
+	 * @return array<int, array{op: string, schema: string, rbac: bool, multitenancy: bool, as: string|null}>
+	 */
+	public function callsOf(string $op, ?string $schema = null): array {
+		return array_values(
+			array_filter(
+				$this->calls,
+				static fn (array $call): bool => $call['op'] === $op && ($schema === null || $call['schema'] === $schema)
+			)
+		);
+	}//end callsOf()
 
 	/**
 	 * Ids removed, with whether the removal was permanent.
@@ -51,9 +104,7 @@ class FakeObjectStore {
 	 * @return array<int, array<string, mixed>>
 	 */
 	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
-		if ($_rbac === true || $_multitenancy === true) {
-			$this->userContextCalls[] = 'findAll';
-		}
+		$this->record(op: 'findAll', schema: (string)($config['filters']['schema'] ?? ''), rbac: $_rbac, multitenancy: $_multitenancy);
 
 		$filters = ($config['filters'] ?? []);
 		$out = [];
@@ -101,9 +152,7 @@ class FakeObjectStore {
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 	): array {
-		if ($_rbac === true || $_multitenancy === true) {
-			$this->userContextCalls[] = 'saveObject';
-		}
+		$this->record(op: 'saveObject', schema: (string)$schema, rbac: $_rbac, multitenancy: $_multitenancy);
 
 		$id = ($uuid ?? ('row-' . (count($this->rows) + 1)));
 		$this->rows[$id] = array_merge($object, ['id' => $id, '_schema' => $schema]);
@@ -131,9 +180,7 @@ class FakeObjectStore {
 		bool $_multitenancy = true,
 		bool $permanent = false,
 	): bool {
-		if ($_rbac === true || $_multitenancy === true) {
-			$this->userContextCalls[] = 'deleteObject';
-		}
+		$this->record(op: 'deleteObject', schema: (string)$schema, rbac: $_rbac, multitenancy: $_multitenancy);
 
 		unset($this->rows[$uuid]);
 		$this->deleted[$uuid] = $permanent;

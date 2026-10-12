@@ -207,6 +207,33 @@ Explicitly not done, so a future task doesn't reach for it by habit:
   converge onto one surface is explicitly left open (Motivation). Nothing
   in this design forecloses it; nothing in it assumes it either.
 
+## Who the mirror writes as (12 October 2026, review of #2458)
+
+The first build wrote and deleted with `_rbac: false`, on the ground that a
+call arrives with no user. That path starts at a public, signed webhook in
+integriq, so it is the shape this fleet has been burned by. The mirror now
+acts as a background service account, the model pipelinq already uses for
+the portal and for SMS and WhatsApp webhooks (`ServiceAccount`): an admin
+picks a Nextcloud account, it joins `pipelinq-background-service`, and the
+`mirroredCall` schema grants that group create, read and delete and nobody
+else anything. With no usable account nothing is mirrored and the log and
+the administration overview say so.
+
+- Not `SystemServiceAccount` (`pipelinq-system`): it is created without an
+  admin choosing it and is in no group. Putting it in the group would hand
+  rights to an account no admin picked.
+- The tenant filter stays off on these calls (`_multitenancy: false`): the
+  mirror is one per instance, and a retention read scoped to the account's
+  active organisation would leave another organisation's rows, with their
+  phone numbers, past 30 days.
+- `CallerResolver` still reads clients, contacts and tickets without access
+  checks. The service account has rights on `mirroredCall` only, so a checked
+  read would find nobody. What it finds goes into the record and is returned
+  to no caller.
+- The acting-identity base is the same in dossiq and pipelinq (and the portal
+  and messaging accounts). It belongs in OpenRegister as one shared piece;
+  that is a follow-up, not part of this change.
+
 ## Risks / Trade-offs
 
 - The panel depends on `kcc-cti-adapter` shipping first; until then it has

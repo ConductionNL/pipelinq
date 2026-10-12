@@ -2347,7 +2347,6 @@ OC.L10N.register(
         "The name this person likes to be called, such as Jan for Johannes.": "Il nome con cui questa persona desidera essere chiamata, ad esempio Jan per Johannes.",
         "Mirrored call": "Chiamata replicata",
         "A call event from a telephony source, kept 30 days": "Un evento di chiamata da una fonte di telefonia, conservato 30 giorni",
-        "One row per call event that reached pipelinq: ringing, answered, ended or transferred. The row names who the caller is in pipelinq and what is open for them, resolved once when the event arrived. Rows are removed 30 days after they were written. No user reads this schema through the object API: a row holds a phone number.": "Una riga per ogni evento di chiamata arrivato in pipelinq: squilla, risposta, terminata o trasferita. La riga indica chi è il chiamante in pipelinq e cosa ha di aperto, risolto una volta all'arrivo dell'evento. Le righe vengono rimosse 30 giorni dopo la scrittura. Nessun utente legge questo schema tramite l'API degli oggetti: una riga contiene un numero di telefono.",
         "Call id": "Id chiamata",
         "The telephony source's identifier for the call. Every event of one call carries the same call id.": "L'identificativo della fonte di telefonia per la chiamata. Ogni evento di una chiamata porta lo stesso id.",
         "Kind": "Tipo",
@@ -2363,11 +2362,23 @@ OC.L10N.register(
         "Duration (seconds)": "Durata (secondi)",
         "How long the call lasted. 0 except on an ended event.": "Quanto è durata la chiamata. 0 tranne che per un evento di fine.",
         "Open cases": "Pratiche aperte",
-        "The case references the telephony source carried for the caller, as given.": "I riferimenti alle pratiche forniti dalla fonte di telefonia per il chiamante, così come sono.",
         "In pipelinq": "In pipelinq",
         "The clients and contacts that have the caller's number, each with their open tickets.": "I clienti e i contatti con il numero del chiamante, ciascuno con i propri ticket aperti.",
         "Mirrored at": "Replicata il",
-        "When pipelinq wrote this row. The 30 days count from here.": "Quando pipelinq ha scritto questa riga. I 30 giorni contano da qui."
+        "When pipelinq wrote this row. The 30 days count from here.": "Quando pipelinq ha scritto questa riga. I 30 giorni contano da qui.",
+        "One row per call event that reached pipelinq: ringing, answered, ended or transferred. The row names who the caller is in pipelinq and what is open for them, resolved once when the event arrived. Rows are removed 30 days after they were written. Only the Pipelinq background service account writes, reads and removes rows. No other user reads this schema: a row holds a phone number.": "Una riga per ogni evento di chiamata arrivato in pipelinq: squilla, risposta, terminata o trasferita. La riga indica chi è il chiamante in pipelinq e cosa ha di aperto, risolto una volta all'arrivo dell'evento. Le righe vengono rimosse 30 giorni dopo la scrittura. Solo l'account di servizio in background di Pipelinq scrive, legge e rimuove righe. Nessun altro utente legge questo schema: una riga contiene un numero di telefono.",
+        "The case references the telephony source carried for the caller: the reference and where it lives, nothing else.": "I riferimenti alle pratiche forniti dalla fonte di telefonia per il chiamante: il riferimento e dove si trova, nient'altro.",
+        "Background work": "Lavoro in background",
+        "Some work runs with nobody signed in, such as logging an incoming call. Pipelinq saves it as the account below.": "Alcuni lavori vengono eseguiti senza che nessuno abbia effettuato l'accesso, come la registrazione di una chiamata in arrivo nel registro. Pipelinq li salva con l'account qui sotto.",
+        "Background service account": "Account di servizio in background",
+        "Pipelinq logs each incoming call for 30 days, saved as this account. It joins the group {group}, which may only create, read and remove those call logs.": "Pipelinq annota ogni chiamata in arrivo per 30 giorni, salvata con questo account. Entra nel gruppo {group}, che può solo creare, leggere e rimuovere questi registri delle chiamate.",
+        "Until you choose one, incoming calls are not logged.": "Finché non ne scegli uno, le chiamate in arrivo non vengono annotate.",
+        "Incoming calls are now logged as {user}.": "Le chiamate in arrivo ora vengono annotate come {user}.",
+        "Could not load the background service account.": "Impossibile caricare l'account di servizio in background.",
+        "Could not save the background service account.": "Impossibile salvare l'account di servizio in background.",
+        "Pipelinq background service account": "Account di servizio in background di Pipelinq",
+        "Incoming calls are logged as %s.": "Le chiamate in arrivo vengono annotate come %s.",
+        "Until you choose one in the Pipelinq settings, incoming calls are not logged.": "Finché non ne scegli uno nelle impostazioni di Pipelinq, le chiamate in arrivo non vengono annotate."
     },
     "nplurals=2; plural=(n != 1);"
 )

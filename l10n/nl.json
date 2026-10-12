@@ -7530,7 +7530,6 @@
         "The name this person likes to be called, such as Jan for Johannes.": "De naam waarmee deze persoon aangesproken wil worden, zoals Jan voor Johannes.",
         "Mirrored call": "Gespiegeld gesprek",
         "A call event from a telephony source, kept 30 days": "Een gespreksgebeurtenis van een telefoniebron, 30 dagen bewaard",
-        "One row per call event that reached pipelinq: ringing, answered, ended or transferred. The row names who the caller is in pipelinq and what is open for them, resolved once when the event arrived. Rows are removed 30 days after they were written. No user reads this schema through the object API: a row holds a phone number.": "Eén regel per gespreksgebeurtenis die pipelinq bereikte: gaat over, opgenomen, beëindigd of doorverbonden. De regel noemt wie de beller in pipelinq is en wat er voor hen openstaat, één keer bepaald toen de gebeurtenis binnenkwam. Regels worden 30 dagen na het schrijven verwijderd. Geen gebruiker leest dit schema via de object-API: een regel bevat een telefoonnummer.",
         "Call id": "Gespreks-id",
         "The telephony source's identifier for the call. Every event of one call carries the same call id.": "Het kenmerk van de telefoniebron voor het gesprek. Elke gebeurtenis van één gesprek heeft hetzelfde gespreks-id.",
         "What happened to the call.": "Wat er met het gesprek gebeurde.",
@@ -7544,10 +7543,22 @@
         "Duration (seconds)": "Duur (seconden)",
         "How long the call lasted. 0 except on an ended event.": "Hoe lang het gesprek duurde. 0, behalve bij een beëindigd gesprek.",
         "Open cases": "Open zaken",
-        "The case references the telephony source carried for the caller, as given.": "De zaakverwijzingen die de telefoniebron voor de beller meegaf, ongewijzigd.",
         "In pipelinq": "In pipelinq",
         "The clients and contacts that have the caller's number, each with their open tickets.": "De klanten en contactpersonen met het nummer van de beller, elk met hun open tickets.",
         "Mirrored at": "Gespiegeld op",
-        "When pipelinq wrote this row. The 30 days count from here.": "Wanneer pipelinq deze regel schreef. De 30 dagen tellen vanaf hier."
+        "When pipelinq wrote this row. The 30 days count from here.": "Wanneer pipelinq deze regel schreef. De 30 dagen tellen vanaf hier.",
+        "One row per call event that reached pipelinq: ringing, answered, ended or transferred. The row names who the caller is in pipelinq and what is open for them, resolved once when the event arrived. Rows are removed 30 days after they were written. Only the Pipelinq background service account writes, reads and removes rows. No other user reads this schema: a row holds a phone number.": "Eén regel per gespreksgebeurtenis die pipelinq bereikte: gaat over, opgenomen, beëindigd of doorverbonden. De regel noemt wie de beller in pipelinq is en wat er voor hen openstaat, één keer bepaald toen de gebeurtenis binnenkwam. Regels worden 30 dagen na het schrijven verwijderd. Alleen het achtergrondaccount van Pipelinq schrijft, leest en verwijdert regels. Geen andere gebruiker leest dit schema: een regel bevat een telefoonnummer.",
+        "The case references the telephony source carried for the caller: the reference and where it lives, nothing else.": "De zaakverwijzingen die de telefoniebron voor de beller meegaf: de verwijzing en waar die staat, verder niets.",
+        "Background work": "Achtergrondwerk",
+        "Some work runs with nobody signed in, such as logging an incoming call. Pipelinq saves it as the account below.": "Sommig werk loopt zonder dat iemand is ingelogd, zoals het vastleggen van een inkomend gesprek. Pipelinq slaat het op als het account hieronder.",
+        "Background service account": "Achtergrondaccount",
+        "Pipelinq logs each incoming call for 30 days, saved as this account. It joins the group {group}, which may only create, read and remove those call logs.": "Pipelinq legt elk inkomend gesprek 30 dagen vast, opgeslagen als dit account. Het komt in de groep {group}, die alleen deze gespreksregels mag maken, lezen en verwijderen.",
+        "Until you choose one, incoming calls are not logged.": "Tot u er een kiest, worden inkomende gesprekken niet vastgelegd.",
+        "Incoming calls are now logged as {user}.": "Inkomende gesprekken worden nu vastgelegd als {user}.",
+        "Could not load the background service account.": "Het achtergrondaccount kon niet worden geladen.",
+        "Could not save the background service account.": "Het achtergrondaccount kon niet worden opgeslagen.",
+        "Pipelinq background service account": "Achtergrondaccount van Pipelinq",
+        "Incoming calls are logged as %s.": "Inkomende gesprekken worden vastgelegd als %s.",
+        "Until you choose one in the Pipelinq settings, incoming calls are not logged.": "Tot u er een kiest in de instellingen van Pipelinq, worden inkomende gesprekken niet vastgelegd."
     }
 }

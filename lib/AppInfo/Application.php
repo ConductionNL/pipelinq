@@ -199,6 +199,7 @@ class Application extends App implements IBootstrap {
 		$context->registerNotifierService(\OCA\Pipelinq\Notification\Notifier::class);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\PortalServiceAccountCheck::class);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\MessagingServiceAccountCheck::class);
+		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\BackgroundServiceAccountCheck::class);
 
 		$context->registerEventListener(
 			event: ObjectCreatedEvent::class,

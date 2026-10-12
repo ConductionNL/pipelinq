@@ -14,7 +14,7 @@
                 "icon": "PhoneLog",
                 "version": "1.0.0",
                 "summary": "A call event from a telephony source, kept 30 days",
-                "description": "One row per call event that reached pipelinq: ringing, answered, ended or transferred. The row names who the caller is in pipelinq and what is open for them, resolved once when the event arrived. Rows are removed 30 days after they were written. No user reads this schema through the object API: a row holds a phone number.",
+                "description": "One row per call event that reached pipelinq: ringing, answered, ended or transferred. The row names who the caller is in pipelinq and what is open for them, resolved once when the event arrived. Rows are removed 30 days after they were written. Only the Pipelinq background service account writes, reads and removes rows. No other user reads this schema: a row holds a phone number.",
                 "type": "object",
                 "required": [
                     "callId",
@@ -23,10 +23,16 @@
                     "mirroredAt"
                 ],
                 "authorization": {
-                    "create": [],
-                    "read": [],
+                    "create": [
+                        "pipelinq-background-service"
+                    ],
+                    "read": [
+                        "pipelinq-background-service"
+                    ],
                     "update": [],
-                    "delete": []
+                    "delete": [
+                        "pipelinq-background-service"
+                    ]
                 },
                 "properties": {
                     "callId": {
@@ -70,7 +76,7 @@
                         "type": "string",
                         "title": "Agent",
                         "description": "The agent the call is for, or empty.",
-                        "maxLength": 255
+                        "maxLength": 64
                     },
                     "at": {
                         "type": "string",
@@ -82,22 +88,80 @@
                         "type": "integer",
                         "title": "Duration (seconds)",
                         "description": "How long the call lasted. 0 except on an ended event.",
-                        "minimum": 0
+                        "minimum": 0,
+                        "maximum": 172800
                     },
                     "openCases": {
                         "type": "array",
                         "title": "Open cases",
-                        "description": "The case references the telephony source carried for the caller, as given.",
+                        "description": "The case references the telephony source carried for the caller: the reference and where it lives, nothing else.",
+                        "maxItems": 20,
                         "items": {
-                            "type": "object"
+                            "type": "object",
+                            "required": [
+                                "reference"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                                "reference": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 255
+                                },
+                                "source": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                }
+                            }
                         }
                     },
                     "inPipelinq": {
                         "type": "array",
                         "title": "In pipelinq",
                         "description": "The clients and contacts that have the caller's number, each with their open tickets.",
+                        "maxItems": 10,
                         "items": {
-                            "type": "object"
+                            "type": "object",
+                            "required": [
+                                "type",
+                                "id"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "client",
+                                        "contact"
+                                    ]
+                                },
+                                "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "openTickets": {
+                                    "type": "array",
+                                    "maxItems": 10,
+                                    "items": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "properties": {
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "title": {
+                                                "type": "string"
+                                            },
+                                            "status": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     },
                     "mirroredAt": {

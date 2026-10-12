@@ -315,6 +315,7 @@
 		<MessagingSettings v-if="isAdmin && isConfigured" />
 		<DeliverabilitySettings v-if="isAdmin && isConfigured" />
 		<CtiPage v-if="isAdmin && isConfigured" />
+		<BackgroundServiceAccountSettings v-if="isAdmin && isConfigured" />
 
 		<!-- Customer portal tenant config, accounts and audit trail
 		     (pipelinq#2041). Admin only, like the endpoints it calls. -->
@@ -371,6 +372,7 @@ import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vu
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
+import BackgroundServiceAccountSettings from './BackgroundServiceAccountSettings.vue'
 import CtiPage from './CtiPage.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
 import DeliverabilitySettings from './DeliverabilitySettings.vue'
@@ -415,6 +417,7 @@ export default {
 	name: 'PipelinqAdminSettings',
 	components: {
 		MessagingSettings,
+		BackgroundServiceAccountSettings,
 		DeliverabilitySettings,
 		CtiPage,
 		PaymentSettingsForm,

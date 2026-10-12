@@ -35,7 +35,9 @@ use Throwable;
  * The telephony adapter lives in integriq, which dispatches one typed event
  * per call event (`CtiEventIntake::dispatchFor()`). Both apps run in the same
  * Nextcloud, so the event arrives in process: no webhook, no shared secret and
- * no subscription to provision. The event class is named as a plain string and
+ * no subscription to provision. What the event says still comes from a
+ * telephony platform's webhook, so the mirror trusts none of it: it checks
+ * every field and writes as the background service account. The event class is named as a plain string and
  * read by its public properties, so pipelinq loads without integriq and
  * nothing fires when it is absent.
  *

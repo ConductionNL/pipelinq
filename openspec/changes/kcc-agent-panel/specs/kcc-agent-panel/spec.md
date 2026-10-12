@@ -27,9 +27,18 @@ E.164, together with that record's open `ticket` rows; and any OpenRegister
 row of a schema implementing `https://openregister.app/ns#Requester` or
 `.../ns#Customer` whose identifying-number field matches a number carried by
 `CallEvent.caller`. The resolved party itself SHALL NOT be stored, only its
-name. No user SHALL read a `mirroredCall` through the object API.
-`mirroredCall` rows SHALL be dropped by a scheduled job 30 days after they
-were written.
+name. The caller's number SHALL be stored once, in `callerNumber`, and
+nowhere else on the record. `mirroredCall` rows SHALL be dropped by a
+scheduled job 30 days after they were written.
+
+An event's fields come from a telephony platform's webhook and SHALL NOT be
+trusted. An event whose `callId`, `sourceId` or `kind` is empty, longer than
+the schema allows, not a known kind or carrying a control character SHALL be
+refused, not cut. Every other field SHALL be brought inside the bounds of
+the `mirroredCall` schema or left empty: a number that is not E.164, a
+moment that is not ISO 8601 and an agent that is not a user id are stored
+empty; of an open case only its reference and its source are kept, and at
+most 20 of them. One event SHALL write at most one record.
 
 #### Scenario: A ringing call is mirrored once
 
@@ -65,9 +74,74 @@ were written.
 - WHEN the retention job runs
 - THEN the record no longer exists
 
+#### Scenario: A hostile event stays inside the schema
+
+- GIVEN a `CallEvent` whose caller name carries control characters, whose
+  number is not E.164, and whose 200 open cases each carry a party beside
+  the reference
+- WHEN the event is mirrored
+- THEN one `mirroredCall` record is written that the `mirroredCall` schema
+  accepts, with an empty number, at most 20 open cases, and of each case
+  only its reference and source
+
+#### Scenario: A call id that cannot be a key is refused
+
+- GIVEN a `CallEvent` whose `callId` is longer than 255 characters
+- WHEN the event is mirrored
+- THEN no `mirroredCall` record is written and nothing is read
+
 @e2e exclude mirroring, idempotency and retention are backend-only; covered
-by PHPUnit on `CallMirror`, `CallerResolver`, `CallEventListener` and
-`CallMirrorRetentionJob`.
+by PHPUnit on `CallMirror`, `MirroredCallRow`, `CallerResolver`,
+`CallEventListener` and `CallMirrorRetentionJob`.
+
+### Requirement: The mirror writes as the background service account
+
+A call event arrives with no user signed in: it starts at a telephony
+platform's signed webhook. Pipelinq SHALL write, read back and remove
+`mirroredCall` records as one Nextcloud account an admin picks, the
+background service account, with OpenRegister's access checks on. The
+`mirroredCall` schema SHALL grant that account's group,
+`pipelinq-background-service`, create, read and delete, and SHALL grant
+nobody else anything; no other pipelinq schema SHALL name the group, and
+nobody may change a record. Without a usable account (none picked, unknown,
+disabled, or outside the group) the mirror SHALL read nothing, write nothing
+and remove nothing, and SHALL say so in the log; it SHALL NOT fall back to a
+write or delete without access checks. The lookup of which clients, contacts
+and open tickets have the caller's number is a read over the whole register
+without access checks; its result goes into the record only and is returned
+to no caller. An admin SHALL pick the account in the Pipelinq settings, and
+the administration overview SHALL warn while there is none.
+
+#### Scenario: A call is mirrored as the service account
+
+- GIVEN an admin picked `call-bot` as the background service account
+- WHEN a `ringing` `CallEvent` is mirrored
+- THEN the record is saved with access checks on while `call-bot` is the
+  acting user, and nobody is the acting user afterwards
+
+#### Scenario: Without a service account nothing is mirrored
+
+- GIVEN no background service account is picked
+- WHEN a `ringing` `CallEvent` is mirrored and the retention job runs
+- THEN no record is read, written or removed, and the log has a warning
+  that names the reason and the group
+
+#### Scenario: A refused write is not retried without access checks
+
+- GIVEN OpenRegister refuses the service account's write
+- WHEN a `CallEvent` is mirrored
+- THEN no record is written and no call to OpenRegister runs without access
+  checks
+
+#### Scenario: Only an admin picks the account
+
+- GIVEN a user who is not an admin
+- WHEN they read or save the background service account
+- THEN the answer is 403 and nothing changes
+
+@e2e exclude the acting identity is backend-only; covered by PHPUnit on
+`BackgroundServiceAccount`, `CallMirror`, `BackgroundServiceAccountController`,
+`BackgroundServiceAccountCheck` and `CreateBackgroundServiceGroup`.
 
 ### Requirement: The panel shows the caller and their open items
 

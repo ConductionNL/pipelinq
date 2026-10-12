@@ -13,8 +13,10 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Calls;
 
 use OCA\Pipelinq\Service\Calls\CallerResolver;
 use OCA\Pipelinq\Service\Calls\CallMirror;
+use OCA\Pipelinq\Service\Calls\MirroredCallRow;
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
 use OCA\Pipelinq\Service\PhoneNormaliser;
+use OCA\Pipelinq\Tests\Unit\Support\FakeBackgroundAccount;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Opis\JsonSchema\Validator;
@@ -34,7 +36,11 @@ require_once __DIR__ . '/FakeObjectStore.php';
  *
  * @covers \OCA\Pipelinq\Service\Calls\CallMirror
  * @covers \OCA\Pipelinq\Service\Calls\CallerResolver
+ * @covers \OCA\Pipelinq\Service\Calls\MirroredCallRow
  * @uses   \OCA\Pipelinq\Service\PhoneNormaliser
+ * @uses   \OCA\Pipelinq\Service\BackgroundServiceAccount
+ * @uses   \OCA\Pipelinq\Service\ServiceAccount
+ * @uses   \OCA\Pipelinq\Service\ServiceAccountUnavailableException
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
  *
  * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-a-call-event-is-mirrored-and-resolved-once
@@ -57,6 +63,13 @@ class CallMirrorTest extends TestCase {
 	 *
 	 * @var array<string, string>
 	 */
+	/**
+	 * The Nextcloud around the background service account.
+	 *
+	 * @var FakeBackgroundAccount
+	 */
+	private FakeBackgroundAccount $world;
+
 	private array $config = [
 		'register' => 'reg-1',
 		'mirroredCall_schema' => 'sch-call',
@@ -71,7 +84,11 @@ class CallMirrorTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
+		$this->world = (new FakeBackgroundAccount($this))->usable();
 		$this->store = new FakeObjectStore();
+		$this->store->acting = fn (): ?string => $this->world->actingUid();
+		// As OpenRegister: with access checks on, only the service account gets through.
+		$this->store->onlyFor = FakeBackgroundAccount::UID;
 	}//end setUp()
 
 	/**
@@ -92,6 +109,8 @@ class CallMirrorTest extends TestCase {
 			$appConfig,
 			$container,
 			new CallerResolver($appConfig, $container, new PhoneNormaliser($appConfig, $logger), $logger),
+			new MirroredCallRow(),
+			$this->world->account,
 			$logger,
 		);
 	}//end mirror()
@@ -171,7 +190,7 @@ class CallMirrorTest extends TestCase {
 		$this->assertSame('42', $row['callId']);
 		$this->assertSame('ringing', $row['kind']);
 		$this->assertSame(gmdate('Y-m-d\TH:i:s\Z', self::NOW), $row['mirroredAt']);
-		$this->assertSame([['reference' => 'ZAAK-2026-0001', 'source' => 'dossiq'], ['reference' => 'ZAAK-2026-0002']], $row['openCases']);
+		$this->assertSame([['reference' => 'ZAAK-2026-0001', 'source' => 'dossiq'], ['reference' => 'ZAAK-2026-0002', 'source' => '']], $row['openCases']);
 		$this->assertSame(
 			[
 				[
@@ -186,7 +205,27 @@ class CallMirrorTest extends TestCase {
 			],
 			$row['inPipelinq']
 		);
-		$this->assertSame([], $this->store->userContextCalls, 'Every read and write runs in system context.');
+
+		// The write and the repeat check ran with access checks ON, as the service account.
+		$this->assertSame(
+			[['op' => 'saveObject', 'schema' => 'sch-call', 'rbac' => true, 'multitenancy' => false, 'as' => FakeBackgroundAccount::UID]],
+			$this->store->callsOf(op: 'saveObject')
+		);
+		$this->assertSame(
+			[['op' => 'findAll', 'schema' => 'sch-call', 'rbac' => true, 'multitenancy' => false, 'as' => FakeBackgroundAccount::UID]],
+			$this->store->callsOf(op: 'findAll', schema: 'sch-call')
+		);
+		// Only reads go without access checks: the lookup of who has this number.
+		foreach ($this->store->calls as $call) {
+			if ($call['rbac'] === false) {
+				$this->assertSame('findAll', $call['op']);
+				$this->assertContains($call['schema'], ['sch-client', 'sch-contact', 'sch-ticket']);
+			}
+		}
+
+		// The caller of mirror() gets an id and nothing else, and nobody is left impersonated.
+		$this->assertIsString($id);
+		$this->assertNull($this->world->actingUid());
 	}//end testARingingCallIsMirroredWithTheCallerResolved()
 
 	/**
@@ -301,7 +340,7 @@ class CallMirrorTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willThrowException(new \RuntimeException('OpenRegister is not installed'));
 		$logger = new NullLogger();
-		$mirror = new CallMirror($appConfig, $container, new CallerResolver($appConfig, $container, new PhoneNormaliser($appConfig, $logger), $logger), $logger);
+		$mirror = new CallMirror($appConfig, $container, new CallerResolver($appConfig, $container, new PhoneNormaliser($appConfig, $logger), $logger), new MirroredCallRow(), $this->world->account, $logger);
 
 		$this->assertNull($mirror->mirror(call: $this->call()));
 		$this->assertSame(0, $mirror->purgeExpired(now: self::NOW));
@@ -328,7 +367,15 @@ class CallMirrorTest extends TestCase {
 		$this->assertSame(1, $removed);
 		$this->assertSame(['old' => true], $this->store->deleted, 'Only the old call goes, and permanently.');
 		$this->assertSame(['edge', 'new', 'undated', 'ticket'], array_keys($this->store->rows));
-		$this->assertSame([], $this->store->userContextCalls);
+		$this->assertSame(
+			[['op' => 'deleteObject', 'schema' => 'sch-call', 'rbac' => true, 'multitenancy' => false, 'as' => FakeBackgroundAccount::UID]],
+			$this->store->callsOf(op: 'deleteObject')
+		);
+		$this->assertSame(
+			[['op' => 'findAll', 'schema' => 'sch-call', 'rbac' => true, 'multitenancy' => false, 'as' => FakeBackgroundAccount::UID]],
+			$this->store->callsOf(op: 'findAll')
+		);
+		$this->assertNull($this->world->actingUid());
 	}//end testRetentionRemovesOnlyWhatIsPastThirtyDays()
 
 	/**
@@ -360,4 +407,172 @@ class CallMirrorTest extends TestCase {
 
 		$this->assertSame(['t-open', 't-new'], array_column($payload['inPipelinq'][0]['openTickets'], 'id'));
 	}//end testAnotherClientsTicketIsNeverListed()
+	/**
+	 * Without a usable service account the mirror reads nothing, writes nothing, removes nothing, and the log says why.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAServiceAccountTheMirrorDoesNothingAndSaysSo(): void {
+		$this->seedParties();
+		$old = gmdate('Y-m-d\TH:i:s\Z', (self::NOW - (90 * 86400)));
+		$this->store->rows['old'] = ['id' => 'old', '_schema' => 'sch-call', 'mirroredAt' => $old];
+		$before = $this->store->rows;
+		unset($this->world->config[\OCA\Pipelinq\Service\BackgroundServiceAccount::CONFIG_KEY]);
+		$mirror = $this->mirror();
+
+		$this->assertNull($mirror->mirror(call: $this->call(), now: self::NOW));
+		$this->assertSame(0, $mirror->purgeExpired(now: self::NOW));
+
+		$this->assertSame([], $this->store->calls, 'Not one call reaches OpenRegister, with or without access checks.');
+		$this->assertSame($before, $this->store->rows);
+		$this->assertCount(2, $this->world->logged);
+		foreach ($this->world->logged as [$level, $message, $context]) {
+			$this->assertSame('warning', $level);
+			$this->assertStringContainsString('no usable background service account', $message);
+			$this->assertSame('unset', $context['reason']);
+			$this->assertStringNotContainsString('+31612345678', json_encode([$message, $context]));
+		}
+	}//end testWithoutAServiceAccountTheMirrorDoesNothingAndSaysSo()
+
+	/**
+	 * Control for the test above: OpenRegister refusing the account costs the row, and nothing retries without checks.
+	 *
+	 * @return void
+	 */
+	public function testARefusedWriteIsNotRetriedWithoutAccessChecks(): void {
+		// The schema grants somebody else: the service account is refused, as an ungranted user is.
+		$this->store->onlyFor = 'somebody-else';
+
+		$this->assertNull($this->mirror()->mirror(call: $this->call(), now: self::NOW));
+
+		$this->assertSame([], $this->store->rows);
+		$this->assertSame([], $this->store->callsOf(op: 'saveObject'));
+		foreach ($this->store->calls as $call) {
+			$this->assertTrue($call['rbac'], 'After a refusal nothing runs without access checks.');
+		}
+	}//end testARefusedWriteIsNotRetriedWithoutAccessChecks()
+
+	/**
+	 * The schema grants the background service group create, read and delete, and grants nobody else anything.
+	 *
+	 * @return void
+	 */
+	public function testTheSchemaGrantsOnlyTheBackgroundServiceGroup(): void {
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 4));
+		$schemas = (new ConfigFileLoaderService($appManager))->loadConfigurationFile()['components']['schemas'];
+		$group = \OCA\Pipelinq\Service\BackgroundServiceAccount::GROUP;
+
+		$this->assertSame(
+			['create' => [$group], 'read' => [$group], 'update' => [], 'delete' => [$group]],
+			$schemas['mirroredCall']['authorization']
+		);
+
+		// Rights on the mirror only: no other schema of the composed register names the group.
+		foreach ($schemas as $slug => $schema) {
+			if ($slug !== 'mirroredCall') {
+				$this->assertStringNotContainsString($group, (string)json_encode(($schema['authorization'] ?? [])), $slug);
+			}
+		}
+	}//end testTheSchemaGrantsOnlyTheBackgroundServiceGroup()
+
+	/**
+	 * What a hostile event carries: each one is refused or lands inside the real schema's bounds.
+	 *
+	 * @return array<string, array{0: array<string, mixed>}>
+	 */
+	public static function hostileEvents(): array {
+		$long = str_repeat('x', 5000);
+		return [
+			'long text everywhere' => [['callerName' => $long, 'agentId' => $long, 'at' => $long, 'callerNumber' => '+' . str_repeat('3', 40)]],
+			'control characters in the name' => [['callerName' => "Sanne\x00\x1b[31m de\r\nVries"]],
+			'markup in the name' => [['callerName' => '<script>alert(1)</script>']],
+			'arrays where text belongs' => [['callerName' => ['a'], 'agentId' => ['b'], 'at' => ['c'], 'callerNumber' => ['+31612345678'], 'durationSeconds' => ['9']]],
+			'a number that is not E.164' => [['callerNumber' => "+31612345678\n+31600000000"]],
+			'a moment that is not a moment' => [['at' => '2026-13-45T99:99:99Z']],
+			'a negative and a huge duration' => [['durationSeconds' => -5]],
+			'a duration past two days' => [['durationSeconds' => PHP_INT_MAX]],
+			'a duration as text' => [['durationSeconds' => '1e9']],
+			'two hundred cases' => [['openCases' => array_fill(0, 200, ['reference' => 'ZAAK-1', 'source' => 'dossiq'])]],
+			'a party inside the cases' => [['openCases' => [['reference' => 'ZAAK-1', 'source' => 'dossiq', 'bsn' => '123456782', 'partij' => ['naam' => 'X']], ['bsn' => '123456782'], 42, null, ['reference' => $long]]]],
+			'an agent that is no user id' => [['agentId' => '../../admin<script>']],
+		];
+	}//end hostileEvents()
+
+	/**
+	 * A hostile event writes one row that the real schema accepts, bounded in every field.
+	 *
+	 * @param array<string, mixed> $overrides The hostile fields.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hostileEvents
+	 */
+	public function testAHostileEventStaysInsideTheRealSchema(array $overrides): void {
+		$this->seedParties();
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 4));
+		$fragment = (new ConfigFileLoaderService($appManager))->loadConfigurationFile()['components']['schemas']['mirroredCall'];
+		$schema = json_decode((string)json_encode(array_merge(array_intersect_key($fragment, array_flip(['type', 'required', 'properties'])), ['additionalProperties' => false])));
+
+		$id = $this->mirror()->mirror(call: $this->call($overrides), now: self::NOW);
+
+		$this->assertIsString($id);
+		$this->assertCount(1, $this->store->callsOf(op: 'saveObject'), 'One event writes one row.');
+		$row = $this->store->rows[$id];
+		unset($row['id'], $row['_schema']);
+		$result = (new Validator())->validate(json_decode((string)json_encode($row)), $schema);
+		$this->assertTrue($result->isValid(), 'The real schema refuses the row: ' . json_encode($row));
+
+		$this->assertLessThan(8000, strlen((string)json_encode($row)), 'A row has a bounded size.');
+		$this->assertLessThanOrEqual(MirroredCallRow::MAX_OPEN_CASES, count($row['openCases']));
+		$this->assertSame(0, preg_match('/\p{C}/u', $row['callerName']));
+		foreach ($row['openCases'] as $case) {
+			$this->assertSame(['reference', 'source'], array_keys($case), 'Only the reference and where it lives.');
+		}
+
+		$this->assertStringNotContainsString('123456782', (string)json_encode($row), 'No citizen service number is stored.');
+	}//end testAHostileEventStaysInsideTheRealSchema()
+
+	/**
+	 * The mirror's own bounds are the schema's: a change on one side turns this red.
+	 *
+	 * @return void
+	 */
+	public function testTheMirrorsBoundsAreTheSchemas(): void {
+		$properties = json_decode((string)json_encode($this->schema()->properties), true);
+
+		$this->assertSame(CallMirror::KINDS, $properties['kind']['enum']);
+		$this->assertSame(MirroredCallRow::MAX_TEXT, $properties['callId']['maxLength']);
+		$this->assertSame(MirroredCallRow::MAX_TEXT, $properties['sourceId']['maxLength']);
+		$this->assertSame(MirroredCallRow::MAX_TEXT, $properties['callerName']['maxLength']);
+		$this->assertSame(MirroredCallRow::MAX_TEXT, $properties['openCases']['items']['properties']['reference']['maxLength']);
+		$this->assertSame(MirroredCallRow::MAX_OPEN_CASES, $properties['openCases']['maxItems']);
+		$this->assertSame(MirroredCallRow::MAX_MATCHES, $properties['inPipelinq']['maxItems']);
+		$this->assertSame(MirroredCallRow::MAX_DURATION, $properties['durationSeconds']['maximum']);
+		$this->assertSame(64, $properties['agentId']['maxLength']);
+		$this->assertSame(64, $properties['at']['maxLength']);
+	}//end testTheMirrorsBoundsAreTheSchemas()
+
+	/**
+	 * A call id or source that cannot be a key is refused, never cut; the number is stored once.
+	 *
+	 * @return void
+	 */
+	public function testAKeyThatCannotBeAKeyIsRefusedAndTheNumberIsStoredOnce(): void {
+		$this->seedParties();
+		$mirror = $this->mirror();
+
+		$this->assertNull($mirror->mirror(call: $this->call(['callId' => str_repeat('9', 256)])));
+		$this->assertNull($mirror->mirror(call: $this->call(['callId' => "4\x1b2"])));
+		$this->assertNull($mirror->mirror(call: $this->call(['sourceId' => ['source-1']])));
+		$this->assertNull($mirror->mirror(call: $this->call(['kind' => ['ringing']])));
+		$this->assertSame([], $this->store->calls, 'A refused event reaches nothing.');
+
+		$id = $mirror->mirror(call: $this->call(), now: self::NOW);
+		$row = $this->store->rows[$id];
+		$this->assertSame('+31612345678', $row['callerNumber']);
+		$this->assertSame(1, substr_count((string)json_encode($row), '31612345678'), 'The number sits in callerNumber and nowhere else.');
+		$this->assertStringNotContainsString('06 12 34 56 78', (string)json_encode($row));
+	}//end testAKeyThatCannotBeAKeyIsRefusedAndTheNumberIsStoredOnce()
 }//end class

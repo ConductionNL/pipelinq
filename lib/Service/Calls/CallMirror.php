@@ -24,6 +24,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Calls;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\BackgroundServiceAccount;
+use OCA\Pipelinq\Service\ServiceAccountUnavailableException;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -36,17 +38,25 @@ use Throwable;
  * plain fields, so an adapter in another app and a future one in this app
  * write the same row.
  *
- * Rows are written, read and removed in system context: a call arrives with
- * no user signed in, and a row holds a phone number, so the schema lets no
- * user read it through the object API.
+ * A call arrives with no user signed in: it starts at a telephony platform's
+ * signed webhook in another app. Rows are written, read back and removed as
+ * the background service account, with OpenRegister's access checks on. The
+ * `mirroredCall` schema grants that account's group create, read and delete,
+ * and grants nobody else anything. Without a usable account the mirror writes
+ * nothing and removes nothing; it never switches the access checks off.
+ *
+ * What an event says comes from outside. Every field is checked against the
+ * bounds of the `mirroredCall` schema before the row is saved, and one event
+ * writes one row of a bounded size.
  *
  * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-a-call-event-is-mirrored-and-resolved-once
+ * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-the-mirror-writes-as-the-background-service-account
  */
 class CallMirror {
 	/**
 	 * What can happen to a call.
 	 */
-	public const KINDS = ['ringing', 'answered', 'ended', 'transferred'];
+	public const KINDS = MirroredCallRow::KINDS;
 
 	/**
 	 * How long a mirrored call is kept, in days.
@@ -64,12 +74,16 @@ class CallMirror {
 	 * @param IAppConfig $appConfig Reads which register and schema hold the mirror.
 	 * @param ContainerInterface $container Finds OpenRegister's object service at run time.
 	 * @param CallerResolver $resolver Resolves the caller once, when the row is written.
+	 * @param MirroredCallRow $row Brings an event's fields inside the schema's bounds.
+	 * @param BackgroundServiceAccount $account The account every write and removal runs as.
 	 * @param LoggerInterface $logger Logger. A caller's number MUST NOT be written here.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
 		private CallerResolver $resolver,
+		private MirroredCallRow $row,
+		private BackgroundServiceAccount $account,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -80,39 +94,45 @@ class CallMirror {
 	 * @param array<string, mixed> $call The event: callId, kind, callerNumber, callerName, openCases, agentId, sourceId, at, durationSeconds.
 	 * @param int|null $now Unix time the row is stamped with; null is the clock.
 	 *
-	 * @return string|null The row's id (the existing one on a repeat), or null when nothing could be written.
+	 * @return string|null The row's id (the existing one on a repeat), or null when nothing was written.
 	 *
 	 * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-a-call-event-is-mirrored-and-resolved-once
+	 * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-the-mirror-writes-as-the-background-service-account
 	 */
 	public function mirror(array $call, ?int $now = null): ?string {
-		$callId = trim((string)($call['callId'] ?? ''));
-		$kind = (string)($call['kind'] ?? '');
-		$sourceId = trim((string)($call['sourceId'] ?? ''));
 		[$register, $schema] = $this->location();
-		if ($callId === '' || $sourceId === '' || in_array($kind, self::KINDS, true) === false || $schema === '') {
+		$key = $this->row->key(call: $call);
+		if ($key === null || $schema === '') {
 			return null;
 		}
 
 		try {
-			$objects = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$key = ['callId' => $callId, 'kind' => $kind, 'sourceId' => $sourceId];
-			$existing = $this->existingId(objects: $objects, register: $register, schema: $schema, key: $key);
-			if ($existing !== null) {
-				return $existing;
-			}
+			// The account is asked for first: without one nothing is read either.
+			return $this->account->runAs(
+				operation: function () use ($call, $key, $register, $schema, $now): string {
+					$objects = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+					$existing = $this->existingId(objects: $objects, register: $register, schema: $schema, key: $key);
+					if ($existing !== null) {
+						return $existing;
+					}
 
-			$saved = $objects->saveObject(
-				object: $this->payload(call: $call, now: ($now ?? time())),
-				extend: [],
-				register: $register,
-				schema: $schema,
-				_rbac: false,
-				_multitenancy: false,
+					$saved = $objects->saveObject(
+						object: $this->payload(call: $call, now: ($now ?? time())),
+						extend: [],
+						register: $register,
+						schema: $schema,
+						_rbac: true,
+						_multitenancy: false,
+					);
+					$data = $this->toArray(row: $saved);
+					return (string)($data['id'] ?? ($data['uuid'] ?? ''));
+				}
 			);
-			$data = $this->toArray(row: $saved);
-			return (string)($data['id'] ?? ($data['uuid'] ?? ''));
+		} catch (ServiceAccountUnavailableException $e) {
+			// BackgroundServiceAccount::refuse() has logged why. Nothing was read or written.
+			return null;
 		} catch (Throwable $e) {
-			$this->logger->error('CallMirror: a call event is not mirrored', ['kind' => $kind, 'exception' => $e->getMessage()]);
+			$this->logger->error('CallMirror: a call event is not mirrored', ['kind' => $key['kind'], 'exception' => $e->getMessage()]);
 			return null;
 		}//end try
 	}//end mirror()
@@ -133,7 +153,7 @@ class CallMirror {
 				'filters' => array_merge(['register' => $register, 'schema' => $schema], $key),
 				'limit' => 1,
 			],
-			_rbac: false,
+			_rbac: true,
 			_multitenancy: false,
 		);
 		foreach ((array)$rows as $row) {
@@ -153,10 +173,7 @@ class CallMirror {
 	}//end existingId()
 
 	/**
-	 * The row written for one call event.
-	 *
-	 * The resolved party of another app is not stored: it can carry a citizen
-	 * service number, and the mirror needs a name to show, not an identifier.
+	 * The row written for one call event: the event's fields inside the schema's bounds, with the caller resolved.
 	 *
 	 * @param array<string, mixed> $call The event.
 	 * @param int $now Unix time.
@@ -166,33 +183,10 @@ class CallMirror {
 	 * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-a-call-event-is-mirrored-and-resolved-once
 	 */
 	public function payload(array $call, int $now): array {
-		$number = (string)($call['callerNumber'] ?? '');
-		if (preg_match('/^\+[1-9][0-9]{1,14}$/', $number) !== 1) {
-			$number = '';
-		}
+		$row = $this->row->build(call: $call, now: $now);
+		$row['inPipelinq'] = array_slice($this->resolver->inPipelinq(e164: $row['callerNumber']), 0, MirroredCallRow::MAX_MATCHES);
 
-		$openCases = [];
-		foreach ((array)($call['openCases'] ?? []) as $case) {
-			if (is_array($case) === true) {
-				$openCases[] = $case;
-			} else if (is_string($case) === true && $case !== '') {
-				$openCases[] = ['reference' => $case];
-			}
-		}
-
-		return [
-			'callId' => mb_substr(trim((string)$call['callId']), 0, 255),
-			'kind' => (string)$call['kind'],
-			'sourceId' => mb_substr(trim((string)$call['sourceId']), 0, 255),
-			'callerNumber' => $number,
-			'callerName' => mb_substr(trim((string)($call['callerName'] ?? '')), 0, 255),
-			'agentId' => mb_substr((string)($call['agentId'] ?? ''), 0, 255),
-			'at' => mb_substr((string)($call['at'] ?? ''), 0, 64),
-			'durationSeconds' => max(0, (int)($call['durationSeconds'] ?? 0)),
-			'openCases' => $openCases,
-			'inPipelinq' => $this->resolver->inPipelinq(e164: $number),
-			'mirroredAt' => gmdate('Y-m-d\TH:i:s\Z', $now),
-		];
+		return $row;
 	}//end payload()
 
 	/**
@@ -213,29 +207,36 @@ class CallMirror {
 		$cutoff = (($now ?? time()) - (self::RETENTION_DAYS * 86400));
 		$removed = 0;
 		try {
-			$objects = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$rows = $objects->findAll(
-				config: [
-					'filters' => ['register' => $register, 'schema' => $schema],
-					'limit' => self::PURGE_BATCH,
-					'sort' => ['mirroredAt' => 'asc'],
-				],
-				_rbac: false,
-				_multitenancy: false,
-			);
-			foreach ((array)$rows as $row) {
-				$data = $this->toArray(row: $row);
-				$id = (string)($data['id'] ?? ($data['uuid'] ?? ''));
-				$mirroredAt = strtotime((string)($data['mirroredAt'] ?? ''));
-				// A row without a readable date is kept: removing what cannot be dated is a guess.
-				if ($id === '' || $mirroredAt === false || $mirroredAt >= $cutoff) {
-					continue;
-				}
+			$this->account->runAs(
+				operation: function () use ($register, $schema, $cutoff, &$removed): void {
+					$objects = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+					$rows = $objects->findAll(
+						config: [
+							'filters' => ['register' => $register, 'schema' => $schema],
+							'limit' => self::PURGE_BATCH,
+							'sort' => ['mirroredAt' => 'asc'],
+						],
+						_rbac: true,
+						_multitenancy: false,
+					);
+					foreach ((array)$rows as $row) {
+						$data = $this->toArray(row: $row);
+						$id = (string)($data['id'] ?? ($data['uuid'] ?? ''));
+						$mirroredAt = strtotime((string)($data['mirroredAt'] ?? ''));
+						// A row without a readable date is kept: removing what cannot be dated is a guess.
+						if ($id === '' || $mirroredAt === false || $mirroredAt >= $cutoff) {
+							continue;
+						}
 
-				if ($objects->deleteObject(uuid: $id, register: $register, schema: $schema, _rbac: false, _multitenancy: false, permanent: true) === true) {
-					$removed++;
+						if ($objects->deleteObject(uuid: $id, register: $register, schema: $schema, _rbac: true, _multitenancy: false, permanent: true) === true) {
+							$removed++;
+						}
+					}
 				}
-			}
+			);
+		} catch (ServiceAccountUnavailableException $e) {
+			// BackgroundServiceAccount::refuse() has logged why. Nothing was removed.
+			return 0;
 		} catch (Throwable $e) {
 			$this->logger->error('CallMirror: the retention run stopped', ['removed' => $removed, 'exception' => $e->getMessage()]);
 		}//end try
