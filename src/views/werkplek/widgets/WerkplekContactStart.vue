@@ -7,7 +7,12 @@
 				{{ t('pipelinq', 'Start a contact') }}
 			</h2>
 			<p class="werkplek-contact-start__lead">
-				{{ t('pipelinq', 'Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.') }}
+				{{
+					t(
+						'pipelinq',
+						'Find the client on the line or at the desk. Open requests, tasks and earlier contact below, with a form to log this contact.',
+					)
+				}}
 			</p>
 		</div>
 		<WerkplekClientSelect class="werkplek-contact-start__select" />

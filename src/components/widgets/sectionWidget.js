@@ -64,7 +64,10 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 				return inner
 			}
 			const title = this.content?.title || ''
-			const translate = typeof this.cnTranslate === 'function' ? this.cnTranslate : (key) => key
+			const translate =
+				typeof this.cnTranslate === 'function'
+					? this.cnTranslate
+					: (key) => key
 			return h(
 				CnDetailCard,
 				{ title: title ? translate(title) : '' },
