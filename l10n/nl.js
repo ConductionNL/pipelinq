@@ -7501,7 +7501,11 @@ OC.L10N.register(
         "The page whose form created this lead.": "De pagina met het formulier waaruit deze lead ontstond.",
         "When the visitor sent the form.": "Het moment waarop de bezoeker het formulier verstuurde.",
         "Submission id": "Kenmerk inzending",
-        "The page's own id for this submission. A second lead with the same id is the same submission.": "Het kenmerk dat de pagina aan deze inzending gaf. Een tweede lead met hetzelfde kenmerk is dezelfde inzending."
+        "The page's own id for this submission. A second lead with the same id is the same submission.": "Het kenmerk dat de pagina aan deze inzending gaf. Een tweede lead met hetzelfde kenmerk is dezelfde inzending.",
+        "Formal decisions on this ticket, made and signed in decidiq": "Formele besluiten over dit ticket, genomen en ondertekend in decidiq",
+        "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "Een besluit kun je direct vanuit dit ticket voorbereiden als voorstel in decidiq, of het verzoek wordt eerst een zaak in dossiq. Hoe dan ook staat het besluit hier.",
+        "On this ticket": "Over dit ticket",
+        "Ticket panels": "Ticketpanelen"
     },
     "nplurals=2; plural=(n != 1);"
 )

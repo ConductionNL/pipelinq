@@ -7586,7 +7586,11 @@ OC.L10N.register(
         "The page whose form created this lead.": "The page whose form created this lead.",
         "When the visitor sent the form.": "When the visitor sent the form.",
         "Submission id": "Submission id",
-        "The page's own id for this submission. A second lead with the same id is the same submission.": "The page's own id for this submission. A second lead with the same id is the same submission."
+        "The page's own id for this submission. A second lead with the same id is the same submission.": "The page's own id for this submission. A second lead with the same id is the same submission.",
+        "Formal decisions on this ticket, made and signed in decidiq": "Formal decisions on this ticket, made and signed in decidiq",
+        "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.",
+        "On this ticket": "On this ticket",
+        "Ticket panels": "Ticket panels"
     },
     "nplurals=2; plural=(n != 1);"
 )

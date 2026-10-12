@@ -401,19 +401,53 @@ describe('the body', () => {
 		expect(panels.type).toBe('tabs')
 		expect(panels.content.maxVisibleTabs).toBe(5)
 		for (const tab of panels.content.tabs) {
-			expect(widgetIds, tab.label).toContain(tab.widgetId)
+			// A tab holds one widget, or a stack of them (`widgetIds`).
+			for (const id of tab.widgetIds || [tab.widgetId]) {
+				expect(widgetIds, tab.label).toContain(id)
+			}
 		}
 	})
 
 	it('keeps every widget the page had, as a tab', () => {
 		const panels = simple.widgets.find((widget) => widget.id === 'ticket-panels')
-		const tabbed = panels.content.tabs.map((tab) => tab.widgetId)
-		for (const widget of full.config.widgets) {
+		const tabbed = panels.content.tabs.flatMap(
+			(tab) => tab.widgetIds || [tab.widgetId],
+		)
+		// The strip itself is the page's own, given the board's four tabs.
+		const children = full.config.widgets.filter(
+			(widget) => widget.id !== 'ticket-panels',
+		)
+		for (const widget of children) {
 			expect(tabbed, widget.id).toContain(widget.id)
+			if (widget.id === 'ticket-decision-routes') {
+				// The one widget the simple page changes: see the test below.
+				continue
+			}
 			expect(simple.widgets.find((item) => item.id === widget.id)).toEqual(
 				widget,
 			)
 		}
+		expect(
+			simple.widgets.filter((widget) => widget.id === 'ticket-panels'),
+		).toHaveLength(1)
+	})
+
+	it('offers Convert to case once: in the Case section, not again on the Decisions tab', () => {
+		const head = (config) =>
+			config.widgets.find((widget) => widget.id === 'ticket-decision-routes')
+		const section = (config) =>
+			(config.bodyWidgets || []).filter(
+				(item) => item.component === 'RequestConversionSection',
+			)
+		// The simple page has the Case section, so the tab's head leaves it out.
+		expect(section(simple)).toHaveLength(1)
+		expect(head(simple).content.convert).toBe(false)
+		expect(head(simple).type).toBe('TicketDecisionRoutesWidget')
+		// The full page has no Case section, so the tab's head offers it.
+		expect(section(full.config)).toHaveLength(0)
+		expect(head(full.config).content.convert).toBeUndefined()
+		// The widget reads the switch from its content; the action shows by default.
+		expect(registrySource).toContain('hideConvert: content.convert === false')
 	})
 
 	it('lists the contact moments logged on this ticket, which is what Log contact writes', () => {

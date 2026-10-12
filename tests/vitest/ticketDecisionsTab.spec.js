@@ -1,0 +1,139 @@
+// @vitest-environment jsdom
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * The Decisions tab on the ticket page (ticket-decisions-tab). The tab is
+ * manifest config: a tabs widget whose Decisions tab stacks the head (what the
+ * tab holds, the two routes, Convert to case) and decidiq's leaf for the
+ * ticket. So the page is tested as the manifest declares it, and the head as
+ * the one component pipelinq owns.
+ *
+ * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-the-ticket-page-has-a-decisions-tab-req-tdt-001
+ */
+
+import { mount } from '@vue/test-utils'
+import { describe, expect, it, vi } from 'vitest'
+import { h } from 'vue'
+import manifest from '../../src/manifest.json'
+
+vi.mock('@nextcloud/l10n', () => ({
+	translate: (app, text) => text,
+}))
+vi.mock('../../src/views/requests/RequestConversionSection.vue', () => ({
+	default: {
+		name: 'RequestConversionSection',
+		props: ['requestId'],
+		render() {
+			return h('div', {
+				'data-stub': 'convert',
+				'data-request': this.requestId,
+			})
+		},
+	},
+}))
+
+const { default: TicketDecisionRoutes } =
+	await import('../../src/components/tickets/TicketDecisionRoutes.vue')
+
+const page = manifest.pages.find((entry) => entry.id === 'TicketDetail')
+const widgets = page.config.widgets
+const byId = (id) => widgets.find((widget) => widget.id === id)
+
+describe('the ticket page declares a Decisions tab', () => {
+	const panels = byId('ticket-panels')
+	const decisions = panels.content.tabs.find((tab) => tab.label === 'Decisions')
+
+	it('has a tab strip with Overview first and Decisions beside it', () => {
+		expect(panels.type).toBe('tabs')
+		expect(panels.content.tabs.map((tab) => tab.label)).toEqual([
+			'Overview',
+			'Decisions',
+		])
+		expect(panels.content.tabs[0].widgetId).toBe('ticket-data')
+	})
+
+	it("stacks the head and the ticket's decisions in that tab", () => {
+		expect(decisions.widgetIds).toEqual([
+			'ticket-decision-routes',
+			'ticket-decisions',
+		])
+		for (const id of decisions.widgetIds) {
+			expect(byId(id), id).toBeTruthy()
+		}
+	})
+
+	it('hides the tab without decidiq', () => {
+		expect(decisions.visibleWhen).toEqual({ appInstalled: 'decidiq' })
+	})
+
+	it("mounts decidiq's leaf for the ticket itself, with no other host named", () => {
+		const leaf = byId('ticket-decisions')
+		expect(leaf.type).toBe('integration')
+		expect(leaf.integrationId).toBe('decidesk-decisions')
+		expect(leaf.props).toBeUndefined()
+	})
+
+	it('shows the decisions in one place: no cell of their own on the overview', () => {
+		const placed = page.config.layout.map((cell) => cell.widgetId)
+		expect(placed).toEqual(['ticket-panels', 'ticket-related'])
+		// The strip renders its children; a cell would render them twice.
+		const children = panels.content.tabs.flatMap(
+			(tab) => tab.widgetIds || [tab.widgetId],
+		)
+		for (const id of children) {
+			expect(placed, id).not.toContain(id)
+		}
+	})
+
+	it('places every declared widget exactly once, in a cell or in a tab', () => {
+		const placed = page.config.layout.map((cell) => cell.widgetId)
+		const children = panels.content.tabs.flatMap(
+			(tab) => tab.widgetIds || [tab.widgetId],
+		)
+		expect([...placed, ...children].sort()).toEqual(
+			widgets.map((widget) => widget.id).sort(),
+		)
+	})
+})
+
+describe('TicketDecisionRoutes', () => {
+	/**
+	 * Mount the head on ticket t-1, with the app's global translate.
+	 *
+	 * @param {object} props Props beside the ticket id.
+	 * @return {object} The wrapper.
+	 */
+	function mountRoutes(props = {}) {
+		return mount(TicketDecisionRoutes, {
+			props: { ticketId: 't-1', ...props },
+			global: { mocks: { t: (app, text) => text } },
+		})
+	}
+
+	it('says what the tab holds and names the two routes', () => {
+		const wrapper = mountRoutes()
+
+		expect(wrapper.text()).toContain(
+			'Formal decisions on this ticket, made and signed in decidiq',
+		)
+		expect(wrapper.text()).toContain(
+			'A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.',
+		)
+	})
+
+	it('offers the existing Convert to case action for this ticket', () => {
+		const wrapper = mountRoutes()
+
+		expect(
+			wrapper.find('[data-stub="convert"]').attributes('data-request'),
+		).toBe('t-1')
+	})
+
+	it('leaves Convert to case out when the page already offers it', () => {
+		const wrapper = mountRoutes({ hideConvert: true })
+
+		expect(wrapper.find('[data-stub="convert"]').exists()).toBe(false)
+		expect(wrapper.text()).toContain('the request becomes a case in dossiq')
+	})
+})
