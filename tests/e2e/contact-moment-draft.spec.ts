@@ -6,11 +6,16 @@
  *
  * Seeds a client, types a subject and notes in the quick log on its page,
  * waits past the two second quiet time, closes the page, opens the client in
- * a new page, restores the draft, saves the contact moment, and checks that
- * the server holds no draft for that client any more.
+ * a new page, restores the draft and saves the contact moment.
+ *
+ * The draft is the contact moment itself, a ticket in OpenRegister's status
+ * `draft` (decisions 180 and 216). So the test also checks that the draft
+ * stays out of the client's ordinary ticket list while it is one, and that
+ * the saved contact moment is the same object, now active.
  *
  * @e2e contact-moment-drafts::the-tab-closes-halfway-through
  * @e2e contact-moment-drafts::saving-removes-the-draft
+ * @e2e contact-moment-drafts::a-draft-is-not-in-the-ticket-list
  */
 import type { Page } from '@playwright/test'
 
@@ -62,22 +67,30 @@ async function api(
 	)
 }
 
+type Ticket = { id: string; '@self'?: { status?: string } }
+
 /**
- * The drafts the server holds for one client.
+ * The contact moments the server lists for one client.
  *
  * @param page     The page to run in.
  * @param clientId The client.
+ * @param drafts   The draft lens: 'true' for drafts alone, '' for the ordinary list.
  *
- * @return The drafts.
+ * @return The tickets.
  */
-async function draftsFor(page: Page, clientId: string): Promise<unknown[]> {
+async function contactMomentsFor(
+	page: Page,
+	clientId: string,
+	drafts: '' | 'true',
+): Promise<Ticket[]> {
+	const lens = drafts === '' ? '' : `&_drafts=${drafts}`
 	const res = await api(
 		page,
 		'GET',
-		`${OBJECTS}/contactMomentDraft?client=${clientId}&_limit=20`,
+		`${OBJECTS}/ticket?client=${clientId}&ticketType=interaction&_limit=20${lens}`,
 	)
 	expect(res.status).toBeLessThan(400)
-	return (res.body.results as unknown[]) ?? []
+	return (res.body.results as Ticket[]) ?? []
 }
 
 test.describe('contact moment draft', () => {
@@ -104,10 +117,16 @@ test.describe('contact moment draft', () => {
 			.fill(`Adreswijziging ${STAMP}`)
 		await quickLog.getByLabel(/^(Notes|Notities)$/).fill('Belt morgen terug')
 		await expect
-			.poll(async () => (await draftsFor(page, clientId)).length, {
-				timeout: 15000,
-			})
+			.poll(
+				async () => (await contactMomentsFor(page, clientId, 'true')).length,
+				{
+					timeout: 15000,
+				},
+			)
 			.toBe(1)
+		const [draft] = await contactMomentsFor(page, clientId, 'true')
+		// The agent's own draft is not in the ordinary ticket list.
+		expect(await contactMomentsFor(page, clientId, '')).toHaveLength(0)
 		await page.close()
 
 		const second = await context.newPage()
@@ -125,9 +144,17 @@ test.describe('contact moment draft', () => {
 		await second.getByRole('option', { name: 'telefoon' }).click()
 		await restored.getByRole('button', { name: /^(Save|Opslaan)$/ }).click()
 		await expect
-			.poll(async () => (await draftsFor(second, clientId)).length, {
-				timeout: 15000,
-			})
+			.poll(
+				async () =>
+					(await contactMomentsFor(second, clientId, 'true')).length,
+				{
+					timeout: 15000,
+				},
+			)
 			.toBe(0)
+		// The draft became the contact moment: same id, now in the ordinary list.
+		const saved = await contactMomentsFor(second, clientId, '')
+		expect(saved.map((ticket) => ticket.id)).toEqual([draft.id])
+		expect(saved[0]['@self']?.status).toBe('active')
 	})
 })

@@ -190,10 +190,11 @@ describe('contact moment draft helpers', () => {
 			channel: 'telefoon',
 			occurredAt: '2026-10-09T10:00:00.000Z',
 			assignee: 'sanne',
-			channelMetadata: {},
 		})
 		// The status is never sent: only OpenRegister's owner action leaves draft.
 		expect(saved).not.toHaveProperty('@self')
+		// No empty envelope: `{}` reaches a PHP validator as `[]`, which is no object.
+		expect(saved).not.toHaveProperty('channelMetadata')
 	})
 
 	it("offers only the author's own, newest, unexpired contact moment draft for this client", () => {
@@ -538,7 +539,6 @@ describe('ContactmomentQuickLog draft', () => {
 				// Five seconds passed while the offer stood.
 				occurredAt: '2026-10-09T10:00:05.000Z',
 				assignee: 'sanne',
-				channelMetadata: {},
 			},
 		})
 		// No second ticket is created and the draft is not deleted: it became the contact moment.

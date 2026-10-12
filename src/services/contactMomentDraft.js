@@ -130,7 +130,10 @@ export function buildDraftTicket(form) {
  * The contact moment as it is saved: the form's fields and the moment of saving.
  *
  * Used for the owner action that makes the draft definitive, and for a plain
- * create when there is no draft to finish.
+ * create when there is no draft to finish. The empty `channelMetadata`
+ * envelope the form used to send is left out: the owner action checks the
+ * whole schema, and an empty JSON object reaches a PHP validator as an empty
+ * list, which is not the object the schema asks for.
  *
  * @param {object} form The quick log form.
  * @param {{author: string, now: Date}} context Who saves, and when.
@@ -143,7 +146,6 @@ export function buildContactMoment(form, context) {
 		...filledFields(form),
 		occurredAt: (context.now || new Date()).toISOString(),
 		assignee: context.author,
-		channelMetadata: {},
 	}
 }
 
