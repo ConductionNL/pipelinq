@@ -986,6 +986,7 @@ OC.L10N.register(
         "Last updated: {time}": "Última actualización: {time}",
         "Last {n} transactions": "Últimas {n} transacciones",
         "Lead": "Cliente potencial",
+        "Leave empty to save the lead without a client.": "Deja vacío para guardar el cliente potencial sin cliente.",
         "Lead & request assignments": "Asignaciones de clientes potenciales y solicitudes",
         "Lead Conversion Rate": "Tasa de conversión de clientes potenciales",
         "Lead Management": "Gestión de clientes potenciales",

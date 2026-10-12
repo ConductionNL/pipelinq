@@ -419,6 +419,10 @@ describe('the body', () => {
 		)
 		for (const widget of children) {
 			expect(tabbed, widget.id).toContain(widget.id)
+			if (widget.id === 'ticket-decision-routes') {
+				// The one widget the simple page changes: see the test below.
+				continue
+			}
 			expect(simple.widgets.find((item) => item.id === widget.id)).toEqual(
 				widget,
 			)
@@ -426,6 +430,24 @@ describe('the body', () => {
 		expect(
 			simple.widgets.filter((widget) => widget.id === 'ticket-panels'),
 		).toHaveLength(1)
+	})
+
+	it('offers Convert to case once: in the Case section, not again on the Decisions tab', () => {
+		const head = (config) =>
+			config.widgets.find((widget) => widget.id === 'ticket-decision-routes')
+		const section = (config) =>
+			(config.bodyWidgets || []).filter(
+				(item) => item.component === 'RequestConversionSection',
+			)
+		// The simple page has the Case section, so the tab's head leaves it out.
+		expect(section(simple)).toHaveLength(1)
+		expect(head(simple).content.convert).toBe(false)
+		expect(head(simple).type).toBe('TicketDecisionRoutesWidget')
+		// The full page has no Case section, so the tab's head offers it.
+		expect(section(full.config)).toHaveLength(0)
+		expect(head(full.config).content.convert).toBeUndefined()
+		// The widget reads the switch from its content; the action shows by default.
+		expect(registrySource).toContain('hideConvert: content.convert === false')
 	})
 
 	it('lists the contact moments logged on this ticket, which is what Log contact writes', () => {

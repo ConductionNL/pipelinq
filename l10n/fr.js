@@ -986,6 +986,7 @@ OC.L10N.register(
         "Last updated: {time}": "Dernière mise à jour : {time}",
         "Last {n} transactions": "{n} dernières transactions",
         "Lead": "Piste",
+        "Leave empty to save the lead without a client.": "Laissez vide pour enregistrer la piste sans client.",
         "Lead & request assignments": "Attributions de pistes et de demandes",
         "Lead Conversion Rate": "Taux de conversion des pistes",
         "Lead Management": "Gestion des pistes",

@@ -2787,6 +2787,96 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "webform-voorbeeld-klachtformulier-1"
+        },
+        "title": "Voorbeeld formulier 1",
+        "key": "voorbeeld-klachtformulier",
+        "status": "draft",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "ticket"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          ],
+          "fixed": {}
+        },
+        "requireAnyOf": [
+          "title"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "webform-voorbeeld-offerteformulier-2"
+        },
+        "title": "Voorbeeld formulier 2",
+        "key": "voorbeeld-offerteformulier",
+        "status": "draft",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "lead"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          ],
+          "fixed": {}
+        },
+        "requireAnyOf": [
+          "title"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "webform-voorbeeld-nieuwsbrief-3"
+        },
+        "title": "Voorbeeld formulier 3",
+        "key": "voorbeeld-nieuwsbrief",
+        "status": "draft",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "contact"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "name",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          ],
+          "fixed": {}
+        },
+        "requireAnyOf": [
+          "title"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "enquiry",
           "slug": "enquiry-voorbeeld-title-1-1"
         },

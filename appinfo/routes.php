@@ -193,13 +193,14 @@ return [
         // Health check endpoint.
         ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
 
-        // Public website enquiry intake (website-enquiry-intake). Anonymous and
-        // cross-origin: the conduction.nl forms post here. It exists instead of
-        // letting the browser POST straight at OpenRegister's object API
-        // because OpenRegister cannot scope which PROPERTIES a public create
-        // may set, so a direct create would let a visitor write `status` and
-        // `handledBy`. See EnquiryIntakeService's class docblock.
-        ['name' => 'enquiry#submit', 'url' => '/api/enquiry', 'verb' => 'POST'],
+        // Public website forms (website-forms-submit-into-tickets, decision 179).
+        // Anonymous and cross-origin: a submit creates the object its published
+        // webForm names (a ticket, a lead, ...), in the request. /api/enquiry is
+        // the address conduction-website already posts to, its `source` being the
+        // form's key; the submit no longer becomes an enquiry. Only the fields the
+        // form maps reach the object. See WebFormIntakeService's class docblock.
+        ['name' => 'webForm#submitBySource', 'url' => '/api/enquiry', 'verb' => 'POST'],
+        ['name' => 'webForm#submit', 'url' => '/api/web-forms/{key}/submit', 'verb' => 'POST', 'requirements' => ['key' => '[a-z0-9][a-z0-9-]{0,99}']],
 
         // Schedules API — pending MUST appear before {id} so the slug does not catch "pending".
         ['name' => 'schedules#index',   'url' => '/api/schedules',         'verb' => 'GET'],

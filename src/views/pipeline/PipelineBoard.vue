@@ -27,7 +27,9 @@
 			:tabs="chipTabs"
 			:counts="chipCounts"
 			:activeIndex="chipIndex"
-			@update:activeIndex="(value) => (chipIndex = value === null ? 0 : value)" />
+			@update:activeIndex="
+				(value) => (chipIndex = value === null ? 0 : value)
+			" />
 		<div class="pipeline-board__header">
 			<div class="pipeline-board__controls">
 				<NcSelect
@@ -498,7 +500,11 @@
 </template>
 
 <script>
-import { CnPageHeader, CnQuickFilterBar, openRowTarget } from '@conduction/nextcloud-vue'
+import {
+	CnPageHeader,
+	CnQuickFilterBar,
+	openRowTarget,
+} from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -829,8 +835,10 @@ export default {
 		 * @return {number[]}
 		 */
 		chipCounts() {
-			return this.chipTabs.map((_, index) =>
-				this.allItems.filter((item) => this.matchesChip(item, index)).length,
+			return this.chipTabs.map(
+				(_, index) =>
+					this.allItems.filter((item) => this.matchesChip(item, index))
+						.length,
 			)
 		},
 
@@ -840,10 +848,14 @@ export default {
 		 * @return {string}
 		 */
 		headerCountLine() {
-			return this.t('pipelinq', '{shown} of {total} open leads · board per stage', {
-				shown: this.filteredItems.length,
-				total: this.allItems.length,
-			})
+			return this.t(
+				'pipelinq',
+				'{shown} of {total} open leads · board per stage',
+				{
+					shown: this.filteredItems.length,
+					total: this.allItems.length,
+				},
+			)
 		},
 
 		/**
@@ -1593,11 +1605,15 @@ export default {
 				return Boolean(uid) && item.assignee === uid
 			}
 			if (index === 2) {
-				const close = item.expectedCloseDate ? new Date(item.expectedCloseDate) : null
+				const close = item.expectedCloseDate
+					? new Date(item.expectedCloseDate)
+					: null
 				const now = new Date()
-				return Boolean(close)
+				return (
+					Boolean(close)
 					&& close.getFullYear() === now.getFullYear()
 					&& close.getMonth() === now.getMonth()
+				)
 			}
 			if (index === 3) {
 				return this.isItemStale(item)

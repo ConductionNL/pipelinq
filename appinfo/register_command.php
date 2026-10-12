@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 use OCA\Pipelinq\Command\CompetitorWatchRunCommand;
 use OCA\Pipelinq\Command\ConnectionAuditCommand;
+use OCA\Pipelinq\Command\EnquiryDrainCommand;
 use OCA\Pipelinq\Command\PortalCleanupCommand;
 use OCA\Pipelinq\Command\ReferencesAuditCommand;
 use OCA\Pipelinq\Command\SearchConsoleImportCommand;
@@ -29,3 +30,4 @@ $application->add(Server::get(SearchConsoleImportCommand::class));
 $application->add(Server::get(CompetitorWatchRunCommand::class));
 $application->add(Server::get(ConnectionAuditCommand::class));
 $application->add(Server::get(ReferencesAuditCommand::class));
+$application->add(Server::get(EnquiryDrainCommand::class));

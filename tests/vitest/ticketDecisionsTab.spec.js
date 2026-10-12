@@ -116,11 +116,12 @@ describe('TicketDecisionRoutes', () => {
 	/**
 	 * Mount the head on ticket t-1, with the app's global translate.
 	 *
+	 * @param {object} props Props beside the ticket id.
 	 * @return {object} The wrapper.
 	 */
-	function mountRoutes() {
+	function mountRoutes(props = {}) {
 		return mount(TicketDecisionRoutes, {
-			props: { ticketId: 't-1' },
+			props: { ticketId: 't-1', ...props },
 			global: { mocks: { t: (app, text) => text } },
 		})
 	}
@@ -142,5 +143,12 @@ describe('TicketDecisionRoutes', () => {
 		expect(
 			wrapper.find('[data-stub="convert"]').attributes('data-request'),
 		).toBe('t-1')
+	})
+
+	it('leaves Convert to case out when the page already offers it', () => {
+		const wrapper = mountRoutes({ hideConvert: true })
+
+		expect(wrapper.find('[data-stub="convert"]').exists()).toBe(false)
+		expect(wrapper.text()).toContain('the request becomes a case in dossiq')
 	})
 })
