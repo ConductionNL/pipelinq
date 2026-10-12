@@ -7444,7 +7444,9 @@ OC.L10N.register(
         "{count} open ticket": "{count} open ticket",
         "{count} open tickets": "{count} open tickets",
         "{shown} of {total} clients": "{shown} van {total} klanten",
-        "Open tickets": "Open tickets"
+        "Open tickets": "Open tickets",
+        "{shown} of {total} unassigned tickets · customer contact · oldest first": "{shown} van {total} niet toegewezen tickets · klantcontact · oudste eerst",
+        "Take it on": "In behandeling nemen"
     },
     "nplurals=2; plural=(n != 1);"
 )

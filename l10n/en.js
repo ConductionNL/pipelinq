@@ -7529,7 +7529,9 @@ OC.L10N.register(
         "{count} open ticket": "{count} open ticket",
         "{count} open tickets": "{count} open tickets",
         "{shown} of {total} clients": "{shown} of {total} clients",
-        "Open tickets": "Open tickets"
+        "Open tickets": "Open tickets",
+        "{shown} of {total} unassigned tickets · customer contact · oldest first": "{shown} of {total} unassigned tickets · customer contact · oldest first",
+        "Take it on": "Take it on"
     },
     "nplurals=2; plural=(n != 1);"
 )
