@@ -99,7 +99,9 @@ class NameFormDestinationsTest extends TestCase {
 	 * A repair step no info.xml names never runs, and its tests stay green.
 	 */
 	public function testTheStepIsRegisteredAfterTheRegisterImport(): void {
-		$xml = simplexml_load_file(dirname(__DIR__, 3) . '/appinfo/info.xml');
+		// Read as text, then parse: inside a Nextcloud server simplexml_load_file()
+		// returns false, because the server's entity loader refuses the path.
+		$xml = simplexml_load_string((string)file_get_contents(dirname(__DIR__, 3) . '/appinfo/info.xml'));
 		$this->assertNotFalse($xml);
 		$steps = array_map('strval', iterator_to_array($xml->{'repair-steps'}->{'post-migration'}->step, false));
 
