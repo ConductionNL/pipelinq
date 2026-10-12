@@ -7540,7 +7540,7 @@
         "Sales pipeline": "Sales pipeline",
         "My leads": "My leads",
         "Closing this month": "Closing this month",
-        "{shown} of {total} open leads \u00b7 board per stage": "{shown} of {total} open leads · board per stage",
+        "{shown} of {total} open leads · board per stage": "{shown} of {total} open leads · board per stage",
         "Stale leads": "Stale leads",
         "{role} at {client.name}": "{role} at {client.name}",
         "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.": "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.",
@@ -7558,6 +7558,10 @@
         "Within the deadline": "Within the deadline",
         "deadline still ahead": "deadline still ahead",
         "Past the deadline": "Past the deadline",
-        "pick these up first": "pick these up first"
+        "pick these up first": "pick these up first",
+        "Formal decisions on this ticket, made and signed in decidiq": "Formal decisions on this ticket, made and signed in decidiq",
+        "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.",
+        "On this ticket": "On this ticket",
+        "Ticket panels": "Ticket panels"
     }
 }

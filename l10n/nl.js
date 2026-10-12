@@ -7453,7 +7453,11 @@ OC.L10N.register(
         "Within the deadline": "Binnen de termijn",
         "deadline still ahead": "uiterste datum nog niet bereikt",
         "Past the deadline": "Over de termijn",
-        "pick these up first": "pak deze eerst op"
+        "pick these up first": "pak deze eerst op",
+        "Formal decisions on this ticket, made and signed in decidiq": "Formele besluiten over dit ticket, genomen en ondertekend in decidiq",
+        "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "Een besluit kun je direct vanuit dit ticket voorbereiden als voorstel in decidiq, of het verzoek wordt eerst een zaak in dossiq. Hoe dan ook staat het besluit hier.",
+        "On this ticket": "Over dit ticket",
+        "Ticket panels": "Ticketpanelen"
     },
     "nplurals=2; plural=(n != 1);"
 )

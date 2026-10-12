@@ -7455,7 +7455,7 @@
         "Sales pipeline": "Verkooppijplijn",
         "My leads": "Mijn leads",
         "Closing this month": "Sluit deze maand",
-        "{shown} of {total} open leads \u00b7 board per stage": "{shown} van {total} open leads · bord per fase",
+        "{shown} of {total} open leads · board per stage": "{shown} van {total} open leads · bord per fase",
         "Stale leads": "Verouderd",
         "{role} at {client.name}": "{role} bij {client.name}",
         "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.": "Zoek de klant aan de lijn of aan de balie. Verzoeken, taken en eerder contact openen hieronder, met een formulier om dit contact vast te leggen.",
@@ -7473,6 +7473,10 @@
         "Within the deadline": "Binnen de termijn",
         "deadline still ahead": "uiterste datum nog niet bereikt",
         "Past the deadline": "Over de termijn",
-        "pick these up first": "pak deze eerst op"
+        "pick these up first": "pak deze eerst op",
+        "Formal decisions on this ticket, made and signed in decidiq": "Formele besluiten over dit ticket, genomen en ondertekend in decidiq",
+        "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "Een besluit kun je direct vanuit dit ticket voorbereiden als voorstel in decidiq, of het verzoek wordt eerst een zaak in dossiq. Hoe dan ook staat het besluit hier.",
+        "On this ticket": "Over dit ticket",
+        "Ticket panels": "Ticketpanelen"
     }
 }

@@ -3130,10 +3130,10 @@
 			"feature": "request-management",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/manifest.json:2512 mounts decidiq's decidesk-decisions leaf on TicketDetail as a widget under the overview (decidiq lib/Listener/RegisterDecisionsLeafListener.php, src/integrations/CnDecisionsWidget.vue: lists decisions with subjectId = the ticket, Create proposal for this object, Open in decidiq); ticket.decisions in lib/Settings/register.d/99-unify-ticket-supertype.json:262. Missing: the Decisions tab the board draws, and decisions on the case the ticket became (caseReference) do not show",
+				"state": "building",
+				"evidence": "Decisions tab on TicketDetail: `ticket-panels` (type tabs) in src/manifest.json stacks TicketDecisionRoutesWidget (src/components/tickets/TicketDecisionRoutes.vue: the line, the two routes, Convert to case) and decidiq's decidesk-decisions leaf for the ticket; hidden without decidiq (visibleWhen appInstalled); the simple structure patches the same widget (src/menu-layout.simple.json). Tests: tests/vitest/ticketDecisionsTab.spec.js. Still open: decisions on the case the ticket became (branch feat/ticket-case-decisions, waits for nextcloud-vue#1520), and the live Playwright pass",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-10-08",
+				"readOn": "2026-10-12",
 				"change": "ticket-decisions-tab"
 			},
 			"note": "Decision 99 (8 Oct): board PqTicketBesluitvorming draws it and no row had it. decidiq owns the decisions, the leaf and the create-proposal action (decidiq openspec/specs/decidesk-contract-decision-hub REQ-DCDH-001, REQ-DCDH-008), all built; nothing new in decidiq. pipelinq places it as a tab and adds the linked case's decisions.",

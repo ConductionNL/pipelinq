@@ -16,10 +16,13 @@ When decidiq is installed, the ticket page SHALL have a tab Decisions beside Ove
 - THEN decidiq holds a proposal whose subject is the ticket
 - AND the tab lists it
 
-#### Scenario: The empty state explains the two routes
+#### Scenario: The tab explains the two routes
 - GIVEN a ticket with no decision and no linked case
 - WHEN the Decisions tab opens
-- THEN it reads "No decision linked" and "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here."
+- THEN it reads "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here."
+- AND the list of decisions shows decidiq's own empty line
+
+The two routes show above the list at all times, with or without a decision. The empty line and the labels of Create and Open in decidiq are the leaf's, so decidiq words them.
 
 #### Scenario: decidiq is not installed
 - GIVEN an instance without decidiq

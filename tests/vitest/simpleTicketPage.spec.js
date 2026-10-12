@@ -401,19 +401,31 @@ describe('the body', () => {
 		expect(panels.type).toBe('tabs')
 		expect(panels.content.maxVisibleTabs).toBe(5)
 		for (const tab of panels.content.tabs) {
-			expect(widgetIds, tab.label).toContain(tab.widgetId)
+			// A tab holds one widget, or a stack of them (`widgetIds`).
+			for (const id of tab.widgetIds || [tab.widgetId]) {
+				expect(widgetIds, tab.label).toContain(id)
+			}
 		}
 	})
 
 	it('keeps every widget the page had, as a tab', () => {
 		const panels = simple.widgets.find((widget) => widget.id === 'ticket-panels')
-		const tabbed = panels.content.tabs.map((tab) => tab.widgetId)
-		for (const widget of full.config.widgets) {
+		const tabbed = panels.content.tabs.flatMap(
+			(tab) => tab.widgetIds || [tab.widgetId],
+		)
+		// The strip itself is the page's own, given the board's four tabs.
+		const children = full.config.widgets.filter(
+			(widget) => widget.id !== 'ticket-panels',
+		)
+		for (const widget of children) {
 			expect(tabbed, widget.id).toContain(widget.id)
 			expect(simple.widgets.find((item) => item.id === widget.id)).toEqual(
 				widget,
 			)
 		}
+		expect(
+			simple.widgets.filter((widget) => widget.id === 'ticket-panels'),
+		).toHaveLength(1)
 	})
 
 	it('lists the contact moments logged on this ticket, which is what Log contact writes', () => {

@@ -7538,7 +7538,11 @@ OC.L10N.register(
         "Within the deadline": "Within the deadline",
         "deadline still ahead": "deadline still ahead",
         "Past the deadline": "Past the deadline",
-        "pick these up first": "pick these up first"
+        "pick these up first": "pick these up first",
+        "Formal decisions on this ticket, made and signed in decidiq": "Formal decisions on this ticket, made and signed in decidiq",
+        "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.",
+        "On this ticket": "On this ticket",
+        "Ticket panels": "Ticket panels"
     },
     "nplurals=2; plural=(n != 1);"
 )
