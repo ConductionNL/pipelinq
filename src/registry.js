@@ -902,8 +902,9 @@ const registry = {
 		component: sectionWidget(
 			'TicketDecisionRoutesWidget',
 			TicketDecisionRoutes,
-			({ objectId }) => ({
+			({ objectId, content }) => ({
 				ticketId: objectId,
+				hideConvert: content.convert === false,
 			}),
 			{ card: true },
 		),

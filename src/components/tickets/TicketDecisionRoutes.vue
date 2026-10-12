@@ -4,7 +4,8 @@
   -
   - The head of the Decisions tab on the ticket page (ticket-decisions-tab,
   - board PqTicketBesluitvorming): what the tab holds, the two routes to a
-  - decision, and the existing Convert to case action. The lists themselves
+  - decision, and the existing Convert to case action (unless the page
+  - already offers it: `hideConvert`). The lists themselves
   - are decidiq's `decidesk-decisions` leaf, mounted by the manifest for the
   - ticket and for the case it became. A manifest `markdown` widget would
   - carry the two lines, but it does not translate its text.
@@ -29,7 +30,7 @@
 				)
 			}}
 		</p>
-		<RequestConversionSection :requestId="ticketId" />
+		<RequestConversionSection v-if="!hideConvert" :requestId="ticketId" />
 	</div>
 </template>
 
@@ -48,6 +49,16 @@ export default {
 		ticketId: {
 			type: String,
 			default: '',
+		},
+
+		/**
+		 * Leave Convert to case out. A page that already has the action
+		 * elsewhere (the simple structure's Case section) sets this, so the
+		 * action shows once.
+		 */
+		hideConvert: {
+			type: Boolean,
+			default: false,
 		},
 	},
 }

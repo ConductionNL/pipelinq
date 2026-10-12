@@ -855,6 +855,13 @@
 					"customer-reply": null
 				},
 				"widgets": {
+					"ticket-decision-routes": {
+						"content": {
+							"title": "Decisions",
+							"convert": false
+						},
+						"_note": "The simple page offers Convert to case in its Case section below, with or without decidiq. The Decisions tab does not repeat it."
+					},
 					"ticket-panels": {
 						"type": "tabs",
 						"title": "Ticket",
