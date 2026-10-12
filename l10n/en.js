@@ -7522,7 +7522,9 @@ OC.L10N.register(
         "Closing this month": "Closing this month",
         "{shown} of {total} open leads · board per stage": "{shown} of {total} open leads · board per stage",
         "Stale leads": "Stale leads",
-        "{role} at {client.name}": "{role} at {client.name}"
+        "{role} at {client.name}": "{role} at {client.name}",
+        "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.": "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.",
+        "Name, phone, email, postcode or client number": "Name, phone, email, postcode or client number"
     },
     "nplurals=2; plural=(n != 1);"
 )
