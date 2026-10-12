@@ -2718,6 +2718,19 @@
 						"icon": "Gavel"
 					},
 					{
+						"id": "ticket-case-decisions",
+						"type": "integration",
+						"integrationId": "decidesk-decisions",
+						"title": "On the linked case",
+						"icon": "Gavel",
+						"_note": "The decisions on the case this ticket became (REQ-TDT-002). The same decidiq leaf, mounted for the case: the host resolves `@object.caseReference` (nextcloud-vue#1520) and does not mount the widget on a ticket without a case. Register and schema are dossiq's case, which is what a created proposal is stamped with; the list itself only reads the id.",
+						"props": {
+							"register": "dossiq",
+							"schema": "case",
+							"objectId": "@object.caseReference"
+						}
+					},
+					{
 						"id": "ticket-panels",
 						"type": "tabs",
 						"title": "Ticket panels",
@@ -2733,7 +2746,8 @@
 								{
 									"widgetIds": [
 										"ticket-decision-routes",
-										"ticket-decisions"
+										"ticket-decisions",
+										"ticket-case-decisions"
 									],
 									"label": "Decisions",
 									"visibleWhen": {

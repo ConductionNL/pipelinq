@@ -5,11 +5,12 @@
  *
  * The Decisions tab on the ticket page (ticket-decisions-tab). The tab is
  * manifest config: a tabs widget whose Decisions tab stacks the head (what the
- * tab holds, the two routes, Convert to case) and decidiq's leaf for the
- * ticket. So the page is tested as the manifest declares it, and the head as
- * the one component pipelinq owns.
+ * tab holds, the two routes, Convert to case), decidiq's leaf for the ticket
+ * and the same leaf for the case the ticket became. So the page is tested as
+ * the manifest declares it, and the head as the one component pipelinq owns.
  *
  * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-the-ticket-page-has-a-decisions-tab-req-tdt-001
+ * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
  */
 
 import { mount } from '@vue/test-utils'
@@ -53,10 +54,11 @@ describe('the ticket page declares a Decisions tab', () => {
 		expect(panels.content.tabs[0].widgetId).toBe('ticket-data')
 	})
 
-	it("stacks the head and the ticket's decisions in that tab", () => {
+	it("stacks the head, the ticket's decisions and the case's decisions in that tab", () => {
 		expect(decisions.widgetIds).toEqual([
 			'ticket-decision-routes',
 			'ticket-decisions',
+			'ticket-case-decisions',
 		])
 		for (const id of decisions.widgetIds) {
 			expect(byId(id), id).toBeTruthy()
@@ -72,6 +74,19 @@ describe('the ticket page declares a Decisions tab', () => {
 		expect(leaf.type).toBe('integration')
 		expect(leaf.integrationId).toBe('decidesk-decisions')
 		expect(leaf.props).toBeUndefined()
+	})
+
+	it("mounts the same leaf for the linked case, by the ticket's caseReference", () => {
+		const leaf = byId('ticket-case-decisions')
+		expect(leaf.type).toBe('integration')
+		expect(leaf.integrationId).toBe('decidesk-decisions')
+		// A token, so the host mounts nothing on a ticket without a case
+		// (nextcloud-vue CnDetailWidgetHost.widgetPropTokens.spec.js).
+		expect(leaf.props).toEqual({
+			register: 'dossiq',
+			schema: 'case',
+			objectId: '@object.caseReference',
+		})
 	})
 
 	it('shows the decisions in one place: no cell of their own on the overview', () => {

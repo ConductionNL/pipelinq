@@ -7457,6 +7457,7 @@ OC.L10N.register(
         "Formal decisions on this ticket, made and signed in decidiq": "Formele besluiten over dit ticket, genomen en ondertekend in decidiq",
         "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "Een besluit kun je direct vanuit dit ticket voorbereiden als voorstel in decidiq, of het verzoek wordt eerst een zaak in dossiq. Hoe dan ook staat het besluit hier.",
         "On this ticket": "Over dit ticket",
+        "On the linked case": "Over de gekoppelde zaak",
         "Ticket panels": "Ticketpanelen"
     },
     "nplurals=2; plural=(n != 1);"

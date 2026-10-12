@@ -2339,6 +2339,7 @@ OC.L10N.register(
         "Formal decisions on this ticket, made and signed in decidiq": "Formelle Beschlüsse zu diesem Ticket, in decidiq gefasst und unterzeichnet",
         "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "Ein Beschluss lässt sich direkt aus diesem Ticket als Vorschlag in decidiq vorbereiten, oder die Anfrage wird zuerst ein Fall in dossiq. In beiden Fällen steht der Beschluss hier.",
         "On this ticket": "Zu diesem Ticket",
+        "On the linked case": "Zum verknüpften Fall",
         "Ticket panels": "Ticket-Bereiche",
         "Ticket details": "Ticketdetails",
         "Decisions": "Beschlüsse"

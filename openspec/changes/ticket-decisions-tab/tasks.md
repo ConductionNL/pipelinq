@@ -9,8 +9,9 @@
   - Verify: manifest validation (`npm run check:manifest`), gate-53/55; live, the tab on a ticket without decisions shows the board's text
 
 ## 2. Case decisions
-- [ ] 2.1 (built on branch feat/ticket-case-decisions, lands after nextcloud-vue#1520 is released and the lock moves to it) When `caseReference` is set, mount the leaf a second time with the case as host, or, if the integration widget only takes the page object, `src/components/tickets/CaseDecisionsList.vue` reading decisions with `subjectId` = case id through the OpenRegister object API
+- [x] 2.1 When `caseReference` is set, mount the leaf a second time with the case as host, or, if the integration widget only takes the page object, `src/components/tickets/CaseDecisionsList.vue` reading decisions with `subjectId` = case id through the OpenRegister object API
   - spec_ref: `#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002`
+  - Built: widget `ticket-case-decisions` in `src/manifest.json`, the leaf a second time with `props: { register: dossiq, schema: case, objectId: @object.caseReference }` (design D2, first option). The host resolves the token and mounts nothing on a ticket without a case: nextcloud-vue#1520, tested there (`CnDetailWidgetHost.widgetPropTokens.spec.js`). Needs a nextcloud-vue release that carries it.
   - Verify: vitest with a ticket with and without `caseReference`; RBAC respected because the read goes through OpenRegister as the user
 
 ## 3. Text and tests
