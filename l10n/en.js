@@ -7615,6 +7615,7 @@ OC.L10N.register(
         "Average answer time": "Average answer time",
         "Deadline first": "Deadline first",
         "Newest first": "Newest first",
+        "Priority first": "Priority first",
         "Saved views": "Saved views",
         "Sorting": "Sorting",
         "Start here": "Start here",

@@ -82,6 +82,41 @@ describe('the My work page', () => {
 		expect(tickets.avatar).toBe('{client.name}')
 	})
 
+	it('badges urgent and high work, and draws the due date as text', () => {
+		const lists = { 'my-answer-today': 'slaDeadline', 'my-waiting-on-me': 'slaDeadline', 'my-waiting-on-customer': 'slaDeadline', 'my-leads': 'expectedCloseDate', 'my-follow-ups': 'deadline' }
+		for (const [id, field] of Object.entries(lists)) {
+			const c = widget(id).content
+			expect(c.due.field, id).toBe(field)
+			// The due text replaces the old "Deadline {date}" trailing.
+			expect(JSON.stringify(c.trailing ?? ''), id).not.toContain('Deadline')
+			if (id === 'my-follow-ups') continue
+			const priority = c.badges.find((b) => b.field === 'priority')
+			expect(priority.hideValues, id).toEqual(['normal', 'low'])
+		}
+	})
+
+	it('marks a lead stale on the same field the Leads list filters on', () => {
+		const stale = widget('my-leads').content.badges.find((b) => b.kind === 'stale')
+		// Lead objects carry `@self.updated`; there is no `_dateModified` on them.
+		expect(stale.field).toBe('@self.updated')
+		expect(stale.afterDays).toBe(14)
+		expect(widget('my-leads').content.trailing).toBe('{value|currency:currency}')
+	})
+
+	it('sorts priority first by the rank, not by the stored string', () => {
+		const select = widget('my-lens').content.controls.find((c) => c.style === 'select')
+		expect(select.options.map((o) => o.value)).toContain('priority')
+		for (const id of ['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer', 'my-leads']) {
+			const entry = widget(id).content.pageControls.sort.map.priority
+			expect(entry.rank, id).toEqual(['urgent', 'high', 'normal', 'low'])
+			expect(entry.then.dir, id).toBe('asc')
+		}
+	})
+
+	it('keeps the meta line when a row has no customer', () => {
+		expect(widget('my-answer-today').content.meta.parts).toEqual(['{client.name}', '{channel}'])
+	})
+
 	it('carries the start-here banner and the saved views', () => {
 		expect(widget('my-start-here').type).toBe('banner')
 		expect(widget('my-saved-views').type).toBe('saved-views')

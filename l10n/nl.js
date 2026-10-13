@@ -7530,6 +7530,7 @@ OC.L10N.register(
         "Average answer time": "Gemiddelde antwoordtijd",
         "Deadline first": "Termijn eerst",
         "Newest first": "Nieuwste eerst",
+        "Priority first": "Prioriteit eerst",
         "Saved views": "Opgeslagen weergaven",
         "Sorting": "Sortering",
         "Start here": "Begin hier",

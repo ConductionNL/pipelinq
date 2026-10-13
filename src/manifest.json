@@ -5253,10 +5253,11 @@
 			"route": "/my-work",
 			"type": "dashboard",
 			"title": "My work",
-			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Not here, each named in the pull request: a priority sort (priority is a string, no numeric rank), the share answered within the deadline (needs a ticket.answeredInTime flag), the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
+			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. Not here, each named in the pull request: the share answered within the deadline (needs a ticket.answeredInTime flag), the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
 			"config": {
 				"showRefresh": true,
 				"showWidgetActions": false,
+				"gridFloat": false,
 				"description": "Tickets, leads and follow-ups that are yours, the most urgent first",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"kpiRow": [
@@ -5382,6 +5383,10 @@
 										{
 											"value": "deadline",
 											"label": "Deadline first"
+										},
+										{
+											"value": "priority",
+											"label": "Priority first"
 										},
 										{
 											"value": "waiting",
@@ -5638,6 +5643,19 @@
 										"newest": {
 											"field": "occurredAt",
 											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "slaDeadline",
+												"dir": "asc"
+											}
 										}
 									}
 								},
@@ -5655,7 +5673,12 @@
 							],
 							"avatar": "{client.name}",
 							"title": "{title}",
-							"meta": "{client.name} · {channel}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
+							},
 							"pill": {
 								"field": "status",
 								"labels": {
@@ -5673,12 +5696,31 @@
 									"completed": "success"
 								}
 							},
-							"trailing": [
-								"{priority}",
-								"Deadline {slaDeadline|date}"
-							],
 							"rowRoute": "TicketDetail",
-							"emptyText": "No tickets assigned to you"
+							"emptyText": "No tickets assigned to you",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								}
+							],
+							"due": {
+								"field": "slaDeadline",
+								"emptyText": "No due date"
+							}
 						}
 					},
 					{
@@ -5731,6 +5773,19 @@
 										"newest": {
 											"field": "occurredAt",
 											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "slaDeadline",
+												"dir": "asc"
+											}
 										}
 									}
 								},
@@ -5748,7 +5803,12 @@
 							],
 							"avatar": "{client.name}",
 							"title": "{title}",
-							"meta": "{client.name} · {channel}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
+							},
 							"pill": {
 								"field": "status",
 								"labels": {
@@ -5766,12 +5826,31 @@
 									"completed": "success"
 								}
 							},
-							"trailing": [
-								"{priority}",
-								"Deadline {slaDeadline|date}"
-							],
 							"rowRoute": "TicketDetail",
-							"emptyText": "No tickets assigned to you"
+							"emptyText": "No tickets assigned to you",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								}
+							],
+							"due": {
+								"field": "slaDeadline",
+								"emptyText": "No due date"
+							}
 						}
 					},
 					{
@@ -5819,6 +5898,19 @@
 										"newest": {
 											"field": "occurredAt",
 											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "slaDeadline",
+												"dir": "asc"
+											}
 										}
 									}
 								}
@@ -5830,7 +5922,12 @@
 							],
 							"avatar": "{client.name}",
 							"title": "{title}",
-							"meta": "{client.name} · {channel}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
+							},
 							"pill": {
 								"field": "status",
 								"labels": {
@@ -5848,12 +5945,31 @@
 									"completed": "success"
 								}
 							},
-							"trailing": [
-								"{priority}",
-								"Deadline {slaDeadline|date}"
-							],
 							"rowRoute": "TicketDetail",
-							"emptyText": "No tickets assigned to you"
+							"emptyText": "No tickets assigned to you",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								}
+							],
+							"due": {
+								"field": "slaDeadline",
+								"emptyText": "No due date"
+							}
 						}
 					},
 					{
@@ -5910,6 +6026,19 @@
 										"newest": {
 											"field": "expectedCloseDate",
 											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "expectedCloseDate",
+												"dir": "asc"
+											}
 										}
 									}
 								},
@@ -5928,13 +6057,46 @@
 							],
 							"avatar": "{client.name}",
 							"title": "{title}",
-							"meta": "{client.name} · {pipeline.title} · {stage}",
-							"trailing": [
-								"€ {value}",
-								"Closing {expectedCloseDate|date}"
-							],
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{pipeline.title}",
+									"{stage}"
+								]
+							},
+							"trailing": "{value|currency:currency}",
 							"rowRoute": "LeadDetail",
-							"emptyText": "No leads assigned to you"
+							"emptyText": "No leads assigned to you",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								},
+								{
+									"kind": "stale",
+									"field": "@self.updated",
+									"afterDays": 14,
+									"label": "Out of date {days} days",
+									"variant": "warning"
+								}
+							],
+							"due": {
+								"field": "expectedCloseDate",
+								"emptyText": "No due date"
+							}
 						}
 					},
 					{
@@ -5992,11 +6154,12 @@
 							"presentation": "rows",
 							"title": "{subject}",
 							"meta": "{type}",
-							"trailing": [
-								"Deadline {deadline|date}"
-							],
 							"rowRoute": "TaskDetail",
-							"emptyText": "No follow-ups assigned to you"
+							"emptyText": "No follow-ups assigned to you",
+							"due": {
+								"field": "deadline",
+								"emptyText": "No due date"
+							}
 						}
 					}
 				],
@@ -6016,7 +6179,8 @@
 						"gridX": 0,
 						"gridY": 1,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"sizeToContent": true
 					},
 					{
 						"id": "2",
@@ -6033,7 +6197,8 @@
 						"gridX": 8,
 						"gridY": 4,
 						"gridWidth": 4,
-						"gridHeight": 3
+						"gridHeight": 3,
+						"sizeToContent": true
 					},
 					{
 						"id": "4",
@@ -6041,7 +6206,8 @@
 						"gridX": 0,
 						"gridY": 5,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"sizeToContent": true
 					},
 					{
 						"id": "5",
@@ -6049,7 +6215,8 @@
 						"gridX": 0,
 						"gridY": 9,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"sizeToContent": true
 					},
 					{
 						"id": "6",
@@ -6057,7 +6224,8 @@
 						"gridX": 0,
 						"gridY": 13,
 						"gridWidth": 6,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"sizeToContent": true
 					},
 					{
 						"id": "7",
@@ -6065,7 +6233,8 @@
 						"gridX": 6,
 						"gridY": 13,
 						"gridWidth": 6,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"sizeToContent": true
 					}
 				]
 			}
