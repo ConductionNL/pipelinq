@@ -145,15 +145,22 @@ def path_in(entries, ref):
     return here
 
 
-def moment(kind, rest):
-    pat = r'^([+-]?\d{1,4})$' if kind == 'date' else r'^([+-]?\d{1,4}) ([01]\d|2[0-3]):([0-5]\d)$'
+WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+
+def moment(kind, rest, today=None):
+    """`n`, `n@thu`, `n HH:MM`, `n@thu HH:MM`: n days from today, then the first such weekday on or after it."""
+    wd = r'(?:@(mon|tue|wed|thu|fri|sat|sun))?'
+    pat = r'^([+-]?\d{1,4})' + wd + '$' if kind == 'date' else r'^([+-]?\d{1,4})' + wd + r' ([01]\d|2[0-3]):([0-5]\d)$'
     m = re.match(pat, rest)
     if not m:
         return None
-    day = TODAY + dt.timedelta(days=int(m.group(1)))
+    day = (today or TODAY) + dt.timedelta(days=int(m.group(1)))
+    if m.group(2):
+        day = day + dt.timedelta(days=(WEEKDAYS.index(m.group(2)) - day.weekday()) % 7)
     if kind == 'date':
         return day.date().isoformat()
-    return day.replace(hour=int(m.group(2)), minute=int(m.group(3)), second=0).isoformat()
+    return day.replace(hour=int(m.group(3)), minute=int(m.group(4)), second=0).isoformat()
 
 
 def fill(value, ctx, gaps):
@@ -190,17 +197,32 @@ def resolve(ph, ctx):
     if kind == 'lookup':
         return ctx['lookups'].get(rest)
     if kind in ('date', 'datetime'):
-        return moment(kind, rest)
+        return moment(kind, rest, ctx.get('today'))
+    if kind == 'organisation':
+        return ctx['organisations'].get(rest)
+    if kind == 'instance' and rest == 'baseUrl':
+        return 'https://instance.example'
     return None
 
 
 def cast_entries(cast_file):
-    cast = json.load(open(cast_file, encoding='utf-8'))['cast']
+    """The cast by key, with each person's and organisation's contactsUid filled the way
+    the loader's catalogue does (`example-set-<set>-<key>` unless the cast declares one)."""
+    whole = json.load(open(cast_file, encoding='utf-8'))
+    cast = whole['cast']
     entries = {}
     for part in ('people', 'organisations', 'groups'):
         for e in cast.get(part, []):
+            e = dict(e)
+            if part != 'groups' and not isinstance(e.get('contactsUid'), str):
+                e['contactsUid'] = 'example-set-%s-%s' % (whole.get('set', ''), e['key'])
             entries[e['key']] = e
-    return cast, entries
+    organisations = {}
+    for o in cast.get('openregisterOrganisations', []) or whole.get('openregisterOrganisations', []) or []:
+        for name in (o.get('slug'), o.get('name')):
+            if name:
+                organisations[name] = 'stand-in-organisation-' + str(o.get('slug') or o.get('name'))
+    return cast, entries, organisations
 
 
 def literal_identifiers(raw_value, path, problems, where):
@@ -236,7 +258,7 @@ def main():
     reg_schemas = {}
     for slug, reg in cfg.get('components', {}).get('registers', {}).items():
         reg_schemas[reg.get('slug', slug)] = set(reg.get('schemas', []))
-    cast, entries = cast_entries(args.cast)
+    cast, entries, organisations = cast_entries(args.cast)
     fragment = json.load(open(args.fragment, encoding='utf-8'))
     app = args.app or os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(args.fragment))))))
     problems = []
@@ -244,7 +266,7 @@ def main():
     if 'cast' in fragment:
         problems.append('the fragment carries a cast; only openregister may')
     keys = set()
-    ctx = {'cast': entries, 'objects': {}, 'lookups': {}}
+    ctx = {'cast': entries, 'objects': {}, 'lookups': {}, 'organisations': organisations}
     counts = {}
     for i, obj in enumerate(fragment.get('objects', [])):
         key = obj.get('key', '')
@@ -285,9 +307,29 @@ def main():
         if undeclared:
             problems.append('%s: keys the schema does not declare (the read-back proof would exit 2): %s' % (where, ', '.join(undeclared)))
         counts[(obj['register'], obj['schema'])] = counts.get((obj['register'], obj['schema']), 0) + 1
+    for index, entry in enumerate(fragment.get('appConfig', [])):
+        where = 'appConfig %d' % index
+        if not isinstance(entry, dict):
+            problems.append('%s is not an object' % where)
+            continue
+        if entry.get('app', app) != app:
+            problems.append('%s sets config of app %s; a fragment sets only its own app' % (where, entry.get('app')))
+        generate = entry.get('generate') is True
+        if not isinstance(entry.get('key'), str) or entry['key'] == '' or (not generate and not isinstance(entry.get('value'), (str, int, float, bool))):
+            problems.append('%s needs a key and a value, or generate: true' % where)
+            continue
+        if generate:
+            continue
+        gaps = []
+        value = fill(entry['value'], ctx, gaps)
+        for g in gaps:
+            problems.append('%s (%s): placeholder %s does not resolve' % (where, entry['key'], g))
+        print('       appConfig %s = %s' % (entry['key'], value))
     for group in fragment.get('groups', []):
         if not group.get('group'):
             problems.append('a group entry has no gid')
+        if group.get('group') == 'admin':
+            problems.append('group admin: a set never adds anyone to Nextcloud administrators')
         for m in group.get('members', []):
             if not entries.get(m, {}).get('uid'):
                 problems.append('group %s: %s is not a cast person with an account' % (group.get('group'), m))

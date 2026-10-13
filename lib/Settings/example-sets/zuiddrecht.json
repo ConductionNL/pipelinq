@@ -1,6 +1,16 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid holds a marked stand-in until the loader can create Contacts vCards. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged.",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; remove puts the old values back. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged.",
+	"appConfig": [
+		{
+			"key": "crm_group",
+			"value": "{{cast:kcc.gid}}"
+		},
+		{
+			"key": "brp.allowed_groups",
+			"value": "{{cast:kcc.gid}}"
+		}
+	],
 	"objects": [
 		{
 			"key": "client-henk",
@@ -11,7 +21,7 @@
 				"type": "person",
 				"email": "{{cast:henk.email}}",
 				"address": "{{cast:henk.address.street}} {{cast:henk.address.number}}, {{cast:henk.address.postcode}} {{cast:henk.address.city}}",
-				"contactsUid": "example-set-zuiddrecht-henk",
+				"contactsUid": "{{cast:henk.contactsUid}}",
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
 				"preferredChannel": "phone",
@@ -29,7 +39,7 @@
 				"type": "person",
 				"email": "{{cast:sanne.email}}",
 				"address": "{{cast:sanne.address.street}} {{cast:sanne.address.number}}, {{cast:sanne.address.postcode}} {{cast:sanne.address.city}}",
-				"contactsUid": "example-set-zuiddrecht-sanne",
+				"contactsUid": "{{cast:sanne.contactsUid}}",
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
 				"preferredChannel": "email",
@@ -47,7 +57,7 @@
 				"type": "person",
 				"email": "{{cast:fatima.email}}",
 				"address": "{{cast:fatima.address.street}} {{cast:fatima.address.number}}, {{cast:fatima.address.postcode}} {{cast:fatima.address.city}}",
-				"contactsUid": "example-set-zuiddrecht-fatima",
+				"contactsUid": "{{cast:fatima.contactsUid}}",
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
 				"preferredChannel": "phone",
@@ -68,7 +78,7 @@
 				"industry": [
 					"{{cast:slagerij.sbi.description}}"
 				],
-				"contactsUid": "example-set-zuiddrecht-slagerij",
+				"contactsUid": "{{cast:slagerij.contactsUid}}",
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
 				"accountOwner": "{{cast:daan.uid}}",
@@ -87,7 +97,7 @@
 				"email": "{{cast:janwillem.email}}",
 				"role": "Eigenaar",
 				"client": "{{object:client-slagerij.id}}",
-				"contactsUid": "example-set-zuiddrecht-janwillem",
+				"contactsUid": "{{cast:janwillem.contactsUid}}",
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl"
@@ -105,7 +115,7 @@
 				"industry": [
 					"{{cast:cloudgemeente.sbi.description}}"
 				],
-				"contactsUid": "example-set-zuiddrecht-cloudgemeente",
+				"contactsUid": "{{cast:cloudgemeente.contactsUid}}",
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
 				"accountOwner": "{{cast:daan.uid}}",
@@ -125,7 +135,7 @@
 				"email": "{{cast:mark.email}}",
 				"role": "Directeur",
 				"client": "{{object:client-cloudgemeente.id}}",
-				"contactsUid": "example-set-zuiddrecht-mark",
+				"contactsUid": "{{cast:mark.contactsUid}}",
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl"
@@ -143,7 +153,7 @@
 				"industry": [
 					"{{cast:vandam.sbi.description}}"
 				],
-				"contactsUid": "example-set-zuiddrecht-vandam",
+				"contactsUid": "{{cast:vandam.contactsUid}}",
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
 				"accountOwner": "{{cast:daan.uid}}",
@@ -162,7 +172,7 @@
 				"email": "{{cast:karin.email}}",
 				"role": "Bedrijfsleider",
 				"client": "{{object:client-vandam.id}}",
-				"contactsUid": "example-set-zuiddrecht-karin",
+				"contactsUid": "{{cast:karin.contactsUid}}",
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl"
@@ -177,7 +187,7 @@
 				"title": "Vraag over de nieuwe afvalkalender",
 				"description": "De heer Bakker belt. Hij heeft de afvalkalender voor 2027 niet gekregen en wil weten wanneer het grofvuil wordt opgehaald.",
 				"client": "{{object:client-henk.id}}",
-				"contactsUid": "example-set-zuiddrecht-henk",
+				"contactsUid": "{{cast:henk.contactsUid}}",
 				"assignee": "{{cast:daan.uid}}",
 				"status": "resolved",
 				"priority": "normal",
@@ -201,7 +211,7 @@
 				"outcome": "handled",
 				"status": "resolved",
 				"client": "{{object:client-henk.id}}",
-				"contactsUid": "example-set-zuiddrecht-henk",
+				"contactsUid": "{{cast:henk.contactsUid}}",
 				"assignee": "{{cast:daan.uid}}",
 				"occurredAt": "{{datetime:-2 10:25}}",
 				"duration": "PT15M",
@@ -217,7 +227,7 @@
 				"title": "Vraag over de stand van het Woo-verzoek fietspad Lindelaan",
 				"description": "Mevrouw De Vries vraagt wanneer zij een besluit krijgt op haar Woo-verzoek over de verlichting van het fietspad aan de Lindelaan.",
 				"client": "{{object:client-sanne.id}}",
-				"contactsUid": "example-set-zuiddrecht-sanne",
+				"contactsUid": "{{cast:sanne.contactsUid}}",
 				"assignee": "{{cast:daan.uid}}",
 				"status": "in_progress",
 				"priority": "normal",
@@ -237,7 +247,7 @@
 				"title": "Klacht over een moeilijke brief",
 				"description": "Mevrouw El-Amrani begrijpt de brief over de afvalstoffenheffing 2027 niet. Zij vindt dat de gemeente te moeilijke woorden gebruikt en wil dat iemand het uitlegt.",
 				"client": "{{object:client-fatima.id}}",
-				"contactsUid": "example-set-zuiddrecht-fatima",
+				"contactsUid": "{{cast:fatima.contactsUid}}",
 				"assignee": "{{cast:daan.uid}}",
 				"status": "new",
 				"priority": "normal",

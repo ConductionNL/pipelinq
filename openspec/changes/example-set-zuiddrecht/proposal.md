@@ -12,10 +12,10 @@ The Zuiddrecht demo municipality tells one story across apps. OpenRegister PR #4
 
 ConductionNL/openregister#4603 (the loader and the cast). Until it merges, the fragment is inert: nothing reads the folder.
 
-## Known gaps
+## Agents and contact identity
 
-- `client.contactsUid` and `contact.contactsUid` are required and name a Nextcloud Contacts vCard, which the loader cannot create. The fragment writes a marked stand-in (`example-set-zuiddrecht-<key>`), so the objects are valid but link to no address-book card until the loader can provision one.
-- Agents and managers get their rights from app config (`crm_group`, `brp.allowed_groups`, `forecast_manager_group` and others). A fragment cannot set app config yet, so the set grants daan nothing beyond what any signed-in user has.
+- `appConfig` sets `crm_group` and `brp.allowed_groups` to the cast's KCC group (`{{cast:kcc.gid}}`, `zuiddrecht-kcc`), which daan is in through the cast. So daan works as a CRM agent and may look people up in the BRP. The loader records the old values and remove puts them back.
+- `client.contactsUid` and `contact.contactsUid` are required and name a Nextcloud Contacts card. Each comes from the cast (`{{cast:<key>.contactsUid}}`, `example-set-zuiddrecht-<key>`), so every app that names a cast member uses the same uid. The loader writes no Contacts card: a later `pipelinq:contacts:sync` writes a card with that uid. Until then the uid links to no card; pipelinq only requires the field.
 - Sanne's question is not yet linked to her Woo case: no dossiq fragment exists to look the case up in.
 
 ## Impact
