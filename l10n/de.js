@@ -2342,7 +2342,21 @@ OC.L10N.register(
         "On this ticket": "Zu diesem Ticket",
         "Ticket panels": "Ticket-Bereiche",
         "Ticket details": "Ticketdetails",
-        "Decisions": "Beschlüsse"
+        "Decisions": "Beschlüsse",
+        "Preferred name": "Rufname",
+        "The name this person likes to be called, such as Jan for Johannes.": "Der Name, mit dem diese Person angesprochen werden möchte, zum Beispiel Jan für Johannes.",
+        "Incoming call": "Eingehender Anruf",
+        "Incoming call: choose contact": "Eingehender Anruf: Kontakt wählen",
+        "queue {queue}": "Warteschlange {queue}",
+        "line {line}": "Leitung {line}",
+        "Found on the number, 1 client": "Zur Nummer gefunden, 1 Kunde",
+        "Found on the number, {count} contacts": "Zur Nummer gefunden, {count} Kontakte",
+        "No client found on this number": "Kein Kunde zu dieser Nummer gefunden",
+        "This call is logged as a contact moment. Open the client to see their requests and earlier contact.": "Dieser Anruf ist als Kontaktmoment erfasst. Öffne den Kunden für Anfragen und früheren Kontakt.",
+        "Not this client": "Nicht dieser Kunde",
+        "Answer and open": "Annehmen und öffnen",
+        "Choose contact": "Kontakt wählen",
+        "The contact is not saved. Try again.": "Der Kontakt wurde nicht gespeichert. Versuche es erneut."
     },
     "nplurals=2; plural=(n != 1);"
 )

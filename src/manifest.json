@@ -1577,21 +1577,21 @@
 						"widgetId": "my-work",
 						"gridX": 0,
 						"gridY": 18,
-						"gridWidth": 6,
+						"gridWidth": 12,
 						"gridHeight": 6
 					},
 					{
 						"id": "8",
 						"widgetId": "client-overview",
-						"gridX": 6,
-						"gridY": 18,
+						"gridX": 0,
+						"gridY": 24,
 						"gridWidth": 6,
 						"gridHeight": 6
 					},
 					{
 						"id": "9",
 						"widgetId": "billing-categories",
-						"gridX": 0,
+						"gridX": 6,
 						"gridY": 24,
 						"gridWidth": 6,
 						"gridHeight": 4
@@ -1803,6 +1803,7 @@
 							"columns": 2,
 							"include": [
 								"name",
+								"preferredName",
 								"email",
 								"phone",
 								"address",
@@ -2416,9 +2417,54 @@
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "client-panels",
+						"widgetId": "client-summary-open-tickets",
 						"gridX": 0,
 						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "client-summary-sla-breached",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "client-summary-new-requests",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "client-summary-sla-at-risk",
+						"gridX": 4,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "5",
+						"widgetId": "client-summary-last-activity",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "9",
+						"widgetId": "client-panels",
+						"gridX": 0,
+						"gridY": 4,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
@@ -2588,7 +2634,10 @@
 					"variant": "purple"
 				},
 				"headerMeta": "{address}",
-				"_kpiNote": "The five summary tiles (client-summary-*) are declared but not placed: the detail grid collapses to one column below 1000px of its own width and the side column leaves the body about 790px, so five tiles stacked into five full-width cards. They return when the library draws a KPI row beside a side column."
+				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip, so an organisation and a person without one show nothing.",
+				"headerFields": [
+					"preferredName"
+				]
 			}
 		},
 		{
@@ -3262,6 +3311,8 @@
 					"variant": "info"
 				},
 				"headerMeta": "{role} at {client.name}",
+				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip.",
+				"headerFields": ["preferredName"],
 				"headerActions": [
 					{
 						"id": "call",
@@ -4980,7 +5031,7 @@
 						"gridX": 8,
 						"gridY": 2,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 8
 					},
 					{
 						"id": "4",
@@ -4994,7 +5045,7 @@
 						"id": "5",
 						"widgetId": "pos-tx-related",
 						"gridX": 8,
-						"gridY": 7,
+						"gridY": 10,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -5002,7 +5053,7 @@
 						"id": "6",
 						"widgetId": "pos-tx-payment",
 						"gridX": 0,
-						"gridY": 12,
+						"gridY": 15,
 						"gridWidth": 12,
 						"gridHeight": 5
 					}
@@ -5042,6 +5093,10 @@
 						"closed"
 					]
 				},
+				"_extendNote": "The customer of a ticket is a reference to a client. Extending it gives the row the client's name, which the title column draws as its second line, as the PqWachtrij board does. A ticket without a client shows the title alone.",
+				"extend": [
+					"client"
+				],
 				"quickFilters": [
 					{
 						"label": "All",
@@ -5102,7 +5157,12 @@
 						},
 						"sortable": true
 					},
-					"title",
+					{
+						"key": "title",
+						"label": "Title",
+						"secondary": "{client.name}",
+						"sortable": true
+					},
 					"ticketType",
 					"priority",
 					"channel",

@@ -277,12 +277,13 @@ class TicketService {
 	 * @param string $ticketType One of the TYPE_* constants.
 	 * @param array<string, mixed> $extraFilters Additional OR filters merged in.
 	 * @param int $limit Max rows.
+	 * @param array<string, string> $sort Order, as `[field => asc|desc]`. Empty keeps the store's own order.
 	 *
 	 * @return array<int, mixed> The matching ticket rows.
 	 *
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 	 */
-	public function findByType(string $ticketType, array $extraFilters = [], int $limit = 10000): array {
+	public function findByType(string $ticketType, array $extraFilters = [], int $limit = 10000, array $sort = []): array {
 		if ($this->isConfigured() === false) {
 			return [];
 		}
@@ -296,8 +297,13 @@ class TicketService {
 			$extraFilters
 		);
 
+		$query = ['filters' => $filters, 'limit' => $limit];
+		if ($sort !== []) {
+			$query['sort'] = $sort;
+		}
+
 		try {
-			return $this->getObjectService()->findAll(['filters' => $filters, 'limit' => $limit]);
+			return $this->getObjectService()->findAll($query);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'TicketService.findByType failed',
