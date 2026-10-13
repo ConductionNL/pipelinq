@@ -5159,6 +5159,7 @@
 					},
 					{
 						"key": "title",
+						"label": "Title",
 						"secondary": "{client.name}",
 						"sortable": true
 					},
