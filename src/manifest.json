@@ -1577,21 +1577,21 @@
 						"widgetId": "my-work",
 						"gridX": 0,
 						"gridY": 18,
-						"gridWidth": 6,
+						"gridWidth": 12,
 						"gridHeight": 6
 					},
 					{
 						"id": "8",
 						"widgetId": "client-overview",
-						"gridX": 6,
-						"gridY": 18,
+						"gridX": 0,
+						"gridY": 24,
 						"gridWidth": 6,
 						"gridHeight": 6
 					},
 					{
 						"id": "9",
 						"widgetId": "billing-categories",
-						"gridX": 0,
+						"gridX": 6,
 						"gridY": 24,
 						"gridWidth": 6,
 						"gridHeight": 4
@@ -5031,7 +5031,7 @@
 						"gridX": 8,
 						"gridY": 2,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 8
 					},
 					{
 						"id": "4",
@@ -5045,7 +5045,7 @@
 						"id": "5",
 						"widgetId": "pos-tx-related",
 						"gridX": 8,
-						"gridY": 7,
+						"gridY": 10,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -5053,7 +5053,7 @@
 						"id": "6",
 						"widgetId": "pos-tx-payment",
 						"gridX": 0,
-						"gridY": 12,
+						"gridY": 15,
 						"gridWidth": 12,
 						"gridHeight": 5
 					}
