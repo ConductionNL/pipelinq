@@ -5,8 +5,8 @@
  *
  * Pins the fleet-reference A6 receiver contract: the full fail-closed
  * rejection matrix (structure, algorithm, signature, use/iss/exp/iat/sub),
- * both secret-derivation branches (portaliq app-config value, instance-secret
- * fallback — mocked IConfig), and — most importantly — the ROUND-TRIP
+ * both secret-derivation branches (portaliq app-config value through mocked
+ * IAppConfig, instance-secret fallback through mocked IConfig), and — most importantly — the ROUND-TRIP
  * compatibility pin: assertions are minted here with the byte-identical
  * procedure portaliq's PortalJwtService::createAssertion() uses (same header,
  * same claim set, same base64url encoding, same HMAC input), so any token
@@ -37,6 +37,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Portal;
 
 use OCA\Pipelinq\Portal\PortalAssertionVerifier;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
 
@@ -300,14 +301,11 @@ class PortalAssertionVerifierTest extends TestCase {
 	 */
 	public function testAppConfigSecretTakesPrecedence(): void {
 		$config = $this->createMock(IConfig::class);
-		$config->method('getAppValue')
-			->with('portaliq', 'jwt_signing_secret', '')
-			->willReturn(self::SECRET);
 		$config->method('getSystemValue')
 			->with('secret', str_pad('portaliq', 32, '_'))
 			->willReturn(self::OTHER_SECRET);
 
-		$verifier = new PortalAssertionVerifier(config: $config);
+		$verifier = new PortalAssertionVerifier(config: $config, appConfig: $this->appConfigReturning(value: self::SECRET));
 
 		$this->assertIsArray($verifier->verify($this->mintAssertion(secret: self::SECRET)));
 		$this->assertNull($verifier->verify($this->mintAssertion(secret: self::OTHER_SECRET)));
@@ -315,28 +313,71 @@ class PortalAssertionVerifierTest extends TestCase {
 	}//end testAppConfigSecretTakesPrecedence()
 
 	/**
+	 * REGRESSION (13-14 Oct 2026, 401 on every portal action): portaliq
+	 * stores `jwt_signing_secret` SENSITIVE, so the legacy
+	 * `IConfig::getAppValue()` returns the encrypted value while
+	 * `IAppConfig::getValueString()` returns the real secret. The verifier
+	 * must use the decrypted secret, never the ciphertext.
+	 *
+	 * @return void
+	 */
+	public function testSensitiveSecretIsReadDecryptedThroughIAppConfig(): void {
+		$ciphertext = '$AppConfigEncryption$'.str_repeat('a1b2c3d4e5f6', 22);
+
+		$config = $this->createMock(IConfig::class);
+		$config->method('getAppValue')
+			->with('portaliq', 'jwt_signing_secret', '')
+			->willReturn($ciphertext);
+		$config->method('getSystemValue')
+			->willReturn(self::OTHER_SECRET);
+
+		// Positional on purpose: against the old constructor the extra
+		// argument is ignored, the legacy ciphertext read runs, and this
+		// test fails on the signature check, not on an unknown-parameter error.
+		$verifier = new PortalAssertionVerifier($config, null, null, $this->appConfigReturning(value: self::SECRET));
+
+		$this->assertIsArray($verifier->verify($this->mintAssertion(secret: self::SECRET)));
+		$this->assertNull($verifier->verify($this->mintAssertion(secret: $ciphertext)));
+
+	}//end testSensitiveSecretIsReadDecryptedThroughIAppConfig()
+
+	/**
 	 * Secret derivation branch 2: empty or too-short app-config values fall
-	 * back to the Nextcloud instance secret — exactly like portaliq.
+	 * back to the Nextcloud instance secret.
 	 *
 	 * @return void
 	 */
 	public function testInstanceSecretFallback(): void {
 		foreach (['', 'short'] as $appValue) {
 			$config = $this->createMock(IConfig::class);
-			$config->method('getAppValue')
-				->with('portaliq', 'jwt_signing_secret', '')
-				->willReturn($appValue);
 			$config->method('getSystemValue')
 				->with('secret', str_pad('portaliq', 32, '_'))
 				->willReturn(self::SECRET);
 
-			$verifier = new PortalAssertionVerifier(config: $config);
+			$verifier = new PortalAssertionVerifier(config: $config, appConfig: $this->appConfigReturning(value: $appValue));
 
 			$this->assertIsArray($verifier->verify($this->mintAssertion(secret: self::SECRET)));
-
 		}
 
 	}//end testInstanceSecretFallback()
+
+	/**
+	 * An IAppConfig mock that serves portaliq's secret the way portaliq
+	 * stores it: non-lazy, decrypted on read.
+	 *
+	 * @param string $value The decrypted secret to return.
+	 *
+	 * @return IAppConfig
+	 */
+	private function appConfigReturning(string $value): IAppConfig {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')
+			->with('portaliq', 'jwt_signing_secret', '', false)
+			->willReturn($value);
+
+		return $appConfig;
+
+	}//end appConfigReturning()
 
 	/**
 	 * No usable secret (< 16 chars, or neither config nor override) fails
