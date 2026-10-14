@@ -5261,10 +5261,7 @@
 				"description": "Tickets, leads and follow-ups that are yours, the most urgent first",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"kpiRow": [
-					"my-open-tickets",
-					"my-answered-week",
-					"my-converted-week",
-					"my-avg-answer"
+					"my-lens"
 				],
 				"widgets": [
 					{
@@ -5402,9 +5399,10 @@
 						}
 					},
 					{
-						"id": "my-open-tickets",
-						"type": "stat",
-						"title": "Open on me",
+						"id": "my-week",
+						"type": "stats-block",
+						"title": "Your week so far",
+						"showTitle": true,
 						"visibleWhen": {
 							"workspace": "lens",
 							"op": "in",
@@ -5414,140 +5412,78 @@
 							]
 						},
 						"content": {
-							"label": "Open on me",
-							"caption": "tickets assigned to you",
-							"icon": "ClipboardCheckOutline",
-							"format": {
-								"style": "number",
-								"decimals": 0
-							},
-							"source": {
-								"register": "pipelinq",
-								"schema": "ticket",
-								"metric": "count",
-								"filter": {
-									"assignee": "@me",
-									"status": {
-										"notIn": [
-											"resolved",
-											"completed",
-											"rejected",
-											"converted",
-											"closed"
-										]
+							"layout": "grid",
+							"columns": 2,
+							"stats": [
+								{
+									"label": "Answered",
+									"caption": "this week",
+									"format": {
+										"style": "number",
+										"decimals": 0
+									},
+									"source": {
+										"register": "pipelinq",
+										"schema": "ticket",
+										"metric": "count",
+										"filter": {
+											"assignee": "@me",
+											"status": {
+												"in": [
+													"resolved",
+													"completed"
+												]
+											},
+											"resolvedAt[gte]": "@today-7d"
+										}
+									}
+								},
+								{
+									"label": "Average answer time",
+									"caption": "agreement: 2 working days",
+									"format": {
+										"style": "decimal",
+										"decimals": 1,
+										"suffix": " days"
+									},
+									"source": {
+										"kind": "elapsed",
+										"register": "pipelinq",
+										"schema": "ticket",
+										"from": "occurredAt",
+										"to": "resolvedAt",
+										"unit": "days",
+										"filter": {
+											"assignee": "@me",
+											"status": {
+												"in": [
+													"resolved",
+													"completed"
+												]
+											},
+											"resolvedAt[gte]": "@today-30d"
+										}
+									}
+								},
+								{
+									"label": "Turned into a case",
+									"caption": "converted in 7 days",
+									"format": {
+										"style": "number",
+										"decimals": 0
+									},
+									"source": {
+										"register": "pipelinq",
+										"schema": "ticket",
+										"metric": "count",
+										"filter": {
+											"assignee": "@me",
+											"status": "converted",
+											"resolvedAt[gte]": "@today-7d"
+										}
 									}
 								}
-							}
-						}
-					},
-					{
-						"id": "my-answered-week",
-						"type": "stat",
-						"title": "Answered this week",
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
 							]
-						},
-						"content": {
-							"label": "Answered this week",
-							"caption": "resolved or completed in 7 days",
-							"icon": "CheckCircleOutline",
-							"format": {
-								"style": "number",
-								"decimals": 0
-							},
-							"source": {
-								"register": "pipelinq",
-								"schema": "ticket",
-								"metric": "count",
-								"filter": {
-									"assignee": "@me",
-									"status": {
-										"in": [
-											"resolved",
-											"completed"
-										]
-									},
-									"resolvedAt[gte]": "@today-7d"
-								}
-							}
-						}
-					},
-					{
-						"id": "my-converted-week",
-						"type": "stat",
-						"title": "Turned into a case",
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
-						"content": {
-							"label": "Turned into a case",
-							"caption": "converted in 7 days",
-							"icon": "ArrowRightCircleOutline",
-							"format": {
-								"style": "number",
-								"decimals": 0
-							},
-							"source": {
-								"register": "pipelinq",
-								"schema": "ticket",
-								"metric": "count",
-								"filter": {
-									"assignee": "@me",
-									"status": "converted",
-									"resolvedAt[gte]": "@today-7d"
-								}
-							}
-						}
-					},
-					{
-						"id": "my-avg-answer",
-						"type": "stat",
-						"title": "Average answer time",
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
-						"content": {
-							"label": "Average answer time",
-							"caption": "agreement: 2 working days",
-							"icon": "TimerOutline",
-							"format": {
-								"style": "decimal",
-								"decimals": 1,
-								"suffix": " days"
-							},
-							"source": {
-								"kind": "elapsed",
-								"register": "pipelinq",
-								"schema": "ticket",
-								"from": "occurredAt",
-								"to": "resolvedAt",
-								"unit": "days",
-								"filter": {
-									"assignee": "@me",
-									"status": {
-										"in": [
-											"resolved",
-											"completed"
-										]
-									},
-									"resolvedAt[gte]": "@today-30d"
-								}
-							}
 						}
 					},
 					{
@@ -5946,7 +5882,7 @@
 								}
 							},
 							"rowRoute": "TicketDetail",
-							"emptyText": "No tickets assigned to you",
+							"emptyText": "No ticket of yours waits for the customer",
 							"badges": [
 								{
 									"field": "priority",
@@ -6166,54 +6102,54 @@
 				"layout": [
 					{
 						"id": "0",
-						"widgetId": "my-lens",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 1,
-						"sizeToContent": true
-					},
-					{
-						"id": "1",
 						"widgetId": "my-answer-today",
 						"gridX": 0,
-						"gridY": 1,
+						"gridY": 0,
 						"gridWidth": 8,
 						"gridHeight": 4,
 						"sizeToContent": true
 					},
 					{
-						"id": "2",
-						"widgetId": "my-start-here",
+						"id": "1",
+						"widgetId": "my-week",
 						"gridX": 8,
-						"gridY": 1,
+						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 3,
 						"sizeToContent": true
 					},
 					{
-						"id": "3",
-						"widgetId": "my-saved-views",
-						"gridX": 8,
+						"id": "2",
+						"widgetId": "my-waiting-on-me",
+						"gridX": 0,
 						"gridY": 4,
+						"gridWidth": 8,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "3",
+						"widgetId": "my-start-here",
+						"gridX": 8,
+						"gridY": 3,
 						"gridWidth": 4,
 						"gridHeight": 3,
 						"sizeToContent": true
 					},
 					{
 						"id": "4",
-						"widgetId": "my-waiting-on-me",
-						"gridX": 0,
-						"gridY": 5,
-						"gridWidth": 8,
-						"gridHeight": 4,
+						"widgetId": "my-saved-views",
+						"gridX": 8,
+						"gridY": 6,
+						"gridWidth": 4,
+						"gridHeight": 3,
 						"sizeToContent": true
 					},
 					{
 						"id": "5",
 						"widgetId": "my-waiting-on-customer",
 						"gridX": 0,
-						"gridY": 9,
+						"gridY": 8,
 						"gridWidth": 8,
 						"gridHeight": 4,
 						"sizeToContent": true
@@ -6222,7 +6158,7 @@
 						"id": "6",
 						"widgetId": "my-leads",
 						"gridX": 0,
-						"gridY": 13,
+						"gridY": 12,
 						"gridWidth": 6,
 						"gridHeight": 4,
 						"sizeToContent": true
@@ -6231,7 +6167,7 @@
 						"id": "7",
 						"widgetId": "my-follow-ups",
 						"gridX": 6,
-						"gridY": 13,
+						"gridY": 12,
 						"gridWidth": 6,
 						"gridHeight": 4,
 						"sizeToContent": true

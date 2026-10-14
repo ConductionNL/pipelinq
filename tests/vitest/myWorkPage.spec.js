@@ -57,7 +57,6 @@ describe('the My work page', () => {
 		expect(bar.controls.map((c) => c.style)).toEqual(['chips', 'toggle', 'select'])
 		const chips = bar.controls[0].options.map((o) => o.value)
 		expect(chips).toEqual(['all', 'tickets', 'leads', 'tasks'])
-		expect(page.config.layout.find((l) => l.widgetId === 'my-lens').sizeToContent).toBe(true)
 	})
 
 	it('follows the chips, and lets the controls sort and show completed work', () => {
@@ -115,6 +114,20 @@ describe('the My work page', () => {
 
 	it('keeps the meta line when a row has no customer', () => {
 		expect(widget('my-answer-today').content.meta.parts).toEqual(['{client.name}', '{channel}'])
+	})
+
+	it('puts the bar above the grid and the week in one card', () => {
+		// In the KPI row the bar is no grid item, so the grid's two-row minimum
+		// does not leave a band under it.
+		expect(page.config.kpiRow).toEqual(['my-lens'])
+		expect(page.config.layout.some((l) => l.widgetId === 'my-lens')).toBe(false)
+		const week = widget('my-week')
+		expect(week.type).toBe('stats-block')
+		expect(week.content.layout).toBe('grid')
+		for (const stat of week.content.stats) {
+			expect(stat.source.filter.assignee, stat.label).toBe('@me')
+		}
+		expect(week.content.stats.map((s) => s.source.kind)).toContain('elapsed')
 	})
 
 	it('carries the start-here banner and the saved views', () => {
