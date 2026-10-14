@@ -3,7 +3,8 @@
 /**
  * Pipelinq register access sync
  *
- * The register fragment `register.d/99-zzz-register-access.json` closes
+ * The register fragments `register.d/99-zzz-register-access-registers.json`
+ * and `register.d/99-zzz-register-access.json` close
  * pipelinq's registers to the built-in staff group `sales` (and the system
  * account). Two groups a deployment picks cannot be named in a file, so this
  * class writes them into OpenRegister:

@@ -1,6 +1,6 @@
 # Tasks: close-pipelinq-register-to-staff
 
-- [x] 1.1 `register.d/99-zzz-register-access.json`: staff-only blocks on the three registers (version 1.1.0), `authenticated` replaced by the staff on 8 schemas, vocabularies readable and staff-written.
+- [x] 1.1 `register.d/99-zzz-register-access-registers.json` and `register.d/99-zzz-register-access.json`: staff-only blocks on the three registers (version 1.1.0), `authenticated` replaced by the staff on 8 schemas, vocabularies readable and staff-written.
   - unit: `RegisterAccessDeclaredTest`
 - [x] 1.2 `RegisterAccessSync` grants `crm_group` wherever `sales` is granted and takes a replaced group out; called from `SettingsService::loadSettings` and `updateSettings`.
   - unit: `RegisterAccessSyncTest`, `SettingsServiceRegisterAccessTest`
