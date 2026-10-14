@@ -18,6 +18,7 @@
 <script>
 import { CnDataTable } from '@conduction/nextcloud-vue'
 import { NcEmptyContent } from '@nextcloud/vue'
+import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 
 export default {
 	name: 'SourcePerformanceWidget',
@@ -72,8 +73,22 @@ export default {
 			]
 		},
 
+		/**
+		 * The rows with the source as its label ("Doorverwijzing", not the
+		 * stored "referral"). The stored value stays on the row as
+		 * `sourceValue`.
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
 		rows() {
-			return Array.isArray(this.data) ? this.data : []
+			if (!Array.isArray(this.data)) {
+				return []
+			}
+			return this.data.map((row) => ({
+				...row,
+				sourceValue: row.source,
+				source: leadSourceLabel(row.source),
+			}))
 		},
 	},
 }
