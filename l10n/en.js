@@ -7647,7 +7647,11 @@ OC.L10N.register(
         "requests with status new": "requests with status new",
         "open tickets past their deadline": "open tickets past their deadline",
         "deadline within 24h": "deadline within 24h",
-        "most recent interaction": "most recent interaction"
+        "most recent interaction": "most recent interaction",
+        "Partner": "Partner",
+        "Event or fair": "Event or fair",
+        "Public tender": "Public tender",
+        "No source": "No source"
     },
     "nplurals=2; plural=(n != 1);"
 )

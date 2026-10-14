@@ -7562,7 +7562,11 @@ OC.L10N.register(
         "requests with status new": "met status nieuw",
         "open tickets past their deadline": "open tickets over de termijn",
         "deadline within 24h": "termijn binnen 24 uur",
-        "most recent interaction": "meest recente contact"
+        "most recent interaction": "meest recente contact",
+        "Partner": "Partner",
+        "Event or fair": "Evenement of beurs",
+        "Public tender": "Aanbesteding",
+        "No source": "Geen bron"
     },
     "nplurals=2; plural=(n != 1);"
 )
