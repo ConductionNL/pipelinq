@@ -31,7 +31,13 @@ describe('the My work page', () => {
 			.slice()
 			.sort((a, b) => a.gridY - b.gridY)
 			.map((l) => l.widgetId)
-			.filter((id) => ['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer'].includes(id))
+			.filter((id) =>
+				[
+					'my-answer-today',
+					'my-waiting-on-me',
+					'my-waiting-on-customer',
+				].includes(id),
+			)
 		expect(order).toEqual([
 			'my-answer-today',
 			'my-waiting-on-me',
@@ -54,13 +60,23 @@ describe('the My work page', () => {
 	it('has a bar with the lens chips, the completed switch and the sort select', () => {
 		const bar = widget('my-lens').content
 		expect(bar.layout).toBe('bar')
-		expect(bar.controls.map((c) => c.style)).toEqual(['chips', 'toggle', 'select'])
+		expect(bar.controls.map((c) => c.style)).toEqual([
+			'chips',
+			'toggle',
+			'select',
+		])
 		const chips = bar.controls[0].options.map((o) => o.value)
 		expect(chips).toEqual(['all', 'tickets', 'leads', 'tasks'])
 	})
 
 	it('follows the chips, and lets the controls sort and show completed work', () => {
-		for (const id of ['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer', 'my-leads', 'my-follow-ups']) {
+		for (const id of [
+			'my-answer-today',
+			'my-waiting-on-me',
+			'my-waiting-on-customer',
+			'my-leads',
+			'my-follow-ups',
+		]) {
 			const w = widget(id)
 			expect(w.visibleWhen.workspace, id).toBe('lens')
 			expect(w.content.pageControls.sort.key, id).toBe('sort')
@@ -82,7 +98,13 @@ describe('the My work page', () => {
 	})
 
 	it('badges urgent and high work, and draws the due date as text', () => {
-		const lists = { 'my-answer-today': 'slaDeadline', 'my-waiting-on-me': 'slaDeadline', 'my-waiting-on-customer': 'slaDeadline', 'my-leads': 'expectedCloseDate', 'my-follow-ups': 'deadline' }
+		const lists = {
+			'my-answer-today': 'slaDeadline',
+			'my-waiting-on-me': 'slaDeadline',
+			'my-waiting-on-customer': 'slaDeadline',
+			'my-leads': 'expectedCloseDate',
+			'my-follow-ups': 'deadline',
+		}
 		for (const [id, field] of Object.entries(lists)) {
 			const c = widget(id).content
 			expect(c.due.field, id).toBe(field)
@@ -95,7 +117,9 @@ describe('the My work page', () => {
 	})
 
 	it('marks a lead stale on the same field the Leads list filters on', () => {
-		const stale = widget('my-leads').content.badges.find((b) => b.kind === 'stale')
+		const stale = widget('my-leads').content.badges.find(
+			(b) => b.kind === 'stale',
+		)
 		// Lead objects carry `@self.updated`; there is no `_dateModified` on them.
 		expect(stale.field).toBe('@self.updated')
 		expect(stale.afterDays).toBe(14)
@@ -103,9 +127,16 @@ describe('the My work page', () => {
 	})
 
 	it('sorts priority first by the rank, not by the stored string', () => {
-		const select = widget('my-lens').content.controls.find((c) => c.style === 'select')
+		const select = widget('my-lens').content.controls.find(
+			(c) => c.style === 'select',
+		)
 		expect(select.options.map((o) => o.value)).toContain('priority')
-		for (const id of ['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer', 'my-leads']) {
+		for (const id of [
+			'my-answer-today',
+			'my-waiting-on-me',
+			'my-waiting-on-customer',
+			'my-leads',
+		]) {
 			const entry = widget(id).content.pageControls.sort.map.priority
 			expect(entry.rank, id).toEqual(['urgent', 'high', 'normal', 'low'])
 			expect(entry.then.dir, id).toBe('asc')
@@ -113,7 +144,10 @@ describe('the My work page', () => {
 	})
 
 	it('keeps the meta line when a row has no customer', () => {
-		expect(widget('my-answer-today').content.meta.parts).toEqual(['{client.name}', '{channel}'])
+		expect(widget('my-answer-today').content.meta.parts).toEqual([
+			'{client.name}',
+			'{channel}',
+		])
 	})
 
 	it('puts the bar above the grid and the week in one card', () => {
@@ -140,7 +174,8 @@ describe('the My work page', () => {
 		for (const a of layout) {
 			for (const b of layout) {
 				if (a === b) continue
-				const overlap = a.gridX < b.gridX + b.gridWidth
+				const overlap =
+					a.gridX < b.gridX + b.gridWidth
 					&& b.gridX < a.gridX + a.gridWidth
 					&& a.gridY < b.gridY + b.gridHeight
 					&& b.gridY < a.gridY + a.gridHeight
