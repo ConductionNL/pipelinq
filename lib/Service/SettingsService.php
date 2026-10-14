@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Access\RegisterAccessSync;
 use OCA\Pipelinq\Service\Matomo\MatomoReportService;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -399,6 +400,7 @@ class SettingsService {
 	 * @param DefaultPipelineService $pipelineService The default pipeline service.
 	 * @param DefaultSkillService $skillService The default skill service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param RegisterAccessSync|null $registerAccess Writes the CRM group into the registers' access rules.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -407,6 +409,7 @@ class SettingsService {
 		private DefaultPipelineService $pipelineService,
 		private DefaultSkillService $skillService,
 		private LoggerInterface $logger,
+		private ?RegisterAccessSync $registerAccess=null,
 	) {
 	}//end __construct()
 
@@ -445,9 +448,11 @@ class SettingsService {
 	 * @return array The updated settings.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
 	 */
 	public function updateSettings(array $data): array {
 		$this->refuseAMatomoToken(data: $data);
+		$previousCrmGroup = $this->appConfig->getValueString(Application::APP_ID, 'crm_group', '');
 
 		foreach (self::CONFIG_KEYS as $key) {
 			if (isset($data[$key]) === true) {
@@ -474,9 +479,29 @@ class SettingsService {
 		}
 
 		$this->logger->info('Pipelinq settings updated', ['keys' => array_keys($data)]);
+		$this->syncCrmGroup(previous: $previousCrmGroup);
 
 		return $this->getSettings();
 	}//end updateSettings()
+
+	/**
+	 * Grant a changed CRM group in the registers' access rules, and take the previous one out.
+	 *
+	 * The register grants the CRM group alongside `sales`
+	 * (close-pipelinq-register-to-staff).
+	 *
+	 * @param string $previous The CRM group before the save.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 */
+	private function syncCrmGroup(string $previous): void {
+		$current = $this->appConfig->getValueString(Application::APP_ID, 'crm_group', '');
+		if ($current !== $previous) {
+			$this->registerAccess?->sync(previous: $previous);
+		}
+	}//end syncCrmGroup()
 
 	/**
 	 * Refuse a raw Matomo token written into the credential REFERENCE field.
@@ -520,9 +545,16 @@ class SettingsService {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $force is a simple re-import toggle
 	 * @spec                                        openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-16
+	 * @spec                                        openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
 	 */
 	public function loadSettings(bool $force = false): array {
-		return $this->settingsLoadService->loadSettings(force: $force);
+		$result = $this->settingsLoadService->loadSettings(force: $force);
+
+		// The import writes the file's access rules back, which name `sales`
+		// but not the deployment's CRM group: grant it again.
+		$this->registerAccess?->sync();
+
+		return $result;
 	}//end loadSettings()
 
 	/**
