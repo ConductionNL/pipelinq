@@ -52,6 +52,10 @@
 			<component :is="pageSidebarComponent" v-if="pageSidebarComponent" />
 		</template>
 	</CnAppRoot>
+	<!-- The incoming-call card of board PqInkomendGesprek. It floats over
+	     whichever page the agent is on, and renders nothing at all on an
+	     install without a telephony platform. -->
+	<IncomingCallCard />
 </template>
 
 <script>
@@ -65,6 +69,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
+import IncomingCallCard from './components/IncomingCallCard.vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
@@ -80,6 +85,7 @@ export default {
 	components: {
 		CnAppRoot,
 		CnObjectSidebar,
+		IncomingCallCard,
 	},
 
 	/**

@@ -2343,7 +2343,21 @@ OC.L10N.register(
         "Ticket panels": "Volets du ticket",
         "Ticket details": "Détails du ticket",
         "Decisions": "Décisions",
-        "On the linked case": "Sur le dossier lié"
+        "On the linked case": "Sur le dossier lié",
+        "Preferred name": "Prénom usuel",
+        "The name this person likes to be called, such as Jan for Johannes.": "Le nom par lequel cette personne souhaite être appelée, par exemple Jan pour Johannes.",
+        "Incoming call": "Appel entrant",
+        "Incoming call: choose contact": "Appel entrant : choisissez le contact",
+        "queue {queue}": "file {queue}",
+        "line {line}": "ligne {line}",
+        "Found on the number, 1 client": "Trouvé avec le numéro, 1 client",
+        "Found on the number, {count} contacts": "Trouvés avec le numéro, {count} contacts",
+        "No client found on this number": "Aucun client trouvé avec ce numéro",
+        "This call is logged as a contact moment. Open the client to see their requests and earlier contact.": "Cet appel est enregistré comme contact. Ouvrez le client pour voir ses demandes et ses contacts précédents.",
+        "Not this client": "Pas ce client",
+        "Answer and open": "Répondre et ouvrir",
+        "Choose contact": "Choisir le contact",
+        "The contact is not saved. Try again.": "Le contact n'est pas enregistré. Réessayez."
     },
     "nplurals=2; plural=(n != 1);"
 )

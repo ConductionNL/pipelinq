@@ -22,6 +22,19 @@ export async function screenPop(fromNumber) {
 }
 
 /**
+ * Ask which inbound call is open on the signed-in agent's own line.
+ *
+ * @return {Promise<{enabled: boolean, delayMs: number, call: object|null}>}
+ *   `enabled` is false when no telephony platform is configured or the screen
+ *   pop is switched off; `call` is null when nobody is calling.
+ * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+ */
+export async function incomingCall() {
+	const { data } = await axios.get(base('/api/cti/incoming-call'))
+	return data
+}
+
+/**
  * Ask the PBX to place a call from the agent's extension to a number.
  *
  * @param {string} targetNumber The number to dial.
@@ -126,6 +139,7 @@ export async function getEventLog(filters = {}) {
 
 export default {
 	screenPop,
+	incomingCall,
 	clickToDial,
 	submitDisposition,
 	attachRecording,
