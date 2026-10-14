@@ -16,4 +16,5 @@
 
 ## 3. Text and tests
 - [x] 3.1 l10n nl and en for the heading, description and empty state (and de, fr, es, it)
-- [ ] 3.2 (live pass, decision 139) One Playwright test: open a ticket, Decisions tab, Create a proposal, the proposal is listed (skips with a reason when decidiq is not installed)
+- [x] 3.2 (live pass, decision 139) One Playwright test: open a ticket, Decisions tab, Create a proposal, the proposal is listed (skips with a reason when decidiq is not installed)
+  - Built: `tests/e2e/ticket-decisions-tab.spec.ts`. Run against :8080 it found a decidiq defect: the leaf wrote `outcome: 'pending'`, outside the decision schema's enum, so every proposal got a 400 and the dialog kept spinning. Fixed in decidiq (ConductionNL/decidiq#1730); this test passes once that lands.
