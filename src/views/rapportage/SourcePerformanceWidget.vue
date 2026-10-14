@@ -56,15 +56,18 @@ export default {
 					label: t('pipelinq', 'Conversion %'),
 					sortable: true,
 					align: 'right',
-					format: (v) => `${v}%`,
+					// CnDataTable takes a format spec, not a function: the
+					// functions here were ignored and the cells read "33.3" and
+					// "7000".
+					format: { style: 'percent', decimals: 1 },
 				},
 				{
 					key: 'avgWonValue',
 					label: t('pipelinq', 'Avg deal value'),
 					sortable: true,
 					align: 'right',
-					format: (v) =>
-						v > 0 ? `EUR ${v.toLocaleString('nl-NL')}` : '—',
+					// In the reporting currency, in the user's locale.
+					format: { style: 'currency', decimals: 0 },
 				},
 			]
 		},
