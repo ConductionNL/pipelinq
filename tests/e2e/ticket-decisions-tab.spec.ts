@@ -16,7 +16,11 @@
  * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-the-ticket-page-has-a-decisions-tab-req-tdt-001
  */
 import { expect, test } from '@playwright/test'
-import { appUrl, dismissSupportDialog, dismissWalkthrough } from './helpers/pipelinq.ts'
+import {
+	appUrl,
+	dismissSupportDialog,
+	dismissWalkthrough,
+} from './helpers/pipelinq.ts'
 import { FixtureSession, TEST_PREFIX } from './workflows/helpers/fixtures.ts'
 
 test('a proposal created on the Decisions tab is listed there', async ({ page }) => {
@@ -24,8 +28,13 @@ test('a proposal created on the Decisions tab is listed there', async ({ page })
 	const fx = new FixtureSession(page)
 	try {
 		await page.goto(appUrl('/tickets'))
-		const decidiq = await page.evaluate(() => Boolean((window as any).OC?.appswebroots?.decidiq))
-		test.skip(!decidiq, 'decidiq is not enabled on this instance, so the Decisions tab is absent by design')
+		const decidiq = await page.evaluate(() =>
+			Boolean((window as any).OC?.appswebroots?.decidiq),
+		)
+		test.skip(
+			!decidiq,
+			'decidiq is not enabled on this instance, so the Decisions tab is absent by design',
+		)
 
 		const ticket = await fx.create('ticket', {
 			title: `${TEST_PREFIX} decisions tab`,
@@ -41,13 +50,25 @@ test('a proposal created on the Decisions tab is listed there', async ({ page })
 		await page.getByRole('tab', { name: /^(Decisions|Besluiten)$/ }).click()
 
 		const proposalTitle = `${TEST_PREFIX} proposal`
-		await page.getByRole('button', { name: /Create proposal for this object|Voorstel aanmaken voor dit object/ }).first().click()
+		await page
+			.getByRole('button', {
+				name: /Create proposal for this object|Voorstel aanmaken voor dit object/,
+			})
+			.first()
+			.click()
 		const dialog = page.getByRole('dialog')
-		await dialog.getByRole('textbox', { name: /^(Title|Titel)/ }).fill(proposalTitle)
+		await dialog
+			.getByRole('textbox', { name: /^(Title|Titel)/ })
+			.fill(proposalTitle)
 		// decidiq's decision schema requires `text`, which the form labels as
 		// the explanation; without it the save is refused with a 400.
-		await dialog.getByRole('textbox', { name: /^(Explanation|Toelichting)/ }).fill('Prepared from the ticket by the e2e suite.')
-		await dialog.getByRole('button', { name: /^(Create|Save|Aanmaken|Opslaan)$/ }).last().click()
+		await dialog
+			.getByRole('textbox', { name: /^(Explanation|Toelichting)/ })
+			.fill('Prepared from the ticket by the e2e suite.')
+		await dialog
+			.getByRole('button', { name: /^(Create|Save|Aanmaken|Opslaan)$/ })
+			.last()
+			.click()
 
 		await expect(page.getByText(proposalTitle)).toBeVisible({ timeout: 30_000 })
 	} finally {
