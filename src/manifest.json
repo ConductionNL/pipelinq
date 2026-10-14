@@ -2767,6 +2767,19 @@
 						"icon": "Gavel"
 					},
 					{
+						"id": "ticket-case-decisions",
+						"type": "integration",
+						"integrationId": "decidesk-decisions",
+						"title": "On the linked case",
+						"icon": "Gavel",
+						"_note": "The decisions on the case this ticket became (REQ-TDT-002). The same decidiq leaf, mounted for the case: the host resolves the tokens (nextcloud-vue#1520) and does not mount the widget while one has no value, so a ticket without a case shows no second list. `caseReference` names no app (ADR-048), so neither does this widget: register and schema are whatever the installed case app answers, read on the server (DashboardController, `case_target`) and handed to the page as app config. A created proposal is stamped with them; the list itself only reads the id.",
+						"props": {
+							"register": "@config.caseRegister",
+							"schema": "@config.caseSchema",
+							"objectId": "@object.caseReference"
+						}
+					},
+					{
 						"id": "ticket-panels",
 						"type": "tabs",
 						"title": "Ticket panels",
@@ -2782,7 +2795,8 @@
 								{
 									"widgetIds": [
 										"ticket-decision-routes",
-										"ticket-decisions"
+										"ticket-decisions",
+										"ticket-case-decisions"
 									],
 									"label": "Decisions",
 									"visibleWhen": {

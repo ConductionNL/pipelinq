@@ -5,17 +5,21 @@
  *
  * The Decisions tab on the ticket page (ticket-decisions-tab). The tab is
  * manifest config: a tabs widget whose Decisions tab stacks the head (what the
- * tab holds, the two routes, Convert to case) and decidiq's leaf for the
- * ticket. So the page is tested as the manifest declares it, and the head as
- * the one component pipelinq owns.
+ * tab holds, the two routes, Convert to case), decidiq's leaf for the ticket
+ * and the same leaf for the case the ticket became. So the page is tested as
+ * the manifest declares it, and the head as the one component pipelinq owns.
  *
  * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-the-ticket-page-has-a-decisions-tab-req-tdt-001
+ * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
  */
 
 import { mount } from '@vue/test-utils'
+import fs from 'fs'
+import path from 'path'
 import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 import manifest from '../../src/manifest.json'
+import { pageAppConfig } from '../../src/utils/pageAppConfig.js'
 
 vi.mock('@nextcloud/l10n', () => ({
 	translate: (app, text) => text,
@@ -53,10 +57,11 @@ describe('the ticket page declares a Decisions tab', () => {
 		expect(panels.content.tabs[0].widgetId).toBe('ticket-data')
 	})
 
-	it("stacks the head and the ticket's decisions in that tab", () => {
+	it("stacks the head, the ticket's decisions and the case's decisions in that tab", () => {
 		expect(decisions.widgetIds).toEqual([
 			'ticket-decision-routes',
 			'ticket-decisions',
+			'ticket-case-decisions',
 		])
 		for (const id of decisions.widgetIds) {
 			expect(byId(id), id).toBeTruthy()
@@ -72,6 +77,28 @@ describe('the ticket page declares a Decisions tab', () => {
 		expect(leaf.type).toBe('integration')
 		expect(leaf.integrationId).toBe('decidesk-decisions')
 		expect(leaf.props).toBeUndefined()
+	})
+
+	it("mounts the same leaf for the linked case, by the ticket's caseReference", () => {
+		const leaf = byId('ticket-case-decisions')
+		expect(leaf.type).toBe('integration')
+		expect(leaf.integrationId).toBe('decidesk-decisions')
+		// Tokens, so the host mounts nothing on a ticket without a case or on
+		// an instance without a case app
+		// (nextcloud-vue CnDetailWidgetHost.widgetPropTokens.spec.js).
+		expect(leaf.props).toEqual({
+			register: '@config.caseRegister',
+			schema: '@config.caseSchema',
+			objectId: '@object.caseReference',
+		})
+	})
+
+	it("names no other app's register or schema: the case app is looked up", () => {
+		// `caseReference` is app-agnostic (ADR-048), so the widget is too.
+		const leaf = byId('ticket-case-decisions')
+		for (const value of Object.values(leaf.props)) {
+			expect(value.charAt(0), value).toBe('@')
+		}
 	})
 
 	it('shows the decisions in one place: no cell of their own on the overview', () => {
@@ -93,6 +120,45 @@ describe('the ticket page declares a Decisions tab', () => {
 		)
 		expect([...placed, ...children].sort()).toEqual(
 			widgets.map((widget) => widget.id).sort(),
+		)
+	})
+})
+
+describe('where cases live reaches the page as app config', () => {
+	const config = { currency: 'EUR', pipelineTarget: 0 }
+
+	it("adds the installed case app's register and schema", () => {
+		expect(
+			pageAppConfig(config, {
+				caseRegister: 'cases',
+				caseSchema: 'case-file',
+			}),
+		).toEqual({ ...config, caseRegister: 'cases', caseSchema: 'case-file' })
+	})
+
+	it.each([
+		['no case app', {}],
+		['nothing at all', undefined],
+		['a register without a schema', { caseRegister: 'cases' }],
+		['an empty schema', { caseRegister: 'cases', caseSchema: '' }],
+		['a value that is no text', { caseRegister: 'cases', caseSchema: 7 }],
+	])('adds neither key with %s', (label, caseTarget) => {
+		expect(pageAppConfig(config, caseTarget)).toEqual(config)
+	})
+
+	it('does not let the config state stand in for the case target', () => {
+		expect(pageAppConfig({ ...config, caseRegister: 'left-over' }, {})).toEqual(
+			config,
+		)
+	})
+
+	it('hands main.js both states', () => {
+		const main = fs.readFileSync(
+			path.resolve(__dirname, '../../src/main.js'),
+			'utf8',
+		)
+		expect(main).toMatch(
+			/pageAppConfig\(\s*loadState\('pipelinq', 'config', \{\}\),\s*loadState\('pipelinq', 'case_target', \{\}\),\s*\)/,
 		)
 	})
 })

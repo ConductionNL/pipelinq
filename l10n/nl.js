@@ -7542,6 +7542,7 @@ OC.L10N.register(
         "You have no saved views yet. Save a view on the tickets list.": "Je hebt nog geen opgeslagen weergaven. Sla een weergave op in de ticketlijst.",
         "agreement: 2 working days": "afspraak 2 werkdagen",
         "€ {value}": "€ {value}",
+        "On the linked case": "Over de gekoppelde zaak",
         "Preferred name": "Roepnaam",
         "The name this person likes to be called, such as Jan for Johannes.": "De naam waarmee deze persoon aangesproken wil worden, zoals Jan voor Johannes.",
         "Incoming call": "Inkomend gesprek",

@@ -7627,6 +7627,7 @@ OC.L10N.register(
         "You have no saved views yet. Save a view on the tickets list.": "You have no saved views yet. Save a view on the tickets list.",
         "agreement: 2 working days": "agreement: 2 working days",
         "€ {value}": "€ {value}",
+        "On the linked case": "On the linked case",
         "Preferred name": "Preferred name",
         "The name this person likes to be called, such as Jan for Johannes.": "The name this person likes to be called, such as Jan for Johannes.",
         "Incoming call": "Incoming call",
