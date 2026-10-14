@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Saving the CRM group, and every import, writes it into the registers' access rules.
+ * Saving the settings, and every import, writes the CRM groups into the registers' access rules.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -75,40 +75,40 @@ class SettingsServiceRegisterAccessTest extends TestCase {
 	}//end service()
 
 	/**
-	 * A new CRM group is synced, with the previous one named for removal.
+	 * Saving the settings applies the CRM groups; the sync itself skips when nothing changed.
 	 *
 	 * @return void
 	 */
-	public function testSavingANewCrmGroupSyncsItAndNamesThePreviousOne(): void {
-		$this->stored = ['crm_group' => 'kcc-oud'];
+	public function testSavingTheSettingsAppliesTheCrmGroups(): void {
 		$sync = $this->createMock(RegisterAccessSync::class);
-		$sync->expects($this->once())->method('sync')->with('kcc-oud');
+		$sync->expects($this->once())->method('sync')->with();
 
-		$this->service(sync: $sync)->updateSettings(['crm_group' => 'zuiddrecht-kcc']);
-	}//end testSavingANewCrmGroupSyncsItAndNamesThePreviousOne()
+		$this->service(sync: $sync)->updateSettings(['crm_read_group' => 'dossiq-medewerkers']);
+
+		$this->assertSame('dossiq-medewerkers', $this->stored['crm_read_group'], 'crm_read_group is a setting the screen saves');
+	}//end testSavingTheSettingsAppliesTheCrmGroups()
 
 	/**
-	 * Saving other settings leaves the registers alone.
+	 * Every import is followed by a forced sync, because the import writes the file's rules back.
 	 *
 	 * @return void
 	 */
-	public function testSavingAnUnchangedCrmGroupDoesNotSync(): void {
-		$this->stored = ['crm_group' => 'zuiddrecht-kcc'];
+	public function testEveryImportIsFollowedByAForcedSync(): void {
 		$sync = $this->createMock(RegisterAccessSync::class);
-		$sync->expects($this->never())->method('sync');
-
-		$this->service(sync: $sync)->updateSettings(['crm_group' => 'zuiddrecht-kcc']);
-	}//end testSavingAnUnchangedCrmGroupDoesNotSync()
-
-	/**
-	 * Every import is followed by a sync, because the import writes the file's rules back.
-	 *
-	 * @return void
-	 */
-	public function testEveryImportIsFollowedByASync(): void {
-		$sync = $this->createMock(RegisterAccessSync::class);
-		$sync->expects($this->once())->method('sync');
+		$sync->expects($this->once())->method('sync')->with(true);
 
 		$this->assertSame(['ok' => true], $this->service(sync: $sync)->loadSettings());
-	}//end testEveryImportIsFollowedByASync()
+	}//end testEveryImportIsFollowedByAForcedSync()
+
+	/**
+	 * The read group is offered with the other settings, empty by default.
+	 *
+	 * @return void
+	 */
+	public function testTheReadGroupIsASettingEmptyByDefault(): void {
+		$settings = $this->service(sync: $this->createMock(RegisterAccessSync::class))->getSettings();
+
+		$this->assertArrayHasKey('crm_read_group', $settings);
+		$this->assertSame('', $settings['crm_read_group']);
+	}//end testTheReadGroupIsASettingEmptyByDefault()
 }//end class

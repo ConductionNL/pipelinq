@@ -14,6 +14,10 @@ The cause: none of pipelinq's three registers had an authorization block, so Ope
 - The register versions move 1.0.0 to 1.1.0, because OpenRegister writes a register's own fields only on a newer version.
 - The deployment's CRM group (`crm_group`, the group `ObjectOwnerAccessPolicy` already treats as staff) cannot be named in a file. `RegisterAccessSync` grants it wherever `sales` is granted, after every import (`SettingsService::loadSettings`, which `InitializeSettings` calls on install and upgrade) and when the setting is saved, when the previous group is taken out. It never grants `authenticated`, `public`, `admin` or an empty value.
 
+- A separate CRM read group (`crm_read_group`, empty by default; decided by Ruben on 2026-10-14) lets case handlers in other apps read parties without CRM write rights. `RegisterAccessSync` grants it `read` and `export` only on client, contact, ticket and partyIndicatorValue, the schemas dossiq reads as the signed-in user for the party panel, the contact moments and the indicators. client, contact and partyIndicatorValue get the register's staff block as their own so the grant reaches only them. The Zuiddrecht example set sets it to `dossiq-medewerkers`.
+- The groups last applied are kept in app config (`crm_group_applied`, `crm_read_group_applied`), so a replaced group is taken out however the setting changed. `SyncRegisterAccessJob` applies a setting written straight to app config (an example set does that) within five minutes, and reads nothing while nothing changed.
+
 ## Consequences
 
-- dossiq embeds pipelinq's party panel and contact moments through providers that keep OpenRegister's checks on by design. A dossiq handler who is not in `sales` or the CRM group no longer sees them. That is the closure working; a deployment that wants handlers to see the customer view adds them to the CRM group.
+- dossiq embeds pipelinq's party panel and contact moments through providers that keep OpenRegister's checks on by design. A dossiq handler sees them when they are in `sales`, the CRM group or the CRM read group.
+- Not granted to the read group, though dossiq reaches them through pipelinq services: programmes (ProgrammePortfolioService) and survey dispatch (SurveyDispatchService, which writes invitations). They are not party data; widen READ_SCHEMAS if handlers need them.

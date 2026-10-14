@@ -37,3 +37,25 @@ When the app config `crm_group` names a group, pipelinq SHALL grant it on every 
 - **WHEN** the setting is saved
 - **THEN** `kcc-oud` is taken out and `kcc-nieuw` granted
 - @e2e exclude PHPUnit `RegisterAccessSyncTest::testAChangedSettingReplacesThePreviousGroup`, `SettingsServiceRegisterAccessTest`
+
+### Requirement: A configured read group reads the parties and contact moments and writes nothing
+
+When the app config `crm_read_group` names a group, pipelinq SHALL grant it `read` and `export`, and never create, update or delete, on exactly the schemas other apps read as the signed-in user for the party panel and the contact moments: client, contact, ticket and partyIndicatorValue. A group the setting no longer names SHALL be taken out, however the setting changed (the settings screen, an example set, `occ config:app:set`). A setting naming `authenticated`, `public`, `admin`, `sales` or nothing SHALL grant nothing. The Zuiddrecht example set SHALL set it to `dossiq-medewerkers`.
+
+#### Scenario: A case handler reads a party and cannot change it
+- **GIVEN** `crm_read_group` = `dossiq-medewerkers` and a handler in that group only
+- **WHEN** the registers are synced and the handler reads a client, then tries to update it
+- **THEN** OpenRegister's permission check grants the read and refuses the update, create and delete
+- @e2e exclude evaluated with OpenRegister's rule semantics (a group in a verb's list grants that verb, a verb that does not list the caller refuses it, admin aside) on the block the real sync writes, in PHPUnit `RegisterAccessSyncTest::testAReadGroupMemberReadsAClientAndCannotUpdateIt`; the live probe after re-import checks the instance
+
+#### Scenario: The read group reaches only the party and contact-moment schemas
+- **GIVEN** the same setting
+- **WHEN** the registers are synced
+- **THEN** client, contact, ticket and partyIndicatorValue grant the group read and export, and no register and no other schema names it
+- @e2e exclude PHPUnit `RegisterAccessSyncTest::testTheSyncWritesTheRegistersAndTheirSchemas`
+
+#### Scenario: Changing the setting removes the old group
+- **GIVEN** `dossiq-medewerkers` was applied
+- **WHEN** the setting changes to `zaakbehandelaars`, written straight to app config as an example set does
+- **THEN** the next sync (the background job, the settings save or the next import) takes `dossiq-medewerkers` out and grants `zaakbehandelaars`; while nothing changed, the job reads nothing
+- @e2e exclude PHPUnit `RegisterAccessSyncTest::testAChangedReadGroupIsTakenOutWhicheverWayItChanged`, `::testNothingChangedReadsNothing`

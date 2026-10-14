@@ -4,4 +4,6 @@
   - unit: `RegisterAccessDeclaredTest`
 - [x] 1.2 `RegisterAccessSync` grants `crm_group` wherever `sales` is granted and takes a replaced group out; called from `SettingsService::loadSettings` and `updateSettings`.
   - unit: `RegisterAccessSyncTest`, `SettingsServiceRegisterAccessTest`
-- [ ] 2.1 (live pass, after merge and re-import) The probe in the PR body returns 0 tickets and clients for an account in no group and for a member of `inwoners`, and a member of the CRM group still works the KCC queue.
+- [x] 1.3 `crm_read_group`: read and export on client, contact, ticket and partyIndicatorValue, never a write; applied groups recorded so a replaced group is taken out; `SyncRegisterAccessJob`; the Zuiddrecht example set sets `dossiq-medewerkers`.
+  - unit: `RegisterAccessSyncTest`, `SettingsServiceRegisterAccessTest`, `RegisterAccessDeclaredTest`
+- [ ] 2.1 (live pass, after merge and re-import) The probe in the PR body returns 0 tickets and clients for an account in no group and for a member of `inwoners`, a member of the CRM group still works the KCC queue, and a member of `dossiq-medewerkers` reads a client and cannot update it.

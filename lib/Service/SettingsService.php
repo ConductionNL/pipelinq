@@ -308,6 +308,11 @@ class SettingsService {
 		// built-in PRIVILEGED_GROUPS = ['admin', 'sales']; empty means only
 		// those two, like every other group key here.
 		'crm_group' => '',
+		// A group that READS the parties and contact moments other apps show
+		// as the signed-in user (dossiq's party panel), without any CRM write
+		// right. RegisterAccessSync grants it read and export on exactly
+		// those schemas (close-pipelinq-register-to-staff). Empty = nobody.
+		'crm_read_group' => '',
 		// First-party marketing-email open/click tracking
 		// (marketing-email-open-click-tracking) — off by default so today's
 		// provider-webhook-only render path is unchanged until an admin
@@ -449,10 +454,10 @@ class SettingsService {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-a-configured-read-group-reads-the-parties-and-contact-moments-and-writes-nothing
 	 */
 	public function updateSettings(array $data): array {
 		$this->refuseAMatomoToken(data: $data);
-		$previousCrmGroup = $this->appConfig->getValueString(Application::APP_ID, 'crm_group', '');
 
 		foreach (self::CONFIG_KEYS as $key) {
 			if (isset($data[$key]) === true) {
@@ -479,29 +484,10 @@ class SettingsService {
 		}
 
 		$this->logger->info('Pipelinq settings updated', ['keys' => array_keys($data)]);
-		$this->syncCrmGroup(previous: $previousCrmGroup);
+		$this->registerAccess?->sync();
 
 		return $this->getSettings();
 	}//end updateSettings()
-
-	/**
-	 * Grant a changed CRM group in the registers' access rules, and take the previous one out.
-	 *
-	 * The register grants the CRM group alongside `sales`
-	 * (close-pipelinq-register-to-staff).
-	 *
-	 * @param string $previous The CRM group before the save.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
-	 */
-	private function syncCrmGroup(string $previous): void {
-		$current = $this->appConfig->getValueString(Application::APP_ID, 'crm_group', '');
-		if ($current !== $previous) {
-			$this->registerAccess?->sync(previous: $previous);
-		}
-	}//end syncCrmGroup()
 
 	/**
 	 * Refuse a raw Matomo token written into the credential REFERENCE field.
@@ -551,8 +537,8 @@ class SettingsService {
 		$result = $this->settingsLoadService->loadSettings(force: $force);
 
 		// The import writes the file's access rules back, which name `sales`
-		// but not the deployment's CRM group: grant it again.
-		$this->registerAccess?->sync();
+		// but not the deployment's CRM group or CRM read group: grant them again.
+		$this->registerAccess?->sync(force: true);
 
 		return $result;
 	}//end loadSettings()

@@ -149,4 +149,29 @@ class RegisterAccessDeclaredTest extends TestCase {
 		$this->assertContains('public', $schemas['lead']['authorization']['create'], 'the website form still creates a lead');
 		$this->assertSame(self::STAFF, $schemas['lead']['authorization']['read']);
 	}//end testServiceAccountsAndTheWebFormKeepTheirGrants()
+
+	/**
+	 * The schemas the CRM read group reads carry the staff block as their own.
+	 *
+	 * The read group is granted on a schema's own block; a schema that
+	 * followed the register would take it from the register and hand it every
+	 * other schema too.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-a-configured-read-group-reads-the-parties-and-contact-moments-and-writes-nothing
+	 */
+	public function testTheReadGroupSchemasCarryTheirOwnStaffBlock(): void {
+		foreach (\OCA\Pipelinq\Service\Access\RegisterAccessSync::READ_SCHEMAS as $slug) {
+			$authorization = $this->config['components']['schemas'][$slug]['authorization'] ?? [];
+			foreach (['read', 'export'] as $verb) {
+				$this->assertSame(self::STAFF, $authorization[$verb] ?? null, $slug.'.'.$verb);
+			}
+
+			// Writes name the staff; ticket also keeps the messaging account's create and update.
+			foreach (['create', 'update', 'delete'] as $verb) {
+				$this->assertSame(self::STAFF, array_slice($authorization[$verb] ?? [], 0, 2), $slug.'.'.$verb);
+			}
+		}
+	}//end testTheReadGroupSchemasCarryTheirOwnStaffBlock()
 }//end class
