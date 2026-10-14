@@ -1808,7 +1808,15 @@
 								"phone",
 								"address",
 								"website"
-							]
+							],
+							"overrides": {
+								"preferredName": {
+									"visibleWhen": {
+										"field": "type",
+										"value": "person"
+									}
+								}
+							}
 						}
 					},
 					{
