@@ -27,9 +27,11 @@
  *      be read through IAppConfig, which decrypts it. The legacy
  *      `IConfig::getAppValue()` returns the stored ciphertext, and every
  *      HMAC check then fails (401 on every portal action, 13-14 Oct 2026).
- *   2. When that is empty or shorter than 16 chars:
- *      `IConfig::getSystemValue('secret', str_pad('portaliq', 32, '_'))` —
- *      the Nextcloud instance secret with portaliq's default-of-last-resort.
+ *   2. There is no second source. Portaliq refuses to mint without its
+ *      dedicated secret (`PortalSessionService`), so a receiver that fell
+ *      back to the Nextcloud instance `secret` could only ever accept a
+ *      token portaliq never made (ADR-054). An empty or short secret fails
+ *      closed.
  *
  * Same instance, same config store, same secret — nothing is exchanged out
  * of band. The secret never comes from the request.
@@ -56,7 +58,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Portal;
 
 use OCP\IAppConfig;
-use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -126,12 +127,11 @@ class PortalAssertionVerifier {
 	/**
 	 * Constructor.
 	 *
-	 * Auto-wireable from IConfig alone (the DI container falls back to the
-	 * scalar defaults). Unit tests construct it with a plain secret instead,
-	 * mirroring portaliq's PortalJwtService testability pattern:
-	 * `new PortalAssertionVerifier(config: null, secretOverride: 'sixteen-chars-min')`.
+	 * Auto-wireable (the DI container hands in IAppConfig and the logger and
+	 * falls back to the scalar default). Unit tests construct it with a plain
+	 * secret instead, mirroring portaliq's PortalJwtService testability pattern:
+	 * `new PortalAssertionVerifier(secretOverride: 'sixteen-chars-min')`.
 	 *
-	 * @param IConfig|null         $config         The instance-secret fallback source.
 	 * @param string|null          $secretOverride Plain signing secret for tests (bypasses config).
 	 * @param LoggerInterface|null $logger         Optional logger — rejection reasons at debug level only.
 	 * @param IAppConfig|null      $appConfig      Reads portaliq's sensitive signing secret (decrypted).
@@ -139,7 +139,6 @@ class PortalAssertionVerifier {
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
 	public function __construct(
-		private readonly ?IConfig $config=null,
 		private readonly ?string $secretOverride=null,
 		private readonly ?LoggerInterface $logger=null,
 		private readonly ?IAppConfig $appConfig=null,
@@ -239,15 +238,13 @@ class PortalAssertionVerifier {
 	 * @return string|null
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+	 * @spec openspec/changes/portal-verifier-has-no-instance-secret-fallback/specs/portal-contribution/spec.md#requirement-a-portal-assertion-is-verified-with-portaliqs-dedicated-secret-only-req-pvs-001
 	 */
 	private function secret(): ?string {
 		$secret = $this->secretOverride;
 		if ($secret === null) {
-			// Dedicated app-config secret first, instance secret as the fallback.
+			// Portaliq's dedicated secret only: it never signs with anything else.
 			$secret = $this->portaliqSecret();
-			if (($secret === '' || strlen($secret) < self::MIN_SECRET_LENGTH) && $this->config !== null) {
-				$secret = (string) $this->config->getSystemValue('secret', str_pad(self::PORTALIQ_APP_ID, 32, '_'));
-			}
 		}
 
 		if (strlen($secret) < self::MIN_SECRET_LENGTH) {
