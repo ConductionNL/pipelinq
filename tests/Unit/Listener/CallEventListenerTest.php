@@ -32,6 +32,7 @@ require_once __DIR__ . '/../../Stubs/Integriq/Event/CallEvent.php';
  *
  * @covers \OCA\Pipelinq\Listener\CallEventListener
  * @uses   \OCA\Pipelinq\AppInfo\Application
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  *
  * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-a-call-event-is-mirrored-and-resolved-once
  */
