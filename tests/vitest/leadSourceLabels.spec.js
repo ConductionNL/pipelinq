@@ -42,9 +42,7 @@ describe('leadSourceLabel', () => {
 	})
 
 	it('keeps a name an admin typed as it is', () => {
-		expect(leadSourceLabel('via het webformulier')).toBe(
-			'via het webformulier',
-		)
+		expect(leadSourceLabel('via het webformulier')).toBe('via het webformulier')
 		expect(leadSourceLabel(null)).toBe('')
 	})
 })
