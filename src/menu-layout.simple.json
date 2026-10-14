@@ -1100,7 +1100,8 @@
 						"gridWidth": 12,
 						"gridHeight": 2,
 						"showTitle": false,
-						"borderless": true
+						"borderless": true,
+						"sizeToContent": true
 					},
 					{
 						"id": "wr",
