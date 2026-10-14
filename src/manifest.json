@@ -1577,21 +1577,21 @@
 						"widgetId": "my-work",
 						"gridX": 0,
 						"gridY": 18,
-						"gridWidth": 6,
+						"gridWidth": 12,
 						"gridHeight": 6
 					},
 					{
 						"id": "8",
 						"widgetId": "client-overview",
-						"gridX": 6,
-						"gridY": 18,
+						"gridX": 0,
+						"gridY": 24,
 						"gridWidth": 6,
 						"gridHeight": 6
 					},
 					{
 						"id": "9",
 						"widgetId": "billing-categories",
-						"gridX": 0,
+						"gridX": 6,
 						"gridY": 24,
 						"gridWidth": 6,
 						"gridHeight": 4
@@ -2417,9 +2417,54 @@
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "client-panels",
+						"widgetId": "client-summary-open-tickets",
 						"gridX": 0,
 						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "client-summary-sla-breached",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "client-summary-new-requests",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "client-summary-sla-at-risk",
+						"gridX": 4,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "5",
+						"widgetId": "client-summary-last-activity",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "9",
+						"widgetId": "client-panels",
+						"gridX": 0,
+						"gridY": 4,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
@@ -2590,8 +2635,9 @@
 				},
 				"headerMeta": "{address}",
 				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip, so an organisation and a person without one show nothing.",
-				"headerFields": ["preferredName"],
-				"_kpiNote": "The five summary tiles (client-summary-*) are declared but not placed: the detail grid collapses to one column below 1000px of its own width and the side column leaves the body about 790px, so five tiles stacked into five full-width cards. They return when the library draws a KPI row beside a side column."
+				"headerFields": [
+					"preferredName"
+				]
 			}
 		},
 		{
@@ -2721,6 +2767,19 @@
 						"icon": "Gavel"
 					},
 					{
+						"id": "ticket-case-decisions",
+						"type": "integration",
+						"integrationId": "decidesk-decisions",
+						"title": "On the linked case",
+						"icon": "Gavel",
+						"_note": "The decisions on the case this ticket became (REQ-TDT-002). The same decidiq leaf, mounted for the case: the host resolves the tokens (nextcloud-vue#1520) and does not mount the widget while one has no value, so a ticket without a case shows no second list. `caseReference` names no app (ADR-048), so neither does this widget: register and schema are whatever the installed case app answers, read on the server (DashboardController, `case_target`) and handed to the page as app config. A created proposal is stamped with them; the list itself only reads the id.",
+						"props": {
+							"register": "@config.caseRegister",
+							"schema": "@config.caseSchema",
+							"objectId": "@object.caseReference"
+						}
+					},
+					{
 						"id": "ticket-panels",
 						"type": "tabs",
 						"title": "Ticket panels",
@@ -2736,7 +2795,8 @@
 								{
 									"widgetIds": [
 										"ticket-decision-routes",
-										"ticket-decisions"
+										"ticket-decisions",
+										"ticket-case-decisions"
 									],
 									"label": "Decisions",
 									"visibleWhen": {
@@ -4985,7 +5045,7 @@
 						"gridX": 8,
 						"gridY": 2,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 8
 					},
 					{
 						"id": "4",
@@ -4999,7 +5059,7 @@
 						"id": "5",
 						"widgetId": "pos-tx-related",
 						"gridX": 8,
-						"gridY": 7,
+						"gridY": 10,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -5007,7 +5067,7 @@
 						"id": "6",
 						"widgetId": "pos-tx-payment",
 						"gridX": 0,
-						"gridY": 12,
+						"gridY": 15,
 						"gridWidth": 12,
 						"gridHeight": 5
 					}
@@ -5047,6 +5107,10 @@
 						"closed"
 					]
 				},
+				"_extendNote": "The customer of a ticket is a reference to a client. Extending it gives the row the client's name, which the title column draws as its second line, as the PqWachtrij board does. A ticket without a client shows the title alone.",
+				"extend": [
+					"client"
+				],
 				"quickFilters": [
 					{
 						"label": "All",
@@ -5107,7 +5171,12 @@
 						},
 						"sortable": true
 					},
-					"title",
+					{
+						"key": "title",
+						"label": "Title",
+						"secondary": "{client.name}",
+						"sortable": true
+					},
 					"ticketType",
 					"priority",
 					"channel",
@@ -5195,11 +5264,981 @@
 		},
 		{
 			"id": "MyWork",
-			"_note": "MyWork.vue is a personal cross-entity worklist: it merges tasks, deals and contactmomenten assigned to the current user into grouped, due-date-coloured sections with entity badges and quick-filter buttons; no single-register 'index' page can aggregate across these schemas.",
 			"route": "/my-work",
-			"type": "custom",
-			"title": "My Work",
-			"component": "MyWorkView"
+			"type": "dashboard",
+			"title": "My work",
+			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. Not here, each named in the pull request: the share answered within the deadline (needs a ticket.answeredInTime flag), the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
+			"config": {
+				"showRefresh": true,
+				"showWidgetActions": false,
+				"gridFloat": false,
+				"description": "Tickets, leads and follow-ups that are yours, the most urgent first",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"kpiRow": [
+					"my-lens"
+				],
+				"widgets": [
+					{
+						"id": "my-lens",
+						"type": "workspace-filter",
+						"title": "Show",
+						"showTitle": false,
+						"content": {
+							"layout": "bar",
+							"controls": [
+								{
+									"style": "chips",
+									"label": "Show",
+									"writes": "@workspace.lens",
+									"urlKey": "lens",
+									"default": "all",
+									"options": [
+										{
+											"value": "all",
+											"label": "All",
+											"countFrom": [
+												{
+													"register": "pipelinq",
+													"schema": "ticket",
+													"filter": {
+														"assignee": "@me",
+														"status": {
+															"notIn": [
+																"resolved",
+																"completed",
+																"rejected",
+																"converted",
+																"closed"
+															]
+														}
+													}
+												},
+												{
+													"register": "pipelinq",
+													"schema": "lead",
+													"filter": {
+														"assignee": "@me",
+														"status": "open"
+													}
+												},
+												{
+													"register": "pipelinq",
+													"schema": "crmTask",
+													"filter": {
+														"assigneeUserId": "@me",
+														"status": "open"
+													}
+												}
+											]
+										},
+										{
+											"value": "tickets",
+											"label": "Tickets",
+											"countFrom": {
+												"register": "pipelinq",
+												"schema": "ticket",
+												"filter": {
+													"assignee": "@me",
+													"status": {
+														"notIn": [
+															"resolved",
+															"completed",
+															"rejected",
+															"converted",
+															"closed"
+														]
+													}
+												}
+											}
+										},
+										{
+											"value": "leads",
+											"label": "Leads",
+											"countFrom": {
+												"register": "pipelinq",
+												"schema": "lead",
+												"filter": {
+													"assignee": "@me",
+													"status": "open"
+												}
+											}
+										},
+										{
+											"value": "tasks",
+											"label": "Follow-ups",
+											"countFrom": {
+												"register": "pipelinq",
+												"schema": "crmTask",
+												"filter": {
+													"assigneeUserId": "@me",
+													"status": "open"
+												}
+											}
+										}
+									]
+								},
+								{
+									"style": "toggle",
+									"label": "Show completed",
+									"writes": "@workspace.showDone",
+									"urlKey": "done",
+									"align": "end"
+								},
+								{
+									"style": "select",
+									"label": "Sorting",
+									"writes": "@workspace.sort",
+									"urlKey": "sort",
+									"default": "deadline",
+									"options": [
+										{
+											"value": "deadline",
+											"label": "Deadline first"
+										},
+										{
+											"value": "priority",
+											"label": "Priority first"
+										},
+										{
+											"value": "waiting",
+											"label": "Waiting longest first"
+										},
+										{
+											"value": "newest",
+											"label": "Newest first"
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"id": "my-week",
+						"type": "stats-block",
+						"title": "Your week so far",
+						"showTitle": true,
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
+						"content": {
+							"layout": "grid",
+							"columns": 2,
+							"stats": [
+								{
+									"label": "Answered",
+									"caption": "this week",
+									"format": {
+										"style": "number",
+										"decimals": 0
+									},
+									"source": {
+										"register": "pipelinq",
+										"schema": "ticket",
+										"metric": "count",
+										"filter": {
+											"assignee": "@me",
+											"status": {
+												"in": [
+													"resolved",
+													"completed"
+												]
+											},
+											"resolvedAt[gte]": "@today-7d"
+										}
+									}
+								},
+								{
+									"label": "Average answer time",
+									"caption": "agreement: 2 working days",
+									"format": {
+										"style": "decimal",
+										"decimals": 1,
+										"suffix": " days"
+									},
+									"source": {
+										"kind": "elapsed",
+										"register": "pipelinq",
+										"schema": "ticket",
+										"from": "occurredAt",
+										"to": "resolvedAt",
+										"unit": "days",
+										"filter": {
+											"assignee": "@me",
+											"status": {
+												"in": [
+													"resolved",
+													"completed"
+												]
+											},
+											"resolvedAt[gte]": "@today-30d"
+										}
+									}
+								},
+								{
+									"label": "Turned into a case",
+									"caption": "converted in 7 days",
+									"format": {
+										"style": "number",
+										"decimals": 0
+									},
+									"source": {
+										"register": "pipelinq",
+										"schema": "ticket",
+										"metric": "count",
+										"filter": {
+											"assignee": "@me",
+											"status": "converted",
+											"resolvedAt[gte]": "@today-7d"
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "my-start-here",
+						"type": "banner",
+						"title": "Start here",
+						"showTitle": false,
+						"content": {
+							"layout": "attention",
+							"stacked": true,
+							"variant": "info",
+							"kicker": "Start here",
+							"title": "{subject.title}",
+							"reason": "This ticket has waited {subject.occurredAt|days} days. The agreement is an answer within 2 working days.",
+							"visibleWhen": {
+								"source": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"filter": {
+										"assignee": "@me",
+										"status": "in_progress",
+										"slaDeadline[lt]": "@today+1d"
+									},
+									"order": {
+										"slaDeadline": "asc"
+									}
+								},
+								"field": "id",
+								"op": "notEmpty"
+							},
+							"actions": [
+								{
+									"label": "Answer now",
+									"route": {
+										"name": "TicketDetail",
+										"params": {
+											"id": "@subject.id"
+										}
+									},
+									"primary": true
+								}
+							]
+						}
+					},
+					{
+						"id": "my-answer-today",
+						"type": "record-list",
+						"title": "Answer today",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
+						"headerLink": {
+							"label": "View all my tickets",
+							"route": "Tickets",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": {
+									"in": [
+										"new",
+										"in_progress"
+									]
+								},
+								"slaDeadline[lt]": "@today+1d"
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "slaDeadline",
+											"dir": "asc"
+										},
+										"waiting": {
+											"field": "occurredAt",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "occurredAt",
+											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "slaDeadline",
+												"dir": "asc"
+											}
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"extend": [
+								"client"
+							],
+							"avatar": "{client.name}",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Waiting for customer",
+									"resolved": "Resolved",
+									"completed": "Completed"
+								},
+								"colorMap": {
+									"new": "info",
+									"in_progress": "warning",
+									"awaiting_customer": "default",
+									"resolved": "success",
+									"completed": "success"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No ticket of yours is due today",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								}
+							],
+							"due": {
+								"field": "slaDeadline",
+								"emptyText": "No due date"
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "Phone",
+									"telefoon": "Phone",
+									"Telefoon": "Phone",
+									"email": "Email",
+									"E-mail": "Email",
+									"balie": "Counter",
+									"Balie": "Counter",
+									"portal": "Portal",
+									"web": "Website",
+									"chat": "Chat",
+									"post": "Letter",
+									"brief": "Letter",
+									"social": "Social media"
+								}
+							}
+						}
+					},
+					{
+						"id": "my-waiting-on-me",
+						"type": "record-list",
+						"title": "Waiting on me",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
+						"headerLink": {
+							"label": "View all my tickets",
+							"route": "Tickets",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": {
+									"in": [
+										"new",
+										"in_progress"
+									]
+								}
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "slaDeadline",
+											"dir": "asc"
+										},
+										"waiting": {
+											"field": "occurredAt",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "occurredAt",
+											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "slaDeadline",
+												"dir": "asc"
+											}
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"extend": [
+								"client"
+							],
+							"avatar": "{client.name}",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Waiting for customer",
+									"resolved": "Resolved",
+									"completed": "Completed"
+								},
+								"colorMap": {
+									"new": "info",
+									"in_progress": "warning",
+									"awaiting_customer": "default",
+									"resolved": "success",
+									"completed": "success"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No tickets assigned to you",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								}
+							],
+							"due": {
+								"field": "slaDeadline",
+								"emptyText": "No due date"
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "Phone",
+									"telefoon": "Phone",
+									"Telefoon": "Phone",
+									"email": "Email",
+									"E-mail": "Email",
+									"balie": "Counter",
+									"Balie": "Counter",
+									"portal": "Portal",
+									"web": "Website",
+									"chat": "Chat",
+									"post": "Letter",
+									"brief": "Letter",
+									"social": "Social media"
+								}
+							}
+						}
+					},
+					{
+						"id": "my-waiting-on-customer",
+						"type": "record-list",
+						"title": "Waiting on the customer",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
+						"headerLink": {
+							"label": "View all my tickets",
+							"route": "Tickets",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": "awaiting_customer"
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "slaDeadline",
+											"dir": "asc"
+										},
+										"waiting": {
+											"field": "occurredAt",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "occurredAt",
+											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "slaDeadline",
+												"dir": "asc"
+											}
+										}
+									}
+								}
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"extend": [
+								"client"
+							],
+							"avatar": "{client.name}",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Waiting for customer",
+									"resolved": "Resolved",
+									"completed": "Completed"
+								},
+								"colorMap": {
+									"new": "info",
+									"in_progress": "warning",
+									"awaiting_customer": "default",
+									"resolved": "success",
+									"completed": "success"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No ticket of yours waits for the customer",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								}
+							],
+							"due": {
+								"field": "slaDeadline",
+								"emptyText": "No due date"
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "Phone",
+									"telefoon": "Phone",
+									"Telefoon": "Phone",
+									"email": "Email",
+									"E-mail": "Email",
+									"balie": "Counter",
+									"Balie": "Counter",
+									"portal": "Portal",
+									"web": "Website",
+									"chat": "Chat",
+									"post": "Letter",
+									"brief": "Letter",
+									"social": "Social media"
+								}
+							}
+						}
+					},
+					{
+						"id": "my-saved-views",
+						"type": "saved-views",
+						"title": "Saved views",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"route": "Tickets",
+							"showCounts": true,
+							"limit": 5,
+							"emptyText": "You have no saved views yet. Save a view on the tickets list."
+						}
+					},
+					{
+						"id": "my-leads",
+						"type": "record-list",
+						"title": "My leads",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"leads"
+							]
+						},
+						"headerLink": {
+							"label": "View all my leads",
+							"route": "Leads",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "lead",
+							"filter": {
+								"assignee": "@me",
+								"status": "open"
+							},
+							"sort": {
+								"field": "expectedCloseDate",
+								"dir": "asc"
+							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "expectedCloseDate",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "expectedCloseDate",
+											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "expectedCloseDate",
+												"dir": "asc"
+											}
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"extend": [
+								"client",
+								"pipeline"
+							],
+							"avatar": "{client.name}",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{pipeline.title}",
+									"{stage}"
+								]
+							},
+							"trailing": "{value|currency:currency}",
+							"rowRoute": "LeadDetail",
+							"emptyText": "No leads assigned to you",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								},
+								{
+									"kind": "stale",
+									"field": "@self.updated",
+									"afterDays": 14,
+									"label": "Out of date {days} days",
+									"variant": "warning"
+								}
+							],
+							"due": {
+								"field": "expectedCloseDate",
+								"emptyText": "No due date"
+							}
+						}
+					},
+					{
+						"id": "my-follow-ups",
+						"type": "record-list",
+						"title": "My follow-ups",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tasks"
+							]
+						},
+						"headerLink": {
+							"label": "View all my tasks",
+							"route": "Tasks",
+							"query": {
+								"assigneeUserId": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"assigneeUserId": "@me",
+								"status": "open"
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "deadline",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "deadline",
+											"dir": "desc"
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{subject}",
+							"meta": "{type}",
+							"rowRoute": "TaskDetail",
+							"emptyText": "No follow-ups assigned to you",
+							"due": {
+								"field": "deadline",
+								"emptyText": "No due date"
+							}
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "0",
+						"widgetId": "my-answer-today",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "1",
+						"widgetId": "my-week",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3,
+						"sizeToContent": true
+					},
+					{
+						"id": "2",
+						"widgetId": "my-waiting-on-me",
+						"gridX": 0,
+						"gridY": 4,
+						"gridWidth": 8,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "3",
+						"widgetId": "my-start-here",
+						"gridX": 8,
+						"gridY": 3,
+						"gridWidth": 4,
+						"gridHeight": 3,
+						"sizeToContent": true
+					},
+					{
+						"id": "4",
+						"widgetId": "my-saved-views",
+						"gridX": 8,
+						"gridY": 6,
+						"gridWidth": 4,
+						"gridHeight": 3,
+						"sizeToContent": true
+					},
+					{
+						"id": "5",
+						"widgetId": "my-waiting-on-customer",
+						"gridX": 0,
+						"gridY": 8,
+						"gridWidth": 8,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "6",
+						"widgetId": "my-leads",
+						"gridX": 0,
+						"gridY": 12,
+						"gridWidth": 6,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "7",
+						"widgetId": "my-follow-ups",
+						"gridX": 6,
+						"gridY": 12,
+						"gridWidth": 6,
+						"gridHeight": 4,
+						"sizeToContent": true
+					}
+				]
+			}
 		},
 		{
 			"id": "SyncSettings",

@@ -2343,6 +2343,7 @@ OC.L10N.register(
         "Ticket panels": "Paneles del ticket",
         "Ticket details": "Detalles del ticket",
         "Decisions": "Decisiones",
+        "On the linked case": "Sobre el expediente vinculado",
         "Preferred name": "Nombre preferido",
         "The name this person likes to be called, such as Jan for Johannes.": "El nombre con el que esta persona quiere que la llamen, por ejemplo Jan en lugar de Johannes.",
         "Incoming call": "Llamada entrante",

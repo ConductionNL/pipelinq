@@ -135,6 +135,14 @@ export default {
 	padding: 16px;
 }
 
+/* The funnel and the source table take the whole row: the table's five
+   sortable columns need about 825px, and half a row is 518px at 1440 wide,
+   so in half a row the table ran out of its card. */
+.lead-analytics__cell--wide {
+	grid-column: 1 / -1;
+	min-width: 0;
+}
+
 .lead-analytics__cell h3 {
 	margin: 0 0 12px;
 	font-weight: 600;
