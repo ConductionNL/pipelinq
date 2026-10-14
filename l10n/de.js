@@ -2343,6 +2343,7 @@ OC.L10N.register(
         "Ticket panels": "Ticket-Bereiche",
         "Ticket details": "Ticketdetails",
         "Decisions": "Beschlüsse",
+        "On the linked case": "Zum verknüpften Fall",
         "Preferred name": "Rufname",
         "The name this person likes to be called, such as Jan for Johannes.": "Der Name, mit dem diese Person angesprochen werden möchte, zum Beispiel Jan für Johannes.",
         "Incoming call": "Eingehender Anruf",
