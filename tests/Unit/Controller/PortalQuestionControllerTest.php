@@ -75,7 +75,7 @@ class PortalQuestionControllerTest extends TestCase {
 
 		return new PortalQuestionController(
 			request: $request,
-			verifier: new PortalAssertionVerifier(config: null, secretOverride: self::SECRET),
+			verifier: new PortalAssertionVerifier(secretOverride: self::SECRET),
 			questions: $this->questions,
 			throttler: $this->throttler,
 			logger: $this->createMock(LoggerInterface::class)
