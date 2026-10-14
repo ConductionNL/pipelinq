@@ -92,19 +92,16 @@ async function openSpaRoute(page: Page, route: string): Promise<void> {
 
 const content = (page: Page) => page.locator('#content-vue')
 
-// ── src/views/MyWork.vue — manifest page `MyWork`, route `/my-work` ──────────
-test('MyWork: /my-work mounts src/views/MyWork.vue', async ({ page }) => {
+// ── manifest page `MyWork`, route `/my-work` (a dashboard of record lists) ────
+test('MyWork: /my-work renders the grouped lists', async ({ page }) => {
 	await openSpaRoute(page, '/my-work')
 
-	// `.my-work` and its `<h2>` sit above every `v-if` in the template, so they
-	// render whether the workload loads, errors or comes back empty.
-	const myWork = content(page).locator('.my-work')
-	await expect(myWork).toBeVisible({ timeout: 15000 })
-	await expect(myWork.getByRole('heading', { name: 'My Work' })).toBeVisible()
-	// The lead/request filter strip is part of the same unconditional header
-	// block, so it distinguishes this page from anything else carrying an
-	// "My Work" heading (the dashboard widget, for instance).
-	await expect(myWork.locator('.my-work__controls .filter-buttons')).toBeVisible()
+	await expect(
+		content(page).getByRole('heading', { name: 'Answer today' }),
+	).toBeVisible({ timeout: 15000 })
+	await expect(
+		content(page).getByRole('heading', { name: 'Waiting on me' }),
+	).toBeVisible()
 })
 
 // ── src/views/leads/LeadList.vue — manifest page `Leads`, route `/leads` ─────
