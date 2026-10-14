@@ -1,0 +1,86 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "close-pipelinq-register-to-staff, the register half. The staff-only blocks on the three registers live here, apart from the schema blocks in 99-zzz-register-access.json: a register that declares no schemas list is paired by the demo-data gate (hydra gate-101) with every schema defined in the same file, which attributed 16 schemas to pipelinq-portal and sla that those registers do not carry. Both files sort after every other fragment and touch disjoint keys, so the merged register the import ships is unchanged. The reasoning for both halves is in 99-zzz-register-access.json."
+  },
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "version": "1.1.0",
+        "authorization": {
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "pipelinq-portal": {
+        "version": "1.1.0",
+        "authorization": {
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "sla": {
+        "version": "1.1.0",
+        "authorization": {
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      }
+    }
+  }
+}
