@@ -7618,6 +7618,7 @@ OC.L10N.register(
         "Priority first": "Priority first",
         "Your week so far": "Your week so far",
         "this week": "this week",
+        "No ticket of yours is due today": "No ticket of yours is due today",
         "No ticket of yours waits for the customer": "No ticket of yours waits for the customer",
         "Saved views": "Saved views",
         "Sorting": "Sorting",

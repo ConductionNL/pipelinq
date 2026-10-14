@@ -164,6 +164,22 @@ describe('the My work page', () => {
 		expect(week.content.stats.map((s) => s.source.kind)).toContain('elapsed')
 	})
 
+	it('says what each list shows when it is empty, and labels the channel', () => {
+		expect(widget('my-answer-today').content.emptyText).toBe(
+			'No ticket of yours is due today',
+		)
+		for (const id of [
+			'my-answer-today',
+			'my-waiting-on-me',
+			'my-waiting-on-customer',
+		]) {
+			const labels = widget(id).content.valueLabels.channel
+			// The data holds both spellings of the phone channel.
+			expect(labels.phone, id).toBe('Phone')
+			expect(labels.telefoon, id).toBe('Phone')
+		}
+	})
+
 	it('carries the start-here banner and the saved views', () => {
 		expect(widget('my-start-here').type).toBe('banner')
 		expect(widget('my-saved-views').type).toBe('saved-views')

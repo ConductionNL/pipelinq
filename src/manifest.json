@@ -5647,7 +5647,7 @@
 								}
 							},
 							"rowRoute": "TicketDetail",
-							"emptyText": "No tickets assigned to you",
+							"emptyText": "No ticket of yours is due today",
 							"badges": [
 								{
 									"field": "priority",
@@ -5670,6 +5670,23 @@
 							"due": {
 								"field": "slaDeadline",
 								"emptyText": "No due date"
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "Phone",
+									"telefoon": "Phone",
+									"Telefoon": "Phone",
+									"email": "Email",
+									"E-mail": "Email",
+									"balie": "Counter",
+									"Balie": "Counter",
+									"portal": "Portal",
+									"web": "Website",
+									"chat": "Chat",
+									"post": "Letter",
+									"brief": "Letter",
+									"social": "Social media"
+								}
 							}
 						}
 					},
@@ -5800,6 +5817,23 @@
 							"due": {
 								"field": "slaDeadline",
 								"emptyText": "No due date"
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "Phone",
+									"telefoon": "Phone",
+									"Telefoon": "Phone",
+									"email": "Email",
+									"E-mail": "Email",
+									"balie": "Counter",
+									"Balie": "Counter",
+									"portal": "Portal",
+									"web": "Website",
+									"chat": "Chat",
+									"post": "Letter",
+									"brief": "Letter",
+									"social": "Social media"
+								}
 							}
 						}
 					},
@@ -5919,6 +5953,23 @@
 							"due": {
 								"field": "slaDeadline",
 								"emptyText": "No due date"
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "Phone",
+									"telefoon": "Phone",
+									"Telefoon": "Phone",
+									"email": "Email",
+									"E-mail": "Email",
+									"balie": "Counter",
+									"Balie": "Counter",
+									"portal": "Portal",
+									"web": "Website",
+									"chat": "Chat",
+									"post": "Letter",
+									"brief": "Letter",
+									"social": "Social media"
+								}
 							}
 						}
 					},

@@ -7533,6 +7533,7 @@ OC.L10N.register(
         "Priority first": "Prioriteit eerst",
         "Your week so far": "Je week tot nu toe",
         "this week": "deze week",
+        "No ticket of yours is due today": "Je hebt vandaag geen tickets met een termijn",
         "No ticket of yours waits for the customer": "Geen ticket van jou wacht op de klant",
         "Saved views": "Opgeslagen weergaven",
         "Sorting": "Sortering",
