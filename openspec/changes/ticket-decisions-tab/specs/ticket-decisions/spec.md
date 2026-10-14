@@ -36,12 +36,17 @@ The two routes show above the list at all times, with or without a decision. The
 
 ### Requirement: Decisions on the linked case show on the ticket (REQ-TDT-002)
 
-When a ticket has a linked case (`caseReference`), the Decisions tab SHALL also list the decisions whose subject is that case, grouped under the case's title, each linking to the decision in decidiq. Only decisions the user may read SHALL show.
+When a ticket has a linked case (`caseReference`), the Decisions tab SHALL also list the decisions whose subject is that case, grouped under the case's title, each linking to the decision in decidiq. Only decisions the user may read SHALL show. The register and schema of the case SHALL be those of whichever installed app implements the case kind, looked up at run time; pipelinq SHALL NOT write another app's register or schema slug for it. When no installed app keeps cases, the tab SHALL show no list for a case.
 
 #### Scenario: The request became a case
 - GIVEN ticket PQ-2026-0417 converted to a dossiq case, and decidiq holds a decision on that case
 - WHEN the handler opens the ticket's Decisions tab
 - THEN the decision shows under the case title with a link to decidiq
+
+#### Scenario: No installed app keeps cases
+- GIVEN a ticket with a `caseReference` on an instance where no installed app implements the case kind
+- WHEN the handler opens the Decisions tab
+- THEN the tab shows the ticket's own decisions and no list for a case
 
 #### Scenario: A decision the user may not read
 - GIVEN the case's decision is restricted to the board's members and the handler is not one

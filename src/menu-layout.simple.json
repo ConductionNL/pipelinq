@@ -886,7 +886,8 @@
 								{
 									"widgetIds": [
 										"ticket-decision-routes",
-										"ticket-decisions"
+										"ticket-decisions",
+										"ticket-case-decisions"
 									],
 									"label": "Decisions",
 									"visibleWhen": {

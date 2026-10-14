@@ -7590,6 +7590,7 @@ OC.L10N.register(
         "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.": "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.",
         "On this ticket": "On this ticket",
         "Ticket panels": "Ticket panels",
+        "On the linked case": "On the linked case",
         "Preferred name": "Preferred name",
         "The name this person likes to be called, such as Jan for Johannes.": "The name this person likes to be called, such as Jan for Johannes.",
         "Incoming call": "Incoming call",
