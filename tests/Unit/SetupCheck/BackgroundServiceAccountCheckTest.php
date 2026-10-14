@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \OCA\Pipelinq\SetupCheck\BackgroundServiceAccountCheck
  * @covers \OCA\Pipelinq\SetupCheck\ServiceAccountCheck
  * @uses   \OCA\Pipelinq\AppInfo\Application
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  */
 class BackgroundServiceAccountCheckTest extends TestCase {
 	/**
