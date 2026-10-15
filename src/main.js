@@ -53,7 +53,6 @@ import {
 	resolveMenuModules,
 } from './utils/menuModules.js'
 import { pageAppConfig, seedPageAppConfig } from './utils/pageAppConfig.js'
-import { translateStatFormatLabels } from './utils/statFormatLabels.js'
 import {
 	buildProfiledManifest,
 	navTheming,
@@ -200,8 +199,6 @@ const mergedManifest = seedVatClassLabels(
 )
 // The index pages' chips, count line and header buttons, in the same way.
 translateIndexPageLabels(mergedManifest, (text) => t('pipelinq', text))
-// A stat tile's value suffix (" days") is printed as written as well.
-translateStatFormatLabels(mergedManifest, (text) => t('pipelinq', text))
 
 /**
  * Build the vue-router config from the manifest. Each manifest page

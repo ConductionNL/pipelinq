@@ -151,14 +151,18 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 48 entries: 40 main, 3 footer, 5 settings, 0 integrations', () => {
+	it('still counts 49 entries: 40 main, 3 footer, 6 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
-		expect(flat(menu)).toHaveLength(48)
+		// The sixth settings entry is the Integrations caption above Connections
+		// and BI export, which settingsSection moves there. nextcloud-vue before
+		// 2.84.0 dropped it in the relocation step's clean-up; 2.84.0 keeps a
+		// caption that has entries under it (nextcloud-vue #1608).
+		expect(flat(menu)).toHaveLength(49)
 		expect(count('main')).toBe(40)
 		expect(count('footer')).toBe(3)
-		expect(count('settings')).toBe(5)
+		expect(count('settings')).toBe(6)
 		expect(count('integrations')).toBe(0)
 	})
 
@@ -248,19 +252,20 @@ describe('the simple profile', () => {
 		}
 	})
 
-	it('keeps relocations out of the file, because any relocation step drops the captions', () => {
-		// The library's relocation step ends by filtering out every entry with
-		// no route, href, action or children. That is a caption. `{}` is enough
-		// to run it, so the key has to be absent.
-		expect(Object.hasOwn(simpleFile, 'relocations')).toBe(false)
+	it('keeps its captions also through a relocation step', () => {
+		// Before nextcloud-vue 2.84.0 the relocation step dropped every entry
+		// with no route, href, action or children, which is what a caption is,
+		// so this file had to leave `relocations` out. 2.84.0 keeps a caption
+		// (nextcloud-vue #1608): the same captions come through either way.
+		const captions = (menu) =>
+			menu.filter((entry) => entry.type === 'caption').map((entry) => entry.id)
+		const without = buildSimple()
 		const withRelocations = build({
 			...applyMenuModules(simpleFile, []),
 			relocations: {},
 		})
-		expect(
-			withRelocations.menu.filter((entry) => entry.type === 'caption'),
-			'the library now keeps captions through relocations; the note in the profile file is stale',
-		).toEqual([])
+		expect(captions(without.menu).length).toBeGreaterThan(0)
+		expect(captions(withRelocations.menu)).toEqual(captions(without.menu))
 	})
 
 	it('gives every entry a label in English and Dutch, an icon the app registers and a page that exists', () => {
@@ -341,10 +346,11 @@ describe('the simple profile', () => {
 		expect(appointments.route).toBe('Bookings')
 		const settings = section(built.menu, 'settings').map((entry) => entry.id)
 		expect(settings).toEqual(expect.arrayContaining(['Services', 'Resources']))
-		// Everything the full profile has in settings is still there.
-		const fullSettings = section(build(fullFile).menu, 'settings').map(
-			(entry) => entry.id,
-		)
+		// Everything the full profile has in settings is still there. The
+		// simple menu is flat and draws no Integrations caption there.
+		const fullSettings = section(build(fullFile).menu, 'settings')
+			.filter((entry) => entry.type !== 'caption')
+			.map((entry) => entry.id)
 		expect(settings).toEqual(expect.arrayContaining(fullSettings))
 	})
 
