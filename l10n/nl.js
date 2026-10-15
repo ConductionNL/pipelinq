@@ -7572,7 +7572,9 @@ OC.L10N.register(
         "You have an unsaved contact moment from {time}.": "Je hebt een contactmoment van {time} dat nog niet is opgeslagen.",
         "Restore draft": "Concept terugzetten",
         "Discard": "Weggooien",
-        "Your session has ended. Log in again in a new tab, then press Save here.": "Je sessie is verlopen. Log opnieuw in op een nieuw tabblad en klik daarna hier op Opslaan."
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Je sessie is verlopen. Log opnieuw in op een nieuw tabblad en klik daarna hier op Opslaan.",
+        "Operator and register": "Operator en kassa",
+        "Followers: {count}": "Volgers: {count}"
     },
     "nplurals=2; plural=(n != 1);"
 )

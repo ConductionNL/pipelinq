@@ -93,11 +93,12 @@ export default {
 		 */
 		columns() {
 			return [
-				{ key: 'network', label: t('pipelinq', 'Network'), sortable: true },
 				{
-					key: 'publishedAt',
-					label: t('pipelinq', 'Published'),
+					key: 'network',
+					label: t('pipelinq', 'Network'),
 					sortable: true,
+					cellClass: 'cn-cell--wrap',
+					secondary: (row) => this.formatDate(row.publishedAt),
 				},
 				{ key: 'views', label: t('pipelinq', 'Views'), sortable: true },
 				{ key: 'likes', label: t('pipelinq', 'Likes'), sortable: true },
@@ -108,14 +109,13 @@ export default {
 				},
 				{ key: 'shares', label: t('pipelinq', 'Shares'), sortable: true },
 				{
-					key: 'followerCount',
-					label: t('pipelinq', 'Followers'),
-					sortable: true,
-				},
-				{
 					key: 'engagementRate',
 					label: t('pipelinq', 'Engagement rate'),
 					sortable: true,
+					secondary: (row) =>
+						t('pipelinq', 'Followers: {count}', {
+							count: row.followerCount,
+						}),
 				},
 			]
 		},
