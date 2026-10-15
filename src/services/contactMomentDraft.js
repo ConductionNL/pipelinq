@@ -154,6 +154,8 @@ export function buildContactMoment(form, context) {
  *
  * @param {object} draft The draft ticket.
  * @return {string} The ISO moment, or an empty string.
+ *
+ * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
  */
 export function draftChangedAt(draft) {
 	return draft?.['@self']?.updated || draft?.['@self']?.created || ''
