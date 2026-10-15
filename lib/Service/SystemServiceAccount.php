@@ -94,6 +94,30 @@ class SystemServiceAccount {
 	}//end runAsCurrentOrSystem()
 
 	/**
+	 * Run an operation as the system account, whoever is signed in.
+	 *
+	 * For an unattended write on a public path: a visitor who happens to be
+	 * signed in (a resident, a colleague testing the website form) must not
+	 * decide what the write may touch, and must not be refused a write the
+	 * submission itself is entitled to. OpenRegister's access checks stay on.
+	 *
+	 * @param callable $operation The work to run.
+	 *
+	 * @return mixed What the operation returns.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-the-touches-are-written-as-pipelinqs-system-account-req-moc-004
+	 */
+	public function runAsSystem(callable $operation): mixed {
+		$previous = $this->userSession->getUser();
+		$this->userSession->setVolatileActiveUser($this->account());
+		try {
+			return $operation();
+		} finally {
+			$this->userSession->setVolatileActiveUser($previous);
+		}
+	}//end runAsSystem()
+
+	/**
 	 * The system account, created disabled on first use.
 	 *
 	 * @return IUser The account.

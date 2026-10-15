@@ -15,6 +15,12 @@
  * again. Looking the nonce up here, before anything is written, is the
  * whole idempotency guarantee.
  *
+ * recordSubmission() is the one writer for a web form submission, whichever
+ * intake it came through: it appends the touchpoint and keeps the contact's
+ * and its client's first and last touch. It writes as pipelinq's system
+ * account with OpenRegister's access checks on (SystemObjectStore), because
+ * it runs on public paths. append() and the readers keep ListObjectStore.
+ *
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
@@ -64,14 +70,38 @@ class TouchpointService {
 	public const KINDS = ['click', 'visit', 'submit', 'reply'];
 
 	/**
+	 * Longest campaign value kept, in characters. Longer is cut, never refused.
+	 *
+	 * @var int
+	 */
+	public const MAX_UTM_LENGTH = 100;
+
+	/**
+	 * Longest landing page kept, in characters.
+	 *
+	 * @var int
+	 */
+	public const MAX_LANDING_PAGE_LENGTH = 500;
+
+	/**
+	 * The campaign values a touch carries, in the order a person reads them.
+	 *
+	 * @var array<int, string>
+	 */
+	public const UTM_KEYS = ['campaign', 'source', 'medium', 'term', 'content'];
+
+	/**
 	 * Constructor.
 	 *
-	 * @param ListObjectStore $store Register-scoped object access.
+	 * @param ListObjectStore        $store       Register-scoped object access for the log's readers and append().
+	 * @param SystemObjectStore|null $systemStore Access as the system account, checks on, for recordSubmission().
+	 *                                            Nextcloud always injects it; null only in tests of the readers.
 	 *
 	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function __construct(
 		private ListObjectStore $store,
+		private ?SystemObjectStore $systemStore=null,
 	) {
 	}//end __construct()
 
@@ -176,6 +206,139 @@ class TouchpointService {
 
 		return $this->store->save(schemaSlug: $this->schemaSlug(), payload: $row);
 	}//end append()
+
+	/**
+	 * Record one web form submission: the touchpoint, and the contact's and its client's touches.
+	 *
+	 * The touchpoint is written when the submission belongs to a campaign (the
+	 * touchpoint schema requires one). The contact's first touch is written once
+	 * and never changed; its last touch follows every submission. The client is
+	 * the contact's `client`, and gets the same two touches. Every read and write
+	 * runs as pipelinq's system account with OpenRegister's access checks on.
+	 *
+	 * @param string               $contactId   The contact who submitted, or an empty string.
+	 * @param string               $campaignId  The campaign the submission belongs to, or an empty string.
+	 * @param array<string, mixed> $utm         Campaign values: campaign, source, medium, term, content.
+	 * @param string               $landingPage The page the form was sent from.
+	 * @param array<string, mixed> $extra       Optional: leadId, nonce, sourceRef, occurredAt.
+	 *
+	 * @return array{touchpoint: array<string, mixed>|null, touched: list<string>} The stored
+	 *         touchpoint (null when none was written) and the schemas whose touches were written.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-contacts-and-clients-show-how-they-found-you-req-moc-001
+	 */
+	public function recordSubmission(
+		string $contactId,
+		string $campaignId,
+		array $utm,
+		string $landingPage,
+		array $extra=[],
+	): array {
+		$result = ['touchpoint' => null, 'touched' => []];
+		if ($this->systemStore === null) {
+			return $result;
+		}
+
+		$campaignId = trim($campaignId);
+		$contactId  = trim($contactId);
+		$values     = $this->utmValues(utm: $utm);
+		$page       = mb_substr(trim($landingPage), 0, self::MAX_LANDING_PAGE_LENGTH);
+		$moment     = trim((string)($extra['occurredAt'] ?? ''));
+		if ($moment === '') {
+			$moment = gmdate('Y-m-d\TH:i:sP');
+		}
+
+		$contact = null;
+		if ($contactId !== '') {
+			$contact = $this->systemStore->find(schemaSlug: 'contact', id: $contactId);
+		}
+
+		$clientId = trim((string)($contact['client'] ?? ''));
+
+		if ($campaignId !== '') {
+			$row = array_filter(
+				[
+					'campaignId' => $campaignId,
+					'contactId' => $contactId,
+					'clientId' => $clientId,
+					'leadId' => trim((string)($extra['leadId'] ?? '')),
+					'kind' => 'submit',
+					'channel' => $this->channelForMedium(medium: $values['medium']),
+					'utm' => $values,
+					'landingPage' => $page,
+					'sourceRef' => trim((string)($extra['sourceRef'] ?? '')),
+					'nonce' => trim((string)($extra['nonce'] ?? '')),
+					'occurredAt' => $moment,
+					'createdAt' => gmdate('Y-m-d\TH:i:sP'),
+				],
+				static fn (mixed $value): bool => $value !== ''
+			);
+			$result['touchpoint'] = $this->systemStore->save(schemaSlug: $this->schemaSlug(), payload: $row);
+		}
+
+		$touch = array_filter(
+			array_merge(['campaignId' => $campaignId], $values, ['landingPage' => $page, 'at' => $moment]),
+			static fn (string $value): bool => $value !== ''
+		);
+
+		if ($contact !== null && $this->writeTouches(schemaSlug: 'contact', id: $contactId, record: $contact, touch: $touch) === true) {
+			$result['touched'][] = 'contact';
+		}
+
+		if ($clientId !== '') {
+			$client = $this->systemStore->find(schemaSlug: 'client', id: $clientId);
+			if ($client !== null && $this->writeTouches(schemaSlug: 'client', id: $clientId, record: $client, touch: $touch) === true) {
+				$result['touched'][] = 'client';
+			}
+		}
+
+		return $result;
+	}//end recordSubmission()
+
+	/**
+	 * The campaign values, each trimmed and cut to MAX_UTM_LENGTH; any other key is dropped.
+	 *
+	 * @param array<string, mixed> $utm The submitted values.
+	 *
+	 * @return array<string, string> One entry per UTM_KEYS key.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-the-website-enquiry-form-keeps-campaign-values-req-moc-003
+	 */
+	public function utmValues(array $utm): array {
+		$values = [];
+		foreach (self::UTM_KEYS as $key) {
+			$raw = ($utm[$key] ?? '');
+			if (is_scalar($raw) === false) {
+				$raw = '';
+			}
+
+			$values[$key] = mb_substr(trim((string)$raw), 0, self::MAX_UTM_LENGTH);
+		}
+
+		return $values;
+	}//end utmValues()
+
+	/**
+	 * Write a record's touches: the first only when it has none, the last always.
+	 *
+	 * @param string                $schemaSlug The record's schema.
+	 * @param string                $id         The record's id.
+	 * @param array<string, mixed>  $record     The record as read.
+	 * @param array<string, string> $touch      The touch of this submission.
+	 *
+	 * @return bool True when the write was stored.
+	 */
+	private function writeTouches(string $schemaSlug, string $id, array $record, array $touch): bool {
+		$payload = $record;
+		unset($payload['@self']);
+		if (empty($payload['firstTouch']) === true) {
+			$payload['firstTouch'] = $touch;
+		}
+
+		$payload['lastTouch'] = $touch;
+
+		return ($this->systemStore?->save(schemaSlug: $schemaSlug, payload: $payload, id: $id) !== null);
+	}//end writeTouches()
 
 	/**
 	 * The canonical id of a touchpoint row.

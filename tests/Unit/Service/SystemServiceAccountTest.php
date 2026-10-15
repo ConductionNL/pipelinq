@@ -29,6 +29,8 @@ use RuntimeException;
 
 /**
  * The system account is created disabled and only stands in when nobody is signed in.
+ *
+ * @covers \OCA\Pipelinq\Service\SystemServiceAccount
  */
 class SystemServiceAccountTest extends TestCase {
 	/**
@@ -101,4 +103,38 @@ class SystemServiceAccountTest extends TestCase {
 		$this->assertSame($system, $seen);
 		$this->assertNull($active);
 	}//end testRestoresThePreviousUserWhenTheWorkThrows()
+
+	/**
+	 * runAsSystem acts as the system account even when someone is signed in, and gives the session back.
+	 *
+	 * @return void
+	 */
+	public function testRunAsSystemReplacesASignedInUserAndRestoresThem(): void {
+		$system   = $this->createMock(IUser::class);
+		$resident = $this->createMock(IUser::class);
+		$users    = $this->createMock(IUserManager::class);
+		$users->method('get')->willReturn($system);
+
+		$active  = $resident;
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturnCallback(function () use (&$active) {
+			return $active;
+		});
+		$session->method('setVolatileActiveUser')->willReturnCallback(function (?IUser $user) use (&$active): void {
+			$active = $user;
+		});
+
+		$account = new SystemServiceAccount(userManager: $users, userSession: $session, random: $this->createMock(ISecureRandom::class));
+		$seen    = $account->runAsSystem(function () use (&$active) {
+			return $active;
+		});
+
+		$this->assertSame($system, $seen);
+		$this->assertSame($resident, $active);
+
+		// The control: runAsCurrentOrSystem keeps the signed-in user.
+		$this->assertSame($resident, $account->runAsCurrentOrSystem(function () use (&$active) {
+			return $active;
+		}));
+	}//end testRunAsSystemReplacesASignedInUserAndRestoresThem()
 }//end class
