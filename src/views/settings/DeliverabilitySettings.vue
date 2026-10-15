@@ -34,60 +34,27 @@
 				v-else-if="transports.length === 0"
 				:description="t('pipelinq', 'No mail transports configured yet.')" />
 
-			<div v-else class="deliverability-settings__table-wrap">
-				<table class="deliverability-settings__table">
-					<thead>
-						<tr>
-							<th scope="col">{{ t('pipelinq', 'Name') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Kind') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Sender domain') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Active') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Default') }}</th>
-							<th scope="col">
-								{{ t('pipelinq', 'Deliverability') }}
-							</th>
-							<th
-								scope="col"
-								class="deliverability-settings__col-actions">
-								{{ t('pipelinq', 'Actions') }}
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="transport in transports" :key="transport.id">
-							<td>{{ transport.displayName }}</td>
-							<td>{{ kindLabel(transport.kind) }}</td>
-							<td>{{ transport.senderDomain || '—' }}</td>
-							<td>
-								<NcCheckboxRadioSwitch
-									type="switch"
-									:modelValue="!!transport.active"
-									:aria-label="t('pipelinq', 'Active')"
-									@update:modelValue="
-										(v) => toggleActive(transport, v)
-									">
-									{{
-										transport.active
-											? t('pipelinq', 'Active')
-											: t('pipelinq', 'Inactive')
-									}}
-								</NcCheckboxRadioSwitch>
-							</td>
-							<td>
-								<NcCheckboxRadioSwitch
-									type="switch"
-									:modelValue="!!transport.default"
-									:disabled="!!transport.default"
-									:aria-label="t('pipelinq', 'Default transport')"
-									@update:modelValue="() => setDefault(transport)">
-									{{
-										transport.default
-											? t('pipelinq', 'Default')
-											: t('pipelinq', 'Make default')
-									}}
-								</NcCheckboxRadioSwitch>
-							</td>
-							<td>
+			<ul v-else class="deliverability-settings__records">
+				<li
+					v-for="transport in transports"
+					:key="transport.id"
+					class="deliverability-settings__record"
+					data-testid="mail-transport">
+					<h3 class="deliverability-settings__record-name">
+						{{ transport.displayName }}
+					</h3>
+					<dl class="deliverability-settings__facts">
+						<div>
+							<dt>{{ t('pipelinq', 'Kind') }}</dt>
+							<dd>{{ kindLabel(transport.kind) }}</dd>
+						</div>
+						<div>
+							<dt>{{ t('pipelinq', 'Sender domain') }}</dt>
+							<dd>{{ transport.senderDomain || '—' }}</dd>
+						</div>
+						<div>
+							<dt>{{ t('pipelinq', 'Deliverability') }}</dt>
+							<dd>
 								<span
 									v-if="!transport.senderDomain"
 									class="deliverability-settings__badge deliverability-settings__badge--off">
@@ -111,18 +78,41 @@
 										{{ dmarcVerdictText(transport) }}
 									</span>
 								</span>
-							</td>
-							<td class="deliverability-settings__col-actions">
-								<NcButton
-									:disabled="checkingId === transport.id"
-									@click="checkDeliverability(transport)">
-									{{ t('pipelinq', 'Check now') }}
-								</NcButton>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
+							</dd>
+						</div>
+					</dl>
+					<div class="deliverability-settings__record-actions">
+						<NcCheckboxRadioSwitch
+							type="switch"
+							:modelValue="!!transport.active"
+							:aria-label="t('pipelinq', 'Active')"
+							@update:modelValue="(v) => toggleActive(transport, v)">
+							{{
+								transport.active
+									? t('pipelinq', 'Active')
+									: t('pipelinq', 'Inactive')
+							}}
+						</NcCheckboxRadioSwitch>
+						<NcCheckboxRadioSwitch
+							type="switch"
+							:modelValue="!!transport.default"
+							:disabled="!!transport.default"
+							:aria-label="t('pipelinq', 'Default transport')"
+							@update:modelValue="() => setDefault(transport)">
+							{{
+								transport.default
+									? t('pipelinq', 'Default')
+									: t('pipelinq', 'Make default')
+							}}
+						</NcCheckboxRadioSwitch>
+						<NcButton
+							:disabled="checkingId === transport.id"
+							@click="checkDeliverability(transport)">
+							{{ t('pipelinq', 'Check now') }}
+						</NcButton>
+					</div>
+				</li>
+			</ul>
 		</NcSettingsSection>
 	</div>
 </template>
@@ -329,30 +319,68 @@ export default {
 		margin-bottom: 12px;
 	}
 
-	&__table-wrap {
-		overflow-x: auto;
+	&__records {
+		display: flex;
+		flex-direction: column;
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
 
-	&__table {
-		width: 100%;
-		border-collapse: collapse;
+	&__record {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 14px 0;
+		border-top: 1px solid var(--color-border);
 
-		th,
-		td {
-			padding: 8px 12px;
-			text-align: start;
-			vertical-align: middle;
+		&:last-child {
 			border-bottom: 1px solid var(--color-border);
 		}
 	}
 
-	&__col-actions {
-		white-space: nowrap;
+	&__record-name {
+		margin: 0;
+		font-size: 15px;
+		font-weight: 600;
+		overflow-wrap: anywhere;
+	}
+
+	&__facts {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+		gap: 8px 16px;
+		margin: 0;
+
+		dt,
+		dd {
+			display: block;
+			width: auto;
+			margin: 0;
+			padding: 0;
+			text-align: start;
+		}
+
+		dt {
+			font-size: 12px;
+			color: var(--color-text-maxcontrast);
+		}
+
+		dd {
+			overflow-wrap: break-word;
+		}
+	}
+
+	&__record-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 16px;
 	}
 
 	&__verdict {
 		display: flex;
-		flex-direction: column;
+		flex-wrap: wrap;
 		gap: 4px;
 	}
 
