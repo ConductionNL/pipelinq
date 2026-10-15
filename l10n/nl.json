@@ -7588,6 +7588,10 @@
         "Public tender": "Aanbesteding",
         "No source": "Geen bron",
         "Administration settings": "Beheerinstellingen",
-        "Set up your Pipelinq installation": "Stel je Pipelinq-installatie in"
+        "Set up your Pipelinq installation": "Stel je Pipelinq-installatie in",
+        "You have an unsaved contact moment from {time}.": "Je hebt een contactmoment van {time} dat nog niet is opgeslagen.",
+        "Restore draft": "Concept terugzetten",
+        "Discard": "Weggooien",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Je sessie is verlopen. Log opnieuw in op een nieuw tabblad en klik daarna hier op Opslaan."
     }
 }

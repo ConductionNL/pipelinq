@@ -7653,7 +7653,11 @@ OC.L10N.register(
         "Public tender": "Public tender",
         "No source": "No source",
         "Administration settings": "Administration settings",
-        "Set up your Pipelinq installation": "Set up your Pipelinq installation"
+        "Set up your Pipelinq installation": "Set up your Pipelinq installation",
+        "You have an unsaved contact moment from {time}.": "You have an unsaved contact moment from {time}.",
+        "Restore draft": "Restore draft",
+        "Discard": "Discard",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Your session has ended. Log in again in a new tab, then press Save here."
     },
     "nplurals=2; plural=(n != 1);"
 )
