@@ -377,6 +377,9 @@ export default {
 
 .subscriptions-section__actions {
 	display: flex;
+	/* In the side column the two buttons are wider than the card: wrap
+	   them instead of squeezing the first one until its label is cut. */
+	flex-wrap: wrap;
 	gap: 0.5rem;
 	margin-block-start: 1rem;
 }
