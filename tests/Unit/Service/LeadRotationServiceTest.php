@@ -233,7 +233,6 @@ class LeadRotationServiceTest extends TestCase {
 		$this->assertSame('boolean', $profile['pauseLeadAssignment']['type']);
 
 		// The control: a reason over 500 characters is refused.
-		$properties['assignmentReason']['maxLength'] = 500;
 		$long = (new Validator())->validate(json_decode((string)json_encode(['assignmentReason' => str_repeat('x', 501)])), json_decode((string)json_encode(['type' => 'object', 'properties' => $properties])));
 		$this->assertFalse($long->isValid());
 	}//end testTheFieldsValidateAgainstTheRealSchemas()
