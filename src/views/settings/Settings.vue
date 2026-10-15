@@ -44,6 +44,7 @@
 			:addLabel="t('pipelinq', '+ Add Source')"
 			:addPlaceholder="t('pipelinq', 'Enter source name…')"
 			:usageCheck="checkLeadSourceUsage"
+			:tagLabel="leadSourceLabel"
 			@add="addLeadSource"
 			@remove="removeLeadSource"
 			@rename="renameLeadSource" />
@@ -361,6 +362,7 @@ import SetupWizardSection from './SetupWizardSection.vue'
 import TagManager from './TagManager.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
+import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
@@ -585,6 +587,15 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @param {string} name A stored lead source name.
+		 * @return {string} Its label, or the name as an admin typed it.
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		leadSourceLabel(name) {
+			return leadSourceLabel(name)
+		},
+
 		/**
 		 * The shell re-imported the configuration: take the config it returns,
 		 * so the sections show what the import wrote.
