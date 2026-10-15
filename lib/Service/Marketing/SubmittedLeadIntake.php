@@ -145,6 +145,7 @@ class SubmittedLeadIntake {
 	 * @return bool True when a touchpoint was written.
 	 *
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/marketing-campaigns/spec.md#requirement-a-landing-page-form-submits-into-a-lead-with-its-contact-and-touchpoint
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-contacts-and-clients-show-how-they-found-you-req-moc-001
 	 */
 	public function recordTouchpoint(string $leadId, array $lead): bool {
 		$nonce = trim((string)($lead['nonce'] ?? ''));
@@ -152,22 +153,23 @@ class SubmittedLeadIntake {
 			return false;
 		}
 
-		$utm = $this->utmBlock(utm: ($lead['lastTouch'] ?? []));
-		$saved = $this->touchpoints->append(
-			touchpoint: [
-				'campaignId' => trim((string)($lead['campaignId'] ?? '')),
-				'contactId' => trim((string)($lead['contact'] ?? '')),
+		// One writer for every intake: the touchpoint, and the contact's and
+		// its client's first and last touch, as the system account with
+		// OpenRegister's access checks on (marketing-campaign-on-client).
+		$recorded = $this->touchpoints->recordSubmission(
+			contactId: trim((string)($lead['contact'] ?? '')),
+			campaignId: trim((string)($lead['campaignId'] ?? '')),
+			utm: $this->utmBlock(utm: ($lead['lastTouch'] ?? [])),
+			landingPage: trim((string)($lead['pageId'] ?? '')),
+			extra: [
 				'leadId' => $leadId,
-				'kind' => 'submit',
-				'channel' => $this->touchpoints->channelForMedium(medium: $utm['medium']),
-				'utm' => $utm,
 				'sourceRef' => trim((string)($lead['pageId'] ?? '')),
 				'occurredAt' => trim((string)($lead['submittedAt'] ?? '')),
 				'nonce' => $nonce,
-			]
+			],
 		);
 
-		return ($saved !== null);
+		return ($recorded['touchpoint'] !== null);
 	}//end recordTouchpoint()
 
 	/**

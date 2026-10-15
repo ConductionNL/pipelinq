@@ -1,0 +1,298 @@
+{
+    "_meta": {
+        "spdx-license": "EUPL-1.2",
+        "spdx-copyright": "2026 Conduction B.V.",
+        "description": "marketing-campaign-on-client (matrix row mkt-form-campaign-tags). A contact and a client carry a first touch and a last touch: the campaign values and the page of a web form submission. TouchpointService::recordSubmission writes them as pipelinq's system account with OpenRegister's access checks on, never with _rbac false. firstTouch is written once, lastTouch on every submission. Both are hideOnForm and carry x-openregister.serverSet, so a form never shows them and OpenRegister's destination validator does not ask a form for them; firstTouch is immutable (writable while empty, fixed after). Neither is readOnly: OpenRegister's readOnly refuses any changed value on update, including the first, so the touch write itself would be refused. A touchpoint gains clientId and landingPage. No property changes type and none becomes required."
+    },
+    "components": {
+        "schemas": {
+            "contact": {
+                "slug": "contact",
+                "properties": {
+                    "firstTouch": {
+                        "type": "object",
+                        "title": "First touch",
+                        "description": "How this person first found you: the campaign values and the page of their first web form submission. Written once and never changed.",
+                        "immutable": true,
+                        "hideOnForm": true,
+                        "x-openregister": {
+                            "serverSet": true
+                        },
+                        "properties": {
+                            "campaignId": {
+                                "type": "string",
+                                "title": "Campaign",
+                                "description": "The campaign of the first web form submission, when it belongs to one.",
+                                "format": "uuid",
+                                "$ref": "campaign"
+                            },
+                            "campaign": {
+                                "type": "string",
+                                "title": "Campaign tag",
+                                "description": "The utm_campaign value of the first submission.",
+                                "maxLength": 100,
+                                "example": "webinar-ai-voor-gemeenten"
+                            },
+                            "source": {
+                                "type": "string",
+                                "title": "Source",
+                                "description": "The utm_source value of the first submission.",
+                                "maxLength": 100,
+                                "example": "linkedin"
+                            },
+                            "medium": {
+                                "type": "string",
+                                "title": "Medium",
+                                "description": "The utm_medium value of the first submission.",
+                                "maxLength": 100,
+                                "example": "social"
+                            },
+                            "term": {
+                                "type": "string",
+                                "title": "Term",
+                                "description": "The utm_term value of the first submission.",
+                                "maxLength": 100
+                            },
+                            "content": {
+                                "type": "string",
+                                "title": "Content",
+                                "description": "The utm_content value of the first submission.",
+                                "maxLength": 100
+                            },
+                            "landingPage": {
+                                "type": "string",
+                                "title": "Landing page",
+                                "description": "The page the first form was sent from.",
+                                "maxLength": 500,
+                                "example": "https://www.example.nl/webinar"
+                            },
+                            "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "title": "Date",
+                                "description": "When the first form was sent."
+                            }
+                        }
+                    },
+                    "lastTouch": {
+                        "type": "object",
+                        "title": "Last touch",
+                        "description": "The campaign values and the page of their latest web form submission. Each new submission replaces it.",
+                        "hideOnForm": true,
+                        "x-openregister": {
+                            "serverSet": true
+                        },
+                        "properties": {
+                            "campaignId": {
+                                "type": "string",
+                                "title": "Campaign",
+                                "description": "The campaign of the latest web form submission, when it belongs to one.",
+                                "format": "uuid",
+                                "$ref": "campaign"
+                            },
+                            "campaign": {
+                                "type": "string",
+                                "title": "Campaign tag",
+                                "description": "The utm_campaign value of the latest submission.",
+                                "maxLength": 100,
+                                "example": "webinar-ai-voor-gemeenten"
+                            },
+                            "source": {
+                                "type": "string",
+                                "title": "Source",
+                                "description": "The utm_source value of the latest submission.",
+                                "maxLength": 100,
+                                "example": "linkedin"
+                            },
+                            "medium": {
+                                "type": "string",
+                                "title": "Medium",
+                                "description": "The utm_medium value of the latest submission.",
+                                "maxLength": 100,
+                                "example": "social"
+                            },
+                            "term": {
+                                "type": "string",
+                                "title": "Term",
+                                "description": "The utm_term value of the latest submission.",
+                                "maxLength": 100
+                            },
+                            "content": {
+                                "type": "string",
+                                "title": "Content",
+                                "description": "The utm_content value of the latest submission.",
+                                "maxLength": 100
+                            },
+                            "landingPage": {
+                                "type": "string",
+                                "title": "Landing page",
+                                "description": "The page the latest form was sent from.",
+                                "maxLength": 500,
+                                "example": "https://www.example.nl/webinar"
+                            },
+                            "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "title": "Date",
+                                "description": "When the latest form was sent."
+                            }
+                        }
+                    }
+                }
+            },
+            "client": {
+                "slug": "client",
+                "properties": {
+                    "firstTouch": {
+                        "type": "object",
+                        "title": "First touch",
+                        "description": "How this client first found you: the campaign values and the page of their first web form submission. Written once and never changed.",
+                        "immutable": true,
+                        "hideOnForm": true,
+                        "x-openregister": {
+                            "serverSet": true
+                        },
+                        "properties": {
+                            "campaignId": {
+                                "type": "string",
+                                "title": "Campaign",
+                                "description": "The campaign of the first web form submission, when it belongs to one.",
+                                "format": "uuid",
+                                "$ref": "campaign"
+                            },
+                            "campaign": {
+                                "type": "string",
+                                "title": "Campaign tag",
+                                "description": "The utm_campaign value of the first submission.",
+                                "maxLength": 100,
+                                "example": "webinar-ai-voor-gemeenten"
+                            },
+                            "source": {
+                                "type": "string",
+                                "title": "Source",
+                                "description": "The utm_source value of the first submission.",
+                                "maxLength": 100,
+                                "example": "linkedin"
+                            },
+                            "medium": {
+                                "type": "string",
+                                "title": "Medium",
+                                "description": "The utm_medium value of the first submission.",
+                                "maxLength": 100,
+                                "example": "social"
+                            },
+                            "term": {
+                                "type": "string",
+                                "title": "Term",
+                                "description": "The utm_term value of the first submission.",
+                                "maxLength": 100
+                            },
+                            "content": {
+                                "type": "string",
+                                "title": "Content",
+                                "description": "The utm_content value of the first submission.",
+                                "maxLength": 100
+                            },
+                            "landingPage": {
+                                "type": "string",
+                                "title": "Landing page",
+                                "description": "The page the first form was sent from.",
+                                "maxLength": 500,
+                                "example": "https://www.example.nl/webinar"
+                            },
+                            "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "title": "Date",
+                                "description": "When the first form was sent."
+                            }
+                        }
+                    },
+                    "lastTouch": {
+                        "type": "object",
+                        "title": "Last touch",
+                        "description": "The campaign values and the page of their latest web form submission. Each new submission replaces it.",
+                        "hideOnForm": true,
+                        "x-openregister": {
+                            "serverSet": true
+                        },
+                        "properties": {
+                            "campaignId": {
+                                "type": "string",
+                                "title": "Campaign",
+                                "description": "The campaign of the latest web form submission, when it belongs to one.",
+                                "format": "uuid",
+                                "$ref": "campaign"
+                            },
+                            "campaign": {
+                                "type": "string",
+                                "title": "Campaign tag",
+                                "description": "The utm_campaign value of the latest submission.",
+                                "maxLength": 100,
+                                "example": "webinar-ai-voor-gemeenten"
+                            },
+                            "source": {
+                                "type": "string",
+                                "title": "Source",
+                                "description": "The utm_source value of the latest submission.",
+                                "maxLength": 100,
+                                "example": "linkedin"
+                            },
+                            "medium": {
+                                "type": "string",
+                                "title": "Medium",
+                                "description": "The utm_medium value of the latest submission.",
+                                "maxLength": 100,
+                                "example": "social"
+                            },
+                            "term": {
+                                "type": "string",
+                                "title": "Term",
+                                "description": "The utm_term value of the latest submission.",
+                                "maxLength": 100
+                            },
+                            "content": {
+                                "type": "string",
+                                "title": "Content",
+                                "description": "The utm_content value of the latest submission.",
+                                "maxLength": 100
+                            },
+                            "landingPage": {
+                                "type": "string",
+                                "title": "Landing page",
+                                "description": "The page the latest form was sent from.",
+                                "maxLength": 500,
+                                "example": "https://www.example.nl/webinar"
+                            },
+                            "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "title": "Date",
+                                "description": "When the latest form was sent."
+                            }
+                        }
+                    }
+                }
+            },
+            "touchpoint": {
+                "slug": "touchpoint",
+                "properties": {
+                    "clientId": {
+                        "type": "string",
+                        "title": "Client",
+                        "description": "The client of the contact who interacted, when the contact has one.",
+                        "format": "uuid",
+                        "$ref": "client"
+                    },
+                    "landingPage": {
+                        "type": "string",
+                        "title": "Landing page",
+                        "description": "The page the form was sent from.",
+                        "maxLength": 500,
+                        "example": "https://www.example.nl/webinar"
+                    }
+                }
+            }
+        }
+    }
+}

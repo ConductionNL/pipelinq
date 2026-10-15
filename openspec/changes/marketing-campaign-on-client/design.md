@@ -31,6 +31,9 @@ page route for a landing page, `pageUrl` for an enquiry). `contact` and
 lead's, plus `campaignId`, `landingPage` and `at`. `firstTouch` is written once
 and never overwritten; `lastTouch` is replaced on every submission. They are
 summaries so a list can filter on them; the history is the touchpoint list.
+Both are `hideOnForm` with `x-openregister.serverSet`, and `firstTouch` is
+`immutable`. Neither is `readOnly`: OpenRegister refuses a changed `readOnly`
+value on every update, the first one included, so the touch write would fail.
 
 ### D2. One writer for both intakes
 
@@ -62,3 +65,25 @@ landing page), both read only.
   render them as text.
 - A client reached through many contacts collects many touchpoints; the list is
   paged and newest first.
+
+## Amendments at build (15 October 2026)
+
+- **Decision 179 replaced the enquiry.** `EnquiryIntakeService` no longer exists:
+  `POST /api/enquiry` is `WebFormController::submitBySource`, which submits the
+  answers into the form's destination object as `pipelinq-system`. A form whose
+  destination is a lead reaches `SubmittedLeadIntake` (on the lead's creation),
+  which now calls `recordSubmission()`. That is D2's second intake. D3's separate
+  UTM fields on an enquiry are not built: the lead's `lastTouch` carries them.
+  A form whose destination is a ticket gets no touches (no change asked for it).
+- **D5. The writer runs as the system account, access checks on.** Both intakes
+  run in a visitor's request. `recordSubmission()` writes through
+  `SystemObjectStore`, which runs every call through
+  `SystemServiceAccount::runAsSystem()` with `_rbac` on and `_multitenancy` off
+  (the account belongs to no organisation). `append()` and the readers keep
+  `ListObjectStore`. The contact and lead creation in both intakes still runs
+  through `ListObjectStore` with `_rbac: false`: inherited, named in the PR,
+  not changed here.
+- **The touchpoint needs a campaign.** Its schema requires `campaignId`, so a
+  submission without one writes the touches and no touchpoint.
+- **Landing page.** For a landing page event it is the portal and the page
+  route; for a lead it is the lead's `pageId`.

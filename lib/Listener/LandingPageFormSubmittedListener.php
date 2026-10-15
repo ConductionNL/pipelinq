@@ -167,14 +167,17 @@ class LandingPageFormSubmittedListener implements IEventListener {
 			);
 		}
 
-		$this->touchpoints->append(
-			touchpoint: $this->touchpointFor(
-				event: $event,
-				campaignId: $campaignId,
-				contactId: $contactId,
-				leadId: $leadId,
-				nonce: $nonce
-			)
+		$this->touchpoints->recordSubmission(
+			contactId: $contactId,
+			campaignId: $campaignId,
+			utm: $event->getUtmLastTouch(),
+			landingPage: $this->landingPageOf(event: $event),
+			extra: [
+				'leadId' => $leadId,
+				'nonce' => $nonce,
+				'sourceRef' => $event->getPageId(),
+				'occurredAt' => $event->getSubmittedAt(),
+			],
 		);
 
 		if ($leadId !== '') {
@@ -345,37 +348,15 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	}//end matchOrCreateClient()
 
 	/**
-	 * The touchpoint this submission appends.
+	 * The page the form was sent from: the portal and the page route, as one string.
 	 *
 	 * @param LandingPageFormSubmittedEvent $event The submission.
-	 * @param string $campaignId The campaign id.
-	 * @param string $contactId The contact id.
-	 * @param string $leadId The lead id.
-	 * @param string $nonce The submission's nonce.
 	 *
-	 * @return array<string, mixed> The touchpoint row.
+	 * @return string The landing page, or an empty string.
 	 */
-	private function touchpointFor(
-		LandingPageFormSubmittedEvent $event,
-		string $campaignId,
-		string $contactId,
-		string $leadId,
-		string $nonce,
-	): array {
-		$utm = $this->utmBlock(utm: $event->getUtmLastTouch());
-
-		return [
-			'campaignId' => $campaignId,
-			'contactId' => $contactId,
-			'leadId' => $leadId,
-			'kind' => 'submit',
-			'channel' => $this->touchpoints->channelForMedium(medium: (string)($utm['medium'] ?? '')),
-			'utm' => $utm,
-			'sourceRef' => $event->getPageId(),
-			'occurredAt' => $event->getSubmittedAt(),
-			'nonce' => $nonce,
-		];
-	}//end touchpointFor()
+	private function landingPageOf(LandingPageFormSubmittedEvent $event): string {
+		return trim(trim($event->getPortal()).' '.trim($event->getPageRoute()));
+	}//end landingPageOf()
 
 	/**
 	 * Normalise a UTM block to the five keys the schemas declare.
