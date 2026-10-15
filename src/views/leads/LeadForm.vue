@@ -61,6 +61,8 @@
 				<NcSelect
 					v-model="form.source"
 					:options="sourceOptions"
+					label="label"
+					:reduce="(o) => o.id"
 					:aria-label-combobox="t('pipelinq', 'Source')"
 					labelOutside
 					:clearable="true"
@@ -202,6 +204,7 @@ import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import { isCurrencyCode, normaliseCurrency } from '../../services/leadCurrency.js'
+import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { reportingCurrency } from '../../services/reportingCurrency.js'
@@ -305,7 +308,10 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-54
 		 */
 		sourceOptions() {
-			return this.leadSourcesStore.sourceNames
+			return this.leadSourcesStore.sourceNames.map((id) => ({
+				id,
+				label: leadSourceLabel(id),
+			}))
 		},
 
 		isEdit() {

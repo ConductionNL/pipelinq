@@ -61,6 +61,7 @@ import {
 	STRUCTURE_SETTING,
 } from './utils/structureProfile.js'
 import { seedVatClassLabels } from './utils/vatClassLabels.js'
+import { translateWidgetSubmitLabels } from './utils/widgetSubmitLabels.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -199,6 +200,8 @@ const mergedManifest = seedVatClassLabels(
 )
 // The index pages' chips, count line and header buttons, in the same way.
 translateIndexPageLabels(mergedManifest, (text) => t('pipelinq', text))
+// A dashboard form widget's submit label, which it prints as written.
+translateWidgetSubmitLabels(mergedManifest, (text) => t('pipelinq', text))
 
 /**
  * Build the vue-router config from the manifest. Each manifest page
