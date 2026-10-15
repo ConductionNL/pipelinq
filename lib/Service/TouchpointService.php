@@ -256,24 +256,15 @@ class TouchpointService {
 		$clientId = trim((string)($contact['client'] ?? ''));
 
 		if ($campaignId !== '') {
-			$row = array_filter(
-				[
-					'campaignId' => $campaignId,
-					'contactId' => $contactId,
-					'clientId' => $clientId,
-					'leadId' => trim((string)($extra['leadId'] ?? '')),
-					'kind' => 'submit',
-					'channel' => $this->channelForMedium(medium: $values['medium']),
-					'utm' => $values,
-					'landingPage' => $page,
-					'sourceRef' => trim((string)($extra['sourceRef'] ?? '')),
-					'nonce' => trim((string)($extra['nonce'] ?? '')),
-					'occurredAt' => $moment,
-					'createdAt' => gmdate('Y-m-d\TH:i:sP'),
-				],
-				static fn (mixed $value): bool => $value !== ''
+			$result['touchpoint'] = $this->writeTouchpoint(
+				campaignId: $campaignId,
+				contactId: $contactId,
+				clientId: $clientId,
+				values: $values,
+				page: $page,
+				moment: $moment,
+				extra: $extra
 			);
-			$result['touchpoint'] = $this->systemStore->save(schemaSlug: $this->schemaSlug(), payload: $row);
 		}
 
 		$touch = array_filter(
@@ -285,11 +276,8 @@ class TouchpointService {
 			$result['touched'][] = 'contact';
 		}
 
-		if ($clientId !== '') {
-			$client = $this->systemStore->find(schemaSlug: 'client', id: $clientId);
-			if ($client !== null && $this->writeTouches(schemaSlug: 'client', id: $clientId, record: $client, touch: $touch) === true) {
-				$result['touched'][] = 'client';
-			}
+		if ($this->touchClient(clientId: $clientId, touch: $touch) === true) {
+			$result['touched'][] = 'client';
 		}
 
 		return $result;
@@ -317,6 +305,70 @@ class TouchpointService {
 
 		return $values;
 	}//end utmValues()
+
+	/**
+	 * Write the `submit` touchpoint of a submission that belongs to a campaign.
+	 *
+	 * @param string                $campaignId The campaign.
+	 * @param string                $contactId  The contact, may be empty.
+	 * @param string                $clientId   The contact's client, may be empty.
+	 * @param array<string, string> $values     The capped campaign values.
+	 * @param string                $page       The landing page, may be empty.
+	 * @param string                $moment     When the form was sent.
+	 * @param array<string, mixed>  $extra      leadId, nonce, sourceRef.
+	 *
+	 * @return array<string, mixed>|null The stored touchpoint, or null.
+	 */
+	private function writeTouchpoint(
+		string $campaignId,
+		string $contactId,
+		string $clientId,
+		array $values,
+		string $page,
+		string $moment,
+		array $extra,
+	): ?array {
+		$row = array_filter(
+			[
+				'campaignId' => $campaignId,
+				'contactId' => $contactId,
+				'clientId' => $clientId,
+				'leadId' => trim((string)($extra['leadId'] ?? '')),
+				'kind' => 'submit',
+				'channel' => $this->channelForMedium(medium: $values['medium']),
+				'utm' => $values,
+				'landingPage' => $page,
+				'sourceRef' => trim((string)($extra['sourceRef'] ?? '')),
+				'nonce' => trim((string)($extra['nonce'] ?? '')),
+				'occurredAt' => $moment,
+				'createdAt' => gmdate('Y-m-d\TH:i:sP'),
+			],
+			static fn (mixed $value): bool => $value !== ''
+		);
+
+		return $this->systemStore?->save(schemaSlug: $this->schemaSlug(), payload: $row);
+	}//end writeTouchpoint()
+
+	/**
+	 * Write the touches of the contact's client, when there is one.
+	 *
+	 * @param string                $clientId The client, may be empty.
+	 * @param array<string, string> $touch    The touch of this submission.
+	 *
+	 * @return bool True when the client's touches were stored.
+	 */
+	private function touchClient(string $clientId, array $touch): bool {
+		if ($clientId === '') {
+			return false;
+		}
+
+		$client = $this->systemStore?->find(schemaSlug: 'client', id: $clientId);
+		if ($client === null) {
+			return false;
+		}
+
+		return $this->writeTouches(schemaSlug: 'client', id: $clientId, record: $client, touch: $touch);
+	}//end touchClient()
 
 	/**
 	 * Write a record's touches: the first only when it has none, the last always.
