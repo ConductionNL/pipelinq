@@ -131,6 +131,9 @@ class SettingsLoadService {
 		'ctiAdapterConfig',
 		'ctiEventLog',
 		'ctiAgentPresence',
+		// The call mirror (kcc-agent-panel): without this slug the
+		// `mirroredCall_schema` key is never set and CallMirror writes nothing.
+		'mirroredCall',
 		// SLA engine (sla-engine-and-escalation) — separate sla register.
 		'slaPolicy',
 		'slaBreachEvent',
