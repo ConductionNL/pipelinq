@@ -1605,7 +1605,7 @@
 						"label": "New request"
 					}
 				],
-				"countText": "{shown} of {total} open tickets · customer contact · newest first",
+				"countText": "{shown} of {total} tickets · customer contact · newest first",
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"rowTitle": "plain",
