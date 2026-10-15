@@ -8,6 +8,8 @@
   -->
 <template>
 	<div>
+		<!-- Cards by default: the five-column role table is wider than the
+		     admin card it sits in. The toggle still offers the table. -->
 		<CnIndexPage
 			:title="t('pipelinq', 'POS roles')"
 			:description="
@@ -24,6 +26,7 @@
 			:sortKey="sortKey"
 			:sortOrder="sortOrder"
 			:selectable="true"
+			viewMode="cards"
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No POS roles defined yet')"
 			:emptyActionLabel="t('pipelinq', 'New role')"
