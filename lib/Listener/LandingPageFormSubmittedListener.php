@@ -42,7 +42,7 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 use OCA\Pipelinq\Service\CampaignService;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
+use OCA\Pipelinq\Service\SystemObjectStore;
 use OCA\Pipelinq\Service\TouchpointService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -89,7 +89,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ListObjectStore $store Register-scoped object access.
+	 * @param SystemObjectStore $store Object access as pipelinq's system account, access checks on.
 	 * @param CampaignService $campaigns Resolves the campaign the form belongs to.
 	 * @param TouchpointService $touchpoints The touchpoint log and its nonce guard.
 	 * @param LoggerInterface $logger Logger.
@@ -97,7 +97,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function __construct(
-		private ListObjectStore $store,
+		private SystemObjectStore $store,
 		private CampaignService $campaigns,
 		private TouchpointService $touchpoints,
 		private LoggerInterface $logger,

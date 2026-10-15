@@ -60,7 +60,7 @@ class SubmittedLeadListenerTest extends TestCase {
 
 		return new SubmittedLeadListener(
 			$config,
-			($intake ?? new SubmittedLeadIntake($this->store, new TouchpointService($this->store, $this->systemStoreOver($this->store)))),
+			($intake ?? new SubmittedLeadIntake($this->systemStoreOver($this->store), new TouchpointService($this->store, $this->systemStoreOver($this->store)))),
 			($logger ?? $this->createMock(LoggerInterface::class))
 		);
 	}//end listener()

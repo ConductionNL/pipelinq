@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Service\SystemObjectStore;
 use OCA\Pipelinq\Service\TouchpointService;
 
 /**
@@ -65,13 +66,13 @@ class SubmittedLeadIntake {
 	/**
 	 * Constructor.
 	 *
-	 * @param ListObjectStore   $store       Register-scoped object access.
+	 * @param SystemObjectStore $store       Object access as pipelinq's system account, access checks on.
 	 * @param TouchpointService $touchpoints The touchpoint log and its nonce guard.
 	 *
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/marketing-campaigns/spec.md#requirement-a-landing-page-form-submits-into-a-lead-with-its-contact-and-touchpoint
 	 */
 	public function __construct(
-		private readonly ListObjectStore $store,
+		private readonly SystemObjectStore $store,
 		private readonly TouchpointService $touchpoints,
 	) {
 	}//end __construct()

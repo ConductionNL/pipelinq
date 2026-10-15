@@ -85,7 +85,7 @@ class LandingPageFormSubmittedListenerTest extends TestCase {
 		$appConfig->method('getValueString')->willReturnArgument(2);
 
 		return new LandingPageFormSubmittedListener(
-			$this->store,
+			$this->systemStoreOver($this->store),
 			new CampaignService($this->store, $appConfig, new CampaignLinkDecorator($appConfig)),
 			new TouchpointService($this->store, $this->systemStoreOver($this->store)),
 			$this->createMock(LoggerInterface::class)
@@ -224,6 +224,29 @@ class LandingPageFormSubmittedListenerTest extends TestCase {
 		$this->assertSame(1, $this->store->countOf(schemaSlug: 'client'));
 		$this->assertSame(2, $this->store->countOf(schemaSlug: 'lead'));
 	}//end testAnOrganisationCreatesTheClientAndASecondSubmissionReusesIt()
+
+	/**
+	 * An anonymous visitor's submission writes the contact, the client and the lead as pipelinq's system account, access checks on.
+	 *
+	 * @return void
+	 */
+	public function testTheVisitorsRecordsAreWrittenAsTheSystemAccount(): void {
+		$listener = $this->build();
+
+		$listener->handle($this->submission(
+			values: ['name' => 'J. de Vries', 'email' => 'j@gemeente-voorbeeld.nl', 'organisation' => 'Gemeente Voorbeeld'],
+			nonce: 'nonce-system'
+		));
+
+		$writes = array_filter($this->systemStoreCalls, static fn (array $call): bool => $call['method'] === 'saveObject');
+		// The client, the contact, the lead, the touchpoint, and the contact's touches.
+		$this->assertEqualsCanonicalizing(['client', 'contact', 'lead', 'touchpoint', 'contact'], array_column($writes, 'schema'));
+		foreach ($this->systemStoreCalls as $call) {
+			$this->assertSame('pipelinq-system', $call['actor'], $call['method'] . ' on ' . $call['schema'] . ' did not run as the system account');
+		}
+
+		$this->assertNull($this->systemStoreActive, 'the visitor is anonymous again afterwards');
+	}//end testTheVisitorsRecordsAreWrittenAsTheSystemAccount()
 
 	/**
 	 * @return void

@@ -58,7 +58,9 @@ cut at 100 characters and SHALL NOT set any server-owned field.
 
 Every read and write that records a submission's touchpoint and touches SHALL run
 as pipelinq's system account with OpenRegister's access checks on, whoever is
-signed in, and SHALL NOT use `_rbac: false`. The register's authorization block
+signed in, and SHALL NOT use `_rbac: false`. The same holds for the contact,
+the client and the lead both intakes (the web form lead and the landing page
+submission) find or create. The register's authorization block
 decides what that account may touch. A failure SHALL be logged and SHALL NOT fail
 the visitor's submission.
 
@@ -68,3 +70,10 @@ the visitor's submission.
 - WHEN the touches are written
 - THEN OpenRegister sees the system account, with access checks on
 - AND the resident's own session is unchanged afterwards
+
+#### Scenario: An anonymous visitor's form creates the contact, client and lead
+
+- GIVEN nobody is signed in and a visitor sends a landing page form with an organisation
+- WHEN the contact, the client and the lead are created
+- THEN each write reaches OpenRegister as the system account, with access checks on
+- AND the visitor is anonymous again afterwards
