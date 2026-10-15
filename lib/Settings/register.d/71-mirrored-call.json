@@ -1,0 +1,195 @@
+{
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "mirroredCall"
+                ]
+            }
+        },
+        "schemas": {
+            "mirroredCall": {
+                "slug": "mirroredCall",
+                "title": "Mirrored call",
+                "icon": "PhoneLog",
+                "version": "1.0.0",
+                "summary": "A call event from a telephony source, kept 30 days",
+                "description": "One row per call event that reached pipelinq: ringing, answered, ended or transferred. The row names who the caller is in pipelinq and what is open for them, resolved once when the event arrived. Rows are removed 30 days after they were written. Only the Pipelinq background service account writes, reads and removes rows. No other user reads this schema: a row holds a phone number.",
+                "type": "object",
+                "required": [
+                    "callId",
+                    "kind",
+                    "sourceId",
+                    "mirroredAt"
+                ],
+                "authorization": {
+                    "create": [
+                        "pipelinq-background-service"
+                    ],
+                    "read": [
+                        "pipelinq-background-service"
+                    ],
+                    "update": [],
+                    "delete": [
+                        "pipelinq-background-service"
+                    ]
+                },
+                "properties": {
+                    "callId": {
+                        "type": "string",
+                        "title": "Call id",
+                        "description": "The telephony source's identifier for the call. Every event of one call carries the same call id.",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "kind": {
+                        "type": "string",
+                        "title": "Kind",
+                        "description": "What happened to the call.",
+                        "enum": [
+                            "ringing",
+                            "answered",
+                            "ended",
+                            "transferred"
+                        ]
+                    },
+                    "sourceId": {
+                        "type": "string",
+                        "title": "Source",
+                        "description": "The telephony source the event came through.",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "callerNumber": {
+                        "type": "string",
+                        "title": "Caller number",
+                        "description": "The caller's number in E.164, or empty when the number was withheld.",
+                        "pattern": "^(\\+[1-9][0-9]{1,14})?$"
+                    },
+                    "callerName": {
+                        "type": "string",
+                        "title": "Caller name",
+                        "description": "The name the telephony source resolved, or empty for an unknown caller.",
+                        "maxLength": 255
+                    },
+                    "agentId": {
+                        "type": "string",
+                        "title": "Agent",
+                        "description": "The agent the call is for, or empty.",
+                        "maxLength": 64
+                    },
+                    "at": {
+                        "type": "string",
+                        "title": "At",
+                        "description": "When the telephony source says it happened, ISO 8601, or empty.",
+                        "maxLength": 64
+                    },
+                    "durationSeconds": {
+                        "type": "integer",
+                        "title": "Duration (seconds)",
+                        "description": "How long the call lasted. 0 except on an ended event.",
+                        "minimum": 0,
+                        "maximum": 172800
+                    },
+                    "openCases": {
+                        "type": "array",
+                        "title": "Open cases",
+                        "description": "The case references the telephony source carried for the caller: the reference and where it lives, nothing else.",
+                        "maxItems": 20,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "reference"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                                "reference": {
+                                    "title": "Reference",
+                                    "description": "The case's reference at its source.",
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 255
+                                },
+                                "source": {
+                                    "title": "Source",
+                                    "description": "The app or system that holds the case.",
+                                    "type": "string",
+                                    "maxLength": 255
+                                }
+                            }
+                        }
+                    },
+                    "inPipelinq": {
+                        "type": "array",
+                        "title": "In pipelinq",
+                        "description": "The clients and contacts that have the caller's number, each with their open tickets.",
+                        "maxItems": 10,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "type",
+                                "id"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                                "type": {
+                                    "title": "Type",
+                                    "description": "Whether the match is a client or a contact.",
+                                    "type": "string",
+                                    "enum": [
+                                        "client",
+                                        "contact"
+                                    ]
+                                },
+                                "id": {
+                                    "title": "Id",
+                                    "description": "The id of the client or contact.",
+                                    "type": "string",
+                                    "minLength": 1
+                                },
+                                "name": {
+                                    "title": "Name",
+                                    "description": "The client's or contact's name.",
+                                    "type": "string"
+                                },
+                                "openTickets": {
+                                    "title": "Open tickets",
+                                    "description": "The open tickets of this client or contact, at most ten.",
+                                    "type": "array",
+                                    "maxItems": 10,
+                                    "items": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "properties": {
+                                            "id": {
+                                                "title": "Id",
+                                                "description": "The ticket's id.",
+                                                "type": "string"
+                                            },
+                                            "title": {
+                                                "title": "Title",
+                                                "description": "The ticket's title.",
+                                                "type": "string"
+                                            },
+                                            "status": {
+                                                "title": "Status",
+                                                "description": "The ticket's status when the call arrived.",
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "mirroredAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Mirrored at",
+                        "description": "When pipelinq wrote this row. The 30 days count from here."
+                    }
+                }
+            }
+        }
+    }
+}

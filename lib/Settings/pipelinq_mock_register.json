@@ -7748,6 +7748,60 @@
         "validUntil": "2026-03-03T09:00:00+00:00",
         "justification": "Voorbeeld Justification 3",
         "status": "archived"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mirroredCall",
+          "slug": "mirroredcall-mirroredcall-1-1"
+        },
+        "callId": "voorbeeld-gesprek-1",
+        "kind": "ringing",
+        "sourceId": "voorbeeld-telefoniebron",
+        "callerNumber": "+31612345678",
+        "callerName": "Sanne de Vries",
+        "agentId": "noor",
+        "at": "2026-03-01T09:00:00+00:00",
+        "durationSeconds": 0,
+        "openCases": [],
+        "inPipelinq": [],
+        "mirroredAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mirroredCall",
+          "slug": "mirroredcall-mirroredcall-1-2"
+        },
+        "callId": "voorbeeld-gesprek-1",
+        "kind": "answered",
+        "sourceId": "voorbeeld-telefoniebron",
+        "callerNumber": "+31612345678",
+        "callerName": "Sanne de Vries",
+        "agentId": "noor",
+        "at": "2026-03-01T09:00:08+00:00",
+        "durationSeconds": 0,
+        "openCases": [],
+        "inPipelinq": [],
+        "mirroredAt": "2026-03-01T09:00:08+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mirroredCall",
+          "slug": "mirroredcall-mirroredcall-1-3"
+        },
+        "callId": "voorbeeld-gesprek-1",
+        "kind": "ended",
+        "sourceId": "voorbeeld-telefoniebron",
+        "callerNumber": "+31612345678",
+        "callerName": "Sanne de Vries",
+        "agentId": "noor",
+        "at": "2026-03-01T09:01:43+00:00",
+        "durationSeconds": 95,
+        "openCases": [],
+        "inPipelinq": [],
+        "mirroredAt": "2026-03-01T09:01:43+00:00"
       }
     ]
   }

@@ -52,7 +52,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.7-unstable.20261014170000</version>
+    <version>0.5.7-unstable.20261015090000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -116,6 +116,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\PointsExpiryBatchJob</job>
         <job>OCA\Pipelinq\BackgroundJob\TierDowngradeJob</job>
         <job>OCA\Pipelinq\BackgroundJob\CtiEventLogCleanupJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\CallMirrorRetentionJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BlastSendJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ReminderDispatchJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SurveyInvitationDispatchJob</job>
@@ -273,13 +274,15 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\CreatePortalServiceGroup</step>
             <!-- The group the SMS and WhatsApp webhooks write with; never picks an account. -->
             <step>OCA\Pipelinq\Repair\CreateMessagingServiceGroup</step>
+            <!-- The group the call mirror writes with; never picks an account. -->
+            <step>OCA\Pipelinq\Repair\CreateBackgroundServiceGroup</step>
             <!-- The group five notification rules address; created only when missing, members untouched. -->
             <step>OCA\Pipelinq\Repair\CreateSalesGroup</step>
             <!--
                 hydra-gate-98 held: OCA\Pipelinq\Repair\CreateServiceGroup : it is the abstract
                 base of the two steps above and cannot be instantiated, so naming it here would
                 make Nextcloud's repair fail. It runs through CreatePortalServiceGroup and
-                CreateMessagingServiceGroup. RepairStepRegistrationTest keeps it that way.
+                CreateMessagingServiceGroup (and CreateBackgroundServiceGroup). RepairStepRegistrationTest keeps it that way.
             -->
         </post-migration>
         <!--
@@ -313,6 +316,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\SeedWeeklyReviewAgentTemplate</step>
             <step>OCA\Pipelinq\Repair\CreatePortalServiceGroup</step>
             <step>OCA\Pipelinq\Repair\CreateMessagingServiceGroup</step>
+            <step>OCA\Pipelinq\Repair\CreateBackgroundServiceGroup</step>
             <step>OCA\Pipelinq\Repair\CreateSalesGroup</step>
         </install>
     </repair-steps>

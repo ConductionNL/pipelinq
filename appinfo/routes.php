@@ -553,6 +553,9 @@ return [
         // The account the SMS and WhatsApp webhooks write as (admin only).
         ['name' => 'messagingAdmin#getServiceAccount',  'url' => '/api/messaging/service-account', 'verb' => 'GET'],
         ['name' => 'messagingAdmin#saveServiceAccount', 'url' => '/api/messaging/service-account', 'verb' => 'PUT'],
+        // The account background work (the call mirror) writes as (admin only).
+        ['name' => 'backgroundServiceAccount#show', 'url' => '/api/background/service-account', 'verb' => 'GET'],
+        ['name' => 'backgroundServiceAccount#save', 'url' => '/api/background/service-account', 'verb' => 'PUT'],
         // Semantic object handoff emit (ADR-051 / semantic-handoff-emit):
         // request -> ns#Case, active contract -> ns#Invoice. Kind-addressed via
         // OpenRegister's handoff engine; actions hide when no app implements the kind.

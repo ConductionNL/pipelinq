@@ -151,5 +151,27 @@ describe('ServiceAccountPicker', () => {
 		expect(messaging).toContain("'/apps/pipelinq/api/messaging/service-account'")
 		expect(portal).toContain('<ServiceAccountPicker')
 		expect(portal).toContain("adminUrl('service-account')")
+
+		// The background service account (the call log) is the third caller,
+		// and the settings page mounts it for an admin.
+		const background = readFileSync(
+			resolve(
+				__dirname,
+				'../../src/views/settings/BackgroundServiceAccountSettings.vue',
+			),
+			'utf8',
+		)
+		const settings = readFileSync(
+			resolve(__dirname, '../../src/views/settings/Settings.vue'),
+			'utf8',
+		)
+		expect(background).toContain('<ServiceAccountPicker')
+		expect(background).toContain(
+			"'/apps/pipelinq/api/background/service-account'",
+		)
+		expect(background).toContain('defaultGroup="pipelinq-background-service"')
+		expect(settings).toContain(
+			'<BackgroundServiceAccountSettings v-if="isAdmin && isConfigured" />',
+		)
 	})
 })
