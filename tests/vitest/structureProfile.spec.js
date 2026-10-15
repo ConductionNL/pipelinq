@@ -151,14 +151,14 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 48 entries: 40 main, 3 footer, 5 settings, 0 integrations', () => {
+	it('still counts 49 entries: 40 main, 3 footer, 6 settings (one the Integrations caption), 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
-		expect(flat(menu)).toHaveLength(48)
+		expect(flat(menu)).toHaveLength(49)
 		expect(count('main')).toBe(40)
 		expect(count('footer')).toBe(3)
-		expect(count('settings')).toBe(5)
+		expect(count('settings')).toBe(6)
 		expect(count('integrations')).toBe(0)
 	})
 
@@ -248,19 +248,19 @@ describe('the simple profile', () => {
 		}
 	})
 
-	it('keeps relocations out of the file, because any relocation step drops the captions', () => {
-		// The library's relocation step ends by filtering out every entry with
-		// no route, href, action or children. That is a caption. `{}` is enough
-		// to run it, so the key has to be absent.
+	it('keeps relocations out of the file, and the library keeps captions through a relocation step', () => {
+		// The simple menu is flat, so it has nothing to relocate. Since
+		// nextcloud-vue 2.84.0 a relocation step no longer drops a caption,
+		// which is what lets the full profile show its Integrations caption.
 		expect(Object.hasOwn(simpleFile, 'relocations')).toBe(false)
 		const withRelocations = build({
 			...applyMenuModules(simpleFile, []),
 			relocations: {},
 		})
 		expect(
-			withRelocations.menu.filter((entry) => entry.type === 'caption'),
-			'the library now keeps captions through relocations; the note in the profile file is stale',
-		).toEqual([])
+			withRelocations.menu.filter((entry) => entry.type === 'caption').length,
+			'the library drops captions through relocations again',
+		).toBeGreaterThan(0)
 	})
 
 	it('gives every entry a label in English and Dutch, an icon the app registers and a page that exists', () => {
@@ -342,9 +342,11 @@ describe('the simple profile', () => {
 		const settings = section(built.menu, 'settings').map((entry) => entry.id)
 		expect(settings).toEqual(expect.arrayContaining(['Services', 'Resources']))
 		// Everything the full profile has in settings is still there.
-		const fullSettings = section(build(fullFile).menu, 'settings').map(
-			(entry) => entry.id,
-		)
+		// Except the full profile's Integrations caption, which this profile
+		// removes by name.
+		const fullSettings = section(build(fullFile).menu, 'settings')
+			.filter((entry) => entry.type !== 'caption')
+			.map((entry) => entry.id)
 		expect(settings).toEqual(expect.arrayContaining(fullSettings))
 	})
 
