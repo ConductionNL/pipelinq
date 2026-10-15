@@ -24,15 +24,18 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
 use OCA\Pipelinq\Service\Marketing\SubmittedLeadIntake;
 use OCA\Pipelinq\Service\TouchpointService;
+use OCA\Pipelinq\Tests\Unit\Support\BuildsSystemObjectStore;
 use OCA\Pipelinq\Tests\Unit\Support\InMemoryListObjectStore;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../Support/InMemoryListObjectStore.php';
+require_once __DIR__ . '/../../Support/BuildsSystemObjectStore.php';
 
 /**
  * A lead a form submitted gets its contact, its client and one touchpoint.
  */
 class SubmittedLeadIntakeTest extends TestCase {
+	use BuildsSystemObjectStore;
 
 	/**
 	 * The lead a campaign form creates, as the hosting page writes it.
@@ -63,7 +66,7 @@ class SubmittedLeadIntakeTest extends TestCase {
 	private function intake(array $seed = []): SubmittedLeadIntake {
 		$this->store = new InMemoryListObjectStore($seed);
 
-		return new SubmittedLeadIntake($this->store, new TouchpointService($this->store));
+		return new SubmittedLeadIntake($this->store, new TouchpointService($this->store, $this->systemStoreOver($this->store)));
 	}//end intake()
 
 	/**

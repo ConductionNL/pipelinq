@@ -41,14 +41,30 @@ medium and landing page.
 
 ### Requirement: The website enquiry form keeps campaign values (REQ-MOC-003)
 
-The public enquiry endpoint SHALL accept campaign, source, medium, content and
-term values and the page URL, SHALL trim and cap them, and SHALL NOT let them set
-any server-owned field. An enquiry from a known contact SHALL update that
-contact's touches.
+A website form submits into its destination object (decision 179). When the
+form's destination is a lead, the lead SHALL carry the visit's campaign values in
+`lastTouch` and the page in `pageId`, and the lead intake SHALL write the touches
+of the lead's contact and client from them. Campaign values SHALL be trimmed and
+cut at 100 characters and SHALL NOT set any server-owned field.
 
 #### Scenario: An enquiry from a campaign link
 
 - GIVEN a known contact opens the website with utm_campaign=voorjaar and utm_source=nieuwsbrief
-- WHEN they send the enquiry form
-- THEN their last touch shows campaign voorjaar, source nieuwsbrief and the page URL
-- AND the enquiry's status is new, whatever the form sent
+- WHEN they send a website form whose destination is a lead
+- THEN their last touch shows campaign voorjaar, source nieuwsbrief and the page
+- AND the lead's status is the one the server sets, whatever the form sent
+
+### Requirement: The touches are written as pipelinq's system account (REQ-MOC-004)
+
+Every read and write that records a submission's touchpoint and touches SHALL run
+as pipelinq's system account with OpenRegister's access checks on, whoever is
+signed in, and SHALL NOT use `_rbac: false`. The register's authorization block
+decides what that account may touch. A failure SHALL be logged and SHALL NOT fail
+the visitor's submission.
+
+#### Scenario: A signed-in resident sends a campaign form
+
+- GIVEN a resident is signed in to the site and sends a landing page form
+- WHEN the touches are written
+- THEN OpenRegister sees the system account, with access checks on
+- AND the resident's own session is unchanged afterwards
