@@ -2357,7 +2357,11 @@ OC.L10N.register(
         "Not this client": "Non è questo cliente",
         "Answer and open": "Rispondi e apri",
         "Choose contact": "Scegli il contatto",
-        "The contact is not saved. Try again.": "Il contatto non è stato salvato. Riprova."
+        "The contact is not saved. Try again.": "Il contatto non è stato salvato. Riprova.",
+        "You have an unsaved contact moment from {time}.": "Hai un contatto non salvato del {time}.",
+        "Restore draft": "Ripristina bozza",
+        "Discard": "Scarta",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "La sessione è scaduta. Accedi di nuovo in una nuova scheda, poi premi Salva qui."
     },
     "nplurals=2; plural=(n != 1);"
 )

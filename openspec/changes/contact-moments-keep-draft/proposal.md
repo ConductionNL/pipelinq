@@ -1,6 +1,7 @@
 ---
 kind: code
 depends_on: []
+# Needs OpenRegister's change draft-owner-activation-and-lifetime (decision 216).
 ---
 
 # Proposal: contact-moments-keep-draft
@@ -41,8 +42,10 @@ The missing half is the manual form.
 
 - While an agent types in the quick log, the form is saved as a draft on the
   server every few seconds of quiet and when the tab is closed.
-- A draft belongs to its author only, never shows in lists or reports, and is
-  deleted when the contact moment is saved or after seven days.
+- A draft belongs to its author only and never shows in lists or reports. It
+  is the contact moment itself, a ticket in OpenRegister's status `draft`
+  (decisions 180 and 216): saving makes it definitive, and OpenRegister
+  removes it after seven days without a change.
 - Opening the quick log for a client or request that has a draft offers Restore
   draft or Discard.
 - When the session has expired, a save attempt keeps the text on screen and

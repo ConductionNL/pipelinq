@@ -7651,7 +7651,11 @@ OC.L10N.register(
         "Partner": "Partner",
         "Event or fair": "Event or fair",
         "Public tender": "Public tender",
-        "No source": "No source"
+        "No source": "No source",
+        "You have an unsaved contact moment from {time}.": "You have an unsaved contact moment from {time}.",
+        "Restore draft": "Restore draft",
+        "Discard": "Discard",
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Your session has ended. Log in again in a new tab, then press Save here."
     },
     "nplurals=2; plural=(n != 1);"
 )
