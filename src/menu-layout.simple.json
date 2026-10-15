@@ -1100,7 +1100,8 @@
 						"gridWidth": 12,
 						"gridHeight": 2,
 						"showTitle": false,
-						"borderless": true
+						"borderless": true,
+						"sizeToContent": true
 					},
 					{
 						"id": "wr",
@@ -1604,9 +1605,9 @@
 						"label": "New request"
 					}
 				],
-				"countText": "{shown} of {total} open tickets · customer contact · sorted by waiting time",
+				"countText": "{shown} of {total} open tickets · customer contact · newest first",
 				"sortKey": "occurredAt",
-				"sortOrder": "asc",
+				"sortOrder": "desc",
 				"rowTitle": "plain",
 				"searchPlaceholder": "Filter by subject or client"
 			},

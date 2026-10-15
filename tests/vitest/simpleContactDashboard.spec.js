@@ -632,6 +632,9 @@ describe('the hidden page header loses nothing', () => {
 			borderless: true,
 		})
 		const client = layoutOf('simple-client-in-focus')
+		// At 1100 wide the description wraps to three lines: a fixed two-row
+		// cell cut the client picker in half behind a scrollbar.
+		expect(client.sizeToContent).toBe(true)
 		const clientBound = full.config.widgets
 			.filter((widget) =>
 				JSON.stringify(widget.content || {}).includes(
