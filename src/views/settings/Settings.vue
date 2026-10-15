@@ -1,75 +1,24 @@
 <template>
-	<div>
-		<!-- Page Title -->
-		<NcSettingsSection
-			:name="t('pipelinq', 'Pipelinq Settings')"
-			:description="t('pipelinq', 'Configure your Pipelinq installation')"
-			docUrl="https://pipelinq.conduction.nl/docs/intro" />
-
-		<!-- Version Information -->
-		<CnVersionInfoCard
-			appName="Pipelinq"
-			:appVersion="appVersion"
-			:isUpToDate="true"
-			:showUpdateButton="true"
-			:title="t('pipelinq', 'Version Information')"
-			:description="
-				t('pipelinq', 'Information about the current Pipelinq installation')
-			">
-			<template #actions>
-				<NcButton
-					variant="primary"
-					:disabled="reimporting"
-					@click="reimport">
-					<template #icon>
-						<NcLoadingIcon v-if="reimporting" :size="20" />
-						<Refresh v-else :size="20" />
-					</template>
-					{{
-						reimporting
-							? t('pipelinq', 'Importing…')
-							: t('pipelinq', 'Re-import configuration')
-					}}
-				</NcButton>
-			</template>
-			<template #footer>
-				<div class="cn-support-info">
-					<h4>{{ t('pipelinq', 'Support') }}</h4>
-					<p>
-						{{ t('pipelinq', 'For support, contact us at') }}
-						<a href="mailto:support@conduction.nl"
-							>support@conduction.nl</a
-						>
-					</p>
-					<p>
-						{{
-							t(
-								'pipelinq',
-								'For a Service Level Agreement (SLA), contact',
-							)
-						}}
-						<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
-					</p>
-				</div>
-			</template>
-		</CnVersionInfoCard>
-
-		<!-- Provisioning is an admin action, never a wizard step
-		     (pipelinq-setup-wizard-review). -->
-		<ProvisionDataSection v-if="isAdmin" />
-
-		<!-- Reopen the first-time setup (pipelinq-audit-admin-forms-pos, A1). -->
-		<SetupWizardSection v-if="isAdmin" />
-
-		<!-- Shillinq and XWiki, detected rather than typed. -->
-		<DetectedIntegrations v-if="isAdmin" />
-
-		<!-- The VAT rate per VAT class (pipelinq-forms-review). -->
-		<VatRatesSettings v-if="isAdmin" :config="config" />
-
-		<!-- Menu structure: simple (default) or full, and the modules
-		     (simple-structure-profile). -->
-		<MenuStructureSettings v-if="isAdmin" />
+	<!-- Board PqBeheer: the library admin shell draws the title, the path and
+	     the Documentatie button, then every settings section as a card in two
+	     columns. The version card comes first; the sections follow in the
+	     board's order (register, lead sources, request channels, lead
+	     management, product categories, menu structure, skills, agent
+	     profiles), then every other section the page has. -->
+	<CnAdminSettingsShell
+		appId="pipelinq"
+		appName="Pipelinq"
+		look="board"
+		:title="t('pipelinq', 'Pipelinq settings')"
+		:breadcrumbs="breadcrumbs"
+		:breadcrumbNote="t('pipelinq', 'Set up your Pipelinq installation')"
+		docUrl="https://pipelinq.conduction.nl/docs/intro"
+		:appVersion="appVersion"
+		:versionTitle="t('pipelinq', 'Version Information')"
+		:versionDescription="t('pipelinq', 'Information about the current Pipelinq installation')"
+		:reimportUrl="reimportUrl"
+		@reimported="onReimported"
+		@reimportError="onReimportError">
 
 		<!-- Register & Schema Mapping -->
 		<CnRegisterMapping
@@ -84,21 +33,6 @@
 			:configuration="config"
 			:saving="saving"
 			@save="save" />
-
-		<!-- Pipeline Management -->
-		<PipelineManager v-if="isConfigured" />
-
-		<!-- Product Categories -->
-		<ProductCategoryManager v-if="isConfigured" />
-
-		<!-- Skill Management -->
-		<SkillSettings v-if="isConfigured" />
-
-		<!-- Agent Profile Management -->
-		<AgentProfileSettings v-if="isConfigured" />
-
-		<!-- Forecast Configuration -->
-		<ForecastSettings v-if="isConfigured" />
 
 		<!-- Lead Sources -->
 		<TagManager
@@ -125,15 +59,6 @@
 			@add="addRequestChannel"
 			@remove="removeRequestChannel"
 			@rename="renameRequestChannel" />
-
-		<!-- Prospect Discovery Settings -->
-		<ProspectSettings v-if="isConfigured" />
-
-		<!-- BI Export Configuration -->
-		<ExportConfigurationSettings
-			v-if="isAdmin"
-			:config="config"
-			@saved="onExportConfigSaved" />
 
 		<!-- Lead Management — stale threshold (REQ-LM-002).
 		     Persisted via IAppConfig under key `lead_stale_threshold_days`. -->
@@ -170,6 +95,47 @@
 				{{ staleMessage }}
 			</NcNoteCard>
 		</NcSettingsSection>
+
+		<!-- Product Categories -->
+		<ProductCategoryManager v-if="isConfigured" />
+
+		<!-- Menu structure: simple (default) or full, and the modules
+		     (simple-structure-profile). -->
+		<MenuStructureSettings v-if="isAdmin" class="cn-settings-section--wide" />
+
+		<!-- Skill Management -->
+		<SkillSettings v-if="isConfigured" />
+
+		<!-- Agent Profile Management -->
+		<AgentProfileSettings v-if="isConfigured" />
+
+		<!-- Provisioning is an admin action, never a wizard step
+		     (pipelinq-setup-wizard-review). -->
+		<ProvisionDataSection v-if="isAdmin" />
+
+		<!-- Reopen the first-time setup (pipelinq-audit-admin-forms-pos, A1). -->
+		<SetupWizardSection v-if="isAdmin" />
+
+		<!-- Shillinq and XWiki, detected rather than typed. -->
+		<DetectedIntegrations v-if="isAdmin" />
+
+		<!-- The VAT rate per VAT class (pipelinq-forms-review). -->
+		<VatRatesSettings v-if="isAdmin" :config="config" />
+
+		<!-- Pipeline Management -->
+		<PipelineManager v-if="isConfigured" />
+
+		<!-- Forecast Configuration -->
+		<ForecastSettings v-if="isConfigured" />
+
+		<!-- Prospect Discovery Settings -->
+		<ProspectSettings v-if="isConfigured" />
+
+		<!-- BI Export Configuration -->
+		<ExportConfigurationSettings
+			v-if="isAdmin"
+			:config="config"
+			@saved="onExportConfigSaved" />
 
 		<!-- Mailing list signup embed (marketing-lists-and-double-opt-in) -->
 		<MailingListEmbedSettings v-if="isConfigured" />
@@ -351,11 +317,11 @@
 				{{ message }}
 			</NcNoteCard>
 		</div>
-	</div>
+	</CnAdminSettingsShell>
 </template>
 
 <script>
-import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
+import { CnAdminSettingsShell, CnRegisterMapping } from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -366,7 +332,6 @@ import {
 	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
@@ -422,15 +387,14 @@ export default {
 		PosStaffManager,
 		PosRoleManager,
 		PortalSettings,
+		CnAdminSettingsShell,
 		CnRegisterMapping,
-		CnVersionInfoCard,
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSettingsSection,
 		NcTextField,
-		Refresh,
 		PipelineManager,
 		ProductCategoryManager,
 		ProspectSettings,
@@ -453,7 +417,17 @@ export default {
 		return {
 			config: {},
 			appVersion: loadState('pipelinq', 'version', 'Unknown'),
-			reimporting: false,
+			// Board PqBeheer: the path under the title. The first crumb goes back
+			// to the server's administration settings.
+			breadcrumbs: [
+				{
+					label: t('pipelinq', 'Administration settings'),
+					href: generateUrl('/settings/admin'),
+				},
+				{ label: 'Pipelinq' },
+			],
+
+			reimportUrl: generateUrl('/apps/pipelinq/api/settings/reimport'),
 			saving: false,
 			message: '',
 			messageType: 'success',
@@ -611,48 +585,29 @@ export default {
 
 	methods: {
 		/**
+		 * The shell re-imported the configuration: take the config it returns,
+		 * so the sections show what the import wrote.
+		 *
+		 * @param {object} data The re-import response.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
 		 */
-		async reimport() {
-			this.reimporting = true
-			this.message = ''
+		onReimported(data) {
+			if (data && data.config) {
+				this.config = data.config
+			}
+		},
 
-			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/settings/reimport'),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					},
-				)
-
-				const data = await response.json()
-
-				// The import ran even when a schema was rejected, so the
-				// config it returns is current either way.
-				if (data.config) {
-					this.config = data.config
-				}
-				if (data.success) {
-					this.message = t(
-						'pipelinq',
-						'Configuration re-imported successfully',
-					)
-					this.messageType = 'success'
-				} else {
-					// The server names the rejected schemas in its message.
-					this.message = data.message || t('pipelinq', 'Re-import failed')
-					this.messageType = 'error'
-				}
-			} catch (error) {
-				this.message = error.message || t('pipelinq', 'Re-import failed')
-				this.messageType = 'error'
-			} finally {
-				this.reimporting = false
+		/**
+		 * The import runs even when a schema is rejected, and the shell then
+		 * reports the server's message as an error. Read the config again, so
+		 * the sections show what the import did write.
+		 *
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
+		 */
+		async onReimportError() {
+			const data = await this.settingsStore.fetchSettings()
+			if (data && data.config) {
+				this.config = data.config
 			}
 		},
 

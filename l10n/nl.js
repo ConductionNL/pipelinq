@@ -7566,7 +7566,9 @@ OC.L10N.register(
         "Partner": "Partner",
         "Event or fair": "Evenement of beurs",
         "Public tender": "Aanbesteding",
-        "No source": "Geen bron"
+        "No source": "Geen bron",
+        "Administration settings": "Beheerinstellingen",
+        "Set up your Pipelinq installation": "Stel je Pipelinq-installatie in"
     },
     "nplurals=2; plural=(n != 1);"
 )

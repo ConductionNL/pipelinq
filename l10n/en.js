@@ -7651,7 +7651,9 @@ OC.L10N.register(
         "Partner": "Partner",
         "Event or fair": "Event or fair",
         "Public tender": "Public tender",
-        "No source": "No source"
+        "No source": "No source",
+        "Administration settings": "Administration settings",
+        "Set up your Pipelinq installation": "Set up your Pipelinq installation"
     },
     "nplurals=2; plural=(n != 1);"
 )
