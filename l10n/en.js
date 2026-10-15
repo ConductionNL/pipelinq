@@ -7659,7 +7659,9 @@ OC.L10N.register(
         "Discard": "Discard",
         "Your session has ended. Log in again in a new tab, then press Save here.": "Your session has ended. Log in again in a new tab, then press Save here.",
         "Operator and register": "Operator and register",
-        "Followers: {count}": "Followers: {count}"
+        "Followers: {count}": "Followers: {count}",
+        "Ascending": "Ascending",
+        "Descending": "Descending"
     },
     "nplurals=2; plural=(n != 1);"
 )

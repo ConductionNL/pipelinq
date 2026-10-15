@@ -22,7 +22,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 	CnPagination: {},
 	CnStatusBadge: {},
 }))
-vi.mock('@nextcloud/vue', () => ({ NcNoteCard: {} }))
+vi.mock('@nextcloud/vue', () => ({ NcNoteCard: {}, NcSelect: {} }))
 vi.mock('@nextcloud/axios', () => ({ default: {} }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (p) => p }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn() }))
@@ -63,6 +63,44 @@ describe('social performance', () => {
 		expect(byKey.engagementRate.secondary({ followerCount: 900 })).toBe(
 			'Followers: 900',
 		)
+	})
+
+	it('still offers all eight orders, the date and followers included', () => {
+		const options = SocialPerformanceView.computed.sortOptions.call({
+			columns,
+		})
+		expect(options.map((o) => o.value)).toEqual([
+			'network',
+			'publishedAt',
+			'views',
+			'likes',
+			'comments',
+			'shares',
+			'followerCount',
+			'engagementRate',
+		])
+		expect(
+			SocialPerformanceView.computed.orderOptions.call({}).map((o) => o.value),
+		).toEqual(['asc', 'desc'])
+	})
+
+	it('sorts the rows by a second-line value chosen in the select', () => {
+		const state = { sortKey: 'engagementRate', sortOrder: 'desc' }
+		SocialPerformanceView.methods.onSort.call(state, {
+			key: 'followerCount',
+			order: 'asc',
+		})
+		const rows = [
+			{ id: 'a', followerCount: 4000, publishedAt: '2026-03-02' },
+			{ id: 'b', followerCount: 900, publishedAt: '2026-03-03' },
+			{ id: 'c', followerCount: 2500, publishedAt: '2026-03-01' },
+		]
+		const sorted = (key, order) =>
+			SocialPerformanceView.computed.sortedRows
+				.call({ sortKey: key, sortOrder: order, tableRows: rows })
+				.map((r) => r.id)
+		expect(sorted(state.sortKey, state.sortOrder)).toEqual(['b', 'c', 'a'])
+		expect(sorted('publishedAt', 'desc')).toEqual(['b', 'a', 'c'])
 	})
 })
 

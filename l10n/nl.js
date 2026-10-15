@@ -7574,7 +7574,9 @@ OC.L10N.register(
         "Discard": "Weggooien",
         "Your session has ended. Log in again in a new tab, then press Save here.": "Je sessie is verlopen. Log opnieuw in op een nieuw tabblad en klik daarna hier op Opslaan.",
         "Operator and register": "Operator en kassa",
-        "Followers: {count}": "Volgers: {count}"
+        "Followers: {count}": "Volgers: {count}",
+        "Ascending": "Oplopend",
+        "Descending": "Aflopend"
     },
     "nplurals=2; plural=(n != 1);"
 )
