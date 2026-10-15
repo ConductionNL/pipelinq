@@ -8,7 +8,7 @@
   - Built: `ContactVcardPropertyBuilder::addPreferredName()` and `ContactDataBuilder::withPreferredName()`. The key is written whenever the object (or the card) carries the field, empty included, so clearing works both ways; an organisation client carries none. Tests: `ContactVcardPropertyBuilderTest`, `ContactDataBuilderTest`.
 - [x] 1.3 ClientDetail and ContactDetail header show the preferred name
   - Built as manifest config: `headerFields: ["preferredName"]` on both pages (a chip under the full name, none when the value is empty), and `preferredName` in ClientDetail's `client-identity` field list so it can be filled in. ContactDetail's `contact-data` lists every field. Test: `tests/vitest/preferredName.spec.js`.
-  - Not built: hiding the field row on a client that is an organisation. The data widget has no per-field condition; the row is empty there and the sync writes no nickname for an organisation.
+  - An organisation client shows no Preferred name row: `client-identity` in `src/manifest.json` sets `content.overrides.preferredName.visibleWhen` (`type` is `person`), read by nextcloud-vue's `CnObjectDataWidget` (nextcloud-vue PR build/dep-pipelinq-field-visible-when; needs a release with it and a lock bump to take effect). Test: `tests/vitest/preferredName.spec.js`.
 - [ ] 1.3b Playwright `tests/e2e/preferred-name.spec.ts` sets Jan on contact Johannes Jansen and sees it on ContactDetail (live pass, decision 139: written, not run)
 - [x] 1.4 CTI screen pop shows the preferred name first for a matched caller
   - Verify: Vitest on the screen pop component with and without a preferred name
