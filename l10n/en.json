@@ -7540,7 +7540,7 @@
         "Sales pipeline": "Sales pipeline",
         "My leads": "My leads",
         "Closing this month": "Closing this month",
-        "{shown} of {total} open leads \u00b7 board per stage": "{shown} of {total} open leads · board per stage",
+        "{shown} of {total} open leads · board per stage": "{shown} of {total} open leads · board per stage",
         "Stale leads": "Stale leads",
         "{role} at {client.name}": "{role} at {client.name}",
         "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.": "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.",
