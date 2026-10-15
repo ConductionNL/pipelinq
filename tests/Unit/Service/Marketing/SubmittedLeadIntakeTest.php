@@ -24,15 +24,18 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
 use OCA\Pipelinq\Service\Marketing\SubmittedLeadIntake;
 use OCA\Pipelinq\Service\TouchpointService;
+use OCA\Pipelinq\Tests\Unit\Support\BuildsSystemObjectStore;
 use OCA\Pipelinq\Tests\Unit\Support\InMemoryListObjectStore;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../Support/InMemoryListObjectStore.php';
+require_once __DIR__ . '/../../Support/BuildsSystemObjectStore.php';
 
 /**
  * A lead a form submitted gets its contact, its client and one touchpoint.
  */
 class SubmittedLeadIntakeTest extends TestCase {
+	use BuildsSystemObjectStore;
 
 	/**
 	 * The lead a campaign form creates, as the hosting page writes it.
@@ -63,7 +66,7 @@ class SubmittedLeadIntakeTest extends TestCase {
 	private function intake(array $seed = []): SubmittedLeadIntake {
 		$this->store = new InMemoryListObjectStore($seed);
 
-		return new SubmittedLeadIntake($this->store, new TouchpointService($this->store));
+		return new SubmittedLeadIntake($this->systemStoreOver($this->store), new TouchpointService($this->store, $this->systemStoreOver($this->store)));
 	}//end intake()
 
 	/**
@@ -80,6 +83,33 @@ class SubmittedLeadIntakeTest extends TestCase {
 		$this->assertSame('Gemeente Tilburg', $this->store->find(schemaSlug: 'client', id: $patch['client'])['name']);
 		$this->assertSame('Webinar AI voor gemeenten: Jane Doe', $patch['title']);
 	}//end testAFirstSubmissionCreatesItsContactAndClient()
+
+	/**
+	 * The web form's contact and client are written as pipelinq's system account, access checks on.
+	 */
+	public function testThePartiesAreWrittenAsTheSystemAccount(): void {
+		$this->intake()->partiesFor(lead: self::LEAD);
+
+		$writes = array_filter($this->systemStoreCalls, static fn (array $call): bool => $call['method'] === 'saveObject');
+		$this->assertSame(['contact', 'client'], array_values(array_column($writes, 'schema')));
+		foreach ($this->systemStoreCalls as $call) {
+			$this->assertSame('pipelinq-system', $call['actor']);
+		}
+
+		$this->assertNull($this->systemStoreActive);
+	}//end testThePartiesAreWrittenAsTheSystemAccount()
+
+	/**
+	 * Neither public intake reaches OpenRegister with access checks off: the source holds no `_rbac: false` and no ListObjectStore.
+	 */
+	public function testNoPublicIntakeWritesWithAccessChecksOff(): void {
+		$lib = dirname(__DIR__, 4) . '/lib';
+		foreach (['/Service/Marketing/SubmittedLeadIntake.php', '/Listener/LandingPageFormSubmittedListener.php'] as $file) {
+			$source = (string)file_get_contents($lib . $file);
+			$this->assertStringContainsString('SystemObjectStore $store', $source, $file);
+			$this->assertDoesNotMatchRegularExpression('/_rbac\s*:\s*false|ListObjectStore/', $source, $file);
+		}
+	}//end testNoPublicIntakeWritesWithAccessChecksOff()
 
 	/**
 	 * Spec scenario: a known contact gets a lead, not a duplicate contact; the same for a known client.

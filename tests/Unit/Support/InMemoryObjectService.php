@@ -5,7 +5,9 @@
  *
  * Mirrors the calls pipelinq makes: find(), findAll(['filters' => ...]) with
  * register and schema as reserved keys, saveObject(), updateObject() and
- * deleteObject().
+ * deleteObject(). find(), findAll() and saveObject() take `_rbac` and
+ * `_multitenancy` as the real service does and record them in `$calls`, with
+ * whoever `$actor` names as acting at that moment.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Support
@@ -31,6 +33,31 @@ class InMemoryObjectService {
 
 	/** @var int */
 	private int $next = 0;
+
+	/** @var array<int, array{method: string, schema: mixed, rbac: bool, multitenancy: bool, actor: mixed}> */
+	public array $calls = [];
+
+	/** @var \Closure|null Answers who is acting when a call is made (a test reads the session through it). */
+	public ?\Closure $actor = null;
+
+	/**
+	 * Record one call with its access flags.
+	 *
+	 * @param string $method       The method.
+	 * @param mixed  $schema       The schema asked for.
+	 * @param bool   $rbac         The `_rbac` flag.
+	 * @param bool   $multitenancy The `_multitenancy` flag.
+	 *
+	 * @return void
+	 */
+	private function record(string $method, mixed $schema, bool $rbac, bool $multitenancy): void {
+		$actor = null;
+		if ($this->actor !== null) {
+			$actor = ($this->actor)();
+		}
+
+		$this->calls[] = ['method' => $method, 'schema' => $schema, 'rbac' => $rbac, 'multitenancy' => $multitenancy, 'actor' => $actor];
+	}//end record()
 
 	/**
 	 * Store a row under a schema.
@@ -64,7 +91,8 @@ class InMemoryObjectService {
 		return $out;
 	}//end ofSchema()
 
-	public function find(string $id, $register = null, $schema = null): ?array {
+	public function find(string $id, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+		$this->record(method: 'find', schema: $schema, rbac: $_rbac, multitenancy: $_multitenancy);
 		$hit = ($this->rows[$id] ?? null);
 		if ($hit === null || ($schema !== null && $hit['schema'] !== $schema)) {
 			return null;
@@ -73,9 +101,10 @@ class InMemoryObjectService {
 		return $hit['row'];
 	}//end find()
 
-	public function findAll(array $config = []): array {
+	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 		$filters = ($config['filters'] ?? []);
 		$schema = ($filters['schema'] ?? null);
+		$this->record(method: 'findAll', schema: $schema, rbac: $_rbac, multitenancy: $_multitenancy);
 		unset($filters['register'], $filters['schema']);
 		$out = [];
 		foreach ($this->rows as $hit) {
@@ -95,7 +124,8 @@ class InMemoryObjectService {
 		return $out;
 	}//end findAll()
 
-	public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+	public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+		$this->record(method: 'saveObject', schema: $schema, rbac: $_rbac, multitenancy: $_multitenancy);
 		if ($uuid !== null && $uuid !== '') {
 			$object['uuid'] = $uuid;
 		}

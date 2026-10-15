@@ -35,12 +35,14 @@ use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
 use OCA\Pipelinq\Service\CampaignLinkDecorator;
 use OCA\Pipelinq\Service\CampaignService;
 use OCA\Pipelinq\Service\TouchpointService;
+use OCA\Pipelinq\Tests\Unit\Support\BuildsSystemObjectStore;
 use OCA\Pipelinq\Tests\Unit\Support\InMemoryListObjectStore;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 require_once __DIR__ . '/../Support/InMemoryListObjectStore.php';
+require_once __DIR__ . '/../Support/BuildsSystemObjectStore.php';
 
 /**
  * Tests for LandingPageFormSubmittedListener.
@@ -48,6 +50,7 @@ require_once __DIR__ . '/../Support/InMemoryListObjectStore.php';
  * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
 class LandingPageFormSubmittedListenerTest extends TestCase {
+	use BuildsSystemObjectStore;
 
 	/**
 	 * The seeded campaign.
@@ -82,9 +85,9 @@ class LandingPageFormSubmittedListenerTest extends TestCase {
 		$appConfig->method('getValueString')->willReturnArgument(2);
 
 		return new LandingPageFormSubmittedListener(
-			$this->store,
+			$this->systemStoreOver($this->store),
 			new CampaignService($this->store, $appConfig, new CampaignLinkDecorator($appConfig)),
-			new TouchpointService($this->store),
+			new TouchpointService($this->store, $this->systemStoreOver($this->store)),
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end build()
@@ -142,6 +145,12 @@ class LandingPageFormSubmittedListenerTest extends TestCase {
 		$this->assertSame('nonce-1', $touchpoint['nonce']);
 		$this->assertSame('2026-10-21T09:47:12+00:00', $touchpoint['occurredAt']);
 		$this->assertSame($event->getLeadId(), $touchpoint['leadId']);
+		$this->assertSame(trim($event->getPortal() . ' ' . $event->getPageRoute()), $touchpoint['landingPage']);
+
+		// marketing-campaign-on-client: the contact carries the submission as its first and last touch.
+		$contact = array_values($this->store->rows['contact'])[0];
+		$this->assertSame('social', $contact['lastTouch']['medium']);
+		$this->assertSame($contact['lastTouch'], $contact['firstTouch']);
 	}//end testCreatesTheContactLeadAndTouchpoint()
 
 	/**
@@ -215,6 +224,29 @@ class LandingPageFormSubmittedListenerTest extends TestCase {
 		$this->assertSame(1, $this->store->countOf(schemaSlug: 'client'));
 		$this->assertSame(2, $this->store->countOf(schemaSlug: 'lead'));
 	}//end testAnOrganisationCreatesTheClientAndASecondSubmissionReusesIt()
+
+	/**
+	 * An anonymous visitor's submission writes the contact, the client and the lead as pipelinq's system account, access checks on.
+	 *
+	 * @return void
+	 */
+	public function testTheVisitorsRecordsAreWrittenAsTheSystemAccount(): void {
+		$listener = $this->build();
+
+		$listener->handle($this->submission(
+			values: ['name' => 'J. de Vries', 'email' => 'j@gemeente-voorbeeld.nl', 'organisation' => 'Gemeente Voorbeeld'],
+			nonce: 'nonce-system'
+		));
+
+		$writes = array_filter($this->systemStoreCalls, static fn (array $call): bool => $call['method'] === 'saveObject');
+		// The client, the contact, the lead, the touchpoint, and the contact's touches.
+		$this->assertEqualsCanonicalizing(['client', 'contact', 'lead', 'touchpoint', 'contact'], array_column($writes, 'schema'));
+		foreach ($this->systemStoreCalls as $call) {
+			$this->assertSame('pipelinq-system', $call['actor'], $call['method'] . ' on ' . $call['schema'] . ' did not run as the system account');
+		}
+
+		$this->assertNull($this->systemStoreActive, 'the visitor is anonymous again afterwards');
+	}//end testTheVisitorsRecordsAreWrittenAsTheSystemAccount()
 
 	/**
 	 * @return void

@@ -42,7 +42,7 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 use OCA\Pipelinq\Service\CampaignService;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
+use OCA\Pipelinq\Service\SystemObjectStore;
 use OCA\Pipelinq\Service\TouchpointService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -89,7 +89,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ListObjectStore $store Register-scoped object access.
+	 * @param SystemObjectStore $store Object access as pipelinq's system account, access checks on.
 	 * @param CampaignService $campaigns Resolves the campaign the form belongs to.
 	 * @param TouchpointService $touchpoints The touchpoint log and its nonce guard.
 	 * @param LoggerInterface $logger Logger.
@@ -97,7 +97,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function __construct(
-		private ListObjectStore $store,
+		private SystemObjectStore $store,
 		private CampaignService $campaigns,
 		private TouchpointService $touchpoints,
 		private LoggerInterface $logger,
@@ -167,14 +167,17 @@ class LandingPageFormSubmittedListener implements IEventListener {
 			);
 		}
 
-		$this->touchpoints->append(
-			touchpoint: $this->touchpointFor(
-				event: $event,
-				campaignId: $campaignId,
-				contactId: $contactId,
-				leadId: $leadId,
-				nonce: $nonce
-			)
+		$this->touchpoints->recordSubmission(
+			contactId: $contactId,
+			campaignId: $campaignId,
+			utm: $event->getUtmLastTouch(),
+			landingPage: $this->landingPageOf(event: $event),
+			extra: [
+				'leadId' => $leadId,
+				'nonce' => $nonce,
+				'sourceRef' => $event->getPageId(),
+				'occurredAt' => $event->getSubmittedAt(),
+			],
 		);
 
 		if ($leadId !== '') {
@@ -345,37 +348,15 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	}//end matchOrCreateClient()
 
 	/**
-	 * The touchpoint this submission appends.
+	 * The page the form was sent from: the portal and the page route, as one string.
 	 *
 	 * @param LandingPageFormSubmittedEvent $event The submission.
-	 * @param string $campaignId The campaign id.
-	 * @param string $contactId The contact id.
-	 * @param string $leadId The lead id.
-	 * @param string $nonce The submission's nonce.
 	 *
-	 * @return array<string, mixed> The touchpoint row.
+	 * @return string The landing page, or an empty string.
 	 */
-	private function touchpointFor(
-		LandingPageFormSubmittedEvent $event,
-		string $campaignId,
-		string $contactId,
-		string $leadId,
-		string $nonce,
-	): array {
-		$utm = $this->utmBlock(utm: $event->getUtmLastTouch());
-
-		return [
-			'campaignId' => $campaignId,
-			'contactId' => $contactId,
-			'leadId' => $leadId,
-			'kind' => 'submit',
-			'channel' => $this->touchpoints->channelForMedium(medium: (string)($utm['medium'] ?? '')),
-			'utm' => $utm,
-			'sourceRef' => $event->getPageId(),
-			'occurredAt' => $event->getSubmittedAt(),
-			'nonce' => $nonce,
-		];
-	}//end touchpointFor()
+	private function landingPageOf(LandingPageFormSubmittedEvent $event): string {
+		return trim(trim($event->getPortal()).' '.trim($event->getPageRoute()));
+	}//end landingPageOf()
 
 	/**
 	 * Normalise a UTM block to the five keys the schemas declare.

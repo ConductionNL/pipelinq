@@ -29,6 +29,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Listener\SubmittedLeadListener;
 use OCA\Pipelinq\Service\Marketing\SubmittedLeadIntake;
 use OCA\Pipelinq\Service\TouchpointService;
+use OCA\Pipelinq\Tests\Unit\Support\BuildsSystemObjectStore;
 use OCA\Pipelinq\Tests\Unit\Support\InMemoryListObjectStore;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
@@ -37,11 +38,13 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 require_once __DIR__ . '/../Support/InMemoryListObjectStore.php';
+require_once __DIR__ . '/../Support/BuildsSystemObjectStore.php';
 
 /**
  * People before the lead is stored, the touchpoint after; only for leads, never blocking.
  */
 class SubmittedLeadListenerTest extends TestCase {
+	use BuildsSystemObjectStore;
 
 	private InMemoryListObjectStore $store;
 
@@ -57,7 +60,7 @@ class SubmittedLeadListenerTest extends TestCase {
 
 		return new SubmittedLeadListener(
 			$config,
-			($intake ?? new SubmittedLeadIntake($this->store, new TouchpointService($this->store))),
+			($intake ?? new SubmittedLeadIntake($this->systemStoreOver($this->store), new TouchpointService($this->store, $this->systemStoreOver($this->store)))),
 			($logger ?? $this->createMock(LoggerInterface::class))
 		);
 	}//end listener()
