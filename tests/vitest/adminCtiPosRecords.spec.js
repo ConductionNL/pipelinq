@@ -104,8 +104,8 @@ describe('CTI event log', () => {
 		const event = wrapper.get('[data-testid="cti-event"]')
 		expect(factsOf(event)).toEqual({
 			'Received at': '2026-03-03T09:00:00+00:00',
-			Platform: 'asterisk',
-			'Event type': 'ended',
+			Platform: 'Asterisk',
+			'Event type': 'Ended',
 			'Call ID': 'call-3',
 			Signature: '✗',
 			Error: 'No contact for the number',

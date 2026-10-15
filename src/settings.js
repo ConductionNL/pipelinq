@@ -13,6 +13,10 @@ import '@conduction/nextcloud-vue/css/index.css'
 // Pinia is a normal plugin now (`PiniaVuePlugin` was Vue-2 only).
 const app = createApp(Settings)
 app.mixin({ methods: { t, n } })
+// The library labels card fields and table columns from the schema's English
+// property titles through `cnTranslate`. On the app pages CnAppRoot provides
+// it; this entry has no CnAppRoot, so it provides the app's catalogue itself.
+app.provide('cnTranslate', (text, vars) => t('pipelinq', text, vars))
 app.use(pinia)
 
 // Register object types in the store before mounting, so the object-backed
