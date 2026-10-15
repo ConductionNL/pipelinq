@@ -7657,7 +7657,19 @@ OC.L10N.register(
         "You have an unsaved contact moment from {time}.": "You have an unsaved contact moment from {time}.",
         "Restore draft": "Restore draft",
         "Discard": "Discard",
-        "Your session has ended. Log in again in a new tab, then press Save here.": "Your session has ended. Log in again in a new tab, then press Save here."
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Your session has ended. Log in again in a new tab, then press Save here.",
+        "Lead cap per 30 days": "Lead cap per 30 days",
+        "The most leads automatic assignment gives this colleague in 30 days. Empty means no cap.": "The most leads automatic assignment gives this colleague in 30 days. Empty means no cap.",
+        "Pause lead assignment": "Pause lead assignment",
+        "While on, automatic assignment gives this colleague no new leads.": "While on, automatic assignment gives this colleague no new leads.",
+        "Why assigned": "Why assigned",
+        "Why automatic assignment gave this lead to this colleague, or why it found nobody.": "Why automatic assignment gave this lead to this colleague, or why it found nobody.",
+        "Assigned on": "Assigned on",
+        "When automatic assignment gave this lead to its colleague.": "When automatic assignment gave this lead to its colleague.",
+        "Rotation found no eligible colleague.": "Rotation found no eligible colleague.",
+        "no cap": "no cap",
+        "cap %s": "cap %s",
+        "Rotation: fewest leads in 30 days (%1$s, %2$s), skill %3$s.": "Rotation: fewest leads in 30 days (%1$s, %2$s), skill %3$s."
     },
     "nplurals=2; plural=(n != 1);"
 )

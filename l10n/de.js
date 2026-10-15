@@ -2361,7 +2361,19 @@ OC.L10N.register(
         "You have an unsaved contact moment from {time}.": "Sie haben einen nicht gespeicherten Kundenkontakt von {time}.",
         "Restore draft": "Entwurf wiederherstellen",
         "Discard": "Verwerfen",
-        "Your session has ended. Log in again in a new tab, then press Save here.": "Ihre Sitzung ist abgelaufen. Melden Sie sich in einem neuen Tab erneut an und klicken Sie dann hier auf Speichern."
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Ihre Sitzung ist abgelaufen. Melden Sie sich in einem neuen Tab erneut an und klicken Sie dann hier auf Speichern.",
+        "Lead cap per 30 days": "Lead-Obergrenze pro 30 Tage",
+        "The most leads automatic assignment gives this colleague in 30 days. Empty means no cap.": "Die meisten Leads, die die automatische Zuweisung dieser Person in 30 Tagen gibt. Leer bedeutet keine Obergrenze.",
+        "Pause lead assignment": "Lead-Zuweisung pausieren",
+        "While on, automatic assignment gives this colleague no new leads.": "Solange dies aktiv ist, erhält diese Person keine neuen Leads durch die automatische Zuweisung.",
+        "Why assigned": "Warum zugewiesen",
+        "Why automatic assignment gave this lead to this colleague, or why it found nobody.": "Warum die automatische Zuweisung diesen Lead dieser Person gab oder warum sie niemanden fand.",
+        "Assigned on": "Zugewiesen am",
+        "When automatic assignment gave this lead to its colleague.": "Wann die automatische Zuweisung diesen Lead der Person gab.",
+        "Rotation found no eligible colleague.": "Die automatische Zuweisung fand keine passende Person.",
+        "no cap": "keine Obergrenze",
+        "cap %s": "Obergrenze %s",
+        "Rotation: fewest leads in 30 days (%1$s, %2$s), skill %3$s.": "Automatisch zugewiesen: wenigste Leads in 30 Tagen (%1$s, %2$s), Fähigkeit %3$s."
     },
     "nplurals=2; plural=(n != 1);"
 )

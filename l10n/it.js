@@ -2361,7 +2361,19 @@ OC.L10N.register(
         "You have an unsaved contact moment from {time}.": "Hai un contatto non salvato del {time}.",
         "Restore draft": "Ripristina bozza",
         "Discard": "Scarta",
-        "Your session has ended. Log in again in a new tab, then press Save here.": "La sessione è scaduta. Accedi di nuovo in una nuova scheda, poi premi Salva qui."
+        "Your session has ended. Log in again in a new tab, then press Save here.": "La sessione è scaduta. Accedi di nuovo in una nuova scheda, poi premi Salva qui.",
+        "Lead cap per 30 days": "Limite di lead ogni 30 giorni",
+        "The most leads automatic assignment gives this colleague in 30 days. Empty means no cap.": "Il numero massimo di lead che l'assegnazione automatica dà a questo collega in 30 giorni. Vuoto significa nessun limite.",
+        "Pause lead assignment": "Sospendi l'assegnazione dei lead",
+        "While on, automatic assignment gives this colleague no new leads.": "Finché è attivo, l'assegnazione automatica non dà nuovi lead a questo collega.",
+        "Why assigned": "Perché assegnato",
+        "Why automatic assignment gave this lead to this colleague, or why it found nobody.": "Perché l'assegnazione automatica ha dato questo lead a questo collega, o perché non ha trovato nessuno.",
+        "Assigned on": "Assegnato il",
+        "When automatic assignment gave this lead to its colleague.": "Quando l'assegnazione automatica ha dato questo lead al suo collega.",
+        "Rotation found no eligible colleague.": "L'assegnazione automatica non ha trovato nessun collega disponibile.",
+        "no cap": "nessun limite",
+        "cap %s": "limite %s",
+        "Rotation: fewest leads in 30 days (%1$s, %2$s), skill %3$s.": "Assegnato automaticamente: meno lead in 30 giorni (%1$s, %2$s), competenza %3$s."
     },
     "nplurals=2; plural=(n != 1);"
 )

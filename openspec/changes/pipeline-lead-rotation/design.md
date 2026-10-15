@@ -39,10 +39,21 @@ OpenRegister's object service like the listener's existing forecast default.
 
 ### D3. The lead says why
 
-The service writes `assignee` and `assignmentReason`, for example "rotation:
-fewest leads in 30 days (3 of cap 10), skill Solar". When nobody is eligible it
-writes only `assignmentReason: rotation found no eligible colleague`, so the
-unassigned lead is explained on LeadDetail, where the suggestion still works.
+The service returns `assignee`, `assignmentReason` and `assignedAt`, for
+example "Rotation: fewest leads in 30 days (3, cap 10), skill Solar." in the
+instance language (IL10N). When nobody is eligible it returns only
+`assignmentReason` "Rotation found no eligible colleague.", so the unassigned
+lead is explained on LeadDetail, where the suggestion still works.
+`DealCreatedListener` writes them together with the forecast default, in one
+save, as the signed-in user or, for a lead created with nobody signed in (the
+web form), as pipelinq's system account with access checks on. A lead that
+already carries a reason is not rotated again, so a redelivered job assigns
+nothing twice.
+
+The 30-day count reads each candidate's leads by the `assignee` filter and
+counts those whose `assignedAt` falls in the window; the latest `assignedAt` is
+the tie-breaker. `assignedAt` is new on `lead` for that reason: OpenRegister's
+created date says when a lead was made, not when rotation gave it to someone.
 
 ### D4. Settings
 
