@@ -927,6 +927,10 @@ final class PortalContributionProviderTest extends TestCase {
 			$this->assertSame(['question', 'title'], $actions['askAboutDossier']['fields']);
 			$this->assertSame(['app' => 'opencatalogi', 'schema' => 'collection'], $actions['askAboutDossier']['attachTo'], 'shown on the dossier page (C7)');
 			$this->assertSame('collectionId', $actions['askAboutDossier']['rowField']);
+			// The question text is required on the form: the receiver refuses
+			// an empty one (question-text-is-required-on-the-portal).
+			$this->assertSame(['question'], $actions['askAboutDossier']['requiredFields']);
+			$this->assertSame(['message'], $actions['replyToQuestion']['requiredFields']);
 			$this->assertSame('/index.php/apps/pipelinq/api/portal/questions/reply', $actions['replyToQuestion']['endpoint']);
 			$this->assertSame(['ticket', 'message'], $actions['replyToQuestion']['fields']);
 			// On the question's own detail, only while it waits for the resident.
