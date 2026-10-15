@@ -98,6 +98,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import { getConfig, testConnection, updateConfig } from '../../services/ctiApi.js'
+import { CTI_PLATFORM_LABELS, enumOptions } from '../../utils/enumLabels.js'
 
 export default {
 	name: 'CtiSettings',
@@ -131,12 +132,7 @@ export default {
 
 	computed: {
 		platformOptions() {
-			return [
-				{ value: 'callvoip', label: 'CallVoip' },
-				{ value: 'ringcentral', label: 'RingCentral' },
-				{ value: 'asterisk', label: 'Asterisk' },
-				{ value: 'other', label: t('pipelinq', 'Other') },
-			]
+			return enumOptions(CTI_PLATFORM_LABELS, (text) => t('pipelinq', text))
 		},
 
 		authMethodOptions() {

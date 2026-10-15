@@ -7661,7 +7661,17 @@ OC.L10N.register(
         "Operator and register": "Operator and register",
         "Followers: {count}": "Followers: {count}",
         "Ascending": "Ascending",
-        "Descending": "Descending"
+        "Descending": "Descending",
+        "Instance mail server": "Instance mail server",
+        "Mail account": "Mail account",
+        "Bulk provider": "Bulk provider",
+        "DMARC found": "DMARC found",
+        "DMARC missing: bulk senders to Gmail are rejected without it": "DMARC missing: bulk senders to Gmail are rejected without it",
+        "DMARC record present but malformed": "DMARC record present but malformed",
+        "DMARC not checked yet": "DMARC not checked yet",
+        "Ringing": "Ringing",
+        "Presence": "Presence",
+        "Recording": "Recording"
     },
     "nplurals=2; plural=(n != 1);"
 )

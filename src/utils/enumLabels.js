@@ -41,6 +41,28 @@ export const RESOURCE_TYPE_LABELS = {
 }
 
 /**
+ * CTI platform (ctiAdapterConfig.platform, ctiEventLog.platform). The schema
+ * has no `x-enum-labels`; the vendor names stay as they are.
+ */
+export const CTI_PLATFORM_LABELS = {
+	callvoip: 'CallVoip',
+	ringcentral: 'RingCentral',
+	asterisk: 'Asterisk',
+	other: 'Other',
+}
+
+/** CTI webhook event type (ctiEventLog.event_type). */
+export const CTI_EVENT_TYPE_LABELS = {
+	ringing: 'Ringing',
+	answered: 'Answered',
+	ended: 'Ended',
+	abandoned: 'Abandoned',
+	transferred: 'Transferred',
+	presence: 'Presence',
+	recording: 'Recording',
+}
+
+/**
  * The translated label for a stored value.
  *
  * @param {object} labels One of the maps above.

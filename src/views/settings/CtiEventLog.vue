@@ -51,11 +51,11 @@
 					</div>
 					<div>
 						<dt>{{ t('pipelinq', 'Platform') }}</dt>
-						<dd>{{ row.platform }}</dd>
+						<dd>{{ platformLabel(row.platform) }}</dd>
 					</div>
 					<div>
 						<dt>{{ t('pipelinq', 'Event type') }}</dt>
-						<dd>{{ row.event_type }}</dd>
+						<dd>{{ eventTypeLabel(row.event_type) }}</dd>
 					</div>
 					<div>
 						<dt>{{ t('pipelinq', 'Call ID') }}</dt>
@@ -97,6 +97,14 @@ import { showError } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon, NcSelect, NcSettingsSection } from '@nextcloud/vue'
 import CtiPayloadDialog from '../../dialogs/CtiPayloadDialog.vue'
 import { getEventLog } from '../../services/ctiApi.js'
+import {
+	CTI_EVENT_TYPE_LABELS,
+	CTI_PLATFORM_LABELS,
+	enumLabel,
+	enumOptions,
+} from '../../utils/enumLabels.js'
+
+const translate = (text) => t('pipelinq', text)
 
 export default {
 	name: 'CtiEventLog',
@@ -122,23 +130,14 @@ export default {
 
 	computed: {
 		platformOptions() {
-			return [
-				{ value: 'callvoip', label: 'CallVoip' },
-				{ value: 'ringcentral', label: 'RingCentral' },
-				{ value: 'asterisk', label: 'Asterisk' },
-			]
+			return ['callvoip', 'ringcentral', 'asterisk'].map((value) => ({
+				value,
+				label: this.platformLabel(value),
+			}))
 		},
 
 		eventTypeOptions() {
-			return [
-				'ringing',
-				'answered',
-				'ended',
-				'abandoned',
-				'transferred',
-				'presence',
-				'recording',
-			].map((v) => ({ value: v, label: v }))
+			return enumOptions(CTI_EVENT_TYPE_LABELS, translate)
 		},
 	},
 
@@ -171,6 +170,24 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * @param {string} platform A stored platform value.
+		 * @return {string} Its label, or the value as stored when unknown.
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.6
+		 */
+		platformLabel(platform) {
+			return enumLabel(CTI_PLATFORM_LABELS, platform, translate)
+		},
+
+		/**
+		 * @param {string} eventType A stored event type.
+		 * @return {string} Its label, or the value as stored when unknown.
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.6
+		 */
+		eventTypeLabel(eventType) {
+			return enumLabel(CTI_EVENT_TYPE_LABELS, eventType, translate)
 		},
 
 		viewPayload(row) {

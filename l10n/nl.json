@@ -7596,6 +7596,16 @@
         "Operator and register": "Operator en kassa",
         "Followers: {count}": "Volgers: {count}",
         "Ascending": "Oplopend",
-        "Descending": "Aflopend"
+        "Descending": "Aflopend",
+        "Instance mail server": "Mailserver van Nextcloud",
+        "Mail account": "Mailaccount",
+        "Bulk provider": "Bulkmaildienst",
+        "DMARC found": "DMARC gevonden",
+        "DMARC missing: bulk senders to Gmail are rejected without it": "DMARC ontbreekt: Gmail weigert bulkmail zonder DMARC",
+        "DMARC record present but malformed": "DMARC-record aanwezig, maar ongeldig",
+        "DMARC not checked yet": "DMARC nog niet gecontroleerd",
+        "Ringing": "Gaat over",
+        "Presence": "Aanwezigheid",
+        "Recording": "Opname"
     }
 }
