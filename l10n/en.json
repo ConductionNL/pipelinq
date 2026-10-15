@@ -7677,6 +7677,10 @@
         "You have an unsaved contact moment from {time}.": "You have an unsaved contact moment from {time}.",
         "Restore draft": "Restore draft",
         "Discard": "Discard",
-        "Your session has ended. Log in again in a new tab, then press Save here.": "Your session has ended. Log in again in a new tab, then press Save here."
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Your session has ended. Log in again in a new tab, then press Save here.",
+        "Operator and register": "Operator and register",
+        "Followers: {count}": "Followers: {count}",
+        "Ascending": "Ascending",
+        "Descending": "Descending"
     }
 }
