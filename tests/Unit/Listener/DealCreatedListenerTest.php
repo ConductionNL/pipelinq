@@ -41,6 +41,8 @@ require_once __DIR__ . '/RecordingDeferralService.php';
  *
  * @covers \OCA\Pipelinq\Listener\DealCreatedListener
  * @uses   \OCA\Pipelinq\Service\SystemServiceAccount
+ * @uses   \OCA\Pipelinq\Service\ForecastDealService
+ * @uses   \OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph
  */
 class DealCreatedListenerTest extends TestCase {
 
