@@ -3402,6 +3402,7 @@
         "Security removal": "Security removal",
         "Seed a small linked demo dataset of clients, leads, requests and contactmomenten, so lists, dashboards and the 360° client view show a working product right away. Optional and safe to run more than once; every object is marked [Demo] and can be removed later with `occ pipelinq:demo:seed --remove`. Skip this on a production install.": "Seed a small linked demo dataset of clients, leads, requests and contactmomenten, so lists, dashboards and the 360° client view show a working product right away. Optional and safe to run more than once; every object is marked [Demo] and can be removed later with `occ pipelinq:demo:seed --remove`. Skip this on a production install.",
         "Seen at": "Seen at",
+        "No egress source is configured for competitor watches, so nothing is read.": "No egress source is configured for competitor watches, so nothing is read.",
         "Segment": "Segment",
         "Segment name": "Segment name",
         "Segment rules": "Segment rules",
