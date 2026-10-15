@@ -1,0 +1,49 @@
+{
+  "_note": "pipeline-lead-rotation. An agent profile gets a cap on the leads rotation gives it per 30 days and a switch to pause its share; a lead records why rotation gave it to someone and when. LeadRotationService writes assignmentReason and assignedAt, never a form: both are hidden in forms and carry x-openregister.serverSet. Neither is readOnly, because OpenRegister refuses a changed readOnly value on every update and the rotation writes them on a lead that already exists. No property changes type and none becomes required.",
+  "components": {
+    "schemas": {
+      "agentProfile": {
+        "slug": "agentProfile",
+        "properties": {
+          "leadCapPer30Days": {
+            "type": "integer",
+            "title": "Lead cap per 30 days",
+            "description": "The most leads automatic assignment gives this colleague in 30 days. Empty means no cap.",
+            "minimum": 1
+          },
+          "pauseLeadAssignment": {
+            "type": "boolean",
+            "title": "Pause lead assignment",
+            "description": "While on, automatic assignment gives this colleague no new leads.",
+            "default": false
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "properties": {
+          "assignmentReason": {
+            "type": "string",
+            "title": "Why assigned",
+            "description": "Why automatic assignment gave this lead to this colleague, or why it found nobody.",
+            "maxLength": 500,
+            "hideOnForm": true,
+            "x-openregister": {
+              "serverSet": true
+            }
+          },
+          "assignedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Assigned on",
+            "description": "When automatic assignment gave this lead to its colleague.",
+            "hideOnForm": true,
+            "x-openregister": {
+              "serverSet": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

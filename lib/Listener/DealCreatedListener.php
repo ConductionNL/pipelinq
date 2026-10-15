@@ -28,7 +28,9 @@ use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Service\ForecastDealService;
+use OCA\Pipelinq\Service\LeadRotationService;
 use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Service\SystemServiceAccount;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -86,6 +88,8 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param LeadRotationService $rotation Picks the colleague a new unassigned lead goes to.
+	 * @param SystemServiceAccount $account Acts for a lead created with nobody signed in, such as a web form's.
 	 */
 	public function __construct(
 		private SchemaMapService $schemaMapService,
@@ -94,6 +98,8 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,
 		private LoggerInterface $logger,
+		private LeadRotationService $rotation,
+		private SystemServiceAccount $account,
 	) {
 	}//end __construct()
 
@@ -158,19 +164,51 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-001-01
 	 */
 	public function runDeferredWork(array $entry): void {
-		$uuid = (string)($entry['uuid'] ?? '');
+		$this->account->runAsCurrentOrSystem(fn () => $this->completeLead(uuid: (string)($entry['uuid'] ?? '')));
+	}//end runDeferredWork()
+
+	/**
+	 * Default the forecast category and, when switched on, assign the lead in turn; one write for both.
+	 *
+	 * @param string $uuid The deal UUID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-001-01
+	 * @spec openspec/changes/pipeline-lead-rotation/specs/lead-rotation/spec.md#requirement-new-unassigned-leads-are-assigned-in-turn-req-lrt-001
+	 */
+	private function completeLead(string $uuid): void {
 		$data = $this->fetch(uuid: $uuid);
 		if ($data === null) {
 			return;
 		}
 
 		$mutated = $this->dealService->applyDefaultCategory($data);
-		if ($mutated === null) {
+		$assignment = $this->assignment(data: ($mutated ?? $data));
+		if ($mutated === null && $assignment === []) {
 			return;
 		}
 
-		$this->persist(uuid: $uuid, data: $mutated);
-	}//end runDeferredWork()
+		$this->persist(uuid: $uuid, data: array_merge(($mutated ?? $data), $assignment));
+	}//end completeLead()
+
+	/**
+	 * The rotation's fields for a lead nobody assigned, when the admin switched rotation on.
+	 *
+	 * A lead that already carries a reason was handled by an earlier delivery
+	 * of this job, so a redelivery assigns nothing twice.
+	 *
+	 * @param array<string, mixed> $data The lead.
+	 *
+	 * @return array<string, string> The fields to write, or none.
+	 */
+	private function assignment(array $data): array {
+		if ($this->rotation->isEnabled() === false || trim((string)($data['assignmentReason'] ?? '')) !== '') {
+			return [];
+		}
+
+		return $this->rotation->assign(lead: $data);
+	}//end assignment()
 
 	/**
 	 * Whether the entity belongs to the lead (deal) schema.

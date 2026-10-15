@@ -2360,7 +2360,19 @@
         "You have an unsaved contact moment from {time}.": "Vous avez un contact non enregistré du {time}.",
         "Restore draft": "Restaurer le brouillon",
         "Discard": "Abandonner",
-        "Your session has ended. Log in again in a new tab, then press Save here.": "Votre session a expiré. Reconnectez-vous dans un nouvel onglet, puis cliquez ici sur Enregistrer."
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Votre session a expiré. Reconnectez-vous dans un nouvel onglet, puis cliquez ici sur Enregistrer.",
+        "Lead cap per 30 days": "Plafond de leads par 30 jours",
+        "The most leads automatic assignment gives this colleague in 30 days. Empty means no cap.": "Le nombre maximal de leads que l'attribution automatique donne à ce collègue en 30 jours. Vide signifie sans plafond.",
+        "Pause lead assignment": "Suspendre l'attribution de leads",
+        "While on, automatic assignment gives this colleague no new leads.": "Tant que c'est activé, l'attribution automatique ne donne aucun nouveau lead à ce collègue.",
+        "Why assigned": "Pourquoi attribué",
+        "Why automatic assignment gave this lead to this colleague, or why it found nobody.": "Pourquoi l'attribution automatique a donné ce lead à ce collègue, ou pourquoi elle n'a trouvé personne.",
+        "Assigned on": "Attribué le",
+        "When automatic assignment gave this lead to its colleague.": "Quand l'attribution automatique a donné ce lead à son collègue.",
+        "Rotation found no eligible colleague.": "L'attribution automatique n'a trouvé aucun collègue disponible.",
+        "no cap": "sans plafond",
+        "cap %s": "plafond %s",
+        "Rotation: fewest leads in 30 days (%1$s, %2$s), skill %3$s.": "Attribué automatiquement : le moins de leads en 30 jours (%1$s, %2$s), compétence %3$s."
     },
     "plurals": null
 }

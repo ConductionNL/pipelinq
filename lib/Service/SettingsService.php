@@ -259,6 +259,8 @@ class SettingsService {
 		// trigger "Send to billing" (empty = NC admins only).
 		'shillinq_time_intake_enabled' => 'false',
 		'billing_handoff_manager_group' => '',
+		// Automatic lead assignment in turn (pipeline-lead-rotation, LeadRotationService). Off until an admin switches it on.
+		'lead_rotation_enabled' => 'false',
 		// Lead-management: number of inactivity days before a lead is flagged stale.
 		// Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
 		// spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.

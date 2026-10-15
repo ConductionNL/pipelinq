@@ -7592,6 +7592,18 @@
         "You have an unsaved contact moment from {time}.": "Je hebt een contactmoment van {time} dat nog niet is opgeslagen.",
         "Restore draft": "Concept terugzetten",
         "Discard": "Weggooien",
-        "Your session has ended. Log in again in a new tab, then press Save here.": "Je sessie is verlopen. Log opnieuw in op een nieuw tabblad en klik daarna hier op Opslaan."
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Je sessie is verlopen. Log opnieuw in op een nieuw tabblad en klik daarna hier op Opslaan.",
+        "Lead cap per 30 days": "Maximum aantal leads per 30 dagen",
+        "The most leads automatic assignment gives this colleague in 30 days. Empty means no cap.": "Het hoogste aantal leads dat automatisch toewijzen deze collega in 30 dagen geeft. Leeg betekent geen maximum.",
+        "Pause lead assignment": "Lead-toewijzing pauzeren",
+        "While on, automatic assignment gives this colleague no new leads.": "Zolang dit aan staat, krijgt deze collega geen nieuwe leads via automatisch toewijzen.",
+        "Why assigned": "Waarom toegewezen",
+        "Why automatic assignment gave this lead to this colleague, or why it found nobody.": "Waarom automatisch toewijzen deze lead aan deze collega gaf, of waarom het niemand vond.",
+        "Assigned on": "Toegewezen op",
+        "When automatic assignment gave this lead to its colleague.": "Wanneer automatisch toewijzen deze lead aan de collega gaf.",
+        "Rotation found no eligible colleague.": "Automatisch toewijzen vond geen geschikte collega.",
+        "no cap": "geen maximum",
+        "cap %s": "maximum %s",
+        "Rotation: fewest leads in 30 days (%1$s, %2$s), skill %3$s.": "Automatisch toegewezen: minste leads in 30 dagen (%1$s, %2$s), vaardigheid %3$s."
     }
 }
