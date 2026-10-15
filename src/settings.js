@@ -4,6 +4,11 @@ import Settings from './views/settings/Settings.vue'
 import pinia from './pinia.js'
 import { initializeStores } from './store/store.js'
 
+// Library CSS. The admin page is its own entry and gets none from main.js:
+// without this import it had 59 library rules against 7,779 on the app pages,
+// so the library's settings sections and cards drew unstyled.
+import '@conduction/nextcloud-vue/css/index.css'
+
 // Vue 3 has no global `Vue.mixin` / `Vue.use`; both are per-app-instance, and
 // Pinia is a normal plugin now (`PiniaVuePlugin` was Vue-2 only).
 const app = createApp(Settings)

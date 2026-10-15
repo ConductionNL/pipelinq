@@ -32,7 +32,7 @@ function ticketListConfig(node) {
 	}
 	if (
 		typeof node.countText === 'string'
-		&& node.countText.includes('open tickets')
+		&& node.countText.includes('tickets · customer contact')
 	) {
 		return node
 	}
