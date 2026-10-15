@@ -70,3 +70,19 @@ export function enumOptions(labels, translate = (text) => text) {
 		label: translate(labels[value]),
 	}))
 }
+
+/** What a competitor watch reads (competitorWatch.kind, watchEvent.kind). */
+export const WATCH_KIND_LABELS = {
+	rss: 'Feed',
+	sitemap: 'Sitemap',
+	page: 'Page fragment',
+	fediverse: 'Public timeline',
+	search: 'Saved search',
+}
+
+/** How often a competitor watch runs (competitorWatch.schedule). */
+export const WATCH_SCHEDULE_LABELS = {
+	hourly: 'Every hour',
+	daily: 'Every day',
+	weekly: 'Every week',
+}
