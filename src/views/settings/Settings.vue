@@ -15,11 +15,12 @@
 		docUrl="https://pipelinq.conduction.nl/docs/intro"
 		:appVersion="appVersion"
 		:versionTitle="t('pipelinq', 'Version Information')"
-		:versionDescription="t('pipelinq', 'Information about the current Pipelinq installation')"
+		:versionDescription="
+			t('pipelinq', 'Information about the current Pipelinq installation')
+		"
 		:reimportUrl="reimportUrl"
 		@reimported="onReimported"
 		@reimportError="onReimportError">
-
 		<!-- Register & Schema Mapping -->
 		<CnRegisterMapping
 			:name="t('pipelinq', 'Register Configuration')"
