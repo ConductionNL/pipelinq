@@ -65,6 +65,30 @@ describe('the lead source table', () => {
 		})
 	})
 
+	it('shows a label for the source, not the stored value', () => {
+		const wrapper = mount(SourcePerformanceWidget, {
+			props: {
+				data: [
+					{ source: 'cold-call', total: 2 },
+					{ source: 'unknown', total: 3 },
+					{ source: 'beurs', total: 1 },
+				],
+			},
+		})
+		const rows = wrapper.findComponent({ name: 'CnDataTable' }).props('rows')
+		expect(rows.map((r) => r.source)).toEqual([
+			'Cold call',
+			'No source',
+			'beurs',
+		])
+		// The stored value stays on the row.
+		expect(rows.map((r) => r.sourceValue)).toEqual([
+			'cold-call',
+			'unknown',
+			'beurs',
+		])
+	})
+
 	it('takes the whole row on the analytics page', () => {
 		const section = readFileSync(
 			resolve(
