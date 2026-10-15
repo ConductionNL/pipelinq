@@ -185,6 +185,23 @@ class TouchpointRecordSubmissionTest extends TestCase {
 	}//end testEveryCallRunsAsTheSystemAccountWithAccessChecksOn()
 
 	/**
+	 * No contact: only the touchpoint is written. A contact whose client is gone: only the contact is touched.
+	 *
+	 * @return void
+	 */
+	public function testAMissingContactOrClientIsSkipped(): void {
+		$service = $this->build();
+		$result = $service->recordSubmission(contactId: ' ', campaignId: self::CAMPAIGN, utm: [], landingPage: '');
+		$this->assertSame([], $result['touched']);
+		$this->assertNotNull($result['touchpoint']);
+		$this->assertArrayNotHasKey('contactId', $this->objects->ofSchema('touchpoint')[0]);
+
+		$this->objects->put('contact', ['uuid' => self::CONTACT, 'name' => 'Jane Doe', 'client' => 'gone']);
+		$result = $service->recordSubmission(contactId: self::CONTACT, campaignId: '', utm: ['campaign' => 'voorjaar'], landingPage: '');
+		$this->assertSame(['contact'], $result['touched']);
+	}//end testAMissingContactOrClientIsSkipped()
+
+	/**
 	 * Campaign values are trimmed and cut at 100 characters; unknown keys never reach a record.
 	 *
 	 * @return void
@@ -259,7 +276,12 @@ class TouchpointRecordSubmissionTest extends TestCase {
 			$record = $this->objects->find($slug === 'contact' ? self::CONTACT : self::CLIENT);
 			foreach (['firstTouch', 'lastTouch'] as $key) {
 				$schema = $origin[$slug]['properties'][$key];
-				$this->assertTrue($schema['readOnly']);
+				// OpenRegister refuses an unknown top-level key, and `readOnly` would refuse the touch write itself.
+				$this->assertArrayNotHasKey('serverSet', $schema);
+				$this->assertArrayNotHasKey('readOnly', $schema);
+				$this->assertTrue($schema['x-openregister']['serverSet']);
+				$this->assertTrue($schema['hideOnForm']);
+				$this->assertSame($key === 'firstTouch', ($schema['immutable'] ?? false));
 				$this->assertValid(['properties' => ['touch' => $schema]], ['touch' => $record[$key]]);
 			}
 		}

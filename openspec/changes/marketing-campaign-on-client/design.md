@@ -31,6 +31,9 @@ page route for a landing page, `pageUrl` for an enquiry). `contact` and
 lead's, plus `campaignId`, `landingPage` and `at`. `firstTouch` is written once
 and never overwritten; `lastTouch` is replaced on every submission. They are
 summaries so a list can filter on them; the history is the touchpoint list.
+Both are `hideOnForm` with `x-openregister.serverSet`, and `firstTouch` is
+`immutable`. Neither is `readOnly`: OpenRegister refuses a changed `readOnly`
+value on every update, the first one included, so the touch write would fail.
 
 ### D2. One writer for both intakes
 

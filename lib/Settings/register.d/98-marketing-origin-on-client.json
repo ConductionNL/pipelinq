@@ -2,7 +2,7 @@
     "_meta": {
         "spdx-license": "EUPL-1.2",
         "spdx-copyright": "2026 Conduction B.V.",
-        "description": "marketing-campaign-on-client (matrix row mkt-form-campaign-tags). A contact and a client carry a first touch and a last touch: the campaign values and the page of a web form submission. TouchpointService::recordSubmission writes them as pipelinq's system account with OpenRegister's access checks on, never with _rbac false. firstTouch is written once, lastTouch on every submission. Both are readOnly and serverSet: a form never sends them and OpenRegister's destination validator does not ask a form for them. A touchpoint gains clientId and landingPage. No property changes type and none becomes required."
+        "description": "marketing-campaign-on-client (matrix row mkt-form-campaign-tags). A contact and a client carry a first touch and a last touch: the campaign values and the page of a web form submission. TouchpointService::recordSubmission writes them as pipelinq's system account with OpenRegister's access checks on, never with _rbac false. firstTouch is written once, lastTouch on every submission. Both are hideOnForm and carry x-openregister.serverSet, so a form never shows them and OpenRegister's destination validator does not ask a form for them; firstTouch is immutable (writable while empty, fixed after). Neither is readOnly: OpenRegister's readOnly refuses any changed value on update, including the first, so the touch write itself would be refused. A touchpoint gains clientId and landingPage. No property changes type and none becomes required."
     },
     "components": {
         "schemas": {
@@ -13,8 +13,11 @@
                         "type": "object",
                         "title": "First touch",
                         "description": "How this person first found you: the campaign values and the page of their first web form submission. Written once and never changed.",
-                        "readOnly": true,
-                        "serverSet": true,
+                        "immutable": true,
+                        "hideOnForm": true,
+                        "x-openregister": {
+                            "serverSet": true
+                        },
                         "properties": {
                             "campaignId": {
                                 "type": "string",
@@ -75,8 +78,10 @@
                         "type": "object",
                         "title": "Last touch",
                         "description": "The campaign values and the page of their latest web form submission. Each new submission replaces it.",
-                        "readOnly": true,
-                        "serverSet": true,
+                        "hideOnForm": true,
+                        "x-openregister": {
+                            "serverSet": true
+                        },
                         "properties": {
                             "campaignId": {
                                 "type": "string",
@@ -142,8 +147,11 @@
                         "type": "object",
                         "title": "First touch",
                         "description": "How this client first found you: the campaign values and the page of their first web form submission. Written once and never changed.",
-                        "readOnly": true,
-                        "serverSet": true,
+                        "immutable": true,
+                        "hideOnForm": true,
+                        "x-openregister": {
+                            "serverSet": true
+                        },
                         "properties": {
                             "campaignId": {
                                 "type": "string",
@@ -204,8 +212,10 @@
                         "type": "object",
                         "title": "Last touch",
                         "description": "The campaign values and the page of their latest web form submission. Each new submission replaces it.",
-                        "readOnly": true,
-                        "serverSet": true,
+                        "hideOnForm": true,
+                        "x-openregister": {
+                            "serverSet": true
+                        },
                         "properties": {
                             "campaignId": {
                                 "type": "string",

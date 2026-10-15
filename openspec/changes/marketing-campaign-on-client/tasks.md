@@ -1,6 +1,6 @@
 # Tasks: marketing-campaign-on-client
 
-- [x] 1.1 Schema: `touchpoint.clientId`, `touchpoint.landingPage`; fragment giving `contact` and `client` `firstTouch` and `lastTouch` (read only in forms)
+- [x] 1.1 Schema: `touchpoint.clientId`, `touchpoint.landingPage`; fragment giving `contact` and `client` `firstTouch` and `lastTouch` (hidden in forms, `x-openregister.serverSet`, `firstTouch` immutable)
   - Verify: register import logs no `PARTIAL IMPORT`; `npm run check:schema-l10n` exit 0
 - [x] 1.2 `TouchpointService::recordSubmission()` per D1 and D2: first touch written once, last touch replaced, client resolved from the contact
   - Verify: PHPUnit `tests/Unit/Service/TouchpointServiceTest.php`: first submission sets both touches, second changes only the last, a contact without a client writes only the contact
