@@ -7652,6 +7652,8 @@ OC.L10N.register(
         "Event or fair": "Event or fair",
         "Public tender": "Public tender",
         "No source": "No source",
+        "Administration settings": "Administration settings",
+        "Set up your Pipelinq installation": "Set up your Pipelinq installation",
         "You have an unsaved contact moment from {time}.": "You have an unsaved contact moment from {time}.",
         "Restore draft": "Restore draft",
         "Discard": "Discard",

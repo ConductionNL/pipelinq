@@ -7567,6 +7567,8 @@ OC.L10N.register(
         "Event or fair": "Evenement of beurs",
         "Public tender": "Aanbesteding",
         "No source": "Geen bron",
+        "Administration settings": "Beheerinstellingen",
+        "Set up your Pipelinq installation": "Stel je Pipelinq-installatie in",
         "You have an unsaved contact moment from {time}.": "Je hebt een contactmoment van {time} dat nog niet is opgeslagen.",
         "Restore draft": "Concept terugzetten",
         "Discard": "Weggooien",
