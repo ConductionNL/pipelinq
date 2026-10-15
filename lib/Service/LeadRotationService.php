@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -118,7 +119,7 @@ class LeadRotationService {
 			return [];
 		}
 
-		$now = DateTimeImmutable::createFromInterface($this->time->now());
+		$now = $this->time->now();
 		$candidates = $this->routing->filterByAvailability(
 			profiles: $this->routing->findMatchingAgents(category: trim((string)($lead['category'] ?? '')))
 		);
@@ -209,17 +210,17 @@ class LeadRotationService {
 				continue;
 			}
 
-			$at = $this->moment(value: ($payload['assignedAt'] ?? ''));
-			if ($at === null) {
+			$assignedAt = $this->moment(value: ($payload['assignedAt'] ?? ''));
+			if ($assignedAt === null) {
 				continue;
 			}
 
-			$stamp = $at->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s');
+			$stamp = $assignedAt->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s');
 			if ($stamp > $last) {
 				$last = $stamp;
 			}
 
-			if ($at >= $since) {
+			if ($assignedAt >= $since) {
 				$count++;
 			}
 		}//end foreach
