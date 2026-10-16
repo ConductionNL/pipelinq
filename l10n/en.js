@@ -7672,7 +7672,12 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Filter by job name": "Filter by job name",
+        "{shown} of {total} export jobs · scheduled exports of pipelinq data to a data warehouse or BI tool": "{shown} of {total} export jobs · scheduled exports of pipelinq data to a data warehouse or BI tool",
+        "A new job stays off until a test run has succeeded. Keys stay with the destination's source, never with the job.": "A new job stays off until a test run has succeeded. Keys stay with the destination's source, never with the job.",
+        "Job": "Job",
+        "Dataset": "Dataset"
     },
     "nplurals=2; plural=(n != 1);"
 )
