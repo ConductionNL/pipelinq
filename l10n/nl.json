@@ -7625,6 +7625,45 @@
         "{shown} of {total} enquiries · all statuses · newest first": "{shown} van {total} aanvragen · alle statussen · nieuwste eerst",
         "Filter by title, name or organisation": "Filter op titel, naam of organisatie",
         "Converted": "Omgezet",
-        "Spam": "Spam"
+        "Spam": "Spam",
+        "Choose people from your address books to add as a contact": "Kies mensen uit je adresboeken om als contact toe te voegen",
+        "Search contacts": "Contacten zoeken",
+        "Importing creates a contact in Pipelinq and links it to the card, so later changes go both ways. Type at least 2 characters to search your Nextcloud contacts.": "Importeren maakt een contact in Pipelinq en koppelt het aan de kaart, zodat latere wijzigingen beide kanten op gaan. Typ minstens 2 tekens om in je Nextcloud-contacten te zoeken.",
+        "With deals": "Met deals",
+        "{shown} of {total} organisations · sorted by name": "{shown} van {total} organisaties · gesorteerd op naam",
+        "Search by name, KvK number or place": "Zoek op naam, KVK-nummer of plaats",
+        "click a column heading to sort": "klik op een kolomkop om te sorteren",
+        "Associations": "Verenigingen",
+        "Foundations": "Stichtingen",
+        "Companies": "Bedrijven",
+        "Open cases": "Open zaken",
+        "KvK number": "KVK-nummer",
+        "Legal form": "Rechtsvorm",
+        "Place": "Plaats",
+        "%n card in your Nextcloud address books matches \"{query}\"": [
+            "%n kaart in je Nextcloud-adresboeken past bij \"{query}\"",
+            "%n kaarten in je Nextcloud-adresboeken passen bij \"{query}\""
+        ],
+        "%n cards in your Nextcloud address books match \"{query}\"": "%n kaarten in je Nextcloud-adresboeken passen bij \"{query}\"",
+        "Import %n contact": [
+            "%n contact importeren",
+            "%n contacten importeren"
+        ],
+        "Import %n contacts": "%n contacten importeren",
+        "The eight digit number in the Chamber of Commerce trade register.": "Het achtcijferige nummer in het Handelsregister van de Kamer van Koophandel.",
+        "The legal form as registered with the Chamber of Commerce.": "De rechtsvorm zoals ingeschreven bij de Kamer van Koophandel.",
+        "The place where the organisation is established.": "De plaats waar de organisatie gevestigd is.",
+        "What the organisation does, in a sentence.": "Wat de organisatie doet, in een zin.",
+        "Sole proprietorship": "Eenmanszaak",
+        "General partnership": "Vennootschap onder firma",
+        "Professional partnership": "Maatschap",
+        "Limited partnership": "Commanditaire vennootschap",
+        "Private limited company": "Besloten vennootschap",
+        "Public limited company": "Naamloze vennootschap",
+        "Cooperative": "Coöperatie",
+        "Association": "Vereniging",
+        "Foundation": "Stichting",
+        "Public body": "Overheidsorgaan",
+        "Other legal form": "Andere rechtsvorm"
     }
 }

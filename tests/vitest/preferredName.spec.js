@@ -121,11 +121,11 @@ describe('the detail headers carry the preferred name', () => {
 		})
 	})
 
-	it('the contact details show every field, so the preferred name is among them', () => {
+	it('the contact details name the fields board PqContactpersoon draws, the preferred name among them', () => {
 		const details = page('ContactDetail').config.widgets.find(
 			(w) => w.id === 'contact-data',
 		)
-		expect(details.content.include).toBeUndefined()
+		expect(details.content.include).toContain('preferredName')
 		expect(details.content.exclude ?? []).not.toContain('preferredName')
 	})
 })

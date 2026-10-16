@@ -4,33 +4,42 @@
 		size="normal"
 		@closing="$emit('close')">
 		<div class="import-dialog">
+			<p class="import-dialog__subtitle">
+				{{ t('pipelinq', 'Choose people from your address books to add as a contact') }}
+			</p>
 			<NcTextField
 				:modelValue="query"
-				:label="t('pipelinq', 'Search contacts…')"
+				:label="t('pipelinq', 'Search contacts')"
 				:showTrailingButton="query !== ''"
 				class="import-dialog__search"
 				@update:modelValue="onSearch"
-				@trailingButtonClick="onClearSearch" />
+				@trailingButtonClick="onClearSearch">
+				<template #icon>
+					<Magnify :size="20" />
+				</template>
+			</NcTextField>
 
 			<NcLoadingIcon v-if="searching" />
 
-			<div v-else-if="results.length > 0" class="import-dialog__results">
-				<div
-					v-for="contact in results"
-					:key="contact.uid"
-					class="import-result">
-					<div class="import-result__info">
-						<span class="import-result__name">{{
-							contact.name || t('pipelinq', 'Unknown')
-						}}</span>
-						<span v-if="contact.email" class="import-result__email">{{
-							contact.email
-						}}</span>
-						<span v-if="contact.org" class="import-result__org">{{
-							contact.org
-						}}</span>
-					</div>
-					<div class="import-result__action">
+			<template v-else-if="results.length > 0">
+				<p class="import-dialog__count">
+					{{ n('pipelinq', '%n card in your Nextcloud address books matches "{query}"', '%n cards in your Nextcloud address books match "{query}"', results.length, { query }) }}
+				</p>
+				<ul class="import-dialog__results">
+					<li
+						v-for="contact in results"
+						:key="contact.uid"
+						class="import-result">
+						<NcAvatar
+							:displayName="contact.name || t('pipelinq', 'Unknown')"
+							:size="36"
+							:disableMenu="true"
+							:disableTooltip="true"
+							:isNoUser="true" />
+						<div class="import-result__info">
+							<span class="import-result__name">{{ contact.name || t('pipelinq', 'Unknown') }}</span>
+							<span class="import-result__meta">{{ metaLine(contact) }}</span>
+						</div>
 						<span
 							v-if="contact.alreadyLinked"
 							class="import-result__linked">
@@ -38,49 +47,64 @@
 						</span>
 						<NcButton
 							v-else
-							:disabled="importing === contact.uid"
-							variant="primary"
-							@click="importContact(contact)">
-							{{
-								importing === contact.uid
-									? t('pipelinq', 'Importing…')
-									: t('pipelinq', 'Import')
-							}}
+							:pressed="isSelected(contact)"
+							:disabled="importing"
+							variant="secondary"
+							@update:pressed="toggle(contact)">
+							<template #icon>
+								<AccountPlusOutline :size="20" />
+							</template>
+							{{ t('pipelinq', 'Import') }}
 						</NcButton>
-					</div>
-				</div>
-			</div>
+					</li>
+				</ul>
+			</template>
 
-			<div
-				v-else-if="query.length >= 2 && !searching"
-				class="import-dialog__empty">
-				<p>{{ t('pipelinq', 'No contacts found') }}</p>
-			</div>
+			<p
+				v-else-if="query.length >= 2"
+				class="import-dialog__count">
+				{{ t('pipelinq', 'No contacts found') }}
+			</p>
 
-			<div v-else class="import-dialog__hint">
-				<p>
-					{{
-						t(
-							'pipelinq',
-							'Type at least 2 characters to search your Nextcloud contacts',
-						)
-					}}
-				</p>
-			</div>
+			<NcNoteCard type="info" class="import-dialog__note">
+				{{ t('pipelinq', 'Importing creates a contact in Pipelinq and links it to the card, so later changes go both ways. Type at least 2 characters to search your Nextcloud contacts.') }}
+			</NcNoteCard>
 		</div>
+
+		<template #actions>
+			<NcButton variant="secondary" @click="$emit('close')">
+				{{ t('pipelinq', 'Cancel') }}
+			</NcButton>
+			<NcButton
+				variant="primary"
+				:disabled="selected.length === 0 || importing"
+				@click="importSelected">
+				<template #icon>
+					<AccountPlusOutline :size="20" />
+				</template>
+				{{ n('pipelinq', 'Import %n contact', 'Import %n contacts', selected.length) }}
+			</NcButton>
+		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { NcAvatar, NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 
 export default {
 	name: 'ContactImportDialog',
 	components: {
+		AccountPlusOutline,
+		Magnify,
+		NcAvatar,
 		NcButton,
 		NcDialog,
 		NcLoadingIcon,
+		NcNoteCard,
 		NcTextField,
 	},
 
@@ -99,12 +123,17 @@ export default {
 
 	emits: ['close', 'imported'],
 
+	setup() {
+		return { t, n }
+	},
+
 	data() {
 		return {
 			query: '',
 			results: [],
+			selected: [],
 			searching: false,
-			importing: null,
+			importing: false,
 			searchTimeout: null,
 		}
 	},
@@ -129,16 +158,44 @@ export default {
 		/**
 		 * Clear the search box and its results.
 		 *
-		 * Extracted from an inline `@trailing-button-click="query = ''; results = []"`.
-		 * Vue's template compiler only treats a handler as raw STATEMENTS when it
-		 * contains a `;`, and prettier's `semi: false` strips it, leaving two
-		 * newline-separated assignments the compiler rejects.
-		 *
 		 * @spec exclude formatting-only extraction of an existing inline handler — no behaviour change
 		 */
 		onClearSearch() {
 			this.query = ''
 			this.results = []
+		},
+
+		/**
+		 * The line under a card's name: its e-mail and phone, or Unknown when it has neither.
+		 *
+		 * @param {object} contact An addressbook search result.
+		 * @return {string} The meta line.
+		 * @spec openspec/specs/contacts-sync/spec.md
+		 */
+		metaLine(contact) {
+			const parts = [contact.email, contact.phone].filter(Boolean)
+			return parts.length > 0 ? parts.join(' · ') : t('pipelinq', 'Unknown')
+		},
+
+		/**
+		 * @param {object} contact An addressbook search result.
+		 * @return {boolean} Whether the card is marked for import.
+		 * @spec openspec/specs/contacts-sync/spec.md
+		 */
+		isSelected(contact) {
+			return this.selected.includes(contact.uid)
+		},
+
+		/**
+		 * Mark or unmark a card for import.
+		 *
+		 * @param {object} contact An addressbook search result.
+		 * @spec openspec/specs/contacts-sync/spec.md
+		 */
+		toggle(contact) {
+			this.selected = this.isSelected(contact)
+				? this.selected.filter((uid) => uid !== contact.uid)
+				: [...this.selected, contact.uid]
 		},
 
 		/**
@@ -170,11 +227,26 @@ export default {
 		},
 
 		/**
+		 * Import every marked card, then close.
+		 *
+		 * @spec openspec/specs/contacts-sync/spec.md
+		 */
+		async importSelected() {
+			this.importing = true
+			const marked = this.results.filter((contact) => this.isSelected(contact))
+			for (const contact of marked) {
+				await this.importContact(contact)
+			}
+			this.importing = false
+			this.selected = []
+			this.$emit('close')
+		},
+
+		/**
 		 * @param {object} contact The addressbook contact to import.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-2
 		 */
 		async importContact(contact) {
-			this.importing = contact.uid
 			try {
 				const body = {
 					uid: contact.uid,
@@ -204,9 +276,8 @@ export default {
 					this.$emit('imported', data.object)
 				}
 			} catch {
-				// Import failed silently
+				// A failed import leaves the card unlinked; the user can retry.
 			}
-			this.importing = null
 		},
 	},
 }
@@ -214,63 +285,66 @@ export default {
 
 <style scoped>
 .import-dialog {
-	padding: 8px 0;
-	min-height: 200px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 4px 0;
 }
 
-.import-dialog__search {
-	margin-bottom: 16px;
+.import-dialog__subtitle {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.import-dialog__count {
+	margin: 0;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
 }
 
 .import-dialog__results {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
 	max-height: 400px;
 	overflow-y: auto;
+	border-top: 1px solid var(--color-border);
 }
 
 .import-result {
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
-	padding: 10px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
+	gap: 12px;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--color-border);
 }
 
 .import-result__info {
 	display: flex;
+	flex: 1;
 	flex-direction: column;
 	gap: 2px;
+	min-width: 0;
 }
 
 .import-result__name {
 	font-weight: 600;
-	font-size: 14px;
 }
 
-.import-result__email {
-	font-size: 12px;
+.import-result__meta {
+	font-size: 13px;
 	color: var(--color-text-maxcontrast);
-}
-
-.import-result__org {
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	font-style: italic;
 }
 
 .import-result__linked {
-	font-size: 12px;
-	color: var(--color-success);
+	padding: 2px 8px;
+	border-radius: var(--border-radius-pill);
+	background: var(--color-success-hover, var(--color-background-hover));
+	color: var(--color-success-text, var(--color-success));
+	font-size: 13px;
 	font-weight: 600;
 }
 
-.import-dialog__empty,
-.import-dialog__hint {
-	text-align: center;
-	color: var(--color-text-maxcontrast);
-	padding: 20px;
+.import-dialog__note {
+	margin: 0;
 }
 </style>
