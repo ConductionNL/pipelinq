@@ -7681,7 +7681,20 @@ OC.L10N.register(
         "Open campaign report": "Open campaign report",
         "In this campaign": "In this campaign",
         "UTM source": "UTM source",
-        "UTM medium": "UTM medium"
+        "UTM medium": "UTM medium",
+        "{shown} of {total} journeys": "{shown} of {total} journeys",
+        "Filter by name": "Filter by name",
+        "A journey is a trigger, a wait, a condition and an action. Pipelinq turns it into a flow.": "A journey is a trigger, a wait, a condition and an action. Pipelinq turns it into a flow.",
+        "Not compiled": "Not compiled",
+        "Engine missing": "Engine missing",
+        "Steps": "Steps",
+        "Converted into a flow. The flow runs in the automation engine.": "Converted into a flow. The flow runs in the automation engine.",
+        "Not converted into a flow yet.": "Not converted into a flow yet.",
+        "There is no automation engine to run the flow.": "There is no automation engine to run the flow.",
+        "The automation engine refused the flow.": "The automation engine refused the flow.",
+        "Open flow": "Open flow",
+        "Every contact reached and every contact refused": "Every contact reached and every contact refused",
+        "Reached contact": "Reached contact"
     },
     "nplurals=2; plural=(n != 1);"
 )
