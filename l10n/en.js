@@ -7672,7 +7672,13 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Website enquiries": "Website enquiries",
+        "Requests that came in through the website form, to convert into a client and a lead.": "Requests that came in through the website form, to convert into a client and a lead.",
+        "{shown} of {total} enquiries · all statuses · newest first": "{shown} of {total} enquiries · all statuses · newest first",
+        "Filter by title, name or organisation": "Filter by title, name or organisation",
+        "Converted": "Converted",
+        "Spam": "Spam"
     },
     "nplurals=2; plural=(n != 1);"
 )

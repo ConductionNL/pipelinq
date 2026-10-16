@@ -48,6 +48,14 @@
 						"route": "Prospects"
 					},
 					{
+						"id": "Enquiries",
+						"label": "Website enquiries",
+						"description": "Requests that came in through the website form, to convert into a client and a lead.",
+						"icon": "WebBox",
+						"category": "sales",
+						"route": "Enquiries"
+					},
+					{
 						"id": "Pipeline",
 						"label": "Pipeline",
 						"description": "Deals as cards on a board, one column per stage.",

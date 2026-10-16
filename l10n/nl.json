@@ -7619,6 +7619,12 @@
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "Website enquiries": "Websiteaanvragen",
+        "Requests that came in through the website form, to convert into a client and a lead.": "Aanvragen die via het websiteformulier binnenkwamen, om om te zetten in een klant en een lead.",
+        "{shown} of {total} enquiries · all statuses · newest first": "{shown} van {total} aanvragen · alle statussen · nieuwste eerst",
+        "Filter by title, name or organisation": "Filter op titel, naam of organisatie",
+        "Converted": "Omgezet",
+        "Spam": "Spam"
     }
 }
