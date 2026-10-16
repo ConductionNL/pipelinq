@@ -7610,8 +7610,6 @@ OC.L10N.register(
         "In this stage since": "In deze fase sinds",
         "Close as won": "Afsluiten als gewonnen",
         "Close as lost": "Afsluiten als verloren",
-        "Close this lead as won?": "Deze lead afsluiten als gewonnen?",
-        "Close this lead as lost?": "Deze lead afsluiten als verloren?",
         "Lead closed as won.": "Lead afgesloten als gewonnen.",
         "Lead closed as lost.": "Lead afgesloten als verloren.",
         "Contact moment logged.": "Contactmoment vastgelegd.",

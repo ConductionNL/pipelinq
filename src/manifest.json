@@ -3897,7 +3897,7 @@
 								"route": {
 									"name": "ClientDetail",
 									"params": {
-										"id": "@source.id"
+										"id": "@object.client"
 									}
 								}
 							},
@@ -4080,7 +4080,7 @@
 						"payload": {
 							"action": "win"
 						},
-						"confirm": "Close this lead as won?",
+						"confirm": true,
 						"successMessage": "Lead closed as won.",
 						"visibleWhen": {
 							"field": "status",
@@ -4098,7 +4098,7 @@
 						"payload": {
 							"action": "lose"
 						},
-						"confirm": "Close this lead as lost?",
+						"confirm": true,
 						"successMessage": "Lead closed as lost.",
 						"visibleWhen": {
 							"field": "status",

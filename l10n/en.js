@@ -7683,8 +7683,6 @@ OC.L10N.register(
         "In this stage since": "In this stage since",
         "Close as won": "Close as won",
         "Close as lost": "Close as lost",
-        "Close this lead as won?": "Close this lead as won?",
-        "Close this lead as lost?": "Close this lead as lost?",
         "Lead closed as won.": "Lead closed as won.",
         "Lead closed as lost.": "Lead closed as lost.",
         "Contact moment logged.": "Contact moment logged.",
