@@ -289,6 +289,7 @@ import ConnectionAuditView from './views/marketing/ConnectionAudit.vue'
 import KeywordIntelligenceView from './views/marketing/KeywordIntelligence.vue'
 // --- Search Console top queries (marketing-campaign-attribution): an
 //     aggregation over searchQueryDaily rows, not a row list. ---
+import SearchInsightView from './views/marketing/SearchInsight.vue'
 import SearchQueriesView from './views/marketing/SearchQueries.vue'
 import WeeklyReviewView from './views/marketing/WeeklyReview.vue'
 // --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
@@ -1125,6 +1126,11 @@ const registry = {
 		kind: 'page',
 		component: ConnectionAuditView,
 		_note: 'The follow audit (marketing-search-intelligence): per client and network, whether we follow them and whether they follow us. Custom rather than a declarative index over socialConnection because the REASON an answer is unknown has to render next to the answer. Only Mastodon and Bluesky publish a follower list an audit can read, so most rows are unknown, and a declarative index would show a bare enum label with the reason dropped.',
+	},
+	SearchInsightView: {
+		kind: 'page',
+		component: SearchInsightView,
+		_note: 'Search insight (PqZoekinzicht): the search queries, keywords, competitors and connection audit pages stacked as four cards on one page. Each card is the existing custom view with its own fetch and actions; this view adds only the page header.',
 	},
 	SearchQueriesView: {
 		kind: 'page',

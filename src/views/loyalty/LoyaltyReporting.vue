@@ -136,7 +136,7 @@ export default {
 			periodOptions: [
 				{ id: '30d', label: 'Last 30 days', days: 30 },
 				{ id: '90d', label: 'Last 90 days', days: 90 },
-				{ id: '365d', label: 'Last 12 months', days: 365 },
+				{ id: '365d', label: 'Last 365 days', days: 365 },
 			],
 
 			kpis: null,

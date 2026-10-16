@@ -7672,7 +7672,15 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "{shown} of {total} posts · newest first": "{shown} of {total} posts · newest first",
+        "Filter by title": "Filter by title",
+        "A post can go to several networks at once, each with its own text.": "A post can go to several networks at once, each with its own text.",
+        "Awaiting approval": "Awaiting approval",
+        "Written by an agent": "Written by an agent",
+        "Points, tiers and what the outstanding points are worth": "Points, tiers and what the outstanding points are worth",
+        "Search insight": "Search insight",
+        "Where residents find us in search engines, and what others publish": "Where residents find us in search engines, and what others publish"
     },
     "nplurals=2; plural=(n != 1);"
 )

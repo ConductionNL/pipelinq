@@ -10,6 +10,12 @@
 					"label": "Search queries",
 					"icon": "Magnify",
 					"route": "SearchQueries"
+				},
+				{
+					"id": "SearchInsight",
+					"label": "Search insight",
+					"icon": "Magnify",
+					"route": "SearchInsight"
 				}
 			]
 		}
@@ -22,6 +28,19 @@
 			"type": "custom",
 			"title": "Search queries",
 			"component": "SearchQueriesView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "searchQueryDaily",
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		},
+		{
+			"id": "SearchInsight",
+			"_note": "Search insight (PqZoekinzicht): one page over the four search and publishing reports, each drawn as a card by its own custom view. Custom for the reason each of those pages is: they are computed reports, not collections.",
+			"route": "/marketing/search-insight",
+			"type": "custom",
+			"title": "Search insight",
+			"component": "SearchInsightView",
 			"config": {
 				"register": "pipelinq",
 				"schema": "searchQueryDaily",
