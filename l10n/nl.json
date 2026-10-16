@@ -7639,6 +7639,17 @@
         "What moved": "Wat bewoog",
         "What to try": "Wat je kunt proberen",
         "Compose again": "Opnieuw samenstellen",
-        "Ideas for topics": "Ideeën voor onderwerpen"
+        "Ideas for topics": "Ideeën voor onderwerpen",
+        "First, today": "Eerst, vandaag",
+        "none came in today": "vandaag nog niets binnengekomen",
+        "none longer than 2 days": "niets langer dan 2 dagen",
+        "none due today": "niets voor vandaag",
+        "All {total}": "Alle {total}",
+        "All complaints": "Alle klachten",
+        "Open my work": "Mijn werk openen",
+        "Nothing moved that the sources can show.": "Niets bewoog dat de bronnen kunnen laten zien.",
+        "No suggestions this week.": "Deze week geen suggesties.",
+        "No topic ideas this week.": "Deze week geen ideeën voor onderwerpen.",
+        "Export the report": "Rapport exporteren"
     }
 }

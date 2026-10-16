@@ -1503,12 +1503,23 @@
 									"label": "Priority"
 								}
 							]
+						},
+						"headerLink": {
+							"label": "All complaints",
+							"route": "Tickets",
+							"query": {
+								"ticketType": "complaint"
+							}
 						}
 					},
 					{
 						"id": "my-work",
 						"type": "custom",
-						"title": "My Work"
+						"title": "My work",
+						"headerLink": {
+							"label": "Open my work",
+							"route": "MyWork"
+						}
 					},
 					{
 						"id": "client-overview",
@@ -1558,7 +1569,7 @@
 					{
 						"id": "report-export",
 						"type": "custom",
-						"title": "Report Export"
+						"title": "Export the report"
 					},
 					{
 						"id": "xwiki-knowledge",
@@ -1648,8 +1659,7 @@
 						"gridX": 0,
 						"gridY": 4,
 						"gridWidth": 4,
-						"gridHeight": 4,
-						"sizeToContent": true
+						"gridHeight": 4
 					},
 					{
 						"id": "19",
@@ -1657,8 +1667,7 @@
 						"gridX": 4,
 						"gridY": 4,
 						"gridWidth": 4,
-						"gridHeight": 4,
-						"sizeToContent": true
+						"gridHeight": 4
 					},
 					{
 						"id": "5",
@@ -1666,8 +1675,7 @@
 						"gridX": 8,
 						"gridY": 4,
 						"gridWidth": 4,
-						"gridHeight": 4,
-						"sizeToContent": true
+						"gridHeight": 4
 					},
 					{
 						"id": "6",
@@ -1742,7 +1750,8 @@
 						"sizeToContent": true
 					}
 				],
-				"gridFloat": false
+				"gridFloat": false,
+				"showWidgetActions": false
 			},
 			"slots": {
 				"widget-my-work": "MyWorkWidget",

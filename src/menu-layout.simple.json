@@ -1153,7 +1153,8 @@
 							"ticketType": "interaction"
 						}
 					}
-				]
+				],
+				"showActionsMenu": false
 			},
 			"configAppend": {
 				"widgets": [
@@ -1164,7 +1165,7 @@
 						"content": {
 							"layout": "attention",
 							"variant": "error",
-							"kicker": "First today",
+							"kicker": "First, today",
 							"title": "Tickets past their deadline",
 							"text": "Tickets past their deadline",
 							"reason": "{value} of your tickets in progress are past their deadline or end today.",
@@ -1193,10 +1194,6 @@
 										}
 									},
 									"primary": true
-								},
-								{
-									"label": "Open the queue",
-									"route": "Queue"
 								}
 							]
 						}
@@ -1234,7 +1231,8 @@
 								"filter": {
 									"status": "new",
 									"occurredAt[gte]": "@today"
-								}
+								},
+								"zeroText": "none came in today"
 							}
 						}
 					},
@@ -1275,7 +1273,8 @@
 									"assignee": "@me",
 									"status": "in_progress",
 									"occurredAt[lt]": "@today-2d"
-								}
+								},
+								"zeroText": "none longer than 2 days"
 							}
 						}
 					},
@@ -1318,7 +1317,8 @@
 									"status": "open",
 									"assigneeUserId": "@me",
 									"deadline[lt]": "@today+1d"
-								}
+								},
+								"zeroText": "none due today"
 							}
 						}
 					},
@@ -1483,13 +1483,13 @@
 							"title": "{title}",
 							"meta": "{occurredAt|relative}",
 							"rowRoute": "TicketDetail",
-							"emptyText": "No contact moments yet."
-						},
-						"headerLink": {
-							"label": "All",
-							"route": "Tickets",
-							"query": {
-								"ticketType": "interaction"
+							"emptyText": "No contact moments yet.",
+							"headerLink": {
+								"label": "All {total}",
+								"route": "Tickets",
+								"query": {
+									"ticketType": "interaction"
+								}
 							}
 						}
 					},

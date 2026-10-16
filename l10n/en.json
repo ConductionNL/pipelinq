@@ -7708,6 +7708,17 @@
         "{count} new today": "{count} new today",
         "Leads, requests, service and team workload · the chosen period compared with the one before": "Leads, requests, service and team workload · the chosen period compared with the one before",
         "newsletters, posts and search traffic of last week": "newsletters, posts and search traffic of last week",
-        "Ideas for topics": "Ideas for topics"
+        "Ideas for topics": "Ideas for topics",
+        "First, today": "First, today",
+        "none came in today": "none came in today",
+        "none longer than 2 days": "none longer than 2 days",
+        "none due today": "none due today",
+        "All {total}": "All {total}",
+        "All complaints": "All complaints",
+        "Open my work": "Open my work",
+        "Nothing moved that the sources can show.": "Nothing moved that the sources can show.",
+        "No suggestions this week.": "No suggestions this week.",
+        "No topic ideas this week.": "No topic ideas this week.",
+        "Export the report": "Export the report"
     }
 }

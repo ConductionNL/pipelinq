@@ -18,9 +18,10 @@
 <template>
 	<div class="weekly-review">
 		<header class="weekly-review__header">
-			<CnPageHeader
-				:title="t('pipelinq', 'Weekly review')"
-				:description="subtitle" />
+			<div class="weekly-review__heading">
+				<h2 class="weekly-review__title">{{ t('pipelinq', 'Weekly review') }}</h2>
+				<p class="weekly-review__subtitle">{{ subtitle }}</p>
+			</div>
 			<NcButton
 				variant="secondary"
 				data-testid="weekly-review-refresh"
@@ -53,7 +54,7 @@
 		<div v-else class="weekly-review__body" data-testid="weekly-review-body">
 			<section class="weekly-review__card">
 				<h3 class="weekly-review__week">
-					{{ t('pipelinq', 'Week of {week}', { week: review.weekStarting }) }}
+					{{ t('pipelinq', 'Week of {week}', { week: weekLabel }) }}
 				</h3>
 				<p class="weekly-review__summary">{{ review.summary }}</p>
 				<p
@@ -88,6 +89,9 @@
 						<li v-for="(line, index) in review.highlights" :key="`h${index}`">
 							{{ line }}
 						</li>
+						<li v-if="!review.highlights || review.highlights.length === 0" class="weekly-review__none">
+							{{ t('pipelinq', 'Nothing moved that the sources can show.') }}
+						</li>
 					</ul>
 				</section>
 				<section class="weekly-review__card">
@@ -95,6 +99,9 @@
 					<ul class="weekly-review__lines" data-testid="weekly-review-suggestions">
 						<li v-for="(line, index) in review.suggestions" :key="`s${index}`">
 							{{ line }}
+						</li>
+						<li v-if="!review.suggestions || review.suggestions.length === 0" class="weekly-review__none">
+							{{ t('pipelinq', 'No suggestions this week.') }}
 						</li>
 					</ul>
 				</section>
@@ -107,6 +114,9 @@
 						<CnStatusBadge :label="line" variant="info" size="small" />
 					</li>
 				</ul>
+				<p v-if="!review.topicIdeas || review.topicIdeas.length === 0" class="weekly-review__none">
+					{{ t('pipelinq', 'No topic ideas this week.') }}
+				</p>
 			</section>
 		</div>
 
@@ -115,7 +125,7 @@
 </template>
 
 <script>
-import { CnPageHeader, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { getCanonicalLocale } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import CalendarWeek from 'vue-material-design-icons/CalendarWeek.vue'
@@ -130,7 +140,6 @@ export default {
 	name: 'WeeklyReviewView',
 	components: {
 		CalendarWeek,
-		CnPageHeader,
 		CnStatusBadge,
 		NcButton,
 		NcEmptyContent,
@@ -161,7 +170,26 @@ export default {
 				month: 'long',
 				year: 'numeric',
 			}).format(new Date())
-			return `${today} · ${this.t('pipelinq', 'newsletters, posts and search traffic of last week')}`
+			const lead = today.charAt(0).toUpperCase() + today.slice(1)
+			return `${lead} · ${this.t('pipelinq', 'newsletters, posts and search traffic of last week')}`
+		},
+
+		/**
+		 * The first day of the reviewed week as day and month ("28 september").
+		 *
+		 * @return {string}
+		 * @spec exclude presentational week label of the weekly review
+		 */
+		weekLabel() {
+			const raw = this.review?.weekStarting
+			const date = raw ? new Date(raw) : null
+			if (date === null || Number.isNaN(date.getTime())) {
+				return raw || ''
+			}
+			return new Intl.DateTimeFormat(getCanonicalLocale() || undefined, {
+				day: 'numeric',
+				month: 'long',
+			}).format(date)
 		},
 
 		/**
@@ -237,6 +265,22 @@ export default {
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 12px;
+}
+
+.weekly-review__title {
+	font-size: 28px;
+	font-weight: 700;
+	line-height: 1.2;
+	margin: 0;
+}
+
+.weekly-review__subtitle {
+	color: var(--color-text-maxcontrast);
+	margin: 6px 0 0;
+}
+
+.weekly-review__none {
+	color: var(--color-text-maxcontrast);
 }
 
 .weekly-review__body {
