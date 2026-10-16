@@ -564,7 +564,19 @@
 						"props": {
 							"ticketType": "interaction",
 							"parentTicket": "@objectId"
-						}
+						},
+						"formEyebrow": "Contact moment",
+						"formSubtitle": "A contact moment with the customer, saved with this ticket",
+						"includeFields": [
+							"channel",
+							"direction",
+							"occurredAt",
+							"duration",
+							"title",
+							"notes",
+							"client"
+						],
+						"columns": 2
 					},
 					{
 						"id": "ticket-resume",
@@ -852,7 +864,28 @@
 				"headerCard": true,
 				"follow": false,
 				"favourite": false,
-				"headerMeta": "{channel} · received {occurredAt|date}"
+				"headerMeta": "{channel} · received {occurredAt|date}",
+				"formColumns": 2,
+				"formSize": "large",
+				"includeFields": [
+					"title",
+					"description",
+					"ticketType",
+					"category",
+					"priority",
+					"channel",
+					"client",
+					"contact",
+					"assignee",
+					"agent_skill",
+					"occurredAt",
+					"slaDeadline",
+					"caseReference",
+					"pipeline",
+					"stage",
+					"contract",
+					"customerMessage"
+				]
 			},
 			"configPatch": {
 				"bodyWidgets": {
@@ -918,7 +951,8 @@
 								},
 								{
 									"widgetId": "ticket-resident-view",
-									"label": "What the resident sees"
+									"label": "What the resident sees",
+									"overflow": true
 								}
 							]
 						},
@@ -936,6 +970,7 @@
 								"channel",
 								"client",
 								"occurredAt",
+								"duration",
 								"priority",
 								"description"
 							],
@@ -944,11 +979,12 @@
 									"formatter": "userDisplayName"
 								},
 								"description": {
-									"gridColumn": "1 / -1"
+									"gridColumn": 2
 								}
 							}
 						},
-						"_note": "Board PqTicket: the overview card names the ticket in two columns, the description across both. What the type does not use stays hidden (hideEmpty)."
+						"_note": "Board PqTicket: the overview card names the ticket in two columns, the description across both. What the type does not use stays hidden (hideEmpty).",
+						"icon": ""
 					}
 				}
 			},

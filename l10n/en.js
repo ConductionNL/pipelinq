@@ -7674,7 +7674,8 @@ OC.L10N.register(
         "Presence": "Presence",
         "Recording": "Recording",
         "Suggested colleagues": "Suggested colleagues",
-        "{channel} · received {occurredAt|date}": "{channel} · received {occurredAt|date}"
+        "{channel} · received {occurredAt|date}": "{channel} · received {occurredAt|date}",
+        "A contact moment with the customer, saved with this ticket": "A contact moment with the customer, saved with this ticket"
     },
     "nplurals=2; plural=(n != 1);"
 )

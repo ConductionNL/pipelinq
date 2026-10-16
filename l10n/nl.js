@@ -7601,7 +7601,8 @@ OC.L10N.register(
         "Presence": "Aanwezigheid",
         "Recording": "Opname",
         "Suggested colleagues": "Voorgestelde collega's",
-        "{channel} · received {occurredAt|date}": "{channel} · ontvangen {occurredAt|date}"
+        "{channel} · received {occurredAt|date}": "{channel} · ontvangen {occurredAt|date}",
+        "A contact moment with the customer, saved with this ticket": "Een contactmoment met de klant, opgeslagen bij dit ticket"
     },
     "nplurals=2; plural=(n != 1);"
 )
