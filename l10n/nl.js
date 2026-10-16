@@ -7632,7 +7632,8 @@ OC.L10N.register(
         "Association": "Vereniging",
         "Foundation": "Stichting",
         "Public body": "Overheidsorgaan",
-        "Other legal form": "Andere rechtsvorm"
+        "Other legal form": "Andere rechtsvorm",
+        "Contacts · import": "Contacten · importeren"
     },
     "nplurals=2; plural=(n != 1);"
 )

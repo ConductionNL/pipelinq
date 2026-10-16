@@ -7705,7 +7705,8 @@ OC.L10N.register(
         "Association": "Association",
         "Foundation": "Foundation",
         "Public body": "Public body",
-        "Other legal form": "Other legal form"
+        "Other legal form": "Other legal form",
+        "Contacts · import": "Contacts · import"
     },
     "nplurals=2; plural=(n != 1);"
 )

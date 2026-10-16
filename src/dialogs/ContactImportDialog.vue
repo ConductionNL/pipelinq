@@ -1,12 +1,13 @@
 <template>
-	<NcDialog
+	<CnDialog
 		:name="t('pipelinq', 'Import from Nextcloud Contacts')"
+		:eyebrow="t('pipelinq', 'Contacts · import')"
+		:subtitle="t('pipelinq', 'Choose people from your address books to add as a contact')"
 		size="normal"
+		width="form"
+		:noClose="importing"
 		@closing="$emit('close')">
 		<div class="import-dialog">
-			<p class="import-dialog__subtitle">
-				{{ t('pipelinq', 'Choose people from your address books to add as a contact') }}
-			</p>
 			<NcTextField
 				:modelValue="query"
 				:label="t('pipelinq', 'Search contacts')"
@@ -85,13 +86,14 @@
 				{{ n('pipelinq', 'Import %n contact', 'Import %n contacts', selected.length) }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcAvatar, NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { NcAvatar, NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
 
@@ -101,8 +103,8 @@ export default {
 		AccountPlusOutline,
 		Magnify,
 		NcAvatar,
+		CnDialog,
 		NcButton,
-		NcDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcTextField,
@@ -289,11 +291,6 @@ export default {
 	flex-direction: column;
 	gap: 12px;
 	padding: 4px 0;
-}
-
-.import-dialog__subtitle {
-	margin: 0;
-	color: var(--color-text-maxcontrast);
 }
 
 .import-dialog__count {

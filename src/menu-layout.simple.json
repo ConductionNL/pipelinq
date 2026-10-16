@@ -2055,11 +2055,26 @@
 							}
 						],
 						"columns": [
-							"name",
-							"kvkNumber",
-							"legalForm",
-							"industry",
-							"place",
+							{
+								"key": "name",
+								"label": "Name"
+							},
+							{
+								"key": "kvkNumber",
+								"label": "KvK number"
+							},
+							{
+								"key": "legalForm",
+								"label": "Legal form"
+							},
+							{
+								"key": "industry",
+								"label": "Industry"
+							},
+							{
+								"key": "place",
+								"label": "Place"
+							},
 							{
 								"key": "openCases",
 								"label": "Open cases",
@@ -2092,7 +2107,10 @@
 								},
 								"widget": "badge"
 							},
-							"phone"
+							{
+								"key": "phone",
+								"label": "Phone"
+							}
 						]
 					}
 				]
