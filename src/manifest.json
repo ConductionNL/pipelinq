@@ -4539,8 +4539,7 @@
 					"board",
 					"map"
 				],
-				"footerNote": "A product that is on a deal or a receipt is discontinued and not deleted, so old quotes stay readable.",
-				"headerFilters": true
+				"footerNote": "A product that is on a deal or a receipt is discontinued and not deleted, so old quotes stay readable."
 			}
 		},
 		{

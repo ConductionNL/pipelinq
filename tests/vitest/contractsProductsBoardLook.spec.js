@@ -58,7 +58,11 @@ describe('contract page', () => {
 			'contract-kpi-invoiced',
 			'contract-panels',
 		])
-		expect(detail.config.sideColumn).toEqual(['side-client', 'side-owner'])
+		expect(detail.config.sideColumn).toEqual([
+			'side-client',
+			'side-owner',
+			'side-history',
+		])
 		expect(widget(detail, 'contract-panels').content.tabs[0].widgetIds).toEqual([
 			'contract-terms',
 			'contract-billing',
@@ -109,6 +113,7 @@ describe('product pages', () => {
 		expect(detail.config.sideColumn).toEqual([
 			'product-supply',
 			'product-related',
+			'side-history',
 		])
 	})
 })
