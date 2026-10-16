@@ -2,9 +2,9 @@
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
-  - Detail-grid widget for PosTransactionDetail: the receipt totals. The tax
-  - return (VAT per rate with its base), then subtotal, discount, VAT and
-  - total, then the invoice split per rate that the bookkeeping export posts.
+  - Detail-grid widget for PosTransactionDetail: the receipt totals as the
+  - PqKassabon board lists them (excl. VAT, discount, VAT per rate, total),
+  - then the invoice split per rate that the bookkeeping export posts, folded.
   - It holds what the old Tax breakdown card, the totals panel and the Total /
   - VAT tiles showed.
   -
@@ -28,34 +28,9 @@
 			<span class="pos-tx-totals__mode">{{ priceModeLabel }}</span>
 		</template>
 
-		<h4 class="pos-tx-totals__heading">
-			{{ t('pipelinq', 'Tax return') }}
-		</h4>
-		<table class="pos-tx-totals__table">
-			<thead>
-				<tr>
-					<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
-					<th scope="col" class="num">{{ t('pipelinq', 'Base') }}</th>
-					<th scope="col" class="num">{{ t('pipelinq', 'VAT') }}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr v-for="row in taxBreakdown" :key="`tax-${row.rate}`">
-					<td>{{ row.rate }}%</td>
-					<td class="num">{{ formatEur(row.base) }}</td>
-					<td class="num">{{ formatEur(row.tax) }}</td>
-				</tr>
-				<tr v-if="taxBreakdown.length === 0">
-					<td colspan="3" class="pos-tx-totals__empty">
-						{{ t('pipelinq', 'No items') }}
-					</td>
-				</tr>
-			</tbody>
-		</table>
-
 		<dl class="pos-tx-totals__summary">
 			<div class="pos-tx-totals__row">
-				<dt>{{ t('pipelinq', 'Subtotal') }}</dt>
+				<dt>{{ t('pipelinq', 'Excl. VAT') }}</dt>
 				<dd>{{ formatEur(transaction.subtotal) }}</dd>
 			</div>
 			<div
@@ -64,9 +39,9 @@
 				<dt>{{ t('pipelinq', 'Discount') }}</dt>
 				<dd>− {{ formatEur(discountTotal) }}</dd>
 			</div>
-			<div class="pos-tx-totals__row">
-				<dt>{{ t('pipelinq', 'VAT') }}</dt>
-				<dd>{{ formatEur(transaction.totalTax) }}</dd>
+			<div v-for="row in taxBreakdown" :key="`tax-${row.rate}`" class="pos-tx-totals__row">
+				<dt>{{ t('pipelinq', 'VAT {rate}%', { rate: row.rate }) }}</dt>
+				<dd>{{ formatEur(row.tax) }}</dd>
 			</div>
 			<div class="pos-tx-totals__row pos-tx-totals__row--total">
 				<dt>{{ t('pipelinq', 'Total') }}</dt>
@@ -79,10 +54,10 @@
 			</div>
 		</dl>
 
-		<section v-if="invoiceBreakdown.length > 0" class="pos-tx-totals__split">
-			<h4 class="pos-tx-totals__heading">
+		<details v-if="invoiceBreakdown.length > 0" class="pos-tx-totals__split">
+			<summary class="pos-tx-totals__heading">
 				{{ t('pipelinq', 'Invoice split') }}
-			</h4>
+			</summary>
 			<table class="pos-tx-totals__table">
 				<thead>
 					<tr>
@@ -101,7 +76,7 @@
 					</tr>
 				</tbody>
 			</table>
-		</section>
+		</details>
 	</CnWidgetWrapper>
 </template>
 

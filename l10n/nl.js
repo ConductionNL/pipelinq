@@ -1385,7 +1385,7 @@ OC.L10N.register(
         "Example data fills the lists, dashboards and the 360 degree client view so you can see the app working straight away. Pick \"None\" on a production install.": "Voorbeeldgegevens vullen de lijsten, dashboards en het 360 graden klantbeeld, zodat je de app meteen ziet werken. Kies \"Geen\" op een productieomgeving.",
         "Example data fills the lists, detail pages and dashboards so you can see the app working straight away. Pick \"None\" on a production install.": "Voorbeeldgegevens vullen de lijsten, detailpagina’s en dashboards, zodat je de app meteen ziet werken. Kies \"Geen\" op een productieomgeving.",
         "Excl. BTW": "Excl. BTW",
-        "Excl. VAT": "Excl. BTW",
+        "Excl. VAT": "Excl. btw",
         "Exclude inactive companies": "Inactieve bedrijven uitsluiten",
         "Excluded addresses (comma separated)": "Uitgesloten adressen (kommagescheiden)",
         "Execute merge": "Samenvoeging uitvoeren",
