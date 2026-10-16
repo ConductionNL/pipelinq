@@ -914,6 +914,14 @@ describe('a page overlay', () => {
 		expect(out.slots).toEqual({ 'widget-e': 'E' })
 	})
 
+	it('takes a page slot out when the overlay names it with null', () => {
+		const out = applyPageOverlay(
+			{ id: 'P', config: {}, slots: { 'title-meta': 'Picker', keep: 'K' } },
+			{ id: 'P', slots: { 'title-meta': null, added: 'A' } },
+		)
+		expect(out.slots).toEqual({ keep: 'K', added: 'A' })
+	})
+
 	it('is skipped and reported when it names a page the manifest does not have', () => {
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 		const out = build({

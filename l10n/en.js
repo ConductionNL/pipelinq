@@ -7672,7 +7672,12 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "your queue, callbacks and contact today": "your queue, callbacks and contact today",
+        "{count} came in today": "{count} came in today",
+        "{count} longer than 2 days": "{count} longer than 2 days",
+        "{count} due today": "{count} due today",
+        "{occurredAt|days} days": "{occurredAt|days} days"
     },
     "nplurals=2; plural=(n != 1);"
 )

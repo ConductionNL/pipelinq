@@ -973,35 +973,15 @@
 		},
 		{
 			"id": "KccWerkplek",
-			"_note": "The contact centre dashboard in the simple structure (openspec/changes/simple-contact-dashboard). The design's widgets come first and every widget the page had follows, moved down by 15 rows and otherwise untouched: the spec fails when an old widget or an old layout entry differs in anything but `gridY`, or when two cards share a grid cell. EVERY NUMBER IS A FILTER ON REAL FIELDS, and a stat links to the list with the same filter as its query, so the number and the list agree. `Waiting for me` is the same filter as the tickets list view of that name. THE DESIGN SHOWS THINGS A TICKET CANNOT ANSWER and they are left out, not invented: the response time this week (no ticket field holds when the first answer went out), the one named ticket in the attention card (a banner counts, it cannot name a record, so the card says how many are late), the customer's initials and name in the list (a ticket holds its client as a reference without a name) and how long a ticket waits as a duration (the list shows the date it came in, oldest first). `Open` is not one number either: the count endpoint and the list spell a set of statuses differently, so the stats each use one status. THE ATTENTION CARD'S FILTER IS FLAT: `slaDeadline[lt]`, not `slaDeadline: { lt }`. A visibleWhen source is read through the objects list, and the library's query builder writes a nested operator as one JSON value, which OpenRegister answers with a 500 (live check, 5 October 2026). The bar's `occurredAt: { gte }` is nested on purpose: it goes to the aggregation endpoint, whose own flattener reads that shape. DATES IN THE LISTS carry `format: date-time`, or the cell prints the stored ISO text. THE ATTENTION CARD CARRIES `text` AS WELL AS `title`, with the same words: the dashboard gives up the grid cell of any banner whose `text` is empty before it looks at the condition (nextcloud-vue 2.60.0, CnDashboardPage isCollapsedWidget), so a card with only a title and a reason never rendered (live check, 5 October 2026). The attention layout shows the title and does not repeat the text. THE BOARD (PqDashboard, 6 October 2026): the attention card's first action is the primary one; the two lists that are the reader's own work (Waiting for me, Contact today per channel) take two thirds of the row and the two the reader looks up (Callbacks, Latest contact) the right third; the type of a waiting ticket is a pill, drawn by the cell renderer from the column's enum with the same labels the ticket page's type pill uses; and Waiting for me links to the whole list with the filter it counts by. The customer's initials and name and the waiting time as a duration stay out, as above.",
+			"_note": "The contact centre dashboard in the simple structure (openspec/changes/simple-contact-dashboard). The design's widgets come first and every widget the page had follows, moved down by 15 rows and otherwise untouched: the spec fails when an old widget or an old layout entry differs in anything but `gridY`, or when two cards share a grid cell. EVERY NUMBER IS A FILTER ON REAL FIELDS, and a stat links to the list with the same filter as its query, so the number and the list agree. `Waiting for me` is the same filter as the tickets list view of that name. THE DESIGN SHOWS THINGS A TICKET CANNOT ANSWER and they are left out, not invented: the response time this week (no ticket field holds when the first answer went out), the one named ticket in the attention card (a banner counts, it cannot name a record, so the card says how many are late), the customer's initials and name in the list (a ticket holds its client as a reference without a name) and how long a ticket waits as a duration (the list shows the date it came in, oldest first). `Open` is not one number either: the count endpoint and the list spell a set of statuses differently, so the stats each use one status. THE ATTENTION CARD'S FILTER IS FLAT: `slaDeadline[lt]`, not `slaDeadline: { lt }`. A visibleWhen source is read through the objects list, and the library's query builder writes a nested operator as one JSON value, which OpenRegister answers with a 500 (live check, 5 October 2026). The bar's `occurredAt: { gte }` is nested on purpose: it goes to the aggregation endpoint, whose own flattener reads that shape. DATES IN THE LISTS carry `format: date-time`, or the cell prints the stored ISO text. THE ATTENTION CARD CARRIES `text` AS WELL AS `title`, with the same words: the dashboard gives up the grid cell of any banner whose `text` is empty before it looks at the condition (nextcloud-vue 2.60.0, CnDashboardPage isCollapsedWidget), so a card with only a title and a reason never rendered (live check, 5 October 2026). The attention layout shows the title and does not repeat the text. THE BOARD (PqDashboard, 6 October 2026): the attention card's first action is the primary one; the two lists that are the reader's own work (Waiting for me, Contact today per channel) take two thirds of the row and the two the reader looks up (Callbacks, Latest contact) the right third; the type of a waiting ticket is a pill, drawn by the cell renderer from the column's enum with the same labels the ticket page's type pill uses; and Waiting for me links to the whole list with the filter it counts by. The customer's initials and name and the waiting time as a duration stay out, as above. ROUND 12 (PqDashboard, 16 October 2026): the page header carries the title, the greeting with the date and the Log contact button beside availability, so the greeting and the availability widgets left the grid (availability is the page's own header component), and the client picker beside the title is taken out because the Start a contact card does that job; the four counts carry no icon and a caption with its own count; the three lists draw rows (initials, title, customer and channel, a type pill, how many days it waits, a chevron) instead of tables; the grid closes up behind each card.",
+			"title": "My customer contact",
 			"config": {
 				"layout": [
-					{
-						"id": "s1",
-						"widgetId": "simple-greeting",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 9,
-						"gridHeight": 2,
-						"showTitle": false,
-						"sizeToContent": true
-					},
-					{
-						"id": "s0",
-						"widgetId": "simple-availability",
-						"gridX": 9,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false,
-						"borderless": true,
-						"sizeToContent": true
-					},
 					{
 						"id": "s2",
 						"widgetId": "simple-first-today",
 						"gridX": 0,
-						"gridY": 2,
+						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 2,
 						"showTitle": false,
@@ -1011,7 +991,7 @@
 						"id": "s3",
 						"widgetId": "simple-new",
 						"gridX": 0,
-						"gridY": 4,
+						"gridY": 2,
 						"gridWidth": 3,
 						"gridHeight": 3,
 						"showTitle": false,
@@ -1022,7 +1002,7 @@
 						"id": "s4",
 						"widgetId": "simple-waiting-for-me",
 						"gridX": 3,
-						"gridY": 4,
+						"gridY": 2,
 						"gridWidth": 3,
 						"gridHeight": 3,
 						"showTitle": false,
@@ -1033,7 +1013,7 @@
 						"id": "s5",
 						"widgetId": "simple-callbacks",
 						"gridX": 6,
-						"gridY": 4,
+						"gridY": 2,
 						"gridWidth": 3,
 						"gridHeight": 3,
 						"showTitle": false,
@@ -1044,7 +1024,7 @@
 						"id": "s6",
 						"widgetId": "simple-waiting-for-customer",
 						"gridX": 9,
-						"gridY": 4,
+						"gridY": 2,
 						"gridWidth": 3,
 						"gridHeight": 3,
 						"showTitle": false,
@@ -1055,20 +1035,21 @@
 						"id": "s7",
 						"widgetId": "simple-waiting-list",
 						"gridX": 0,
-						"gridY": 9,
+						"gridY": 7,
 						"gridWidth": 8,
 						"gridHeight": 5,
 						"showTitle": true,
 						"headerLink": {
 							"label": "Whole queue",
 							"route": "Queue"
-						}
+						},
+						"sizeToContent": true
 					},
 					{
 						"id": "s8",
 						"widgetId": "simple-per-channel",
 						"gridX": 0,
-						"gridY": 14,
+						"gridY": 12,
 						"gridWidth": 8,
 						"gridHeight": 3,
 						"showTitle": true,
@@ -1078,36 +1059,37 @@
 						"id": "s9",
 						"widgetId": "simple-callback-list",
 						"gridX": 8,
-						"gridY": 9,
+						"gridY": 7,
 						"gridWidth": 4,
 						"gridHeight": 5,
-						"showTitle": true
+						"showTitle": true,
+						"sizeToContent": true
 					},
 					{
 						"id": "s10",
 						"widgetId": "simple-latest-contact",
 						"gridX": 8,
-						"gridY": 14,
+						"gridY": 12,
 						"gridWidth": 4,
 						"gridHeight": 4,
-						"showTitle": true
+						"showTitle": true,
+						"sizeToContent": true
 					},
 					{
 						"id": "s11",
 						"widgetId": "simple-client-in-focus",
 						"gridX": 0,
-						"gridY": 7,
+						"gridY": 5,
 						"gridWidth": 12,
 						"gridHeight": 2,
 						"showTitle": false,
-						"borderless": true,
 						"sizeToContent": true
 					},
 					{
 						"id": "wr",
 						"widgetId": "requests",
 						"gridX": 0,
-						"gridY": 18,
+						"gridY": 16,
 						"gridWidth": 8,
 						"gridHeight": 4
 					},
@@ -1115,7 +1097,7 @@
 						"id": "wi",
 						"widgetId": "interaction",
 						"gridX": 8,
-						"gridY": 18,
+						"gridY": 16,
 						"gridWidth": 4,
 						"gridHeight": 8
 					},
@@ -1123,7 +1105,7 @@
 						"id": "wt",
 						"widgetId": "tasks",
 						"gridX": 0,
-						"gridY": 22,
+						"gridY": 20,
 						"gridWidth": 8,
 						"gridHeight": 4
 					},
@@ -1131,7 +1113,7 @@
 						"id": "wk",
 						"widgetId": "knowledge",
 						"gridX": 8,
-						"gridY": 26,
+						"gridY": 24,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -1139,7 +1121,7 @@
 						"id": "wc",
 						"widgetId": "client-cases",
 						"gridX": 0,
-						"gridY": 26,
+						"gridY": 24,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -1147,32 +1129,34 @@
 						"id": "wm",
 						"widgetId": "client-contacts",
 						"gridX": 4,
-						"gridY": 26,
+						"gridY": 24,
 						"gridWidth": 4,
 						"gridHeight": 5
 					}
 				],
-				"description": "Your customer contact today, then the workplace",
-				"showHeader": false,
-				"showWidgetActions": false
+				"description": "your queue, callbacks and contact today",
+				"showHeader": true,
+				"showWidgetActions": false,
+				"greeting": "first",
+				"gridFloat": false,
+				"headerActions": [
+					{
+						"id": "log-contact",
+						"label": "Log contact",
+						"type": "open-form",
+						"formTitle": "Log contact",
+						"icon": "Phone",
+						"variant": "primary",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"props": {
+							"ticketType": "interaction"
+						}
+					}
+				]
 			},
 			"configAppend": {
 				"widgets": [
-					{
-						"id": "simple-availability",
-						"type": "custom",
-						"title": "Availability"
-					},
-					{
-						"id": "simple-greeting",
-						"type": "header",
-						"title": "Greeting",
-						"content": {
-							"title": "My customer contact",
-							"showDate": true,
-							"ground": true
-						}
-					},
 					{
 						"id": "simple-first-today",
 						"type": "banner",
@@ -1223,8 +1207,7 @@
 						"title": "New",
 						"content": {
 							"label": "New",
-							"caption": "Not picked up yet",
-							"icon": "TrayFull",
+							"caption": "{count} came in today",
 							"format": {
 								"style": "decimal",
 								"decimals": 0
@@ -1243,7 +1226,16 @@
 									"status": "new"
 								}
 							},
-							"layout": "stacked"
+							"layout": "stacked",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"status": "new",
+									"occurredAt[gte]": "@today"
+								}
+							}
 						}
 					},
 					{
@@ -1252,8 +1244,7 @@
 						"title": "Waiting for me",
 						"content": {
 							"label": "Waiting for me",
-							"caption": "Assigned to you",
-							"icon": "ClipboardAccountOutline",
+							"caption": "{count} longer than 2 days",
 							"format": {
 								"style": "decimal",
 								"decimals": 0
@@ -1274,8 +1265,18 @@
 									"status": "in_progress"
 								}
 							},
-							"variant": "warning",
-							"layout": "stacked"
+							"variant": "error",
+							"layout": "stacked",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": "@me",
+									"status": "in_progress",
+									"occurredAt[lt]": "@today-2d"
+								}
+							}
 						}
 					},
 					{
@@ -1284,8 +1285,7 @@
 						"title": "Callback requests",
 						"content": {
 							"label": "Callback requests",
-							"caption": "Still to call back",
-							"icon": "Phone",
+							"caption": "{count} due today",
 							"format": {
 								"style": "decimal",
 								"decimals": 0
@@ -1308,7 +1308,18 @@
 									"assigneeUserId": "@me"
 								}
 							},
-							"layout": "stacked"
+							"layout": "stacked",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"type": "callbackRequest",
+									"status": "open",
+									"assigneeUserId": "@me",
+									"deadline[lt]": "@today+1d"
+								}
+							}
 						}
 					},
 					{
@@ -1318,7 +1329,6 @@
 						"content": {
 							"label": "Waiting for customer",
 							"caption": "No action needed now",
-							"icon": "AccountClock",
 							"format": {
 								"style": "decimal",
 								"decimals": 0
@@ -1344,8 +1354,7 @@
 					},
 					{
 						"id": "simple-waiting-list",
-						"type": "object-list",
-						"hideRefresh": true,
+						"type": "record-list",
 						"title": "Waiting for me",
 						"content": {
 							"register": "pipelinq",
@@ -1358,52 +1367,46 @@
 								"field": "occurredAt",
 								"dir": "asc"
 							},
-							"limit": 8,
-							"rowRoute": "TicketDetail",
-							"columns": [
-								{
-									"key": "title",
-									"label": "Subject",
-									"secondary": "channel"
-								},
-								{
-									"key": "ticketType",
-									"label": "Type",
-									"enum": [
-										"request",
-										"complaint",
-										"interaction"
-									],
-									"enumLabels": {
-										"request": "Request",
-										"complaint": "Complaint",
-										"interaction": "Contact moment"
-									}
-								},
-								{
-									"key": "occurredAt",
-									"label": "Waiting since",
-									"widget": "age",
-									"widgetProps": {
-										"variantWhen": [
-											{
-												"op": "gte",
-												"value": 3,
-												"variant": "error"
-											}
-										]
-									},
-									"format": "date-time"
-								}
+							"limit": 5,
+							"presentation": "rows",
+							"extend": [
+								"client"
 							],
-							"emptyText": "Nothing is waiting for you.",
-							"viewAllRoute": "Tickets",
-							"viewAllQuery": {
-								"assignee": "@me",
-								"status": "in_progress"
+							"avatar": "{client.name}",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
 							},
-							"hideHeader": true,
-							"allowCreate": false
+							"pill": {
+								"field": "ticketType",
+								"labels": {
+									"request": "Request",
+									"complaint": "Complaint",
+									"interaction": "Contact moment"
+								},
+								"colorMap": {
+									"request": "info",
+									"complaint": "error",
+									"interaction": "default"
+								}
+							},
+							"trailing": "{occurredAt|days} days",
+							"rowRoute": "TicketDetail",
+							"emptyText": "Nothing is waiting for you.",
+							"valueLabels": {
+								"channel": {
+									"telefoon": "Phone",
+									"email": "Email",
+									"balie": "Counter",
+									"chat": "Chat",
+									"social": "Social media",
+									"brief": "Letter",
+									"portal": "Mijn Zuiddrecht"
+								}
+							}
 						}
 					},
 					{
@@ -1434,8 +1437,7 @@
 					},
 					{
 						"id": "simple-callback-list",
-						"type": "object-list",
-						"hideRefresh": true,
+						"type": "record-list",
 						"title": "Callback requests",
 						"content": {
 							"register": "pipelinq",
@@ -1449,29 +1451,22 @@
 								"field": "deadline",
 								"dir": "asc"
 							},
-							"limit": 6,
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{subject}",
+							"meta": "{description}",
+							"trailing": "{deadline|relativetime}",
 							"rowRoute": "TaskDetail",
-							"columns": [
-								{
-									"key": "subject",
-									"label": "Subject",
-									"secondary": "callbackPhoneNumber"
-								},
-								{
-									"key": "deadline",
-									"label": "Deadline",
-									"format": "date-time"
-								}
-							],
-							"emptyText": "You have no callbacks to make.",
-							"hideHeader": true,
-							"allowCreate": false
+							"emptyText": "You have no callbacks to make."
+						},
+						"headerLink": {
+							"label": "All tasks",
+							"route": "Tasks"
 						}
 					},
 					{
 						"id": "simple-latest-contact",
-						"type": "object-list",
-						"hideRefresh": true,
+						"type": "record-list",
 						"title": "Latest contact",
 						"content": {
 							"register": "pipelinq",
@@ -1483,23 +1478,19 @@
 								"field": "occurredAt",
 								"dir": "desc"
 							},
-							"limit": 6,
+							"limit": 3,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": "{occurredAt|relative}",
 							"rowRoute": "TicketDetail",
-							"columns": [
-								{
-									"key": "title",
-									"label": "Subject",
-									"secondary": "channel"
-								},
-								{
-									"key": "occurredAt",
-									"label": "When",
-									"format": "date-time"
-								}
-							],
-							"emptyText": "No contact moments yet.",
-							"hideHeader": true,
-							"allowCreate": false
+							"emptyText": "No contact moments yet."
+						},
+						"headerLink": {
+							"label": "All",
+							"route": "Tickets",
+							"query": {
+								"ticketType": "interaction"
+							}
 						}
 					},
 					{
@@ -1523,7 +1514,7 @@
 				]
 			},
 			"slots": {
-				"widget-simple-availability": "WerkplekHeaderActions"
+				"title-meta": null
 			}
 		},
 		{

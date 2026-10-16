@@ -7619,6 +7619,11 @@
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "your queue, callbacks and contact today": "je wachtrij, terugbelverzoeken en contact van vandaag",
+        "{count} came in today": "{count} vandaag binnengekomen",
+        "{count} longer than 2 days": "{count} langer dan 2 dagen",
+        "{count} due today": "{count} voor vandaag",
+        "{occurredAt|days} days": "{occurredAt|days} dagen"
     }
 }
