@@ -3,191 +3,222 @@
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
   -->
 <template>
-	<div class="pos-form">
-		<div class="pos-form__header">
-			<NcButton :to="{ name: 'PosTransactions' }">
-				{{ t('pipelinq', 'Back to list') }}
-			</NcButton>
-			<h2>
-				{{
-					isNew
-						? t('pipelinq', 'New transaction')
-						: transaction.reference || t('pipelinq', 'Transaction')
-				}}
-			</h2>
-		</div>
-
-		<NcLoadingIcon v-if="loading" :size="32" />
-
-		<template v-else>
-			<div class="pos-form__fields">
-				<NcTextField
-					v-model="transaction.terminalId"
-					:label="t('pipelinq', 'Terminal')" />
-				<CnResourceSelect
-					register="pipelinq"
-					schema="client"
-					labelField="name"
-					:modelValue="transaction.client || ''"
-					:inputLabel="t('pipelinq', 'Client (optional)')"
-					:placeholder="t('pipelinq', 'Search clients')"
-					:preload="true"
-					data-testid="pos-form-client"
-					@update:modelValue="onClientSelect" />
-				<NcSelect
-					:modelValue="selectedPriceMode"
-					:options="priceModeOptions"
-					:inputLabel="t('pipelinq', 'Price mode')"
-					label="label"
-					:clearable="false"
-					@update:modelValue="onPriceModeSelect" />
-				<NcSelect
-					:modelValue="selectedTender"
-					:options="tenderOptions"
-					:inputLabel="t('pipelinq', 'Tender type')"
-					label="label"
-					:clearable="false"
-					data-testid="tender-type"
-					@update:modelValue="onTenderSelect" />
-				<NcTextField
-					v-model="transaction.notes"
-					:label="t('pipelinq', 'Notes')" />
-			</div>
-
-			<div class="pos-form__customer">
-				<div v-if="!selectedCustomer" class="pos-form__customer-empty">
-					<NcButton
-						variant="secondary"
-						data-testid="add-customer"
-						:disabled="saving"
-						@click="openCustomerLookup">
-						{{ t('pipelinq', 'Add customer') }}
-					</NcButton>
-					<span
-						v-if="onAccountError"
-						class="pos-form__customer-error"
-						role="alert">
-						{{ onAccountError }}
-					</span>
-				</div>
-				<div
-					v-else
-					class="pos-form__customer-selected"
-					data-testid="selected-customer">
-					<span class="pos-form__customer-label">
-						{{ t('pipelinq', 'Customer:') }}
-						<strong>{{ selectedCustomer.name }}</strong>
-						<span
-							v-if="selectedCustomer.doNotContact"
-							class="pos-form__customer-flag"
-							:title="
-								t(
-									'pipelinq',
-									'This customer does not wish to be contacted.',
-								)
-							">
-							🔒
-						</span>
-					</span>
-					<NcButton
-						variant="tertiary"
-						:aria-label="t('pipelinq', 'Remove customer')"
-						data-testid="clear-customer"
-						:disabled="saving"
-						@click="clearCustomer">
-						✕
-					</NcButton>
-				</div>
-				<PurchaseHistory v-if="selectedCustomer" :rows="history" />
-				<label
-					class="pos-form__consent"
-					:title="
-						!selectedCustomer
-							? t('pipelinq', 'Select a customer first.')
-							: ''
-					">
-					<input
-						type="checkbox"
-						:checked="transaction.marketingConsent"
-						:disabled="
-							!selectedCustomer
-							|| (selectedCustomer && selectedCustomer.doNotContact)
-						"
-						data-testid="marketing-consent"
-						@change="onConsentChange" />
-					{{ t('pipelinq', 'I want to receive offers and updates.') }}
-				</label>
-			</div>
-
-			<table class="pos-form__lines">
-				<thead>
-					<tr>
-						<th scope="col">{{ t('pipelinq', 'Product') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Qty') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Discount %') }}</th>
-						<th scope="col">{{ t('pipelinq', 'VAT') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Line total') }}</th>
-						<th scope="col" />
-					</tr>
-				</thead>
-				<tbody>
-					<PosLineItemRow
-						v-for="(line, index) in lines"
-						:key="line._key"
-						:line="line"
-						:products="products"
-						:priceMode="priceMode"
-						@update:line="updateLine(index, $event)"
-						@remove="removeLine(index)" />
-				</tbody>
-			</table>
-
-			<NcButton class="pos-form__add" @click="addLine">
+	<CnDetailPage
+		:title="pageTitle"
+		:breadcrumb="{ label: t('pipelinq', 'Transactions'), route: 'PosTransactions' }"
+		:typePill="{ text: statusLabel, variant: 'default' }"
+		:loading="loading"
+		:sidebar="{ enabled: false }"
+		:showRefresh="false">
+		<template #actions>
+			<NcButton
+				variant="primary"
+				:disabled="saving || !checkoutAllowed"
+				data-testid="checkout-header"
+				@click="save">
 				<template #icon>
-					<Plus :size="20" />
+					<CashRegister :size="20" />
 				</template>
-				{{ t('pipelinq', 'Add line') }}
+				{{ t('pipelinq', 'Checkout') }}
 			</NcButton>
-
-			<PosTotalsPanel :lines="lines" :priceMode="priceMode" />
-
-			<PaymentMethodSelector
-				v-model="paymentSelection"
-				:clientSelected="!!transaction.client"
-				@change="onPaymentSelectionChange" />
-
-			<div class="pos-form__actions">
-				<NcButton
-					variant="primary"
-					:disabled="saving || !checkoutAllowed"
-					data-testid="checkout"
-					@click="save">
-					{{ t('pipelinq', 'Checkout') }}
-				</NcButton>
-			</div>
 		</template>
+
+		<div class="pos-till">
+			<div class="pos-till__main">
+				<CnDetailCard :title="t('pipelinq', 'Lines')">
+					<div class="pos-till__scan">
+						<BarcodeScanner
+							class="pos-till__scanner"
+							:status="scanStatus"
+							:errorMessage="scanError"
+							@scan="onBarcodeScan" />
+						<NcButton class="pos-till__add" @click="addLine">
+							<template #icon>
+								<Plus :size="20" />
+							</template>
+							{{ t('pipelinq', 'Add line') }}
+						</NcButton>
+					</div>
+					<table class="pos-form__lines">
+						<thead>
+							<tr>
+								<th scope="col">{{ t('pipelinq', 'Product') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Description') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Qty') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Discount %') }}</th>
+								<th scope="col">{{ t('pipelinq', 'VAT') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Line total') }}</th>
+								<th scope="col" />
+							</tr>
+						</thead>
+						<tbody>
+							<PosLineItemRow
+								v-for="(line, index) in lines"
+								:key="line._key"
+								:line="line"
+								:products="products"
+								:priceMode="priceMode"
+								@update:line="updateLine(index, $event)"
+								@remove="removeLine(index)" />
+						</tbody>
+					</table>
+					<p class="pos-till__hint">
+						{{ priceModeHint }}
+					</p>
+				</CnDetailCard>
+
+				<CnDetailCard :title="t('pipelinq', 'Transaction')">
+					<div class="pos-form__fields">
+						<NcTextField
+							v-model="transaction.terminalId"
+							:label="t('pipelinq', 'Terminal')" />
+						<NcSelect
+							:modelValue="selectedPriceMode"
+							:options="priceModeOptions"
+							:inputLabel="t('pipelinq', 'Price mode')"
+							label="label"
+							:clearable="false"
+							@update:modelValue="onPriceModeSelect" />
+						<NcSelect
+							:modelValue="selectedTender"
+							:options="tenderOptions"
+							:inputLabel="t('pipelinq', 'Tender type')"
+							label="label"
+							:clearable="false"
+							data-testid="tender-type"
+							@update:modelValue="onTenderSelect" />
+					</div>
+					<NcTextField
+						v-model="transaction.notes"
+						:label="t('pipelinq', 'Notes')" />
+				</CnDetailCard>
+
+				<CnDetailCard v-if="selectedCustomer" :title="t('pipelinq', 'Purchase history')">
+					<PurchaseHistory :rows="history" />
+				</CnDetailCard>
+			</div>
+
+			<div class="pos-till__side">
+				<CnDetailCard :title="t('pipelinq', 'Totals')">
+					<PosTotalsPanel :lines="lines" :priceMode="priceMode" />
+					<PaymentMethodSelector
+						v-model="paymentSelection"
+						:clientSelected="!!transaction.client"
+						@change="onPaymentSelectionChange" />
+					<NcButton
+						class="pos-till__checkout"
+						variant="primary"
+						wide
+						:disabled="saving || !checkoutAllowed"
+						data-testid="checkout"
+						@click="save">
+						<template #icon>
+							<CashRegister :size="20" />
+						</template>
+						{{ t('pipelinq', 'Checkout') }}
+					</NcButton>
+				</CnDetailCard>
+
+				<CnDetailCard :title="t('pipelinq', 'Customer')">
+					<div class="pos-form__customer">
+						<CnResourceSelect
+							register="pipelinq"
+							schema="client"
+							labelField="name"
+							:modelValue="transaction.client || ''"
+							:inputLabel="t('pipelinq', 'Client (optional)')"
+							:placeholder="t('pipelinq', 'Search clients')"
+							:preload="true"
+							data-testid="pos-form-client"
+							@update:modelValue="onClientSelect" />
+						<div v-if="!selectedCustomer" class="pos-form__customer-empty">
+							<NcButton
+								variant="secondary"
+								data-testid="add-customer"
+								:disabled="saving"
+								@click="openCustomerLookup">
+								{{ t('pipelinq', 'Add customer') }}
+							</NcButton>
+							<span
+								v-if="onAccountError"
+								class="pos-form__customer-error"
+								role="alert">
+								{{ onAccountError }}
+							</span>
+						</div>
+						<div
+							v-else
+							class="pos-form__customer-selected"
+							data-testid="selected-customer">
+							<span class="pos-form__customer-label">
+								<strong>{{ selectedCustomer.name }}</strong>
+								<span
+									v-if="selectedCustomer.doNotContact"
+									class="pos-form__customer-flag"
+									:title="
+										t(
+											'pipelinq',
+											'This customer does not wish to be contacted.',
+										)
+									">
+									🔒
+								</span>
+							</span>
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('pipelinq', 'Remove customer')"
+								data-testid="clear-customer"
+								:disabled="saving"
+								@click="clearCustomer">
+								✕
+							</NcButton>
+						</div>
+						<label
+							class="pos-form__consent"
+							:title="
+								!selectedCustomer
+									? t('pipelinq', 'Select a customer first.')
+									: ''
+							">
+							<input
+								type="checkbox"
+								:checked="transaction.marketingConsent"
+								:disabled="
+									!selectedCustomer
+									|| (selectedCustomer && selectedCustomer.doNotContact)
+								"
+								data-testid="marketing-consent"
+								@change="onConsentChange" />
+							{{ t('pipelinq', 'I want to receive offers and updates.') }}
+						</label>
+					</div>
+				</CnDetailCard>
+			</div>
+		</div>
 
 		<CustomerLookupModal
 			v-if="showCustomerModal"
 			@select="onCustomerSelected"
 			@cancel="closeCustomerLookup" />
-	</div>
+	</CnDetailPage>
 </template>
 
 <script>
-import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { CnDetailCard, CnDetailPage, CnResourceSelect } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess, showWarning } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import CashRegister from 'vue-material-design-icons/CashRegister.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vue'
 import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
 import PurchaseHistory from '../../components/pos/PurchaseHistory.vue'
+import BarcodeScanner from '../../components/products/BarcodeScanner.vue'
 import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
+import { findProductByBarcode } from '../../services/posBarcode.js'
 import {
 	attachCustomer as apiAttachCustomer,
 	detachCustomer as apiDetachCustomer,
@@ -216,11 +247,14 @@ function collectionRows(collection) {
 export default {
 	name: 'PosTransactionForm',
 	components: {
+		BarcodeScanner,
+		CashRegister,
+		CnDetailCard,
+		CnDetailPage,
 		CnResourceSelect,
 		NcButton,
 		NcTextField,
 		NcSelect,
-		NcLoadingIcon,
 		Plus,
 		PosLineItemRow,
 		PosTotalsPanel,
@@ -266,6 +300,8 @@ export default {
 			paymentSelection: 'cash',
 			paymentProvider: 'cash',
 			paymentMethod: 'cash',
+			scanStatus: 'idle',
+			scanError: '',
 		}
 	},
 
@@ -288,6 +324,47 @@ export default {
 		 *
 		 * @return {boolean} True when creating.
 		 */
+		/**
+		 * The page name: New transaction, or the reference once saved.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-transaction-core/spec.md
+		 */
+		pageTitle() {
+			return this.isNew
+				? t('pipelinq', 'New transaction')
+				: this.transaction.reference || t('pipelinq', 'Transaction')
+		},
+
+		/**
+		 * The status pill text (Draft for a new transaction).
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-transaction-core/spec.md
+		 */
+		statusLabel() {
+			const labels = {
+				draft: t('pipelinq', 'Draft'),
+				parked: t('pipelinq', 'Parked'),
+				confirmed: t('pipelinq', 'Confirmed'),
+				settled: t('pipelinq', 'Settled'),
+				refunded: t('pipelinq', 'Refunded'),
+			}
+			return labels[this.transaction.status] || labels.draft
+		},
+
+		/**
+		 * The line under the table: what the unit prices include.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-transaction-core/spec.md
+		 */
+		priceModeHint() {
+			return this.priceMode === 'incl'
+				? t('pipelinq', 'Price display incl. VAT: unit prices include VAT.')
+				: t('pipelinq', 'Price display excl. VAT: VAT is added to the unit prices.')
+		},
+
 		isNew() {
 			return !this.transactionId || this.transactionId === 'new'
 		},
@@ -490,6 +567,34 @@ export default {
 		/**
 		 * Append a blank line.
 		 */
+		/**
+		 * A scanned or typed barcode adds its product as a new line.
+		 *
+		 * @param {string} code The barcode.
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-transaction-core/spec.md
+		 */
+		onBarcodeScan(code) {
+			const product = findProductByBarcode(this.products, code)
+			if (!product) {
+				this.scanStatus = 'error'
+				this.scanError = t('pipelinq', 'No product has this barcode.')
+				return
+			}
+			this.scanStatus = 'found'
+			this.scanError = ''
+			this.lines.push(
+				recalculateLine({
+					_key: this.nextKey(),
+					description: product.name || '',
+					quantity: 1,
+					unitPrice: product.unitPrice ?? 0,
+					discount: 0,
+					taxRate: product.taxRate ?? 21,
+					product: product.id,
+				}),
+			)
+		},
+
 		addLine() {
 			this.lines.push(
 				recalculateLine({
@@ -817,18 +922,53 @@ export default {
 	max-width: 1000px;
 }
 
-.pos-form__header {
+.pos-till {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 340px;
+	gap: 20px;
+	align-items: start;
+}
+
+.pos-till__main,
+.pos-till__side {
 	display: flex;
-	align-items: center;
-	gap: 16px;
-	margin-bottom: 20px;
+	flex-direction: column;
+	gap: 20px;
+	min-width: 0;
+}
+
+.pos-till__scan {
+	display: flex;
+	align-items: flex-end;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.pos-till__scanner {
+	flex: 1;
+}
+
+.pos-till__hint {
+	margin: 12px 0 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.pos-till__checkout {
+	margin-top: 12px;
+}
+
+@media (max-width: 1100px) {
+	.pos-till {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 
 .pos-form__fields {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
 	gap: 16px;
-	margin-bottom: 24px;
+	margin-bottom: 16px;
 }
 
 .pos-form__lines {
@@ -845,24 +985,10 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 }
 
-.pos-form__add {
-	margin-bottom: 24px;
-}
-
-.pos-form__actions {
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 24px;
-}
-
 .pos-form__customer {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	margin: 16px 0;
-	padding: 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
 }
 
 .pos-form__customer-empty {

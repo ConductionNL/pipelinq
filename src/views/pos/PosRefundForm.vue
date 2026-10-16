@@ -3,101 +3,115 @@
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
 -->
 <template>
-	<div class="pos-refund-form">
-		<div class="pos-refund-form__header">
-			<NcButton :to="{ name: 'PosRefunds' }">
-				{{ t('pipelinq', 'Back to list') }}
+	<CnDetailPage
+		:title="isEdit ? t('pipelinq', 'Edit refund') : t('pipelinq', 'New refund')"
+		:breadcrumb="{ label: t('pipelinq', 'Refunds'), route: 'PosRefunds' }"
+		:typePill="{ text: t('pipelinq', 'Draft'), variant: 'default' }"
+		:loading="loading"
+		:sidebar="{ enabled: false }"
+		:showRefresh="false">
+		<template #actions>
+			<NcButton variant="primary" :disabled="saving" @click="save">
+				<template #icon>
+					<ContentSave :size="20" />
+				</template>
+				{{ t('pipelinq', 'Save') }}
 			</NcButton>
-			<h2>
-				{{
-					isEdit
-						? t('pipelinq', 'Edit refund')
-						: t('pipelinq', 'New refund')
-				}}
-			</h2>
-		</div>
-
-		<NcLoadingIcon v-if="loading" :size="32" />
-
-		<template v-else>
-			<div class="pos-refund-form__fields">
-				<NcSelect
-					:modelValue="selectedTransaction"
-					:options="transactionOptions"
-					:inputLabel="t('pipelinq', 'Original transaction')"
-					:placeholder="t('pipelinq', 'Choose a transaction…')"
-					label="label"
-					:clearable="false"
-					:disabled="lockedTransaction"
-					@update:modelValue="onTransactionSelect" />
-				<NcSelect
-					:modelValue="selectedReason"
-					:options="reasonOptions"
-					:inputLabel="t('pipelinq', 'Refund reason')"
-					:placeholder="t('pipelinq', 'Choose a reason…')"
-					label="label"
-					:clearable="false"
-					@update:modelValue="onReasonSelect" />
-				<NcTextField
-					v-model="refund.notes"
-					:label="t('pipelinq', 'Notes')" />
-			</div>
-
-			<div v-if="originalLines.length" class="pos-refund-form__select-all">
-				<NcButton variant="secondary" @click="selectAll">
-					{{ t('pipelinq', 'Return all items') }}
-				</NcButton>
-			</div>
-
-			<table v-if="originalLines.length" class="pos-refund-form__lines">
-				<thead>
-					<tr>
-						<th scope="col" />
-						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Original qty') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Returned qty') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Restock') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Refund total') }}</th>
-						<th scope="col" />
-					</tr>
-				</thead>
-				<tbody>
-					<PosRefundLineRow
-						v-for="(candidate, index) in candidates"
-						:key="candidate.originalLine"
-						:line="candidate"
-						:originalLine="originalLineFor(candidate.originalLine)"
-						:reasons="activeReasons"
-						@update:line="updateCandidate(index, $event)"
-						@remove="removeCandidate(index)" />
-				</tbody>
-			</table>
-
-			<p v-else class="pos-refund-form__empty">
-				{{
-					t(
-						'pipelinq',
-						'Select an original transaction to choose items to refund.',
-					)
-				}}
-			</p>
-
-			<PosRefundTotalsPanel :lines="selectedLines" />
-
-			<div class="pos-refund-form__actions">
-				<NcButton variant="primary" :disabled="saving" @click="save">
-					{{ t('pipelinq', 'Save') }}
-				</NcButton>
-			</div>
 		</template>
-	</div>
+
+		<div class="pos-refund">
+			<div class="pos-refund__main">
+				<CnDetailCard :title="t('pipelinq', 'Refund')">
+					<div class="pos-refund-form__fields">
+						<NcSelect
+							:modelValue="selectedTransaction"
+							:options="transactionOptions"
+							:inputLabel="t('pipelinq', 'Original transaction')"
+							:placeholder="t('pipelinq', 'Choose a transaction…')"
+							label="label"
+							:clearable="false"
+							:disabled="lockedTransaction"
+							@update:modelValue="onTransactionSelect" />
+						<NcSelect
+							:modelValue="selectedReason"
+							:options="reasonOptions"
+							:inputLabel="t('pipelinq', 'Refund reason')"
+							:placeholder="t('pipelinq', 'Choose a reason…')"
+							label="label"
+							:clearable="false"
+							@update:modelValue="onReasonSelect" />
+					</div>
+					<NcTextField
+						v-model="refund.notes"
+						:label="t('pipelinq', 'Notes')" />
+				</CnDetailCard>
+
+				<CnDetailCard :title="t('pipelinq', 'Items to take back')">
+					<template v-if="originalLines.length">
+						<div class="pos-refund-form__select-all">
+							<NcButton variant="secondary" @click="selectAll">
+								{{ t('pipelinq', 'Return all items') }}
+							</NcButton>
+						</div>
+						<table class="pos-refund-form__lines">
+							<thead>
+								<tr>
+									<th scope="col" />
+									<th scope="col">{{ t('pipelinq', 'Description') }}</th>
+									<th scope="col">{{ t('pipelinq', 'Original qty') }}</th>
+									<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
+									<th scope="col">{{ t('pipelinq', 'Returned qty') }}</th>
+									<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
+									<th scope="col">{{ t('pipelinq', 'Restock') }}</th>
+									<th scope="col">{{ t('pipelinq', 'Refund total') }}</th>
+									<th scope="col" />
+								</tr>
+							</thead>
+							<tbody>
+								<PosRefundLineRow
+									v-for="(candidate, index) in candidates"
+									:key="candidate.originalLine"
+									:line="candidate"
+									:originalLine="originalLineFor(candidate.originalLine)"
+									:reasons="activeReasons"
+									@update:line="updateCandidate(index, $event)"
+									@remove="removeCandidate(index)" />
+							</tbody>
+						</table>
+						<p class="pos-refund__hint">
+							{{ t('pipelinq', 'The returned quantity cannot exceed the original quantity. Choose at least one item to take back.') }}
+						</p>
+					</template>
+					<p v-else class="pos-refund-form__empty">
+						{{
+							t(
+								'pipelinq',
+								'Select an original transaction to choose items to refund.',
+							)
+						}}
+					</p>
+				</CnDetailCard>
+			</div>
+
+			<div class="pos-refund__side">
+				<CnDetailCard :title="t('pipelinq', 'Refund total')">
+					<PosRefundTotalsPanel :lines="selectedLines" />
+				</CnDetailCard>
+				<CnDetailCard :title="t('pipelinq', 'After saving')">
+					<p class="pos-refund__after">
+						{{ t('pipelinq', 'The refund waits for confirmation. A manager confirms or rejects it.') }}
+					</p>
+				</CnDetailCard>
+			</div>
+		</div>
+	</CnDetailPage>
 </template>
 
 <script>
+import { CnDetailCard, CnDetailPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import ContentSave from 'vue-material-design-icons/ContentSave.vue'
 import PosRefundLineRow from '../../components/pos/PosRefundLineRow.vue'
 import PosRefundTotalsPanel from '../../components/pos/PosRefundTotalsPanel.vue'
 import { refundLineAmounts } from '../../services/posTotals.js'
@@ -106,10 +120,12 @@ import { useObjectStore } from '../../store/modules/object.js'
 export default {
 	name: 'PosRefundForm',
 	components: {
+		CnDetailCard,
+		CnDetailPage,
+		ContentSave,
 		NcButton,
 		NcTextField,
 		NcSelect,
-		NcLoadingIcon,
 		PosRefundLineRow,
 		PosRefundTotalsPanel,
 	},
@@ -535,23 +551,39 @@ export default {
 </script>
 
 <style scoped>
-.pos-refund-form {
-	padding: 20px;
-	max-width: 1100px;
+.pos-refund {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 340px;
+	gap: 20px;
+	align-items: start;
 }
 
-.pos-refund-form__header {
+.pos-refund__main,
+.pos-refund__side {
 	display: flex;
-	align-items: center;
-	gap: 16px;
-	margin-bottom: 20px;
+	flex-direction: column;
+	gap: 20px;
+	min-width: 0;
+}
+
+.pos-refund__hint,
+.pos-refund__after {
+	margin: 12px 0 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+	.pos-refund {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 
 .pos-refund-form__fields {
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
+	grid-template-columns: repeat(2, 1fr);
 	gap: 16px;
-	margin-bottom: 24px;
+	margin-bottom: 16px;
 }
 
 .pos-refund-form__select-all {
@@ -576,11 +608,5 @@ export default {
 	color: var(--color-text-maxcontrast);
 	font-style: italic;
 	margin: 16px 0;
-}
-
-.pos-refund-form__actions {
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 24px;
 }
 </style>

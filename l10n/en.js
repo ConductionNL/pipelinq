@@ -7672,7 +7672,16 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Lines": "Lines",
+        "Price display incl. VAT: unit prices include VAT.": "Price display incl. VAT: unit prices include VAT.",
+        "Price display excl. VAT: VAT is added to the unit prices.": "Price display excl. VAT: VAT is added to the unit prices.",
+        "No product has this barcode.": "No product has this barcode.",
+        "Refunds": "Refunds",
+        "Items to take back": "Items to take back",
+        "The returned quantity cannot exceed the original quantity. Choose at least one item to take back.": "The returned quantity cannot exceed the original quantity. Choose at least one item to take back.",
+        "After saving": "After saving",
+        "The refund waits for confirmation. A manager confirms or rejects it.": "The refund waits for confirmation. A manager confirms or rejects it."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -7599,7 +7599,16 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "Lines": "Regels",
+        "Price display incl. VAT: unit prices include VAT.": "Prijsweergave incl. btw: stukprijzen zijn inclusief btw.",
+        "Price display excl. VAT: VAT is added to the unit prices.": "Prijsweergave excl. btw: de btw komt bij de stukprijzen.",
+        "No product has this barcode.": "Geen product heeft deze barcode.",
+        "Refunds": "Retouren",
+        "Items to take back": "Artikelen om terug te nemen",
+        "The returned quantity cannot exceed the original quantity. Choose at least one item to take back.": "Het retouraantal mag niet hoger zijn dan het oorspronkelijke aantal. Kies minstens één artikel om terug te nemen.",
+        "After saving": "Na opslaan",
+        "The refund waits for confirmation. A manager confirms or rejects it.": "De retour wacht op bevestiging. Een leidinggevende bevestigt of wijst af."
     },
     "nplurals=2; plural=(n != 1);"
 )
