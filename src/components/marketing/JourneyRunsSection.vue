@@ -210,7 +210,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .journey-runs {
 	display: flex;
 	flex-direction: column;
