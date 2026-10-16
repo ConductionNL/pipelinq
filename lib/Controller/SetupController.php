@@ -186,14 +186,17 @@ class SetupController extends Controller {
 				// dataset missing from this list is a dataset nobody can pick.
 				'datasets' => $this->demoSeedService->listChoices(),
 				// Exactly the ids of `manifest.setup.steps`, asserted by
-				// SetupControllerStatusContractTest. Provisioning and the
-				// integrations are not steps any more: provisioning is an admin
-				// settings action and integrations are detected, not asked.
+				// SetupControllerStatusContractTest. Provisioning is not a step:
+				// it is an admin settings action. The till's receipt fields are
+				// optional, and the integrations step only says what is
+				// detected, so neither keeps the wizard open.
 				'steps' => [
 					'welcome' => ['done' => true],
 					'demo-data' => ['done' => $demoDataDone],
 					'currency' => ['done' => $currencyDone],
 					'organisation' => ['done' => $organisationDone],
+					'pos' => ['done' => true],
+					'integrations' => ['done' => true],
 					'done' => ['done' => true],
 				],
 			]

@@ -75,6 +75,7 @@ test.describe('First-time setup contract', () => {
 	 * records having shipped once already.
 	 */
 	// @e2e openspec/specs/first-time-setup/spec.md#optional-steps-report-done-without-gating
+	// @e2e openspec/changes/setup-wizard-seven-steps/specs/first-time-setup/spec.md#the-status-reports-the-two-new-steps
 	test('setup status reports every step, and only currency gates completion', async ({
 		page,
 	}) => {
@@ -96,6 +97,8 @@ test.describe('First-time setup contract', () => {
 			'currency',
 			'demo-data',
 			'organisation',
+			'pos',
+			'integrations',
 			'done',
 		]) {
 			expect(
@@ -111,9 +114,10 @@ test.describe('First-time setup contract', () => {
 		// The optional steps reflect their OWN state rather than the app's,
 		// and completion is true regardless — which is the whole scenario:
 		// only currency gates completion.
-		// Provisioning and the integrations are not wizard steps any more.
+		// Provisioning is not a wizard step any more. The integrations step
+		// asks nothing, so it never keeps the wizard open.
 		expect(res.json.steps.provision).toBeUndefined()
-		expect(res.json.steps.integrations).toBeUndefined()
+		expect(res.json.steps.integrations.done).toBe(true)
 		expect(
 			res.json.steps['demo-data'].done,
 			'ci-seed recorded the demo-data decision',

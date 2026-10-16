@@ -113,6 +113,39 @@
 				}
 			},
 			{
+				"id": "pos",
+				"type": "config-fields",
+				"title": "Point of sale",
+				"body": "How the till sends and prints receipts. Every field is optional, so leave one blank to skip it.",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"receipt_email_sender": {
+							"type": "string",
+							"format": "email",
+							"title": "Sender address for emailed receipts",
+							"order": 1
+						},
+						"receipt_printer_host": {
+							"type": "string",
+							"title": "Receipt printer address",
+							"order": 2
+						},
+						"receipt_printer_port": {
+							"type": "string",
+							"title": "Receipt printer port",
+							"order": 3
+						}
+					}
+				}
+			},
+			{
+				"id": "integrations",
+				"type": "info",
+				"title": "Integrations",
+				"body": "Pipelinq finds Shillinq, xWiki and integriq on this server by itself, so there is nothing to fill in here. The administration settings show what it found under Connections."
+			},
+			{
 				"id": "done",
 				"type": "summary",
 				"title": "All set",
