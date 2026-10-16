@@ -5147,6 +5147,41 @@
 						"type": "audit-trail",
 						"title": "History",
 						"icon": "History"
+					},
+					{
+						"id": "pos-tx-receipt",
+						"type": "object-list",
+						"title": "Receipt",
+						"icon": "ReceiptTextOutline",
+						"_note": "PqKassabon Bon card: when the receipt was printed or mailed, from the print log.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "receiptPrintLog",
+							"filter": {
+								"transaction": "@objectId"
+							},
+							"sort": {
+								"field": "printedAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "action",
+									"label": "Action"
+								},
+								{
+									"key": "printedAt",
+									"label": "When"
+								},
+								{
+									"key": "printerDevice",
+									"label": "Printer"
+								}
+							],
+							"limit": 5,
+							"allowCreate": false,
+							"emptyText": "Not printed or mailed yet."
+						}
 					}
 				],
 				"layout": [
@@ -5201,6 +5236,7 @@
 				},
 				"sideColumn": [
 					"pos-tx-totals",
+					"pos-tx-receipt",
 					"pos-tx-related",
 					"pos-tx-history"
 				],

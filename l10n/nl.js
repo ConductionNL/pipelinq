@@ -7608,7 +7608,10 @@ OC.L10N.register(
         "Deposits": "Afstortingen",
         "{total|currency:EUR} · {settledAt|datetime}": "{total|currency:EUR} · {settledAt|datetime}",
         "{floatAt|datetime} to {closedAt|time}": "{floatAt|datetime} tot {closedAt|time}",
-        "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transacties"
+        "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transacties",
+        "Receipt": "Bon",
+        "Not printed or mailed yet.": "Nog niet geprint of gemaild.",
+        "Printer": "Printer"
     },
     "nplurals=2; plural=(n != 1);"
 )

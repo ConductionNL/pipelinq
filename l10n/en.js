@@ -7681,7 +7681,10 @@ OC.L10N.register(
         "Deposits": "Deposits",
         "{total|currency:EUR} · {settledAt|datetime}": "{total|currency:EUR} · {settledAt|datetime}",
         "{floatAt|datetime} to {closedAt|time}": "{floatAt|datetime} to {closedAt|time}",
-        "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transactions"
+        "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transactions",
+        "Receipt": "Receipt",
+        "Not printed or mailed yet.": "Not printed or mailed yet.",
+        "Printer": "Printer"
     },
     "nplurals=2; plural=(n != 1);"
 )
