@@ -207,17 +207,26 @@ export default {
 </script>
 
 <style scoped>
+/* Board PqBeheerKoppelingen: three fields per row, the two switches side
+   by side, the buttons left under a rule. */
 .cti-settings {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	max-width: 720px;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 12px 16px;
+	align-items: end;
+}
+
+.cti-settings__actions,
+.cti-settings__status {
+	grid-column: 1 / -1;
 }
 
 .cti-settings__actions {
 	display: flex;
 	gap: 12px;
-	justify-content: flex-end;
+	justify-content: flex-start;
+	padding-top: 12px;
+	border-top: 1px solid var(--color-border);
 }
 
 .cti-settings__status {
