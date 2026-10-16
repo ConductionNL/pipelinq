@@ -229,6 +229,14 @@
 								"email": "info",
 								"sms": "teal"
 							}
+						},
+						"enum": [
+							"email",
+							"sms"
+						],
+						"enumLabels": {
+							"email": "Email",
+							"sms": "SMS"
 						}
 					},
 					"subject",
@@ -319,18 +327,7 @@
 									}
 								}
 							},
-							"caption": "{count} messages",
-							"captionSource": {
-								"register": "pipelinq",
-								"schema": "blast",
-								"metric": "sum",
-								"field": "totals.sent",
-								"filter": {
-									"sentAt": {
-										"gte": "@monthStart"
-									}
-								}
-							}
+							"caption": "messages handed to the provider"
 						}
 					},
 					{
@@ -352,20 +349,7 @@
 									"field": "totals.delivered"
 								}
 							},
-							"caption": "clicks {ratio}",
-							"captionSource": {
-								"register": "pipelinq",
-								"schema": "blast",
-								"kind": "ratio",
-								"numerator": {
-									"metric": "sum",
-									"field": "totals.clicked"
-								},
-								"denominator": {
-									"metric": "sum",
-									"field": "totals.delivered"
-								}
-							},
+							"caption": "of the delivered messages",
 							"format": {
 								"style": "percent",
 								"decimals": 0
@@ -384,21 +368,7 @@
 								"metric": "sum",
 								"field": "totals.unsubscribed"
 							},
-							"caption": "{ratio} of the recipients",
-							"captionSource": {
-								"register": "pipelinq",
-								"schema": "blast",
-								"kind": "ratio",
-								"numerator": {
-									"metric": "sum",
-									"field": "totals.unsubscribed"
-								},
-								"denominator": {
-									"metric": "sum",
-									"field": "totals.delivered"
-								},
-								"decimals": 1
-							}
+							"caption": "via the link in the footer"
 						}
 					},
 					{
@@ -433,7 +403,7 @@
 						"showCount": true
 					},
 					{
-						"label": "Scheduled",
+						"label": "Lined up",
 						"filter": {
 							"status": "scheduled"
 						},
@@ -467,6 +437,24 @@
 								"failed": "error",
 								"cancelled": "default"
 							}
+						},
+						"enum": [
+							"draft",
+							"scheduled",
+							"sending",
+							"sent",
+							"paused",
+							"failed",
+							"cancelled"
+						],
+						"enumLabels": {
+							"draft": "Draft",
+							"scheduled": "Lined up",
+							"sending": "Sending",
+							"sent": "Sent",
+							"paused": "Paused",
+							"failed": "Failed",
+							"cancelled": "Cancelled"
 						}
 					},
 					{

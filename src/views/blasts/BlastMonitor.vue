@@ -105,7 +105,7 @@
 			<section class="blast-monitor__card blast-monitor__timeline">
 				<header class="blast-monitor__timeline-head">
 					<h3>{{ t('pipelinq', 'Recent events') }}</h3>
-					<span>{{ t('pipelinq', 'Newest first') }}</span>
+					<span>{{ t('pipelinq', 'Newest first · addresses are masked') }}</span>
 				</header>
 				<ul v-if="timeline.length > 0">
 					<li
@@ -113,9 +113,7 @@
 						:key="event.id || event.timestamp + event.status">
 						<time>{{ formatTime(event.timestamp) }}</time>
 						<span class="blast-monitor__event-target">
-							{{
-								event.email || event.phone || event.contactId || '—'
-							}}
+							{{ maskAddress(event.email || event.phone || event.contactId) }}
 						</span>
 						<CnStatusBadge
 							:status="event.status"
@@ -152,6 +150,8 @@ const TOTALS_KEYS = [
 	'unsubscribed',
 	'complained',
 ]
+// The tiles in the order the send monitor board draws them.
+const TILE_ORDER = ['queued', 'sent', 'delivered', 'opened', 'clicked', 'bounced', 'unsubscribed', 'complained']
 const TERMINAL_STATUSES = ['sent', 'failed', 'cancelled']
 
 export default {
@@ -199,7 +199,7 @@ export default {
 		 * @return {Array<string>}
 		 */
 		totalsKeys() {
-			return TOTALS_KEYS
+			return TILE_ORDER
 		},
 
 		/**
@@ -442,7 +442,7 @@ export default {
 				delivered: this.t('pipelinq', 'Delivered'),
 				opened: this.t('pipelinq', 'Opened'),
 				clicked: this.t('pipelinq', 'Clicked'),
-				bounced: this.t('pipelinq', 'Bounced'),
+				bounced: this.t('pipelinq', 'Could not be delivered'),
 				unsubscribed: this.t('pipelinq', 'Unsubscribed'),
 				complained: this.t('pipelinq', 'Complained'),
 			}
@@ -456,7 +456,31 @@ export default {
 		 * @return {string}
 		 */
 		totalLabel(key) {
+			if (key === 'queued') {
+				return this.t('pipelinq', 'In the queue')
+			}
 			return this.statusLabel(key)
+		},
+
+		/**
+		 * An address as the event list shows it: the first character, then
+		 * stars, then the domain ("a***@ziggo.nl"), so the list can be on a
+		 * shared screen.
+		 *
+		 * @param {string} value An e-mail address, phone number or contact id.
+		 * @return {string} The masked text.
+		 * @spec openspec/specs/marketing-ui/spec.md#cancel-a-sending-blast
+		 */
+		maskAddress(value) {
+			const text = String(value || '')
+			if (text === '') {
+				return '—'
+			}
+			const at = text.indexOf('@')
+			if (at > 0) {
+				return `${text.charAt(0)}***${text.slice(at)}`
+			}
+			return text.length > 4 ? `${'*'.repeat(text.length - 4)}${text.slice(-4)}` : text
 		},
 
 		/**

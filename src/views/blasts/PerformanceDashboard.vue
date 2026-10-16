@@ -40,6 +40,12 @@
 					}}
 				</p>
 			</div>
+			<NcButton variant="secondary" :disabled="overviewRows.length === 0" @click="downloadOverview">
+				<template #icon>
+					<Download :size="18" />
+				</template>
+				{{ t('pipelinq', 'Download') }}
+			</NcButton>
 		</header>
 
 		<CnTabs
@@ -88,10 +94,10 @@
 								<td class="performance-dashboard__num">
 									{{ row.sent }}
 								</td>
-								<td class="performance-dashboard__num">
+								<td class="performance-dashboard__num performance-dashboard__strong">
 									{{ formatPercent(row.openRate) }}
 								</td>
-								<td class="performance-dashboard__num">
+								<td class="performance-dashboard__num performance-dashboard__strong">
 									{{ formatPercent(row.clickRate) }}
 								</td>
 								<td class="performance-dashboard__num">
@@ -365,6 +371,7 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
+import Download from 'vue-material-design-icons/Download.vue'
 import { trafficOutcome } from '../../services/campaignTraffic.js'
 
 const OVERVIEW_LIMIT = 50
@@ -378,6 +385,7 @@ export default {
 	name: 'PerformanceDashboard',
 	components: {
 		ArrowLeft,
+		Download,
 		NcButton,
 		NcLoadingIcon,
 		CnStatusBadge,
@@ -436,7 +444,7 @@ export default {
 			return [
 				{ id: 'overview', label: this.t('pipelinq', 'Overview') },
 				{ id: 'ab', label: this.t('pipelinq', 'A/B testing') },
-				{ id: 'attribution', label: this.t('pipelinq', 'Attribution') },
+				{ id: 'attribution', label: this.t('pipelinq', 'Attribution to deals') },
 			]
 		},
 
@@ -561,6 +569,26 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Save the overview as a CSV file, the columns as the table shows them.
+		 *
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-overview-metrics-table
+		 */
+		downloadOverview() {
+			const keys = ['name', 'segmentName', 'status', 'sent', 'openRate', 'clickRate', 'unsubscribed']
+			const cell = (value) => {
+				const text = value === null || value === undefined ? '' : String(value)
+				return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+			}
+			const lines = [keys.join(';'), ...this.sortedOverviewRows.map((row) => keys.map((key) => cell(row[key])).join(';'))]
+			const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+			const link = document.createElement('a')
+			link.href = URL.createObjectURL(blob)
+			link.download = 'blast-performance.csv'
+			link.click()
+			URL.revokeObjectURL(link.href)
+		},
+
 		/**
 		 * Load blasts, segments (for name lookup) and per-blast attribution
 		 * summaries in parallel. Each block degrades independently —
@@ -1142,6 +1170,14 @@ export default {
 .performance-dashboard__table {
 	width: 100%;
 	border-collapse: collapse;
+	table-layout: auto;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+}
+
+.performance-dashboard__strong {
+	font-weight: 600;
 }
 
 .performance-dashboard__table th,

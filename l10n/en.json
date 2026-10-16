@@ -7758,6 +7758,21 @@
         "Mailing list sign-up form": "Mailing list sign-up form",
         "What a subscriber sees": "What a subscriber sees",
         "Who belongs to it follows from the rules, every time the segment is used": "Who belongs to it follows from the rules, every time the segment is used",
-        "Updates as the data changes. A segment is a living rule, not a fixed list.": "Updates as the data changes. A segment is a living rule, not a fixed list."
+        "Updates as the data changes. A segment is a living rule, not a fixed list.": "Updates as the data changes. A segment is a living rule, not a fixed list.",
+        "Lined up": "Lined up",
+        "Undeliverable": "Undeliverable",
+        "not yet": "not yet",
+        "consent": "consent",
+        "soft opt-in": "soft opt-in",
+        "legitimate interest": "legitimate interest",
+        "contract": "contract",
+        "An unconfirmed sign-up never gets a blast. The person is only added after opening the confirmation link.": "An unconfirmed sign-up never gets a blast. The person is only added after opening the confirmation link.",
+        "Waiting for confirmation": "Waiting for confirmation",
+        "Attribution to deals": "Attribution to deals",
+        "In the queue": "In the queue",
+        "Newest first · addresses are masked": "Newest first · addresses are masked",
+        "Could not be delivered": "Could not be delivered",
+        "messages handed to the provider": "messages handed to the provider",
+        "of the delivered messages": "of the delivered messages"
     }
 }

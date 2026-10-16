@@ -138,7 +138,9 @@
 							"ariaLabel": "Mailing list",
 							"tabs": [
 								{
-									"widgetId": "mailing-list-data",
+									"widgetIds": [
+										"mailing-list-data"
+									],
 									"label": "Overview"
 								},
 								{
@@ -242,8 +244,9 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 8,
-						"showTitle": false
+						"gridHeight": 6,
+						"showTitle": false,
+						"sizeToContent": true
 					}
 				],
 				"bodyWidgets": [

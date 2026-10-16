@@ -1777,25 +1777,79 @@
 				"columns": [
 					{
 						"key": "name",
-						"label": "Newsletter"
+						"label": "Newsletter",
+						"secondary": "{channel}"
 					},
 					{
 						"key": "status",
 						"label": "Status",
-						"formatter": "enumText"
-					},
-					{
-						"key": "scheduledFor",
-						"label": "Scheduled for"
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"sent": "success",
+								"scheduled": "info",
+								"sending": "purple",
+								"draft": "default",
+								"paused": "warning",
+								"failed": "error",
+								"cancelled": "default"
+							}
+						},
+						"enum": [
+							"draft",
+							"scheduled",
+							"sending",
+							"sent",
+							"paused",
+							"failed",
+							"cancelled"
+						],
+						"enumLabels": {
+							"draft": "Draft",
+							"scheduled": "Lined up",
+							"sending": "Sending",
+							"sent": "Sent",
+							"paused": "Paused",
+							"failed": "Failed",
+							"cancelled": "Cancelled"
+						}
 					},
 					{
 						"key": "sentAt",
-						"label": "Sent on"
+						"label": "Sent or scheduled",
+						"formatter": "datetime"
 					},
 					{
-						"key": "channel",
-						"label": "Channel",
-						"formatter": "enumText"
+						"key": "totals.opened",
+						"label": "Opened",
+						"sortable": false,
+						"formatter": "share",
+						"formatterOptions": {
+							"over": "totals.delivered"
+						},
+						"cellClass": "cn-cell--strong"
+					},
+					{
+						"key": "totals.clicked",
+						"label": "Clicked",
+						"sortable": false,
+						"formatter": "share",
+						"formatterOptions": {
+							"over": "totals.delivered"
+						},
+						"cellClass": "cn-cell--strong"
+					},
+					{
+						"key": "totals.unsubscribed",
+						"label": "Unsubscribed",
+						"sortable": false
+					},
+					{
+						"key": "skippedNoConsent",
+						"label": "Note",
+						"sortable": false,
+						"filterable": false,
+						"formatter": "blastNote"
 					}
 				]
 			}
