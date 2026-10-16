@@ -593,6 +593,18 @@ describe('the modules', () => {
 		}
 	})
 
+	it('marketing shows Campaigns and Newsletters only, as the boards draw it; its other pages open from the Modules page', () => {
+		const shown = flat(buildSimple(['marketing']).menu).map((entry) => entry.id)
+		expect(shown).toEqual(expect.arrayContaining(['MarketingCaption', 'CampaignsMenu', 'BlastsMenu']))
+		for (const id of ['MarketingGroup', 'Segments', 'Templates', 'Journeys', 'SocialPosts', 'KeywordIntelligence', 'SearchQueries']) {
+			expect(shown, id).not.toContain(id)
+		}
+		const routes = new Set(buildSimple(['marketing']).pages.map((page) => page.id))
+		for (const id of ['Segments', 'Templates', 'Journeys', 'SocialPosts', 'KeywordIntelligence', 'SearchQueries']) {
+			expect(routes.has(id), id).toBe(true)
+		}
+	})
+
 	it.each(MODULE_KEYS)(
 		'%s joins the menu when it is switched on, and only it',
 		(key) => {
