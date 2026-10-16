@@ -69,7 +69,7 @@
 			<template #icon>
 				<Printer :size="20" />
 			</template>
-			{{ t('pipelinq', 'Print Receipt') }}
+			{{ t('pipelinq', 'Print receipt') }}
 		</NcButton>
 		<NcButton
 			v-if="canIssueReceipt"
@@ -79,13 +79,16 @@
 			<template #icon>
 				<EmailOutline :size="20" />
 			</template>
-			{{ t('pipelinq', 'Email Receipt') }}
+			{{ t('pipelinq', 'Email receipt') }}
 		</NcButton>
 		<!-- @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-002 -->
 		<NcButton
 			v-if="canRegisterReturn && transactionId"
 			variant="secondary"
 			:to="{ name: 'PosRefundNewFromTransaction', params: { transactionId } }">
+			<template #icon>
+				<CashRefund :size="20" />
+			</template>
 			{{ t('pipelinq', 'Register refund') }}
 		</NcButton>
 		<NcButton
@@ -123,6 +126,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
+import CashRefund from 'vue-material-design-icons/CashRefund.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Printer from 'vue-material-design-icons/Printer.vue'
@@ -134,6 +138,7 @@ import { useObjectStore } from '../../store/modules/object.js'
 export default {
 	name: 'PosTransactionHeaderActions',
 	components: {
+		CashRefund,
 		EmailOutline,
 		EmailReceiptModal,
 		NcButton,

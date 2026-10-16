@@ -4,7 +4,7 @@
   -->
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'Print Receipt')"
+		:name="t('pipelinq', 'Print receipt')"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">

@@ -4593,7 +4593,7 @@
 						"title": "Shift",
 						"icon": "FileDocument",
 						"content": {
-							"columns": 2,
+							"columns": 3,
 							"overrides": {
 								"operator": {
 									"formatter": "userDisplayName"
@@ -4601,7 +4601,15 @@
 								"managedBy": {
 									"formatter": "userDisplayName"
 								}
-							}
+							},
+							"include": [
+								"drawer",
+								"operator",
+								"floatAt",
+								"closedAt",
+								"status",
+								"reconciliationStatus"
+							]
 						}
 					},
 					{
@@ -4654,7 +4662,7 @@
 					{
 						"id": "shift-drops",
 						"type": "CashShiftDropsWidget",
-						"title": "Drops",
+						"title": "Deposits",
 						"icon": "CashMinus",
 						"content": {
 							"register": "pipelinq",
@@ -4753,7 +4761,10 @@
 					"shift-kpis-drops",
 					"shift-related",
 					"shift-history"
-				]
+				],
+				"follow": false,
+				"showEditAction": false,
+				"headerMeta": "{floatAt|datetime} to {closedAt|time}"
 			}
 		},
 		{
@@ -4854,7 +4865,17 @@
 						"type": "data",
 						"title": "Z-report",
 						"content": {
-							"columns": 2
+							"columns": 3,
+							"include": [
+								"reference",
+								"reportDate",
+								"terminalId",
+								"status",
+								"subtotal",
+								"discountTotal",
+								"total",
+								"bookkeepingStatus"
+							]
 						}
 					},
 					{
@@ -4947,7 +4968,10 @@
 					"z-tax",
 					"z-payments",
 					"z-history"
-				]
+				],
+				"follow": false,
+				"showEditAction": false,
+				"headerMeta": "{terminalId} · {reportDate|date} · {transactionCount} transactions"
 			}
 		},
 		{
@@ -5036,12 +5060,22 @@
 						"title": "Transaction",
 						"icon": "FileDocument",
 						"content": {
-							"columns": 2,
+							"columns": 3,
 							"overrides": {
 								"cashier": {
 									"formatter": "userDisplayName"
 								}
-							}
+							},
+							"include": [
+								"reference",
+								"status",
+								"cashier",
+								"terminalId",
+								"priceMode",
+								"client",
+								"@self.created",
+								"settledAt"
+							]
 						}
 					},
 					{
@@ -5169,7 +5203,10 @@
 					"pos-tx-totals",
 					"pos-tx-related",
 					"pos-tx-history"
-				]
+				],
+				"follow": false,
+				"showEditAction": false,
+				"headerMeta": "{total|currency:EUR} · {settledAt|datetime}"
 			}
 		},
 		{

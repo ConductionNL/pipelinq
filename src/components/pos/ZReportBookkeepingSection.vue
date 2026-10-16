@@ -84,7 +84,7 @@
 						<tr v-if="!taxBreakdown.length">
 							<td colspan="3">
 								{{
-									t('pipelinq', 'No VAT breakdown — empty report.')
+									t('pipelinq', 'No VAT breakdown: the report is empty.')
 								}}
 							</td>
 						</tr>

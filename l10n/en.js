@@ -1315,7 +1315,6 @@ OC.L10N.register(
         "Email & Calendar Sync": "Email & Calendar Sync",
         "Email & calendar sync": "Email & calendar sync",
         "Email History": "Email History",
-        "Email Receipt": "Email Receipt",
         "Email Sync": "Email Sync",
         "Email address": "Email address",
         "Email address is required": "Email address is required",
@@ -2353,7 +2352,6 @@ OC.L10N.register(
         "No Ideal Customer Profile configured": "No Ideal Customer Profile configured",
         "No POS roles defined yet": "No POS roles defined yet",
         "No SLA": "No SLA",
-        "No VAT breakdown — empty report.": "No VAT breakdown — empty report.",
         "No actions configured.": "No actions configured.",
         "No active billing categories found": "No active billing categories found",
         "No activities yet": "No activities yet",
@@ -2895,7 +2893,6 @@ OC.L10N.register(
         "Prijzen incl. BTW": "Prices incl. VAT",
         "Primary": "Primary",
         "Print": "Print",
-        "Print Receipt": "Print Receipt",
         "Priority": "Priority",
         "Priority (lower wins failover)": "Priority (lower wins failover)",
         "Priority updated": "Priority updated",
@@ -7677,7 +7674,14 @@ OC.L10N.register(
         "Z-reports": "Z-reports",
         "To review": "To review",
         "Ready to book": "Ready to book",
-        "Booked": "Booked"
+        "Booked": "Booked",
+        "Print receipt": "Print receipt",
+        "Email receipt": "Email receipt",
+        "No VAT breakdown: the report is empty.": "No VAT breakdown: the report is empty.",
+        "Deposits": "Deposits",
+        "{total|currency:EUR} · {settledAt|datetime}": "{total|currency:EUR} · {settledAt|datetime}",
+        "{floatAt|datetime} to {closedAt|time}": "{floatAt|datetime} to {closedAt|time}",
+        "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transactions"
     },
     "nplurals=2; plural=(n != 1);"
 )
