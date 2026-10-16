@@ -70,7 +70,11 @@
 				"columns": [
 					{
 						"key": "receivedAt",
-						"label": "Received"
+						"label": "Received",
+						"formatter": "relativeDate",
+						"formatterOptions": {
+							"time": true
+						}
 					},
 					{
 						"key": "title",
@@ -101,7 +105,8 @@
 								"spam": "error",
 								"closed": "secondary"
 							}
-						}
+						},
+						"formatter": "enumLabel"
 					},
 					{
 						"key": "handledBy",
@@ -112,7 +117,8 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"footerNote": "Converting links an enquiry to a client, a contact person and a lead."
 			}
 		}
 	]

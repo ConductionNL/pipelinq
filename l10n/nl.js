@@ -7605,7 +7605,8 @@ OC.L10N.register(
         "{shown} of {total} enquiries · all statuses · newest first": "{shown} van {total} aanvragen · alle statussen · nieuwste eerst",
         "Filter by title, name or organisation": "Filter op titel, naam of organisatie",
         "Converted": "Omgezet",
-        "Spam": "Spam"
+        "Spam": "Spam",
+        "Converting links an enquiry to a client, a contact person and a lead.": "Omzetten koppelt een aanvraag aan een klant, een contactpersoon en een lead."
     },
     "nplurals=2; plural=(n != 1);"
 )

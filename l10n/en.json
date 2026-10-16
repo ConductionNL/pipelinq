@@ -7698,6 +7698,7 @@
         "{shown} of {total} enquiries · all statuses · newest first": "{shown} of {total} enquiries · all statuses · newest first",
         "Filter by title, name or organisation": "Filter by title, name or organisation",
         "Converted": "Converted",
-        "Spam": "Spam"
+        "Spam": "Spam",
+        "Converting links an enquiry to a client, a contact person and a lead.": "Converting links an enquiry to a client, a contact person and a lead."
     }
 }

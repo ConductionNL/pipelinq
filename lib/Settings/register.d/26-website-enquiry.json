@@ -193,7 +193,13 @@
             ],
             "default": "new",
             "title": "Status",
-            "facetable": true
+            "facetable": true,
+            "x-enum-labels": {
+              "new": "New",
+              "converted": "Converted",
+              "spam": "Spam",
+              "closed": "Closed"
+            }
           },
           "client": {
             "type": "string",
