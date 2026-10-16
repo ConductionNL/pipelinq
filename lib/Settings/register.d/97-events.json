@@ -1,0 +1,256 @@
+{
+    "$comment": "Events and their registrations (PqEvenement, round 12): an event under a campaign with a place, a number of places and a sign-up form, and one eventRegistration per person or household. Additive: two new schemas, nothing existing changes. Needs an occ upgrade (the fragment hash moves the register version) before the event pages can show data.",
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "event",
+                    "eventRegistration"
+                ]
+            }
+        },
+        "schemas": {
+            "event": {
+                "slug": "event",
+                "title": "Public event",
+                "icon": "CalendarStar",
+                "version": "1.0.0",
+                "summary": "A meeting residents or customers sign up for: an information evening, a webinar, a market.",
+                "description": "An event belongs to a campaign, has a place and a number of places, and collects registrations through a sign-up form on the portal. Every registration is an eventRegistration object pointing at the event, so the event page counts and lists them without a stored counter that can drift.",
+                "x-schema-org": "schema:Event",
+                "required": [
+                    "name",
+                    "startsAt"
+                ],
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "location"
+                },
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "What the event is called, as residents read it.",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "example": "Informatieavond warmtenet Oost"
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Whether people can still sign up.",
+                        "enum": [
+                            "draft",
+                            "open",
+                            "full",
+                            "closed",
+                            "cancelled"
+                        ],
+                        "default": "draft",
+                        "facetable": true,
+                        "x-enum-labels": {
+                            "draft": "Draft",
+                            "open": "Registration open",
+                            "full": "No places left",
+                            "closed": "Registration closed",
+                            "cancelled": "Cancelled"
+                        },
+                        "example": "open"
+                    },
+                    "identifier": {
+                        "type": "string",
+                        "title": "Event reference",
+                        "description": "The reference the municipality quotes for this event.",
+                        "example": "EVT-2026-0012"
+                    },
+                    "campaignId": {
+                        "type": "string",
+                        "title": "Campaign",
+                        "description": "The campaign this event is part of.",
+                        "format": "uuid"
+                    },
+                    "startsAt": {
+                        "type": "string",
+                        "title": "Starts at",
+                        "description": "When the event begins.",
+                        "format": "date-time",
+                        "example": "2026-11-12T19:30:00+01:00"
+                    },
+                    "endsAt": {
+                        "type": "string",
+                        "title": "Ends at",
+                        "description": "When the event ends.",
+                        "format": "date-time",
+                        "example": "2026-11-12T21:30:00+01:00"
+                    },
+                    "location": {
+                        "type": "string",
+                        "title": "Location",
+                        "description": "Where it takes place, as an address residents can find.",
+                        "example": "Wijkcentrum De Linde, Lindelaan 2"
+                    },
+                    "room": {
+                        "type": "string",
+                        "title": "Room",
+                        "description": "The room inside the location.",
+                        "example": "Grote zaal"
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "title": "Places",
+                        "description": "How many people can attend. Registrations past this number go on the waiting list.",
+                        "minimum": 0,
+                        "example": 80
+                    },
+                    "hosts": {
+                        "type": "string",
+                        "title": "Hosts",
+                        "description": "Who receives the guests.",
+                        "example": "Pieter Jansen, Lotte Visser"
+                    },
+                    "reminderAt": {
+                        "type": "string",
+                        "title": "Reminder",
+                        "description": "When the reminder mail goes out to everyone registered.",
+                        "format": "date-time",
+                        "example": "2026-11-10T18:00:00+01:00"
+                    },
+                    "formTitle": {
+                        "type": "string",
+                        "title": "Form",
+                        "description": "The sign-up form on the portal.",
+                        "example": "Aanmelden informatieavond"
+                    },
+                    "formUrl": {
+                        "type": "string",
+                        "title": "On page",
+                        "description": "The portal page that carries the sign-up form.",
+                        "example": "zuiddrecht.nl/warmtenet-oost"
+                    },
+                    "formQuestions": {
+                        "type": "string",
+                        "title": "Questions",
+                        "description": "What the form asks.",
+                        "example": "naam, adres, aantal personen, een vraag voor de avond"
+                    },
+                    "formClosesAt": {
+                        "type": "string",
+                        "title": "Closes",
+                        "description": "When the form stops accepting registrations.",
+                        "format": "date-time",
+                        "example": "2026-11-11T12:00:00+01:00"
+                    }
+                }
+            },
+            "eventRegistration": {
+                "slug": "eventRegistration",
+                "title": "Event registration",
+                "icon": "AccountCheckOutline",
+                "version": "1.0.0",
+                "summary": "One person or household signed up for an event.",
+                "description": "A registration names who signed up, where they live, how they found the event and whether they have a place or are on the waiting list. A registration from someone Pipelinq did not know yet also creates a contact and a lead, which contactId and leadId point at.",
+                "required": [
+                    "eventId",
+                    "name"
+                ],
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "address"
+                },
+                "properties": {
+                    "eventId": {
+                        "type": "string",
+                        "title": "Event",
+                        "description": "The event this registration is for.",
+                        "format": "uuid",
+                        "facetable": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "Who signed up.",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "example": "Sanne de Vries"
+                    },
+                    "address": {
+                        "type": "string",
+                        "title": "Address",
+                        "description": "Where they live.",
+                        "example": "Lindelaan 14"
+                    },
+                    "source": {
+                        "type": "string",
+                        "title": "Registered via",
+                        "description": "How they found the event.",
+                        "enum": [
+                            "newsletter",
+                            "webform",
+                            "social",
+                            "desk"
+                        ],
+                        "facetable": true,
+                        "x-enum-labels": {
+                            "newsletter": "Newsletter",
+                            "webform": "Web form",
+                            "social": "Social post",
+                            "desk": "At the desk"
+                        },
+                        "example": "newsletter"
+                    },
+                    "partySize": {
+                        "type": "integer",
+                        "title": "Party size",
+                        "description": "How many people come on this registration.",
+                        "minimum": 1,
+                        "default": 1,
+                        "example": 1
+                    },
+                    "registeredAt": {
+                        "type": "string",
+                        "title": "Registered on",
+                        "description": "When they signed up.",
+                        "format": "date-time",
+                        "example": "2026-10-02T09:12:00+02:00"
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Whether they have a place.",
+                        "enum": [
+                            "confirmed",
+                            "waitlist",
+                            "cancelled"
+                        ],
+                        "default": "confirmed",
+                        "facetable": true,
+                        "x-enum-labels": {
+                            "confirmed": "Confirmed",
+                            "waitlist": "Waiting list",
+                            "cancelled": "Cancelled"
+                        },
+                        "example": "confirmed"
+                    },
+                    "waitlistPosition": {
+                        "type": "integer",
+                        "title": "Waiting list position",
+                        "description": "Their place on the waiting list, 1 first.",
+                        "minimum": 1
+                    },
+                    "contactId": {
+                        "type": "string",
+                        "title": "Contact",
+                        "description": "The contact this registration made or matched.",
+                        "format": "uuid"
+                    },
+                    "leadId": {
+                        "type": "string",
+                        "title": "Lead",
+                        "description": "The lead made for someone Pipelinq did not know yet.",
+                        "format": "uuid"
+                    }
+                }
+            }
+        }
+    }
+}

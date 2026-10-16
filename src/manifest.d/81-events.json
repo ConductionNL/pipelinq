@@ -1,0 +1,445 @@
+{
+	"menu": [
+		{
+			"id": "MarketingGroup",
+			"label": "Marketing",
+			"order": 130,
+			"children": [
+				{
+					"id": "Events",
+					"label": "Public events",
+					"icon": "CalendarStar",
+					"route": "Events",
+					"order": 47
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Events",
+			"_note": "Events as a declarative type:index page (PqEvenement round 12). An event is a public gathering under a campaign with places and a sign-up form; its registrations are eventRegistration objects.",
+			"route": "/events",
+			"type": "index",
+			"title": "Public events",
+			"config": {
+				"register": "pipelinq",
+				"schema": "event",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"sortKey": "startsAt",
+				"sortOrder": "desc",
+				"countText": "{shown} of {total} events",
+				"searchPlaceholder": "Filter by name or location",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board"
+				],
+				"board": {
+					"statusField": "status"
+				},
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New event"
+					}
+				],
+				"addLabel": "New event",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Registration open",
+						"filter": {
+							"status": "open"
+						},
+						"showCount": true
+					},
+					{
+						"label": "No places left",
+						"filter": {
+							"status": "full"
+						},
+						"showCount": true
+					}
+				],
+				"columns": [
+					"name",
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"draft": "default",
+								"open": "success",
+								"full": "warning",
+								"closed": "default",
+								"cancelled": "error"
+							}
+						}
+					},
+					{
+						"key": "startsAt",
+						"label": "Starts at",
+						"formatter": "datetime"
+					},
+					"location",
+					"capacity"
+				]
+			}
+		},
+		{
+			"id": "EventDetail",
+			"_note": "Event record as a declarative type:detail page (PqEvenement). Header: the status and type pills, the trail back to Campaigns, the date and place line. Four counts of the event's registrations, then one tab strip: Overview (the event data), Registrations (the registration list, counted), Sign-up form, History. The side column carries the sign-up form, the location and the history, as the board draws them.",
+			"route": "/events/:id",
+			"type": "detail",
+			"title": "Public event",
+			"config": {
+				"register": "pipelinq",
+				"schema": "event",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"follow": false,
+				"showTypeEyebrow": false,
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"draft": "Draft",
+						"open": "Registration open",
+						"full": "No places left",
+						"closed": "Registration closed",
+						"cancelled": "Cancelled"
+					},
+					"colorMap": {
+						"draft": "default",
+						"open": "success",
+						"full": "warning",
+						"closed": "default",
+						"cancelled": "error"
+					}
+				},
+				"typePill": {
+					"text": "Public event",
+					"variant": "purple"
+				},
+				"breadcrumb": {
+					"label": "Campaigns",
+					"route": "Campaigns",
+					"separator": "/"
+				},
+				"headerMeta": "{startsAt|datetime} to {endsAt|datetime} · {location}",
+				"actionsMenu": {
+					"label": "More"
+				},
+				"widgets": [
+					{
+						"id": "event-registered",
+						"type": "stat",
+						"title": "Registered",
+						"content": {
+							"label": "Registered",
+							"caption": "of the places",
+							"source": {
+								"register": "pipelinq",
+								"schema": "eventRegistration",
+								"metric": "count",
+								"filter": {
+									"eventId": "@objectId",
+									"status": "confirmed"
+								}
+							}
+						}
+					},
+					{
+						"id": "event-waitlist",
+						"type": "stat",
+						"title": "Waiting list",
+						"content": {
+							"label": "Waiting list",
+							"caption": "moves up when someone cancels",
+							"source": {
+								"register": "pipelinq",
+								"schema": "eventRegistration",
+								"metric": "count",
+								"filter": {
+									"eventId": "@objectId",
+									"status": "waitlist"
+								}
+							}
+						}
+					},
+					{
+						"id": "event-from-newsletter",
+						"type": "stat",
+						"title": "From the newsletter",
+						"content": {
+							"label": "From the newsletter",
+							"caption": "the rest came via the website and posts",
+							"source": {
+								"register": "pipelinq",
+								"schema": "eventRegistration",
+								"metric": "count",
+								"filter": {
+									"eventId": "@objectId",
+									"source": "newsletter"
+								}
+							}
+						}
+					},
+					{
+						"id": "event-new-contacts",
+						"type": "stat",
+						"title": "New in pipelinq",
+						"content": {
+							"label": "New in pipelinq",
+							"caption": "every registration without an existing record became a contact and a lead",
+							"source": {
+								"register": "pipelinq",
+								"schema": "eventRegistration",
+								"metric": "count",
+								"filter": {
+									"eventId": "@objectId",
+									"leadId": {
+										"isnull": false
+									}
+								}
+							}
+						}
+					},
+					{
+						"id": "event-panels",
+						"type": "tabs",
+						"title": "Public event",
+						"content": {
+							"ariaLabel": "Public event",
+							"tabs": [
+								{
+									"widgetId": "event-data",
+									"label": "Overview"
+								},
+								{
+									"widgetId": "event-registrations",
+									"label": "Registrations",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "event-form",
+									"label": "Sign-up form"
+								},
+								{
+									"widgetId": "event-history",
+									"label": "History"
+								}
+							]
+						}
+					},
+					{
+						"id": "event-data",
+						"type": "data",
+						"title": "Event details",
+						"content": {
+							"title": "Event details",
+							"columns": 3,
+							"include": [
+								"name",
+								"status",
+								"startsAt",
+								"endsAt",
+								"location",
+								"room",
+								"capacity",
+								"hosts",
+								"reminderAt",
+								"identifier"
+							]
+						}
+					},
+					{
+						"id": "event-registrations",
+						"type": "object-list",
+						"title": "Registrations",
+						"content": {
+							"register": "pipelinq",
+							"schema": "eventRegistration",
+							"filter": {
+								"eventId": "@objectId"
+							},
+							"sort": {
+								"field": "registeredAt",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Name"
+								},
+								{
+									"key": "address",
+									"label": "Address"
+								},
+								{
+									"key": "source",
+									"label": "Registered via"
+								},
+								{
+									"key": "registeredAt",
+									"label": "Registered on"
+								},
+								{
+									"key": "status",
+									"label": "Status",
+									"widget": "badge",
+									"widgetProps": {
+										"colorMap": {
+											"confirmed": "success",
+											"waitlist": "warning",
+											"cancelled": "default"
+										}
+									}
+								}
+							],
+							"limit": 25,
+							"allowCreate": true,
+							"addLabel": "Add registration",
+							"emptyText": "Nobody has signed up yet."
+						}
+					},
+					{
+						"id": "event-form",
+						"type": "facts",
+						"title": "Sign-up form",
+						"content": {
+							"fields": [
+								{
+									"path": "formTitle",
+									"label": "Form"
+								},
+								{
+									"path": "formUrl",
+									"label": "On page"
+								},
+								{
+									"path": "formQuestions",
+									"label": "Questions"
+								},
+								{
+									"path": "formClosesAt",
+									"label": "Closes",
+									"format": "date-long"
+								}
+							],
+							"emptyText": "No sign-up form yet."
+						}
+					},
+					{
+						"id": "event-location",
+						"type": "facts",
+						"title": "Location",
+						"content": {
+							"fields": [
+								{
+									"path": "room",
+									"label": "Room"
+								},
+								{
+									"path": "hosts",
+									"label": "Hosts"
+								},
+								{
+									"path": "reminderAt",
+									"label": "Reminder",
+									"format": "date-long"
+								}
+							]
+						}
+					},
+					{
+						"id": "event-history",
+						"type": "timeline",
+						"title": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc"
+						}
+					},
+					{
+						"id": "event-side-history",
+						"type": "timeline",
+						"title": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc",
+							"limit": 4
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "event-registered",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "event-waitlist",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "event-from-newsletter",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "event-new-contacts",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "5",
+						"widgetId": "event-panels",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 10,
+						"showTitle": false
+					}
+				],
+				"sideColumn": [
+					"event-form",
+					"event-location",
+					"event-side-history"
+				],
+				"sidebar": {
+					"enabled": false
+				}
+			}
+		}
+	]
+}
