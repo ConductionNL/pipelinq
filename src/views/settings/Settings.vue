@@ -310,6 +310,25 @@
 			<CtiEventLog v-if="isAdmin && isConfigured" />
 		</template>
 
+		<template #tab-integrations>
+			<!-- Board PqIntegrations: the connections this app declares, as
+			     integriq checks them. Until the library draws them here, the
+			     tab opens the in-app list scoped to this app. -->
+			<NcSettingsSection
+				class="cn-settings-section--wide"
+				:name="t('pipelinq', 'Integrations')"
+				:description="
+					t(
+						'pipelinq',
+						'The connections Pipelinq declares, checked by integriq.',
+					)
+				">
+				<a :href="integrationsUrl" class="pos-lookup-link">
+					{{ t('pipelinq', 'Open the integrations') }}
+				</a>
+			</NcSettingsSection>
+		</template>
+
 		<template #tab-pos>
 			<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
 			     who processes the money) and `PosTenderTypeList` (tender types — how
@@ -455,6 +474,12 @@ const ADMIN_TABS = [
 		label: 'Connections',
 		title: 'Pipelinq settings',
 		note: 'The connections: telephony, messages, xWiki and Shillinq',
+	},
+	{
+		id: 'integrations',
+		label: 'Integrations',
+		title: 'Pipelinq settings: integrations',
+		note: 'Applies to the whole organisation; integriq checks every connection',
 	},
 	{
 		id: 'pos',
@@ -623,6 +648,16 @@ export default {
 		 */
 		breadcrumbNote() {
 			return t('pipelinq', this.openTab.note)
+		},
+
+		/**
+		 * The in-app integrations list, scoped to this app.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		integrationsUrl() {
+			return generateUrl('/apps/pipelinq/settings/integrations?app=pipelinq')
 		},
 
 		/**

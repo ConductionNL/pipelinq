@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: The admin page splits into tabs
-The Pipelinq admin page MUST draw a tab strip with the tabs Algemeen, Koppelingen, Kassa, Marketing en gegevens and Klantportaal, MUST mount only the open tab's sections, and MUST keep every section the page had on one of the tabs. The open tab MUST be in the address, and the title and the path MUST name it.
+The Pipelinq admin page MUST draw a tab strip with the tabs Algemeen, Koppelingen, Integraties, Kassa, Marketing en gegevens and Klantportaal, MUST mount only the open tab's sections, and MUST keep every section the page had on one of the tabs. The open tab MUST be in the address, and the title and the path MUST name it.
 
 #### Scenario: An admin opens the Kassa tab
 @e2e exclude Asserted in tests/vitest/adminSettingsTabs.spec.js; the pixel check against board PqBeheerKassa covers the drawn page.

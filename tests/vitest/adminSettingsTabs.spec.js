@@ -71,10 +71,11 @@ describe('the admin page tabs', () => {
 		expect(template).toMatch(/@tabChange="onTabChange"/)
 	})
 
-	it('has the five tabs in the board order, Algemeen first', () => {
+	it('has the six tabs in the board order, Algemeen first', () => {
 		expect(adminTabs().map((entry) => entry.id)).toEqual([
 			'general',
 			'connections',
+			'integrations',
 			'pos',
 			'marketing',
 			'portal',
@@ -153,6 +154,13 @@ describe('the admin page tabs', () => {
 		].map((tag) => markup.indexOf(tag))
 		expect(order.every((index) => index > -1)).toBe(true)
 		expect(order).toEqual([...order].sort((a, b) => a - b))
+	})
+
+	it('opens the integrations from the Integraties tab', () => {
+		expect(tab('integrations')).toContain(':href="integrationsUrl"')
+		expect(source).toContain(
+			"generateUrl('/apps/pipelinq/settings/integrations?app=pipelinq')",
+		)
 	})
 
 	it('puts the customer portal on Klantportaal', () => {
