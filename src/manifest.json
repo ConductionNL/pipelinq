@@ -3895,7 +3895,8 @@
 				"headerButtons": [
 					{
 						"action": "export",
-						"label": "Download"
+						"label": "Download",
+						"icon": "Download"
 					},
 					{
 						"action": "actions-menu"
@@ -3988,7 +3989,8 @@
 										]
 									},
 									"deadline[lt]": "@now"
-								}
+								},
+								"zeroText": "none past the deadline"
 							}
 						}
 					},
@@ -4031,7 +4033,8 @@
 										]
 									},
 									"assigneeUserId": "@me"
-								}
+								},
+								"zeroText": "none for you"
 							}
 						}
 					},
@@ -4076,7 +4079,8 @@
 									"assigneeUserId": {
 										"isnull": true
 									}
-								}
+								},
+								"zeroText": "all assigned"
 							}
 						}
 					},
@@ -4120,7 +4124,8 @@
 						"label": "Task",
 						"secondary": "{type} · {clientId.name} · {callbackPhoneNumber}",
 						"cellClass": "cn-cell--strong",
-						"sortable": true
+						"sortable": true,
+						"width": "34%"
 					},
 					{
 						"key": "type",
@@ -4214,6 +4219,11 @@
 						"callbackRequest": "purple",
 						"followUpTask": "success",
 						"informationRequest": "warning"
+					},
+					"labels": {
+						"callbackRequest": "Callback request",
+						"followUpTask": "Follow-up task",
+						"informationRequest": "Information request"
 					}
 				},
 				"statusPill": {
@@ -4223,16 +4233,15 @@
 						"in_progress": "primary",
 						"completed": "success",
 						"expired": "error"
+					},
+					"labels": {
+						"open": "Open",
+						"in_progress": "In progress",
+						"completed": "Completed",
+						"expired": "Expired"
 					}
 				},
 				"showTypeEyebrow": false,
-				"headerFields": [
-					{
-						"key": "deadline",
-						"format": "date",
-						"warnWhenPast": true
-					}
-				],
 				"stageField": "status",
 				"headerActions": [
 					{
@@ -4240,11 +4249,7 @@
 						"label": "Call them",
 						"type": "navigate",
 						"target": "tel:@object.callbackPhoneNumber",
-						"icon": "PhoneOutline",
-						"visibleWhen": {
-							"field": "callbackPhoneNumber",
-							"op": "notEmpty"
-						}
+						"icon": "PhoneOutline"
 					},
 					{
 						"id": "complete",
@@ -4294,37 +4299,31 @@
 					"title": "What now?",
 					"stages": {
 						"open": {
-							"title": "What now? Get this task done before the deadline",
+							"title": "What now? Call back before the deadline",
 							"checklist": [
 								{
 									"label": "The client is linked",
 									"doneField": "clientId"
 								},
 								{
-									"label": "A handler is assigned",
-									"doneField": "assigneeUserId"
-								},
-								{
-									"label": "The result is written down",
-									"doneField": "resultText"
+									"label": "Call back",
+									"doneField": "resultText",
+									"hint": "Then write down what came out of it"
 								}
 							],
 							"after": "Then: write down the result and finish the task"
 						},
 						"in_progress": {
-							"title": "What now? Get this task done before the deadline",
+							"title": "What now? Call back before the deadline",
 							"checklist": [
 								{
 									"label": "The client is linked",
 									"doneField": "clientId"
 								},
 								{
-									"label": "A handler is assigned",
-									"doneField": "assigneeUserId"
-								},
-								{
-									"label": "The result is written down",
-									"doneField": "resultText"
+									"label": "Call back",
+									"doneField": "resultText",
+									"hint": "Then write down what came out of it"
 								}
 							],
 							"after": "Then: write down the result and finish the task"
@@ -4386,6 +4385,17 @@
 								},
 								"contactMomentSummary": {
 									"gridColumn": 3
+								},
+								"deadline": {
+									"label": "Time limit",
+									"formatter": "datetime"
+								},
+								"callbackPhoneNumber": {
+									"label": "Callback number"
+								},
+								"assigneeGroupId": {
+									"label": "Group",
+									"widget": "group"
 								}
 							}
 						}
@@ -4451,7 +4461,21 @@
 							]
 						}
 					]
-				}
+				},
+				"bodyWidgets": [
+					{
+						"id": "task-finish",
+						"component": "TaskFinishSection",
+						"title": "Finish this task",
+						"placement": "after-data",
+						"props": {
+							"objectId": "@objectId",
+							"status": "@object.status"
+						}
+					}
+				],
+				"follow": false,
+				"headerMeta": "due {deadline|datetime}"
 			}
 		},
 		{

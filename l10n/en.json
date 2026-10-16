@@ -7715,6 +7715,18 @@
         "The client is linked": "The client is linked",
         "The result is written down": "The result is written down",
         "Then: write down the result and finish the task": "Then: write down the result and finish the task",
-        "Call them": "Call them"
+        "Call them": "Call them",
+        "none past the deadline": "none past the deadline",
+        "none for you": "none for you",
+        "all assigned": "all assigned",
+        "Finish this task": "Finish this task",
+        "What came out of the call?": "What came out of the call?",
+        "Log attempt": "Log attempt",
+        "The attempt is logged.": "The attempt is logged.",
+        "Could not save this on the task.": "Could not save this on the task.",
+        "due {deadline|datetime}": "due {deadline|datetime}",
+        "Callback number": "Callback number",
+        "What now? Call back before the deadline": "What now? Call back before the deadline",
+        "Then write down what came out of it": "Then write down what came out of it"
     }
 }

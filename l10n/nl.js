@@ -7622,7 +7622,19 @@ OC.L10N.register(
         "The client is linked": "De klant is gekoppeld",
         "The result is written down": "Het resultaat is opgeschreven",
         "Then: write down the result and finish the task": "Daarna: schrijf het resultaat op en rond de taak af",
-        "Call them": "Bellen"
+        "Call them": "Bellen",
+        "none past the deadline": "niets over tijd",
+        "none for you": "niets voor jou",
+        "all assigned": "allemaal toegewezen",
+        "Finish this task": "Deze taak afronden",
+        "What came out of the call?": "Wat kwam er uit het terugbellen?",
+        "Log attempt": "Poging vastleggen",
+        "The attempt is logged.": "De poging is vastgelegd.",
+        "Could not save this on the task.": "Dit kon niet op de taak worden bewaard.",
+        "due {deadline|datetime}": "uiterlijk {deadline|datetime}",
+        "Callback number": "Terugbelnummer",
+        "What now? Call back before the deadline": "Wat nu? Terugbellen binnen de termijn",
+        "Then write down what came out of it": "Schrijf daarna op wat eruit kwam"
     },
     "nplurals=2; plural=(n != 1);"
 )

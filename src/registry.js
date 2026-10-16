@@ -134,6 +134,7 @@ import SurveyResponseRateWidget from './components/satisfaction/SurveyResponseRa
 //     top-level menu item linking to this card grid. ---
 import ServiceHubOverview from './components/service/ServiceHubOverview.vue'
 import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
+import TaskFinishSection from './components/TaskFinishSection.vue'
 // --- Ticket page, simple structure (simple-ticket-page): the conversation to
 //     read, and the Answer dialog that wraps CustomerReplySection. ---
 import TicketConversationSection from './components/TicketConversationSection.vue'
@@ -1002,6 +1003,11 @@ const registry = {
 		kind: 'section',
 		component: TicketConversationSection,
 		_note: "simple-ticket-page. The customer's portal replies and the employee's answers as one thread (library CnConversationThread), read only. It reads the ticket from cnSectionContext. Answers are written in TicketAnswerDialog, so one component saves them.",
+	},
+	TaskFinishSection: {
+		kind: 'section',
+		component: TaskFinishSection,
+		_note: 'TaskDetail in-body section (PqTaak "Deze taak afronden"): a result field with Log attempt and Finish, posting to the callback endpoints, which check the assignee and the status move server side.',
 	},
 	CustomerReplySection: {
 		kind: 'section',
