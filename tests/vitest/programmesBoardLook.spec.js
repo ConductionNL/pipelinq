@@ -57,6 +57,7 @@ describe('project page', () => {
 			'side-client',
 			'side-team',
 			'side-term',
+			'side-history',
 		])
 	})
 })

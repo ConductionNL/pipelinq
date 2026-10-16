@@ -203,37 +203,72 @@
 					},
 					{
 						"id": "prog-plan",
-						"type": "data",
+						"type": "facts",
 						"title": "Plan",
 						"icon": "ClipboardTextOutline",
 						"content": {
-							"title": "Plan",
-							"columns": 2,
-							"include": [
-								"name",
-								"client",
-								"orgUnit",
-								"startDate",
-								"endDate",
-								"status",
-								"owner",
-								"progressMode",
-								"description"
-							],
-							"overrides": {
-								"owner": {
-									"formatter": "userDisplayName"
+							"fields": [
+								{
+									"label": "Project",
+									"path": "name"
 								},
-								"status": {
-									"editable": false
+								{
+									"label": "Client",
+									"path": "client",
+									"resolve": {
+										"register": "pipelinq",
+										"schema": "client",
+										"labelField": "name"
+									}
+								},
+								{
+									"label": "Org unit",
+									"path": "orgUnit"
+								},
+								{
+									"label": "Start date",
+									"path": "startDate",
+									"format": "date-long"
+								},
+								{
+									"label": "End date",
+									"path": "endDate",
+									"format": "date-long"
+								},
+								{
+									"label": "Status",
+									"path": "status",
+									"map": {
+										"planned": "Planned",
+										"active": "Active",
+										"onHold": "On hold",
+										"closed": "Closed"
+									}
+								},
+								{
+									"label": "Owner",
+									"path": "owner"
+								},
+								{
+									"label": "Progress mode",
+									"path": "progressMode",
+									"map": {
+										"manual": "Set by hand",
+										"fromTasks": "From finished tasks",
+										"fromEffort": "From booked effort"
+									}
+								},
+								{
+									"as": "text",
+									"path": "description"
 								}
-							}
+							]
 						}
 					},
 					{
 						"id": "prog-tasks",
 						"type": "object-list",
-						"title": "Tasks",
+						"title": "Tasks in this cycle",
 						"icon": "ClipboardCheckOutline",
 						"content": {
 							"register": "pipelinq",
@@ -274,14 +309,16 @@
 											"inProgress": "purple",
 											"closed": "success"
 										}
-									}
+									},
+									"formatter": "enumLabel"
 								}
 							],
 							"allowCreate": true,
 							"allowEdit": true,
 							"addLabel": "Add task",
 							"limit": 25,
-							"emptyText": "No tasks on this project yet."
+							"emptyText": "No tasks on this project yet.",
+							"footerNote": "Unfinished tasks move to the next cycle when you close this one."
 						}
 					},
 					{
@@ -321,7 +358,8 @@
 											"open": "purple",
 											"closed": "default"
 										}
-									}
+									},
+									"formatter": "enumLabel"
 								}
 							],
 							"allowCreate": true,
@@ -520,7 +558,7 @@
 					{
 						"id": "side-term",
 						"type": "facts",
-						"title": "Term",
+						"title": "Project term",
 						"icon": "CalendarRange",
 						"content": {
 							"fields": [
@@ -581,14 +619,16 @@
 											"inProgress": "purple",
 											"closed": "success"
 										}
-									}
+									},
+									"formatter": "enumLabel"
 								}
 							],
 							"allowCreate": true,
 							"allowEdit": true,
 							"addLabel": "Add task",
 							"limit": 25,
-							"emptyText": "No tasks on this project yet."
+							"emptyText": "No tasks on this project yet.",
+							"footerNote": "Unfinished tasks move to the next cycle when you close this one."
 						}
 					},
 					{
@@ -628,7 +668,8 @@
 											"open": "purple",
 											"closed": "default"
 										}
-									}
+									},
+									"formatter": "enumLabel"
 								}
 							],
 							"allowCreate": true,
@@ -663,6 +704,15 @@
 							],
 							"limit": 25,
 							"emptyText": "No work linked yet. The project only points at records; each app keeps its own."
+						}
+					},
+					{
+						"id": "side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"content": {
+							"limit": 4
 						}
 					}
 				],
@@ -715,7 +765,8 @@
 				"sideColumn": [
 					"side-client",
 					"side-team",
-					"side-term"
+					"side-term",
+					"side-history"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -732,7 +783,9 @@
 							]
 						}
 					]
-				}
+				},
+				"follow": false,
+				"identifierField": "id"
 			}
 		}
 	]
