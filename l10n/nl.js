@@ -7599,7 +7599,10 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "deadline is today or past": "termijn is vandaag of verstreken",
+        "the customer has replied": "de klant heeft gereageerd",
+        "nothing to do until they reply": "niets te doen tot ze reageren"
     },
     "nplurals=2; plural=(n != 1);"
 )

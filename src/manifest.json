@@ -5275,7 +5275,7 @@
 			"route": "/my-work",
 			"type": "dashboard",
 			"title": "My work",
-			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. Not here, each named in the pull request: the share answered within the deadline (needs a ticket.answeredInTime flag), the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
+			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. Not here, each named in the pull request: the share answered within the deadline (needs a ticket.answeredInTime flag), the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object). ROUND 12 (PqMijnWerk): the three ticket lists say in their header what puts a ticket there instead of linking to the ticket list, and their pill names the kind of ticket (request, complaint, contact moment) as the board does; the status is what the list itself already says.",
 			"config": {
 				"showRefresh": true,
 				"showWidgetActions": false,
@@ -5562,13 +5562,6 @@
 								"tickets"
 							]
 						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
-						},
 						"content": {
 							"register": "pipelinq",
 							"schema": "ticket",
@@ -5638,20 +5631,16 @@
 								]
 							},
 							"pill": {
-								"field": "status",
+								"field": "ticketType",
 								"labels": {
-									"new": "New",
-									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer",
-									"resolved": "Resolved",
-									"completed": "Completed"
+									"request": "Request",
+									"complaint": "Complaint",
+									"interaction": "Contact moment"
 								},
 								"colorMap": {
-									"new": "info",
-									"in_progress": "warning",
-									"awaiting_customer": "default",
-									"resolved": "success",
-									"completed": "success"
+									"request": "info",
+									"complaint": "error",
+									"interaction": "default"
 								}
 							},
 							"rowRoute": "TicketDetail",
@@ -5695,7 +5684,8 @@
 									"brief": "Letter",
 									"social": "Social media"
 								}
-							}
+							},
+							"headerNote": "deadline is today or past"
 						}
 					},
 					{
@@ -5709,13 +5699,6 @@
 								"all",
 								"tickets"
 							]
-						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
 						},
 						"content": {
 							"register": "pipelinq",
@@ -5785,20 +5768,16 @@
 								]
 							},
 							"pill": {
-								"field": "status",
+								"field": "ticketType",
 								"labels": {
-									"new": "New",
-									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer",
-									"resolved": "Resolved",
-									"completed": "Completed"
+									"request": "Request",
+									"complaint": "Complaint",
+									"interaction": "Contact moment"
 								},
 								"colorMap": {
-									"new": "info",
-									"in_progress": "warning",
-									"awaiting_customer": "default",
-									"resolved": "success",
-									"completed": "success"
+									"request": "info",
+									"complaint": "error",
+									"interaction": "default"
 								}
 							},
 							"rowRoute": "TicketDetail",
@@ -5842,7 +5821,8 @@
 									"brief": "Letter",
 									"social": "Social media"
 								}
-							}
+							},
+							"headerNote": "the customer has replied"
 						}
 					},
 					{
@@ -5856,13 +5836,6 @@
 								"all",
 								"tickets"
 							]
-						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
 						},
 						"content": {
 							"register": "pipelinq",
@@ -5921,20 +5894,16 @@
 								]
 							},
 							"pill": {
-								"field": "status",
+								"field": "ticketType",
 								"labels": {
-									"new": "New",
-									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer",
-									"resolved": "Resolved",
-									"completed": "Completed"
+									"request": "Request",
+									"complaint": "Complaint",
+									"interaction": "Contact moment"
 								},
 								"colorMap": {
-									"new": "info",
-									"in_progress": "warning",
-									"awaiting_customer": "default",
-									"resolved": "success",
-									"completed": "success"
+									"request": "info",
+									"complaint": "error",
+									"interaction": "default"
 								}
 							},
 							"rowRoute": "TicketDetail",
@@ -5978,7 +5947,8 @@
 									"brief": "Letter",
 									"social": "Social media"
 								}
-							}
+							},
+							"headerNote": "nothing to do until they reply"
 						}
 					},
 					{

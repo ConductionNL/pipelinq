@@ -7672,7 +7672,10 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "deadline is today or past": "deadline is today or past",
+        "the customer has replied": "the customer has replied",
+        "nothing to do until they reply": "nothing to do until they reply"
     },
     "nplurals=2; plural=(n != 1);"
 )
