@@ -66,6 +66,11 @@ import ArticleContentSection from './components/marketing/ArticleContentSection.
 import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
 import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
+import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
+import ListSubscriberViewSection from './components/marketing/ListSubscriberViewSection.vue'
+import SocialPostHeaderActions from './components/marketing/SocialPostHeaderActions.vue'
+import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
+import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
 // --- Mailing-list memberships (marketing-lists-and-double-opt-in). One
 //     kind:'section' bound either to a list (the mailing list detail page) or
 //     to a contact (the contact detail page): the row is the same row read
@@ -74,11 +79,6 @@ import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
 //     because a membership is read through its STATE and needs the chip
 //     vocabulary, and because the list view leads with per-state counts that
 //     summaryAggregates cannot express. ---
-import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
-import ListSubscriberViewSection from './components/marketing/ListSubscriberViewSection.vue'
-import SocialPostHeaderActions from './components/marketing/SocialPostHeaderActions.vue'
-import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
-import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
 import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
 import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 // --- Cash-shift detail — declarative type:"detail": the closing count is its
