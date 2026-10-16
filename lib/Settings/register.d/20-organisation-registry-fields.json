@@ -18,19 +18,32 @@
             "title": "Legal form",
             "description": "The legal form as registered with the Chamber of Commerce.",
             "enum": [
-              "Eenmanszaak",
-              "Vennootschap onder firma",
-              "Maatschap",
-              "Commanditaire vennootschap",
-              "Besloten vennootschap",
-              "Naamloze vennootschap",
-              "Coöperatie",
-              "Vereniging",
-              "Stichting",
-              "Overheidsorgaan",
-              "Overig"
+              "eenmanszaak",
+              "vof",
+              "maatschap",
+              "cv",
+              "bv",
+              "nv",
+              "cooperatie",
+              "vereniging",
+              "stichting",
+              "overheid",
+              "overig"
             ],
-            "facetable": true
+            "facetable": true,
+            "x-enum-labels": {
+              "eenmanszaak": "Sole proprietorship",
+              "vof": "General partnership",
+              "maatschap": "Professional partnership",
+              "cv": "Limited partnership",
+              "bv": "Private limited company",
+              "nv": "Public limited company",
+              "cooperatie": "Cooperative",
+              "vereniging": "Association",
+              "stichting": "Foundation",
+              "overheid": "Public body",
+              "overig": "Other legal form"
+            }
           },
           "place": {
             "type": "string",
