@@ -7672,7 +7672,20 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Identifier": "Identifier",
+        "{shown} of {total} transactions · newest first": "{shown} of {total} transactions · newest first",
+        "Open a transaction to print or mail the receipt, or to register a return.": "Open a transaction to print or mail the receipt, or to register a return.",
+        "Z-reports": "Z-reports",
+        "{shown} of {total} day reports · bookkeeping happens in Shillinq": "{shown} of {total} day reports · bookkeeping happens in Shillinq",
+        "The day close makes one Z-report per till every night. They are read-only.": "The day close makes one Z-report per till every night. They are read-only.",
+        "Not booked": "Not booked",
+        "Booked": "Booked",
+        "Ready to book": "Ready to book",
+        "To review": "To review",
+        "Opening balance": "Opening balance",
+        "Deposits": "Deposits",
+        "A shift closes with a blind count. The difference is checked against the margin.": "A shift closes with a blind count. The difference is checked against the margin."
     },
     "nplurals=2; plural=(n != 1);"
 )

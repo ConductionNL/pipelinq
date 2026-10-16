@@ -1859,10 +1859,23 @@
 			"title": "Transactions",
 			"config": {
 				"addLabel": "New transaction",
+				"_boardNote": "PqKassabonnen: count line, the chips All, Today (created today), Parked and Refunded with their counts, the status as a pill, the created time as the last column, and a footer that says what the transaction page is for.",
+				"showMassExport": true,
+				"sortKey": "@self.created",
+				"sortOrder": "desc",
+				"countText": "{shown} of {total} transactions · newest first",
+				"footerNote": "Open a transaction to print or mail the receipt, or to register a return.",
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true, "showCount": true },
+					{ "label": "Today", "filter": { "created[gte]": "@today" }, "showCount": true },
+					{ "label": "Parked", "filter": { "status": "parked" }, "showCount": true },
+					{ "label": "Refunded", "filter": { "status": "refunded" }, "showCount": true }
+				],
 				"columns": [
 					{
 						"key": "reference",
-						"label": "Reference"
+						"label": "Identifier",
+						"cellClass": "cn-cell--strong"
 					},
 					{
 						"key": "cashier",
@@ -1876,7 +1889,9 @@
 					{
 						"key": "status",
 						"label": "Status",
-						"formatter": "enumText"
+						"formatter": "enumText",
+						"widget": "badge",
+						"widgetProps": { "colorMap": { "settled": "success", "confirmed": "primary", "parked": "warning", "refunded": "default", "draft": "default" } }
 					},
 					{
 						"key": "priceMode",
@@ -1890,6 +1905,12 @@
 						"formatterOptions": {
 							"decimals": 2
 						}
+					},
+					{
+						"key": "@self.created",
+						"label": "Created",
+						"widget": "date",
+						"widgetProps": { "showTime": true }
 					}
 				]
 			}

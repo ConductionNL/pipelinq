@@ -1,0 +1,52 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "Labels for the point of sale status values the PqKassabonnen, PqKassadiensten and PqZRapporten boards print as pills: a Z-report reads Geboekt or Mislukt, a shift Open or Afgestemd, instead of the stored code. Presentation only: no value a record may hold changes. Named 99-zz so it merges after the fragments that declare these schemas."
+	},
+	"components": {
+		"schemas": {
+			"posZReport": {
+				"slug": "posZReport",
+				"properties": {
+					"status": {
+						"x-enum-labels": {
+							"draft": "Draft",
+							"ready": "Ready to book",
+							"submitted": "Submitted",
+							"posted": "Booked",
+							"failed": "Failed",
+							"reconciled": "Reconciled"
+						}
+					},
+					"bookkeepingStatus": {
+						"x-enum-labels": {
+							"pending": "Not booked",
+							"raised": "Booked",
+							"failed": "Failed"
+						}
+					}
+				}
+			},
+			"cashShift": {
+				"slug": "cashShift",
+				"properties": {
+					"status": {
+						"x-enum-labels": {
+							"open": "Open",
+							"closed": "To review",
+							"reconciled": "Reconciled"
+						}
+					},
+					"reconciliationStatus": {
+						"x-enum-labels": {
+							"pending": "Pending",
+							"approved": "Approved",
+							"rejected": "Rejected"
+						}
+					}
+				}
+			}
+		}
+	}
+}

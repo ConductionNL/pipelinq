@@ -1,36 +1,37 @@
 <!--
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
--->
+  -
+  - The cash shift list as the PqKassadiensten board draws it. The list reads
+  - itself (CnIndexPage self-fetch) with the board's count line, chips, columns
+  - and footer; this view only owns opening a shift, which goes through the
+  - server's open endpoint so the operator and the opening time come from the
+  - session.
+  -->
 <template>
 	<div>
 		<CnIndexPage
+			ref="index"
 			:title="t('pipelinq', 'Cash drawer')"
-			:description="
-				t(
-					'pipelinq',
-					'Manage cash shifts: opening float, drops, blind counting and reconciliation',
-				)
-			"
-			:schema="schema"
-			:objects="objects"
-			:pagination="pagination"
-			:loading="loading"
-			:refreshing="refreshing"
-			:sortKey="sortKey"
-			:sortOrder="sortOrder"
+			register="pipelinq"
+			schema="cashShift"
+			:countText="t('pipelinq', 'Manage cash shifts: opening float, drops, blind counting and reconciliation')"
+			:footerNote="t('pipelinq', 'A shift closes with a blind count. The difference is checked against the margin.')"
+			:quickFilters="quickFilters"
+			:columns="columns"
+			sortKey="floatAt"
+			sortOrder="desc"
 			:selectable="true"
-			:includeColumns="visibleColumns"
+			:showMassExport="true"
+			:addLabel="t('pipelinq', 'Open shift')"
+			:headerButtons="headerButtons"
 			:emptyTitle="t('pipelinq', 'No shifts found')"
 			:emptyActionLabel="t('pipelinq', 'Open shift')"
 			rowClickToView
 			@add="openShift"
 			@emptyAction="openShift"
-			@refresh="onRefresh"
-			@sort="onSort"
 			@rowClick="openDetail"
-			@view="openDetail"
-			@pageChanged="onPageChange" />
+			@view="openDetail" />
 
 		<CashShiftOpenDialog
 			v-if="showOpen"
@@ -41,12 +42,10 @@
 </template>
 
 <script>
-import { CnIndexPage, openRowTarget, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { inject } from 'vue'
 import CashShiftOpenDialog from '../../modals/CashShiftOpenDialog.vue'
-import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'CashShiftList',
@@ -55,55 +54,74 @@ export default {
 		CashShiftOpenDialog,
 	},
 
-	setup() {
-		const sidebarState = inject('sidebarState', null)
-		const objectStore = useObjectStore()
-		return useListView('cashShift', { sidebarState, objectStore })
-	},
-
 	data() {
 		return {
 			showOpen: false,
 			opening: false,
-			refreshing: false,
 		}
 	},
 
 	computed: {
 		/**
-		 * Columns shown on the list, in order.
+		 * The board's chips: every shift, the open ones, and the closed ones
+		 * still waiting for their reconciliation.
 		 *
-		 * @return {Array<string>} The column keys.
+		 * @return {Array<object>} The quick filters.
+		 * @spec openspec/changes/screens-pos-lists-board/specs/pos-cash-management/spec.md
 		 */
-		visibleColumns() {
+		quickFilters() {
 			return [
-				'reference',
-				'drawer',
-				'operator',
-				'floatAmount',
-				'status',
-				'floatAt',
-				'closedAt',
+				{ label: t('pipelinq', 'All'), filter: {}, default: true, showCount: true },
+				{ label: t('pipelinq', 'Open'), filter: { status: 'open' }, showCount: true },
+				{ label: t('pipelinq', 'To review'), filter: { status: 'closed', reconciliationStatus: 'pending' }, showCount: true },
+			]
+		},
+
+		/**
+		 * The board's columns. Drops are counted from the cashDrop records of
+		 * the shift.
+		 *
+		 * @return {Array<object>} The columns.
+		 * @spec openspec/changes/screens-pos-lists-board/specs/pos-cash-management/spec.md
+		 */
+		columns() {
+			return [
+				{ key: 'reference', label: t('pipelinq', 'Shift'), cellClass: 'cn-cell--strong' },
+				{ key: 'operator', label: t('pipelinq', 'Cashier'), formatter: 'userDisplayName' },
+				{
+					key: 'status',
+					label: t('pipelinq', 'Status'),
+					formatter: 'enumLabel',
+					widget: 'badge',
+					widgetProps: { colorMap: { open: 'primary', closed: 'warning', reconciled: 'success' } },
+				},
+				{ key: 'floatAt', label: t('pipelinq', 'Opened'), widget: 'date', widgetProps: { timeOnly: true, showTime: true } },
+				{ key: 'closedAt', label: t('pipelinq', 'Closed'), widget: 'date', widgetProps: { timeOnly: true, showTime: true } },
+				{ key: 'floatAmount', label: t('pipelinq', 'Opening balance'), formatter: 'objectCurrency', formatterOptions: { decimals: 2 } },
+				{
+					key: 'drops',
+					label: t('pipelinq', 'Deposits'),
+					sortable: false,
+					aggregate: { schema: 'cashDrop', op: 'count', where: { shift: '@self.id' } },
+				},
+			]
+		},
+
+		/**
+		 * The board header: Download, the actions menu and Open shift.
+		 *
+		 * @return {Array<object>} The header buttons.
+		 */
+		headerButtons() {
+			return [
+				{ action: 'export', label: t('pipelinq', 'Download') },
+				{ action: 'actions-menu' },
+				{ action: 'add', variant: 'primary', icon: 'Plus', label: t('pipelinq', 'Open shift') },
 			]
 		},
 	},
 
 	methods: {
-		/**
-		 * Refresh handler for the Actions-menu Refresh item. Drives the
-		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
-		 *
-		 * @spec exclude presentational refresh-button spinner wiring — no business logic
-		 */
-		async onRefresh() {
-			this.refreshing = true
-			try {
-				await this.refresh()
-			} finally {
-				this.refreshing = false
-			}
-		},
-
 		/**
 		 * Navigate to a shift's detail.
 		 *
@@ -163,7 +181,7 @@ export default {
 				if (id) {
 					this.$router.push({ name: 'CashShiftDetail', params: { id } })
 				} else {
-					await this.refresh()
+					await this.$refs.index?.onRefreshEvent()
 				}
 			} catch {
 				showError(t('pipelinq', 'Failed to open shift.'))
