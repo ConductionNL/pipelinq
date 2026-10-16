@@ -677,6 +677,7 @@ class PortalContributionProvider {
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
 	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
 	 * @spec openspec/changes/a-resident-asks-a-question-without-a-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-that-is-not-about-a-dossier
+	 * @spec openspec/changes/a-contact-question-is-required-and-dated/specs/dossier-questions/spec.md#requirement-a-question-asked-on-the-contact-page-needs-its-text-and-is-dated
 	 */
 	private function questionActions(): array {
 		$actions = [
@@ -690,10 +691,17 @@ class PortalContributionProvider {
 				'defaults' => ['ticketType' => 'request', 'channel' => 'portal'],
 				'scopeField' => 'portalSubject',
 				'fields' => ['title', 'description'],
+				// The ticket schema mandates neither, and portaliq honours a
+				// field config's `required` only for a field the schema
+				// mandates, so the action names them here.
+				'requiredFields' => ['title', 'description'],
 				'fieldConfigs' => [
 					'title' => ['label' => 'Onderwerp', 'required' => true, 'placeholder' => 'Waar gaat uw vraag over?'],
 					'description' => ['label' => 'Uw vraag', 'required' => true, 'size' => 'full'],
 				],
+				// The moment it was asked: "Gesteld" on Mijn vragen. Portaliq
+				// stamps it when it writes the ticket.
+				'createdAtField' => 'occurredAt',
 				// The portal confirms receipt by mail, naming the subject only.
 				'confirmationMail' => 'contact-confirmation',
 				'topicField' => 'title',

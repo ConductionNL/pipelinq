@@ -984,6 +984,25 @@ final class PortalContributionProviderTest extends TestCase {
 	}//end testAResidentAsksAQuestionWithoutADossier()
 
 	/**
+	 * Scenario: the contact form asks for the question and the question is dated.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/a-contact-question-is-required-and-dated/specs/dossier-questions/spec.md#requirement-a-question-asked-on-the-contact-page-needs-its-text-and-is-dated
+	 */
+	public function testAContactQuestionNeedsItsTextAndIsDated(): void {
+		$manifest = $this->withOpenCatalogi(installed: false)->getContribution(self::CITIZEN_SUBJECT);
+		$this->assertIsArray($manifest);
+		$ask = $this->indexById($manifest['actions'])['askQuestion'];
+
+		$this->assertSame(['title', 'description'], $ask['requiredFields']);
+		$this->assertSame('occurredAt', $ask['createdAtField']);
+		$this->assertNotContains('occurredAt', $ask['fields'], 'the moment is stamped by the server, never typed');
+		$columns = array_column($this->indexById($manifest['collections'])['myQuestions']['columns'], 'field');
+		$this->assertContains('occurredAt', $columns, 'Gesteld reads the stamped field');
+	}//end testAContactQuestionNeedsItsTextAndIsDated()
+
+	/**
 	 * Scenario: opencatalogi is not installed.
 	 *
 	 * @return void
