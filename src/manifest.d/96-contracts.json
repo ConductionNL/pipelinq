@@ -110,7 +110,7 @@
 						"showCount": true
 					},
 					{
-						"label": "Cancelled",
+						"label": "Terminated",
 						"filter": {
 							"status": "cancelled"
 						},
@@ -187,7 +187,9 @@
 							}
 						}
 					}
-				]
+				],
+				"filterMenu": true,
+				"headerFilters": true
 			}
 		},
 		{
@@ -318,25 +320,16 @@
 					},
 					{
 						"id": "contract-kpi-days",
-						"type": "facts",
-						"title": "End date",
+						"type": "stat",
+						"title": "Days to end date",
 						"content": {
-							"fields": [
-								{
-									"as": "title",
-									"path": "endDate",
-									"format": "date-long"
-								},
-								{
-									"as": "line",
-									"parts": [
-										{
-											"path": "noticePeriodDays",
-											"label": "notice period in days"
-										}
-									]
-								}
-							]
+							"label": "Days to end date",
+							"objectField": "endDate",
+							"display": "countdown",
+							"countdown": {
+								"unit": "days"
+							},
+							"caption": "until the end date"
 						}
 					},
 					{
@@ -453,6 +446,15 @@
 								}
 							]
 						}
+					},
+					{
+						"id": "side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"content": {
+							"limit": 4
+						}
 					}
 				],
 				"layout": [
@@ -471,7 +473,8 @@
 						"gridX": 4,
 						"gridY": 0,
 						"gridWidth": 4,
-						"gridHeight": 2
+						"gridHeight": 2,
+						"showTitle": false
 					},
 					{
 						"id": "k3",
@@ -523,7 +526,8 @@
 				},
 				"sideColumn": [
 					"side-client",
-					"side-owner"
+					"side-owner",
+					"side-history"
 				],
 				"breadcrumb": {
 					"label": "Contracts",
@@ -582,13 +586,29 @@
 										"field": "noticeReminderSent",
 										"op": "eq",
 										"value": true
-									}
+									},
+									"hint": "Send it before the last day to give notice"
 								}
 							]
 						}
 					}
 				},
 				"headerActions": [
+					{
+						"id": "send-to-invoicing",
+						"type": "api-call",
+						"label": "Send to invoicing",
+						"icon": "SendOutline",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/handoff/contract/@objectId/send-to-invoicing",
+						"successMessage": "Contract sent to invoicing.",
+						"visibleWhen": {
+							"endpoint": "/apps/pipelinq/api/handoff/contract/@objectId/availability",
+							"field": "canSend",
+							"op": "eq",
+							"value": true
+						}
+					},
 					{
 						"id": "open-renewal-lead",
 						"type": "navigate",
@@ -604,7 +624,11 @@
 				],
 				"primaryActionByStage": {
 					"expiring": "open-renewal-lead"
-				}
+				},
+				"follow": false,
+				"quickActions": [
+					"send-to-invoicing"
+				]
 			}
 		}
 	]

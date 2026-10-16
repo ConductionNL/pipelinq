@@ -1733,44 +1733,6 @@
 			}
 		},
 		{
-			"id": "Contracts",
-			"config": {
-				"addLabel": "New contract",
-				"columns": [
-					{
-						"key": "contractNumber",
-						"label": "Contract number"
-					},
-					{
-						"key": "title",
-						"label": "Title"
-					},
-					{
-						"key": "status",
-						"label": "Status",
-						"formatter": "enumText"
-					},
-					{
-						"key": "billingInterval",
-						"label": "Billing interval",
-						"formatter": "enumText"
-					},
-					{
-						"key": "valuePerInterval",
-						"label": "Value per interval",
-						"formatter": "objectCurrency",
-						"formatterOptions": {
-							"decimals": 0
-						}
-					},
-					{
-						"key": "endDate",
-						"label": "End date"
-					}
-				]
-			}
-		},
-		{
 			"id": "Blasts",
 			"config": {
 				"addLabel": "New newsletter",

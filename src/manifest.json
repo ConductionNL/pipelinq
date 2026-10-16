@@ -4028,7 +4028,8 @@
 					},
 					{
 						"key": "type",
-						"label": "Type"
+						"label": "Type",
+						"formatter": "enumLabel"
 					},
 					{
 						"key": "status",
@@ -4039,7 +4040,8 @@
 								"active": "success",
 								"inactive": "default"
 							}
-						}
+						},
+						"formatter": "enumLabel"
 					},
 					{
 						"key": "unitPrice",
@@ -4120,7 +4122,8 @@
 					"board",
 					"map"
 				],
-				"footerNote": "A product that is on a deal or a receipt is discontinued and not deleted, so old quotes stay readable."
+				"footerNote": "A product that is on a deal or a receipt is discontinued and not deleted, so old quotes stay readable.",
+				"headerFilters": true
 			}
 		},
 		{
@@ -4188,7 +4191,7 @@
 								"unit",
 								"description"
 							],
-							"hideEmpty": true
+							"hideEmpty": false
 						}
 					},
 					{
@@ -4342,8 +4345,11 @@
 					{
 						"id": "product-supply",
 						"type": "ProductSupplyWidget",
-						"title": "Supply",
-						"icon": "TruckOutline"
+						"title": "Delivery",
+						"icon": "TruckOutline",
+						"content": {
+							"title": "Delivery"
+						}
 					},
 					{
 						"id": "product-related",
@@ -4368,6 +4374,15 @@
 									}
 								}
 							]
+						}
+					},
+					{
+						"id": "side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"content": {
+							"limit": 4
 						}
 					}
 				],
@@ -4427,7 +4442,8 @@
 				},
 				"sideColumn": [
 					"product-supply",
-					"product-related"
+					"product-related",
+					"side-history"
 				],
 				"breadcrumb": {
 					"label": "Products",
@@ -4440,18 +4456,27 @@
 					"colorMap": {
 						"active": "success",
 						"inactive": "default"
+					},
+					"labels": {
+						"active": "Active",
+						"inactive": "Discontinued"
 					}
 				},
 				"typePill": {
 					"field": "type",
-					"variant": "info"
+					"variant": "info",
+					"labels": {
+						"product": "Product",
+						"service": "Service"
+					}
 				},
 				"headerMeta": "{unit} · prices excl. VAT",
 				"actionsMenu": {
 					"label": "More"
 				},
 				"identifierField": "sku",
-				"_boardNote": "Board look (PqProduct, round 12): pills, breadcrumb and meta in the header, three KPI tiles, one tab strip as the body and the supply and related cards beside it."
+				"_boardNote": "Board look (PqProduct, round 12): pills, breadcrumb and meta in the header, three KPI tiles, one tab strip as the body and the supply and related cards beside it.",
+				"follow": false
 			}
 		},
 		{

@@ -36,7 +36,7 @@ describe('contract list', () => {
 			'All',
 			'To renew',
 			'Active',
-			'Cancelled',
+			'Terminated',
 		])
 		expect(list.config.sortKey).toBe('endDate')
 		expect(list.config.sortOrder).toBe('asc')
