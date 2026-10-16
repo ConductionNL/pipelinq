@@ -7602,7 +7602,9 @@ OC.L10N.register(
         "Recording": "Opname",
         "Suggested colleagues": "Voorgestelde collega's",
         "{channel} · received {occurredAt|date}": "{channel} · ontvangen {occurredAt|date}",
-        "A contact moment with the customer, saved with this ticket": "Een contactmoment met de klant, opgeslagen bij dit ticket"
+        "A contact moment with the customer, saved with this ticket": "Een contactmoment met de klant, opgeslagen bij dit ticket",
+        "The question": "De vraag",
+        "Your message": "Je bericht"
     },
     "nplurals=2; plural=(n != 1);"
 )

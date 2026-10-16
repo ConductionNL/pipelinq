@@ -255,9 +255,9 @@ describe('the primary button', () => {
 			/TicketAnswerDialog: \{\s+kind: 'modal',\s+component: TicketAnswerDialog,/,
 		)
 		const dialog = read('src', 'dialogs', 'TicketAnswerDialog.vue')
-		expect(dialog).toContain(
-			'<CustomerReplySection v-if="ticketId" :objectId="ticketId" />',
-		)
+		expect(dialog).toMatch(/<CustomerReplySection\s+v-if="ticketId"/)
+		expect(dialog).toContain(':objectId="ticketId"')
+		expect(dialog).toContain('inDialog')
 		expect(dialog).toContain("emit('cn:page:refresh', {})")
 	})
 })
@@ -379,7 +379,13 @@ describe('the pills and the side column', () => {
 			simple.sideColumn.map((card) =>
 				typeof card === 'string' ? card : card.id,
 			),
-		).toEqual(['side-customer', 'side-deadline', 'side-case', 'ticket-related'])
+		).toEqual([
+			'side-customer',
+			'side-deadline',
+			'side-case',
+			'ticket-related',
+			'ticket-resident-view',
+		])
 		for (const card of simple.sideColumn.filter(
 			(item) => typeof item !== 'string',
 		)) {
@@ -476,7 +482,6 @@ describe('the body', () => {
 			'Related',
 			'Decisions',
 			'History',
-			'What the resident sees',
 		])
 		expect(panels.content.tabs[0].widgetIds).toEqual([
 			'ticket-data',
