@@ -1018,6 +1018,23 @@ const registry = {
 		component: ResidentViewSection,
 		_note: 'What the resident sees on a request ticket (portal-resident-view-preview): the resident portal panel and, with portaliq and a client, the organisation portal panel, both from GET /api/tickets/{id}/resident-view, plus the line that everything else stays internal. Renders nothing on complaint and interaction tickets, so it carries its own heading instead of a section title.',
 	},
+	RoutingSuggestionWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'RoutingSuggestionWidget',
+			RoutingSuggestionSection,
+			({ objectId, objectData, content }) => ({
+				objectId,
+				category: objectData.category || '',
+				entityType: content.entityType || 'request',
+				objectType: content.objectType || 'ticket',
+				assignee: objectData.assignee || '',
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'RoutingSuggestionSection as a side-column card (PqLead "Voorgestelde medewerkers"): the record category and assignee come from the page object.',
+	},
 	RoutingSuggestionSection: {
 		kind: 'section',
 		component: RoutingSuggestionSection,

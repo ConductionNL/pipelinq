@@ -97,9 +97,36 @@ describe('contact detail', () => {
 describe('lead detail', () => {
 	const lead = page('LeadDetail')
 
-	it('shows the deal value and line item titles once', () => {
-		expect(layoutItem(lead, 'lead-kpi-value').showTitle).toBe(false)
-		expect(layoutItem(lead, 'lead-kpi-lines').showTitle).toBe(false)
+	it('draws the board: one tab strip as the body and a side column of cards', () => {
+		expect(lead.config.layout.map((item) => item.widgetId)).toEqual([
+			'lead-panels',
+		])
+		expect(lead.config.sideColumn).toEqual([
+			'side-client',
+			'side-suggested',
+			'side-win-chance',
+			'side-next-step',
+			'side-related',
+		])
+		const overview = widget(lead, 'lead-panels').content.tabs[0]
+		expect(overview.widgetIds).toEqual([
+			'lead-stages',
+			'lead-deal',
+			'lead-lines',
+			'lead-contacts',
+			'lead-flow-runs',
+		])
+	})
+
+	it('puts Log contact and the two close buttons in the header', () => {
+		expect(lead.config.quickActions).toEqual([
+			'log-contact',
+			'close-won',
+			'close-lost',
+		])
+		const won = lead.config.headerActions.find((a) => a.id === 'close-won')
+		expect(won.payload).toEqual({ action: 'win' })
+		expect(won.visibleWhen).toEqual({ field: 'status', op: 'eq', value: 'open' })
 	})
 
 	it('names the product of a line item instead of its uuid', () => {

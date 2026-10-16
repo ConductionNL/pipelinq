@@ -3426,8 +3426,125 @@
 				"register": "pipelinq",
 				"schema": "lead",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). One Deal data widget carries every deal field, titled through content.title (pipelinq review E3); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; the deal value is a stat widget formatted in the reporting currency (@config.currency). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule.",
+				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). One Deal data widget carries every deal field, titled through content.title (pipelinq review E3); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; the deal value is a stat widget formatted in the reporting currency (@config.currency). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule. Board look (PqLead, round 12): a two-row header (Lead pill, the stage as status pill, the breadcrumb and the meta line), Log contact and the two close buttons as quick actions, the next-step card for the open stages, one tab strip as the body and a side column with the client, suggested colleagues, win chance, the next step and related records. The deal value and line-count KPIs stay declared for the dashboard catalogue but are not placed.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
 				"widgets": [
+					{
+						"id": "lead-panels",
+						"type": "tabs",
+						"title": "Lead parts",
+						"icon": "ViewDashboard",
+						"_note": "The board's tab strip (PqLead). Overview stacks the stage strip, the deal, its products, the contacts with their role and the flow runs; the other tabs each hold one list. History is the record's audit trail, which the board look draws as the last tab. The children stay out of `layout` because the tabs widget renders them.",
+						"content": {
+							"ariaLabel": "Lead parts",
+							"tabs": [
+								{
+									"label": "Overview",
+									"widgetIds": [
+										"lead-stages",
+										"lead-deal",
+										"lead-lines",
+										"lead-contacts",
+										"lead-flow-runs"
+									]
+								},
+								{
+									"label": "Contacts",
+									"widgetId": "lead-contacts-tab",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "contact",
+										"filter": {
+											"leads": "@objectId"
+										}
+									}
+								},
+								{
+									"label": "Contact moments",
+									"widgetId": "lead-contactmoments",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "ticket",
+										"filter": {
+											"lead": "@objectId",
+											"ticketType": "interaction"
+										}
+									}
+								},
+								{
+									"label": "Tasks",
+									"widgetId": "lead-tasks",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "crmTask",
+										"filter": {
+											"lead": "@objectId"
+										}
+									}
+								},
+								{
+									"label": "Appointments",
+									"widgetId": "lead-calendar"
+								},
+								{
+									"label": "Mail",
+									"widgetId": "lead-email"
+								},
+								{
+									"label": "Notes",
+									"widgetId": "lead-notes"
+								},
+								{
+									"label": "Files",
+									"widgetId": "lead-files"
+								},
+								{
+									"label": "Decisions",
+									"widgetId": "lead-decisions"
+								},
+								{
+									"label": "History",
+									"widgetId": "lead-history"
+								}
+							]
+						}
+					},
+					{
+						"id": "lead-stages",
+						"type": "stages",
+						"title": "Stages",
+						"icon": "ChevronDoubleRight",
+						"_note": "The board's stage strip at the top of the Overview tab: the stages of the lead's own pipeline, read from the pipeline record, with the current one from `stage`.",
+						"content": {
+							"currentField": "stage",
+							"stagesEndpoint": {
+								"url": "/apps/openregister/api/objects/pipelinq/pipeline/@object.pipeline",
+								"path": "stages",
+								"idField": "name",
+								"labelField": "name",
+								"orderField": "order",
+								"finalField": "isClosed"
+							},
+							"transition": {
+								"kind": "lifecycle"
+							}
+						}
+					},
 					{
 						"id": "lead-deal",
 						"type": "data",
@@ -3438,11 +3555,7 @@
 							"title": "Deal",
 							"columns": 2,
 							"include": [
-								"title",
-								"client",
 								"value",
-								"status",
-								"stage",
 								"qualificationScore",
 								"expectedCloseDate",
 								"priority",
@@ -3450,93 +3563,42 @@
 								"category",
 								"assignee",
 								"stageEnteredAt",
+								"title",
+								"client",
+								"status",
+								"stage",
 								"description",
 								"notes"
 							],
 							"overrides": {
-								"assignee": { "formatter": "userDisplayName" },
-								"status": { "editable": false },
-								"stageEnteredAt": { "editable": false },
-								"qualificationScore": { "label": "Win chance" }
-							}
-						}
-					},
-					{
-						"id": "lead-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
-					},
-					{
-						"id": "lead-kpi-value",
-						"type": "stat",
-						"title": "Deal value",
-						"icon": "Cash",
-						"content": {
-							"label": "Deal value",
-							"icon": "Cash",
-							"format": {
-								"style": "currency",
-								"currency": "@config.currency",
-								"decimals": 0
-							},
-							"source": {
-								"register": "pipelinq",
-								"schema": "lead",
-								"metric": "sum",
-								"field": "value",
-								"filter": { "id": "@objectId" }
-							}
-						}
-					},
-					{
-						"id": "lead-kpi-lines",
-						"type": "stats-block",
-						"title": "Line items",
-						"icon": "ClipboardList",
-						"content": {
-							"entries": [
-								{
-									"title": "Line items",
-									"countLabel": "on this deal",
-									"register": "pipelinq",
-									"schema": "leadProduct",
-									"metric": "count",
-									"filter": { "lead": "@objectId" }
+								"assignee": {
+									"formatter": "userDisplayName"
+								},
+								"status": {
+									"editable": false
+								},
+								"stageEnteredAt": {
+									"editable": false,
+									"label": "In this stage since"
+								},
+								"qualificationScore": {
+									"label": "Win chance"
 								}
-							]
+							},
+							"hideEmpty": true
 						}
-					},
-					{
-						"id": "lead-email",
-						"type": "integration",
-						"integrationId": "email",
-						"title": "Emails",
-						"icon": "Email"
-					},
-					{
-						"id": "lead-files",
-						"type": "integration",
-						"integrationId": "files",
-						"title": "Files",
-						"icon": "FolderOutline"
-					},
-					{
-						"id": "lead-calendar",
-						"type": "integration",
-						"integrationId": "calendar",
-						"title": "Meetings",
-						"icon": "Calendar"
 					},
 					{
 						"id": "lead-lines",
 						"type": "object-list",
-						"title": "Deal line items",
+						"title": "Products on this lead",
 						"icon": "Package",
 						"content": {
 							"register": "pipelinq",
 							"schema": "leadProduct",
-							"filter": { "lead": "@objectId" },
+							"filter": {
+								"lead": "@objectId"
+							},
 							"columns": [
 								{
 									"key": "product",
@@ -3548,16 +3610,22 @@
 										"labelField": "name"
 									}
 								},
-								{ "key": "quantity", "label": "Qty" },
+								{
+									"key": "quantity",
+									"label": "Quantity"
+								},
 								{
 									"key": "unitPrice",
-									"label": "Unit price",
+									"label": "Price",
 									"format": {
 										"style": "currency",
 										"currency": "@config.currency"
 									}
 								},
-								{ "key": "discount", "label": "Discount %" },
+								{
+									"key": "discount",
+									"label": "Discount"
+								},
 								{
 									"key": "total",
 									"label": "Line total",
@@ -3569,25 +3637,49 @@
 							],
 							"allowEdit": true,
 							"limit": 25,
-							"emptyText": "No products quoted on this deal yet. Add a line to build the quote."
+							"emptyText": "No products quoted on this deal yet. Add a line to build the quote.",
+							"addLabel": "Add product",
+							"footerNote": "The value of the lead follows the line totals. Change a line and the value changes with it."
 						}
 					},
 					{
-						"id": "lead-notes",
-						"type": "integration",
-						"integrationId": "notes",
-						"title": "Notes",
-						"icon": "NoteTextOutline"
-					},
-					{
-						"id": "lead-decisions",
-						"type": "integration",
-						"integrationId": "decidesk-decisions",
-						"title": "Besluitvorming",
-						"icon": "Gavel"
-					},
-					{
 						"id": "lead-contacts",
+						"type": "object-list",
+						"title": "Contacts and their role",
+						"icon": "AccountGroup",
+						"_note": "The people this deal is worked with, read from contact.leads (97-lead-activity). allowCreate is OFF and that is not an oversight: the widget pre-fills a created object by merging its resolved filter into the payload as a SCALAR, and `leads` is an array. OpenRegister answers a scalar written into an array property with 400, so an Add button here would offer a create that always fails. A person is linked to the deal from the contact form instead.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "contact",
+							"filter": {
+								"leads": "@objectId"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Name"
+								},
+								{
+									"key": "role",
+									"label": "Role"
+								},
+								{
+									"key": "email",
+									"label": "Email"
+								},
+								{
+									"key": "phone",
+									"label": "Phone"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "ContactDetail",
+							"allowCreate": false,
+							"emptyText": "Nobody is linked to this deal yet. Open a contact and add this deal to their leads."
+						}
+					},
+					{
+						"id": "lead-contacts-tab",
 						"type": "object-list",
 						"title": "Contacts",
 						"icon": "AccountGroup",
@@ -3620,6 +3712,20 @@
 							"rowRoute": "ContactDetail",
 							"allowCreate": false,
 							"emptyText": "Nobody is linked to this deal yet. Open a contact and add this deal to their leads."
+						}
+					},
+					{
+						"id": "lead-flow-runs",
+						"type": "flow-runs",
+						"title": "Flow runs",
+						"icon": "Sitemap",
+						"_note": "Takes the cell the line-items list used to hold, which moved into the tab strip. `subject: '@objectId'` binds this deal, so OpenRegister scopes the active and finished reads to it server-side. `rowRoute` rather than `runRoute`, for the reason dossiq records on case-flow-runs: pipelinq has no run detail page, and FlowDetail (/flows/:id) resolves a FLOW id, so pointing a run uuid at it would open nothing.",
+						"content": {
+							"subject": "@objectId",
+							"limit": 5,
+							"pollSeconds": 15,
+							"rowRoute": "FlowDetail",
+							"emptyText": "No flow is running for this deal"
 						}
 					},
 					{
@@ -3704,63 +3810,206 @@
 						}
 					},
 					{
-						"id": "lead-flow-runs",
-						"type": "flow-runs",
-						"title": "Flow runs",
-						"icon": "Sitemap",
-						"_note": "Takes the cell the line-items list used to hold, which moved into the tab strip. `subject: '@objectId'` binds this deal, so OpenRegister scopes the active and finished reads to it server-side. `rowRoute` rather than `runRoute`, for the reason dossiq records on case-flow-runs: pipelinq has no run detail page, and FlowDetail (/flows/:id) resolves a FLOW id, so pointing a run uuid at it would open nothing.",
+						"id": "lead-calendar",
+						"type": "integration",
+						"integrationId": "calendar",
+						"title": "Meetings",
+						"icon": "Calendar"
+					},
+					{
+						"id": "lead-email",
+						"type": "integration",
+						"integrationId": "email",
+						"title": "Emails",
+						"icon": "Email"
+					},
+					{
+						"id": "lead-notes",
+						"type": "integration",
+						"integrationId": "notes",
+						"title": "Notes",
+						"icon": "NoteTextOutline"
+					},
+					{
+						"id": "lead-files",
+						"type": "integration",
+						"integrationId": "files",
+						"title": "Files",
+						"icon": "FolderOutline"
+					},
+					{
+						"id": "lead-decisions",
+						"type": "integration",
+						"integrationId": "decidesk-decisions",
+						"title": "Besluitvorming",
+						"icon": "Gavel"
+					},
+					{
+						"id": "lead-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "side-client",
+						"type": "facts",
+						"title": "Client",
+						"icon": "OfficeBuildingOutline",
 						"content": {
-							"subject": "@objectId",
-							"limit": 5,
-							"pollSeconds": 15,
-							"rowRoute": "FlowDetail",
-							"emptyText": "No flow is running for this deal"
+							"source": {
+								"register": "pipelinq",
+								"schema": "client",
+								"id": "@object.client"
+							},
+							"fields": [
+								{
+									"as": "lead",
+									"initialsPath": "name",
+									"title": "name",
+									"subtitle": [
+										{
+											"path": "type",
+											"map": {
+												"organization": "Organisation",
+												"person": "Resident"
+											}
+										}
+									]
+								},
+								{
+									"label": "Email",
+									"path": "email",
+									"format": "email"
+								},
+								{
+									"label": "Phone",
+									"path": "phone",
+									"format": "phone"
+								},
+								{
+									"label": "Website",
+									"path": "website",
+									"format": "url"
+								}
+							],
+							"link": {
+								"label": "Client page",
+								"route": {
+									"name": "ClientDetail",
+									"params": {
+										"id": "@source.id"
+									}
+								}
+							},
+							"emptyText": "No client linked to this lead yet"
 						}
 					},
 					{
-						"id": "lead-panels",
-						"type": "tabs",
-						"title": "Deal panels",
-						"icon": "ViewDashboard",
-						"_note": "Nine panels describing one deal used to be nine cards stacked down the page, each with its own header and Actions menu, only one of them ever read. The strip takes over the title and the card, the children render bare, and the Actions menu is hoisted into the bar where it rebinds to whichever tab is open. The nine children stay in `widgets` and are DELIBERATELY absent from `layout`: the tabs widget renders them, so a layout entry would render each one twice.",
+						"id": "side-suggested",
+						"type": "RoutingSuggestionWidget",
+						"title": "Suggested colleagues",
+						"icon": "AccountArrowRight",
 						"content": {
-							"ariaLabel": "Deal details",
-							"tabs": [
+							"title": "Suggested colleagues",
+							"entityType": "lead",
+							"objectType": "lead"
+						}
+					},
+					{
+						"id": "side-win-chance",
+						"type": "facts",
+						"title": "Win chance",
+						"icon": "Percent",
+						"content": {
+							"fields": [
 								{
-									"widgetId": "lead-lines",
-									"label": "Line items"
+									"as": "title",
+									"path": "qualificationScore"
 								},
 								{
-									"widgetId": "lead-notes",
-									"label": "Notes"
+									"as": "line",
+									"path": "stage",
+									"label": "Stage"
 								},
 								{
-									"widgetId": "lead-files",
-									"label": "Files"
-								},
+									"as": "line",
+									"text": "The chance of the stage, raised by recent contact and lowered when the lead stands still for 14 days."
+								}
+							]
+						}
+					},
+					{
+						"id": "side-next-step",
+						"type": "record-list",
+						"title": "Next step",
+						"icon": "CalendarArrowRight",
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"lead": "@objectId",
+								"status": {
+									"ne": "completed"
+								}
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"limit": 1,
+							"presentation": "rows",
+							"title": "{subject}",
+							"meta": "{deadline|date}",
+							"rowRoute": "TaskDetail",
+							"emptyText": "No next step planned"
+						}
+					},
+					{
+						"id": "side-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					},
+					{
+						"id": "lead-kpi-value",
+						"type": "stat",
+						"title": "Deal value",
+						"icon": "Cash",
+						"content": {
+							"label": "Deal value",
+							"icon": "Cash",
+							"format": {
+								"style": "currency",
+								"currency": "@config.currency",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "lead",
+								"metric": "sum",
+								"field": "value",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "lead-kpi-lines",
+						"type": "stats-block",
+						"title": "Line items",
+						"icon": "ClipboardList",
+						"content": {
+							"entries": [
 								{
-									"widgetId": "lead-email",
-									"label": "Mail"
-								},
-								{
-									"widgetId": "lead-calendar",
-									"label": "Appointments"
-								},
-								{
-									"widgetId": "lead-decisions",
-									"label": "Decisions"
-								},
-								{
-									"widgetId": "lead-contacts",
-									"label": "Contacts"
-								},
-								{
-									"widgetId": "lead-contactmoments",
-									"label": "Contact moments"
-								},
-								{
-									"widgetId": "lead-tasks",
-									"label": "Tasks"
+									"title": "Line items",
+									"countLabel": "on this deal",
+									"register": "pipelinq",
+									"schema": "leadProduct",
+									"metric": "count",
+									"filter": {
+										"lead": "@objectId"
+									}
 								}
 							]
 						}
@@ -3769,102 +4018,277 @@
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "lead-deal",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 8
-					},
-					{
-						"id": "7",
-						"widgetId": "lead-kpi-value",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 3,
-						"showTitle": false
-					},
-					{
-						"id": "9",
-						"widgetId": "lead-kpi-lines",
-						"gridX": 8,
-						"gridY": 3,
-						"gridWidth": 4,
-						"gridHeight": 3,
-						"showTitle": false
-					},
-					{
-						"id": "3",
-						"widgetId": "lead-related",
-						"gridX": 8,
-						"gridY": 6,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "8",
-						"widgetId": "lead-flow-runs",
-						"gridX": 8,
-						"gridY": 11,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "12",
 						"widgetId": "lead-panels",
 						"gridX": 0,
-						"gridY": 8,
-						"gridWidth": 8,
-						"gridHeight": 8
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
-				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2049): RoutingSuggestionSection ranks colleagues whose skills cover the lead category, and writes the chosen colleague into the lead assignee.",
-				"bodyWidgets": [
-					{
-						"id": "routing-suggestions",
-						"component": "RoutingSuggestionSection",
-						"title": "Suggested agents",
-						"placement": "end",
-						"props": {
-							"objectId": "@objectId",
-							"category": "@object.category",
-							"entityType": "lead",
-							"objectType": "lead",
-							"assignee": "@object.assignee"
-						}
-					}
+				"sideColumn": [
+					"side-client",
+					"side-suggested",
+					"side-win-chance",
+					"side-next-step",
+					"side-related"
 				],
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "win",
-							"from": "open",
-							"to": "won",
-							"label": "Close as win",
-							"confirm": "Close this lead as won?"
-						},
-						{
-							"action": "lose",
-							"from": "open",
-							"to": "lost",
-							"label": "Close as lose",
-							"confirm": "Close this lead as lost?"
-						}
-					]
+				"breadcrumb": {
+					"label": "Leads",
+					"route": "Leads",
+					"separator": "/"
 				},
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "audit",
-							"label": "History",
-							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+				"typePill": {
+					"text": "Lead",
+					"variant": "info"
+				},
+				"statusPill": {
+					"field": "stage",
+					"variant": "purple"
+				},
+				"headerMeta": "via {source} · {stageEnteredAt|days} days in this stage · owner {assignee}",
+				"stageField": "stage",
+				"headerActions": [
+					{
+						"id": "log-contact",
+						"type": "open-form",
+						"label": "Log contact",
+						"icon": "PhoneLogOutline",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"includeFields": [
+							"title",
+							"channel",
+							"direction",
+							"occurredAt",
+							"description"
+						],
+						"successMessage": "Contact moment logged.",
+						"props": {
+							"lead": "@objectId",
+							"client": "@object.client",
+							"ticketType": "interaction"
 						}
-					]
-				}
+					},
+					{
+						"id": "close-won",
+						"type": "api-call",
+						"label": "Close as won",
+						"icon": "TrophyOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"payload": {
+							"action": "win"
+						},
+						"confirm": "Close this lead as won?",
+						"successMessage": "Lead closed as won.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "open"
+						}
+					},
+					{
+						"id": "close-lost",
+						"type": "api-call",
+						"label": "Close as lost",
+						"icon": "CloseCircleOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"payload": {
+							"action": "lose"
+						},
+						"confirm": "Close this lead as lost?",
+						"successMessage": "Lead closed as lost.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "open"
+						}
+					}
+				],
+				"quickActions": [
+					"log-contact",
+					"close-won",
+					"close-lost"
+				],
+				"actionsMenu": {
+					"label": "More"
+				},
+				"nextStep": {
+					"field": "stage",
+					"stages": {
+						"Nieuw": {
+							"title": "What now? Stage 1 of 5: new",
+							"after": "Then: to Contacted",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "Make the first contact",
+									"doneField": "lastTouch"
+								}
+							]
+						},
+						"Benaderd": {
+							"title": "What now? Stage 2 of 5: contacted",
+							"after": "Then: to Qualified",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "Plan a follow-up appointment"
+								}
+							]
+						},
+						"Gekwalificeerd": {
+							"title": "What now? Stage 3 of 5: qualified",
+							"after": "Then: to Proposal",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "A proposal has been sent"
+								},
+								{
+									"label": "Add products and then make the quote"
+								}
+							]
+						},
+						"Voorstel": {
+							"title": "What now? Stage 4 of 5: proposal",
+							"after": "Then: close as won or lost",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "An expected close date is set",
+									"doneField": "expectedCloseDate"
+								},
+								{
+									"label": "Follow up on the proposal"
+								}
+							]
+						},
+						"New": {
+							"title": "What now? Stage 1 of 5: new",
+							"after": "Then: to Contacted",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "Make the first contact",
+									"doneField": "lastTouch"
+								}
+							]
+						},
+						"Contacted": {
+							"title": "What now? Stage 2 of 5: contacted",
+							"after": "Then: to Qualified",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "Plan a follow-up appointment"
+								}
+							]
+						},
+						"Qualified": {
+							"title": "What now? Stage 3 of 5: qualified",
+							"after": "Then: to Proposal",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "A proposal has been sent"
+								},
+								{
+									"label": "Add products and then make the quote"
+								}
+							]
+						},
+						"Proposal": {
+							"title": "What now? Stage 4 of 5: proposal",
+							"after": "Then: close as won or lost",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "An expected close date is set",
+									"doneField": "expectedCloseDate"
+								},
+								{
+									"label": "Follow up on the proposal"
+								}
+							]
+						}
+					}
+				},
+				"identifierField": "id"
 			}
 		},
 		{

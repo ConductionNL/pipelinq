@@ -28,12 +28,13 @@
 		:quickFilterMaxVisible="6"
 		:showTitle="true"
 		:showTitleIcon="false"
-		:headerFilters="false"
+		:viewSwitch="viewSwitch"
+		:viewSwitchLinks="viewSwitchLinks"
 		rowTitle="plain"
 		:searchPlaceholder="t('pipelinq', 'Filter by title or client')"
 		:headerButtons="headerButtons"
 		:headerActions="headerActions"
-		:countText="t('pipelinq', '{shown} of {total} leads')"
+		:countText="t('pipelinq', '{shown} of {total} leads · win chance first')"
 		:footerNote="
 			t(
 				'pipelinq',
@@ -56,6 +57,7 @@ import {
 	getStaleThreshold,
 	isLeadOverdue,
 } from '../../services/pipelineUtils.js'
+import { STAGE_COLORS } from '../../services/stageColors.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 
@@ -75,7 +77,12 @@ export default {
 					label: t('pipelinq', 'Lead'),
 					secondary: '{source}',
 				},
-				{ key: 'stage', label: t('pipelinq', 'Stage') },
+				{
+					key: 'stage',
+					label: t('pipelinq', 'Stage'),
+					widget: 'badge',
+					widgetProps: { colorMap: STAGE_COLORS },
+				},
 				{
 					key: 'value',
 					label: t('pipelinq', 'Value'),
@@ -117,6 +124,10 @@ export default {
 				},
 			],
 
+			// The board's view switch: table and cards in place, the
+			// board is the Pipeline page.
+			viewSwitch: ['table', 'cards', 'board', 'map'],
+			viewSwitchLinks: { board: { route: 'Pipeline' } },
 			callFirst: false,
 			// The sort Call first replaced, restored when it is switched off.
 			sortBeforeCallFirst: [],
@@ -168,6 +179,16 @@ export default {
 				{
 					label: t('pipelinq', 'Mine'),
 					filter: { status: 'open', assignee: '@me' },
+					showCount: true,
+				},
+				{
+					label: t('pipelinq', 'Closes this month'),
+					filter: {
+						status: 'open',
+						'expectedCloseDate[gte]': '@monthStart',
+						'expectedCloseDate[lte]': '@monthEnd',
+					},
+
 					showCount: true,
 				},
 				{
