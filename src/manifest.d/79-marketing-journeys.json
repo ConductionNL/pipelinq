@@ -268,7 +268,7 @@
 								"route": {
 									"name": "FlowDetail",
 									"params": {
-										"id": "@source.flowUuid"
+										"id": "@object.flowUuid"
 									}
 								}
 							}
