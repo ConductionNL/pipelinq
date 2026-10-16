@@ -671,7 +671,7 @@ test.describe('Blasts ledger and wizard', () => {
 			.first()
 			.click()
 
-		const dialog = page.getByRole('dialog', { name: 'New blast' })
+		const dialog = page.getByRole('dialog', { name: 'New newsletter' })
 		await expect(dialog).toBeVisible({ timeout: 20000 })
 
 		// The six steps render as a stepper with exactly one current step.
