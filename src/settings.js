@@ -1,3 +1,4 @@
+import { registerTranslations } from '@conduction/nextcloud-vue'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { createApp } from 'vue'
 import Settings from './views/settings/Settings.vue'
@@ -8,6 +9,10 @@ import { initializeStores } from './store/store.js'
 // without this import it had 59 library rules against 7,779 on the app pages,
 // so the library's settings sections and cards drew unstyled.
 import '@conduction/nextcloud-vue/css/index.css'
+
+// The library's own catalogue (version card, shell chrome). main.js registers
+// it for the app pages; this entry is a separate bundle.
+registerTranslations()
 
 // Vue 3 has no global `Vue.mixin` / `Vue.use`; both are per-app-instance, and
 // Pinia is a normal plugin now (`PiniaVuePlugin` was Vue-2 only).
