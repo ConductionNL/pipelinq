@@ -4007,8 +4007,15 @@
 				],
 				"_searchNote": "The dedicated 'Barcode lookup' page is gone (nav-ia-cleanup): this index's search already matches on barcode, so scanning into the search box resolves the product here — one surface instead of two for the same question. Verified live: searching '8714100838623' returns exactly the matching product. `barcode` is a column so the value is visible on the row you land on, not just the key you searched by.",
 				"columns": [
-					{ "key": "name", "label": "Name" },
-					{ "key": "barcode", "label": "Barcode" },
+					{
+						"key": "name",
+						"label": "Name",
+						"secondary": "{unit}"
+					},
+					{
+						"key": "barcode",
+						"label": "Barcode"
+					},
 					{
 						"key": "category",
 						"label": "Category",
@@ -4019,19 +4026,101 @@
 							"labelField": "name"
 						}
 					},
-					{ "key": "type", "label": "Type" },
-					{ "key": "status", "label": "Status" },
+					{
+						"key": "type",
+						"label": "Type"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"active": "success",
+								"inactive": "default"
+							}
+						}
+					},
 					{
 						"key": "unitPrice",
 						"label": "Price",
 						"formatter": "objectCurrency",
-						"formatterOptions": { "decimals": 2 }
+						"formatterOptions": {
+							"decimals": 2
+						}
+					},
+					{
+						"key": "onDeals",
+						"label": "On deals",
+						"sortable": false,
+						"aggregate": {
+							"register": "pipelinq",
+							"schema": "leadProduct",
+							"op": "count",
+							"where": {
+								"product": "@self.id"
+							}
+						}
 					}
 				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"_boardNote": "Board look (PqProducten, round 12): count line, quick filters by type and status, the name with its category and unit under it, the status as a pill and how many deals carry the product.",
+				"showTitle": true,
+				"showTitleIcon": false,
+				"rowTitle": "plain",
+				"countText": "{shown} of {total} products and services · prices excl. VAT",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New product"
+					}
+				],
+				"searchPlaceholder": "Filter by name, barcode or category",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Products",
+						"filter": {
+							"type": "product"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Services",
+						"filter": {
+							"type": "service"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Discontinued",
+						"filter": {
+							"status": "inactive"
+						},
+						"showCount": true
+					}
+				],
+				"viewSwitch": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"footerNote": "A product that is on a deal or a receipt is discontinued and not deleted, so old quotes stay readable."
 			}
 		},
 		{
@@ -4046,45 +4135,86 @@
 				"_note": "Catalog archetype (bespoke-detail-pages). A product is a catalog master, not a conversation — so there are deliberately NO comms leaves (product declares no email/calendar linkedType). The body leads with the catalog fields (name, sku/barcode/gtin, unitPrice/cost/taxRate/btwClass, category, type, unit, variants/modifierGroups/priceTiers) 8-wide and the related graph (category, preferredSupplier, MDM masterEntityRef) at 4-wide. A stats-block KPI card (rule 2, replacing the retired summaryAggregates) chips the live On-deals count @objectId-scoped; below sits a read-only object-list of the deal lines that reference this product (leadProduct, FK 'product', allowCreate:false — deal lines are authored on the deal, never from the catalog) so a product manager can see demand at a glance, then the product image/spec files full-width. Two-tone grid (catalog + usage) makes it read very differently from the comms-first person pages.",
 				"widgets": [
 					{
+						"id": "product-panels",
+						"type": "tabs",
+						"title": "Product parts",
+						"icon": "ViewDashboard",
+						"_note": "The board's tab strip (PqProduct): Overview stacks the product, its price tiers and variants, the deals it is on and its files; History is the audit trail.",
+						"content": {
+							"ariaLabel": "Product parts",
+							"tabs": [
+								{
+									"label": "Overview",
+									"widgetIds": [
+										"product-data",
+										"product-tiers",
+										"product-variants",
+										"product-lines",
+										"product-files"
+									]
+								},
+								{
+									"label": "History",
+									"widgetId": "product-history"
+								}
+							]
+						}
+					},
+					{
 						"id": "product-data",
 						"type": "data",
 						"title": "Product",
 						"icon": "Package",
 						"content": {
-							"columns": 2,
+							"columns": 3,
 							"overrides": {
-								"unitPrice": { "formatter": "objectCurrency" },
-								"cost": { "formatter": "objectCurrency" }
-							}
+								"unitPrice": {
+									"formatter": "objectCurrency"
+								},
+								"cost": {
+									"formatter": "objectCurrency"
+								}
+							},
+							"include": [
+								"name",
+								"sku",
+								"barcode",
+								"unitPrice",
+								"cost",
+								"taxRate",
+								"vatClass",
+								"category",
+								"type",
+								"unit",
+								"description"
+							],
+							"hideEmpty": true
 						}
 					},
 					{
-						"id": "product-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
-					},
-					{
-						"id": "product-supply",
-						"type": "ProductSupplyWidget",
-						"title": "Supply",
-						"icon": "TruckOutline"
-					},
-					{
-						"id": "product-kpis",
-						"type": "stats-block",
-						"title": "Demand",
-						"icon": "ChartBar",
+						"id": "product-tiers",
+						"type": "data",
+						"title": "Price tiers",
+						"icon": "Stairs",
 						"content": {
-							"entries": [
-								{
-									"title": "On deals",
-									"register": "pipelinq",
-									"schema": "leadProduct",
-									"metric": "count",
-									"filter": { "product": "@objectId" }
-								}
-							]
+							"columns": 1,
+							"include": [
+								"priceTiers"
+							],
+							"hideEmpty": false
+						}
+					},
+					{
+						"id": "product-variants",
+						"type": "data",
+						"title": "Variants",
+						"icon": "ShapeOutline",
+						"content": {
+							"columns": 1,
+							"include": [
+								"variants"
+							],
+							"hideEmpty": false
 						}
 					},
 					{
@@ -4095,7 +4225,9 @@
 						"content": {
 							"register": "pipelinq",
 							"schema": "leadProduct",
-							"filter": { "product": "@objectId" },
+							"filter": {
+								"product": "@objectId"
+							},
 							"columns": [
 								{
 									"key": "lead",
@@ -4107,7 +4239,10 @@
 										"labelField": "title"
 									}
 								},
-								{ "key": "quantity", "label": "Qty" },
+								{
+									"key": "quantity",
+									"label": "Qty"
+								},
 								{
 									"key": "unitPrice",
 									"label": "Unit price",
@@ -4116,7 +4251,10 @@
 										"currency": "@config.currency"
 									}
 								},
-								{ "key": "discount", "label": "Discount %" },
+								{
+									"key": "discount",
+									"label": "Discount %"
+								},
 								{
 									"key": "total",
 									"label": "Line total",
@@ -4137,56 +4275,138 @@
 						"integrationId": "files",
 						"title": "Images & spec sheets",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "product-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "product-kpi-deals",
+						"type": "stat",
+						"title": "On deals",
+						"content": {
+							"label": "On deals",
+							"caption": "deal lines with this product",
+							"source": {
+								"register": "pipelinq",
+								"schema": "leadProduct",
+								"metric": "count",
+								"filter": {
+									"product": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "product-kpi-value",
+						"type": "stat",
+						"title": "Value on deals",
+						"content": {
+							"label": "Value on deals",
+							"caption": "line totals, excl. VAT",
+							"format": {
+								"style": "currency",
+								"currency": "@config.currency",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "leadProduct",
+								"metric": "sum",
+								"field": "total",
+								"filter": {
+									"product": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "product-kpi-counter",
+						"type": "stat",
+						"title": "Sold at the counter",
+						"content": {
+							"label": "Sold at the counter",
+							"caption": "receipt lines",
+							"source": {
+								"register": "pipelinq",
+								"schema": "posTransactionLine",
+								"metric": "count",
+								"filter": {
+									"product": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "product-supply",
+						"type": "ProductSupplyWidget",
+						"title": "Supply",
+						"icon": "TruckOutline"
+					},
+					{
+						"id": "product-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					},
+					{
+						"id": "product-kpis",
+						"type": "stats-block",
+						"title": "Demand",
+						"icon": "ChartBar",
+						"content": {
+							"entries": [
+								{
+									"title": "On deals",
+									"register": "pipelinq",
+									"schema": "leadProduct",
+									"metric": "count",
+									"filter": {
+										"product": "@objectId"
+									}
+								}
+							]
+						}
 					}
 				],
 				"layout": [
 					{
+						"id": "k1",
+						"widgetId": "product-kpi-deals",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "k2",
+						"widgetId": "product-kpi-value",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "k3",
+						"widgetId": "product-kpi-counter",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
 						"id": "1",
-						"widgetId": "product-data",
+						"widgetId": "product-panels",
 						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 10
-					},
-					{
-						"id": "5",
-						"widgetId": "product-kpis",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "2",
-						"widgetId": "product-related",
-						"gridX": 8,
 						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "6",
-						"widgetId": "product-supply",
-						"gridX": 8,
-						"gridY": 6,
-						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "3",
-						"widgetId": "product-lines",
-						"gridX": 0,
-						"gridY": 10,
 						"gridWidth": 12,
-						"gridHeight": 5
-					},
-					{
-						"id": "4",
-						"widgetId": "product-files",
-						"gridX": 0,
-						"gridY": 15,
-						"gridWidth": 12,
-						"gridHeight": 3
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
 				"sidebar": {
@@ -4197,10 +4417,41 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
-				}
+				},
+				"sideColumn": [
+					"product-supply",
+					"product-related"
+				],
+				"breadcrumb": {
+					"label": "Products",
+					"route": "Products",
+					"currentField": "sku",
+					"separator": "/"
+				},
+				"statusPill": {
+					"field": "status",
+					"colorMap": {
+						"active": "success",
+						"inactive": "default"
+					}
+				},
+				"typePill": {
+					"field": "type",
+					"variant": "info"
+				},
+				"headerMeta": "{unit} · prices excl. VAT",
+				"actionsMenu": {
+					"label": "More"
+				},
+				"identifierField": "sku",
+				"_boardNote": "Board look (PqProduct, round 12): pills, breadcrumb and meta in the header, three KPI tiles, one tab strip as the body and the supply and related cards beside it."
 			}
 		},
 		{
