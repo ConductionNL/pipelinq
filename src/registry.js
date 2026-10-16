@@ -825,6 +825,18 @@ const registry = {
 		component: SocialPublicationsSection,
 		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement end). One row per account the post named, with the failure reason where it did not go out. The Retry button appears only on the two of six failure codes a retry can fix, because a Retry on a dead grant or an unfiled developer application is a button that cannot work. Also hosts the share path for accounts no application may post to: the prepared text, a copy action, a link into the network\'s own composer and the confirmation.',
 	},
+	SocialPostVariantsWidget: {
+		kind: 'widget',
+		component: sectionWidget('SocialPostVariantsWidget', SocialPostVariantsSection, ({ objectId }) => ({ postId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'SocialPostVariantsSection as a tab widget, so the per-network texts are the first card of the post page\'s Overview tab (PqSocialBericht).',
+	},
+	SocialPublicationsWidget: {
+		kind: 'widget',
+		component: sectionWidget('SocialPublicationsWidget', SocialPublicationsSection, ({ objectId }) => ({ postId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'SocialPublicationsSection as a tab widget, the second card of the post page\'s Overview tab (PqSocialBericht).',
+	},
 	ActivityTimeline: {
 		kind: 'section',
 		component: ActivityTimeline,

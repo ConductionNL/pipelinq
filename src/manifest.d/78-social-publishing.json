@@ -109,7 +109,8 @@
 					{
 						"action": "create",
 						"variant": "primary",
-						"label": "New post"
+						"label": "New post",
+						"icon": "Plus"
 					}
 				],
 				"quickFilters": [
@@ -127,7 +128,7 @@
 						"showCount": true
 					},
 					{
-						"label": "Scheduled",
+						"label": "Lined up",
 						"filter": {
 							"status": "scheduled"
 						},
@@ -155,6 +156,20 @@
 								"published": "success",
 								"failed": "error"
 							}
+						},
+						"enum": [
+							"draft",
+							"approval",
+							"scheduled",
+							"published",
+							"failed"
+						],
+						"enumLabels": {
+							"draft": "Draft",
+							"approval": "Awaiting approval",
+							"scheduled": "Lined up",
+							"published": "Published",
+							"failed": "Failed"
 						}
 					},
 					{
@@ -208,7 +223,11 @@
 							"ariaLabel": "Social post",
 							"tabs": [
 								{
-									"widgetId": "social-post-data",
+									"widgetIds": [
+										"social-post-variants",
+										"social-post-publications",
+										"social-post-data"
+									],
 									"label": "Overview"
 								},
 								{
@@ -240,7 +259,7 @@
 									"enumLabels": {
 										"draft": "Draft",
 										"approval": "Awaiting approval",
-										"scheduled": "Scheduled",
+										"scheduled": "Lined up",
 										"published": "Published",
 										"failed": "Failed"
 									}
@@ -288,6 +307,49 @@
 							"order": "desc",
 							"limit": 3
 						}
+					},
+					{
+						"id": "social-post-variants",
+						"type": "SocialPostVariantsWidget",
+						"title": "What this says per network",
+						"content": {
+							"title": "What this says per network"
+						}
+					},
+					{
+						"id": "social-post-publications",
+						"type": "SocialPublicationsWidget",
+						"title": "Where it went",
+						"content": {
+							"title": "Where it went"
+						}
+					},
+					{
+						"id": "social-post-approvals",
+						"type": "field-list",
+						"title": "Approvals",
+						"content": {
+							"field": "approvals",
+							"readOnly": true,
+							"row": {
+								"title": {
+									"path": "decision",
+									"map": {
+										"approved": "Approved",
+										"rejected": "Rejected"
+									}
+								},
+								"meta": [
+									{
+										"path": "decidedAt",
+										"format": "date"
+									},
+									"userId"
+								]
+							},
+							"hint": "A post waits for approval before it can be scheduled.",
+							"emptyText": "A post waits for approval before it can be scheduled."
+						}
 					}
 				],
 				"layout": [
@@ -298,31 +360,8 @@
 						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 8,
-						"showTitle": false
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "social-post-variants",
-						"component": "SocialPostVariantsSection",
-						"title": "What this says per network",
-						"placement": "before-body",
-						"props": {
-							"postId": "@objectId"
-						},
-						"card": true,
-						"colSpan": 12
-					},
-					{
-						"id": "social-post-publications",
-						"component": "SocialPublicationsSection",
-						"title": "Where it went",
-						"placement": "end",
-						"props": {
-							"postId": "@objectId"
-						},
-						"card": true,
-						"colSpan": 12
+						"showTitle": false,
+						"sizeToContent": true
 					}
 				],
 				"sidebar": {
@@ -335,7 +374,7 @@
 					"labels": {
 						"draft": "Draft",
 						"approval": "Awaiting approval",
-						"scheduled": "Scheduled",
+						"scheduled": "Lined up",
 						"published": "Published",
 						"failed": "Failed"
 					},
@@ -356,6 +395,7 @@
 					"label": "More"
 				},
 				"sideColumn": [
+					"social-post-approvals",
 					"social-post-side-history"
 				]
 			}

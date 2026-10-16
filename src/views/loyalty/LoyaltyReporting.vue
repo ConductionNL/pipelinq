@@ -11,23 +11,28 @@
 					{{ t('pipelinq', 'Points, tiers and what the outstanding points are worth') }}
 				</p>
 			</div>
-			<NcButton variant="secondary" :disabled="!kpis" @click="exportCsv">
-				<template #icon>
-					<Download :size="18" />
-				</template>
-				{{ t('pipelinq', 'Download') }}
-			</NcButton>
+			<div class="loyalty-reporting__actions">
+				<NcButton variant="secondary" :disabled="!kpis" @click="exportCsv">
+					<template #icon>
+						<Download :size="18" />
+					</template>
+					{{ t('pipelinq', 'Download') }}
+				</NcButton>
+				<CnBuildiqEditButton />
+			</div>
 		</header>
 
 		<div class="loyalty-reporting__controls">
-			<NcSelect
+			<div class="loyalty-reporting__programme">
+				<span class="loyalty-reporting__period-label">{{ t('pipelinq', 'Programme') }}</span>
+				<NcSelect
 				v-model="selectedProgramme"
-				class="loyalty-reporting__programme"
-				:inputLabel="t('pipelinq', 'Programme')"
+				:ariaLabelCombobox="t('pipelinq', 'Programme')"
 				:options="programmeOptions"
 				label="label"
 				:clearable="false"
 				@update:modelValue="loadKpis" />
+			</div>
 			<div class="loyalty-reporting__period">
 				<span class="loyalty-reporting__period-label">{{ t('pipelinq', 'Period') }}</span>
 				<div class="loyalty-reporting__segments" role="group" :aria-label="t('pipelinq', 'Period')">
@@ -114,6 +119,7 @@
 </template>
 
 <script>
+import { CnBuildiqEditButton } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -126,7 +132,7 @@ import LoyaltyAccountCreation from './LoyaltyAccountCreation.vue'
 
 export default {
 	name: 'LoyaltyReporting',
-	components: { Download, LoyaltyAccountCreation, NcButton, NcEmptyContent, NcLoadingIcon, NcSelect },
+	components: { CnBuildiqEditButton, Download, LoyaltyAccountCreation, NcButton, NcEmptyContent, NcLoadingIcon, NcSelect },
 	data() {
 		return {
 			loading: false,
@@ -339,6 +345,14 @@ export default {
 
 .loyalty-reporting__programme {
 	flex: 1 1 400px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.loyalty-reporting__actions {
+	display: flex;
+	gap: 8px;
 }
 
 .loyalty-reporting__period {

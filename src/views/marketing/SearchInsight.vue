@@ -16,21 +16,24 @@
 			<div>
 				<h2>{{ t('pipelinq', 'Search insight') }}</h2>
 				<p class="search-insight__subtitle">
-					{{ t('pipelinq', 'Where residents find us in search engines, and what others publish') }}
+					{{ t('pipelinq', 'Where residents find us in search engines, and what others publish · four pages under Marketing') }}
 				</p>
 			</div>
+			<div class="search-insight__actions">
 			<NcButton variant="secondary" @click="download">
 				<template #icon>
 					<Download :size="18" />
 				</template>
 				{{ t('pipelinq', 'Download') }}
 			</NcButton>
+			<CnBuildiqEditButton />
+			</div>
 		</header>
 		<section class="search-insight__card">
 			<SearchQueries ref="queries" />
 		</section>
 		<section class="search-insight__card">
-			<KeywordIntelligence />
+			<KeywordIntelligence :embedded="true" />
 		</section>
 		<section class="search-insight__card">
 			<CompetitorWatches />
@@ -42,6 +45,7 @@
 </template>
 
 <script>
+import { CnBuildiqEditButton } from '@conduction/nextcloud-vue'
 import { NcButton } from '@nextcloud/vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import CompetitorWatches from './CompetitorWatches.vue'
@@ -52,6 +56,7 @@ import SearchQueries from './SearchQueries.vue'
 export default {
 	name: 'SearchInsight',
 	components: {
+		CnBuildiqEditButton,
 		CompetitorWatches,
 		Download,
 		NcButton,
@@ -99,6 +104,11 @@ export default {
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 16px;
+}
+
+.search-insight__actions {
+	display: flex;
+	gap: 8px;
 }
 
 .search-insight__header h2 {

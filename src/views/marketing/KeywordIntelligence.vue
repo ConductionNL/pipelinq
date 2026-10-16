@@ -18,6 +18,7 @@
 		<header class="keyword-intel__header">
 			<h2>{{ t('pipelinq', 'Keywords') }}</h2>
 			<NcSelect
+				v-if="!embedded"
 				v-model="window"
 				class="keyword-intel__window"
 				:options="windowOptions"
@@ -389,6 +390,14 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
+	},
+
+	props: {
+		/** Drawn as a card on the search insight page, which carries the period. */
+		embedded: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	data() {

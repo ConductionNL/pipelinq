@@ -13,14 +13,21 @@
 	<div class="search-queries">
 		<header class="search-queries__header">
 			<h2>{{ t('pipelinq', 'Search queries') }}</h2>
-			<NcSelect
-				v-model="window"
-				class="search-queries__window"
-				:options="windowOptions"
-				:clearable="false"
-				:inputLabel="t('pipelinq', 'Period')"
-				label="label"
-				@update:modelValue="fetchRows" />
+			<div class="search-queries__window">
+				<span class="search-queries__window-label">{{ t('pipelinq', 'Period') }}</span>
+				<div class="search-queries__segments" role="group" :aria-label="t('pipelinq', 'Period')">
+					<button
+						v-for="option in windowOptions"
+						:key="option.days"
+						type="button"
+						class="search-queries__segment"
+						:class="{ 'search-queries__segment--active': window && window.days === option.days }"
+						:aria-pressed="window && window.days === option.days ? 'true' : 'false'"
+						@click="pickWindow(option)">
+						{{ option.label }}
+					</button>
+				</div>
+			</div>
 		</header>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
@@ -77,7 +84,7 @@
 import { CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
 
 const DAY = 24 * 60 * 60 * 1000
@@ -89,7 +96,6 @@ export default {
 		Magnify,
 		NcEmptyContent,
 		NcLoadingIcon,
-		NcSelect,
 	},
 
 	data() {
@@ -199,6 +205,17 @@ export default {
 
 	methods: {
 		/**
+		 * Switch the period and read the rows again.
+		 *
+		 * @param {object} option The picked period.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+		 */
+		pickWindow(option) {
+			this.window = option
+			this.fetchRows()
+		},
+
+		/**
 		 * @param {object} event The table's `{key, order}` sort event.
 		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 		 */
@@ -267,6 +284,37 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.search-queries__window {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.search-queries__window-label {
+	font-weight: 600;
+}
+
+.search-queries__segments {
+	display: flex;
+	gap: 4px;
+	padding: 4px;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius-large);
+}
+
+.search-queries__segment {
+	border: none;
+	background: transparent;
+	padding: 6px 12px;
+	border-radius: var(--border-radius);
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.search-queries__segment--active {
+	background: var(--color-main-background);
+}
+
 .search-queries {
 	padding: 20px;
 }

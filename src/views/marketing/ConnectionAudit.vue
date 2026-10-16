@@ -19,8 +19,16 @@
 <template>
 	<div class="connection-audit">
 		<header class="connection-audit__header">
-			<h2>{{ t('pipelinq', 'Connection audit') }}</h2>
-			<NcButton :disabled="refreshing" @click="refresh">
+			<div>
+				<h2>{{ t('pipelinq', 'Connection audit') }}</h2>
+				<p class="connection-audit__subtitle">
+					{{ t('pipelinq', 'Clients with an account on a network we publish on') }}
+				</p>
+			</div>
+			<NcButton variant="secondary" :disabled="refreshing" @click="refresh">
+				<template #icon>
+					<Refresh :size="18" />
+				</template>
 				{{ t('pipelinq', 'Check again') }}
 			</NcButton>
 		</header>
@@ -90,10 +98,12 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import AccountArrowRightOutline from 'vue-material-design-icons/AccountArrowRightOutline.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 
 export default {
 	name: 'ConnectionAudit',
 	components: {
+		Refresh,
 		AccountArrowRightOutline,
 		NcButton,
 		NcEmptyContent,
@@ -192,6 +202,12 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.connection-audit__subtitle {
+	margin: 2px 0 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
 .connection-audit {
 	padding: 20px;
 }
