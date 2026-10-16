@@ -625,38 +625,57 @@
 			"type": "dashboard",
 			"title": "Sales overview",
 			"config": {
-				"showRefresh": true,
+				"showRefresh": false,
 				"widgetShowRefresh": false,
 				"headerActions": [
 					{
+						"id": "new-client",
+						"label": "New client",
+						"type": "open-modal",
+						"target": "ClientCreateDialog",
+						"icon": "AccountPlusOutline"
+					},
+					{
 						"id": "new-lead",
-						"label": "New Lead",
+						"label": "New lead",
 						"type": "open-modal",
 						"target": "LeadCreateDialog",
 						"variant": "primary",
 						"icon": "Plus"
-					},
-					{
-						"id": "new-client",
-						"label": "New Client",
-						"type": "open-modal",
-						"target": "ClientCreateDialog",
-						"icon": "Plus"
 					}
 				],
-				"description": "Revenue, pipeline and win performance",
+				"description": "Compared with the period before · all owners",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
 					"enabled": true,
-					"showHeaderPicker": false,
+					"showHeaderPicker": true,
 					"persistKey": "pipelinq-commercial-range",
-					"default": { "preset": "month" },
+					"default": {
+						"preset": "quarter"
+					},
 					"presets": [
-						{ "id": "week", "label": "Last 7 days", "days": 7 },
-						{ "id": "month", "label": "Last 30 days", "days": 30 },
-						{ "id": "quarter", "label": "Last 90 days", "days": 90 },
-						{ "id": "year", "label": "Last 365 days", "days": 365 }
-					]
+						{
+							"id": "week",
+							"label": "Last 7 days",
+							"days": 7
+						},
+						{
+							"id": "month",
+							"label": "Last 30 days",
+							"days": 30
+						},
+						{
+							"id": "quarter",
+							"label": "Last 90 days",
+							"days": 90
+						},
+						{
+							"id": "year",
+							"label": "Last 365 days",
+							"days": 365
+						}
+					],
+					"control": "segmented"
 				},
 				"widgets": [
 					{
@@ -665,7 +684,9 @@
 						"title": "Revenue",
 						"content": {
 							"label": "Revenue",
-							"route": { "name": "Leads" },
+							"route": {
+								"name": "Leads"
+							},
 							"icon": "Cash",
 							"format": {
 								"style": "currency",
@@ -674,7 +695,9 @@
 							},
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/analytics/commercial",
-								"params": { "period": "@workspace.datePreset?" }
+								"params": {
+									"period": "@workspace.datePreset?"
+								}
 							},
 							"valueField": "revenue",
 							"previousField": "previousPeriod.revenue",
@@ -684,10 +707,12 @@
 					{
 						"id": "won-value",
 						"type": "stat",
-						"title": "Won Value",
+						"title": "Won value",
 						"content": {
-							"label": "Won Value",
-							"route": { "name": "Leads" },
+							"label": "Won value",
+							"route": {
+								"name": "Leads"
+							},
 							"icon": "Trophy",
 							"variant": "success",
 							"format": {
@@ -697,7 +722,9 @@
 							},
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/analytics/commercial",
-								"params": { "period": "@workspace.datePreset?" }
+								"params": {
+									"period": "@workspace.datePreset?"
+								}
 							},
 							"valueField": "wonValue",
 							"previousField": "previousPeriod.wonValue",
@@ -707,16 +734,23 @@
 					{
 						"id": "win-rate",
 						"type": "stat",
-						"title": "Win Rate",
+						"title": "Win percentage",
 						"content": {
-							"label": "Win Rate",
-							"route": { "name": "Leads" },
+							"label": "Win percentage",
+							"route": {
+								"name": "Leads"
+							},
 							"icon": "TrendingUp",
 							"variant": "success",
-							"format": { "style": "percent", "decimals": 1 },
+							"format": {
+								"style": "percent",
+								"decimals": 1
+							},
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/analytics/commercial",
-								"params": { "period": "@workspace.datePreset?" }
+								"params": {
+									"period": "@workspace.datePreset?"
+								}
 							},
 							"valueField": "winRate",
 							"previousField": "previousPeriod.winRate",
@@ -726,10 +760,12 @@
 					{
 						"id": "avg-deal-size",
 						"type": "stat",
-						"title": "Avg Deal Size",
+						"title": "Average deal",
 						"content": {
-							"label": "Avg Deal Size",
-							"route": { "name": "Leads" },
+							"label": "Average deal",
+							"route": {
+								"name": "Leads"
+							},
 							"icon": "Cash",
 							"format": {
 								"style": "currency",
@@ -738,7 +774,9 @@
 							},
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/analytics/commercial",
-								"params": { "period": "@workspace.datePreset?" }
+								"params": {
+									"period": "@workspace.datePreset?"
+								}
 							},
 							"valueField": "avgDealSize",
 							"previousField": "previousPeriod.avgDealSize",
@@ -748,10 +786,12 @@
 					{
 						"id": "weighted-forecast",
 						"type": "stat",
-						"title": "Weighted Forecast",
+						"title": "Weighted forecast",
 						"content": {
-							"label": "Weighted Forecast",
-							"route": { "name": "Leads" },
+							"label": "Weighted forecast",
+							"route": {
+								"name": "Leads"
+							},
 							"icon": "ChartLine",
 							"format": {
 								"style": "currency",
@@ -760,7 +800,9 @@
 							},
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/analytics/commercial",
-								"params": { "period": "@workspace.datePreset?" }
+								"params": {
+									"period": "@workspace.datePreset?"
+								}
 							},
 							"valueField": "weightedForecast",
 							"goodDirection": "up"
@@ -772,8 +814,10 @@
 						"title": "Recurring revenue",
 						"requiresApp": "shillinq",
 						"content": {
-							"label": "Recurring revenue (run-rate)",
-							"route": { "name": "Contracts" },
+							"label": "Recurring revenue",
+							"route": {
+								"name": "Contracts"
+							},
 							"icon": "Repeat",
 							"variant": "success",
 							"format": {
@@ -786,20 +830,24 @@
 								"schema": "SalesOrderLine",
 								"metric": "sum",
 								"field": "maandWaarde",
-								"filter": { "nature": "RECURRING" }
+								"filter": {
+									"nature": "RECURRING"
+								}
 							}
 						}
 					},
 					{
 						"id": "revenue-over-time",
 						"type": "chart",
-						"title": "Revenue over time",
+						"title": "Revenue per month",
 						"content": {
-							"chartKind": "area",
+							"chartKind": "bar",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
-								"filter": { "status": "won" },
+								"filter": {
+									"status": "won"
+								},
 								"bucket": {
 									"field": "expectedCloseDate",
 									"interval": "month",
@@ -812,20 +860,27 @@
 					{
 						"id": "pipeline-by-stage",
 						"type": "chart",
-						"title": "Pipeline by stage",
+						"title": "Open pipeline by stage",
 						"content": {
 							"chartKind": "bar",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
-								"filter": { "status": "open" },
+								"filter": {
+									"status": "open"
+								},
 								"groupBy": {
 									"field": "stage",
 									"metric": "sum",
 									"metricField": "value",
 									"sort": "desc"
 								}
-							}
+							},
+							"horizontal": true
+						},
+						"headerLink": {
+							"label": "Board",
+							"route": "Pipeline"
 						}
 					},
 					{
@@ -833,30 +888,35 @@
 						"type": "chart",
 						"title": "Revenue by source",
 						"content": {
-							"chartKind": "donut",
+							"chartKind": "bar",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
-								"filter": { "status": "won" },
+								"filter": {
+									"status": "won"
+								},
 								"groupBy": {
 									"field": "source",
 									"metric": "sum",
 									"metricField": "value",
 									"sort": "desc"
 								}
-							}
+							},
+							"horizontal": true
 						}
 					},
 					{
 						"id": "top-customers",
 						"type": "chart",
-						"title": "Top customers by revenue",
+						"title": "Largest customers by revenue",
 						"content": {
 							"chartKind": "bar",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
-								"filter": { "status": "won" },
+								"filter": {
+									"status": "won"
+								},
 								"groupBy": {
 									"field": "client",
 									"metric": "sum",
@@ -868,122 +928,84 @@
 										"labelField": "name"
 									}
 								}
-							}
+							},
+							"horizontal": true
 						}
 					},
 					{
 						"id": "closing-soon",
-						"type": "object-table",
-						"title": "Deals closing soon",
+						"type": "record-list",
+						"title": "Closing soon",
+						"headerLink": {
+							"label": "All leads",
+							"route": "Leads"
+						},
 						"content": {
 							"register": "pipelinq",
 							"schema": "lead",
-							"filter": { "status": "open" },
-							"sort": { "field": "expectedCloseDate", "dir": "asc" },
-							"limit": 6,
-							"hideHeader": true,
-							"borderless": true,
+							"filter": {
+								"status": "open"
+							},
+							"sort": {
+								"field": "expectedCloseDate",
+								"dir": "asc"
+							},
+							"limit": 3,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": "{stage} · {expectedCloseDate|date} · {assignee}",
+							"trailing": [
+								"{value|currency}"
+							],
 							"rowRoute": "LeadDetail",
-							"emptyText": "No open deals with a close date.",
-							"columns": [
-								{
-									"key": "title",
-									"label": "Deal",
-									"cellClass": "cn-cell--strong"
-								},
-								{
-									"key": "client",
-									"label": "Client",
-									"widget": "fkResolve",
-									"widgetProps": {
-										"register": "pipelinq",
-										"schema": "client",
-										"labelField": "name"
-									},
-									"cellClass": "cn-cell--muted"
-								},
-								{
-									"key": "expectedCloseDate",
-									"label": "Close date",
-									"formatter": "date",
-									"cellClass": "cn-cell--muted"
-								},
-								{
-									"key": "value",
-									"label": "Value",
-									"formatter": "currency",
-									"formatterOptions": {
-										"currency": "@config.currency",
-										"decimals": 0
-									},
-									"cellClass": "cn-cell--strong cn-cell--end"
-								}
-							]
+							"emptyText": "No open deals with a close date."
 						}
 					},
 					{
 						"id": "recently-won-lost",
-						"type": "object-table",
+						"type": "record-list",
 						"title": "Recently won / lost",
 						"content": {
 							"register": "pipelinq",
 							"schema": "lead",
-							"filter": { "status": ["won", "lost"] },
-							"sort": { "field": "expectedCloseDate", "dir": "desc" },
-							"limit": 6,
-							"hideHeader": true,
-							"borderless": true,
-							"rowRoute": "LeadDetail",
-							"emptyText": "No deals closed yet.",
-							"columns": [
-								{
-									"key": "title",
-									"label": "Deal",
-									"cellClass": "cn-cell--strong"
-								},
-								{
-									"key": "client",
-									"label": "Client",
-									"widget": "fkResolve",
-									"widgetProps": {
-										"register": "pipelinq",
-										"schema": "client",
-										"labelField": "name"
-									},
-									"cellClass": "cn-cell--muted"
-								},
-								{
-									"key": "status",
-									"label": "Status",
-									"widget": "badge",
-									"widgetProps": {
-										"colorMap": {
-											"won": "var(--color-success)",
-											"lost": "var(--color-background-dark)"
-										}
-									}
-								},
-								{
-									"key": "value",
-									"label": "Value",
-									"formatter": "currency",
-									"formatterOptions": {
-										"currency": "@config.currency",
-										"decimals": 0
-									},
-									"cellClass": "cn-cell--strong cn-cell--end"
+							"filter": {
+								"status": [
+									"won",
+									"lost"
+								]
+							},
+							"sort": {
+								"field": "expectedCloseDate",
+								"dir": "desc"
+							},
+							"limit": 3,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": "{expectedCloseDate|date} · {assignee}",
+							"pill": {
+								"field": "status",
+								"variantMap": {
+									"won": "success",
+									"lost": "error"
 								}
-							]
+							},
+							"trailing": [
+								"{value|currency}"
+							],
+							"rowRoute": "LeadDetail",
+							"emptyText": "No deals closed yet."
 						}
 					},
 					{
 						"id": "pipeline-coverage",
 						"type": "gauge",
-						"title": "Pipeline coverage",
+						"title": "Pipeline cover",
 						"content": {
 							"label": "Open pipeline vs target",
 							"labelWithoutTarget": "Open pipeline (no target set)",
-							"route": { "name": "Pipeline" },
+							"route": {
+								"name": "Pipeline"
+							},
 							"format": {
 								"style": "currency",
 								"currency": "@config.currency",
@@ -994,7 +1016,9 @@
 								"schema": "lead",
 								"metric": "sum",
 								"field": "value",
-								"filter": { "status": "open" }
+								"filter": {
+									"status": "open"
+								}
 							},
 							"target": {
 								"kind": "static",
@@ -1010,12 +1034,17 @@
 					{
 						"id": "won-vs-open",
 						"type": "delta",
-						"title": "Won vs open",
+						"title": "Won against open",
 						"content": {
 							"label": "Won deals",
-							"route": { "name": "Pipeline" },
+							"route": {
+								"name": "Pipeline"
+							},
 							"icon": "Trophy",
-							"format": { "style": "number", "decimals": 0 },
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
 							"source": {
 								"register": "pipelinq",
 								"schema": "lead",
@@ -1030,145 +1059,92 @@
 										}
 									}
 								},
-								"previous": { "filter": { "status": "open" } }
+								"previous": {
+									"filter": {
+										"status": "open"
+									}
+								}
 							}
 						}
 					}
 				],
 				"layout": [
 					{
-						"id": "c16",
-						"widgetId": "pipeline-coverage",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false,
-						"dateChip": true
-					},
-					{
-						"id": "c5",
-						"widgetId": "weighted-forecast",
-						"gridX": 3,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false,
-						"dateChip": true
-					},
-					{
-						"id": "c1",
-						"widgetId": "revenue",
-						"gridX": 6,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false,
-						"dateChip": true
-					},
-					{
-						"id": "c13",
-						"widgetId": "mrr",
-						"gridX": 9,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false,
-						"dateChip": true
-					},
-					{
-						"id": "c17",
-						"widgetId": "won-vs-open",
-						"gridX": 0,
-						"gridY": 2,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false,
-						"dateChip": true
-					},
-					{
-						"id": "c2",
-						"widgetId": "won-value",
-						"gridX": 3,
-						"gridY": 2,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false,
-						"dateChip": true
-					},
-					{
-						"id": "c3",
-						"widgetId": "win-rate",
-						"gridX": 6,
-						"gridY": 2,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false,
-						"dateChip": true
-					},
-					{
-						"id": "c18",
-						"widgetId": "avg-deal-size",
-						"gridX": 9,
-						"gridY": 2,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false,
-						"dateChip": true
-					},
-					{
 						"id": "c7",
 						"widgetId": "revenue-over-time",
 						"gridX": 0,
-						"gridY": 4,
-						"gridWidth": 6,
-						"gridHeight": 4,
-						"dateChip": true
+						"gridY": 0,
+						"gridWidth": 7,
+						"gridHeight": 4
 					},
 					{
 						"id": "c8",
 						"widgetId": "pipeline-by-stage",
-						"gridX": 6,
+						"gridX": 7,
+						"gridY": 0,
+						"gridWidth": 5,
+						"gridHeight": 4
+					},
+					{
+						"id": "c11",
+						"widgetId": "closing-soon",
+						"gridX": 0,
 						"gridY": 4,
-						"gridWidth": 6,
-						"gridHeight": 4,
-						"dateChip": true
+						"gridWidth": 7,
+						"gridHeight": 4
+					},
+					{
+						"id": "c12",
+						"widgetId": "recently-won-lost",
+						"gridX": 7,
+						"gridY": 4,
+						"gridWidth": 5,
+						"gridHeight": 4
 					},
 					{
 						"id": "c9",
 						"widgetId": "revenue-by-category",
 						"gridX": 0,
 						"gridY": 8,
-						"gridWidth": 6,
-						"gridHeight": 4,
-						"dateChip": true
+						"gridWidth": 4,
+						"gridHeight": 4
 					},
 					{
 						"id": "c10",
 						"widgetId": "top-customers",
-						"gridX": 6,
+						"gridX": 4,
 						"gridY": 8,
-						"gridWidth": 6,
-						"gridHeight": 4,
-						"dateChip": true
-					},
-					{
-						"id": "c11",
-						"widgetId": "closing-soon",
-						"gridX": 0,
-						"gridY": 12,
-						"gridWidth": 6,
+						"gridWidth": 4,
 						"gridHeight": 4
 					},
 					{
-						"id": "c12",
-						"widgetId": "recently-won-lost",
-						"gridX": 6,
-						"gridY": 12,
-						"gridWidth": 6,
-						"gridHeight": 4
+						"id": "c16",
+						"widgetId": "pipeline-coverage",
+						"gridX": 8,
+						"gridY": 8,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": "c17",
+						"widgetId": "won-vs-open",
+						"gridX": 8,
+						"gridY": 10,
+						"gridWidth": 4,
+						"gridHeight": 2
 					}
-				]
+				],
+				"kpiRow": [
+					"revenue",
+					"won-value",
+					"win-rate",
+					"avg-deal-size",
+					"weighted-forecast",
+					"mrr"
+				],
+				"showWidgetActions": false,
+				"showActionsMenu": false,
+				"_boardNote": "Board look (PqVerkoopoverzicht, round 12): the period as one segmented control, six KPI tiles in an auto-fit row above the grid, then revenue per month beside the open pipeline by stage, the deals closing soon beside the recently won and lost ones, and revenue by source, the largest customers, pipeline coverage and won against open on the last row. No widget carries its own date chip or Actions menu."
 			},
 			"slots": {}
 		},

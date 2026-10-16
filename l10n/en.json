@@ -7692,6 +7692,19 @@
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Won value": "Won value",
+        "Win percentage": "Win percentage",
+        "Average deal": "Average deal",
+        "Weighted forecast": "Weighted forecast",
+        "Revenue per month": "Revenue per month",
+        "Open pipeline by stage": "Open pipeline by stage",
+        "Board": "Board",
+        "Largest customers by revenue": "Largest customers by revenue",
+        "Closing soon": "Closing soon",
+        "All leads": "All leads",
+        "Compared with the period before · all owners": "Compared with the period before · all owners",
+        "Pipeline cover": "Pipeline cover",
+        "Won against open": "Won against open"
     }
 }

@@ -7599,7 +7599,20 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "Won value": "Gewonnen waarde",
+        "Win percentage": "Winstpercentage",
+        "Average deal": "Gemiddelde deal",
+        "Weighted forecast": "Gewogen prognose",
+        "Revenue per month": "Omzet per maand",
+        "Open pipeline by stage": "Open pijplijn per fase",
+        "Board": "Bord",
+        "Largest customers by revenue": "Grootste klanten op omzet",
+        "Closing soon": "Sluit binnenkort",
+        "All leads": "Alle leads",
+        "Compared with the period before · all owners": "Vergeleken met de periode ervoor · alle eigenaren",
+        "Pipeline cover": "Dekking pijplijn",
+        "Won against open": "Gewonnen tegenover open"
     },
     "nplurals=2; plural=(n != 1);"
 )
