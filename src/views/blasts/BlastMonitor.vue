@@ -544,7 +544,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .blast-monitor {
 	box-sizing: border-box;
 	width: 100%;
