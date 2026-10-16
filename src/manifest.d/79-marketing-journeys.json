@@ -149,7 +149,8 @@
 								{
 									"widgetIds": [
 										"journey-data",
-										"journey-steps"
+										"journey-steps",
+										"journey-runs"
 									],
 									"label": "Overview"
 								},
@@ -283,6 +284,14 @@
 							"order": "desc",
 							"limit": 3
 						}
+					},
+					{
+						"id": "journey-runs",
+						"type": "JourneyRunsWidget",
+						"title": "What this journey did",
+						"content": {
+							"title": "What this journey did"
+						}
 					}
 				],
 				"layout": [
@@ -293,20 +302,8 @@
 						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 8,
-						"showTitle": false
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "journey-runs",
-						"component": "JourneyRunsSection",
-						"title": "What this journey did",
-						"placement": "end",
-						"props": {
-							"journeyId": "@objectId"
-						},
-						"card": true,
-						"colSpan": 12
+						"showTitle": false,
+						"sizeToContent": true
 					}
 				],
 				"sidebar": {

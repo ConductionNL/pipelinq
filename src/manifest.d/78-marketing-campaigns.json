@@ -153,13 +153,16 @@
 							"tabs": [
 								{
 									"widgetIds": [
-										"campaign-data"
+										"campaign-data",
+										"campaign-landing",
+										"campaign-report"
 									],
 									"label": "Overview"
 								},
 								{
 									"widgetId": "campaign-history",
-									"label": "History"
+									"label": "History",
+									"countFrom": "widget"
 								}
 							]
 						}
@@ -244,6 +247,22 @@
 							"order": "desc",
 							"limit": 3
 						}
+					},
+					{
+						"id": "campaign-landing",
+						"type": "CampaignLandingPageWidget",
+						"title": "Landing page",
+						"content": {
+							"title": "Landing page"
+						}
+					},
+					{
+						"id": "campaign-report",
+						"type": "CampaignReportWidget",
+						"title": "Campaign report",
+						"content": {
+							"title": "Campaign report"
+						}
 					}
 				],
 				"layout": [
@@ -256,29 +275,6 @@
 						"showTitle": false,
 						"gridHeight": 6,
 						"sizeToContent": true
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "campaign-landing-page",
-						"component": "CampaignLandingPageSection",
-						"title": "Landing page",
-						"placement": "end",
-						"props": {
-							"campaignId": "@objectId"
-						},
-						"card": true,
-						"colSpan": 12
-					},
-					{
-						"id": "campaign-report",
-						"component": "CampaignReportSection",
-						"placement": "end",
-						"card": true,
-						"colSpan": 12,
-						"props": {
-							"campaignId": "@objectId"
-						}
 					}
 				],
 				"sidebar": {
