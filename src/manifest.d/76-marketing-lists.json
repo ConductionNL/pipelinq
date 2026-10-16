@@ -25,10 +25,13 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "mailingList",
-				"columnOverrides": { "createdBy": { "formatter": "userDisplayName" } },
+				"columnOverrides": {
+					"createdBy": {
+						"formatter": "userDisplayName"
+					}
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
-				"includeColumns": ["name", "optInMode", "publicSignup", "status"],
 				"actions": [
 					{
 						"id": "view",
@@ -41,7 +44,72 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"countText": "{shown} of {total} lists",
+				"searchPlaceholder": "Filter by name",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board"
+				],
+				"board": {
+					"statusField": "status"
+				},
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New list"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Active",
+						"filter": {
+							"status": "active"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Paused",
+						"filter": {
+							"status": "paused"
+						},
+						"showCount": true
+					}
+				],
+				"columns": [
+					"name",
+					{
+						"key": "optInMode",
+						"label": "Way of signing up"
+					},
+					"publicSignup",
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"active": "success",
+								"paused": "warning",
+								"archived": "default"
+							}
+						}
+					}
+				]
 			}
 		},
 		{
@@ -56,24 +124,103 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"widgets": [
 					{
+						"id": "list-panels",
+						"type": "tabs",
+						"title": "Mailing list",
+						"content": {
+							"ariaLabel": "Mailing list",
+							"tabs": [
+								{
+									"widgetId": "mailing-list-data",
+									"label": "Overview"
+								},
+								{
+									"widgetId": "list-history",
+									"label": "History"
+								}
+							]
+						}
+					},
+					{
 						"id": "mailing-list-data",
 						"type": "data",
 						"title": "List details",
-						"icon": "EmailMultipleOutline",
 						"content": {
+							"title": "List details",
 							"columns": 2,
-							"overrides": { "createdBy": { "formatter": "userDisplayName" } }
+							"include": [
+								"senderName",
+								"senderEmail",
+								"replyTo",
+								"optInMode",
+								"publicSignup",
+								"footerAddress",
+								"description"
+							],
+							"overrides": {
+								"senderName": {
+									"order": 0
+								},
+								"senderEmail": {
+									"order": 1,
+									"label": "Sender e-mail address"
+								},
+								"replyTo": {
+									"order": 2,
+									"label": "Reply address"
+								},
+								"optInMode": {
+									"order": 3,
+									"label": "Way of signing up",
+									"enumLabels": {
+										"double": "Double",
+										"soft": "Soft"
+									}
+								},
+								"publicSignup": {
+									"order": 4,
+									"label": "Public sign-up"
+								},
+								"footerAddress": {
+									"order": 5,
+									"label": "Address in the footer"
+								},
+								"description": {
+									"order": 6,
+									"gridColumn": 2
+								}
+							}
+						}
+					},
+					{
+						"id": "list-history",
+						"type": "timeline",
+						"title": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc"
+						}
+					},
+					{
+						"id": "list-side-history",
+						"type": "timeline",
+						"title": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc",
+							"limit": 3
 						}
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "mailing-list-data",
+						"widgetId": "list-panels",
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 4
+						"gridHeight": 8,
+						"showTitle": false
 					}
 				],
 				"bodyWidgets": [
@@ -84,21 +231,52 @@
 						"placement": "end",
 						"props": {
 							"listId": "@objectId"
-						}
+						},
+						"card": true,
+						"colSpan": 12
 					}
 				],
 				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "audit",
-							"label": "History",
-							"icon": "History",
-							"widgets": [{ "type": "audit" }]
-						}
-					]
-				}
+					"enabled": false
+				},
+				"follow": false,
+				"showTypeEyebrow": false,
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"active": "Active",
+						"paused": "Paused",
+						"archived": "Archived"
+					},
+					"colorMap": {
+						"active": "success",
+						"paused": "warning",
+						"archived": "default"
+					}
+				},
+				"typePill": {
+					"field": "optInMode",
+					"labels": {
+						"double": "Double opt-in",
+						"soft": "Soft opt-in"
+					},
+					"colorMap": {
+						"double": "info",
+						"soft": "default"
+					}
+				},
+				"breadcrumb": {
+					"label": "Mailing lists",
+					"route": "MailingLists",
+					"separator": "/"
+				},
+				"headerMeta": "created on {@self.created|date}",
+				"actionsMenu": {
+					"label": "More"
+				},
+				"sideColumn": [
+					"list-side-history"
+				]
 			}
 		}
 	]

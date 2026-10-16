@@ -19,11 +19,27 @@
 -->
 <template>
 	<div class="performance-dashboard">
+		<NcButton
+			class="performance-dashboard__back"
+			variant="tertiary"
+			:to="{ name: 'Blasts' }">
+			<template #icon>
+				<ArrowLeft :size="18" />
+			</template>
+			{{ t('pipelinq', 'Back to blasts') }}
+		</NcButton>
 		<header class="performance-dashboard__header">
-			<NcButton variant="tertiary" :to="{ name: 'Blasts' }">
-				{{ t('pipelinq', 'Back to blasts') }}
-			</NcButton>
-			<h2>{{ t('pipelinq', 'Blast performance') }}</h2>
+			<div>
+				<h2>{{ t('pipelinq', 'Blast performance') }}</h2>
+				<p class="performance-dashboard__subtitle">
+					{{
+						t('pipelinq', '{shown} of {total} newsletters · opened and clicked from our own measurements · newest first', {
+							shown: overviewRows.length,
+							total: blasts.length,
+						})
+					}}
+				</p>
+			</div>
 		</header>
 
 		<CnTabs
@@ -350,6 +366,7 @@
 import { CnStatusBadge, CnTab, CnTabs } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { trafficOutcome } from '../../services/campaignTraffic.js'
 
@@ -363,6 +380,7 @@ const P_VALUE_ALPHA = 0.05
 export default {
 	name: 'PerformanceDashboard',
 	components: {
+		ArrowLeft,
 		NcButton,
 		NcLoadingIcon,
 		CnStatusBadge,
@@ -1073,9 +1091,7 @@ export default {
 .performance-dashboard {
 	box-sizing: border-box;
 	width: 100%;
-	max-width: 1240px;
-	margin: 0 auto;
-	padding: 24px 20px;
+	padding: 24px 28px;
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
@@ -1088,7 +1104,18 @@ export default {
 }
 
 .performance-dashboard__header h2 {
+	margin: 0 0 6px;
+	font-size: 28px;
+}
+
+.performance-dashboard__subtitle {
 	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.performance-dashboard__back {
+	align-self: flex-start;
+	margin-inline-start: -12px;
 }
 
 .performance-dashboard :deep(.performance-dashboard__body) {

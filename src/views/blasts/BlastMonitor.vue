@@ -2,52 +2,84 @@
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
 	<div class="blast-monitor">
+		<NcButton
+			class="blast-monitor__back"
+			variant="tertiary"
+			:to="{ name: 'Blasts' }">
+			<template #icon>
+				<ArrowLeft :size="18" />
+			</template>
+			{{ t('pipelinq', 'Back to blasts') }}
+		</NcButton>
+
 		<header class="blast-monitor__header">
-			<NcButton variant="tertiary" :to="{ name: 'Blasts' }">
-				{{ t('pipelinq', 'Back to blasts') }}
+			<div class="blast-monitor__heading">
+				<h2>{{ blast?.name || t('pipelinq', 'Blast') }}</h2>
+				<div class="blast-monitor__meta">
+					<CnStatusBadge
+						v-if="blast?.status"
+						:status="blast.status"
+						:variant="statusVariant(blast.status)"
+						:label="statusLabel(blast.status)"
+						size="small" />
+					<router-link :to="{ name: 'Blasts' }" class="blast-monitor__crumb">
+						{{ t('pipelinq', 'Newsletters') }}
+					</router-link>
+					<span aria-hidden="true">/</span>
+					<span>{{ t('pipelinq', 'Live sending') }}</span>
+					<span v-if="audienceTotal" class="blast-monitor__meta-line">
+						· {{ t('pipelinq', '{count} recipients', { count: audienceTotal.toLocaleString() }) }}
+					</span>
+				</div>
+			</div>
+			<NcButton
+				v-if="canCancel"
+				variant="error"
+				:disabled="cancelling"
+				@click="cancel">
+				<template #icon>
+					<Cancel :size="18" />
+				</template>
+				{{
+					cancelling
+						? t('pipelinq', 'Cancelling…')
+						: t('pipelinq', 'Cancel send')
+				}}
 			</NcButton>
-			<h2>{{ blast?.name || t('pipelinq', 'Blast') }}</h2>
-			<CnStatusBadge
-				v-if="blast?.status"
-				:status="blast.status"
-				:label="statusLabel(blast.status)" />
 		</header>
+		<p v-if="cancelError" class="blast-monitor__error" role="alert">
+			{{ cancelError }}
+		</p>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
 
 		<section v-else class="blast-monitor__body">
-			<div class="blast-monitor__progress">
-				<!-- The label is rendered twice: once on the track and once on the
-					fill, which is masked to the progress width with a wavy edge, so
-					the text flips colour exactly along the wave. -->
+			<div class="blast-monitor__card blast-monitor__progress">
+				<div class="blast-monitor__progress-head">
+					<p class="blast-monitor__progress-meta">
+						<strong>{{ progressPercent }}%</strong>
+						{{ t('pipelinq', 'done') }}
+					</p>
+					<p v-if="etaLabel" class="blast-monitor__eta">
+						{{ etaLabel }}
+					</p>
+				</div>
 				<div
 					class="blast-monitor__bar"
-					:class="{
-						'blast-monitor__bar--active': isSending,
-						'blast-monitor__bar--empty': progressPercent <= 0,
-						'blast-monitor__bar--full': progressPercent >= 100,
-					}"
 					:style="{ '--blast-progress': progressPercent }"
 					role="progressbar"
 					:aria-valuenow="progressPercent"
 					aria-valuemin="0"
 					aria-valuemax="100">
-					<span class="blast-monitor__bar-label">
-						<strong>{{ progressPercent }}%</strong>
-						{{ t('pipelinq', 'complete') }}
-					</span>
-					<span class="blast-monitor__bar-wave" aria-hidden="true" />
-					<div
-						class="blast-monitor__bar-fill blast-monitor__bar-wave"
-						aria-hidden="true">
-						<span class="blast-monitor__bar-label">
-							<strong>{{ progressPercent }}%</strong>
-							{{ t('pipelinq', 'complete') }}
-						</span>
-					</div>
+					<div class="blast-monitor__bar-fill" />
 				</div>
-				<p v-if="etaLabel" class="blast-monitor__eta">
-					{{ etaLabel }}
+				<p class="blast-monitor__progress-note">
+					{{
+						t('pipelinq', '{done} of {total} handed to the provider', {
+							done: processed.toLocaleString(),
+							total: audienceTotal.toLocaleString(),
+						})
+					}}
 				</p>
 			</div>
 
@@ -55,50 +87,47 @@
 				<div
 					v-for="key in totalsKeys"
 					:key="key"
-					class="blast-monitor__total">
+					class="blast-monitor__card blast-monitor__total">
 					<span class="blast-monitor__total-label">
 						{{ totalLabel(key) }}
 					</span>
-					<strong class="blast-monitor__total-value">
+					<strong
+						class="blast-monitor__total-value"
+						:class="`blast-monitor__total-value--${totalTone(key)}`">
 						{{ totals[key] || 0 }}
 					</strong>
+					<span class="blast-monitor__total-caption">
+						{{ totalCaption(key) }}
+					</span>
 				</div>
 			</div>
 
-			<section class="blast-monitor__timeline">
-				<h3>{{ t('pipelinq', 'Recent events') }}</h3>
+			<section class="blast-monitor__card blast-monitor__timeline">
+				<header class="blast-monitor__timeline-head">
+					<h3>{{ t('pipelinq', 'Recent events') }}</h3>
+					<span>{{ t('pipelinq', 'Newest first') }}</span>
+				</header>
 				<ul v-if="timeline.length > 0">
 					<li
 						v-for="event in timeline"
 						:key="event.id || event.timestamp + event.status">
 						<time>{{ formatTime(event.timestamp) }}</time>
-						<CnStatusBadge
-							:status="event.status"
-							:label="statusLabel(event.status)" />
 						<span class="blast-monitor__event-target">
 							{{
 								event.email || event.phone || event.contactId || '—'
 							}}
 						</span>
+						<CnStatusBadge
+							:status="event.status"
+							:variant="statusVariant(event.status)"
+							:label="statusLabel(event.status)"
+							size="small" />
 					</li>
 				</ul>
 				<p v-else class="blast-monitor__empty">
 					{{ t('pipelinq', 'No events yet.') }}
 				</p>
 			</section>
-
-			<footer v-if="canCancel" class="blast-monitor__footer">
-				<NcButton variant="error" :disabled="cancelling" @click="cancel">
-					{{
-						cancelling
-							? t('pipelinq', 'Cancelling…')
-							: t('pipelinq', 'Cancel send')
-					}}
-				</NcButton>
-			</footer>
-			<p v-if="cancelError" class="blast-monitor__error" role="alert">
-				{{ cancelError }}
-			</p>
 		</section>
 	</div>
 </template>
@@ -108,6 +137,8 @@ import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
+import Cancel from 'vue-material-design-icons/Cancel.vue'
 
 const POLL_INTERVAL_MS = 2000
 const TIMELINE_MAX = 50
@@ -126,6 +157,8 @@ const TERMINAL_STATUSES = ['sent', 'failed', 'cancelled']
 export default {
 	name: 'BlastMonitor',
 	components: {
+		ArrowLeft,
+		Cancel,
 		NcButton,
 		NcLoadingIcon,
 		CnStatusBadge,
@@ -224,7 +257,7 @@ export default {
 			if (!isFinite(remaining) || remaining < 1) {
 				return ''
 			}
-			return this.t('pipelinq', 'ETA: ~{seconds}s remaining', {
+			return this.t('pipelinq', 'About {seconds} s to go', {
 				seconds: Math.round(remaining),
 			})
 		},
@@ -427,6 +460,65 @@ export default {
 		},
 
 		/**
+		 * The tone of a state: the colour of its pill and its tile figure.
+		 *
+		 * @param {string} status A blast or delivery state.
+		 * @return {string} A CnStatusBadge variant.
+		 * @spec openspec/specs/marketing-ui/spec.md#cancel-a-sending-blast
+		 */
+		statusVariant(status) {
+			const tones = {
+				sending: 'purple',
+				cancelling: 'warning',
+				scheduled: 'info',
+				sent: 'default',
+				delivered: 'success',
+				opened: 'info',
+				clicked: 'teal',
+				bounced: 'error',
+				failed: 'error',
+				unsubscribed: 'warning',
+				complained: 'error',
+				paused: 'warning',
+			}
+			return tones[status] || 'default'
+		},
+
+		/**
+		 * The tone of a tile's figure: delivered reads good, bounced reads bad.
+		 *
+		 * @param {string} key A totals key.
+		 * @return {string} success, error or plain.
+		 * @spec openspec/specs/marketing-ui/spec.md#cancel-a-sending-blast
+		 */
+		totalTone(key) {
+			return { delivered: 'success', bounced: 'error' }[key] || 'plain'
+		},
+
+		/**
+		 * The line under a tile's figure, saying what the number means.
+		 *
+		 * @param {string} key A totals key.
+		 * @return {string} The caption.
+		 * @spec openspec/specs/marketing-ui/spec.md#cancel-a-sending-blast
+		 */
+		totalCaption(key) {
+			const totals = this.totals
+			const share = (part, whole) => (whole ? Math.round(((part || 0) / whole) * 100) : 0)
+			const captions = {
+				queued: () => this.t('pipelinq', 'waiting on the rate limit'),
+				sent: () => this.t('pipelinq', 'handed to the provider'),
+				delivered: () => this.t('pipelinq', '{percent}% of sent', { percent: share(totals.delivered, totals.sent) }),
+				opened: () => this.t('pipelinq', '{percent}% of delivered', { percent: share(totals.opened, totals.delivered) }),
+				clicked: () => this.t('pipelinq', '{percent}% of delivered', { percent: share(totals.clicked, totals.delivered) }),
+				bounced: () => this.t('pipelinq', 'address refused'),
+				unsubscribed: () => this.t('pipelinq', 'via the link in the footer'),
+				complained: () => this.t('pipelinq', 'marked as spam'),
+			}
+			return captions[key] ? captions[key]() : ''
+		},
+
+		/**
 		 * Pretty-print a timestamp for the timeline list.
 		 *
 		 * @param {string} ts Timestamp string.
@@ -443,7 +535,7 @@ export default {
 				if (isNaN(date.getTime())) {
 					return ts
 				}
-				return date.toLocaleString()
+				return date.toLocaleTimeString()
 			} catch {
 				return ts
 			}
@@ -456,204 +548,181 @@ export default {
 .blast-monitor {
 	box-sizing: border-box;
 	width: 100%;
-	max-width: 980px;
-	margin: 0 auto;
-	padding: 24px 20px;
+	padding: 24px 28px;
 	display: flex;
 	flex-direction: column;
-	gap: 24px;
+	gap: 16px;
+}
+
+.blast-monitor__back {
+	align-self: flex-start;
+	margin-inline-start: -12px;
 }
 
 .blast-monitor__header {
 	display: flex;
-	align-items: center;
-	gap: 12px;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
 }
 
 .blast-monitor__header h2 {
-	margin: 0;
+	margin: 0 0 8px;
+	font-size: 28px;
+}
+
+.blast-monitor__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	color: var(--color-text-maxcontrast);
+}
+
+.blast-monitor__crumb {
+	text-decoration: underline;
+	color: var(--color-primary-element);
 }
 
 .blast-monitor__body {
 	display: flex;
 	flex-direction: column;
-	gap: 24px;
+	gap: 20px;
+}
+
+.blast-monitor__card {
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	padding: 20px 22px;
 }
 
 .blast-monitor__progress {
 	display: flex;
 	flex-direction: column;
+	gap: 12px;
+}
+
+.blast-monitor__progress-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.blast-monitor__progress-meta {
+	margin: 0;
+	display: flex;
+	align-items: baseline;
 	gap: 8px;
+
+	strong {
+		font-size: 26px;
+	}
 }
 
 .blast-monitor__bar {
 	position: relative;
 	width: 100%;
-	height: 34px;
+	height: 12px;
 	background: var(--color-background-dark);
 	border-radius: 999px;
-	box-shadow: inset 0 1px 3px rgba(var(--color-box-shadow-rgb), 0.25);
 	overflow: hidden;
-	/* Lets the wave layers turn the progress number into a length (cqi). */
-	container-type: inline-size;
-	transition: --blast-progress 600ms ease;
-}
-
-.blast-monitor__bar-label {
-	position: absolute;
-	inset: 0;
-	z-index: 1;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 4px;
-	color: var(--color-main-text);
-	font-variant-numeric: tabular-nums;
-	white-space: nowrap;
-}
-
-/* Both wave layers are full-width and masked by two layers: a solid block up to
-   the wave's start, plus a sine-edged strip that scrolls vertically, so the
-   leading edge ripples. The bare .blast-monitor__bar-wave is the paler, larger
-   wave behind the fill, running the other way. */
-.blast-monitor__bar-wave {
-	--wave-width: 20px;
-	--wave-height: 80px;
-	--wave-shift: 6px;
-	--wave-edge: calc(
-		var(--blast-progress) * 1cqi - var(--wave-width) / 2 + var(--wave-shift)
-	);
-	position: absolute;
-	inset: 0;
-	background: color-mix(in srgb, var(--color-primary-element) 40%, transparent);
-	mask-image:
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 34' preserveAspectRatio='none'%3E%3Cpath d='M0 0H15C28.3 6.1 28.3 10.9 15 17S1.7 27.9 15 34H0Z'/%3E%3C/svg%3E"),
-		linear-gradient(#000, #000);
-	mask-repeat: repeat-y, no-repeat;
-	mask-position:
-		var(--wave-edge) 0,
-		0 0;
-	mask-size:
-		var(--wave-width) var(--wave-height),
-		max(0px, var(--wave-edge) + 1px) 100%;
-	animation: blast-monitor-wave 3.6s linear infinite reverse;
 }
 
 .blast-monitor__bar-fill {
-	--wave-width: 15px;
-	--wave-height: 56px;
-	--wave-shift: 0px;
+	height: 100%;
+	width: calc(var(--blast-progress) * 1%);
 	background: var(--color-primary-element);
-	animation-duration: 2.4s;
-	animation-direction: normal;
-}
-
-.blast-monitor__bar-fill .blast-monitor__bar-label {
-	color: var(--color-primary-element-text);
-}
-
-.blast-monitor__bar--active .blast-monitor__bar-wave {
-	animation-duration: 1.4s;
-}
-
-.blast-monitor__bar--active .blast-monitor__bar-fill {
-	animation-duration: 0.9s;
-}
-
-.blast-monitor__bar--empty .blast-monitor__bar-wave {
-	visibility: hidden;
-}
-
-.blast-monitor__bar--full .blast-monitor__bar-wave {
-	mask: none;
-	animation: none;
-}
-
-@property --blast-progress {
-	syntax: '<number>';
-	inherits: true;
-	initial-value: 0;
-}
-
-@keyframes blast-monitor-wave {
-	from {
-		mask-position:
-			var(--wave-edge) 0,
-			0 0;
-	}
-
-	to {
-		mask-position:
-			var(--wave-edge) var(--wave-height),
-			0 0;
-	}
+	border-radius: 999px;
+	transition: width 600ms ease;
 }
 
 .blast-monitor__eta {
 	margin: 0;
-	text-align: center;
+	color: var(--color-primary-element);
+	font-weight: 600;
+}
+
+.blast-monitor__progress-note {
+	margin: 0;
 	color: var(--color-text-maxcontrast);
-	font-size: 0.9em;
 }
 
 .blast-monitor__totals {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-	gap: 8px;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 16px;
 }
 
 .blast-monitor__total {
 	display: flex;
 	flex-direction: column;
-	padding: 12px;
-	background: var(--color-background-hover);
-	border-radius: var(--border-radius);
+	gap: 4px;
 }
 
-.blast-monitor__total-label {
-	color: var(--color-text-lighter);
-	font-size: 0.85em;
+.blast-monitor__total-label,
+.blast-monitor__total-caption {
+	color: var(--color-text-maxcontrast);
+}
+
+.blast-monitor__total-caption {
+	font-size: 13px;
 }
 
 .blast-monitor__total-value {
-	font-size: 1.4em;
+	font-size: 26px;
 	color: var(--color-main-text);
 }
 
-.blast-monitor__timeline {
+.blast-monitor__total-value--success {
+	color: var(--color-success-text, var(--color-success));
+}
+
+.blast-monitor__total-value--error {
+	color: var(--color-error-text, var(--color-error));
+}
+
+.blast-monitor__timeline-head {
 	display: flex;
-	flex-direction: column;
-	gap: 6px;
+	align-items: baseline;
+	justify-content: space-between;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+
+	h3 {
+		margin: 0 0 8px;
+		color: var(--color-main-text);
+		font-size: 17px;
+	}
 }
 
 .blast-monitor__timeline ul {
 	margin: 0;
 	padding: 0;
 	list-style: none;
-	max-height: 360px;
-	overflow-y: auto;
 }
 
 .blast-monitor__timeline li {
-	display: flex;
+	display: grid;
+	grid-template-columns: 100px 1fr auto;
 	align-items: center;
 	gap: 8px;
-	padding: 6px 0;
+	padding: 10px 0;
 	border-bottom: 1px solid var(--color-border);
 }
 
+.blast-monitor__timeline time {
+	color: var(--color-text-maxcontrast);
+}
+
 .blast-monitor__event-target {
-	color: var(--color-text-lighter);
+	font-weight: 600;
 }
 
 .blast-monitor__empty {
-	color: var(--color-text-lighter);
+	color: var(--color-text-maxcontrast);
 	margin: 0;
-}
-
-.blast-monitor__footer {
-	display: flex;
-	justify-content: flex-end;
 }
 
 .blast-monitor__error {
@@ -662,13 +731,15 @@ export default {
 	margin: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.blast-monitor__bar {
-		transition: none;
+@media (max-width: 1024px) {
+	.blast-monitor__totals {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
+}
 
-	.blast-monitor__bar-wave {
-		animation: none;
+@media (prefers-reduced-motion: reduce) {
+	.blast-monitor__bar-fill {
+		transition: none;
 	}
 }
 </style>
