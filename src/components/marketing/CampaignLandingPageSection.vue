@@ -57,7 +57,7 @@
 				}}
 			</NcNoteCard>
 			<NcTextField
-				:value="page.route"
+				:modelValue="page.route"
 				class="campaign-landing__field"
 				:label="t('pipelinq', 'Route on the portal')"
 				:readonly="true" />
