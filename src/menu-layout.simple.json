@@ -1676,166 +1676,6 @@
 			"title": "Questions and reports"
 		},
 		{
-			"id": "Queue",
-			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, past the deadline), the type tabs with a channel strip under them, and per row the wait, the title with the customer and channel, the type, the priority, Take on and View. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated.",
-			"config": {
-				"headerButtons": [
-					{
-						"action": "export",
-						"label": "Download"
-					},
-					{
-						"action": "queue-take-oldest",
-						"variant": "primary",
-						"icon": "AccountArrowLeftOutline",
-						"label": "Take the oldest"
-					}
-				],
-				"selectable": false,
-				"showViewToggle": false,
-				"inlineActionCount": 2,
-				"footerNote": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
-				"filterStrip": {
-					"field": "channel",
-					"label": "Kind, then channel",
-					"showCount": true
-				},
-				"columns": [
-					{
-						"key": "occurredAt",
-						"label": "Waiting",
-						"widget": "age",
-						"widgetProps": {
-							"variantWhen": [
-								{
-									"op": "gte",
-									"value": 2,
-									"variant": "error"
-								}
-							]
-						},
-						"sortable": true
-					},
-					{
-						"key": "title",
-						"label": "Title",
-						"secondary": "{client.name} · {channel}",
-						"sortable": true
-					},
-					{
-						"key": "ticketType",
-						"label": "Type",
-						"widget": "badge",
-						"widgetProps": {
-							"colorMap": {
-								"request": "primary",
-								"complaint": "error"
-							}
-						}
-					},
-					{
-						"key": "priority",
-						"label": "Priority"
-					}
-				],
-				"rowTitle": "plain",
-				"sidePanel": [
-					{
-						"id": "queue-team",
-						"type": "record-list",
-						"title": "Team today",
-						"content": {
-							"endpointSource": {
-								"url": "/apps/pipelinq/api/routing/team-load",
-								"responsePath": "results"
-							},
-							"avatar": "{displayName}",
-							"title": "{displayName}",
-							"meta": "{isAvailable}",
-							"valueLabels": {
-								"isAvailable": {
-									"true": "Available",
-									"false": "Not available"
-								}
-							},
-							"trailing": "{open} open",
-							"bar": {
-								"valueField": "open",
-								"maxField": "maxConcurrent",
-								"overVariant": "error"
-							},
-							"emptyText": "No agent profiles yet."
-						}
-					},
-					{
-						"id": "queue-agreements",
-						"type": "text",
-						"title": "Agreements",
-						"content": {
-							"text": "Requests and reports: an answer within 2 working days. Complaints: a first reply the same day. Phone: answered within 30 seconds.",
-							"link": {
-								"label": "Service levels in Reports",
-								"route": "SlaAttainment"
-							}
-						}
-					}
-				]
-			},
-			"configAppend": {
-				"headerActions": [
-					{
-						"id": "queue-take-oldest",
-						"type": "api-call",
-						"label": "Take the oldest",
-						"icon": "AccountArrowLeftOutline",
-						"url": "/apps/pipelinq/api/tickets/assign-oldest",
-						"method": "POST",
-						"successMessage": "The oldest ticket is yours. It is on your My Work now.",
-						"errorMessage": "Nothing is waiting in the queue."
-					}
-				],
-				"statRow": [
-					{
-						"id": "queue-longest-waiting",
-						"type": "stat",
-						"title": "Longest waiting",
-						"content": {
-							"label": "Longest waiting",
-							"display": "countdown",
-							"countdown": {
-								"pastLabel": "{n} days",
-								"todayLabel": "Today",
-								"emptyText": "Nothing is waiting"
-							},
-							"endpointSource": {
-								"url": "/apps/openregister/api/objects/pipelinq/ticket",
-								"params": {
-									"_limit": 1,
-									"_order[occurredAt]": "asc",
-									"assignee": "IS NULL",
-									"status_notIn": [
-										"resolved",
-										"completed",
-										"rejected",
-										"converted",
-										"closed"
-									]
-								},
-								"responsePath": "results.0.occurredAt"
-							},
-							"caption": "the oldest ticket nobody has picked up"
-						}
-					}
-				]
-			},
-			"configOrder": {
-				"statRow": [
-					"queue-unassigned",
-					"queue-longest-waiting"
-				]
-			}
-		},
-		{
 			"id": "Leads",
 			"config": {
 				"columns": [
@@ -2137,6 +1977,166 @@
 				"footerNote": "A contact is someone you deal with at a client. Residents are clients themselves.",
 				"sortKey": "@self.created",
 				"sortOrder": "desc"
+			}
+		},
+		{
+			"id": "Queue",
+			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, past the deadline), the type tabs with a channel strip under them, and per row the wait, the title with the customer and channel, the type, the priority, Take on and View. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated.",
+			"config": {
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "queue-take-oldest",
+						"variant": "primary",
+						"icon": "AccountArrowLeftOutline",
+						"label": "Take the oldest"
+					}
+				],
+				"selectable": false,
+				"showViewToggle": false,
+				"inlineActionCount": 2,
+				"footerNote": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
+				"filterStrip": {
+					"field": "channel",
+					"label": "Kind, then channel",
+					"showCount": true
+				},
+				"columns": [
+					{
+						"key": "occurredAt",
+						"label": "Waiting",
+						"widget": "age",
+						"widgetProps": {
+							"variantWhen": [
+								{
+									"op": "gte",
+									"value": 2,
+									"variant": "error"
+								}
+							]
+						},
+						"sortable": true
+					},
+					{
+						"key": "title",
+						"label": "Title",
+						"secondary": "{client.name} · {channel}",
+						"sortable": true
+					},
+					{
+						"key": "ticketType",
+						"label": "Type",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"request": "primary",
+								"complaint": "error"
+							}
+						}
+					},
+					{
+						"key": "priority",
+						"label": "Priority"
+					}
+				],
+				"rowTitle": "plain",
+				"sidePanel": [
+					{
+						"id": "queue-team",
+						"type": "record-list",
+						"title": "Team today",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/routing/team-load",
+								"responsePath": "results"
+							},
+							"avatar": "{displayName}",
+							"title": "{displayName}",
+							"meta": "{isAvailable}",
+							"valueLabels": {
+								"isAvailable": {
+									"true": "Available",
+									"false": "Not available"
+								}
+							},
+							"trailing": "{open} open",
+							"bar": {
+								"valueField": "open",
+								"maxField": "maxConcurrent",
+								"overVariant": "error"
+							},
+							"emptyText": "No agent profiles yet."
+						}
+					},
+					{
+						"id": "queue-agreements",
+						"type": "text",
+						"title": "Agreements",
+						"content": {
+							"text": "Requests and reports: an answer within 2 working days. Complaints: a first reply the same day. Phone: answered within 30 seconds.",
+							"link": {
+								"label": "Service levels in Reports",
+								"route": "SlaAttainment"
+							}
+						}
+					}
+				]
+			},
+			"configAppend": {
+				"headerActions": [
+					{
+						"id": "queue-take-oldest",
+						"type": "api-call",
+						"label": "Take the oldest",
+						"icon": "AccountArrowLeftOutline",
+						"url": "/apps/pipelinq/api/tickets/assign-oldest",
+						"method": "POST",
+						"successMessage": "The oldest ticket is yours. It is on your My Work now.",
+						"errorMessage": "Nothing is waiting in the queue."
+					}
+				],
+				"statRow": [
+					{
+						"id": "queue-longest-waiting",
+						"type": "stat",
+						"title": "Longest waiting",
+						"content": {
+							"label": "Longest waiting",
+							"display": "countdown",
+							"countdown": {
+								"pastLabel": "{n} days",
+								"todayLabel": "Today",
+								"emptyText": "Nothing is waiting"
+							},
+							"endpointSource": {
+								"url": "/apps/openregister/api/objects/pipelinq/ticket",
+								"params": {
+									"_limit": 1,
+									"_order[occurredAt]": "asc",
+									"assignee": "IS NULL",
+									"status_notIn": [
+										"resolved",
+										"completed",
+										"rejected",
+										"converted",
+										"closed"
+									]
+								},
+								"responsePath": "results.0.occurredAt"
+							},
+							"caption": "the oldest ticket nobody has picked up"
+						}
+					}
+				]
+			},
+			"configOrder": {
+				"statRow": [
+					"queue-unassigned",
+					"queue-longest-waiting"
+				]
 			}
 		}
 	]
