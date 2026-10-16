@@ -51,7 +51,7 @@
 					{
 						"id": "campaign-report",
 						"label": "Campaign report",
-						"icon": "ChartBox",
+						"icon": "ChartBoxOutline",
 						"handler": "navigate",
 						"route": "CampaignReportPage"
 					}
@@ -65,7 +65,7 @@
 					{
 						"action": "campaign-report",
 						"label": "Campaign report",
-						"icon": "ChartBox"
+						"icon": "ChartBoxOutline"
 					},
 					{
 						"action": "add",
@@ -111,11 +111,12 @@
 						"widgetProps": {
 							"colorMap": {
 								"running": "success",
-								"planned": "default",
+								"planned": "info",
 								"finished": "default",
 								"cancelled": "error"
 							}
-						}
+						},
+						"formatter": "enumText"
 					},
 					"utmCampaign",
 					"startsAt",
@@ -151,7 +152,9 @@
 							"ariaLabel": "Campaign",
 							"tabs": [
 								{
-									"widgetId": "campaign-data",
+									"widgetIds": [
+										"campaign-data"
+									],
 									"label": "Overview"
 								},
 								{
@@ -226,35 +229,10 @@
 					},
 					{
 						"id": "campaign-contents",
-						"type": "links",
+						"type": "markdown",
 						"title": "In this campaign",
 						"content": {
-							"linkLayout": "inline-no-icon",
-							"columns": 1,
-							"showSectionTitles": false,
-							"sections": [
-								{
-									"title": "",
-									"links": [
-										{
-											"label": "Nieuwsbrieven",
-											"url": "/apps/pipelinq/blasts"
-										},
-										{
-											"label": "Sociale berichten",
-											"url": "/apps/pipelinq/social-posts"
-										},
-										{
-											"label": "Artikelen, de inhoud van de pagina",
-											"url": "/apps/pipelinq/articles"
-										},
-										{
-											"label": "Leads",
-											"url": "/apps/pipelinq/leads"
-										}
-									]
-								}
-							]
+							"markdown": "[Nieuwsbrieven](/index.php/apps/pipelinq/blasts)\n\n[Sociale berichten](/index.php/apps/pipelinq/social-posts)\n\n[Artikelen, de inhoud van de pagina](/index.php/apps/pipelinq/articles)\n\n[Leads](/index.php/apps/pipelinq/leads)"
 						}
 					},
 					{
@@ -275,8 +253,9 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 8,
-						"showTitle": false
+						"showTitle": false,
+						"gridHeight": 6,
+						"sizeToContent": true
 					}
 				],
 				"bodyWidgets": [
@@ -317,7 +296,7 @@
 					},
 					"colorMap": {
 						"running": "success",
-						"planned": "default",
+						"planned": "info",
 						"finished": "default",
 						"cancelled": "error"
 					}

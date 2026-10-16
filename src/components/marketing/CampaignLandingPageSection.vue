@@ -295,17 +295,21 @@ export default {
 }
 
 .campaign-landing__facts {
+	padding: 0;
 	display: grid;
 	grid-template-columns: max-content 1fr;
 	gap: 6px 16px;
 	margin: 0 0 12px;
 
-	dt {
-		color: var(--color-text-maxcontrast);
-	}
-
+	dt,
 	dd {
 		margin: 0;
+		padding: 0;
+		text-align: start;
+	}
+
+	dt {
+		color: var(--color-text-maxcontrast);
 	}
 }
 

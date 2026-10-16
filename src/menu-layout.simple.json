@@ -1811,7 +1811,16 @@
 					{
 						"key": "status",
 						"label": "Status",
-						"formatter": "enumText"
+						"formatter": "enumText",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"running": "success",
+								"planned": "info",
+								"finished": "default",
+								"cancelled": "error"
+							}
+						}
 					},
 					{
 						"key": "utmCampaign",

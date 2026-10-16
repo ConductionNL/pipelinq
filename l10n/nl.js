@@ -2396,7 +2396,7 @@ OC.L10N.register(
         "No export jobs yet": "Nog geen exporttaken",
         "No export runs yet": "Nog geen exportuitvoeringen",
         "No files in this run": "Geen bestanden in deze uitvoering",
-        "No flow engine": "Geen flow-engine",
+        "No flow engine": "Engine ontbreekt",
         "No flow is running for this deal": "Er loopt geen flow voor deze deal",
         "No forms yet": "Nog geen formulieren",
         "No hours recorded": "Geen uren geregistreerd",
@@ -2522,7 +2522,7 @@ OC.L10N.register(
         "Normal": "Normaal",
         "Not counted yet. The difference appears once the shift is closed and counted.": "Nog niet geteld. Het verschil verschijnt zodra de shift is afgesloten en geteld.",
         "Not available": "Niet beschikbaar",
-        "Not compiled yet": "Nog niet gecompileerd",
+        "Not compiled yet": "Niet samengesteld",
         "Not configured": "Niet geconfigureerd",
         "Not connected to a portal.": "Niet gekoppeld aan een portaal.",
         "Not enough snapshots": "Onvoldoende momentopnames",
@@ -7627,7 +7627,18 @@ OC.L10N.register(
         "The journey is paused. Its flow no longer runs.": "De journey is gepauzeerd. De flow draait niet meer.",
         "Could not pause this journey.": "Deze journey kon niet worden gepauzeerd.",
         "The journey runs again.": "De journey draait weer.",
-        "Could not resume this journey.": "Deze journey kon niet worden hervat."
+        "Could not resume this journey.": "Deze journey kon niet worden hervat.",
+        "This journey has not run yet": "Deze journey heeft nog niet gedraaid",
+        "Once its trigger fires, every contact it reached and every contact it refused is listed here.": "Zodra de trigger afgaat, staat hier elk contact dat bereikt is en elk contact dat geweigerd is.",
+        "Could not read what this journey did.": "Kon niet lezen wat deze journey deed.",
+        "No consent for this channel": "Geen toestemming voor dit kanaal",
+        "Skipped: this customer is being chased for an unpaid invoice": "Overgeslagen: deze klant krijgt een aanmaning voor een openstaande factuur",
+        "The template is gone": "Het sjabloon bestaat niet meer",
+        "No mail transport is configured": "Er is geen verzendroute ingesteld",
+        "This contact has no email address": "Dit contact heeft geen e-mailadres",
+        "The mail transport rejected it": "De verzendroute heeft het geweigerd",
+        "This journey is saved but it will not run: this instance has no flow engine.": "Deze journey is opgeslagen maar draait niet: deze omgeving heeft geen flow-engine.",
+        "The flow engine refused this journey: {reason}": "De flow-engine heeft deze journey geweigerd: {reason}"
     },
     "nplurals=2; plural=(n != 1);"
 )
