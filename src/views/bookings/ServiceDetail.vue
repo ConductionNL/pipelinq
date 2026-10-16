@@ -51,7 +51,8 @@
 		:headerMeta="boardHeader.headerMeta"
 		:sideColumn="sideColumn"
 		:headerActions="headerActions"
-		:actionsMenu="{ label: t('pipelinq', 'More') }">
+		:actionsMenu="{ label: t('pipelinq', 'More') }"
+		:follow="false">
 		<template #actions>
 			<NcButton @click="openEditDialog">
 				<template #icon>
@@ -70,7 +71,10 @@
 					</div>
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Status') }}</label>
-						<span>{{ statusLabel(serviceData.status) }}</span>
+						<CnStatusBadge
+							:label="statusLabel(serviceData.status)"
+							:colorMap="{ active: 'success' }"
+							:colorKey="serviceData.status" />
 					</div>
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Duration') }}</label>
@@ -110,7 +114,7 @@
 			<CnDetailCard :title="t('pipelinq', 'Rules')">
 				<div class="info-grid">
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Requires deposit') }}</label>
+						<label>{{ t('pipelinq', 'Deposit required') }}</label>
 						<span>{{
 							serviceData.requiresDeposit
 								? t('pipelinq', 'Yes')
@@ -118,12 +122,14 @@
 						}}</span>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Deposit amount') }}</label>
+						<label>{{ t('pipelinq', 'Amount of deposit') }}</label>
 						<span>{{
-							formatCurrency(
-								serviceData.depositAmount,
-								serviceData.currency,
-							)
+							serviceData.depositAmount
+								? formatCurrency(
+										serviceData.depositAmount,
+										serviceData.currency,
+									)
+								: t('pipelinq', 'not set')
 						}}</span>
 					</div>
 					<div class="info-field">
@@ -140,14 +146,14 @@
 						<span>{{ cancellationPolicyLabel }}</span>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Cancellation window') }}</label>
+						<label>{{ t('pipelinq', 'Cancellation term') }}</label>
 						<span
 							>{{ serviceData.cancellationHoursBefore || 0 }}
 							{{ t('pipelinq', 'hours') }}</span
 						>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Required skills') }}</label>
+						<label>{{ t('pipelinq', 'Skills required') }}</label>
 						<span>{{ requiredSkillsLabel }}</span>
 					</div>
 				</div>
@@ -258,6 +264,7 @@ import {
 	CnDetailCard,
 	CnDetailPage,
 	CnFormDialog,
+	CnStatusBadge,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -285,7 +292,7 @@ const SERVICE_BOARD_HEADER = Object.freeze({
 		colorMap: { active: 'success', draft: 'default', archived: 'default' },
 		labels: { draft: 'Draft', active: 'Active', archived: 'Archived' },
 	},
-	headerMeta: '{durationMinutes} minutes',
+	headerMeta: '{durationMinutes} minutes · {price|currency}',
 })
 
 /** The side cards the PqService board draws. */
@@ -338,6 +345,7 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		CnFormDialog,
+		CnStatusBadge,
 		ServiceForm,
 		ServiceStepsEditor,
 		DeleteServiceDialog,
@@ -555,7 +563,7 @@ export default {
 				},
 
 				requiresDeposit: {
-					label: t('pipelinq', 'Requires deposit'),
+					label: t('pipelinq', 'Deposit required'),
 					order: 12,
 				},
 
@@ -949,8 +957,14 @@ export default {
 	margin-bottom: 8px;
 }
 
+.info-field {
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--color-border);
+}
+
 .info-field label {
 	display: block;
+	font-weight: normal;
 	margin-bottom: 2px;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;

@@ -33,7 +33,7 @@
 			"_note": "Service catalogue as a declarative type:index page (pipelinq-views-to-declarative-r2). price→the service's own currency (reporting currency when unset; objectCurrency formatter), durationMinutes→duration format, status→badge with its x-enum-labels label (enumLabel formatter), bookableOnline→Yes/No (yesNo formatter; the library's check mark was too pale to see). 'New service' navigates to the bespoke ServiceDetail create form (id:'new'); row open navigates to ServiceDetail. ServiceDetail stays custom (multiStep sub-table editor + policy cards + cache-invalidation hook).",
 			"route": "/services",
 			"type": "index",
-			"title": "Services",
+			"title": "Services and resources",
 			"config": {
 				"register": "pipelinq",
 				"schema": "appointmentService",
@@ -60,17 +60,18 @@
 						"key": "durationMinutes",
 						"label": "Duration",
 						"format": {
-							"style": "duration",
-							"unit": "minutes"
+							"style": "number",
+							"suffix": " min"
 						}
 					},
 					{
 						"key": "bufferBeforeMinutes",
-						"label": "Buffer before",
+						"label": "Buffer before / after",
 						"format": {
-							"style": "duration",
-							"unit": "minutes"
-						}
+							"style": "number",
+							"suffix": " min"
+						},
+						"secondary": "after {bufferAfterMinutes} min"
 					},
 					{
 						"key": "price",
@@ -89,7 +90,9 @@
 					{
 						"key": "requiredResourceTypes",
 						"label": "Booked on",
-						"sortable": false
+						"sortable": false,
+						"widget": "badge",
+						"formatter": "enumLabel"
 					},
 					{
 						"key": "status",
@@ -133,7 +136,8 @@
 				"headerButtons": [
 					{
 						"action": "export",
-						"label": "Download"
+						"label": "Download",
+						"icon": "Download"
 					},
 					{
 						"action": "create",
@@ -179,7 +183,8 @@
 					"map"
 				],
 				"footerNote": "A service is booked on the resources with the requested kind and skills. A changed duration clears the saved free times.",
-				"_boardNote": "Board look (PqServices, round 12): count line, quick filters with counts, the name with its description under it, the buffer and what a service is booked on."
+				"_boardNote": "Board look (PqServices, round 12): count line, quick filters with counts, the name with its description under it, the buffer and what a service is booked on.",
+				"filterMenu": true
 			}
 		},
 		{
