@@ -7604,7 +7604,22 @@ OC.L10N.register(
         "{count} came in today": "{count} vandaag binnengekomen",
         "{count} longer than 2 days": "{count} langer dan 2 dagen",
         "{count} due today": "{count} voor vandaag",
-        "{occurredAt|days} days": "{occurredAt|days} dagen"
+        "{occurredAt|days} days": "{occurredAt|days} dagen",
+        "Value of the pipeline": "Waarde pijplijn",
+        "Late": "Te laat",
+        "Lead conversion": "Conversie van leads",
+        "Average request turnaround": "Gemiddelde doorlooptijd verzoek",
+        "open leads": "open leads",
+        "leads past their close date": "leads voorbij hun afsluitdatum",
+        "{count} close this month": "{count} sluiten deze maand",
+        "{count} new today": "{count} nieuw vandaag",
+        "Leads, requests, service and team workload · the chosen period compared with the one before": "Leads, verzoeken, dienstverlening en werkdruk van het team · de gekozen periode vergeleken met de periode ervoor",
+        "newsletters, posts and search traffic of last week": "nieuwsbrieven, berichten en zoekverkeer van vorige week",
+        "Week of {week}": "Week van {week}",
+        "What moved": "Wat bewoog",
+        "What to try": "Wat je kunt proberen",
+        "Compose again": "Opnieuw samenstellen",
+        "Ideas for topics": "Ideeën voor onderwerpen"
     },
     "nplurals=2; plural=(n != 1);"
 )

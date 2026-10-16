@@ -7677,7 +7677,18 @@ OC.L10N.register(
         "{count} came in today": "{count} came in today",
         "{count} longer than 2 days": "{count} longer than 2 days",
         "{count} due today": "{count} due today",
-        "{occurredAt|days} days": "{occurredAt|days} days"
+        "{occurredAt|days} days": "{occurredAt|days} days",
+        "Value of the pipeline": "Value of the pipeline",
+        "Late": "Late",
+        "Lead conversion": "Lead conversion",
+        "Average request turnaround": "Average request turnaround",
+        "open leads": "open leads",
+        "leads past their close date": "leads past their close date",
+        "{count} close this month": "{count} close this month",
+        "{count} new today": "{count} new today",
+        "Leads, requests, service and team workload · the chosen period compared with the one before": "Leads, requests, service and team workload · the chosen period compared with the one before",
+        "newsletters, posts and search traffic of last week": "newsletters, posts and search traffic of last week",
+        "Ideas for topics": "Ideas for topics"
     },
     "nplurals=2; plural=(n != 1);"
 )

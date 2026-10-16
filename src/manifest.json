@@ -1177,80 +1177,136 @@
 			"route": "/operational",
 			"type": "dashboard",
 			"title": "Operational overview",
+			"_note": "The operational overview as its board draws it (PqOperationeel, round 12): the period is a segmented control under the header, Refresh, New client and New lead stand in the header, the seven counts carry no icon and say what they hold in a caption, the three charts share one row, and the lists and cards pair up two by two as the board orders them. Every widget the page had stays; the survey response rate the board does not draw sits last.",
 			"config": {
 				"showRefresh": true,
 				"widgetShowRefresh": false,
 				"headerActions": [
 					{
+						"id": "refresh",
+						"label": "Refresh",
+						"type": "refresh",
+						"icon": "Refresh"
+					},
+					{
+						"id": "new-client",
+						"label": "New client",
+						"type": "open-modal",
+						"target": "ClientCreateDialog",
+						"icon": "Plus"
+					},
+					{
 						"id": "new-lead",
-						"label": "New Lead",
+						"label": "New lead",
 						"type": "open-modal",
 						"target": "LeadCreateDialog",
 						"variant": "primary",
 						"icon": "Plus"
-					},
-					{
-						"id": "new-client",
-						"label": "New Client",
-						"type": "open-modal",
-						"target": "ClientCreateDialog",
-						"icon": "Plus"
 					}
 				],
-				"description": "Leads, requests, service and team workload",
+				"description": "Leads, requests, service and team workload · the chosen period compared with the one before",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
 					"enabled": true,
-					"showHeaderPicker": false,
+					"showHeaderPicker": true,
 					"persistKey": "pipelinq-operational-range",
-					"default": { "preset": "month" },
+					"default": {
+						"preset": "month"
+					},
 					"presets": [
-						{ "id": "week", "label": "Last 7 days", "days": 7 },
-						{ "id": "month", "label": "Last 30 days", "days": 30 },
-						{ "id": "quarter", "label": "Last 90 days", "days": 90 },
-						{ "id": "year", "label": "Last 365 days", "days": 365 }
-					]
+						{
+							"id": "week",
+							"label": "Last 7 days",
+							"days": 7
+						},
+						{
+							"id": "month",
+							"label": "Last 30 days",
+							"days": 30
+						},
+						{
+							"id": "quarter",
+							"label": "Last 90 days",
+							"days": 90
+						},
+						{
+							"id": "year",
+							"label": "Last 365 days",
+							"days": 365
+						}
+					],
+					"control": "segmented"
 				},
 				"widgets": [
 					{
 						"id": "open-leads",
 						"type": "stat",
-						"title": "Open Leads",
+						"title": "Open leads",
 						"content": {
-							"label": "Open Leads",
-							"icon": "FilterVariant",
-							"format": { "style": "number", "decimals": 0 },
+							"label": "Open leads",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
 							"source": {
 								"register": "pipelinq",
 								"schema": "lead",
 								"metric": "count",
-								"filter": { "status": "open" }
+								"filter": {
+									"status": "open"
+								}
+							},
+							"layout": "stacked",
+							"caption": "{count} close this month",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "lead",
+								"metric": "count",
+								"filter": {
+									"status": "open",
+									"expectedCloseDate[gte]": "@monthStart",
+									"expectedCloseDate[lt]": "@nextMonthStart"
+								}
 							}
 						}
 					},
 					{
 						"id": "open-requests",
 						"type": "stat",
-						"title": "Open Requests",
+						"title": "Open requests",
 						"content": {
-							"label": "Open Requests",
-							"icon": "ClipboardList",
-							"format": { "style": "number", "decimals": 0 },
+							"label": "Open requests",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
 							"source": {
 								"register": "pipelinq",
 								"schema": "ticket",
 								"metric": "count",
-								"filter": { "ticketType": "request" }
+								"filter": {
+									"ticketType": "request"
+								}
+							},
+							"layout": "stacked",
+							"caption": "{count} new today",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"ticketType": "request",
+									"occurredAt[gte]": "@today"
+								}
 							}
 						}
 					},
 					{
 						"id": "pipeline-value",
 						"type": "stat",
-						"title": "Pipeline Value",
+						"title": "Value of the pipeline",
 						"content": {
-							"label": "Pipeline Value",
-							"icon": "Cash",
+							"label": "Value of the pipeline",
 							"format": {
 								"style": "currency",
 								"currency": "@config.currency",
@@ -1262,79 +1318,102 @@
 								"metric": "sum",
 								"field": "value",
 								"filter": {}
-							}
+							},
+							"layout": "stacked",
+							"caption": "open leads"
 						}
 					},
 					{
 						"id": "overdue",
 						"type": "stat",
-						"title": "Overdue",
+						"title": "Late",
 						"content": {
-							"label": "Overdue",
-							"icon": "ScaleBalance",
+							"label": "Late",
 							"variant": "error",
-							"format": { "style": "number", "decimals": 0 },
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
 							"source": {
 								"register": "pipelinq",
 								"schema": "lead",
 								"metric": "count",
 								"filter": {
 									"status": "open",
-									"expectedCloseDate": { "lt": "@today" }
+									"expectedCloseDate": {
+										"lt": "@today"
+									}
 								}
-							}
+							},
+							"layout": "stacked",
+							"caption": "leads past their close date"
 						}
 					},
 					{
 						"id": "lead-conversion",
 						"type": "stat",
-						"title": "Lead Conversion Rate",
+						"title": "Lead conversion",
 						"content": {
-							"label": "Lead Conversion Rate",
-							"icon": "TrendingUp",
+							"label": "Lead conversion",
 							"variant": "success",
-							"format": { "style": "percent", "decimals": 1 },
+							"format": {
+								"style": "percent",
+								"decimals": 1
+							},
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/analytics/overview",
-								"params": { "period": "@workspace.datePreset?" }
+								"params": {
+									"period": "@workspace.datePreset?"
+								}
 							},
 							"valueField": "leadConversionRate",
 							"previousField": "previousPeriod.leadConversionRate",
-							"goodDirection": "up"
+							"goodDirection": "up",
+							"layout": "stacked"
 						}
 					},
 					{
 						"id": "avg-resolution",
 						"type": "stat",
-						"title": "Avg Request Resolution",
+						"title": "Average request turnaround",
 						"content": {
-							"label": "Avg Request Resolution",
-							"icon": "ClockOutline",
-							"format": { "style": "duration-hours", "decimals": 1 },
+							"label": "Average request turnaround",
+							"format": {
+								"style": "duration-hours",
+								"decimals": 1
+							},
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/analytics/overview",
-								"params": { "period": "@workspace.datePreset?" }
+								"params": {
+									"period": "@workspace.datePreset?"
+								}
 							},
 							"valueField": "avgRequestResolutionTime",
 							"previousField": "previousPeriod.avgRequestResolutionTime",
-							"goodDirection": "down"
+							"goodDirection": "down",
+							"layout": "stacked"
 						}
 					},
 					{
 						"id": "contact-volume",
 						"type": "stat",
-						"title": "Contact Moment Volume",
+						"title": "Contacts",
 						"content": {
 							"label": "Contacts",
-							"icon": "Account",
-							"format": { "style": "number", "decimals": 0 },
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/analytics/overview",
-								"params": { "period": "@workspace.datePreset?" }
+								"params": {
+									"period": "@workspace.datePreset?"
+								}
 							},
 							"valueField": "contactMomentVolume",
 							"previousField": "previousPeriod.contactMomentVolume",
-							"goodDirection": "up"
+							"goodDirection": "up",
+							"layout": "stacked"
 						}
 					},
 					{
@@ -1342,7 +1421,7 @@
 						"type": "chart",
 						"title": "Leads over time",
 						"content": {
-							"chartKind": "area",
+							"chartKind": "bar",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
@@ -1364,7 +1443,9 @@
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "ticket",
-								"filter": { "ticketType": "request" },
+								"filter": {
+									"ticketType": "request"
+								},
 								"groupBy": {
 									"field": "category",
 									"metric": "count",
@@ -1376,13 +1457,15 @@
 					{
 						"id": "requests-by-status",
 						"type": "chart",
-						"title": "Requests by Status",
+						"title": "Requests by status",
 						"content": {
 							"chartKind": "bar",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "ticket",
-								"filter": { "ticketType": "request" },
+								"filter": {
+									"ticketType": "request"
+								},
 								"groupBy": {
 									"field": "status",
 									"metric": "count",
@@ -1398,17 +1481,35 @@
 						"content": {
 							"register": "pipelinq",
 							"schema": "ticket",
-							"filter": { "ticketType": "complaint" },
-							"sort": { "field": "priority", "dir": "desc" },
+							"filter": {
+								"ticketType": "complaint"
+							},
+							"sort": {
+								"field": "priority",
+								"dir": "desc"
+							},
 							"limit": 6,
 							"columns": [
-								{ "key": "title", "label": "Complaint" },
-								{ "key": "status", "label": "Status" },
-								{ "key": "priority", "label": "Priority" }
+								{
+									"key": "title",
+									"label": "Complaint"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "priority",
+									"label": "Priority"
+								}
 							]
 						}
 					},
-					{ "id": "my-work", "type": "custom", "title": "My Work" },
+					{
+						"id": "my-work",
+						"type": "custom",
+						"title": "My Work"
+					},
 					{
 						"id": "client-overview",
 						"type": "object-table",
@@ -1417,12 +1518,17 @@
 							"register": "pipelinq",
 							"schema": "client",
 							"filter": {},
-							"sort": { "field": "name", "dir": "asc" },
+							"sort": {
+								"field": "name",
+								"dir": "asc"
+							},
 							"limit": 5,
 							"hideHeader": true,
 							"borderless": true,
 							"rowRoute": "ClientDetail",
-							"viewAllRoute": { "name": "Clients" },
+							"viewAllRoute": {
+								"name": "Clients"
+							},
 							"viewAllLabel": "View all clients",
 							"emptyText": "No clients yet",
 							"columns": [
@@ -1473,7 +1579,8 @@
 						"gridY": 0,
 						"gridWidth": 3,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "2",
@@ -1482,7 +1589,8 @@
 						"gridY": 0,
 						"gridWidth": 3,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "3",
@@ -1491,7 +1599,8 @@
 						"gridY": 0,
 						"gridWidth": 3,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "4",
@@ -1500,7 +1609,8 @@
 						"gridY": 0,
 						"gridWidth": 3,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "14",
@@ -1509,7 +1619,8 @@
 						"gridY": 2,
 						"gridWidth": 4,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "15",
@@ -1519,7 +1630,7 @@
 						"gridWidth": 4,
 						"gridHeight": 2,
 						"showTitle": false,
-						"dateChip": true
+						"sizeToContent": true
 					},
 					{
 						"id": "16",
@@ -1528,101 +1639,111 @@
 						"gridY": 2,
 						"gridWidth": 4,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "18",
 						"widgetId": "leads-over-time",
 						"gridX": 0,
 						"gridY": 4,
-						"gridWidth": 6,
+						"gridWidth": 4,
 						"gridHeight": 4,
-						"dateChip": true
+						"sizeToContent": true
 					},
 					{
 						"id": "19",
 						"widgetId": "requests-by-category",
-						"gridX": 6,
+						"gridX": 4,
 						"gridY": 4,
-						"gridWidth": 6,
+						"gridWidth": 4,
 						"gridHeight": 4,
-						"dateChip": true
+						"sizeToContent": true
 					},
 					{
 						"id": "5",
 						"widgetId": "requests-by-status",
-						"gridX": 0,
-						"gridY": 8,
-						"gridWidth": 6,
-						"gridHeight": 4
+						"gridX": 8,
+						"gridY": 4,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"sizeToContent": true
 					},
 					{
 						"id": "6",
 						"widgetId": "complaints",
-						"gridX": 6,
+						"gridX": 0,
 						"gridY": 8,
 						"gridWidth": 6,
-						"gridHeight": 4
-					},
-					{
-						"id": "11",
-						"widgetId": "navi-analytics",
-						"gridX": 0,
-						"gridY": 12,
-						"gridWidth": 12,
-						"gridHeight": 6
+						"gridHeight": 4,
+						"sizeToContent": true
 					},
 					{
 						"id": "7",
 						"widgetId": "my-work",
-						"gridX": 0,
-						"gridY": 18,
-						"gridWidth": 12,
-						"gridHeight": 6
+						"gridX": 6,
+						"gridY": 8,
+						"gridWidth": 6,
+						"gridHeight": 4,
+						"sizeToContent": true
 					},
 					{
 						"id": "8",
 						"widgetId": "client-overview",
 						"gridX": 0,
-						"gridY": 24,
+						"gridY": 12,
 						"gridWidth": 6,
-						"gridHeight": 6
+						"gridHeight": 6,
+						"sizeToContent": true
 					},
 					{
 						"id": "9",
 						"widgetId": "billing-categories",
 						"gridX": 6,
-						"gridY": 24,
+						"gridY": 12,
 						"gridWidth": 6,
-						"gridHeight": 4
+						"gridHeight": 3,
+						"sizeToContent": true
 					},
 					{
 						"id": "12",
 						"widgetId": "report-export",
+						"gridX": 6,
+						"gridY": 15,
+						"gridWidth": 6,
+						"gridHeight": 3,
+						"sizeToContent": true
+					},
+					{
+						"id": "11",
+						"widgetId": "navi-analytics",
 						"gridX": 0,
-						"gridY": 28,
-						"gridWidth": 12,
-						"gridHeight": 3
+						"gridY": 18,
+						"gridWidth": 6,
+						"gridHeight": 5,
+						"sizeToContent": true
 					},
 					{
 						"id": "13",
 						"widgetId": "xwiki-knowledge",
-						"gridX": 0,
-						"gridY": 31,
+						"gridX": 6,
+						"gridY": 18,
 						"gridWidth": 6,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"sizeToContent": true
 					},
 					{
 						"id": "20",
 						"widgetId": "survey-response-rate",
-						"gridX": 6,
-						"gridY": 31,
+						"gridX": 0,
+						"gridY": 23,
 						"gridWidth": 6,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"sizeToContent": true
 					}
-				]
+				],
+				"gridFloat": false
 			},
-			"_note": "The Customer Satisfaction KPI (SatisfactionKpiWidget, widget id 'satisfaction', layout slot 17) was removed 2026-07 because its data source was empty after the forms-leaf migration. Satisfaction returns as the survey response-rate widget (survey-response-rate), fed by the closed-loop invitations of customer-satisfaction-closed-loop.",
 			"slots": {
 				"widget-my-work": "MyWorkWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
