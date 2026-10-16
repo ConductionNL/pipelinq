@@ -12,8 +12,8 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-function read (file) {
-  return JSON.parse(readFileSync(resolve(__dirname, '../..', file), 'utf8'))
+function read(file) {
+	return JSON.parse(readFileSync(resolve(__dirname, '../..', file), 'utf8'))
 }
 const register = read('lib/Settings/register.d/97-quotes.json')
 const pages = read('src/manifest.d/82-quotes.json').pages
