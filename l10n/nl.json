@@ -7630,6 +7630,14 @@
         "Skills decide which tickets are suggested to you. An administrator sets them on your agent profile.": "Vaardigheden bepalen welke tickets je voorgesteld krijgt. Een beheerder stelt ze in op je medewerkerprofiel.",
         "Available.": "Beschikbaar.",
         "Not available.": "Niet beschikbaar.",
-        "Set it at the top of the dashboard. When you are not available, calls and the queue pass you by.": "Stel het in bovenaan het dashboard. Ben je niet beschikbaar, dan slaan gesprekken en de wachtrij je over."
+        "Set it at the top of the dashboard. When you are not available, calls and the queue pass you by.": "Stel het in bovenaan het dashboard. Ben je niet beschikbaar, dan slaan gesprekken en de wachtrij je over.",
+        "Sync with Contacts": "Synchronisatie met Contacten",
+        "Your records in Pipelinq and your Nextcloud address book.": "Je records in Pipelinq en je Nextcloud-adresboek.",
+        "Address book": "Adresboek",
+        "New cards go here. Other address books are only read.": "Nieuwe kaarten komen hier. Andere adresboeken worden alleen gelezen.",
+        "Write changes back to Nextcloud Contacts": "Wijzigingen terugschrijven naar Nextcloud Contacten",
+        "Save a resident, company or contact and the card is updated too. The latest change wins.": "Sla je een inwoner, bedrijf of contact op, dan wordt de kaart ook bijgewerkt. De laatste wijziging wint.",
+        "The first address book I can write in": "Het eerste adresboek waarin ik kan schrijven",
+        "Could not save the sync with Contacts.": "De synchronisatie met Contacten kon niet worden bewaard."
     }
 }

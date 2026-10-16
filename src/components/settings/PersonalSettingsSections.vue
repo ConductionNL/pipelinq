@@ -3,12 +3,48 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
   - The app's own sections of the user settings dialog (board PqPersoonlijk):
-  - mail and calendar, the reader's skills and their availability. Each one
-  - shows what is set and links to where it is changed; nothing is edited here
-  - that has a home elsewhere.
+  - the sync with Contacts (the reader's own address book and write-back
+  - choice, kept per user), mail and calendar, the reader's skills and their
+  - availability. The last three show what is set and link to where it is
+  - changed.
   -->
 <template>
 	<div class="personal-settings">
+		<NcAppSettingsSection
+			id="pipelinq-contacts-sync"
+			:name="t('pipelinq', 'Sync with Contacts')">
+			<p class="personal-settings__lead">
+				{{ t('pipelinq', 'Your records in Pipelinq and your Nextcloud address book.') }}
+			</p>
+			<NcSelect
+				v-model="addressBook"
+				:inputLabel="t('pipelinq', 'Address book')"
+				:options="addressBookOptions"
+				:reduce="(option) => option.key"
+				label="name"
+				:clearable="false"
+				data-testid="personal-settings-address-book"
+				@update:modelValue="saveContactsSync" />
+			<p class="personal-settings__hint">
+				{{ t('pipelinq', 'New cards go here. Other address books are only read.') }}
+			</p>
+			<NcCheckboxRadioSwitch
+				v-model="writeBack"
+				type="switch"
+				data-testid="personal-settings-write-back"
+				@update:modelValue="saveContactsSync">
+				{{ t('pipelinq', 'Write changes back to Nextcloud Contacts') }}
+			</NcCheckboxRadioSwitch>
+			<p class="personal-settings__hint">
+				{{
+					t(
+						'pipelinq',
+						'Save a resident, company or contact and the card is updated too. The latest change wins.',
+					)
+				}}
+			</p>
+		</NcAppSettingsSection>
+
 		<NcAppSettingsSection
 			id="pipelinq-mail-calendar"
 			:name="t('pipelinq', 'Email and calendar')">
@@ -64,28 +100,94 @@
 <script>
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
+import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcAppSettingsSection } from '@nextcloud/vue'
+import { NcAppSettingsSection, NcCheckboxRadioSwitch, NcSelect } from '@nextcloud/vue'
 
 export default {
 	name: 'PersonalSettingsSections',
 	components: {
 		CnStatusBadge,
 		NcAppSettingsSection,
+		NcCheckboxRadioSwitch,
+		NcSelect,
 	},
 
 	data() {
 		return {
 			isAvailable: false,
 			skills: [],
+			addressBook: '',
+			addressBooks: [],
+			writeBack: true,
 		}
+	},
+
+	computed: {
+		/**
+		 * The address books to pick from, the first writable one when none is chosen.
+		 *
+		 * @return {Array<{key: string, name: string}>}
+		 */
+		addressBookOptions() {
+			return [
+				{ key: '', name: this.t('pipelinq', 'The first address book I can write in') },
+				...this.addressBooks,
+			]
+		},
 	},
 
 	created() {
 		this.load()
+		this.loadContactsSync()
 	},
 
 	methods: {
+		/**
+		 * Read the reader's contacts sync choices and the address books on offer.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/contacts-sync/spec.md
+		 */
+		async loadContactsSync() {
+			try {
+				const res = await axios.get(generateUrl('/apps/pipelinq/api/contacts-sync/settings'))
+				this.applyContactsSync(res.data)
+			} catch {
+				this.addressBooks = []
+			}
+		},
+
+		/**
+		 * Save the reader's contacts sync choices.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/contacts-sync/spec.md
+		 */
+		async saveContactsSync() {
+			try {
+				const res = await axios.put(generateUrl('/apps/pipelinq/api/contacts-sync/settings'), {
+					addressBook: this.addressBook,
+					writeBack: this.writeBack,
+				})
+				this.applyContactsSync(res.data)
+			} catch {
+				showError(this.t('pipelinq', 'Could not save the sync with Contacts.'))
+			}
+		},
+
+		/**
+		 * Take the server's answer as the shown state.
+		 *
+		 * @param {object} data The preferences: addressBook, writeBack, addressBooks.
+		 * @spec openspec/specs/contacts-sync/spec.md
+		 */
+		applyContactsSync(data) {
+			this.addressBooks = Array.isArray(data?.addressBooks) ? data.addressBooks : []
+			this.addressBook = typeof data?.addressBook === 'string' ? data.addressBook : ''
+			this.writeBack = data?.writeBack !== false
+		},
+
 		/**
 		 * Read the reader's agent profile: availability and skills. A failure
 		 * leaves the sections with their text and no values.
@@ -115,6 +217,12 @@ export default {
 .personal-settings__lead {
 	color: var(--color-text-maxcontrast);
 	margin: 0 0 8px;
+}
+
+.personal-settings__hint {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.85rem;
+	margin: 4px 0 12px;
 }
 
 .personal-settings__link {

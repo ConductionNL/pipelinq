@@ -24,10 +24,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCP\Constants;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAddressBook;
 use OCP\IAppConfig;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
@@ -45,6 +45,8 @@ class ContactVcardWriterService {
 	 * @param LoggerInterface $logger The logger.
 	 * @param RegisterResolverService $registerResolver The register resolver.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param ContactSyncPreferences $preferences The user's contacts sync choices.
+	 * @param IUserSession $userSession The user session, whose choices apply.
 	 */
 	public function __construct(
 		private IContactsManager $contactsManager,
@@ -52,6 +54,8 @@ class ContactVcardWriterService {
 		private LoggerInterface $logger,
 		private RegisterResolverService $registerResolver,
 		private readonly ObjectServiceInterface $objectService,
+		private ContactSyncPreferences $preferences,
+		private IUserSession $userSession,
 	) {
 	}//end __construct()
 
@@ -74,6 +78,14 @@ class ContactVcardWriterService {
 		}
 
 		$existingUid = $objData['contactsUid'] ?? null;
+		$uid = $this->userSession->getUser()?->getUID();
+		if ($existingUid !== null && $existingUid !== '' && $uid !== null
+			&& $this->preferences->writesBack(uid: $uid) === false
+		) {
+			$this->logger->debug('Pipelinq: write-back to Contacts is off for this user', ['uid' => $existingUid]);
+			return $existingUid;
+		}
+
 		$target = $this->resolveTarget(
 			addressBooks: $addressBooks,
 			properties: $properties,
@@ -196,7 +208,7 @@ class ContactVcardWriterService {
 					continue;
 				}
 
-				if ($this->isWritable(addressBook: $book) === false) {
+				if ($this->preferences->isWritable(addressBook: $book) === false) {
 					$this->logger->warning(
 						'Pipelinq: linked contact lives in a read-only addressbook, write-back skipped',
 						['uid' => $existingUid]
@@ -209,8 +221,18 @@ class ContactVcardWriterService {
 			}
 		}//end if
 
+		$uid = $this->userSession->getUser()?->getUID();
+		$chosen = $uid === null ? '' : $this->preferences->addressBookKey(uid: $uid);
 		foreach ($addressBooks as $book) {
-			if ($this->isWritable(addressBook: $book) === true) {
+			if ($chosen !== '' && (string) $book->getKey() === $chosen
+				&& $this->preferences->isWritable(addressBook: $book) === true
+			) {
+				return [$book, $properties];
+			}
+		}
+
+		foreach ($addressBooks as $book) {
+			if ($this->preferences->isWritable(addressBook: $book) === true) {
 				return [$book, $properties];
 			}
 		}
@@ -253,21 +275,6 @@ class ContactVcardWriterService {
 
 		return null;
 	}//end findCardUri()
-
-	/**
-	 * Whether pipelinq may write cards in this addressbook.
-	 *
-	 * @param IAddressBook $addressBook The addressbook.
-	 *
-	 * @return bool True for a writable, non-system addressbook.
-	 */
-	private function isWritable(IAddressBook $addressBook): bool {
-		if ($addressBook->isSystemAddressBook() === true) {
-			return false;
-		}
-
-		return ($addressBook->getPermissions() & Constants::PERMISSION_UPDATE) !== 0;
-	}//end isWritable()
 
 	/**
 	 * Extract the contacts UID from an addressbook create/update result.

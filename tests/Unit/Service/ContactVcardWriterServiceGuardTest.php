@@ -25,12 +25,15 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Pipelinq\Service\ContactSyncPreferences;
 use OCA\Pipelinq\Service\ContactVcardWriterService;
 use OCA\Pipelinq\Service\RegisterResolverService;
 use OCP\Constants;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAddressBook;
 use OCP\IAppConfig;
+use OCP\IUserSession;
+use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -86,6 +89,8 @@ class ContactVcardWriterServiceGuardTest extends TestCase {
 			$this->createMock(LoggerInterface::class),
 			$resolver,
 			objectService: $object,
+			preferences: new ContactSyncPreferences($this->createMock(IConfig::class), $contacts),
+			userSession: $this->createMock(IUserSession::class),
 		);
 	}//end buildService()
 

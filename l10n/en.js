@@ -7683,7 +7683,15 @@ OC.L10N.register(
         "Skills decide which tickets are suggested to you. An administrator sets them on your agent profile.": "Skills decide which tickets are suggested to you. An administrator sets them on your agent profile.",
         "Available.": "Available.",
         "Not available.": "Not available.",
-        "Set it at the top of the dashboard. When you are not available, calls and the queue pass you by.": "Set it at the top of the dashboard. When you are not available, calls and the queue pass you by."
+        "Set it at the top of the dashboard. When you are not available, calls and the queue pass you by.": "Set it at the top of the dashboard. When you are not available, calls and the queue pass you by.",
+        "Sync with Contacts": "Sync with Contacts",
+        "Your records in Pipelinq and your Nextcloud address book.": "Your records in Pipelinq and your Nextcloud address book.",
+        "Address book": "Address book",
+        "New cards go here. Other address books are only read.": "New cards go here. Other address books are only read.",
+        "Write changes back to Nextcloud Contacts": "Write changes back to Nextcloud Contacts",
+        "Save a resident, company or contact and the card is updated too. The latest change wins.": "Save a resident, company or contact and the card is updated too. The latest change wins.",
+        "The first address book I can write in": "The first address book I can write in",
+        "Could not save the sync with Contacts.": "Could not save the sync with Contacts."
     },
     "nplurals=2; plural=(n != 1);"
 )
