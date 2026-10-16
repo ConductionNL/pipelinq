@@ -1,0 +1,119 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "The website enquiries list, as board PqAanvragen draws it. The `enquiry` schema (lib/Settings/register.d/26-website-enquiry.json) held every website form submission until forms began to submit into the record they name; the enquiries already received were listed on no page. This page is that list. It has no menu entry of its own: the Modules page carries a card for it. Convert, Mark as spam and Close are the schema's lifecycle transitions, which the row menu offers from the record's own actions."
+	},
+	"menu": [],
+	"pages": [
+		{
+			"id": "Enquiries",
+			"route": "/enquiries",
+			"type": "index",
+			"title": "Website enquiries",
+			"config": {
+				"register": "pipelinq",
+				"schema": "enquiry",
+				"showViewAction": false,
+				"showAdd": false,
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"countText": "{shown} of {total} enquiries · all statuses · newest first",
+				"searchPlaceholder": "Filter by title, name or organisation",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					}
+				],
+				"defaultSort": [
+					{
+						"field": "receivedAt",
+						"order": "desc"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "New",
+						"filter": {
+							"status": "new"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Converted",
+						"filter": {
+							"status": "converted"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Spam",
+						"filter": {
+							"status": "spam"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Closed",
+						"filter": {
+							"status": "closed"
+						},
+						"showCount": true
+					},
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					}
+				],
+				"columns": [
+					{
+						"key": "receivedAt",
+						"label": "Received"
+					},
+					{
+						"key": "title",
+						"label": "Title"
+					},
+					{
+						"key": "contactName",
+						"label": "From",
+						"secondary": "{organisation}"
+					},
+					{
+						"key": "source",
+						"label": "Source",
+						"widget": "badge"
+					},
+					{
+						"key": "pageUrl",
+						"label": "Page"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"new": "primary",
+								"converted": "success",
+								"spam": "error",
+								"closed": "secondary"
+							}
+						}
+					},
+					{
+						"key": "handledBy",
+						"label": "Handled by",
+						"formatter": "userDisplayName"
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		}
+	]
+}
