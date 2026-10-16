@@ -322,7 +322,7 @@ OC.L10N.register(
         "Attributes": "Attributen",
         "Attributes (e.g. maat=S, kleur=Wit)": "Attributen (bijv. maat=S, kleur=Wit)",
         "Attribution": "Attributie",
-        "Attribution model": "Attributiemodel",
+        "Attribution model": "Toeschrijvingsmodel",
         "Audience": "Doelgroep",
         "Audit entry": "Audit entry",
         "Audit entry kon niet worden geladen.": "Audit entry kon niet worden geladen.",
@@ -1379,7 +1379,7 @@ OC.L10N.register(
         "Every performance request failed. Reload the page, and check the server log if it keeps happening.": "Elk prestatieverzoek is mislukt. Herlaad de pagina, en kijk in het serverlog als het blijft gebeuren.",
         "Every report Pipelinq offers, in one place. Pick a report to open it.": "Elke rapportage die Pipelinq biedt, op één plek. Kies een rapportage om die te openen.",
         "Every week": "Elke week",
-        "Everyone who submits this form becomes a lead in this campaign.": "Iedereen die dit formulier invult wordt een lead in deze campagne.",
+        "Everyone who submits this form becomes a lead in this campaign.": "Iedereen die dit formulier invult, wordt een lead in deze campagne.",
         "Evidence": "Bewijs",
         "Evidence (required)": "Bewijs (verplicht)",
         "Example data": "Voorbeeldgegevens",
@@ -7599,7 +7599,16 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "Filter by name or UTM value": "Filter op naam of UTM-waarde",
+        "{shown} of {total} campaigns · newest first": "{shown} van {total} campagnes · nieuwste eerst",
+        "A campaign bundles mailings and posts, with one landing page and one report.": "Een campagne bundelt mailings en berichten, met één landingspagina en één rapport.",
+        "{startsAt|date} to {endsAt|date} · budget {budgetEur|currency:EUR}": "{startsAt|date} tot {endsAt|date} · budget {budgetEur|currency:EUR}",
+        "Published by portaliq with a sign-up form": "Gepubliceerd door portaliq met een aanmeldformulier",
+        "Open campaign report": "Campagnerapport openen",
+        "In this campaign": "In deze campagne",
+        "UTM source": "UTM-bron",
+        "UTM medium": "UTM-medium"
     },
     "nplurals=2; plural=(n != 1);"
 )

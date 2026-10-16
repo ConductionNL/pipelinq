@@ -29,16 +29,97 @@
 				"register": "pipelinq",
 				"schema": "campaign",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"includeColumns": [
+				"addLabel": "New campaign",
+				"showEditAction": true,
+				"showCopyAction": false,
+				"sortKey": "startsAt",
+				"sortOrder": "desc",
+				"countText": "{shown} of {total} campaigns · newest first",
+				"searchPlaceholder": "Filter by name or UTM value",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board"
+				],
+				"board": {
+					"statusField": "status"
+				},
+				"footerNote": "A campaign bundles mailings and posts, with one landing page and one report.",
+				"headerActions": [
+					{
+						"id": "campaign-report",
+						"label": "Campaign report",
+						"icon": "ChartBox",
+						"handler": "navigate",
+						"route": "CampaignReportPage"
+					}
+				],
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "campaign-report",
+						"label": "Campaign report",
+						"icon": "ChartBox"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New campaign"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Running",
+						"filter": {
+							"status": "running"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Planned",
+						"filter": {
+							"status": "planned"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Finished",
+						"filter": {
+							"status": "finished"
+						},
+						"showCount": true
+					}
+				],
+				"columns": [
 					"name",
-					"status",
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"running": "success",
+								"planned": "default",
+								"finished": "default",
+								"cancelled": "error"
+							}
+						}
+					},
 					"utmCampaign",
 					"startsAt",
 					"endsAt"
-				],
-				"addLabel": "New campaign",
-				"showEditAction": true,
-				"showCopyAction": false
+				]
 			}
 		},
 		{
@@ -56,12 +137,30 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"widgets": [
 					{
+						"id": "campaign-panels",
+						"type": "tabs",
+						"title": "Campaign",
+						"content": {
+							"ariaLabel": "Campaign",
+							"tabs": [
+								{
+									"widgetId": "campaign-data",
+									"label": "Overview"
+								},
+								{
+									"widgetId": "campaign-history",
+									"label": "History"
+								}
+							]
+						}
+					},
+					{
 						"id": "campaign-data",
 						"type": "data",
 						"title": "Campaign details",
-						"icon": "InformationOutline",
 						"content": {
-							"columns": 2,
+							"title": "Campaign details",
+							"columns": 3,
 							"include": [
 								"goal",
 								"status",
@@ -71,18 +170,106 @@
 								"startsAt",
 								"endsAt",
 								"budgetEur"
+							],
+							"overrides": {
+								"goal": {
+									"order": 0
+								},
+								"status": {
+									"order": 1,
+									"enumLabels": {
+										"planned": "Planned",
+										"running": "Running",
+										"finished": "Finished",
+										"cancelled": "Cancelled"
+									}
+								},
+								"utmCampaign": {
+									"order": 2,
+									"label": "UTM campaign"
+								},
+								"utmSource": {
+									"order": 3,
+									"label": "UTM source"
+								},
+								"utmMedium": {
+									"order": 4,
+									"label": "UTM medium"
+								},
+								"startsAt": {
+									"order": 5
+								},
+								"endsAt": {
+									"order": 6
+								},
+								"budgetEur": {
+									"order": 7
+								}
+							}
+						}
+					},
+					{
+						"id": "campaign-history",
+						"type": "timeline",
+						"title": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc"
+						}
+					},
+					{
+						"id": "campaign-contents",
+						"type": "links",
+						"title": "In this campaign",
+						"content": {
+							"linkLayout": "inline-no-icon",
+							"columns": 1,
+							"showSectionTitles": false,
+							"sections": [
+								{
+									"title": "",
+									"links": [
+										{
+											"label": "Nieuwsbrieven",
+											"url": "/apps/pipelinq/blasts"
+										},
+										{
+											"label": "Sociale berichten",
+											"url": "/apps/pipelinq/social-posts"
+										},
+										{
+											"label": "Artikelen, de inhoud van de pagina",
+											"url": "/apps/pipelinq/articles"
+										},
+										{
+											"label": "Leads",
+											"url": "/apps/pipelinq/leads"
+										}
+									]
+								}
 							]
+						}
+					},
+					{
+						"id": "campaign-side-history",
+						"type": "timeline",
+						"title": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc",
+							"limit": 3
 						}
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "campaign-data",
+						"widgetId": "campaign-panels",
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 5
+						"gridHeight": 8,
+						"showTitle": false
 					}
 				],
 				"bodyWidgets": [
@@ -93,25 +280,54 @@
 						"placement": "end",
 						"props": {
 							"campaignId": "@objectId"
+						},
+						"card": true,
+						"colSpan": 12
+					},
+					{
+						"id": "campaign-report",
+						"component": "CampaignReportSection",
+						"placement": "end",
+						"card": true,
+						"colSpan": 12,
+						"props": {
+							"campaignId": "@objectId"
 						}
 					}
 				],
 				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "audit",
-							"label": "History",
-							"icon": "History",
-							"widgets": [
-								{
-									"type": "audit"
-								}
-							]
-						}
-					]
-				}
+					"enabled": false
+				},
+				"follow": false,
+				"showTypeEyebrow": false,
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"planned": "Planned",
+						"running": "Running",
+						"finished": "Finished",
+						"cancelled": "Cancelled"
+					},
+					"colorMap": {
+						"running": "success",
+						"planned": "default",
+						"finished": "default",
+						"cancelled": "error"
+					}
+				},
+				"breadcrumb": {
+					"label": "Campaigns",
+					"route": "Campaigns",
+					"separator": "/"
+				},
+				"headerMeta": "{startsAt|date} to {endsAt|date} · budget {budgetEur|currency:EUR}",
+				"actionsMenu": {
+					"label": "More"
+				},
+				"sideColumn": [
+					"campaign-contents",
+					"campaign-side-history"
+				]
 			}
 		},
 		{

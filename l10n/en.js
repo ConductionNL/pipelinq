@@ -7672,7 +7672,16 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Filter by name or UTM value": "Filter by name or UTM value",
+        "{shown} of {total} campaigns · newest first": "{shown} of {total} campaigns · newest first",
+        "A campaign bundles mailings and posts, with one landing page and one report.": "A campaign bundles mailings and posts, with one landing page and one report.",
+        "{startsAt|date} to {endsAt|date} · budget {budgetEur|currency:EUR}": "{startsAt|date} to {endsAt|date} · budget {budgetEur|currency:EUR}",
+        "Published by portaliq with a sign-up form": "Published by portaliq with a sign-up form",
+        "Open campaign report": "Open campaign report",
+        "In this campaign": "In this campaign",
+        "UTM source": "UTM source",
+        "UTM medium": "UTM medium"
     },
     "nplurals=2; plural=(n != 1);"
 )
