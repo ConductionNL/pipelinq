@@ -7736,7 +7736,9 @@ OC.L10N.register(
         "name@example.org": "name@example.org",
         "Unsubscribe from everything": "Unsubscribe from everything",
         "Mailing list sign-up form": "Mailing list sign-up form",
-        "What a subscriber sees": "What a subscriber sees"
+        "What a subscriber sees": "What a subscriber sees",
+        "Who belongs to it follows from the rules, every time the segment is used": "Who belongs to it follows from the rules, every time the segment is used",
+        "Updates as the data changes. A segment is a living rule, not a fixed list.": "Updates as the data changes. A segment is a living rule, not a fixed list."
     },
     "nplurals=2; plural=(n != 1);"
 )

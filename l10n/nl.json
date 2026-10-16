@@ -7683,6 +7683,8 @@
         "name@example.org": "naam@voorbeeld.nl",
         "Unsubscribe from everything": "Voor alles afmelden",
         "Mailing list sign-up form": "Aanmeldformulier mailinglijst",
-        "What a subscriber sees": "Wat een abonnee ziet"
+        "What a subscriber sees": "Wat een abonnee ziet",
+        "Who belongs to it follows from the rules, every time the segment is used": "Wie erbij hoort, volgt uit de regels, elke keer dat het segment wordt gebruikt",
+        "Updates as the data changes. A segment is a living rule, not a fixed list.": "Werkt bij als de gegevens veranderen. Een segment is een levende regel, geen vaste lijst."
     }
 }
