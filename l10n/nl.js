@@ -7636,7 +7636,11 @@ OC.L10N.register(
         "{startAt|weekday} · {startAt|time} to {endAt|time}": "{startAt|weekday} · {startAt|time} tot {endAt|time}",
         "Contact details and earlier tickets": "Contactgegevens en eerdere tickets",
         "Reminder": "Herinnering",
-        "Not sent yet": "Nog niet"
+        "Not sent yet": "Nog niet",
+        "Period: today": "Periode: vandaag",
+        "Period: this week": "Periode: deze week",
+        "Handler: me": "Behandelaar: ik",
+        "Status: unconfirmed": "Status: onbevestigd"
     },
     "nplurals=2; plural=(n != 1);"
 )

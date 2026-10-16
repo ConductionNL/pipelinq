@@ -155,10 +155,10 @@
 				"rowTitle": "plain",
 				"footerNote": "Customers book appointments in the portal. Open one to reschedule or cancel it.",
 				"quickFilters": [
-					{ "label": "Today", "filter": { "startAt[gte]": "@today", "startAt[lt]": "@today+1d" }, "showCount": true },
-					{ "label": "This week", "filter": { "startAt[gte]": "@today", "startAt[lt]": "@today+7d" }, "default": true, "showCount": true },
-					{ "label": "Mine", "filter": { "assignee": "@me" }, "showCount": true },
-					{ "label": "Unconfirmed", "filter": { "status": "pending-deposit" }, "showCount": true }
+					{ "label": "Today", "activeLabel": "Period: today", "filter": { "startAt[gte]": "@today", "startAt[lt]": "@today+1d" }, "showCount": true },
+					{ "label": "This week", "activeLabel": "Period: this week", "filter": { "startAt[gte]": "@today", "startAt[lt]": "@today+7d" }, "default": true, "showCount": true },
+					{ "label": "Mine", "activeLabel": "Handler: me", "filter": { "assignee": "@me" }, "showCount": true },
+					{ "label": "Unconfirmed", "activeLabel": "Status: unconfirmed", "filter": { "status": "pending-deposit" }, "showCount": true }
 				],
 				"columns": [
 					{ "key": "startAt", "label": "When", "formatter": "bookingWhen", "secondary": "{startAt|weekday:today}", "cellClass": "cn-cell--strong" },
