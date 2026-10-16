@@ -89,9 +89,11 @@
 		<template #empty>
 			<NcEmptyContent
 				:name="
-					prospectStore.error
-						? t('pipelinq', 'Could not load prospects')
-						: t('pipelinq', 'No prospects found')
+					prospectStore.icp && icpFacts.length === 0
+						? t('pipelinq', 'No prospects yet')
+						: prospectStore.error
+							? t('pipelinq', 'Could not load prospects')
+							: t('pipelinq', 'No prospects found')
 				"
 				:description="emptyDescription">
 				<template #icon>
@@ -186,7 +188,12 @@ export default {
 		headerButtons() {
 			return [
 				{ action: 'export', label: t('pipelinq', 'Download') },
-				{ action: 'refresh-prospects', variant: 'primary' },
+				{
+					action: 'refresh-prospects',
+					variant: 'primary',
+					icon: 'Refresh',
+					label: t('pipelinq', 'Refresh prospects'),
+				},
 			]
 		},
 
@@ -269,10 +276,7 @@ export default {
 				)
 			}
 			return this.prospectStore.error.includes('Ideal Customer Profile')
-				? t(
-						'pipelinq',
-						'Configure your Ideal Customer Profile in admin settings to discover prospects.',
-					)
+				? t('pipelinq', 'Set an ideal customer profile first.')
 				: this.prospectStore.error
 		},
 
