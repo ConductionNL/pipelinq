@@ -62,12 +62,13 @@ import { useSettingsStore } from '../../store/modules/settings.js'
 
 export default {
 	name: 'LeadList',
-	// The page config the renderer hands a custom page (columns, sort, actions)
-	// would fall through onto CnIndexPage and replace what this list declares.
-	inheritAttrs: false,
 	components: {
 		CnIndexPage,
 	},
+
+	// The page config the renderer hands a custom page (columns, sort, actions)
+	// would fall through onto CnIndexPage and replace what this list declares.
+	inheritAttrs: false,
 
 	data() {
 		return {
