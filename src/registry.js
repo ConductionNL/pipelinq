@@ -790,6 +790,18 @@ const registry = {
 		component: SubscriptionsSection,
 		_note: 'Mailing-list memberships, bound either to a list (listId) or to a contact (contactId); self-fetches the matching endpoint. Kept custom because a membership row renders a STATE chip the declarative object-list widget cannot express, and because the list view leads with per-state counts that summaryAggregates (equality-only, one schema) cannot break out of one field.',
 	},
+	ListSignupFormWidget: {
+		kind: 'widget',
+		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'The embed code of a mailing list sign-up form, posting to the public subscribe endpoint, with a copy button. Side card on MailingListDetail (PqMailinglijst).',
+	},
+	ListSubscriberViewWidget: {
+		kind: 'widget',
+		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
+	},
 	ArticleContentSection: {
 		kind: 'section',
 		component: ArticleContentSection,
@@ -904,18 +916,6 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: "Head of the ticket page's Decisions tab (ticket-decisions-tab): what the tab holds, the two routes to a decision, and Convert to case. The decision lists are decidiq's leaf, mounted by the manifest.",
-	},
-	ListSignupFormWidget: {
-		kind: 'widget',
-		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId })),
-		...PANEL_WIDGET_META,
-		_note: 'The embed code of a mailing list sign-up form, posting to the public subscribe endpoint, with a copy button. Side card on MailingListDetail (PqMailinglijst).',
-	},
-	ListSubscriberViewWidget: {
-		kind: 'widget',
-		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId })),
-		...PANEL_WIDGET_META,
-		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
 	ContactChannelsWidget: {
 		kind: 'widget',
