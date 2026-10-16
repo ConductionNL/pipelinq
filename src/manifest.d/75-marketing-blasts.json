@@ -387,19 +387,19 @@
 						}
 					},
 					{
-						"id": "blasts-bounced",
+						"id": "blasts-blocked-consent",
 						"type": "stat",
-						"title": "Not delivered",
+						"title": "Blocked by consent",
 						"content": {
-							"label": "Not delivered",
+							"label": "Blocked by consent",
+							"caption": "no lawful basis, not sent",
+							"variant": "error",
 							"source": {
 								"register": "pipelinq",
 								"schema": "blast",
 								"metric": "sum",
-								"field": "totals.bounced"
-							},
-							"caption": "bounced, not delivered",
-							"variant": "error"
+								"field": "skippedNoConsent"
+							}
 						}
 					}
 				],
@@ -483,6 +483,13 @@
 						"key": "totals.unsubscribed",
 						"label": "Unsubscribed",
 						"sortable": false
+					},
+					{
+						"key": "skippedNoConsent",
+						"label": "Note",
+						"sortable": false,
+						"filterable": false,
+						"formatter": "blastNote"
 					}
 				]
 			}

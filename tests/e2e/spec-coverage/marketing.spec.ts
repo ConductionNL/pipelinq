@@ -181,13 +181,12 @@ test.describe('Blast performance dashboard', () => {
 		const tabs = dash.getByRole('tab')
 		await expect(tabs).toHaveCount(3)
 
-		// The eight declared metric columns. Header cells carry `aria-sort` and a
+		// The seven metric columns the board draws. Header cells carry `aria-sort` and a
 		// click handler — that is what "sortable columns" means here.
 		const headers = dash.locator('.performance-dashboard__table thead th')
-		await expect(headers).toHaveCount(8, { timeout: 20000 })
+		await expect(headers).toHaveCount(7, { timeout: 20000 })
 		for (const label of [
 			'Sent',
-			'Delivered',
 			'Open rate',
 			'Click rate',
 			'Unsubscribed',

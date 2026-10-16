@@ -7716,7 +7716,17 @@ OC.L10N.register(
         "via the link in the footer": "via the link in the footer",
         "marked as spam": "marked as spam",
         "done": "done",
-        "{shown} of {total} newsletters · opened and clicked from our own measurements · newest first": "{shown} of {total} newsletters · opened and clicked from our own measurements · newest first"
+        "{shown} of {total} newsletters · opened and clicked from our own measurements · newest first": "{shown} of {total} newsletters · opened and clicked from our own measurements · newest first",
+        "Without consent": "Without consent",
+        "Contacts the send left out because they gave no consent for the channel.": "Contacts the send left out because they gave no consent for the channel.",
+        "Suppressed": "Suppressed",
+        "Contacts the send left out because they are on the suppression list.": "Contacts the send left out because they are on the suppression list.",
+        "{done} of {total} sent": "{done} of {total} sent",
+        "{count} without consent, not sent": "{count} without consent, not sent",
+        "A/B test, variant A {percent}%": "A/B test, variant A {percent}%",
+        "Rules checked": "Rules checked",
+        "Blocked by consent": "Blocked by consent",
+        "no lawful basis, not sent": "no lawful basis, not sent"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -89,9 +89,6 @@
 									{{ row.sent }}
 								</td>
 								<td class="performance-dashboard__num">
-									{{ row.delivered }}
-								</td>
-								<td class="performance-dashboard__num">
 									{{ formatPercent(row.openRate) }}
 								</td>
 								<td class="performance-dashboard__num">
@@ -455,7 +452,6 @@ export default {
 				{ key: 'segmentName', label: this.t('pipelinq', 'Segment') },
 				{ key: 'status', label: this.t('pipelinq', 'Status') },
 				{ key: 'sent', label: this.t('pipelinq', 'Sent') },
-				{ key: 'delivered', label: this.t('pipelinq', 'Delivered') },
 				{ key: 'openRate', label: this.t('pipelinq', 'Open rate') },
 				{ key: 'clickRate', label: this.t('pipelinq', 'Click rate') },
 				{ key: 'unsubscribed', label: this.t('pipelinq', 'Unsubscribed') },

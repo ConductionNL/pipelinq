@@ -7663,6 +7663,16 @@
         "via the link in the footer": "via de link in de voettekst",
         "marked as spam": "als spam gemarkeerd",
         "done": "klaar",
-        "{shown} of {total} newsletters · opened and clicked from our own measurements · newest first": "{shown} van {total} nieuwsbrieven · geopend en geklikt uit eigen metingen · nieuwste eerst"
+        "{shown} of {total} newsletters · opened and clicked from our own measurements · newest first": "{shown} van {total} nieuwsbrieven · geopend en geklikt uit eigen metingen · nieuwste eerst",
+        "Without consent": "Zonder toestemming",
+        "Contacts the send left out because they gave no consent for the channel.": "Contacten die de verzending oversloeg omdat ze geen toestemming gaven voor het kanaal.",
+        "Suppressed": "Onderdrukt",
+        "Contacts the send left out because they are on the suppression list.": "Contacten die de verzending oversloeg omdat ze op de onderdrukkingslijst staan.",
+        "{done} of {total} sent": "{done} van {total} verstuurd",
+        "{count} without consent, not sent": "{count} zonder toestemming, niet verstuurd",
+        "A/B test, variant A {percent}%": "A/B-test, variant A {percent}%",
+        "Rules checked": "Regels gecontroleerd",
+        "Blocked by consent": "Geblokkeerd door toestemming",
+        "no lawful basis, not sent": "geen grondslag, niet verstuurd"
     }
 }
