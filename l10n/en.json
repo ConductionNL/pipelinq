@@ -7692,6 +7692,18 @@
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Point of sale": "Point of sale",
+        "Marketing and data": "Marketing and data",
+        "Pipelinq settings: point of sale": "Pipelinq settings: point of sale",
+        "Pipelinq settings: marketing and data": "Pipelinq settings: marketing and data",
+        "The connections: telephony, messages, xWiki and Shillinq": "The connections: telephony, messages, xWiki and Shillinq",
+        "Only when the module is on": "Only when the module is on",
+        "Marketing, prospects and export": "Marketing, prospects and export",
+        "Each portal has its own domain, look and tabs": "Each portal has its own domain, look and tabs",
+        "For a Service Level Agreement (SLA), contact us at": "For a Service Level Agreement (SLA), contact us at",
+        "Customer lookup at the till": "Customer lookup at the till",
+        "Search fields, how far back the purchase history goes and consents for the till.": "Search fields, how far back the purchase history goes and consents for the till.",
+        "Open customer lookup at the till": "Open customer lookup at the till"
     }
 }

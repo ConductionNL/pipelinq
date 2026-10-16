@@ -7619,6 +7619,18 @@
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "Point of sale": "Kassa",
+        "Marketing and data": "Marketing en gegevens",
+        "Pipelinq settings: point of sale": "Pipelinq-instellingen: kassa",
+        "Pipelinq settings: marketing and data": "Pipelinq-instellingen: marketing en gegevens",
+        "The connections: telephony, messages, xWiki and Shillinq": "de koppelingen: telefonie, berichten, xWiki en Shillinq",
+        "Only when the module is on": "alleen als de module aan staat",
+        "Marketing, prospects and export": "het deel over marketing, prospects en export",
+        "Each portal has its own domain, look and tabs": "elk portaal met eigen domein, uiterlijk en tabbladen",
+        "For a Service Level Agreement (SLA), contact us at": "Voor een Service Level Agreement (SLA), neem contact met ons op met",
+        "Customer lookup at the till": "Klant zoeken aan de kassa",
+        "Search fields, how far back the purchase history goes and consents for the till.": "Zoekvelden, hoe ver de aankoopgeschiedenis teruggaat en toestemmingen voor de kassa.",
+        "Open customer lookup at the till": "Klant zoeken aan de kassa openen"
     }
 }
