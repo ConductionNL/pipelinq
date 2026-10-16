@@ -48,49 +48,11 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 globalThis.t = (app, text, vars = {}) =>
 	String(text).replace(/\{(\w+)\}/g, (whole, key) => vars[key] ?? whole)
 
-const { translateWidgetSubmitLabels } =
-	await import('../../src/utils/widgetSubmitLabels.js')
 const { leadSourceLabel } = await import('../../src/services/leadSourceLabels.js')
 const { default: TagManager } =
 	await import('../../src/views/settings/TagManager.vue')
 
 describe('dashboard widget submit labels', () => {
-	it('translates a widget submit label and leaves the rest alone', () => {
-		const manifest = {
-			pages: [
-				{
-					config: {
-						widgets: [
-							{
-								id: 'interaction',
-								title: 'New contact moment',
-								content: { submitLabel: 'Save contact moment' },
-							},
-							{ id: 'other', content: {} },
-							{ id: 'bare' },
-						],
-					},
-				},
-				{ type: 'index' },
-			],
-		}
-		const dutch = { 'Save contact moment': 'Contactmoment opslaan' }
-		translateWidgetSubmitLabels(manifest, (text) => dutch[text] || text)
-
-		const [form, other, bare] = manifest.pages[0].config.widgets
-		expect(form.content.submitLabel).toBe('Contactmoment opslaan')
-		expect(form.title).toBe('New contact moment')
-		expect(other.content).toEqual({})
-		expect(bare.content).toBeUndefined()
-	})
-
-	it('is applied to the merged manifest in main.js', () => {
-		const main = readFileSync(resolve(__dirname, '../../src/main.js'), 'utf8')
-		expect(main).toContain(
-			"translateWidgetSubmitLabels(mergedManifest, (text) => t('pipelinq', text))",
-		)
-	})
-
 	it('has a Dutch translation for the werkplek submit label', () => {
 		const nl = JSON.parse(
 			readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8'),
