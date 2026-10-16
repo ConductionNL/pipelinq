@@ -10,6 +10,7 @@
  */
 
 import { translate as t } from '@nextcloud/l10n'
+import { timeRange } from '../utils/bookingTime.js'
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
 import { createUserDisplayNameFormatter } from './userDisplayName.js'
@@ -110,12 +111,27 @@ export function yesNo(value) {
 		: t('pipelinq', 'No')
 }
 
+/**
+ * When an appointment is, as the PqAfspraken board writes it: the start and
+ * end time of day ("08:45 tot 09:00"). The row's `endAt` gives the end; a
+ * row without one shows the start alone.
+ *
+ * @param {unknown} value The start (`startAt`).
+ * @param {object} [row] The booking; its `endAt` is the end.
+ * @return {string} The time range, or '' for an empty start.
+ * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+ */
+export function bookingWhen(value, row) {
+	return timeRange(value, row?.endAt)
+}
+
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
 	enumText,
 	enumLabel,
 	yesNo,
+	bookingWhen,
 }
 
 /**

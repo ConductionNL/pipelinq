@@ -37,12 +37,18 @@ describe('the booking page', () => {
 	const widget = (id) => page.config.widgets.find((w) => w.id === id)
 
 	it('uses tabs with the notes leaf and no body section', () => {
-		const tabs = widget('booking-tabs').content.tabs.map((t) => t.widgetId)
-		expect(tabs).toEqual([
+		const tabs = widget('booking-panels').content.tabs
+		expect(tabs[0].widgetIds).toEqual([
+			'booking-data',
 			'booking-timeline',
+			'booking-assignments',
+		])
+		expect(tabs.slice(1).map((t) => t.widgetId)).toEqual([
 			'booking-assignments',
 			'booking-notes',
 			'booking-files',
+			'booking-related',
+			'booking-history',
 		])
 		expect(widget('booking-notes')).toMatchObject({
 			type: 'integration',

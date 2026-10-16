@@ -2,8 +2,10 @@
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
-  - The BookingDetail page's `actionsComponent`: the six booking admin actions,
-  - rendered in the page header beside Edit.
+  - The BookingDetail page's `actionsComponent`: the booking admin actions as
+  - the row of buttons the PqAfspraak board draws under the title. The five
+  - status actions are always there and disabled while they do not apply, so
+  - the row keeps its place; Send reminder joins them when it applies.
   -
   - They POST to BookingService's /api/bookings/{id}/{action} endpoints, which
   - carry side-effects (confirmation / reminder emails, no-show fees) and
@@ -18,60 +20,78 @@
   -->
 <template>
 	<div
-		v-if="hasActions"
+		v-if="booking.id || objectId"
 		class="booking-header-actions"
 		data-testid="booking-header-actions">
 		<NcButton
-			v-if="canConfirmDeposit"
-			variant="primary"
-			:disabled="busy"
+			variant="secondary"
+			:disabled="busy || !canConfirmDeposit"
+			data-testid="booking-action-confirm-deposit"
 			@click="run('confirm-deposit', {}, t('pipelinq', 'Deposit confirmed.'))">
+			<template #icon>
+				<CashCheck :size="20" />
+			</template>
 			{{ t('pipelinq', 'Confirm deposit') }}
 		</NcButton>
 		<NcButton
-			v-if="canMarkCompleted"
-			variant="primary"
-			:disabled="busy"
+			variant="secondary"
+			:disabled="busy || !canMarkCompleted"
+			data-testid="booking-action-complete"
 			@click="run('complete', {}, t('pipelinq', 'Booking marked completed.'))">
+			<template #icon>
+				<CheckCircleOutline :size="20" />
+			</template>
 			{{ t('pipelinq', 'Mark completed') }}
 		</NcButton>
 		<NcButton
-			v-if="canMarkNoShow"
-			variant="error"
-			:disabled="busy"
+			variant="secondary"
+			:disabled="busy || !canMarkNoShow"
+			data-testid="booking-action-no-show"
 			@click="run('no-show', {}, t('pipelinq', 'Booking marked as no-show.'))">
+			<template #icon>
+				<AccountCancelOutline :size="20" />
+			</template>
 			{{ t('pipelinq', 'Mark no-show') }}
 		</NcButton>
 		<NcButton
-			v-if="canReschedule"
 			variant="secondary"
-			:disabled="busy"
+			:disabled="busy || !canReschedule"
+			data-testid="booking-action-reschedule"
 			@click="showReschedule = true">
+			<template #icon>
+				<CalendarSync :size="20" />
+			</template>
 			{{ t('pipelinq', 'Reschedule') }}
 		</NcButton>
 		<NcButton
-			v-if="canSendReminder"
 			variant="secondary"
-			:disabled="busy"
-			@click="run('send-reminder', {}, t('pipelinq', 'Reminder dispatched.'))">
-			{{ t('pipelinq', 'Send reminder') }}
+			:disabled="busy || !canCancel"
+			data-testid="booking-action-cancel"
+			@click="showCancel = true">
+			<template #icon>
+				<CalendarRemove :size="20" />
+			</template>
+			{{ t('pipelinq', 'Cancel') }}
 		</NcButton>
 		<NcButton
-			v-if="canCancel"
-			variant="error"
+			v-if="canSendReminder"
+			variant="tertiary"
 			:disabled="busy"
-			@click="showCancel = true">
-			{{ t('pipelinq', 'Cancel') }}
+			data-testid="booking-action-send-reminder"
+			@click="run('send-reminder', {}, t('pipelinq', 'Reminder dispatched.'))">
+			{{ t('pipelinq', 'Send reminder') }}
 		</NcButton>
 
 		<RescheduleBookingDialog
 			v-if="showReschedule"
 			:currentStartAt="booking.startAt || ''"
+			:currentEndAt="booking.endAt || ''"
 			@confirm="onReschedule"
 			@cancel="showReschedule = false" />
 
 		<CancelBookingDialog
 			v-if="showCancel"
+			:booking="booking"
 			@confirm="onCancel"
 			@cancel="showCancel = false" />
 	</div>
@@ -82,6 +102,11 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
+import AccountCancelOutline from 'vue-material-design-icons/AccountCancelOutline.vue'
+import CalendarRemove from 'vue-material-design-icons/CalendarRemove.vue'
+import CalendarSync from 'vue-material-design-icons/CalendarSync.vue'
+import CashCheck from 'vue-material-design-icons/CashCheck.vue'
+import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import CancelBookingDialog from '../../dialogs/CancelBookingDialog.vue'
 import RescheduleBookingDialog from '../../dialogs/RescheduleBookingDialog.vue'
 
@@ -89,7 +114,17 @@ const HOUR_MS = 60 * 60 * 1000
 
 export default {
 	name: 'BookingHeaderActions',
-	components: { CancelBookingDialog, NcButton, RescheduleBookingDialog },
+	components: {
+		AccountCancelOutline,
+		CalendarRemove,
+		CalendarSync,
+		CancelBookingDialog,
+		CashCheck,
+		CheckCircleOutline,
+		NcButton,
+		RescheduleBookingDialog,
+	},
+
 	// The slot also hands over schema / store / openEditForm; none of them
 	// belong on the root element.
 	inheritAttrs: false,
@@ -239,24 +274,6 @@ export default {
 		canSendReminder() {
 			return (
 				this.booking.status === 'confirmed' && this.isFuture && this.hourAway
-			)
-		},
-
-		/**
-		 * Whether any admin action applies, so the header shows the actions.
-		 *
-		 * @return {boolean}
-		 *
-		 * @spec openspec/specs/appointment-booking/spec.md
-		 */
-		hasActions() {
-			return (
-				this.canConfirmDeposit
-				|| this.canMarkCompleted
-				|| this.canMarkNoShow
-				|| this.canReschedule
-				|| this.canCancel
-				|| this.canSendReminder
 			)
 		},
 	},

@@ -8,13 +8,8 @@
 <template>
 	<NcDialog :name="t('pipelinq', 'Cancel booking')" @closing="$emit('cancel')">
 		<div class="cancel-form">
-			<p>
-				{{
-					t(
-						'pipelinq',
-						'Staff cancellations always skip the cancellation charge.',
-					)
-				}}
+			<p v-if="summary" class="cancel-form__lead">
+				{{ summary }}
 			</p>
 			<div class="form-group">
 				<label for="cancel-reason">{{
@@ -24,14 +19,22 @@
 					id="cancel-reason"
 					v-model="reason"
 					rows="3"
+					:placeholder="t('pipelinq', 'Cancellation reason')"
 					:aria-label="t('pipelinq', 'Cancellation reason')" />
 			</div>
+			<CnNoteCard type="warning" :text="chargeNote" />
+			<p class="cancel-form__after">
+				{{ t('pipelinq', 'The customer gets a cancellation message. The booking stays in the list with a cancelled status.') }}
+			</p>
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('cancel')">
 				{{ t('pipelinq', 'Back') }}
 			</NcButton>
 			<NcButton variant="error" @click="$emit('confirm', reason)">
+				<template #icon>
+					<CalendarRemove :size="20" />
+				</template>
 				{{ t('pipelinq', 'Cancel booking') }}
 			</NcButton>
 		</template>
@@ -39,25 +42,71 @@
 </template>
 
 <script>
+import { CnNoteCard } from '@conduction/nextcloud-vue'
 import { NcButton, NcDialog } from '@nextcloud/vue'
+import CalendarRemove from 'vue-material-design-icons/CalendarRemove.vue'
+import { objectCurrency } from '../services/cellFormatters.js'
+import { slotLabel } from '../utils/bookingTime.js'
 
 export default {
 	name: 'CancelBookingDialog',
-	components: { NcButton, NcDialog },
+	components: { CalendarRemove, CnNoteCard, NcButton, NcDialog },
+	props: {
+		/** The booking being cancelled, for its subject, slot and deposit. */
+		booking: { type: Object, default: () => ({}) },
+	},
+
 	emits: ['confirm', 'cancel'],
 	data() {
 		return { reason: '' }
+	},
+
+	computed: {
+		/**
+		 * What is being cancelled: the subject and the slot.
+		 *
+		 * @return {string}
+		 */
+		summary() {
+			const slot = slotLabel(this.booking?.startAt, this.booking?.endAt)
+			return [this.booking?.subject, slot].filter(Boolean).join(', ')
+		},
+
+		/**
+		 * The charge rule, and the refund when a deposit was paid.
+		 *
+		 * @return {string}
+		 */
+		chargeNote() {
+			const rule = t('pipelinq', 'Staff cancellations always skip the cancellation charge.')
+			const amount = Number(this.booking?.depositAmount)
+			if (!this.booking?.depositPaidAt || !Number.isFinite(amount) || amount <= 0) {
+				return rule
+			}
+			return rule + ' ' + t('pipelinq', 'The deposit of {amount} is refunded.', {
+				amount: objectCurrency(amount, this.booking),
+			})
+		},
 	},
 }
 </script>
 
 <style scoped>
 .cancel-form {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 	padding: 8px 0;
 }
 
+.cancel-form__lead,
+.cancel-form__after {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
 .form-group {
-	margin-top: 12px;
+	margin: 0;
 }
 
 .form-group label {

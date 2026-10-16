@@ -10,6 +10,9 @@
 <template>
 	<NcDialog :name="t('pipelinq', 'Reschedule booking')" @closing="$emit('cancel')">
 		<div class="reschedule-form">
+			<p class="reschedule-form__lead">
+				{{ t('pipelinq', 'Choose a new start time.') }}
+			</p>
 			<div class="form-group">
 				<label for="new-start-at">{{
 					t('pipelinq', 'New start time')
@@ -20,6 +23,15 @@
 					type="datetime-local"
 					:aria-label="t('pipelinq', 'New start time')" />
 			</div>
+			<dl class="reschedule-form__slots" data-testid="reschedule-slots">
+				<dt>{{ t('pipelinq', 'Now') }}</dt>
+				<dd>{{ currentSlot }}</dd>
+				<dt>{{ t('pipelinq', 'New') }}</dt>
+				<dd>{{ newSlot }}</dd>
+			</dl>
+			<CnNoteCard
+				type="info"
+				:text="t('pipelinq', 'The customer gets a new confirmation and the reminder moves with the appointment.')" />
 			<p v-if="error" class="error-text">
 				{{ error }}
 			</p>
@@ -29,6 +41,9 @@
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="primary" :disabled="!isValid" @click="onConfirm">
+				<template #icon>
+					<CalendarSync :size="20" />
+				</template>
 				{{ t('pipelinq', 'Reschedule') }}
 			</NcButton>
 		</template>
@@ -36,13 +51,18 @@
 </template>
 
 <script>
+import { CnNoteCard } from '@conduction/nextcloud-vue'
 import { NcButton, NcDialog } from '@nextcloud/vue'
+import CalendarSync from 'vue-material-design-icons/CalendarSync.vue'
+import { slotLabel } from '../utils/bookingTime.js'
 
 export default {
 	name: 'RescheduleBookingDialog',
-	components: { NcButton, NcDialog },
+	components: { CalendarSync, CnNoteCard, NcButton, NcDialog },
 	props: {
 		currentStartAt: { type: String, default: '' },
+		/** The current end; the new slot keeps the same length. */
+		currentEndAt: { type: String, default: '' },
 	},
 
 	emits: ['confirm', 'cancel'],
@@ -54,6 +74,32 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The slot the booking has now ("Donderdag 8 oktober, 14:00 tot 15:00").
+		 *
+		 * @return {string}
+		 */
+		currentSlot() {
+			return slotLabel(this.currentStartAt, this.currentEndAt) || '-'
+		},
+
+		/**
+		 * The slot the chosen start gives, just as long as the current one.
+		 *
+		 * @return {string}
+		 */
+		newSlot() {
+			const start = new Date(this.newStartAt)
+			if (!this.newStartAt || Number.isNaN(start.getTime())) {
+				return '-'
+			}
+			const from = new Date(this.currentStartAt).getTime()
+			const to = new Date(this.currentEndAt).getTime()
+			const length = Number.isFinite(to - from) && to > from ? to - from : 0
+			const end = length > 0 ? new Date(start.getTime() + length) : null
+			return t('pipelinq', '{slot}, same length', { slot: slotLabel(start, end) })
+		},
+
 		isValid() {
 			return (
 				!!this.newStartAt
@@ -96,11 +142,34 @@ export default {
 
 <style scoped>
 .reschedule-form {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 	padding: 8px 0;
 }
 
+.reschedule-form__lead {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.reschedule-form__slots {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 8px 16px;
+	margin: 0;
+}
+
+.reschedule-form__slots dt {
+	color: var(--color-text-maxcontrast);
+}
+
+.reschedule-form__slots dd {
+	margin: 0;
+}
+
 .form-group {
-	margin-bottom: 12px;
+	margin: 0;
 }
 
 .form-group label {
