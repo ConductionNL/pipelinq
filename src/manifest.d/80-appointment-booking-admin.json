@@ -159,7 +159,7 @@
 					{ "label": "Unconfirmed", "filter": { "status": "pending-deposit" }, "showCount": true }
 				],
 				"columns": [
-					{ "key": "startAt", "label": "When", "formatter": "bookingWhen", "secondary": "{startAt|weekday}", "cellClass": "cn-cell--strong" },
+					{ "key": "startAt", "label": "When", "formatter": "bookingWhen", "secondary": "{startAt|weekday:today}", "cellClass": "cn-cell--strong" },
 					{ "key": "customerId", "label": "With whom", "formatter": "bookingCustomerName" },
 					{ "key": "subject", "label": "About", "secondary": "{source}", "cellClass": "cn-cell--strong" },
 					{ "key": "location", "label": "Location or desk" },
