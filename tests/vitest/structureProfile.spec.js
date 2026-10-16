@@ -166,13 +166,13 @@ describe('the full profile', () => {
 		expect(count('integrations')).toBe(0)
 	})
 
-	it('holds the header controls back on index pages only, and the simple profile draws the board header', () => {
+	it('holds the header controls back on index pages only, and the simple profile draws the board header with its column filters', () => {
 		expect(fullFile.pageDefaults).toEqual({ index: { headerFilters: false } })
 		expect(simpleFile.pageDefaults).toEqual({
 			index: {
 				showTitle: true,
 				showTitleIcon: false,
-				headerFilters: false,
+				headerFilters: true,
 				headerButtons: [
 					{ action: 'export', label: 'Download' },
 					{ action: 'actions-menu' },
@@ -185,7 +185,7 @@ describe('the full profile', () => {
 		)
 		expect(simpleIndex.length).toBeGreaterThan(0)
 		for (const page of simpleIndex) {
-			expect(page.config?.headerFilters, page.id).toBe(false)
+			expect(page.config?.headerFilters, page.id).toBe(true)
 			expect(page.config?.showTitle, page.id).toBe(true)
 		}
 		const unchanged = { pages: [{ id: 'x', type: 'detail', config: {} }] }
