@@ -7681,7 +7681,16 @@ OC.L10N.register(
         "Items to take back": "Items to take back",
         "The returned quantity cannot exceed the original quantity. Choose at least one item to take back.": "The returned quantity cannot exceed the original quantity. Choose at least one item to take back.",
         "After saving": "After saving",
-        "The refund waits for confirmation. A manager confirms or rejects it.": "The refund waits for confirmation. A manager confirms or rejects it."
+        "The refund waits for confirmation. A manager confirms or rejects it.": "The refund waits for confirmation. A manager confirms or rejects it.",
+        "Invalid signature": "Invalid signature",
+        "Not exported": "Not exported",
+        "Filter ({count})": "Filter ({count})",
+        "Filter": "Filter",
+        "{shown} of {total} · newest first": "{shown} of {total} · newest first",
+        "Audit entry {time}": "Audit entry {time}",
+        "Invalid signature, possibly tampered with. The signature or the chain hash does not match: the entry was changed by hand, or the secret key was replaced without signing again.": "Invalid signature, possibly tampered with. The signature or the chain hash does not match: the entry was changed by hand, or the secret key was replaced without signing again.",
+        "Not exported yet": "Not exported yet",
+        "Open and verify": "Open and verify"
     },
     "nplurals=2; plural=(n != 1);"
 )

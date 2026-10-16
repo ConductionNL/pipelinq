@@ -24,16 +24,19 @@
 				"
 				icon="ShieldCheckOutline" />
 			<div class="kassakoppeling-audit-list__actions">
-				<NcButton :disabled="loading" @click="refresh">
+				<NcButton
+					variant="tertiary"
+					:disabled="loading"
+					:aria-label="t('pipelinq', 'Refresh')"
+					@click="refresh">
 					<template #icon>
 						<NcLoadingIcon v-if="loading" :size="20" />
 						<Refresh v-else :size="20" />
 					</template>
-					{{ t('pipelinq', 'Refresh') }}
 				</NcButton>
 				<NcButton
 					v-if="isAdmin"
-					variant="primary"
+					variant="secondary"
 					data-testid="kassakoppeling-audit-export"
 					@click="showExport = true">
 					<template #icon>
@@ -44,7 +47,26 @@
 			</div>
 		</div>
 
+		<div class="kassakoppeling-audit-list__toolbar">
+			<CnQuickFilterBar
+				:tabs="quickFilters"
+				:counts="quickFilterCounts"
+				:activeIndex="quickFilterIndex"
+				@update:activeIndex="onQuickFilter" />
+			<NcButton
+				variant="secondary"
+				:aria-expanded="showFilters ? 'true' : 'false'"
+				data-testid="kassakoppeling-audit-filter-toggle"
+				@click="showFilters = !showFilters">
+				<template #icon>
+					<FilterOutline :size="20" />
+				</template>
+				{{ appliedFilterCount > 0 ? t('pipelinq', 'Filter ({count})', { count: appliedFilterCount }) : t('pipelinq', 'Filter') }}
+			</NcButton>
+		</div>
+
 		<form
+			v-show="showFilters"
 			class="kassakoppeling-audit-list__filters"
 			data-testid="kassakoppeling-audit-filters"
 			@submit.prevent="applyFilters">
@@ -102,6 +124,8 @@
 			</div>
 		</form>
 
+		<div class="kassakoppeling-audit-list__body">
+			<div class="kassakoppeling-audit-list__main">
 		<CnDataTable
 			class="kassakoppeling-audit-list__table"
 			data-testid="kassakoppeling-audit-table"
@@ -113,7 +137,7 @@
 				t('pipelinq', 'No audit entries found for the selected filters.')
 			"
 			rowKey="_rowKey"
-			@rowClick="openDetail">
+			@rowClick="selectEntry">
 			<template #column-timestamp="{ row }">
 				{{ formatTimestamp(row.timestamp) }}
 			</template>
@@ -135,20 +159,55 @@
 					:variant="verifyVariant(row.verified)"
 					size="small" />
 			</template>
-			<template #column-chevron>
-				<ChevronRight
-					:size="20"
-					class="kassakoppeling-audit-list__chevron" />
-			</template>
 		</CnDataTable>
 
 		<CnPagination
 			:currentPage="page"
 			:totalPages="totalPages"
-			:totalItems="sortedEntries.length"
+			:totalItems="visibleEntries.length"
 			:currentPageSize="pageSize"
 			@pageChanged="page = $event"
 			@pageSizeChanged="onPageSizeChange" />
+		<p class="kassakoppeling-audit-list__count">
+			{{ t('pipelinq', '{shown} of {total} · newest first', { shown: pageEntries.length, total: visibleEntries.length }) }}
+		</p>
+			</div>
+
+			<aside
+				v-if="selectedEntry"
+				class="kassakoppeling-audit-list__inspect"
+				data-testid="kassakoppeling-audit-inspect">
+				<h3>{{ t('pipelinq', 'Audit entry {time}', { time: formatTimestamp(selectedEntry.timestamp) }) }}</h3>
+				<CnNoteCard
+					v-if="selectedEntry.verified === false"
+					type="error"
+					:text="t('pipelinq', 'Invalid signature, possibly tampered with. The signature or the chain hash does not match: the entry was changed by hand, or the secret key was replaced without signing again.')" />
+				<dl class="kassakoppeling-audit-list__facts">
+					<dt>{{ t('pipelinq', 'Action') }}</dt>
+					<dd>{{ actionLabel(selectedEntry.action) }}</dd>
+					<dt>{{ t('pipelinq', 'Operator') }}</dt>
+					<dd>{{ selectedEntry.operatorId || '—' }}</dd>
+					<dt>{{ t('pipelinq', 'Amount') }}</dt>
+					<dd>{{ formatEur(selectedEntry.amount) }}</dd>
+					<dt>{{ t('pipelinq', 'Register') }}</dt>
+					<dd>{{ selectedEntry.registerNumber || '—' }}</dd>
+					<dt>{{ t('pipelinq', 'Exported on') }}</dt>
+					<dd>{{ selectedEntry.exportedAt ? formatTimestamp(selectedEntry.exportedAt) : t('pipelinq', 'Not exported yet') }}</dd>
+				</dl>
+				<h4>{{ t('pipelinq', 'Cryptographic data') }}</h4>
+				<dl class="kassakoppeling-audit-list__facts">
+					<dt>{{ t('pipelinq', 'Signature') }}</dt>
+					<dd><code>{{ shortHash(selectedEntry.signature) }}</code></dd>
+					<dt>{{ t('pipelinq', 'Current hash') }}</dt>
+					<dd><code>{{ shortHash(selectedEntry.currentHash) }}</code></dd>
+					<dt>{{ t('pipelinq', 'Previous hash') }}</dt>
+					<dd><code>{{ shortHash(selectedEntry.previousHash) }}</code></dd>
+				</dl>
+				<NcButton variant="secondary" @click="openDetail(selectedEntry, $event)">
+					{{ t('pipelinq', 'Open and verify') }}
+				</NcButton>
+			</aside>
+		</div>
 
 		<BelastingdienstExportDialog
 			v-if="showExport"
@@ -161,8 +220,10 @@
 <script>
 import {
 	CnDataTable,
+	CnNoteCard,
 	CnPageHeader,
 	CnPagination,
+	CnQuickFilterBar,
 	CnStatusBadge,
 	openRowTarget,
 } from '@conduction/nextcloud-vue'
@@ -175,7 +236,6 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
-import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -203,6 +263,24 @@ function hasAnyFilter(filters) {
 	return Object.values(filters).some((value) => value !== '')
 }
 
+/**
+ * Whether an entry belongs to a chip: 0 all, 1 an invalid signature,
+ * 2 not exported yet.
+ *
+ * @param {object} entry The audit entry.
+ * @param {number} index The chip index.
+ * @return {boolean} True when the chip shows it.
+ */
+export function matchesChip(entry, index) {
+	if (index === 1) {
+		return entry.verified === false
+	}
+	if (index === 2) {
+		return !entry.exportedAt
+	}
+	return true
+}
+
 const ACTION_LABELS = {
 	sale: 'Sale',
 	void: 'Void',
@@ -223,10 +301,11 @@ export default {
 	name: 'KassakoppelingAuditList',
 	components: {
 		BelastingdienstExportDialog,
-		ChevronRight,
 		CnDataTable,
 		CnPageHeader,
+		CnNoteCard,
 		CnPagination,
+		CnQuickFilterBar,
 		CnStatusBadge,
 		Download,
 		FilterOutline,
@@ -247,6 +326,9 @@ export default {
 			page: 1,
 			pageSize: PAGE_SIZE,
 			filters: emptyFilters(),
+			showFilters: false,
+			quickFilterIndex: 0,
+			selectedId: '',
 			// The filters the list was last fetched with. Clear only fetches
 			// again when these narrowed the list; edits that were never
 			// applied are just emptied.
@@ -267,8 +349,7 @@ export default {
 		},
 
 		/**
-		 * The table columns. The last one is the row's chevron affordance,
-		 * presentational only, so it has no label.
+		 * The table columns, as the PqKassaAudit board orders them.
 		 *
 		 * @return {Array<object>} CnDataTable column definitions.
 		 *
@@ -281,12 +362,8 @@ export default {
 					label: t('pipelinq', 'Time'),
 					cellClass: 'cn-cell--wrap',
 				},
-				{
-					key: 'operatorId',
-					label: t('pipelinq', 'Operator and register'),
-					cellClass: 'cn-cell--wrap',
-					secondary: (row) => row.registerNumber || '—',
-				},
+				{ key: 'operatorId', label: t('pipelinq', 'Operator') },
+				{ key: 'registerNumber', label: t('pipelinq', 'Register') },
 				{ key: 'action', label: t('pipelinq', 'Action') },
 				{
 					key: 'amount',
@@ -295,12 +372,6 @@ export default {
 					cellClass: 'num',
 				},
 				{ key: 'verified', label: t('pipelinq', 'Verification') },
-				{
-					key: 'chevron',
-					label: '',
-					class: 'chevron-col',
-					cellClass: 'chevron-col',
-				},
 			]
 		},
 
@@ -423,6 +494,65 @@ export default {
 		},
 
 		/**
+		 * The board's chips: every entry, the ones whose signature failed and
+		 * the ones not exported yet.
+		 *
+		 * @return {Array<{label: string, filter: object}>} The chips.
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-kassakoppeling-audit/spec.md
+		 */
+		quickFilters() {
+			return [
+				{ label: t('pipelinq', 'All'), filter: {} },
+				{ label: t('pipelinq', 'Invalid signature'), filter: { verified: false } },
+				{ label: t('pipelinq', 'Not exported'), filter: { exported: false } },
+			]
+		},
+
+		/**
+		 * How many entries each chip holds.
+		 *
+		 * @return {Array<number>} The counts, by chip.
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-kassakoppeling-audit/spec.md
+		 */
+		quickFilterCounts() {
+			return [0, 1, 2].map((index) => this.sortedEntries.filter((entry) => matchesChip(entry, index)).length)
+		},
+
+		/**
+		 * The entries the active chip lets through, newest first.
+		 *
+		 * @return {Array<object>} The entries.
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-kassakoppeling-audit/spec.md
+		 */
+		visibleEntries() {
+			return this.sortedEntries.filter((entry) => matchesChip(entry, this.quickFilterIndex))
+		},
+
+		/**
+		 * How many of the filters the list was fetched with are set.
+		 *
+		 * @return {number} The count.
+		 */
+		appliedFilterCount() {
+			return Object.values(this.appliedFilters).filter((value) => value !== '').length
+		},
+
+		/**
+		 * The entry the side panel shows: the one picked, else the first
+		 * with an invalid signature, else the newest.
+		 *
+		 * @return {object|null} The entry.
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-kassakoppeling-audit/spec.md
+		 */
+		selectedEntry() {
+			const rows = this.visibleEntries
+			return rows.find((entry) => (entry.id || entry.uuid) === this.selectedId)
+				|| rows.find((entry) => entry.verified === false)
+				|| rows[0]
+				|| null
+		},
+
+		/**
 		 * Total number of pages at the configured page size.
 		 *
 		 * @return {number} The total page count.
@@ -430,7 +560,7 @@ export default {
 		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
 		 */
 		totalPages() {
-			return Math.max(1, Math.ceil(this.sortedEntries.length / this.pageSize))
+			return Math.max(1, Math.ceil(this.visibleEntries.length / this.pageSize))
 		},
 
 		/**
@@ -444,7 +574,7 @@ export default {
 			const start = (this.page - 1) * this.pageSize
 			// The table keys rows by one field; an entry may carry an id, a
 			// uuid or only its timestamp.
-			return this.sortedEntries
+			return this.visibleEntries
 				.slice(start, start + this.pageSize)
 				.map((entry) => ({
 					...entry,
@@ -539,6 +669,37 @@ export default {
 		onPageSizeChange(size) {
 			this.pageSize = Number(size) || PAGE_SIZE
 			this.page = 1
+		},
+
+		/**
+		 * Show an entry in the side panel.
+		 *
+		 * @param {object} entry The clicked entry.
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-kassakoppeling-audit/spec.md
+		 */
+		selectEntry(entry) {
+			this.selectedId = entry?.id || entry?.uuid || ''
+		},
+
+		/**
+		 * Switch the chip and go back to the first page.
+		 *
+		 * @param {number} index The chip index.
+		 */
+		onQuickFilter(index) {
+			this.quickFilterIndex = index
+			this.page = 1
+		},
+
+		/**
+		 * A hash shortened to its first and last six characters.
+		 *
+		 * @param {string} value The hash.
+		 * @return {string} The short form.
+		 */
+		shortHash(value) {
+			const text = String(value || '')
+			return text.length > 14 ? text.slice(0, 6) + '…' + text.slice(-4) : text || '—'
 		},
 
 		/**
@@ -744,6 +905,69 @@ export default {
 	gap: 8px;
 }
 
+.kassakoppeling-audit-list__toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.kassakoppeling-audit-list__body {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 340px;
+	gap: 20px;
+	align-items: start;
+}
+
+.kassakoppeling-audit-list__main {
+	min-width: 0;
+}
+
+.kassakoppeling-audit-list__count {
+	margin: 8px 0 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.kassakoppeling-audit-list__inspect {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 20px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	background: var(--color-main-background);
+}
+
+.kassakoppeling-audit-list__inspect h3,
+.kassakoppeling-audit-list__inspect h4 {
+	margin: 0;
+}
+
+.kassakoppeling-audit-list__facts {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 6px 16px;
+	margin: 0;
+	font-size: 14px;
+}
+
+.kassakoppeling-audit-list__facts dt {
+	color: var(--color-text-maxcontrast);
+}
+
+.kassakoppeling-audit-list__facts dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+	.kassakoppeling-audit-list__body {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
 .kassakoppeling-audit-list__filters {
 	display: flex;
 	flex-wrap: wrap;
@@ -770,13 +994,4 @@ export default {
 	text-align: end;
 }
 
-.kassakoppeling-audit-list__table :deep(.chevron-col) {
-	width: 1%;
-	padding-inline: 4px;
-}
-
-.kassakoppeling-audit-list__chevron {
-	display: block;
-	color: var(--color-text-maxcontrast);
-}
 </style>

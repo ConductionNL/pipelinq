@@ -1436,7 +1436,7 @@
         "Export test run": "Testuitvoering export",
         "Export to Belastingdienst": "Exporteren naar Belastingdienst",
         "Export {entity} report": "{entity}-rapport exporteren",
-        "Exported on": "Exporteerd op",
+        "Exported on": "Geëxporteerd op",
         "Exporteerd op": "Exporteerd op",
         "Exporteren naar Belastingdienst": "Exporteren naar Belastingdienst",
         "Extend +60 days": "Verleng +60 dagen",
@@ -7628,6 +7628,15 @@
         "Items to take back": "Artikelen om terug te nemen",
         "The returned quantity cannot exceed the original quantity. Choose at least one item to take back.": "Het retouraantal mag niet hoger zijn dan het oorspronkelijke aantal. Kies minstens één artikel om terug te nemen.",
         "After saving": "Na opslaan",
-        "The refund waits for confirmation. A manager confirms or rejects it.": "De retour wacht op bevestiging. Een leidinggevende bevestigt of wijst af."
+        "The refund waits for confirmation. A manager confirms or rejects it.": "De retour wacht op bevestiging. Een leidinggevende bevestigt of wijst af.",
+        "Invalid signature": "Ongeldige handtekening",
+        "Not exported": "Niet geëxporteerd",
+        "Filter ({count})": "Filter ({count})",
+        "Filter": "Filter",
+        "{shown} of {total} · newest first": "{shown} van {total} · nieuwste eerst",
+        "Audit entry {time}": "Auditregel {time}",
+        "Invalid signature, possibly tampered with. The signature or the chain hash does not match: the entry was changed by hand, or the secret key was replaced without signing again.": "Handtekening ongeldig, mogelijk gemanipuleerd. De handtekening of de ketenhash klopt niet: de regel is met de hand gewijzigd, of de geheime sleutel is vervangen zonder opnieuw te ondertekenen.",
+        "Not exported yet": "Nog niet geëxporteerd",
+        "Open and verify": "Openen en controleren"
     }
 }

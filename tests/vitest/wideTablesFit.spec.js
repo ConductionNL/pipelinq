@@ -105,7 +105,7 @@ describe('social performance', () => {
 })
 
 describe('kassakoppeling audit log', () => {
-	it('shows the register under the operator', () => {
+	it('shows operator and register as columns of their own, as the PqKassaAudit board does', () => {
 		const source = readFileSync(
 			resolve(
 				__dirname,
@@ -113,9 +113,9 @@ describe('kassakoppeling audit log', () => {
 			),
 			'utf8',
 		)
-		expect(source).toContain("label: t('pipelinq', 'Operator and register')")
-		expect(source).toContain("secondary: (row) => row.registerNumber || '—'")
-		expect(source).not.toContain("key: 'registerNumber'")
+		expect(source).toContain("{ key: 'operatorId', label: t('pipelinq', 'Operator') }")
+		expect(source).toContain("{ key: 'registerNumber', label: t('pipelinq', 'Register') }")
+		expect(source).not.toContain("key: 'chevron'")
 	})
 })
 
