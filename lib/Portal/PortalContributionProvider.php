@@ -662,20 +662,45 @@ class PortalContributionProvider {
 	}//end questionsCollection()
 
 	/**
-	 * The two question actions, both endpoint actions portaliq forwards.
+	 * The question actions.
 	 *
-	 * `askAboutDossier` is offered only when opencatalogi, which holds the
-	 * dossier, is installed. `replyToQuestion` stays, so a resident can still
-	 * answer on a question asked earlier.
+	 * `askQuestion` is a create action for a question about no dossier in
+	 * particular (the site's contact form); it files the same kind of ticket
+	 * `myQuestions` lists. `askAboutDossier` and `replyToQuestion` are endpoint
+	 * actions portaliq forwards. `askAboutDossier` is offered only when
+	 * opencatalogi, which holds the dossier, is installed. `replyToQuestion`
+	 * stays, so a resident can still answer on a question asked earlier.
 	 *
 	 * @return array<int, array<string, mixed>> The action declarations.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
 	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
+	 * @spec openspec/changes/a-resident-asks-a-question-without-a-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-that-is-not-about-a-dossier
 	 */
 	private function questionActions(): array {
-		$actions = [];
+		$actions = [
+			[
+				'id' => 'askQuestion',
+				'type' => 'create',
+				'label' => 'Stel een vraag',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				// A question: the same kind and channel `myQuestions` lists.
+				'defaults' => ['ticketType' => 'request', 'channel' => 'portal'],
+				'scopeField' => 'portalSubject',
+				'fields' => ['title', 'description'],
+				'fieldConfigs' => [
+					'title' => ['label' => 'Onderwerp', 'required' => true, 'placeholder' => 'Waar gaat uw vraag over?'],
+					'description' => ['label' => 'Uw vraag', 'required' => true, 'size' => 'full'],
+				],
+				// The portal confirms receipt by mail, naming the subject only.
+				'confirmationMail' => 'contact-confirmation',
+				'topicField' => 'title',
+				'submitLabel' => 'Vraag versturen',
+				'successMessage' => 'Wij hebben uw vraag ontvangen. U vindt hem terug bij Mijn vragen.',
+			],
+		];
 		if ($this->isOpenCatalogiInstalled() === true) {
 			$actions[] = [
 				'id' => 'askAboutDossier',
