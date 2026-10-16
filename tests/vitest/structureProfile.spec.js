@@ -184,13 +184,8 @@ describe('the full profile', () => {
 			(page) => page.type === 'index',
 		)
 		expect(simpleIndex.length).toBeGreaterThan(0)
-		// A page whose board draws a filter in every column header turns them
-		// back on (PqTickets).
-		const boardHeaderFilters = ['Tickets']
 		for (const page of simpleIndex) {
-			expect(page.config?.headerFilters, page.id).toBe(
-				boardHeaderFilters.includes(page.id),
-			)
+			expect(page.config?.headerFilters, page.id).toBe(false)
 			expect(page.config?.showTitle, page.id).toBe(true)
 		}
 		const unchanged = { pages: [{ id: 'x', type: 'detail', config: {} }] }
