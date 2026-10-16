@@ -76,6 +76,7 @@ import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
 import { createAppFormatters } from './services/cellFormatters.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
+import { share } from './services/shareFormatter.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
 import { useObjectStore } from './store/modules/object.js'
 
@@ -186,7 +187,7 @@ export default {
 		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 		 */
 		cellFormatters() {
-			return createAppFormatters(useObjectStore())
+			return { ...createAppFormatters(useObjectStore()), share }
 		},
 
 		/**

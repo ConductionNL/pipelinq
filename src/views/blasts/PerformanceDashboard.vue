@@ -366,8 +366,8 @@
 import { CnStatusBadge, CnTab, CnTabs } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import { trafficOutcome } from '../../services/campaignTraffic.js'
 
 const OVERVIEW_LIMIT = 50

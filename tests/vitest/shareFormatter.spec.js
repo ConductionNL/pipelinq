@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { share } from '../../src/services/cellFormatters.js'
+import { share } from '../../src/services/shareFormatter.js'
 
 describe('share formatter', () => {
 	const row = { totals: { opened: 71, delivered: 119, clicked: 0 } }
