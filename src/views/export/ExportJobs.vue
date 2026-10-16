@@ -119,7 +119,7 @@ export default {
 		 */
 		headerButtons() {
 			return [
-				{ action: 'export', label: t('pipelinq', 'Download') },
+				{ action: 'export', label: t('pipelinq', 'Download'), icon: 'Download' },
 				{ action: 'actions-menu' },
 				{
 					action: 'add',
