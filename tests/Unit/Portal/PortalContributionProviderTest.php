@@ -232,7 +232,7 @@ final class PortalContributionProviderTest extends TestCase {
 		// The create actions only; the Woo question endpoint actions have their
 		// own tests below.
 		$actions = $this->indexById(array_filter($manifest['actions'], static fn (array $a): bool => ($a['type'] ?? '') === 'create'));
-		$this->assertSame(['createComplaint', 'createOwnComplaint', 'createOwnRequest', 'createRequest'], $this->sortedKeys($actions));
+		$this->assertSame(['askQuestion', 'createComplaint', 'createOwnComplaint', 'createOwnRequest', 'createRequest'], $this->sortedKeys($actions));
 
 		// Both intakes write the unified `ticket` schema. The kind is stamped
 		// server-side from `defaults` — never taken from the client — and the
@@ -946,6 +946,42 @@ final class PortalContributionProviderTest extends TestCase {
 
 		$this->assertNull($this->withOpenCatalogi()->getContribution(self::CUSTOMER_SUBJECT)['actions'][0] ?? null, 'customer is not a Woo audience');
 	}//end testCitizenAndClientMayAskAndReply()
+
+	/**
+	 * Scenario: a resident asks a question that is not about a dossier.
+	 *
+	 * The site's contact form binds to `askQuestion`. It files the kind of
+	 * ticket `myQuestions` lists, stamped with the resident's own reference,
+	 * whether or not opencatalogi is installed, and asks the portal for its
+	 * receipt mail naming the subject.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/a-resident-asks-a-question-without-a-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-that-is-not-about-a-dossier
+	 */
+	public function testAResidentAsksAQuestionWithoutADossier(): void {
+		foreach ([true, false] as $installed) {
+			foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
+				$manifest = $this->withOpenCatalogi(installed: $installed)->getContribution($subject);
+				$this->assertIsArray($manifest);
+				$ask = $this->indexById($manifest['actions'])['askQuestion'] ?? null;
+				$this->assertIsArray($ask, 'the contact form needs the action with or without opencatalogi');
+
+				$this->assertSame('create', $ask['type']);
+				$this->assertSame('pipelinq', $ask['register']);
+				$this->assertSame('ticket', $ask['schema']);
+				$this->assertSame('portalSubject', $ask['scopeField']);
+				$this->assertArrayNotHasKey('scopeClaim', $ask);
+				$questions = $this->indexById($manifest['collections'])['myQuestions'];
+				$this->assertSame($questions['filter'], $ask['defaults'], 'a question asked here is listed under Mijn vragen');
+				$this->assertSame(['title', 'description'], $ask['fields']);
+				$this->assertSame('contact-confirmation', $ask['confirmationMail']);
+				$this->assertSame('title', $ask['topicField'], 'the mail names the subject, never the question');
+				$this->assertTrue($ask['fieldConfigs']['description']['required']);
+				$this->assertSame('Uw vraag', $ask['fieldConfigs']['description']['label']);
+			}
+		}
+	}//end testAResidentAsksAQuestionWithoutADossier()
 
 	/**
 	 * Scenario: opencatalogi is not installed.
