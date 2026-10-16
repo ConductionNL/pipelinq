@@ -245,49 +245,6 @@ class RoutingService {
 	}//end getAgentWorkload()
 
 	/**
-	 * The team's load: every agent profile with its open items against its capacity.
-	 *
-	 * One row per profile, sorted by name: the user id and name, whether the
-	 * agent is available, the open request tickets and leads assigned to them
-	 * ({@see getAgentWorkload()}), their maxConcurrent, and whether the open
-	 * count has reached it. Empty when the register or the agent profile
-	 * schema is not configured.
-	 *
-	 * @return array<int, array<string, mixed>> The rows.
-	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.3
-	 */
-	public function getTeamLoad(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$agentProfileSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'agentProfile_schema', '');
-		if ($registerId === '' || $agentProfileSchemaId === '') {
-			return [];
-		}
-
-		$rows = [];
-		foreach ($this->loadAgentProfiles(registerId: $registerId, agentProfileSchemaId: $agentProfileSchemaId) as $profile) {
-			$userId = (string) ($profile['userId'] ?? '');
-			if ($userId === '') {
-				continue;
-			}
-
-			$open = $this->getAgentWorkload(userId: $userId);
-			$rows[] = [
-				'userId' => $userId,
-				'displayName' => (string) ($profile['displayName'] ?? $userId),
-				'isAvailable' => ($profile['isAvailable'] ?? true) !== false,
-				'open' => $open,
-				'maxConcurrent' => (int) ($profile['maxConcurrent'] ?? self::DEFAULT_MAX_CONCURRENT),
-				'atCapacity' => $this->isAgentAtCapacity(profile: $profile, workload: $open),
-			];
-		}
-
-		usort($rows, static fn (array $a, array $b): int => strcasecmp($a['displayName'], $b['displayName']));
-
-		return $rows;
-	}//end getTeamLoad()
-
-	/**
 	 * Find agent profiles whose skills cover the given category.
 	 *
 	 * Returns profiles enriched with `matchedSkill` (title) and

@@ -223,7 +223,7 @@ return [
 
         // Skill-based routing suggestions — must precede SPA catch-all.
         ['name' => 'routing#getSuggestions', 'url' => '/api/routing/suggestions', 'verb' => 'GET'],
-        ['name' => 'routing#getTeamLoad',    'url' => '/api/routing/team-load',   'verb' => 'GET'],
+        ['name' => 'teamLoad#index',         'url' => '/api/routing/team-load',   'verb' => 'GET'],
 
         // POS transaction lifecycle (camelCase slug matches PosTransactionController class name).
         // CRUD is handled by OpenRegister's generic object API; these are the lifecycle actions.

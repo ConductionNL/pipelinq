@@ -593,33 +593,4 @@ class RoutingControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
 		$this->assertSame(['message' => 'Operation failed'], $response->getData());
 	}//end testGetSuggestionsMapsBackendFailureToAStaticServerError()
-
-	/**
-	 * The team load lists every agent with the open requests assigned to them.
-	 *
-	 * @return void
-	 */
-	public function testGetTeamLoadListsEveryAgentWithTheirOpenItems(): void {
-		$this->signIn();
-		$this->seedRoutingFixtures();
-
-		$response = $this->buildController()->getTeamLoad();
-
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$rows = $response->getData()['results'];
-		$this->assertSame(['alice', 'bob'], array_column($rows, 'userId'));
-		$this->assertSame([0, 1], array_column($rows, 'open'));
-		$this->assertSame([5, 5], array_column($rows, 'maxConcurrent'));
-	}//end testGetTeamLoadListsEveryAgentWithTheirOpenItems()
-
-	/**
-	 * Unauthenticated team load is refused with 401.
-	 *
-	 * @return void
-	 */
-	public function testGetTeamLoadRequiresAuthentication(): void {
-		$this->userSession->method('getUser')->willReturn(null);
-
-		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->buildController()->getTeamLoad()->getStatus());
-	}//end testGetTeamLoadRequiresAuthentication()
 }//end class

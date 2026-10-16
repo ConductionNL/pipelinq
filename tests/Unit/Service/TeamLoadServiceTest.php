@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for RoutingService::getTeamLoad() (the queue's team card).
+ * Unit tests for TeamLoadService (the queue's Team today card).
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -24,49 +24,52 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\RoutingService;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Service\TeamLoadService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Every agent profile becomes a row with its open items against its capacity.
  */
-class RoutingServiceTeamLoadTest extends TestCase {
+class TeamLoadServiceTest extends TestCase {
 
 	/**
-	 * Build the service with the given config values, profiles and workloads.
+	 * Build the service.
 	 *
-	 * @param array<string, string>            $config    App config values by key.
-	 * @param array<int, array<string, mixed>> $profiles  The agent profiles findAll returns.
-	 * @param array<string, int>               $workloads Open items by user id.
+	 * @param array<string, string>                 $config    App config values by key.
+	 * @param array<int, array<string, mixed>>|null $profiles  What findAll returns, or null to make it throw.
+	 * @param array<string, int>                    $workloads Open items by user id.
 	 *
-	 * @return RoutingService The service, with getAgentWorkload answered from $workloads.
+	 * @return TeamLoadService The service.
 	 */
-	private function service(array $config, array $profiles, array $workloads): RoutingService {
+	private function service(array $config, ?array $profiles, array $workloads): TeamLoadService {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default): string => $config[$key] ?? $default
 		);
 		$objects = $this->createMock(ObjectServiceInterface::class);
-		$objects->method('findAll')->willReturn($profiles);
+		if ($profiles === null) {
+			$objects->method('findAll')->willThrowException(new RuntimeException('down'));
+		} else {
+			$objects->method('findAll')->willReturn($profiles);
+		}
 
-		$service = $this->getMockBuilder(RoutingService::class)
-			->setConstructorArgs(
-				[
-					$appConfig,
-					$this->createMock(TicketService::class),
-					$this->createMock(LoggerInterface::class),
-					$objects,
-				]
-			)
-			->onlyMethods(['getAgentWorkload'])
-			->getMock();
-		$service->method('getAgentWorkload')->willReturnCallback(
+		$routing = $this->createMock(RoutingService::class);
+		$routing->method('getAgentWorkload')->willReturnCallback(
 			static fn (string $userId): int => $workloads[$userId] ?? 0
 		);
+		$routing->method('isAgentAtCapacity')->willReturnCallback(
+			static fn (array $profile, int $workload): bool => $workload >= (int) ($profile['maxConcurrent'] ?? 10)
+		);
 
-		return $service;
+		return new TeamLoadService(
+			appConfig: $appConfig,
+			routing: $routing,
+			objectService: $objects,
+			logger: $this->createMock(LoggerInterface::class)
+		);
 	}//end service()
 
 	/**
@@ -109,13 +112,18 @@ class RoutingServiceTeamLoadTest extends TestCase {
 	}//end testRowsPerProfile()
 
 	/**
-	 * Without the agent profile schema there is no team to show.
+	 * Without the agent profile schema, or when the profiles cannot be read, there is no team to show.
 	 *
 	 * @return void
 	 */
-	public function testUnconfiguredIsEmpty(): void {
-		$service = $this->service(config: ['register' => 'pipelinq'], profiles: [['userId' => 'x']], workloads: []);
-
-		$this->assertSame(expected: [], actual: $service->getTeamLoad());
-	}//end testUnconfiguredIsEmpty()
+	public function testUnconfiguredOrUnreadableIsEmpty(): void {
+		$this->assertSame(
+			expected: [],
+			actual: $this->service(config: ['register' => 'pipelinq'], profiles: [['userId' => 'x']], workloads: [])->getTeamLoad()
+		);
+		$this->assertSame(
+			expected: [],
+			actual: $this->service(config: ['register' => 'pipelinq', 'agentProfile_schema' => 'agentProfile'], profiles: null, workloads: [])->getTeamLoad()
+		);
+	}//end testUnconfiguredOrUnreadableIsEmpty()
 }//end class

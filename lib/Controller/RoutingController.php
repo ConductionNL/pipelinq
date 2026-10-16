@@ -145,35 +145,4 @@ class RoutingController extends Controller {
 
 		return new JSONResponse($result, Http::STATUS_OK);
 	}//end getSuggestions()
-
-	/**
-	 * The team's load: per agent the open items against their capacity.
-	 *
-	 * Reads the assignment graph across the team, so it is a CRM capability,
-	 * as {@see getSuggestions()}.
-	 *
-	 * @return JSONResponse `{ results: [...] }` (see RoutingService::getTeamLoad()), or an error.
-	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.3
-	 */
-	#[NoAdminRequired]
-	public function getTeamLoad(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		try {
-			$rows = $this->routingService->getTeamLoad();
-		} catch (\Throwable $e) {
-			$this->logger->error('RoutingController: getTeamLoad failed', ['exception' => $e]);
-			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}
-
-		return new JSONResponse(['results' => $rows], Http::STATUS_OK);
-	}//end getTeamLoad()
 }//end class
