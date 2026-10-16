@@ -1,6 +1,6 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged.",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. The BI export part (board PqBiExport): two destinations, a data warehouse and a regional data lake, and four export jobs on them; three run on a schedule and the leads job is switched off.",
 	"appConfig": [
 		{
 			"key": "crm_group",
@@ -290,6 +290,115 @@
 				"assignee": "{{cast:daan.uid}}",
 				"stageEnteredAt": "{{datetime:-3 14:00}}",
 				"category": "bedrijfsvestiging"
+			}
+		},
+		{
+			"key": "export-destination-warehouse",
+			"register": "pipelinq",
+			"schema": "exportDestination",
+			"data": {
+				"name": "Datawarehouse",
+				"type": "postgres",
+				"pathTemplate": "pipelinq/{schema}/{date}",
+				"compression": "none",
+				"encryptionEnabled": true,
+				"validationStatus": "valid",
+				"connectorSourceId": "zuiddrecht-datawarehouse"
+			}
+		},
+		{
+			"key": "export-destination-datalake",
+			"register": "pipelinq",
+			"schema": "exportDestination",
+			"data": {
+				"name": "Regionaal datameer",
+				"type": "azure_data_lake",
+				"pathTemplate": "zuiddrecht/pipelinq/{schema}/{date}",
+				"compression": "gzip",
+				"encryptionEnabled": true,
+				"validationStatus": "valid",
+				"connectorSourceId": "zuiddrecht-datameer"
+			}
+		},
+		{
+			"key": "export-job-kcc-tickets",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"data": {
+				"name": "Tickets voor het KCC-dashboard",
+				"description": "Elke nacht de tickets en klanten voor het dashboard van het klantcontactcentrum.",
+				"sourceSchemas": [
+					"ticket",
+					"client"
+				],
+				"destinationId": "{{object:export-destination-warehouse.id}}",
+				"format": "parquet",
+				"mode": "incremental",
+				"incrementalWatermarkColumn": "@self.updated",
+				"scheduleCron": "0 2 * * *",
+				"enabled": true,
+				"createdBy": "{{cast:daan.uid}}",
+				"createdAt": "{{datetime:-30 09:00}}"
+			}
+		},
+		{
+			"key": "export-job-contacts-per-channel",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"data": {
+				"name": "Contactmomenten per kanaal",
+				"description": "Elk uur de contactmomenten, voor de kanaalrapportage.",
+				"sourceSchemas": [
+					"ticket"
+				],
+				"destinationId": "{{object:export-destination-warehouse.id}}",
+				"format": "parquet",
+				"mode": "incremental",
+				"incrementalWatermarkColumn": "@self.updated",
+				"scheduleCron": "@hourly",
+				"rowFilterExpression": "ticketType = 'interaction'",
+				"enabled": true,
+				"createdBy": "{{cast:daan.uid}}",
+				"createdAt": "{{datetime:-30 09:00}}"
+			}
+		},
+		{
+			"key": "export-job-appointments",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"data": {
+				"name": "Afspraken en niet verschenen",
+				"description": "Elke maandag alle afspraken, met wie niet verscheen.",
+				"sourceSchemas": [
+					"appointmentBooking"
+				],
+				"destinationId": "{{object:export-destination-datalake.id}}",
+				"format": "csv",
+				"mode": "full",
+				"scheduleCron": "0 3 * * 1",
+				"enabled": true,
+				"createdBy": "{{cast:daan.uid}}",
+				"createdAt": "{{datetime:-30 09:00}}"
+			}
+		},
+		{
+			"key": "export-job-leads",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"data": {
+				"name": "Leads en waarde in de pijplijn",
+				"description": "Elke nacht de leads met hun fase en waarde. Staat uit tot de verbinding weer werkt.",
+				"sourceSchemas": [
+					"lead",
+					"pipeline"
+				],
+				"destinationId": "{{object:export-destination-warehouse.id}}",
+				"format": "jsonl",
+				"mode": "full",
+				"scheduleCron": "@daily",
+				"enabled": false,
+				"createdBy": "{{cast:daan.uid}}",
+				"createdAt": "{{datetime:-30 09:00}}"
 			}
 		}
 	]
