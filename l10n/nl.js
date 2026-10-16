@@ -7599,7 +7599,9 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "Suggested colleagues": "Voorgestelde collega's",
+        "{channel} · received {occurredAt|date}": "{channel} · ontvangen {occurredAt|date}"
     },
     "nplurals=2; plural=(n != 1);"
 )

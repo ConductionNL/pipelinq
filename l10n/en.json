@@ -7692,6 +7692,8 @@
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Suggested colleagues": "Suggested colleagues",
+        "{channel} · received {occurredAt|date}": "{channel} · received {occurredAt|date}"
     }
 }

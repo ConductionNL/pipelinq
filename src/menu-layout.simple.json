@@ -831,7 +831,8 @@
 							"hideEmpty": true,
 							"editable": false
 						}
-					}
+					},
+					"ticket-related"
 				],
 				"layout": [
 					{
@@ -848,11 +849,20 @@
 					"route": "Tickets"
 				},
 				"showTypeEyebrow": false,
-				"headerCard": true
+				"headerCard": true,
+				"follow": false,
+				"favourite": false,
+				"headerMeta": "{channel} · received {occurredAt|date}"
 			},
 			"configPatch": {
 				"bodyWidgets": {
-					"customer-reply": null
+					"customer-reply": null,
+					"dossier-snapshot": null,
+					"woo-conversion": null,
+					"resident-view": null,
+					"routing-suggestions": {
+						"title": "Suggested colleagues"
+					}
 				},
 				"widgets": {
 					"ticket-decision-routes": {
@@ -872,16 +882,24 @@
 							"moreLabel": "More",
 							"tabs": [
 								{
-									"widgetId": "ticket-data",
+									"widgetIds": [
+										"ticket-data",
+										"ticket-conversation",
+										"ticket-dossier",
+										"ticket-woo",
+										"ticket-case"
+									],
 									"label": "Overview"
 								},
 								{
 									"widgetId": "ticket-contactmoments",
-									"label": "Contact moments"
+									"label": "Contact moments",
+									"countFrom": "widget"
 								},
 								{
 									"widgetId": "ticket-related",
-									"label": "Related"
+									"label": "Related",
+									"countFrom": "widget"
 								},
 								{
 									"widgetIds": [
@@ -893,11 +911,44 @@
 									"visibleWhen": {
 										"appInstalled": "decidiq"
 									}
+								},
+								{
+									"widgetId": "ticket-history",
+									"label": "History"
+								},
+								{
+									"widgetId": "ticket-resident-view",
+									"label": "What the resident sees"
 								}
-							],
-							"variant": "segmented"
+							]
 						},
-						"_note": "The page declares `ticket-panels` itself (overview and decisions). The simple structure gives it the board's four tabs, so this patches the widget instead of appending a second one with the same id."
+						"_note": "Board PqTicket: folder tabs with counts. The overview holds the ticket details, the conversation, the dossier asked about, the Woo request and the case, one under the other; contact moments, related, decisions and history each have a tab, and what the resident sees sits behind More."
+					},
+					"ticket-data": {
+						"title": "Ticket details",
+						"content": {
+							"title": "Ticket details",
+							"columns": 2,
+							"hideEmpty": true,
+							"include": [
+								"assignee",
+								"category",
+								"channel",
+								"client",
+								"occurredAt",
+								"priority",
+								"description"
+							],
+							"overrides": {
+								"assignee": {
+									"formatter": "userDisplayName"
+								},
+								"description": {
+									"gridColumn": "1 / -1"
+								}
+							}
+						},
+						"_note": "Board PqTicket: the overview card names the ticket in two columns, the description across both. What the type does not use stays hidden (hideEmpty)."
 					}
 				}
 			},
@@ -941,33 +992,43 @@
 							"rowRoute": "TicketDetail",
 							"emptyText": "No contact moments on this ticket yet."
 						}
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "ticket-conversation",
-						"component": "TicketConversationSection",
-						"title": "Conversation",
-						"placement": "after-data",
-						"props": {
-							"objectId": "@objectId"
-						}
 					},
 					{
-						"id": "request-conversion",
-						"component": "RequestConversionSection",
+						"id": "ticket-conversation",
+						"type": "TicketConversationWidget",
+						"title": "Conversation",
+						"icon": "ForumOutline"
+					},
+					{
+						"id": "ticket-dossier",
+						"type": "DossierSnapshotWidget",
+						"title": "Asked about",
+						"icon": "FolderOutline"
+					},
+					{
+						"id": "ticket-woo",
+						"type": "WooConversionWidget",
+						"title": "Woo request",
+						"icon": "FileDocumentOutline"
+					},
+					{
+						"id": "ticket-case",
+						"type": "RequestConversionWidget",
 						"title": "Case",
-						"placement": "after-data",
-						"props": {
-							"requestId": "@objectId"
-						}
+						"icon": "Gavel"
+					},
+					{
+						"id": "ticket-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "ticket-resident-view",
+						"type": "ResidentViewWidget",
+						"title": "What the resident sees",
+						"icon": "EyeOutline"
 					}
-				]
-			},
-			"configOrder": {
-				"bodyWidgets": [
-					"dossier-snapshot",
-					"ticket-conversation"
 				]
 			}
 		},
