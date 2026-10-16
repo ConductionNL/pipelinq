@@ -3499,23 +3499,28 @@
 								},
 								{
 									"label": "Appointments",
-									"widgetId": "lead-calendar"
+									"widgetId": "lead-calendar",
+									"countFrom": "widget"
 								},
 								{
 									"label": "Mail",
-									"widgetId": "lead-email"
+									"widgetId": "lead-email",
+									"countFrom": "widget"
 								},
 								{
 									"label": "Notes",
-									"widgetId": "lead-notes"
+									"widgetId": "lead-notes",
+									"countFrom": "widget"
 								},
 								{
 									"label": "Files",
-									"widgetId": "lead-files"
+									"widgetId": "lead-files",
+									"countFrom": "widget"
 								},
 								{
 									"label": "Decisions",
-									"widgetId": "lead-decisions"
+									"widgetId": "lead-decisions",
+									"countFrom": "widget"
 								},
 								{
 									"label": "History",
@@ -3542,7 +3547,8 @@
 							},
 							"transition": {
 								"kind": "lifecycle"
-							}
+							},
+							"variant": "bars"
 						}
 					},
 					{
