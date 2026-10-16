@@ -7630,7 +7630,8 @@ OC.L10N.register(
         "Nothing moved that the sources can show.": "Niets bewoog dat de bronnen kunnen laten zien.",
         "No suggestions this week.": "Deze week geen suggesties.",
         "No topic ideas this week.": "Deze week geen ideeën voor onderwerpen.",
-        "Export the report": "Rapport exporteren"
+        "Export the report": "Rapport exporteren",
+        "View all clients": "Alle klanten bekijken"
     },
     "nplurals=2; plural=(n != 1);"
 )

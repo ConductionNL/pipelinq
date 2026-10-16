@@ -298,7 +298,7 @@ export default {
 
 .weekly-review__card h3 {
 	margin: 0 0 12px;
-	font-size: 1rem;
+	font-size: 1.1rem;
 	font-weight: 700;
 }
 
@@ -310,7 +310,7 @@ export default {
 }
 
 .weekly-review__summary {
-	font-size: 1.05rem;
+	font-size: 1.15rem;
 	line-height: 1.6;
 	margin: 0 0 12px;
 }

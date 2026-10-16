@@ -7699,7 +7699,8 @@ OC.L10N.register(
         "Nothing moved that the sources can show.": "Nothing moved that the sources can show.",
         "No suggestions this week.": "No suggestions this week.",
         "No topic ideas this week.": "No topic ideas this week.",
-        "Export the report": "Export the report"
+        "Export the report": "Export the report",
+        "View all clients": "View all clients"
     },
     "nplurals=2; plural=(n != 1);"
 )

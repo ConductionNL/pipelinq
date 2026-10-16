@@ -1496,11 +1496,30 @@
 								},
 								{
 									"key": "status",
-									"label": "Status"
+									"label": "Status",
+									"widget": "badge",
+									"widgetProps": {
+										"colorMap": {
+											"new": "primary",
+											"in_progress": "primary",
+											"awaiting_customer": "warning",
+											"resolved": "success",
+											"closed": "success"
+										}
+									}
 								},
 								{
 									"key": "priority",
-									"label": "Priority"
+									"label": "Priority",
+									"widget": "badge",
+									"widgetProps": {
+										"colorMap": {
+											"urgent": "error",
+											"high": "error",
+											"normal": "default",
+											"low": "default"
+										}
+									}
 								}
 							]
 						},
@@ -1534,8 +1553,7 @@
 								"dir": "asc"
 							},
 							"limit": 5,
-							"hideHeader": true,
-							"borderless": true,
+							"hideHeader": false,
 							"rowRoute": "ClientDetail",
 							"viewAllRoute": {
 								"name": "Clients"
@@ -1738,7 +1756,8 @@
 						"gridY": 18,
 						"gridWidth": 6,
 						"gridHeight": 5,
-						"sizeToContent": true
+						"sizeToContent": true,
+						"showTitle": false
 					},
 					{
 						"id": "20",
@@ -1751,7 +1770,8 @@
 					}
 				],
 				"gridFloat": false,
-				"showWidgetActions": false
+				"showWidgetActions": false,
+				"showActionsMenu": false
 			},
 			"slots": {
 				"widget-my-work": "MyWorkWidget",
