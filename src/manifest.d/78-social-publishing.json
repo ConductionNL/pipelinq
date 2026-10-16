@@ -93,7 +93,8 @@
 				"viewModes": [
 					"table",
 					"cards",
-					"board"
+					"board",
+					"map"
 				],
 				"board": {
 					"statusField": "status"
@@ -166,7 +167,13 @@
 						"label": "Published on",
 						"formatter": "datetime"
 					}
-				]
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
