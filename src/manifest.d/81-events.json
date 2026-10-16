@@ -1,20 +1,4 @@
 {
-	"menu": [
-		{
-			"id": "MarketingGroup",
-			"label": "Marketing",
-			"order": 130,
-			"children": [
-				{
-					"id": "Events",
-					"label": "Public events",
-					"icon": "CalendarStar",
-					"route": "Events",
-					"order": 47
-				}
-			]
-		}
-	],
 	"pages": [
 		{
 			"id": "Events",
@@ -459,7 +443,7 @@
 						"type": "api-call",
 						"url": "/apps/pipelinq/api/events/@objectId/reminder",
 						"method": "POST",
-						"confirm": "Send the reminder to everyone with a place?",
+						"confirm": true,
 						"successMessage": "The reminder is on its way to everyone with a place.",
 						"errorMessage": "Could not send the reminder."
 					},
