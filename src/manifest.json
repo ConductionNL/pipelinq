@@ -644,7 +644,7 @@
 						"icon": "Plus"
 					}
 				],
-				"description": "Compared with the period before · all owners",
+				"description": "Last 90 days · compared with the 90 days before · all owners",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
 					"enabled": true,
@@ -687,7 +687,6 @@
 							"route": {
 								"name": "Leads"
 							},
-							"icon": "Cash",
 							"format": {
 								"style": "currency",
 								"currency": "@config.currency",
@@ -713,7 +712,6 @@
 							"route": {
 								"name": "Leads"
 							},
-							"icon": "Trophy",
 							"variant": "success",
 							"format": {
 								"style": "currency",
@@ -740,7 +738,6 @@
 							"route": {
 								"name": "Leads"
 							},
-							"icon": "TrendingUp",
 							"variant": "success",
 							"format": {
 								"style": "percent",
@@ -766,7 +763,6 @@
 							"route": {
 								"name": "Leads"
 							},
-							"icon": "Cash",
 							"format": {
 								"style": "currency",
 								"currency": "@config.currency",
@@ -792,7 +788,6 @@
 							"route": {
 								"name": "Leads"
 							},
-							"icon": "ChartLine",
 							"format": {
 								"style": "currency",
 								"currency": "@config.currency",
@@ -818,7 +813,6 @@
 							"route": {
 								"name": "Contracts"
 							},
-							"icon": "Repeat",
 							"variant": "success",
 							"format": {
 								"style": "currency",
@@ -964,7 +958,7 @@
 					{
 						"id": "recently-won-lost",
 						"type": "record-list",
-						"title": "Recently won / lost",
+						"title": "Recent won / lost",
 						"content": {
 							"register": "pipelinq",
 							"schema": "lead",
