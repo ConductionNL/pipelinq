@@ -5033,6 +5033,7 @@ OC.L10N.register(
         "Delivery channel actually used.": "Afleverkanaal dat werkelijk is gebruikt.",
         "Delivery channel.": "Afleverkanaal.",
         "Delivery lifecycle state (indexed).": "Status in de afleverlevenscyclus, geïndexeerd.",
+        "Delivery projects above the cases: plan, tasks, cycles and team.": "Projecten boven de zaken: plan, taken, cycli en team.",
         "Delivery Status": "Afleverstatus",
         "DeliveryAuditLog": "DeliveryAuditLog",
         "Denomination Breakdown": "Verdeling per coupure",

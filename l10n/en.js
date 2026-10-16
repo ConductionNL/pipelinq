@@ -5105,6 +5105,7 @@ OC.L10N.register(
         "Delivery channel actually used.": "Delivery channel actually used.",
         "Delivery channel.": "Delivery channel.",
         "Delivery lifecycle state (indexed).": "Delivery lifecycle state (indexed).",
+        "Delivery projects above the cases: plan, tasks, cycles and team.": "Delivery projects above the cases: plan, tasks, cycles and team.",
         "Delivery Status": "Delivery Status",
         "DeliveryAuditLog": "DeliveryAuditLog",
         "Denomination Breakdown": "Denomination Breakdown",
