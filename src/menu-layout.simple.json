@@ -1610,7 +1610,7 @@
 				"sortOrder": "desc",
 				"rowTitle": "plain",
 				"searchPlaceholder": "Filter by subject or client",
-				"_queryPresetsNote": "The Contact moments entry opens this list with ?ticketType=interaction; the preset gives that view the lenses, columns and copy of board PqContactmomenten. The board's Mijn Zuiddrecht lens is the online channel, labelled Online because the portal's name belongs to the instance. Channel lenses list both vocabularies the channel field carries (phone and telefoon, counter and balie).",
+				"_queryPresetsNote": "The Contact moments entry opens this list with ?ticketType=interaction; the preset gives that view the lenses, columns and copy of board PqContactmomenten. The default lens is the last 30 days, so the list opens with the recent moments, as the board opens on this month. The board's Mijn Zuiddrecht lens is the online channel, labelled Online because the portal's name belongs to the instance. Channel lenses list both vocabularies the channel field carries (phone and telefoon, counter and balie).",
 				"queryPresets": [
 					{
 						"id": "contact-moments",
@@ -1627,6 +1627,14 @@
 							}
 						],
 						"quickFilters": [
+							{
+								"label": "Last 30 days",
+								"filter": {
+									"occurredAt[gte]": "@today-30d"
+								},
+								"default": true,
+								"showCount": true
+							},
 							{
 								"label": "Today",
 								"filter": {
