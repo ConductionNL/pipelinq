@@ -7692,6 +7692,16 @@
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Service details": "Service details",
+        "Built in steps": "Built in steps",
+        "{durationMinutes} minutes": "{durationMinutes} minutes",
+        "Resources that can do this": "Resources that can do this",
+        "No resource can carry this service yet": "No resource can carry this service yet",
+        "{shown} of {total} services · what residents can book, and on whom or what it is booked": "{shown} of {total} services · what residents can book, and on whom or what it is booked",
+        "Filter by service name": "Filter by service name",
+        "A service is booked on the resources with the requested kind and skills. A changed duration clears the saved free times.": "A service is booked on the resources with the requested kind and skills. A changed duration clears the saved free times.",
+        "Buffer before": "Buffer before",
+        "Booked on": "Booked on"
     }
 }

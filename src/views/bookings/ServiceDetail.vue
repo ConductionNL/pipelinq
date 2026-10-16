@@ -43,20 +43,26 @@
 		:backLabel="t('pipelinq', 'Back to list')"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
-		objectType="pipelinq_service"
+		objectType="appointmentService"
 		:objectId="serviceId"
-		:sidebarProps="sidebarProps">
+		:sidebarProps="sidebarProps"
+		:breadcrumb="boardHeader.breadcrumb"
+		:statusPill="boardHeader.statusPill"
+		:headerMeta="boardHeader.headerMeta"
+		:sideColumn="sideColumn"
+		:headerActions="headerActions"
+		:actionsMenu="{ label: t('pipelinq', 'More') }">
 		<template #actions>
-			<NcButton variant="primary" @click="openEditDialog">
+			<NcButton @click="openEditDialog">
+				<template #icon>
+					<Pencil :size="20" />
+				</template>
 				{{ t('pipelinq', 'Edit') }}
-			</NcButton>
-			<NcButton variant="error" @click="showDelete = true">
-				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>
 
-		<div class="service-detail__pair">
-			<CnDetailCard :title="t('pipelinq', 'Service information')">
+		<div class="service-detail__stack">
+			<CnDetailCard :title="t('pipelinq', 'Service details')">
 				<div class="info-grid">
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Name') }}</label>
@@ -101,7 +107,7 @@
 					<p>{{ serviceData.description }}</p>
 				</div>
 			</CnDetailCard>
-			<CnDetailCard :title="t('pipelinq', 'Policies')">
+			<CnDetailCard :title="t('pipelinq', 'Rules')">
 				<div class="info-grid">
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Requires deposit') }}</label>
@@ -149,7 +155,7 @@
 		</div>
 
 		<CnDetailCard
-			:title="t('pipelinq', 'Multi-step composition')"
+			:title="t('pipelinq', 'Built in steps')"
 			data-testid="service-composition">
 			<template #actions>
 				<template v-if="editingSteps">
@@ -258,6 +264,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate } from '@nextcloud/l10n'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import ServiceForm from './ServiceForm.vue'
@@ -270,6 +277,53 @@ import {
 	RESOURCE_TYPE_LABELS,
 } from '../../utils/enumLabels.js'
 
+/** The page header the PqService board draws. */
+const SERVICE_BOARD_HEADER = Object.freeze({
+	breadcrumb: { label: 'Services', route: 'Services', separator: '/' },
+	statusPill: {
+		field: 'status',
+		colorMap: { active: 'success', draft: 'default', archived: 'default' },
+		labels: { draft: 'Draft', active: 'Active', archived: 'Archived' },
+	},
+	headerMeta: '{durationMinutes} minutes',
+})
+
+/** The side cards the PqService board draws. */
+const SERVICE_SIDE_COLUMN = Object.freeze([
+	{
+		id: 'service-bookings',
+		type: 'stat',
+		title: 'Bookings',
+		content: {
+			label: 'Bookings',
+			caption: 'this week',
+			source: {
+				register: 'pipelinq',
+				schema: 'appointmentBooking',
+				metric: 'count',
+				filter: { serviceId: '@objectId', 'startAt[gte]': '@today-7d' },
+			},
+			clickRoute: 'Bookings',
+		},
+	},
+	{
+		id: 'service-resources',
+		type: 'record-list',
+		title: 'Resources that can do this',
+		content: {
+			register: 'pipelinq',
+			schema: 'appointmentResource',
+			filter: { type: '@object.requiredResourceTypes', status: 'active' },
+			limit: 3,
+			presentation: 'rows',
+			title: '{name}',
+			meta: '{type}',
+			rowRoute: 'ResourceDetail',
+			emptyText: 'No resource can carry this service yet',
+		},
+	},
+])
+
 const STATUS_LABELS = {
 	draft: 'Draft',
 	active: 'Active',
@@ -280,6 +334,7 @@ export default {
 	name: 'ServiceDetail',
 	components: {
 		NcButton,
+		Pencil,
 		CnDetailPage,
 		CnDetailCard,
 		CnFormDialog,
@@ -330,6 +385,47 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The board header of the service page (PqService): the status pill,
+		 * the breadcrumb back to the list and the duration as the meta line.
+		 *
+		 * @return {object}
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		boardHeader() {
+			return SERVICE_BOARD_HEADER
+		},
+
+		/**
+		 * The side cards of the service page: its bookings and the resources
+		 * that can carry it.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		sideColumn() {
+			return SERVICE_SIDE_COLUMN
+		},
+
+		/**
+		 * Delete sits in the More menu, as the board draws it.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		headerActions() {
+			return [
+				{
+					id: 'delete-service',
+					label: t('pipelinq', 'Delete'),
+					icon: 'Delete',
+					onSelect: () => {
+						this.showDelete = true
+					},
+				},
+			]
+		},
+
 		/**
 		 * The service's cancellation policy as words; a service without one
 		 * has the schema default, free cancellation.
@@ -836,17 +932,16 @@ export default {
 	padding: 20px 20px 0;
 }
 
-/* Service information and Policies side by side; one column on a phone. */
-.service-detail__pair {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+/* The service details and its rules stacked, as the board draws them. */
+.service-detail__stack {
+	display: flex;
+	flex-direction: column;
 	gap: 16px;
-	align-items: start;
 }
 
 .info-grid {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
 	gap: 16px;
 }
 
@@ -856,10 +951,13 @@ export default {
 
 .info-field label {
 	display: block;
-	font-weight: bold;
 	margin-bottom: 2px;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
+}
+
+.info-field span {
+	font-weight: 600;
 }
 
 .info-field--full {

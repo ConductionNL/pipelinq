@@ -7599,7 +7599,17 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "Service details": "Gegevens dienst",
+        "Built in steps": "Opbouw in stappen",
+        "{durationMinutes} minutes": "{durationMinutes} minuten",
+        "Resources that can do this": "Resources die dit kunnen",
+        "No resource can carry this service yet": "Nog geen resource kan deze dienst uitvoeren",
+        "{shown} of {total} services · what residents can book, and on whom or what it is booked": "{shown} van {total} diensten · wat inwoners kunnen boeken, en op wie of wat het geboekt wordt",
+        "Filter by service name": "Filter op naam van de dienst",
+        "A service is booked on the resources with the requested kind and skills. A changed duration clears the saved free times.": "Een dienst wordt geboekt op de resources met de gevraagde soort en vaardigheden. Een gewijzigde duur wist de bewaarde vrije tijden.",
+        "Buffer before": "Buffer voor",
+        "Booked on": "Geboekt op"
     },
     "nplurals=2; plural=(n != 1);"
 )
