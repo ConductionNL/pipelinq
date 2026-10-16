@@ -86,6 +86,7 @@
 			v-if="showReschedule"
 			:currentStartAt="booking.startAt || ''"
 			:currentEndAt="booking.endAt || ''"
+			:subject="booking.subject || ''"
 			@confirm="onReschedule"
 			@cancel="showReschedule = false" />
 

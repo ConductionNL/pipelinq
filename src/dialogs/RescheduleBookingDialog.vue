@@ -8,11 +8,13 @@
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
-	<NcDialog :name="t('pipelinq', 'Reschedule booking')" @closing="$emit('cancel')">
+	<CnDialog
+		:name="t('pipelinq', 'Reschedule booking')"
+		:eyebrow="eyebrow"
+		:subtitle="t('pipelinq', 'Choose a new start time.')"
+		width="form"
+		@closing="$emit('cancel')">
 		<div class="reschedule-form">
-			<p class="reschedule-form__lead">
-				{{ t('pipelinq', 'Choose a new start time.') }}
-			</p>
 			<div class="form-group">
 				<label for="new-start-at">{{
 					t('pipelinq', 'New start time')
@@ -47,22 +49,24 @@
 				{{ t('pipelinq', 'Reschedule') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { CnNoteCard } from '@conduction/nextcloud-vue'
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDialog, CnNoteCard } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 import CalendarSync from 'vue-material-design-icons/CalendarSync.vue'
 import { slotLabel } from '../utils/bookingTime.js'
 
 export default {
 	name: 'RescheduleBookingDialog',
-	components: { CalendarSync, CnNoteCard, NcButton, NcDialog },
+	components: { CalendarSync, CnDialog, CnNoteCard, NcButton },
 	props: {
 		currentStartAt: { type: String, default: '' },
 		/** The current end; the new slot keeps the same length. */
 		currentEndAt: { type: String, default: '' },
+		/** What the booking is about, named in the dialog's eyebrow. */
+		subject: { type: String, default: '' },
 	},
 
 	emits: ['confirm', 'cancel'],
@@ -74,6 +78,15 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The context line above the title ("Boeking · locatiebezoek Parkstraat").
+		 *
+		 * @return {string}
+		 */
+		eyebrow() {
+			return [t('pipelinq', 'Booking'), this.subject].filter(Boolean).join(' · ')
+		},
+
 		/**
 		 * The slot the booking has now ("Donderdag 8 oktober, 14:00 tot 15:00").
 		 *
@@ -146,11 +159,6 @@ export default {
 	flex-direction: column;
 	gap: 16px;
 	padding: 8px 0;
-}
-
-.reschedule-form__lead {
-	margin: 0;
-	color: var(--color-text-maxcontrast);
 }
 
 .reschedule-form__slots {

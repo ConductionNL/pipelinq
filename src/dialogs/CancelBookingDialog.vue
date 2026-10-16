@@ -6,11 +6,13 @@
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
-	<NcDialog :name="t('pipelinq', 'Cancel booking')" @closing="$emit('cancel')">
+	<CnDialog
+		:name="t('pipelinq', 'Cancel booking')"
+		:eyebrow="eyebrow"
+		:subtitle="summary"
+		width="form"
+		@closing="$emit('cancel')">
 		<div class="cancel-form">
-			<p v-if="summary" class="cancel-form__lead">
-				{{ summary }}
-			</p>
 			<div class="form-group">
 				<label for="cancel-reason">{{
 					t('pipelinq', 'Reason (optional)')
@@ -38,19 +40,19 @@
 				{{ t('pipelinq', 'Cancel booking') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { CnNoteCard } from '@conduction/nextcloud-vue'
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDialog, CnNoteCard } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 import CalendarRemove from 'vue-material-design-icons/CalendarRemove.vue'
 import { objectCurrency } from '../services/cellFormatters.js'
 import { slotLabel } from '../utils/bookingTime.js'
 
 export default {
 	name: 'CancelBookingDialog',
-	components: { CalendarRemove, CnNoteCard, NcButton, NcDialog },
+	components: { CalendarRemove, CnDialog, CnNoteCard, NcButton },
 	props: {
 		/** The booking being cancelled, for its subject, slot and deposit. */
 		booking: { type: Object, default: () => ({}) },
@@ -62,6 +64,15 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The context line above the title ("Boeking · locatiebezoek Parkstraat").
+		 *
+		 * @return {string}
+		 */
+		eyebrow() {
+			return [t('pipelinq', 'Booking'), this.booking?.subject].filter(Boolean).join(' · ')
+		},
+
 		/**
 		 * What is being cancelled: the subject and the slot.
 		 *
@@ -99,7 +110,6 @@ export default {
 	padding: 8px 0;
 }
 
-.cancel-form__lead,
 .cancel-form__after {
 	margin: 0;
 	color: var(--color-text-maxcontrast);
