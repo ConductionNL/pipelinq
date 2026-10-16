@@ -1,5 +1,24 @@
 <template>
 	<div class="client-form" data-testid="client-form">
+		<fieldset class="form-group client-form__type" data-testid="client-type-select">
+			<legend>{{ t('pipelinq', 'Type') }}</legend>
+			<div class="client-form__type-options">
+				<NcCheckboxRadioSwitch
+					v-for="option in typeOptions"
+					:key="option.value"
+					v-model="form.type"
+					:value="option.value"
+					type="radio"
+					name="client-type"
+					:data-testid="'client-type-' + option.value">
+					{{ option.label }}
+				</NcCheckboxRadioSwitch>
+			</div>
+			<p v-if="shownErrors.type" class="field-error" role="alert">
+				{{ shownErrors.type }}
+			</p>
+		</fieldset>
+
 		<div class="form-group">
 			<label for="client-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
@@ -16,21 +35,6 @@
 
 		<div class="form-row">
 			<div class="form-group">
-				<label for="client-type">{{ t('pipelinq', 'Type') }} *</label>
-				<NcSelect
-					v-model="form.type"
-					inputId="client-type"
-					:inputLabel="t('pipelinq', 'Type')"
-					labelOutside
-					:options="typeOptions"
-					:reduce="(o) => o.value"
-					:placeholder="t('pipelinq', 'Select type')"
-					data-testid="client-type-select" />
-				<p v-if="shownErrors.type" class="field-error" role="alert">
-					{{ shownErrors.type }}
-				</p>
-			</div>
-			<div class="form-group">
 				<label for="client-email">{{ t('pipelinq', 'Email') }}</label>
 				<NcTextField
 					id="client-email"
@@ -43,9 +47,6 @@
 					data-testid="client-email-input"
 					@update:modelValue="(v) => (form.email = v)" />
 			</div>
-		</div>
-
-		<div class="form-row">
 			<div class="form-group">
 				<label for="client-phone">{{ t('pipelinq', 'Phone') }}</label>
 				<NcTextField
@@ -58,18 +59,17 @@
 					data-testid="client-phone-input"
 					@update:modelValue="(v) => (form.phone = v)" />
 			</div>
-			<div class="form-group">
-				<label for="client-website">{{ t('pipelinq', 'Website') }}</label>
-				<NcTextField
-					id="client-website"
-					labelOutside
-					:label="t('pipelinq', 'Website')"
-					:modelValue="form.website"
-					:error="!!shownErrors.website"
-					:helperText="shownErrors.website"
-					data-testid="client-website-input"
-					@update:modelValue="(v) => (form.website = v)" />
-			</div>
+		</div>
+
+		<div class="form-group">
+			<label for="client-address">{{ t('pipelinq', 'Address') }}</label>
+			<NcTextField
+				id="client-address"
+				labelOutside
+				:label="t('pipelinq', 'Address')"
+				:modelValue="form.address"
+				data-testid="client-address-input"
+				@update:modelValue="(v) => (form.address = v)" />
 		</div>
 
 		<div class="form-row">
@@ -85,6 +85,30 @@
 					:placeholder="t('pipelinq', 'Pick sectors')"
 					data-testid="client-industry-select" />
 			</div>
+			<div class="form-group">
+				<label for="client-website">{{ t('pipelinq', 'Website') }}</label>
+				<NcTextField
+					id="client-website"
+					labelOutside
+					:label="t('pipelinq', 'Website')"
+					:modelValue="form.website"
+					:error="!!shownErrors.website"
+					:helperText="shownErrors.website"
+					data-testid="client-website-input"
+					@update:modelValue="(v) => (form.website = v)" />
+			</div>
+		</div>
+
+		<div class="form-group">
+			<label for="client-notes">{{ t('pipelinq', 'Notes') }}</label>
+			<textarea
+				id="client-notes"
+				v-model="form.notes"
+				rows="3"
+				data-testid="client-notes-input" />
+		</div>
+
+		<div class="form-row">
 			<div class="form-group">
 				<label for="client-account-owner">{{
 					t('pipelinq', 'Account owner')
@@ -103,9 +127,6 @@
 					data-testid="client-account-owner-select"
 					@search="searchUsers" />
 			</div>
-		</div>
-
-		<div class="form-row">
 			<div class="form-group">
 				<label for="client-language">{{
 					t('pipelinq', 'Correspondence language')
@@ -120,37 +141,18 @@
 					label="label"
 					data-testid="client-language-select" />
 			</div>
-			<div class="form-group">
-				<label for="client-timezone">{{ t('pipelinq', 'Timezone') }}</label>
-				<NcSelect
-					v-model="form.timezone"
-					inputId="client-timezone"
-					:inputLabel="t('pipelinq', 'Timezone')"
-					labelOutside
-					:options="timezoneOptions"
-					:placeholder="t('pipelinq', 'Select a timezone')"
-					data-testid="client-timezone-select" />
-			</div>
 		</div>
 
 		<div class="form-group">
-			<label for="client-address">{{ t('pipelinq', 'Address') }}</label>
-			<NcTextField
-				id="client-address"
+			<label for="client-timezone">{{ t('pipelinq', 'Timezone') }}</label>
+			<NcSelect
+				v-model="form.timezone"
+				inputId="client-timezone"
+				:inputLabel="t('pipelinq', 'Timezone')"
 				labelOutside
-				:label="t('pipelinq', 'Address')"
-				:modelValue="form.address"
-				data-testid="client-address-input"
-				@update:modelValue="(v) => (form.address = v)" />
-		</div>
-
-		<div class="form-group">
-			<label for="client-notes">{{ t('pipelinq', 'Notes') }}</label>
-			<textarea
-				id="client-notes"
-				v-model="form.notes"
-				rows="3"
-				data-testid="client-notes-input" />
+				:options="timezoneOptions"
+				:placeholder="t('pipelinq', 'Select a timezone')"
+				data-testid="client-timezone-select" />
 		</div>
 
 		<div v-if="showActions" class="client-form__actions">
@@ -172,7 +174,7 @@
 import axios from '@nextcloud/axios'
 import { getLanguage, translate } from '@nextcloud/l10n'
 import { generateOcsUrl, generateUrl } from '@nextcloud/router'
-import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcTextField } from '@nextcloud/vue'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import {
 	defaultLanguage,
@@ -207,6 +209,7 @@ export default {
 	name: 'ClientForm',
 	components: {
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcTextField,
 		NcSelect,
 	},
@@ -496,6 +499,21 @@ export default {
 }
 
 .form-row {
+	display: flex;
+	gap: 16px;
+}
+
+.client-form__type {
+	border: 0;
+	padding: 0;
+}
+
+.client-form__type legend {
+	margin-bottom: 4px;
+	font-weight: bold;
+}
+
+.client-form__type-options {
 	display: flex;
 	gap: 16px;
 }
