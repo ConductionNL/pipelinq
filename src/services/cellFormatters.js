@@ -10,7 +10,6 @@
  */
 
 import { translate as t } from '@nextcloud/l10n'
-import { auditVerdict } from './connectionAudit.js'
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
 import { createUserDisplayNameFormatter } from './userDisplayName.js'
@@ -114,7 +113,6 @@ export function yesNo(value) {
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
-	auditVerdict,
 	enumText,
 	enumLabel,
 	yesNo,

@@ -74,7 +74,10 @@ import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
 import { createAppFormatters } from './services/cellFormatters.js'
-import { createConnectionAuditHandlers } from './services/connectionAudit.js'
+import {
+	auditVerdict,
+	createConnectionAuditHandlers,
+} from './services/connectionAudit.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
@@ -187,7 +190,8 @@ export default {
 		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 		 */
 		cellFormatters() {
-			return createAppFormatters(useObjectStore())
+			// `auditVerdict` prints the connection audit's follow answers.
+			return { ...createAppFormatters(useObjectStore()), auditVerdict }
 		},
 
 		/**

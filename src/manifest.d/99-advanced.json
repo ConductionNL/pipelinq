@@ -79,7 +79,7 @@
 						"id": "Modules",
 						"label": "Modules",
 						"description": "Sales, marketing, point of sale and more, to switch on per organisation.",
-						"icon": "PuzzleOutline",
+						"icon": "PackageVariant",
 						"category": "setup",
 						"route": "Modules"
 					},

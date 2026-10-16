@@ -84,14 +84,14 @@
 						"action": "rerun-connection-audit",
 						"label": "Check again",
 						"variant": "primary",
-						"icon": "Refresh"
+						"icon": "Repeat"
 					}
 				],
 				"headerActions": [
 					{
 						"id": "rerun-connection-audit",
 						"label": "Check again",
-						"icon": "Refresh",
+						"icon": "Repeat",
 						"handler": "rerunConnectionAudit"
 					}
 				],

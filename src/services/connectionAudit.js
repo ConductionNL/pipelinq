@@ -39,7 +39,7 @@ export function auditVerdict(value) {
 /**
  * Build the Check again header-action handler.
  *
- * @param {{generateUrl: function(string): string, http: {get: function}, showSuccess: function(string): void, showError: function(string): void, translate: function}} deps What the handler needs.
+ * @param {{generateUrl: function(string): string, http: {get: Function}, showSuccess: function(string): void, showError: function(string): void, translate: Function}} deps What the handler needs.
  * @return {{rerunConnectionAudit: function(): Promise<boolean>}} The handler, keyed by its manifest name.
  * @spec openspec/changes/advanced-hub-and-connection-audit-board/specs/board-look/spec.md#requirement-the-connection-audit-reads-as-its-board
  */
@@ -66,7 +66,10 @@ export function createConnectionAuditHandlers({
 			} catch (error) {
 				showError(
 					error?.response?.data?.error
-						|| translate('pipelinq', 'Could not load the connection audit.'),
+						|| translate(
+							'pipelinq',
+							'Could not load the connection audit.',
+						),
 				)
 				return false
 			}

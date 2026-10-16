@@ -15,13 +15,14 @@ import {
 	CONNECTION_AUDIT_PATH,
 	createConnectionAuditHandlers,
 } from '../../src/services/connectionAudit.js'
-import { CELL_FORMATTERS } from '../../src/services/cellFormatters.js'
 
-const read = (file) =>
-	JSON.parse(readFileSync(resolve(__dirname, '../..', file), 'utf8'))
+function read(file) {
+	return JSON.parse(readFileSync(resolve(__dirname, '../..', file), 'utf8'))
+}
 const advanced = read('src/manifest.d/99-advanced.json').pages[0]
-const audit = read('src/manifest.d/79-marketing-search-intelligence.json')
-	.pages.find((page) => page.id === 'ConnectionAudit')
+const audit = read(
+	'src/manifest.d/79-marketing-search-intelligence.json',
+).pages.find((page) => page.id === 'ConnectionAudit')
 const nl = read('l10n/nl.json').translations
 
 describe('the Advanced page', () => {
@@ -48,7 +49,10 @@ describe('the Advanced page', () => {
 			advanced.title,
 			advanced.config.description,
 			...Object.values(advanced.config.categories),
-			...advanced.config.cards.flatMap((card) => [card.label, card.description]),
+			...advanced.config.cards.flatMap((card) => [
+				card.label,
+				card.description,
+			]),
 		]
 		for (const key of strings) {
 			expect(nl[key], key).toBeTruthy()
@@ -77,7 +81,13 @@ describe('the connection audit', () => {
 		expect(auditVerdict('no')).toBe('No')
 		expect(auditVerdict('unknown')).toBe('Cannot be checked')
 		expect(auditVerdict('')).toBe('Cannot be checked')
-		expect(CELL_FORMATTERS.auditVerdict).toBe(auditVerdict)
+	})
+
+	it('is registered as a cell formatter', () => {
+		const app = readFileSync(resolve(__dirname, '../../src/App.vue'), 'utf8')
+		expect(app).toMatch(
+			/createAppFormatters\(useObjectStore\(\)\), auditVerdict \}/,
+		)
 	})
 
 	it('re-runs the audit through the endpoint', async () => {
@@ -107,6 +117,8 @@ describe('the connection audit', () => {
 			translate: (_app, text) => text,
 		})
 		await expect(rerunConnectionAudit()).resolves.toBe(false)
-		expect(showError).toHaveBeenCalledWith('Could not load the connection audit.')
+		expect(showError).toHaveBeenCalledWith(
+			'Could not load the connection audit.',
+		)
 	})
 })
