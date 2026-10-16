@@ -4758,7 +4758,6 @@
 				},
 				"sideColumn": [
 					"shift-kpis-opening-float",
-					"shift-kpis-drops",
 					"shift-related",
 					"shift-history"
 				],
@@ -4884,25 +4883,7 @@
 						"title": "Bookkeeping",
 						"icon": "BookOpenVariant",
 						"content": {
-							"part": "bookkeeping"
-						}
-					},
-					{
-						"id": "z-tax",
-						"type": "ZReportBookkeepingWidget",
-						"title": "VAT breakdown",
-						"icon": "Percent",
-						"content": {
-							"part": "tax"
-						}
-					},
-					{
-						"id": "z-payments",
-						"type": "ZReportBookkeepingWidget",
-						"title": "Payment methods",
-						"icon": "CreditCardOutline",
-						"content": {
-							"part": "payments"
+							"part": "all"
 						}
 					},
 					{
@@ -4910,6 +4891,69 @@
 						"type": "audit-trail",
 						"title": "History",
 						"icon": "History"
+					},
+					{
+						"id": "z-kpis-day-total",
+						"type": "stats-block",
+						"title": "Day total",
+						"icon": "Cash",
+						"content": {
+							"entries": [
+								{
+									"title": "Day total",
+									"register": "pipelinq",
+									"schema": "posZReport",
+									"metric": "sum",
+									"field": "total",
+									"currency": "EUR",
+									"filter": {
+										"id": "@objectId"
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "z-kpis-vat",
+						"type": "stats-block",
+						"title": "VAT",
+						"icon": "Cash",
+						"content": {
+							"entries": [
+								{
+									"title": "VAT",
+									"register": "pipelinq",
+									"schema": "posZReport",
+									"metric": "sum",
+									"field": "totalTax",
+									"currency": "EUR",
+									"filter": {
+										"id": "@objectId"
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "z-kpis-transactions",
+						"type": "stats-block",
+						"title": "Transactions",
+						"icon": "Cash",
+						"content": {
+							"entries": [
+								{
+									"title": "Transactions",
+									"register": "pipelinq",
+									"schema": "posZReport",
+									"metric": "sum",
+									"field": "transactionCount",
+									"countLabel": "transactions",
+									"filter": {
+										"id": "@objectId"
+									}
+								}
+							]
+						}
 					}
 				],
 				"layout": [
@@ -4939,7 +4983,7 @@
 						}
 					]
 				},
-				"_boardNote": "PqZRapport: the relation frame. Overview stacks the Z-report data and the bookkeeping card (the shillinq status and Re-raise); the VAT breakdown, the payment methods and the history are the side column. The day total, VAT and transaction count are fields of the data card. The three blocks of ZReportBookkeepingSection are cards of their own (ZReportBookkeepingWidget, content.part).",
+				"_boardNote": "PqZRapport: the relation frame. Overview stacks the Z-report data and the bookkeeping card (the shillinq status, Re-raise, the VAT breakdown and the payment methods); the day total, VAT and transaction count tiles and the history are the side column.",
 				"titleField": "reference",
 				"breadcrumb": {
 					"label": "Z-reports",
@@ -4965,8 +5009,9 @@
 					}
 				},
 				"sideColumn": [
-					"z-tax",
-					"z-payments",
+					"z-kpis-day-total",
+					"z-kpis-vat",
+					"z-kpis-transactions",
 					"z-history"
 				],
 				"follow": false,
