@@ -1,0 +1,52 @@
+{
+  "_note": "The Chamber of Commerce facts of a client that is an organisation, as the Organisations list and the organisation page show them (boards PqOrganisaties, PqOrganisatie): the KvK number, the legal form, the place of establishment and a short description of what the organisation does. A client that is a person carries none of them. They sit on `client` itself rather than on a separate company record, because an organisation in pipelinq is a client with type organization and every list, form and relation already points there.",
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "properties": {
+          "kvkNumber": {
+            "type": "string",
+            "title": "KvK number",
+            "description": "The eight digit number in the Chamber of Commerce trade register.",
+            "pattern": "^[0-9]{8}$",
+            "maxLength": 8,
+            "facetable": true
+          },
+          "legalForm": {
+            "type": "string",
+            "title": "Legal form",
+            "description": "The legal form as registered with the Chamber of Commerce.",
+            "enum": [
+              "Eenmanszaak",
+              "Vennootschap onder firma",
+              "Maatschap",
+              "Commanditaire vennootschap",
+              "Besloten vennootschap",
+              "Naamloze vennootschap",
+              "Coöperatie",
+              "Vereniging",
+              "Stichting",
+              "Overheidsorgaan",
+              "Overig"
+            ],
+            "facetable": true
+          },
+          "place": {
+            "type": "string",
+            "title": "Place",
+            "description": "The place where the organisation is established.",
+            "maxLength": 255,
+            "facetable": true
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "What the organisation does, in a sentence.",
+            "maxLength": 2000
+          }
+        }
+      }
+    }
+  }
+}
