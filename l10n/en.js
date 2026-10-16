@@ -7672,7 +7672,24 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Take the oldest": "Take the oldest",
+        "Longest waiting": "Longest waiting",
+        "the oldest ticket nobody has picked up": "the oldest ticket nobody has picked up",
+        "{n} days": "{n} days",
+        "Nothing is waiting": "Nothing is waiting",
+        "Nothing is waiting in the queue.": "Nothing is waiting in the queue.",
+        "The oldest ticket is yours. It is on your My Work now.": "The oldest ticket is yours. It is on your My Work now.",
+        "Oldest first. A ticket leaves the queue as soon as someone takes it on.": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
+        "Kind, then channel": "Kind, then channel",
+        "Team today": "Team today",
+        "{open} open": "{open} open",
+        "No agent profiles yet.": "No agent profiles yet.",
+        "Agreements": "Agreements",
+        "Requests and reports: an answer within 2 working days. Complaints: a first reply the same day. Phone: answered within 30 seconds.": "Requests and reports: an answer within 2 working days. Complaints: a first reply the same day. Phone: answered within 30 seconds.",
+        "Service levels in Reports": "Service levels in Reports",
+        "{client.name} · {channel}": "{client.name} · {channel}",
+        "newest first · click a column header to sort": "newest first · click a column header to sort"
     },
     "nplurals=2; plural=(n != 1);"
 )
