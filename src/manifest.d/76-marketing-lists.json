@@ -210,6 +210,22 @@
 							"order": "desc",
 							"limit": 3
 						}
+					},
+					{
+						"id": "list-signup-form",
+						"type": "ListSignupFormWidget",
+						"title": "Mailing list sign-up form",
+						"content": {
+							"title": "Mailing list sign-up form"
+						}
+					},
+					{
+						"id": "list-subscriber-view",
+						"type": "ListSubscriberViewWidget",
+						"title": "What a subscriber sees",
+						"content": {
+							"title": "What a subscriber sees"
+						}
 					}
 				],
 				"layout": [
@@ -275,7 +291,9 @@
 					"label": "More"
 				},
 				"sideColumn": [
-					"list-side-history"
+					"list-side-history",
+					"list-signup-form",
+					"list-subscriber-view"
 				]
 			}
 		}

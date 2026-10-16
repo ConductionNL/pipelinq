@@ -7726,7 +7726,17 @@ OC.L10N.register(
         "A/B test, variant A {percent}%": "A/B test, variant A {percent}%",
         "Rules checked": "Rules checked",
         "Blocked by consent": "Blocked by consent",
-        "no lawful basis, not sent": "no lawful basis, not sent"
+        "no lawful basis, not sent": "no lawful basis, not sent",
+        "Paste this form into a page so people can sign up. They get a link and are only added once they open it.": "Paste this form into a page so people can sign up. They get a link and are only added once they open it.",
+        "Sign-up form": "Sign-up form",
+        "Copied": "Copied",
+        "Copy embed code": "Copy embed code",
+        "Every message links to this page. One click there stops every list.": "Every message links to this page. One click there stops every list.",
+        "Your mailing lists": "Your mailing lists",
+        "name@example.org": "name@example.org",
+        "Unsubscribe from everything": "Unsubscribe from everything",
+        "Mailing list sign-up form": "Mailing list sign-up form",
+        "What a subscriber sees": "What a subscriber sees"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -7673,6 +7673,16 @@
         "A/B test, variant A {percent}%": "A/B-test, variant A {percent}%",
         "Rules checked": "Regels gecontroleerd",
         "Blocked by consent": "Geblokkeerd door toestemming",
-        "no lawful basis, not sent": "geen grondslag, niet verstuurd"
+        "no lawful basis, not sent": "geen grondslag, niet verstuurd",
+        "Paste this form into a page so people can sign up. They get a link and are only added once they open it.": "Plak dit formulier in een pagina zodat mensen zich kunnen aanmelden. Ze krijgen een link en worden pas toegevoegd als ze die openen.",
+        "Sign-up form": "Aanmeldformulier",
+        "Copied": "Gekopieerd",
+        "Copy embed code": "Insluitcode kopiëren",
+        "Every message links to this page. One click there stops every list.": "Elk bericht linkt naar deze pagina. Eén klik daar stopt elke lijst.",
+        "Your mailing lists": "Je mailinglijsten",
+        "name@example.org": "naam@voorbeeld.nl",
+        "Unsubscribe from everything": "Voor alles afmelden",
+        "Mailing list sign-up form": "Aanmeldformulier mailinglijst",
+        "What a subscriber sees": "Wat een abonnee ziet"
     }
 }

@@ -66,9 +66,6 @@ import ArticleContentSection from './components/marketing/ArticleContentSection.
 import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
 import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
-import SocialPostHeaderActions from './components/marketing/SocialPostHeaderActions.vue'
-import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
-import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
 // --- Mailing-list memberships (marketing-lists-and-double-opt-in). One
 //     kind:'section' bound either to a list (the mailing list detail page) or
 //     to a contact (the contact detail page): the row is the same row read
@@ -77,6 +74,11 @@ import SocialPublicationsSection from './components/marketing/SocialPublications
 //     because a membership is read through its STATE and needs the chip
 //     vocabulary, and because the list view leads with per-state counts that
 //     summaryAggregates cannot express. ---
+import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
+import ListSubscriberViewSection from './components/marketing/ListSubscriberViewSection.vue'
+import SocialPostHeaderActions from './components/marketing/SocialPostHeaderActions.vue'
+import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
+import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
 import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
 import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 // --- Cash-shift detail — declarative type:"detail": the closing count is its
@@ -902,6 +904,18 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: "Head of the ticket page's Decisions tab (ticket-decisions-tab): what the tab holds, the two routes to a decision, and Convert to case. The decision lists are decidiq's leaf, mounted by the manifest.",
+	},
+	ListSignupFormWidget: {
+		kind: 'widget',
+		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'The embed code of a mailing list sign-up form, posting to the public subscribe endpoint, with a copy button. Side card on MailingListDetail (PqMailinglijst).',
+	},
+	ListSubscriberViewWidget: {
+		kind: 'widget',
+		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
 	ContactChannelsWidget: {
 		kind: 'widget',
