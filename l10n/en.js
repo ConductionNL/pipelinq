@@ -7694,7 +7694,12 @@ OC.L10N.register(
         "The automation engine refused the flow.": "The automation engine refused the flow.",
         "Open flow": "Open flow",
         "Every contact reached and every contact refused": "Every contact reached and every contact refused",
-        "Reached contact": "Reached contact"
+        "Reached contact": "Reached contact",
+        "Pause": "Pause",
+        "The journey is paused. Its flow no longer runs.": "The journey is paused. Its flow no longer runs.",
+        "Could not pause this journey.": "Could not pause this journey.",
+        "The journey runs again.": "The journey runs again.",
+        "Could not resume this journey.": "Could not resume this journey."
     },
     "nplurals=2; plural=(n != 1);"
 )

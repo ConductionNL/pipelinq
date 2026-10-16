@@ -338,6 +338,46 @@
 				"sideColumn": [
 					"journey-flow",
 					"journey-side-history"
+				],
+				"headerActions": [
+					{
+						"id": "pause",
+						"label": "Pause",
+						"icon": "Pause",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/journeys/@objectId/status",
+						"method": "POST",
+						"payload": {
+							"status": "paused"
+						},
+						"visibleWhen": {
+							"field": "status",
+							"value": "active"
+						},
+						"successMessage": "The journey is paused. Its flow no longer runs.",
+						"errorMessage": "Could not pause this journey."
+					},
+					{
+						"id": "resume",
+						"label": "Resume",
+						"icon": "Play",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/journeys/@objectId/status",
+						"method": "POST",
+						"payload": {
+							"status": "active"
+						},
+						"visibleWhen": {
+							"field": "status",
+							"value": "paused"
+						},
+						"successMessage": "The journey runs again.",
+						"errorMessage": "Could not resume this journey."
+					}
+				],
+				"quickActions": [
+					"pause",
+					"resume"
 				]
 			}
 		},

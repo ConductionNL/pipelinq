@@ -7622,7 +7622,12 @@ OC.L10N.register(
         "Open flow": "Flow openen",
         "Every contact reached and every contact refused": "Elk contact dat bereikt is en elk contact dat geweigerd is",
         "{sent} sent, {refused} refused, {failed} failed": "{sent} verstuurd, {refused} geweigerd, {failed} mislukt",
-        "Reached contact": "Contact"
+        "Reached contact": "Contact",
+        "Pause": "Pauzeren",
+        "The journey is paused. Its flow no longer runs.": "De journey is gepauzeerd. De flow draait niet meer.",
+        "Could not pause this journey.": "Deze journey kon niet worden gepauzeerd.",
+        "The journey runs again.": "De journey draait weer.",
+        "Could not resume this journey.": "Deze journey kon niet worden hervat."
     },
     "nplurals=2; plural=(n != 1);"
 )
