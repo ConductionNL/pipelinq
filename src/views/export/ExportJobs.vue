@@ -102,6 +102,7 @@ export default {
 				{ key: 'scheduleCron', label: t('pipelinq', 'Schedule') },
 				{ key: 'enabled', label: t('pipelinq', 'Enabled') },
 			],
+
 			quickFilters: [
 				{ label: t('pipelinq', 'All'), filter: {}, default: true, showCount: true },
 				{ label: t('pipelinq', 'Enabled'), filter: { enabled: true }, showCount: true },
