@@ -1874,9 +1874,9 @@
 				"footerNote": "Open a transaction to print or mail the receipt, or to register a return.",
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true, "showCount": true },
-					{ "label": "Today", "filter": { "created[gte]": "@today" }, "showCount": true },
-					{ "label": "Parked", "filter": { "status": "parked" }, "showCount": true },
-					{ "label": "Refunded", "filter": { "status": "refunded" }, "showCount": true }
+					{ "label": "Today", "activeLabel": "Created: today", "filter": { "created[gte]": "@today" }, "showCount": true },
+					{ "label": "Parked", "activeLabel": "Status: parked", "filter": { "status": "parked" }, "showCount": true },
+					{ "label": "Refunded", "activeLabel": "Status: refunded", "filter": { "status": "refunded" }, "showCount": true }
 				],
 				"columns": [
 					{

@@ -7688,7 +7688,10 @@ OC.L10N.register(
         "{shown} of {total} day reports · bookkeeping happens in shillinq": "{shown} of {total} day reports · bookkeeping happens in shillinq",
         "Filter by identifier or cashier": "Filter by identifier or cashier",
         "Filter by identifier or till": "Filter by identifier or till",
-        "Filter by cashier or till": "Filter by cashier or till"
+        "Filter by cashier or till": "Filter by cashier or till",
+        "Created: today": "Created: today",
+        "Status: parked": "Status: parked",
+        "Status: refunded": "Status: refunded"
     },
     "nplurals=2; plural=(n != 1);"
 )

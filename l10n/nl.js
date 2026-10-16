@@ -7615,7 +7615,10 @@ OC.L10N.register(
         "{shown} of {total} day reports · bookkeeping happens in shillinq": "{shown} van {total} dagrapporten · de boekhouding gebeurt in shillinq",
         "Filter by identifier or cashier": "Filter op kenmerk of kassamedewerker",
         "Filter by identifier or till": "Filter op kenmerk of kassa",
-        "Filter by cashier or till": "Filter op kassamedewerker of kassa"
+        "Filter by cashier or till": "Filter op kassamedewerker of kassa",
+        "Created: today": "Aangemaakt: vandaag",
+        "Status: parked": "Status: geparkeerd",
+        "Status: refunded": "Status: terugbetaald"
     },
     "nplurals=2; plural=(n != 1);"
 )
