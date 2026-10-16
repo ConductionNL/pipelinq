@@ -549,7 +549,7 @@ describe('the body', () => {
 			expect(simple.widgets.find((item) => item.id === id).type).toBe(type)
 		}
 		expect(registrySource).toMatch(
-			/sectionWidget\(\s+'TicketConversationWidget',\s+TicketConversationSection,\s+\(\) => \(\{\}\),\s+\{ context: true \},/,
+			/sectionWidget\(\s+'TicketConversationWidget',\s+TicketConversationSection,\s+\(\) => \(\{\}\),\s+\{ card: true, context: true \},/,
 		)
 	})
 
@@ -610,7 +610,7 @@ describe('the words', () => {
 			expect(nl[word], `nl "${word}"`).toBeTruthy()
 		}
 		expect(nl['Take on']).toBe('In behandeling nemen')
-		expect(nl['Answer the customer']).toBe('Beantwoorden')
+		expect(nl['Answer the customer']).toBe('De klant beantwoorden')
 		expect(nl['Close the ticket']).toBe('Afsluiten')
 	})
 

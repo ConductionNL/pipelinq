@@ -6989,7 +6989,7 @@ OC.L10N.register(
         "Saved. People see the change the next time they open Pipelinq.": "Opgeslagen. Mensen zien de wijziging als ze Pipelinq opnieuw openen.",
         "The menu could not be saved. Try again.": "Het menu is niet opgeslagen. Probeer het opnieuw.",
         "Take on": "In behandeling nemen",
-        "Answer the customer": "Beantwoorden",
+        "Answer the customer": "De klant beantwoorden",
         "Log contact": "Contact vastleggen",
         "Back to in progress": "Terug naar in behandeling",
         "Close the ticket": "Afsluiten",
@@ -7604,7 +7604,11 @@ OC.L10N.register(
         "{channel} · received {occurredAt|date}": "{channel} · ontvangen {occurredAt|date}",
         "A contact moment with the customer, saved with this ticket": "Een contactmoment met de klant, opgeslagen bij dit ticket",
         "The question": "De vraag",
-        "Your message": "Je bericht"
+        "Your message": "Je bericht",
+        "The ticket": "Het ticket",
+        "People": "Mensen",
+        "Dates and links": "Datums en koppelingen",
+        "Visible to the customer": "Zichtbaar voor de klant"
     },
     "nplurals=2; plural=(n != 1);"
 )

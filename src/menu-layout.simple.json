@@ -927,71 +927,88 @@
 				"fieldOverrides": {
 					"title": {
 						"order": 1,
-						"description": ""
+						"description": "",
+						"section": "The ticket"
 					},
 					"description": {
 						"order": 2,
-						"description": ""
+						"description": "",
+						"section": "The ticket"
 					},
 					"ticketType": {
 						"order": 3,
-						"description": ""
+						"description": "",
+						"section": "The ticket"
 					},
 					"category": {
 						"order": 4,
-						"description": ""
+						"description": "",
+						"section": "The ticket"
 					},
 					"priority": {
 						"order": 5,
-						"description": ""
+						"description": "",
+						"section": "The ticket"
 					},
 					"channel": {
 						"order": 6,
-						"description": ""
+						"description": "",
+						"section": "The ticket"
 					},
 					"client": {
 						"order": 7,
-						"description": ""
+						"description": "",
+						"section": "People"
 					},
 					"contact": {
 						"order": 8,
-						"description": ""
+						"description": "",
+						"section": "People"
 					},
 					"assignee": {
 						"order": 9,
-						"description": ""
+						"description": "",
+						"section": "People"
 					},
 					"agent_skill": {
 						"order": 10,
-						"description": ""
+						"description": "",
+						"section": "People"
 					},
 					"occurredAt": {
 						"order": 11,
-						"description": ""
+						"description": "",
+						"section": "Dates and links"
 					},
 					"slaDeadline": {
 						"order": 12,
-						"description": ""
+						"description": "",
+						"section": "Dates and links"
 					},
 					"caseReference": {
 						"order": 13,
-						"description": ""
+						"description": "",
+						"section": "Dates and links"
 					},
 					"pipeline": {
 						"order": 14,
-						"description": ""
+						"description": "",
+						"section": "Dates and links"
 					},
 					"stage": {
 						"order": 15,
-						"description": ""
+						"description": "",
+						"section": "Dates and links"
 					},
 					"contract": {
 						"order": 16,
-						"description": ""
+						"description": "",
+						"section": "Dates and links"
 					},
 					"customerMessage": {
 						"order": 17,
-						"description": ""
+						"description": "",
+						"section": "Visible to the customer"
 					}
 				}
 			},
@@ -1129,7 +1146,56 @@
 							],
 							"limit": 25,
 							"rowRoute": "TicketDetail",
-							"emptyText": "No contact moments on this ticket yet."
+							"emptyText": "No contact moments on this ticket yet.",
+							"allowCreate": true,
+							"addLabel": "Log contact",
+							"formIncludeFields": [
+								"channel",
+								"direction",
+								"occurredAt",
+								"duration",
+								"title",
+								"notes",
+								"client"
+							],
+							"formFieldOverrides": {
+								"channel": {
+									"order": 1,
+									"label": "Channel",
+									"description": ""
+								},
+								"direction": {
+									"order": 2,
+									"label": "Direction",
+									"description": ""
+								},
+								"occurredAt": {
+									"order": 3,
+									"label": "When",
+									"description": ""
+								},
+								"duration": {
+									"order": 4,
+									"label": "Duration",
+									"description": ""
+								},
+								"title": {
+									"order": 5,
+									"label": "Subject",
+									"description": ""
+								},
+								"notes": {
+									"order": 6,
+									"label": "Notes",
+									"description": ""
+								},
+								"client": {
+									"order": 7,
+									"label": "Client",
+									"description": ""
+								}
+							},
+							"formColumns": 2
 						}
 					},
 					{
