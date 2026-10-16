@@ -7599,7 +7599,9 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "{shown} of {total} contact moments · all channels · newest first": "{shown} van {total} contactmomenten · alle kanalen · nieuwste eerst",
+        "Callback agreed": "Terugbellen afgesproken"
     },
     "nplurals=2; plural=(n != 1);"
 )

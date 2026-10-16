@@ -7672,7 +7672,9 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "{shown} of {total} contact moments · all channels · newest first": "{shown} of {total} contact moments · all channels · newest first",
+        "Callback agreed": "Callback agreed"
     },
     "nplurals=2; plural=(n != 1);"
 )
