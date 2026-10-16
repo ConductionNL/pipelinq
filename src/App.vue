@@ -74,6 +74,7 @@ import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
 import { createAppFormatters } from './services/cellFormatters.js'
+import { createConnectionAuditHandlers } from './services/connectionAudit.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
@@ -231,6 +232,15 @@ export default {
 				...createConnectionHandlers({
 					generateUrl,
 					assign: (url) => window.location.assign(url),
+				}),
+
+				// Check again on the connection audit (board PqVerbindingscontrole).
+				...createConnectionAuditHandlers({
+					generateUrl,
+					http: axios,
+					showSuccess,
+					showError,
+					translate: ncT,
 				}),
 
 				// "Assign to me" on the Queue rows (detail-pages-read-at-a-glance).

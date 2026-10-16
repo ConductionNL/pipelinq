@@ -143,9 +143,11 @@ import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
+import PuzzleOutline from 'vue-material-design-icons/PuzzleOutline.vue'
 import Receipt from 'vue-material-design-icons/Receipt.vue'
 import ReceiptOutline from 'vue-material-design-icons/ReceiptOutline.vue'
 import ReceiptText from 'vue-material-design-icons/ReceiptText.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Repeat from 'vue-material-design-icons/Repeat.vue'
 import RouterWireless from 'vue-material-design-icons/RouterWireless.vue'
 import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
@@ -313,9 +315,11 @@ export default {
 	Pipe,
 	Plus,
 	PowerPlugOutline,
+	PuzzleOutline,
 	Receipt,
 	ReceiptOutline,
 	ReceiptText,
+	Refresh,
 	Repeat,
 	RouterWireless,
 	ScaleBalance,
