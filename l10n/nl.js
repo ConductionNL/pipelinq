@@ -7660,7 +7660,24 @@ OC.L10N.register(
         "Event details": "Evenementgegevens",
         "Add registration": "Aanmelding toevoegen",
         "Nobody has signed up yet.": "Nog niemand heeft zich aangemeld.",
-        "No sign-up form yet.": "Nog geen aanmeldformulier."
+        "No sign-up form yet.": "Nog geen aanmeldformulier.",
+        "When the last reminder went out.": "Wanneer de laatste herinnering verstuurd is.",
+        "E-mail address": "E-mailadres",
+        "Where the reminder goes.": "Waar de herinnering heen gaat.",
+        "Checked in": "Ingecheckt",
+        "When they were checked in at the door. Empty until then.": "Wanneer ze bij de deur zijn ingecheckt. Leeg tot dan.",
+        "Check in at the door": "Inchecken bij de deur",
+        "Send the reminder to everyone with a place?": "De herinnering versturen naar iedereen met een plek?",
+        "The reminder is on its way to everyone with a place.": "De herinnering is onderweg naar iedereen met een plek.",
+        "Could not send the reminder.": "De herinnering kon niet worden verstuurd.",
+        "Search a name or street": "Zoek een naam of straat",
+        "Nobody on the list matches.": "Niemand op de lijst komt overeen.",
+        "Check in": "Inchecken",
+        "Could not load the registrations.": "De aanmeldingen konden niet worden geladen.",
+        "This registration was cancelled.": "Deze aanmelding is geannuleerd.",
+        "Could not check this registration in.": "Deze aanmelding kon niet worden ingecheckt.",
+        "You are registered for %1$s on %2$s at %3$s. We look forward to seeing you.": "U bent aangemeld voor %1$s op %2$s in %3$s. We zien u graag.",
+        "Reminder: %s": "Herinnering: %s"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -170,14 +170,15 @@ import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+// Make a letter from a filinq template (work-letter-from-filinq-template): the
+//     header action on ClientDetail and TicketDetail opens this dialog. ---
+import EventCheckInDialog from './dialogs/EventCheckInDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
-// Make a letter from a filinq template (work-letter-from-filinq-template): the
-//     header action on ClientDetail and TicketDetail opens this dialog. ---
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
 //     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
@@ -1258,6 +1259,12 @@ const registry = {
 	//     dialog cannot express. Placement stays declarative; only the form
 	//     body is app-owned. CnAppRoot mounts these and forwards `close`, so
 	//     each dialog routes to its own detail page on success. ---
+	EventCheckInDialog: {
+		kind: 'modal',
+		component: EventCheckInDialog,
+		propsSchema: null,
+		_note: 'The door list of one event: confirmed registrations, a search, and a Check in button that stamps checkedInAt once. Target of the check-in header action on EventDetail; reads the event id from the route.',
+	},
 	LetterFromTemplateModal: {
 		kind: 'modal',
 		component: LetterFromTemplateModal,

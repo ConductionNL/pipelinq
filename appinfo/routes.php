@@ -706,6 +706,11 @@ return [
         ['name' => 'journey#show',    'url' => '/api/journeys/{id}',         'verb' => 'GET'],
         ['name' => 'journey#update',  'url' => '/api/journeys/{id}',         'verb' => 'PATCH'],
 
+        // Marketing — Public events (public-events): the reminder to everyone
+        // with a place, and the door check-in of one registration.
+        ['name' => 'event#reminder', 'url' => '/api/events/{id}/reminder',            'verb' => 'POST'],
+        ['name' => 'event#checkIn',  'url' => '/api/event-registrations/{id}/check-in', 'verb' => 'POST'],
+
         // Marketing — Weekly review (marketing-integrated-campaigns, ADR-112).
         ['name' => 'weeklyReview#show',     'url' => '/api/weekly-review',          'verb' => 'GET'],
         ['name' => 'weeklyReview#generate', 'url' => '/api/weekly-review/generate', 'verb' => 'POST'],

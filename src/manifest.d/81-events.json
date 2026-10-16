@@ -307,6 +307,11 @@
 											"cancelled": "default"
 										}
 									}
+								},
+								{
+									"key": "checkedInAt",
+									"label": "Checked in",
+									"formatter": "datetime"
 								}
 							],
 							"limit": 25,
@@ -438,7 +443,31 @@
 				],
 				"sidebar": {
 					"enabled": false
-				}
+				},
+				"headerActions": [
+					{
+						"id": "send-reminder",
+						"label": "Send reminder",
+						"icon": "Send",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/events/@objectId/reminder",
+						"method": "POST",
+						"confirm": "Send the reminder to everyone with a place?",
+						"successMessage": "The reminder is on its way to everyone with a place.",
+						"errorMessage": "Could not send the reminder."
+					},
+					{
+						"id": "check-in",
+						"label": "Check in at the door",
+						"icon": "Check",
+						"type": "open-modal",
+						"target": "EventCheckInDialog"
+					}
+				],
+				"quickActions": [
+					"send-reminder",
+					"check-in"
+				]
 			}
 		}
 	]

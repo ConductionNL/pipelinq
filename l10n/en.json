@@ -7753,6 +7753,23 @@
         "Event details": "Event details",
         "Add registration": "Add registration",
         "Nobody has signed up yet.": "Nobody has signed up yet.",
-        "No sign-up form yet.": "No sign-up form yet."
+        "No sign-up form yet.": "No sign-up form yet.",
+        "When the last reminder went out.": "When the last reminder went out.",
+        "E-mail address": "E-mail address",
+        "Where the reminder goes.": "Where the reminder goes.",
+        "Checked in": "Checked in",
+        "When they were checked in at the door. Empty until then.": "When they were checked in at the door. Empty until then.",
+        "Check in at the door": "Check in at the door",
+        "Send the reminder to everyone with a place?": "Send the reminder to everyone with a place?",
+        "The reminder is on its way to everyone with a place.": "The reminder is on its way to everyone with a place.",
+        "Could not send the reminder.": "Could not send the reminder.",
+        "Search a name or street": "Search a name or street",
+        "Nobody on the list matches.": "Nobody on the list matches.",
+        "Check in": "Check in",
+        "Could not load the registrations.": "Could not load the registrations.",
+        "This registration was cancelled.": "This registration was cancelled.",
+        "Could not check this registration in.": "Could not check this registration in.",
+        "You are registered for %1$s on %2$s at %3$s. We look forward to seeing you.": "You are registered for %1$s on %2$s at %3$s. We look forward to seeing you.",
+        "Reminder: %s": "Reminder: %s"
     }
 }

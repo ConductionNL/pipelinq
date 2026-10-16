@@ -139,6 +139,12 @@
                         "description": "When the form stops accepting registrations.",
                         "format": "date-time",
                         "example": "2026-11-11T12:00:00+01:00"
+                    },
+                    "reminderSentAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Reminder sent",
+                        "description": "When the last reminder went out."
                     }
                 }
             },
@@ -248,6 +254,19 @@
                         "title": "Lead",
                         "description": "The lead made for someone Pipelinq did not know yet.",
                         "format": "uuid"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "E-mail address",
+                        "description": "Where the reminder goes.",
+                        "example": "sanne.devries@zuiddrecht.example"
+                    },
+                    "checkedInAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Checked in",
+                        "description": "When they were checked in at the door. Empty until then."
                     }
                 }
             }
