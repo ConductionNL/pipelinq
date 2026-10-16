@@ -1,0 +1,74 @@
+{
+	"components": {
+		"schemas": {
+			"channelConversation": {
+				"version": "1.1.0",
+				"properties": {
+					"subject": {
+						"type": "string",
+						"title": "Subject",
+						"description": "What the visitor asked first, as the queue shows it."
+					},
+					"visitorName": {
+						"type": "string",
+						"title": "Visitor name",
+						"description": "The name the visitor gave, empty while unknown."
+					},
+					"origin": {
+						"type": "string",
+						"title": "Origin",
+						"description": "The site the chat came from, such as the municipality's website, when one desk serves several."
+					},
+					"pageUrl": {
+						"type": "string",
+						"format": "uri",
+						"title": "Page",
+						"description": "The page the visitor started the chat on."
+					},
+					"handedOverAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Handed over at",
+						"description": "When the bot handed the chat to a person."
+					},
+					"handoverReason": {
+						"type": "string",
+						"title": "Handover reason",
+						"description": "Why the bot handed the chat over."
+					},
+					"botSummary": {
+						"type": "string",
+						"title": "Bot answers",
+						"description": "What the bot answered from, such as a knowledge base article."
+					},
+					"ticket": {
+						"type": "string",
+						"format": "uuid",
+						"title": "Ticket",
+						"description": "The ticket logged from this chat, if any."
+					}
+				}
+			},
+			"channelMessage": {
+				"version": "1.1.0",
+				"properties": {
+					"author": {
+						"type": "string",
+						"enum": [
+							"visitor",
+							"bot",
+							"agent"
+						],
+						"title": "Author",
+						"description": "Who wrote the message: the visitor, the bot or an agent."
+					},
+					"authorName": {
+						"type": "string",
+						"title": "Author name",
+						"description": "The name shown above the message."
+					}
+				}
+			}
+		}
+	}
+}

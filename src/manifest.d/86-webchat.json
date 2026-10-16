@@ -1,0 +1,173 @@
+{
+	"menu": [
+		{
+			"id": "Webchat",
+			"label": "Webchat",
+			"icon": "ChatOutline",
+			"route": "Webchat",
+			"order": 25
+		}
+	],
+	"pages": [
+		{
+			"id": "Webchat",
+			"route": "/webchat",
+			"type": "dashboard",
+			"title": "Webchat",
+			"_note": "Board PqWebchat: chats the website bot handed over, the conversation, and who the visitor is with what the bot did. A chat is a channelConversation with channel chat (outbound-messaging model); its messages are channelMessage rows with an author. Picking a chat writes @workspace.selectedConversation (record-list `select`, nextcloud-vue); the thread (`thread` widget, nextcloud-vue) reads and answers the selected chat. An answer is stored as an outbound message; delivering it to the visitor's browser is the chat provider's job, which this page does not do.",
+			"config": {
+				"description": "Chats the bot handed over to a colleague, the conversation and who is asking.",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"widgets": [
+					{
+						"id": "chat-waiting",
+						"type": "record-list",
+						"title": "Waiting",
+						"content": {
+							"register": "pipelinq",
+							"schema": "channelConversation",
+							"filter": {
+								"channel": "chat",
+								"status": "open"
+							},
+							"sort": {
+								"field": "handedOverAt",
+								"dir": "asc"
+							},
+							"presentation": "rows",
+							"title": "{visitorName}",
+							"meta": "{subject}",
+							"label": "{origin}",
+							"trailing": "{handedOverAt|relative}",
+							"select": "selectedConversation",
+							"headerNote": "{total}",
+							"emptyText": "No chats are waiting.",
+							"footerNote": "One desk serves several sites; each chat shows which one it came from."
+						}
+					},
+					{
+						"id": "chat-thread",
+						"type": "thread",
+						"title": "Conversation",
+						"content": {
+							"register": "pipelinq",
+							"schema": "channelMessage",
+							"filter": {
+								"conversationId": "@workspace.selectedConversation"
+							},
+							"sort": {
+								"field": "sentAt",
+								"dir": "asc"
+							},
+							"textField": "body",
+							"timeField": "sentAt",
+							"authorField": "authorName",
+							"sideField": "direction",
+							"sideUs": "outbound",
+							"emptyText": "Pick a chat on the left to read it.",
+							"reply": {
+								"label": "Type an answer",
+								"sendLabel": "Send",
+								"createDefaults": {
+									"direction": "outbound",
+									"author": "agent",
+									"channel": "chat",
+									"conversationId": "@workspace.selectedConversation"
+								}
+							}
+						}
+					},
+					{
+						"id": "chat-visitor",
+						"type": "facts",
+						"title": "Who is this",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "channelConversation",
+								"id": "@workspace.selectedConversation"
+							},
+							"fields": [
+								{
+									"path": "visitorName",
+									"label": "Name"
+								},
+								{
+									"path": "origin",
+									"label": "Origin"
+								},
+								{
+									"path": "pageUrl",
+									"label": "Page"
+								}
+							],
+							"emptyText": "Pick a chat to see who is asking."
+						}
+					},
+					{
+						"id": "chat-bot",
+						"type": "facts",
+						"title": "What the bot did",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "channelConversation",
+								"id": "@workspace.selectedConversation"
+							},
+							"fields": [
+								{
+									"path": "botSummary",
+									"label": "Answered from"
+								},
+								{
+									"path": "handedOverAt",
+									"label": "Handed over",
+									"format": "datetime"
+								},
+								{
+									"path": "handoverReason",
+									"label": "Why"
+								}
+							],
+							"emptyText": "Pick a chat to see what the bot did."
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "chat-waiting",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 8
+					},
+					{
+						"id": "2",
+						"widgetId": "chat-thread",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 5,
+						"gridHeight": 12
+					},
+					{
+						"id": "3",
+						"widgetId": "chat-visitor",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
+						"id": "4",
+						"widgetId": "chat-bot",
+						"gridX": 8,
+						"gridY": 4,
+						"gridWidth": 4,
+						"gridHeight": 3
+					}
+				]
+			}
+		}
+	]
+}

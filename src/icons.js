@@ -63,6 +63,7 @@ import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import ChartLine from 'vue-material-design-icons/ChartLine.vue'
 import ChartTimelineVariant from 'vue-material-design-icons/ChartTimelineVariant.vue'
 import ChartTimelineVariantShimmer from 'vue-material-design-icons/ChartTimelineVariantShimmer.vue'
+import ChatOutline from 'vue-material-design-icons/ChatOutline.vue'
 import Check from 'vue-material-design-icons/Check.vue'
 import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarkedCircleOutline.vue'
 import CheckboxMarkedOutline from 'vue-material-design-icons/CheckboxMarkedOutline.vue'
@@ -231,6 +232,7 @@ export default {
 	ChartLine,
 	ChartTimelineVariant,
 	ChartTimelineVariantShimmer,
+	ChatOutline,
 	Check,
 	CheckCircle,
 	CheckboxMarkedCircleOutline,
