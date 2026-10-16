@@ -10,10 +10,10 @@
  */
 
 import { translate as t } from '@nextcloud/l10n'
-import { MARKETING_FORMATTERS } from './marketingFormatters.js'
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
 import { createUserDisplayNameFormatter } from './userDisplayName.js'
+import { MARKETING_FORMATTERS } from './valueFormatters.js'
 
 /**
  * Format an amount in the row's own currency (`row.currency`), or in the
