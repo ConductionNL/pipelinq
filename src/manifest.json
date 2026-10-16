@@ -3503,12 +3503,12 @@
 									"countFrom": "widget"
 								},
 								{
-									"label": "Mail",
+									"label": "Mail messages",
 									"widgetId": "lead-email",
 									"countFrom": "widget"
 								},
 								{
-									"label": "Notes",
+									"label": "Notes on the lead",
 									"widgetId": "lead-notes",
 									"countFrom": "widget"
 								},
@@ -3533,7 +3533,6 @@
 						"id": "lead-stages",
 						"type": "stages",
 						"title": "Stages",
-						"icon": "ChevronDoubleRight",
 						"_note": "The board's stage strip at the top of the Overview tab: the stages of the lead's own pipeline, read from the pipeline record, with the current one from `stage`.",
 						"content": {
 							"currentField": "stage",
@@ -3555,7 +3554,6 @@
 						"id": "lead-deal",
 						"type": "data",
 						"title": "Deal",
-						"icon": "HandshakeOutline",
 						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out. The client sits here too (decision 207): a lead can exist with no client linked, and the Related card only lists a client once there is one, so this field is where a client is read, added and taken off.",
 						"content": {
 							"title": "Deal",
@@ -3598,7 +3596,6 @@
 						"id": "lead-lines",
 						"type": "object-list",
 						"title": "Products on this lead",
-						"icon": "Package",
 						"content": {
 							"register": "pipelinq",
 							"schema": "leadProduct",
@@ -3652,7 +3649,6 @@
 						"id": "lead-contacts",
 						"type": "object-list",
 						"title": "Contacts and their role",
-						"icon": "AccountGroup",
 						"_note": "The people this deal is worked with, read from contact.leads (97-lead-activity). allowCreate is OFF and that is not an oversight: the widget pre-fills a created object by merging its resolved filter into the payload as a SCALAR, and `leads` is an array. OpenRegister answers a scalar written into an array property with 400, so an Add button here would offer a create that always fails. A person is linked to the deal from the contact form instead.",
 						"content": {
 							"register": "pipelinq",
@@ -3724,7 +3720,6 @@
 						"id": "lead-flow-runs",
 						"type": "flow-runs",
 						"title": "Flow runs",
-						"icon": "Sitemap",
 						"_note": "Takes the cell the line-items list used to hold, which moved into the tab strip. `subject: '@objectId'` binds this deal, so OpenRegister scopes the active and finished reads to it server-side. `rowRoute` rather than `runRoute`, for the reason dossiq records on case-flow-runs: pipelinq has no run detail page, and FlowDetail (/flows/:id) resolves a FLOW id, so pointing a run uuid at it would open nothing.",
 						"content": {
 							"subject": "@objectId",
@@ -4052,7 +4047,7 @@
 					"field": "stage",
 					"variant": "purple"
 				},
-				"headerMeta": "via {source} · {stageEnteredAt|days} days in this stage · owner {assignee}",
+				"headerMeta": "{source} · {stageEnteredAt|days} days in this stage · owner {assignee}",
 				"stageField": "stage",
 				"headerActions": [
 					{
