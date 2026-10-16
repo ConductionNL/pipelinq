@@ -12,4 +12,6 @@ The drawn boards are the UI canon. The till (PqKassa) and the refund editor (PqK
 
 Nothing is removed: every field, the customer lookup, the client picker and the consent stay; only their place changes.
 
-Not yet: the checkout dialog of PqKassaAfrekenen (split payment over loyalty points, a gift card and the card terminal) and the receipt preview of a new transaction, which the server renders only for a saved one.
+- Checkout (PqKassaAfrekenen) opens a payment dialog (`src/dialogs/PaymentCheckoutDialog.vue`, on CnDialog) that splits the amount due over loyalty points, gift cards and the rest on the till's payment method (`src/services/paymentSplit.js`). Confirming it saves and confirms the sale, redeems the gift cards as voucher tenders, records the rest and settles.
+
+Not yet: the till does not look up the customer's loyalty account, so the points part shows only when a caller passes one (the dialog takes `loyalty`); points are not redeemed server-side until the loyalty programme has a points-as-payment step. Selling a new gift card from the dialog and the receipt preview of a new transaction are not built.

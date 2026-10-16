@@ -236,6 +236,8 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 			unitPrice: '10',
 		})
 		await page.locator('[data-testid="checkout"]').click()
+		// Checkout opens the payment dialog; confirming it completes the sale.
+		await page.locator('[data-testid="payment-checkout-confirm"]').click()
 		// The sale persisted and the app navigated to the new transaction detail.
 		await page.waitForURL(/pos\/[0-9a-f-]{36}/i, { timeout: 10000 })
 		const txId = page.url().match(/pos\/([0-9a-f-]{36})/i)![1]

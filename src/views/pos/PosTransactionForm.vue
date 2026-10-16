@@ -15,7 +15,7 @@
 				variant="primary"
 				:disabled="saving || !checkoutAllowed"
 				data-testid="checkout-header"
-				@click="save">
+				@click="openCheckout">
 				<template #icon>
 					<CashRegister :size="20" />
 				</template>
@@ -112,7 +112,7 @@
 						wide
 						:disabled="saving || !checkoutAllowed"
 						data-testid="checkout"
-						@click="save">
+						@click="openCheckout">
 						<template #icon>
 							<CashRegister :size="20" />
 						</template>
@@ -197,6 +197,16 @@
 			</div>
 		</div>
 
+		<PaymentCheckoutDialog
+			v-if="showCheckout"
+			:due="dueTotal"
+			:terminal="transaction.terminalId || ''"
+			:customerName="selectedCustomer ? selectedCustomer.name : ''"
+			:restMethod="paymentMethod === 'cash' ? 'cash' : 'card'"
+			:submitting="saving"
+			@confirm="checkout"
+			@cancel="showCheckout = false" />
+
 		<CustomerLookupModal
 			v-if="showCustomerModal"
 			@select="onCustomerSelected"
@@ -217,14 +227,16 @@ import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
 import PurchaseHistory from '../../components/pos/PurchaseHistory.vue'
 import BarcodeScanner from '../../components/products/BarcodeScanner.vue'
+import PaymentCheckoutDialog from '../../dialogs/PaymentCheckoutDialog.vue'
 import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
+import { tenderTypeId } from '../../services/paymentSplit.js'
 import { findProductByBarcode } from '../../services/posBarcode.js'
 import {
 	attachCustomer as apiAttachCustomer,
 	detachCustomer as apiDetachCustomer,
 	getCustomerHistory,
 } from '../../services/posCustomerApi.js'
-import { recalculateLine } from '../../services/posTotals.js'
+import { computeTotals, recalculateLine } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 /**
@@ -260,6 +272,7 @@ export default {
 		PosTotalsPanel,
 		PurchaseHistory,
 		CustomerLookupModal,
+		PaymentCheckoutDialog,
 		PaymentMethodSelector,
 	},
 
@@ -301,6 +314,7 @@ export default {
 			paymentProvider: 'cash',
 			paymentMethod: 'cash',
 			scanStatus: 'idle',
+			showCheckout: false,
 			scanError: '',
 		}
 	},
@@ -324,6 +338,16 @@ export default {
 		 *
 		 * @return {boolean} True when creating.
 		 */
+		/**
+		 * The amount due for the lines, incl. VAT.
+		 *
+		 * @return {number}
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-split-tender/spec.md
+		 */
+		dueTotal() {
+			return computeTotals(this.lines, this.priceMode).total
+		},
+
 		/**
 		 * The page name: New transaction, or the reference once saved.
 		 *
@@ -676,7 +700,77 @@ export default {
 		 *
 		 * @spec openspec/specs/pos-transaction-core/spec.md#REQ-POS-004
 		 */
-		async save() {
+		/**
+		 * Open the checkout dialog, once the sale may be checked out.
+		 *
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-split-tender/spec.md
+		 */
+		openCheckout() {
+			if (!this.checkoutAllowed) {
+				showError(t('pipelinq', 'Customer is required for on-account transactions.'))
+				return
+			}
+			this.showCheckout = true
+		},
+
+		/**
+		 * Complete the sale with the payment the checkout dialog split: save
+		 * and confirm it, redeem each gift card and record it as a voucher
+		 * tender, record the rest on the till's payment method, then settle.
+		 * When a payment step fails the confirmed sale opens, where its
+		 * payment can be finished.
+		 *
+		 * @param {{parts: Array<object>, rest: number}} split The payment split.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-split-tender/spec.md
+		 */
+		async checkout(split) {
+			// Points are not redeemed by the till yet, so a split that uses
+			// them would leave that part unpaid.
+			if (split.parts.some((p) => p.kind === 'loyalty')) {
+				showError(t('pipelinq', 'Loyalty points cannot be redeemed at the till yet.'))
+				return
+			}
+			const txId = await this.save({ navigate: false })
+			if (!txId) {
+				return
+			}
+			this.saving = true
+			try {
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/pos/tender-types?activeOnly=1'))
+				const types = Array.isArray(data) ? data : (data?.results || data?.tenderTypes || [])
+				const tendersUrl = generateUrl('/apps/pipelinq/api/pos-transactions/' + encodeURIComponent(txId) + '/tenders')
+				for (const part of split.parts.filter((p) => p.kind === 'giftCard')) {
+					await axios.post(generateUrl('/apps/pipelinq/api/loyalty/gift-card/redeem'), {
+						giftCardId: part.giftCardId,
+						pin: part.pin,
+						amount: part.amount,
+						posTransactionId: txId,
+					})
+					await axios.post(tendersUrl, { tenderType: tenderTypeId(types, 'VOUCHER'), amount: part.amount, reference: part.serial })
+				}
+				if (split.rest > 0) {
+					await axios.post(tendersUrl, { tenderType: tenderTypeId(types, this.paymentMethod === 'cash' ? 'CASH' : 'CARD'), amount: split.rest })
+				}
+				await axios.post(generateUrl('/apps/pipelinq/api/pos-transactions/' + encodeURIComponent(txId) + '/settle'))
+				showSuccess(t('pipelinq', 'Payment received.'))
+			} catch (error) {
+				showError(error?.response?.data?.error || t('pipelinq', 'The sale is saved, but the payment could not be completed. Finish it on the transaction.'))
+			} finally {
+				this.saving = false
+				this.showCheckout = false
+				this.$router.push({ name: 'PosTransactionDetail', params: { id: txId } })
+			}
+		},
+
+		/**
+		 * Save the sale with its lines and confirm it.
+		 *
+		 * @param {{navigate?: boolean}} [options] `navigate: false` stays on the
+		 *   page and leaves opening the sale to the caller.
+		 * @return {Promise<string|null>} The transaction id, or null when saving failed.
+		 */
+		async save({ navigate = true } = {}) {
 			if (!this.checkoutAllowed) {
 				showError(
 					t(
@@ -684,7 +778,7 @@ export default {
 						'Customer is required for on-account transactions.',
 					),
 				)
-				return
+				return null
 			}
 			this.saving = true
 			try {
@@ -705,7 +799,7 @@ export default {
 				)
 				if (!savedTx) {
 					showError(t('pipelinq', 'Failed to save transaction.'))
-					return
+					return null
 				}
 				const txId = savedTx.id || this.transactionId
 
@@ -768,16 +862,20 @@ export default {
 						name: 'PosTransactionDetail',
 						params: { id: txId },
 					})
-					return
+					return null
 				}
 
-				showSuccess(t('pipelinq', 'Transaction saved.'))
-				this.$router.push({
-					name: 'PosTransactionDetail',
-					params: { id: txId },
-				})
+				if (navigate) {
+					showSuccess(t('pipelinq', 'Transaction saved.'))
+					this.$router.push({
+						name: 'PosTransactionDetail',
+						params: { id: txId },
+					})
+				}
+				return txId
 			} catch {
 				showError(t('pipelinq', 'Failed to save transaction.'))
+				return null
 			} finally {
 				this.saving = false
 			}
