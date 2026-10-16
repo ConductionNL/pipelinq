@@ -150,10 +150,9 @@ test.describe('Clients — full CRUD with persistence', () => {
 
 		// NcTextField forwards data-testid onto the <input> element itself.
 		await dialog.locator('[data-testid="client-name-input"]').fill(NAME)
-		await pickOption(
-			dialog.locator('[data-testid="client-type-select"]'),
-			'organi',
-		) // organization
+		await dialog
+			.locator('[data-testid="client-type-organization"] input')
+			.check({ force: true })
 		await dialog.locator('[data-testid="client-email-input"]').fill(EMAIL)
 		await dialog.locator('[data-testid="client-phone-input"]').fill(PHONE)
 		await dialog.locator('[data-testid="client-form-save"]').click()

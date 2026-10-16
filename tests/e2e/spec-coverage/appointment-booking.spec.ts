@@ -178,16 +178,9 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		await dialog
 			.locator('[data-testid="client-phone-input"]')
 			.fill('+31 20 000 0000')
-		await dialog.locator('[data-testid="client-type-select"]').click()
-		// NcSelect teleports its dropdown, so the option is matched page-wide, and
-		// it is awaited rather than clicked blind — the list is populated
-		// asynchronously (workflows/client-crud.spec.ts sleeps here instead).
-		const typeOption = fxPage
-			.locator('li[role="option"], .vs__dropdown-option')
-			.filter({ hasText: 'organi' })
-			.first()
-		await expect(typeOption).toBeVisible({ timeout: 10000 })
-		await typeOption.click()
+		await dialog
+			.locator('[data-testid="client-type-organization"] input')
+			.check({ force: true })
 		await dialog.locator('[data-testid="client-form-save"]').click()
 		await expect(dialog).toBeHidden({ timeout: 20000 })
 

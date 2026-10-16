@@ -48,6 +48,7 @@ vi.mock('@nextcloud/vue', () => {
 	})
 	return {
 		NcDialog: passthrough('NcDialog'),
+		NcCheckboxRadioSwitch: passthrough('NcCheckboxRadioSwitch'),
 		NcButton: {
 			name: 'NcButton',
 			emits: ['click'],
