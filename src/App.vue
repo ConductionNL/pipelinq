@@ -73,11 +73,9 @@ import IncomingCallCard from './components/IncomingCallCard.vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
-import { blastNote } from './services/blastNote.js'
 import { createAppFormatters } from './services/cellFormatters.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
-import { share } from './services/shareFormatter.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
 import { useObjectStore } from './store/modules/object.js'
 
@@ -188,7 +186,7 @@ export default {
 		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 		 */
 		cellFormatters() {
-			return { ...createAppFormatters(useObjectStore()), share, blastNote }
+			return createAppFormatters(useObjectStore())
 		},
 
 		/**
