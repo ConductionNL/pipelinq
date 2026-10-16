@@ -40,7 +40,8 @@
 				"viewModes": [
 					"table",
 					"cards",
-					"board"
+					"board",
+					"map"
 				],
 				"board": {
 					"statusField": "status"
@@ -115,7 +116,13 @@
 						}
 					},
 					"waitFor"
-				]
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
