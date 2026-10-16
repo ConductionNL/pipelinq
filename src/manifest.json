@@ -4050,27 +4050,6 @@
 				"stageField": "stage",
 				"headerActions": [
 					{
-						"id": "log-contact",
-						"type": "open-form",
-						"label": "Log contact",
-						"icon": "PhoneLogOutline",
-						"register": "pipelinq",
-						"schema": "ticket",
-						"includeFields": [
-							"title",
-							"channel",
-							"direction",
-							"occurredAt",
-							"description"
-						],
-						"successMessage": "Contact moment logged.",
-						"props": {
-							"lead": "@objectId",
-							"client": "@object.client",
-							"ticketType": "interaction"
-						}
-					},
-					{
 						"id": "close-won",
 						"type": "api-call",
 						"label": "Close as won",
@@ -4108,7 +4087,6 @@
 					}
 				],
 				"quickActions": [
-					"log-contact",
 					"close-won",
 					"close-lost"
 				],
@@ -4127,8 +4105,17 @@
 									"doneField": "client"
 								},
 								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
 									"label": "Make the first contact",
-									"doneField": "lastTouch"
+									"doneField": "lastTouch",
+									"hint": "Log the call or visit on this lead"
 								}
 							]
 						},
@@ -4170,10 +4157,8 @@
 									}
 								},
 								{
-									"label": "A proposal has been sent"
-								},
-								{
-									"label": "Add products and then make the quote"
+									"label": "A proposal has been sent",
+									"hint": "Add products and then make the quote"
 								}
 							]
 						},
@@ -4194,11 +4179,8 @@
 									}
 								},
 								{
-									"label": "An expected close date is set",
-									"doneField": "expectedCloseDate"
-								},
-								{
-									"label": "Follow up on the proposal"
+									"label": "Follow up on the proposal",
+									"hint": "An expected close date is set"
 								}
 							]
 						},
@@ -4211,8 +4193,17 @@
 									"doneField": "client"
 								},
 								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
 									"label": "Make the first contact",
-									"doneField": "lastTouch"
+									"doneField": "lastTouch",
+									"hint": "Log the call or visit on this lead"
 								}
 							]
 						},
@@ -4254,10 +4245,8 @@
 									}
 								},
 								{
-									"label": "A proposal has been sent"
-								},
-								{
-									"label": "Add products and then make the quote"
+									"label": "A proposal has been sent",
+									"hint": "Add products and then make the quote"
 								}
 							]
 						},
@@ -4278,17 +4267,15 @@
 									}
 								},
 								{
-									"label": "An expected close date is set",
-									"doneField": "expectedCloseDate"
-								},
-								{
-									"label": "Follow up on the proposal"
+									"label": "Follow up on the proposal",
+									"hint": "An expected close date is set"
 								}
 							]
 						}
 					}
 				},
-				"identifierField": "id"
+				"identifierField": "id",
+				"follow": false
 			}
 		},
 		{

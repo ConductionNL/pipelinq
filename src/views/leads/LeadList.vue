@@ -33,7 +33,6 @@
 		rowTitle="plain"
 		:searchPlaceholder="t('pipelinq', 'Filter by title or client')"
 		:headerButtons="headerButtons"
-		:headerActions="headerActions"
 		:countText="t('pipelinq', '{shown} of {total} leads · win chance first')"
 		:footerNote="
 			t(
@@ -63,6 +62,9 @@ import { useSettingsStore } from '../../store/modules/settings.js'
 
 export default {
 	name: 'LeadList',
+	// The page config the renderer hands a custom page (columns, sort, actions)
+	// would fall through onto CnIndexPage and replace what this list declares.
+	inheritAttrs: false,
 	components: {
 		CnIndexPage,
 	},
@@ -219,7 +221,7 @@ export default {
 		},
 
 		/**
-		 * The header buttons in the board's order: Download, Actions, New lead.
+		 * The header buttons in the board's order: Download, then New lead.
 		 *
 		 * @return {Array<object>}
 		 *
@@ -228,32 +230,11 @@ export default {
 		headerButtons() {
 			return [
 				{ action: 'export', label: t('pipelinq', 'Download') },
-				{ action: 'actions-menu' },
 				{
 					action: 'add',
 					variant: 'primary',
 					icon: 'Plus',
 					label: t('pipelinq', 'New lead'),
-				},
-			]
-		},
-
-		/**
-		 * Call first sits in the Actions menu: it sorts by score, highest first.
-		 *
-		 * @return {Array<object>}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
-		 */
-		headerActions() {
-			return [
-				{
-					id: 'call-first',
-					label: this.callFirst
-						? t('pipelinq', 'Sort as before')
-						: t('pipelinq', 'Call first'),
-
-					icon: 'SortDescending',
-					handler: () => this.setCallFirst(!this.callFirst),
 				},
 			]
 		},
@@ -267,14 +248,14 @@ export default {
 	},
 
 	/**
-	 * Keep the Call first button in step with the list's sort, then load the
-	 * settings and the default pipeline's stages.
+	 * Track whether the list is sorted Call first, open it that way, then load
+	 * the settings and the default pipeline's stages.
 	 *
 	 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 	 */
 	async mounted() {
 		// Read from the page's own sort, so a column click, a saved view or a
-		// sort restored from the URL all show on the button.
+		// sort restored from the URL all count.
 		this.$watch(
 			() => this.$refs.index?.effectiveSortKeys,
 			(keys) => {
@@ -282,6 +263,11 @@ export default {
 			},
 			{ immediate: true },
 		)
+		// The list opens win chance first, as its count line says, unless the
+		// address already carries a sort.
+		if (!this.$route?.query?._order && !this.callFirst) {
+			this.setCallFirst(true)
+		}
 		await this.settingsStore.fetchSettings()
 		await this.loadDefaultPipeline()
 	},

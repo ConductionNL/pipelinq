@@ -77,3 +77,9 @@ describe('lead list board look', () => {
 		expect(registry).toMatch(/RoutingSuggestionWidget: \{\s*kind: 'widget'/)
 	})
 })
+
+describe('lead list config', () => {
+	it('does not let the page config fall through onto the index page', () => {
+		expect(LeadList.inheritAttrs).toBe(false)
+	})
+})
