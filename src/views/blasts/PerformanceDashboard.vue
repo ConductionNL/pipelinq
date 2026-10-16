@@ -40,12 +40,15 @@
 					}}
 				</p>
 			</div>
+<div class="cn-header-actions">
 			<NcButton variant="secondary" :disabled="overviewRows.length === 0" @click="downloadOverview">
 				<template #icon>
 					<Download :size="18" />
 				</template>
 				{{ t('pipelinq', 'Download') }}
 			</NcButton>
+			<CnBuildiqEditButton />
+			</div>
 		</header>
 
 		<CnTabs
@@ -366,7 +369,7 @@
 </template>
 
 <script>
-import { CnStatusBadge, CnTab, CnTabs } from '@conduction/nextcloud-vue'
+import { CnBuildiqEditButton, CnStatusBadge, CnTab, CnTabs } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
@@ -384,6 +387,7 @@ const P_VALUE_ALPHA = 0.05
 export default {
 	name: 'PerformanceDashboard',
 	components: {
+		CnBuildiqEditButton,
 		ArrowLeft,
 		Download,
 		NcButton,
@@ -1112,6 +1116,12 @@ export default {
 </script>
 
 <style scoped>
+.cn-header-actions {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
 .performance-dashboard {
 	box-sizing: border-box;
 	width: 100%;

@@ -32,6 +32,7 @@
 					</span>
 				</div>
 			</div>
+<div class="cn-header-actions">
 			<NcButton
 				v-if="canCancel"
 				variant="error"
@@ -46,6 +47,8 @@
 						: t('pipelinq', 'Cancel send')
 				}}
 			</NcButton>
+			<CnBuildiqEditButton />
+			</div>
 		</header>
 		<p v-if="cancelError" class="blast-monitor__error" role="alert">
 			{{ cancelError }}
@@ -131,7 +134,7 @@
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnBuildiqEditButton, CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
@@ -157,6 +160,7 @@ const TERMINAL_STATUSES = ['sent', 'failed', 'cancelled']
 export default {
 	name: 'BlastMonitor',
 	components: {
+		CnBuildiqEditButton,
 		ArrowLeft,
 		Cancel,
 		NcButton,
@@ -569,6 +573,12 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.cn-header-actions {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
 .blast-monitor {
 	box-sizing: border-box;
 	width: 100%;
