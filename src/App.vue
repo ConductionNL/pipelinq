@@ -23,7 +23,11 @@
 		:notificationLabels="notificationLabels"
 		:permissions="permissions"
 		:persistManifestDelta="persistManifestDelta"
-		:requiresApps="[]">
+		:requiresApps="[]"
+		:userSettingsSections="userSettingsSections">
+		<template #user-settings-sections>
+			<PersonalSettingsSections />
+		</template>
 		<template #sidebar="{ pageSidebarComponent }">
 			<!--
 				Host-rendered CnObjectSidebar. Detail pages declare their tabs in
@@ -70,6 +74,7 @@ import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import IncomingCallCard from './components/IncomingCallCard.vue'
+import PersonalSettingsSections from './components/settings/PersonalSettingsSections.vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
@@ -86,6 +91,7 @@ export default {
 		CnAppRoot,
 		CnObjectSidebar,
 		IncomingCallCard,
+		PersonalSettingsSections,
 	},
 
 	/**
@@ -139,6 +145,16 @@ export default {
 
 	data() {
 		return {
+			// The user settings dialog in the board's order (PqPersoonlijk):
+			// notifications, the app's sections, then the walkthrough.
+			userSettingsSections: [
+				'notifications',
+				'app',
+				'walkthrough',
+				'credentials',
+				'integrations',
+			],
+
 			objectSidebarState: reactive({
 				active: false,
 				open: true,

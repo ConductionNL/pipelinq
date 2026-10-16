@@ -7675,7 +7675,15 @@ OC.L10N.register(
         "Recording": "Recording",
         "deadline is today or past": "deadline is today or past",
         "the customer has replied": "the customer has replied",
-        "nothing to do until they reply": "nothing to do until they reply"
+        "nothing to do until they reply": "nothing to do until they reply",
+        "Email and calendar": "Email and calendar",
+        "Mail and appointments linked to your clients.": "Mail and appointments linked to your clients.",
+        "Open the sync settings": "Open the sync settings",
+        "My skills": "My skills",
+        "Skills decide which tickets are suggested to you. An administrator sets them on your agent profile.": "Skills decide which tickets are suggested to you. An administrator sets them on your agent profile.",
+        "Available.": "Available.",
+        "Not available.": "Not available.",
+        "Set it at the top of the dashboard. When you are not available, calls and the queue pass you by.": "Set it at the top of the dashboard. When you are not available, calls and the queue pass you by."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -7622,6 +7622,14 @@
         "Recording": "Opname",
         "deadline is today or past": "termijn is vandaag of verstreken",
         "the customer has replied": "de klant heeft gereageerd",
-        "nothing to do until they reply": "niets te doen tot ze reageren"
+        "nothing to do until they reply": "niets te doen tot ze reageren",
+        "Email and calendar": "E-mail en agenda",
+        "Mail and appointments linked to your clients.": "Mail en afspraken gekoppeld aan je klanten.",
+        "Open the sync settings": "Synchronisatie-instellingen openen",
+        "My skills": "Mijn vaardigheden",
+        "Skills decide which tickets are suggested to you. An administrator sets them on your agent profile.": "Vaardigheden bepalen welke tickets je voorgesteld krijgt. Een beheerder stelt ze in op je medewerkerprofiel.",
+        "Available.": "Beschikbaar.",
+        "Not available.": "Niet beschikbaar.",
+        "Set it at the top of the dashboard. When you are not available, calls and the queue pass you by.": "Stel het in bovenaan het dashboard. Ben je niet beschikbaar, dan slaan gesprekken en de wachtrij je over."
     }
 }
