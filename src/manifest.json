@@ -3022,7 +3022,21 @@
 						"icon": "AccountBoxOutline",
 						"content": {
 							"title": "Contact details",
-							"columns": 3
+							"columns": 3,
+							"include": [
+								"name",
+								"client",
+								"role",
+								"email",
+								"phone",
+								"preferredChannel",
+								"correspondenceLanguage",
+								"timezone",
+								"marketingConsent",
+								"doNotContact",
+								"surveyOptOut",
+								"secrecy"
+							]
 						}
 					},
 					{

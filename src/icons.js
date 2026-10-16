@@ -178,6 +178,7 @@ import ViewDashboard from 'vue-material-design-icons/ViewDashboard.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
 import WalletOutline from 'vue-material-design-icons/WalletOutline.vue'
+import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
 
 export default {
 	Account,
@@ -346,4 +347,5 @@ export default {
 	ViewDashboard,
 	ViewGridOutline,
 	WalletOutline,
+	AccountPlusOutline,
 }
