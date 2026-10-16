@@ -32,6 +32,14 @@
 
 <template>
 	<div class="features-roadmap">
+		<CnFeaturesAndRoadmapPage
+			:repo="repo"
+			:documentationUrl="documentationUrl"
+			:openbuiltUrl="openbuiltUrl"
+			:llmSkillsUrl="llmSkillsUrl"
+			:suggestUrl="suggestUrl"
+			:categories="categories"
+			:board="board" />
 		<p class="features-roadmap__compare">
 			<a
 				class="features-roadmap__compare-link"
@@ -51,13 +59,6 @@
 				}}
 			</span>
 		</p>
-
-		<CnFeaturesAndRoadmapPage
-			:repo="repo"
-			:documentationUrl="documentationUrl"
-			:openbuiltUrl="openbuiltUrl"
-			:llmSkillsUrl="llmSkillsUrl"
-			:suggestUrl="suggestUrl" />
 	</div>
 </template>
 
@@ -90,6 +91,10 @@ export default {
 		llmSkillsUrl: { type: String, default: '' },
 		/** Suggest-a-feature CTA override, forwarded to the library page. */
 		suggestUrl: { type: String, default: '' },
+		/** Category captions in display order, forwarded to the library page. */
+		categories: { type: Object, default: () => ({}) },
+		/** The board look's options (subtitle, issue labels), forwarded to the library page. */
+		board: { type: Object, default: () => ({}) },
 	},
 
 	computed: {
@@ -138,7 +143,7 @@ export default {
 	align-items: baseline;
 	gap: 4px 12px;
 	margin: 0;
-	padding: 12px 12px 0;
+	padding: 12px 28px 24px;
 }
 
 .features-roadmap__compare-link {

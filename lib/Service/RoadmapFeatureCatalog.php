@@ -49,11 +49,11 @@ class RoadmapFeatureCatalog {
 	}//end __construct()
 
 	/**
-	 * Build the Features & Roadmap list from openspec/specs at runtime so the
-	 * surface stays current with the specs without depending on a committed
-	 * docs/features.json (which can drift). Cached per app version — the specs
-	 * only change when the app updates — with the committed docs/features.json
-	 * as a fallback for deploys that ship without openspec/.
+	 * The Features & Roadmap list: the curated docs/features.json (a title and
+	 * summary written for the reader, a status and a category per feature, as
+	 * the PqRoadmap board groups them), else the done specs in openspec/specs
+	 * as a fallback. Cached per app version: both only change when the app
+	 * updates.
 	 *
 	 * @return array<int, array{slug:string, title:string, summary:string, docsUrl:string}>
 	 *
@@ -69,20 +69,36 @@ class RoadmapFeatureCatalog {
 			return $cached;
 		}
 
-		$features = $this->extractFeaturesFromSpecs(specsDir: __DIR__ . '/../../openspec/specs');
+		$features = $this->readCuratedFeatures(path: __DIR__ . '/../../docs/features.json');
 		if ($features === []) {
-			$path = __DIR__ . '/../../docs/features.json';
-			if (is_file($path) === true) {
-				$decoded = json_decode((string)file_get_contents($path), associative: true);
-				if (is_array($decoded) === true) {
-					$features = $decoded;
-				}
-			}
+			$features = $this->extractFeaturesFromSpecs(specsDir: __DIR__ . '/../../openspec/specs');
 		}
 
 		$cache->set($cacheKey, $features, 86400);
 		return $features;
 	}//end load()
+
+	/**
+	 * Read the curated feature list. A missing or unreadable file gives nothing.
+	 *
+	 * @param string $path Absolute path to docs/features.json.
+	 *
+	 * @return array<int, array<string, mixed>> The features.
+	 *
+	 * @spec openspec/specs/features-roadmap/spec.md
+	 */
+	public function readCuratedFeatures(string $path): array {
+		if (is_file($path) === false) {
+			return [];
+		}
+
+		$decoded = json_decode((string) file_get_contents($path), associative: true);
+		if (is_array($decoded) === false) {
+			return [];
+		}
+
+		return array_values(array_filter($decoded, 'is_array'));
+	}//end readCuratedFeatures()
 
 	/**
 	 * Parse `status: done` capability specs into feature entries. Mirrors the

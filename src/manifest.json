@@ -6644,9 +6644,24 @@
 			"type": "custom",
 			"component": "FeaturesRoadmapView",
 			"title": "Features & roadmap",
-			"_note": "Was type:\"roadmap\". The library's CnFeaturesAndRoadmapPage renders exactly two tabs and declares zero slots. FeaturesRoadmapView renders that library page unchanged and adds one link above it: how pipelinq compares, on pipelinq.conduction.nl/compare. The comparison itself left the app on 2026-10-07 (Ruben: how an app compares belongs on its public site, for every app); the docs page reads src/data/capabilityComparison.json, the same file the in-app section read. Revert to type:\"roadmap\" the day the library page can carry that link.",
+			"_note": "Was type:\"roadmap\". The library's CnFeaturesAndRoadmapPage renders exactly two tabs and declares zero slots. FeaturesRoadmapView renders that library page unchanged and adds one link above it: how pipelinq compares, on pipelinq.conduction.nl/compare. The comparison itself left the app on 2026-10-07 (Ruben: how an app compares belongs on its public site, for every app); the docs page reads src/data/capabilityComparison.json, the same file the in-app section read. Revert to type:\"roadmap\" the day the library page can carry that link. ROUND 12 (PqRoadmap): the library page draws the board look (nextcloud-vue #1702) from the curated docs/features.json, each feature with a status and a category; the wrapper forwards `categories` and `board`, and the comparison link sits under the page.",
 			"config": {
-				"documentationUrl": "https://pipelinq.conduction.nl"
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"categories": {
+					"crm": "Core CRM",
+					"contact": "Customer contact and government",
+					"marketing": "Marketing",
+					"insight": "Analysis and insight",
+					"automation": "Automation and organisation",
+					"infra": "Infrastructure"
+				},
+				"board": {
+					"subtitle": "A page every app has · what Pipelinq does now and what is coming, {count} features",
+					"issueLabels": {
+						"in progress": "in_progress",
+						"planned": "planned"
+					}
+				}
 			}
 		},
 		{

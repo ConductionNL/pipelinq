@@ -35,6 +35,7 @@ vi.mock('@nextcloud/l10n', () => ({
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnFeaturesAndRoadmapPage: {
 		name: 'CnFeaturesAndRoadmapPage',
+		props: ['categories', 'board'],
 		render() {
 			return h('div', { class: 'cn-features-and-roadmap-view' })
 		},
@@ -87,6 +88,18 @@ describe('FeaturesRoadmapView', () => {
 		expect(
 			wrapper.find('a.features-roadmap__compare-link').attributes('href'),
 		).toBe('https://pipelinq.conduction.nl/compare')
+	})
+
+	it('hands the categories and the board options to the library page, and keeps the link under it', () => {
+		const categories = { crm: 'Core CRM' }
+		const board = { subtitle: '{count} features' }
+		const wrapper = mount(FeaturesRoadmapView, { props: { categories, board } })
+		const page = wrapper.findComponent({ name: 'CnFeaturesAndRoadmapPage' })
+		expect(page.props('categories')).toEqual(categories)
+		expect(page.props('board')).toEqual(board)
+		const root = wrapper.element
+		expect(root.firstElementChild.classList.contains('cn-features-and-roadmap-view')).toBe(true)
+		expect(root.lastElementChild.classList.contains('features-roadmap__compare')).toBe(true)
 	})
 
 	it('sends a Dutch reader to the Dutch page', () => {

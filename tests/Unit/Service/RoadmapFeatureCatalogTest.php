@@ -102,4 +102,21 @@ class RoadmapFeatureCatalogTest extends TestCase {
 
 		$this->assertNotEmpty($catalog->load());
 	}//end testLoadReadsAndCachesPerVersion()
+
+	/**
+	 * The curated list is read as written: every entry has a status and a category.
+	 *
+	 * @return void
+	 */
+	public function testTheCuratedListCarriesStatusAndCategory(): void {
+		$features = $this->catalog(cached: null)->readCuratedFeatures(path: __DIR__.'/../../../docs/features.json');
+
+		$this->assertNotEmpty($features);
+		foreach ($features as $feature) {
+			$this->assertNotEmpty($feature['status'] ?? '', $feature['slug']);
+			$this->assertNotEmpty($feature['category'] ?? '', $feature['slug']);
+		}
+
+		$this->assertSame([], $this->catalog(cached: null)->readCuratedFeatures(path: '/nonexistent/features.json'));
+	}//end testTheCuratedListCarriesStatusAndCategory()
 }//end class

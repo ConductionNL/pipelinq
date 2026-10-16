@@ -7619,6 +7619,12 @@
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "Core CRM": "Basis-CRM",
+        "Customer contact and government": "Klantcontact en overheid",
+        "Analysis and insight": "Analyse en inzicht",
+        "Automation and organisation": "Automatisering en organisatie",
+        "Infrastructure": "Infrastructuur",
+        "A page every app has · what Pipelinq does now and what is coming, {count} features": "Een pagina die elke app heeft · wat Pipelinq nu doet en wat eraan komt, {count} functies"
     }
 }

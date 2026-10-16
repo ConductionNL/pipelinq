@@ -7692,6 +7692,12 @@
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Core CRM": "Core CRM",
+        "Customer contact and government": "Customer contact and government",
+        "Analysis and insight": "Analysis and insight",
+        "Automation and organisation": "Automation and organisation",
+        "Infrastructure": "Infrastructure",
+        "A page every app has · what Pipelinq does now and what is coming, {count} features": "A page every app has · what Pipelinq does now and what is coming, {count} features"
     }
 }
