@@ -3,9 +3,11 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -->
 <template>
-	<div class="loyalty-enrollment">
-		<h2>{{ t('pipelinq', 'Loyalty enrollment') }}</h2>
-		<p>
+	<div class="loyalty-enrollment" :class="{ 'loyalty-enrollment--embedded': embedded }">
+		<component :is="embedded ? 'h3' : 'h2'">
+			{{ t('pipelinq', 'Loyalty enrollment') }}
+		</component>
+		<p class="loyalty-enrollment__intro">
 			{{
 				t(
 					'pipelinq',
@@ -85,6 +87,14 @@ export default {
 		NcNoteCard,
 		NcSelect,
 		NcTextField,
+	},
+
+	props: {
+		/** Drawn as a card on the reporting page rather than as a page of its own. */
+		embedded: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	data() {
@@ -197,7 +207,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .loyalty-enrollment {
 	padding: 1rem;
 	max-width: 640px;
@@ -210,5 +220,19 @@ export default {
 
 .loyalty-enrollment__terms {
 	font-size: 0.85rem;
+}
+
+.loyalty-enrollment--embedded {
+	padding: 0;
+
+	h3 {
+		margin: 0;
+	}
+
+	.loyalty-enrollment__intro {
+		color: var(--color-text-maxcontrast);
+		font-size: 13px;
+		margin: 0 0 12px;
+	}
 }
 </style>

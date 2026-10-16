@@ -7619,6 +7619,12 @@
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "{shown} of {total} posts · newest first": "{shown} van {total} berichten · nieuwste eerst",
+        "Filter by title": "Filter op titel",
+        "A post can go to several networks at once, each with its own text.": "Een bericht kan tegelijk naar meerdere netwerken, elk met een eigen tekst.",
+        "Awaiting approval": "Wacht op goedkeuring",
+        "Written by an agent": "Geschreven door een agent",
+        "Points, tiers and what the outstanding points are worth": "Punten, niveaus en wat de openstaande punten waard zijn"
     }
 }
