@@ -7720,6 +7720,17 @@
         "The eight digit number in the Chamber of Commerce trade register.": "The eight digit number in the Chamber of Commerce trade register.",
         "The legal form as registered with the Chamber of Commerce.": "The legal form as registered with the Chamber of Commerce.",
         "The place where the organisation is established.": "The place where the organisation is established.",
-        "What the organisation does, in a sentence.": "What the organisation does, in a sentence."
+        "What the organisation does, in a sentence.": "What the organisation does, in a sentence.",
+        "Sole proprietorship": "Sole proprietorship",
+        "General partnership": "General partnership",
+        "Professional partnership": "Professional partnership",
+        "Limited partnership": "Limited partnership",
+        "Private limited company": "Private limited company",
+        "Public limited company": "Public limited company",
+        "Cooperative": "Cooperative",
+        "Association": "Association",
+        "Foundation": "Foundation",
+        "Public body": "Public body",
+        "Other legal form": "Other legal form"
     }
 }

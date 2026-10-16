@@ -2027,14 +2027,14 @@
 							{
 								"label": "Associations",
 								"filter": {
-									"legalForm": "Vereniging"
+									"legalForm": "vereniging"
 								},
 								"showCount": true
 							},
 							{
 								"label": "Foundations",
 								"filter": {
-									"legalForm": "Stichting"
+									"legalForm": "stichting"
 								},
 								"showCount": true
 							},
@@ -2042,13 +2042,13 @@
 								"label": "Companies",
 								"filter": {
 									"legalForm": [
-										"Eenmanszaak",
-										"Vennootschap onder firma",
-										"Maatschap",
-										"Commanditaire vennootschap",
-										"Besloten vennootschap",
-										"Naamloze vennootschap",
-										"Coöperatie"
+										"eenmanszaak",
+										"vof",
+										"maatschap",
+										"cv",
+										"bv",
+										"nv",
+										"cooperatie"
 									]
 								},
 								"showCount": true

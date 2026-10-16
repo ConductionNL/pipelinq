@@ -7647,6 +7647,17 @@
         "The eight digit number in the Chamber of Commerce trade register.": "Het achtcijferige nummer in het Handelsregister van de Kamer van Koophandel.",
         "The legal form as registered with the Chamber of Commerce.": "De rechtsvorm zoals ingeschreven bij de Kamer van Koophandel.",
         "The place where the organisation is established.": "De plaats waar de organisatie gevestigd is.",
-        "What the organisation does, in a sentence.": "Wat de organisatie doet, in een zin."
+        "What the organisation does, in a sentence.": "Wat de organisatie doet, in een zin.",
+        "Sole proprietorship": "Eenmanszaak",
+        "General partnership": "Vennootschap onder firma",
+        "Professional partnership": "Maatschap",
+        "Limited partnership": "Commanditaire vennootschap",
+        "Private limited company": "Besloten vennootschap",
+        "Public limited company": "Naamloze vennootschap",
+        "Cooperative": "Coöperatie",
+        "Association": "Vereniging",
+        "Foundation": "Stichting",
+        "Public body": "Overheidsorgaan",
+        "Other legal form": "Andere rechtsvorm"
     }
 }
