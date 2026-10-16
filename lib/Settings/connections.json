@@ -6,7 +6,7 @@
             "title": "Telephony (CTI)",
             "description": "Screen pop and click to dial through Asterisk, RingCentral or CallVoip. You pick one platform.",
             "order": 10,
-            "settingsUrl": "/settings/admin/pipelinq#section-cti",
+            "settingsUrl": "/settings/admin/pipelinq?tab=connections#section-cti",
             "reportedOnly": true,
             "unconfiguredMessage": "Not checked yet. Pick a platform in the telephony settings, then choose Test connection."
         },
@@ -79,7 +79,7 @@
             "title": "Bulk mail provider",
             "description": "Mailings sent through Amazon SES, Brevo, Mailjet, SendGrid, Mailgun or Postmark, over an integriq source.",
             "order": 40,
-            "settingsUrl": "/settings/admin/pipelinq#section-mail-transports",
+            "settingsUrl": "/settings/admin/pipelinq?tab=marketing#section-mail-transports",
             "unconfiguredMessage": "Not checked yet. Pipelinq does not test a provider itself. Link the provider's source with Add integration to have it checked."
         }
     ]

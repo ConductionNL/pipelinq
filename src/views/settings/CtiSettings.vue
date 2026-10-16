@@ -9,6 +9,7 @@
   -->
 <template>
 	<NcSettingsSection
+		id="section-cti"
 		:name="t('pipelinq', 'CTI integration')"
 		:description="
 			t(

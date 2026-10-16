@@ -56,8 +56,11 @@ function adminTabs() {
 		source.indexOf('const ADMIN_TABS = ['),
 		source.indexOf(']', source.indexOf('const ADMIN_TABS = [')) + 1,
 	)
-	return [...block.matchAll(/id: '([^']+)',\s*label: '([^']+)',\s*title: '([^']+)',\s*note: '([^']+)'/g)]
-		.map(([, id, label, title, note]) => ({ id, label, title, note }))
+	return [
+		...block.matchAll(
+			/id: '([^']+)',\s*label: '([^']+)',\s*title: '([^']+)',\s*note: '([^']+)'/g,
+		),
+	].map(([, id, label, title, note]) => ({ id, label, title, note }))
 }
 
 describe('the admin page tabs', () => {
@@ -114,7 +117,7 @@ describe('the admin page tabs', () => {
 	it('puts telephony, messages, xWiki, Shillinq and the detected apps on Koppelingen', () => {
 		const markup = tab('connections')
 		const order = [
-			'<CtiPage',
+			'<CtiSettings',
 			'<MessagingSettings',
 			"t('pipelinq', 'xWiki integration')",
 			"t('pipelinq', 'Shillinq integration')",
@@ -157,6 +160,8 @@ describe('the admin page tabs', () => {
 	})
 
 	it('reads the open tab from the address the shell writes', () => {
-		expect(source).toMatch(/new URLSearchParams\(window\.location\.search\)\.get\('tab'\)/)
+		expect(source).toMatch(
+			/new URLSearchParams\(window\.location\.search\)\.get\('tab'\)/,
+		)
 	})
 })

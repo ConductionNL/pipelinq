@@ -146,7 +146,12 @@
 				<a href="mailto:support@conduction.nl">support@conduction.nl</a>
 			</p>
 			<p>
-				{{ t('pipelinq', 'For a Service Level Agreement (SLA), contact us at') }}
+				{{
+					t(
+						'pipelinq',
+						'For a Service Level Agreement (SLA), contact us at',
+					)
+				}}
 				<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
 			</p>
 		</NcSettingsSection>
@@ -154,7 +159,9 @@
 		<template #tab-connections>
 			<!-- Telephony and channels: configuration, not an operator surface
 			     (nav-ia-cleanup). -->
-			<CtiPage v-if="isAdmin && isConfigured" />
+			<CtiSettings
+				v-if="isAdmin && isConfigured"
+				class="cn-settings-section--wide" />
 
 			<MessagingSettings v-if="isAdmin && isConfigured" />
 
@@ -248,7 +255,6 @@
 				</NcNoteCard>
 			</NcSettingsSection>
 
-
 			<!-- Shillinq integration. Nobody types a webhook URL: the hand-offs
 			     follow the detected Shillinq app (pipelinq-audit-admin-forms-pos).
 			     Without Shillinq, DetectedIntegrations says it is not installed. -->
@@ -263,7 +269,9 @@
 				">
 				<!-- Real time-intake emit (time-billing-handoff-emit). Default off — an
 				     unconfigured install keeps the deep-link-only handoff unchanged. -->
-				<NcCheckboxRadioSwitch v-model="shillinqTimeIntakeEnabled" type="switch">
+				<NcCheckboxRadioSwitch
+					v-model="shillinqTimeIntakeEnabled"
+					type="switch">
 					{{
 						t(
 							'pipelinq',
@@ -295,10 +303,11 @@
 				</NcNoteCard>
 			</NcSettingsSection>
 
-
 			<!-- Shillinq and XWiki, detected rather than typed. -->
 			<DetectedIntegrations v-if="isAdmin" />
 
+			<!-- The CTI webhook log: not on the board, kept after its sections. -->
+			<CtiEventLog v-if="isAdmin && isConfigured" />
 		</template>
 
 		<template #tab-pos>
@@ -312,10 +321,10 @@
 			<PosRoleManager v-if="isAdmin && isConfigured" />
 			<PosStaffManager v-if="isAdmin && isConfigured" />
 
-
 			<!-- The till's customer lookup is a page of its own in the app. -->
 			<NcSettingsSection
 				v-if="isAdmin && isConfigured"
+				class="cn-settings-section--wide"
 				:name="t('pipelinq', 'Customer lookup at the till')"
 				:description="
 					t(
@@ -323,9 +332,9 @@
 						'Search fields, how far back the purchase history goes and consents for the till.',
 					)
 				">
-				<NcButton :href="posCustomerLookupUrl">
+				<a :href="posCustomerLookupUrl" class="pos-lookup-link">
 					{{ t('pipelinq', 'Open customer lookup at the till') }}
-				</NcButton>
+				</a>
 			</NcSettingsSection>
 		</template>
 
@@ -360,14 +369,12 @@
 				v-if="isAdmin"
 				:config="config"
 				@saved="onExportConfigSaved" />
-
 		</template>
 
 		<template #tab-portal>
 			<!-- Customer portal tenant config, accounts and audit trail
 			     (pipelinq#2041). Admin only, like the endpoints it calls. -->
 			<PortalSettings v-if="isAdmin && isConfigured" />
-
 		</template>
 	</CnAdminSettingsShell>
 </template>
@@ -388,7 +395,8 @@ import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vu
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
-import CtiPage from './CtiPage.vue'
+import CtiEventLog from './CtiEventLog.vue'
+import CtiSettings from './CtiSettings.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
 import DeliverabilitySettings from './DeliverabilitySettings.vue'
 import DetectedIntegrations from './DetectedIntegrations.vue'
@@ -485,7 +493,8 @@ export default {
 	components: {
 		MessagingSettings,
 		DeliverabilitySettings,
-		CtiPage,
+		CtiEventLog,
+		CtiSettings,
 		PaymentSettingsForm,
 		PosTenderTypeManager,
 		PosStaffManager,
@@ -557,7 +566,10 @@ export default {
 		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
 		 */
 		adminTabs() {
-			return ADMIN_TABS.map((tab) => ({ id: tab.id, label: t('pipelinq', tab.label) }))
+			return ADMIN_TABS.map((tab) => ({
+				id: tab.id,
+				label: t('pipelinq', tab.label),
+			}))
 		},
 
 		/**
@@ -567,7 +579,9 @@ export default {
 		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
 		 */
 		openTab() {
-			return ADMIN_TABS.find((tab) => tab.id === this.activeTab) || ADMIN_TABS[0]
+			return (
+				ADMIN_TABS.find((tab) => tab.id === this.activeTab) || ADMIN_TABS[0]
+			)
 		},
 
 		/**
@@ -1090,5 +1104,10 @@ export default {
 <style scoped>
 .actions-section {
 	margin-top: 16px;
+}
+
+.pos-lookup-link {
+	color: var(--color-primary-element);
+	text-decoration: underline;
 }
 </style>
