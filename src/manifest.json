@@ -3871,15 +3871,240 @@
 			"id": "Tasks",
 			"route": "/tasks",
 			"type": "index",
-			"title": "Tasks",
+			"title": "Tasks and callback requests",
+			"_note": "The tasks list as its board draws it (PqTaken): four counts above the list, the chips Mine, Team, Unassigned, Callback requests and Expired, and each task with its kind, client and callback number on a second line. Every count is a filter on the task's own fields. THE BOARD'S MAP AND BOARD VIEWS are left out: a task has no address and no stage of its own.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "crmTask",
 				"fieldOverrides": {
-					"assigneeGroupId": { "widget": "group" }
+					"assigneeGroupId": {
+						"widget": "group"
+					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
+				"extend": [
+					"clientId"
+				],
+				"sortKey": "deadline",
+				"sortOrder": "asc",
+				"rowTitle": "plain",
+				"countText": "{shown} of {total} tasks · whole team · deadline first",
+				"searchPlaceholder": "Filter by subject or client",
+				"footerNote": "A callback request that passes its deadline expires, and the handler and the team lead are told. Select tasks to reassign them together.",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "actions-menu"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"icon": "Phone",
+						"label": "Schedule a callback"
+					}
+				],
+				"createDefaults": {
+					"type": "callbackRequest"
+				},
+				"quickFilters": [
+					{
+						"label": "Mine",
+						"filter": {
+							"assigneeUserId": "@me"
+						},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Team",
+						"filter": {},
+						"showCount": true
+					},
+					{
+						"label": "Unassigned",
+						"filter": {
+							"assigneeUserId": "IS NULL"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Callback requests",
+						"filter": {
+							"type": "callbackRequest"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Expired",
+						"filter": {
+							"status": "expired"
+						},
+						"showCount": true
+					}
+				],
+				"statRow": [
+					{
+						"id": "tasks-callbacks-today",
+						"type": "stat",
+						"title": "Callback requests today",
+						"content": {
+							"label": "Callback requests today",
+							"caption": "{count} past the deadline",
+							"layout": "stacked",
+							"variant": "error",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"type": "callbackRequest",
+									"status": {
+										"in": [
+											"open",
+											"in_progress"
+										]
+									},
+									"deadline[lt]": "@today+1d"
+								}
+							},
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"type": "callbackRequest",
+									"status": {
+										"in": [
+											"open",
+											"in_progress"
+										]
+									},
+									"deadline[lt]": "@now"
+								}
+							}
+						}
+					},
+					{
+						"id": "tasks-open-follow-ups",
+						"type": "stat",
+						"title": "Open follow-ups",
+						"content": {
+							"label": "Open follow-ups",
+							"caption": "{count} for you",
+							"layout": "stacked",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"type": "followUpTask",
+									"status": {
+										"in": [
+											"open",
+											"in_progress"
+										]
+									}
+								}
+							},
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"type": "followUpTask",
+									"status": {
+										"in": [
+											"open",
+											"in_progress"
+										]
+									},
+									"assigneeUserId": "@me"
+								}
+							}
+						}
+					},
+					{
+						"id": "tasks-information-requests",
+						"type": "stat",
+						"title": "Information requests",
+						"content": {
+							"label": "Information requests",
+							"caption": "{count} unassigned",
+							"layout": "stacked",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"type": "informationRequest",
+									"status": {
+										"in": [
+											"open",
+											"in_progress"
+										]
+									}
+								}
+							},
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"type": "informationRequest",
+									"status": {
+										"in": [
+											"open",
+											"in_progress"
+										]
+									},
+									"assigneeUserId": {
+										"isnull": true
+									}
+								}
+							}
+						}
+					},
+					{
+						"id": "tasks-expired-this-week",
+						"type": "stat",
+						"title": "Expired this week",
+						"content": {
+							"label": "Expired this week",
+							"caption": "reassigned or closed",
+							"layout": "stacked",
+							"variant": "error",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"status": "expired",
+									"deadline[gte]": "@today-7d"
+								}
+							}
+						}
+					}
+				],
 				"actions": [
 					{
 						"id": "view",
@@ -3890,16 +4115,75 @@
 					}
 				],
 				"columns": [
-					{ "key": "subject", "label": "Subject" },
-					{ "key": "type", "label": "Type" },
-					{ "key": "status", "label": "Status" },
-					{ "key": "priority", "label": "Priority" },
+					{
+						"key": "subject",
+						"label": "Task",
+						"secondary": "{type} · {clientId.name} · {callbackPhoneNumber}",
+						"cellClass": "cn-cell--strong",
+						"sortable": true
+					},
+					{
+						"key": "type",
+						"label": "Kind",
+						"widget": "badge",
+						"enum": [
+							"callbackRequest",
+							"followUpTask",
+							"informationRequest"
+						],
+						"enumLabels": {
+							"callbackRequest": "Call back",
+							"followUpTask": "Follow-up",
+							"informationRequest": "Information"
+						},
+						"widgetProps": {
+							"colorMap": {
+								"callbackRequest": "purple",
+								"followUpTask": "success",
+								"informationRequest": "warning"
+							}
+						}
+					},
 					{
 						"key": "assigneeUserId",
-						"label": "Assignee",
+						"label": "For",
 						"formatter": "userDisplayName"
 					},
-					{ "key": "deadline", "label": "Deadline" }
+					{
+						"key": "deadline",
+						"label": "Time limit",
+						"widget": "date",
+						"widgetProps": {
+							"relative": true,
+							"showTime": true,
+							"variantWhen": [
+								{
+									"op": "lte",
+									"value": 0,
+									"variant": "error"
+								}
+							]
+						},
+						"sortable": true
+					},
+					{
+						"key": "priority",
+						"label": "Priority",
+						"formatter": "enumText"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"open": "primary",
+								"in_progress": "purple",
+								"completed": "success",
+								"expired": "error"
+							}
+						}
+					}
 				],
 				"sidebar": {
 					"enabled": true,
@@ -3912,24 +4196,205 @@
 			"route": "/tasks/:id",
 			"type": "detail",
 			"title": "Task",
+			"_note": "Task/action-item archetype, drawn as its board draws it (PqTaak). A task is a to-do an agent works to completion. The header names the kind and the status as pills, with Call and Finish beside Edit; the what-now card lists what the task still needs and carries the call button; the body is one strip of tabs (Overview, History) and the side column holds Related and History. Call opens the callback number; Finish and Log an attempt post to the callback endpoints (CallbackController), which check the assignee and the status move server side. THE BOARD'S FINISH CARD (a result field with Log attempt and Finish) has no widget yet; Finish in the header does the same without the result text. NO email/calendar body widgets: task declares no comms linkedType.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "crmTask",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Task/action-item archetype (bespoke-detail-pages). A task is a to-do an agent works to completion, so the body leads with the execution fields (type, status, priority, deadline, assignee user/group, callbackPhoneNumber, preferredTimeSlot, attempts, resultText) 8-wide and the source records it hangs off (client, request, originating contactmoment) at 4-wide. Documents full-width for any attached result artefact. NO email/calendar body widgets — task declares no comms linkedType; a callback task carries the phone number as a field, not a live mailbox. No child collection, so no object-list.",
+				"extend": [
+					"clientId"
+				],
+				"breadcrumb": {
+					"label": "Tasks",
+					"route": "Tasks"
+				},
+				"typePill": {
+					"field": "type",
+					"colorMap": {
+						"callbackRequest": "purple",
+						"followUpTask": "success",
+						"informationRequest": "warning"
+					}
+				},
+				"statusPill": {
+					"field": "status",
+					"colorMap": {
+						"open": "primary",
+						"in_progress": "primary",
+						"completed": "success",
+						"expired": "error"
+					}
+				},
+				"showTypeEyebrow": false,
+				"headerFields": [
+					{
+						"key": "deadline",
+						"format": "date",
+						"warnWhenPast": true
+					}
+				],
+				"stageField": "status",
+				"headerActions": [
+					{
+						"id": "call",
+						"label": "Call them",
+						"type": "navigate",
+						"target": "tel:@object.callbackPhoneNumber",
+						"icon": "PhoneOutline",
+						"visibleWhen": {
+							"field": "callbackPhoneNumber",
+							"op": "notEmpty"
+						}
+					},
+					{
+						"id": "complete",
+						"label": "Finish",
+						"type": "api-call",
+						"icon": "Check",
+						"url": "/apps/pipelinq/api/callbacks/@objectId/complete",
+						"method": "POST",
+						"successMessage": "The task is finished.",
+						"errorMessage": "Could not finish this task.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"open",
+								"in_progress"
+							]
+						}
+					},
+					{
+						"id": "claim",
+						"label": "Assign to me",
+						"type": "api-call",
+						"icon": "AccountArrowLeftOutline",
+						"url": "/apps/pipelinq/api/callbacks/@objectId/claim",
+						"method": "POST",
+						"successMessage": "Assigned to you.",
+						"errorMessage": "Could not assign this task to you.",
+						"visibleWhen": {
+							"field": "assigneeUserId",
+							"op": "empty"
+						}
+					}
+				],
+				"quickActions": [
+					"call",
+					"complete"
+				],
+				"actionsMenu": {
+					"label": "More"
+				},
+				"primaryActionByStage": {
+					"open": "call",
+					"in_progress": "call"
+				},
+				"nextStep": {
+					"title": "What now?",
+					"stages": {
+						"open": {
+							"title": "What now? Get this task done before the deadline",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "clientId"
+								},
+								{
+									"label": "A handler is assigned",
+									"doneField": "assigneeUserId"
+								},
+								{
+									"label": "The result is written down",
+									"doneField": "resultText"
+								}
+							],
+							"after": "Then: write down the result and finish the task"
+						},
+						"in_progress": {
+							"title": "What now? Get this task done before the deadline",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "clientId"
+								},
+								{
+									"label": "A handler is assigned",
+									"doneField": "assigneeUserId"
+								},
+								{
+									"label": "The result is written down",
+									"doneField": "resultText"
+								}
+							],
+							"after": "Then: write down the result and finish the task"
+						}
+					}
+				},
 				"widgets": [
+					{
+						"id": "task-panels",
+						"type": "tabs",
+						"title": "Task",
+						"icon": "ClipboardCheckOutline",
+						"content": {
+							"ariaLabel": "Task",
+							"variant": "segmented",
+							"tabs": [
+								{
+									"widgetId": "task-data",
+									"label": "Overview"
+								},
+								{
+									"widgetId": "task-history",
+									"label": "History"
+								}
+							]
+						}
+					},
 					{
 						"id": "task-data",
 						"type": "data",
 						"title": "Task",
 						"icon": "ClipboardCheckOutline",
 						"content": {
-							"columns": 2,
+							"title": "Task",
+							"columns": 3,
+							"include": [
+								"type",
+								"status",
+								"priority",
+								"deadline",
+								"assigneeUserId",
+								"assigneeGroupId",
+								"callbackPhoneNumber",
+								"preferredTimeSlot",
+								"attempts",
+								"resultText",
+								"description",
+								"contactMomentSummary"
+							],
 							"overrides": {
-								"assigneeUserId": { "formatter": "userDisplayName" },
-								"createdBy": { "formatter": "userDisplayName" }
+								"assigneeUserId": {
+									"formatter": "userDisplayName"
+								},
+								"createdBy": {
+									"formatter": "userDisplayName"
+								},
+								"description": {
+									"gridColumn": 3
+								},
+								"contactMomentSummary": {
+									"gridColumn": 3
+								}
 							}
 						}
+					},
+					{
+						"id": "task-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
 					},
 					{
 						"id": "task-related",
@@ -3948,30 +4413,29 @@
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "task-data",
+						"widgetId": "task-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 4
-					},
-					{
-						"id": "2",
-						"widgetId": "task-related",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 4
+						"gridWidth": 12,
+						"gridHeight": 8,
+						"showTitle": false
 					},
 					{
 						"id": "3",
 						"widgetId": "task-files",
 						"gridX": 0,
-						"gridY": 4,
+						"gridY": 8,
 						"gridWidth": 12,
 						"gridHeight": 3
 					}
 				],
-				"lifecycleActions": { "field": "status" },
+				"sideColumn": [
+					"task-related",
+					"task-history"
+				],
+				"lifecycleActions": {
+					"field": "status"
+				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -3980,7 +4444,11 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
 				}
