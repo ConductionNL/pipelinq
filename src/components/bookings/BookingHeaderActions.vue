@@ -5,7 +5,8 @@
   - The BookingDetail page's `actionsComponent`: the booking admin actions as
   - the row of buttons the PqAfspraak board draws under the title. The five
   - status actions are always there and disabled while they do not apply, so
-  - the row keeps its place; Send reminder joins them when it applies.
+  - the row keeps its place. Send reminder lives on the When and where card
+  - (BookingDetailSection part `when`), where the board puts it.
   -
   - They POST to BookingService's /api/bookings/{id}/{action} endpoints, which
   - carry side-effects (confirmation / reminder emails, no-show fees) and
@@ -73,14 +74,6 @@
 			</template>
 			{{ t('pipelinq', 'Cancel') }}
 		</NcButton>
-		<NcButton
-			v-if="canSendReminder"
-			variant="tertiary"
-			:disabled="busy"
-			data-testid="booking-action-send-reminder"
-			@click="run('send-reminder', {}, t('pipelinq', 'Reminder dispatched.'))">
-			{{ t('pipelinq', 'Send reminder') }}
-		</NcButton>
 
 		<RescheduleBookingDialog
 			v-if="showReschedule"
@@ -110,8 +103,6 @@ import CashCheck from 'vue-material-design-icons/CashCheck.vue'
 import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import CancelBookingDialog from '../../dialogs/CancelBookingDialog.vue'
 import RescheduleBookingDialog from '../../dialogs/RescheduleBookingDialog.vue'
-
-const HOUR_MS = 60 * 60 * 1000
 
 export default {
 	name: 'BookingHeaderActions',
@@ -192,20 +183,6 @@ export default {
 			)
 		},
 
-		/**
-		 * Whether the booking starts more than an hour from now.
-		 *
-		 * @return {boolean}
-		 *
-		 * @spec openspec/specs/appointment-booking/spec.md
-		 */
-		hourAway() {
-			return (
-				Boolean(this.booking.startAt)
-				&& new Date(this.booking.startAt).getTime() - Date.now() > HOUR_MS
-			)
-		},
-
 		isOpen() {
 			return ['confirmed', 'pending-deposit'].includes(this.booking.status)
 		},
@@ -265,18 +242,6 @@ export default {
 			return this.isOpen && this.isFuture
 		},
 
-		/**
-		 * Whether Send reminder applies: a confirmed booking more than an hour away.
-		 *
-		 * @return {boolean}
-		 *
-		 * @spec openspec/specs/appointment-booking/spec.md
-		 */
-		canSendReminder() {
-			return (
-				this.booking.status === 'confirmed' && this.isFuture && this.hourAway
-			)
-		},
 	},
 
 	methods: {

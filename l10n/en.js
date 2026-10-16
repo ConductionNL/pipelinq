@@ -7705,7 +7705,11 @@ OC.L10N.register(
         "{slot}, same length": "{slot}, same length",
         "The customer gets a new confirmation and the reminder moves with the appointment.": "The customer gets a new confirmation and the reminder moves with the appointment.",
         "The customer gets a cancellation message. The booking stays in the list with a cancelled status.": "The customer gets a cancellation message. The booking stays in the list with a cancelled status.",
-        "The deposit of {amount} is refunded.": "The deposit of {amount} is refunded."
+        "The deposit of {amount} is refunded.": "The deposit of {amount} is refunded.",
+        "{startAt|weekday} · {startAt|time} to {endAt|time}": "{startAt|weekday} · {startAt|time} to {endAt|time}",
+        "Contact details and earlier tickets": "Contact details and earlier tickets",
+        "Reminder": "Reminder",
+        "Not sent yet": "Not sent yet"
     },
     "nplurals=2; plural=(n != 1);"
 )

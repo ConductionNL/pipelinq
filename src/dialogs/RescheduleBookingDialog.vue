@@ -72,7 +72,7 @@ export default {
 	emits: ['confirm', 'cancel'],
 	data() {
 		return {
-			newStartAt: this.formatForInput(this.currentStartAt),
+			newStartAt: this.formatForInput(this.weekLater(this.currentStartAt)),
 			error: '',
 		}
 	},
@@ -123,6 +123,17 @@ export default {
 
 	methods: {
 		/**
+		 * The same time a week later, the first suggestion for the new start.
+		 *
+		 * @param {string} iso The current start.
+		 * @return {string} The suggested start, or '' without a current start.
+		 */
+		weekLater(iso) {
+			const start = Date.parse(iso || '')
+			return Number.isFinite(start) ? new Date(start + 7 * 24 * 60 * 60 * 1000).toISOString() : ''
+		},
+
+		/**
 		 * Convert an ISO-8601 timestamp to the value format expected by
 		 * `<input type="datetime-local">` (YYYY-MM-DDTHH:MM in local time).
 		 *
@@ -163,6 +174,8 @@ export default {
 
 .reschedule-form__slots {
 	display: grid;
+	justify-content: start;
+	text-align: start;
 	grid-template-columns: max-content 1fr;
 	gap: 8px 16px;
 	margin: 0;

@@ -7632,7 +7632,11 @@ OC.L10N.register(
         "{slot}, same length": "{slot}, even lang",
         "The customer gets a new confirmation and the reminder moves with the appointment.": "De klant krijgt een nieuwe bevestiging en de herinnering schuift mee met de afspraak.",
         "The customer gets a cancellation message. The booking stays in the list with a cancelled status.": "De klant krijgt een annuleringsbericht. De boeking blijft in de lijst staan met de status Geannuleerd.",
-        "The deposit of {amount} is refunded.": "De aanbetaling van {amount} wordt terugbetaald."
+        "The deposit of {amount} is refunded.": "De aanbetaling van {amount} wordt terugbetaald.",
+        "{startAt|weekday} · {startAt|time} to {endAt|time}": "{startAt|weekday} · {startAt|time} tot {endAt|time}",
+        "Contact details and earlier tickets": "Contactgegevens en eerdere tickets",
+        "Reminder": "Herinnering",
+        "Not sent yet": "Nog niet"
     },
     "nplurals=2; plural=(n != 1);"
 )

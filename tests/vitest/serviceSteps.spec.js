@@ -70,8 +70,9 @@ describe('the booking page', () => {
 		]) {
 			expect(fields).toContain(field)
 		}
-		// Status changes come from the audit trail and the statusHistory list.
-		expect(timeline.content.auditTrail).toBe(true)
+		// Status changes come from the statusHistory list. The audit trail,
+		// read events included, is the History tab (PqAfspraak).
+		expect(timeline.content.auditTrail).toBe(false)
 		const [history] = timeline.content.lists
 		const item =
 			bookingRegister.components.schemas.appointmentBooking.properties
