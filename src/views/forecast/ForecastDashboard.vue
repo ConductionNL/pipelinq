@@ -158,6 +158,7 @@ import {
 	attainmentPercent,
 	gapToQuota,
 	isAtRisk,
+	latestPerOwner,
 	projectedAttainment,
 } from '../../services/forecastMath.js'
 
@@ -375,7 +376,7 @@ export default {
 					periodId: this.periodId,
 					level: this.childLevel,
 				})
-				this.rows = data.snapshots || []
+				this.rows = latestPerOwner(data.snapshots || [])
 			} catch {
 				this.rows = []
 			} finally {

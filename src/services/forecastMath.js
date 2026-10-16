@@ -117,3 +117,23 @@ export function sumSnapshotsByDate(snapshots) {
 		String(a.date).localeCompare(String(b.date)),
 	)
 }
+
+/**
+ * Keep each owner's newest snapshot, so a period that has been snapshotted
+ * every week counts every owner once.
+ *
+ * @param {Array<object>} snapshots Rows with owner_id and as_of_date.
+ * @return {Array<object>} One row per owner, in the order owners first appear.
+ * @spec exclude forecast snapshots have no owning requirement, see
+ *   ForecastSettings::load for the same gap
+ */
+export function latestPerOwner(snapshots) {
+	const latest = new Map()
+	for (const row of snapshots) {
+		const current = latest.get(row.owner_id)
+		if (!current || String(row.as_of_date) > String(current.as_of_date)) {
+			latest.set(row.owner_id, row)
+		}
+	}
+	return [...latest.values()]
+}

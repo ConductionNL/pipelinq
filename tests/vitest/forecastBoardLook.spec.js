@@ -12,7 +12,10 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { sumSnapshotsByDate } from '../../src/services/forecastMath.js'
+import {
+	latestPerOwner,
+	sumSnapshotsByDate,
+} from '../../src/services/forecastMath.js'
 
 function view(name) {
 	return readFileSync(
@@ -36,6 +39,17 @@ describe('sumSnapshotsByDate', () => {
 
 	it('answers an empty list with no points', () => {
 		expect(sumSnapshotsByDate([])).toEqual([])
+	})
+})
+
+describe('latestPerOwner', () => {
+	it('keeps the newest snapshot of each owner', () => {
+		const rows = latestPerOwner([
+			{ owner_id: 'a', as_of_date: '2026-10-05', commit: 1 },
+			{ owner_id: 'b', as_of_date: '2026-10-05', commit: 2 },
+			{ owner_id: 'a', as_of_date: '2026-10-12', commit: 3 },
+		])
+		expect(rows.map((r) => r.commit)).toEqual([3, 2])
 	})
 })
 
