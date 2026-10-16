@@ -7677,7 +7677,6 @@ OC.L10N.register(
         "{shown} of {total} transactions · newest first": "{shown} of {total} transactions · newest first",
         "Open a transaction to print or mail the receipt, or to register a return.": "Open a transaction to print or mail the receipt, or to register a return.",
         "Z-reports": "Z-reports",
-        "{shown} of {total} day reports · bookkeeping happens in Shillinq": "{shown} of {total} day reports · bookkeeping happens in Shillinq",
         "The day close makes one Z-report per till every night. They are read-only.": "The day close makes one Z-report per till every night. They are read-only.",
         "Not booked": "Not booked",
         "Booked": "Booked",
@@ -7685,7 +7684,11 @@ OC.L10N.register(
         "To review": "To review",
         "Opening balance": "Opening balance",
         "Deposits": "Deposits",
-        "A shift closes with a blind count. The difference is checked against the margin.": "A shift closes with a blind count. The difference is checked against the margin."
+        "A shift closes with a blind count. The difference is checked against the margin.": "A shift closes with a blind count. The difference is checked against the margin.",
+        "{shown} of {total} day reports · bookkeeping happens in shillinq": "{shown} of {total} day reports · bookkeeping happens in shillinq",
+        "Filter by identifier or cashier": "Filter by identifier or cashier",
+        "Filter by identifier or till": "Filter by identifier or till",
+        "Filter by cashier or till": "Filter by cashier or till"
     },
     "nplurals=2; plural=(n != 1);"
 )

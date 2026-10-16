@@ -4735,7 +4735,10 @@
 				"showMassDelete": false,
 				"sortKey": "reportDate",
 				"sortOrder": "desc",
-				"countText": "{shown} of {total} day reports · bookkeeping happens in Shillinq",
+				"countText": "{shown} of {total} day reports · bookkeeping happens in shillinq",
+				"searchPlaceholder": "Filter by identifier or till",
+				"rowTitle": "plain",
+				"headerButtons": [ { "action": "export", "label": "Download", "icon": "TrayArrowDown" } ],
 				"footerNote": "The day close makes one Z-report per till every night. They are read-only.",
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true, "showCount": true },
@@ -4746,8 +4749,8 @@
 					{ "key": "reference", "label": "Identifier", "cellClass": "cn-cell--strong" },
 					{ "key": "reportDate", "label": "Date", "format": "date" },
 					{ "key": "terminalId", "label": "Till" },
-					{ "key": "transactionCount", "label": "Transactions" },
-					{ "key": "total", "label": "Total", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } },
+					{ "key": "transactionCount", "label": "Transactions", "cellClass": "cn-cell--end" },
+					{ "key": "total", "label": "Total", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 }, "cellClass": "cn-cell--end" },
 					{
 						"key": "status",
 						"label": "Status",
@@ -4767,7 +4770,8 @@
 					{
 						"key": "createdAt",
 						"label": "Created",
-						"format": "date-time"
+						"widget": "date",
+						"widgetProps": { "showTime": true }
 					}
 				],
 				"actions": [

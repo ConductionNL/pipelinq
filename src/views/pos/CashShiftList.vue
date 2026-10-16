@@ -13,6 +13,9 @@
 		<CnIndexPage
 			ref="index"
 			:title="t('pipelinq', 'Cash drawer')"
+			:showTitle="true"
+			:searchPlaceholder="t('pipelinq', 'Filter by cashier or till')"
+			rowTitle="plain"
 			register="pipelinq"
 			schema="cashShift"
 			:countText="t('pipelinq', 'Manage cash shifts: opening float, drops, blind counting and reconciliation')"
@@ -97,7 +100,7 @@ export default {
 				},
 				{ key: 'floatAt', label: t('pipelinq', 'Opened'), widget: 'date', widgetProps: { timeOnly: true, showTime: true } },
 				{ key: 'closedAt', label: t('pipelinq', 'Closed'), widget: 'date', widgetProps: { timeOnly: true, showTime: true } },
-				{ key: 'floatAmount', label: t('pipelinq', 'Opening balance'), formatter: 'objectCurrency', formatterOptions: { decimals: 2 } },
+				{ key: 'floatAmount', label: t('pipelinq', 'Opening balance'), formatter: 'objectCurrency', formatterOptions: { decimals: 2 }, cellClass: 'cn-cell--end' },
 				{
 					key: 'drops',
 					label: t('pipelinq', 'Deposits'),
@@ -114,8 +117,7 @@ export default {
 		 */
 		headerButtons() {
 			return [
-				{ action: 'export', label: t('pipelinq', 'Download') },
-				{ action: 'actions-menu' },
+				{ action: 'export', label: t('pipelinq', 'Download'), icon: 'TrayArrowDown' },
 				{ action: 'add', variant: 'primary', icon: 'Plus', label: t('pipelinq', 'Open shift') },
 			]
 		},

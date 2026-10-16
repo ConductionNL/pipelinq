@@ -7604,7 +7604,6 @@ OC.L10N.register(
         "{shown} of {total} transactions · newest first": "{shown} van {total} transacties · nieuwste eerst",
         "Open a transaction to print or mail the receipt, or to register a return.": "Open een transactie om de bon te printen of te mailen, of om een retour te registreren.",
         "Z-reports": "Z-rapporten",
-        "{shown} of {total} day reports · bookkeeping happens in Shillinq": "{shown} van {total} dagrapporten · de boekhouding gebeurt in Shillinq",
         "The day close makes one Z-report per till every night. They are read-only.": "De dagafsluiting maakt elke nacht één Z-rapport per kassa. Ze zijn alleen-lezen.",
         "Not booked": "Niet geboekt",
         "Booked": "Geboekt",
@@ -7612,7 +7611,11 @@ OC.L10N.register(
         "To review": "Te controleren",
         "Opening balance": "Beginsaldo",
         "Deposits": "Afstortingen",
-        "A shift closes with a blind count. The difference is checked against the margin.": "Een dienst wordt gesloten met een blinde telling. Het verschil wordt getoetst aan de marge."
+        "A shift closes with a blind count. The difference is checked against the margin.": "Een dienst wordt gesloten met een blinde telling. Het verschil wordt getoetst aan de marge.",
+        "{shown} of {total} day reports · bookkeeping happens in shillinq": "{shown} van {total} dagrapporten · de boekhouding gebeurt in shillinq",
+        "Filter by identifier or cashier": "Filter op kenmerk of kassamedewerker",
+        "Filter by identifier or till": "Filter op kenmerk of kassa",
+        "Filter by cashier or till": "Filter op kassamedewerker of kassa"
     },
     "nplurals=2; plural=(n != 1);"
 )
