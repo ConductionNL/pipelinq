@@ -39,6 +39,7 @@
 		objectType="appointmentResource"
 		:objectStore="objectStore"
 		:objectId="resourceId"
+		:follow="false"
 		:sidebarProps="sidebarProps">
 		<template #actions>
 			<NcButton variant="secondary" @click="openEditDialog">
@@ -52,52 +53,54 @@
 			</NcButton>
 		</template>
 
+		<CnTabs card :ariaLabel="t('pipelinq', 'Resource')">
+			<CnTab :title="t('pipelinq', 'Overview')">
 		<CnDetailCard :title="t('pipelinq', 'Resource details')">
-			<dl class="resource-facts">
+			<div class="resource-facts">
 				<div class="resource-facts__item">
-					<dt>{{ t('pipelinq', 'Name') }}</dt>
-					<dd>{{ resourceData.name || '-' }}</dd>
+					<span class="resource-facts__label">{{ t('pipelinq', 'Name') }}</span>
+					<span class="resource-facts__value">{{ resourceData.name || '-' }}</span>
 				</div>
 				<div class="resource-facts__item">
-					<dt>{{ t('pipelinq', 'Type') }}</dt>
-					<dd>{{ typeLabel }}</dd>
+					<span class="resource-facts__label">{{ t('pipelinq', 'Type') }}</span>
+					<span class="resource-facts__value">{{ typeLabel }}</span>
 				</div>
 				<div class="resource-facts__item">
-					<dt>{{ t('pipelinq', 'Status') }}</dt>
-					<dd>
+					<span class="resource-facts__label">{{ t('pipelinq', 'Status') }}</span>
+					<span class="resource-facts__value">
 						<CnStatusBadge
 							:label="statusLabel"
 							:variant="resourceData.status === 'active' ? 'success' : 'default'"
 							size="small" />
-					</dd>
+					</span>
 				</div>
 				<div class="resource-facts__item">
-					<dt>{{ t('pipelinq', 'Bookable') }}</dt>
-					<dd>
+					<span class="resource-facts__label">{{ t('pipelinq', 'Bookable') }}</span>
+					<span class="resource-facts__value">
 						{{
 							resourceData.bookable
 								? t('pipelinq', 'Yes')
 								: t('pipelinq', 'No')
 						}}
-					</dd>
+					</span>
 				</div>
 				<div class="resource-facts__item">
-					<dt>{{ t('pipelinq', 'Max concurrent') }}</dt>
-					<dd>{{ resourceData.maxConcurrent || 1 }}</dd>
+					<span class="resource-facts__label">{{ t('pipelinq', 'Max concurrent') }}</span>
+					<span class="resource-facts__value">{{ resourceData.maxConcurrent || 1 }}</span>
 				</div>
 				<div class="resource-facts__item">
-					<dt>{{ t('pipelinq', 'Skills') }}</dt>
-					<dd>{{ skillsLabel }}</dd>
+					<span class="resource-facts__label">{{ t('pipelinq', 'Skills') }}</span>
+					<span class="resource-facts__value">{{ skillsLabel }}</span>
 				</div>
 				<div class="resource-facts__item">
-					<dt>{{ t('pipelinq', 'Nextcloud user') }}</dt>
-					<dd>{{ resourceData.userId || '-' }}</dd>
+					<span class="resource-facts__label">{{ t('pipelinq', 'Nextcloud user') }}</span>
+					<span class="resource-facts__value">{{ resourceData.userId || '-' }}</span>
 				</div>
 				<div class="resource-facts__item">
-					<dt>{{ t('pipelinq', 'Calendar sync link') }}</dt>
-					<dd>{{ resourceData.calendarSyncId || '-' }}</dd>
+					<span class="resource-facts__label">{{ t('pipelinq', 'Calendar sync link') }}</span>
+					<span class="resource-facts__value">{{ resourceData.calendarSyncId || '-' }}</span>
 				</div>
-			</dl>
+			</div>
 		</CnDetailCard>
 
 		<div class="resource-schedule">
@@ -116,7 +119,7 @@
 						</thead>
 						<tbody>
 							<tr v-for="(row, idx) in workingHours" :key="idx">
-								<td>{{ t('pipelinq', row.day || '-') }}</td>
+								<td>{{ dayLabel(row.day) }}</td>
 								<td>{{ row.openTime || '-' }}</td>
 								<td>{{ row.closeTime || '-' }}</td>
 							</tr>
@@ -133,15 +136,15 @@
 					<table class="viewTable">
 						<thead>
 							<tr>
-								<th scope="col">{{ t('pipelinq', 'Start') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Begin') }}</th>
 								<th scope="col">{{ t('pipelinq', 'End') }}</th>
 								<th scope="col">{{ t('pipelinq', 'Label') }}</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr v-for="(row, idx) in vacations" :key="idx">
-								<td>{{ row.startDate || '-' }}</td>
-								<td>{{ row.endDate || '-' }}</td>
+								<td>{{ shortDate(row.startDate) }}</td>
+								<td>{{ shortDate(row.endDate) }}</td>
 								<td>{{ row.label || '-' }}</td>
 							</tr>
 						</tbody>
@@ -152,6 +155,11 @@
 				</p>
 			</CnDetailCard>
 		</div>
+			</CnTab>
+			<CnTab :title="t('pipelinq', 'History')" lazy>
+				<CnAuditTrailCard register="pipelinq" schema="appointmentResource" :objectId="resourceId" />
+			</CnTab>
+		</CnTabs>
 
 		<DeleteResourceDialog
 			v-if="showDelete"
@@ -191,10 +199,13 @@
 
 <script>
 import {
+	CnAuditTrailCard,
 	CnDetailCard,
 	CnDetailPage,
 	CnFormDialog,
 	CnStatusBadge,
+	CnTab,
+	CnTabs,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -215,7 +226,10 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		CnFormDialog,
+		CnAuditTrailCard,
 		CnStatusBadge,
+		CnTab,
+		CnTabs,
 		Pencil,
 		ResourceForm,
 		ResourceHoursEditor,
@@ -449,6 +463,36 @@ export default {
 
 	methods: {
 		/**
+		 * A stored weekday ("tuesday") as its label ("Dinsdag").
+		 *
+		 * @param {string} day The stored day.
+		 * @return {string} The label.
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		dayLabel(day) {
+			const word = String(day || '')
+			if (word === '') {
+				return '-'
+			}
+			return t('pipelinq', word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+		},
+
+		/**
+		 * A stored date ("2026-10-19") as a short date ("19 okt 2026").
+		 *
+		 * @param {string} value The stored date.
+		 * @return {string} The date, or '-' when empty.
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		shortDate(value) {
+			const date = new Date(String(value || ''))
+			if (!value || Number.isNaN(date.getTime())) {
+				return value || '-'
+			}
+			return new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' }).format(date)
+		},
+
+		/**
 		 * Fetch the resource schema and open the edit dialog on it.
 		 *
 		 * @return {Promise<void>}
@@ -606,7 +650,6 @@ export default {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 0 24px;
-	margin: 0;
 }
 
 .resource-facts__item {
@@ -614,13 +657,14 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 }
 
-.resource-facts__item dt {
+.resource-facts__label {
+	display: block;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
 
-.resource-facts__item dd {
-	margin: 0;
+.resource-facts__value {
+	display: block;
 	font-weight: 600;
 }
 

@@ -7619,7 +7619,8 @@ OC.L10N.register(
         "Resource details": "Gegevens resource",
         "This resource cannot be booked in these periods.": "In deze periodes kun je niet boeken.",
         "Call in": "Bellen",
-        "Customers who walk in without an appointment, oldest first, and calling the next one.": "Klanten die zonder afspraak binnenlopen, de langst wachtende eerst, en de volgende oproepen."
+        "Customers who walk in without an appointment, oldest first, and calling the next one.": "Klanten die zonder afspraak binnenlopen, de langst wachtende eerst, en de volgende oproepen.",
+        "Begin": "Begin"
     },
     "nplurals=2; plural=(n != 1);"
 )

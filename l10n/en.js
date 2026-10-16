@@ -7692,7 +7692,8 @@ OC.L10N.register(
         "Resource details": "Resource details",
         "This resource cannot be booked in these periods.": "This resource cannot be booked in these periods.",
         "Call in": "Call in",
-        "Customers who walk in without an appointment, oldest first, and calling the next one.": "Customers who walk in without an appointment, oldest first, and calling the next one."
+        "Customers who walk in without an appointment, oldest first, and calling the next one.": "Customers who walk in without an appointment, oldest first, and calling the next one.",
+        "Begin": "Begin"
     },
     "nplurals=2; plural=(n != 1);"
 )

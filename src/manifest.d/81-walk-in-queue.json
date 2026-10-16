@@ -28,6 +28,8 @@
 				"footerNote": "Call next calls the customer who has waited longest. A customer without a name shows as Anonymous customer.",
 				"emptyText": "Nobody has walked in yet today.",
 				"inlineActionCount": 2,
+				"showViewToggle": false,
+				"headerButtons": [ { "action": "call-next", "label": "Call next", "variant": "primary", "icon": "BellRingOutline" } ],
 				"headerActions": [
 					{ "id": "call-next", "label": "Call next", "icon": "BellRingOutline", "variant": "primary", "handler": "walkInCallNext" }
 				],
@@ -40,7 +42,7 @@
 							"label": "Waiting",
 							"caption": "in the queue now",
 							"format": { "style": "number", "decimals": 0 },
-							"source": { "register": "pipelinq", "schema": "walkInTicket", "metric": "count", "filter": { "status": "waiting" } }
+							"source": { "register": "pipelinq", "schema": "walkInTicket", "metric": "count", "filter": { "status": "waiting", "arrivedAt": { "gte": "@today" } } }
 						}
 					},
 					{
@@ -51,7 +53,7 @@
 							"label": "Being helped",
 							"caption": "called to a desk",
 							"format": { "style": "number", "decimals": 0 },
-							"source": { "register": "pipelinq", "schema": "walkInTicket", "metric": "count", "filter": { "status": "called" } }
+							"source": { "register": "pipelinq", "schema": "walkInTicket", "metric": "count", "filter": { "status": "called", "arrivedAt": { "gte": "@today" } } }
 						}
 					},
 					{
