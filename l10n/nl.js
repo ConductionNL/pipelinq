@@ -7604,7 +7604,7 @@ OC.L10N.register(
         "Filter by title": "Filter op titel",
         "A post can go to several networks at once, each with its own text.": "Een bericht kan tegelijk naar meerdere netwerken, elk met een eigen tekst.",
         "Awaiting approval": "Wacht op goedkeuring",
-        "Written by an agent": "Geschreven door een agent",
+        "Written by an agent": "Geschreven door een medewerker",
         "Points, tiers and what the outstanding points are worth": "Punten, niveaus en wat de openstaande punten waard zijn",
         "Search insight": "Zoekinzicht",
         "Where residents find us in search engines, and what others publish": "Waar inwoners ons vinden in zoekmachines, en wat anderen publiceren"
