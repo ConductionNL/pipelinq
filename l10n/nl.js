@@ -7641,7 +7641,22 @@ OC.L10N.register(
         "Association": "Vereniging",
         "Foundation": "Stichting",
         "Public body": "Overheidsorgaan",
-        "Other legal form": "Andere rechtsvorm"
+        "Other legal form": "Andere rechtsvorm",
+        "Choose people from your address books to add as a contact": "Kies mensen uit je adresboeken om als contact toe te voegen",
+        "Search contacts": "Contacten zoeken",
+        "Importing creates a contact in Pipelinq and links it to the card, so later changes go both ways. Type at least 2 characters to search your Nextcloud contacts.": "Importeren maakt een contact in Pipelinq en koppelt het aan de kaart, zodat latere wijzigingen beide kanten op gaan. Typ minstens 2 tekens om in je Nextcloud-contacten te zoeken.",
+        "With deals": "Met deals",
+        "{shown} of {total} organisations · sorted by name": "{shown} van {total} organisaties · gesorteerd op naam",
+        "Search by name, KvK number or place": "Zoek op naam, KVK-nummer of plaats",
+        "click a column heading to sort": "klik op een kolomkop om te sorteren",
+        "Associations": "Verenigingen",
+        "Foundations": "Stichtingen",
+        "Companies": "Bedrijven",
+        "Open cases": "Open zaken",
+        "%n card in your Nextcloud address books matches \"{query}\"": ["%n kaart in je Nextcloud-adresboeken past bij \"{query}\"","%n kaarten in je Nextcloud-adresboeken passen bij \"{query}\""],
+        "%n cards in your Nextcloud address books match \"{query}\"": "%n kaarten in je Nextcloud-adresboeken passen bij \"{query}\"",
+        "Import %n contact": ["%n contact importeren","%n contacten importeren"],
+        "Import %n contacts": "%n contacten importeren"
     },
     "nplurals=2; plural=(n != 1);"
 )
