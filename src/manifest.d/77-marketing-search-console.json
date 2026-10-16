@@ -10,12 +10,6 @@
 					"label": "Search queries",
 					"icon": "Magnify",
 					"route": "SearchQueries"
-				},
-				{
-					"id": "SearchInsight",
-					"label": "Search insight",
-					"icon": "Magnify",
-					"route": "SearchInsight"
 				}
 			]
 		}
