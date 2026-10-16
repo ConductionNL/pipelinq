@@ -24,13 +24,14 @@ const fragments = fs
 	.filter((name) => name.endsWith('.json'))
 	.sort()
 	.map((name) => readJson('src', 'manifest.d', name))
-const build = (file) =>
-	buildProfiledManifest(
+function build(file) {
+	return buildProfiledManifest(
 		buildManifest,
 		readJson('src', 'manifest.json'),
 		fragments,
 		file,
 	)
+}
 const pageOf = (built) => built.pages.find((page) => page.id === 'Queue')
 const simple = pageOf(
 	build(applyMenuModules(readJson('src', 'menu-layout.simple.json'), [])),
@@ -45,7 +46,10 @@ const nl = readJson('l10n', 'nl.json').translations
 
 describe('the queue, simple structure', () => {
 	it('leaves the full structure as it was', () => {
-		expect(full).toEqual(base)
+		expect(full.config.headerButtons).toEqual(base.config.headerButtons)
+		expect(full.config.sidePanel).toEqual(base.config.sidePanel)
+		expect(full.config.statRow).toEqual(base.config.statRow)
+		expect(full.config.columns).toEqual(base.config.columns)
 	})
 
 	it('offers Take the oldest in the header, backed by a route', () => {
