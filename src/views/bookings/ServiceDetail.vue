@@ -96,7 +96,7 @@
 						>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Bookable online') }}</label>
+						<label>{{ t('pipelinq', 'Online to book') }}</label>
 						<span>{{
 							serviceData.bookableOnline
 								? t('pipelinq', 'Yes')
@@ -558,7 +558,7 @@ export default {
 				},
 
 				bookableOnline: {
-					label: t('pipelinq', 'Bookable online'),
+					label: t('pipelinq', 'Online to book'),
 					order: 11,
 				},
 

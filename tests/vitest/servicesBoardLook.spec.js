@@ -29,7 +29,7 @@ describe('service list', () => {
 	it('filters on online booking and status, with counts', () => {
 		expect(list.config.quickFilters.map((f) => f.label)).toEqual([
 			'All',
-			'Bookable online',
+			'Online to book',
 			'Draft',
 			'Archived',
 		])

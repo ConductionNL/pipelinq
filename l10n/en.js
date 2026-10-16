@@ -2631,6 +2631,7 @@ OC.L10N.register(
         "Ongeldig BSN.": "Invalid BSN.",
         "Onkosten": "Expenses",
         "Online": "Online",
+        "Online to book": "Online to book",
         "Only administrators may export to the Belastingdienst.": "Only administrators may export to the Belastingdienst.",
         "Only confirmed subscribers receive this. Anyone still awaiting confirmation is skipped.": "Only confirmed subscribers receive this. Anyone still awaiting confirmation is skipped.",
         "Only low quality (< 0.6)": "Only low quality (< 0.6)",

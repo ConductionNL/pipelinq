@@ -70,8 +70,7 @@
 						"format": {
 							"style": "number",
 							"suffix": " min"
-						},
-						"secondary": "after {bufferAfterMinutes} min"
+						}
 					},
 					{
 						"key": "price",
@@ -155,7 +154,7 @@
 						"showCount": true
 					},
 					{
-						"label": "Bookable online",
+						"label": "Online to book",
 						"filter": {
 							"bookableOnline": true
 						},
