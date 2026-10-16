@@ -339,7 +339,7 @@
 		"index": {
 			"showTitle": true,
 			"showTitleIcon": false,
-			"headerFilters": false,
+			"headerFilters": true,
 			"headerButtons": [
 				{
 					"action": "export",
