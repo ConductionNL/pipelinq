@@ -689,6 +689,11 @@ class PortalContributionProvider {
 				'attachTo' => ['app' => 'opencatalogi', 'schema' => 'collection'],
 				'rowField' => 'collectionId',
 				'fields' => ['question', 'title'],
+				// The question is what the form is for, and the receiver refuses
+				// one without it. An endpoint action names its required fields
+				// here: portaliq honours a field config's `required` only for a
+				// field a schema mandates.
+				'requiredFields' => ['question'],
 				'fieldConfigs' => [
 					'title' => ['label' => 'Onderwerp', 'size' => 'large', 'placeholder' => 'Waar gaat uw vraag over?'],
 					'question' => [
@@ -719,6 +724,7 @@ class PortalContributionProvider {
 			// leaves it off any other question and refuses it there with 409.
 			'rowWhen' => ['field' => 'status', 'in' => ['awaiting_customer']],
 			'fields' => ['ticket', 'message'],
+			'requiredFields' => ['message'],
 			'fieldConfigs' => [
 				'ticket' => ['visible' => false, 'required' => true],
 				'message' => ['label' => 'Uw reactie', 'required' => true, 'size' => 'full'],
