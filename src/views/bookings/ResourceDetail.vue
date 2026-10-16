@@ -31,111 +31,127 @@
 	<CnDetailPage
 		v-else
 		:title="resourceData.name || t('pipelinq', 'Resource')"
-		:subtitle="t('pipelinq', 'Resource')"
-		:backRoute="{ name: 'Resources' }"
-		:backLabel="t('pipelinq', 'Back to list')"
+		:breadcrumb="{ label: t('pipelinq', 'Resources'), route: 'Resources' }"
+		:typePill="typePill"
+		:statusPill="statusPill"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
-		objectType="pipelinq_resource"
+		objectType="appointmentResource"
+		:objectStore="objectStore"
 		:objectId="resourceId"
 		:sidebarProps="sidebarProps">
 		<template #actions>
-			<NcButton variant="primary" @click="openEditDialog">
+			<NcButton variant="secondary" @click="openEditDialog">
+				<template #icon>
+					<Pencil :size="20" />
+				</template>
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
-			<NcButton variant="error" @click="showDelete = true">
+			<NcButton variant="tertiary" @click="showDelete = true">
 				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>
 
-		<CnDetailCard :title="t('pipelinq', 'Resource information')">
-			<div class="info-grid">
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Name') }}</label>
-					<span>{{ resourceData.name || '-' }}</span>
+		<CnDetailCard :title="t('pipelinq', 'Resource details')">
+			<dl class="resource-facts">
+				<div class="resource-facts__item">
+					<dt>{{ t('pipelinq', 'Name') }}</dt>
+					<dd>{{ resourceData.name || '-' }}</dd>
 				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Type') }}</label>
-					<span>{{ resourceData.type || '-' }}</span>
+				<div class="resource-facts__item">
+					<dt>{{ t('pipelinq', 'Type') }}</dt>
+					<dd>{{ typeLabel }}</dd>
 				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Status') }}</label>
-					<span>{{ resourceData.status || '-' }}</span>
+				<div class="resource-facts__item">
+					<dt>{{ t('pipelinq', 'Status') }}</dt>
+					<dd>
+						<CnStatusBadge
+							:label="statusLabel"
+							:variant="resourceData.status === 'active' ? 'success' : 'default'"
+							size="small" />
+					</dd>
 				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Bookable') }}</label>
-					<span>{{
-						resourceData.bookable
-							? t('pipelinq', 'Yes')
-							: t('pipelinq', 'No')
-					}}</span>
+				<div class="resource-facts__item">
+					<dt>{{ t('pipelinq', 'Bookable') }}</dt>
+					<dd>
+						{{
+							resourceData.bookable
+								? t('pipelinq', 'Yes')
+								: t('pipelinq', 'No')
+						}}
+					</dd>
 				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Max concurrent') }}</label>
-					<span>{{ resourceData.maxConcurrent || 1 }}</span>
+				<div class="resource-facts__item">
+					<dt>{{ t('pipelinq', 'Max concurrent') }}</dt>
+					<dd>{{ resourceData.maxConcurrent || 1 }}</dd>
 				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Skills') }}</label>
-					<span>{{ skillsLabel }}</span>
+				<div class="resource-facts__item">
+					<dt>{{ t('pipelinq', 'Skills') }}</dt>
+					<dd>{{ skillsLabel }}</dd>
 				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Nextcloud user') }}</label>
-					<span>{{ resourceData.userId || '-' }}</span>
+				<div class="resource-facts__item">
+					<dt>{{ t('pipelinq', 'Nextcloud user') }}</dt>
+					<dd>{{ resourceData.userId || '-' }}</dd>
 				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Calendar sync link') }}</label>
-					<span>{{ resourceData.calendarSyncId || '-' }}</span>
+				<div class="resource-facts__item">
+					<dt>{{ t('pipelinq', 'Calendar sync link') }}</dt>
+					<dd>{{ resourceData.calendarSyncId || '-' }}</dd>
 				</div>
-			</div>
+			</dl>
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Working hours')">
-			<div v-if="!workingHours.length" class="section-empty">
-				<p>{{ t('pipelinq', 'No working hours configured.') }}</p>
-			</div>
-			<div v-else class="viewTableContainer">
-				<table class="viewTable">
-					<thead>
-						<tr>
-							<th scope="col">{{ t('pipelinq', 'Day') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Open') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Close') }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="(row, idx) in workingHours" :key="idx">
-							<td>{{ t('pipelinq', row.day || '-') }}</td>
-							<td>{{ row.openTime || '-' }}</td>
-							<td>{{ row.closeTime || '-' }}</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</CnDetailCard>
+		<div class="resource-schedule">
+			<CnDetailCard :title="t('pipelinq', 'Working hours')">
+				<div v-if="!workingHours.length" class="section-empty">
+					<p>{{ t('pipelinq', 'No working hours configured.') }}</p>
+				</div>
+				<div v-else class="viewTableContainer">
+					<table class="viewTable">
+						<thead>
+							<tr>
+								<th scope="col">{{ t('pipelinq', 'Day') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Open') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Close') }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="(row, idx) in workingHours" :key="idx">
+								<td>{{ t('pipelinq', row.day || '-') }}</td>
+								<td>{{ row.openTime || '-' }}</td>
+								<td>{{ row.closeTime || '-' }}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Vacations')">
-			<div v-if="!vacations.length" class="section-empty">
-				<p>{{ t('pipelinq', 'No vacations recorded.') }}</p>
-			</div>
-			<div v-else class="viewTableContainer">
-				<table class="viewTable">
-					<thead>
-						<tr>
-							<th scope="col">{{ t('pipelinq', 'Start') }}</th>
-							<th scope="col">{{ t('pipelinq', 'End') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Label') }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="(row, idx) in vacations" :key="idx">
-							<td>{{ row.startDate || '-' }}</td>
-							<td>{{ row.endDate || '-' }}</td>
-							<td>{{ row.label || '-' }}</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</CnDetailCard>
+			<CnDetailCard :title="t('pipelinq', 'Vacations')">
+				<div v-if="!vacations.length" class="section-empty">
+					<p>{{ t('pipelinq', 'No vacations recorded.') }}</p>
+				</div>
+				<div v-else class="viewTableContainer">
+					<table class="viewTable">
+						<thead>
+							<tr>
+								<th scope="col">{{ t('pipelinq', 'Start') }}</th>
+								<th scope="col">{{ t('pipelinq', 'End') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Label') }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="(row, idx) in vacations" :key="idx">
+								<td>{{ row.startDate || '-' }}</td>
+								<td>{{ row.endDate || '-' }}</td>
+								<td>{{ row.label || '-' }}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<p class="resource-schedule__note">
+					{{ t('pipelinq', 'This resource cannot be booked in these periods.') }}
+				</p>
+			</CnDetailCard>
+		</div>
 
 		<DeleteResourceDialog
 			v-if="showDelete"
@@ -178,11 +194,13 @@ import {
 	CnDetailCard,
 	CnDetailPage,
 	CnFormDialog,
+	CnStatusBadge,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ResourceHoursEditor from '../../components/bookings/ResourceHoursEditor.vue'
 import ResourceVacationsEditor from '../../components/bookings/ResourceVacationsEditor.vue'
 import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
@@ -197,6 +215,8 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		CnFormDialog,
+		CnStatusBadge,
+		Pencil,
 		ResourceForm,
 		ResourceHoursEditor,
 		ResourceVacationsEditor,
@@ -275,6 +295,52 @@ export default {
 			return Array.isArray(this.resourceData.vacations)
 				? this.resourceData.vacations
 				: []
+		},
+
+		/**
+		 * The resource type as its label ("Staff").
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		typeLabel() {
+			const labels = { staff: t('pipelinq', 'Staff'), room: t('pipelinq', 'Room'), equipment: t('pipelinq', 'Equipment') }
+			return labels[this.resourceData.type] || this.resourceData.type || '-'
+		},
+
+		/**
+		 * The status as its label ("Active").
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		statusLabel() {
+			const labels = { active: t('pipelinq', 'Active'), inactive: t('pipelinq', 'Inactive'), archived: t('pipelinq', 'Archived') }
+			return labels[this.resourceData.status] || this.resourceData.status || '-'
+		},
+
+		/**
+		 * The type pill above the name, as the PqResource board draws it.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		typePill() {
+			return { field: 'type', variant: 'info', labels: { staff: t('pipelinq', 'Staff'), room: t('pipelinq', 'Room'), equipment: t('pipelinq', 'Equipment') } }
+		},
+
+		/**
+		 * The status pill beside the type.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		statusPill() {
+			return {
+				field: 'status',
+				colorMap: { active: 'success', inactive: 'default', archived: 'default' },
+				labels: { active: t('pipelinq', 'Active'), inactive: t('pipelinq', 'Inactive'), archived: t('pipelinq', 'Archived') },
+			}
 		},
 
 		skillsLabel() {
@@ -536,20 +602,36 @@ export default {
 	padding: 20px 20px 0;
 }
 
-.info-grid {
+.resource-facts {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 16px;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0 24px;
+	margin: 0;
 }
 
-.info-field {
-	margin-bottom: 8px;
+.resource-facts__item {
+	padding: 8px 0;
+	border-bottom: 1px solid var(--color-border);
 }
 
-.info-field label {
-	display: block;
-	font-weight: bold;
-	margin-bottom: 2px;
+.resource-facts__item dt {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.resource-facts__item dd {
+	margin: 0;
+	font-weight: 600;
+}
+
+.resource-schedule {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	gap: 20px;
+}
+
+.resource-schedule__note {
+	margin: 12px 0 0;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }

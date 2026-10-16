@@ -25,7 +25,8 @@
 		"SettingsIntegrationsCaption",
 		"MarketingGroup",
 		"Dashboard",
-		"Prospects"
+		"Prospects",
+		"WalkInQueue"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",

@@ -23,6 +23,12 @@
 					"label": "Bookings",
 					"icon": "Calendar",
 					"route": "Bookings"
+				},
+				{
+					"id": "WalkInQueue",
+					"label": "Walk-in queue",
+					"icon": "AccountClockOutline",
+					"route": "WalkInQueue"
 				}
 			]
 		}
