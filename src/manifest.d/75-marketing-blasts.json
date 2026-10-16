@@ -71,7 +71,8 @@
 				"viewModes": [
 					"table",
 					"cards",
-					"board"
+					"board",
+					"map"
 				],
 				"board": {
 					"statusField": "entityType"
@@ -133,7 +134,13 @@
 						"label": "Updated",
 						"formatter": "date"
 					}
-				]
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
@@ -170,7 +177,8 @@
 				"viewModes": [
 					"table",
 					"cards",
-					"board"
+					"board",
+					"map"
 				],
 				"board": {
 					"statusField": "channel"
@@ -228,7 +236,13 @@
 						"key": "senderEmail",
 						"label": "Sender e-mail address"
 					}
-				]
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
@@ -267,7 +281,8 @@
 				"viewModes": [
 					"table",
 					"cards",
-					"board"
+					"board",
+					"map"
 				],
 				"board": {
 					"statusField": "status"
@@ -491,7 +506,13 @@
 						"filterable": false,
 						"formatter": "blastNote"
 					}
-				]
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
