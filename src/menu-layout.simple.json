@@ -25,7 +25,22 @@
 		"SettingsIntegrationsCaption",
 		"MarketingGroup",
 		"Dashboard",
-		"Prospects"
+		"Prospects",
+		"Segments",
+		"Templates",
+		"Articles",
+		"MailingLists",
+		"Blasts",
+		"Campaigns",
+		"BlastPerformance",
+		"Journeys",
+		"SocialAccounts",
+		"SocialPosts",
+		"SocialPerformance",
+		"KeywordIntelligence",
+		"CompetitorWatches",
+		"ConnectionAudit",
+		"SearchQueries"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",
@@ -392,23 +407,7 @@
 		},
 		"marketing": {
 			"label": "Marketing",
-			"ids": [
-				"Segments",
-				"Templates",
-				"Articles",
-				"MailingLists",
-				"Blasts",
-				"Campaigns",
-				"BlastPerformance",
-				"Journeys",
-				"SocialAccounts",
-				"SocialPosts",
-				"SocialPerformance",
-				"KeywordIntelligence",
-				"CompetitorWatches",
-				"ConnectionAudit",
-				"SearchQueries"
-			],
+			"ids": [],
 			"menu": [
 				{
 					"id": "MarketingCaption",
