@@ -2745,7 +2745,7 @@ OC.L10N.register(
         "Payment completed.": "Betaling afgerond.",
         "Payment failed": "Betaling mislukt",
         "Payment method": "Betaalmethode",
-        "Payment methods": "Betaalmethoden",
+        "Payment methods": "Betaalwijzen",
         "Payment pending": "Betaling in behandeling",
         "Payment providers (PSP)": "Betalingsproviders (PSP)",
         "Payment reversed.": "Betaling teruggeboekt.",
@@ -4130,7 +4130,7 @@ OC.L10N.register(
         "VAT": "BTW",
         "VAT %": "Btw-percentage",
         "VAT amount": "BTW bedrag",
-        "VAT breakdown": "BTW uitsplitsing",
+        "VAT breakdown": "Btw-uitsplitsing",
         "VAT number": "Btw-nummer",
         "VAT rate": "Btw-tarief",
         "VAT {rate}%": "Btw {rate}%",
@@ -4441,7 +4441,7 @@ OC.L10N.register(
         "Your request": "Uw verzoek",
         "Your request has been submitted ({id}). Expected response: {eta}.": "Uw verzoek is ingediend ({id}). Verwachte reactie: {eta}.",
         "Your session expires in {seconds} seconds.": "Uw sessie verloopt over {seconds} seconden.",
-        "Z-report": "Z-report",
+        "Z-report": "Z-rapport",
         "Z-report niet gevonden.": "Z-report niet gevonden.",
         "Z-report niet kunnen laden.": "Z-report niet kunnen laden.",
         "Zero (0%)": "Nul (0%)",
@@ -7599,7 +7599,12 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC nog niet gecontroleerd",
         "Ringing": "Gaat over",
         "Presence": "Aanwezigheid",
-        "Recording": "Opname"
+        "Recording": "Opname",
+        "Bookkeeping": "Boekhouding",
+        "Z-reports": "Z-rapporten",
+        "To review": "Te controleren",
+        "Ready to book": "Klaar om te boeken",
+        "Booked": "Geboekt"
     },
     "nplurals=2; plural=(n != 1);"
 )

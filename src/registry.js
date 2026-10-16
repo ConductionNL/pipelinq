@@ -726,6 +726,20 @@ const registry = {
 		component: ZReportBookkeepingSection,
 		_note: 'Z-report in-body section for the declarative type:"detail" ZReportDetail page: BTW + payment-method breakdown tables (array fields on the object, not FK children) plus the shillinq bookkeeping-status projection and the manager-gated, idempotent re-raise action (POST /api/pos-bookkeeping/post). Self-fetches by @objectId so it stays in sync after a re-raise. The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
 	},
+	ZReportBookkeepingWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ZReportBookkeepingWidget',
+			ZReportBookkeepingSection,
+			({ objectId, content }) => ({
+				zReportId: objectId,
+				part: content.part || 'all',
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'One block of the Z-report section as a card (PqZRapport): content.part is bookkeeping (the shillinq status and Re-raise), tax (the VAT breakdown) or payments (the payment methods).',
+	},
 	PosCustomerSettingsView: {
 		kind: 'page',
 		component: PosCustomerSettingsView,

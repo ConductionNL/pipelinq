@@ -23,8 +23,8 @@
 	<div class="z-report-section">
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
-			<section class="z-report-section__block">
-				<h4>{{ t('pipelinq', 'Accounting status') }}</h4>
+			<section v-if="shows('bookkeeping')" class="z-report-section__block">
+				<h4 v-if="part === 'all'">{{ t('pipelinq', 'Accounting status') }}</h4>
 				<div class="info-grid">
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'shillinq posting status') }}</label>
@@ -63,8 +63,8 @@
 				</NcButton>
 			</section>
 
-			<section class="z-report-section__block">
-				<h4>{{ t('pipelinq', 'VAT breakdown') }}</h4>
+			<section v-if="shows('tax')" class="z-report-section__block">
+				<h4 v-if="part === 'all'">{{ t('pipelinq', 'VAT breakdown') }}</h4>
 				<table
 					class="z-report-section__table"
 					data-testid="z-report-tax-table">
@@ -92,8 +92,8 @@
 				</table>
 			</section>
 
-			<section class="z-report-section__block">
-				<h4>{{ t('pipelinq', 'Payment methods') }}</h4>
+			<section v-if="shows('payments')" class="z-report-section__block">
+				<h4 v-if="part === 'all'">{{ t('pipelinq', 'Payment methods') }}</h4>
 				<table
 					class="z-report-section__table"
 					data-testid="z-report-payment-table">
@@ -166,6 +166,17 @@ export default {
 		zReportId: {
 			type: String,
 			default: '',
+		},
+
+		/**
+		 * Which block to render: `bookkeeping`, `tax`, `payments`, or `all`
+		 * (the three under their own headings, as the body section shows
+		 * them). One block is a card on the PqZRapport board, titled by the
+		 * card.
+		 */
+		part: {
+			type: String,
+			default: 'all',
 		},
 	},
 
@@ -240,6 +251,17 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Whether a block renders for the chosen part.
+		 *
+		 * @param {string} block The block name.
+		 * @return {boolean}
+		 * @spec openspec/changes/screens-pos-details-board/specs/pos-end-of-day-bookkeeping/spec.md
+		 */
+		shows(block) {
+			return this.part === 'all' || this.part === block
+		},
+
 		formatEur,
 		/**
 		 * Load the Z-report so the breakdown tables + bookkeeping projection render.

@@ -7672,7 +7672,12 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Bookkeeping": "Bookkeeping",
+        "Z-reports": "Z-reports",
+        "To review": "To review",
+        "Ready to book": "Ready to book",
+        "Booked": "Booked"
     },
     "nplurals=2; plural=(n != 1);"
 )

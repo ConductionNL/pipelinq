@@ -4565,6 +4565,29 @@
 				"_note": "FINANCIAL archetype (bespoke-detail-pages). A cash-drawer shift is a cash-management ledger record, so NO comms leaves (cashShift declares no email/calendar linkedType). Two columns: the shift fields 8-wide beside the Opening float and Drops tiles and the cash-reconciliation variance; the cash drops (CashShiftDropsWidget: an object-list on cashDrop, FK 'shift', with Add drop) beside Related. Audit-trail is a sidebar tab.",
 				"widgets": [
 					{
+						"id": "shift-panels",
+						"type": "tabs",
+						"title": "Shift",
+						"icon": "ViewDashboard",
+						"content": {
+							"ariaLabel": "Shift",
+							"tabs": [
+								{
+									"widgetIds": [
+										"shift-data",
+										"shift-variance",
+										"shift-drops"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "shift-history",
+									"label": "History"
+								}
+							]
+						}
+					},
+					{
 						"id": "shift-data",
 						"type": "data",
 						"title": "Shift",
@@ -4572,8 +4595,12 @@
 						"content": {
 							"columns": 2,
 							"overrides": {
-								"operator": { "formatter": "userDisplayName" },
-								"managedBy": { "formatter": "userDisplayName" }
+								"operator": {
+									"formatter": "userDisplayName"
+								},
+								"managedBy": {
+									"formatter": "userDisplayName"
+								}
 							}
 						}
 					},
@@ -4591,7 +4618,9 @@
 									"metric": "sum",
 									"field": "floatAmount",
 									"currency": "EUR",
-									"filter": { "id": "@objectId" }
+									"filter": {
+										"id": "@objectId"
+									}
 								}
 							]
 						}
@@ -4609,7 +4638,9 @@
 									"schema": "cashDrop",
 									"metric": "count",
 									"countLabel": "drops",
-									"filter": { "shift": "@objectId" }
+									"filter": {
+										"shift": "@objectId"
+									}
 								}
 							]
 						}
@@ -4628,13 +4659,30 @@
 						"content": {
 							"register": "pipelinq",
 							"schema": "cashDrop",
-							"filter": { "shift": "@objectId" },
-							"sort": { "field": "droppedAt", "dir": "desc" },
+							"filter": {
+								"shift": "@objectId"
+							},
+							"sort": {
+								"field": "droppedAt",
+								"dir": "desc"
+							},
 							"columns": [
-								{ "key": "reason", "label": "Reden" },
-								{ "key": "amount", "label": "Bedrag" },
-								{ "key": "droppedAt", "label": "Op" },
-								{ "key": "droppedBy", "label": "Door" }
+								{
+									"key": "reason",
+									"label": "Reden"
+								},
+								{
+									"key": "amount",
+									"label": "Bedrag"
+								},
+								{
+									"key": "droppedAt",
+									"label": "Op"
+								},
+								{
+									"key": "droppedBy",
+									"label": "Door"
+								}
 							],
 							"limit": 25,
 							"allowCreate": false,
@@ -4646,56 +4694,23 @@
 						"type": "related",
 						"title": "Related",
 						"icon": "LinkVariant"
+					},
+					{
+						"id": "shift-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "shift-data",
+						"widgetId": "shift-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 6
-					},
-					{
-						"id": "2-1",
-						"widgetId": "shift-kpis-opening-float",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-2",
-						"widgetId": "shift-kpis-drops",
-						"gridX": 10,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-3",
-						"widgetId": "shift-variance",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "3",
-						"widgetId": "shift-drops",
-						"gridX": 0,
-						"gridY": 6,
-						"gridWidth": 8,
-						"gridHeight": 5
-					},
-					{
-						"id": "4",
-						"widgetId": "shift-related",
-						"gridX": 8,
-						"gridY": 6,
-						"gridWidth": 4,
-						"gridHeight": 5
+						"gridWidth": 12,
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
 				"sidebar": {
@@ -4706,10 +4721,39 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
-				}
+				},
+				"_boardNote": "PqKassadienst: the relation frame. Overview stacks the shift data, the cash difference with its approval and the drops; the opening float and the drop count, the related records and the history are the side column.",
+				"titleField": "reference",
+				"breadcrumb": {
+					"label": "Cash drawer",
+					"route": "CashShifts"
+				},
+				"statusPill": {
+					"field": "status",
+					"colorMap": {
+						"open": "primary",
+						"closed": "warning",
+						"reconciled": "success"
+					},
+					"labels": {
+						"open": "Open",
+						"closed": "To review",
+						"reconciled": "Reconciled"
+					}
+				},
+				"sideColumn": [
+					"shift-kpis-opening-float",
+					"shift-kpis-drops",
+					"shift-related",
+					"shift-history"
+				]
 			}
 		},
 		{
@@ -4784,110 +4828,78 @@
 				"_note": "FINANCIAL archetype (bespoke-detail-pages). A Z-report is the end-of-day close ledger record, generated by the day-close job and read-only by hand — so NO comms leaves (posZReport declares no email/calendar linkedType) and no object-list (the day's transactions are referenced by the transactionIds ARRAY on the object, not a FK child schema, so there is no single-schema collection to list). The body opens with the report fields (reference, reportDate, terminalId, status, subtotal/discount/total, bookkeepingStatus, shillinqJournalEntryId) 8-wide + an in-grid stats-block KPI card top-right (rule 2, replacing the three loose uncarded stat tiles: Day total / VAT / Transaction count — the headline numbers an accountant checks first, @objectId-scoped). The BTW + payment-method breakdown tables (also arrays-on-object) and the shillinq re-raise action stay in the PRESERVED ZReportBookkeepingSection bodyWidget (after-data), as its note records. Audit-trail moves to a sidebar tab.",
 				"widgets": [
 					{
+						"id": "z-panels",
+						"type": "tabs",
+						"title": "Z-report",
+						"icon": "ViewDashboard",
+						"content": {
+							"ariaLabel": "Z-report",
+							"tabs": [
+								{
+									"widgetIds": [
+										"z-data",
+										"z-bookkeeping"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "z-history",
+									"label": "History"
+								}
+							]
+						}
+					},
+					{
 						"id": "z-data",
 						"type": "data",
 						"title": "Z-report",
-						"content": { "columns": 2 }
-					},
-					{
-						"id": "z-kpis-day-total",
-						"type": "stats-block",
-						"title": "Day total",
-						"icon": "Cash",
 						"content": {
-							"entries": [
-								{
-									"title": "Day total",
-									"register": "pipelinq",
-									"schema": "posZReport",
-									"metric": "sum",
-									"field": "total",
-									"currency": "EUR",
-									"filter": { "id": "@objectId" }
-								}
-							]
+							"columns": 2
 						}
 					},
 					{
-						"id": "z-kpis-vat",
-						"type": "stats-block",
-						"title": "VAT",
-						"icon": "Cash",
+						"id": "z-bookkeeping",
+						"type": "ZReportBookkeepingWidget",
+						"title": "Bookkeeping",
+						"icon": "BookOpenVariant",
 						"content": {
-							"entries": [
-								{
-									"title": "VAT",
-									"register": "pipelinq",
-									"schema": "posZReport",
-									"metric": "sum",
-									"field": "totalTax",
-									"currency": "EUR",
-									"filter": { "id": "@objectId" }
-								}
-							]
+							"part": "bookkeeping"
 						}
 					},
 					{
-						"id": "z-kpis-transactions",
-						"type": "stats-block",
-						"title": "Transactions",
-						"icon": "Cash",
+						"id": "z-tax",
+						"type": "ZReportBookkeepingWidget",
+						"title": "VAT breakdown",
+						"icon": "Percent",
 						"content": {
-							"entries": [
-								{
-									"title": "Transactions",
-									"register": "pipelinq",
-									"schema": "posZReport",
-									"metric": "sum",
-									"field": "transactionCount",
-									"countLabel": "transactions",
-									"filter": { "id": "@objectId" }
-								}
-							]
+							"part": "tax"
 						}
+					},
+					{
+						"id": "z-payments",
+						"type": "ZReportBookkeepingWidget",
+						"title": "Payment methods",
+						"icon": "CreditCardOutline",
+						"content": {
+							"part": "payments"
+						}
+					},
+					{
+						"id": "z-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "z-data",
+						"widgetId": "z-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 4
-					},
-					{
-						"id": "2-1",
-						"widgetId": "z-kpis-day-total",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-2",
-						"widgetId": "z-kpis-vat",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-3",
-						"widgetId": "z-kpis-transactions",
-						"gridX": 8,
-						"gridY": 4,
-						"gridWidth": 4,
-						"gridHeight": 2
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "z-report-bookkeeping",
-						"component": "ZReportBookkeepingSection",
-						"title": "Boekhoudkundige afhandeling",
-						"placement": "after-data",
-						"props": { "zReportId": "@objectId" }
+						"gridWidth": 12,
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
 				"sidebar": {
@@ -4898,10 +4910,44 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
-				}
+				},
+				"_boardNote": "PqZRapport: the relation frame. Overview stacks the Z-report data and the bookkeeping card (the shillinq status and Re-raise); the VAT breakdown, the payment methods and the history are the side column. The day total, VAT and transaction count are fields of the data card. The three blocks of ZReportBookkeepingSection are cards of their own (ZReportBookkeepingWidget, content.part).",
+				"titleField": "reference",
+				"breadcrumb": {
+					"label": "Z-reports",
+					"route": "ZReports"
+				},
+				"statusPill": {
+					"field": "status",
+					"colorMap": {
+						"posted": "success",
+						"reconciled": "success",
+						"submitted": "primary",
+						"ready": "warning",
+						"failed": "error",
+						"draft": "default"
+					},
+					"labels": {
+						"draft": "Draft",
+						"ready": "Ready to book",
+						"submitted": "Submitted",
+						"posted": "Booked",
+						"failed": "Failed",
+						"reconciled": "Reconciled"
+					}
+				},
+				"sideColumn": [
+					"z-tax",
+					"z-payments",
+					"z-history"
+				]
 			}
 		},
 		{
@@ -4956,8 +5002,34 @@
 				"schema": "posTransaction",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS transaction is a receipt/ledger record, so deliberately NO comms leaves (posTransaction declares no email/calendar linkedType). The money sits top-right beside the fields so a cashier or auditor reads it first, and the audit trail is a sidebar tab, the home for the immutable change log of a financial record.",
-				"excludeFields": ["taxBreakdown", "invoiceBreakdown"],
+				"excludeFields": [
+					"taxBreakdown",
+					"invoiceBreakdown"
+				],
 				"widgets": [
+					{
+						"id": "pos-tx-panels",
+						"type": "tabs",
+						"title": "Transaction",
+						"icon": "ViewDashboard",
+						"content": {
+							"ariaLabel": "Transaction",
+							"tabs": [
+								{
+									"widgetIds": [
+										"pos-tx-data",
+										"pos-tx-lines",
+										"pos-tx-payment"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "pos-tx-history",
+									"label": "History"
+								}
+							]
+						}
+					},
 					{
 						"id": "pos-tx-data",
 						"type": "data",
@@ -4966,26 +5038,10 @@
 						"content": {
 							"columns": 2,
 							"overrides": {
-								"cashier": { "formatter": "userDisplayName" }
-							}
-						}
-					},
-					{
-						"id": "pos-tx-kpis-line-items",
-						"type": "stats-block",
-						"title": "Line items",
-						"icon": "Cash",
-						"content": {
-							"entries": [
-								{
-									"title": "Line items",
-									"register": "pipelinq",
-									"schema": "posTransactionLine",
-									"metric": "count",
-									"countLabel": "lines",
-									"filter": { "transaction": "@objectId" }
+								"cashier": {
+									"formatter": "userDisplayName"
 								}
-							]
+							}
 						}
 					},
 					{
@@ -5002,15 +5058,38 @@
 						"content": {
 							"register": "pipelinq",
 							"schema": "posTransactionLine",
-							"filter": { "transaction": "@objectId" },
-							"sort": { "field": "sortOrder", "dir": "asc" },
+							"filter": {
+								"transaction": "@objectId"
+							},
+							"sort": {
+								"field": "sortOrder",
+								"dir": "asc"
+							},
 							"columns": [
-								{ "key": "description", "label": "Description" },
-								{ "key": "quantity", "label": "Qty" },
-								{ "key": "unitPrice", "label": "Unit price" },
-								{ "key": "discount", "label": "Discount %" },
-								{ "key": "taxRate", "label": "VAT %" },
-								{ "key": "lineTotal", "label": "Line total" }
+								{
+									"key": "description",
+									"label": "Description"
+								},
+								{
+									"key": "quantity",
+									"label": "Qty"
+								},
+								{
+									"key": "unitPrice",
+									"label": "Unit price"
+								},
+								{
+									"key": "discount",
+									"label": "Discount %"
+								},
+								{
+									"key": "taxRate",
+									"label": "VAT %"
+								},
+								{
+									"key": "lineTotal",
+									"label": "Line total"
+								}
 							],
 							"limit": 25,
 							"allowCreate": false,
@@ -5028,56 +5107,23 @@
 						"type": "PosTransactionPaymentWidget",
 						"title": "Payment",
 						"icon": "CreditCardOutline"
+					},
+					{
+						"id": "pos-tx-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "pos-tx-data",
+						"widgetId": "pos-tx-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 7
-					},
-					{
-						"id": "2",
-						"widgetId": "pos-tx-kpis-line-items",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "3",
-						"widgetId": "pos-tx-totals",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 8
-					},
-					{
-						"id": "4",
-						"widgetId": "pos-tx-lines",
-						"gridX": 0,
-						"gridY": 7,
-						"gridWidth": 8,
-						"gridHeight": 5
-					},
-					{
-						"id": "5",
-						"widgetId": "pos-tx-related",
-						"gridX": 8,
-						"gridY": 10,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "6",
-						"widgetId": "pos-tx-payment",
-						"gridX": 0,
-						"gridY": 15,
 						"gridWidth": 12,
-						"gridHeight": 5
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
 				"sidebar": {
@@ -5088,10 +5134,42 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
-				}
+				},
+				"_boardNote": "PqKassabon: the relation frame. The reference names the page, the status is a pill, Transactions is the breadcrumb. Overview stacks the transaction data, the lines and the payment; the totals, the related records and the history are the side column. The line count is in the lines table and the totals card.",
+				"titleField": "reference",
+				"breadcrumb": {
+					"label": "Transactions",
+					"route": "PosTransactions"
+				},
+				"statusPill": {
+					"field": "status",
+					"colorMap": {
+						"settled": "success",
+						"confirmed": "primary",
+						"parked": "warning",
+						"refunded": "default",
+						"draft": "default"
+					},
+					"labels": {
+						"draft": "Draft",
+						"parked": "Parked",
+						"confirmed": "Confirmed",
+						"settled": "Settled",
+						"refunded": "Refunded"
+					}
+				},
+				"sideColumn": [
+					"pos-tx-totals",
+					"pos-tx-related",
+					"pos-tx-history"
+				]
 			}
 		},
 		{
