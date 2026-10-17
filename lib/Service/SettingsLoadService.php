@@ -202,6 +202,10 @@ class SettingsLoadService {
 		'campaignTemplate',
 		'journey',
 		'journeyRun',
+		// Public events and their registrations (public-events): EventService
+		// reads both keys for the reminder and the door check-in.
+		'event',
+		'eventRegistration',
 		'segment',
 		'subscription',
 		'touchpoint',
