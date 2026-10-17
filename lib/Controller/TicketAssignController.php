@@ -46,6 +46,20 @@ use Throwable;
 class TicketAssignController extends Controller {
 
 	/**
+	 * The statuses that close a ticket; a closed ticket is not in the queue.
+	 *
+	 * @var string[]
+	 */
+	private const CLOSED_STATUSES = ['resolved', 'completed', 'rejected', 'converted', 'closed'];
+
+	/**
+	 * How many of the oldest tickets Take the oldest reads to find one nobody has.
+	 *
+	 * @var integer
+	 */
+	private const QUEUE_SCAN = 200;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest      $request     The request.
@@ -99,16 +113,86 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'Ticket not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		$data = $ticket->getObject();
-		unset($data['@self']);
-		$data['assignee'] = $user->getUID();
+		return $this->assign(ticket: $ticket->getObject(), id: $id, uid: $user->getUID());
+	}//end assignToMe()
+
+	/**
+	 * Make the signed-in user the assignee of the oldest ticket in the queue.
+	 *
+	 * The queue is every open ticket nobody has picked up. The oldest is the
+	 * one that came in first (`occurredAt`). Read and written under the user's
+	 * own OpenRegister RBAC, as {@see assignToMe()}: a queue they cannot read
+	 * is empty to them.
+	 *
+	 * @return JSONResponse The ticket's id and new assignee, 404 when nothing waits, or an error.
+	 *
+	 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+	 */
+	#[NoAdminRequired]
+	public function assignOldest(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->tickets->isConfigured() === false) {
+			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
+		}
 
 		try {
-			$objectService->saveObject(object: $data, register: $register, schema: $schema, uuid: $id);
+			$rows = $this->tickets->getObjectService()->findAll(
+				config: [
+					'filters' => ['register' => $this->tickets->getRegisterId(), 'schema' => $this->tickets->getSchemaId()],
+					'sort' => ['occurredAt' => 'asc'],
+					'limit' => self::QUEUE_SCAN,
+				]
+			);
+		} catch (Throwable) {
+			$rows = [];
+		}
+
+		foreach ($rows as $row) {
+			$data = $row;
+			if (is_array($row) === false) {
+				$data = $row->getObject();
+				$data['id'] = $data['id'] ?? $row->getUuid();
+			}
+
+			$id = (string) ($data['id'] ?? '');
+			if ($id === '' || empty($data['assignee']) === false || in_array($data['status'] ?? '', self::CLOSED_STATUSES, true) === true) {
+				continue;
+			}
+
+			return $this->assign(ticket: $data, id: $id, uid: $user->getUID());
+		}
+
+		return new JSONResponse(['error' => 'Nothing is waiting in the queue'], Http::STATUS_NOT_FOUND);
+	}//end assignOldest()
+
+	/**
+	 * Save a ticket with a new assignee.
+	 *
+	 * @param array<string, mixed> $ticket The ticket's data.
+	 * @param string               $id     The ticket id.
+	 * @param string               $uid    The new assignee.
+	 *
+	 * @return JSONResponse The ticket's id and new assignee, or 403 when the write is refused.
+	 */
+	private function assign(array $ticket, string $id, string $uid): JSONResponse {
+		unset($ticket['@self']);
+		$ticket['assignee'] = $uid;
+
+		try {
+			$this->tickets->getObjectService()->saveObject(
+				object: $ticket,
+				register: $this->tickets->getRegisterId(),
+				schema: $this->tickets->getSchemaId(),
+				uuid: $id
+			);
 		} catch (Throwable) {
 			return new JSONResponse(['error' => 'You cannot change this ticket'], Http::STATUS_FORBIDDEN);
 		}
 
-		return new JSONResponse(['id' => $id, 'assignee' => $user->getUID()]);
-	}//end assignToMe()
+		return new JSONResponse(['id' => $id, 'assignee' => $uid]);
+	}//end assign()
 }//end class
