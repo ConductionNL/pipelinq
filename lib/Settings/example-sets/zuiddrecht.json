@@ -1,6 +1,6 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged.",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. The appointment samples (PqAfspraak, PqAfspraken, PqInloop) add a Locatiebezoek service, Sanne's confirmed site visit two days ahead, handled by daan, and four walk-in customers today.",
 	"appConfig": [
 		{
 			"key": "crm_group",
@@ -290,6 +290,100 @@
 				"assignee": "{{cast:daan.uid}}",
 				"stageEnteredAt": "{{datetime:-3 14:00}}",
 				"category": "bedrijfsvestiging"
+			}
+		},
+		{
+			"key": "service-locatiebezoek",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Locatiebezoek",
+				"description": "Een medewerker komt ter plekke kijken, bijvoorbeeld voor een straatfeest of een bouwplan.",
+				"durationMinutes": 60,
+				"price": 0,
+				"currency": "EUR",
+				"bookableOnline": false,
+				"requiresDeposit": true,
+				"depositAmount": 25,
+				"cancellationPolicy": "free",
+				"status": "active"
+			}
+		},
+		{
+			"key": "booking-sanne-parkstraat",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-sanne.id}}",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"subject": "Locatiebezoek Parkstraat",
+				"location": "Parkstraat 24",
+				"assignee": "{{cast:daan.uid}}",
+				"startAt": "{{datetime:2 14:00}}",
+				"endAt": "{{datetime:2 15:00}}",
+				"status": "confirmed",
+				"source": "phone",
+				"depositAmount": 25,
+				"confirmationSentAt": "{{datetime:-1 11:20}}",
+				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest. Neem een schets van de kramen en het podium mee.",
+				"internalNotes": "Controleer de calamiteitenroute en waar de brandweer langs kan.",
+				"resourceAssignments": [],
+				"statusHistory": [
+					{
+						"status": "confirmed",
+						"changedAt": "{{datetime:-1 11:18}}",
+						"changedBy": "{{cast:daan.uid}}",
+						"reason": "Telefonisch geboekt"
+					}
+				]
+			}
+		},
+		{
+			"key": "walkin-anna",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Anna de Vries",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:41}}",
+				"estimatedReadyAt": "{{datetime:0 09:55}}",
+				"status": "called"
+			}
+		},
+		{
+			"key": "walkin-rachid",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Rachid Yilmaz",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:43}}",
+				"estimatedReadyAt": "{{datetime:0 09:58}}",
+				"status": "called"
+			}
+		},
+		{
+			"key": "walkin-mohammed",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Mohammed El Amrani",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:50}}",
+				"estimatedReadyAt": "{{datetime:0 10:08}}",
+				"status": "waiting"
+			}
+		},
+		{
+			"key": "walkin-joke",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Joke Smit",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:52}}",
+				"estimatedReadyAt": "{{datetime:0 10:14}}",
+				"status": "waiting"
 			}
 		}
 	]
