@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "blast": {
+                "slug": "blast",
                 "version": "1.3.0",
                 "properties": {
                     "skippedNoConsent": {
