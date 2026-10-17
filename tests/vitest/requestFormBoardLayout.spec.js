@@ -48,7 +48,7 @@ vi.mock('@nextcloud/vue', () => {
 		props: ['label', 'modelValue', 'ariaLabelCombobox', 'options'],
 		emits: ['update:modelValue'],
 		render() {
-			return h('label', { 'data-label': this.label || this.ariaLabelCombobox })
+			return h('label', { 'data-label': this.ariaLabelCombobox || this.label })
 		},
 	})
 	return {
