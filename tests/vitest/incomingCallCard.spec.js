@@ -22,7 +22,11 @@ import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
-const api = vi.hoisted(() => ({ incomingCall: vi.fn(), screenPop: vi.fn() }))
+const api = vi.hoisted(() => ({
+	incomingCall: vi.fn(),
+	screenPop: vi.fn(),
+	submitDisposition: vi.fn(),
+}))
 const store = vi.hoisted(() => ({
 	liveLastEventAt: 0,
 	subscribe: vi.fn(),
@@ -30,11 +34,23 @@ const store = vi.hoisted(() => ({
 	fetchObject: vi.fn(),
 	saveObject: vi.fn(),
 }))
-const dialogs = vi.hoisted(() => ({ showError: vi.fn() }))
+const dialogs = vi.hoisted(() => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 
 vi.mock('../../src/services/ctiApi.js', () => api)
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => store }))
 vi.mock('@nextcloud/dialogs', () => dialogs)
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		props: ['name', 'eyebrow', 'subtitle'],
+		render() {
+			return h('div', { 'data-eyebrow': this.eyebrow }, [
+				this.$slots.default?.(),
+				this.$slots.actions?.(),
+			])
+		},
+	},
+}))
 vi.mock('@nextcloud/vue', () => {
 	const shell = (name, tag) => ({
 		name,
@@ -49,6 +65,8 @@ vi.mock('@nextcloud/vue', () => {
 	})
 	return {
 		NcButton: shell('NcButton', 'button'),
+		NcCheckboxRadioSwitch: shell('NcCheckboxRadioSwitch', 'label'),
+		NcSelect: shell('NcSelect', 'div'),
 		NcDialog: shell('NcDialog', 'div'),
 		NcLoadingIcon: shell('NcLoadingIcon', 'span'),
 		NcTextArea: shell('NcTextArea', 'textarea'),
@@ -63,6 +81,8 @@ const { default: IncomingCallCard, POLL_MS } =
 	await import('../../src/components/IncomingCallCard.vue')
 const { default: ScreenPopModal } =
 	await import('../../src/modals/ScreenPopModal.vue')
+const { default: CtiDispositionModal } =
+	await import('../../src/modals/CtiDispositionModal.vue')
 const { default: NewContactIntakeModal } =
 	await import('../../src/modals/NewContactIntakeModal.vue')
 
@@ -310,6 +330,85 @@ describe('a call with one match', () => {
 
 		await vi.advanceTimersByTimeAsync(2000)
 		expect(part(wrapper, 'incoming-call-card').exists()).toBe(true)
+	})
+})
+
+describe('the call the agent took', () => {
+	beforeEach(() => {
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: CALL })
+		api.screenPop.mockResolvedValue({
+			action: 'navigate',
+			matches: [SANNE],
+			e164: '+31612345678',
+			rawNumber: '06 12 34 56 78',
+		})
+		api.submitDisposition.mockReset().mockResolvedValue({})
+	})
+
+	it('stays on screen as the call panel with the caller and the clock', async () => {
+		const wrapper = await card()
+		await part(wrapper, 'incoming-call-open').trigger('click')
+		await flushPromises()
+
+		const panel = part(wrapper, 'call-panel')
+		expect(panel.text()).toContain('In call with Sanne de Vries')
+		expect(panel.text()).toContain('06 12 34 56 78')
+		expect(part(wrapper, 'call-panel-timer').text()).toBe('0:08')
+		await vi.advanceTimersByTimeAsync(3000)
+		expect(part(wrapper, 'call-panel-timer').text()).toBe('0:11')
+	})
+
+	it('asks for the wrap-up when the line reports the call ended, and saves it on the call', async () => {
+		const wrapper = await card()
+		await part(wrapper, 'incoming-call-open').trigger('click')
+		await flushPromises()
+
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: null })
+		await vi.advanceTimersByTimeAsync(POLL_MS)
+		await flushPromises()
+
+		const dialog = wrapper.findComponent(CtiDispositionModal)
+		expect(dialog.exists()).toBe(true)
+		expect(dialog.props('number')).toBe('06 12 34 56 78')
+		expect(dialog.props('callerName')).toBe('Sanne de Vries')
+		expect(dialog.props('durationSeconds')).toBe(8 + POLL_MS / 1000)
+
+		dialog.vm.$emit('submit', {
+			subject: 'Permit',
+			outcome: 'resolved',
+			notes: '',
+			queue: '',
+		})
+		await flushPromises()
+		expect(api.submitDisposition).toHaveBeenCalledWith('call-1', {
+			subject: 'Permit',
+			outcome: 'resolved',
+			notes: '',
+			queue: '',
+		})
+		expect(part(wrapper, 'call-panel').exists()).toBe(false)
+		expect(wrapper.findComponent(CtiDispositionModal).exists()).toBe(false)
+	})
+
+	it('wraps up when the agent ends the call, and keeps the panel when saving fails', async () => {
+		api.submitDisposition.mockRejectedValue(new Error('500'))
+		const wrapper = await card()
+		await part(wrapper, 'incoming-call-open').trigger('click')
+		await flushPromises()
+
+		await part(wrapper, 'call-panel-end').trigger('click')
+		const dialog = wrapper.findComponent(CtiDispositionModal)
+		expect(dialog.exists()).toBe(true)
+		dialog.vm.$emit('submit', {
+			subject: 'Permit',
+			outcome: 'callback',
+			notes: '',
+			queue: '',
+		})
+		await flushPromises()
+
+		expect(dialogs.showError).toHaveBeenCalled()
+		expect(part(wrapper, 'call-panel').exists()).toBe(true)
 	})
 })
 

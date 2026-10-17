@@ -9,10 +9,58 @@
   - With no telephony platform configured the first answer says so, and the
   - card stops: nothing is shown, nothing is polled and nothing errors.
   -
+  - Once the agent opens or adds the caller the card becomes the call panel
+  - (board PqWerkplekKlant): who is on the line, how long, and End and wrap
+  - up. When the agent ends the call, or the line reports it ended, the wrap-up
+  - dialog (CtiDispositionModal, board PqGesprekAfronden) asks for the subject,
+  - the outcome and notes and saves them on the call's contact moment.
+  -
   - @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
   -->
 <template>
-	<div v-if="active" class="incoming-call-host">
+	<div v-if="active || activeCall" class="incoming-call-host">
+		<div
+			v-if="activeCall && !cardShown"
+			class="incoming-call incoming-call--active"
+			role="status"
+			data-testid="call-panel">
+			<div class="incoming-call__header">
+				<span class="incoming-call__icon" aria-hidden="true">
+					<Phone :size="22" />
+				</span>
+				<span class="incoming-call__heading">
+					<strong>{{
+						t('pipelinq', 'In call with {name}', {
+							name: activeCall.name,
+						})
+					}}</strong>
+					<span>{{ activeCall.fromNumber }}</span>
+				</span>
+				<span class="incoming-call__timer" data-testid="call-panel-timer">{{
+					clock(activeCall.startedAt, activeCall.endedAt)
+				}}</span>
+			</div>
+			<div class="incoming-call__actions">
+				<span class="incoming-call__spacer" />
+				<NcButton
+					variant="primary"
+					data-testid="call-panel-end"
+					@click="wrapUpOpen = true">
+					<template #icon>
+						<PhoneHangup :size="16" />
+					</template>
+					{{ t('pipelinq', 'End and wrap up') }}
+				</NcButton>
+			</div>
+		</div>
+		<CtiDispositionModal
+			v-if="activeCall && wrapUpOpen"
+			:number="activeCall.fromNumber"
+			:callerName="activeCall.name"
+			:durationSeconds="seconds(activeCall.startedAt, activeCall.endedAt)"
+			:saving="wrapUpSaving"
+			@close="wrapUpOpen = false"
+			@submit="saveWrapUp" />
 		<div
 			v-if="cardShown"
 			class="incoming-call"
@@ -148,14 +196,17 @@
 </template>
 
 <script>
-import { showError } from '@nextcloud/dialogs'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import AccountOutline from 'vue-material-design-icons/AccountOutline.vue'
 import Close from 'vue-material-design-icons/Close.vue'
+import Phone from 'vue-material-design-icons/Phone.vue'
+import PhoneHangup from 'vue-material-design-icons/PhoneHangup.vue'
 import PhoneIncoming from 'vue-material-design-icons/PhoneIncoming.vue'
+import CtiDispositionModal from '../modals/CtiDispositionModal.vue'
 import NewContactIntakeModal from '../modals/NewContactIntakeModal.vue'
 import ScreenPopModal from '../modals/ScreenPopModal.vue'
-import { incomingCall, screenPop } from '../services/ctiApi.js'
+import { incomingCall, screenPop, submitDisposition } from '../services/ctiApi.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 /** How often the card asks again when no live event arrives. */
@@ -167,9 +218,12 @@ export default {
 	components: {
 		AccountOutline,
 		Close,
+		CtiDispositionModal,
 		NcButton,
 		NcLoadingIcon,
 		NewContactIntakeModal,
+		Phone,
+		PhoneHangup,
 		PhoneIncoming,
 		ScreenPopModal,
 	},
@@ -197,6 +251,11 @@ export default {
 			revealTimer: null,
 			liveHandle: null,
 			destroyed: false,
+			/** The call the agent took: the call panel and the wrap-up are about it. */
+			activeCall: null,
+			activeTimer: null,
+			wrapUpOpen: false,
+			wrapUpSaving: false,
 		}
 	},
 
@@ -314,6 +373,7 @@ export default {
 	 */
 	beforeUnmount() {
 		this.destroyed = true
+		clearInterval(this.activeTimer)
 		this.stop()
 	},
 
@@ -354,6 +414,13 @@ export default {
 		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		receive(call, delayMs) {
+			if (
+				this.activeCall
+				&& !this.activeCall.endedAt
+				&& (call === null || call.id !== this.activeCall.id)
+			) {
+				this.endActiveCall()
+			}
 			if (call === null) {
 				this.clearCall()
 				return
@@ -461,6 +528,98 @@ export default {
 		},
 
 		/**
+		 * The agent took the call: show the call panel for it until it is
+		 * wrapped up. A previewed call has no line behind it, so it gets none.
+		 *
+		 * @param {object} call The call.
+		 * @param {string} name Who is on the line.
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		takeCall(call, name) {
+			if (call.id === 'preview') {
+				return
+			}
+			this.activeCall = {
+				id: call.id,
+				fromNumber: (this.pop && this.pop.rawNumber) || call.fromNumber,
+				startedAt: call.answeredAt || call.startedAt,
+				endedAt: '',
+				name,
+			}
+			clearInterval(this.activeTimer)
+			this.activeTimer = setInterval(() => {
+				this.now = Date.now()
+			}, 1000)
+		},
+
+		/**
+		 * The line says the call ended: stop the clock and ask for the wrap-up.
+		 *
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		endActiveCall() {
+			this.activeCall = {
+				...this.activeCall,
+				endedAt: new Date(Date.now()).toISOString(),
+			}
+			clearInterval(this.activeTimer)
+			this.activeTimer = null
+			this.wrapUpOpen = true
+		},
+
+		/**
+		 * Save the wrap-up on the call's contact moment and close the panel.
+		 *
+		 * @param {{subject: string, outcome: string, notes: string}} form The wrap-up.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		async saveWrapUp(form) {
+			this.wrapUpSaving = true
+			try {
+				await submitDisposition(this.activeCall.id, form)
+			} catch {
+				showError(
+					this.t('pipelinq', 'The call outcome is not saved. Try again.'),
+				)
+				return
+			} finally {
+				this.wrapUpSaving = false
+			}
+			showSuccess(this.t('pipelinq', 'The call outcome is saved.'))
+			clearInterval(this.activeTimer)
+			this.activeTimer = null
+			this.wrapUpOpen = false
+			this.activeCall = null
+		},
+
+		/**
+		 * @param {string} from When the call started.
+		 * @param {string} [to] When it ended; now while it runs.
+		 * @return {number} Whole seconds, or -1 when the start is unknown.
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		seconds(from, to) {
+			const start = Date.parse(from)
+			if (Number.isNaN(start)) {
+				return -1
+			}
+			const end = to ? Date.parse(to) : this.now
+			return Math.max(0, Math.floor((end - start) / 1000))
+		},
+
+		/**
+		 * @param {string} from When the call started.
+		 * @param {string} [to] When it ended.
+		 * @return {string} The duration as m:ss.
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		clock(from, to) {
+			const total = Math.max(0, this.seconds(from, to))
+			return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+		},
+
+		/**
 		 * Close the card for this call. The next call shows again.
 		 *
 		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
@@ -492,6 +651,7 @@ export default {
 			const callId = this.call.id
 			this.chooserOpen = false
 			this.handledCallId = callId
+			this.takeCall(this.call, this.displayName(match))
 			await this.linkCall(callId, { [type]: id })
 			this.$router.push({
 				name: type === 'client' ? 'ClientDetail' : 'ContactDetail',
@@ -522,6 +682,7 @@ export default {
 			const id = saved.id || saved.uuid
 			this.intakeOpen = false
 			this.handledCallId = callId
+			this.takeCall(this.call, contact.name)
 			const notes = [form.organisation, form.notes]
 				.map((part) => (part || '').trim())
 				.filter(Boolean)
