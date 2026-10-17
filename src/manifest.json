@@ -4396,6 +4396,9 @@
 								"assigneeGroupId": {
 									"label": "Group",
 									"widget": "group"
+								},
+								"preferredTimeSlot": {
+									"label": "Preferred time"
 								}
 							}
 						}
@@ -4411,6 +4414,13 @@
 						"type": "related",
 						"title": "Related",
 						"icon": "LinkVariant"
+					},
+					{
+						"id": "task-finish",
+						"type": "TaskFinishWidget",
+						"title": "Finish this task",
+						"icon": "CheckCircle",
+						"content": {}
 					},
 					{
 						"id": "task-files",
@@ -4431,10 +4441,18 @@
 						"showTitle": false
 					},
 					{
+						"id": "2",
+						"widgetId": "task-finish",
+						"gridX": 0,
+						"gridY": 8,
+						"gridWidth": 12,
+						"gridHeight": 3
+					},
+					{
 						"id": "3",
 						"widgetId": "task-files",
 						"gridX": 0,
-						"gridY": 8,
+						"gridY": 11,
 						"gridWidth": 12,
 						"gridHeight": 3
 					}
@@ -4462,18 +4480,6 @@
 						}
 					]
 				},
-				"bodyWidgets": [
-					{
-						"id": "task-finish",
-						"component": "TaskFinishSection",
-						"title": "Finish this task",
-						"placement": "after-data",
-						"props": {
-							"objectId": "@objectId",
-							"status": "@object.status"
-						}
-					}
-				],
 				"follow": false,
 				"headerMeta": "due {deadline|datetime}"
 			}

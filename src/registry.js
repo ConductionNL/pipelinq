@@ -1064,10 +1064,19 @@ const registry = {
 		component: TicketConversationSection,
 		_note: "simple-ticket-page. The customer's portal replies and the employee's answers as one thread (library CnConversationThread), read only. It reads the ticket from cnSectionContext. Answers are written in TicketAnswerDialog, so one component saves them.",
 	},
-	TaskFinishSection: {
-		kind: 'section',
-		component: TaskFinishSection,
-		_note: 'TaskDetail in-body section (PqTaak "Deze taak afronden"): a result field with Log attempt and Finish, posting to the callback endpoints, which check the assignee and the status move server side.',
+	TaskFinishWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'TaskFinishWidget',
+			TaskFinishSection,
+			({ objectId, objectData }) => ({
+				objectId,
+				status: typeof objectData.status === 'string' ? objectData.status : '',
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'TaskFinishSection as a grid widget (PqTaak "Deze taak afronden"): a result field with Log attempt and Finish, posting to the callback endpoints, which check the assignee and the status move server side.',
 	},
 	CustomerReplySection: {
 		kind: 'section',

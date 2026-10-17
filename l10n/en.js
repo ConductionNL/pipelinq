@@ -7733,7 +7733,8 @@ OC.L10N.register(
         "due {deadline|datetime}": "due {deadline|datetime}",
         "Callback number": "Callback number",
         "What now? Call back before the deadline": "What now? Call back before the deadline",
-        "Then write down what came out of it": "Then write down what came out of it"
+        "Then write down what came out of it": "Then write down what came out of it",
+        "Preferred time": "Preferred time"
     },
     "nplurals=2; plural=(n != 1);"
 )

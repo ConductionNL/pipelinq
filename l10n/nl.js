@@ -7660,7 +7660,8 @@ OC.L10N.register(
         "due {deadline|datetime}": "uiterlijk {deadline|datetime}",
         "Callback number": "Terugbelnummer",
         "What now? Call back before the deadline": "Wat nu? Terugbellen binnen de termijn",
-        "Then write down what came out of it": "Schrijf daarna op wat eruit kwam"
+        "Then write down what came out of it": "Schrijf daarna op wat eruit kwam",
+        "Preferred time": "Voorkeurstijd"
     },
     "nplurals=2; plural=(n != 1);"
 )
