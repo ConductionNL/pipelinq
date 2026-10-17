@@ -7684,7 +7684,12 @@ OC.L10N.register(
         "Lined up": "Lined up",
         "A post waits for approval before it can be scheduled.": "A post waits for approval before it can be scheduled.",
         "Clients with an account on a network we publish on": "Clients with an account on a network we publish on",
-        "Where residents find us in search engines, and what others publish · four pages under Marketing": "Where residents find us in search engines, and what others publish · four pages under Marketing"
+        "Where residents find us in search engines, and what others publish · four pages under Marketing": "Where residents find us in search engines, and what others publish · four pages under Marketing",
+        "Past 7 days": "Past 7 days",
+        "Past 28 days": "Past 28 days",
+        "Past 90 days": "Past 90 days",
+        "Past 30 days": "Past 30 days",
+        "Past 365 days": "Past 365 days"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -140,9 +140,9 @@ export default {
 			selectedProgramme: null,
 			selectedPeriod: null,
 			periodOptions: [
-				{ id: '30d', label: 'Last 30 days', days: 30 },
-				{ id: '90d', label: 'Last 90 days', days: 90 },
-				{ id: '365d', label: 'Last 365 days', days: 365 },
+				{ id: '30d', label: 'Past 30 days', days: 30 },
+				{ id: '90d', label: 'Past 90 days', days: 90 },
+				{ id: '365d', label: 'Past 365 days', days: 365 },
 			],
 
 			kpis: null,
@@ -377,6 +377,7 @@ export default {
 .loyalty-reporting__segment {
 	border: none;
 	background: transparent;
+	color: var(--color-main-text);
 	padding: 6px 12px;
 	border-radius: var(--border-radius);
 	font-weight: 600;

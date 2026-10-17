@@ -168,9 +168,9 @@ export default {
 		 */
 		windowOptions() {
 			return [
-				{ days: 7, label: this.t('pipelinq', 'Last 7 days') },
-				{ days: 28, label: this.t('pipelinq', 'Last 28 days') },
-				{ days: 90, label: this.t('pipelinq', 'Last 90 days') },
+				{ days: 7, label: this.t('pipelinq', 'Past 7 days') },
+				{ days: 28, label: this.t('pipelinq', 'Past 28 days') },
+				{ days: 90, label: this.t('pipelinq', 'Past 90 days') },
 			]
 		},
 
@@ -305,6 +305,7 @@ export default {
 .search-queries__segment {
 	border: none;
 	background: transparent;
+	color: var(--color-main-text);
 	padding: 6px 12px;
 	border-radius: var(--border-radius);
 	font-weight: 600;

@@ -7628,7 +7628,12 @@ OC.L10N.register(
         "Every query with demand is answered by a page whose title or headings carry its terms.": "Elke zoekopdracht met vraag wordt beantwoord door een pagina met die woorden in de titel of koppen.",
         "Connect a Search Console property under Settings, Marketing traffic. Once the import has run, this page shows where you rank, which queries are one push from page one, which pages compete with each other, and which questions nothing of yours answers.": "Koppel een Search Console-property onder Instellingen, Marketingverkeer. Na de eerste import ziet u hier waar u staat, welke zoekopdrachten één zetje van pagina één zijn, welke pagina's elkaar beconcurreren en welke vragen niets van u beantwoordt.",
         "Could not load keyword proposals.": "De trefwoordvoorstellen konden niet worden geladen.",
-        "Where residents find us in search engines, and what others publish · four pages under Marketing": "Waar inwoners ons vinden in zoekmachines, en wat anderen publiceren · vier pagina's onder Marketing"
+        "Where residents find us in search engines, and what others publish · four pages under Marketing": "Waar inwoners ons vinden in zoekmachines, en wat anderen publiceren · vier pagina's onder Marketing",
+        "Past 7 days": "Afgelopen 7 dagen",
+        "Past 28 days": "Afgelopen 28 dagen",
+        "Past 90 days": "Afgelopen 90 dagen",
+        "Past 30 days": "Afgelopen 30 dagen",
+        "Past 365 days": "Afgelopen 365 dagen"
     },
     "nplurals=2; plural=(n != 1);"
 )
