@@ -4881,7 +4881,7 @@
 						"id": "z-bookkeeping",
 						"type": "ZReportBookkeepingWidget",
 						"title": "Bookkeeping",
-						"icon": "BookOpenVariant",
+						"icon": "BookOpenVariantOutline",
 						"content": {
 							"part": "all"
 						}
@@ -5197,7 +5197,7 @@
 						"id": "pos-tx-receipt",
 						"type": "object-list",
 						"title": "Receipt",
-						"icon": "ReceiptTextOutline",
+						"icon": "ReceiptOutline",
 						"_note": "PqKassabon Bon card: when the receipt was printed or mailed, from the print log.",
 						"content": {
 							"register": "pipelinq",
