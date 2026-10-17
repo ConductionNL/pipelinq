@@ -13,6 +13,9 @@
 		<NcAppSettingsSection
 			id="pipelinq-contacts-sync"
 			:name="t('pipelinq', 'Sync with Contacts')">
+			<template #icon>
+				<Sync :size="18" />
+			</template>
 			<p class="personal-settings__lead">
 				{{ t('pipelinq', 'Your records in Pipelinq and your Nextcloud address book.') }}
 			</p>
@@ -48,6 +51,9 @@
 		<NcAppSettingsSection
 			id="pipelinq-mail-calendar"
 			:name="t('pipelinq', 'Email and calendar')">
+			<template #icon>
+				<Email :size="18" />
+			</template>
 			<p class="personal-settings__lead">
 				{{ t('pipelinq', 'Mail and appointments linked to your clients.') }}
 			</p>
@@ -61,6 +67,9 @@
 		<NcAppSettingsSection
 			id="pipelinq-skills"
 			:name="t('pipelinq', 'My skills')">
+			<template #icon>
+				<Tag :size="18" />
+			</template>
 			<ul v-if="skills.length > 0" class="personal-settings__skills" data-testid="personal-settings-skills">
 				<li v-for="skill in skills" :key="skill">
 					<CnStatusBadge :label="skill" variant="info" size="small" />
@@ -79,6 +88,9 @@
 		<NcAppSettingsSection
 			id="pipelinq-availability"
 			:name="t('pipelinq', 'Availability')">
+			<template #icon>
+				<ClockOutline :size="18" />
+			</template>
 			<p class="personal-settings__lead" data-testid="personal-settings-availability">
 				<strong>{{ isAvailable ? t('pipelinq', 'Available.') : t('pipelinq', 'Not available.') }}</strong>
 				{{
@@ -103,14 +115,22 @@ import axios from '@nextcloud/axios'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcAppSettingsSection, NcCheckboxRadioSwitch, NcSelect } from '@nextcloud/vue'
+import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
+import Email from 'vue-material-design-icons/Email.vue'
+import Sync from 'vue-material-design-icons/Sync.vue'
+import Tag from 'vue-material-design-icons/Tag.vue'
 
 export default {
 	name: 'PersonalSettingsSections',
 	components: {
+		ClockOutline,
 		CnStatusBadge,
+		Email,
 		NcAppSettingsSection,
 		NcCheckboxRadioSwitch,
 		NcSelect,
+		Sync,
+		Tag,
 	},
 
 	data() {
