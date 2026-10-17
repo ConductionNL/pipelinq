@@ -113,6 +113,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { collectionRows } from '../../utils/collectionRows.js'
 
 // The pipelinq schemas the export pipeline may read. `ticket` is the unified
 // supertype (unify-ticket-supertype): the former `request`, `complaint` and
@@ -309,8 +310,7 @@ export default {
 					_limit: 200,
 				})
 				this.destinations =
-					this.objectStore.getCollection('exportDestination')?.results
-					|| []
+					collectionRows(this.objectStore.getCollection('exportDestination'))
 			} catch {
 				this.destinations = []
 			}

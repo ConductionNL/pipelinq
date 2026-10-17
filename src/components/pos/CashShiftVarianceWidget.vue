@@ -107,6 +107,7 @@ import CashShiftRejectDialog from '../../modals/CashShiftRejectDialog.vue'
 import { postShiftAction } from '../../services/posShiftActions.js'
 import { formatEur } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { collectionRows } from '../../utils/collectionRows.js'
 
 const DIFF_STATUS_LABELS = {
 	pending: 'Pending',
@@ -319,7 +320,7 @@ export default {
 					_limit: 100,
 				})
 				const diffs = (
-					store.getCollection('cashDiff')?.results || []
+					collectionRows(store.getCollection('cashDiff'))
 				).filter((d) => d.shift === this.shiftId)
 				this.diff = this.latestDiff(diffs)
 			} catch (err) {

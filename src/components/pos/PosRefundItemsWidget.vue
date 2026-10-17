@@ -81,6 +81,7 @@ import {
 } from '../../services/posRefundLines.js'
 import { formatEur } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { collectionRows } from '../../utils/collectionRows.js'
 
 export default {
 	name: 'PosRefundItemsWidget',
@@ -235,7 +236,7 @@ export default {
 				const store = useObjectStore()
 				this.lines = await fetchRefundLines(store, this.refundId)
 				await store.fetchCollection('refundReason', { _limit: 100 })
-				this.reasons = store.getCollection('refundReason')?.results || []
+				this.reasons = collectionRows(store.getCollection('refundReason'))
 				this.originalLines = await fetchOriginalLines(
 					store,
 					this.originalTransaction,

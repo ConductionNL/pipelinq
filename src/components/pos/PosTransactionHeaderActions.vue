@@ -130,6 +130,7 @@ import EmailReceiptModal from '../../modals/EmailReceiptModal.vue'
 import PosRefundDialog from '../../modals/PosRefundDialog.vue'
 import PrintReceiptModal from '../../modals/PrintReceiptModal.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { collectionRows } from '../../utils/collectionRows.js'
 
 export default {
 	name: 'PosTransactionHeaderActions',
@@ -365,7 +366,7 @@ export default {
 					transaction: id,
 					_limit: 500,
 				})
-				const rows = store.getCollection('posTransactionLine')?.results || []
+				const rows = collectionRows(store.getCollection('posTransactionLine'))
 				this.lineCount = rows.filter(
 					(line) => line.transaction === id,
 				).length
@@ -391,7 +392,7 @@ export default {
 					status: 'active',
 					_limit: 100,
 				})
-				const rows = store.getCollection('receiptTemplate')?.results || []
+				const rows = collectionRows(store.getCollection('receiptTemplate'))
 				this.receiptTemplates = rows.filter(
 					(tpl) => (tpl.status || 'active') === 'active',
 				)
