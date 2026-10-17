@@ -7698,7 +7698,23 @@ OC.L10N.register(
         "The ticket": "The ticket",
         "People": "People",
         "Dates and links": "Dates and links",
-        "Visible to the customer": "Visible to the customer"
+        "Visible to the customer": "Visible to the customer",
+        "Every page that is not in the daily menu, under Advanced. An administrator can add a module to the menu.": "Every page that is not in the daily menu, under Advanced. An administrator can add a module to the menu.",
+        "An administrator switches a module on in the admin settings, and then it is in the menu for everyone. A module that is off still opens from this page.": "An administrator switches a module on in the admin settings, and then it is in the menu for everyone. A module that is off still opens from this page.",
+        "Every task and every callback request, for the whole team.": "Every task and every callback request, for the whole team.",
+        "The people you talk to at a resident, company or organisation.": "The people you talk to at a resident, company or organisation.",
+        "Add apps and connections that work with Pipelinq.": "Add apps and connections that work with Pipelinq.",
+        "Flows": "Flows",
+        "Steps that run by themselves when something happens.": "Steps that run by themselves when something happens.",
+        "Features and roadmap": "Features and roadmap",
+        "What Pipelinq can do, and what is coming.": "What Pipelinq can do, and what is coming.",
+        "Waiting times, deadlines met and contact per channel.": "Waiting times, deadlines met and contact per channel.",
+        "How Pipelinq works, step by step. Opens in a new tab.": "How Pipelinq works, step by step. Opens in a new tab.",
+        "Leads, prospects and deals, from first contact to won or lost.": "Leads, prospects and deals, from first contact to won or lost.",
+        "Segments, mailings, campaigns and social posts, with how they did.": "Segments, mailings, campaigns and social posts, with how they did.",
+        "Sales at the counter: receipts, returns and the cash drawer.": "Sales at the counter: receipts, returns and the cash drawer.",
+        "Agreements with clients, their term and their renewal.": "Agreements with clients, their term and their renewal.",
+        "Admin settings": "Admin settings"
     },
     "nplurals=2; plural=(n != 1);"
 )

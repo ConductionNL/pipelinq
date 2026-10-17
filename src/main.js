@@ -22,6 +22,7 @@ import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations
 // runtimeChunk, so the barrel's 3-hop re-exports of these functions resolve to
 // `undefined` across the chunk boundary (components, used directly, are fine).
 import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
+import { getCurrentUser } from '@nextcloud/auth'
 import { getCapabilities } from '@nextcloud/capabilities'
 import { loadState } from '@nextcloud/initial-state'
 import {
@@ -49,6 +50,7 @@ import {
 	applyHomePage,
 	applyMenuModules,
 	holdUnreachableTours,
+	markModuleCards,
 	MODULES_SETTING,
 	resolveMenuModules,
 } from './utils/menuModules.js'
@@ -160,20 +162,26 @@ const fragments = fragmentCtx
 const structureProfile = resolveStructureProfile(
 	loadState('pipelinq', STRUCTURE_SETTING, ''),
 )
+const enabledModules = resolveMenuModules(
+	loadState('pipelinq', MODULES_SETTING, ''),
+	simpleMenuLayout,
+)
 const profileFile =
 	structureProfile === STRUCTURE_FULL
 		? menuLayout
-		: applyMenuModules(
-				simpleMenuLayout,
-				resolveMenuModules(
-					loadState('pipelinq', MODULES_SETTING, ''),
-					simpleMenuLayout,
-				),
-			)
+		: applyMenuModules(simpleMenuLayout, enabledModules)
+// The Modules page's cards say which modules are in the menu: the full
+// structure shows every module, the simple one the switched-on ones.
 const { manifest: profiledManifest, homePage } = applyHomePage(
-	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile, {
-		theming: navTheming(getCapabilities()),
-	}),
+	markModuleCards(
+		buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile, {
+			theming: navTheming(getCapabilities()),
+		}),
+		structureProfile === STRUCTURE_FULL
+			? Object.keys(simpleMenuLayout.modules || {})
+			: enabledModules,
+		getCurrentUser()?.isAdmin === true,
+	),
 	profileFile.home,
 )
 // The getting-started tour sends the reader to menu entries the simple menu

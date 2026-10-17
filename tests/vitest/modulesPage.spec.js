@@ -11,7 +11,9 @@
  *
  * The page is now `type: "links"`, the library's typed page of link cards.
  * That page leaves out a card whose route does not resolve, so a manifest
- * assertion still cannot tell 29 cards from none. This spec mounts the
+ * assertion still cannot tell its links from none. Since board PqModules the
+ * six modules are module cards, each linking its pages, and the rest are two
+ * lists (Also in Pipelinq, More). This spec mounts the
  * library's real CnPageRenderer on the real `/modules` route, with the simple
  * structure's built manifest and a router built from its own pages, and counts
  * what a reader would see.
@@ -27,7 +29,7 @@ import { describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import CnLinkCardsPage from '@conduction/nextcloud-vue/src/components/CnLinkCardsPage/CnLinkCardsPage.vue'
 import CnPageRenderer from '@conduction/nextcloud-vue/src/components/CnPageRenderer/CnPageRenderer.vue'
-import { applyHomePage, applyMenuModules } from '../../src/utils/menuModules.js'
+import { applyHomePage, applyMenuModules, markModuleCards } from '../../src/utils/menuModules.js'
 import { buildProfiledManifest } from '../../src/utils/structureProfile.js'
 
 const ROOT = path.resolve(__dirname, '../..')
@@ -42,24 +44,21 @@ const fragments = fs
 	.map((name) => readJson('src', 'manifest.d', name))
 const simpleFile = readJson('src', 'menu-layout.simple.json')
 const { manifest } = applyHomePage(
-	buildProfiledManifest(
-		buildManifest,
-		readJson('src', 'manifest.json'),
-		fragments,
-		applyMenuModules(simpleFile, []),
+	markModuleCards(
+		buildProfiledManifest(
+			buildManifest,
+			readJson('src', 'manifest.json'),
+			fragments,
+			applyMenuModules(simpleFile, ['sales']),
+		),
+		['sales'],
+		true,
 	),
 	simpleFile.home,
 )
 const page = manifest.pages.find((item) => item.id === 'Modules')
-const GROUPS = [
-	'sales',
-	'marketing',
-	'pos',
-	'products',
-	'contracts',
-	'loyalty',
-	'other',
-]
+const GROUPS = ['other', 'more']
+const modulePages = page.config.modules.flatMap((module) => module.pages)
 
 /**
  * Open `/modules` the way the app does: every manifest page is a route that
@@ -110,46 +109,49 @@ describe('the Modules page, through the page renderer', () => {
 		).not.toContain('ModulesPage')
 	})
 
-	it('names a route that resolves on every one of its 29 cards', async () => {
+	it('names a route that resolves on every page link and in-app card', async () => {
 		const { router } = await openModules()
-		expect(page.config.cards).toHaveLength(29)
-		for (const card of page.config.cards) {
-			expect(router.hasRoute(card.route), card.id).toBe(true)
+		expect(page.config.modules).toHaveLength(6)
+		expect(modulePages).toHaveLength(26)
+		for (const link of [...modulePages, ...page.config.cards.filter((card) => !card.href)]) {
+			expect(router.hasRoute(link.route), link.label).toBe(true)
 		}
 	})
 
-	it('shows all 29 cards in seven groups, each a link to its own page', async () => {
+	it('shows six module cards, each linking its pages, and two lists', async () => {
 		const { wrapper } = await openModules()
-		expect(wrapper.find('[data-testid="cn-link-cards-page"]').exists()).toBe(
-			true,
-		)
-
-		const cards = wrapper.findAll('[data-testid="cn-link-card"]')
-		expect(cards).toHaveLength(29)
-		const hrefs = cards.map((card) => card.attributes('href'))
-		const expected = page.config.cards.map(
-			(card) =>
-				'/apps/pipelinq'
-				+ manifest.pages.find((item) => item.id === card.route).route,
-		)
-		expect([...hrefs].sort()).toEqual([...expected].sort())
-		expect(new Set(hrefs).size).toBe(29)
-		expect(hrefs).toContain('/apps/pipelinq/leads')
+		const modules = wrapper.findAll('[data-testid="cn-module-card"]')
+		expect(modules).toHaveLength(6)
+		const pageLinks = modules.flatMap((card) => card.findAll('a').map((link) => link.attributes('href')))
+		expect(pageLinks).toContain('/apps/pipelinq/leads')
 		// The sales overview is reached at the address the start page gave it.
-		expect(hrefs).toContain('/apps/pipelinq/sales-overview')
+		expect(pageLinks).toContain('/apps/pipelinq/sales-overview')
 
 		const groups = wrapper.findAll('[data-testid="cn-link-cards-group"]')
 		expect(groups.map((group) => group.attributes('data-group'))).toEqual(GROUPS)
-		expect(groups[1].findAll('[data-testid="cn-link-card"]')).toHaveLength(15)
+		expect(wrapper.findAll('[data-testid="cn-link-card"]')).toHaveLength(page.config.cards.length)
+	})
+
+	it('badges a switched-on module as in the menu and offers the admin settings on one that is off', async () => {
+		const { wrapper } = await openModules()
+		const card = (id) => wrapper.findAll('[data-testid="cn-module-card"]')[page.config.modules.findIndex((module) => module.id === id)]
+		expect(card('sales').find('[data-testid="cn-module-card-settings"]').exists()).toBe(false)
+		expect(card('pos').find('[data-testid="cn-module-card-settings"]').exists()).toBe(true)
+	})
+
+	it('drops the admin settings link for a reader who is not an administrator', () => {
+		const plain = markModuleCards(manifest, [], false)
+		const modules = plain.pages.find((item) => item.id === 'Modules').config.modules
+		expect(modules.every((module) => module.settings === undefined && module.enabled === false)).toBe(true)
 	})
 
 	it('shows every card with its own words', async () => {
 		const { wrapper } = await openModules()
 		expect(wrapper.text()).toContain('Modules and more')
 		expect(wrapper.text()).toContain(page.config.description)
-		for (const card of page.config.cards) {
-			expect(wrapper.text(), card.id).toContain(card.label)
-			expect(wrapper.text(), card.id).toContain(card.description)
+		for (const item of [...page.config.cards, ...page.config.modules]) {
+			expect(wrapper.text(), item.id).toContain(item.label)
+			expect(wrapper.text(), item.id).toContain(item.description)
 		}
 	})
 
@@ -159,8 +161,12 @@ describe('the Modules page, through the page renderer', () => {
 		const strings = [
 			page.title,
 			page.config.description,
+			page.config.modulesTitle,
+			page.config.footnote,
 			...Object.values(page.config.categories),
 			...page.config.cards.flatMap((card) => [card.label, card.description]),
+			...page.config.modules.flatMap((module) => [module.label, module.description, module.settings?.label]).filter(Boolean),
+			...modulePages.map((link) => link.label),
 		]
 		for (const text of strings) {
 			expect(en[text], `en "${text}"`).toBeTruthy()
@@ -170,7 +176,6 @@ describe('the Modules page, through the page renderer', () => {
 		expect(wrapper.text()).toContain('Modules en meer')
 		expect(wrapper.text()).toContain('Verkoopoverzicht')
 		expect(wrapper.text()).not.toContain('Sales overview')
-		expect(wrapper.findAll('[data-testid="cn-link-card"]')).toHaveLength(29)
 	})
 
 	it('opens the page a card names', async () => {

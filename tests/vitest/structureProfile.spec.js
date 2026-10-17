@@ -395,6 +395,12 @@ describe('the simple profile', () => {
 			for (const card of page.config?.cards ?? []) {
 				carded.add(card.route)
 			}
+			// A module card links each of its pages.
+			for (const module of page.config?.modules ?? []) {
+				for (const link of module.pages ?? []) {
+					carded.add(link.route)
+				}
+			}
 		}
 		const lost = flat(build(fullFile).menu)
 			.filter((entry) => entry.route || entry.href)
@@ -658,24 +664,32 @@ describe('the modules', () => {
 				(item) => item.type === 'custom' && item.id === 'Modules',
 			),
 		).toEqual([])
-		const cards = page.config.cards
+		// Each module is a module card (nextcloud-vue 2.92.0) that links every
+		// page the module takes out of the menu; the rest are link cards.
+		const { cards, modules } = page.config
 		const pageIds = new Set(buildSimple().pages.map((item) => item.id))
 		const entries = flat(buildManifest(manifest(), fragments, {}).menu)
+		expect(modules.map((module) => module.id).sort()).toEqual([...MODULE_KEYS].sort())
 		for (const key of MODULE_KEYS) {
-			expect(page.config.categories[key], key).toBe(
-				simpleFile.modules[key].label,
-			)
+			const module = modules.find((item) => item.id === key)
+			expect(module.label, key).toBe(simpleFile.modules[key].label)
 			for (const id of simpleFile.modules[key].ids) {
 				const route = entries.find((entry) => entry.id === id).route
-				const card = cards.find((item) => item.route === route)
-				expect(card, `${key}: no card opens ${route}`).toBeTruthy()
-				expect(card.category, id).toBe(key)
+				expect(
+					module.pages.some((item) => item.route === route),
+					`${key}: no page link opens ${route}`,
+				).toBe(true)
 			}
 		}
-		for (const card of cards) {
-			expect(pageIds.has(card.route), card.id).toBe(true)
-			expect(iconsSource, card.id).toContain(`\n\t${card.icon},\n`)
-			for (const text of [card.label, card.description]) {
+		const links = [...cards, ...modules.flatMap((module) => module.pages)]
+		for (const link of links) {
+			if (!link.href) {
+				expect(pageIds.has(link.route), link.label).toBe(true)
+			}
+		}
+		for (const item of [...cards, ...modules]) {
+			expect(iconsSource, item.id).toContain(`\n\t${item.icon},\n`)
+			for (const text of [item.label, item.description]) {
 				expect(en[text], `en "${text}"`).toBeTruthy()
 				expect(nl[text], `nl "${text}"`).toBeTruthy()
 			}

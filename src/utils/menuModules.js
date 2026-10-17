@@ -188,3 +188,36 @@ export function holdUnreachableTours(manifest) {
 		},
 	}
 }
+
+/**
+ * Tell the module cards on a links page which modules are in the menu.
+ *
+ * A `links` page lists the modules as cards with a badge (in the menu, off).
+ * Whether a module is on is the app setting `menu_modules`, known only at
+ * boot, so this sets each card's `enabled` from the switched-on keys. The
+ * admin settings link on a card that is off is for administrators: for
+ * anyone else it is dropped. A page without module cards is left as it is.
+ *
+ * @param {object} manifest The built manifest.
+ * @param {Array<string>} enabled The switched-on module keys.
+ * @param {boolean} isAdmin Whether the reader administers this instance.
+ * @return {object} The manifest with the module cards marked.
+ *
+ * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-104
+ */
+export function markModuleCards(manifest, enabled, isAdmin) {
+	const on = new Set(Array.isArray(enabled) ? enabled : [])
+	const pages = (manifest?.pages || []).map((page) => {
+		const modules = page?.config?.modules
+		if (page?.type !== 'links' || !Array.isArray(modules)) {
+			return page
+		}
+		const marked = modules.map((module) => {
+			const { settings, ...rest } = module
+			const next = { ...rest, enabled: on.has(module.id) }
+			return isAdmin === true && settings ? { ...next, settings } : next
+		})
+		return { ...page, config: { ...page.config, modules: marked } }
+	})
+	return { ...manifest, pages }
+}
