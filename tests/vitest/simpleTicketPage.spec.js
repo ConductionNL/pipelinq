@@ -132,7 +132,7 @@ describe('the full structure', () => {
 })
 
 describe('the header, as DqZaak draws it', () => {
-	it('reads the list as a text breadcrumb, has no type eyebrow, sits in a card and shows the tabs as a segmented control', () => {
+	it('reads the list as a text breadcrumb, has no type eyebrow, sits in a card and shows the tabs as the folder tabs of the board', () => {
 		expect(simple.breadcrumb).toEqual({
 			label: 'Questions and reports',
 			route: 'Tickets',
@@ -140,7 +140,10 @@ describe('the header, as DqZaak draws it', () => {
 		expect(simple.showTypeEyebrow).toBe(false)
 		expect(simple.headerCard).toBe(true)
 		const tabs = simple.widgets.find((widget) => widget.id === 'ticket-panels')
-		expect(tabs.content.variant).toBe('segmented')
+		expect(tabs.content.variant).toBeUndefined()
+		expect(simple.follow).toBe(false)
+		expect(simple.favourite).toBe(false)
+		expect(simple.headerMeta).toBe('{channel} · received {occurredAt|date}')
 		// The full page declares none of it, so it renders as before.
 		for (const key of ['breadcrumb', 'showTypeEyebrow', 'headerCard']) {
 			expect(full.config[key], key).toBeUndefined()
@@ -252,9 +255,9 @@ describe('the primary button', () => {
 			/TicketAnswerDialog: \{\s+kind: 'modal',\s+component: TicketAnswerDialog,/,
 		)
 		const dialog = read('src', 'dialogs', 'TicketAnswerDialog.vue')
-		expect(dialog).toContain(
-			'<CustomerReplySection v-if="ticketId" :objectId="ticketId" />',
-		)
+		expect(dialog).toMatch(/<CustomerReplySection\s+v-if="ticketId"/)
+		expect(dialog).toContain(':objectId="ticketId"')
+		expect(dialog).toContain('inDialog')
 		expect(dialog).toContain("emit('cn:page:refresh', {})")
 	})
 })
@@ -371,13 +374,21 @@ describe('the pills and the side column', () => {
 		)
 	})
 
-	it('show the customer, the deadline and the linked case from fields the ticket has', () => {
-		expect(simple.sideColumn.map((card) => card.id)).toEqual([
+	it('show the customer, the deadline, the linked case and what is related, from fields the ticket has', () => {
+		expect(
+			simple.sideColumn.map((card) =>
+				typeof card === 'string' ? card : card.id,
+			),
+		).toEqual([
 			'side-customer',
 			'side-deadline',
 			'side-case',
+			'ticket-related',
+			'ticket-resident-view',
 		])
-		for (const card of simple.sideColumn) {
+		for (const card of simple.sideColumn.filter(
+			(item) => typeof item !== 'string',
+		)) {
 			expect(card.type).toBe('data')
 			expect(card.content.editable).toBe(false)
 			for (const field of card.content.include) {
@@ -419,8 +430,8 @@ describe('the body', () => {
 		)
 		for (const widget of children) {
 			expect(tabbed, widget.id).toContain(widget.id)
-			if (widget.id === 'ticket-decision-routes') {
-				// The one widget the simple page changes: see the test below.
+			if (['ticket-decision-routes', 'ticket-data'].includes(widget.id)) {
+				// The widgets the simple page changes: see the tests below.
 				continue
 			}
 			expect(simple.widgets.find((item) => item.id === widget.id)).toEqual(
@@ -436,8 +447,8 @@ describe('the body', () => {
 		const head = (config) =>
 			config.widgets.find((widget) => widget.id === 'ticket-decision-routes')
 		const section = (config) =>
-			(config.bodyWidgets || []).filter(
-				(item) => item.component === 'RequestConversionSection',
+			(config.widgets || []).filter(
+				(item) => item.type === 'RequestConversionWidget',
 			)
 		// The simple page has the Case section, so the tab's head leaves it out.
 		expect(section(simple)).toHaveLength(1)
@@ -463,43 +474,95 @@ describe('the body', () => {
 		}
 	})
 
-	it('shows the conversation to read and moves the answer box into the dialog', () => {
-		const ids = simple.bodyWidgets.map((section) => section.id)
-		expect(ids).toEqual([
-			'dossier-snapshot',
-			'ticket-conversation',
-			'woo-conversion',
-			'resident-view',
-			'routing-suggestions',
-			'request-conversion',
+	it('stacks the details, the conversation, the dossier, the Woo request and the case in the Overview tab', () => {
+		const panels = simple.widgets.find((widget) => widget.id === 'ticket-panels')
+		expect(panels.content.tabs.map((tab) => tab.label)).toEqual([
+			'Overview',
+			'Contact moments',
+			'Related',
+			'Decisions',
+			'History',
 		])
-		// Everything the page had is still there, except the answer box.
-		for (const section of full.config.bodyWidgets) {
-			if (section.id === 'customer-reply') {
-				continue
-			}
-			expect(
-				simple.bodyWidgets.find((item) => item.id === section.id),
-			).toEqual(section)
-		}
-		for (const section of simple.bodyWidgets) {
-			expect(registrySource, section.component).toMatch(
-				new RegExp(`\\n\\t${section.component}: \\{\\s+kind: 'section',`),
-			)
+		expect(panels.content.tabs[0].widgetIds).toEqual([
+			'ticket-data',
+			'ticket-conversation',
+			'ticket-dossier',
+			'ticket-woo',
+			'ticket-case',
+		])
+		const counted = panels.content.tabs.filter(
+			(tab) => tab.countFrom === 'widget',
+		)
+		expect(counted.map((tab) => tab.label)).toEqual([
+			'Contact moments',
+			'Related',
+		])
+		const data = simple.widgets.find((widget) => widget.id === 'ticket-data')
+		expect(data.content.columns).toBe(2)
+		for (const key of data.content.include) {
+			expect(ticketProperties[key], key).toBeTruthy()
 		}
 	})
 
-	it('offers convert to case through the section that asks first whether it can', () => {
-		const section = simple.bodyWidgets.find(
-			(item) => item.id === 'request-conversion',
+	it('moves every section into a tab except the suggested colleagues, and drops only the answer box', () => {
+		expect(simple.bodyWidgets.map((section) => section.id)).toEqual([
+			'routing-suggestions',
+		])
+		const moved = {
+			'dossier-snapshot': [
+				'ticket-dossier',
+				'DossierSnapshotWidget',
+				'DossierSnapshotSection',
+			],
+			'woo-conversion': [
+				'ticket-woo',
+				'WooConversionWidget',
+				'WooConversionSection',
+			],
+			'resident-view': [
+				'ticket-resident-view',
+				'ResidentViewWidget',
+				'ResidentViewSection',
+			],
+		}
+		for (const section of full.config.bodyWidgets) {
+			if (
+				section.id === 'customer-reply'
+				|| section.id === 'routing-suggestions'
+			) {
+				continue
+			}
+			const [id, type, component] = moved[section.id]
+			expect(section.component).toBe(component)
+			const widget = simple.widgets.find((item) => item.id === id)
+			expect(widget.type, section.id).toBe(type)
+			expect(registrySource).toMatch(
+				new RegExp(
+					`\\n\\t${type}: \\{\\s+kind: 'widget',\\s+component: sectionWidget\\(\\s+'${type}',\\s+${component},`,
+				),
+			)
+		}
+		for (const [id, type] of [
+			['ticket-conversation', 'TicketConversationWidget'],
+			['ticket-case', 'RequestConversionWidget'],
+		]) {
+			expect(simple.widgets.find((item) => item.id === id).type).toBe(type)
+		}
+		expect(registrySource).toMatch(
+			/sectionWidget\(\s+'TicketConversationWidget',\s+TicketConversationSection,\s+\(\) => \(\{\}\),\s+\{ card: true, context: true \},/,
 		)
+	})
+
+	it('offers convert to case through the section that asks first whether it can', () => {
 		const source = read(
 			'src',
 			'views',
 			'requests',
 			'RequestConversionSection.vue',
 		)
-		expect(Object.keys(section.props)).toEqual(['requestId'])
+		expect(registrySource).toContain(
+			'({ objectId }) => ({ requestId: objectId })',
+		)
 		expect(source).toContain('requestId: {')
 		expect(read('appinfo', 'routes.php')).toContain(
 			"'/api/handoff/request/{id}/convert-to-case'",
@@ -547,7 +610,7 @@ describe('the words', () => {
 			expect(nl[word], `nl "${word}"`).toBeTruthy()
 		}
 		expect(nl['Take on']).toBe('In behandeling nemen')
-		expect(nl['Answer the customer']).toBe('Beantwoorden')
+		expect(nl['Answer the customer']).toBe('De klant beantwoorden')
 		expect(nl['Close the ticket']).toBe('Afsluiten')
 	})
 

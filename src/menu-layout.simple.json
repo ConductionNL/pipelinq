@@ -25,7 +25,22 @@
 		"SettingsIntegrationsCaption",
 		"MarketingGroup",
 		"Dashboard",
-		"Prospects"
+		"Prospects",
+		"Segments",
+		"Templates",
+		"Articles",
+		"MailingLists",
+		"Blasts",
+		"Campaigns",
+		"BlastPerformance",
+		"Journeys",
+		"SocialAccounts",
+		"SocialPosts",
+		"SocialPerformance",
+		"KeywordIntelligence",
+		"CompetitorWatches",
+		"ConnectionAudit",
+		"SearchQueries"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",
@@ -339,7 +354,7 @@
 		"index": {
 			"showTitle": true,
 			"showTitleIcon": false,
-			"headerFilters": false,
+			"headerFilters": true,
 			"headerButtons": [
 				{
 					"action": "export",
@@ -392,23 +407,7 @@
 		},
 		"marketing": {
 			"label": "Marketing",
-			"ids": [
-				"Segments",
-				"Templates",
-				"Articles",
-				"MailingLists",
-				"Blasts",
-				"Campaigns",
-				"BlastPerformance",
-				"Journeys",
-				"SocialAccounts",
-				"SocialPosts",
-				"SocialPerformance",
-				"KeywordIntelligence",
-				"CompetitorWatches",
-				"ConnectionAudit",
-				"SearchQueries"
-			],
+			"ids": [],
 			"menu": [
 				{
 					"id": "MarketingCaption",
@@ -564,6 +563,55 @@
 						"props": {
 							"ticketType": "interaction",
 							"parentTicket": "@objectId"
+						},
+						"formEyebrow": "Contact moment",
+						"formSubtitle": "A contact moment with the customer, saved with this ticket",
+						"includeFields": [
+							"channel",
+							"direction",
+							"occurredAt",
+							"duration",
+							"title",
+							"notes",
+							"client"
+						],
+						"columns": 2,
+						"fieldOverrides": {
+							"channel": {
+								"order": 1,
+								"label": "Channel",
+								"description": ""
+							},
+							"direction": {
+								"order": 2,
+								"label": "Direction",
+								"description": ""
+							},
+							"occurredAt": {
+								"order": 3,
+								"label": "When",
+								"description": ""
+							},
+							"duration": {
+								"order": 4,
+								"label": "Duration",
+								"description": ""
+							},
+							"title": {
+								"order": 5,
+								"label": "Subject",
+								"description": ""
+							},
+							"notes": {
+								"order": 6,
+								"label": "Notes",
+								"description": ""
+							},
+							"client": {
+								"order": 7,
+								"label": "Client",
+								"description": ""
+							}
 						}
 					},
 					{
@@ -831,7 +879,9 @@
 							"hideEmpty": true,
 							"editable": false
 						}
-					}
+					},
+					"ticket-related",
+					"ticket-resident-view"
 				],
 				"layout": [
 					{
@@ -848,11 +898,128 @@
 					"route": "Tickets"
 				},
 				"showTypeEyebrow": false,
-				"headerCard": true
+				"headerCard": true,
+				"follow": false,
+				"favourite": false,
+				"headerMeta": "{channel} · received {occurredAt|date}",
+				"formColumns": 2,
+				"formSize": "large",
+				"includeFields": [
+					"title",
+					"description",
+					"ticketType",
+					"category",
+					"priority",
+					"channel",
+					"client",
+					"contact",
+					"assignee",
+					"agent_skill",
+					"occurredAt",
+					"slaDeadline",
+					"caseReference",
+					"pipeline",
+					"stage",
+					"contract",
+					"customerMessage"
+				],
+				"fieldOverrides": {
+					"title": {
+						"order": 1,
+						"description": "",
+						"section": "The ticket"
+					},
+					"description": {
+						"order": 2,
+						"description": "",
+						"section": "The ticket"
+					},
+					"ticketType": {
+						"order": 3,
+						"description": "",
+						"section": "The ticket"
+					},
+					"category": {
+						"order": 4,
+						"description": "",
+						"section": "The ticket"
+					},
+					"priority": {
+						"order": 5,
+						"description": "",
+						"section": "The ticket"
+					},
+					"channel": {
+						"order": 6,
+						"description": "",
+						"section": "The ticket"
+					},
+					"client": {
+						"order": 7,
+						"description": "",
+						"section": "People"
+					},
+					"contact": {
+						"order": 8,
+						"description": "",
+						"section": "People"
+					},
+					"assignee": {
+						"order": 9,
+						"description": "",
+						"section": "People"
+					},
+					"agent_skill": {
+						"order": 10,
+						"description": "",
+						"section": "People"
+					},
+					"occurredAt": {
+						"order": 11,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"slaDeadline": {
+						"order": 12,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"caseReference": {
+						"order": 13,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"pipeline": {
+						"order": 14,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"stage": {
+						"order": 15,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"contract": {
+						"order": 16,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"customerMessage": {
+						"order": 17,
+						"description": "",
+						"section": "Visible to the customer"
+					}
+				}
 			},
 			"configPatch": {
 				"bodyWidgets": {
-					"customer-reply": null
+					"customer-reply": null,
+					"dossier-snapshot": null,
+					"woo-conversion": null,
+					"resident-view": null,
+					"routing-suggestions": {
+						"title": "Suggested colleagues"
+					}
 				},
 				"widgets": {
 					"ticket-decision-routes": {
@@ -872,16 +1039,24 @@
 							"moreLabel": "More",
 							"tabs": [
 								{
-									"widgetId": "ticket-data",
+									"widgetIds": [
+										"ticket-data",
+										"ticket-conversation",
+										"ticket-dossier",
+										"ticket-woo",
+										"ticket-case"
+									],
 									"label": "Overview"
 								},
 								{
 									"widgetId": "ticket-contactmoments",
-									"label": "Contact moments"
+									"label": "Contact moments",
+									"countFrom": "widget"
 								},
 								{
 									"widgetId": "ticket-related",
-									"label": "Related"
+									"label": "Related",
+									"countFrom": "widget"
 								},
 								{
 									"widgetIds": [
@@ -893,11 +1068,42 @@
 									"visibleWhen": {
 										"appInstalled": "decidiq"
 									}
+								},
+								{
+									"widgetId": "ticket-history",
+									"label": "History"
 								}
-							],
-							"variant": "segmented"
+							]
 						},
-						"_note": "The page declares `ticket-panels` itself (overview and decisions). The simple structure gives it the board's four tabs, so this patches the widget instead of appending a second one with the same id."
+						"_note": "Board PqTicket: folder tabs with counts. The overview holds the ticket details, the conversation, the dossier asked about, the Woo request and the case, one under the other; contact moments, related, decisions and history each have a tab. What the resident sees is the last card of the side column, so the strip keeps the five tabs of the board."
+					},
+					"ticket-data": {
+						"title": "Ticket details",
+						"content": {
+							"title": "Ticket details",
+							"columns": 2,
+							"hideEmpty": true,
+							"include": [
+								"assignee",
+								"category",
+								"channel",
+								"client",
+								"occurredAt",
+								"duration",
+								"priority",
+								"description"
+							],
+							"overrides": {
+								"assignee": {
+									"formatter": "userDisplayName"
+								},
+								"description": {
+									"gridColumn": 2
+								}
+							}
+						},
+						"_note": "Board PqTicket: the overview card names the ticket in two columns, the description across both. What the type does not use stays hidden (hideEmpty).",
+						"icon": ""
 					}
 				}
 			},
@@ -939,35 +1145,100 @@
 							],
 							"limit": 25,
 							"rowRoute": "TicketDetail",
-							"emptyText": "No contact moments on this ticket yet."
-						}
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "ticket-conversation",
-						"component": "TicketConversationSection",
-						"title": "Conversation",
-						"placement": "after-data",
-						"props": {
-							"objectId": "@objectId"
+							"emptyText": "No contact moments on this ticket yet.",
+							"allowCreate": true,
+							"addLabel": "Log contact",
+							"formIncludeFields": [
+								"channel",
+								"direction",
+								"occurredAt",
+								"duration",
+								"title",
+								"notes",
+								"client"
+							],
+							"formFieldOverrides": {
+								"channel": {
+									"order": 1,
+									"label": "Channel",
+									"description": ""
+								},
+								"direction": {
+									"order": 2,
+									"label": "Direction",
+									"description": ""
+								},
+								"occurredAt": {
+									"order": 3,
+									"label": "When",
+									"description": ""
+								},
+								"duration": {
+									"order": 4,
+									"label": "Duration",
+									"description": ""
+								},
+								"title": {
+									"order": 5,
+									"label": "Subject",
+									"description": ""
+								},
+								"notes": {
+									"order": 6,
+									"label": "Notes",
+									"description": ""
+								},
+								"client": {
+									"order": 7,
+									"label": "Client",
+									"description": ""
+								}
+							},
+							"formColumns": 2
 						}
 					},
 					{
-						"id": "request-conversion",
-						"component": "RequestConversionSection",
-						"title": "Case",
-						"placement": "after-data",
-						"props": {
-							"requestId": "@objectId"
+						"id": "ticket-conversation",
+						"type": "TicketConversationWidget",
+						"title": "Conversation",
+						"icon": "ForumOutline",
+						"content": {
+							"title": "Conversation"
 						}
+					},
+					{
+						"id": "ticket-dossier",
+						"type": "DossierSnapshotWidget",
+						"title": "Asked about",
+						"icon": "FolderOutline"
+					},
+					{
+						"id": "ticket-woo",
+						"type": "WooConversionWidget",
+						"title": "Woo request",
+						"icon": "FileDocumentOutline"
+					},
+					{
+						"id": "ticket-case",
+						"type": "RequestConversionWidget",
+						"title": "Case",
+						"icon": "Gavel",
+						"content": {
+							"title": "Case"
+						}
+					},
+					{
+						"id": "ticket-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "ticket-resident-view",
+						"type": "ResidentViewWidget",
+						"title": "What the resident sees",
+						"icon": "EyeOutline"
 					}
-				]
-			},
-			"configOrder": {
-				"bodyWidgets": [
-					"dossier-snapshot",
-					"ticket-conversation"
 				]
 			}
 		},
@@ -1528,7 +1799,7 @@
 		},
 		{
 			"id": "Tickets",
-			"_note": "The tickets list in the simple structure (openspec/changes/simple-contact-dashboard). No view is dropped: the four the page had keep their filter and gain a count, three join them, five show and the rest sit behind the overflow chip. `Waiting for me`, `New` and `Waiting for customer` use the same filters as the dashboard stats that link here. THE AVATAR IS THE HANDLER'S: `assignee` holds a Nextcloud user id. The design draws the customer's initials, and a ticket holds its client as a reference without a name. THE COLOUR IS ON THE DEADLINE: late or due today is red (`lte 0`), due within two days is amber. How long a ticket has waited cannot be coloured, a date rule counts days until a date and a wait lies in the past.",
+			"_note": "The tickets list in the simple structure (openspec/changes/simple-contact-dashboard). No view is dropped: the four the page had keep their filter and gain a count, three join them, five show and the rest sit behind the overflow chip. `Waiting for me`, `New` and `Waiting for customer` use the same filters as the dashboard stats that link here. THE AVATAR IS THE HANDLER'S: `assignee` holds a Nextcloud user id. The design draws the customer's initials, and a ticket holds its client as a reference without a name. THE COLOUR IS ON THE DEADLINE: late or due today is red (`lte 0`), due within two days is amber. How long a ticket has waited cannot be coloured, a date rule counts days until a date and a wait lies in the past. BOARD PqTickets: no menu per row (a row opens the ticket, where Edit and the rest live; copy and delete stay on the selection), and the footer says how the list is sorted.",
 			"config": {
 				"quickFilterMaxVisible": 6,
 				"columns": [
@@ -1609,7 +1880,12 @@
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"rowTitle": "plain",
-				"searchPlaceholder": "Filter by subject or client"
+				"searchPlaceholder": "Filter by subject or client",
+				"actions": [],
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"footerNote": "newest first · click a column header to sort"
 			},
 			"configPatch": {
 				"quickFilters": {
@@ -1971,6 +2247,166 @@
 				"footerNote": "A contact is someone you deal with at a client. Residents are clients themselves.",
 				"sortKey": "@self.created",
 				"sortOrder": "desc"
+			}
+		},
+		{
+			"id": "Queue",
+			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, past the deadline), the type tabs with a channel strip under them, and per row the wait, the title with the customer and channel, the type, the priority, Take on and View. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated.",
+			"config": {
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "queue-take-oldest",
+						"variant": "primary",
+						"icon": "AccountArrowLeftOutline",
+						"label": "Take the oldest"
+					}
+				],
+				"selectable": false,
+				"showViewToggle": false,
+				"inlineActionCount": 2,
+				"footerNote": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
+				"filterStrip": {
+					"field": "channel",
+					"label": "Kind, then channel",
+					"showCount": true
+				},
+				"columns": [
+					{
+						"key": "occurredAt",
+						"label": "Waiting",
+						"widget": "age",
+						"widgetProps": {
+							"variantWhen": [
+								{
+									"op": "gte",
+									"value": 2,
+									"variant": "error"
+								}
+							]
+						},
+						"sortable": true
+					},
+					{
+						"key": "title",
+						"label": "Title",
+						"secondary": "{client.name} · {channel}",
+						"sortable": true
+					},
+					{
+						"key": "ticketType",
+						"label": "Type",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"request": "primary",
+								"complaint": "error"
+							}
+						}
+					},
+					{
+						"key": "priority",
+						"label": "Priority"
+					}
+				],
+				"rowTitle": "plain",
+				"sidePanel": [
+					{
+						"id": "queue-team",
+						"type": "record-list",
+						"title": "Team today",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/routing/team-load",
+								"responsePath": "results"
+							},
+							"avatar": "{displayName}",
+							"title": "{displayName}",
+							"meta": "{isAvailable}",
+							"valueLabels": {
+								"isAvailable": {
+									"true": "Available",
+									"false": "Not available"
+								}
+							},
+							"trailing": "{open} open",
+							"bar": {
+								"valueField": "open",
+								"maxField": "maxConcurrent",
+								"overVariant": "error"
+							},
+							"emptyText": "No agent profiles yet."
+						}
+					},
+					{
+						"id": "queue-agreements",
+						"type": "text",
+						"title": "Agreements",
+						"content": {
+							"text": "Requests and reports: an answer within 2 working days. Complaints: a first reply the same day. Phone: answered within 30 seconds.",
+							"link": {
+								"label": "Service levels in Reports",
+								"route": "SlaAttainment"
+							}
+						}
+					}
+				]
+			},
+			"configAppend": {
+				"headerActions": [
+					{
+						"id": "queue-take-oldest",
+						"type": "api-call",
+						"label": "Take the oldest",
+						"icon": "AccountArrowLeftOutline",
+						"url": "/apps/pipelinq/api/tickets/assign-oldest",
+						"method": "POST",
+						"successMessage": "The oldest ticket is yours. It is on your My Work now.",
+						"errorMessage": "Nothing is waiting in the queue."
+					}
+				],
+				"statRow": [
+					{
+						"id": "queue-longest-waiting",
+						"type": "stat",
+						"title": "Longest waiting",
+						"content": {
+							"label": "Longest waiting",
+							"display": "countdown",
+							"countdown": {
+								"pastLabel": "{n} days",
+								"todayLabel": "Today",
+								"emptyText": "Nothing is waiting"
+							},
+							"endpointSource": {
+								"url": "/apps/openregister/api/objects/pipelinq/ticket",
+								"params": {
+									"_limit": 1,
+									"_order[occurredAt]": "asc",
+									"assignee": "IS NULL",
+									"status_notIn": [
+										"resolved",
+										"completed",
+										"rejected",
+										"converted",
+										"closed"
+									]
+								},
+								"responsePath": "results.0.occurredAt"
+							},
+							"caption": "the oldest ticket nobody has picked up"
+						}
+					}
+				]
+			},
+			"configOrder": {
+				"statRow": [
+					"queue-unassigned",
+					"queue-longest-waiting"
+				]
 			}
 		}
 	]
