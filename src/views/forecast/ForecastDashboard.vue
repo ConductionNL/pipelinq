@@ -5,130 +5,130 @@
 <template>
 	<div class="forecast-dashboard">
 		<div class="forecast-dashboard__header">
-			<h2>{{ t('pipelinq', 'Forecast') }}</h2>
-			<div class="forecast-dashboard__controls">
-				<NcSelect
-					v-model="selectedLevel"
-					:inputLabel="t('pipelinq', 'Level')"
-					:options="levelOptions"
-					label="label"
-					:clearable="false"
-					@update:modelValue="loadSnapshots" />
-				<NcButton variant="secondary" @click="exportCsv">
-					{{ t('pipelinq', 'Export CSV') }}
-				</NcButton>
-			</div>
+			<CnPageHeader
+				:title="t('pipelinq', 'Forecast')"
+				:description="subtitle" />
+			<NcButton class="forecast-dashboard__download" @click="exportCsv">
+				<template #icon>
+					<Download :size="20" />
+				</template>
+				{{ t('pipelinq', 'Download') }}
+			</NcButton>
 		</div>
-
-		<NcNoteCard v-if="atRisk" type="warning" class="forecast-dashboard__atrisk">
-			{{ atRiskMessage }}
-		</NcNoteCard>
-
+		<CnSegmentedControl
+			:modelValue="level"
+			:options="levelOptions"
+			:ariaLabel="t('pipelinq', 'Level')"
+			size="compact"
+			class="forecast-dashboard__levels"
+			@update:modelValue="setLevel" />
 		<NcLoadingIcon v-if="loading" :size="32" />
-
 		<template v-else>
-			<div class="forecast-summary">
-				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{
-						t('pipelinq', 'Quota')
+			<div class="forecast-tiles">
+				<CnDetailCard
+					v-for="tile in tiles"
+					:key="tile.id"
+					class="forecast-tile">
+					<span class="forecast-tile__label">{{ tile.label }}</span>
+					<strong
+						class="forecast-tile__value"
+						:class="{ 'forecast-tile__value--gap': tile.warn }"
+						>{{ tile.value }}</strong
+					>
+					<span v-if="tile.caption" class="forecast-tile__caption">{{
+						tile.caption
 					}}</span>
-					<span class="forecast-summary__value">{{
-						formatMoney(summary.quota)
-					}}</span>
-				</div>
-				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{
-						t('pipelinq', 'Closed Won')
-					}}</span>
-					<span class="forecast-summary__value">{{
-						formatMoney(summary.closedWon)
-					}}</span>
-				</div>
-				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{
-						t('pipelinq', 'Committed')
-					}}</span>
-					<span class="forecast-summary__value">{{
-						formatMoney(summary.commit)
-					}}</span>
-				</div>
-				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{
-						t('pipelinq', 'Gap to close')
-					}}</span>
-					<span class="forecast-summary__value">{{
-						formatMoney(summary.gap)
-					}}</span>
-				</div>
+				</CnDetailCard>
 			</div>
-
-			<div class="forecast-progress" :aria-label="progressLabel">
-				<div class="forecast-progress__bar">
-					<div
-						class="forecast-progress__seg forecast-progress__seg--closed"
-						:style="{ width: pct(summary.closedWon) + '%' }" />
-					<div
-						class="forecast-progress__seg forecast-progress__seg--commit"
-						:style="{ width: pct(summary.commit) + '%' }" />
+			<CnDetailCard :title="quarterTitle" class="forecast-quarter">
+				<template #header-actions>
+					<NcButton variant="secondary" @click="exportCsv">
+						<template #icon>
+							<Download :size="20" />
+						</template>
+						{{ t('pipelinq', 'Export CSV') }}
+					</NcButton>
+				</template>
+				<div class="forecast-progress" :aria-label="progressLabel">
+					<div class="forecast-progress__bar">
+						<div
+							class="forecast-progress__seg forecast-progress__seg--closed"
+							:style="{ width: pct(summary.closedWon) + '%' }" />
+						<div
+							class="forecast-progress__seg forecast-progress__seg--commit"
+							:style="{ width: pct(summary.commit) + '%' }" />
+					</div>
+					<span class="forecast-progress__label">{{ progressLabel }}</span>
 				</div>
-				<span class="forecast-progress__label">{{ progressLabel }}</span>
-			</div>
-
-			<table v-if="rows.length" class="forecast-table">
-				<thead>
-					<tr>
-						<th scope="col">{{ t('pipelinq', 'Owner') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Commit') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Best Case') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Pipeline') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Closed Won') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Quota') }}</th>
-						<th scope="col" />
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="row in rows" :key="row.owner_id">
-						<td>{{ row.owner_id }}</td>
-						<td>
-							<span
-								:class="{
-									'forecast-table__overridden': hasOverride(row),
-								}">
-								{{ formatMoney(row.commit) }}
-							</span>
-							<span
-								v-if="hasOverride(row)"
-								class="forecast-table__badge"
-								:title="overrideTitle(row)">
-								▼ {{ t('pipelinq', 'override') }}
-							</span>
-						</td>
-						<td>{{ formatMoney(row.best_case) }}</td>
-						<td>{{ formatMoney(row.pipeline) }}</td>
-						<td>{{ formatMoney(row.closed_won) }}</td>
-						<td>
-							{{ row.quota === null ? '—' : formatMoney(row.quota) }}
-						</td>
-						<td>
-							<NcButton variant="tertiary" @click="openOverride(row)">
-								{{ t('pipelinq', 'Override') }}
-							</NcButton>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-
-			<NcEmptyContent
-				v-else
-				:name="t('pipelinq', 'No snapshots yet')"
-				:description="
-					t(
-						'pipelinq',
-						'Forecast snapshots are generated every Monday. Check back after the next run.',
-					)
-				" />
+				<NcNoteCard v-if="atRisk" type="warning">
+					{{ atRiskMessage }}
+				</NcNoteCard>
+				<table v-if="rows.length" class="forecast-table">
+					<thead>
+						<tr>
+							<th scope="col">{{ t('pipelinq', 'Owner') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Commit') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Best Case') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Pipeline') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Closed Won') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Quota') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Override') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="row in rows" :key="row.owner_id">
+							<td>{{ row.owner_id }}</td>
+							<td>
+								<span
+									:class="{
+										'forecast-table__overridden':
+											hasOverride(row),
+									}">
+									{{ formatMoney(row.commit) }}
+								</span>
+								<span
+									v-if="hasOverride(row)"
+									class="forecast-table__badge"
+									:title="overrideTitle(row)">
+									{{ t('pipelinq', 'override') }}
+								</span>
+							</td>
+							<td>{{ formatMoney(row.best_case) }}</td>
+							<td>{{ formatMoney(row.pipeline) }}</td>
+							<td>{{ formatMoney(row.closed_won) }}</td>
+							<td>
+								{{
+									row.quota === null ? '—' : formatMoney(row.quota)
+								}}
+							</td>
+							<td>
+								<NcButton
+									variant="secondary"
+									@click="openOverride(row)">
+									<template #icon>
+										<Pencil :size="20" />
+									</template>
+									{{ t('pipelinq', 'Override') }}
+								</NcButton>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<NcEmptyContent
+					v-else
+					:name="t('pipelinq', 'No snapshots yet')"
+					:description="
+						t(
+							'pipelinq',
+							'Forecast snapshots are generated every Monday. Check back after the next run.',
+						)
+					" />
+			</CnDetailCard>
+			<h2 class="forecast-dashboard__section">
+				{{ t('pipelinq', 'Trend and accuracy of the forecast') }}
+			</h2>
+			<ForecastTrend embedded :level="childLevel" />
 		</template>
-
 		<ForecastOverrideModal
 			v-if="overrideTarget"
 			:periodId="periodId"
@@ -143,37 +143,45 @@
 
 <script>
 import {
-	NcButton,
-	NcEmptyContent,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcSelect,
-} from '@nextcloud/vue'
+	CnDetailCard,
+	CnPageHeader,
+	CnSegmentedControl,
+} from '@conduction/nextcloud-vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import Download from 'vue-material-design-icons/Download.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ForecastOverrideModal from '../../modals/ForecastOverrideModal.vue'
+import ForecastTrend from './ForecastTrend.vue'
 import { formatEur } from '../../services/commercialFormat.js'
 import { csvExportUrl, fetchSnapshots } from '../../services/forecastApi.js'
 import {
 	attainmentPercent,
 	gapToQuota,
 	isAtRisk,
+	latestPerOwner,
 	projectedAttainment,
 } from '../../services/forecastMath.js'
 
 export default {
 	name: 'ForecastDashboard',
 	components: {
+		CnDetailCard,
+		CnPageHeader,
+		CnSegmentedControl,
+		Download,
+		ForecastTrend,
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
-		NcSelect,
+		Pencil,
 		ForecastOverrideModal,
 	},
 
 	data() {
 		return {
 			loading: false,
-			selectedLevel: { id: 'team', label: t('pipelinq', 'Team') },
+			level: 'team',
 			rows: [],
 			overrideTarget: null,
 			daysRemaining: 30,
@@ -183,15 +191,85 @@ export default {
 	computed: {
 		levelOptions() {
 			return [
-				{ id: 'company', label: t('pipelinq', 'Company') },
-				{ id: 'division', label: t('pipelinq', 'Division') },
-				{ id: 'team', label: t('pipelinq', 'Team') },
-				{ id: 'rep', label: t('pipelinq', 'Rep') },
+				{ value: 'rep', label: t('pipelinq', 'Seller') },
+				{ value: 'team', label: t('pipelinq', 'Team') },
+				{ value: 'division', label: t('pipelinq', 'Division') },
+				{ value: 'company', label: t('pipelinq', 'Company') },
 			]
 		},
 
-		level() {
-			return this.selectedLevel?.id || 'team'
+		/**
+		 * The quarter the forecast covers, as the card title.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		quarterTitle() {
+			const now = new Date()
+			return t('pipelinq', 'Quarter {quarter} of {year}', {
+				quarter: Math.floor(now.getMonth() / 3) + 1,
+				year: now.getFullYear(),
+			})
+		},
+
+		/**
+		 * The line under the title: the quarter and the level shown.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		subtitle() {
+			const option = this.levelOptions.find((o) => o.value === this.level)
+			return t('pipelinq', '{quarter} · level {level}', {
+				quarter: this.quarterTitle,
+				level: option ? option.label.toLowerCase() : this.level,
+			})
+		},
+
+		/**
+		 * The four KPI tiles: quota, won, committed and what is still to get.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		tiles() {
+			const gapPercent =
+				this.summary.quota > 0
+					? 100
+						- attainmentPercent(
+							this.summary.projected,
+							this.summary.quota,
+						)
+					: 0
+			return [
+				{
+					id: 'quota',
+					label: t('pipelinq', 'Quota'),
+					value: this.formatMoney(this.summary.quota),
+				},
+				{
+					id: 'won',
+					label: t('pipelinq', 'Won'),
+					value: this.formatMoney(this.summary.closedWon),
+				},
+				{
+					id: 'commit',
+					label: t('pipelinq', 'Committed'),
+					value: this.formatMoney(this.summary.commit),
+				},
+				{
+					id: 'gap',
+					label: t('pipelinq', 'Still to get'),
+					value: this.formatMoney(this.summary.gap),
+					warn: this.summary.gap > 0,
+					caption:
+						gapPercent > 0
+							? t('pipelinq', '{percent}% below quota', {
+									percent: gapPercent,
+								})
+							: '',
+				},
+			]
 		},
 
 		childLevel() {
@@ -298,12 +376,24 @@ export default {
 					periodId: this.periodId,
 					level: this.childLevel,
 				})
-				this.rows = data.snapshots || []
+				this.rows = latestPerOwner(data.snapshots || [])
 			} catch {
 				this.rows = []
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Show another level and read its snapshots.
+		 *
+		 * @param {string} level The level chosen.
+		 * @spec exclude forecast snapshots have no owning requirement, see
+		 *   ForecastSettings::load for the same gap
+		 */
+		setLevel(level) {
+			this.level = level
+			this.loadSnapshots()
 		},
 
 		openOverride(row) {
@@ -327,9 +417,48 @@ export default {
 
 <style scoped>
 .forecast-dashboard {
-	padding: 20px;
-	max-width: 1200px;
-	margin: 0 auto;
+	padding: 24px 28px;
+}
+
+.forecast-tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 16px;
+	margin: 20px 0;
+}
+
+.forecast-tile__label {
+	display: block;
+	color: var(--color-text-maxcontrast);
+	font-size: 14px;
+}
+
+.forecast-tile__value {
+	display: block;
+	font-size: 28px;
+	font-weight: 700;
+	margin-top: 4px;
+}
+
+.forecast-tile__value--gap {
+	color: var(--color-text-error, var(--color-error));
+}
+
+.forecast-tile__caption {
+	display: block;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+	margin-top: 4px;
+}
+
+.forecast-dashboard__section {
+	font-size: 20px;
+	font-weight: 700;
+	margin: 32px 0 16px;
+}
+
+.forecast-dashboard__levels {
+	margin-top: 8px;
 }
 
 .forecast-dashboard__header {
@@ -338,38 +467,6 @@ export default {
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 12px;
-}
-
-.forecast-dashboard__controls {
-	display: flex;
-	gap: 12px;
-	align-items: flex-end;
-}
-
-.forecast-dashboard__atrisk {
-	margin: 16px 0;
-}
-
-.forecast-summary {
-	display: flex;
-	gap: 24px;
-	flex-wrap: wrap;
-	margin: 20px 0;
-}
-
-.forecast-summary__metric {
-	display: flex;
-	flex-direction: column;
-}
-
-.forecast-summary__label {
-	color: var(--color-text-maxcontrast);
-	font-size: 0.85em;
-}
-
-.forecast-summary__value {
-	font-size: 1.4em;
-	font-weight: 600;
 }
 
 .forecast-progress {
