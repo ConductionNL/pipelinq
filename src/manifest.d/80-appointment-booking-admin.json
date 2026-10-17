@@ -151,7 +151,7 @@
 				"sortOrder": "asc",
 				"countText": "{shown} of {total} appointments · sorted by time",
 				"searchPlaceholder": "Filter by customer or service",
-				"headerButtons": [ { "action": "export", "label": "Download", "icon": "TrayArrowDown" } ],
+				"headerButtons": [ { "action": "export", "label": "Download" } ],
 				"rowTitle": "plain",
 				"footerNote": "Customers book appointments in the portal. Open one to reschedule or cancel it.",
 				"quickFilters": [
@@ -223,8 +223,8 @@
 					{ "id": "booking-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
 					{ "id": "booking-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
 					{ "id": "booking-history", "type": "audit-trail", "title": "History", "icon": "History" },
-					{ "id": "booking-context", "type": "BookingCustomerWidget", "title": "Customer", "icon": "AccountOutline", "content": {} },
-					{ "id": "booking-when", "type": "BookingWhenWidget", "title": "When and where", "icon": "MapMarkerOutline", "content": {} }
+					{ "id": "booking-context", "type": "BookingCustomerWidget", "title": "Customer", "icon": "AccountBoxOutline", "content": {} },
+					{ "id": "booking-when", "type": "BookingWhenWidget", "title": "When and where", "icon": "MapMarkerCheck", "content": {} }
 				],
 				"sidebar": {
 					"enabled": true,
