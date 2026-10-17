@@ -1243,6 +1243,7 @@ OC.L10N.register(
         "Edit service": "Edit service",
         "Could not load the service form.": "Could not load the service form.",
         "Unit of the quantity.": "Unit of the quantity.",
+        "Welcome": "Welcome",
         "Whole queue": "Whole queue",
         "Win chance": "Win chance",
         "days": "days",

@@ -1227,6 +1227,7 @@ OC.L10N.register(
         "Edit service": "Dienst bewerken",
         "Could not load the service form.": "Het formulier van de dienst kon niet worden geladen.",
         "Unit of the quantity.": "Eenheid van het aantal.",
+        "Welcome": "Welkom",
         "Whole queue": "Hele wachtrij",
         "Win chance": "Winkans",
         "days": "dagen",
