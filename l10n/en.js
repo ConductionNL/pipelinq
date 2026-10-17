@@ -7672,7 +7672,16 @@ OC.L10N.register(
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Suggested colleagues": "Suggested colleagues",
+        "{channel} · received {occurredAt|date}": "{channel} · received {occurredAt|date}",
+        "A contact moment with the customer, saved with this ticket": "A contact moment with the customer, saved with this ticket",
+        "The question": "The question",
+        "Your message": "Your message",
+        "The ticket": "The ticket",
+        "People": "People",
+        "Dates and links": "Dates and links",
+        "Visible to the customer": "Visible to the customer"
     },
     "nplurals=2; plural=(n != 1);"
 )
