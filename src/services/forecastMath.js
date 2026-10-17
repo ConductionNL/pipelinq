@@ -87,3 +87,53 @@ export function attainmentPercent(value, quota) {
 	}
 	return Math.round((Number(value) / Number(quota)) * 100)
 }
+
+/**
+ * Turn snapshot rows into one point per snapshot date, the amounts of every
+ * owner on that date added up, oldest first. A single owner's rows pass
+ * through as one point each.
+ *
+ * @param {Array<object>} snapshots Rows with as_of_date, commit, best_case and pipeline.
+ * @return {Array<{date: string, commit: number, best_case: number, pipeline: number}>}
+ * @spec exclude forecast snapshots have no owning requirement, see
+ *   ForecastSettings::load for the same gap
+ */
+export function sumSnapshotsByDate(snapshots) {
+	const byDate = new Map()
+	for (const row of snapshots) {
+		const date = row.as_of_date
+		const point = byDate.get(date) || {
+			date,
+			commit: 0,
+			best_case: 0,
+			pipeline: 0,
+		}
+		point.commit += Number(row.commit || 0)
+		point.best_case += Number(row.best_case || 0)
+		point.pipeline += Number(row.pipeline || 0)
+		byDate.set(date, point)
+	}
+	return [...byDate.values()].sort((a, b) =>
+		String(a.date).localeCompare(String(b.date)),
+	)
+}
+
+/**
+ * Keep each owner's newest snapshot, so a period that has been snapshotted
+ * every week counts every owner once.
+ *
+ * @param {Array<object>} snapshots Rows with owner_id and as_of_date.
+ * @return {Array<object>} One row per owner, in the order owners first appear.
+ * @spec exclude forecast snapshots have no owning requirement, see
+ *   ForecastSettings::load for the same gap
+ */
+export function latestPerOwner(snapshots) {
+	const latest = new Map()
+	for (const row of snapshots) {
+		const current = latest.get(row.owner_id)
+		if (!current || String(row.as_of_date) > String(current.as_of_date)) {
+			latest.set(row.owner_id, row)
+		}
+	}
+	return [...latest.values()]
+}

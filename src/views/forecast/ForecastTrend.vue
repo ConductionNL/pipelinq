@@ -3,8 +3,8 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -->
 <template>
-	<div class="forecast-trend">
-		<div class="forecast-trend__header">
+	<div class="forecast-trend" :class="{ 'forecast-trend--embedded': embedded }">
+		<div v-if="!embedded" class="forecast-trend__header">
 			<h2>{{ t('pipelinq', 'Forecast trend & accuracy') }}</h2>
 			<NcTextField
 				v-model="ownerId"
@@ -12,110 +12,124 @@
 				:placeholder="t('pipelinq', 'Rep user id')"
 				@update:modelValue="loadTrend" />
 		</div>
-
 		<NcLoadingIcon v-if="loading" :size="32" />
-
 		<template v-else>
-			<section v-if="series.length >= 1" class="forecast-trend__chart">
-				<h3>
-					{{ t('pipelinq', 'Commit / best-case / pipeline over time') }}
-				</h3>
-				<svg
-					class="forecast-trend__svg"
-					viewBox="0 0 600 200"
-					preserveAspectRatio="none"
-					role="img"
-					:aria-label="t('pipelinq', 'Forecast trend chart')">
-					<polyline class="line line--commit" :points="line('commit')" />
-					<polyline
-						class="line line--bestcase"
-						:points="line('best_case')" />
-					<polyline
-						class="line line--pipeline"
-						:points="line('pipeline')" />
-				</svg>
-				<div class="forecast-trend__legend">
-					<span class="legend legend--commit">{{
-						t('pipelinq', 'Commit')
-					}}</span>
-					<span class="legend legend--bestcase">{{
-						t('pipelinq', 'Best Case')
-					}}</span>
-					<span class="legend legend--pipeline">{{
-						t('pipelinq', 'Pipeline')
-					}}</span>
-				</div>
-			</section>
-
-			<NcEmptyContent
-				v-else
-				:name="t('pipelinq', 'Not enough snapshots')"
-				:description="
-					t(
-						'pipelinq',
-						'At least one weekly snapshot is needed to show a trend.',
-					)
-				" />
-
-			<section v-if="delta" class="forecast-trend__delta">
-				<h3>{{ t('pipelinq', 'Deal movements (week over week)') }}</h3>
-				<p>
-					{{ t('pipelinq', 'Moved into commit') }}:
-					{{ delta.intoCommit || t('pipelinq', 'none') }}
-				</p>
-				<p>
-					{{ t('pipelinq', 'Moved out of commit') }}:
-					{{ delta.outOfCommit || t('pipelinq', 'none') }}
-				</p>
-			</section>
-
-			<section class="forecast-trend__accuracy">
-				<h3>{{ t('pipelinq', 'Forecast accuracy') }}</h3>
-				<table v-if="accuracyRows.length" class="accuracy-table">
-					<thead>
-						<tr>
-							<th scope="col">{{ t('pipelinq', 'Rep') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Week 1 commit') }}</th>
-							<th scope="col">
-								{{ t('pipelinq', 'Actual closed won') }}
-							</th>
-							<th scope="col">{{ t('pipelinq', 'Accuracy') }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="row in accuracyRows" :key="row.owner_id">
-							<td>{{ row.owner_id }}</td>
-							<td>{{ formatMoney(row.weekOneCommit) }}</td>
-							<td>{{ formatMoney(row.actual) }}</td>
-							<td :class="'accuracy--' + bandFor(row.score)">
-								{{ Math.round(row.score * 100) }}%
-							</td>
-						</tr>
-					</tbody>
-				</table>
+			<CnDetailCard
+				:title="t('pipelinq', 'Commit / best-case / pipeline over time')"
+				class="forecast-trend__chart">
+				<template v-if="series.length >= 1">
+					<svg
+						class="forecast-trend__svg"
+						viewBox="0 0 600 200"
+						preserveAspectRatio="none"
+						role="img"
+						:aria-label="t('pipelinq', 'Forecast trend chart')">
+						<polyline
+							class="line line--commit"
+							:points="line('commit')" />
+						<polyline
+							class="line line--bestcase"
+							:points="line('best_case')" />
+						<polyline
+							class="line line--pipeline"
+							:points="line('pipeline')" />
+					</svg>
+					<div class="forecast-trend__legend">
+						<span class="legend legend--commit">{{
+							t('pipelinq', 'Commit')
+						}}</span>
+						<span class="legend legend--bestcase">{{
+							t('pipelinq', 'Best Case')
+						}}</span>
+						<span class="legend legend--pipeline">{{
+							t('pipelinq', 'Pipeline')
+						}}</span>
+					</div>
+				</template>
 				<NcEmptyContent
 					v-else
-					:name="t('pipelinq', 'No closed periods yet')"
+					:name="t('pipelinq', 'Not enough snapshots')"
 					:description="
 						t(
 							'pipelinq',
-							'Accuracy is computed once a fiscal period closes.',
+							'At least one weekly snapshot is needed to show a trend.',
 						)
 					" />
-			</section>
+			</CnDetailCard>
+			<div class="forecast-trend__pair">
+				<CnDetailCard
+					:title="t('pipelinq', 'Deal movements (week over week)')"
+					class="forecast-trend__delta">
+					<p>
+						{{ t('pipelinq', 'Moved into commit') }}:
+						{{ delta?.intoCommit || t('pipelinq', 'none') }}
+					</p>
+					<p>
+						{{ t('pipelinq', 'Moved out of commit') }}:
+						{{ delta?.outOfCommit || t('pipelinq', 'none') }}
+					</p>
+				</CnDetailCard>
+				<CnDetailCard
+					:title="t('pipelinq', 'Forecast accuracy')"
+					class="forecast-trend__accuracy">
+					<table v-if="accuracyRows.length" class="accuracy-table">
+						<thead>
+							<tr>
+								<th scope="col">{{ t('pipelinq', 'Rep') }}</th>
+								<th scope="col">
+									{{ t('pipelinq', 'Week 1 commit') }}
+								</th>
+								<th scope="col">
+									{{ t('pipelinq', 'Actual closed won') }}
+								</th>
+								<th scope="col">{{ t('pipelinq', 'Accuracy') }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="row in accuracyRows" :key="row.owner_id">
+								<td>{{ row.owner_id }}</td>
+								<td>{{ formatMoney(row.weekOneCommit) }}</td>
+								<td>{{ formatMoney(row.actual) }}</td>
+								<td :class="'accuracy--' + bandFor(row.score)">
+									{{ Math.round(row.score * 100) }}%
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<NcEmptyContent
+						v-else
+						:name="t('pipelinq', 'No closed periods yet')"
+						:description="
+							t(
+								'pipelinq',
+								'Accuracy is computed once a fiscal period closes.',
+							)
+						" />
+				</CnDetailCard>
+			</div>
 		</template>
 	</div>
 </template>
 
 <script>
+import { CnDetailCard } from '@conduction/nextcloud-vue'
 import { NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { formatEur } from '../../services/commercialFormat.js'
 import { fetchSnapshots } from '../../services/forecastApi.js'
-import { accuracyBand } from '../../services/forecastMath.js'
+import { accuracyBand, sumSnapshotsByDate } from '../../services/forecastMath.js'
 
 export default {
 	name: 'ForecastTrend',
-	components: { NcEmptyContent, NcLoadingIcon, NcTextField },
+	components: { CnDetailCard, NcEmptyContent, NcLoadingIcon, NcTextField },
+
+	props: {
+		/** Drawn inside the forecast page: no own heading, no owner field. */
+		embedded: { type: Boolean, default: false },
+
+		/** With `embedded`: the level whose snapshots make up the trend. */
+		level: { type: String, default: 'rep' },
+	},
+
 	data() {
 		return {
 			loading: false,
@@ -142,13 +156,39 @@ export default {
 		},
 	},
 
+	watch: {
+		/**
+		 * Read the trend again when the page shows another level.
+		 *
+		 * @spec exclude forecast snapshots have no owning requirement, see
+		 *   ForecastSettings::load for the same gap
+		 */
+		level() {
+			if (this.embedded) {
+				this.loadTrend()
+			}
+		},
+	},
+
+	/**
+	 * Inside the forecast page the trend loads at once for its level.
+	 *
+	 * @spec exclude forecast snapshots have no owning requirement, see
+	 *   ForecastSettings::load for the same gap
+	 */
+	mounted() {
+		if (this.embedded) {
+			this.loadTrend()
+		}
+	},
+
 	methods: {
 		/**
 		 * @spec exclude forecast snapshots have no owning requirement, see
 		 *   ForecastSettings::load for the same gap
 		 */
 		async loadTrend() {
-			if (!this.ownerId) {
+			if (!this.embedded && !this.ownerId) {
 				this.series = []
 				return
 			}
@@ -156,16 +196,11 @@ export default {
 			try {
 				const data = await fetchSnapshots({
 					periodId: this.periodId,
-					level: 'rep',
-					ownerId: this.ownerId,
+					level: this.embedded ? this.level : 'rep',
+					ownerId: this.embedded ? null : this.ownerId,
 					limit: 100,
 				})
-				this.series = (data.snapshots || []).map((s) => ({
-					date: s.as_of_date,
-					commit: Number(s.commit || 0),
-					best_case: Number(s.best_case || 0),
-					pipeline: Number(s.pipeline || 0),
-				}))
+				this.series = sumSnapshotsByDate(data.snapshots || [])
 				this.buildDelta()
 			} catch {
 				this.series = []
@@ -227,6 +262,18 @@ export default {
 </script>
 
 <style scoped>
+.forecast-trend.forecast-trend--embedded {
+	padding: 0;
+	max-width: none;
+}
+
+.forecast-trend__pair {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+	gap: 16px;
+	margin-top: 16px;
+}
+
 .forecast-trend {
 	padding: 20px;
 	max-width: 1000px;
@@ -285,11 +332,6 @@ export default {
 
 .legend--pipeline::before {
 	color: var(--color-text-maxcontrast);
-}
-
-.forecast-trend__delta,
-.forecast-trend__accuracy {
-	margin-top: 24px;
 }
 
 .accuracy-table {
