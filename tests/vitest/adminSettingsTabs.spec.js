@@ -71,12 +71,13 @@ describe('the admin page tabs', () => {
 		expect(template).toMatch(/@tabChange="onTabChange"/)
 	})
 
-	it('has the six tabs in the board order, Algemeen first', () => {
+	it('has the seven tabs in the board order, Algemeen first', () => {
 		expect(adminTabs().map((entry) => entry.id)).toEqual([
 			'general',
 			'connections',
 			'integrations',
 			'pos',
+			'pos-lookup',
 			'marketing',
 			'portal',
 		])
@@ -161,6 +162,11 @@ describe('the admin page tabs', () => {
 		expect(source).toContain(
 			"generateUrl('/apps/pipelinq/settings/integrations?app=pipelinq')",
 		)
+	})
+
+	it('puts the till customer lookup on its own tab', () => {
+		expect(tab('pos-lookup')).toContain('<PosCustomerSettings')
+		expect(source).toContain("return '?tab=pos-lookup'")
 	})
 
 	it('puts the customer portal on Klantportaal', () => {

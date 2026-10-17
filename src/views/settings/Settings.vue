@@ -357,6 +357,11 @@
 			</NcSettingsSection>
 		</template>
 
+		<!-- Board PqKassaKlantzoeken: the till's customer lookup settings. -->
+		<template #tab-pos-lookup>
+			<PosCustomerSettings v-if="isAdmin && isConfigured" />
+		</template>
+
 		<template #tab-marketing>
 			<!-- Marketing intelligence (marketing-search-intelligence): the
 			     sources the keyword, Matomo and competitor reads leave through,
@@ -414,6 +419,7 @@ import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vu
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
+import PosCustomerSettings from '../admin/PosCustomerSettings.vue'
 import CtiEventLog from './CtiEventLog.vue'
 import CtiSettings from './CtiSettings.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
@@ -488,6 +494,12 @@ const ADMIN_TABS = [
 		note: 'Only when the module is on',
 	},
 	{
+		id: 'pos-lookup',
+		label: 'Customer lookup at the till',
+		title: 'Pipelinq settings: customer lookup at the till',
+		note: 'Administration setting for the point of sale module',
+	},
+	{
 		id: 'marketing',
 		label: 'Marketing and data',
 		title: 'Pipelinq settings: marketing and data',
@@ -525,6 +537,7 @@ export default {
 		PosStaffManager,
 		PosRoleManager,
 		PortalSettings,
+		PosCustomerSettings,
 		CnAdminSettingsShell,
 		CnRegisterMapping,
 		NcButton,
@@ -661,13 +674,13 @@ export default {
 		},
 
 		/**
-		 * The app page that holds the till's customer lookup settings.
+		 * The tab that holds the till's customer lookup settings.
 		 *
 		 * @return {string}
 		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
 		 */
 		posCustomerLookupUrl() {
-			return generateUrl('/apps/pipelinq/admin/pos-customer-link')
+			return '?tab=pos-lookup'
 		},
 
 		/**

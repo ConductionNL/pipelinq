@@ -50,7 +50,7 @@
 	],
 	"nav": {
 		"brand": {
-			"name": "pipelinq",
+			"name": "Pipelinq",
 			"caption": "@theming.name",
 			"logo": "@theming.emblem|@theming.logo"
 		},
