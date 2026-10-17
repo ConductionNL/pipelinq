@@ -2,8 +2,8 @@
 	"_meta": {
 		"spdx-license": "EUPL-1.2",
 		"spdx-copyright": "2026 Conduction B.V.",
-		"description": "The SIMPLE structure profile, and the default one (openspec/changes/simple-structure-profile). `menu-layout.json` is the FULL profile and is untouched: an administrator brings it back with the setting `menu_structure`. Both profiles are built from the same manifest and the same fragments, so nothing is deleted and every page stays routable; this file only decides what the navigation offers first. THE STANDARD KEYS (`removals`, `settingsSection`) go to the library's buildManifest exactly as the full file's do. `relocations` is ABSENT on purpose, and must stay absent rather than become `{}`: the simple menu is flat, and the library's relocation step ends by dropping every entry that has no route, no href, no action and no children, which is what a caption is. THE PROFILE KEYS `menu`, `pages`, `nav` and `tours` are read by src/utils/structureProfile.js. `tours` is the contact centre tour: the sales tour points at Contacts, Products, Leads and Contracts, which this menu lacks, so holdUnreachableTours holds it back and without a tour of its own the user settings had no Walkthrough section (openspec/changes/simple-tour-and-readable-labels). `nav` is merged over the manifest's own `nav`: the brand block at the top of the navigation (PqDashboard, AppZijbalk) names the app, and the instance's name comes from its theming capabilities through `@theming.name` and its mark through `@theming.emblem|@theming.logo` (the active set's emblem from thematiq, the wordmark when the set ships none), so no municipality is written here; an instance that answers nothing shows the app's name alone. `menu` is merged BEFORE the manifest's own menu; buildManifest merges entries by id and the FIRST definition of a key wins, so an entry here that carries only `id` and `order` keeps its label, icon and route from the manifest, and an entry the manifest does not know (the captions, Contact moments, Appointments, Organisations, Modules and more) is added as written. `pages` holds page overlays. THE PIPELINQ KEYS `modules`, `modulesCaption` and `home` are read by src/utils/menuModules.js.",
-		"removalsNote": "The first six are the full profile's own removals, repeated because buildManifest takes ONE list; the spec fails when the two drift. The rest leave the simple menu and stay one step away: `Contacts`, `Tasks` and `OperationalDashboard` have a card on the Modules page, `SlaAttainment` a card on Reports, and `Bookings` is replaced by `AppointmentsMenu`, which opens the same page from the top level. `PointOfSale` and `SettingsIntegrationsCaption` are empty shells in the manifest (a label and no route). The full profile loses the second to the relocation step's clean-up and fills the first with children; this profile has no relocation step, so both are removed by name. The ids of a module that is switched off are added to this list at boot, by applyMenuModules.",
+		"description": "The SIMPLE structure profile, and the default one (openspec/changes/simple-structure-profile). `menu-layout.json` is the FULL profile and is untouched: an administrator brings it back with the setting `menu_structure`. Both profiles are built from the same manifest and the same fragments, so nothing is deleted and every page stays routable; this file only decides what the navigation offers first. THE STANDARD KEYS (`removals`, `settingsSection`) go to the library's buildManifest exactly as the full file's do. `relocations` is absent: the simple menu is flat and moves nothing. (Before nextcloud-vue 2.84.0 the relocation step also dropped every caption; since #1608 it keeps them.) THE PROFILE KEYS `menu`, `pages`, `nav` and `tours` are read by src/utils/structureProfile.js. `tours` is the contact centre tour: the sales tour points at Contacts, Products, Leads and Contracts, which this menu lacks, so holdUnreachableTours holds it back and without a tour of its own the user settings had no Walkthrough section (openspec/changes/simple-tour-and-readable-labels). `nav` is merged over the manifest's own `nav`: the brand block at the top of the navigation (PqDashboard, AppZijbalk) names the app, and the instance's name comes from its theming capabilities through `@theming.name` and its mark through `@theming.emblem|@theming.logo` (the active set's emblem from thematiq, the wordmark when the set ships none), so no municipality is written here; an instance that answers nothing shows the app's name alone. `menu` is merged BEFORE the manifest's own menu; buildManifest merges entries by id and the FIRST definition of a key wins, so an entry here that carries only `id` and `order` keeps its label, icon and route from the manifest, and an entry the manifest does not know (the captions, Contact moments, Appointments, Organisations, Modules and more) is added as written. `pages` holds page overlays. THE PIPELINQ KEYS `modules`, `modulesCaption` and `home` are read by src/utils/menuModules.js.",
+		"removalsNote": "The first six are the full profile's own removals, repeated because buildManifest takes ONE list; the spec fails when the two drift. The rest leave the simple menu and stay one step away: `Contacts`, `Tasks` and `OperationalDashboard` have a card on the Modules page, `SlaAttainment` a card on Reports, and `Bookings` is replaced by `AppointmentsMenu`, which opens the same page from the top level. `PointOfSale` and `SettingsIntegrationsCaption` are empty shells in the manifest (a label and no route). The full profile fills the first with children and, since nextcloud-vue 2.84.0, keeps the second as the caption above Connections and BI export in its settings; this flat menu removes both by name. The ids of a module that is switched off are added to this list at boot, by applyMenuModules.",
 		"settingsNote": "The first three are the full profile's. `Services` and `Resources` join them: what can be booked and with whom is set-up, the bookings themselves are daily work. `SavedReplies` too: the team writes them once, agents pick them where they answer.",
 		"viewsNote": "`ContactMomentsMenu` opens the tickets list narrowed to ticketType `interaction`, and `OrganisationsMenu` the clients list narrowed to type `organization`. Both values are enum members of the seeded schema (register.d/99-unify-ticket-supertype.json, pipelinq_register.json), so they are the same on every instance. A filtered list is a view, not a page. Known gap: CnAppNav decides `active` by route name and ignores `query`, so each pair lights up together.",
 		"modulesNote": "A module is a set of menu entries that a municipality does not need and a business does. Every module is OFF in the simple menu until an administrator names it in the setting `menu_modules` (a comma separated list of the keys below). `ids` are the manifest entries that leave the menu while the module is off. `menu` is what joins the profile menu when it is on, under the one caption `modulesCaption` declares. Off or on, every entry has a card on the Modules page (src/manifest.d/98-modules.json), which the footer entry `ModulesMenu` opens. The full profile ignores modules: it shows everything, as before.",
@@ -25,7 +25,22 @@
 		"SettingsIntegrationsCaption",
 		"MarketingGroup",
 		"Dashboard",
-		"Prospects"
+		"Prospects",
+		"Segments",
+		"Templates",
+		"Articles",
+		"MailingLists",
+		"Blasts",
+		"Campaigns",
+		"BlastPerformance",
+		"Journeys",
+		"SocialAccounts",
+		"SocialPosts",
+		"SocialPerformance",
+		"KeywordIntelligence",
+		"CompetitorWatches",
+		"ConnectionAudit",
+		"SearchQueries"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",
@@ -339,7 +354,7 @@
 		"index": {
 			"showTitle": true,
 			"showTitleIcon": false,
-			"headerFilters": false,
+			"headerFilters": true,
 			"headerButtons": [
 				{
 					"action": "export",
@@ -392,23 +407,7 @@
 		},
 		"marketing": {
 			"label": "Marketing",
-			"ids": [
-				"Segments",
-				"Templates",
-				"Articles",
-				"MailingLists",
-				"Blasts",
-				"Campaigns",
-				"BlastPerformance",
-				"Journeys",
-				"SocialAccounts",
-				"SocialPosts",
-				"SocialPerformance",
-				"KeywordIntelligence",
-				"CompetitorWatches",
-				"ConnectionAudit",
-				"SearchQueries"
-			],
+			"ids": [],
 			"menu": [
 				{
 					"id": "MarketingCaption",
@@ -564,6 +563,55 @@
 						"props": {
 							"ticketType": "interaction",
 							"parentTicket": "@objectId"
+						},
+						"formEyebrow": "Contact moment",
+						"formSubtitle": "A contact moment with the customer, saved with this ticket",
+						"includeFields": [
+							"channel",
+							"direction",
+							"occurredAt",
+							"duration",
+							"title",
+							"notes",
+							"client"
+						],
+						"columns": 2,
+						"fieldOverrides": {
+							"channel": {
+								"order": 1,
+								"label": "Channel",
+								"description": ""
+							},
+							"direction": {
+								"order": 2,
+								"label": "Direction",
+								"description": ""
+							},
+							"occurredAt": {
+								"order": 3,
+								"label": "When",
+								"description": ""
+							},
+							"duration": {
+								"order": 4,
+								"label": "Duration",
+								"description": ""
+							},
+							"title": {
+								"order": 5,
+								"label": "Subject",
+								"description": ""
+							},
+							"notes": {
+								"order": 6,
+								"label": "Notes",
+								"description": ""
+							},
+							"client": {
+								"order": 7,
+								"label": "Client",
+								"description": ""
+							}
 						}
 					},
 					{
@@ -831,7 +879,9 @@
 							"hideEmpty": true,
 							"editable": false
 						}
-					}
+					},
+					"ticket-related",
+					"ticket-resident-view"
 				],
 				"layout": [
 					{
@@ -848,11 +898,213 @@
 					"route": "Tickets"
 				},
 				"showTypeEyebrow": false,
-				"headerCard": true
+				"headerCard": true,
+				"follow": false,
+				"favourite": false,
+				"headerMeta": "{channel} · received {occurredAt|date}",
+				"formColumns": 2,
+				"formSize": "large",
+				"includeFields": [
+					"title",
+					"description",
+					"ticketType",
+					"category",
+					"priority",
+					"channel",
+					"client",
+					"contact",
+					"assignee",
+					"agent_skill",
+					"occurredAt",
+					"slaDeadline",
+					"caseReference",
+					"pipeline",
+					"stage",
+					"contract",
+					"customerMessage"
+				],
+				"fieldOverrides": {
+					"title": {
+						"order": 1,
+						"description": "",
+						"section": "The ticket"
+					},
+					"description": {
+						"order": 2,
+						"description": "",
+						"section": "The ticket"
+					},
+					"ticketType": {
+						"order": 3,
+						"description": "",
+						"section": "The ticket"
+					},
+					"category": {
+						"order": 4,
+						"description": "",
+						"section": "The ticket"
+					},
+					"priority": {
+						"order": 5,
+						"description": "",
+						"section": "The ticket"
+					},
+					"channel": {
+						"order": 6,
+						"description": "",
+						"section": "The ticket"
+					},
+					"client": {
+						"order": 7,
+						"description": "",
+						"section": "People"
+					},
+					"contact": {
+						"order": 8,
+						"description": "",
+						"section": "People"
+					},
+					"assignee": {
+						"order": 9,
+						"description": "",
+						"section": "People"
+					},
+					"agent_skill": {
+						"order": 10,
+						"description": "",
+						"section": "People"
+					},
+					"occurredAt": {
+						"order": 11,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"slaDeadline": {
+						"order": 12,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"caseReference": {
+						"order": 13,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"pipeline": {
+						"order": 14,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"stage": {
+						"order": 15,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"contract": {
+						"order": 16,
+						"description": "",
+						"section": "Dates and links"
+					},
+					"customerMessage": {
+						"order": 17,
+						"description": "",
+						"section": "Visible to the customer"
+					}
+				}
 			},
 			"configPatch": {
 				"bodyWidgets": {
-					"customer-reply": null
+					"customer-reply": null,
+					"dossier-snapshot": null,
+					"woo-conversion": null,
+					"resident-view": null,
+					"routing-suggestions": {
+						"title": "Suggested colleagues"
+					}
+				},
+				"widgets": {
+					"ticket-decision-routes": {
+						"content": {
+							"title": "Decisions",
+							"convert": false
+						},
+						"_note": "The simple page offers Convert to case in its Case section below, with or without decidiq. The Decisions tab does not repeat it."
+					},
+					"ticket-panels": {
+						"type": "tabs",
+						"title": "Ticket",
+						"icon": "FileDocument",
+						"content": {
+							"ariaLabel": "Ticket details",
+							"maxVisibleTabs": 5,
+							"moreLabel": "More",
+							"tabs": [
+								{
+									"widgetIds": [
+										"ticket-data",
+										"ticket-conversation",
+										"ticket-dossier",
+										"ticket-woo",
+										"ticket-case"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "ticket-contactmoments",
+									"label": "Contact moments",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "ticket-related",
+									"label": "Related",
+									"countFrom": "widget"
+								},
+								{
+									"widgetIds": [
+										"ticket-decision-routes",
+										"ticket-decisions",
+										"ticket-case-decisions"
+									],
+									"label": "Decisions",
+									"visibleWhen": {
+										"appInstalled": "decidiq"
+									}
+								},
+								{
+									"widgetId": "ticket-history",
+									"label": "History"
+								}
+							]
+						},
+						"_note": "Board PqTicket: folder tabs with counts. The overview holds the ticket details, the conversation, the dossier asked about, the Woo request and the case, one under the other; contact moments, related, decisions and history each have a tab. What the resident sees is the last card of the side column, so the strip keeps the five tabs of the board."
+					},
+					"ticket-data": {
+						"title": "Ticket details",
+						"content": {
+							"title": "Ticket details",
+							"columns": 2,
+							"hideEmpty": true,
+							"include": [
+								"assignee",
+								"category",
+								"channel",
+								"client",
+								"occurredAt",
+								"duration",
+								"priority",
+								"description"
+							],
+							"overrides": {
+								"assignee": {
+									"formatter": "userDisplayName"
+								},
+								"description": {
+									"gridColumn": 2
+								}
+							}
+						},
+						"_note": "Board PqTicket: the overview card names the ticket in two columns, the description across both. What the type does not use stays hidden (hideEmpty).",
+						"icon": ""
+					}
 				}
 			},
 			"configAppend": {
@@ -893,65 +1145,100 @@
 							],
 							"limit": 25,
 							"rowRoute": "TicketDetail",
-							"emptyText": "No contact moments on this ticket yet."
+							"emptyText": "No contact moments on this ticket yet.",
+							"allowCreate": true,
+							"addLabel": "Log contact",
+							"formIncludeFields": [
+								"channel",
+								"direction",
+								"occurredAt",
+								"duration",
+								"title",
+								"notes",
+								"client"
+							],
+							"formFieldOverrides": {
+								"channel": {
+									"order": 1,
+									"label": "Channel",
+									"description": ""
+								},
+								"direction": {
+									"order": 2,
+									"label": "Direction",
+									"description": ""
+								},
+								"occurredAt": {
+									"order": 3,
+									"label": "When",
+									"description": ""
+								},
+								"duration": {
+									"order": 4,
+									"label": "Duration",
+									"description": ""
+								},
+								"title": {
+									"order": 5,
+									"label": "Subject",
+									"description": ""
+								},
+								"notes": {
+									"order": 6,
+									"label": "Notes",
+									"description": ""
+								},
+								"client": {
+									"order": 7,
+									"label": "Client",
+									"description": ""
+								}
+							},
+							"formColumns": 2
 						}
 					},
-					{
-						"id": "ticket-panels",
-						"type": "tabs",
-						"title": "Ticket",
-						"icon": "FileDocument",
-						"content": {
-							"ariaLabel": "Ticket details",
-							"maxVisibleTabs": 5,
-							"moreLabel": "More",
-							"tabs": [
-								{
-									"widgetId": "ticket-data",
-									"label": "Overview"
-								},
-								{
-									"widgetId": "ticket-contactmoments",
-									"label": "Contact moments"
-								},
-								{
-									"widgetId": "ticket-related",
-									"label": "Related"
-								},
-								{
-									"widgetId": "ticket-decisions",
-									"label": "Decisions"
-								}
-							],
-							"variant": "segmented"
-						}
-					}
-				],
-				"bodyWidgets": [
 					{
 						"id": "ticket-conversation",
-						"component": "TicketConversationSection",
+						"type": "TicketConversationWidget",
 						"title": "Conversation",
-						"placement": "after-data",
-						"props": {
-							"objectId": "@objectId"
+						"icon": "ForumOutline",
+						"content": {
+							"title": "Conversation"
 						}
 					},
 					{
-						"id": "request-conversion",
-						"component": "RequestConversionSection",
+						"id": "ticket-dossier",
+						"type": "DossierSnapshotWidget",
+						"title": "Asked about",
+						"icon": "FolderOutline"
+					},
+					{
+						"id": "ticket-woo",
+						"type": "WooConversionWidget",
+						"title": "Woo request",
+						"icon": "FileDocumentOutline"
+					},
+					{
+						"id": "ticket-case",
+						"type": "RequestConversionWidget",
 						"title": "Case",
-						"placement": "after-data",
-						"props": {
-							"requestId": "@objectId"
+						"icon": "Gavel",
+						"content": {
+							"title": "Case"
 						}
+					},
+					{
+						"id": "ticket-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "ticket-resident-view",
+						"type": "ResidentViewWidget",
+						"title": "What the resident sees",
+						"icon": "EyeOutline"
 					}
-				]
-			},
-			"configOrder": {
-				"bodyWidgets": [
-					"dossier-snapshot",
-					"ticket-conversation"
 				]
 			}
 		},
@@ -1084,7 +1371,8 @@
 						"gridWidth": 12,
 						"gridHeight": 2,
 						"showTitle": false,
-						"borderless": true
+						"borderless": true,
+						"sizeToContent": true
 					},
 					{
 						"id": "wr",
@@ -1487,19 +1775,31 @@
 					},
 					{
 						"id": "simple-client-in-focus",
-						"type": "custom",
-						"title": "Client in focus"
+						"type": "workspace-filter",
+						"title": "Start a contact",
+						"showTitle": false,
+						"content": {
+							"layout": "start",
+							"title": "Start a contact",
+							"description": "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.",
+							"writes": "@workspace.selectedClient",
+							"objectSource": {
+								"register": "pipelinq",
+								"schema": "client",
+								"labelField": "name",
+								"placeholder": "Name, phone, email, postcode or client number"
+							}
+						}
 					}
 				]
 			},
 			"slots": {
-				"widget-simple-availability": "WerkplekHeaderActions",
-				"widget-simple-client-in-focus": "WerkplekContactStart"
+				"widget-simple-availability": "WerkplekHeaderActions"
 			}
 		},
 		{
 			"id": "Tickets",
-			"_note": "The tickets list in the simple structure (openspec/changes/simple-contact-dashboard). No view is dropped: the four the page had keep their filter and gain a count, three join them, five show and the rest sit behind the overflow chip. `Waiting for me`, `New` and `Waiting for customer` use the same filters as the dashboard stats that link here. THE AVATAR IS THE HANDLER'S: `assignee` holds a Nextcloud user id. The design draws the customer's initials, and a ticket holds its client as a reference without a name. THE COLOUR IS ON THE DEADLINE: late or due today is red (`lte 0`), due within two days is amber. How long a ticket has waited cannot be coloured, a date rule counts days until a date and a wait lies in the past.",
+			"_note": "The tickets list in the simple structure (openspec/changes/simple-contact-dashboard). No view is dropped: the four the page had keep their filter and gain a count, three join them, five show and the rest sit behind the overflow chip. `Waiting for me`, `New` and `Waiting for customer` use the same filters as the dashboard stats that link here. THE AVATAR IS THE HANDLER'S: `assignee` holds a Nextcloud user id. The design draws the customer's initials, and a ticket holds its client as a reference without a name. THE COLOUR IS ON THE DEADLINE: late or due today is red (`lte 0`), due within two days is amber. How long a ticket has waited cannot be coloured, a date rule counts days until a date and a wait lies in the past. BOARD PqTickets: no menu per row (a row opens the ticket, where Edit and the rest live; copy and delete stay on the selection), and the footer says how the list is sorted.",
 			"config": {
 				"quickFilterMaxVisible": 6,
 				"columns": [
@@ -1576,11 +1876,16 @@
 						"label": "New request"
 					}
 				],
-				"countText": "{shown} of {total} open tickets · customer contact · sorted by waiting time",
+				"countText": "{shown} of {total} tickets · customer contact · newest first",
 				"sortKey": "occurredAt",
-				"sortOrder": "asc",
+				"sortOrder": "desc",
 				"rowTitle": "plain",
-				"searchPlaceholder": "Filter by subject or client"
+				"searchPlaceholder": "Filter by subject or client",
+				"actions": [],
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"footerNote": "newest first · click a column header to sort"
 			},
 			"configPatch": {
 				"quickFilters": {
@@ -1639,97 +1944,6 @@
 				]
 			},
 			"title": "Questions and reports"
-		},
-		{
-			"id": "Leads",
-			"config": {
-				"columns": [
-					{
-						"key": "title",
-						"label": "Lead",
-						"secondary": "{source}"
-					},
-					{
-						"key": "stage",
-						"label": "Stage"
-					},
-					{
-						"key": "value",
-						"label": "Value",
-						"formatter": "objectCurrency",
-						"formatterOptions": {
-							"decimals": 0
-						}
-					},
-					{
-						"key": "qualificationScore",
-						"label": "Win chance",
-						"widget": "lead-win-chance",
-						"sortable": true
-					},
-					{
-						"key": "expectedCloseDate",
-						"label": "Expected close",
-						"widget": "lead-close-date",
-						"sortable": true
-					},
-					{
-						"key": "priority",
-						"label": "Priority",
-						"formatter": "enumText"
-					},
-					{
-						"key": "assignee",
-						"label": "Owner",
-						"widget": "avatar",
-						"widgetProps": {
-							"user": true
-						}
-					}
-				],
-				"sortKey": "stageEnteredAt",
-				"sortOrder": "desc",
-				"rowTitle": "plain",
-				"searchPlaceholder": "Filter by title or client"
-			}
-		},
-		{
-			"id": "Contracts",
-			"config": {
-				"addLabel": "New contract",
-				"columns": [
-					{
-						"key": "contractNumber",
-						"label": "Contract number"
-					},
-					{
-						"key": "title",
-						"label": "Title"
-					},
-					{
-						"key": "status",
-						"label": "Status",
-						"formatter": "enumText"
-					},
-					{
-						"key": "billingInterval",
-						"label": "Billing interval",
-						"formatter": "enumText"
-					},
-					{
-						"key": "valuePerInterval",
-						"label": "Value per interval",
-						"formatter": "objectCurrency",
-						"formatterOptions": {
-							"decimals": 0
-						}
-					},
-					{
-						"key": "endDate",
-						"label": "End date"
-					}
-				]
-			}
 		},
 		{
 			"id": "Blasts",
@@ -1932,6 +2146,166 @@
 				"footerNote": "A contact is someone you deal with at a client. Residents are clients themselves.",
 				"sortKey": "@self.created",
 				"sortOrder": "desc"
+			}
+		},
+		{
+			"id": "Queue",
+			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, past the deadline), the type tabs with a channel strip under them, and per row the wait, the title with the customer and channel, the type, the priority, Take on and View. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated.",
+			"config": {
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "queue-take-oldest",
+						"variant": "primary",
+						"icon": "AccountArrowLeftOutline",
+						"label": "Take the oldest"
+					}
+				],
+				"selectable": false,
+				"showViewToggle": false,
+				"inlineActionCount": 2,
+				"footerNote": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
+				"filterStrip": {
+					"field": "channel",
+					"label": "Kind, then channel",
+					"showCount": true
+				},
+				"columns": [
+					{
+						"key": "occurredAt",
+						"label": "Waiting",
+						"widget": "age",
+						"widgetProps": {
+							"variantWhen": [
+								{
+									"op": "gte",
+									"value": 2,
+									"variant": "error"
+								}
+							]
+						},
+						"sortable": true
+					},
+					{
+						"key": "title",
+						"label": "Title",
+						"secondary": "{client.name} · {channel}",
+						"sortable": true
+					},
+					{
+						"key": "ticketType",
+						"label": "Type",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"request": "primary",
+								"complaint": "error"
+							}
+						}
+					},
+					{
+						"key": "priority",
+						"label": "Priority"
+					}
+				],
+				"rowTitle": "plain",
+				"sidePanel": [
+					{
+						"id": "queue-team",
+						"type": "record-list",
+						"title": "Team today",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/routing/team-load",
+								"responsePath": "results"
+							},
+							"avatar": "{displayName}",
+							"title": "{displayName}",
+							"meta": "{isAvailable}",
+							"valueLabels": {
+								"isAvailable": {
+									"true": "Available",
+									"false": "Not available"
+								}
+							},
+							"trailing": "{open} open",
+							"bar": {
+								"valueField": "open",
+								"maxField": "maxConcurrent",
+								"overVariant": "error"
+							},
+							"emptyText": "No agent profiles yet."
+						}
+					},
+					{
+						"id": "queue-agreements",
+						"type": "text",
+						"title": "Agreements",
+						"content": {
+							"text": "Requests and reports: an answer within 2 working days. Complaints: a first reply the same day. Phone: answered within 30 seconds.",
+							"link": {
+								"label": "Service levels in Reports",
+								"route": "SlaAttainment"
+							}
+						}
+					}
+				]
+			},
+			"configAppend": {
+				"headerActions": [
+					{
+						"id": "queue-take-oldest",
+						"type": "api-call",
+						"label": "Take the oldest",
+						"icon": "AccountArrowLeftOutline",
+						"url": "/apps/pipelinq/api/tickets/assign-oldest",
+						"method": "POST",
+						"successMessage": "The oldest ticket is yours. It is on your My Work now.",
+						"errorMessage": "Nothing is waiting in the queue."
+					}
+				],
+				"statRow": [
+					{
+						"id": "queue-longest-waiting",
+						"type": "stat",
+						"title": "Longest waiting",
+						"content": {
+							"label": "Longest waiting",
+							"display": "countdown",
+							"countdown": {
+								"pastLabel": "{n} days",
+								"todayLabel": "Today",
+								"emptyText": "Nothing is waiting"
+							},
+							"endpointSource": {
+								"url": "/apps/openregister/api/objects/pipelinq/ticket",
+								"params": {
+									"_limit": 1,
+									"_order[occurredAt]": "asc",
+									"assignee": "IS NULL",
+									"status_notIn": [
+										"resolved",
+										"completed",
+										"rejected",
+										"converted",
+										"closed"
+									]
+								},
+								"responsePath": "results.0.occurredAt"
+							},
+							"caption": "the oldest ticket nobody has picked up"
+						}
+					}
+				]
+			},
+			"configOrder": {
+				"statRow": [
+					"queue-unassigned",
+					"queue-longest-waiting"
+				]
 			}
 		}
 	]

@@ -43,6 +43,11 @@ return [
         // Contact-FIRST create — provisions the NC contact and saves the object
         // with the required contactsUid (client-contact unification).
         ['name' => 'contactSync#create', 'url' => '/api/contacts-sync/create', 'verb' => 'POST'],
+        // A mail client's side pane (contact-moments-mail-add-in): sender lookup,
+        // add as contact, log this mail. Called with an app password.
+        ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
+        ['name' => 'mailAddIn#contact', 'url' => '/api/mail-add-in/contact', 'verb' => 'POST'],
+        ['name' => 'mailAddIn#log', 'url' => '/api/mail-add-in/log', 'verb' => 'POST'],
 
         // Email matching (leaf-first email-calendar-sync) — per-user settings + trigger + status.
         // The matching job links Nextcloud Mail messages to CRM entities via the OR `email` leaf.
@@ -174,6 +179,7 @@ return [
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
         ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],
         ['name' => 'cti#screenPop',        'url' => '/api/cti/screen-pop',                 'verb' => 'POST'],
+        ['name' => 'incomingCall#show',    'url' => '/api/cti/incoming-call',              'verb' => 'GET'],
         ['name' => 'cti#clickToDial',      'url' => '/api/cti/click-to-dial',              'verb' => 'POST'],
         ['name' => 'cti#disposition',      'url' => '/api/cti/contactmoment/{id}/disposition', 'verb' => 'POST'],
         ['name' => 'cti#attachRecording',  'url' => '/api/cti/contactmoment/{id}/recording',   'verb' => 'POST'],
@@ -193,13 +199,14 @@ return [
         // Health check endpoint.
         ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
 
-        // Public website enquiry intake (website-enquiry-intake). Anonymous and
-        // cross-origin: the conduction.nl forms post here. It exists instead of
-        // letting the browser POST straight at OpenRegister's object API
-        // because OpenRegister cannot scope which PROPERTIES a public create
-        // may set, so a direct create would let a visitor write `status` and
-        // `handledBy`. See EnquiryIntakeService's class docblock.
-        ['name' => 'enquiry#submit', 'url' => '/api/enquiry', 'verb' => 'POST'],
+        // Public website forms (website-forms-submit-into-tickets, decision 179).
+        // Anonymous and cross-origin: a submit creates the object its published
+        // webForm names (a ticket, a lead, ...), in the request. /api/enquiry is
+        // the address conduction-website already posts to, its `source` being the
+        // form's key; the submit no longer becomes an enquiry. Only the fields the
+        // form maps reach the object. See WebFormIntakeService's class docblock.
+        ['name' => 'webForm#submitBySource', 'url' => '/api/enquiry', 'verb' => 'POST'],
+        ['name' => 'webForm#submit', 'url' => '/api/web-forms/{key}/submit', 'verb' => 'POST', 'requirements' => ['key' => '[a-z0-9][a-z0-9-]{0,99}']],
 
         // Schedules API — pending MUST appear before {id} so the slug does not catch "pending".
         ['name' => 'schedules#index',   'url' => '/api/schedules',         'verb' => 'GET'],
@@ -216,6 +223,7 @@ return [
 
         // Skill-based routing suggestions — must precede SPA catch-all.
         ['name' => 'routing#getSuggestions', 'url' => '/api/routing/suggestions', 'verb' => 'GET'],
+        ['name' => 'teamLoad#index',         'url' => '/api/routing/team-load',   'verb' => 'GET'],
 
         // POS transaction lifecycle (camelCase slug matches PosTransactionController class name).
         // CRUD is handled by OpenRegister's generic object API; these are the lifecycle actions.
@@ -563,6 +571,7 @@ return [
         ['name' => 'ticketWooRequest#availability',   'url' => '/api/tickets/{id}/woo-request/availability', 'verb' => 'GET'],
         ['name' => 'ticketWooRequest#convert',        'url' => '/api/tickets/{id}/woo-request',              'verb' => 'POST'],
         // "Assign to me" on TicketDetail and the Queue (detail-pages-read-at-a-glance).
+        ['name' => 'ticketAssign#assignOldest',       'url' => '/api/tickets/assign-oldest',                 'verb' => 'POST'],
         ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
         // What the resident reads of a ticket, for the preview on TicketDetail (portal-resident-view-preview).
         ['name' => 'residentView#show',               'url' => '/api/tickets/{id}/resident-view',            'verb' => 'GET'],

@@ -1,0 +1,14 @@
+{
+  "_note": "contact-moments-keep-draft (decisions 180 and 216). A half typed contact moment is kept as the ticket itself, in OpenRegister's status `draft`; there is no draft schema and pipelinq carries no cleanup job. `draftLifetimeDays: 7` is set on purpose: OpenRegister removes a draft nobody changed for 30 days unless the schema says otherwise (decision 228), and a half typed contact moment goes after seven (decision 145). `draftsListed: false` keeps the agent's own drafts out of every ticket list, count and facet by default; the quick log asks for them with `_drafts=true`. Other people's drafts are never listed (decision 201). Fragments are deep-merged onto pipelinq_register.json in filename order, so this one only adds these two configuration keys to `ticket`.",
+  "components": {
+    "schemas": {
+      "ticket": {
+        "slug": "ticket",
+        "configuration": {
+          "draftLifetimeDays": 7,
+          "draftsListed": false
+        }
+      }
+    }
+  }
+}

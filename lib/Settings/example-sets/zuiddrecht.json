@@ -1,0 +1,927 @@
+{
+	"set": "zuiddrecht",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged.",
+	"appConfig": [
+		{
+			"key": "crm_group",
+			"value": "{{cast:kcc.gid}}"
+		},
+		{
+			"key": "crm_read_group",
+			"value": "dossiq-medewerkers"
+		},
+		{
+			"key": "brp.allowed_groups",
+			"value": "{{cast:kcc.gid}}"
+		}
+	],
+	"objects": [
+		{
+			"key": "client-henk",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:henk.displayName}}",
+				"type": "person",
+				"email": "{{cast:henk.email}}",
+				"address": "{{cast:henk.address.street}} {{cast:henk.address.number}}, {{cast:henk.address.postcode}} {{cast:henk.address.city}}",
+				"contactsUid": "{{cast:henk.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Belt liever dan dat hij mailt. Zijn dochter Linda Bakker helpt hem soms."
+			}
+		},
+		{
+			"key": "client-sanne",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:sanne.displayName}}",
+				"type": "person",
+				"email": "{{cast:sanne.email}}",
+				"address": "{{cast:sanne.address.street}} {{cast:sanne.address.number}}, {{cast:sanne.address.postcode}} {{cast:sanne.address.city}}",
+				"contactsUid": "{{cast:sanne.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan."
+			}
+		},
+		{
+			"key": "client-fatima",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:fatima.displayName}}",
+				"type": "person",
+				"email": "{{cast:fatima.email}}",
+				"address": "{{cast:fatima.address.street}} {{cast:fatima.address.number}}, {{cast:fatima.address.postcode}} {{cast:fatima.address.city}}",
+				"contactsUid": "{{cast:fatima.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Wil graag uitleg in eenvoudige taal."
+			}
+		},
+		{
+			"key": "client-slagerij",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:slagerij.name}}",
+				"type": "organization",
+				"email": "{{cast:slagerij.email}}",
+				"address": "{{cast:slagerij.address.street}} {{cast:slagerij.address.number}}, {{cast:slagerij.address.postcode}} {{cast:slagerij.address.city}}",
+				"industry": [
+					"{{cast:slagerij.sbi.description}}"
+				],
+				"contactsUid": "{{cast:slagerij.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:slagerij.kvk}}."
+			}
+		},
+		{
+			"key": "contact-janwillem",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "{{cast:janwillem.displayName}}",
+				"email": "{{cast:janwillem.email}}",
+				"role": "Eigenaar",
+				"client": "{{object:client-slagerij.id}}",
+				"contactsUid": "{{cast:janwillem.contactsUid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-cloudgemeente",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:cloudgemeente.name}}",
+				"type": "organization",
+				"email": "{{cast:cloudgemeente.email}}",
+				"address": "{{cast:cloudgemeente.address.street}} {{cast:cloudgemeente.address.number}}, {{cast:cloudgemeente.address.postcode}} {{cast:cloudgemeente.address.city}}",
+				"industry": [
+					"{{cast:cloudgemeente.sbi.description}}"
+				],
+				"contactsUid": "{{cast:cloudgemeente.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:cloudgemeente.kvk}}.",
+				"website": "https://cloudgemeente.zuiddrecht.example"
+			}
+		},
+		{
+			"key": "contact-mark",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "{{cast:mark.displayName}}",
+				"email": "{{cast:mark.email}}",
+				"role": "Directeur",
+				"client": "{{object:client-cloudgemeente.id}}",
+				"contactsUid": "{{cast:mark.contactsUid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-vandam",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:vandam.name}}",
+				"type": "organization",
+				"email": "{{cast:vandam.email}}",
+				"address": "{{cast:vandam.address.street}} {{cast:vandam.address.number}}, {{cast:vandam.address.postcode}} {{cast:vandam.address.city}}",
+				"industry": [
+					"{{cast:vandam.sbi.description}}"
+				],
+				"contactsUid": "{{cast:vandam.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:vandam.kvk}}."
+			}
+		},
+		{
+			"key": "contact-karin",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "{{cast:karin.displayName}}",
+				"email": "{{cast:karin.email}}",
+				"role": "Bedrijfsleider",
+				"client": "{{object:client-vandam.id}}",
+				"contactsUid": "{{cast:karin.contactsUid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-drechtwonen",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Woningcorporatie Drechtwonen",
+				"contactsUid": "example-drechtwonen",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Stichting met 3.200 woningen in Zuiddrecht en omgeving."
+			}
+		},
+		{
+			"key": "lead-woonportaal",
+			"register": "pipelinq",
+			"schema": "lead",
+			"lookups": {
+				"pipeline": {
+					"schema": "pipeline",
+					"where": {
+						"title": "Sales",
+						"isDefault": true
+					}
+				}
+			},
+			"data": {
+				"title": "Woonportaal voor huurders",
+				"description": "Een portaal waar huurders reparaties melden, hun huurcontract inzien en berichten van de corporatie lezen.",
+				"client": "{{object:client-drechtwonen.id}}",
+				"source": "via het webformulier",
+				"pipeline": "{{lookup:pipeline}}",
+				"stage": "Gekwalificeerd",
+				"stageOrder": 2,
+				"status": "open",
+				"priority": "high",
+				"probability": 62,
+				"value": 120000,
+				"currency": "EUR",
+				"expectedCloseDate": "{{date:14}}",
+				"assignee": "{{cast:daan.uid}}"
+			}
+		},
+		{
+			"key": "contact-hendriks",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "M. Hendriks",
+				"role": "IT manager",
+				"client": "{{object:client-drechtwonen.id}}",
+				"leads": [
+					"{{object:lead-woonportaal.id}}"
+				],
+				"contactsUid": "example-drechtwonen-hendriks",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "contact-vos",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "Karin Vos",
+				"role": "Pleitbezorger",
+				"client": "{{object:client-drechtwonen.id}}",
+				"leads": [
+					"{{object:lead-woonportaal.id}}"
+				],
+				"contactsUid": "example-drechtwonen-vos",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "contact-lam",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "Peter Lam",
+				"role": "Inkoop",
+				"client": "{{object:client-drechtwonen.id}}",
+				"leads": [
+					"{{object:lead-woonportaal.id}}"
+				],
+				"contactsUid": "example-drechtwonen-lam",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "product-licentie",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Licentie huurdersportaal",
+				"type": "product",
+				"status": "active",
+				"unitPrice": 72000
+			}
+		},
+		{
+			"key": "leadline-licentie",
+			"register": "pipelinq",
+			"schema": "leadProduct",
+			"data": {
+				"lead": "{{object:lead-woonportaal.id}}",
+				"product": "{{object:product-licentie.id}}",
+				"quantity": 1,
+				"unitPrice": 72000,
+				"discount": 0,
+				"total": 72000.0
+			}
+		},
+		{
+			"key": "product-implementatie",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Implementatie, dagen",
+				"type": "service",
+				"status": "active",
+				"unitPrice": 1100
+			}
+		},
+		{
+			"key": "leadline-implementatie",
+			"register": "pipelinq",
+			"schema": "leadProduct",
+			"data": {
+				"lead": "{{object:lead-woonportaal.id}}",
+				"product": "{{object:product-implementatie.id}}",
+				"quantity": 40,
+				"unitPrice": 1100,
+				"discount": 10,
+				"total": 39600.0
+			}
+		},
+		{
+			"key": "product-training",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Training voor medewerkers",
+				"type": "service",
+				"status": "active",
+				"unitPrice": 1400
+			}
+		},
+		{
+			"key": "leadline-training",
+			"register": "pipelinq",
+			"schema": "leadProduct",
+			"data": {
+				"lead": "{{object:lead-woonportaal.id}}",
+				"product": "{{object:product-training.id}}",
+				"quantity": 6,
+				"unitPrice": 1400,
+				"discount": 0,
+				"total": 8400.0
+			}
+		},
+		{
+			"key": "programme-straatverlichting",
+			"register": "pipelinq",
+			"schema": "deliveryProgramme",
+			"data": {
+				"name": "Vervanging straatverlichting Oost",
+				"description": "Vervang de 412 natriumlampen in Oost door ledarmaturen, straat voor straat, en informeer bewoners voordat hun straat aan de beurt is.",
+				"client": "{{object:client-drechtwonen.id}}",
+				"orgUnit": "Openbare ruimte",
+				"owner": "{{cast:marleen.uid}}",
+				"startDate": "{{date:-137}}",
+				"endDate": "{{date:64}}",
+				"status": "active",
+				"progressMode": "fromTasks"
+			}
+		},
+		{
+			"key": "programme-cycle-1",
+			"register": "pipelinq",
+			"schema": "programmeCycle",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"name": "Cyclus 1",
+				"startDate": "{{date:-137}}",
+				"endDate": "{{date:-98}}",
+				"status": "closed"
+			}
+		},
+		{
+			"key": "programme-cycle-2",
+			"register": "pipelinq",
+			"schema": "programmeCycle",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"name": "Cyclus 2",
+				"startDate": "{{date:-95}}",
+				"endDate": "{{date:-43}}",
+				"status": "closed"
+			}
+		},
+		{
+			"key": "programme-cycle-3",
+			"register": "pipelinq",
+			"schema": "programmeCycle",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"name": "Cyclus 3",
+				"startDate": "{{date:-40}}",
+				"endDate": "{{date:1}}",
+				"status": "open"
+			}
+		},
+		{
+			"key": "programme-task-1",
+			"register": "pipelinq",
+			"schema": "programmeTask",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"title": "Inspectie van masten in Lindelaan en Beukenhof",
+				"status": "closed",
+				"assignee": "{{cast:esra.uid}}",
+				"cycle": "{{object:programme-cycle-3.id}}"
+			}
+		},
+		{
+			"key": "programme-task-2",
+			"register": "pipelinq",
+			"schema": "programmeTask",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"title": "Brief aan bewoners van de Parkstraat",
+				"status": "inProgress",
+				"assignee": "{{cast:ilse.uid}}",
+				"cycle": "{{object:programme-cycle-3.id}}"
+			}
+		},
+		{
+			"key": "programme-task-3",
+			"register": "pipelinq",
+			"schema": "programmeTask",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"title": "120 ledarmaturen bestellen, partij 2",
+				"status": "inProgress",
+				"assignee": "{{cast:marleen.uid}}",
+				"cycle": "{{object:programme-cycle-3.id}}"
+			}
+		},
+		{
+			"key": "programme-task-4",
+			"register": "pipelinq",
+			"schema": "programmeTask",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"title": "Lampen vervangen Parkstraat",
+				"status": "open",
+				"assignee": "{{cast:bram.uid}}",
+				"cycle": "{{object:programme-cycle-3.id}}"
+			}
+		},
+		{
+			"key": "programme-task-5",
+			"register": "pipelinq",
+			"schema": "programmeTask",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"title": "Donkere plekken controleren die inwoners meldden",
+				"status": "open",
+				"assignee": "{{cast:esra.uid}}",
+				"cycle": "{{object:programme-cycle-3.id}}"
+			}
+		},
+		{
+			"key": "programme-member-marleen",
+			"register": "pipelinq",
+			"schema": "programmeTeamMember",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"user": "{{cast:marleen.uid}}",
+				"role": "Projectleider"
+			}
+		},
+		{
+			"key": "programme-member-esra",
+			"register": "pipelinq",
+			"schema": "programmeTeamMember",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"user": "{{cast:esra.uid}}",
+				"role": "Toezichthouder"
+			}
+		},
+		{
+			"key": "programme-member-ilse",
+			"register": "pipelinq",
+			"schema": "programmeTeamMember",
+			"data": {
+				"programme": "{{object:programme-straatverlichting.id}}",
+				"user": "{{cast:ilse.uid}}",
+				"role": "Communicatie"
+			}
+		},
+		{
+			"key": "forecast-daan-1",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-35}}",
+				"owner_id": "{{cast:daan.uid}}",
+				"level": "rep",
+				"commit_amount": 48000,
+				"best_case_amount": 120000,
+				"pipeline_amount": 168000,
+				"closed_won_amount": 90000,
+				"quota_amount": 160000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-daan-2",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-28}}",
+				"owner_id": "{{cast:daan.uid}}",
+				"level": "rep",
+				"commit_amount": 48000,
+				"best_case_amount": 120000,
+				"pipeline_amount": 168000,
+				"closed_won_amount": 90000,
+				"quota_amount": 160000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-daan-3",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-21}}",
+				"owner_id": "{{cast:daan.uid}}",
+				"level": "rep",
+				"commit_amount": 48000,
+				"best_case_amount": 120000,
+				"pipeline_amount": 168000,
+				"closed_won_amount": 90000,
+				"quota_amount": 160000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-daan-4",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-14}}",
+				"owner_id": "{{cast:daan.uid}}",
+				"level": "rep",
+				"commit_amount": 48000,
+				"best_case_amount": 120000,
+				"pipeline_amount": 168000,
+				"closed_won_amount": 90000,
+				"quota_amount": 160000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-daan-5",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-7}}",
+				"owner_id": "{{cast:daan.uid}}",
+				"level": "rep",
+				"commit_amount": 48000,
+				"best_case_amount": 120000,
+				"pipeline_amount": 168000,
+				"closed_won_amount": 90000,
+				"quota_amount": 160000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-daan-6",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:0}}",
+				"owner_id": "{{cast:daan.uid}}",
+				"level": "rep",
+				"commit_amount": 48000,
+				"best_case_amount": 120000,
+				"pipeline_amount": 168000,
+				"closed_won_amount": 90000,
+				"quota_amount": 160000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-marleen-1",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-35}}",
+				"owner_id": "{{cast:marleen.uid}}",
+				"level": "rep",
+				"commit_amount": 30000,
+				"best_case_amount": 55000,
+				"pipeline_amount": 92000,
+				"closed_won_amount": 70000,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-marleen-2",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-28}}",
+				"owner_id": "{{cast:marleen.uid}}",
+				"level": "rep",
+				"commit_amount": 30000,
+				"best_case_amount": 55000,
+				"pipeline_amount": 92000,
+				"closed_won_amount": 70000,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-marleen-3",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-21}}",
+				"owner_id": "{{cast:marleen.uid}}",
+				"level": "rep",
+				"commit_amount": 30000,
+				"best_case_amount": 55000,
+				"pipeline_amount": 92000,
+				"closed_won_amount": 70000,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-marleen-4",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-14}}",
+				"owner_id": "{{cast:marleen.uid}}",
+				"level": "rep",
+				"commit_amount": 30000,
+				"best_case_amount": 55000,
+				"pipeline_amount": 92000,
+				"closed_won_amount": 70000,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-marleen-5",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-7}}",
+				"owner_id": "{{cast:marleen.uid}}",
+				"level": "rep",
+				"commit_amount": 30000,
+				"best_case_amount": 55000,
+				"pipeline_amount": 92000,
+				"closed_won_amount": 70000,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-marleen-6",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:0}}",
+				"owner_id": "{{cast:marleen.uid}}",
+				"level": "rep",
+				"commit_amount": 30000,
+				"best_case_amount": 55000,
+				"pipeline_amount": 92000,
+				"closed_won_amount": 70000,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-esra-1",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-35}}",
+				"owner_id": "{{cast:esra.uid}}",
+				"level": "rep",
+				"commit_amount": 18000,
+				"best_case_amount": 48000,
+				"pipeline_amount": 110000,
+				"closed_won_amount": 52400,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-esra-2",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-28}}",
+				"owner_id": "{{cast:esra.uid}}",
+				"level": "rep",
+				"commit_amount": 18000,
+				"best_case_amount": 48000,
+				"pipeline_amount": 110000,
+				"closed_won_amount": 52400,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-esra-3",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-21}}",
+				"owner_id": "{{cast:esra.uid}}",
+				"level": "rep",
+				"commit_amount": 18000,
+				"best_case_amount": 48000,
+				"pipeline_amount": 110000,
+				"closed_won_amount": 52400,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-esra-4",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-14}}",
+				"owner_id": "{{cast:esra.uid}}",
+				"level": "rep",
+				"commit_amount": 18000,
+				"best_case_amount": 48000,
+				"pipeline_amount": 110000,
+				"closed_won_amount": 52400,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-esra-5",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:-7}}",
+				"owner_id": "{{cast:esra.uid}}",
+				"level": "rep",
+				"commit_amount": 18000,
+				"best_case_amount": 48000,
+				"pipeline_amount": 110000,
+				"closed_won_amount": 52400,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-esra-6",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q4-2026",
+				"as_of_date": "{{date:0}}",
+				"owner_id": "{{cast:esra.uid}}",
+				"level": "rep",
+				"commit_amount": 18000,
+				"best_case_amount": 48000,
+				"pipeline_amount": 110000,
+				"closed_won_amount": 52400,
+				"quota_amount": 120000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "ticket-henk-afvalkalender",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over de nieuwe afvalkalender",
+				"description": "De heer Bakker belt. Hij heeft de afvalkalender voor 2027 niet gekregen en wil weten wanneer het grofvuil wordt opgehaald.",
+				"client": "{{object:client-henk.id}}",
+				"contactsUid": "{{cast:henk.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"status": "resolved",
+				"priority": "normal",
+				"channel": "phone",
+				"category": "afval",
+				"occurredAt": "{{datetime:-2 10:25}}",
+				"resolvedAt": "{{datetime:-2 10:40}}",
+				"resolution": "Ophaaldag voor grofvuil doorgegeven. De afvalkalender gaat per post naar de heer Bakker."
+			}
+		},
+		{
+			"key": "interaction-henk-afvalkalender",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Telefoongesprek met Henk Bakker over de afvalkalender",
+				"description": "Inkomend gesprek. Vraag over de afvalkalender en het grofvuil beantwoord.",
+				"direction": "inbound",
+				"channel": "telefoon",
+				"outcome": "handled",
+				"status": "resolved",
+				"client": "{{object:client-henk.id}}",
+				"contactsUid": "{{cast:henk.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"occurredAt": "{{datetime:-2 10:25}}",
+				"duration": "PT15M",
+				"parentTicket": "{{object:ticket-henk-afvalkalender.id}}"
+			}
+		},
+		{
+			"key": "ticket-sanne-woo",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over de stand van het Woo-verzoek fietspad Lindelaan",
+				"description": "Mevrouw De Vries vraagt wanneer zij een besluit krijgt op haar Woo-verzoek over de verlichting van het fietspad aan de Lindelaan.",
+				"client": "{{object:client-sanne.id}}",
+				"contactsUid": "{{cast:sanne.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "email",
+				"category": "woo",
+				"occurredAt": "{{datetime:-1 09:12}}",
+				"slaDeadline": "{{datetime:2 17:00}}",
+				"notes": "Navraag gedaan bij {{cast:thomas.displayName}} ({{cast:thomas.function}}) over de termijn. Antwoord volgt."
+			}
+		},
+		{
+			"key": "ticket-fatima-klacht",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "complaint",
+				"title": "Klacht over een moeilijke brief",
+				"description": "Mevrouw El-Amrani begrijpt de brief over de afvalstoffenheffing 2027 niet. Zij vindt dat de gemeente te moeilijke woorden gebruikt en wil dat iemand het uitlegt.",
+				"client": "{{object:client-fatima.id}}",
+				"contactsUid": "{{cast:fatima.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"status": "new",
+				"priority": "normal",
+				"channel": "phone",
+				"complaintCategory": "communication",
+				"occurredAt": "{{datetime:0 11:05}}",
+				"slaDeadline": "{{datetime:42 17:00}}"
+			}
+		},
+		{
+			"key": "lead-cloudgemeente",
+			"register": "pipelinq",
+			"schema": "lead",
+			"lookups": {
+				"pipeline": {
+					"schema": "pipeline",
+					"where": {
+						"title": "Sales",
+						"isDefault": true
+					}
+				}
+			},
+			"data": {
+				"title": "Kantoorruimte voor CloudGemeente B.V.",
+				"description": "CloudGemeente B.V. groeit en zoekt in Zuiddrecht kantoorruimte voor vijftien extra werkplekken. Mark Visser vraagt welke panden en regelingen er zijn.",
+				"client": "{{object:client-cloudgemeente.id}}",
+				"contact": "{{object:contact-mark.id}}",
+				"source": "email",
+				"pipeline": "{{lookup:pipeline}}",
+				"stage": "Gekwalificeerd",
+				"stageOrder": 2,
+				"status": "open",
+				"priority": "normal",
+				"probability": 30,
+				"expectedCloseDate": "{{date:45}}",
+				"assignee": "{{cast:daan.uid}}",
+				"stageEnteredAt": "{{datetime:-3 14:00}}",
+				"category": "bedrijfsvestiging"
+			}
+		}
+	]
+}

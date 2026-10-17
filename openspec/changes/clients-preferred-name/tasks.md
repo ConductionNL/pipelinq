@@ -1,14 +1,23 @@
 # Tasks: clients-preferred-name
 
-- [ ] 1.1 Fragment adding `preferredName` to `contact` and to `client` (shown for person clients)
+- [x] 1.1 Fragment adding `preferredName` to `contact` and to `client` (shown for person clients)
+  - Built: `lib/Settings/register.d/19-preferred-name.json` (both with `slug`), `appinfo/info.xml` bumped so the import runs; label and help in six locales. Test: `tests/Unit/Settings/PreferredNameSchemaTest.php` validates what the Contacts sync writes (a name, and the empty text that clears it) against the merged schema, with a refusing control.
   - Verify: register import logs no `PARTIAL IMPORT`; `npm run check:schema-l10n` exit 0
-- [ ] 1.2 Write `NICKNAME` in `ContactVcardPropertyBuilder::buildProperties()` and read it in both `ContactDataBuilder` import builders
+- [x] 1.2 Write `NICKNAME` in `ContactVcardPropertyBuilder::buildProperties()` and read it in both `ContactDataBuilder` import builders
   - Verify: PHPUnit on both directions, including an empty value that clears `NICKNAME`
-- [ ] 1.3 ClientDetail and ContactDetail header show the preferred name
-  - Verify: Playwright `tests/e2e/preferred-name.spec.ts` sets Jan on contact Johannes Jansen and sees it on ContactDetail
-- [ ] 1.4 CTI screen pop shows the preferred name first for a matched caller
+  - Built: `ContactVcardPropertyBuilder::addPreferredName()` and `ContactDataBuilder::withPreferredName()`. The key is written whenever the object (or the card) carries the field, empty included, so clearing works both ways; an organisation client carries none. Tests: `ContactVcardPropertyBuilderTest`, `ContactDataBuilderTest`.
+- [x] 1.3 ClientDetail and ContactDetail header show the preferred name
+  - Built as manifest config: `headerFields: ["preferredName"]` on both pages (a chip under the full name, none when the value is empty), and `preferredName` in ClientDetail's `client-identity` field list so it can be filled in. ContactDetail's `contact-data` lists every field. Test: `tests/vitest/preferredName.spec.js`.
+  - An organisation client shows no Preferred name row: `client-identity` in `src/manifest.json` sets `content.overrides.preferredName.visibleWhen` (`type` is `person`), read by nextcloud-vue's `CnObjectDataWidget` (nextcloud-vue PR build/dep-pipelinq-field-visible-when; needs a release with it and a lock bump to take effect). Test: `tests/vitest/preferredName.spec.js`.
+- [ ] 1.3b Playwright `tests/e2e/preferred-name.spec.ts` sets Jan on contact Johannes Jansen and sees it on ContactDetail (live pass, decision 139: written, not run)
+- [x] 1.4 CTI screen pop shows the preferred name first for a matched caller
   - Verify: Vitest on the screen pop component with and without a preferred name
-- [ ] 1.5 `TemplateRenderer` variable `preferredName` with the full name fallback
+  - Built: `ScreenPopModal` shows the preferred name in bold with the full name under it; a caller without one shows the full name only. Test: `tests/vitest/preferredName.spec.js`. The matcher returns whole records, so `preferredName` reaches the modal without a server change.
+  - Found, not fixed here: nothing on development mounts `ScreenPopModal` or calls `ctiApi.screenPop()`. The list of matched callers has no caller until the incoming-call card of board PqInkomendGesprek is built.
+- [x] 1.5 `TemplateRenderer` variable `preferredName` with the full name fallback
   - Verify: PHPUnit on `render()` with and without the value
-- [ ] 1.6 English strings with Dutch translation ("Roepnaam"), user doc section in `docs/Features/client-management.md`
+  - Built: `TemplateRenderer::withPreferredName()`, called by `render()`; falls back to `fullName`, then `name`. Test: `TemplateRendererTest::testPreferredNameFallsBackToTheFullName`. `render()`'s one caller (`BerichtenboxService`) passes the variables it is handed; its only caller, `BerichtenboxZaakStatusListener`, knows the recipient by BSN and hands no name, and it cannot fire today (no `zaak_schema` key is written). So this path renders the variable empty until a caller supplies a name.
+- [x] 1.5b A campaign mail fills `{{preferredName}}` from the recipient's record at send time
+  - Built: `Marketing\RecipientNameReader::greetingName()` (contact, then client; preferred name, else full name, else empty), called by `MailTransportService::buildRenderedMail()`, which both the blast and the journey send go through. Escaped in the HTML body. Tests: `RecipientNameReaderTest`, and from the caller `MailTransportServiceTest::testSendOneDeliveryGreetsTheRecipientByTheirPreferredName`.
+- [x] 1.6 English strings with Dutch translation ("Roepnaam"), user doc section in `docs/Features/client-management.md`
   - Verify: `npm run test:l10n` exit 0; docs build exit 0

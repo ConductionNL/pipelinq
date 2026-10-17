@@ -24,7 +24,9 @@
 						v-model="editName"
 						class="tag-chip__input"
 						:aria-label="
-							t('pipelinq', 'Rename tag {name}', { name: tag.name })
+							t('pipelinq', 'Rename tag {name}', {
+								name: labelOf(tag),
+							})
 						"
 						@keyup.enter="saveRename(tag.id)"
 						@keyup.escape="cancelEdit" />
@@ -46,7 +48,7 @@
 						class="tag-chip__label"
 						:title="t('pipelinq', 'Double-click to rename')"
 						@dblclick="startEditing(tag)">
-						{{ tag.name }}
+						{{ labelOf(tag) }}
 					</span>
 					<button
 						class="tag-chip__remove"
@@ -141,6 +143,15 @@ export default {
 			type: Function,
 			default: null,
 		},
+
+		/**
+		 * Display label of a stored tag name; the name itself when not set.
+		 * Renaming still edits the stored name.
+		 */
+		tagLabel: {
+			type: Function,
+			default: null,
+		},
 	},
 
 	emits: ['remove'],
@@ -156,6 +167,15 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @param {object} tag The tag.
+		 * @return {string} Its display label.
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		labelOf(tag) {
+			return this.tagLabel ? this.tagLabel(tag.name) : tag.name
+		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-94
 		 */
@@ -273,7 +293,7 @@ export default {
 			let message = t(
 				'pipelinq',
 				'Are you sure you want to remove "{name}"?',
-				{ name: tag.name },
+				{ name: this.labelOf(tag) },
 			)
 
 			if (this.usageCheck) {
@@ -283,7 +303,7 @@ export default {
 						message = t(
 							'pipelinq',
 							'{count} items currently use "{name}". They will retain their value, but it will no longer be available for new items.',
-							{ count, name: tag.name },
+							{ count, name: this.labelOf(tag) },
 						)
 					}
 				} catch {

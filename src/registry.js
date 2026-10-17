@@ -137,6 +137,7 @@ import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdo
 // --- Ticket page, simple structure (simple-ticket-page): the conversation to
 //     read, and the Answer dialog that wraps CustomerReplySection. ---
 import TicketConversationSection from './components/TicketConversationSection.vue'
+import TicketDecisionRoutes from './components/tickets/TicketDecisionRoutes.vue'
 import WooConversionSection from './components/WooConversionSection.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
@@ -295,8 +296,6 @@ import WeeklyReviewView from './views/marketing/WeeklyReview.vue'
 //     + the composer preflight facts, and hosts the SendMessageModal
 //     composer. Same self-fetching-by-props pattern as the sections above. ---
 import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
-// --- MyWork — bespoke per-user surface mixing tasks + leads + requests. ---
-import MyWorkView from './views/MyWork.vue'
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
@@ -329,7 +328,6 @@ import SocialPostFormView from './views/social/SocialPostFormView.vue'
 import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
-import WerkplekContactStart from './views/werkplek/widgets/WerkplekContactStart.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 import ContactAwareObjectListWidget from './components/widgets/ContactAwareObjectListWidget.js'
 import { sectionWidget } from './components/widgets/sectionWidget.js'
@@ -400,12 +398,6 @@ const registry = {
 		_note: 'ADR-044 cards-collapse hub for the Service group: seven CnCards linking to the former Service child leaves (Requests/Tasks/Contactmomenten/Complaints/Projects/MyWork/BookingsGroup). Leaf routes stay registered.',
 	},
 
-	// --- MyWork — multi-entity user dashboard. ---
-	MyWorkView: {
-		kind: 'page',
-		component: MyWorkView,
-		_note: 'Personalised work surface mixing tasks + leads + requests for the current user; no single-entity typed page captures multi-entity user dashboard.',
-	},
 	ProspectsView: {
 		kind: 'page',
 		component: ProspectsView,
@@ -892,9 +884,84 @@ const registry = {
 				entityType: content.entityType || 'contact',
 				entityName: objectData.name || '',
 			}),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
 		_note: 'ContactRelationships as a grid widget: entityId from the page object, entityType from content (default contact).',
+	},
+	TicketDecisionRoutesWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'TicketDecisionRoutesWidget',
+			TicketDecisionRoutes,
+			({ objectId, content }) => ({
+				ticketId: objectId,
+				hideConvert: content.convert === false,
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: "Head of the ticket page's Decisions tab (ticket-decisions-tab): what the tab holds, the two routes to a decision, and Convert to case. The decision lists are decidiq's leaf, mounted by the manifest.",
+	},
+	// --- The ticket page's Overview sections as tab widgets (board PqTicket):
+	//     the conversation, the dossier asked about, the Woo request and the case
+	//     sit inside the Overview tab rather than in a tail below the tab strip. ---
+	TicketConversationWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'TicketConversationWidget',
+			TicketConversationSection,
+			() => ({}),
+			{ card: true, context: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'TicketConversationSection as a tab widget; it reads the ticket from cnSectionContext, which the wrapper provides.',
+	},
+	DossierSnapshotWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'DossierSnapshotWidget',
+			DossierSnapshotSection,
+			({ objectId }) => ({ objectId }),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'DossierSnapshotSection as a tab widget.',
+	},
+	WooConversionWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'WooConversionWidget',
+			WooConversionSection,
+			({ objectId }) => ({ objectId }),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'WooConversionSection as a tab widget.',
+	},
+	RequestConversionWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'RequestConversionWidget',
+			RequestConversionSection,
+			({ objectId }) => ({ requestId: objectId }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'RequestConversionSection (Convert to case) as a tab widget.',
+	},
+	ResidentViewWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ResidentViewWidget',
+			ResidentViewSection,
+			({ objectId, objectData }) => ({
+				ticketId: objectId,
+				ticketType: objectData.ticketType || '',
+				customerMessage: objectData.customerMessage || '',
+				status: objectData.status || '',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'ResidentViewSection as a tab widget.',
 	},
 	ContactChannelsWidget: {
 		kind: 'widget',
@@ -905,6 +972,7 @@ const registry = {
 				entityId: objectId,
 				entityType: content.entityType || 'contact',
 			}),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
 		_note: 'ContactChannelsSection as a grid widget.',
@@ -918,6 +986,7 @@ const registry = {
 				entityId: objectId,
 				entityType: content.entityType || 'contact',
 			}),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
 		_note: 'MessagingConversationSection as a grid widget.',
@@ -930,6 +999,7 @@ const registry = {
 			({ objectId }) => ({
 				contactId: objectId,
 			}),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
 		_note: 'SubscriptionsSection bound to the page contact, as a grid widget.',
@@ -1007,6 +1077,23 @@ const registry = {
 		kind: 'section',
 		component: ResidentViewSection,
 		_note: 'What the resident sees on a request ticket (portal-resident-view-preview): the resident portal panel and, with portaliq and a client, the organisation portal panel, both from GET /api/tickets/{id}/resident-view, plus the line that everything else stays internal. Renders nothing on complaint and interaction tickets, so it carries its own heading instead of a section title.',
+	},
+	RoutingSuggestionWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'RoutingSuggestionWidget',
+			RoutingSuggestionSection,
+			({ objectId, objectData, content }) => ({
+				objectId,
+				category: objectData.category || '',
+				entityType: content.entityType || 'request',
+				objectType: content.objectType || 'ticket',
+				assignee: objectData.assignee || '',
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'RoutingSuggestionSection as a side-column card (PqLead "Voorgestelde medewerkers"): the record category and assignee come from the page object.',
 	},
 	RoutingSuggestionSection: {
 		kind: 'section',
@@ -1190,13 +1277,6 @@ const registry = {
 		component: WerkplekClientSelect,
 		...HEADER_ACTIONS_META,
 		_note: 'Workspace title-meta slot: the client in focus, written to @workspace.selectedClient.',
-	},
-
-	WerkplekContactStart: {
-		kind: 'widget',
-		component: WerkplekContactStart,
-		...HEADER_ACTIONS_META,
-		_note: 'Contact centre dashboard: the Start a contact card around the client in focus picker.',
 	},
 
 	// --- xWiki integration (xwiki-integration). ---

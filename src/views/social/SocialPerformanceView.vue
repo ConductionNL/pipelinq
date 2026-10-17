@@ -25,6 +25,29 @@
 
 		<NcNoteCard v-if="error" type="error">{{ error }}</NcNoteCard>
 
+		<!-- The date and the follower count sit on a second line to fit the
+			table, so their order is offered here; the headers sort the rest. -->
+		<div class="social-performance__sort">
+			<NcSelect
+				:modelValue="sortKey"
+				:options="sortOptions"
+				:inputLabel="t('pipelinq', 'Sort')"
+				:clearable="false"
+				label="label"
+				:reduce="(o) => o.value"
+				data-testid="social-performance-sort"
+				@update:modelValue="(key) => onSort({ key, order: sortOrder })" />
+			<NcSelect
+				:modelValue="sortOrder"
+				:options="orderOptions"
+				:inputLabel="t('pipelinq', 'Sort order')"
+				:clearable="false"
+				label="label"
+				:reduce="(o) => o.value"
+				data-testid="social-performance-order"
+				@update:modelValue="(order) => onSort({ key: sortKey, order })" />
+		</div>
+
 		<!-- CnDataTable renders its headers before the rows arrive, so the page
 			still paints before the one request that fills it. It only reports
 			header clicks; the sorting itself is done here. -->
@@ -59,7 +82,7 @@
 
 <script>
 import { CnDataTable } from '@conduction/nextcloud-vue'
-import { NcNoteCard } from '@nextcloud/vue'
+import { NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { fetchPerformance } from '../../services/socialApi.js'
 import { networkIcon } from '../../services/socialNetworkIcons.js'
 import {
@@ -73,6 +96,7 @@ export default {
 	components: {
 		CnDataTable,
 		NcNoteCard,
+		NcSelect,
 	},
 
 	data() {
@@ -93,11 +117,12 @@ export default {
 		 */
 		columns() {
 			return [
-				{ key: 'network', label: t('pipelinq', 'Network'), sortable: true },
 				{
-					key: 'publishedAt',
-					label: t('pipelinq', 'Published'),
+					key: 'network',
+					label: t('pipelinq', 'Network'),
 					sortable: true,
+					cellClass: 'cn-cell--wrap',
+					secondary: (row) => this.formatDate(row.publishedAt),
 				},
 				{ key: 'views', label: t('pipelinq', 'Views'), sortable: true },
 				{ key: 'likes', label: t('pipelinq', 'Likes'), sortable: true },
@@ -108,15 +133,48 @@ export default {
 				},
 				{ key: 'shares', label: t('pipelinq', 'Shares'), sortable: true },
 				{
-					key: 'followerCount',
-					label: t('pipelinq', 'Followers'),
-					sortable: true,
-				},
-				{
 					key: 'engagementRate',
 					label: t('pipelinq', 'Engagement rate'),
 					sortable: true,
+					secondary: (row) =>
+						t('pipelinq', 'Followers: {count}', {
+							count: row.followerCount,
+						}),
 				},
+			]
+		},
+
+		/**
+		 * Every order the page offers: the six table columns plus the
+		 * publication date and the follower count shown on their second lines.
+		 *
+		 * @return {Array<{value: string, label: string}>} The sort choices.
+		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		sortOptions() {
+			const extra = {
+				network: [
+					{ value: 'publishedAt', label: t('pipelinq', 'Published') },
+				],
+
+				shares: [
+					{ value: 'followerCount', label: t('pipelinq', 'Followers') },
+				],
+			}
+			return this.columns.flatMap((column) => [
+				{ value: column.key, label: column.label },
+				...(extra[column.key] || []),
+			])
+		},
+
+		/**
+		 * @return {Array<{value: string, label: string}>} The two directions.
+		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		orderOptions() {
+			return [
+				{ value: 'asc', label: t('pipelinq', 'Ascending') },
+				{ value: 'desc', label: t('pipelinq', 'Descending') },
 			]
 		},
 
@@ -270,6 +328,12 @@ export default {
 
 .social-performance h2 {
 	margin: 0;
+}
+
+.social-performance__sort {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
 }
 
 .social-performance__network {

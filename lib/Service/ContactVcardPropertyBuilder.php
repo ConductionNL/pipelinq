@@ -60,6 +60,7 @@ class ContactVcardPropertyBuilder {
 		$properties = ['FN' => $name];
 
 		$properties = $this->addChannelProperties(properties: $properties, objData: $objData);
+		$properties = $this->addPreferredName(properties: $properties, objData: $objData, objectType: $objectType);
 
 		if ($objectType === 'client') {
 			$properties = $this->addClientProperties(
@@ -78,6 +79,36 @@ class ContactVcardPropertyBuilder {
 
 		return $properties;
 	}//end buildProperties()
+
+	/**
+	 * Write the preferred name as the vCard NICKNAME.
+	 *
+	 * Written whenever the object carries the field, an empty value included:
+	 * an emptied preferred name clears the nickname on the Nextcloud contact.
+	 * An object that does not carry the field leaves the nickname alone, and
+	 * so does a client that is an organisation.
+	 *
+	 * @param array $properties The vCard properties built so far.
+	 * @param array $objData The object data.
+	 * @param string $objectType The object type ('client' or 'contact').
+	 *
+	 * @return array The updated properties.
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	private function addPreferredName(array $properties, array $objData, string $objectType): array {
+		if (array_key_exists('preferredName', $objData) === false) {
+			return $properties;
+		}
+
+		if ($objectType === 'client' && ($objData['type'] ?? '') === 'organization') {
+			return $properties;
+		}
+
+		$properties['NICKNAME'] = trim((string)($objData['preferredName'] ?? ''));
+
+		return $properties;
+	}//end addPreferredName()
 
 	/**
 	 * kind/network -> vCard TYPE token used by {@see buildTypedVcardEntries()}

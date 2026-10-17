@@ -61,6 +61,8 @@
 				<NcSelect
 					v-model="form.source"
 					:options="sourceOptions"
+					label="label"
+					:reduce="(o) => o.id"
 					:aria-label-combobox="t('pipelinq', 'Source')"
 					labelOutside
 					:clearable="true"
@@ -88,9 +90,10 @@
 				@update:modelValue="expectedCloseDateObj = $event" />
 		</div>
 
-		<!-- Client + Contact. Contact is scoped to the chosen client and stays
-		     disabled until there is one — the same cascade Stage has on
-		     Pipeline below. Both can create what they cannot find. -->
+		<!-- Client + Contact. Both are optional (decision 207): a lead can be
+		     saved with no client linked. With a client chosen the contact
+		     picker is scoped to it; without one it offers every contact.
+		     Both can create what they cannot find. -->
 		<div class="form-row">
 			<div class="form-group" data-testid="lead-form-client">
 				<CnResourceSelect
@@ -98,13 +101,18 @@
 					schema="client"
 					labelField="name"
 					:modelValue="form.client || ''"
-					:inputLabel="t('pipelinq', 'Client') + ' *'"
+					:inputLabel="t('pipelinq', 'Client')"
 					:placeholder="t('pipelinq', 'Select or create a client')"
 					:preload="true"
 					:createHandler="createClient"
 					@update:modelValue="onClientChange" />
-				<p v-if="shownErrors.client" class="field-error" role="alert">
-					{{ shownErrors.client }}
+				<p class="field-hint" data-testid="lead-form-client-hint">
+					{{
+						t(
+							'pipelinq',
+							'Leave empty to save the lead without a client.',
+						)
+					}}
 				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-contact">
@@ -115,14 +123,9 @@
 					:modelValue="form.contact || ''"
 					:inputLabel="t('pipelinq', 'Contact')"
 					:filters="contactFilters"
-					:disabled="!form.client"
 					:preload="true"
 					:createHandler="createContact"
-					:placeholder="
-						form.client
-							? t('pipelinq', 'Select or create a contact')
-							: t('pipelinq', 'Select a client first')
-					"
+					:placeholder="t('pipelinq', 'Select or create a contact')"
 					@update:modelValue="(v) => (form.contact = v || null)" />
 			</div>
 		</div>
@@ -201,6 +204,7 @@ import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import { isCurrencyCode, normaliseCurrency } from '../../services/leadCurrency.js'
+import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { reportingCurrency } from '../../services/reportingCurrency.js'
@@ -304,7 +308,10 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-54
 		 */
 		sourceOptions() {
-			return this.leadSourcesStore.sourceNames
+			return this.leadSourcesStore.sourceNames.map((id) => ({
+				id,
+				label: leadSourceLabel(id),
+			}))
 		},
 
 		isEdit() {
@@ -371,16 +378,13 @@ export default {
 				)
 			}
 
-			// A lead belongs to a pipeline and to a client; the schema requires
-			// both. Catching it here means the user sees which field is missing,
-			// instead of OpenRegister rejecting the whole save with
-			// "The required property (client) is missing".
+			// A lead belongs to a pipeline; the schema requires it. Catching it
+			// here means the user sees which field is missing, instead of
+			// OpenRegister rejecting the whole save with
+			// "The required property (pipeline) is missing". The client is
+			// optional (decision 207): a lead can exist with no client linked.
 			if (!this.form.pipeline) {
 				errors.pipeline = t('pipelinq', 'Pipeline is required')
-			}
-
-			if (!this.form.client) {
-				errors.client = t('pipelinq', 'Client is required')
 			}
 
 			return errors
@@ -563,6 +567,12 @@ export default {
 
 .field-error {
 	color: var(--color-error);
+	font-size: 12px;
+	margin-top: 4px;
+}
+
+.field-hint {
+	color: var(--color-text-maxcontrast);
 	font-size: 12px;
 	margin-top: 4px;
 }

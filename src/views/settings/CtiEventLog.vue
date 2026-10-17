@@ -38,43 +38,50 @@
 				{{ loading ? t('pipelinq', 'Reloading…') : t('pipelinq', 'Reload') }}
 			</NcButton>
 		</div>
-		<table class="cti-event-log__table" data-testid="cti-event-log-table">
-			<thead>
-				<tr>
-					<th scope="col">{{ t('pipelinq', 'Received at') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Platform') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Event type') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Call ID') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Signature') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Error') }}</th>
-					<th scope="col" class="cti-event-log__actions" />
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="row in events"
-					:key="row.id || row.uuid || row.received_at">
-					<td>{{ row.received_at }}</td>
-					<td>{{ row.platform }}</td>
-					<td>{{ row.event_type }}</td>
-					<td>{{ row.external_call_id }}</td>
-					<td>{{ row.signature_valid ? '✓' : '✗' }}</td>
-					<td>{{ row.processing_error || '' }}</td>
-					<td class="cti-event-log__actions">
-						<NcButton variant="tertiary" @click="viewPayload(row)">
-							{{ t('pipelinq', 'View payload') }}
-						</NcButton>
-					</td>
-				</tr>
-				<tr v-if="!events.length">
-					<td colspan="7" class="cti-event-log__empty">
-						{{
-							t('pipelinq', 'No webhook events in the selected range.')
-						}}
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<ul class="cti-event-log__records" data-testid="cti-event-log-table">
+			<li
+				v-for="row in events"
+				:key="row.id || row.uuid || row.received_at"
+				class="cti-event-log__record"
+				data-testid="cti-event">
+				<dl class="cti-event-log__facts">
+					<div>
+						<dt>{{ t('pipelinq', 'Received at') }}</dt>
+						<dd>{{ row.received_at }}</dd>
+					</div>
+					<div>
+						<dt>{{ t('pipelinq', 'Platform') }}</dt>
+						<dd>{{ platformLabel(row.platform) }}</dd>
+					</div>
+					<div>
+						<dt>{{ t('pipelinq', 'Event type') }}</dt>
+						<dd>{{ eventTypeLabel(row.event_type) }}</dd>
+					</div>
+					<div>
+						<dt>{{ t('pipelinq', 'Call ID') }}</dt>
+						<dd>{{ row.external_call_id }}</dd>
+					</div>
+					<div>
+						<dt>{{ t('pipelinq', 'Signature') }}</dt>
+						<dd>{{ row.signature_valid ? '✓' : '✗' }}</dd>
+					</div>
+					<div
+						v-if="row.processing_error"
+						class="cti-event-log__fact--wide">
+						<dt>{{ t('pipelinq', 'Error') }}</dt>
+						<dd>{{ row.processing_error }}</dd>
+					</div>
+				</dl>
+				<div class="cti-event-log__actions">
+					<NcButton variant="tertiary" @click="viewPayload(row)">
+						{{ t('pipelinq', 'View payload') }}
+					</NcButton>
+				</div>
+			</li>
+			<li v-if="!events.length" class="cti-event-log__empty">
+				{{ t('pipelinq', 'No webhook events in the selected range.') }}
+			</li>
+		</ul>
 		<CtiPayloadDialog
 			v-if="payloadRow"
 			:payload="payloadRow.payload_json"
@@ -90,6 +97,14 @@ import { showError } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon, NcSelect, NcSettingsSection } from '@nextcloud/vue'
 import CtiPayloadDialog from '../../dialogs/CtiPayloadDialog.vue'
 import { getEventLog } from '../../services/ctiApi.js'
+import {
+	CTI_EVENT_TYPE_LABELS,
+	CTI_PLATFORM_LABELS,
+	enumLabel,
+	enumOptions,
+} from '../../utils/enumLabels.js'
+
+const translate = (text) => t('pipelinq', text)
 
 export default {
 	name: 'CtiEventLog',
@@ -115,23 +130,14 @@ export default {
 
 	computed: {
 		platformOptions() {
-			return [
-				{ value: 'callvoip', label: 'CallVoip' },
-				{ value: 'ringcentral', label: 'RingCentral' },
-				{ value: 'asterisk', label: 'Asterisk' },
-			]
+			return ['callvoip', 'ringcentral', 'asterisk'].map((value) => ({
+				value,
+				label: this.platformLabel(value),
+			}))
 		},
 
 		eventTypeOptions() {
-			return [
-				'ringing',
-				'answered',
-				'ended',
-				'abandoned',
-				'transferred',
-				'presence',
-				'recording',
-			].map((v) => ({ value: v, label: v }))
+			return enumOptions(CTI_EVENT_TYPE_LABELS, translate)
 		},
 	},
 
@@ -166,6 +172,24 @@ export default {
 			}
 		},
 
+		/**
+		 * @param {string} platform A stored platform value.
+		 * @return {string} Its label, or the value as stored when unknown.
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.6
+		 */
+		platformLabel(platform) {
+			return enumLabel(CTI_PLATFORM_LABELS, platform, translate)
+		},
+
+		/**
+		 * @param {string} eventType A stored event type.
+		 * @return {string} Its label, or the value as stored when unknown.
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.6
+		 */
+		eventTypeLabel(eventType) {
+			return enumLabel(CTI_EVENT_TYPE_LABELS, eventType, translate)
+		},
+
 		viewPayload(row) {
 			this.payloadRow = row
 		},
@@ -176,25 +200,56 @@ export default {
 <style scoped>
 .cti-event-log__filters {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 12px;
 	align-items: flex-end;
 	margin-bottom: 12px;
 }
 
-.cti-event-log__table {
-	width: 100%;
-	border-collapse: collapse;
+.cti-event-log__records {
+	margin: 0;
+	padding: 0;
+	list-style: none;
 }
 
-.cti-event-log__table th,
-.cti-event-log__table td {
-	padding: 6px 12px;
+.cti-event-log__record {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 8px 16px;
+	padding: 12px 0;
 	border-bottom: 1px solid var(--color-border);
+}
+
+.cti-event-log__facts {
+	display: grid;
+	flex: 1 1 320px;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 8px 16px;
+	margin: 0;
+}
+
+.cti-event-log__facts dt,
+.cti-event-log__facts dd {
+	display: block;
+	width: auto;
+	margin: 0;
+	padding: 0;
 	text-align: start;
 }
 
-.cti-event-log__actions {
-	text-align: end;
+.cti-event-log__facts dt {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.cti-event-log__facts dd {
+	overflow-wrap: break-word;
+}
+
+.cti-event-log__fact--wide {
+	grid-column: 1 / -1;
 }
 
 .cti-event-log__empty {

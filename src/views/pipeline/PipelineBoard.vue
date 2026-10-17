@@ -27,7 +27,9 @@
 			:tabs="chipTabs"
 			:counts="chipCounts"
 			:activeIndex="chipIndex"
-			@update:activeIndex="(value) => (chipIndex = value === null ? 0 : value)" />
+			@update:activeIndex="
+				(value) => (chipIndex = value === null ? 0 : value)
+			" />
 		<div class="pipeline-board__header">
 			<div class="pipeline-board__controls">
 				<NcSelect
@@ -498,7 +500,11 @@
 </template>
 
 <script>
-import { CnPageHeader, CnQuickFilterBar, openRowTarget } from '@conduction/nextcloud-vue'
+import {
+	CnPageHeader,
+	CnQuickFilterBar,
+	openRowTarget,
+} from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -813,6 +819,7 @@ export default {
 		 * open lead, my leads, leads closing this month and stale leads.
 		 *
 		 * @return {Array<{label: string}>}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		chipTabs() {
 			return [
@@ -827,10 +834,13 @@ export default {
 		 * The number on each chip, counted over the leads the pipeline holds.
 		 *
 		 * @return {number[]}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		chipCounts() {
-			return this.chipTabs.map((_, index) =>
-				this.allItems.filter((item) => this.matchesChip(item, index)).length,
+			return this.chipTabs.map(
+				(_, index) =>
+					this.allItems.filter((item) => this.matchesChip(item, index))
+						.length,
 			)
 		},
 
@@ -838,12 +848,17 @@ export default {
 		 * The line under the title: how many leads show, out of how many.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		headerCountLine() {
-			return this.t('pipelinq', '{shown} of {total} open leads · board per stage', {
-				shown: this.filteredItems.length,
-				total: this.allItems.length,
-			})
+			return this.t(
+				'pipelinq',
+				'{shown} of {total} open leads · board per stage',
+				{
+					shown: this.filteredItems.length,
+					total: this.allItems.length,
+				},
+			)
 		},
 
 		/**
@@ -1586,6 +1601,7 @@ export default {
 		 * @param {object} item The lead.
 		 * @param {number} index The chip index.
 		 * @return {boolean}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		matchesChip(item, index) {
 			if (index === 1) {
@@ -1593,11 +1609,15 @@ export default {
 				return Boolean(uid) && item.assignee === uid
 			}
 			if (index === 2) {
-				const close = item.expectedCloseDate ? new Date(item.expectedCloseDate) : null
+				const close = item.expectedCloseDate
+					? new Date(item.expectedCloseDate)
+					: null
 				const now = new Date()
-				return Boolean(close)
+				return (
+					Boolean(close)
 					&& close.getFullYear() === now.getFullYear()
 					&& close.getMonth() === now.getMonth()
+				)
 			}
 			if (index === 3) {
 				return this.isItemStale(item)

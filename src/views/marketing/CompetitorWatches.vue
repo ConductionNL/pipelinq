@@ -29,7 +29,7 @@
 				v-if="!configured"
 				type="warning"
 				data-testid="competitors-unconfigured">
-				{{ reason }}
+				{{ reason ? t('pipelinq', reason) : '' }}
 				{{
 					t(
 						'pipelinq',
@@ -78,15 +78,19 @@
 								<td>{{ competitorName(watch) }}</td>
 								<td>
 									<span class="competitors__kind">{{
-										watch.kind
+										kindLabel(watch.kind)
 									}}</span>
 									<span class="competitors__target">{{
 										watch.target
 									}}</span>
 								</td>
-								<td>{{ watch.schedule }}</td>
+								<td>{{ scheduleLabel(watch.schedule) }}</td>
 								<td>
-									{{ watch.lastRunAt || t('pipelinq', 'Never') }}
+									{{
+										watch.lastRunAt
+											? formatWhen(watch.lastRunAt)
+											: t('pipelinq', 'Never')
+									}}
 								</td>
 								<td>
 									<span :class="outcomeClass(watch)">
@@ -138,8 +142,8 @@
 						</div>
 						<p class="competitors__event-meta">
 							<span>{{ competitorNameById(event.competitorId) }}</span>
-							<span>{{ event.kind }}</span>
-							<span>{{ event.seenAt }}</span>
+							<span>{{ kindLabel(event.kind) }}</span>
+							<span>{{ formatWhen(event.seenAt) }}</span>
 						</p>
 						<p
 							v-if="event.diffSummary"
@@ -160,6 +164,12 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import AccountGroupOutline from 'vue-material-design-icons/AccountGroupOutline.vue'
+import { formatDate } from '../../services/localeUtils.js'
+import {
+	enumLabel,
+	WATCH_KIND_LABELS,
+	WATCH_SCHEDULE_LABELS,
+} from '../../utils/enumLabels.js'
 
 export default {
 	name: 'CompetitorWatches',
@@ -273,6 +283,46 @@ export default {
 		},
 
 		/**
+		 * @param {string} kind A stored watch kind.
+		 * @return {string} Its label, or the value as stored when unknown.
+		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 */
+		kindLabel(kind) {
+			return enumLabel(WATCH_KIND_LABELS, kind, (text) =>
+				this.t('pipelinq', text),
+			)
+		},
+
+		/**
+		 * @param {string} schedule A stored watch schedule.
+		 * @return {string} Its label, or the value as stored when unknown.
+		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 */
+		scheduleLabel(schedule) {
+			return enumLabel(WATCH_SCHEDULE_LABELS, schedule, (text) =>
+				this.t('pipelinq', text),
+			)
+		},
+
+		/**
+		 * @param {string} value An ISO timestamp.
+		 * @return {string} Its date and time in the reader's locale, or the value as stored when unreadable.
+		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 */
+		formatWhen(value) {
+			if (!value || Number.isNaN(new Date(value).getTime())) {
+				return value || ''
+			}
+			return formatDate(value, {
+				day: 'numeric',
+				month: 'short',
+				year: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+			})
+		},
+
+		/**
 		 * What the last run did, in words rather than a code.
 		 *
 		 * @param {object} watch A watch.
@@ -350,6 +400,7 @@ export default {
 	th,
 	td {
 		padding: 8px 12px;
+		white-space: normal;
 		border-bottom: 1px solid var(--color-border);
 		text-align: start;
 		vertical-align: top;

@@ -31,78 +31,79 @@
 
 		<NcLoadingIcon v-if="loading" :size="32" />
 
-		<table
-			v-else-if="tenderTypes.length > 0"
-			class="pos-tender-type-list__table">
-			<thead>
-				<tr>
-					<th scope="col">{{ t('pipelinq', 'Name') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Code') }}</th>
-					<th scope="col">{{ t('pipelinq', 'GL account') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Flags') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Active') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Sort') }}</th>
-					<th scope="col" class="pos-tender-type-list__col-actions">
-						{{ t('pipelinq', 'Actions') }}
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr v-for="type in tenderTypes" :key="type.id || type.code">
-					<td>{{ type.name }}</td>
-					<td>
-						<code>{{ type.code }}</code>
-					</td>
-					<td>{{ type.glAccount }}</td>
-					<td>
-						<span
-							v-if="type.requiresReference"
-							class="pos-tender-type-list__flag"
-							>{{ t('pipelinq', 'Ref') }}</span
-						>
-						<span
-							v-if="type.requiresPin"
-							class="pos-tender-type-list__flag"
-							>{{ t('pipelinq', 'PIN') }}</span
-						>
-						<span
-							v-if="type.allowsChange"
-							class="pos-tender-type-list__flag"
-							>{{ t('pipelinq', 'Change') }}</span
-						>
-					</td>
-					<td>
-						<span
-							v-if="type.isActive"
-							class="pos-tender-type-list__badge pos-tender-type-list__badge--on">
-							{{ t('pipelinq', 'Active') }}
-						</span>
-						<span
-							v-else
-							class="pos-tender-type-list__badge pos-tender-type-list__badge--off">
-							{{ t('pipelinq', 'Inactive') }}
-						</span>
-					</td>
-					<td class="pos-tender-type-list__col-sort">
-						{{ type.sortOrder || 0 }}
-					</td>
-					<td class="pos-tender-type-list__col-actions">
-						<NcButton @click="editType(type)">
-							<template #icon>
-								<Pencil :size="20" />
-							</template>
-							{{ t('pipelinq', 'Edit') }}
-						</NcButton>
-						<NcButton variant="error" @click="deleteType(type)">
-							<template #icon>
-								<Delete :size="20" />
-							</template>
-							{{ t('pipelinq', 'Delete') }}
-						</NcButton>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<ul v-else-if="tenderTypes.length > 0" class="pos-tender-type-list__records">
+			<li
+				v-for="type in tenderTypes"
+				:key="type.id || type.code"
+				class="pos-tender-type-list__record"
+				data-testid="pos-tender-type">
+				<div class="pos-tender-type-list__record-head">
+					<h3 class="pos-tender-type-list__record-name">
+						{{ type.name }}
+					</h3>
+					<span
+						v-if="type.isActive"
+						class="pos-tender-type-list__badge pos-tender-type-list__badge--on">
+						{{ t('pipelinq', 'Active') }}
+					</span>
+					<span
+						v-else
+						class="pos-tender-type-list__badge pos-tender-type-list__badge--off">
+						{{ t('pipelinq', 'Inactive') }}
+					</span>
+				</div>
+				<dl class="pos-tender-type-list__facts">
+					<div>
+						<dt>{{ t('pipelinq', 'Code') }}</dt>
+						<dd>
+							<code>{{ type.code }}</code>
+						</dd>
+					</div>
+					<div>
+						<dt>{{ t('pipelinq', 'GL account') }}</dt>
+						<dd>{{ type.glAccount }}</dd>
+					</div>
+					<div>
+						<dt>{{ t('pipelinq', 'Flags') }}</dt>
+						<dd>
+							<span
+								v-if="type.requiresReference"
+								class="pos-tender-type-list__flag"
+								>{{ t('pipelinq', 'Ref') }}</span
+							>
+							<span
+								v-if="type.requiresPin"
+								class="pos-tender-type-list__flag"
+								>{{ t('pipelinq', 'PIN') }}</span
+							>
+							<span
+								v-if="type.allowsChange"
+								class="pos-tender-type-list__flag"
+								>{{ t('pipelinq', 'Change') }}</span
+							>
+						</dd>
+					</div>
+					<div>
+						<dt>{{ t('pipelinq', 'Sort') }}</dt>
+						<dd>{{ type.sortOrder || 0 }}</dd>
+					</div>
+				</dl>
+				<div class="pos-tender-type-list__row-actions">
+					<NcButton @click="editType(type)">
+						<template #icon>
+							<Pencil :size="20" />
+						</template>
+						{{ t('pipelinq', 'Edit') }}
+					</NcButton>
+					<NcButton variant="error" @click="deleteType(type)">
+						<template #icon>
+							<Delete :size="20" />
+						</template>
+						{{ t('pipelinq', 'Delete') }}
+					</NcButton>
+				</div>
+			</li>
+		</ul>
 
 		<p v-else class="pos-tender-type-list__empty">
 			{{ t('pipelinq', 'No tender types defined yet.') }}
@@ -297,7 +298,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
-	padding: 16px;
 }
 
 .pos-tender-type-list__header {
@@ -321,36 +321,67 @@ export default {
 	gap: 8px;
 }
 
-.pos-tender-type-list__table {
-	width: 100%;
-	border-collapse: collapse;
+.pos-tender-type-list__records {
+	margin: 0;
+	padding: 0;
+	list-style: none;
 }
 
-.pos-tender-type-list__table th {
+.pos-tender-type-list__record {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 14px 0;
+	border-top: 1px solid var(--color-border);
+}
+
+.pos-tender-type-list__record:last-child {
+	border-bottom: 1px solid var(--color-border);
+}
+
+.pos-tender-type-list__record-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+}
+
+.pos-tender-type-list__record-name {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.pos-tender-type-list__facts {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	gap: 8px 16px;
+	margin: 0;
+}
+
+.pos-tender-type-list__facts dt,
+.pos-tender-type-list__facts dd {
+	display: block;
+	width: auto;
+	margin: 0;
+	padding: 0;
 	text-align: start;
+}
+
+.pos-tender-type-list__facts dt {
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
-	border-bottom: 1px solid var(--color-border);
-	padding: 8px;
 }
 
-.pos-tender-type-list__table td {
-	border-bottom: 1px solid var(--color-border);
-	padding: 8px;
-	vertical-align: middle;
+.pos-tender-type-list__facts dd {
+	overflow-wrap: break-word;
 }
 
-.pos-tender-type-list__col-actions {
-	text-align: end;
-	white-space: nowrap;
-}
-
-.pos-tender-type-list__col-actions :deep(.button-vue) {
-	margin-inline-start: 4px;
-}
-
-.pos-tender-type-list__col-sort {
-	text-align: end;
+.pos-tender-type-list__row-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
 }
 
 .pos-tender-type-list__flag {
