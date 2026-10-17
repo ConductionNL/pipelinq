@@ -903,6 +903,66 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: "Head of the ticket page's Decisions tab (ticket-decisions-tab): what the tab holds, the two routes to a decision, and Convert to case. The decision lists are decidiq's leaf, mounted by the manifest.",
 	},
+	// --- The ticket page's Overview sections as tab widgets (board PqTicket):
+	//     the conversation, the dossier asked about, the Woo request and the case
+	//     sit inside the Overview tab rather than in a tail below the tab strip. ---
+	TicketConversationWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'TicketConversationWidget',
+			TicketConversationSection,
+			() => ({}),
+			{ card: true, context: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'TicketConversationSection as a tab widget; it reads the ticket from cnSectionContext, which the wrapper provides.',
+	},
+	DossierSnapshotWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'DossierSnapshotWidget',
+			DossierSnapshotSection,
+			({ objectId }) => ({ objectId }),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'DossierSnapshotSection as a tab widget.',
+	},
+	WooConversionWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'WooConversionWidget',
+			WooConversionSection,
+			({ objectId }) => ({ objectId }),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'WooConversionSection as a tab widget.',
+	},
+	RequestConversionWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'RequestConversionWidget',
+			RequestConversionSection,
+			({ objectId }) => ({ requestId: objectId }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'RequestConversionSection (Convert to case) as a tab widget.',
+	},
+	ResidentViewWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ResidentViewWidget',
+			ResidentViewSection,
+			({ objectId, objectData }) => ({
+				ticketId: objectId,
+				ticketType: objectData.ticketType || '',
+				customerMessage: objectData.customerMessage || '',
+				status: objectData.status || '',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'ResidentViewSection as a tab widget.',
+	},
 	ContactChannelsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
