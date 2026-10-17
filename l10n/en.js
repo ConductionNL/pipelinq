@@ -7712,7 +7712,11 @@ OC.L10N.register(
         "The gift card could not be checked.": "The gift card could not be checked.",
         "Payment received.": "Payment received.",
         "The sale is saved, but the payment could not be completed. Finish it on the transaction.": "The sale is saved, but the payment could not be completed. Finish it on the transaction.",
-        "Loyalty points cannot be redeemed at the till yet.": "Loyalty points cannot be redeemed at the till yet."
+        "Loyalty points cannot be redeemed at the till yet.": "Loyalty points cannot be redeemed at the till yet.",
+        "Customer lookup at the till": "Customer lookup at the till",
+        "Where cashiers see this": "Where cashiers see this",
+        "The customer card on the till: searching, the purchase history and the consent question.": "The customer card on the till: searching, the purchase history and the consent question.",
+        "Open the till": "Open the till"
     },
     "nplurals=2; plural=(n != 1);"
 )

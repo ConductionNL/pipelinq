@@ -2,94 +2,89 @@
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
-  - POS Customer-link admin settings panel — toggles which fields the lookup
-  - searches, history depth, marketing-consent sync, and the on-account-
-  - requires-customer invariant. Persists via /api/admin/pos-customer-settings.
+  - POS customer-link admin settings (PqKassaKlantzoeken): which fields the
+  - lookup searches, the history depth, marketing-consent sync and the
+  - on-account-requires-customer rule, as a form card beside a card that says
+  - where cashiers see it. Persists via /api/admin/pos-customer-settings. The
+  - in-app route and the admin page's "pos-lookup" tab both mount it.
   -
   - @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
   -->
 <template>
-	<NcSettingsSection
-		:name="t('pipelinq', 'POS customer lookup')"
-		:description="
-			t(
-				'pipelinq',
-				'Configure how cashiers search for customers, how much history is shown at checkout, and how marketing consent is synced to the linked contact.',
-			)
-		">
-		<NcLoadingIcon v-if="loading" :size="24" />
+	<div class="pos-customer-settings">
+		<section class="pos-customer-settings__card">
+			<h2 class="pos-customer-settings__title">
+				{{ t('pipelinq', 'Customer lookup at the till') }}
+			</h2>
+			<p class="pos-customer-settings__lead">
+				{{ t('pipelinq', 'Configure how cashiers search for customers, how much history is shown at checkout, and how marketing consent is synced to the linked contact.') }}
+			</p>
 
-		<div v-else class="pos-customer-settings">
-			<fieldset class="pos-customer-settings__group">
-				<legend>{{ t('pipelinq', 'Search fields') }}</legend>
-				<label v-for="field in availableFields" :key="field.id">
-					<input
-						type="checkbox"
-						:checked="form.customerSearchFields.includes(field.id)"
-						@change="toggleField(field.id, $event.target.checked)" />
-					{{ field.label }}
-				</label>
-			</fieldset>
+			<NcLoadingIcon v-if="loading" :size="24" />
 
-			<fieldset class="pos-customer-settings__group">
-				<legend>{{ t('pipelinq', 'Purchase history depth') }}</legend>
-				<label v-for="depth in availableDepths" :key="depth">
-					<input
-						type="radio"
-						:value="depth"
-						:checked="form.customerHistoryDepth === depth"
-						name="history-depth"
-						@change="form.customerHistoryDepth = depth" />
-					{{ t('pipelinq', 'Last {n} transactions', { n: depth }) }}
-				</label>
-			</fieldset>
+			<template v-else>
+				<fieldset class="pos-customer-settings__group">
+					<legend>{{ t('pipelinq', 'Search fields') }}</legend>
+					<NcCheckboxRadioSwitch
+						v-for="field in availableFields"
+						:key="field.id"
+						:modelValue="form.customerSearchFields.includes(field.id)"
+						@update:modelValue="toggleField(field.id, $event)">
+						{{ field.label }}
+					</NcCheckboxRadioSwitch>
+					<p class="pos-customer-settings__hint">
+						{{ t('pipelinq', 'At least one search field is required.') }}
+					</p>
+				</fieldset>
 
-			<fieldset class="pos-customer-settings__group">
-				<legend>{{ t('pipelinq', 'Pipelinq integration') }}</legend>
-				<label>
-					<input v-model="form.enablePipelinqSync" type="checkbox" />
-					{{
-						t(
-							'pipelinq',
-							'Automatically sync marketing consent to the linked contact.',
-						)
-					}}
-				</label>
-				<label>
-					<input
-						v-model="form.requireCustomerForOnAccount"
-						type="checkbox" />
-					{{
-						t(
-							'pipelinq',
-							'Require a customer for on-account transactions.',
-						)
-					}}
-				</label>
-			</fieldset>
+				<NcSelect
+					:modelValue="selectedDepth"
+					:options="depthOptions"
+					:inputLabel="t('pipelinq', 'Purchase history depth')"
+					label="label"
+					:clearable="false"
+					@update:modelValue="form.customerHistoryDepth = $event ? $event.id : form.customerHistoryDepth" />
 
-			<div class="pos-customer-settings__actions">
-				<NcButton
-					variant="primary"
-					:disabled="saving"
-					data-testid="customer-settings-save"
-					@click="save">
-					{{ t('pipelinq', 'Save') }}
-				</NcButton>
-				<p
-					v-if="statusMessage"
-					class="pos-customer-settings__status"
-					:class="{ 'pos-customer-settings__status--error': statusError }"
-					role="status">
-					{{ statusMessage }}
-				</p>
-			</div>
-		</div>
-	</NcSettingsSection>
+				<fieldset class="pos-customer-settings__group">
+					<legend>{{ t('pipelinq', 'Pipelinq integration') }}</legend>
+					<NcCheckboxRadioSwitch v-model="form.enablePipelinqSync">
+						{{ t('pipelinq', 'Automatically sync marketing consent to the linked contact.') }}
+					</NcCheckboxRadioSwitch>
+					<NcCheckboxRadioSwitch v-model="form.requireCustomerForOnAccount">
+						{{ t('pipelinq', 'Require a customer for on-account transactions.') }}
+					</NcCheckboxRadioSwitch>
+				</fieldset>
+
+				<div class="pos-customer-settings__actions">
+					<p
+						v-if="statusMessage"
+						class="pos-customer-settings__status"
+						:class="{ 'pos-customer-settings__status--error': statusError }"
+						role="status">
+						{{ statusMessage }}
+					</p>
+					<NcButton
+						variant="primary"
+						:disabled="saving"
+						data-testid="customer-settings-save"
+						@click="save">
+						{{ t('pipelinq', 'Save') }}
+					</NcButton>
+				</div>
+			</template>
+		</section>
+
+		<aside class="pos-customer-settings__card pos-customer-settings__aside">
+			<h3>{{ t('pipelinq', 'Where cashiers see this') }}</h3>
+			<p>{{ t('pipelinq', 'The customer card on the till: searching, the purchase history and the consent question.') }}</p>
+			<a :href="tillUrl" class="pos-customer-settings__link">{{ t('pipelinq', 'Open the till') }}</a>
+		</aside>
+	</div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import {
 	getCustomerSettings,
 	updateCustomerSettings,
@@ -102,8 +97,9 @@ export default {
 	name: 'PosCustomerSettings',
 	components: {
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
-		NcSettingsSection,
+		NcSelect,
 	},
 
 	data() {
@@ -143,6 +139,33 @@ export default {
 		 */
 		availableDepths() {
 			return ALL_DEPTHS
+		},
+
+		/**
+		 * The history depths as select options ("Last 10 transactions").
+		 *
+		 * @return {Array<{id: number, label: string}>} The options.
+		 */
+		depthOptions() {
+			return ALL_DEPTHS.map((n) => ({ id: n, label: t('pipelinq', 'Last {n} transactions', { n }) }))
+		},
+
+		/**
+		 * The chosen depth as a select option.
+		 *
+		 * @return {{id: number, label: string}} The option.
+		 */
+		selectedDepth() {
+			return this.depthOptions.find((o) => o.id === this.form.customerHistoryDepth) || this.depthOptions[0]
+		},
+
+		/**
+		 * The till, opened from the side card.
+		 *
+		 * @return {string} The URL.
+		 */
+		tillUrl() {
+			return generateUrl('/apps/pipelinq/pos/new')
 		},
 	},
 
@@ -236,34 +259,61 @@ export default {
 
 <style scoped>
 .pos-customer-settings {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 300px;
+	gap: 20px;
+	align-items: start;
+}
+
+.pos-customer-settings__card {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
-	max-width: 720px;
+	padding: 20px 24px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	background: var(--color-main-background);
+}
+
+.pos-customer-settings__title,
+.pos-customer-settings__aside h3 {
+	margin: 0;
+	font-size: 17px;
+	font-weight: 700;
+}
+
+.pos-customer-settings__lead,
+.pos-customer-settings__hint {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
 }
 
 .pos-customer-settings__group {
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	padding: 12px 16px;
+	border: 0;
+	margin: 0;
+	padding: 0;
 }
 
 .pos-customer-settings__group legend {
 	font-weight: 600;
-	padding: 0 6px;
-}
-
-.pos-customer-settings__group label {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin: 6px 0;
+	margin-bottom: 4px;
 }
 
 .pos-customer-settings__actions {
 	display: flex;
 	align-items: center;
+	justify-content: flex-end;
 	gap: 16px;
+}
+
+.pos-customer-settings__aside p {
+	margin: 0;
+}
+
+.pos-customer-settings__link {
+	font-weight: 600;
+	text-decoration: underline;
 }
 
 .pos-customer-settings__status {
@@ -273,5 +323,11 @@ export default {
 
 .pos-customer-settings__status--error {
 	color: var(--color-error);
+}
+
+@media (max-width: 1100px) {
+	.pos-customer-settings {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 </style>
