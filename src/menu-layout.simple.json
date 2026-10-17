@@ -1608,7 +1608,6 @@
 				"countText": "{shown} of {total} tickets · customer contact · newest first",
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
-				"rowTitle": "plain",
 				"searchPlaceholder": "Filter by subject or client"
 			},
 			"configPatch": {
@@ -1728,7 +1727,6 @@
 				],
 				"sortKey": "stageEnteredAt",
 				"sortOrder": "desc",
-				"rowTitle": "plain",
 				"searchPlaceholder": "Filter by title or client"
 			}
 		},
@@ -1862,10 +1860,9 @@
 				"_boardNote": "PqKassabonnen: count line, the chips All, Today (created today), Parked and Refunded with their counts, the status as a pill, the created time as the last column, and a footer that says what the transaction page is for.",
 				"showMassExport": true,
 				"selectable": true,
-				"rowTitle": "plain",
 				"searchPlaceholder": "Filter by identifier or cashier",
 				"headerButtons": [
-					{ "action": "export", "label": "Download", "icon": "TrayArrowDown" },
+					{ "action": "export", "label": "Download" },
 					{ "action": "add", "variant": "primary", "icon": "Plus" }
 				],
 				"sortKey": "@self.created",

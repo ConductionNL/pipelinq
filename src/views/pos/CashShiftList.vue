@@ -15,7 +15,6 @@
 			:title="t('pipelinq', 'Cash drawer')"
 			:showTitle="true"
 			:searchPlaceholder="t('pipelinq', 'Filter by cashier or till')"
-			rowTitle="plain"
 			register="pipelinq"
 			schema="cashShift"
 			:countText="t('pipelinq', 'Manage cash shifts: opening float, drops, blind counting and reconciliation')"
@@ -105,6 +104,7 @@ export default {
 					key: 'drops',
 					label: t('pipelinq', 'Deposits'),
 					sortable: false,
+					cellClass: 'cn-cell--end',
 					aggregate: { schema: 'cashDrop', op: 'count', where: { shift: '@self.id' } },
 				},
 			]
@@ -117,7 +117,7 @@ export default {
 		 */
 		headerButtons() {
 			return [
-				{ action: 'export', label: t('pipelinq', 'Download'), icon: 'TrayArrowDown' },
+				{ action: 'export', label: t('pipelinq', 'Download') },
 				{ action: 'add', variant: 'primary', icon: 'Plus', label: t('pipelinq', 'Open shift') },
 			]
 		},

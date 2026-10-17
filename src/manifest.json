@@ -4737,8 +4737,7 @@
 				"sortOrder": "desc",
 				"countText": "{shown} of {total} day reports · bookkeeping happens in shillinq",
 				"searchPlaceholder": "Filter by identifier or till",
-				"rowTitle": "plain",
-				"headerButtons": [ { "action": "export", "label": "Download", "icon": "TrayArrowDown" } ],
+				"headerButtons": [ { "action": "export", "label": "Download" } ],
 				"footerNote": "The day close makes one Z-report per till every night. They are read-only.",
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true, "showCount": true },
