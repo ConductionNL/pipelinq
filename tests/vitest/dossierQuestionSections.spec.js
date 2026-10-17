@@ -348,6 +348,34 @@ describe('CustomerReplySection', () => {
 		)
 	})
 
+	it('in the Answer dialog opens with the question and leaves sending to the footer (PqTicketAntwoord)', async () => {
+		storeMock.fetchObject.mockResolvedValue({ ...question, portalReplies: [] })
+		const wrapper = mount(CustomerReplySection, {
+			props: { objectId: 't-9', inDialog: true },
+		})
+		await flushPromises()
+
+		expect(wrapper.find('[data-testid="customer-reply-question"]').text()).toBe(
+			question.description,
+		)
+		expect(wrapper.find('[data-testid="customer-reply-send"]').exists()).toBe(
+			false,
+		)
+		expect(wrapper.text()).not.toContain('Replies from the customer')
+		const states = wrapper.emitted('state')
+		expect(states[states.length - 1][0]).toMatchObject({
+			busy: false,
+			waitForCustomer: true,
+		})
+
+		await wrapper.find('textarea').setValue('Ja, dat kan.')
+		expect(wrapper.emitted('state').at(-1)[0].canSave).toBe(true)
+		await wrapper.vm.save(true)
+		await flushPromises()
+		expect(storeMock.saveObject).toHaveBeenCalled()
+		expect(wrapper.emitted('saved')).toHaveLength(1)
+	})
+
 	it('is not offered on a contact moment', async () => {
 		storeMock.fetchObject.mockResolvedValue({
 			...question,
