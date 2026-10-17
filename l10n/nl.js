@@ -2680,7 +2680,7 @@ OC.L10N.register(
         "Organization": "Organisatie",
         "Original qty": "Origineel aantal",
         "Original receipt is required": "Originele kassabon is verplicht",
-        "Original transaction": "Originele transactie",
+        "Original transaction": "Oorspronkelijke transactie",
         "Originele kassabon is verplicht": "Originele kassabon is verplicht",
         "Other": "Overig",
         "Our account": "Ons account",
@@ -3039,7 +3039,7 @@ OC.L10N.register(
         "Refund amount (excl. BTW)": "Retourbedrag (excl. BTW)",
         "Refund completed.": "Retour voltooid.",
         "Refund information": "Retourgegevens",
-        "Refund reason": "Reden terugboeking",
+        "Refund reason": "Reden voor retour",
         "Refund rejected.": "Retour afgewezen.",
         "Refund saved.": "Retour opgeslagen.",
         "Refund total": "Retourtotaal",
@@ -7643,7 +7643,10 @@ OC.L10N.register(
         "Customer lookup at the till": "Klant zoeken aan de kassa",
         "Where cashiers see this": "Waar kassamedewerkers dit zien",
         "The customer card on the till: searching, the purchase history and the consent question.": "De klantkaart op de kassa: zoeken, de aankoopgeschiedenis en de toestemmingsvraag.",
-        "Open the till": "Kassa openen"
+        "Open the till": "Kassa openen",
+        "Original receipt": "Oorspronkelijke bon",
+        "Identifier": "Kenmerk",
+        "Immutable, cryptographically signed record of every register action for Belastingdienst audits · only administrators can export": "Onveranderbaar, cryptografisch ondertekend logboek van elke kassahandeling voor controles door de Belastingdienst · alleen beheerders kunnen exporteren"
     },
     "nplurals=2; plural=(n != 1);"
 )

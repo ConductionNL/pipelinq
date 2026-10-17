@@ -19,10 +19,9 @@
 				:description="
 					t(
 						'pipelinq',
-						'Immutable, cryptographically signed record of every register action for Belastingdienst audits.',
+						'Immutable, cryptographically signed record of every register action for Belastingdienst audits · only administrators can export',
 					)
-				"
-				icon="ShieldCheckOutline" />
+				" />
 			<div class="kassakoppeling-audit-list__actions">
 				<NcButton
 					variant="tertiary"
@@ -49,6 +48,7 @@
 
 		<div class="kassakoppeling-audit-list__toolbar">
 			<CnQuickFilterBar
+				inline
 				:tabs="quickFilters"
 				:counts="quickFilterCounts"
 				:activeIndex="quickFilterIndex"
@@ -145,10 +145,7 @@
 				{{ row.operatorId || '—' }}
 			</template>
 			<template #column-action="{ row }">
-				<CnStatusBadge
-					:label="actionLabel(row.action)"
-					:variant="actionVariant(row.action)"
-					size="small" />
+				{{ actionLabel(row.action) }}
 			</template>
 			<template #column-amount="{ row }">
 				{{ formatEur(row.amount) }}
@@ -286,15 +283,6 @@ const ACTION_LABELS = {
 	void: 'Void',
 	refund: 'Refund',
 	'no-sale': 'No sale',
-}
-
-// Badge colour per action: a sale is the normal case, a void undoes one,
-// a refund gives money back and a no-sale only opens the drawer.
-const ACTION_VARIANTS = {
-	sale: 'success',
-	void: 'error',
-	refund: 'warning',
-	'no-sale': 'default',
 }
 
 export default {
@@ -773,18 +761,6 @@ export default {
 		 */
 		actionLabel(action) {
 			return t('pipelinq', ACTION_LABELS[action] || action || '—')
-		},
-
-		/**
-		 * Get the badge variant for an action.
-		 *
-		 * @param {string} action The action enum value.
-		 * @return {string} A CnStatusBadge variant.
-		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
-		 */
-		actionVariant(action) {
-			return ACTION_VARIANTS[action] || 'default'
 		},
 
 		/**

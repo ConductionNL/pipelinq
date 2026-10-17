@@ -7716,7 +7716,10 @@ OC.L10N.register(
         "Customer lookup at the till": "Customer lookup at the till",
         "Where cashiers see this": "Where cashiers see this",
         "The customer card on the till: searching, the purchase history and the consent question.": "The customer card on the till: searching, the purchase history and the consent question.",
-        "Open the till": "Open the till"
+        "Open the till": "Open the till",
+        "Original receipt": "Original receipt",
+        "Identifier": "Identifier",
+        "Immutable, cryptographically signed record of every register action for Belastingdienst audits · only administrators can export": "Immutable, cryptographically signed record of every register action for Belastingdienst audits · only administrators can export"
     },
     "nplurals=2; plural=(n != 1);"
 )

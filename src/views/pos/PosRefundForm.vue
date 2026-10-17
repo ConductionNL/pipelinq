@@ -13,7 +13,7 @@
 		<template #actions>
 			<NcButton variant="primary" :disabled="saving" @click="save">
 				<template #icon>
-					<ContentSave :size="20" />
+					<Check :size="20" />
 				</template>
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
@@ -97,6 +97,16 @@
 				<CnDetailCard :title="t('pipelinq', 'Refund total')">
 					<PosRefundTotalsPanel :lines="selectedLines" />
 				</CnDetailCard>
+				<CnDetailCard v-if="originalTransaction" :title="t('pipelinq', 'Original receipt')">
+					<dl class="pos-refund__facts">
+						<dt>{{ t('pipelinq', 'Identifier') }}</dt>
+						<dd>{{ originalTransaction.reference || '-' }}</dd>
+						<dt>{{ t('pipelinq', 'Date') }}</dt>
+						<dd>{{ formatDate(originalTransaction.settledAt || originalTransaction.confirmedAt) }}</dd>
+						<dt>{{ t('pipelinq', 'Total') }}</dt>
+						<dd>{{ formatEur(originalTransaction.total) }}</dd>
+					</dl>
+				</CnDetailCard>
 				<CnDetailCard :title="t('pipelinq', 'After saving')">
 					<p class="pos-refund__after">
 						{{ t('pipelinq', 'The refund waits for confirmation. A manager confirms or rejects it.') }}
@@ -111,18 +121,19 @@
 import { CnDetailCard, CnDetailPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
-import ContentSave from 'vue-material-design-icons/ContentSave.vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import PosRefundLineRow from '../../components/pos/PosRefundLineRow.vue'
 import PosRefundTotalsPanel from '../../components/pos/PosRefundTotalsPanel.vue'
-import { refundLineAmounts } from '../../services/posTotals.js'
+import { formatEur, refundLineAmounts } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { collectionRows } from '../../utils/collectionRows.js'
 
 export default {
 	name: 'PosRefundForm',
 	components: {
 		CnDetailCard,
 		CnDetailPage,
-		ContentSave,
+		Check,
 		NcButton,
 		NcTextField,
 		NcSelect,
@@ -258,6 +269,16 @@ export default {
 		 *
 		 * @return {Array<object>} The selected lines with computed amounts.
 		 */
+		/**
+		 * The transaction this refund takes items back from.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/changes/screens-kassa-till-board/specs/pos-transaction-core/spec.md
+		 */
+		originalTransaction() {
+			return this.transactions.find((tx) => tx.id === this.refund.originalTransaction) || null
+		},
+
 		selectedLines() {
 			return this.candidates.filter((c) => c.selected)
 		},
@@ -280,6 +301,21 @@ export default {
 	},
 
 	methods: {
+		formatEur,
+
+		/**
+		 * A date-time as a short local date and time.
+		 *
+		 * @param {string} value The date-time.
+		 * @return {string}
+		 */
+		formatDate(value) {
+			const date = new Date(String(value || ''))
+			return !value || Number.isNaN(date.getTime())
+				? '-'
+				: new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date)
+		},
+
 		/**
 		 * Load candidate transactions for the picker.
 		 */
@@ -289,7 +325,7 @@ export default {
 					_limit: 500,
 				})
 				this.transactions =
-					this.objectStore.getCollection('posTransaction')?.results || []
+					collectionRows(this.objectStore.getCollection('posTransaction'))
 			} catch {
 				this.transactions = []
 			}
@@ -304,7 +340,7 @@ export default {
 					_limit: 100,
 				})
 				this.reasons =
-					this.objectStore.getCollection('refundReason')?.results || []
+					collectionRows(this.objectStore.getCollection('refundReason'))
 			} catch {
 				this.reasons = []
 			}
@@ -323,7 +359,7 @@ export default {
 				_limit: 500,
 			})
 			const existing = (
-				this.objectStore.getCollection('posRefundLine')?.results || []
+				collectionRows(this.objectStore.getCollection('posRefundLine'))
 			).filter((l) => l.refund === this.refundId)
 
 			this.candidates = this.originalLines.map((original) => {
@@ -361,7 +397,7 @@ export default {
 				_limit: 500,
 			})
 			this.originalLines = (
-				this.objectStore.getCollection('posTransactionLine')?.results || []
+				collectionRows(this.objectStore.getCollection('posTransactionLine'))
 			)
 				.filter((l) => l.transaction === transactionId)
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
@@ -564,6 +600,21 @@ export default {
 	flex-direction: column;
 	gap: 20px;
 	min-width: 0;
+}
+
+.pos-refund__facts {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 6px 16px;
+	margin: 0;
+}
+
+.pos-refund__facts dt {
+	color: var(--color-text-maxcontrast);
+}
+
+.pos-refund__facts dd {
+	margin: 0;
 }
 
 .pos-refund__hint,
