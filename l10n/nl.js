@@ -7601,7 +7601,12 @@ OC.L10N.register(
         "Presence": "Aanwezigheid",
         "Recording": "Opname",
         "{shown} of {total} contact moments · all channels · newest first": "{shown} van {total} contactmomenten · alle kanalen · nieuwste eerst",
-        "Callback agreed": "Terugbellen afgesproken"
+        "Callback agreed": "Terugbellen afgesproken",
+        "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone.": "Een contactmoment is één gesprek, via welk kanaal ook. De meeste horen bij een verzoek; sommige staan op zichzelf.",
+        "{count} d": "{count} d",
+        "{count} h": "{count} u",
+        "{count} min": "{count} min",
+        "{count} s": "{count} s"
     },
     "nplurals=2; plural=(n != 1);"
 )

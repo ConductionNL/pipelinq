@@ -7674,7 +7674,12 @@ OC.L10N.register(
         "Presence": "Presence",
         "Recording": "Recording",
         "{shown} of {total} contact moments · all channels · newest first": "{shown} of {total} contact moments · all channels · newest first",
-        "Callback agreed": "Callback agreed"
+        "Callback agreed": "Callback agreed",
+        "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone.": "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone.",
+        "{count} d": "{count} d",
+        "{count} h": "{count} h",
+        "{count} min": "{count} min",
+        "{count} s": "{count} s"
     },
     "nplurals=2; plural=(n != 1);"
 )

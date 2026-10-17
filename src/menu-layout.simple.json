@@ -1628,14 +1628,6 @@
 						],
 						"quickFilters": [
 							{
-								"label": "Last 30 days",
-								"filter": {
-									"occurredAt[gte]": "@today-30d"
-								},
-								"default": true,
-								"showCount": true
-							},
-							{
 								"label": "Today",
 								"filter": {
 									"occurredAt[gte]": "@today"
@@ -1685,6 +1677,14 @@
 									"outcome": "callbackRequest"
 								},
 								"showCount": true
+							},
+							{
+								"label": "Last 30 days",
+								"filter": {
+									"occurredAt[gte]": "@today-30d"
+								},
+								"default": true,
+								"showCount": true
 							}
 						],
 						"columns": [
@@ -1699,19 +1699,18 @@
 							},
 							{
 								"key": "channel",
-								"label": "Channel"
-							},
-							{
-								"key": "direction",
-								"label": "Direction"
+								"label": "Channel",
+								"formatter": "enumText"
 							},
 							{
 								"key": "outcome",
-								"label": "Outcome"
+								"label": "Outcome",
+								"formatter": "enumLabel"
 							},
 							{
 								"key": "duration",
-								"label": "Duration"
+								"label": "Duration",
+								"formatter": "isoDuration"
 							},
 							{
 								"key": "status",
@@ -1728,14 +1727,16 @@
 							},
 							{
 								"key": "occurredAt",
-								"label": "When"
+								"label": "When",
+								"formatter": "datetime"
 							},
 							{
 								"key": "assignee",
 								"label": "Handler",
 								"formatter": "userDisplayName"
 							}
-						]
+						],
+						"footerNote": "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone."
 					}
 				]
 			},
