@@ -1,5 +1,22 @@
 {
     "translations": {
+        "Take the oldest": "Take the oldest",
+        "Longest waiting": "Longest waiting",
+        "the oldest ticket nobody has picked up": "the oldest ticket nobody has picked up",
+        "{n} days": "{n} days",
+        "Nothing is waiting": "Nothing is waiting",
+        "Nothing is waiting in the queue.": "Nothing is waiting in the queue.",
+        "The oldest ticket is yours. It is on your My Work now.": "The oldest ticket is yours. It is on your My Work now.",
+        "Oldest first. A ticket leaves the queue as soon as someone takes it on.": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
+        "Kind, then channel": "Kind, then channel",
+        "Team today": "Team today",
+        "{open} open": "{open} open",
+        "No agent profiles yet.": "No agent profiles yet.",
+        "Agreements": "Agreements",
+        "Requests and reports: an answer within 2 working days. Complaints: a first reply the same day. Phone: answered within 30 seconds.": "Requests and reports: an answer within 2 working days. Complaints: a first reply the same day. Phone: answered within 30 seconds.",
+        "Service levels in Reports": "Service levels in Reports",
+        "{client.name} · {channel}": "{client.name} · {channel}",
+        "newest first · click a column header to sort": "newest first · click a column header to sort",
         "\"Vanaf\" datum moet voor of gelijk zijn aan \"tot en met\" datum.": "\"From\" date must be before or equal to \"up to and including\" date.",
         "#": "#",
         "%n contact in this segment is missing {channel} consent. Choose how to proceed.": [
@@ -7732,6 +7749,15 @@
         "DMARC not checked yet": "DMARC not checked yet",
         "Ringing": "Ringing",
         "Presence": "Presence",
-        "Recording": "Recording"
+        "Recording": "Recording",
+        "Suggested colleagues": "Suggested colleagues",
+        "{channel} · received {occurredAt|date}": "{channel} · received {occurredAt|date}",
+        "A contact moment with the customer, saved with this ticket": "A contact moment with the customer, saved with this ticket",
+        "The question": "The question",
+        "Your message": "Your message",
+        "The ticket": "The ticket",
+        "People": "People",
+        "Dates and links": "Dates and links",
+        "Visible to the customer": "Visible to the customer"
     }
 }
