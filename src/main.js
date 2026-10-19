@@ -40,6 +40,7 @@ import menuLayout from './menu-layout.json'
 import simpleMenuLayout from './menu-layout.simple.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
+import { retiredRedirects } from './retiredRoutes.js'
 import { installPageRefreshOnCreate } from './services/pageRefreshOnCreate.js'
 import { loadPersistedOverrides } from './services/persistedOverrides.js'
 import { contactWriteBackPlugin } from './store/plugins/contactWriteBack.js'
@@ -233,6 +234,8 @@ function routesFromManifest(manifest) {
 	if (homePage && manifest.pages.some((page) => page.id === homePage)) {
 		routes.push({ path: '/', redirect: { name: homePage } })
 	}
+	// Pages that became a default view keep their address as a redirect.
+	routes.push(...retiredRedirects(manifest.pages))
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
 	//
 	// vue-router 4 REMOVED the bare `path: '*'` wildcard. It does not error —

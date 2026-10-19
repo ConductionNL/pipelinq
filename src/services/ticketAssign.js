@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
- * "Assign to me" for a ticket row on the Queue.
+ * "Take it on" for an unassigned ticket row on All tickets.
  *
- * The Queue is every open ticket nobody has picked up. Taking one sets its
- * assignee to you, which moves it off the Queue and onto your My Work, and
+ * The queue view is every open ticket nobody has picked up. Taking one sets its
+ * assignee to you, which moves it out of the queue and onto your My Work, and
  * then opens it, because the next thing you do with a ticket you picked up
  * is work on it. TicketDetail offers the same action as a header action.
  *

@@ -2,14 +2,14 @@
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Gate-19 behavioral e2e coverage for the Queue page (/queue).
- * Maps to openspec/changes/retire-queue-concept/specs/retire-queue-concept/spec.md.
+ * Gate-19 behavioral e2e coverage for the queue, the default view `queue` on
+ * All tickets. Maps to
+ * openspec/changes/queue-as-default-view/specs/retire-queue-concept/spec.md.
  *
  * The queue is a FILTER, not a collection, so the assertions here are about the
- * filter holding: every row unassigned, and the row count strictly below the
- * unfiltered index. A page that silently dropped its base filter would render a
- * healthy-looking table of every ticket in the app, which is exactly the failure
- * `assignee_isnull=true` produced before the sentinel spelling replaced it.
+ * filter holding: the row count strictly below the unfiltered index. A view that
+ * silently dropped its filter would render a healthy-looking table of every
+ * ticket in the app.
  */
 import { expect, test } from '@playwright/test'
 import {
@@ -19,30 +19,30 @@ import {
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
 
-// @e2e openspec/changes/retire-queue-concept/specs/retire-queue-concept/spec.md#the-queue-holds-unassigned-open-tickets
-test('Queue: navigates from the sidebar and renders its index surface', async ({
+const QUEUE_VIEW = '/apps/pipelinq/tickets?savedView=default:queue'
+
+// @e2e openspec/changes/queue-as-default-view/specs/retire-queue-concept/spec.md#the-old-address-opens-the-view
+test('Queue: the old address opens the queue view on All tickets', async ({
 	page,
 }) => {
 	const errs = trackPipelinqErrors(page)
-	await openApp(page)
-	await navClick(page, 'Queue', /\/queue/)
-
-	await expect(
-		page.locator('#content-vue').getByRole('heading', { name: 'Queue' }).first(),
-	).toBeVisible()
-	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible()
+	await page.goto('/apps/pipelinq/queue')
+	await expect(page).toHaveURL(/\/tickets\?savedView=default(%3A|:)queue/)
+	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible({
+		timeout: 15000,
+	})
 	await assertNoHardError(page)
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/changes/retire-queue-concept/specs/retire-queue-concept/spec.md#the-queue-holds-unassigned-open-tickets
-test('Queue: holds strictly fewer rows than the unfiltered ticket index', async ({
+// @e2e openspec/changes/queue-as-default-view/specs/retire-queue-concept/spec.md#the-queue-holds-unassigned-open-tickets
+test('Queue: the view holds strictly fewer rows than the unfiltered ticket index', async ({
 	page,
 }) => {
 	await openApp(page)
 
-	// The seeded register carries assigned tickets, so a queue that returned the
-	// same count as All tickets means the base filter never reached the query.
+	// The seeded register carries assigned tickets, so a view that returned the
+	// same count as All tickets means its filter never reached the query.
 	await navClick(page, 'All tickets', /\/tickets/)
 	const content = page.locator('#content-vue')
 	await expect(content.locator('table tbody tr').first()).toBeVisible({
@@ -50,7 +50,7 @@ test('Queue: holds strictly fewer rows than the unfiltered ticket index', async 
 	})
 	const allRows = await content.locator('table tbody tr').count()
 
-	await navClick(page, 'Queue', /\/queue/)
+	await page.goto(QUEUE_VIEW)
 	await expect(
 		content.locator('table tbody tr, .cn-index-page__empty').first(),
 	).toBeVisible({ timeout: 15000 })
@@ -60,49 +60,6 @@ test('Queue: holds strictly fewer rows than the unfiltered ticket index', async 
 		queueRows,
 		'the queue is a filtered slice of the ticket index, never the whole of it',
 	).toBeLessThan(allRows)
-})
-
-// @e2e openspec/changes/retire-queue-concept/specs/retire-queue-concept/spec.md#the-queue-narrows-by-ticket-type
-test('Queue: the ticket-type tabs narrow the queue', async ({ page }) => {
-	await openApp(page)
-	await navClick(page, 'Queue', /\/queue/)
-
-	const content = page.locator('#content-vue')
-	await expect(content.locator('table tbody tr').first()).toBeVisible({
-		timeout: 15000,
-	})
-	const before = await content.locator('table tbody tr').count()
-
-	// role=tab, NOT button. CnIndexPage renders the quickFilters strip as a
-	// tablist; targeting a button here timed out for 60s against a page that was
-	// rendering perfectly.
-	await content.getByRole('tab', { name: 'Complaints' }).first().click()
-	await expect(
-		content.locator('table tbody tr, .cn-index-page__empty').first(),
-	).toBeVisible({ timeout: 15000 })
-	const after = await content.locator('table tbody tr').count()
-
-	expect(
-		after,
-		'narrowing to one ticketType cannot widen the result set',
-	).toBeLessThanOrEqual(before)
-})
-
-// @e2e openspec/changes/retire-queue-concept/specs/retire-queue-concept/spec.md#an-empty-queue-says-so
-test('Queue: an empty result renders the empty state, not a bare table', async ({
-	page,
-}) => {
-	// Drive the filter to a slice that cannot match: the page must answer with its
-	// empty state rather than an empty table body or a blank region.
-	await page.goto('/apps/pipelinq/queue?ticketType=__none__')
-	await expect(page.locator('[data-testid="cn-app-root"]')).toBeVisible({
-		timeout: 15000,
-	})
-
-	const content = page.locator('#content-vue')
-	await expect(
-		content.locator('.cn-index-page__empty, table tbody tr').first(),
-	).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/kcc-werkplek/spec.md#the-werkplek-shows-the-agents-own-work-only

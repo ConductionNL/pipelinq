@@ -516,13 +516,6 @@
 			"order": 100
 		},
 		{
-			"id": "Queue",
-			"label": "Queue",
-			"icon": "TrayFull",
-			"route": "Queue",
-			"order": 10
-		},
-		{
 			"id": "MyWork",
 			"label": "My Work",
 			"icon": "ClipboardAccountOutline",
@@ -2662,6 +2655,11 @@
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"showViewAction": false,
+				"allowSavedViews": true,
+				"_defaultSavedViewsNote": "The queue is a view on this list, not a page of its own: every open ticket nobody has picked up, oldest first. `assignee: \"IS NULL\"` is the literal sentinel every OpenRegister condition builder matches; `status_notIn` names the closed half of the lifecycle, so a new open status is in the queue the day it is added. The old /queue address redirects to `/tickets?savedView=default:queue` (src/retiredRoutes.js).",
+				"defaultSavedViews": [
+					{ "slug": "queue", "name": "Queue", "filters": { "assignee": "IS NULL", "status_notIn": ["resolved", "completed", "rejected", "converted", "closed"] }, "sort": [{ "key": "occurredAt", "order": "asc" }] }
+				],
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
 					{ "label": "Requests", "filter": { "ticketType": "request" } },
@@ -2675,6 +2673,13 @@
 					}
 				],
 				"actions": [
+					{
+						"id": "assign-to-me",
+						"label": "Take it on",
+						"icon": "AccountArrowLeftOutline",
+						"handler": "assignTicketToMe",
+						"visibleWhen": { "field": "assignee", "op": "empty" }
+					},
 					{
 						"id": "view",
 						"label": "View",
@@ -5784,182 +5789,6 @@
 						}
 					]
 				}
-			}
-		},
-		{
-			"id": "Queue",
-			"route": "/queue",
-			"type": "index",
-			"title": "Queue",
-			"_note": "The one queue (retire-queue-concept). There is no queue RECORD any more: the queue is every open ticket nobody has picked up, so this page is an index over `ticket` with a base filter, not a schema of its own. `assignee: \"IS NULL\"` is the literal sentinel every OpenRegister condition builder matches by value. The suffix spelling `assignee_isnull=true` was dead when this page shipped and is fixed in openregister `isnull-filter-operator`; the sentinel is kept because it also works on instances that do not yet carry that change, and the two are two spellings of one predicate. `status_notIn` names the CLOSED half of the lifecycle rather than enumerating the open half, so a new open status is in the queue the day it is added instead of being silently missing from an `in` list. CORRECTION 2026-09-04: this note previously claimed OpenRegister has no not-in operator. That was wrong. `notIn` and `ne` both work on object fields, measured over HTTP. Assigning a ticket removes it from here and puts it on the assignee's My Work; All tickets still shows it either way. The ticketType tabs are the same strip the Tickets index uses, so the queue narrows to requests, complaints or contactmomenten without a second page. WHY THIS IS A PAGE AND NOT A `menu[].query` PRESET, which is what gate-68 (ADR-097 Decision 5) proposes for a second index over an already-indexed schema: a preset's values are constrained to string/number/boolean by the manifest schema, so the five-value `status_notIn` list cannot be expressed as one. A preset is also only a link: the target page's own facets sit in the same filter map and can widen it back to every ticket, where a base filter on the page cannot be cleared by the person reading it. gate-68 reports this pair informationally and never blocks.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "ticket",
-				"documentationUrl": "https://pipelinq.conduction.nl",
-				"showViewAction": false,
-				"filter": {
-					"assignee": "IS NULL",
-					"status_notIn": [
-						"resolved",
-						"completed",
-						"rejected",
-						"converted",
-						"closed"
-					]
-				},
-				"_extendNote": "The customer of a ticket is a reference to a client. Extending it gives the row the client's name, which the title column draws as its second line, as the PqWachtrij board does. A ticket without a client shows the title alone.",
-				"extend": [
-					"client"
-				],
-				"quickFilters": [
-					{
-						"label": "All",
-						"filter": {},
-						"default": true,
-						"showCount": true
-					},
-					{
-						"label": "Requests",
-						"filter": {
-							"ticketType": "request"
-						},
-						"showCount": true
-					},
-					{
-						"label": "Complaints",
-						"filter": {
-							"ticketType": "complaint"
-						},
-						"showCount": true
-					},
-					{
-						"label": "Contactmomenten",
-						"filter": {
-							"ticketType": "interaction"
-						},
-						"showCount": true
-					}
-				],
-				"actions": [
-					{
-						"id": "assign-to-me",
-						"label": "Take it on",
-						"icon": "AccountArrowLeftOutline",
-						"handler": "assignTicketToMe"
-					},
-					{
-						"id": "view",
-						"label": "View",
-						"icon": "EyeOutline",
-						"handler": "navigate",
-						"route": "TicketDetail"
-					}
-				],
-				"columns": [
-					{
-						"key": "occurredAt",
-						"label": "Waiting",
-						"widget": "age",
-						"widgetProps": {
-							"variantWhen": [
-								{
-									"op": "gte",
-									"value": 2,
-									"variant": "error"
-								}
-							]
-						},
-						"sortable": true
-					},
-					{
-						"key": "title",
-						"label": "Title",
-						"secondary": "{client.name}",
-						"sortable": true
-					},
-					"ticketType",
-					"priority",
-					"channel",
-					"status"
-				],
-				"emptyText": "Nothing is waiting. Every open ticket has someone on it.",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				},
-				"sortKey": "occurredAt",
-				"sortOrder": "asc",
-				"countText": "{shown} of {total} unassigned tickets · customer contact · oldest first",
-				"statRow": [
-					{
-						"id": "queue-unassigned",
-						"type": "stat",
-						"title": "Unassigned",
-						"content": {
-							"label": "Unassigned",
-							"caption": "tickets nobody has picked up",
-							"icon": "ClipboardTextClockOutline",
-							"format": {
-								"style": "number",
-								"decimals": 0
-							},
-							"source": {
-								"register": "pipelinq",
-								"schema": "ticket",
-								"metric": "count",
-								"filter": {
-									"assignee": {
-										"isnull": true
-									},
-									"status": {
-										"notIn": [
-											"resolved",
-											"completed",
-											"rejected",
-											"converted",
-											"closed"
-										]
-									}
-								}
-							}
-						}
-					},
-					{
-						"id": "queue-past-deadline",
-						"type": "stat",
-						"title": "Past the deadline",
-						"content": {
-							"label": "Past the deadline",
-							"caption": "pick these up first",
-							"icon": "AlertCircleOutline",
-							"format": {
-								"style": "number",
-								"decimals": 0
-							},
-							"variant": "error",
-							"source": {
-								"register": "pipelinq",
-								"schema": "ticket",
-								"metric": "count",
-								"filter": {
-									"assignee": {
-										"isnull": true
-									},
-									"status": {
-										"notIn": [
-											"resolved",
-											"completed",
-											"rejected",
-											"converted",
-											"closed"
-										]
-									},
-									"slaDeadline[lt]": "@now"
-								}
-							}
-						}
-					}
-				]
 			}
 		},
 		{

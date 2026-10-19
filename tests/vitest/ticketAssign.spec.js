@@ -75,12 +75,12 @@ describe('assignTicketToMe', () => {
 describe('the bundled manifest', () => {
 	const page = (id) => manifest.pages.find((p) => p.id === id)
 
-	it('offers Assign to me on every Queue row', () => {
-		const queue = manifest.pages.filter((p) => p.id === 'Queue').at(-1)
-		expect(queue.config.actions).toContainEqual(
+	it('offers Take it on on every unassigned All tickets row', () => {
+		expect(page('Tickets').config.actions).toContainEqual(
 			expect.objectContaining({
 				id: 'assign-to-me',
 				handler: 'assignTicketToMe',
+				visibleWhen: { field: 'assignee', op: 'empty' },
 			}),
 		)
 	})

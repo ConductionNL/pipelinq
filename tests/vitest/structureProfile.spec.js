@@ -12,7 +12,7 @@
  *
  * What has to stay true:
  *   - the full profile is exactly what it was before profiles existed;
- *   - the simple menu is the eight entries of the design, in order, under
+ *   - the simple menu is the seven entries of the design, in order, under
  *     three captions;
  *   - a module that is off is out of the menu, a module that is on is in it;
  *   - nothing is lost: every entry the full menu offers is in the simple menu
@@ -151,7 +151,7 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 49 entries: 40 main, 3 footer, 6 settings, 0 integrations', () => {
+	it('still counts 48 entries: 39 main, 3 footer, 6 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
@@ -159,8 +159,8 @@ describe('the full profile', () => {
 		// and BI export, which settingsSection moves there. nextcloud-vue before
 		// 2.84.0 dropped it in the relocation step's clean-up; 2.84.0 keeps a
 		// caption that has entries under it (nextcloud-vue #1608).
-		expect(flat(menu)).toHaveLength(49)
-		expect(count('main')).toBe(40)
+		expect(flat(menu)).toHaveLength(48)
+		expect(count('main')).toBe(39)
 		expect(count('footer')).toBe(3)
 		expect(count('settings')).toBe(6)
 		expect(count('integrations')).toBe(0)
@@ -212,13 +212,12 @@ describe('the simple profile', () => {
 	const built = buildSimple()
 	const main = section(built.menu, 'main')
 
-	it('shows eight entries under two captions, in the order of the design', () => {
-		// PqDashboard: Dashboard, My work and Queue sit at the top with no
+	it('shows seven entries under two captions, in the order of the design', () => {
+		// PqDashboard: Dashboard and My work sit at the top with no
 		// caption above them; the board's first caption is Klantcontact.
 		expect(main.map((entry) => entry.id)).toEqual([
 			'KccWerkplek',
 			'MyWork',
-			'Queue',
 			'ContactCaption',
 			'Tickets',
 			'ContactMomentsMenu',
@@ -233,11 +232,10 @@ describe('the simple profile', () => {
 			'Relaties',
 		])
 		const entries = main.filter((entry) => entry.type !== 'caption')
-		expect(entries).toHaveLength(8)
+		expect(entries).toHaveLength(7)
 		expect(entries.map((entry) => nl[entry.label])).toEqual([
 			'Dashboard',
 			'Mijn werk',
-			'Wachtrij',
 			'Vragen en meldingen',
 			'Contactmomenten',
 			'Afspraken',
@@ -303,7 +301,7 @@ describe('the simple profile', () => {
 
 	it('keeps route and page of every entry it rewords', () => {
 		const source = flat(build(fullFile).menu)
-		for (const id of ['KccWerkplek', 'MyWork', 'Queue', 'Tickets', 'Clients']) {
+		for (const id of ['KccWerkplek', 'MyWork', 'Tickets', 'Clients']) {
 			const original = source.find((entry) => entry.id === id)
 			const shown = main.find((entry) => entry.id === id)
 			expect(shown.route, id).toBe(original.route)
@@ -441,11 +439,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 97 pages as the full profile, so every route stays', () => {
+	it('builds the same 96 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(97)
+		expect(built.pages).toHaveLength(96)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)
@@ -636,7 +634,7 @@ describe('the modules', () => {
 				)
 			}
 			// The daily entries do not move.
-			const daily = (ids) => ids.filter((id) => !own.has(id)).slice(0, 10)
+			const daily = (ids) => ids.filter((id) => !own.has(id)).slice(0, 9)
 			expect(daily(order)).toEqual(
 				daily(section(buildSimple().menu, 'main').map((entry) => entry.id)),
 			)
@@ -818,7 +816,7 @@ describe('the getting-started tour', () => {
 		const shown = new Set(flat(built.menu).map((entry) => entry.route))
 		const refs = navTargets(tour)
 		// The control: the tour does point at menu entries.
-		expect(refs).toEqual(['Tickets', 'MyWork', 'Queue', 'Clients', 'Modules'])
+		expect(refs).toEqual(['Tickets', 'MyWork', 'Clients', 'Modules'])
 		expect(refs.filter((ref) => !shown.has(ref))).toEqual([])
 
 		const pages = new Map(built.pages.map((page) => [page.id, page]))
