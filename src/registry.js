@@ -299,7 +299,7 @@ import { sectionWidget } from './components/widgets/sectionWidget.js'
 //     overview are all widgets on the standard dashboard grid (header + actions
 //     + single scroll region). One small host widget remains: the header
 //     agent-availability toggle. ---
-import { createWithContact } from './services/contactSyncApi.js'
+import { createClientWithContact, createWithContact } from './services/contactSyncApi.js'
 
 /*
  * Grid metadata required for every kind:"widget" entry by the ADR-036
@@ -1290,7 +1290,7 @@ const registry = {
 	// Contact-aware create for the generic Add button on the Clients index page.
 	createClientContactAware: {
 		kind: 'create-override',
-		handler: (formData) => createWithContact('client', formData),
+		handler: (formData) => createClientWithContact(formData),
 		_note: 'Routes a generic client create through POST /api/contacts-sync/create so the required contactsUid (FK to a NC addressbook contact) is provisioned + filled instead of 400ing on a straight OpenRegister save.',
 	},
 

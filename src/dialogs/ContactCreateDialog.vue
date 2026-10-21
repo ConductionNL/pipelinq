@@ -1,57 +1,51 @@
+<!--
+  - SPDX-License-Identifier: EUPL-1.2
+  - SPDX-FileCopyrightText: 2026 Conduction B.V.
+  -
+  - New contact person from a picker: the library form dialog over the
+  - contact schema, asking the name, client, role, email address and phone
+  - number with the checks the Contacts page declares (`fieldOverrides`). The
+  - save goes through the contacts-sync create, and the new contact goes back
+  - to the form that asked.
+  -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'New contact')"
-		:open="true"
-		size="normal"
+	<CnFormDialog
+		v-if="schema"
+		ref="form"
+		:schema="schema"
+		:item="null"
+		register="pipelinq"
+		:initialData="seed"
+		:dialogTitle="t('pipelinq', 'New contact')"
+		:includeFields="includeFields"
+		:fieldOverrides="fieldOverrides"
 		data-testid="contact-create-dialog"
-		@closing="$emit('close')">
-		<ContactForm
-			:contact="seed"
-			:preSelectedClient="client"
-			@save="onSave"
-			@cancel="$emit('close')" />
-	</NcDialog>
+		@confirm="onConfirm"
+		@close="$emit('close')" />
 </template>
 
 <script>
-import { showError } from '@nextcloud/dialogs'
-import { NcDialog } from '@nextcloud/vue'
-import ContactForm from '../views/contacts/ContactForm.vue'
+import { CnFormDialog } from '@conduction/nextcloud-vue'
+import manifest from '../manifest.json'
 import { createWithContact } from '../services/contactSyncApi.js'
+import { useObjectStore } from '../store/modules/object.js'
 
-/**
- * ContactCreateDialog — create a contact person without leaving the form that
- * needs one.
- *
- * Mirrors ClientCreateDialog, including its persist path: the `contact` schema
- * marks `contactsUid` REQUIRED (the authoritative identity is the Nextcloud
- * addressbook entry, never minted locally), so a plain
- * objectStore.saveObject('contact', …) 400s with "The required property
- * (contactsUid) is missing". The raw form fields go to the backend, which
- * provisions the NC contact via ContactVcardService and saves the object with
- * the resolved contactsUid.
- *
- * This is also what finally mounts ContactForm. That component carried a
- * standing note that nothing imported it — no manifest page, no router entry,
- * no importer — leaving it unreachable on every instance and untestable by
- * Playwright. It is re-wired here rather than deleted.
- */
+const CONTACTS_PAGE = manifest.pages.find((page) => page.id === 'Contacts')
+
 export default {
 	name: 'ContactCreateDialog',
-
 	components: {
-		NcDialog,
-		ContactForm,
+		CnFormDialog,
 	},
 
 	props: {
-		/** Client uuid the new contact belongs to; pre-selects the client field. */
+		/** The client the contact belongs to, when the picker knows it. */
 		client: {
 			type: String,
 			default: null,
 		},
 
-		/** Name typed into the picker, carried into the form so it is not retyped. */
+		/** A name to start from (typed in a picker). */
 		name: {
 			type: String,
 			default: '',
@@ -60,45 +54,65 @@ export default {
 
 	emits: ['created', 'close'],
 
+	data() {
+		return {
+			schema: null,
+			includeFields: ['name', 'client', 'role', 'email', 'phone'],
+		}
+	},
+
 	computed: {
 		/**
-		 * ContactForm reads its initial values from `contact`, so the typed
-		 * term and the parent client are handed over that way.
-		 *
-		 * @return {object}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
+		 * @return {object} The Contacts page's field checks.
+		 * @spec openspec/changes/party-forms-as-configuration/specs/client-forms/spec.md#requirement-the-client-form-is-configuration-shared-by-every-create
+		 */
+		fieldOverrides() {
+			return (CONTACTS_PAGE && CONTACTS_PAGE.config && CONTACTS_PAGE.config.fieldOverrides) || {}
+		},
+
+		/**
+		 * @return {object} The values the form starts from.
+		 * @spec openspec/changes/party-forms-as-configuration/specs/client-forms/spec.md#requirement-the-client-form-is-configuration-shared-by-every-create
 		 */
 		seed() {
 			const seed = {}
-			if (this.name) seed.name = this.name
-			if (this.client) seed.client = this.client
+			if (this.name) {
+				seed.name = this.name
+			}
+			if (this.client) {
+				seed.client = this.client
+			}
 			return seed
 		},
 	},
 
+	async mounted() {
+		const store = useObjectStore()
+		await store.fetchSchema('contact')
+		this.schema = store.getSchema('contact')
+	},
+
 	methods: {
 		/**
-		 * Persist through the contact-first endpoint and hand the created
-		 * object back, so a picker can select it immediately.
+		 * Create the contact and hand it back to the form that asked.
 		 *
-		 * @param {object} formData The raw create-form fields.
-		 * @return {Promise<void>}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
+		 * @param {object} formData The form's values.
+		 * @spec openspec/changes/party-forms-as-configuration/specs/client-forms/spec.md#requirement-the-client-form-is-configuration-shared-by-every-create
 		 */
-		async onSave(formData) {
+		async onConfirm(formData) {
+			let created
 			try {
-				const created = await createWithContact('contact', formData)
-				if (created && (created.id || created['@self']?.id)) {
-					this.$emit('created', created)
-					return
-				}
-				showError(t('pipelinq', 'Failed to create contact.'))
+				created = await createWithContact('contact', formData)
 			} catch (error) {
-				showError(
-					error?.response?.data?.error
-						|| t('pipelinq', 'Failed to create contact.'),
-				)
+				this.$refs.form?.setResult({ error: error?.response?.data?.error || t('pipelinq', 'Failed to create contact.') })
+				return
 			}
+			if (!created || !(created.id || created['@self']?.id)) {
+				this.$refs.form?.setResult({ error: t('pipelinq', 'Failed to create contact.') })
+				return
+			}
+			this.$refs.form?.setResult({ success: true })
+			this.$emit('created', created)
 		},
 	},
 }

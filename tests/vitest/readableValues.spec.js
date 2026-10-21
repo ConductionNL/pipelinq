@@ -189,9 +189,8 @@ describe('the hand-written forms and the service page use the same labels', () =
 		const detail = read('src', 'views', 'bookings', 'ServiceDetail.vue')
 		expect(detail).not.toContain("serviceData.cancellationPolicy || 'free' }}")
 		expect(detail).not.toContain("{{ step.resourceType || '-' }}")
-		expect(read('src', 'views', 'clients', 'ClientForm.vue')).not.toContain(
-			"typeOptions: ['person', 'organization']",
-		)
+		const clients = JSON.parse(read('src', 'manifest.json')).pages.find((p) => p.id === 'Clients')
+		expect(clients.config.fieldOverrides.type.enumLabels).toEqual({ person: 'Person', organization: 'Organization' })
 		expect(read('src', 'views', 'leads', 'LeadForm.vue')).not.toContain(
 			"priorityOptions: ['low', 'normal', 'high', 'urgent']",
 		)
