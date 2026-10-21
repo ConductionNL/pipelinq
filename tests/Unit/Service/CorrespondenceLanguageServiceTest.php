@@ -86,6 +86,9 @@ class CorrespondenceLanguageServiceTest extends TestCase {
 		);
 
 		$l10nFactory = $this->createMock(IFactory::class);
+		$l10nFactory->method('getLanguages')->willReturn(
+			['commonLanguages' => [['code' => 'nl', 'name' => 'Nederlands']], 'otherLanguages' => [['code' => 'en', 'name' => 'English']]]
+		);
 		$l10nFactory->method('findAvailableLanguages')->willReturnCallback(
 			function (): array {
 				return $this->shipped;
@@ -335,4 +338,17 @@ class CorrespondenceLanguageServiceTest extends TestCase {
 
 		$this->assertSame(403, $this->service()->resolve(partyId: 'p1')['status']);
 	}//end testACallerWhoMayNotReadThePartyIsRefused()
+	/**
+	 * The options name each available language as Nextcloud does.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/party-forms-as-configuration/specs/client-forms/spec.md#requirement-the-client-form-is-configuration-shared-by-every-create
+	 */
+	public function testTheOptionsNameEachLanguage(): void {
+		$this->assertSame(
+			[['value' => 'en', 'label' => 'English'], ['value' => 'nl', 'label' => 'Nederlands']],
+			$this->service()->options()
+		);
+	}//end testTheOptionsNameEachLanguage()
 }//end class

@@ -19,6 +19,7 @@ import {
 } from '../../src/store/plugins/contactWriteBack.js'
 
 const createClientWithContact = vi.hoisted(() => vi.fn())
+const updateField = vi.hoisted(() => vi.fn())
 vi.mock('../../src/services/contactSyncApi.js', () => ({
 	createClientWithContact,
 	createWithContact: vi.fn(),
@@ -30,13 +31,18 @@ vi.mock('../../src/store/modules/object.js', () => ({
 		getSchema: () => ({ properties: { name: { type: 'string' } }, required: ['name', 'type'] }),
 	}),
 }))
+vi.mock('@nextcloud/vue', () => ({
+	NcButton: { name: 'NcButton', inheritAttrs: false, render() { return h('button', this.$attrs, this.$slots.default?.()) } },
+}))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnFormDialog: {
 		name: 'CnFormDialog',
 		props: ['schema', 'item', 'initialData', 'includeFields', 'fieldOverrides', 'dialogTitle', 'register'],
 		emits: ['confirm', 'close'],
-		methods: { setResult: vi.fn() },
-		render: () => h('div'),
+		methods: { setResult: vi.fn(), updateField },
+		render() {
+			return h('div', this.$slots['before-fields']?.())
+		},
 	},
 }))
 
@@ -44,6 +50,8 @@ globalThis.t = (_app, text) => text
 
 const { default: ClientCreateDialog } =
 	await import('../../src/dialogs/ClientCreateDialog.vue')
+const { default: ContactCreateDialog } =
+	await import('../../src/dialogs/ContactCreateDialog.vue')
 
 function mountDialog(props) {
 	const push = vi.fn(() => Promise.resolve())
@@ -102,6 +110,24 @@ describe('New client dialog opened from a picker', () => {
 	})
 })
 
+describe('New contact dialog', () => {
+	it('asks name, client, role, email and phone with the Contacts page checks, and can make a client', async () => {
+		const wrapper = mount(ContactCreateDialog, {
+			props: { name: 'Jan', client: 'k-1' },
+			global: { mocks: { t: (_app, text) => text }, stubs: { ClientCreateDialog: true } },
+		})
+		await flushPromises()
+		const dialog = wrapper.findComponent({ name: 'CnFormDialog' })
+		const contacts = manifest.pages.find((p) => p.id === 'Contacts').config
+		expect(dialog.props('includeFields')).toEqual(['name', 'client', 'role', 'email', 'phone'])
+		expect(dialog.props('fieldOverrides')).toEqual(contacts.fieldOverrides)
+		expect(dialog.props('initialData')).toEqual({ name: 'Jan', client: 'k-1' })
+		expect(wrapper.find('[data-testid="contact-create-new-client"]').exists()).toBe(true)
+		wrapper.vm.onClientCreated('k-9')
+		expect(updateField).toHaveBeenCalledWith('client', 'k-9')
+	})
+})
+
 describe('the client form config', () => {
 	const config = manifest.pages.find((p) => p.id === 'Clients').config
 	const o = config.fieldOverrides
@@ -128,7 +154,8 @@ describe('the client form config', () => {
 
 	it('starts with the signed-in owner, the reader\'s language and the readable type labels', () => {
 		expect(o.accountOwner).toEqual({ widget: 'user', default: '@me' })
-		expect(o.correspondenceLanguage['x-default']).toBe('current-language')
+		expect(o.correspondenceLanguage.defaultToken).toBe('current-language')
+		expect(o.correspondenceLanguage.optionsFrom).toMatchObject({ url: '/apps/pipelinq/api/correspondence-languages', responsePath: 'options' })
 		expect(o.type.enumLabels).toEqual({ person: 'Person', organization: 'Organization' })
 		expect(o.industry.widget).toBe('multiselect')
 		expect(o.industry.items.enum.length).toBeGreaterThan(0)

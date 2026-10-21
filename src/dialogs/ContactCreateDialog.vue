@@ -4,7 +4,8 @@
   -
   - New contact person from a picker: the library form dialog over the
   - contact schema, asking the name, client, role, email address and phone
-  - number with the checks the Contacts page declares (`fieldOverrides`). The
+  - number with the checks the Contacts page declares (`fieldOverrides`), and
+  - a New client button for a client that does not exist yet. The
   - save goes through the contacts-sync create, and the new contact goes back
   - to the form that asked.
   -->
@@ -21,11 +22,27 @@
 		:fieldOverrides="fieldOverrides"
 		data-testid="contact-create-dialog"
 		@confirm="onConfirm"
-		@close="$emit('close')" />
+		@close="$emit('close')">
+		<template #before-fields>
+			<NcButton
+				variant="tertiary"
+				data-testid="contact-create-new-client"
+				@click="newClient = true">
+				{{ t('pipelinq', 'New client') }}
+			</NcButton>
+			<ClientCreateDialog
+				v-if="newClient"
+				:stayOnPage="true"
+				@created="onClientCreated"
+				@close="newClient = false" />
+		</template>
+	</CnFormDialog>
 </template>
 
 <script>
 import { CnFormDialog } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
+import ClientCreateDialog from './ClientCreateDialog.vue'
 import manifest from '../manifest.json'
 import { createWithContact } from '../services/contactSyncApi.js'
 import { useObjectStore } from '../store/modules/object.js'
@@ -35,7 +52,9 @@ const CONTACTS_PAGE = manifest.pages.find((page) => page.id === 'Contacts')
 export default {
 	name: 'ContactCreateDialog',
 	components: {
+		ClientCreateDialog,
 		CnFormDialog,
+		NcButton,
 	},
 
 	props: {
@@ -58,6 +77,7 @@ export default {
 		return {
 			schema: null,
 			includeFields: ['name', 'client', 'role', 'email', 'phone'],
+			newClient: false,
 		}
 	},
 
@@ -93,6 +113,17 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Put a client created from this form in its client field.
+		 *
+		 * @param {string} id The new client's id.
+		 * @spec openspec/changes/party-forms-as-configuration/specs/client-forms/spec.md#requirement-the-client-form-is-configuration-shared-by-every-create
+		 */
+		onClientCreated(id) {
+			this.newClient = false
+			this.$refs.form?.updateField('client', id)
+		},
+
 		/**
 		 * Create the contact and hand it back to the form that asked.
 		 *

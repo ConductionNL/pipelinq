@@ -1700,8 +1700,14 @@
 						}
 					},
 					"correspondenceLanguage": {
-						"widget": "language",
-						"x-default": "current-language"
+						"widget": "select",
+						"optionsFrom": {
+							"url": "/apps/pipelinq/api/correspondence-languages",
+							"responsePath": "options",
+							"valueField": "value",
+							"labelField": "label"
+						},
+						"defaultToken": "current-language"
 					},
 					"timezone": {
 						"widget": "timezone"
