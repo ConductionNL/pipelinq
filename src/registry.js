@@ -179,10 +179,6 @@ import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
-// --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
-//     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
-//     avg response time) and the mTLS client-certificate expiry countdown. ---
-import BrpMonitorView from './views/admin/BrpMonitor.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
@@ -318,15 +314,12 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 //     availability endpoint and hide when no installed app implements the
 //     kind — same self-fetching-by-props pattern as the sections above. ---
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
-// --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
-import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 import SocialPostFormView from './views/social/SocialPostFormView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
 import StoreGallery from './views/store/StoreGallery.vue'
-import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 import ContactAwareObjectListWidget from './components/widgets/ContactAwareObjectListWidget.js'
@@ -617,18 +610,6 @@ const registry = {
 		_note: 'GDPR-compliant loyalty account enrollment form: mandatory opt-in checkbox, terms version capture, customerId+programmeId input (REQ-LOY-010-01).',
 	},
 
-	// --- Admin managers. ---
-	PipelineManagerView: {
-		kind: 'page',
-		component: PipelineManagerView,
-		_note: 'Pipeline stage + transition manager with drag-and-drop reordering; lib gap: no pipeline-designer page type.',
-	},
-	SyncSettingsView: {
-		kind: 'page',
-		component: SyncSettingsView,
-		_note: 'External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config.',
-	},
-
 	// --- POS transactions. The PosTransactions list + detail are now declarative
 	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
 	//     declarative); only the bespoke cart-editor form view, the detail's
@@ -730,11 +711,6 @@ const registry = {
 		kind: 'page',
 		component: PosCustomerSettingsView,
 		_note: 'Admin settings panel for the POS customer-link lookup: search fields, purchase-history depth, marketing-consent sync toggle and the on-account-requires-customer invariant (pos-customer-link, REQ-PCL-006).',
-	},
-	BrpMonitorView: {
-		kind: 'page',
-		component: BrpMonitorView,
-		_note: 'Admin BRP Monitor — lookups / cache-hit ratio / error rate / avg response time over the last 24h, plus mTLS client-certificate expiry countdown (bsn-validatie-en-brp-lookup REQ-BSN-010).',
 	},
 
 	// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit). ---

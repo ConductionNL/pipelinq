@@ -5605,14 +5605,6 @@
 			"component": "PosCustomerSettingsView"
 		},
 		{
-			"id": "BrpMonitor",
-			"_note": "BrpMonitor.vue is a bespoke operational monitor for BRP (Dutch persons-registry) connection health and recent lookups, with its own status/refresh layout; it is a live diagnostics panel, not a list or detail of register objects, so no standard page type fits.",
-			"route": "/admin/brp-monitor",
-			"type": "custom",
-			"title": "BRP Monitor",
-			"component": "BrpMonitorView"
-		},
-		{
 			"id": "KassakoppelingAuditList",
 			"_note": "KassakoppelingAuditList.vue is a bespoke audit-trail viewer for the kassakoppeling (cash-register fiscalisation link) with append-only entries and verification actions rendered in a custom layout; the generic 'index' type cannot express the immutable-audit presentation and per-row verify controls.",
 			"route": "/kassakoppeling/audit",
@@ -6938,24 +6930,6 @@
 						"sizeToContent": true
 					}
 				]
-			}
-		},
-		{
-			"id": "SyncSettings",
-			"route": "/sync-settings",
-			"type": "settings",
-			"title": "Sync settings",
-			"config": {
-				"sections": [
-					{
-						"id": "sync",
-						"title": "Integrations",
-						"component": "SyncSettingsView"
-					}
-				]
-			},
-			"slots": {
-				"section-sync": "SyncSettingsView"
 			}
 		},
 		{

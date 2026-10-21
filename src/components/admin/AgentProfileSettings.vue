@@ -107,10 +107,19 @@
 				</NcButton>
 			</div>
 		</div>
+		<CnDeleteDialog
+			v-if="deleting"
+			ref="deleteDialog"
+			:item="deleting"
+			nameField="userId"
+			:dialogTitle="t('pipelinq', 'Delete agent profile')"
+			@confirm="confirmDelete"
+			@close="deleting = null" />
 	</NcSettingsSection>
 </template>
 
 <script>
+import { CnDeleteDialog } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
 import { useAgentProfilesStore } from '../../store/modules/agentProfiles.js'
 import { useSkillsStore } from '../../store/modules/skills.js'
@@ -118,6 +127,7 @@ import { useSkillsStore } from '../../store/modules/skills.js'
 export default {
 	name: 'AgentProfileSettings',
 	components: {
+		CnDeleteDialog,
 		NcButton,
 		NcLoadingIcon,
 		NcSettingsSection,
@@ -125,6 +135,8 @@ export default {
 
 	data() {
 		return {
+			// The row the delete dialog asks about.
+			deleting: null,
 			editingId: null,
 			editForm: {},
 		}
@@ -244,19 +256,25 @@ export default {
 		},
 
 		/**
-		 * @param {object} profile The agent profile to delete.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-4
+		 * Ask before deleting a row.
+		 *
+		 * @param {object} profile The row to delete.
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
 		 */
-		async deleteProfile(profile) {
-			if (
-				confirm(
-					t('pipelinq', 'Delete agent profile for "{userId}"?', {
-						userId: profile.userId,
-					}),
-				)
-			) {
-				await this.profilesStore.deleteProfile(profile.id)
-			}
+		deleteProfile(profile) {
+			this.deleting = profile
+		},
+
+		/**
+		 * Delete the row the dialog asked about, and tell the dialog how it went.
+		 *
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
+		 */
+		async confirmDelete() {
+			const deleted = await this.profilesStore.deleteProfile(this.deleting.id)
+			this.$refs.deleteDialog?.setResult(deleted
+				? { success: true }
+				: { error: this.profilesStore.error || t('pipelinq', 'Deleting failed.') })
 		},
 	},
 }
