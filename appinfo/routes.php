@@ -96,6 +96,8 @@ return [
         // My-work worklist — canonical server-side union of the current user's
         // leads + requests (replaces the MyWorkWidget/MyWork client-side union).
         ['name' => 'worklist#mine', 'url' => '/api/worklist/mine', 'verb' => 'GET'],
+        // The cards of one pipeline's board (leads, requests and the other kinds it applies to).
+        ['name' => 'pipelineBoard#items', 'url' => '/api/pipeline-items', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
         ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
