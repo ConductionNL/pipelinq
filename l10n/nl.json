@@ -1,5 +1,14 @@
 {
     "translations": {
+        "Mollie": "Mollie",
+        "CCV": "CCV",
+        "Adyen": "Adyen",
+        "Stripe": "Stripe",
+        "iDEAL": "iDEAL",
+        "Bancontact": "Bancontact",
+        "Payment started again.": "Betaling opnieuw gestart.",
+        "This rejects the cash difference and reopens the shift for a recount.": "Dit wijst het kasverschil af en opent de dienst opnieuw voor een hertelling.",
+        "Cash difference rejected. The shift is open for a recount.": "Kasverschil afgewezen. De dienst staat open voor een hertelling.",
         "Take the oldest": "Pak de oudste",
         "Longest waiting": "Langst wachtend",
         "the oldest ticket nobody has picked up": "het oudste ticket dat nog niemand heeft opgepakt",

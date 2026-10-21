@@ -1,5 +1,14 @@
 {
     "translations": {
+        "Mollie": "Mollie",
+        "CCV": "CCV",
+        "Adyen": "Adyen",
+        "Stripe": "Stripe",
+        "iDEAL": "iDEAL",
+        "Bancontact": "Bancontact",
+        "Payment started again.": "Payment started again.",
+        "This rejects the cash difference and reopens the shift for a recount.": "This rejects the cash difference and reopens the shift for a recount.",
+        "Cash difference rejected. The shift is open for a recount.": "Cash difference rejected. The shift is open for a recount.",
         "Take the oldest": "Take the oldest",
         "Longest waiting": "Longest waiting",
         "the oldest ticket nobody has picked up": "the oldest ticket nobody has picked up",

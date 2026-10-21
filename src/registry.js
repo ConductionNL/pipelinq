@@ -84,7 +84,6 @@ import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 //     cashDiff variance are grid widgets. ---
 import CashShiftDropsWidget from './components/pos/CashShiftDropsWidget.vue'
 import CashShiftHeaderActions from './components/pos/CashShiftHeaderActions.vue'
-import CashShiftVarianceWidget from './components/pos/CashShiftVarianceWidget.vue'
 // --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
 //     declarative): refund fields auto-render; the manager-gated confirm/reject
 //     actions are its actionsComponent, and the cross-schema "Returned items"
@@ -649,7 +648,7 @@ const registry = {
 		kind: 'widget',
 		component: PosTransactionPaymentWidget,
 		...PANEL_WIDGET_META,
-		_note: 'PosTransactionDetail grid widget: the split tenders with their balance (TenderEntryPanel) and the payment provider status (PaymentStatusCard) when a provider handled the payment. Reloads its tenders on cn:page:refresh.',
+		_note: 'PosTransactionDetail grid widget: the split tenders with their balance (TenderEntryPanel). Reloads its tenders on cn:page:refresh.',
 	},
 	PosTransactionFormView: {
 		kind: 'page',
@@ -701,12 +700,6 @@ const registry = {
 		component: CashShiftDropsWidget,
 		...PANEL_WIDGET_META,
 		_note: "CashShiftDetail grid widget: the cashDrop object-list plus Add drop, which POSTs to /api/pos-shifts/{id}/drop (POS-operator, open-shift and positive-amount checks, server-set droppedBy/droppedAt) instead of the object-list's generic create.",
-	},
-	CashShiftVarianceWidget: {
-		kind: 'widget',
-		component: CashShiftVarianceWidget,
-		...PANEL_WIDGET_META,
-		_note: 'CashShiftDetail grid widget: the latest/pending cashDiff VARIANCE projection (an object-list lists ALL children; it cannot pick the single most-relevant diff with its tolerance verdict) + manager-gated approve/reject via /api/pos-shifts/{id}/diff/{approve|reject}. Re-reads on cn:page:refresh.',
 	},
 
 	// POS staff, POS roles and POS tender types are administrator configuration,
