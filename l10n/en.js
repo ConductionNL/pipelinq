@@ -1,6 +1,12 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Closed, template required": "Closed, template required",
+        "Messaging consent": "Messaging consent",
+        "Not sent: the WhatsApp session is closed. Use Send message with an approved template.": "Not sent: the WhatsApp session is closed. Use Send message with an approved template.",
+        "SMS consent": "SMS consent",
+        "WhatsApp consent": "WhatsApp consent",
+        "WhatsApp session": "WhatsApp session",
         "Take the oldest": "Take the oldest",
         "Longest waiting": "Longest waiting",
         "the oldest ticket nobody has picked up": "the oldest ticket nobody has picked up",

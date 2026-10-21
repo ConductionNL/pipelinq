@@ -2509,14 +2509,95 @@
 					},
 					{
 						"id": "messaging-conversation",
-						"component": "MessagingConversationSection",
+						"type": "conversation",
 						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "client"
-						},
 						"colSpan": 6,
-						"card": true
+						"card": true,
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "channelMessage",
+								"filter": {
+									"clientId": "@objectId"
+								},
+								"limit": 200
+							},
+							"textField": "body",
+							"timeField": "sentAt",
+							"sideField": "direction",
+							"usValue": "outbound",
+							"channelField": "channel",
+							"channelMap": {
+								"sms": "SMS",
+								"whatsapp": "WhatsApp"
+							},
+							"statusField": "deliveryStatus",
+							"statusMap": {
+								"queued": "Queued",
+								"sent": "Sent",
+								"delivered": "Delivered",
+								"read": "Read",
+								"failed": "Failed",
+								"expired": "Expired"
+							},
+							"messageActions": [
+								{
+									"id": "resend",
+									"label": "Send again",
+									"endpoint": "/apps/pipelinq/api/messaging/messages/{id}/resend",
+									"method": "POST",
+									"when": [
+										{
+											"field": "direction",
+											"equals": "outbound"
+										},
+										{
+											"field": "channel",
+											"in": [
+												"sms",
+												"whatsapp"
+											]
+										},
+										{
+											"field": "deliveryStatus",
+											"in": [
+												"failed",
+												"expired"
+											]
+										},
+										{
+											"field": "metadata.resentAs",
+											"empty": true
+										}
+									],
+									"errors": {
+										"path": "status",
+										"map": {
+											"consent-missing": "Not sent: the contact has not given consent for this channel.",
+											"budget-exceeded": "Not sent: the messaging budget for this period is used up.",
+											"no-provider": "Not sent: no provider is set up for this channel.",
+											"template-invalid": "Not sent: the template is no longer approved.",
+											"template-required": "Not sent: the WhatsApp session is closed. Use Send message with an approved template.",
+											"already-resent": "This message was already sent again.",
+											"not-failed": "This message did not fail, so it is not sent again."
+										},
+										"default": "Sending failed again. Try again later."
+									},
+									"errorText": "Sending failed again. Try again later."
+								}
+							],
+							"allowReply": false,
+							"emptyText": "No messages yet.",
+							"headerAction": {
+								"label": "Send message",
+								"type": "open-modal",
+								"target": "SendMessageModal",
+								"props": {
+									"clientId": "@objectId"
+								}
+							},
+							"title": "Messages"
+						}
 					},
 					{
 						"id": "contactmoment-quick-log",
@@ -2847,11 +2928,52 @@
 					},
 					{
 						"id": "customer-reply",
-						"component": "CustomerReplySection",
+						"type": "conversation",
 						"title": "Customer contact",
 						"placement": "after-data",
-						"props": {
-							"objectId": "@objectId"
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "in",
+							"value": [
+								"request",
+								"complaint"
+							]
+						},
+						"content": {
+							"fields": [
+								{
+									"field": "portalReplies",
+									"side": "them"
+								},
+								{
+									"field": "portalAnswers",
+									"side": "us"
+								}
+							],
+							"textField": "message",
+							"timeField": "createdAt",
+							"usLabel": "Employee",
+							"emptyText": "No messages with the customer yet.",
+							"replyLabel": "Message to the customer",
+							"placeholder": "The customer reads this on the portal. Everything else on the ticket stays internal.",
+							"sendLabel": "Send answer",
+							"endpoint": "/apps/pipelinq/api/tickets/@objectId/answer",
+							"templates": {
+								"url": "/apps/pipelinq/api/saved-replies",
+								"params": {
+									"channel": "portal",
+									"ticket": "@objectId"
+								},
+								"inputLabel": "Saved reply",
+								"textField": "body"
+							},
+							"replyOptions": [
+								{
+									"key": "waitForCustomer",
+									"label": "Also set the ticket to waiting for the customer",
+									"default": true
+								}
+							]
 						}
 					},
 					{
@@ -3268,11 +3390,131 @@
 					},
 					{
 						"id": "contact-messages",
-						"type": "MessagingConversationWidget",
+						"type": "conversation",
 						"title": "Messages",
 						"icon": "MessageTextOutline",
 						"content": {
-							"entityType": "contact"
+							"source": {
+								"register": "pipelinq",
+								"schema": "channelMessage",
+								"filter": {
+									"contactId": "@objectId"
+								},
+								"limit": 200
+							},
+							"textField": "body",
+							"timeField": "sentAt",
+							"sideField": "direction",
+							"usValue": "outbound",
+							"channelField": "channel",
+							"channelMap": {
+								"sms": "SMS",
+								"whatsapp": "WhatsApp"
+							},
+							"statusField": "deliveryStatus",
+							"statusMap": {
+								"queued": "Queued",
+								"sent": "Sent",
+								"delivered": "Delivered",
+								"read": "Read",
+								"failed": "Failed",
+								"expired": "Expired"
+							},
+							"messageActions": [
+								{
+									"id": "resend",
+									"label": "Send again",
+									"endpoint": "/apps/pipelinq/api/messaging/messages/{id}/resend",
+									"method": "POST",
+									"when": [
+										{
+											"field": "direction",
+											"equals": "outbound"
+										},
+										{
+											"field": "channel",
+											"in": [
+												"sms",
+												"whatsapp"
+											]
+										},
+										{
+											"field": "deliveryStatus",
+											"in": [
+												"failed",
+												"expired"
+											]
+										},
+										{
+											"field": "metadata.resentAs",
+											"empty": true
+										}
+									],
+									"errors": {
+										"path": "status",
+										"map": {
+											"consent-missing": "Not sent: the contact has not given consent for this channel.",
+											"budget-exceeded": "Not sent: the messaging budget for this period is used up.",
+											"no-provider": "Not sent: no provider is set up for this channel.",
+											"template-invalid": "Not sent: the template is no longer approved.",
+											"template-required": "Not sent: the WhatsApp session is closed. Use Send message with an approved template.",
+											"already-resent": "This message was already sent again.",
+											"not-failed": "This message did not fail, so it is not sent again."
+										},
+										"default": "Sending failed again. Try again later."
+									},
+									"errorText": "Sending failed again. Try again later."
+								}
+							],
+							"allowReply": false,
+							"emptyText": "No messages yet.",
+							"headerAction": {
+								"label": "Send message",
+								"type": "open-modal",
+								"target": "SendMessageModal",
+								"props": {
+									"contactId": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "contact-messaging-consent",
+						"type": "facts",
+						"title": "Messaging consent",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"source": {
+								"url": "/apps/pipelinq/api/messaging/preflight/@objectId"
+							},
+							"fields": [
+								{
+									"path": "consent.sms",
+									"label": "SMS consent",
+									"map": {
+										"opted-in": "Opted in",
+										"opted-out": "Opted out",
+										"unknown": "Unknown"
+									}
+								},
+								{
+									"path": "consent.whatsapp",
+									"label": "WhatsApp consent",
+									"map": {
+										"opted-in": "Opted in",
+										"opted-out": "Opted out",
+										"unknown": "Unknown"
+									}
+								},
+								{
+									"path": "whatsappSessionOpen",
+									"label": "WhatsApp session",
+									"map": {
+										"true": "Open (24h window)",
+										"false": "Closed, template required"
+									}
+								}
+							]
 						}
 					},
 					{
@@ -3364,6 +3606,7 @@
 					"contact-brp",
 					"contact-email",
 					"contact-messages",
+					"contact-messaging-consent",
 					"contact-calendar",
 					"contact-history"
 				]

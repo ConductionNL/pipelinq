@@ -10,7 +10,10 @@
  *
  * - DossierSnapshotSection lists the dossier as the resident saw it, with
  *   links, and renders nothing for an ordinary ticket.
- * - CustomerReplySection writes customerMessage (and awaiting_customer on
+ * - The answer to the customer is a `conversation` that posts to
+ *   POST /api/tickets/{id}/answer (TicketAnswerServiceTest saves
+ *   customerMessage, portalAnswers and awaiting_customer). It replaced
+ *   CustomerReplySection, which wrote customerMessage (and awaiting_customer on
  *   "Send answer" with the wait box ticked) while keeping the rest of the ticket, since
  *   the store's save is a PUT that replaces the object.
  * - WooConversionSection is hidden unless dossiq can take the ticket, and
@@ -102,8 +105,6 @@ vi.mock('@nextcloud/vue', () => ({
 
 const { default: DossierSnapshotSection } =
 	await import('../../src/components/DossierSnapshotSection.vue')
-const { default: CustomerReplySection } =
-	await import('../../src/components/CustomerReplySection.vue')
 const { default: WooConversionSection } =
 	await import('../../src/components/WooConversionSection.vue')
 
@@ -199,191 +200,49 @@ describe('DossierSnapshotSection', () => {
 	})
 })
 
-describe('CustomerReplySection', () => {
-	beforeEach(() => {
-		storeMock.fetchObject.mockReset()
-		storeMock.saveObject.mockReset()
-		storeMock.fetchObject.mockResolvedValue({ ...question })
-		storeMock.saveObject.mockImplementation((type, data) =>
-			Promise.resolve(data),
-		)
-	})
-
-	it('leaves its frame title to the widget frame, so it shows once', async () => {
-		const wrapper = await mountFor(CustomerReplySection)
-
-		// The manifest's bodyWidget title "Customer contact" is the h3
-		// CnDetailPage renders above the section. A heading of the section's
-		// own printed it a second time (Woo round 3).
-		expect(wrapper.find('h1, h2, h3').exists()).toBe(false)
-		expect(wrapper.text()).not.toContain('Customer contact')
-	})
-
-	it("puts the resident's replies under their own heading, not under the answer (Woo round 5)", async () => {
-		const wrapper = await mountFor(CustomerReplySection)
-
-		// The replies are what the resident wrote (portalReplies), so they
-		// sit under "Replies from the customer". "Answer to the customer"
-		// heads only the employee's own message, after the replies.
-		const headings = wrapper.findAll('h4').map((h) => h.text())
-		expect(headings).toEqual([
-			'Replies from the customer',
-			'Answer to the customer',
-		])
-		const html = wrapper.html()
-		const repliesAt = html.indexOf('Replies from the customer')
-		const replyAt = html.indexOf('Eerste reactie')
-		const answerAt = html.indexOf('Answer to the customer')
-		expect(repliesAt).toBeLessThan(replyAt)
-		expect(replyAt).toBeLessThan(answerAt)
-	})
-
-	it('names the frame "Customer contact" in the manifest', () => {
-		const manifest = JSON.parse(
+describe('the answer to the customer', () => {
+	const section = () =>
+		JSON.parse(
 			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
 		)
-		const page = manifest.pages.find((p) => p.id === 'TicketDetail')
-		const widget = page.config.bodyWidgets.find(
-			(w) => w.component === 'CustomerReplySection',
-		)
-		expect(widget.title).toBe('Customer contact')
+			.pages.find((p) => p.id === 'TicketDetail')
+			.config.bodyWidgets.find((w) => w.id === 'customer-reply')
+
+	it('names the frame "Customer contact" once, in the manifest', () => {
+		expect(section().title).toBe('Customer contact')
+		expect(section().content.title).toBeUndefined()
 	})
 
-	it('lists the portal replies oldest first (REQ-QCD-007)', async () => {
-		const wrapper = await mountFor(CustomerReplySection)
-
-		const replies = wrapper.findAll('ol li').map((li) => li.text())
-		expect(replies[0]).toContain('Eerste reactie')
-		expect(replies[1]).toContain('Tweede reactie')
-	})
-
-	it('saves the answer and waits for a reply, keeping the rest of the ticket (REQ-QCD-007)', async () => {
-		const wrapper = await mountFor(CustomerReplySection)
-
-		await wrapper.find('textarea').setValue('Het besluit valt in november.')
-		await wrapper
-			.findAll('button')
-			.find((b) => b.text() === 'Send answer')
-			.trigger('click')
-		await flushPromises()
-
-		expect(storeMock.saveObject).toHaveBeenCalledTimes(1)
-		const [type, payload] = storeMock.saveObject.mock.calls[0]
-		expect(type).toBe('ticket')
-		expect(payload).toEqual({
-			...question,
-			customerMessage: 'Het besluit valt in november.',
-			portalAnswers: [
-				{
-					message: 'Het besluit valt in november.',
-					createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
-				},
-			],
-			status: 'awaiting_customer',
-		})
-		expect(wrapper.find('.note-success').exists()).toBe(true)
-	})
-
-	it('keeps every answer with its date, and saving the same answer again adds none (REQ-QDP-001)', async () => {
-		storeMock.fetchObject.mockResolvedValue({
-			...question,
-			customerMessage: 'Eerste antwoord',
-			portalAnswers: [
-				{ message: 'Eerste antwoord', createdAt: '2026-09-28T10:00:00Z' },
-			],
-		})
-		const wrapper = await mountFor(CustomerReplySection)
-
-		await wrapper
-			.findAll('button')
-			.find((b) => b.text() === 'Send answer')
-			.trigger('click')
-		await flushPromises()
-		expect(storeMock.saveObject.mock.calls[0][1].portalAnswers).toHaveLength(1)
-
-		await wrapper.find('textarea').setValue('Tweede antwoord')
-		await wrapper
-			.findAll('button')
-			.find((b) => b.text() === 'Send answer')
-			.trigger('click')
-		await flushPromises()
-		const answers = storeMock.saveObject.mock.calls[1][1].portalAnswers
-		expect(answers.map((a) => a.message)).toEqual([
-			'Eerste antwoord',
-			'Tweede antwoord',
+	it("shows the resident's replies and the answers as one thread, oldest first (REQ-QCD-007)", () => {
+		const { content } = section()
+		expect(content.fields).toEqual([
+			{ field: 'portalReplies', side: 'them' },
+			{ field: 'portalAnswers', side: 'us' },
 		])
-		expect(answers[0].createdAt).toBe('2026-09-28T10:00:00Z')
+		expect(content.textField).toBe('message')
+		expect(content.timeField).toBe('createdAt')
 	})
 
-	it('"Send answer" without the wait box leaves the status alone', async () => {
-		const wrapper = await mountFor(CustomerReplySection)
-
-		await wrapper.find('textarea').setValue('Antwoord')
-		await wrapper.find('input[type="checkbox"]').setValue(false)
-		await wrapper
-			.findAll('button')
-			.find((b) => b.text() === 'Send answer')
-			.trigger('click')
-		await flushPromises()
-
-		expect(storeMock.saveObject.mock.calls[0][1].status).toBe('in_progress')
-		expect(storeMock.saveObject.mock.calls[0][1].customerMessage).toBe(
-			'Antwoord',
-		)
+	it('saves the answer on the server and can wait for a reply (REQ-QCD-007)', () => {
+		const { content } = section()
+		expect(content.endpoint).toBe('/apps/pipelinq/api/tickets/@objectId/answer')
+		expect(content.replyOptions).toEqual([
+			{ key: 'waitForCustomer', label: 'Also set the ticket to waiting for the customer', default: true },
+		])
+		expect(content.sendLabel).toBe('Send answer')
 	})
 
-	it('says so when the answer does not save', async () => {
-		storeMock.saveObject.mockResolvedValue(null)
-		const wrapper = await mountFor(CustomerReplySection)
-
-		await wrapper.find('textarea').setValue('Antwoord')
-		await wrapper
-			.findAll('button')
-			.find((b) => b.text() === 'Send answer')
-			.trigger('click')
-		await flushPromises()
-
-		expect(wrapper.find('.note-error').text()).toContain(
-			'Could not save the answer.',
-		)
-	})
-
-	it('in the Answer dialog opens with the question and leaves sending to the footer (PqTicketAntwoord)', async () => {
-		storeMock.fetchObject.mockResolvedValue({ ...question, portalReplies: [] })
-		const wrapper = mount(CustomerReplySection, {
-			props: { objectId: 't-9', inDialog: true },
+	it('offers the portal saved replies, filled for this ticket', () => {
+		expect(section().content.templates).toEqual({
+			url: '/apps/pipelinq/api/saved-replies',
+			params: { channel: 'portal', ticket: '@objectId' },
+			inputLabel: 'Saved reply',
+			textField: 'body',
 		})
-		await flushPromises()
-
-		expect(wrapper.find('[data-testid="customer-reply-question"]').text()).toBe(
-			question.description,
-		)
-		expect(wrapper.find('[data-testid="customer-reply-send"]').exists()).toBe(
-			false,
-		)
-		expect(wrapper.text()).not.toContain('Replies from the customer')
-		const states = wrapper.emitted('state')
-		expect(states[states.length - 1][0]).toMatchObject({
-			busy: false,
-			waitForCustomer: true,
-		})
-
-		await wrapper.find('textarea').setValue('Ja, dat kan.')
-		expect(wrapper.emitted('state').at(-1)[0].canSave).toBe(true)
-		await wrapper.vm.save(true)
-		await flushPromises()
-		expect(storeMock.saveObject).toHaveBeenCalled()
-		expect(wrapper.emitted('saved')).toHaveLength(1)
 	})
 
-	it('is not offered on a contact moment', async () => {
-		storeMock.fetchObject.mockResolvedValue({
-			...question,
-			ticketType: 'interaction',
-		})
-		const wrapper = await mountFor(CustomerReplySection)
-
-		expect(wrapper.find('section').exists()).toBe(false)
+	it('is not offered on a contact moment', () => {
+		expect(section().visibleWhen).toEqual({ field: 'ticketType', op: 'in', value: ['request', 'complaint'] })
 	})
 })
 
@@ -470,11 +329,11 @@ describe('TicketDetail', () => {
 			'utf8',
 		)
 
-		for (const name of [
-			'DossierSnapshotSection',
-			'CustomerReplySection',
-			'WooConversionSection',
-		]) {
+		expect(
+			(page.config.bodyWidgets || []).find((w) => w.id === 'customer-reply').type,
+		).toBe('conversation')
+
+		for (const name of ['DossierSnapshotSection', 'WooConversionSection']) {
 			const widget = (page.config.bodyWidgets || []).find(
 				(w) => w.component === name,
 			)

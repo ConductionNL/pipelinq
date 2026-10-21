@@ -3,9 +3,10 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
   - SendMessageModal is the outbound WhatsApp/SMS composer
-  - (outbound-messaging-provider-wiring). It only ever REFLECTS the preflight
-  - facts passed in as a prop (available channels, WhatsApp session-window
-  - state, consent state, approved templates) — it never decides consent /
+  - (outbound-messaging-provider-wiring). Opened for a client, it first asks
+  - which of the client's contacts to write to. It only ever REFLECTS the
+  - preflight facts it reads for the contact (available channels, WhatsApp
+  - session-window state, consent state, approved templates); it never decides consent /
   - budget / template gating itself. The local "can I send" check below is a
   - soft UX gate to avoid an obviously-doomed submit and to surface the
   - opt-in action; POST /api/messaging/send always goes to the server and its
@@ -18,6 +19,17 @@
 <template>
 	<NcModal :name="t('pipelinq', 'Send message')" @close="$emit('close')">
 		<div class="send-message">
+			<p v-if="!contactId && contactsLoaded && contacts.length === 0" class="send-message__hint" data-testid="send-message-no-contacts">
+				{{ t('pipelinq', 'No contacts are linked to this client yet. Add a contact to send messages.') }}
+			</p>
+			<NcSelect
+				v-else-if="!contactId"
+				v-model="chosenContactId"
+				:options="contactOptions"
+				:inputLabel="t('pipelinq', 'Contact')"
+				label="label"
+				:reduce="(o) => o.id"
+				data-testid="send-message-contact" />
 			<NcSelect
 				v-model="channel"
 				:options="channelOptions"
@@ -98,12 +110,13 @@
 						:label="t('pipelinq', 'Parameter {n}', { n: index + 1 })" />
 				</template>
 				<template v-else>
-					<SavedReplyPicker
+					<CnTemplateSelect
 						:key="channel"
-						:channel="channel"
-						:language="language"
-						:values="placeholderValues"
-						@pick="body = $event" />
+						url="/apps/pipelinq/api/saved-replies"
+						:params="{ channel, contact: effectiveContactId, client: clientId }"
+						:inputLabel="t('pipelinq', 'Saved reply')"
+						data-testid="saved-reply-picker"
+						@apply="applyReply" />
 					<NcTextArea
 						v-model="body"
 						:label="t('pipelinq', 'Message')"
@@ -131,27 +144,37 @@
 </template>
 
 <script>
+import { CnTemplateSelect } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcModal, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
-import SavedReplyPicker from '../components/SavedReplyPicker.vue'
+import { useObjectStore } from '../store/modules/object.js'
+
+const EMPTY_PREFLIGHT = {
+	channels: { sms: false, whatsapp: false },
+	whatsappSessionOpen: false,
+	consent: { sms: 'unknown', whatsapp: 'unknown' },
+	templates: [],
+}
 
 export default {
 	name: 'SendMessageModal',
 	components: {
+		CnTemplateSelect,
 		NcButton,
 		NcModal,
 		NcSelect,
 		NcTextArea,
 		NcTextField,
-		SavedReplyPicker,
 	},
 
 	props: {
+		/** The contact to write to; without one, a contact of `clientId` is picked here. */
 		contactId: {
 			type: String,
-			required: true,
+			default: '',
 		},
 
 		clientId: {
@@ -165,27 +188,6 @@ export default {
 			default: '',
 		},
 
-		/** Placeholder values for a saved reply, e.g. `{'contact.name': 'Jan'}`. */
-		placeholderValues: {
-			type: Object,
-			default: () => ({}),
-		},
-
-		/** The contact's correspondence language; its saved replies sort first. */
-		language: {
-			type: String,
-			default: '',
-		},
-
-		preflight: {
-			type: Object,
-			default: () => ({
-				channels: { sms: false, whatsapp: false },
-				whatsappSessionOpen: false,
-				consent: { sms: 'unknown', whatsapp: 'unknown' },
-				templates: [],
-			}),
-		},
 	},
 
 	emits: ['sent', 'close'],
@@ -201,10 +203,29 @@ export default {
 			consentLegalBasis: 'consent',
 			recordingConsent: false,
 			localConsent: null,
+			chosenContactId: '',
+			contacts: [],
+			contactsLoaded: false,
+			preflight: { ...EMPTY_PREFLIGHT },
 		}
 	},
 
 	computed: {
+		/**
+		 * @return {string} The contact the message goes to.
+		 * @spec openspec/changes/answer-and-saved-replies-on-the-server/specs/messaging-saved-replies/spec.md#requirement-a-message-names-the-client-of-its-contact
+		 */
+		effectiveContactId() {
+			return this.contactId || this.chosenContactId
+		},
+
+		/**
+		 * @return {Array<{id: string, label: string}>} The client's contacts.
+		 */
+		contactOptions() {
+			return this.contacts.map((contact) => ({ id: contact.id, label: contact.name || contact.id }))
+		},
+
 		/**
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
@@ -317,7 +338,7 @@ export default {
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		canSend() {
-			if (this.sending || !this.channel || !this.consentOk) {
+			if (this.sending || !this.channel || !this.consentOk || !this.effectiveContactId) {
 				return false
 			}
 			if (this.whatsappNeedsTemplate) {
@@ -370,6 +391,13 @@ export default {
 	},
 
 	watch: {
+		effectiveContactId: {
+			immediate: true,
+			handler() {
+				this.loadPreflight()
+			},
+		},
+
 		/**
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
@@ -391,7 +419,50 @@ export default {
 		},
 	},
 
+	async mounted() {
+		if (!this.contactId && this.clientId) {
+			this.contacts = (await useObjectStore().fetchCollection('contact', { client: this.clientId, _limit: 100 })) || []
+			this.contactsLoaded = true
+			if (this.contacts.length > 0) {
+				this.chosenContactId = this.contacts[0].id
+			}
+		}
+	},
+
 	methods: {
+		/**
+		 * Read what the contact may be sent on: channels, consent, the
+		 * WhatsApp session and its templates.
+		 *
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
+		async loadPreflight() {
+			if (!this.effectiveContactId) {
+				this.preflight = { ...EMPTY_PREFLIGHT }
+				return
+			}
+			try {
+				const { data } = await axios.get(
+					generateUrl('/apps/pipelinq/api/messaging/preflight/{contactId}', { contactId: this.effectiveContactId }),
+				)
+				this.preflight = { ...EMPTY_PREFLIGHT, ...(data || {}) }
+			} catch {
+				this.preflight = { ...EMPTY_PREFLIGHT }
+			}
+		},
+
+		/**
+		 * Put a picked saved reply in the message.
+		 *
+		 * @param {object|null} option The template option.
+		 * @spec openspec/changes/answer-and-saved-replies-on-the-server/specs/messaging-saved-replies/spec.md#requirement-the-server-offers-saved-replies-filled-for-the-record
+		 */
+		applyReply(option) {
+			if (option && option.values && typeof option.values.body === 'string') {
+				this.body = option.values.body
+			}
+		},
+
 		/**
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
@@ -404,7 +475,7 @@ export default {
 				const { data } = await axios.post(
 					generateUrl('/apps/pipelinq/api/messaging/consent'),
 					{
-						contactId: this.contactId,
+						contactId: this.effectiveContactId,
 						channel: this.channel,
 						action: 'opt-in',
 						source: 'admin-override',
@@ -437,7 +508,7 @@ export default {
 				const { data } = await axios.post(
 					generateUrl('/apps/pipelinq/api/messaging/send'),
 					{
-						contactId: this.contactId,
+						contactId: this.effectiveContactId,
 						channel: this.channel,
 						body: this.whatsappNeedsTemplate ? '' : this.body,
 						templateId: this.whatsappNeedsTemplate
@@ -453,6 +524,8 @@ export default {
 				if (data.status === 'sent') {
 					showSuccess(t('pipelinq', 'Message sent.'))
 					this.$emit('sent', data)
+					// The conversation that opened this dialog reads its messages again.
+					emit('cn:page:refresh', {})
 					this.$emit('close')
 				}
 			} catch (e) {

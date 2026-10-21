@@ -22,8 +22,6 @@
  */
 
 import { splitDescription } from '@conduction/nextcloud-vue/src/utils/schema.js'
-import { emit } from '@nextcloud/event-bus'
-import { flushPromises, mount } from '@vue/test-utils'
 import fs from 'fs'
 import path from 'path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -91,8 +89,6 @@ const {
 	PAGE_REFRESH_CHANNEL,
 	WIDGET_REFRESH_CHANNEL,
 } = await import('../../src/services/pageRefreshOnCreate.js')
-const { default: MessagingConversationSection } =
-	await import('../../src/views/messaging/MessagingConversationSection.vue')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (...parts) => fs.readFileSync(path.join(ROOT, ...parts), 'utf8')
@@ -214,28 +210,14 @@ describe('a contact added on a client page reaches the other cards', () => {
 		)
 	})
 
-	it("the Messages card fetches the client's contacts again on a page refresh", async () => {
-		storeMock.fetchObject.mockResolvedValue({
-			id: 'client-1',
-			name: 'AUDIT aaa',
-		})
-		storeMock.fetchCollection.mockResolvedValueOnce([])
-		const wrapper = mount(MessagingConversationSection, {
-			props: { entityId: 'client-1', entityType: 'client' },
-			global: { mocks: { t: (app, text) => text } },
-		})
-		await flushPromises()
-		expect(wrapper.find('.empty').exists()).toBe(true)
-
-		storeMock.fetchCollection.mockResolvedValue([
-			{ id: 'ct-1', name: 'AUDIT R5 contact' },
-		])
-		emit(PAGE_REFRESH_CHANNEL, {})
-		await flushPromises()
-
-		expect(wrapper.find('.empty').exists()).toBe(false)
-		expect(wrapper.find('.contact-picker').text()).toContain('AUDIT R5 contact')
-		wrapper.unmount()
+	it('the Messages card reads its messages again on a page refresh', () => {
+		// The conversation widget re-reads its source on cn:page:refresh
+		// (nextcloud-vue CnConversationReplyTools.spec.js); the card filters on
+		// the client, so a new contact's messages appear with it.
+		const client = readJson('src', 'manifest.json').pages.find((p) => p.id === 'ClientDetail')
+		const card = client.config.bodyWidgets.find((w) => w.id === 'messaging-conversation')
+		expect(card.type).toBe('conversation')
+		expect(card.content.source.filter).toEqual({ clientId: '@objectId' })
 	})
 })
 
@@ -244,12 +226,7 @@ describe('the Messages card copy', () => {
 		'No contacts are linked to this client yet. Add a contact to send messages.'
 
 	it('carries no em-dash and has an English and a Dutch entry', () => {
-		const source = read(
-			'src',
-			'views',
-			'messaging',
-			'MessagingConversationSection.vue',
-		)
+		const source = read('src', 'modals', 'SendMessageModal.vue')
 		expect(source).toContain(KEY)
 		expect(source).not.toContain('No contacts linked to this client yet —')
 		expect(EN[KEY]).toBe(KEY)

@@ -46,7 +46,6 @@ import ContactChannelsSection from './components/ContactChannelsSection.vue'
 import ContactLinks from './components/ContactLinks.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
-import CustomerReplySection from './components/CustomerReplySection.vue'
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
 //     declarative type:"index" page cannot express. Donut widget for the
@@ -130,9 +129,6 @@ import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 import ClientSatisfactionSection from './components/satisfaction/ClientSatisfactionSection.vue'
 import SurveyResponseRateWidget from './components/satisfaction/SurveyResponseRateWidget.vue'
 import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
-// --- Ticket page, simple structure (simple-ticket-page): the conversation to
-//     read, and the Answer dialog that wraps CustomerReplySection. ---
-import TicketConversationSection from './components/TicketConversationSection.vue'
 import TicketDecisionRoutes from './components/tickets/TicketDecisionRoutes.vue'
 import WooConversionSection from './components/WooConversionSection.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
@@ -175,6 +171,7 @@ import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
+import SendMessageModal from './modals/SendMessageModal.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
@@ -254,11 +251,6 @@ import KeywordIntelligenceView from './views/marketing/KeywordIntelligence.vue'
 //     aggregation over searchQueryDaily rows, not a row list. ---
 import SearchQueriesView from './views/marketing/SearchQueries.vue'
 import WeeklyReviewView from './views/marketing/WeeklyReview.vue'
-// --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
-//     provider-wiring): self-fetches conversation/message rows by contactId
-//     + the composer preflight facts, and hosts the SendMessageModal
-//     composer. Same self-fetching-by-props pattern as the sections above. ---
-import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
@@ -747,17 +739,6 @@ const registry = {
 	// --- The ticket page's Overview sections as tab widgets (board PqTicket):
 	//     the conversation, the dossier asked about, the Woo request and the case
 	//     sit inside the Overview tab rather than in a tail below the tab strip. ---
-	TicketConversationWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'TicketConversationWidget',
-			TicketConversationSection,
-			() => ({}),
-			{ card: true, context: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'TicketConversationSection as a tab widget; it reads the ticket from cnSectionContext, which the wrapper provides.',
-	},
 	DossierSnapshotWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -818,20 +799,6 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'ContactChannelsSection as a grid widget.',
 	},
-	MessagingConversationWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'MessagingConversationWidget',
-			MessagingConversationSection,
-			({ objectId, content }) => ({
-				entityId: objectId,
-				entityType: content.entityType || 'contact',
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'MessagingConversationSection as a grid widget.',
-	},
 	SubscriptionsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -878,11 +845,6 @@ const registry = {
 		component: ClientBillingHandoffSection,
 		_note: 'Manager-gated "Send to billing" action for a client (time-billing-handoff-emit): self-fetches GET /api/billing/handoff/{clientId}/availability and posts the chosen period\'s approved, un-billed time entries to shillinq\'s time-intake as one idempotent batch. Falls back to the existing Shillinq deep-link when the real emit is disabled/unavailable or the user is not a billing-handoff manager.',
 	},
-	MessagingConversationSection: {
-		kind: 'section',
-		component: MessagingConversationSection,
-		_note: "Outbound WhatsApp/SMS conversation feed for a client or contact (outbound-messaging-provider-wiring). Self-fetches message/conversation rows by contactId + the composer preflight facts; on ClientDetail (no client-level FK on message/conversation) it resolves the client's linked contacts client-side and lets the agent pick which contact to converse with. Hosts the SendMessageModal composer.",
-	},
 
 	// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit).
 	//     Registered for TicketDetail / ContractDetail's declarative
@@ -898,16 +860,6 @@ const registry = {
 		kind: 'section',
 		component: DossierSnapshotSection,
 		_note: "The dossier a resident asked about, on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-006): reads the ticket's subjectReference snapshot and lists the documents as links to the public publications. Never reads the dossier itself; renders nothing for a ticket without a snapshot.",
-	},
-	TicketConversationSection: {
-		kind: 'section',
-		component: TicketConversationSection,
-		_note: "simple-ticket-page. The customer's portal replies and the employee's answers as one thread (library CnConversationThread), read only. It reads the ticket from cnSectionContext. Answers are written in TicketAnswerDialog, so one component saves them.",
-	},
-	CustomerReplySection: {
-		kind: 'section',
-		component: CustomerReplySection,
-		_note: "Answer the customer on a request or complaint (questions-about-a-citizen-dossier REQ-QCD-007, messaging-saved-replies-and-resend D5): portal replies oldest first, a text area bound to customerMessage, a saved reply picker (messaging-saved-replies-and-resend) and Send answer with a waiting-for-the-customer checkbox (status awaiting_customer, PqTicketAntwoord board). Writes through the object store, so portaliq's change rule pipelinq.question.answered hears the change.",
 	},
 	WooConversionSection: {
 		kind: 'section',
@@ -1194,7 +1146,14 @@ const registry = {
 		kind: 'modal',
 		component: TicketAnswerDialog,
 		propsSchema: null,
-		_note: 'simple-ticket-page. Target of the ticket page Answer action in the simple structure. Wraps CustomerReplySection unchanged and asks the page to reload on close.',
+		_note: 'simple-ticket-page. Target of the ticket page Answer action in the simple structure. Saves through POST /api/tickets/{id}/answer, as the page conversation does, and asks the page to reload on close.',
+	},
+
+	SendMessageModal: {
+		kind: 'modal',
+		component: SendMessageModal,
+		propsSchema: null,
+		_note: "Send a WhatsApp or SMS message. Target of the Send message action of the messages conversation on ContactDetail (props contactId) and ClientDetail (props clientId: the modal asks which of the client's contacts).",
 	},
 
 	RequestCreateDialog: {

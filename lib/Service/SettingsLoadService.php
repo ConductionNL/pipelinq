@@ -225,6 +225,8 @@ class SettingsLoadService {
 		'messageSendBudget',
 		'messageTemplate',
 		'messagingConsentRecord',
+		// Saved replies, which SavedReplyService lists and fills.
+		'savedReply',
 		// BRP lookups and the BSN audit trail.
 		'brpLookupVerzoek',
 		'brpPersoon',

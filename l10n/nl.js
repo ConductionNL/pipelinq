@@ -1,6 +1,12 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Closed, template required": "Gesloten, sjabloon nodig",
+        "Messaging consent": "Toestemming voor berichten",
+        "Not sent: the WhatsApp session is closed. Use Send message with an approved template.": "Niet verstuurd: de WhatsApp-sessie is gesloten. Gebruik Bericht sturen met een goedgekeurd sjabloon.",
+        "SMS consent": "Toestemming voor sms",
+        "WhatsApp consent": "Toestemming voor WhatsApp",
+        "WhatsApp session": "WhatsApp-sessie",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "De klant betaalt op de pinautomaat van {provider}.",
         "The customer is sent to {provider} to finish the payment.": "De klant gaat naar {provider} om de betaling af te ronden.",

@@ -242,10 +242,8 @@
 		<WriteEmailModal
 			v-if="writeEmailTo"
 			:address="writeEmailTo"
-			:placeholderValues="emailPlaceholderValues"
-			:language="
-				(entity && (entity.correspondenceLanguage || entity.language)) || ''
-			"
+			:contactId="entityType === 'contact' ? resolvedId : ''"
+			:clientId="entityType === 'client' ? resolvedId : ''"
 			@close="writeEmailTo = ''" />
 		<ContactSocialProfileModal
 			v-if="socialModal.open"
@@ -363,19 +361,6 @@ export default {
 			const bag =
 				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
-		},
-
-		/**
-		 * Saved reply placeholder values for an email to this party.
-		 *
-		 * @return {object}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
-		 */
-		emailPlaceholderValues() {
-			const name = (this.entity && this.entity.name) || ''
-			return this.entityType === 'client'
-				? { 'client.name': name }
-				: { 'contact.name': name }
 		},
 
 		/**
