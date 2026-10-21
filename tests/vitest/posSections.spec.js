@@ -38,11 +38,24 @@ describe('the refund totals', () => {
 	})
 })
 
+describe('the booking context', () => {
+	// @spec openspec/changes/pl2-pos-sections/specs/appointment-booking/spec.md#requirement-the-booking-context-names-the-service-and-the-customer
+	it('is a facts card that names the service and the customer', () => {
+		const fragment = JSON.parse(readFileSync(resolve(root, 'src/manifest.d/80-appointment-booking-admin.json'), 'utf8'))
+		const booking = fragment.pages.find((p) => p.id === 'BookingDetail')
+		const context = booking.config.widgets.find((w) => w.id === 'booking-context')
+		expect(context.type).toBe('facts')
+		expect(context.content.fields.map((f) => f.resolve?.schema).filter(Boolean)).toEqual(['appointmentService', 'contact', 'client'])
+		expect(context.content.link.route).toEqual({ name: 'BookingDetail', params: { id: '@source.previousBookingId' } })
+	})
+})
+
 describe('the replaced code', () => {
 	it.each([
 		'src/views/pos/CashShiftList.vue',
 		'src/modals/CashShiftOpenDialog.vue',
 		'src/components/pos/PosRefundTotalsWidget.vue',
+		'src/components/bookings/BookingDetailSection.vue',
 	])('%s is deleted', (file) => {
 		expect(existsSync(resolve(root, file))).toBe(false)
 	})

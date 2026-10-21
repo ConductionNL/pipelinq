@@ -29,7 +29,7 @@ import ClientBillingHandoffSection from './components/billing/ClientBillingHando
 // declarative); its array-on-object tables + computed timeline + notes editor
 // stay in the page body via this kind:'section', and its TIME-WINDOW-gated admin
 // actions are the page's actionsComponent.
-import BookingDetailSection from './components/bookings/BookingDetailSection.vue'
+import BookingAssignments from './components/bookings/BookingAssignments.vue'
 import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
@@ -1048,38 +1048,15 @@ const registry = {
 		component: ResourceDetailView,
 		_note: 'Resource detail + edit page with the 7-weekday workingHours grid, vacation list, validation (open<close, startDate<=endDate) and per-resource cache invalidation on save (REQ-APT-002).',
 	},
-	// --- Booking detail is now a declarative type:"detail" page
-	//     (pipelinq-pos-mdm-detail-declarative); the booking's flat fields
-	//     auto-render and this in-body section carries what no primitive
-	//     expresses: the inline notes editor, the resourceAssignments +
-	//     statusHistory array-on-object tables, and the computed timeline. The
-	//     six TIME-WINDOW-gated admin actions are the page's actionsComponent. ---
-	BookingDetailSection: {
-		kind: 'section',
-		component: BookingDetailSection,
-		_note: 'Booking in-body section for the declarative type:"detail" BookingDetail page. Self-fetches by @objectId and re-reads on cn:page:refresh.',
-	},
-	// --- Booking page parts as grid widgets (booking-and-service-pages). Each
-	//     renders one part of BookingDetailSection, so the page can put them in
-	//     its grid and its tab strip. The timeline is the library's `timeline`
-	//     widget type (review-part-two). ---
-	BookingContextWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'BookingContextWidget',
-			BookingDetailSection,
-			({ objectId }) => ({ bookingId: objectId, part: 'context' }),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'BookingDetail: the service and customer names and the deposit state, resolved across schemas.',
-	},
+	// --- Booking page grid widgets (booking-and-service-pages): the context
+	//     card is a facts widget and the timeline the library's `timeline`
+	//     widget; the resource assignments resolve resource names here. ---
 	BookingAssignmentsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
 			'BookingAssignmentsWidget',
-			BookingDetailSection,
-			({ objectId }) => ({ bookingId: objectId, part: 'assignments' }),
+			BookingAssignments,
+			({ objectId }) => ({ bookingId: objectId }),
 		),
 		...PANEL_WIDGET_META,
 		_note: 'BookingDetail: the resourceAssignments array-on-object table, with resource names.',

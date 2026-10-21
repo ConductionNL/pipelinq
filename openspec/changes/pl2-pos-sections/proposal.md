@@ -15,6 +15,11 @@ Two POS surfaces become manifest configuration:
   what was booked. The card is a facts card over the amounts the server stored on the refund (excl. VAT, VAT) and the
   method it went back to.
 
+- **Booking context.** The Service and customer card was one part of BookingDetailSection, which drew a context, an
+  assignments table and a timeline part; the timeline part and the combined mode were reached by no page. The context is a
+  facts card that resolves the names; the assignments table stays as a small grid widget (BookingAssignments, field-list
+  cannot resolve a resource name yet) and BookingDetailSection is deleted.
+
 ## Dependency
 
 The Open shift form (an endpoint form with required fields that opens the answer) needs nextcloud-vue

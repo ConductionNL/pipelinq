@@ -1,6 +1,8 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Open the earlier booking": "Eerdere afspraak openen",
+        "paid": "betaald",
         "Visa": "Visa",
         "Mastercard": "Mastercard",
         "Digital wallet": "Digitale portemonnee",
