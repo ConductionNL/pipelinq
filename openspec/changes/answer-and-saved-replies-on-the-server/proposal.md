@@ -18,4 +18,4 @@ Four components answered customers in the browser: CustomerReplySection wrote `c
 
 Deleted: CustomerReplySection, TicketConversationSection, MessagingConversationSection, SavedReplyPicker, `utils/ticketConversation.js`, the reply helpers in `services/savedReplies.js`. Needs nextcloud-vue `feature/pl-abstract-pl1-conversation` (and `feature/pl-abstract-pl1-handoff` for the body-section `type`/`visibleWhen`).
 
-The page no longer shows the latest conversation's Open/Assigned/Closed badge. The consent line is a facts card on the contact page; Send message shows consent per channel. On a closed WhatsApp window, Send again now names the refusal ("Use Send message with an approved template") instead of opening the composer.
+The contact page shows the latest conversation's Open/Assigned/Closed badge (`statusBadge`); the client page shows none, since a conversation thread names a contact, not a client. The consent line is a facts card on the contact page; Send message shows consent per channel. On a closed WhatsApp window, Send again opens the composer on WhatsApp for a template (`onStatus`), as before.
