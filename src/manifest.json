@@ -253,7 +253,7 @@
 						"allowManualNext": true,
 						"body": "The pipeline shows every lead by stage. Drag your lead forward as it progresses.",
 						"task": "Open the Pipeline and move your lead to the next stage",
-						"target": { "kind": "element", "ref": "pipeline-board" },
+						"target": { "kind": "page", "ref": "Pipeline" },
 						"advanceOn": { "type": "manual" }
 					},
 					{
@@ -7506,11 +7506,216 @@
 		},
 		{
 			"id": "Pipeline",
-			"_note": "PipelineBoard.vue is a bespoke drag-and-drop kanban of deals across pipeline stages, with a pipeline selector, search and list/board view toggle; the standard 'index' type renders a flat table and cannot provide the stage-column drag interaction.",
 			"route": "/pipeline",
-			"type": "custom",
+			"type": "index",
 			"title": "Pipeline",
-			"component": "PipelineBoardView"
+			"_note": "The pipeline board as config. The cards come from GET /api/pipeline-items (every record the pipeline applies to, read with the user's permissions); the columns are the chosen pipeline's stages; a drop goes through the pipelineStageMove handler; the board follows live changes.",
+			"config": {
+				"register": "pipelinq",
+				"schema": "lead",
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/pipelinq/api/pipeline-items",
+					"rowsPath": "results",
+					"searchFields": {
+						"pipeline": {
+							"single": true
+						}
+					}
+				},
+				"showTitle": true,
+				"description": "Every lead and request on the chosen pipeline, by stage",
+				"viewModes": [
+					"board",
+					"table"
+				],
+				"viewMode": "board",
+				"live": [
+					"lead",
+					"ticket"
+				],
+				"createModal": "LeadCreateDialog",
+				"headerButtons": [
+					{
+						"action": "add",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New lead"
+					}
+				],
+				"headerActions": [
+					{
+						"id": "pipeline-settings",
+						"label": "Pipeline settings",
+						"type": "open-modal",
+						"target": "PipelineSettingsModal",
+						"icon": "Cog"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "Sales pipeline",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "My leads",
+						"filter": {
+							"assignee": "@me"
+						}
+					}
+				],
+				"actions": [
+					{
+						"id": "assign",
+						"label": "Assign",
+						"icon": "AccountPlus",
+						"type": "open-modal",
+						"target": "PipelineCardFieldModal",
+						"props": {
+							"field": "assignee"
+						}
+					},
+					{
+						"id": "priority",
+						"label": "Set priority",
+						"icon": "Flag",
+						"type": "open-modal",
+						"target": "PipelineCardFieldModal",
+						"props": {
+							"field": "priority"
+						}
+					}
+				],
+				"board": {
+					"statusField": "stage",
+					"narrow": {
+						"field": "pipeline",
+						"label": "Pipeline",
+						"source": {
+							"schema": "pipeline",
+							"labelField": "title"
+						}
+					},
+					"columnFields": [
+						{
+							"field": "stage",
+							"label": "Stage",
+							"source": {
+								"schema": "pipeline",
+								"itemsPath": "stages",
+								"keyField": "name",
+								"labelField": "name",
+								"orderField": "order",
+								"colorField": "color",
+								"closedField": "isClosed",
+								"narrowBy": {
+									"field": "_parent",
+									"rowField": "pipeline"
+								}
+							}
+						}
+					],
+					"moveHandler": "pipelineStageMove",
+					"sumField": "value",
+					"dueRule": {
+						"field": "expectedCloseDate",
+						"soonDays": 7
+					},
+					"card": {
+						"title": "title",
+						"sub": "value",
+						"pill": "priority",
+						"pillColors": {
+							"low": "default",
+							"normal": "info",
+							"high": "warning",
+							"urgent": "error"
+						},
+						"due": "expectedCloseDate",
+						"owner": "assignee",
+						"formatters": {
+							"value": "objectCurrency"
+						}
+					},
+					"cardFields": [
+						"qualificationScore"
+					],
+					"cardCells": {
+						"qualificationScore": {
+							"widget": "lead-score"
+						}
+					},
+					"cardActions": [
+						"assign",
+						"priority"
+					]
+				},
+				"columns": [
+					{
+						"key": "title",
+						"label": "Title"
+					},
+					{
+						"key": "_schemaSlug",
+						"label": "Type"
+					},
+					{
+						"key": "stage",
+						"label": "Stage"
+					},
+					{
+						"key": "assignee",
+						"label": "Assignee",
+						"widget": "avatar",
+						"widgetProps": {
+							"user": true
+						}
+					},
+					{
+						"key": "value",
+						"label": "Value",
+						"formatter": "objectCurrency",
+						"sortable": true
+					},
+					{
+						"key": "expectedCloseDate",
+						"label": "Due date",
+						"widget": "date",
+						"widgetProps": {
+							"due": {
+								"soonWithin": 7,
+								"activeWhen": {
+									"field": "status",
+									"equals": "open"
+								}
+							}
+						},
+						"sortable": true
+					},
+					{
+						"key": "priority",
+						"label": "Priority",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"low": "default",
+								"normal": "info",
+								"high": "warning",
+								"urgent": "error"
+							}
+						},
+						"formatter": "enumText",
+						"sortable": true
+					},
+					{
+						"key": "qualificationScore",
+						"label": "Score",
+						"widget": "lead-score",
+						"sortable": true
+					}
+				]
+			}
 		},
 		{
 			"id": "SavedReplies",

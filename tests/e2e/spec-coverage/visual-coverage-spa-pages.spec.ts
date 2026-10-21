@@ -123,21 +123,15 @@ test('Leads: /leads mounts the lead index page', async ({ page }) => {
 	await expect(index.getByText('Out of date').first()).toBeVisible()
 })
 
-// ── src/views/pipeline/PipelineBoard.vue — page `Pipeline`, route `/pipeline` ─
-test('PipelineBoard: /pipeline mounts src/views/pipeline/PipelineBoard.vue', async ({
+// ── index page `Pipeline` (board view), route `/pipeline` ─
+test('Pipeline: /pipeline mounts the pipeline board', async ({
 	page,
 }) => {
 	await openSpaRoute(page, '/pipeline')
 
-	const board = content(page).locator('.pipeline-board')
-	await expect(board).toBeVisible({ timeout: 15000 })
-	await expect(board.getByRole('heading', { name: 'Pipeline' })).toBeVisible()
-	// The pipeline selector / search / view-toggle strip is rendered
-	// unconditionally in the board header, so it does not depend on any
-	// pipeline record existing.
 	await expect(
-		board.locator('.pipeline-board__controls .view-toggle'),
-	).toBeVisible()
+		content(page).locator('[data-testid="cn-board-view"]').first(),
+	).toBeVisible({ timeout: 15000 })
 })
 
 // ── src/views/pos/CashShiftList.vue — page `CashShifts`, route `/pos/shifts` ──

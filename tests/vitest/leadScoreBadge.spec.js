@@ -126,12 +126,11 @@ describe('callers', () => {
 		expect(leads.config.sortKeys).toEqual(CALL_FIRST_SORT)
 	})
 
-	it('the board card mounts the badge for a lead, and the board sorts by score', () => {
-		expect(read('src/views/pipeline/PipelineCard.vue')).toMatch(
-			/<LeadScoreBadge/,
-		)
-		const board = read('src/views/pipeline/PipelineBoard.vue')
-		expect(board).toMatch(/\{ key: 'score', label: this\.t\('pipelinq', 'Score'\) \}/)
-		expect(board).toMatch(/compareCallFirst/)
+	it('the board card shows the score badge, and the board table sorts by score', () => {
+		const manifest = JSON.parse(read('src/manifest.json'))
+		const pipeline = manifest.pages.find((p) => p.id === 'Pipeline')
+		expect(pipeline.config.board.cardCells.qualificationScore).toEqual({ widget: 'lead-score' })
+		expect(pipeline.config.columns).toContainEqual(expect.objectContaining({ key: 'qualificationScore', widget: 'lead-score', sortable: true }))
+		expect(read('src/App.vue')).toMatch(/'lead-score': LeadScoreCell/)
 	})
 })

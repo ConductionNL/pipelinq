@@ -15,6 +15,7 @@
 		:aiCompanion="true"
 		:manifest="manifest"
 		:registry="appRegistry"
+		:cellWidgets="cellWidgets"
 		:formatters="cellFormatters"
 		:pageTypes="pageTypes"
 		appId="pipelinq"
@@ -69,9 +70,11 @@ import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { computed, reactive } from 'vue'
 import IncomingCallCard from './components/IncomingCallCard.vue'
+import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
 import { createAppFormatters } from './services/cellFormatters.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
+import { createPipelineStageMove } from './services/pipelineStageMove.js'
 import { getStaleThreshold } from './services/pipelineUtils.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
 import { useObjectStore } from './store/modules/object.js'
@@ -207,6 +210,18 @@ export default {
 		},
 
 		/**
+		 * Cell-widget registry for CnAppRoot, keyed by the `widget` id a
+		 * manifest column or board card cell references: the lead score badge
+		 * with its explanation.
+		 *
+		 * @return {Record<string, object>}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
+		 */
+		cellWidgets() {
+			return { 'lead-score': LeadScoreCell }
+		},
+
+		/**
 		 * The v2 registry plus the Integrations page's Add integration handler,
 		 * which leaves this app for integriq's Connections overview, registered
 		 * as a `kind: 'handler'` entry.
@@ -219,6 +234,12 @@ export default {
 				...createConnectionHandlers({
 					generateUrl,
 					assign: (url) => window.location.assign(url),
+				}),
+
+				// The Pipeline board's move: a card dropped on another stage.
+				pipelineStageMove: createPipelineStageMove({
+					objectStore: () => useObjectStore(),
+					translate: ncT,
 				}),
 
 				// "Assign to me" on the Queue rows (detail-pages-read-at-a-glance).

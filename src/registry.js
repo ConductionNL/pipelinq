@@ -176,6 +176,8 @@ import ExportTestRunModal from './modals/ExportTestRunModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
+import PipelineCardFieldModal from './modals/PipelineCardFieldModal.vue'
+import PipelineSettingsModal from './modals/PipelineSettingsModal.vue'
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
 //     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
 //     avg response time) and the mTLS client-certificate expiry countdown. ---
@@ -238,7 +240,6 @@ import WeeklyReviewView from './views/marketing/WeeklyReview.vue'
 import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
-import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 // --- POS cash drawer. The detail page is now a declarative type:"detail" page
 //     (pipelinq-pos-mdm-detail-declarative): the shift's float fields auto-render,
 //     the drops are a relatedCollections table, and the variance/diff projection
@@ -359,11 +360,6 @@ const registry = {
 	},
 
 	// --- Pipeline board (kanban + list with in-memory search). ---
-	PipelineBoardView: {
-		kind: 'page',
-		component: PipelineBoardView,
-		_note: 'Pipeline kanban/list board with in-memory title search (REQ-PIPE-022). Restored after migrate-pipeline-to-deck-leaf; coexists with Deck integration.',
-	},
 
 	// --- Forecast roll-up dashboards. ---
 	ForecastDashboardView: {
@@ -1106,6 +1102,20 @@ const registry = {
 		component: LetterFromTemplateModal,
 		propsSchema: null,
 		_note: 'Make a letter. Target of the make-letter header action on ClientDetail and TicketDetail; reads the record id from the route.',
+	},
+
+	PipelineCardFieldModal: {
+		kind: 'modal',
+		component: PipelineCardFieldModal,
+		propsSchema: null,
+		_note: 'Set the assignee or the priority of a Pipeline board card. Target of the Assign and Set priority card actions.',
+	},
+
+	PipelineSettingsModal: {
+		kind: 'modal',
+		component: PipelineSettingsModal,
+		propsSchema: null,
+		_note: 'The settings of the pipeline the board is narrowed to. Target of the Pipeline settings header action.',
 	},
 
 	ExportTestRunModal: {

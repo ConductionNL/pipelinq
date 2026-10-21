@@ -3,17 +3,15 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * The pipeline card's assignee list comes from core autocomplete, which every
+ * The board card's assignee list comes from core autocomplete, which every
  * signed-in user may call, through the instance's OCS URL. It is fetched once
- * for the whole board and only when someone opens the Assign dialog: the
- * provisioning API the cards used to call on mount is admin-only, fired once
- * per card, and ignored sub-folder installs.
+ * and only when someone opens the Assign dialog: the provisioning API the
+ * cards used to call on mount is admin-only, fired once per card, and ignored
+ * sub-folder installs.
  *
  * @spec openspec/specs/lead-management/spec.md
  */
 
-import fs from 'fs'
-import path from 'path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const axiosMock = vi.hoisted(() => ({ get: vi.fn() }))
@@ -55,10 +53,3 @@ describe('listAssignableUserIds', () => {
 	})
 })
 
-describe('PipelineCard', () => {
-	it('does not fetch users when it mounts', () => {
-		const source = fs.readFileSync(path.resolve(__dirname, '../../src/views/pipeline/PipelineCard.vue'), 'utf8')
-		expect(source).not.toMatch(/cloud\/users/)
-		expect(source).not.toMatch(/mounted\(\)\s*\{[^}]*loadUsers/)
-	})
-})

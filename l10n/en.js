@@ -7807,7 +7807,11 @@ OC.L10N.register(
         "Connection tested; the status column shows the result": "Connection tested; the status column shows the result",
         "Changes": "Changes",
         "Not tested": "Not tested",
-        "Last tested": "Last tested"
+        "Last tested": "Last tested",
+        "Choose a pipeline on the board first.": "Choose a pipeline on the board first.",
+        "Could not save the pipeline.": "Could not save the pipeline.",
+        "Could not save the change.": "Could not save the change.",
+        "Every lead and request on the chosen pipeline, by stage": "Every lead and request on the chosen pipeline, by stage"
     },
     "nplurals=2; plural=(n != 1);"
 )

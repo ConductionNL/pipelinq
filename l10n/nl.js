@@ -7734,7 +7734,11 @@ OC.L10N.register(
         "Connection tested; the status column shows the result": "Verbinding getest; de statuskolom toont het resultaat",
         "Changes": "Wijzigingen",
         "Not tested": "Niet getest",
-        "Last tested": "Laatst getest"
+        "Last tested": "Laatst getest",
+        "Choose a pipeline on the board first.": "Kies eerst een pijplijn op het bord.",
+        "Could not save the pipeline.": "De pijplijn kon niet worden opgeslagen.",
+        "Could not save the change.": "De wijziging kon niet worden opgeslagen.",
+        "Every lead and request on the chosen pipeline, by stage": "Elke lead en elk verzoek op de gekozen pijplijn, per fase"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -184,7 +184,7 @@ describe('the lead list', () => {
 
 	it('shows the win chance with a Low flag under 30 wherever a lead table lists it', () => {
 		const tables = JSON.stringify(manifest)
-		expect(tables).not.toMatch(/"lead-probability"|"lead-score"|"lead-close-date"/)
+		expect(tables).not.toMatch(/"lead-probability"|"lead-close-date"/)
 		const flagged = []
 		JSON.parse(tables, (key, value) => {
 			if (value && value.key === 'qualificationScore' && value.widget === 'number') {
@@ -281,5 +281,34 @@ describe('the knowledge base on the operational dashboard', () => {
 		expect(widget.content).toEqual({ space: '@config.xwiki_default_space?', limit: 5 })
 		expect(fs.readFileSync(path.join(ROOT, 'src/App.vue'), 'utf8')).toMatch(/xwiki_default_space: useSettingsStore\(\)\.config\?\.xwiki_default_space/)
 		expect(registrySource).not.toMatch(/XWikiDashboardWidget/)
+	})
+})
+
+describe('the pipeline board', () => {
+	const pipeline = page('Pipeline')
+
+	it('reads every record on the chosen pipeline, by its stages, and moves through the stage handler', () => {
+		expect(pipeline.type).toBe('index')
+		expect(pipeline.config.entitySource).toBe('endpoint')
+		expect(pipeline.config.sourceConfig).toEqual({ url: '/apps/pipelinq/api/pipeline-items', rowsPath: 'results', searchFields: { pipeline: { single: true } } })
+		const board = pipeline.config.board
+		expect(board.narrow.field).toBe('pipeline')
+		expect(board.columnFields[0].source).toMatchObject({ schema: 'pipeline', itemsPath: 'stages', keyField: 'name', closedField: 'isClosed', narrowBy: { field: '_parent', rowField: 'pipeline' } })
+		expect(board.moveHandler).toBe('pipelineStageMove')
+		expect(fs.readFileSync(path.join(ROOT, 'src/App.vue'), 'utf8')).toMatch(/pipelineStageMove: createPipelineStageMove/)
+		expect(registrySource).not.toMatch(/PipelineBoardView/)
+	})
+
+	it('keeps the card actions, the live board and the pipeline settings', () => {
+		const board = pipeline.config.board
+		expect(board.cardActions).toEqual(['assign', 'priority'])
+		expect(pipeline.config.actions.map((a) => [a.id, a.target, a.props.field])).toEqual([
+			['assign', 'PipelineCardFieldModal', 'assignee'],
+			['priority', 'PipelineCardFieldModal', 'priority'],
+		])
+		expect(pipeline.config.live).toEqual(['lead', 'ticket'])
+		expect(pipeline.config.headerActions[0]).toMatchObject({ type: 'open-modal', target: 'PipelineSettingsModal' })
+		expect(registrySource).toMatch(/PipelineCardFieldModal: \{\s*kind: 'modal'/)
+		expect(registrySource).toMatch(/PipelineSettingsModal: \{\s*kind: 'modal'/)
 	})
 })
