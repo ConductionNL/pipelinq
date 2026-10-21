@@ -198,3 +198,16 @@ describe('the lead list', () => {
 		}
 	})
 })
+
+describe('the store', () => {
+	it('is the library store page with pipelinq\'s kinds and its shipped templates', () => {
+		const store = page('Store')
+		expect(store.type).toBe('store')
+		expect(store.config.app).toBe('pipelinq')
+		expect(store.config.kinds).toEqual(['pipeline', 'queue-routing', 'catalogue', 'pos-setup', 'loyalty-programme'])
+		expect(store.config.builtIn.map((item) => item.slug)).toEqual(['b2b-sales-pipeline', 'service-desk-routing', 'retail-pos-setup'])
+		// Install stays administrators only, the library default.
+		expect(store.config.canInstall).toBeUndefined()
+		expect(registrySource).not.toMatch(/StoreGallery/)
+	})
+})

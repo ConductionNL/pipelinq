@@ -273,7 +273,6 @@ import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 import SocialPostFormView from './views/social/SocialPostFormView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
-import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
@@ -333,11 +332,6 @@ const registry = {
 		_note: 'Full-page expansion of ProspectWidget (refactor-pipelinq-ia-alignment): scored-prospect list with sortable columns + convert-to-lead action over the prospect Pinia store; lib has no declarative type for scored external-source enrichment.',
 	},
 
-	StoreGallery: {
-		kind: 'page',
-		component: StoreGallery,
-		_note: "ADR-080 store plane. Reads /api/store/items, a thin action over AppHost GenericStoreService, so the SSRF guard, the redirect refusal and the token all live in the engine and pipelinq builds no registry URL. A custom component rather than type:index because store items are REMOTE objects and the object-backed index renderer resolves a local register plus schema, which cannot address them. With no registry configured the engine answers not_configured WITHOUT a network call and the page renders pipelinq's built-in templates, which is Decision 4 and the only reason this surface may carry the word Store at all. Install is pipelinq's own and admin-guarded (Decision 3), and it writes commercial CONFIGURATION only; the record schemas are refused by StoreController::INSTALLABLE_SLUGS.",
-	},
 
 	// --- Dashboard widgets (rendered as #widget-{id} slots inside
 	//     CnDashboardPage via the manifest Dashboard page's `slots` map). ---
