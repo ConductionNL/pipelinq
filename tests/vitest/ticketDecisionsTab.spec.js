@@ -6,39 +6,20 @@
  * The Decisions tab on the ticket page (ticket-decisions-tab). The tab is
  * manifest config: a tabs widget whose Decisions tab stacks the head (what the
  * tab holds, the two routes, Convert to case), decidiq's leaf for the ticket
- * and the same leaf for the case the ticket became. So the page is tested as
- * the manifest declares it, and the head as the one component pipelinq owns.
+ * and the same leaf for the case the ticket became. The head is config too:
+ * two text widgets and the library `handoff` for Convert to case. So the page
+ * is tested as the manifest declares it.
  *
  * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-the-ticket-page-has-a-decisions-tab-req-tdt-001
  * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
  */
 
-import { mount } from '@vue/test-utils'
 import fs from 'fs'
 import path from 'path'
-import { describe, expect, it, vi } from 'vitest'
-import { h } from 'vue'
+import { describe, expect, it } from 'vitest'
 import manifest from '../../src/manifest.json'
+import simpleLayout from '../../src/menu-layout.simple.json'
 import { pageAppConfig } from '../../src/utils/pageAppConfig.js'
-
-vi.mock('@nextcloud/l10n', () => ({
-	translate: (app, text) => text,
-}))
-vi.mock('../../src/views/requests/RequestConversionSection.vue', () => ({
-	default: {
-		name: 'RequestConversionSection',
-		props: ['requestId'],
-		render() {
-			return h('div', {
-				'data-stub': 'convert',
-				'data-request': this.requestId,
-			})
-		},
-	},
-}))
-
-const { default: TicketDecisionRoutes } =
-	await import('../../src/components/tickets/TicketDecisionRoutes.vue')
 
 const page = manifest.pages.find((entry) => entry.id === 'TicketDetail')
 const widgets = page.config.widgets
@@ -59,7 +40,9 @@ describe('the ticket page declares a Decisions tab', () => {
 
 	it("stacks the head, the ticket's decisions and the case's decisions in that tab", () => {
 		expect(decisions.widgetIds).toEqual([
+			'ticket-decision-lead',
 			'ticket-decision-routes',
+			'ticket-decision-convert',
 			'ticket-decisions',
 			'ticket-case-decisions',
 		])
@@ -163,43 +146,46 @@ describe('where cases live reaches the page as app config', () => {
 	})
 })
 
-describe('TicketDecisionRoutes', () => {
-	/**
-	 * Mount the head on ticket t-1, with the app's global translate.
-	 *
-	 * @param {object} props Props beside the ticket id.
-	 * @return {object} The wrapper.
-	 */
-	function mountRoutes(props = {}) {
-		return mount(TicketDecisionRoutes, {
-			props: { ticketId: 't-1', ...props },
-			global: { mocks: { t: (app, text) => text } },
-		})
-	}
-
-	it('says what the tab holds and names the two routes', () => {
-		const wrapper = mountRoutes()
-
-		expect(wrapper.text()).toContain(
+describe('the head of the Decisions tab', () => {
+	it('says what the tab holds and names the two routes, in the app catalogue', () => {
+		expect(byId('ticket-decision-lead').type).toBe('text')
+		expect(byId('ticket-decision-lead').content.text).toBe(
 			'Formal decisions on this ticket, made and signed in decidiq',
 		)
-		expect(wrapper.text()).toContain(
+		expect(byId('ticket-decision-routes').type).toBe('text')
+		expect(byId('ticket-decision-routes').content.text).toBe(
 			'A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.',
 		)
+		const nl = JSON.parse(
+			fs.readFileSync(path.resolve(__dirname, '../../l10n/nl.json'), 'utf8'),
+		).translations
+		expect(nl[byId('ticket-decision-lead').content.text]).toBeTruthy()
+		expect(nl[byId('ticket-decision-routes').content.text]).toBeTruthy()
 	})
 
 	it('offers the existing Convert to case action for this ticket', () => {
-		const wrapper = mountRoutes()
-
-		expect(
-			wrapper.find('[data-stub="convert"]').attributes('data-request'),
-		).toBe('t-1')
+		const convert = byId('ticket-decision-convert')
+		expect(convert.type).toBe('handoff')
+		expect(convert.content.availability.url).toBe(
+			'/apps/pipelinq/api/handoff/request/@objectId/availability',
+		)
+		expect(convert.content.action.url).toBe(
+			'/apps/pipelinq/api/handoff/request/@objectId/convert-to-case',
+		)
 	})
 
-	it('leaves Convert to case out when the page already offers it', () => {
-		const wrapper = mountRoutes({ hideConvert: true })
-
-		expect(wrapper.find('[data-stub="convert"]').exists()).toBe(false)
-		expect(wrapper.text()).toContain('the request becomes a case in dossiq')
+	it('leaves Convert to case out of the simple page, which offers it in its Case section', () => {
+		const ticket = simpleLayout.pages.find((entry) => entry.id === 'TicketDetail')
+		expect(ticket.configPatch.widgets['ticket-decision-convert']).toBeNull()
+		const panels = ticket.configPatch.widgets['ticket-panels']
+		const decisions = panels.content.tabs.find((tab) => tab.label === 'Decisions')
+		expect(decisions.widgetIds).toEqual([
+			'ticket-decision-lead',
+			'ticket-decision-routes',
+			'ticket-decisions',
+			'ticket-case-decisions',
+		])
+		const overview = panels.content.tabs.find((tab) => tab.label === 'Overview')
+		expect(overview.widgetIds).toContain('ticket-case')
 	})
 })

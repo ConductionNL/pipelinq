@@ -13,11 +13,13 @@
  * - CustomerReplySection writes customerMessage (and awaiting_customer on
  *   "Send answer" with the wait box ticked) while keeping the rest of the ticket, since
  *   the store's save is a PUT that replaces the object.
- * - WooConversionSection is hidden unless dossiq can take the ticket, and
- *   shows the case after converting.
+ * - The Woo conversion is a library `handoff` section: hidden unless dossiq
+ *   can take the ticket, and showing the Woo request after converting. Its
+ *   behaviour is nextcloud-vue's (CnHandoffAction.spec.js); this file pins the
+ *   endpoints, paths and texts pipelinq declares for it.
  *
  * The last spec pins the callers: TicketDetail declares all three and the
- * registry resolves them, so the page actually renders them.
+ * registry or the library resolves them, so the page actually renders them.
  *
  * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-sees-what-the-resident-asked-about-req-qcd-006
  */
@@ -104,8 +106,6 @@ const { default: DossierSnapshotSection } =
 	await import('../../src/components/DossierSnapshotSection.vue')
 const { default: CustomerReplySection } =
 	await import('../../src/components/CustomerReplySection.vue')
-const { default: WooConversionSection } =
-	await import('../../src/components/WooConversionSection.vue')
 
 /** A question asked from a dossier with three items, as DossierQuestionService writes it. */
 const question = {
@@ -387,61 +387,40 @@ describe('CustomerReplySection', () => {
 	})
 })
 
-describe('WooConversionSection', () => {
-	beforeEach(() => {
-		axiosMock.get.mockReset()
-		axiosMock.post.mockReset()
+describe('Woo conversion handoff', () => {
+	const ticketDetail = () =>
+		JSON.parse(
+			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
+		).pages.find((p) => p.id === 'TicketDetail')
+
+	it('asks dossiq whether it can take the ticket and hides otherwise (REQ-QCD-008)', () => {
+		const section = ticketDetail().config.bodyWidgets.find(
+			(w) => w.id === 'woo-conversion',
+		)
+
+		expect(section.type).toBe('handoff')
+		expect(section.placement).toBe('after-data')
+		expect(section.content.availability.url).toBe(
+			'/apps/pipelinq/api/tickets/@objectId/woo-request/availability',
+		)
+		expect(section.content.canPath).toBe('canConvert')
 	})
 
-	it('is hidden when dossiq cannot take the ticket (REQ-QCD-008)', async () => {
-		axiosMock.get.mockResolvedValue({
-			data: {
-				available: false,
-				canConvert: false,
-				status: 'in_progress',
-				caseReference: '',
-			},
-		})
-		const wrapper = await mountFor(WooConversionSection)
-
-		expect(axiosMock.get).toHaveBeenCalledWith(
-			'/index.php/apps/pipelinq/api/tickets/t-9/woo-request/availability',
+	it('converts and shows the Woo request with its link (REQ-QCD-008)', () => {
+		const { content } = ticketDetail().config.bodyWidgets.find(
+			(w) => w.id === 'woo-conversion',
 		)
-		expect(wrapper.find('button').exists()).toBe(false)
-	})
 
-	it('converts and shows the Woo request (REQ-QCD-008)', async () => {
-		axiosMock.get.mockResolvedValue({
-			data: {
-				available: true,
-				canConvert: true,
-				status: 'in_progress',
-				caseReference: '',
-			},
+		expect(content.action).toEqual({
+			url: '/apps/pipelinq/api/tickets/@objectId/woo-request',
+			label: 'Convert to Woo request',
 		})
-		axiosMock.post.mockResolvedValue({
-			data: {
-				status: 'converted',
-				caseReference: 'c-42',
-				caseUrl: '/index.php/apps/dossiq/#/cases/c-42',
-			},
-		})
-		const wrapper = await mountFor(WooConversionSection)
-
-		const button = wrapper.find('button')
-		expect(button.text()).toBe('Convert to Woo request')
-		await button.trigger('click')
-		await flushPromises()
-
-		expect(axiosMock.post).toHaveBeenCalledWith(
-			'/index.php/apps/pipelinq/api/tickets/t-9/woo-request',
-			{},
-		)
-		expect(wrapper.find('button').exists()).toBe(false)
-		expect(wrapper.text()).toContain('This question is now a Woo request.')
-		expect(wrapper.find('a').attributes('href')).toBe(
-			'/index.php/apps/dossiq/#/cases/c-42',
-		)
+		expect(content.donePath).toBe('status')
+		expect(content.doneValue).toBe('converted')
+		expect(content.linkPath).toBe('caseUrl')
+		expect(content.labels.done).toBe('This question is now a Woo request.')
+		expect(content.labels.link).toBe('Open the Woo request')
+		expect(content.errors.map['intake-failed'].reload).toBe(true)
 	})
 })
 
@@ -460,7 +439,7 @@ describe('Tickets index', () => {
 })
 
 describe('TicketDetail', () => {
-	it('declares the three sections and the registry resolves them', () => {
+	it('declares the three sections and the registry or the library resolves them', () => {
 		const manifest = JSON.parse(
 			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
 		)
@@ -470,11 +449,12 @@ describe('TicketDetail', () => {
 			'utf8',
 		)
 
-		for (const name of [
-			'DossierSnapshotSection',
-			'CustomerReplySection',
-			'WooConversionSection',
-		]) {
+		const woo = (page.config.bodyWidgets || []).find(
+			(w) => w.id === 'woo-conversion',
+		)
+		expect(woo.type).toBe('handoff')
+
+		for (const name of ['DossierSnapshotSection', 'CustomerReplySection']) {
 			const widget = (page.config.bodyWidgets || []).find(
 				(w) => w.component === name,
 			)

@@ -1,6 +1,9 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Already sent. Shillinq returned the existing draft invoice {invoiceNumber}.": "Al verstuurd. Shillinq gaf de bestaande conceptfactuur {invoiceNumber} terug.",
+        "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries).": "Naar facturatie verstuurd. Conceptfactuur {invoiceNumber} aangemaakt ({entryCount} regels).",
+        "Shillinq is already processing this batch. Try again shortly.": "Shillinq verwerkt deze batch al. Probeer het zo opnieuw.",
         "Take the oldest": "Pak de oudste",
         "Longest waiting": "Langst wachtend",
         "the oldest ticket nobody has picked up": "het oudste ticket dat nog niemand heeft opgepakt",

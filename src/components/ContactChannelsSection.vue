@@ -353,7 +353,7 @@ export default {
 
 		/**
 		 * @return {string} The resolved entity id — prop wins, else the injected section context.
-		 * @spec exclude id-resolution plumbing shared with every other body section (ContactRelationships, ClientBillingHandoffSection, …), no behaviour specific to this change.
+		 * @spec exclude id-resolution plumbing shared with every other body section (ContactRelationships, …), no behaviour specific to this change.
 		 */
 		resolvedId() {
 			if (this.entityId) {

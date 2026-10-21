@@ -2564,14 +2564,110 @@
 					},
 					{
 						"id": "billing-handoff",
-						"component": "ClientBillingHandoffSection",
+						"type": "handoff",
 						"title": "Billing",
 						"placement": "end",
-						"props": {
-							"clientId": "@objectId"
-						},
 						"colSpan": 6,
-						"card": true
+						"card": true,
+						"content": {
+							"availability": {
+								"url": "/apps/pipelinq/api/billing/handoff/@objectId/availability"
+							},
+							"canPath": [
+								"available",
+								"isManager"
+							],
+							"repeatable": true,
+							"fallbackLinkPath": "deepLinkUrl",
+							"fields": [
+								{
+									"key": "periodStart",
+									"type": "date",
+									"label": "From",
+									"default": "@monthStart"
+								},
+								{
+									"key": "periodEnd",
+									"type": "date",
+									"label": "To",
+									"default": "@monthEnd"
+								}
+							],
+							"action": {
+								"url": "/apps/pipelinq/api/billing/handoff/@objectId",
+								"label": "Send to billing"
+							},
+							"labels": {
+								"fallbackLink": "Continue in Shillinq"
+							},
+							"results": {
+								"path": "status",
+								"map": {
+									"synced": [
+										{
+											"whenPath": "duplicated",
+											"type": "success",
+											"text": "Already sent. Shillinq returned the existing draft invoice {invoiceNumber}."
+										},
+										{
+											"type": "success",
+											"text": "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries)."
+										}
+									],
+									"empty": {
+										"type": "success",
+										"text": "No approved, un-billed hours in this period."
+									},
+									"conflict": {
+										"type": "warning",
+										"text": "Shillinq is already processing this batch. Try again shortly."
+									},
+									"unmapped": {
+										"type": "error",
+										"textPath": "message",
+										"text": "Shillinq could not resolve this client or a rate. Check the Shillinq organisation reference on this client."
+									}
+								},
+								"default": {
+									"type": "error",
+									"textPath": "message",
+									"text": "Could not send this batch to billing."
+								}
+							},
+							"errors": {
+								"path": "status",
+								"map": {
+									"synced": [
+										{
+											"whenPath": "duplicated",
+											"type": "success",
+											"text": "Already sent. Shillinq returned the existing draft invoice {invoiceNumber}."
+										},
+										{
+											"type": "success",
+											"text": "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries)."
+										}
+									],
+									"empty": {
+										"type": "success",
+										"text": "No approved, un-billed hours in this period."
+									},
+									"conflict": {
+										"type": "warning",
+										"text": "Shillinq is already processing this batch. Try again shortly."
+									},
+									"unmapped": {
+										"type": "error",
+										"textPath": "message",
+										"text": "Shillinq could not resolve this client or a rate. Check the Shillinq organisation reference on this client."
+									}
+								},
+								"default": {
+									"textPath": "message",
+									"text": "Could not send this batch to billing."
+								}
+							}
+						}
 					}
 				],
 				"sidebar": {
@@ -2759,12 +2855,67 @@
 						"icon": "LinkVariant"
 					},
 					{
-						"id": "ticket-decision-routes",
-						"type": "TicketDecisionRoutesWidget",
+						"id": "ticket-decision-lead",
+						"type": "text",
 						"title": "Decisions",
 						"icon": "Gavel",
 						"content": {
-							"title": "Decisions"
+							"text": "Formal decisions on this ticket, made and signed in decidiq"
+						}
+					},
+					{
+						"id": "ticket-decision-routes",
+						"type": "text",
+						"title": "Decisions",
+						"icon": "Gavel",
+						"content": {
+							"text": "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.",
+							"color": "var(--color-text-maxcontrast)"
+						}
+					},
+					{
+						"id": "ticket-decision-convert",
+						"type": "handoff",
+						"title": "Case",
+						"icon": "Gavel",
+						"content": {
+							"availability": {
+								"url": "/apps/pipelinq/api/handoff/request/@objectId/availability"
+							},
+							"canPath": "canConvert",
+							"donePath": "status",
+							"doneValue": "converted",
+							"referencePath": "caseReference",
+							"copyReference": true,
+							"action": {
+								"url": "/apps/pipelinq/api/handoff/request/@objectId/convert-to-case",
+								"label": "Convert to case"
+							},
+							"labels": {
+								"done": "This request has been converted to a case.",
+								"reference": "Case reference",
+								"success": "Request converted to case.",
+								"copy": "Copy",
+								"copied": "Case reference copied.",
+								"copyFailed": "Could not copy the case reference."
+							},
+							"errors": {
+								"path": "status",
+								"map": {
+									"invalid-status": {
+										"text": "Conversion is no longer available for this request.",
+										"reload": true
+									},
+									"not-available": {
+										"text": "Conversion is no longer available for this request.",
+										"reload": true
+									},
+									"handoff-failed": {
+										"text": "Could not create the case: {reason}"
+									}
+								},
+								"default": "Could not convert this request to a case."
+							}
 						}
 					},
 					{
@@ -2802,7 +2953,9 @@
 								},
 								{
 									"widgetIds": [
+										"ticket-decision-lead",
 										"ticket-decision-routes",
+										"ticket-decision-convert",
 										"ticket-decisions",
 										"ticket-case-decisions"
 									],
@@ -2834,7 +2987,7 @@
 						"gridHeight": 6
 					}
 				],
-				"_bodyWidgetsNote": "Woo citizen journey J4 (questions-about-a-citizen-dossier): DossierSnapshotSection shows the dossier a resident asked about, before the body; CustomerReplySection is the answer control (customerMessage, the resident's replies) and WooConversionSection converts a question into a dossiq Woo request, after the data. Each renders nothing when it does not apply. Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
+				"_bodyWidgetsNote": "Woo citizen journey J4 (questions-about-a-citizen-dossier): DossierSnapshotSection shows the dossier a resident asked about, before the body; CustomerReplySection is the answer control (customerMessage, the resident's replies) and the woo-conversion handoff converts a question into a dossiq Woo request, after the data. Each renders nothing when it does not apply. Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
 				"bodyWidgets": [
 					{
 						"id": "dossier-snapshot",
@@ -2856,11 +3009,38 @@
 					},
 					{
 						"id": "woo-conversion",
-						"component": "WooConversionSection",
+						"type": "handoff",
 						"title": "Woo request",
 						"placement": "after-data",
-						"props": {
-							"objectId": "@objectId"
+						"content": {
+							"availability": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/woo-request/availability"
+							},
+							"canPath": "canConvert",
+							"donePath": "status",
+							"doneValue": "converted",
+							"linkPath": "caseUrl",
+							"action": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/woo-request",
+								"label": "Convert to Woo request"
+							},
+							"labels": {
+								"done": "This question is now a Woo request.",
+								"link": "Open the Woo request"
+							},
+							"errors": {
+								"path": "status",
+								"map": {
+									"intake-failed": {
+										"text": "dossiq could not start the Woo request. Try again later.",
+										"reload": true
+									}
+								},
+								"default": {
+									"text": "This question can no longer be converted.",
+									"reload": true
+								}
+							}
 						}
 					},
 					{

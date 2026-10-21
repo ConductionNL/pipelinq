@@ -419,7 +419,7 @@ describe('the body', () => {
 		}
 	})
 
-	it('keeps every widget the page had, as a tab', () => {
+	it('keeps every widget the page had, as a tab, except the Decisions tab\'s Convert to case', () => {
 		const panels = simple.widgets.find((widget) => widget.id === 'ticket-panels')
 		const tabbed = panels.content.tabs.flatMap(
 			(tab) => tab.widgetIds || [tab.widgetId],
@@ -429,8 +429,13 @@ describe('the body', () => {
 			(widget) => widget.id !== 'ticket-panels',
 		)
 		for (const widget of children) {
+			if (widget.id === 'ticket-decision-convert') {
+				// The simple page offers it in its Case section: see the test below.
+				expect(tabbed).not.toContain(widget.id)
+				continue
+			}
 			expect(tabbed, widget.id).toContain(widget.id)
-			if (['ticket-decision-routes', 'ticket-data'].includes(widget.id)) {
+			if (widget.id === 'ticket-data') {
 				// The widgets the simple page changes: see the tests below.
 				continue
 			}
@@ -444,21 +449,23 @@ describe('the body', () => {
 	})
 
 	it('offers Convert to case once: in the Case section, not again on the Decisions tab', () => {
-		const head = (config) =>
-			config.widgets.find((widget) => widget.id === 'ticket-decision-routes')
-		const section = (config) =>
-			(config.widgets || []).filter(
-				(item) => item.type === 'RequestConversionWidget',
-			)
-		// The simple page has the Case section, so the tab's head leaves it out.
-		expect(section(simple)).toHaveLength(1)
-		expect(head(simple).content.convert).toBe(false)
-		expect(head(simple).type).toBe('TicketDecisionRoutesWidget')
-		// The full page has no Case section, so the tab's head offers it.
-		expect(section(full.config)).toHaveLength(0)
-		expect(head(full.config).content.convert).toBeUndefined()
-		// The widget reads the switch from its content; the action shows by default.
-		expect(registrySource).toContain('hideConvert: content.convert === false')
+		const converts = (config) =>
+			(config.widgets || [])
+				.filter(
+					(item) =>
+						item.type === 'handoff'
+						&& item.content.action.url.endsWith('/convert-to-case'),
+				)
+				.map((item) => item.id)
+		// The simple page has the Case section, so the Decisions tab leaves it out.
+		expect(converts(simple)).toEqual(['ticket-case'])
+		// The full page has no Case section, so the Decisions tab offers it.
+		expect(converts(full.config)).toEqual(['ticket-decision-convert'])
+		const ticketCase = simple.widgets.find((item) => item.id === 'ticket-case')
+		const tabConvert = full.config.widgets.find(
+			(item) => item.id === 'ticket-decision-convert',
+		)
+		expect(ticketCase.content).toEqual(tabConvert.content)
 	})
 
 	it('lists the contact moments logged on this ticket, which is what Log contact writes', () => {
@@ -514,11 +521,7 @@ describe('the body', () => {
 				'DossierSnapshotWidget',
 				'DossierSnapshotSection',
 			],
-			'woo-conversion': [
-				'ticket-woo',
-				'WooConversionWidget',
-				'WooConversionSection',
-			],
+			'woo-conversion': ['ticket-woo', 'handoff', null],
 			'resident-view': [
 				'ticket-resident-view',
 				'ResidentViewWidget',
@@ -533,9 +536,15 @@ describe('the body', () => {
 				continue
 			}
 			const [id, type, component] = moved[section.id]
-			expect(section.component).toBe(component)
 			const widget = simple.widgets.find((item) => item.id === id)
 			expect(widget.type, section.id).toBe(type)
+			if (component === null) {
+				// A library widget: the section and the tab declare the same content.
+				expect(section.type).toBe(type)
+				expect(widget.content).toEqual(section.content)
+				continue
+			}
+			expect(section.component).toBe(component)
 			expect(registrySource).toMatch(
 				new RegExp(
 					`\\n\\t${type}: \\{\\s+kind: 'widget',\\s+component: sectionWidget\\(\\s+'${type}',\\s+${component},`,
@@ -544,7 +553,7 @@ describe('the body', () => {
 		}
 		for (const [id, type] of [
 			['ticket-conversation', 'TicketConversationWidget'],
-			['ticket-case', 'RequestConversionWidget'],
+			['ticket-case', 'handoff'],
 		]) {
 			expect(simple.widgets.find((item) => item.id === id).type).toBe(type)
 		}
@@ -554,16 +563,11 @@ describe('the body', () => {
 	})
 
 	it('offers convert to case through the section that asks first whether it can', () => {
-		const source = read(
-			'src',
-			'views',
-			'requests',
-			'RequestConversionSection.vue',
+		const ticketCase = simple.widgets.find((item) => item.id === 'ticket-case')
+		expect(ticketCase.content.availability.url).toBe(
+			'/apps/pipelinq/api/handoff/request/@objectId/availability',
 		)
-		expect(registrySource).toContain(
-			'({ objectId }) => ({ requestId: objectId })',
-		)
-		expect(source).toContain('requestId: {')
+		expect(ticketCase.content.canPath).toBe('canConvert')
 		expect(read('appinfo', 'routes.php')).toContain(
 			"'/api/handoff/request/{id}/convert-to-case'",
 		)
