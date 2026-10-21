@@ -48,7 +48,7 @@ Deleting a skill or an agent profile SHALL ask in CnDeleteDialog, which names th
 - WHEN the administrator presses Delete on the skill "Parking"
 - THEN a dialog asks to delete "Parking", and only its confirm button deletes it
 
-@e2e exclude covered by tests/vitest/adminDeleteDialog.spec.js.
+@e2e exclude the dialog is CnIndexPage's built-in CnDeleteDialog on the declared lists; asserted by tests/vitest/adminLists.spec.js.
 
 ### Requirement: Settings with lists, rows or a JSON value are declared too
 
@@ -69,3 +69,21 @@ The menu structure (radio, and the simple menu's modules as checkboxes saved as 
 - THEN the Prospect Discovery section shows them, read from `/api/prospect-settings`
 
 @e2e exclude asserted against the route table by tests/vitest/adminSections.spec.js.
+
+### Requirement: The admin lists are declared index pages
+
+Product categories, skills, agent profiles, POS tender types, POS staff and POS roles SHALL be embedded CnIndexPage declarations in `src/views/settings/adminLists.js`. A row SHALL open in place: in its form dialog (`PosRoleFormDialog`, `PosStaffFormDialog`, `PosTenderTypeFormDialog`), which the admin page mounts through `cnOpenModal`, or in the built-in form dialog for register objects. Closing a dialog SHALL read the lists again. An agent profile's user SHALL be picked from the Nextcloud users, never typed, and its skills from the skills. A staff member's role SHALL show the role's name. Deleting a tender type SHALL ask in a dialog that names it and SHALL show the server's refusal.
+
+#### Scenario: Adding an agent profile
+
+- WHEN the administrator presses Add on Agent Profiles
+- THEN a form opens with a user picker and a skills picker, and no browser prompt
+
+@e2e exclude asserted by tests/vitest/adminLists.spec.js; the user picker is the library form's `format: user` field.
+
+#### Scenario: Opening a POS role
+
+- WHEN the administrator clicks a POS role
+- THEN the role form opens in a dialog on the admin page, and nothing navigates
+
+@e2e tests/e2e/spec-coverage/visual-coverage-admin-pos.spec.ts

@@ -71,7 +71,11 @@
 			@saved="onSectionSaved" />
 
 		<!-- Product Categories -->
-		<ProductCategoryManager v-if="isConfigured" />
+		<CnSettingsSection
+			v-if="isConfigured"
+			:name="t('pipelinq', 'Product Categories')">
+			<CnIndexPage :key="`productCategory-${listKey}`" v-bind="lists.productCategory" />
+		</CnSettingsSection>
 
 		<!-- Menu structure: simple (default) or full, and the modules
 		     (simple-structure-profile). -->
@@ -82,10 +86,30 @@
 			@saved="onSectionSaved" />
 
 		<!-- Skill Management -->
-		<SkillSettings v-if="isConfigured" />
+		<CnSettingsSection
+			v-if="isConfigured"
+			:name="t('pipelinq', 'Skills')"
+			:description="
+				t(
+					'pipelinq',
+					'Define skills for routing requests to the right agents',
+				)
+			">
+			<CnIndexPage :key="`skill-${listKey}`" v-bind="lists.skill" />
+		</CnSettingsSection>
 
 		<!-- Agent Profile Management -->
-		<AgentProfileSettings v-if="isConfigured" />
+		<CnSettingsSection
+			v-if="isConfigured"
+			:name="t('pipelinq', 'Agent Profiles')"
+			:description="
+				t(
+					'pipelinq',
+					'Assign skills and configure routing for agents',
+				)
+			">
+			<CnIndexPage :key="`agentProfile-${listKey}`" v-bind="lists.agentProfile" />
+		</CnSettingsSection>
 
 		<!-- Provisioning is an admin action, never a wizard step
 		     (pipelinq-setup-wizard-review). -->
@@ -153,18 +177,47 @@
 		     (pipelinq#2041). Admin only, like the endpoints it calls. -->
 		<PortalSettings v-if="isAdmin && isConfigured" />
 
-		<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
-		     who processes the money) and `PosTenderTypeList` (tender types — how
-		     the customer pays at the register) read as duplicates but are two
-		     different things; the labels are what confused them. -->
+		<!-- Point of Sale configuration. Payment providers (who processes the
+		     money) and tender types (how the customer pays at the register) read
+		     as duplicates but are two different things. -->
 		<PaymentSettingsForm v-if="isAdmin && isConfigured" />
 		<CnSettingsFieldsSection
 			v-if="isAdmin && isConfigured"
 			v-bind="sections.posCustomer"
 			appId="pipelinq" />
-		<PosTenderTypeManager v-if="isAdmin && isConfigured" />
-		<PosStaffManager v-if="isAdmin && isConfigured" />
-		<PosRoleManager v-if="isAdmin && isConfigured" />
+		<CnSettingsSection
+			v-if="isAdmin && isConfigured"
+			:name="t('pipelinq', 'POS tender types')"
+			:description="
+				t(
+					'pipelinq',
+					'How a customer can pay at the till (cash, pin, voucher) and the GL account each one posts to. Distinct from the payment providers above, which process the money.',
+				)
+			">
+			<CnIndexPage :key="`posTenderType-${listKey}`" v-bind="lists.posTenderType" />
+		</CnSettingsSection>
+		<CnSettingsSection
+			v-if="isAdmin && isConfigured"
+			:name="t('pipelinq', 'POS staff')"
+			:description="
+				t(
+					'pipelinq',
+					'Cashiers who can sign in at the register, and the POS role each one holds.',
+				)
+			">
+			<CnIndexPage :key="`posStaff-${listKey}`" v-bind="lists.posStaff" />
+		</CnSettingsSection>
+		<CnSettingsSection
+			v-if="isAdmin && isConfigured"
+			:name="t('pipelinq', 'POS roles')"
+			:description="
+				t(
+					'pipelinq',
+					'Permission sets a cashier can hold at the register: voiding, refunds, opening the cash drawer.',
+				)
+			">
+			<CnIndexPage :key="`posRole-${listKey}`" v-bind="lists.posRole" />
+		</CnSettingsSection>
 
 		<!-- Marketing traffic (marketing-campaign-attribution): campaign
 		     parameters on blast links, the Portaliq portal, Search Console. -->
@@ -196,20 +249,34 @@
 			</NcNoteCard>
 		</div>
 	</CnAdminSettingsShell>
+
+	<!-- The admin page has no CnAppRoot, so it mounts the modals its lists
+	     open (a row, Add, a row action). Closing one reads the lists again. -->
+	<component
+		:is="adminModalComponent"
+		v-if="adminModalComponent"
+		v-bind="adminModal.props"
+		@close="closeAdminModal"
+		@done="closeAdminModal"
+		@saved="closeAdminModal" />
 </template>
 
 <script>
 import {
+	CnActionDialog,
 	CnAdminSettingsShell,
+	CnIndexPage,
 	CnRegisterMapping,
 	CnSettingsFieldsSection,
+	CnSettingsSection,
 } from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
 import { generateUrl } from '@nextcloud/router'
 import { NcNoteCard } from '@nextcloud/vue'
-import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
-import SkillSettings from '../../components/admin/SkillSettings.vue'
+import PosRoleFormDialog from '../../dialogs/PosRoleFormDialog.vue'
+import PosStaffFormDialog from '../../dialogs/PosStaffFormDialog.vue'
+import PosTenderTypeFormDialog from '../../modals/PosTenderTypeFormDialog.vue'
 import CtiPage from './CtiPage.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
 import DeliverabilitySettings from './DeliverabilitySettings.vue'
@@ -221,10 +288,6 @@ import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
 import MessagingSettings from './MessagingSettings.vue'
 import PaymentSettingsForm from './PaymentSettingsForm.vue'
 import PipelineManager from './PipelineManager.vue'
-import PosRoleManager from './PosRoleManager.vue'
-import PosStaffManager from './PosStaffManager.vue'
-import PosTenderTypeManager from './PosTenderTypeManager.vue'
-import ProductCategoryManager from './ProductCategoryManager.vue'
 import TagManager from './TagManager.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import manifest from '../../manifest.json'
@@ -233,6 +296,8 @@ import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
+import { useSkillsStore } from '../../store/modules/skills.js'
+import { adminLists } from './adminLists.js'
 import adminSections from './adminSections.json'
 
 /**
@@ -246,6 +311,18 @@ function shillinqDetected() {
 	return detected?.shillinq?.installed === true
 }
 
+/**
+ * The modals the page's lists open, by the name a declaration uses.
+ *
+ * @type {Record<string, object>}
+ */
+const ADMIN_MODALS = {
+	CnActionDialog,
+	PosRoleFormDialog,
+	PosStaffFormDialog,
+	PosTenderTypeFormDialog,
+}
+
 export default {
 	name: 'PipelinqAdminSettings',
 	components: {
@@ -253,27 +330,33 @@ export default {
 		DeliverabilitySettings,
 		CtiPage,
 		PaymentSettingsForm,
-		PosTenderTypeManager,
-		PosStaffManager,
-		PosRoleManager,
 		PortalSettings,
 		CnAdminSettingsShell,
+		CnIndexPage,
 		CnRegisterMapping,
 		CnSettingsFieldsSection,
+		CnSettingsSection,
 		NcNoteCard,
 		PipelineManager,
-		ProductCategoryManager,
 		TagManager,
-		SkillSettings,
-		AgentProfileSettings,
 		MailingListEmbedSettings,
 		MarketingTrafficSettings,
 		DetectedIntegrations,
 	},
 
+	provide() {
+		return {
+			cnOpenModal: (key, props = {}) => this.openAdminModal(key, props),
+		}
+	},
+
 	data() {
 		return {
 			config: {},
+			// The modal a list on this page opened: `{ key, props }`, or null.
+			adminModal: null,
+			// Bumped when a modal closes, so the lists read their rows again.
+			listKey: 0,
 			appVersion: loadState('pipelinq', 'version', 'Unknown'),
 			// Board PqBeheer: the path under the title. The first crumb goes back
 			// to the server's administration settings.
@@ -326,6 +409,31 @@ export default {
 		 */
 		objectStore() {
 			return useObjectStore()
+		},
+
+		/**
+		 * The page's lists, as CnIndexPage props.
+		 *
+		 * @return {Record<string, object>}
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-admin-lists-are-declared-index-pages
+		 */
+		lists() {
+			const registry = this.objectStore.objectTypeRegistry || {}
+			return adminLists(
+				t,
+				(slug) => registry[slug],
+				(key, props) => this.openAdminModal(key, props),
+				useSkillsStore().skills || [],
+			)
+		},
+
+		/**
+		 * The component of the open modal, or null.
+		 *
+		 * @return {object|null}
+		 */
+		adminModalComponent() {
+			return this.adminModal ? ADMIN_MODALS[this.adminModal.key] || null : null
 		},
 
 		isConfigured() {
@@ -393,6 +501,7 @@ export default {
 		}
 
 		if (this.isConfigured) {
+			useSkillsStore().fetchSkills()
 			this.leadSourcesStore.fetchSources()
 			this.requestChannelsStore.fetchChannels()
 		}
@@ -455,6 +564,30 @@ export default {
 		 */
 		onSectionSaved(sent) {
 			this.config = { ...this.config, ...(sent || {}) }
+		},
+
+		/**
+		 * Open one of the page's modals; an unknown name opens nothing.
+		 *
+		 * @param {string} key The modal's name.
+		 * @param {object} props Its props.
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-admin-lists-are-declared-index-pages
+		 */
+		openAdminModal(key, props = {}) {
+			if (!ADMIN_MODALS[key]) {
+				return
+			}
+			this.adminModal = { key, props }
+		},
+
+		/**
+		 * Close the open modal and read the lists again.
+		 *
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-admin-lists-are-declared-index-pages
+		 */
+		closeAdminModal() {
+			this.adminModal = null
+			this.listKey += 1
 		},
 
 		/**

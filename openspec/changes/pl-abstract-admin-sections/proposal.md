@@ -14,6 +14,7 @@ The Pipelinq admin page carried a hand-built form per section: its own load, sav
 - The POS customer lookup settings are a section on the admin page instead of the unlinked in-app route `/admin/pos-customer-link` (audit bug 13, ADR-004).
 - Prospect discovery read and saved `/api/prospects/settings`, which no route serves, so its settings never loaded or saved. The section uses `/api/prospect-settings`.
 - xWiki's reachability is no longer probed on every page load and shown next to Detected integrations: the connection is shown once there, and "Test connection" says whether xWiki answers.
+- Product categories, skills, agent profiles and the POS tender types, staff and roles become embedded CnIndexPage declarations (`adminLists.js`). The admin page provides `cnOpenModal` and mounts the forms a row or Add opens. An agent profile's user is picked, not typed into a browser prompt. Needs the nextcloud-vue release with `index-page-embedded`.
 - The unreferenced registry key `PipelineManagerView` goes, with its note about drag-and-drop reordering that never existed.
 - Deleting a skill or an agent profile asks in CnDeleteDialog instead of the browser's `confirm()`.
 

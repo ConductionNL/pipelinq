@@ -48,10 +48,10 @@ describe('the admin page', () => {
 			"t('pipelinq', 'Lead Sources')",
 			"t('pipelinq', 'Request Channels')",
 			'v-bind="sections.leadManagement"',
-			'<ProductCategoryManager',
+			'v-bind="lists.productCategory"',
 			'v-bind="sections.menuStructure"',
-			'<SkillSettings',
-			'<AgentProfileSettings',
+			'v-bind="lists.skill"',
+			'v-bind="lists.agentProfile"',
 		].map(at)
 		expect(order).toEqual([...order].sort((a, b) => a - b))
 	})
@@ -79,9 +79,9 @@ describe('the admin page', () => {
 			'<PortalSettings',
 			'<PaymentSettingsForm',
 			'v-bind="sections.posCustomer"',
-			'<PosTenderTypeManager',
-			'<PosStaffManager',
-			'<PosRoleManager',
+			'v-bind="lists.posTenderType"',
+			'v-bind="lists.posStaff"',
+			'v-bind="lists.posRole"',
 			'<MarketingTrafficSettings',
 			'v-bind="sections.marketingIntel"',
 			'v-bind="sections.brpMonitor"',

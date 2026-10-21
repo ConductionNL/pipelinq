@@ -691,9 +691,9 @@ const registry = {
 
 	// POS staff, POS roles and POS tender types are administrator configuration,
 	// not operator surfaces, so they are no longer manifest pages: they render as
-	// sections on the Nextcloud admin page (/settings/admin/pipelinq) instead —
-	// see PosStaffManager / PosRoleManager / PosTenderTypeManager. The views are
-	// imported directly by those managers, so they need no registry entry here.
+	// sections on the Nextcloud admin page (/settings/admin/pipelinq) instead:
+	// index pages declared in views/settings/adminLists.js, with no registry
+	// entry here.
 	// (nav-ia-cleanup)
 
 	// --- POS end-of-day bookkeeping. The Z-report list is a declarative
