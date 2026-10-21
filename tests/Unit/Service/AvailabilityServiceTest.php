@@ -464,4 +464,79 @@ class AvailabilityServiceTest extends TestCase {
 		$service->invalidateCache(resourceId: 'res-sarah', date: '2026-06-01');
 
 	}//end testInvalidateCacheDeletesEntry()
+
+	/**
+	 * `invalidateResource` deletes every cached day of the resource, and a row
+	 * that fails to delete does not stop the others.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 */
+	public function testInvalidateResourceDeletesEveryCachedDay(): void {
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$object->expects($this->once())
+			->method('findAll')
+			->with(['filters' => ['register' => 'pipelinq', 'schema' => 'availability-cache', 'resourceId' => 'res-sarah']])
+			->willReturn([
+				self::entity(['@self' => ['id' => 'day-1'], 'resourceId' => 'res-sarah']),
+				['@self' => ['id' => 'day-2'], 'resourceId' => 'res-sarah'],
+				['@self' => ['id' => 'day-3'], 'resourceId' => 'res-sarah'],
+			]);
+		$deleted = [];
+		$object->method('deleteObject')->willReturnCallback(
+			callback: static function (string $uuid) use (&$deleted): bool {
+				if ($uuid === 'day-2') {
+					throw new \RuntimeException('locked');
+				}
+
+				$deleted[] = $uuid;
+				return true;
+			}
+		);
+
+		[$service] = $this->buildService(objectService: $object);
+
+		$this->assertSame(2, $service->invalidateResource(resourceId: 'res-sarah'));
+		$this->assertSame(['day-1', 'day-3'], $deleted);
+	}//end testInvalidateResourceDeletesEveryCachedDay()
+
+	/**
+	 * `invalidateForResourceTypes` expires the resources of the named types
+	 * only; no type at all means every resource.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 */
+	public function testInvalidateForResourceTypesExpiresTheMatchingResources(): void {
+		$resources = [
+			['@self' => ['id' => 'room-1'], 'type' => 'room'],
+			['@self' => ['id' => 'staff-1'], 'type' => 'staff'],
+			['@self' => ['id' => 'car-1'], 'type' => 'vehicle'],
+		];
+		$asked = [];
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$object->method('findAll')->willReturnCallback(
+			callback: static function (array $config) use ($resources, &$asked): array {
+				$filters = $config['filters'];
+				if ($filters['schema'] === 'appointmentResource') {
+					return $resources;
+				}
+
+				$asked[] = $filters['resourceId'];
+				return [['@self' => ['id' => 'cache-' . $filters['resourceId']]]];
+			}
+		);
+		$object->method('deleteObject')->willReturn(true);
+
+		[$service] = $this->buildService(objectService: $object);
+
+		$this->assertSame(2, $service->invalidateForResourceTypes(resourceTypes: ['room', 'staff']));
+		$this->assertSame(['room-1', 'staff-1'], $asked);
+
+		$asked = [];
+		$this->assertSame(3, $service->invalidateForResourceTypes(resourceTypes: []));
+		$this->assertSame(['room-1', 'staff-1', 'car-1'], $asked);
+	}//end testInvalidateForResourceTypesExpiresTheMatchingResources()
 }//end class

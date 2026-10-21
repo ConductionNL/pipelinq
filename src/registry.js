@@ -1213,7 +1213,7 @@ const registry = {
 	ServiceDetailView: {
 		kind: 'page',
 		component: ServiceDetailView,
-		_note: 'Service detail + edit page with the multiStep sub-table editor, deposit / cancellation policy cards and a best-effort availabilityCache invalidation hook on save (REQ-APT-015).',
+		_note: 'Service detail + edit page with the multiStep sub-table editor and deposit / cancellation policy cards; the server expires the cached availability on save (REQ-APT-015).',
 	},
 	ResourceDetailView: {
 		kind: 'page',

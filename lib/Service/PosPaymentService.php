@@ -149,6 +149,18 @@ class PosPaymentService {
 	public const RETIRED_SECRET_FIELDS = ['apiKey', 'apiSecret'];
 
 	/**
+	 * The payment methods a provider offers at the till when its config names none.
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	public const DEFAULT_METHODS = [
+		'mollie' => ['ideal', 'bancontact', 'creditcard'],
+		'ccv' => ['card'],
+		'adyen' => ['card'],
+		'stripe' => ['card'],
+	];
+
+	/**
 	 * Mask used for sensitive fields in API responses (never the actual value).
 	 *
 	 * @var string
@@ -197,6 +209,57 @@ class PosPaymentService {
 
 		return $providers;
 	}//end listProviders()
+
+	/**
+	 * The payment methods a cashier can choose: one entry per method of every
+	 * active provider. Carries no credential and no config beyond the names, so
+	 * any signed-in user may read it.
+	 *
+	 * A provider's methods are the `methods` list in its config, else
+	 * {@see self::DEFAULT_METHODS}.
+	 *
+	 * @return array<int, array{provider: string, providerLabel: string, type: string, method: string}>
+	 *
+	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+	 */
+	public function listPaymentMethods(): array {
+		$methods = [];
+		foreach (self::PROVIDERS as $name) {
+			if ($this->readBool(name: $name, key: 'isActive', default: false) === false) {
+				continue;
+			}
+
+			foreach ($this->methodsFor(name: $name) as $method) {
+				$methods[] = [
+					'provider' => $name,
+					'providerLabel' => $this->displayNameFor(name: $name),
+					'type' => $this->typeFor(name: $name),
+					'method' => $method,
+				];
+			}
+		}
+
+		return $methods;
+	}//end listPaymentMethods()
+
+	/**
+	 * A provider's methods: its config's `methods`, else the default list.
+	 *
+	 * @param string $name The provider name.
+	 *
+	 * @return array<int, string>
+	 */
+	private function methodsFor(string $name): array {
+		$configured = ($this->readObject(name: $name, key: 'config')['methods'] ?? null);
+		if (is_array($configured) === true) {
+			$names = array_values(array_filter($configured, static fn ($method): bool => is_string($method) === true && $method !== ''));
+			if ($names !== []) {
+				return $names;
+			}
+		}
+
+		return (self::DEFAULT_METHODS[$name] ?? []);
+	}//end methodsFor()
 
 	/**
 	 * Get a single provider config (credentials masked).

@@ -51,6 +51,7 @@ use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
+use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
 use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
@@ -261,6 +262,20 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
 			listener: DealUpdatedListener::class
+		);
+		// A changed resource or service expires the cached availability it
+		// made wrong, for every writer (appointment-booking, REQ-APT-015).
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectDeletedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
 		);
 		// Burgerportaal / MijnOverheid Berichtenbox bridge:
 		// listen for zaak status transitions and queue an outbound

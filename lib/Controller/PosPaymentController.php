@@ -183,6 +183,26 @@ class PosPaymentController extends Controller {
 	// ---------------------------------------------------------------------
 
 	/**
+	 * GET /api/pos-payments/methods — the payment methods a cashier can choose.
+	 *
+	 * Names only (provider, its label and type, the method): no credential and
+	 * no provider config, so every signed-in user may read it. The provider
+	 * configuration endpoints above stay admin-only.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+	 */
+	#[NoAdminRequired]
+	public function methods(): JSONResponse {
+		try {
+			return new JSONResponse(['methods' => $this->service->listPaymentMethods()]);
+		} catch (Throwable $e) {
+			return $this->serverError(label: 'methods', exception: $e);
+		}
+	}//end methods()
+
+	/**
 	 * POST /api/pos-payments/{id}/initiate — initiate payment.
 	 *
 	 * @param string $id The transaction id.
