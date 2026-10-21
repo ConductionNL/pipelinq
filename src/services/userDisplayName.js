@@ -163,6 +163,7 @@ export function listAssignableUserIds(limit = 200) {
 /**
  * Forget the assignable users, so the next call asks the server again.
  *
+ * @spec openspec/specs/lead-management/spec.md
  * @return {void}
  */
 export function resetAssignableUsers() {
