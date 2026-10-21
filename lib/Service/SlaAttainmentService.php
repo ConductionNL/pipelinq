@@ -31,6 +31,7 @@ use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -61,12 +62,14 @@ class SlaAttainmentService {
 	 * @param IAppConfig $appConfig App config.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
 	 * @param LoggerInterface $logger PSR logger.
+	 * @param IL10N|null $l10n Words the grouping in `labels.group`.
 	 */
 	public function __construct(
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private TicketService $ticketService,
 		private LoggerInterface $logger,
+		private ?IL10N $l10n = null,
 	) {
 	}//end __construct()
 
@@ -143,8 +146,31 @@ class SlaAttainmentService {
 				'byTarget' => $byTargetOut,
 				'byGroup' => $byGroup,
 			],
+			'labels' => ['group' => $this->groupLabel(groupBy: $groupBy)],
 		];
 	}//end compute()
+
+	/**
+	 * The words for a grouping, translated, to head the group column.
+	 *
+	 * @param string $groupBy One of VALID_GROUPS.
+	 *
+	 * @return string The label.
+	 */
+	private function groupLabel(string $groupBy): string {
+		$label = [
+			'policy' => 'Policy',
+			'customer' => 'Customer',
+			'tier' => 'Customer tier',
+			'team' => 'Team',
+			'target' => 'Target kind',
+		][$groupBy];
+		if ($this->l10n === null) {
+			return $label;
+		}
+
+		return $this->l10n->t($label);
+	}//end groupLabel()
 
 	/**
 	 * Walk the breach events and accumulate per-target/per-group breach counts.
@@ -288,6 +314,7 @@ class SlaAttainmentService {
 				'groupKey' => (string)$key,
 				'groupName' => (string)($entry['name'] ?? $key),
 				'attainment' => $groupAttainment,
+				'attainmentPercent' => round(($groupAttainment * 100), 1),
 				'total' => $denom,
 				'met' => $withE,
 				'breached' => (int)$entry['breached'],

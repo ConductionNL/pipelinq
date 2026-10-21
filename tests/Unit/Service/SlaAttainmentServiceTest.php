@@ -174,7 +174,19 @@ class SlaAttainmentServiceTest extends TestCase {
 		$this->assertSame(1, $groups['Goud']['met']);
 		$this->assertSame(1, $groups['Goud']['breached']);
 		$this->assertSame(2, $groups['Goud']['total']);
+		$this->assertSame(50.0, $groups['Goud']['attainmentPercent']);
 	}//end testGroupsByPolicyUnderThePolicyName()
+
+	/**
+	 * The answer names the grouping, so the group column can be headed by it.
+	 *
+	 * @return void
+	 */
+	public function testNamesTheGroupingForTheGroupColumn(): void {
+		$result = $this->service->compute(['bucket' => 'day', 'date' => '2026-10-01', 'groupBy' => 'tier']);
+
+		$this->assertSame(['group' => 'Customer tier'], $result['labels']);
+	}//end testNamesTheGroupingForTheGroupColumn()
 
 	/**
 	 * By tier: met and breached objects land in the same tier rows, taken from

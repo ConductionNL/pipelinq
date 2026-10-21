@@ -122,7 +122,6 @@ import SurveyResponseRateWidget from './components/satisfaction/SurveyResponseRa
 //     ADR-044). Replaces the expandable Service nav group with a single
 //     top-level menu item linking to this card grid. ---
 import ServiceHubOverview from './components/service/ServiceHubOverview.vue'
-import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
 // --- Ticket page, simple structure (simple-ticket-page): the conversation to
 //     read, and the Answer dialog that wraps CustomerReplySection. ---
 import TicketConversationSection from './components/TicketConversationSection.vue'
@@ -692,13 +691,6 @@ const registry = {
 		component: BillingCategoryWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Donut chart of hours per billing category for the Dashboard (REQ-BCT-004). Clicking a segment navigates to the time entry list filtered by that category.',
-	},
-
-	// --- SLA engine — attainment dashboard (sla-engine-and-escalation Feature 12). ---
-	SlaAttainmentBreakdownSection: {
-		kind: 'section',
-		component: SlaAttainmentBreakdownSection,
-		_note: 'In-body section for the declarative type:"dashboard" SlaAttainment page (pipelinq-dashboards-declarative). The four headline KPIs (overall attainment % + total/met/breached) are endpoint-bound stat widgets reading GET /api/sla/attainment, driven by the page bucket + groupBy pageFilters. This section renders the per-group breakdown table (by policy/tier/team/target/customer) the stat grid cannot express; it reads bucket + groupBy props (from @workspace.*) and self-fetches the same endpoint, re-querying on change. The SlaAttainmentService now defaults the period to the current bucket window when no explicit date param is sent, so the dashboard needs no client-side date math.',
 	},
 
 	// --- Client / Contact 360 detail in-body sections (kind:'section').

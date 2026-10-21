@@ -162,3 +162,27 @@ describe('lead analytics', () => {
 		})
 	})
 })
+
+describe('SLA attainment', () => {
+	const p = page('SlaAttainment')
+
+	it('draws the breakdown as a table headed by the grouping the server names', () => {
+		expectWidgetsOnly(p)
+		const table = widget(p, 'sla-breakdown')
+		expect(table.content.endpointSource).toEqual({
+			url: '/apps/pipelinq/api/sla/attainment',
+			params: { bucket: '@workspace.bucket', groupBy: '@workspace.groupBy' },
+			responsePath: 'details.byGroup',
+		})
+		const group = table.content.columns.find((c) => c.key === 'groupName')
+		expect(group.labelPath).toBe('labels.group')
+		const attainment = table.content.columns.find((c) => c.key === 'attainmentPercent')
+		expect(attainment.format).toEqual({ style: 'percent', decimals: 1 })
+	})
+
+	it('colours its figures with tokens, not hex values', () => {
+		for (const w of p.config.widgets) {
+			expect(JSON.stringify(w)).not.toMatch(/#[0-9a-f]{6}/i)
+		}
+	})
+})
