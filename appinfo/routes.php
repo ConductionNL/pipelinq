@@ -223,6 +223,7 @@ return [
 
         // Skill-based routing suggestions — must precede SPA catch-all.
         ['name' => 'routing#getSuggestions', 'url' => '/api/routing/suggestions', 'verb' => 'GET'],
+        ['name' => 'teamLoad#index',         'url' => '/api/routing/team-load',   'verb' => 'GET'],
 
         // POS transaction lifecycle (camelCase slug matches PosTransactionController class name).
         // CRUD is handled by OpenRegister's generic object API; these are the lifecycle actions.
@@ -298,6 +299,7 @@ return [
         // - /api/pos-payment-webhook/{provider} is the public, signature-validated webhook
         //   inbound from Mollie / CCV / Adyen / Stripe (REQ-PAY-006).
         // Specific routes precede any wildcard {path} catch-all (ADR-016).
+        ['name' => 'posPayment#methods',  'url' => '/api/pos-payments/methods',       'verb' => 'GET'],
         ['name' => 'posPayment#initiate', 'url' => '/api/pos-payments/{id}/initiate', 'verb' => 'POST'],
         ['name' => 'posPayment#capture',  'url' => '/api/pos-payments/{id}/capture',  'verb' => 'POST'],
         ['name' => 'posPayment#refund',   'url' => '/api/pos-payments/{id}/refund',   'verb' => 'POST'],
@@ -570,6 +572,7 @@ return [
         ['name' => 'ticketWooRequest#availability',   'url' => '/api/tickets/{id}/woo-request/availability', 'verb' => 'GET'],
         ['name' => 'ticketWooRequest#convert',        'url' => '/api/tickets/{id}/woo-request',              'verb' => 'POST'],
         // "Assign to me" on TicketDetail and the Queue (detail-pages-read-at-a-glance).
+        ['name' => 'ticketAssign#assignOldest',       'url' => '/api/tickets/assign-oldest',                 'verb' => 'POST'],
         ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
         // What the resident reads of a ticket, for the preview on TicketDetail (portal-resident-view-preview).
         ['name' => 'residentView#show',               'url' => '/api/tickets/{id}/resident-view',            'verb' => 'GET'],

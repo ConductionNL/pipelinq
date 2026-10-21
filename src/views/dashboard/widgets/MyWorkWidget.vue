@@ -24,7 +24,7 @@
 		:rowClickRoute="itemRoute">
 		<template #column-entityType="{ row }">
 			<span class="entity-badge" :class="'badge--' + row.entityType">
-				{{ row.entityType === 'lead' ? 'LEAD' : 'REQ' }}
+				{{ row.entityType === 'lead' ? t('pipelinq', 'Lead') : t('pipelinq', 'Request') }}
 			</span>
 		</template>
 		<template #column-dueDate="{ row }">

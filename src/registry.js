@@ -129,10 +129,6 @@ import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 //     response-rate widget. ---
 import ClientSatisfactionSection from './components/satisfaction/ClientSatisfactionSection.vue'
 import SurveyResponseRateWidget from './components/satisfaction/SurveyResponseRateWidget.vue'
-// --- Service Hub — cards-collapse landing page (service-group-cards-collapse,
-//     ADR-044). Replaces the expandable Service nav group with a single
-//     top-level menu item linking to this card grid. ---
-import ServiceHubOverview from './components/service/ServiceHubOverview.vue'
 import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
 // --- Ticket page, simple structure (simple-ticket-page): the conversation to
 //     read, and the Answer dialog that wraps CustomerReplySection. ---
@@ -179,10 +175,6 @@ import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
-// --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
-//     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
-//     avg response time) and the mTLS client-certificate expiry countdown. ---
-import BrpMonitorView from './views/admin/BrpMonitor.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
@@ -201,39 +193,10 @@ import ContractInvoicingSection from './views/contracts/ContractInvoicingSection
 // --- Dashboard (manifest-driven type:"dashboard") — header actions and
 //     per-widget slot components. The page itself is rendered by
 //     CnDashboardPage from `config.widgets[]` + `config.layout[]`. ---
-import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
-import LeadsOverTimeChartWidget from './views/dashboard/widgets/LeadsOverTimeChartWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
-// --- Dashboard analytics widgets (openspec/changes/dashboard +
-//     openspec/changes/decompose-unified-analytics). Navi AI
-//     conversational analytics + the endpoint-bound trend charts.
-//     The lead-conversion / avg-resolution / contact-volume KPI cards
-//     were dissolved into `type:"stat"` + `content.endpointSource`
-//     manifest config (ADR-049 Phase-4, nextcloud-vue#91 Wave 2). The
-//     Customer Satisfaction KPI was NOT dissolved to config: its data
-//     source is permanently null (no survey responses after the
-//     forms-leaf migration), so it is dropped until real CSAT data
-//     returns via openspec change customer-satisfaction-closed-loop.
-//     The funder report export panel stays custom (see the
-//     ReportExportPanel _note). ---
+// --- Navi AI conversational analytics (openspec/changes/dashboard). ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
-import OpenLeadsKpiWidget from './views/dashboard/widgets/OpenLeadsKpiWidget.vue'
-import OpenRequestsKpiWidget from './views/dashboard/widgets/OpenRequestsKpiWidget.vue'
-import OverdueKpiWidget from './views/dashboard/widgets/OverdueKpiWidget.vue'
-import PipelineByStageChartWidget from './views/dashboard/widgets/PipelineByStageChartWidget.vue'
-import PipelineValueKpiWidget from './views/dashboard/widgets/PipelineValueKpiWidget.vue'
 import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
-import RequestsByCategoryChartWidget from './views/dashboard/widgets/RequestsByCategoryChartWidget.vue'
-import RequestsByStatusWidget from './views/dashboard/widgets/RequestsByStatusWidget.vue'
-import RevenueByCategoryChartWidget from './views/dashboard/widgets/RevenueByCategoryChartWidget.vue'
-// Commercial dashboard trend charts (openspec/changes/commercial-dashboard).
-// Four endpoint-bound charts from GET /api/analytics/trends (revenue /
-// pipeline-by-stage / revenue-by-product-category / top-customers). The six
-// commercial KPI cards were dissolved into `type:"stat"` +
-// `content.endpointSource` manifest config (ADR-049 Phase-4). These charts
-// stay custom pending a library fix — see their registry _notes.
-import RevenueOverTimeChartWidget from './views/dashboard/widgets/RevenueOverTimeChartWidget.vue'
-import TopCustomersChartWidget from './views/dashboard/widgets/TopCustomersChartWidget.vue'
 // --- xWiki integration (xwiki-integration): dashboard widget wrapper +
 //     reusable widget / sidebar / viewer / list components. ---
 import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget.vue'
@@ -318,15 +281,12 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 //     availability endpoint and hide when no installed app implements the
 //     kind — same self-fetching-by-props pattern as the sections above. ---
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
-// --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
-import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 import SocialPostFormView from './views/social/SocialPostFormView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
 import StoreGallery from './views/store/StoreGallery.vue'
-import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 import ContactAwareObjectListWidget from './components/widgets/ContactAwareObjectListWidget.js'
@@ -347,13 +307,6 @@ import { createWithContact } from './services/contactSyncApi.js'
  * the manifest layout for coherence. `allowedSlots` uses the v2 slot
  * literals (body, sidebar, header-actions, footer, modal).
  */
-const KPI_WIDGET_META = {
-	defaultSize: { w: 3, h: 2 },
-	minSize: { w: 2, h: 2 },
-	maxSize: { w: 6, h: 4 },
-	allowedSlots: ['body'],
-	propsSchema: null,
-}
 const PANEL_WIDGET_META = {
 	defaultSize: { w: 6, h: 4 },
 	minSize: { w: 3, h: 2 },
@@ -386,18 +339,6 @@ const SIDEBAR_TAB_META = {
  * @type {Record<string, { kind: string, component: object, _note?: string }>}
  */
 const registry = {
-	// --- Service Hub — cards-collapse landing page (service-group-cards-collapse,
-	//     ADR-044). The former expandable Service nav group (Requests / Tasks /
-	//     Contactmomenten / Complaints / Projects / MyWork / BookingsGroup)
-	//     is collapsed into a single top-level menu item linking here.
-	//     All former leaf routes remain registered; the hub renders one CnCard
-	//     per leaf (REQ-NAV-001 / REQ-NAV-002 / REQ-NAV-003). ---
-	ServiceHubOverview: {
-		kind: 'page',
-		component: ServiceHubOverview,
-		_note: 'ADR-044 cards-collapse hub for the Service group: seven CnCards linking to the former Service child leaves (Requests/Tasks/Contactmomenten/Complaints/Projects/MyWork/BookingsGroup). Leaf routes stay registered.',
-	},
-
 	ProspectsView: {
 		kind: 'page',
 		component: ProspectsView,
@@ -416,48 +357,7 @@ const registry = {
 	},
 
 	// --- Dashboard widgets (rendered as #widget-{id} slots inside
-	//     CnDashboardPage via the manifest Dashboard page's `slots` map).
-	//     KPI widgets compute their counts from multiple cross-schema
-	//     fetches (e.g. overdue = leads filtered against pipeline
-	//     isClosed stages) that the declarative `stats-block` +
-	//     `dataSource` shorthand can't express, so they ship as small
-	//     custom widget components instead. ---
-	OpenLeadsKpiWidget: {
-		kind: 'widget',
-		component: OpenLeadsKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card for open leads (leads minus those in pipeline stages flagged isClosed). Renders <CnStatsBlock>.',
-	},
-	OpenRequestsKpiWidget: {
-		kind: 'widget',
-		component: OpenRequestsKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card for open requests (status new or in_progress). Renders <CnStatsBlock>.',
-	},
-	PipelineValueKpiWidget: {
-		kind: 'widget',
-		component: PipelineValueKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card for total open-lead value in the reporting currency. Renders <CnStatsBlock>.',
-	},
-	OverdueKpiWidget: {
-		kind: 'widget',
-		component: OverdueKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card for overdue leads + stale requests. Renders <CnStatsBlock>.',
-	},
-	RequestsByStatusWidget: {
-		kind: 'widget',
-		component: RequestsByStatusWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Horizontal bar chart of requests grouped by status. Standalone widget — fetches its own data.',
-	},
-	ComplaintsWidget: {
-		kind: 'widget',
-		component: ComplaintsWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Open / overdue / status breakdown of complaints. Wraps the existing ComplaintsOverviewWidget with a self-contained fetch.',
-	},
+	//     CnDashboardPage via the manifest Dashboard page's `slots` map). ---
 	MyWorkWidget: {
 		kind: 'widget',
 		component: MyWorkWidget,
@@ -470,53 +370,11 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnDataTable / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
 	},
-	LeadsOverTimeChartWidget: {
-		kind: 'widget',
-		component: LeadsOverTimeChartWidget,
-		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap). Line chart: leads over time from GET /api/analytics/trends?metric=leads. NOT dissolvable in nextcloud-vue beta.156: CnDashboardPage renders type:"chart" widgets via getChartProps() whose CHART_PROP_KEYS allowlist does NOT forward endpointSource, and the chart dataSource union is OpenRegister/GraphQL-only (no REST-endpoint form) — so an app REST endpoint cannot feed a dashboard chart. Dissolvable once the library forwards endpointSource for legacy config.widgets[] charts. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
-	},
-	RequestsByCategoryChartWidget: {
-		kind: 'widget',
-		component: RequestsByCategoryChartWidget,
-		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Bar chart: requests by category from GET /api/analytics/trends?metric=requests-by-category. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
-	},
 	ReportExportPanel: {
 		kind: 'widget',
 		component: ReportExportPanel,
 		...PANEL_WIDGET_META,
 		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — dashboard export-action gap). Collapsible funder-reporting export panel; delegates format picker + download to CnMassExportDialog / ExportService. NOT dissolvable to the Wave-1 type:"export" action: that action is dispatched via cnDispatchAction from an index/toolbar surface, but CnDashboardPage renders no dispatchable page-level actions (it exposes only Refresh/Docs/Request-feature + the header-actions slot), so an in-body dashboard export panel has no declarative equivalent. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
-	},
-
-	// --- Commercial dashboard trend charts (openspec/changes/commercial-dashboard).
-	//     The six commercial KPI cards were dissolved into type:"stat" +
-	//     content.endpointSource manifest config (ADR-049 Phase-4). These four
-	//     charts stay custom pending the same chart-endpoint library gap noted
-	//     on LeadsOverTimeChartWidget. ---
-	RevenueOverTimeChartWidget: {
-		kind: 'widget',
-		component: RevenueOverTimeChartWidget,
-		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Line chart: revenue over time from GET /api/analytics/trends?metric=revenue.',
-	},
-	PipelineByStageChartWidget: {
-		kind: 'widget',
-		component: PipelineByStageChartWidget,
-		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Horizontal bar funnel: open-lead value per stage from GET /api/analytics/trends?metric=pipeline-by-stage.',
-	},
-	RevenueByCategoryChartWidget: {
-		kind: 'widget',
-		component: RevenueByCategoryChartWidget,
-		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Donut: POS revenue by product category from GET /api/analytics/trends?metric=revenue-by-product-category.',
-	},
-	TopCustomersChartWidget: {
-		kind: 'widget',
-		component: TopCustomersChartWidget,
-		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Horizontal bar: top customers by revenue from GET /api/analytics/trends?metric=top-customers.',
 	},
 
 	// --- Surveys + Forms migrated to the OpenRegister forms leaf (NC Forms). ---
@@ -615,18 +473,6 @@ const registry = {
 		kind: 'page',
 		component: LoyaltyAccountCreationView,
 		_note: 'GDPR-compliant loyalty account enrollment form: mandatory opt-in checkbox, terms version capture, customerId+programmeId input (REQ-LOY-010-01).',
-	},
-
-	// --- Admin managers. ---
-	PipelineManagerView: {
-		kind: 'page',
-		component: PipelineManagerView,
-		_note: 'Pipeline stage + transition manager with drag-and-drop reordering; lib gap: no pipeline-designer page type.',
-	},
-	SyncSettingsView: {
-		kind: 'page',
-		component: SyncSettingsView,
-		_note: 'External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config.',
 	},
 
 	// --- POS transactions. The PosTransactions list + detail are now declarative
@@ -730,11 +576,6 @@ const registry = {
 		kind: 'page',
 		component: PosCustomerSettingsView,
 		_note: 'Admin settings panel for the POS customer-link lookup: search fields, purchase-history depth, marketing-consent sync toggle and the on-account-requires-customer invariant (pos-customer-link, REQ-PCL-006).',
-	},
-	BrpMonitorView: {
-		kind: 'page',
-		component: BrpMonitorView,
-		_note: 'Admin BRP Monitor — lookups / cache-hit ratio / error rate / avg response time over the last 24h, plus mTLS client-certificate expiry countdown (bsn-validatie-en-brp-lookup REQ-BSN-010).',
 	},
 
 	// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit). ---
@@ -903,6 +744,66 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: "Head of the ticket page's Decisions tab (ticket-decisions-tab): what the tab holds, the two routes to a decision, and Convert to case. The decision lists are decidiq's leaf, mounted by the manifest.",
 	},
+	// --- The ticket page's Overview sections as tab widgets (board PqTicket):
+	//     the conversation, the dossier asked about, the Woo request and the case
+	//     sit inside the Overview tab rather than in a tail below the tab strip. ---
+	TicketConversationWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'TicketConversationWidget',
+			TicketConversationSection,
+			() => ({}),
+			{ card: true, context: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'TicketConversationSection as a tab widget; it reads the ticket from cnSectionContext, which the wrapper provides.',
+	},
+	DossierSnapshotWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'DossierSnapshotWidget',
+			DossierSnapshotSection,
+			({ objectId }) => ({ objectId }),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'DossierSnapshotSection as a tab widget.',
+	},
+	WooConversionWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'WooConversionWidget',
+			WooConversionSection,
+			({ objectId }) => ({ objectId }),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'WooConversionSection as a tab widget.',
+	},
+	RequestConversionWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'RequestConversionWidget',
+			RequestConversionSection,
+			({ objectId }) => ({ requestId: objectId }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'RequestConversionSection (Convert to case) as a tab widget.',
+	},
+	ResidentViewWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ResidentViewWidget',
+			ResidentViewSection,
+			({ objectId, objectData }) => ({
+				ticketId: objectId,
+				ticketType: objectData.ticketType || '',
+				customerMessage: objectData.customerMessage || '',
+				status: objectData.status || '',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'ResidentViewSection as a tab widget.',
+	},
 	ContactChannelsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -1017,6 +918,23 @@ const registry = {
 		kind: 'section',
 		component: ResidentViewSection,
 		_note: 'What the resident sees on a request ticket (portal-resident-view-preview): the resident portal panel and, with portaliq and a client, the organisation portal panel, both from GET /api/tickets/{id}/resident-view, plus the line that everything else stays internal. Renders nothing on complaint and interaction tickets, so it carries its own heading instead of a section title.',
+	},
+	RoutingSuggestionWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'RoutingSuggestionWidget',
+			RoutingSuggestionSection,
+			({ objectId, objectData, content }) => ({
+				objectId,
+				category: objectData.category || '',
+				entityType: content.entityType || 'request',
+				objectType: content.objectType || 'ticket',
+				assignee: objectData.assignee || '',
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'RoutingSuggestionSection as a side-column card (PqLead "Voorgestelde medewerkers"): the record category and assignee come from the page object.',
 	},
 	RoutingSuggestionSection: {
 		kind: 'section',
@@ -1159,7 +1077,7 @@ const registry = {
 	ServiceDetailView: {
 		kind: 'page',
 		component: ServiceDetailView,
-		_note: 'Service detail + edit page with the multiStep sub-table editor, deposit / cancellation policy cards and a best-effort availabilityCache invalidation hook on save (REQ-APT-015).',
+		_note: 'Service detail + edit page with the multiStep sub-table editor and deposit / cancellation policy cards; the server expires the cached availability on save (REQ-APT-015).',
 	},
 	ResourceDetailView: {
 		kind: 'page',
