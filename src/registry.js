@@ -84,9 +84,6 @@ import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
 import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 import TicketDecisionRoutes from './components/tickets/TicketDecisionRoutes.vue'
 import WooConversionSection from './components/WooConversionSection.vue'
-import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
-import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
-import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 // --- AVG (GDPR data-subject request) workflow removed by consume-or-dsar
 //     (ADR-047 Phase 3): the data-subject request workflow is owned by
 //     OpenRegister's case engine; pipelinq deep-links handlers into OR's AVG
@@ -693,24 +690,7 @@ const registry = {
 	},
 
 	// --- xWiki integration (xwiki-integration). ---
-	XWikiWidget: {
-		kind: 'widget',
-		component: XWikiWidgetComponent,
-		...PANEL_WIDGET_META,
-		_note: 'Reusable compact xWiki article-list card. Consumed by the dashboard widget wrapper, detail-page widgets, and ad-hoc embeds. Filters by space / tags / query.',
-	},
-	XWikiSidebarTab: {
-		kind: 'widget',
-		component: XWikiSidebarTabComponent,
-		...SIDEBAR_TAB_META,
-		_note: 'xWiki detail-sidebar panel with search / space-browser / article-viewer modes. Mounted on client / lead / request detail pages.',
-	},
-	XWikiArticleViewer: {
-		kind: 'widget',
-		component: XWikiArticleViewer,
-		...PANEL_WIDGET_META,
-		_note: 'Inline xWiki HTML viewer used by the sidebar tab; consumes the xwiki Pinia store directly.',
-	},
+
 	// --- AVG (GDPR data-subject request) workflow migrated to OpenRegister
 	//     (ADR-047 Phase 3 / consume-or-dsar): the dashboard/detail/intake views
 	//     and their bespoke components were removed. OR's case engine owns the

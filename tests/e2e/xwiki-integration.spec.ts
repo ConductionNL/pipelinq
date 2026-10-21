@@ -6,10 +6,10 @@ import { expect, test } from '@playwright/test'
  * 10.3 — Dashboard widget renders (or shows the unavailable message).
  * 10.4 — Sidebar tab on the Client detail renders.
  *
- * Both tests use the lightweight "renders OR shows unavailable" assertion
- * shape (rather than mandating xWiki being live) because the dev compose
- * stack does not always have xWiki running on port 8088, and the proxy is
- * specifically built to degrade gracefully when xWiki is unreachable.
+ * Both surfaces read OpenRegister's xwiki integration (kb-search on the
+ * dashboard, the integration's tab in the client sidebar). The tests assert
+ * the surface renders, not that xWiki is live: the dev compose stack does not
+ * always have an xWiki source, and both surfaces degrade without one.
  */
 test.describe('xWiki Integration', () => {
 	test('dashboard renders the knowledge-base widget or unavailable message', async ({
@@ -24,26 +24,10 @@ test.describe('xWiki Integration', () => {
 			.waitFor({ state: 'visible', timeout: 15000 })
 			.catch(() => {})
 
-		// Either the widget title or the unavailable message must be visible.
-		const widgetTitle = page
-			.getByText('Knowledge base', { exact: false })
-			.first()
-		const unavailable = page
-			.getByText('xWiki integration unavailable', { exact: false })
-			.first()
-		await expect
-			.poll(
-				async () => {
-					const a = await widgetTitle.isVisible().catch(() => false)
-					const b = await unavailable.isVisible().catch(() => false)
-					return a || b
-				},
-				{
-					timeout: 15000,
-					message: 'xWiki widget should render or report unavailable',
-				},
-			)
-			.toBe(true)
+		await expect(
+			page.getByText('Knowledge base', { exact: false }).first(),
+			'the knowledge-base widget should render',
+		).toBeVisible({ timeout: 15000 })
 	})
 
 	test('client detail sidebar exposes the Knowledge base tab', async ({
@@ -108,27 +92,20 @@ test.describe('xWiki Integration', () => {
 			await sidebarToggle.click()
 		}
 
-		// Then the tab, with the same tolerance the dashboard test above uses:
-		// the compose stack does not always have xWiki on 8088, and the proxy is
-		// built to degrade gracefully when it is unreachable.
+		// Then the tab, which holds the xwiki integration's tab.
 		const tab = page.getByRole('tab', { name: /Knowledge base/i }).first()
 		const fallback = page.getByText('Knowledge base').first()
-		const unavailable = page
-			.getByText('xWiki integration unavailable', { exact: false })
-			.first()
 		await expect
 			.poll(
 				async () => {
 					return (
 						(await tab.isVisible().catch(() => false))
 						|| (await fallback.isVisible().catch(() => false))
-						|| (await unavailable.isVisible().catch(() => false))
 					)
 				},
 				{
 					timeout: 30000,
-					message:
-						'on the client DETAIL page, the Knowledge base tab should render, or the integration should report itself unavailable',
+					message: 'on the client DETAIL page, the Knowledge base tab should render',
 				},
 			)
 			.toBe(true)

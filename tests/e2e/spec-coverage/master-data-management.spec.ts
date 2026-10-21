@@ -41,13 +41,14 @@ const RETIRED_MDM_PATHS = [
 ]
 
 /**
- * A live pipelinq API route, used as the POSITIVE CONTROL. `xWiki#status` is
- * registered in appinfo/routes.php as `GET /api/xwiki/status`, is
- * `#[NoAdminRequired]` + `#[NoCSRFRequired]`, and returns a JSONResponse on
- * BOTH of its branches (the try and the catch), so it answers
- * `application/json` on any instance whether or not xWiki is reachable.
+ * A live pipelinq API route, used as the POSITIVE CONTROL. `partyKind#index`
+ * is registered in appinfo/routes.php as `GET /api/party-kinds`, is
+ * `#[NoAdminRequired]`, and always returns a JSONResponse built from the
+ * registry, so it answers `application/json` on any instance. It is not
+ * `#[NoCSRFRequired]`, so the control sends the `OCS-APIRequest` header that
+ * passes Nextcloud's CSRF check for a logged-in session.
  */
-const LIVE_API_CONTROL = '/apps/pipelinq/api/xwiki/status'
+const LIVE_API_CONTROL = '/apps/pipelinq/api/party-kinds'
 
 // @e2e openspec/specs/master-data-management/spec.md#no-pipelinq-read-api-routes-remain
 test('the retired /api/mdm/master read-API is not routed to any controller', async ({
@@ -74,7 +75,9 @@ test('the retired /api/mdm/master read-API is not routed to any controller', asy
 	 * swallowing these) answers `text/html`. The assertion below holds under
 	 * either behaviour.
 	 */
-	const control = await page.request.get(LIVE_API_CONTROL)
+	const control = await page.request.get(LIVE_API_CONTROL, {
+		headers: { 'OCS-APIRequest': 'true' },
+	})
 	expect(
 		control.status(),
 		'positive control: a LIVE pipelinq API route must answer 200',
