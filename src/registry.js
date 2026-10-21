@@ -42,7 +42,6 @@ import CommunicationHistory from './components/CommunicationHistory.vue'
 //     page body via `bodyWidgets` (kind:'section'). Each reads the live object
 //     via props (token-resolved `@objectId`) — no page host needed. ---
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
-import ContactRelationships from './components/ContactRelationships.vue'
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
 //     declarative type:"index" page cannot express. Donut widget for the
@@ -604,11 +603,6 @@ const registry = {
 	//     sub-feature that reads the live object via props (token-resolved
 	//     `@objectId`). CnBodySections renders them as titled body sections
 	//     (NOT sidebar tabs) and also `provide`s `cnSectionContext`. ---
-	ContactRelationships: {
-		kind: 'section',
-		component: ContactRelationships,
-		_note: 'Outbound/inbound relationship graph for a client or contact; self-fetches by entityId/entityType.',
-	},
 	SubscriptionsSection: {
 		kind: 'section',
 		component: SubscriptionsSection,
@@ -700,21 +694,7 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'CnObjectListWidget whose create goes through POST /api/contacts-sync/create for client and contact, so the required contactsUid is provisioned. The Contacts tab on the client page uses it; a plain object-list POSTs straight to OpenRegister and gets 400 (round5-contact-create-and-task-links).',
 	},
-	ContactRelationshipsWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'ContactRelationshipsWidget',
-			ContactRelationships,
-			({ objectId, objectData, content }) => ({
-				entityId: objectId,
-				entityType: content.entityType || 'contact',
-				entityName: objectData.name || '',
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'ContactRelationships as a grid widget: entityId from the page object, entityType from content (default contact).',
-	},
+
 	TicketDecisionRoutesWidget: {
 		kind: 'widget',
 		component: sectionWidget(
