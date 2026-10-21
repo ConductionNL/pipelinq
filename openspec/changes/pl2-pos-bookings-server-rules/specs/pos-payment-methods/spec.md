@@ -22,3 +22,15 @@ this endpoint, and SHALL word its hint by the provider's type.
 - GIVEN Stripe is configured but not active
 - WHEN the cashier opens the dropdown
 - THEN no Stripe method is offered
+
+### Requirement: A payment is reversed only with a reason
+
+`POST /api/pos-payments/{id}/refund` SHALL refuse a reversal whose reason is empty or only spaces with 422, before the
+provider is asked, because the reason is written to the reversal and read back in the tax audit trail.
+
+#### Scenario: No reason
+
+- GIVEN a manager reverses a settled payment
+- WHEN the reason is empty
+- THEN the server answers 422 "A reason is required to reverse a payment" and nothing is reversed
+

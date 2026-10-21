@@ -604,13 +604,19 @@ class PosPaymentService {
 	 * @return array<string, mixed>
 	 *
 	 * @throws OCSForbiddenException When the caller is not a POS manager.
-	 * @throws OCSBadRequestException When the transaction is not refundable.
+	 * @throws OCSBadRequestException When the transaction is not refundable, or no reason is given.
 	 *
 	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
+	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason
 	 */
 	public function refundPayment(string $transactionId, string $reason, string $userId): array {
 		if ($this->isManager(userId: $userId) === false) {
 			throw new OCSForbiddenException('Manager permission required');
+		}
+
+		// The reason is written to the reversal and read back in the tax audit trail.
+		if (trim($reason) === '') {
+			throw new OCSBadRequestException('A reason is required to reverse a payment');
 		}
 
 		$transaction = $this->loadTransaction(id: $transactionId);

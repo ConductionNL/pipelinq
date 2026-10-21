@@ -521,6 +521,23 @@ class PosPaymentServiceTest extends TestCase {
 		$service->refundPayment(transactionId: 'tx-1', reason: 'why', userId: 'someuser');
 	}//end testRefundRequiresManager()
 
+	/**
+	 * A reversal without a reason is refused before the provider is asked.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason
+	 */
+	public function testRefundRequiresAReason(): void {
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$object->expects($this->never())->method('find');
+		$service = $this->buildService(object: $object, opts: ['isManager' => true]);
+
+		$this->expectException(exception: OCSBadRequestException::class);
+		$this->expectExceptionMessage(message: 'A reason is required to reverse a payment');
+		$service->refundPayment(transactionId: 'tx-1', reason: '  ', userId: 'manager');
+	}//end testRefundRequiresAReason()
+
 	public function testRefundRejectsUnsettledTransaction(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::entity([

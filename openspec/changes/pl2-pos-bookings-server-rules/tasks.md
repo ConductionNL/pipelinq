@@ -11,3 +11,9 @@
 - **files**: `lib/Service/AvailabilityService.php`, `lib/Listener/AvailabilityCacheInvalidationListener.php`, `lib/BackgroundJob/DeferredObjectListenerJob.php`, `lib/AppInfo/Application.php`, `src/views/bookings/ResourceDetail.vue`, `src/views/bookings/ServiceDetail.vue`
 - [x] Implement: the deferred listener, `invalidateResource()`, `invalidateForResourceTypes()`; the detail pages stop deleting cache rows
 - [x] Test: `tests/Unit/Listener/AvailabilityCacheInvalidationListenerTest.php`, `tests/Unit/Service/AvailabilityServiceTest.php`
+
+### Task 3: A payment is reversed only with a reason
+- **spec_ref**: `openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason`
+- **files**: `lib/Service/PosPaymentService.php`
+- [x] Implement: an empty reason is refused with 422 (the reversal dialog's guard, now on the server)
+- [x] Test: `tests/Unit/Service/PosPaymentServiceTest.php`
