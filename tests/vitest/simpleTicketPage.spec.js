@@ -385,6 +385,8 @@ describe('the pills and the side column', () => {
 			'side-case',
 			'ticket-related',
 			'ticket-resident-view',
+			'ticket-resident-view-portal',
+			'ticket-resident-view-internal',
 		])
 		for (const card of simple.sideColumn.filter(
 			(item) => typeof item !== 'string',
@@ -519,16 +521,12 @@ describe('the body', () => {
 				'WooConversionWidget',
 				'WooConversionSection',
 			],
-			'resident-view': [
-				'ticket-resident-view',
-				'ResidentViewWidget',
-				'ResidentViewSection',
-			],
 		}
 		for (const section of full.config.bodyWidgets) {
 			if (
 				section.id === 'customer-reply'
 				|| section.id === 'routing-suggestions'
+				|| section.type === 'facts'
 			) {
 				continue
 			}
@@ -551,6 +549,18 @@ describe('the body', () => {
 		expect(registrySource).toMatch(
 			/sectionWidget\(\s+'TicketConversationWidget',\s+TicketConversationSection,\s+\(\) => \(\{\}\),\s+\{ card: true, context: true \},/,
 		)
+	})
+
+	it('shows the resident view as the same facts cards on both pages', () => {
+		for (const [full_, simple_] of [['resident-view', 'ticket-resident-view'], ['resident-view-portal', 'ticket-resident-view-portal'], ['resident-view-internal', 'ticket-resident-view-internal']]) {
+			const section = full.config.bodyWidgets.find((item) => item.id === full_)
+			const widget = simple.widgets.find((item) => item.id === simple_)
+			expect(section.type).toBe('facts')
+			expect(widget.type).toBe('facts')
+			expect(widget.content.endpointSource).toEqual(section.content.endpointSource)
+			expect(widget.content.rowsPath).toBe(section.content.rowsPath)
+			expect(widget.visibleWhen).toEqual({ field: 'ticketType', op: 'eq', value: 'request' })
+		}
 	})
 
 	it('offers convert to case through the section that asks first whether it can', () => {

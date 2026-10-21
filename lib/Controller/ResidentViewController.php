@@ -32,6 +32,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
 use OCA\Pipelinq\Service\Portal\PortalRequestService;
 use OCA\Pipelinq\Service\Portal\PortalTenantService;
+use OCA\Pipelinq\Service\ResidentViewRows;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -78,6 +79,7 @@ class ResidentViewController extends Controller {
 	 * @param PortalContributionProvider $portal   pipelinq's contribution to portaliq.
 	 * @param PortalTenantService        $tenants  The portal tenant settings.
 	 * @param IAppManager                $apps     Whether portaliq is installed.
+	 * @param ResidentViewRows           $rows     The panels as labelled rows.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -86,6 +88,7 @@ class ResidentViewController extends Controller {
 		private readonly PortalContributionProvider $portal,
 		private readonly PortalTenantService $tenants,
 		private readonly IAppManager $apps,
+		private readonly ResidentViewRows $rows,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -146,11 +149,15 @@ class ResidentViewController extends Controller {
 			$shown = array_merge($shown, array_keys($portaliq['fields']));
 		}
 
+		$internal = $this->internalFields(ticket: $data, shown: $shown);
 		return new JSONResponse(
 			[
 				'bespoke'        => $bespoke,
 				'portaliq'       => $portaliq,
-				'internalFields' => $this->internalFields(ticket: $data, shown: $shown),
+				'internalFields' => $internal,
+				'residentRows'   => $this->rows->residentRows(bespoke: $bespoke),
+				'portalRows'     => $this->rows->portalRows(portal: $portaliq),
+				'internalRows'   => $this->rows->internalRows(fields: $internal),
 			]
 		);
 	}//end show()

@@ -72,14 +72,14 @@ test.describe('what the resident sees', () => {
 		})
 
 		await gotoAppRoute(page, `/tickets/${id}`)
-		const section = page.getByTestId('resident-view')
+		const section = page.locator('[data-section-id="resident-view"]')
 		await expect(section).toBeVisible({ timeout: 30000 })
 		await expect(section).toContainText(`E2E resident view ${STAMP}`)
 		await expect(section).toContainText(`We will come by on Thursday ${STAMP}`)
 		await expect(section).not.toContainText(`internal note ${STAMP}`)
 		// The default portal setting hides the handler's name.
 		await expect(section).not.toContainText('admin')
-		await expect(section.locator('.resident-view__internal')).toBeVisible()
+		await expect(section).toContainText('Everything else on this ticket stays internal.')
 	})
 
 	test('a complaint ticket has no resident view', async ({ page }) => {
@@ -94,6 +94,6 @@ test.describe('what the resident sees', () => {
 		await expect(page.getByText(`E2E complaint ${STAMP}`).first()).toBeVisible({
 			timeout: 30000,
 		})
-		await expect(page.getByTestId('resident-view')).toHaveCount(0)
+		await expect(page.locator('[data-section-id="resident-view"]')).toHaveCount(0)
 	})
 })
