@@ -39,6 +39,15 @@ describe('the activity on a client page', () => {
 		expect(section.content.typeChips.map((c) => c.value)).toEqual(['interaction', 'task', 'email', 'calendar'])
 	})
 
+	it('shows a contact moment by its channel and every other event by its type, as before', () => {
+		expect(section.content.endpointSource.icons).toEqual({
+			path: 'metadata.channel',
+			map: { phone: 'Phone', email: 'Email' },
+			typeMap: { interaction: 'Message', worklog: 'ClockOutline', task: 'CheckCircle', email: 'EmailOutline', calendar: 'Calendar' },
+			default: 'Message',
+		})
+	})
+
 	it('says what will appear when there is nothing yet', () => {
 		expect(section.content.emptyText).toMatch(/^Activities will appear here/)
 	})

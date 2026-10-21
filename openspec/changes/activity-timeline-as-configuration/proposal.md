@@ -8,8 +8,8 @@ The client page drew its activity with an app-local ActivityTimeline over GET /a
 
 - ClientDetail's Activity section is a `timeline` body widget over `/api/timeline` (entityType client), with the chips Contact moments, Tasks, Email and Calendar and Load more.
 - Removed: ActivityTimeline and its registry entry.
-- Not kept: the per-channel icon of a contact moment (phone, email, other); every event shows its type label and author instead.
+- Each event keeps its icon: a contact moment by its channel (phone, email, other), the rest by type (`endpointSource.icons`).
 
 ## Needs
 
-nextcloud-vue `timeline` `endpointSource`, `typeChips` and `emptyText` (branch `feature/pl-abstract-pl1-timeline-endpoint`); body sections with a widget `type` (branch `feature/pl-abstract-pl1-handoff`).
+nextcloud-vue `timeline` `endpointSource`, `typeChips`, `emptyText` and `icons` (branch `feature/pl-abstract-pl1-timeline-endpoint`); body sections with a widget `type` (branch `feature/pl-abstract-pl1-handoff`).

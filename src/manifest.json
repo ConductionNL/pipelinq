@@ -2569,7 +2569,22 @@
 									"calendar": "Calendar"
 								},
 								"typesParam": "types[]",
-								"limit": 20
+								"limit": 20,
+								"icons": {
+									"path": "metadata.channel",
+									"map": {
+										"phone": "Phone",
+										"email": "Email"
+									},
+									"typeMap": {
+										"interaction": "Message",
+										"worklog": "ClockOutline",
+										"task": "CheckCircle",
+										"email": "EmailOutline",
+										"calendar": "Calendar"
+									},
+									"default": "Message"
+								}
 							},
 							"typeChips": [
 								{
