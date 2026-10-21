@@ -497,7 +497,7 @@
 		},
 		{
 			"id": "KassakoppelingAuditList",
-			"label": "Kassakoppeling audit",
+			"label": "Cash register audit",
 			"icon": "Check",
 			"route": "KassakoppelingAuditList",
 			"order": 99
@@ -5594,11 +5594,11 @@
 		},
 		{
 			"id": "KassakoppelingAuditList",
-			"_note": "KassakoppelingAuditList.vue is a bespoke audit-trail viewer for the kassakoppeling (cash-register fiscalisation link) with append-only entries and verification actions rendered in a custom layout; the generic 'index' type cannot express the immutable-audit presentation and per-row verify controls.",
-			"route": "/kassakoppeling/audit",
+			"_note": "The cash register audit log: a bespoke viewer over /api/kassakoppeling/audit with a date range, register, operator and action filter and the admin export for the tax authority. The detail is declarative (KassakoppelingAuditDetail).",
+			"route": "/cash-register-audit",
 			"type": "custom",
-			"title": "Kassakoppeling audit",
-			"component": "KassakoppelingAuditListView",
+			"title": "Cash register audit",
+			"component": "CashRegisterAuditListView",
 			"config": {
 				"register": "pipelinq",
 				"schema": "kassakoppelingAuditLog"
@@ -5606,14 +5606,200 @@
 		},
 		{
 			"id": "KassakoppelingAuditDetail",
-			"_note": "KassakoppelingAuditDetail.vue is a CnDetailPage with audit-specific CnDetailCard panels showing the signed payload, hash chain and verification result of one fiscalisation entry; the standard 'detail' type cannot render this signed/verifiable audit layout.",
-			"route": "/kassakoppeling/audit/:id",
-			"type": "custom",
-			"title": "Audit entry",
-			"component": "KassakoppelingAuditDetailView",
+			"_note": "One cash register audit entry as a declarative type:detail page over the app's own endpoint (entitySource \"endpoint\", GET /api/kassakoppeling/audit/{id}); the entry is append-only, so the only action is Verify signature, which recomputes the HMAC and the chain hash on the server. Amounts are stored in cents.",
+			"route": "/cash-register-audit/:id",
+			"type": "detail",
+			"title": "Cash register audit entry",
 			"config": {
-				"register": "pipelinq",
-				"schema": "kassakoppelingAuditLog"
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/pipelinq/api/kassakoppeling/audit/{id}",
+					"recordPath": "entry"
+				},
+				"showEditAction": false,
+				"stageField": "verified",
+				"headerActions": [
+					{
+						"id": "audit-verify",
+						"label": "Verify signature",
+						"type": "api-call",
+						"variant": "primary",
+						"icon": "ShieldCheckOutline",
+						"url": "/apps/pipelinq/api/kassakoppeling/audit/@objectId/verify",
+						"successMessage": "Verification done. The status shows the result.",
+						"visibleWhen": {
+							"field": "verified",
+							"op": "neq",
+							"value": true
+						}
+					}
+				],
+				"widgets": [
+					{
+						"id": "audit-verification",
+						"type": "facts",
+						"title": "Verification status",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"fields": [
+								{
+									"as": "pill",
+									"key": "verified",
+									"path": "verified",
+									"map": {
+										"true": "Cryptographically verified",
+										"false": "Signature invalid: possible tampering"
+									},
+									"variantMap": {
+										"true": "success",
+										"false": "error"
+									}
+								},
+								{
+									"as": "text",
+									"key": "verified-text",
+									"path": "verified",
+									"map": {
+										"true": "The HMAC-SHA256 signature and the SHA-256 chain hash match the stored values. The entry has not been modified since creation.",
+										"false": "The signature or the chain hash does not match. This may indicate manual modification of the entry or a rotation of the secret key without re-signing."
+									}
+								}
+							],
+							"emptyText": "Not verified yet. Verify signature recomputes the signature and the chain hash."
+						}
+					},
+					{
+						"id": "audit-summary",
+						"type": "facts",
+						"title": "Summary",
+						"icon": "FileDocument",
+						"content": {
+							"fields": [
+								{
+									"as": "pill",
+									"key": "action",
+									"path": "action",
+									"map": {
+										"sale": "Sale",
+										"void": "Void",
+										"refund": "Refund",
+										"no-sale": "No sale"
+									},
+									"variantMap": {
+										"sale": "success",
+										"void": "warning",
+										"refund": "primary",
+										"no-sale": "default"
+									}
+								},
+								{
+									"path": "operatorId",
+									"label": "Operator",
+									"format": "user"
+								},
+								{
+									"path": "amount",
+									"label": "Amount",
+									"format": "currency",
+									"minorUnits": true
+								},
+								{
+									"path": "timestamp",
+									"label": "Time",
+									"format": "date-long"
+								},
+								{
+									"path": "registerNumber",
+									"label": "Register number"
+								},
+								{
+									"path": "exportedAt",
+									"label": "Exported on",
+									"format": "date-long"
+								},
+								{
+									"path": "itemCount",
+									"label": "Number of items"
+								},
+								{
+									"path": "taxAmount",
+									"label": "VAT amount",
+									"format": "currency",
+									"minorUnits": true
+								},
+								{
+									"path": "description",
+									"label": "Description"
+								}
+							]
+						}
+					},
+					{
+						"id": "audit-crypto",
+						"type": "facts",
+						"title": "Cryptographic data",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"fields": [
+								{
+									"as": "text",
+									"key": "algorithm",
+									"text": "HMAC-SHA256, key on the server"
+								},
+								{
+									"path": "signature",
+									"label": "Signature",
+									"copy": true
+								},
+								{
+									"path": "currentHash",
+									"label": "Current hash",
+									"copy": true
+								},
+								{
+									"path": "previousHash",
+									"label": "Previous hash",
+									"copy": true
+								}
+							],
+							"link": {
+								"label": "Open the linked transaction",
+								"route": {
+									"name": "PosTransactionDetail",
+									"params": {
+										"id": "@source.transactionUuid"
+									}
+								}
+							}
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "audit-verification",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 2
+					},
+					{
+						"id": "2",
+						"widgetId": "audit-summary",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 6,
+						"gridHeight": 6
+					},
+					{
+						"id": "3",
+						"widgetId": "audit-crypto",
+						"gridX": 6,
+						"gridY": 2,
+						"gridWidth": 6,
+						"gridHeight": 6
+					}
+				]
 			}
 		},
 		{

@@ -109,7 +109,7 @@ describe('kassakoppeling audit log', () => {
 		const source = readFileSync(
 			resolve(
 				__dirname,
-				'../../src/views/kassakoppeling/KassakoppelingAuditList.vue',
+				'../../src/views/pos/CashRegisterAuditList.vue',
 			),
 			'utf8',
 		)
