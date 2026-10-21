@@ -177,6 +177,7 @@ class SearchQueryReportService {
 				'clicks' => (int)$entry['clicks'],
 				'impressions' => $impressions,
 				'ctr' => $ctr,
+				'ctrPercent' => round(($ctr * 100), 1),
 				'position' => $position,
 				'pages' => count($entry['pages']),
 			];
@@ -212,14 +213,15 @@ class SearchQueryReportService {
 	}//end window()
 
 	/**
-	 * Parse a `YYYY-MM-DD` string, or null.
+	 * Parse a `YYYY-MM-DD` string, or the day of an ISO 8601 moment (as a
+	 * dashboard date range sends it), or null.
 	 *
 	 * @param string|null $value The string.
 	 *
 	 * @return DateTimeImmutable|null UTC midnight or null.
 	 */
 	private function parseDay(?string $value): ?DateTimeImmutable {
-		if ($value === null || preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', trim($value), $matches) !== 1) {
+		if ($value === null || preg_match('/^(\d{4})-(\d{2})-(\d{2})(T[0-9:.]+(Z|[+-]\d{2}:?\d{2})?)?$/', trim($value), $matches) !== 1) {
 			return null;
 		}
 
@@ -227,7 +229,7 @@ class SearchQueryReportService {
 			return null;
 		}
 
-		return new DateTimeImmutable((trim($value) . 'T00:00:00'), new DateTimeZone('UTC'));
+		return new DateTimeImmutable((substr(trim($value), 0, 10) . 'T00:00:00'), new DateTimeZone('UTC'));
 	}//end parseDay()
 
 	/**

@@ -248,9 +248,6 @@ import CampaignReportView from './views/marketing/CampaignReport.vue'
 //     four derivations over those same rows, the competitor watches, and
 //     the follow audit. Each is a computed read, not a row list. ---
 import KeywordIntelligenceView from './views/marketing/KeywordIntelligence.vue'
-// --- Search Console top queries (marketing-campaign-attribution): an
-//     aggregation over searchQueryDaily rows, not a row list. ---
-import SearchQueriesView from './views/marketing/SearchQueries.vue'
 import WeeklyReviewView from './views/marketing/WeeklyReview.vue'
 // --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
 //     provider-wiring): self-fetches conversation/message rows by contactId
@@ -1038,11 +1035,7 @@ const registry = {
 	},
 
 
-	SearchQueriesView: {
-		kind: 'page',
-		component: SearchQueriesView,
-		_note: 'Search Console top queries (marketing-campaign-attribution): one row per query with clicks and impressions summed and an impression-weighted position over a selectable window, from GET /api/marketing/search-queries; empty state points at the Marketing traffic settings. Custom because the page is an aggregation, which no declarative index primitive expresses.',
-	},
+
 
 	// --- Appointment booking — admin views (appointment-booking 11 of 12). ---
 	ServiceDetailView: {

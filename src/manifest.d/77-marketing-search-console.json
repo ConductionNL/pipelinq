@@ -17,15 +17,83 @@
 	"pages": [
 		{
 			"id": "SearchQueries",
-			"_note": "Search Console top queries (marketing-campaign-attribution). Custom rather than a declarative type:index over searchQueryDaily because the page shows an AGGREGATION (one row per query, clicks and impressions summed, impression-weighted position over a window) served by GET /api/marketing/search-queries, and an empty state that points to the settings when nothing is connected. Missing primitive: an aggregation-backed index page.",
+			"_note": "Search Console top queries (marketing-campaign-attribution): one row per query over the page's date range, aggregated server-side by GET /apps/pipelinq/api/marketing/search-queries (clicks and impressions summed, impression-weighted position, click-through in percent). The tile counts the queries in the window and names the last import.",
 			"route": "/marketing/search-queries",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Search queries",
-			"component": "SearchQueriesView",
 			"config": {
-				"register": "pipelinq",
-				"schema": "searchQueryDaily",
-				"documentationUrl": "https://pipelinq.conduction.nl"
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"dateRange": {
+					"enabled": true,
+					"persistKey": "pipelinq-search-queries-range",
+					"default": { "preset": "28d" },
+					"presets": [
+						{ "id": "7d", "label": "Last 7 days", "days": 7 },
+						{ "id": "28d", "label": "Last 28 days", "days": 28 },
+						{ "id": "90d", "label": "Last 90 days", "days": 90 }
+					]
+				},
+				"widgets": [
+					{
+						"id": "search-query-count",
+						"type": "stat",
+						"title": "Queries",
+						"content": {
+							"label": "Queries",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/marketing/search-queries",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?", "limit": 100 }
+							},
+							"valueField": "totalQueries",
+							"caption": "between {from} and {to}",
+							"note": "Last import: {lastImportAt}"
+						}
+					},
+					{
+						"id": "search-queries",
+						"type": "object-table",
+						"title": "Search queries",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/marketing/search-queries",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?", "limit": 100 },
+								"responsePath": "rows"
+							},
+							"columns": [
+								{ "key": "query", "label": "Query", "sortable": true, "cellClass": "cn-cell--strong" },
+								{ "key": "clicks", "label": "Clicks", "sortable": true, "format": { "style": "number" } },
+								{ "key": "impressions", "label": "Impressions", "sortable": true, "format": { "style": "number" } },
+								{
+									"key": "ctrPercent",
+									"label": "CTR",
+									"sortable": true,
+									"format": { "style": "percent", "decimals": 1 }
+								},
+								{
+									"key": "position",
+									"label": "Position",
+									"sortable": true,
+									"format": { "style": "number", "decimals": 1 }
+								},
+								{ "key": "pages", "label": "Pages", "sortable": true, "format": { "style": "number" } }
+							],
+							"emptyText": "No search data yet. Connect a Search Console property and a service account key under Settings, Marketing traffic; the first import runs within a day. Once connected, Search Console publishes a day about two days later."
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "search-query-count",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{ "id": 2, "widgetId": "search-queries", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 8 }
+				]
 			}
 		}
 	]

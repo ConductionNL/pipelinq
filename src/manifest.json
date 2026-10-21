@@ -7632,17 +7632,28 @@
 								"responsePath": "rows"
 							},
 							"columns": [
-								{ "key": "label", "label": "Channel", "cellClass": "cn-cell--strong" },
-								{ "key": "total", "label": "Total", "format": { "style": "number" } },
-								{ "key": "fcrRate", "label": "FCR rate", "format": { "style": "percent", "decimals": 1 } },
-								{ "key": "slaCompliance", "label": "SLA", "format": { "style": "percent", "decimals": 1 } },
+								{ "key": "label", "label": "Channel", "cellClass": "cn-cell--strong", "sortable": true },
+								{ "key": "total", "label": "Total", "format": { "style": "number" }, "sortable": true },
+								{
+									"key": "fcrRate",
+									"label": "FCR rate",
+									"format": { "style": "percent", "decimals": 1 },
+									"sortable": true
+								},
+								{
+									"key": "slaCompliance",
+									"label": "SLA",
+									"format": { "style": "percent", "decimals": 1 },
+									"sortable": true
+								},
 								{
 									"key": "slaStatus",
 									"label": "SLA status",
 									"widget": "badge",
 									"enum": ["green", "orange", "red"],
 									"enumLabels": { "green": "On target", "orange": "Just below target", "red": "Below target" },
-									"widgetProps": { "colorMap": { "green": "success", "orange": "warning", "red": "error" } }
+									"widgetProps": { "colorMap": { "green": "success", "orange": "warning", "red": "error" } },
+									"sortable": true
 								}
 							],
 							"emptyText": "No data available for the selected period"
@@ -7721,14 +7732,20 @@
 								"responsePath": "rows"
 							},
 							"columns": [
-								{ "key": "agentName", "label": "Agent", "cellClass": "cn-cell--strong" },
-								{ "key": "count", "label": "Contacts", "format": { "style": "number" } },
+								{ "key": "agentName", "label": "Agent", "cellClass": "cn-cell--strong", "sortable": true },
+								{ "key": "count", "label": "Contacts", "format": { "style": "number" }, "sortable": true },
 								{
 									"key": "avgHandlingSeconds",
 									"label": "Avg time",
-									"format": { "style": "duration", "unit": "seconds" }
+									"format": { "style": "duration", "unit": "seconds" },
+									"sortable": true
 								},
-								{ "key": "fcrRate", "label": "FCR %", "format": { "style": "percent", "decimals": 1 } }
+								{
+									"key": "fcrRate",
+									"label": "FCR %",
+									"format": { "style": "percent", "decimals": 1 },
+									"sortable": true
+								}
 							],
 							"emptyText": "No agent data for this period"
 						}
