@@ -29,6 +29,7 @@ import {
 	clickHeaderAction,
 	gotoAppRoute,
 	navClick,
+	openActionsOverflow,
 	openApp,
 } from '../helpers/pipelinq.ts'
 import { FixtureSession, TEST_PREFIX } from '../workflows/helpers/fixtures.ts'
@@ -293,12 +294,12 @@ test.describe('Booking admin surfaces (seeded)', () => {
 	/*
 	 * SPEC/IMPLEMENTATION MISMATCH — reported, not fixed. The scenario asks for
 	 * all four of "Mark completed", "Mark no-show", "Reschedule" and "Cancel" on
-	 * a CONFIRMED FUTURE booking. BookingDetailSection gates the first two on
-	 * `isPast` and the last two on `isFuture`
-	 * (src/components/bookings/BookingDetailSection.vue, canComplete/canNoShow vs
-	 * canReschedule/canCancel), so NO single booking can ever show all four. This
-	 * asserts what the implementation actually guarantees: each of the four
-	 * actions is rendered in its own time window.
+	 * a CONFIRMED FUTURE booking. The declared header actions gate the first two
+	 * on `endAt lte @now` and the last two on `endAt gt @now`
+	 * (src/manifest.d/80-appointment-booking-admin.json, BookingDetail), so NO
+	 * single booking can ever show all four. This asserts what the page
+	 * guarantees: each action in its own time window, Mark completed as the
+	 * confirmed booking's primary button and the rest in the Actions menu.
 	 */
 	// @e2e openspec/specs/appointment-booking/spec.md#booking-detail-shows-status-actions
 	test('Booking detail exposes its time-window-gated status actions', async ({
@@ -313,22 +314,25 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		// with no failed assertion.
 		const content = page.locator('#content-vue')
 
+		const menuEntry = (label: string) =>
+			page
+				.getByRole('menuitem', { name: label })
+				.or(page.locator('button.action-button').filter({ hasText: label }))
+				.first()
+
 		await gotoAppRoute(page, `/bookings/${futureBookingId}`)
-		await expect(
-			content.getByRole('button', { name: 'Reschedule' }),
-		).toBeVisible({ timeout: 25000 })
-		await expect(
-			content.getByRole('button', { name: 'Cancel', exact: true }),
-		).toBeVisible()
+		await openActionsOverflow(page)
+		await expect(menuEntry('Reschedule')).toBeVisible({ timeout: 25000 })
+		await expect(menuEntry('Cancel booking')).toBeVisible()
+		await page.keyboard.press('Escape')
 		await assertNoHardError(page)
 
 		await gotoAppRoute(page, `/bookings/${pastBookingId}`)
 		await expect(
 			content.getByRole('button', { name: 'Mark completed' }),
 		).toBeVisible({ timeout: 25000 })
-		await expect(
-			content.getByRole('button', { name: 'Mark no-show' }),
-		).toBeVisible()
+		await openActionsOverflow(page)
+		await expect(menuEntry('Mark no-show')).toBeVisible()
 		await assertNoHardError(page)
 	})
 })

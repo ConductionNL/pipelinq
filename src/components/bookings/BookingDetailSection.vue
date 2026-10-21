@@ -21,7 +21,7 @@
   - timeline through the library's `timeline` widget (review-part-two); the
   - timeline part here only renders in the combined `all` section.
   -
-  - The admin actions live in the page header (BookingHeaderActions).
+  - The admin actions are the page's declared header actions.
   -
   - Self-fetches the booking by id (passed as `bookingId` via @objectId, with a
   - cnSectionContext inject fallback) and re-reads it on `cn:page:refresh`, which

@@ -30,7 +30,6 @@ import ClientBillingHandoffSection from './components/billing/ClientBillingHando
 // stay in the page body via this kind:'section', and its TIME-WINDOW-gated admin
 // actions are the page's actionsComponent.
 import BookingDetailSection from './components/bookings/BookingDetailSection.vue'
-import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
@@ -1066,7 +1065,7 @@ const registry = {
 	//     auto-render and this in-body section carries what no primitive
 	//     expresses: the inline notes editor, the resourceAssignments +
 	//     statusHistory array-on-object tables, and the computed timeline. The
-	//     six TIME-WINDOW-gated admin actions are the page's actionsComponent. ---
+	//     six time-gated admin actions are declared header actions. ---
 	BookingDetailSection: {
 		kind: 'section',
 		component: BookingDetailSection,
@@ -1096,12 +1095,6 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: 'BookingDetail: the resourceAssignments array-on-object table, with resource names.',
-	},
-	BookingHeaderActions: {
-		kind: 'widget',
-		component: BookingHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'BookingDetail actionsComponent: the six admin actions beside Edit. lifecycleActions is intentionally NOT used even though booking has an x-openregister-lifecycle: the real transitions POST to BookingService endpoints with side-effects (confirmation/reminder emails, no-show fees) and time-window gating, and Reschedule creates a new booking UUID — OR /transition would only flip status and bypass those.',
 	},
 
 	// --- KCC Werkplek — declarative agent workspace (pipelinq-werkplek-declarative).
