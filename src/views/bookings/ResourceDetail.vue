@@ -7,8 +7,8 @@
   vacation list. Edit opens the schema-driven CnFormDialog, with the
   working-hours and vacation editors in its field slots; creating a resource
   (id "new") still uses the full-page ResourceForm. On save we delegate to the
-  ObjectService and best-effort invalidate this resource's availabilityCache
-  rows (REQ-APT-002).
+  ObjectService; the server expires this resource's cached availability
+  (AvailabilityCacheInvalidationListener, REQ-APT-002).
 
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 -->
@@ -446,7 +446,6 @@ export default {
 				return
 			}
 			dialog?.setResult({ success: true })
-			await this.invalidateAvailability(saved.id || this.resourceId)
 			await this.objectStore.fetchObject(
 				'appointmentResource',
 				this.resourceId,
@@ -466,7 +465,6 @@ export default {
 				return
 			}
 			showSuccess(t('pipelinq', 'Resource saved.'))
-			await this.invalidateAvailability(saved.id || formData.id)
 			this.$router.push({
 				name: 'ResourceDetail',
 				params: { id: saved.id },
@@ -490,37 +488,6 @@ export default {
 				showError(
 					error?.message || t('pipelinq', 'Failed to delete resource.'),
 				)
-			}
-		},
-
-		/**
-		 * Best-effort invalidation of this resource's availability cache rows.
-		 *
-		 * @param {string} resourceId The resource UUID.
-		 * @return {Promise<void>}
-		 */
-		async invalidateAvailability(resourceId) {
-			if (!resourceId) return
-			try {
-				const cached = await this.objectStore.fetchCollection(
-					'availabilityCache',
-					{
-						resourceId,
-						_limit: 200,
-					},
-				)
-				for (const row of cached || []) {
-					try {
-						await this.objectStore.deleteObject(
-							'availabilityCache',
-							row.id,
-						)
-					} catch {
-						// per-row failure tolerated
-					}
-				}
-			} catch {
-				// list failure tolerated
 			}
 		},
 	},

@@ -299,6 +299,7 @@ return [
         // - /api/pos-payment-webhook/{provider} is the public, signature-validated webhook
         //   inbound from Mollie / CCV / Adyen / Stripe (REQ-PAY-006).
         // Specific routes precede any wildcard {path} catch-all (ADR-016).
+        ['name' => 'posPayment#methods',  'url' => '/api/pos-payments/methods',       'verb' => 'GET'],
         ['name' => 'posPayment#initiate', 'url' => '/api/pos-payments/{id}/initiate', 'verb' => 'POST'],
         ['name' => 'posPayment#capture',  'url' => '/api/pos-payments/{id}/capture',  'verb' => 'POST'],
         ['name' => 'posPayment#refund',   'url' => '/api/pos-payments/{id}/refund',   'verb' => 'POST'],
