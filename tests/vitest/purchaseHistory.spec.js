@@ -37,7 +37,7 @@ afterEach(() => {
 describe('PurchaseHistory', () => {
 	const rows = [{ id: 'p1', createdAt: '2026-10-07T11:43:00Z', reference: 'POS-1', total: 1234.5, currency: 'USD', tenderType: 'card' }]
 
-	it('shows the total in the purchase\\'s currency and the user\\'s locale', () => {
+	it("shows the total in the purchase's currency and the user's locale", () => {
 		const cells = mountIn('en_US', rows).findAll('td').map((cell) => cell.text())
 		expect(cells[3]).toBe('$1,234.50')
 		expect(cells[0]).toBe('10/07/2026')
