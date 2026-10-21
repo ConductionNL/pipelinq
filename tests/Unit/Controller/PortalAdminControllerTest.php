@@ -213,4 +213,44 @@ class PortalAdminControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertSame('No account "ghost" exists.', $response->getData()['message']);
 	}//end testAnUnusableServiceAccountIsRefused()
+
+	/**
+	 * The tenant picker lists every configured tenant once, the default tenant
+	 * first, each by its display name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-portal-tenant-is-picked-from-the-tenants
+	 */
+	public function testTenantsListsEveryConfiguredTenantWithTheDefaultFirst(): void {
+		$this->repository->seed('portalTenantConfig', 'cfg-2', ['tenantId' => 'zuid', 'displayName' => 'Gemeente Zuid']);
+		$this->repository->seed('portalTenantConfig', 'cfg-3', ['tenantId' => 'noord']);
+		$this->repository->seed('portalTenantConfig', 'cfg-4', ['tenantId' => 'zuid', 'displayName' => 'Gemeente Zuid']);
+
+		$response = $this->controller(isAdmin: true)->tenants();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(
+			[
+				['id' => 'default', 'label' => 'default'],
+				['id' => 'noord', 'label' => 'noord'],
+				['id' => 'zuid', 'label' => 'Gemeente Zuid'],
+			],
+			$response->getData()['tenants']
+		);
+	}//end testTenantsListsEveryConfiguredTenantWithTheDefaultFirst()
+
+	/**
+	 * A non-admin cannot enumerate the tenants.
+	 *
+	 * @return void
+	 */
+	public function testTenantsRefusesANonAdmin(): void {
+		$this->repository->seed('portalTenantConfig', 'cfg-2', ['tenantId' => 'zuid']);
+
+		$response = $this->controller(isAdmin: false)->tenants();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertArrayNotHasKey('tenants', $response->getData());
+	}//end testTenantsRefusesANonAdmin()
 }//end class

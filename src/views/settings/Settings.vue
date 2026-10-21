@@ -45,10 +45,9 @@
 			:loading="leadSourcesLoading"
 			:addLabel="t('pipelinq', '+ Add Source')"
 			:addPlaceholder="t('pipelinq', 'Enter source name…')"
-			:usageCheck="checkLeadSourceUsage"
 			:tagLabel="leadSourceLabel"
+			:remove="removeLeadSource"
 			@add="addLeadSource"
-			@remove="removeLeadSource"
 			@rename="renameLeadSource" />
 
 		<!-- Request Channels -->
@@ -59,9 +58,8 @@
 			:loading="requestChannelsLoading"
 			:addLabel="t('pipelinq', '+ Add Channel')"
 			:addPlaceholder="t('pipelinq', 'Enter channel name…')"
-			:usageCheck="checkRequestChannelUsage"
+			:remove="removeRequestChannel"
 			@add="addRequestChannel"
-			@remove="removeRequestChannel"
 			@rename="renameRequestChannel" />
 
 		<CnSettingsFieldsSection
@@ -221,10 +219,11 @@
 
 		<!-- Marketing traffic (marketing-campaign-attribution): campaign
 		     parameters on blast links, the Portaliq portal, Search Console. -->
-		<MarketingTrafficSettings
+		<CnSettingsFieldsSection
 			v-if="isAdmin"
-			:config="config"
-			@saved="onMarketingTrafficSaved" />
+			v-bind="sections.marketingTraffic"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- Marketing intelligence (marketing-search-intelligence): the
 		     sources the keyword, Matomo and competitor reads leave through,
@@ -282,7 +281,6 @@ import CtiPage from './CtiPage.vue'
 import DeliverabilitySettings from './DeliverabilitySettings.vue'
 import DetectedIntegrations from './DetectedIntegrations.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
-import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
@@ -340,7 +338,6 @@ export default {
 		PipelineManager,
 		TagManager,
 		MailingListEmbedSettings,
-		MarketingTrafficSettings,
 		DetectedIntegrations,
 	},
 
@@ -545,17 +542,6 @@ export default {
 		},
 
 		/**
-		 * Keep the page's config in step with what the marketing traffic
-		 * section saved, so the other sections do not overwrite it.
-		 *
-		 * @param {object} updated The updated config returned by the section.
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
-		 */
-		onMarketingTrafficSaved(updated) {
-			this.config = updated || this.config
-		},
-
-		/**
 		 * Keep the page's config in step with what a declared section saved,
 		 * so the register mapping does not write an older value back.
 		 *
@@ -659,59 +645,6 @@ export default {
 			await this.requestChannelsStore.renameChannel(id, name)
 		},
 
-		/**
-		 * @param {string} sourceName The lead source to count references for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-69
-		 */
-		async checkLeadSourceUsage(sourceName) {
-			return this.countObjectsWithField('lead', 'source', sourceName)
-		},
-
-		/**
-		 * @param {string} channelName The request channel to count references for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
-		 */
-		async checkRequestChannelUsage(channelName) {
-			// A request is a `ticket` narrowed by ticketType (unify-ticket-supertype),
-			// so the usage count must exclude complaints and contactmomenten.
-			return this.countObjectsWithField('ticket', 'channel', channelName, {
-				ticketType: 'request',
-			})
-		},
-
-		/**
-		 * Count objects of `type` whose `field` equals `value`, used to warn
-		 * before deleting a value something still references.
-		 *
-		 * @param {string} type The registered object-type slug.
-		 * @param {string} field The property to match on.
-		 * @param {string} value The value to match.
-		 * @param {object} [extraFilters] Additional query filters, e.g. the
-		 *   `ticketType` discriminator needed to narrow the `ticket` supertype
-		 *   down to one of its subtypes (unify-ticket-supertype).
-		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-71
-		 */
-		async countObjectsWithField(type, field, value, extraFilters = {}) {
-			const config = this.objectStore.objectTypeRegistry[type]
-			if (!config) return 0
-			const extra = Object.entries(extraFilters)
-				.map(([k, v]) => `${k}=${encodeURIComponent(v)}&`)
-				.join('')
-			const url = generateUrl(
-				`/apps/openregister/api/objects/${config.register}/${config.schema}?${extra}${field}=${encodeURIComponent(value)}&_limit=1`,
-			)
-			const response = await fetch(url, {
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
-			})
-			if (!response.ok) return 0
-			const data = await response.json()
-			return data.total || 0
-		},
 	},
 }
 </script>

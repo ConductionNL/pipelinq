@@ -7800,6 +7800,9 @@
         "The tender type is deleted.": "De betaalmethode is verwijderd.",
         "A tender type that active tenders still use cannot be deleted.": "Een betaalmethode die actieve betalingen nog gebruiken, kan niet worden verwijderd.",
         "How a customer can pay at the till (cash, pin, voucher) and the GL account each one posts to. Distinct from the payment providers above, which process the money.": "Hoe een klant kan betalen aan de kassa (contant, pin, cadeaubon) en de grootboekrekening waarop elke betaalmethode wordt geboekt. Dit is iets anders dan de betalingsproviders hierboven, die het geld verwerken.",
-        "Permission sets a cashier can hold at the register: voiding, refunds, opening the cash drawer.": "Rechtensets die een kassière kan hebben bij de kassa: annuleren, terugbetalingen, de kassalade openen."
+        "Permission sets a cashier can hold at the register: voiding, refunds, opening the cash drawer.": "Rechtensets die een kassière kan hebben bij de kassa: annuleren, terugbetalingen, de kassalade openen.",
+        "%1$s is still used by %2$s leads. Give them another source first.": "%1$s wordt nog door %2$s leads gebruikt. Geef ze eerst een andere bron.",
+        "%1$s is still used by %2$s requests. Give them another channel first.": "%1$s wordt nog door %2$s verzoeken gebruikt. Geef ze eerst een ander kanaal.",
+        "Remove {name}": "{name} verwijderen"
     }
 }

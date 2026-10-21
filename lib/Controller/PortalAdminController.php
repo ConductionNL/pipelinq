@@ -126,6 +126,23 @@ class PortalAdminController extends Controller {
 	}//end saveConfig()
 
 	/**
+	 * List the tenants an administrator can configure, for the tenant picker.
+	 *
+	 * @auth admin-only Enumerates every portal tenant; the body additionally enforces it through adminGuarded().
+	 *
+	 * @return JSONResponse `{tenants: [{id, label}]}`, or an error.
+	 *
+	 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-portal-tenant-is-picked-from-the-tenants
+	 */
+	public function tenants(): JSONResponse {
+		return $this->adminGuarded(
+			handler: function (): array {
+				return [['tenants' => $this->tenant->listTenants()], Http::STATUS_OK];
+			}
+		);
+	}//end tenants()
+
+	/**
 	 * List all portal accounts for a tenant (no secrets).
 	 *
 	 * @auth admin-only Enumerates every portal account on the tenant; the body additionally enforces it through adminGuarded().

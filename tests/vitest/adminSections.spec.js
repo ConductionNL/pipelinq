@@ -68,7 +68,7 @@ describe('the declared admin sections', () => {
 	it('saves only keys the settings write stores', () => {
 		const service = readFileSync(resolve(__dirname, '../../lib/Service/SettingsService.php'), 'utf8')
 		const stored = new Set([...service.matchAll(/^\t\t'([a-z0-9_.]+)'(?: =>|,)/gm)].map((match) => match[1]))
-		for (const id of ['leadManagement', 'shillinq', 'exportConfiguration', 'marketingIntel', 'menuStructure', 'vatRates', 'xwiki']) {
+		for (const id of ['leadManagement', 'shillinq', 'exportConfiguration', 'marketingIntel', 'marketingTraffic', 'menuStructure', 'vatRates', 'xwiki']) {
 			for (const field of sections[id].fields) {
 				if (['heading', 'status', 'action'].includes(field.type)) {
 					continue
@@ -123,6 +123,7 @@ describe('the declared admin sections', () => {
 			prospect: 'isConfigured',
 			xwiki: 'isAdmin',
 			posCustomer: 'isAdmin && isConfigured',
+			marketingTraffic: 'isAdmin',
 		}
 		expect([...Object.keys(guards), 'cti'].sort()).toEqual(Object.keys(sections).sort())
 		for (const [id, guard] of Object.entries(guards)) {
@@ -162,6 +163,18 @@ describe('the sections with an endpoint of their own', () => {
 	it('shows whether xWiki is reachable only when asked, and its connection once, in Detected integrations', () => {
 		expect(settings).not.toMatch(/testXwiki|xwikiStatus/)
 		expect(settings).toContain('<DetectedIntegrations')
+	})
+})
+
+describe('the marketing traffic section', () => {
+	it('removes the stored Search Console key through the settings write, and reads again', () => {
+		const clear = sections.marketingTraffic.fields.find((field) => field.type === 'action')
+		expect(clear).toMatchObject({ url: '/apps/pipelinq/api/settings', method: 'PUT', params: { 'search.gsc.service_account_key_clear': 'true' }, reload: true })
+		expect(clear.visibleWhen).toEqual({ key: 'search.gsc.service_account_key_set', equals: true })
+	})
+
+	it('keeps the properties as comma text, one per line on screen', () => {
+		expect(sections.marketingTraffic.fields.find((field) => field.key === 'search.gsc.properties')).toMatchObject({ type: 'lines', saveAs: 'csv' })
 	})
 })
 

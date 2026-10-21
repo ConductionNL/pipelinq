@@ -25,11 +25,13 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SystemTagService;
+use OCA\Pipelinq\Service\VocabularyUsage;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -47,12 +49,16 @@ class RequestChannelController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param SystemTagService $systemTagService The system tag service.
+	 * @param VocabularyUsage  $usage            Counts the records that use a value.
+	 * @param IL10N            $l10n             The translator, for the refusal.
 	 * @param IUserSession $userSession The user session.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private SystemTagService $systemTagService,
+		private VocabularyUsage $usage,
+		private IL10N $l10n,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 	) {
@@ -136,12 +142,25 @@ class RequestChannelController extends Controller {
 	 * @return JSONResponse The response.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-vocabulary-value-in-use-cannot-be-removed
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function destroy(string $id): JSONResponse {
 		try {
 			$objectType = self::OBJECT_TYPE;
 			$tagId = (int)$id;
+			$name = $this->tagName(tagId: $tagId);
+			$uses = $this->usage->countUses('ticket_schema', 'channel', $name, ['ticketType' => 'request']);
+			if ($uses > 0) {
+				return new JSONResponse(
+					[
+						'success' => false,
+						'message' => $this->l10n->t('%1$s is still used by %2$s requests. Give them another channel first.', [$name, (string) $uses]),
+					],
+					Http::STATUS_CONFLICT
+				);
+			}
+
 			$this->systemTagService->removeTag(
 				objectType: $objectType,
 				tagId: $tagId
@@ -152,4 +171,23 @@ class RequestChannelController extends Controller {
 			return new JSONResponse(['success' => false, 'message' => 'An unexpected error occurred'], 500);
 		}
 	}//end destroy()
+
+	/**
+	 * The name of one of this list's values, or '' when it is not one.
+	 *
+	 * @param int $tagId The tag id.
+	 *
+	 * @return string The name.
+	 *
+	 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-vocabulary-value-in-use-cannot-be-removed
+	 */
+	private function tagName(int $tagId): string {
+		foreach ($this->systemTagService->getTags(objectType: self::OBJECT_TYPE) as $tag) {
+			if ((int) $tag['id'] === $tagId) {
+				return (string) $tag['name'];
+			}
+		}
+
+		return '';
+	}//end tagName()
 }//end class

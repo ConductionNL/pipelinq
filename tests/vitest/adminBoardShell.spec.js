@@ -82,7 +82,7 @@ describe('the admin page', () => {
 			'v-bind="lists.posTenderType"',
 			'v-bind="lists.posStaff"',
 			'v-bind="lists.posRole"',
-			'<MarketingTrafficSettings',
+			'v-bind="sections.marketingTraffic"',
 			'v-bind="sections.marketingIntel"',
 			'v-bind="sections.brpMonitor"',
 		]) {

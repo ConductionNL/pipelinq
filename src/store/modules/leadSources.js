@@ -89,10 +89,11 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 					method: 'DELETE',
 					headers: headers(),
 				})
+				// A refused remove (a value records still use) answers its reason.
+				const data = await response.json().catch(() => ({}))
 				if (!response.ok) {
-					throw new Error(`Failed to remove source (${response.status})`)
+					throw new Error(data.message || `Failed to remove source (${response.status})`)
 				}
-				const data = await response.json()
 
 				if (!data.success) {
 					throw new Error(data.message || 'Failed to remove source')

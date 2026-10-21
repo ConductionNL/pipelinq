@@ -87,3 +87,39 @@ Product categories, skills, agent profiles, POS tender types, POS staff and POS 
 - THEN the role form opens in a dialog on the admin page, and nothing navigates
 
 @e2e tests/e2e/spec-coverage/visual-coverage-admin-pos.spec.ts
+
+### Requirement: The portal tenant is picked from the tenants
+
+`GET /portal/api/admin/tenants` SHALL answer, for an administrator only, every tenant with a stored portal configuration once, by its display name (else its id), with the default tenant first whether or not it is stored. The portal section SHALL offer these in a select labelled "Tenant" instead of a free-text field; typing an id that is not listed SHALL start that tenant's configuration. Picking a tenant SHALL read its configuration, accounts and audit events.
+
+#### Scenario: Switching to another municipality
+
+- GIVEN tenants `default` and `zuid` ("Gemeente Zuid") are configured
+- WHEN the administrator picks "Gemeente Zuid"
+- THEN the section reads the configuration of `zuid`
+
+@e2e exclude covered by tests/Unit/Controller/PortalAdminControllerTest.php and tests/vitest/portalAdminSettings.spec.js.
+
+### Requirement: A vocabulary value in use cannot be removed
+
+`DELETE /api/settings/lead-sources/{id}` and `DELETE /api/settings/request-channels/{id}` SHALL count the leads (`source`) or requests (`channel`, `ticketType: request`) that still hold the value, and while any do SHALL refuse with 409 and a translated sentence naming the value and the count ("Website is still used by 3 leads. Give them another source first."). The admin page SHALL ask in a dialog before removing and SHALL show that sentence; it SHALL NOT count the records itself.
+
+#### Scenario: Removing a channel requests still use
+
+- GIVEN 3 requests have channel "Email"
+- WHEN the administrator removes "Email"
+- THEN the server answers 409 and the dialog says "Email is still used by 3 requests. Give them another channel first."
+
+@e2e exclude covered by tests/Unit/Controller/LeadSourceControllerTest.php, tests/Unit/Controller/RequestChannelControllerTest.php, tests/Unit/Service/VocabularyUsageTest.php and tests/vitest/leadSourceAndSubmitCopy.spec.js.
+
+### Requirement: Marketing traffic is declared, with a way to remove the stored key
+
+The marketing traffic section SHALL be a declared section: the campaign parameter switch, the Portaliq portal slug, the Search Console properties one per line (stored as comma text), the service account key as a replace-only secret, the service account address and the last import as notes read from `/api/marketing/search-queries`, and "Remove the stored key" while a key is stored, which clears it through the settings write and reads the section again.
+
+#### Scenario: Removing the stored key
+
+- GIVEN a Search Console key is stored
+- WHEN the administrator presses "Remove the stored key"
+- THEN `search.gsc.service_account_key_clear` is sent, the section says "The stored key was removed" and the button goes
+
+@e2e exclude the action is the library's (CnSettingsFieldsSectionLists spec); the declaration is asserted by tests/vitest/adminSections.spec.js.

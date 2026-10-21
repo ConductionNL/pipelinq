@@ -764,5 +764,90 @@
 				"failureText": "xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq."
 			}
 		]
+	},
+	"marketingTraffic": {
+		"name": "Marketing traffic",
+		"description": "Campaign parameters on blast links, the Portaliq portal that mail events and site visits are attributed to, and the Search Console import.",
+		"valuesPath": "config",
+		"reloadAfterSave": true,
+		"fields": [
+			{
+				"key": "blast.utm_auto",
+				"label": "Add campaign parameters to blast links",
+				"type": "switch",
+				"trueValue": "true",
+				"falseValue": "false",
+				"default": true,
+				"hint": "Every link in a blast gets utm_source, utm_medium, utm_campaign and utm_content when it does not carry them yet. Parameters you wrote yourself are kept."
+			},
+			{
+				"key": "blast.traffic_portal",
+				"label": "Portaliq portal slug",
+				"placeholder": "open-tilburg",
+				"hint": "Mail opens and clicks are reported to this portal, and the blast performance page reads the site sessions of each campaign from it. Leave empty to keep everything inside Pipelinq."
+			},
+			{
+				"key": "searchConsoleHeading",
+				"label": "Search Console",
+				"type": "heading"
+			},
+			{
+				"key": "search.gsc.properties",
+				"label": "Search Console properties",
+				"type": "lines",
+				"saveAs": "csv",
+				"placeholder": "https://example.org/",
+				"hint": "One property per line: a site URL such as https://example.org/ or a domain property such as sc-domain:example.org."
+			},
+			{
+				"key": "search.gsc.service_account_key",
+				"label": "Service account key (JSON)",
+				"type": "secret",
+				"setKey": "search.gsc.service_account_key_set",
+				"hint": "The JSON key file of a Google Cloud service account. It is stored encrypted and never shown again."
+			},
+			{
+				"key": "email",
+				"type": "status",
+				"url": "/apps/pipelinq/api/marketing/search-queries?limit=1",
+				"valuePath": "serviceAccountEmail",
+				"textMap": {
+					"*": "Add {email} as a user with full permission on each property in Search Console, or the import is refused."
+				},
+				"visibleWhen": {
+					"key": "email",
+					"empty": false
+				}
+			},
+			{
+				"key": "when",
+				"type": "status",
+				"url": "/apps/pipelinq/api/marketing/search-queries?limit=1",
+				"valuePath": "lastImportAt",
+				"textMap": {
+					"*": "Last import: {when}"
+				},
+				"visibleWhen": {
+					"key": "when",
+					"empty": false
+				}
+			},
+			{
+				"key": "clearKey",
+				"label": "Remove the stored key",
+				"type": "action",
+				"url": "/apps/pipelinq/api/settings",
+				"method": "PUT",
+				"params": {
+					"search.gsc.service_account_key_clear": "true"
+				},
+				"reload": true,
+				"successText": "The stored key was removed",
+				"visibleWhen": {
+					"key": "search.gsc.service_account_key_set",
+					"equals": true
+				}
+			}
+		]
 	}
 }
