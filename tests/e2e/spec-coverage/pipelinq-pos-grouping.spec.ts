@@ -18,7 +18,7 @@
  *     `ProductBarcodeSearch` page was DELETED — src/manifest.json:1085 says so
  *     in `_searchNote`: "The dedicated 'Barcode lookup' page is gone
  *     (nav-ia-cleanup): this index's search already matches on barcode".
- *   * REQ-PPOS-003's `PosStaffList` / `PosRoleList` are not in the gear foldout
+ *   * REQ-PPOS-003's POS staff / POS roles lists are not in the gear foldout
  *     — `src/menu-layout.json#settingsSection` holds only Pipelines,
  *     SettingsIntegrationsCaption and ExportJobs. Per `_adminSettingsNote` both
  *     moved to the Nextcloud admin page (/settings/admin/pipelinq) and "their

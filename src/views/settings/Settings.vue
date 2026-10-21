@@ -45,10 +45,9 @@
 			:loading="leadSourcesLoading"
 			:addLabel="t('pipelinq', '+ Add Source')"
 			:addPlaceholder="t('pipelinq', 'Enter source name…')"
-			:usageCheck="checkLeadSourceUsage"
 			:tagLabel="leadSourceLabel"
+			:remove="removeLeadSource"
 			@add="addLeadSource"
-			@remove="removeLeadSource"
 			@rename="renameLeadSource" />
 
 		<!-- Request Channels -->
@@ -59,9 +58,8 @@
 			:loading="requestChannelsLoading"
 			:addLabel="t('pipelinq', '+ Add Channel')"
 			:addPlaceholder="t('pipelinq', 'Enter channel name…')"
-			:usageCheck="checkRequestChannelUsage"
+			:remove="removeRequestChannel"
 			@add="addRequestChannel"
-			@remove="removeRequestChannel"
 			@rename="renameRequestChannel" />
 
 		<CnSettingsFieldsSection
@@ -71,17 +69,45 @@
 			@saved="onSectionSaved" />
 
 		<!-- Product Categories -->
-		<ProductCategoryManager v-if="isConfigured" />
+		<CnSettingsSection
+			v-if="isConfigured"
+			:name="t('pipelinq', 'Product Categories')">
+			<CnIndexPage :key="`productCategory-${listKey}`" v-bind="lists.productCategory" />
+		</CnSettingsSection>
 
 		<!-- Menu structure: simple (default) or full, and the modules
 		     (simple-structure-profile). -->
-		<MenuStructureSettings v-if="isAdmin" class="cn-settings-section--wide" />
+		<CnSettingsFieldsSection
+			v-if="isAdmin"
+			v-bind="sections.menuStructure"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- Skill Management -->
-		<SkillSettings v-if="isConfigured" />
+		<CnSettingsSection
+			v-if="isConfigured"
+			:name="t('pipelinq', 'Skills')"
+			:description="
+				t(
+					'pipelinq',
+					'Define skills for routing requests to the right agents',
+				)
+			">
+			<CnIndexPage :key="`skill-${listKey}`" v-bind="lists.skill" />
+		</CnSettingsSection>
 
 		<!-- Agent Profile Management -->
-		<AgentProfileSettings v-if="isConfigured" />
+		<CnSettingsSection
+			v-if="isConfigured"
+			:name="t('pipelinq', 'Agent Profiles')"
+			:description="
+				t(
+					'pipelinq',
+					'Assign skills and configure routing for agents',
+				)
+			">
+			<CnIndexPage :key="`agentProfile-${listKey}`" v-bind="lists.agentProfile" />
+		</CnSettingsSection>
 
 		<!-- Provisioning is an admin action, never a wizard step
 		     (pipelinq-setup-wizard-review). -->
@@ -94,16 +120,24 @@
 		<DetectedIntegrations v-if="isAdmin" />
 
 		<!-- The VAT rate per VAT class (pipelinq-forms-review). -->
-		<VatRatesSettings v-if="isAdmin" :config="config" />
+		<CnSettingsFieldsSection
+			v-if="isAdmin"
+			v-bind="sections.vatRates"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- Pipeline Management -->
 		<PipelineManager v-if="isConfigured" />
 
-		<!-- Forecast Configuration -->
-		<ForecastSettings v-if="isConfigured" />
+		<CnSettingsFieldsSection
+			v-if="isConfigured"
+			v-bind="sections.forecast"
+			appId="pipelinq" />
 
-		<!-- Prospect Discovery Settings -->
-		<ProspectSettings v-if="isConfigured" />
+		<CnSettingsFieldsSection
+			v-if="isConfigured"
+			v-bind="sections.prospect"
+			appId="pipelinq" />
 
 		<CnSettingsFieldsSection
 			v-if="isAdmin"
@@ -123,95 +157,13 @@
 			appId="pipelinq"
 			@saved="onSectionSaved" />
 
-		<!-- xWiki Integration (xwiki-integration) -->
-		<NcSettingsSection
+		<!-- xWiki Integration (xwiki-integration). Whether and how xWiki is
+		     connected is shown once, in DetectedIntegrations. -->
+		<CnSettingsFieldsSection
 			v-if="isAdmin"
-			:name="t('pipelinq', 'xWiki integration')"
-			:description="
-				t(
-					'pipelinq',
-					'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. Pipelinq finds xWiki through the xWiki app or through OpenRegister.',
-				)
-			">
-			<NcNoteCard
-				v-if="xwikiStatus"
-				:type="xwikiStatus.available ? 'success' : 'warning'">
-				<span v-if="xwikiStatus.available">
-					{{
-						t('pipelinq', 'xWiki reachable at {url}', {
-							url: xwikiStatus.baseUrl,
-						})
-					}}
-					<template v-if="xwikiStatus.version">
-						({{
-							t('pipelinq', 'version {ver}', {
-								ver: xwikiStatus.version,
-							})
-						}})
-					</template>
-				</span>
-				<span v-else>
-					{{
-						t(
-							'pipelinq',
-							'xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq.',
-						)
-					}}
-				</span>
-			</NcNoteCard>
-			<NcNoteCard v-if="!xwikiAppInstalled" type="warning">
-				{{
-					t(
-						'pipelinq',
-						'The optional xWiki Nextcloud app is not installed. Pipelinq searches xWiki through OpenRegister instead.',
-					)
-				}}
-			</NcNoteCard>
-			<NcTextField
-				v-model="config.xwiki_default_space"
-				:label="t('pipelinq', 'Default xWiki space')"
-				placeholder="Kennisbank"
-				:helperText="
-					t(
-						'pipelinq',
-						'Space name pre-selected by the dashboard widget. Leave empty to search across all spaces.',
-					)
-				" />
-			<NcTextField
-				v-model="config.xwiki_cache_ttl"
-				type="number"
-				:label="t('pipelinq', 'Cache TTL (seconds)')"
-				placeholder="300"
-				:helperText="
-					t(
-						'pipelinq',
-						'How long search and page results are cached server-side. Default: 300.',
-					)
-				" />
-			<div class="xwiki-actions">
-				<NcButton
-					variant="primary"
-					:disabled="savingXwiki"
-					@click="saveXwiki">
-					<template #icon>
-						<NcLoadingIcon v-if="savingXwiki" :size="16" />
-					</template>
-					{{ t('pipelinq', 'Save xWiki settings') }}
-				</NcButton>
-				<NcButton
-					variant="secondary"
-					:disabled="testingXwiki"
-					@click="testXwiki">
-					<template #icon>
-						<NcLoadingIcon v-if="testingXwiki" :size="16" />
-					</template>
-					{{ t('pipelinq', 'Test connection') }}
-				</NcButton>
-			</div>
-			<NcNoteCard v-if="xwikiMessage" :type="xwikiMessageType">
-				{{ xwikiMessage }}
-			</NcNoteCard>
-		</NcSettingsSection>
+			v-bind="sections.xwiki"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- Channels & telephony. Configuration, not an operator surface, so it
 		     lives here rather than in the app nav (nav-ia-cleanup). -->
@@ -223,21 +175,55 @@
 		     (pipelinq#2041). Admin only, like the endpoints it calls. -->
 		<PortalSettings v-if="isAdmin && isConfigured" />
 
-		<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
-		     who processes the money) and `PosTenderTypeList` (tender types — how
-		     the customer pays at the register) read as duplicates but are two
-		     different things; the labels are what confused them. -->
+		<!-- Point of Sale configuration. Payment providers (who processes the
+		     money) and tender types (how the customer pays at the register) read
+		     as duplicates but are two different things. -->
 		<PaymentSettingsForm v-if="isAdmin && isConfigured" />
-		<PosTenderTypeManager v-if="isAdmin && isConfigured" />
-		<PosStaffManager v-if="isAdmin && isConfigured" />
-		<PosRoleManager v-if="isAdmin && isConfigured" />
+		<CnSettingsFieldsSection
+			v-if="isAdmin && isConfigured"
+			v-bind="sections.posCustomer"
+			appId="pipelinq" />
+		<CnSettingsSection
+			v-if="isAdmin && isConfigured"
+			:name="t('pipelinq', 'POS tender types')"
+			:description="
+				t(
+					'pipelinq',
+					'How a customer can pay at the till (cash, pin, voucher) and the GL account each one posts to. Distinct from the payment providers above, which process the money.',
+				)
+			">
+			<CnIndexPage :key="`posTenderType-${listKey}`" v-bind="lists.posTenderType" />
+		</CnSettingsSection>
+		<CnSettingsSection
+			v-if="isAdmin && isConfigured"
+			:name="t('pipelinq', 'POS staff')"
+			:description="
+				t(
+					'pipelinq',
+					'Cashiers who can sign in at the register, and the POS role each one holds.',
+				)
+			">
+			<CnIndexPage :key="`posStaff-${listKey}`" v-bind="lists.posStaff" />
+		</CnSettingsSection>
+		<CnSettingsSection
+			v-if="isAdmin && isConfigured"
+			:name="t('pipelinq', 'POS roles')"
+			:description="
+				t(
+					'pipelinq',
+					'Permission sets a cashier can hold at the register: voiding, refunds, opening the cash drawer.',
+				)
+			">
+			<CnIndexPage :key="`posRole-${listKey}`" v-bind="lists.posRole" />
+		</CnSettingsSection>
 
 		<!-- Marketing traffic (marketing-campaign-attribution): campaign
 		     parameters on blast links, the Portaliq portal, Search Console. -->
-		<MarketingTrafficSettings
+		<CnSettingsFieldsSection
 			v-if="isAdmin"
-			:config="config"
-			@saved="onMarketingTrafficSaved" />
+			v-bind="sections.marketingTraffic"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- Marketing intelligence (marketing-search-intelligence): the
 		     sources the keyword, Matomo and competitor reads leave through,
@@ -262,46 +248,45 @@
 			</NcNoteCard>
 		</div>
 	</CnAdminSettingsShell>
+
+	<!-- The admin page has no CnAppRoot, so it mounts the modals its lists
+	     open (a row, Add, a row action). Closing one reads the lists again. -->
+	<component
+		:is="adminModalComponent"
+		v-if="adminModalComponent"
+		v-bind="adminModal.props"
+		@close="closeAdminModal"
+		@done="closeAdminModal"
+		@saved="closeAdminModal" />
 </template>
 
 <script>
 import {
+	CnActionDialog,
 	CnAdminSettingsShell,
+	CnIndexPage,
 	CnRegisterMapping,
 	CnSettingsFieldsSection,
+	CnSettingsSection,
 } from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
 import { generateUrl } from '@nextcloud/router'
-import {
-	NcButton,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcSettingsSection,
-	NcTextField,
-} from '@nextcloud/vue'
-import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
-import ForecastSettings from '../../components/admin/ForecastSettings.vue'
+import { NcNoteCard } from '@nextcloud/vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
-import SkillSettings from '../../components/admin/SkillSettings.vue'
+import PosRoleFormDialog from '../../dialogs/PosRoleFormDialog.vue'
+import PosStaffFormDialog from '../../dialogs/PosStaffFormDialog.vue'
+import PosTenderTypeFormDialog from '../../modals/PosTenderTypeFormDialog.vue'
 import CtiPage from './CtiPage.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
 import DeliverabilitySettings from './DeliverabilitySettings.vue'
 import DetectedIntegrations from './DetectedIntegrations.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
-import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
-import MenuStructureSettings from './MenuStructureSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
 import PaymentSettingsForm from './PaymentSettingsForm.vue'
 import PipelineManager from './PipelineManager.vue'
-import PosRoleManager from './PosRoleManager.vue'
-import PosStaffManager from './PosStaffManager.vue'
-import PosTenderTypeManager from './PosTenderTypeManager.vue'
-import ProductCategoryManager from './ProductCategoryManager.vue'
-import ProspectSettings from './ProspectSettings.vue'
 import TagManager from './TagManager.vue'
-import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import manifest from '../../manifest.json'
 import { leadSourceLabel } from '../../services/leadSourceLabels.js'
@@ -309,6 +294,8 @@ import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
+import { useSkillsStore } from '../../store/modules/skills.js'
+import { adminLists } from './adminLists.js'
 import adminSections from './adminSections.json'
 
 /**
@@ -322,6 +309,18 @@ function shillinqDetected() {
 	return detected?.shillinq?.installed === true
 }
 
+/**
+ * The modals the page's lists open, by the name a declaration uses.
+ *
+ * @type {Record<string, object>}
+ */
+const ADMIN_MODALS = {
+	CnActionDialog,
+	PosRoleFormDialog,
+	PosStaffFormDialog,
+	PosTenderTypeFormDialog,
+}
+
 export default {
 	name: 'PipelinqAdminSettings',
 	components: {
@@ -329,35 +328,32 @@ export default {
 		DeliverabilitySettings,
 		CtiPage,
 		PaymentSettingsForm,
-		PosTenderTypeManager,
-		PosStaffManager,
-		PosRoleManager,
 		PortalSettings,
 		CnAdminSettingsShell,
+		CnIndexPage,
 		CnRegisterMapping,
 		CnSettingsFieldsSection,
-		NcButton,
-		NcLoadingIcon,
+		CnSettingsSection,
 		NcNoteCard,
-		NcSettingsSection,
-		NcTextField,
 		PipelineManager,
-		ProductCategoryManager,
-		ProspectSettings,
 		TagManager,
-		SkillSettings,
-		AgentProfileSettings,
-		ForecastSettings,
 		MailingListEmbedSettings,
-		MarketingTrafficSettings,
-		MenuStructureSettings,
 		DetectedIntegrations,
-		VatRatesSettings,
+	},
+
+	provide() {
+		return {
+			cnOpenModal: (key, props = {}) => this.openAdminModal(key, props),
+		}
 	},
 
 	data() {
 		return {
 			config: {},
+			// The modal a list on this page opened: `{ key, props }`, or null.
+			adminModal: null,
+			// Bumped when a modal closes, so the lists read their rows again.
+			listKey: 0,
 			appVersion: loadState('pipelinq', 'version', 'Unknown'),
 			// Board PqBeheer: the path under the title. The first crumb goes back
 			// to the server's administration settings.
@@ -380,13 +376,6 @@ export default {
 			isAdmin: false,
 			// Shillinq is detected, never configured (pipelinq-audit-admin-forms-pos).
 			shillinqInstalled: shillinqDetected(),
-			// xWiki integration (xwiki-integration).
-			savingXwiki: false,
-			testingXwiki: false,
-			xwikiMessage: '',
-			xwikiMessageType: 'success',
-			xwikiStatus: null,
-			xwikiAppInstalled: true,
 		}
 	},
 
@@ -417,6 +406,31 @@ export default {
 		 */
 		objectStore() {
 			return useObjectStore()
+		},
+
+		/**
+		 * The page's lists, as CnIndexPage props.
+		 *
+		 * @return {Record<string, object>}
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-admin-lists-are-declared-index-pages
+		 */
+		lists() {
+			const registry = this.objectStore.objectTypeRegistry || {}
+			return adminLists(
+				t,
+				(slug) => registry[slug],
+				(key, props) => this.openAdminModal(key, props),
+				useSkillsStore().skills || [],
+			)
+		},
+
+		/**
+		 * The component of the open modal, or null.
+		 *
+		 * @return {object|null}
+		 */
+		adminModalComponent() {
+			return this.adminModal ? ADMIN_MODALS[this.adminModal.key] || null : null
 		},
 
 		isConfigured() {
@@ -484,14 +498,9 @@ export default {
 		}
 
 		if (this.isConfigured) {
+			useSkillsStore().fetchSkills()
 			this.leadSourcesStore.fetchSources()
 			this.requestChannelsStore.fetchChannels()
-		}
-
-		if (this.isAdmin) {
-			// xWiki integration (xwiki-integration): probe status so the
-			// admin section shows the reachable / unreachable badge on load.
-			this.testXwiki()
 		}
 	},
 
@@ -533,17 +542,6 @@ export default {
 		},
 
 		/**
-		 * Keep the page's config in step with what the marketing traffic
-		 * section saved, so the other sections do not overwrite it.
-		 *
-		 * @param {object} updated The updated config returned by the section.
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
-		 */
-		onMarketingTrafficSaved(updated) {
-			this.config = updated || this.config
-		},
-
-		/**
 		 * Keep the page's config in step with what a declared section saved,
 		 * so the register mapping does not write an older value back.
 		 *
@@ -552,6 +550,30 @@ export default {
 		 */
 		onSectionSaved(sent) {
 			this.config = { ...this.config, ...(sent || {}) }
+		},
+
+		/**
+		 * Open one of the page's modals; an unknown name opens nothing.
+		 *
+		 * @param {string} key The modal's name.
+		 * @param {object} props Its props.
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-admin-lists-are-declared-index-pages
+		 */
+		openAdminModal(key, props = {}) {
+			if (!ADMIN_MODALS[key]) {
+				return
+			}
+			this.adminModal = { key, props }
+		},
+
+		/**
+		 * Close the open modal and read the lists again.
+		 *
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-admin-lists-are-declared-index-pages
+		 */
+		closeAdminModal() {
+			this.adminModal = null
+			this.listKey += 1
 		},
 
 		/**
@@ -623,134 +645,6 @@ export default {
 			await this.requestChannelsStore.renameChannel(id, name)
 		},
 
-		/**
-		 * @param {string} sourceName The lead source to count references for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-69
-		 */
-		async checkLeadSourceUsage(sourceName) {
-			return this.countObjectsWithField('lead', 'source', sourceName)
-		},
-
-		/**
-		 * @param {string} channelName The request channel to count references for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
-		 */
-		async checkRequestChannelUsage(channelName) {
-			// A request is a `ticket` narrowed by ticketType (unify-ticket-supertype),
-			// so the usage count must exclude complaints and contactmomenten.
-			return this.countObjectsWithField('ticket', 'channel', channelName, {
-				ticketType: 'request',
-			})
-		},
-
-		/**
-		 * Persist xWiki integration settings (xwiki-integration).
-		 *
-		 * @spec openspec/changes/xwiki-integration/tasks.md#8.1
-		 */
-		async saveXwiki() {
-			this.savingXwiki = true
-			this.xwikiMessage = ''
-			try {
-				const result = await this.settingsStore.saveSettings({
-					...this.config,
-					xwiki_default_space: (
-						this.config.xwiki_default_space || ''
-					).trim(),
-					xwiki_cache_ttl: String(this.config.xwiki_cache_ttl || 300),
-				})
-				if (result) {
-					this.config = this.settingsStore.config || result
-				}
-				this.xwikiMessage = t('pipelinq', 'xWiki settings saved.')
-				this.xwikiMessageType = 'success'
-				await this.testXwiki()
-			} catch (e) {
-				this.xwikiMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save xWiki settings.')
-				this.xwikiMessageType = 'error'
-			} finally {
-				this.savingXwiki = false
-			}
-		},
-
-		/**
-		 * Test the xWiki connection via /api/xwiki/status.
-		 *
-		 * @spec openspec/changes/xwiki-integration/tasks.md#8.1
-		 */
-		async testXwiki() {
-			this.testingXwiki = true
-			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/xwiki/status'),
-					{
-						headers: {
-							requesttoken:
-								typeof OC !== 'undefined' && OC.requestToken
-									? OC.requestToken
-									: '',
-							'OCS-APIREQUEST': 'true',
-						},
-					},
-				)
-				const data = await response.json()
-				this.xwikiStatus = data
-				this.xwikiAppInstalled = data && data.source === 'xwiki-app'
-				if (data.available) {
-					this.xwikiMessage = t('pipelinq', 'xWiki connection successful.')
-					this.xwikiMessageType = 'success'
-				} else {
-					this.xwikiMessage = t(
-						'pipelinq',
-						'xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq.',
-					)
-					this.xwikiMessageType = 'warning'
-				}
-			} catch (e) {
-				this.xwikiMessage =
-					e.message
-					|| t('pipelinq', 'Failed to reach the xWiki status endpoint.')
-				this.xwikiMessageType = 'error'
-			} finally {
-				this.testingXwiki = false
-			}
-		},
-
-		/**
-		 * Count objects of `type` whose `field` equals `value`, used to warn
-		 * before deleting a value something still references.
-		 *
-		 * @param {string} type The registered object-type slug.
-		 * @param {string} field The property to match on.
-		 * @param {string} value The value to match.
-		 * @param {object} [extraFilters] Additional query filters, e.g. the
-		 *   `ticketType` discriminator needed to narrow the `ticket` supertype
-		 *   down to one of its subtypes (unify-ticket-supertype).
-		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-71
-		 */
-		async countObjectsWithField(type, field, value, extraFilters = {}) {
-			const config = this.objectStore.objectTypeRegistry[type]
-			if (!config) return 0
-			const extra = Object.entries(extraFilters)
-				.map(([k, v]) => `${k}=${encodeURIComponent(v)}&`)
-				.join('')
-			const url = generateUrl(
-				`/apps/openregister/api/objects/${config.register}/${config.schema}?${extra}${field}=${encodeURIComponent(value)}&_limit=1`,
-			)
-			const response = await fetch(url, {
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
-			})
-			if (!response.ok) return 0
-			const data = await response.json()
-			return data.total || 0
-		},
 	},
 }
 </script>

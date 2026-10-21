@@ -8035,7 +8035,27 @@ OC.L10N.register(
         "Week of": "Week of",
         "Paid invoice": "Paid invoice",
         "Won lead": "Won lead",
-        "{counts.sent} sent, {counts.refused} refused, {counts.failed} failed": "{counts.sent} sent, {counts.refused} refused, {counts.failed} failed"
+        "{counts.sent} sent, {counts.refused} refused, {counts.failed} failed": "{counts.sent} sent, {counts.refused} refused, {counts.failed} failed",
+        "Forecast team groups": "Forecast team groups",
+        "Dutch Standard Industrial Classification codes. One code per line.": "Dutch Standard Industrial Classification codes. One code per line.",
+        "Used for OpenCorporates search. One keyword per line.": "Used for OpenCorporates search. One keyword per line.",
+        "Last 10 transactions": "Last 10 transactions",
+        "Last 20 transactions": "Last 20 transactions",
+        "Last 50 transactions": "Last 50 transactions",
+        "CallVoip": "CallVoip",
+        "RingCentral": "RingCentral",
+        "Asterisk": "Asterisk",
+        "Basic": "Basic",
+        "API key": "API key",
+        "NL": "NL",
+        "xWiki reachable at {baseUrl}": "xWiki reachable at {baseUrl}",
+        "The tender type is deleted.": "The tender type is deleted.",
+        "A tender type that active tenders still use cannot be deleted.": "A tender type that active tenders still use cannot be deleted.",
+        "How a customer can pay at the till (cash, pin, voucher) and the GL account each one posts to. Distinct from the payment providers above, which process the money.": "How a customer can pay at the till (cash, pin, voucher) and the GL account each one posts to. Distinct from the payment providers above, which process the money.",
+        "Permission sets a cashier can hold at the register: voiding, refunds, opening the cash drawer.": "Permission sets a cashier can hold at the register: voiding, refunds, opening the cash drawer.",
+        "%1$s is still used by %2$s leads. Give them another source first.": "%1$s is still used by %2$s leads. Give them another source first.",
+        "%1$s is still used by %2$s requests. Give them another channel first.": "%1$s is still used by %2$s requests. Give them another channel first.",
+        "Remove {name}": "Remove {name}"
     },
     "nplurals=2; plural=(n != 1);"
 )

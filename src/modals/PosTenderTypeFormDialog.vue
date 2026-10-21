@@ -109,7 +109,7 @@ export default {
 	},
 
 	props: {
-		tenderType: {
+		object: {
 			type: Object,
 			default: null,
 		},
@@ -126,7 +126,7 @@ export default {
 
 	computed: {
 		isNew() {
-			return !this.tenderType || !this.idOf(this.tenderType)
+			return !this.object || !this.idOf(this.object)
 		},
 
 		canSave() {
@@ -136,7 +136,7 @@ export default {
 
 	methods: {
 		initialForm() {
-			const src = this.tenderType || {}
+			const src = this.object || {}
 			return {
 				name: src.name || '',
 				code: (src.code || '').toUpperCase(),
@@ -154,7 +154,7 @@ export default {
 			this.saving = true
 			this.errorMessage = ''
 			try {
-				const id = this.idOf(this.tenderType)
+				const id = this.idOf(this.object)
 				const url = this.isNew
 					? generateUrl('/apps/pipelinq/api/pos/tender-types')
 					: generateUrl('/apps/pipelinq/api/pos/tender-types/{id}', { id })

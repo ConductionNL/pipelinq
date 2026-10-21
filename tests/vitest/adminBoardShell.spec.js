@@ -11,6 +11,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import sections from '../../src/views/settings/adminSections.json'
 
 const source = readFileSync(
 	resolve(__dirname, '../../src/views/settings/Settings.vue'),
@@ -47,18 +48,16 @@ describe('the admin page', () => {
 			"t('pipelinq', 'Lead Sources')",
 			"t('pipelinq', 'Request Channels')",
 			'v-bind="sections.leadManagement"',
-			'<ProductCategoryManager',
-			'<MenuStructureSettings',
-			'<SkillSettings',
-			'<AgentProfileSettings',
+			'v-bind="lists.productCategory"',
+			'v-bind="sections.menuStructure"',
+			'v-bind="lists.skill"',
+			'v-bind="lists.agentProfile"',
 		].map(at)
 		expect(order).toEqual([...order].sort((a, b) => a - b))
 	})
 
 	it('spans the menu structure across the grid, as the board draws it', () => {
-		expect(template).toMatch(
-			/<MenuStructureSettings[^>]*class="cn-settings-section--wide"/,
-		)
+		expect(sections.menuStructure.wide).toBe(true)
 	})
 
 	it('keeps every section it had', () => {
@@ -66,23 +65,24 @@ describe('the admin page', () => {
 			'v-bind="sections.provisionData"',
 			':showSetup="isAdmin"',
 			'<DetectedIntegrations',
-			'<VatRatesSettings',
+			'v-bind="sections.vatRates"',
 			'<PipelineManager',
-			'<ForecastSettings',
-			'<ProspectSettings',
+			'v-bind="sections.forecast"',
+			'v-bind="sections.prospect"',
 			'v-bind="sections.exportConfiguration"',
 			'<MailingListEmbedSettings',
 			'v-bind="sections.shillinq"',
-			"t('pipelinq', 'xWiki integration')",
+			'v-bind="sections.xwiki"',
 			'<MessagingSettings',
 			'<DeliverabilitySettings',
 			'<CtiPage',
 			'<PortalSettings',
 			'<PaymentSettingsForm',
-			'<PosTenderTypeManager',
-			'<PosStaffManager',
-			'<PosRoleManager',
-			'<MarketingTrafficSettings',
+			'v-bind="sections.posCustomer"',
+			'v-bind="lists.posTenderType"',
+			'v-bind="lists.posStaff"',
+			'v-bind="lists.posRole"',
+			'v-bind="sections.marketingTraffic"',
 			'v-bind="sections.marketingIntel"',
 			'v-bind="sections.brpMonitor"',
 		]) {

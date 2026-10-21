@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 //
 // Frontend API client for the POS customer-link surface.
-// All endpoints documented in lib/Controller/PosCustomerController.php +
-// lib/Controller/PosCustomerSettingsController.php.
+// All endpoints documented in lib/Controller/PosCustomerController.php.
 //
 // @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
 
@@ -80,28 +79,4 @@ export async function detachCustomer(transactionId) {
 		),
 	)
 	return data?.transaction || null
-}
-
-/**
- * Read the POS customer-link admin settings.
- *
- * @return {Promise<object>} The settings.
- */
-export async function getCustomerSettings() {
-	const { data } = await axios.get(base('/api/admin/pos-customer-settings'))
-	return data?.settings || {}
-}
-
-/**
- * Update the POS customer-link admin settings.
- *
- * @param {object} settings The settings payload.
- * @return {Promise<object>} The persisted settings.
- */
-export async function updateCustomerSettings(settings) {
-	const { data } = await axios.post(
-		base('/api/admin/pos-customer-settings'),
-		settings,
-	)
-	return data?.settings || {}
 }

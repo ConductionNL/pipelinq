@@ -52,6 +52,7 @@ vi.mock('@nextcloud/vue', () => ({
 	NcCheckboxRadioSwitch: { name: 'NcCheckboxRadioSwitch', ...slot('label') },
 	NcLoadingIcon: { name: 'NcLoadingIcon', render: () => h('span') },
 	NcNoteCard: { name: 'NcNoteCard', ...slot('div') },
+	NcSelect: { name: 'NcSelect', props: ['modelValue', 'options', 'inputLabel', 'taggable'], emits: ['update:modelValue'], render: () => h('div') },
 	NcSettingsSection: { name: 'NcSettingsSection', ...slot('section') },
 }))
 
@@ -74,6 +75,9 @@ const storedConfig = {
  */
 function answerGets() {
 	axiosMock.get.mockImplementation((url) => {
+		if (url.endsWith('/portal/api/admin/tenants')) {
+			return Promise.resolve({ data: { tenants: [{ id: 'default', label: 'default' }, { id: 'zuid', label: 'Gemeente Zuid' }] } })
+		}
 		if (url.endsWith('/portal/api/admin/tenant-config')) {
 			return Promise.resolve({
 				data: { config: storedConfig, configured: true },
@@ -176,5 +180,23 @@ describe('PortalSettings', () => {
 		expect(source).toMatch(
 			/import PortalSettings from '..\/..\/components\/admin\/PortalSettings.vue'/,
 		)
+	})
+
+	// Q15: the tenant is picked from the tenants with a configuration, not typed.
+	it('picks the tenant from the tenants and reads the picked one', async () => {
+		const wrapper = mount(PortalSettings)
+		await flushPromises()
+
+		const picker = wrapper.findComponent({ name: 'NcSelect' })
+		expect(picker.props('inputLabel')).toBe('Tenant')
+		expect(picker.props('options').map((option) => option.label)).toEqual(['default', 'Gemeente Zuid'])
+		expect(picker.props('taggable')).toBe(true)
+		expect(wrapper.find('input#portal-tenant-id').exists()).toBe(false)
+
+		axiosMock.get.mockClear()
+		picker.vm.$emit('update:modelValue', { id: 'zuid', label: 'Gemeente Zuid' })
+		await flushPromises()
+		const configCall = axiosMock.get.mock.calls.find((call) => call[0].endsWith('/tenant-config'))
+		expect(configCall[1].params).toEqual({ tenantId: 'zuid' })
 	})
 })
