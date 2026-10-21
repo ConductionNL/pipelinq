@@ -141,3 +141,21 @@ describe('subscriptions', () => {
 		expect(contact.config.headerActions.find((a) => a.id === 'manage-subscriptions')).toMatchObject({ type: 'open-modal', target: 'SubscriptionManageModal', props: { contactId: '@objectId' } })
 	})
 })
+
+describe('journey runs', () => {
+	const journeys = readJson('src', 'manifest.d', '79-marketing-journeys.json')
+	const runSchema = readJson('lib', 'Settings', 'register.d', '99-marketing-integrated-campaigns.json').components.schemas.journeyRun.properties
+
+	it('lists what a journey did from its runs, with the counts above and the reasons in words', () => {
+		const detail = journeys.pages.find((p) => p.id === 'JourneyDetail')
+		const runs = detail.config.widgets.find((w) => w.id === 'journey-runs')
+		expect(runs.type).toBe('object-table')
+		expect(runs.content.endpointSource).toEqual({ url: '/apps/pipelinq/api/journeys/@objectId/runs', responsePath: 'results' })
+		expect(runs.content.note).toBe('{counts.sent} sent, {counts.refused} refused, {counts.failed} failed')
+		const columns = Object.fromEntries(runs.content.columns.map((c) => [c.key, c]))
+		expect(columns.contactId.widget).toBe('fkResolve')
+		expect(columns.state.enumLabels).toEqual(runSchema.state['x-enum-labels'])
+		expect(columns.reason.enumLabels.suppressed_dunning).toBe('Skipped: this customer is being chased for an unpaid invoice')
+		expect(columns.reason.enumLabels.no_consent).not.toBe(columns.reason.enumLabels.no_transport)
+	})
+})

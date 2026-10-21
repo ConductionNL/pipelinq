@@ -16,9 +16,6 @@ import {
 	degradedSources,
 	flowStatusMessage,
 	isAgentAuthored,
-	runCounts,
-	runReasonLabel,
-	runStateLabel,
 } from '../../src/services/journeyLabels.js'
 
 /**
@@ -34,60 +31,6 @@ function t(app, text, params = {}) {
 		params[key] === undefined ? match : String(params[key]),
 	)
 }
-
-describe('runStateLabel', () => {
-	it('turns every stored state into words', () => {
-		expect(runStateLabel('sent', t)).toBe('Sent')
-		expect(runStateLabel('refused', t)).toBe('Refused')
-		expect(runStateLabel('task-created', t)).toBe('Task created')
-		expect(runStateLabel('failed', t)).toBe('Failed')
-	})
-
-	it('hands an unknown state back rather than hiding it', () => {
-		expect(runStateLabel('parked', t)).toBe('parked')
-	})
-})
-
-describe('runReasonLabel', () => {
-	it('says what a suppression actually means', () => {
-		expect(runReasonLabel('suppressed_dunning', t)).toBe(
-			'Skipped: this customer is being chased for an unpaid invoice',
-		)
-	})
-
-	it('distinguishes no consent from a missing transport', () => {
-		expect(runReasonLabel('no_consent', t)).toBe('No consent for this channel')
-		expect(runReasonLabel('no_transport', t)).toBe(
-			'No mail transport is configured',
-		)
-		expect(runReasonLabel('no_consent', t)).not.toBe(
-			runReasonLabel('no_transport', t),
-		)
-	})
-
-	it('hands an unknown reason back rather than blanking the row', () => {
-		expect(runReasonLabel('something_new', t)).toBe('something_new')
-	})
-})
-
-describe('runCounts', () => {
-	it('counts a refusal on its own', () => {
-		expect(
-			runCounts([
-				{ state: 'sent' },
-				{ state: 'refused' },
-				{ state: 'refused' },
-				{ state: 'failed' },
-				{ state: 'task-created' },
-			]),
-		).toEqual({ sent: 2, refused: 2, failed: 1 })
-	})
-
-	it('answers zeroes for an empty or absent list', () => {
-		expect(runCounts([])).toEqual({ sent: 0, refused: 0, failed: 0 })
-		expect(runCounts(undefined)).toEqual({ sent: 0, refused: 0, failed: 0 })
-	})
-})
 
 describe('flowStatusMessage', () => {
 	it('says nothing when the journey compiled', () => {

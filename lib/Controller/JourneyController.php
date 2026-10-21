@@ -212,7 +212,18 @@ class JourneyController extends Controller {
 			return $denied;
 		}
 
-		return new JSONResponse(['results' => $this->journeys->runsFor(journeyId: $id)]);
+		$runs = $this->journeys->runsFor(journeyId: $id);
+		$counts = ['sent' => 0, 'refused' => 0, 'failed' => 0];
+		foreach ($runs as $run) {
+			$state = (string)($run['state'] ?? '');
+			if ($state !== 'refused' && $state !== 'failed') {
+				$state = 'sent';
+			}
+
+			$counts[$state]++;
+		}
+
+		return new JSONResponse(['results' => $runs, 'counts' => $counts]);
 	}//end runs()
 
 	/**

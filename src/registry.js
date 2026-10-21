@@ -50,7 +50,6 @@ import CustomerReplySection from './components/CustomerReplySection.vue'
 import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
-import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
 import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
 import ListSubscriberViewSection from './components/marketing/ListSubscriberViewSection.vue'
 import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
@@ -491,11 +490,7 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
-	JourneyRunsSection: {
-		kind: 'section',
-		component: JourneyRunsSection,
-		_note: 'In-body section for the declarative type:"detail" JourneyDetail page (marketing-integrated-campaigns, placement end). Lists every contact a journey reached and every contact it REFUSED, with the reason in words. Not a declarative object-list widget: that widget renders the stored enum value, and "suppressed_dunning" tells a marketer nothing. The refusal is the whole point of the section, because a journey that reached nobody looks exactly like a journey with a small audience. Self-fetches by journeyId (@objectId).',
-	},
+
 	CampaignLandingPageSection: {
 		kind: 'section',
 		component: CampaignLandingPageSection,
@@ -853,12 +848,7 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'The campaign report as a card of the campaign page\'s Overview tab (PqCampagne): one GET /api/campaigns/{id}/report.',
 	},
-	JourneyRunsWidget: {
-		kind: 'widget',
-		component: sectionWidget('JourneyRunsWidget', JourneyRunsSection, ({ objectId }) => ({ journeyId: objectId })),
-		...PANEL_WIDGET_META,
-		_note: 'JourneyRunsSection as a card of the journey page\'s Overview tab (PqJourney).',
-	},
+
 	CampaignReportSection: {
 		kind: 'section',
 		component: CampaignReportView,

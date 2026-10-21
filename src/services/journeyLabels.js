@@ -15,68 +15,6 @@
  */
 
 /**
- * How a journey run ended, in words.
- *
- * @param {string} state The stored state.
- * @param {function(string, string): string} t The translator.
- * @return {string} The label, falling back to the stored value.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
- */
-export function runStateLabel(state, t) {
-	const labels = {
-		sent: t('pipelinq', 'Sent'),
-		refused: t('pipelinq', 'Refused'),
-		'task-created': t('pipelinq', 'Task created'),
-		failed: t('pipelinq', 'Failed'),
-	}
-	return labels[state] || state
-}
-
-/**
- * Why a journey refused or failed, in words.
- *
- * @param {string} reason The stored reason.
- * @param {function(string, string): string} t The translator.
- * @return {string} The label, falling back to the stored value.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
- */
-export function runReasonLabel(reason, t) {
-	const labels = {
-		no_consent: t('pipelinq', 'No consent for this channel'),
-		suppressed_dunning: t(
-			'pipelinq',
-			'Skipped: this customer is being chased for an unpaid invoice',
-		),
-		template_missing: t('pipelinq', 'The template is gone'),
-		no_transport: t('pipelinq', 'No mail transport is configured'),
-		no_email: t('pipelinq', 'This contact has no email address'),
-		transport_rejected: t('pipelinq', 'The mail transport rejected it'),
-	}
-	return labels[reason] || reason
-}
-
-/**
- * How many runs ended each way.
- *
- * A refusal is counted on its own, because a journey that reached nobody
- * because nobody consented looks exactly like a journey with a small
- * audience until these two numbers are side by side.
- *
- * @param {Array<object>} runs The journey runs.
- * @return {object} `{sent, refused, failed}`.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
- */
-export function runCounts(runs) {
-	const counts = { sent: 0, refused: 0, failed: 0 }
-	for (const run of runs || []) {
-		if (run.state === 'refused') counts.refused += 1
-		else if (run.state === 'failed') counts.failed += 1
-		else counts.sent += 1
-	}
-	return counts
-}
-
-/**
  * What the flow engine did with a journey, in words.
  *
  * An empty string means it compiled cleanly and there is nothing to say.

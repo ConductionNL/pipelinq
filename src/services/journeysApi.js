@@ -57,20 +57,6 @@ export async function saveJourney(payload, journeyId = '') {
 }
 
 /**
- * What one journey did, and who it refused.
- *
- * @param {string} journeyId The journey id.
- * @return {Promise<Array<object>>} The runs.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
- */
-export async function fetchJourneyRuns(journeyId) {
-	const { data } = await axios.get(
-		generateUrl(`/apps/pipelinq/api/journeys/${journeyId}/runs`),
-	)
-	return data?.results || []
-}
-
-/**
  * The weekly review, in one request.
  *
  * @return {Promise<object>} The review.

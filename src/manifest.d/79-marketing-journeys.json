@@ -287,10 +287,38 @@
 					},
 					{
 						"id": "journey-runs",
-						"type": "JourneyRunsWidget",
+						"type": "object-table",
 						"title": "What this journey did",
+						"subtitle": "Every contact reached and every contact refused",
 						"content": {
-							"title": "What this journey did"
+							"endpointSource": { "url": "/apps/pipelinq/api/journeys/@objectId/runs", "responsePath": "results" },
+							"note": "{counts.sent} sent, {counts.refused} refused, {counts.failed} failed",
+							"columns": [
+								{ "key": "contactId", "label": "Reached contact", "widget": "fkResolve", "widgetProps": { "register": "pipelinq", "schema": "contact", "labelField": "name" } },
+								{ "key": "occurredAt", "label": "When", "widget": "date", "widgetProps": { "showTime": true } },
+								{
+									"key": "state",
+									"label": "Outcome",
+									"widget": "badge",
+									"enum": ["sent", "refused", "task-created", "failed"],
+									"enumLabels": { "sent": "Sent", "refused": "Refused", "task-created": "Task created", "failed": "Failed" },
+									"widgetProps": { "colorMap": { "sent": "success", "task-created": "success", "refused": "warning", "failed": "error" } }
+								},
+								{
+									"key": "reason",
+									"label": "Why",
+									"enum": ["no_consent", "suppressed_dunning", "template_missing", "no_transport", "no_email", "transport_rejected"],
+									"enumLabels": {
+										"no_consent": "No consent for this channel",
+										"suppressed_dunning": "Skipped: this customer is being chased for an unpaid invoice",
+										"template_missing": "The template is gone",
+										"no_transport": "No mail transport is configured",
+										"no_email": "This contact has no email address",
+										"transport_rejected": "The mail transport rejected it"
+									}
+								}
+							],
+							"emptyText": "This journey has not run yet. Once its trigger fires, every contact it reached and every contact it refused is listed here."
 						}
 					}
 				],
