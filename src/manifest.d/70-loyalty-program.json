@@ -53,6 +53,7 @@
 						"label": "Enrol a customer",
 						"type": "open-form",
 						"icon": "AccountPlus",
+						"schema": "customerLoyaltyAccount",
 						"endpoint": { "url": "/apps/pipelinq/api/loyalty/accounts", "method": "POST" },
 						"formProperties": {
 							"customerId": { "type": "string", "title": "Customer" },
