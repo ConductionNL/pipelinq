@@ -59,15 +59,78 @@
 		},
 		{
 			"id": "ConnectionAudit",
-			"_note": "The follow audit (marketing-search-intelligence). Custom rather than a declarative type:index over socialConnection, because the page's whole job is to render the REASON an answer is unknown next to the answer, and because it offers a re-run action. A declarative index would show the three-valued fields as bare enum labels and drop the reason, which is the half a marketer needs in order not to act on a wrong no.",
+			"_note": "The follow audit (marketing-search-intelligence): a table on GET /apps/pipelinq/api/marketing/connection-audit that shows the reason beside every answer, so a marketer does not act on a wrong no. Check again reads the networks anew (refresh=true) and the table reads the result.",
 			"route": "/marketing/connection-audit",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Connection audit",
-			"component": "ConnectionAuditView",
 			"config": {
-				"register": "pipelinq",
-				"schema": "socialConnection",
-				"documentationUrl": "https://pipelinq.conduction.nl"
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"headerActions": [
+					{
+						"id": "check-again",
+						"label": "Check again",
+						"type": "api-call",
+						"method": "GET",
+						"icon": "Refresh",
+						"url": "/apps/pipelinq/api/marketing/connection-audit",
+						"params": { "refresh": "true" },
+						"successMessage": "The connections were checked again"
+					}
+				],
+				"widgets": [
+					{
+						"id": "connection-audit",
+						"type": "object-table",
+						"title": "Connections",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/marketing/connection-audit", "responsePath": "rows" },
+							"columns": [
+								{
+									"key": "counterpartHandle",
+									"label": "Handle",
+									"widget": "link",
+									"widgetProps": { "href": "{counterpartUrl}" },
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "network",
+									"label": "Network",
+									"enum": ["mastodon", "bluesky", "linkedin", "x", "facebook", "instagram", "threads"],
+									"enumLabels": {
+										"mastodon": "Mastodon",
+										"bluesky": "Bluesky",
+										"linkedin": "LinkedIn",
+										"x": "X",
+										"facebook": "Facebook page",
+										"instagram": "Instagram business",
+										"threads": "Threads"
+									}
+								},
+								{
+									"key": "weFollowThem",
+									"label": "We follow them",
+									"enum": ["yes", "no", "unknown"],
+									"enumLabels": { "yes": "Yes", "no": "No", "unknown": "Cannot be checked" },
+									"widget": "badge",
+									"widgetProps": { "colorMap": { "yes": "success", "no": "warning", "unknown": "default" } }
+								},
+								{
+									"key": "theyFollowUs",
+									"label": "They follow us",
+									"enum": ["yes", "no", "unknown"],
+									"enumLabels": { "yes": "Yes", "no": "No", "unknown": "Cannot be checked" },
+									"widget": "badge",
+									"widgetProps": { "colorMap": { "yes": "success", "no": "warning", "unknown": "default" } }
+								},
+								{ "key": "reason", "label": "Reason" }
+							],
+							"emptyText": "Nothing to compare yet. Connect a social account and give a client a handle on the same network. Only Mastodon and Bluesky publish a follower list an audit can read; for the other networks this page will say so rather than guess."
+						}
+					}
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "connection-audit", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 8 }
+				]
 			}
 		}
 	]
