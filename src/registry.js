@@ -110,13 +110,6 @@ import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWid
 //     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
 import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
 import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
-// --- Lead-management analytics dashboard (lead-management REQ-LM-006..008).
-//     Declarative type:"dashboard" (pipelinq-dashboards-declarative): the four
-//     bespoke chart/table widgets are hosted in one kind:'section' bodyWidget
-//     (LeadAnalyticsSection) that self-fetches /api/rapportage/pipeline-stats
-//     once and keeps the in-widget filtering (pipeline selector + win/loss
-//     date-range re-fetch) the legacy view had. ---
-import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
 // What the resident reads of a request ticket (portal-resident-view-preview). ---
 import ResidentViewSection from './components/ResidentViewSection.vue'
 import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
@@ -304,10 +297,6 @@ import CashShiftListView from './views/pos/CashShiftList.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
 import ProspectsView from './views/prospects/ProspectsView.vue'
-import LeadAgingWidget from './views/rapportage/LeadAgingWidget.vue'
-import PipelineFunnelWidget from './views/rapportage/PipelineFunnelWidget.vue'
-import SourcePerformanceWidget from './views/rapportage/SourcePerformanceWidget.vue'
-import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 // --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit):
 //     "Convert to case" (request → ns#Case) and "Send to invoicing"
 //     (contract → ns#Invoice) in-body actions. Both self-fetch their
@@ -550,36 +539,6 @@ const registry = {
 		_note: 'Wraps CnIndexPage with the lead-management stale filter, overdue row highlighting and platform mass import/export dialogs (REQ-LM-002/004/005).',
 	},
 
-	// --- Lead-management analytics. ---
-	LeadAnalyticsSection: {
-		kind: 'section',
-		component: LeadAnalyticsSection,
-		_note: "In-body lead-analytics surface (pipeline funnel + source table + aging donut + win/loss) for the declarative LeadAnalytics dashboard. Self-fetches /api/rapportage/pipeline-stats ONCE and distributes the four slices to the presentational child widgets, preserving the legacy view's in-widget filtering (funnel pipeline selector, win/loss date-range re-fetch). KEPT-IN-SECTION because the filters live INSIDE the widgets and the win/loss date-range derives dateFrom/dateTo no page-level period pageFilter can emit.",
-	},
-	PipelineFunnelWidget: {
-		kind: 'widget',
-		component: PipelineFunnelWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Pipeline value per stage (count, total, weighted) — bar chart with pipeline filter (REQ-LM-006).',
-	},
-	SourcePerformanceWidget: {
-		kind: 'widget',
-		component: SourcePerformanceWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Source conversion table (total, won, rate, avg) sortable per column (REQ-LM-007).',
-	},
-	LeadAgingWidget: {
-		kind: 'widget',
-		component: LeadAgingWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Aging-bucket donut chart (≤7d / 8-14d / 15-30d / >30d) (REQ-LM-006).',
-	},
-	WinLossWidget: {
-		kind: 'widget',
-		component: WinLossWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
-	},
 	// --- Loyalty program (loyalty-program). ---
 	LoyaltyReportingView: {
 		kind: 'page',

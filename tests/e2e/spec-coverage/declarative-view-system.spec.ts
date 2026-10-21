@@ -1076,7 +1076,7 @@ test('Agent performance: team totals and a leaderboard on the agent rows, driven
 })
 
 // @e2e openspec/specs/declarative-view-system/spec.md#lead-analytics-renders-the-four-lead-widgets-from-one-fetch
-test('Lead analytics: four widgets from ONE pipeline-stats fetch, re-fetched on range change', async ({
+test('Lead analytics: every widget from ONE pipeline-stats fetch, re-fetched on range change', async ({
 	page,
 }) => {
 	// Every request the page makes to the lead-analytics endpoint, so "ONE
@@ -1090,17 +1090,12 @@ test('Lead analytics: four widgets from ONE pipeline-stats fetch, re-fetched on 
 	await gotoPage(page, '/rapportage')
 	const content = page.locator('#content-vue')
 
-	await expect(page.locator('[data-section-id="lead-analytics"]')).toHaveCount(1)
-	await expect(
-		page.locator('[data-testid^="cn-body-section-error-"]'),
-	).toHaveCount(0)
-
-	// The four widgets the single fetch feeds.
+	// The widgets the single fetch feeds.
 	for (const title of [
 		'Pipeline funnel',
 		'Source performance',
 		'Lead aging',
-		'Win/loss',
+		'Won vs lost',
 	]) {
 		await expect(
 			content.getByRole('heading', { name: title }).first(),
@@ -1116,24 +1111,27 @@ test('Lead analytics: four widgets from ONE pipeline-stats fetch, re-fetched on 
 	// once.
 	statsCalls.length = 0
 
-	// The win/loss date-range selector re-fetches the whole section with
-	// dateFrom/dateTo (that from/to pair is exactly what a static period select
-	// cannot emit, which is why this page has no page-level period filter).
+	// The page date range re-fetches with dateFrom/dateTo, and every widget
+	// reads the one answer.
 	const refetch = page.waitForRequest(
 		(req) =>
 			req.url().includes('/api/rapportage/pipeline-stats')
 			&& req.url().includes('dateFrom='),
 		{ timeout: 20000 },
 	)
-	await content.locator('.win-loss-widget__filters').first().click()
+	await content
+		.locator('.vs__dropdown-toggle, .v-select')
+		.filter({ hasText: /All time|Last 30 days|Last 90 days|Last 12 months/ })
+		.first()
+		.click()
 	await page
 		.locator('li[role="option"], .vs__dropdown-option')
 		.filter({ hasText: 'Last 30 days' })
 		.first()
 		.click()
 	await refetch
-	// Still ONE call — the other three widgets are fed from the same payload and
-	// do not fetch for themselves.
+	// Still ONE call: the shared endpoint source sends one request for every
+	// widget that reads the same url and params.
 	await expect(
 		content.getByRole('heading', { name: 'Pipeline funnel' }).first(),
 	).toBeVisible()
@@ -1147,6 +1145,10 @@ test('Lead analytics: four widgets from ONE pipeline-stats fetch, re-fetched on 
 			path.join(APP_ROOT, 'src', 'views', 'rapportage', 'RapportageView.vue'),
 		),
 		'RapportageView.vue must not have come back',
+	).toBe(false)
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'components', 'rapportage', 'LeadAnalyticsSection.vue')),
+		'LeadAnalyticsSection.vue must not have come back',
 	).toBe(false)
 	await assertNoHardError(page)
 })

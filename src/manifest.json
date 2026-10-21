@@ -7042,18 +7042,312 @@
 		},
 		{
 			"id": "Rapportage",
-			"_note": "Lead analytics as a declarative type:dashboard page (pipelinq-dashboards-declarative). The surface has no headline KPI cards to lift into endpoint stat widgets — its four bespoke widgets (pipeline-value funnel bar chart, source-performance table, lead-aging donut, win/loss pie + KPI block) are fed from ONE GET /api/rapportage/pipeline-stats fetch and the interactivity lives INSIDE the widgets (the funnel's OR-sourced pipeline selector filters in memory; the win/loss date-range selector re-fetches with dateFrom/dateTo). All four therefore live in one kind:'section' bodyWidget (LeadAnalyticsSection) which preserves the legacy single-fetch + in-widget filtering verbatim. KEPT-AS-NOTE: no page-level period pageFilter — the date window is derived inside the win/loss range selector (a from/to pair a static select cannot emit) and the pipeline selector's options are OR-sourced; missing primitives: derived-date-range pageFilter + OR-collection pageFilter options.",
+			"_note": "Lead analytics: every widget reads GET /apps/pipelinq/api/rapportage/pipeline-stats at its own responsePath, and the shared endpoint source sends one request for all of them. The pipeline filter narrows the funnel, and the date range narrows source performance and win/loss.",
 			"route": "/rapportage",
 			"type": "dashboard",
 			"title": "Analytics",
 			"config": {
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"bodyWidgets": [
+				"pageFilters": [
 					{
-						"id": "lead-analytics",
-						"component": "LeadAnalyticsSection",
-						"placement": "before-grid"
+						"key": "pipeline",
+						"label": "Pipeline",
+						"type": "select",
+						"clearable": true,
+						"placeholder": "All pipelines",
+						"optionsFrom": { "register": "pipelinq", "schema": "pipeline", "labelField": "title" }
 					}
+				],
+				"dateRange": {
+					"enabled": true,
+					"persistKey": "pipelinq-lead-analytics-range",
+					"default": { "preset": "all" },
+					"presets": [
+						{ "id": "30d", "label": "Last 30 days", "days": 30 },
+						{ "id": "90d", "label": "Last 90 days", "days": 90 },
+						{ "id": "12m", "label": "Last 12 months", "days": 365 },
+						{ "id": "all", "label": "All time", "days": null }
+					]
+				},
+				"widgets": [
+					{
+						"id": "lead-funnel",
+						"type": "chart",
+						"title": "Pipeline funnel",
+						"content": {
+							"chartKind": "bar",
+							"emptyLabel": "There are no leads in this pipeline yet.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "stageValues",
+								"labelsPath": "stage",
+								"series": [
+									{ "name": "Total value", "path": "totalValue" },
+									{ "name": "Weighted value", "path": "weightedValue" }
+								]
+							},
+							"valueFormat": "currency"
+						}
+					},
+					{
+						"id": "lead-sources",
+						"type": "object-table",
+						"title": "Source performance",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "sourcePerformance"
+							},
+							"columns": [
+								{
+									"key": "source",
+									"label": "Source",
+									"enum": [
+										"website",
+										"email",
+										"phone",
+										"referral",
+										"partner",
+										"campaign",
+										"social_media",
+										"event",
+										"tender",
+										"other",
+										"cold-call",
+										"advertisement",
+										"landing-page",
+										"unknown"
+									],
+									"enumLabels": {
+										"website": "Website",
+										"email": "Email",
+										"phone": "Phone",
+										"referral": "Referral",
+										"partner": "Partner",
+										"campaign": "Campaign",
+										"social_media": "Social media",
+										"event": "Event or fair",
+										"tender": "Public tender",
+										"other": "Other",
+										"cold-call": "Cold call",
+										"advertisement": "Advertisement",
+										"landing-page": "Landing page",
+										"unknown": "No source"
+									}
+								},
+								{ "key": "total", "label": "Total leads", "format": { "style": "number" } },
+								{ "key": "won", "label": "Won", "format": { "style": "number" } },
+								{ "key": "conversionRate", "label": "Conversion %", "format": { "style": "percent", "decimals": 1 } },
+								{ "key": "avgWonValue", "label": "Avg deal value", "format": { "style": "currency", "decimals": 0 } }
+							],
+							"emptyText": "No lead source performance to report yet."
+						}
+					},
+					{
+						"id": "lead-aging",
+						"type": "chart",
+						"title": "Lead aging",
+						"content": {
+							"chartKind": "donut",
+							"emptyLabel": "There are no open leads to distribute into aging buckets.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "agingBuckets",
+								"labelsPath": "bucket",
+								"series": [
+									{ "name": "Leads", "path": "count" }
+								]
+							}
+						}
+					},
+					{
+						"id": "lead-win-loss",
+						"type": "chart",
+						"title": "Won vs lost",
+						"content": {
+							"chartKind": "pie",
+							"emptyLabel": "No won or lost leads in the selected range.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "winLossSlices",
+								"labelsPath": "label",
+								"series": [
+									{ "name": "Leads", "path": "count" }
+								]
+							}
+						}
+					},
+					{
+						"id": "lead-win-rate",
+						"type": "stat",
+						"title": "Win rate",
+						"content": {
+							"label": "Win rate",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.winRate",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "Trophy",
+							"format": { "style": "percent", "decimals": 1 }
+						}
+					},
+					{
+						"id": "lead-won",
+						"type": "stat",
+						"title": "Won",
+						"content": {
+							"label": "Won",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.wonCount",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CheckCircle",
+							"format": { "style": "number" }
+						}
+					},
+					{
+						"id": "lead-lost",
+						"type": "stat",
+						"title": "Lost",
+						"content": {
+							"label": "Lost",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.lostCount",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CloseCircle",
+							"format": { "style": "number" }
+						}
+					},
+					{
+						"id": "lead-avg-won",
+						"type": "stat",
+						"title": "Avg won deal value",
+						"content": {
+							"label": "Avg won deal value",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.avgWonValue",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CurrencyEur",
+							"format": { "style": "currency", "decimals": 0 }
+						}
+					},
+					{
+						"id": "lead-days-to-close",
+						"type": "stat",
+						"title": "Avg days to close",
+						"content": {
+							"label": "Avg days to close",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.avgDaysToClose",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CalendarClock",
+							"format": { "style": "decimal", "suffix": " days" }
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "lead-win-rate",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 2,
+						"widgetId": "lead-won",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 3,
+						"widgetId": "lead-lost",
+						"gridX": 5,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 4,
+						"widgetId": "lead-avg-won",
+						"gridX": 7,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 5,
+						"widgetId": "lead-days-to-close",
+						"gridX": 10,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{ "id": 6, "widgetId": "lead-funnel", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": 7, "widgetId": "lead-sources", "gridX": 0, "gridY": 7, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": 8, "widgetId": "lead-aging", "gridX": 0, "gridY": 12, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": 9, "widgetId": "lead-win-loss", "gridX": 6, "gridY": 12, "gridWidth": 6, "gridHeight": 5 }
 				]
 			}
 		},
