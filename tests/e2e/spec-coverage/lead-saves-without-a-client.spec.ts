@@ -36,7 +36,9 @@ async function openNewLeadDialog(page: Page) {
 	})
 	await button.click()
 
-	const dialog = page.locator('[data-testid="lead-create-dialog"]')
+	const dialog = page
+		.getByRole('dialog')
+		.filter({ has: page.locator('[data-cn-field="pipeline"]') })
 	await expect(dialog).toBeVisible({ timeout: 15000 })
 	return dialog
 }
@@ -87,11 +89,13 @@ test('the form says the client may stay empty', async ({ page }) => {
 	const dialog = await openNewLeadDialog(page)
 
 	await expect(
-		dialog.locator('[data-testid="lead-form-client-hint"]'),
+		dialog
+			.locator('[data-cn-field="client"]')
+			.getByText('Leave empty to save the lead without a client.'),
 		'the client field must say it may stay empty',
 	).toBeVisible({ timeout: 10000 })
 	await expect(
-		dialog.locator('[data-testid="lead-form-client"] .field-error'),
+		dialog.locator('[data-cn-field="client"] .cn-field-helper--error'),
 		'the client field must never report as missing',
 	).toHaveCount(0)
 
@@ -99,7 +103,7 @@ test('the form says the client may stay empty', async ({ page }) => {
 	// scenario 1), so it must not report as missing either. This fails if the
 	// auto-assign regresses.
 	await expect(
-		dialog.locator('[data-testid="lead-form-pipeline"] .field-error'),
+		dialog.locator('[data-cn-field="pipeline"] .cn-field-helper--error'),
 		'pipeline is auto-assigned from the default, so it must NOT report as missing',
 	).toBeHidden({ timeout: 10000 })
 })

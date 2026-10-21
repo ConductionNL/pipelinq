@@ -1,107 +1,109 @@
+<!--
+  - SPDX-License-Identifier: EUPL-1.2
+  - SPDX-FileCopyrightText: 2026 Conduction B.V.
+  -
+  - The New lead dialog: CnFormDialog over the lead create form
+  - (services/leadCreateForm.js). Opened as the createModal of the Leads and
+  - Pipeline pages; a created lead opens on its detail page.
+  -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'New Lead')"
-		:open="true"
-		size="normal"
+	<CnFormDialog
+		v-if="ready"
+		ref="form"
+		:dialogTitle="t('pipelinq', 'New Lead')"
+		:fields="fields"
+		register="pipelinq"
+		:item="null"
+		:initialData="initialData"
+		:confirmLabel="t('pipelinq', 'Create')"
+		:cancelLabel="t('pipelinq', 'Cancel')"
+		:feedback="false"
 		data-testid="lead-create-dialog"
-		@closing="$emit('close')">
-		<LeadForm
-			ref="form"
-			:showActions="false"
-			@save="onSave"
-			@update:valid="(v) => (valid = v)" />
-		<template #actions>
-			<NcButton data-testid="lead-create-cancel" @click="$emit('close')">
-				{{ t('pipelinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="!valid || saving"
-				data-testid="lead-create-save"
-				@click="submit">
-				{{ saving ? t('pipelinq', 'Creating…') : t('pipelinq', 'Create') }}
-			</NcButton>
-		</template>
-	</NcDialog>
+		@confirm="onConfirm"
+		@close="$emit('close')" />
 </template>
 
 <script>
-import { showError } from '@nextcloud/dialogs'
-import { NcButton, NcDialog } from '@nextcloud/vue'
-import LeadForm from '../views/leads/LeadForm.vue'
+import { CnFormDialog } from '@conduction/nextcloud-vue'
+import { leadCreateFields, leadCreateInitialData, leadCreatePayload } from '../services/leadCreateForm.js'
+import { leadSourceLabel } from '../services/leadSourceLabels.js'
+import { reportingCurrency } from '../services/reportingCurrency.js'
+import { useLeadSourcesStore } from '../store/modules/leadSources.js'
 import { useObjectStore } from '../store/modules/object.js'
+import { LEAD_PRIORITY_LABELS } from '../utils/enumLabels.js'
 
 export default {
 	name: 'LeadCreateDialog',
-	components: {
-		NcButton,
-		NcDialog,
-		LeadForm,
-	},
+	components: { CnFormDialog },
 
 	emits: ['created', 'close'],
+
 	data() {
 		return {
-			valid: false,
-			saving: false,
+			ready: false,
 		}
 	},
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-23
+		 * @return {Array<object>} The stored pipelines.
 		 */
-		objectStore() {
-			return useObjectStore()
+		pipelines() {
+			return useObjectStore().collections.pipeline || []
 		},
+
+		/**
+		 * @return {Array<object>} The form's field definitions.
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
+		 */
+		fields() {
+			return leadCreateFields({
+				translate: (text) => t('pipelinq', text),
+				pipelines: this.pipelines,
+				sources: useLeadSourcesStore().sourceNames,
+				sourceLabel: leadSourceLabel,
+				priorityLabels: LEAD_PRIORITY_LABELS,
+			})
+		},
+
+		/**
+		 * @return {object} The values a new lead starts with.
+		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+		 */
+		initialData() {
+			return leadCreateInitialData(this.pipelines, reportingCurrency())
+		},
+	},
+
+	async created() {
+		await Promise.all([
+			useObjectStore().fetchCollection('pipeline', { _limit: 100 }),
+			useLeadSourcesStore().fetchSources(),
+		])
+		this.ready = true
 	},
 
 	methods: {
 		/**
-		 * Navigate to the created record and close.
+		 * Save the lead, then open it. A refused save keeps the form open
+		 * with the server's message.
 		 *
-		 * A registry modal is mounted by CnAppRoot, which forwards only
-		 * `close` — there is no parent to route on the dialog's behalf the way
-		 * the old bespoke header-actions component did.
-		 *
-		 * @param {string} route The detail route name.
-		 * @param {string} id The created object's id.
-		 * @return {void}
+		 * @param {object} formData The form values.
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
-		goToDetail(route, id) {
-			this.$emit('close')
-			if (id && this.$router) {
-				this.$router.push({ name: route, params: { id } }).catch(() => {})
+		async onConfirm(formData) {
+			const store = useObjectStore()
+			const result = await store.saveObject('lead', leadCreatePayload(formData, this.pipelines))
+			if (!result) {
+				const message = store.getError('lead')?.message || t('pipelinq', 'Failed to create lead.')
+				this.$refs.form?.setValidationErrors({}, message)
+				return
 			}
-		},
-
-		/**
-		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
-		 */
-		submit() {
-			this.$refs.form.onSave()
-		},
-
-		/**
-		 * @param {object} formData The raw create-form fields.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-24
-		 */
-		async onSave(formData) {
-			this.saving = true
-			try {
-				const result = await this.objectStore.saveObject('lead', formData)
-				if (result) {
-					this.$emit('created', result.id)
-					this.goToDetail('LeadDetail', result.id)
-				} else {
-					const error = this.objectStore.getError('lead')
-					showError(
-						error?.message || t('pipelinq', 'Failed to create lead.'),
-					)
-				}
-			} finally {
-				this.saving = false
+			this.$emit('created', result.id)
+			this.$emit('close')
+			if (result.id && this.$router) {
+				this.$router.push({ name: 'LeadDetail', params: { id: result.id } }).catch(() => {})
 			}
 		},
 	},

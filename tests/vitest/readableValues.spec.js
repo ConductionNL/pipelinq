@@ -192,8 +192,8 @@ describe('the hand-written forms and the service page use the same labels', () =
 		expect(read('src', 'views', 'clients', 'ClientForm.vue')).not.toContain(
 			"typeOptions: ['person', 'organization']",
 		)
-		expect(read('src', 'views', 'leads', 'LeadForm.vue')).not.toContain(
-			"priorityOptions: ['low', 'normal', 'high', 'urgent']",
+		expect(read('src', 'dialogs', 'LeadCreateDialog.vue')).toContain(
+			'priorityLabels: LEAD_PRIORITY_LABELS',
 		)
 	})
 })
