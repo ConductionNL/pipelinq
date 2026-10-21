@@ -62,9 +62,9 @@ describe('the screens use them', () => {
 		expect(settings).toContain('exchange_rates: rates')
 	})
 
-	it('the leads list shows the currency next to the value', () => {
+	it('the leads list shows the value in the lead\'s own currency', () => {
 		const manifest = JSON.parse(read('src/manifest.json'))
 		const columns = manifest.pages.find((p) => p.id === 'Leads').config.columns
-		expect(columns.indexOf('currency')).toBe(columns.indexOf('value') + 1)
+		expect(columns.find((c) => c.key === 'value').formatter).toBe('objectCurrency')
 	})
 })

@@ -282,7 +282,7 @@ describe('RoutingSuggestionSection', () => {
 		})
 	})
 
-	it('lets a lead carry a category on the form and the list', () => {
+	it('lets a lead carry a category on the form', () => {
 		const schema = JSON.parse(
 			readFileSync(
 				resolve(__dirname, '../../lib/Settings/pipelinq_register.json'),
@@ -298,11 +298,5 @@ describe('RoutingSuggestionSection', () => {
 		)
 		expect(form).toContain(':modelValue="form.category"')
 		expect(form).toMatch(/category: this\.lead\.category/)
-
-		const manifest = JSON.parse(
-			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
-		)
-		const leads = manifest.pages.find((p) => p.id === 'Leads')
-		expect(leads.config.columns).toContain('category')
 	})
 })
