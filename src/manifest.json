@@ -2138,7 +2138,11 @@
 								{
 									"key": "qualificationScore",
 									"label": "Win chance",
-									"widget": "lead-probability"
+									"widget": "number",
+									"widgetProps": {
+										"unit": { "one": "{count}%", "other": "{count}%" },
+										"flagWhen": { "field": "qualificationScore", "lt": 30, "text": "Low", "variant": "warning" }
+									}
 								},
 								{
 									"key": "expectedCloseDate",
@@ -3082,7 +3086,11 @@
 								{
 									"key": "qualificationScore",
 									"label": "Win chance",
-									"widget": "lead-probability"
+									"widget": "number",
+									"widgetProps": {
+										"unit": { "one": "{count}%", "other": "{count}%" },
+										"flagWhen": { "field": "qualificationScore", "lt": 30, "text": "Low", "variant": "warning" }
+									}
 								},
 								{
 									"key": "status",
@@ -3397,43 +3405,208 @@
 		},
 		{
 			"id": "Leads",
-			"_note": "LeadList.vue extends a CnIndexPage with lead-specific bulk controls (NcCheckboxRadioSwitch quick-filters plus CnMassImportDialog / CnMassExportDialog) that the declarative 'index' page type does not expose; kept as a host-app component until those bulk actions are promoted to the library.",
 			"route": "/leads",
-			"type": "custom",
+			"type": "index",
 			"title": "Leads",
-			"component": "LeadListView",
+			"_note": "The lead list as config. Win chance first unless the address carries a sort; the Out of date chip and the footer note read the admin's stale threshold (@config.lead_stale_threshold_days, provided by App.vue); an open lead past its expected close date is marked on its row.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
+				"showTitle": true,
+				"showTitleIcon": false,
+				"rowTitle": "plain",
 				"showViewAction": false,
-				"actions": [
+				"rowClickToView": true,
+				"createModal": "LeadCreateDialog",
+				"searchPlaceholder": "Filter by title or client",
+				"headerButtons": [
 					{
-						"id": "view",
-						"label": "View",
-						"icon": "EyeOutline",
-						"handler": "navigate",
-						"route": "LeadDetail"
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New lead"
+					}
+				],
+				"countText": "{shown} of {total} leads · win chance first",
+				"footerNote": "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in @config.lead_stale_threshold_days days is called stale.",
+				"viewSwitch": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"viewSwitchLinks": {
+					"board": {
+						"route": "Pipeline"
+					}
+				},
+				"sortKeys": [
+					{
+						"key": "qualificationScore",
+						"order": "desc"
+					},
+					{
+						"key": "@self.updated",
+						"order": "asc"
+					}
+				],
+				"quickFilterMaxVisible": 6,
+				"quickFilters": [
+					{
+						"label": "Open",
+						"filter": {
+							"status": "open"
+						},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Mine",
+						"filter": {
+							"status": "open",
+							"assignee": "@me"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Closes this month",
+						"filter": {
+							"status": "open",
+							"expectedCloseDate[gte]": "@monthStart",
+							"expectedCloseDate[lte]": "@monthEnd"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Out of date",
+						"filter": {
+							"status": "open",
+							"@self[updated][lt]": "@today-{@config.lead_stale_threshold_days}d"
+						},
+						"showCount": false
+					},
+					{
+						"label": "Won",
+						"filter": {
+							"status": "won"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Lost",
+						"filter": {
+							"status": "lost"
+						},
+						"showCount": true
+					}
+				],
+				"rowClass": [
+					{
+						"when": [
+							{
+								"field": "expectedCloseDate",
+								"op": "lt",
+								"value": "@today"
+							},
+							{
+								"field": "status",
+								"value": "open"
+							}
+						],
+						"class": "lead-overdue"
 					}
 				],
 				"columns": [
-					"title",
-					"stage",
-					"category",
-					"status",
-					"priority",
+					{
+						"key": "title",
+						"label": "Lead",
+						"secondary": "{source}"
+					},
+					{
+						"key": "stage",
+						"label": "Stage",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"nieuw": "default",
+								"new": "default",
+								"benaderd": "info",
+								"contacted": "info",
+								"gekwalificeerd": "purple",
+								"qualified": "purple",
+								"voorstel": "warning",
+								"proposal": "warning",
+								"onderhandeling": "warning",
+								"negotiation": "warning",
+								"gewonnen": "success",
+								"won": "success",
+								"verloren": "error",
+								"lost": "error"
+							}
+						}
+					},
+					{
+						"key": "value",
+						"label": "Value",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 0
+						}
+					},
 					{
 						"key": "qualificationScore",
 						"label": "Win chance",
-						"widget": "lead-score",
-						"sortable": true
+						"sortable": true,
+						"widget": "progress",
+						"widgetProps": {
+							"fallbackFields": [
+								"probability"
+							],
+							"thresholds": {
+								"good": 60,
+								"warn": 30
+							},
+							"badge": {
+								"label": "Out of date {days} days",
+								"dateField": "@self.updated",
+								"afterDays": 14,
+								"when": {
+									"status": "open"
+								}
+							}
+						}
 					},
-					"value",
-					"currency",
 					{
 						"key": "expectedCloseDate",
 						"label": "Expected close",
-						"widget": "lead-close-date",
-						"sortable": true
+						"sortable": true,
+						"widget": "date",
+						"widgetProps": {
+							"due": {
+								"soonWithin": 7,
+								"activeWhen": {
+									"field": "status",
+									"equals": "open"
+								}
+							}
+						}
+					},
+					{
+						"key": "priority",
+						"label": "Priority",
+						"formatter": "enumText"
+					},
+					{
+						"key": "assignee",
+						"label": "Owner",
+						"widget": "avatar",
+						"widgetProps": {
+							"user": true
+						}
 					}
 				],
 				"sidebar": {

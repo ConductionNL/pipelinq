@@ -222,10 +222,6 @@ import KassakoppelingAuditDetailView from './views/kassakoppeling/Kassakoppeling
 //     view, or the date-range + format export modal. ---
 import KassakoppelingAuditListView from './views/kassakoppeling/KassakoppelingAuditList.vue'
 import LeadForecastTab from './views/leads/LeadForecastTab.vue'
-// --- Leads list (lead-management spec REQ-LM-002 / REQ-LM-004 / REQ-LM-005).
-//     Wraps CnIndexPage to add the stale filter, overdue row highlighting
-//     and CSV import/export via the platform mass dialogs. ---
-import LeadListView from './views/leads/LeadList.vue'
 import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
 // --- Loyalty program (loyalty-program). ---
 import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
@@ -399,13 +395,6 @@ const registry = {
 		component: LeadForecastTab,
 		...SIDEBAR_TAB_META,
 		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
-	},
-
-	// --- Leads list with lead-management enhancements. ---
-	LeadListView: {
-		kind: 'page',
-		component: LeadListView,
-		_note: 'Wraps CnIndexPage with the lead-management stale filter, overdue row highlighting and platform mass import/export dialogs (REQ-LM-002/004/005).',
 	},
 
 	// --- Lead-management analytics. ---

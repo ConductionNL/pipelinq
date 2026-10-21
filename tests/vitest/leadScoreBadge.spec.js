@@ -3,11 +3,10 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * The score badge, the Leads list cell and the explanation
- * (pipeline-lead-score-call-first). The last specs pin the callers: the
- * list declares the column with the registered widget and a Call first
- * toggle, App.vue registers the widget, the board card mounts the badge and
- * the board table sorts by score, so the badge is actually rendered.
+ * The score badge and the explanation (pipeline-lead-score-call-first). The
+ * last specs pin the callers: the Leads list shows the score column and opens
+ * win chance first, the board card mounts the badge and the board table sorts
+ * by score, so the badge is actually rendered.
  *
  * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
  */
@@ -17,6 +16,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
+import { CALL_FIRST_SORT } from '../../src/services/leadScore.js'
 
 vi.mock('@nextcloud/vue', () => ({
 	NcPopover: {
@@ -28,7 +28,6 @@ vi.mock('@nextcloud/vue', () => ({
 }))
 
 let LeadScoreBadge
-let LeadScoreCell
 let LeadScoreExplanation
 
 beforeAll(async () => {
@@ -39,8 +38,6 @@ beforeAll(async () => {
 	LeadScoreBadge = (
 		await import('../../src/components/leadScore/LeadScoreBadge.vue')
 	).default
-	LeadScoreCell = (await import('../../src/views/leads/cells/LeadScoreCell.vue'))
-		.default
 	LeadScoreExplanation = (
 		await import('../../src/components/leadScore/LeadScoreExplanation.vue')
 	).default
@@ -74,26 +71,6 @@ describe('LeadScoreBadge', () => {
 		})
 		expect(w.find('.lead-score-badge__band').text()).toBe(word)
 		expect(w.find('.lead-score-badge__value').text()).toBe(String(score))
-	})
-})
-
-describe('LeadScoreCell', () => {
-	it('shows a dash for a lead saved before the score existed', () => {
-		const w = mount(LeadScoreCell, {
-			props: { value: null, row: { title: 'Old lead' } },
-			global: globalMixin,
-		})
-		expect(w.text()).toBe('—')
-		expect(w.find('button').exists()).toBe(false)
-	})
-
-	it('shows the column value with its band', () => {
-		const w = mount(LeadScoreCell, {
-			props: { value: 55, row: { title: 'Lead' } },
-			global: globalMixin,
-		})
-		expect(w.find('button').text()).toContain('55')
-		expect(w.find('button').text()).toContain('Medium')
 	})
 })
 
@@ -135,37 +112,18 @@ describe('LeadScoreExplanation', () => {
 })
 
 describe('callers', () => {
-	it('App.vue registers the lead-score cell widget', () => {
-		const app = read('src/App.vue')
-		expect(app).toMatch(
-			/import LeadScoreCell from '\.\/views\/leads\/cells\/LeadScoreCell\.vue'/,
-		)
-		expect(app).toMatch(/'lead-score': LeadScoreCell/)
-	})
-
-	it('the Leads list has a sortable score column and a Call first toggle', () => {
-		const list = read('src/views/leads/LeadList.vue')
-		expect(list).toMatch(
-			/key: 'qualificationScore',[\s\S]{0,120}widget: 'progress'/,
-		)
-		expect(list).toMatch(/Call first/)
-		expect(list).toMatch(/CALL_FIRST_SORT/)
+	it('the Leads list has a sortable score column and opens win chance first', () => {
 		const manifest = JSON.parse(read('src/manifest.json'))
 		const leads = manifest.pages.find((p) => p.route === '/leads')
-		// The manifest's columns are the ones the page renders. An object
-		// column gets no schema defaults, so it sorts only when it says so.
+		expect(leads.type).toBe('index')
 		expect(leads.config.columns).toContainEqual(
 			expect.objectContaining({
 				key: 'qualificationScore',
-				widget: 'lead-score',
+				widget: 'progress',
 				sortable: true,
 			}),
 		)
-		for (const column of leads.config.columns) {
-			if (typeof column === 'object') {
-				expect(column).toMatchObject({ sortable: true })
-			}
-		}
+		expect(leads.config.sortKeys).toEqual(CALL_FIRST_SORT)
 	})
 
 	it('the board card mounts the badge for a lead, and the board sorts by score', () => {

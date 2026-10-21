@@ -7729,7 +7729,8 @@ OC.L10N.register(
         "Visible to the customer": "Zichtbaar voor de klant",
         "Client added": "Klant toegevoegd",
         "No recent requests": "Geen recente verzoeken",
-        "Lead title (required)": "Leadtitel (verplicht)"
+        "Lead title (required)": "Leadtitel (verplicht)",
+        "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in @config.lead_stale_threshold_days days is called stale.": "Winkans is de kans van de fase, lager als een lead stilstaat. Een lead zonder stap in @config.lead_stale_threshold_days dagen heet verouderd."
     },
     "nplurals=2; plural=(n != 1);"
 )

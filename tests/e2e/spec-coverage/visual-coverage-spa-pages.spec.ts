@@ -104,8 +104,8 @@ test('MyWork: /my-work renders the grouped lists', async ({ page }) => {
 	).toBeVisible()
 })
 
-// ── src/views/leads/LeadList.vue — manifest page `Leads`, route `/leads` ─────
-test('LeadList: /leads mounts src/views/leads/LeadList.vue', async ({ page }) => {
+// ── manifest page `Leads` (type index), route `/leads` ─────
+test('Leads: /leads mounts the lead index page', async ({ page }) => {
 	await openSpaRoute(page, '/leads')
 
 	const index = content(page).locator('[data-testid="cn-index-page"]').first()
@@ -118,19 +118,9 @@ test('LeadList: /leads mounts src/views/leads/LeadList.vue', async ({ page }) =>
 		'Leads',
 	)
 
-	// ⚠️ NOT ASSERTED ON PURPOSE — LeadList's `<template #header-actions>` block
-	// (the "Stale only (>Nd)" and "Hide closed" switches, REQ-LM-002 /
-	// REQ-LM-004) NEVER RENDERS. `CnIndexPage` in @conduction/nextcloud-vue
-	// 2.2.0-vue3.9 declares no `header-actions` slot; its render function calls
-	// `renderSlot` for exactly: header, below-header, mass-actions, action-items,
-	// actions, import-fields, delete-dialog, copy-dialog, form-dialog,
-	// form-fields, empty, `column-<col>`, row-actions, row-icon, row-badges,
-	// list-item, card. `header-actions` exists in that package only as a
-	// CnActionsBar PROP and as a manifest widget-placement slot name, so Vue
-	// silently drops the template block. LeadList's other override,
-	// `#column-expectedCloseDate`, IS in the supported list and does render.
-	// Asserting the filters here would be asserting a bug into place; the
-	// product defect is reported separately rather than papered over.
+	// The quick filters are the page's own chips (Open, Mine, Closes this
+	// month, Out of date, Won, Lost).
+	await expect(index.getByText('Out of date').first()).toBeVisible()
 })
 
 // ── src/views/pipeline/PipelineBoard.vue — page `Pipeline`, route `/pipeline` ─

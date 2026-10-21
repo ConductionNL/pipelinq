@@ -152,3 +152,49 @@ describe('Nextcloud Dashboard widgets', () => {
 		expect(source).not.toMatch(/—/)
 	})
 })
+
+describe('the lead list', () => {
+	const leads = page('Leads')
+
+	it('is an index page whose manifest columns are the real columns', () => {
+		expect(leads.type).toBe('index')
+		expect(leads.component).toBeUndefined()
+		expect(leads.config.columns.map((c) => c.key)).toEqual(['title', 'stage', 'value', 'qualificationScore', 'expectedCloseDate', 'priority', 'assignee'])
+		expect(registrySource).not.toMatch(/LeadListView/)
+	})
+
+	it('never marks a closed lead overdue, in the cell or on the row', () => {
+		const close = leads.config.columns.find((c) => c.key === 'expectedCloseDate')
+		expect(close.widget).toBe('date')
+		expect(close.widgetProps.due).toEqual({ soonWithin: 7, activeWhen: { field: 'status', equals: 'open' } })
+		expect(leads.config.rowClass).toEqual([{
+			when: [{ field: 'expectedCloseDate', op: 'lt', value: '@today' }, { field: 'status', value: 'open' }],
+			class: 'lead-overdue',
+		}])
+		expect(fs.readFileSync(path.join(ROOT, 'src/assets/app.css'), 'utf8')).toMatch(/\.lead-overdue/)
+	})
+
+	it('lets the admin\'s stale threshold move the Out of date chip and its footer sentence', () => {
+		const chip = leads.config.quickFilters.find((f) => f.label === 'Out of date')
+		expect(chip.filter['@self[updated][lt]']).toBe('@today-{@config.lead_stale_threshold_days}d')
+		expect(leads.config.footerNote).toContain('@config.lead_stale_threshold_days')
+		const app = fs.readFileSync(path.join(ROOT, 'src/App.vue'), 'utf8')
+		expect(app).toMatch(/cnAppConfig: computed\(\(\) => \(\{\s*lead_stale_threshold_days: getStaleThreshold/)
+	})
+
+	it('shows the win chance with a Low flag under 30 wherever a lead table lists it', () => {
+		const tables = JSON.stringify(manifest)
+		expect(tables).not.toMatch(/"lead-probability"|"lead-score"|"lead-close-date"/)
+		const flagged = []
+		JSON.parse(tables, (key, value) => {
+			if (value && value.key === 'qualificationScore' && value.widget === 'number') {
+				flagged.push(value)
+			}
+			return value
+		})
+		expect(flagged.length).toBe(2)
+		for (const column of flagged) {
+			expect(column.widgetProps.flagWhen).toEqual({ field: 'qualificationScore', lt: 30, text: 'Low', variant: 'warning' })
+		}
+	})
+})
