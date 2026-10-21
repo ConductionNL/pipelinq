@@ -8035,7 +8035,9 @@ OC.L10N.register(
         "Every lead and request on the chosen pipeline, by stage": "Elke lead en elk verzoek op de gekozen pijplijn, per fase",
         "Already sent. Shillinq returned the existing draft invoice {invoiceNumber}.": "Al verstuurd. Shillinq gaf de bestaande conceptfactuur {invoiceNumber} terug.",
         "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries).": "Naar facturatie verstuurd. Conceptfactuur {invoiceNumber} aangemaakt ({entryCount} regels).",
-        "Shillinq is already processing this batch. Try again shortly.": "Shillinq verwerkt deze batch al. Probeer het zo opnieuw."
+        "Shillinq is already processing this batch. Try again shortly.": "Shillinq verwerkt deze batch al. Probeer het zo opnieuw.",
+        "BRP is unavailable right now. Try again in a few minutes.": "De BRP is nu niet bereikbaar. Probeer het over een paar minuten opnieuw.",
+        "Address shown. An audit record was created.": "Adres getoond. Er is een auditregel vastgelegd."
     },
     "nplurals=2; plural=(n != 1);"
 )

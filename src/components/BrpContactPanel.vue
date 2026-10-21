@@ -54,18 +54,18 @@
 
 			<div v-if="persoon" class="brp-panel__persoon" data-testid="brp-persoon">
 				<div class="brp-panel__persoon-header">
-					<span
+					<Lock
 						v-if="persoon.indicationSecret === '1'"
 						class="brp-panel__geheim-icon"
-						:title="t('pipelinq', 'Confidentiality active')">
-						🔒
-					</span>
+						:size="16"
+						:title="t('pipelinq', 'Confidentiality active')" />
 					<strong>{{ fullName }}</strong>
 					<span
 						v-if="cacheHit"
 						class="brp-panel__cache-badge"
 						:title="t('pipelinq', 'Served from cache')">
-						⚡ {{ t('pipelinq', 'from cache') }}
+						<Cached :size="14" aria-hidden="true" />
+						{{ t('pipelinq', 'from cache') }}
 					</span>
 				</div>
 				<dl class="brp-panel__persoon-fields">
@@ -115,6 +115,8 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import Cached from 'vue-material-design-icons/Cached.vue'
+import Lock from 'vue-material-design-icons/Lock.vue'
 import BrpDoelbindingModal from '../modals/BrpDoelbindingModal.vue'
 
 export default {
@@ -125,6 +127,8 @@ export default {
 		NcTextField,
 		CnDetailCard,
 		BrpDoelbindingModal,
+		Cached,
+		Lock,
 	},
 
 	props: {
@@ -248,7 +252,7 @@ export default {
 					data.errorMessage
 					|| this.t(
 						'pipelinq',
-						'BRP is currently unavailable — please try again in a few minutes.',
+						'BRP is unavailable right now. Try again in a few minutes.',
 					)
 				showError(this.errorMessage)
 			}
@@ -267,7 +271,7 @@ export default {
 				this.revealedAddress = true
 				this.revealedVerblijfplaats = response.data?.residence || null
 				showSuccess(
-					this.t('pipelinq', 'Address revealed — audit record created.'),
+					this.t('pipelinq', 'Address shown. An audit record was created.'),
 				)
 			} catch (err) {
 				const data = err?.response?.data || {}
@@ -325,6 +329,9 @@ export default {
 }
 
 .brp-panel__cache-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
 	font-size: 0.8em;
 	color: var(--color-text-maxcontrast, #767676);
 }

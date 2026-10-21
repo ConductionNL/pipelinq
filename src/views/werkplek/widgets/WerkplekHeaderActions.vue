@@ -3,7 +3,7 @@
 <!-- @spec openspec/changes/pipelinq-werkplek-declarative/tasks.md#task-3 -->
 <template>
 	<div class="werkplek-header-actions">
-		<WerkplekAgentStatus
+		<AgentAvailabilityToggle
 			:isAvailable="isAvailable"
 			@update:isAvailable="isAvailable = $event" />
 	</div>
@@ -12,7 +12,7 @@
 <script>
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import WerkplekAgentStatus from '../../../components/werkplek/WerkplekAgentStatus.vue'
+import AgentAvailabilityToggle from '../../../components/werkplek/AgentAvailabilityToggle.vue'
 
 /**
  * WerkplekHeaderActions — the workspace dashboard's `actionsComponent`,
@@ -25,7 +25,7 @@ import WerkplekAgentStatus from '../../../components/werkplek/WerkplekAgentStatu
 export default {
 	name: 'WerkplekHeaderActions',
 
-	components: { WerkplekAgentStatus },
+	components: { AgentAvailabilityToggle },
 
 	data() {
 		return {

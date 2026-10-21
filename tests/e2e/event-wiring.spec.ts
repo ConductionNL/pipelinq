@@ -41,11 +41,9 @@
  *   turned a silent no-op into a TypeError, so the affordance was deleted
  *   rather than left advertising a feature nobody had built.
  *
- *   ⚠️ And it could never have fired anyway: NOTHING imports ProspectWidget,
- *   so it and ProspectCard are tree-shaken out — `prospect-widget` appears
- *   zero times in the built bundle. `/prospects` is served by ProspectsView,
- *   which does not use ProspectCard at all. Both components are orphaned,
- *   which is a larger cleanup than removing one button and is left alone here.
+ *   It could never have fired anyway: nothing imported ProspectWidget, and
+ *   `/prospects` is served by ProspectsView. ProspectWidget and ProspectCard
+ *   have since been deleted (PL-ABSTRACT PL1).
  * - `validateLeaf` / `searchContacts` live in components nothing imports, so
  *   they are absent from every built chunk and cannot be reached at all.
  */

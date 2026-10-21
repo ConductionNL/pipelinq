@@ -8070,7 +8070,9 @@ OC.L10N.register(
         "Every lead and request on the chosen pipeline, by stage": "Every lead and request on the chosen pipeline, by stage",
         "Already sent. Shillinq returned the existing draft invoice {invoiceNumber}.": "Already sent. Shillinq returned the existing draft invoice {invoiceNumber}.",
         "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries).": "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries).",
-        "Shillinq is already processing this batch. Try again shortly.": "Shillinq is already processing this batch. Try again shortly."
+        "Shillinq is already processing this batch. Try again shortly.": "Shillinq is already processing this batch. Try again shortly.",
+        "BRP is unavailable right now. Try again in a few minutes.": "BRP is unavailable right now. Try again in a few minutes.",
+        "Address shown. An audit record was created.": "Address shown. An audit record was created."
     },
     "nplurals=2; plural=(n != 1);"
 )
