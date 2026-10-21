@@ -576,6 +576,9 @@ return [
         ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
         // What the resident reads of a ticket, for the preview on TicketDetail (portal-resident-view-preview).
         ['name' => 'residentView#show',               'url' => '/api/tickets/{id}/resident-view',            'verb' => 'GET'],
+        // The answer to the customer, and the saved replies to start it from (answer-and-saved-replies-on-the-server).
+        ['name' => 'ticketAnswer#answer',             'url' => '/api/tickets/{id}/answer',                   'verb' => 'POST'],
+        ['name' => 'savedReply#index',                'url' => '/api/saved-replies',                         'verb' => 'GET'],
 
         // Shillinq time-intake billing handoff — real emit side of the
         // time-approval-workflow delegation (time-billing-handoff-emit).

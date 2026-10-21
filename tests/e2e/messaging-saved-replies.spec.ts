@@ -129,7 +129,7 @@ test.describe('saved replies and send again', () => {
 		await expect(page.getByText(`Uw afspraak staat ${STAMP}`)).toBeVisible()
 		await expect(page.getByText('No messages yet.')).toHaveCount(0)
 
-		await page.getByTestId('messaging-resend').first().click()
+		await page.getByTestId('cn-conversation-action-resend').first().click()
 		const outcome = page.getByText(`We are open until five ${STAMP}`)
 		await expect(outcome.first()).toBeVisible()
 
@@ -153,7 +153,7 @@ test.describe('saved replies and send again', () => {
 		}
 	})
 
-	test('a closed WhatsApp window turns Send again into the composer', async ({
+	test('a closed WhatsApp window says Send again needs an approved template', async ({
 		page,
 	}) => {
 		await openApp(page)
@@ -171,9 +171,9 @@ test.describe('saved replies and send again', () => {
 		})
 
 		await gotoAppRoute(page, `/contacts/${contactId}`)
-		await page.getByTestId('messaging-resend').first().click()
+		await page.getByTestId('cn-conversation-action-resend').first().click()
 		await expect(
-			page.getByRole('dialog', { name: 'Send message' }),
+			page.getByText('Not sent: the WhatsApp session is closed. Use Send message with an approved template.'),
 		).toBeVisible()
 	})
 
@@ -233,7 +233,7 @@ test.describe('saved replies and send again', () => {
 		await page
 			.getByLabel('Message to the customer')
 			.fill(`About Straatfeest ${STAMP}: we will call you tomorrow.`)
-		await page.getByTestId('customer-reply-send').click()
+		await page.getByTestId('cn-conversation-send').click()
 
 		await expect
 			.poll(async () => {

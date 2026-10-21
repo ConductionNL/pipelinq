@@ -1,0 +1,7 @@
+- [x] 1. TicketAnswerService + TicketAnswerController, route `POST /api/tickets/{id}/answer`.
+- [x] 2. SavedReplyService + SavedReplyController, route `GET /api/saved-replies`.
+- [x] 3. ChannelMessageClientListener and `clientId` on channelMessage (schema 1.1.0).
+- [x] 4. Repair step BackfillConversationFields.
+- [x] 5. Manifest: customer-reply, messaging-conversation, contact-messages, contact-messaging-consent; simple layout ticket-conversation.
+- [x] 6. TicketAnswerDialog, SendMessageModal, WriteEmailModal on the endpoints and CnTemplateSelect.
+- [x] 7. Tests: PHPUnit (TicketAnswerServiceTest, SavedReplyServiceTest, BackfillConversationFieldsTest); vitest config specs; e2e testids.

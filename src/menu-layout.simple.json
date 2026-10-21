@@ -1203,11 +1203,30 @@
 					},
 					{
 						"id": "ticket-conversation",
-						"type": "TicketConversationWidget",
+						"type": "conversation",
 						"title": "Conversation",
 						"icon": "ForumOutline",
 						"content": {
-							"title": "Conversation"
+							"fields": [
+								{
+									"field": "portalReplies",
+									"side": "them"
+								},
+								{
+									"field": "portalAnswers",
+									"side": "us"
+								}
+							],
+							"textField": "message",
+							"timeField": "createdAt",
+							"usLabel": "Employee",
+							"emptyText": "No messages with the customer yet.",
+							"allowReply": false
+						},
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
 						}
 					},
 					{
