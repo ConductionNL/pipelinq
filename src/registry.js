@@ -66,6 +66,8 @@ import ArticleContentSection from './components/marketing/ArticleContentSection.
 import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
 import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
+import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
+import ListSubscriberViewSection from './components/marketing/ListSubscriberViewSection.vue'
 import SocialPostHeaderActions from './components/marketing/SocialPostHeaderActions.vue'
 import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
 import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
@@ -178,10 +180,6 @@ import ExportTestRunModal from './modals/ExportTestRunModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 import PipelineCardFieldModal from './modals/PipelineCardFieldModal.vue'
 import PipelineSettingsModal from './modals/PipelineSettingsModal.vue'
-// --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
-//     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
-//     avg response time) and the mTLS client-certificate expiry countdown. ---
-import BrpMonitorView from './views/admin/BrpMonitor.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
@@ -259,14 +257,11 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 //     availability endpoint and hide when no installed app implements the
 //     kind — same self-fetching-by-props pattern as the sections above. ---
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
-// --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
-import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 import SocialPostFormView from './views/social/SocialPostFormView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
-import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 import ContactAwareObjectListWidget from './components/widgets/ContactAwareObjectListWidget.js'
@@ -415,18 +410,6 @@ const registry = {
 		_note: 'GDPR-compliant loyalty account enrollment form: mandatory opt-in checkbox, terms version capture, customerId+programmeId input (REQ-LOY-010-01).',
 	},
 
-	// --- Admin managers. ---
-	PipelineManagerView: {
-		kind: 'page',
-		component: PipelineManagerView,
-		_note: 'Pipeline stage + transition manager with drag-and-drop reordering; lib gap: no pipeline-designer page type.',
-	},
-	SyncSettingsView: {
-		kind: 'page',
-		component: SyncSettingsView,
-		_note: 'External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config.',
-	},
-
 	// --- POS transactions. The PosTransactions list + detail are now declarative
 	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
 	//     declarative); only the bespoke cart-editor form view, the detail's
@@ -529,11 +512,6 @@ const registry = {
 		component: PosCustomerSettingsView,
 		_note: 'Admin settings panel for the POS customer-link lookup: search fields, purchase-history depth, marketing-consent sync toggle and the on-account-requires-customer invariant (pos-customer-link, REQ-PCL-006).',
 	},
-	BrpMonitorView: {
-		kind: 'page',
-		component: BrpMonitorView,
-		_note: 'Admin BRP Monitor — lookups / cache-hit ratio / error rate / avg response time over the last 24h, plus mTLS client-certificate expiry countdown (bsn-validatie-en-brp-lookup REQ-BSN-010).',
-	},
 
 	// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit). ---
 	KassakoppelingAuditListView: {
@@ -585,6 +563,18 @@ const registry = {
 		kind: 'section',
 		component: SubscriptionsSection,
 		_note: 'Mailing-list memberships, bound either to a list (listId) or to a contact (contactId); self-fetches the matching endpoint. Kept custom because a membership row renders a STATE chip the declarative object-list widget cannot express, and because the list view leads with per-state counts that summaryAggregates (equality-only, one schema) cannot break out of one field.',
+	},
+	ListSignupFormWidget: {
+		kind: 'widget',
+		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'The embed code of a mailing list sign-up form, posting to the public subscribe endpoint, with a copy button. Side card on MailingListDetail (PqMailinglijst).',
+	},
+	ListSubscriberViewWidget: {
+		kind: 'widget',
+		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
 	ArticleContentSection: {
 		kind: 'section',
@@ -956,6 +946,29 @@ const registry = {
 		component: WeeklyReviewView,
 		_note: 'The weekly marketing review (marketing-integrated-campaigns, ADR-112): what moved, what to try and three topic ideas, from ONE GET /api/weekly-review. Reached as a card on the Reports page and never as a menu entry of its own. Custom because the response aggregates four collections into one narrative record and names the sources it could not read, which no declarative index or dashboard primitive expresses. It also renders the ADR-088 mark when an agent wrote the summary.',
 	},
+	CampaignLandingPageWidget: {
+		kind: 'widget',
+		component: sectionWidget('CampaignLandingPageWidget', CampaignLandingPageSection, ({ objectId }) => ({ campaignId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'CampaignLandingPageSection as a card of the campaign page\'s Overview tab (PqCampagne).',
+	},
+	CampaignReportWidget: {
+		kind: 'widget',
+		component: sectionWidget('CampaignReportWidget', CampaignReportView, ({ objectId }) => ({ campaignId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'The campaign report as a card of the campaign page\'s Overview tab (PqCampagne): one GET /api/campaigns/{id}/report.',
+	},
+	JourneyRunsWidget: {
+		kind: 'widget',
+		component: sectionWidget('JourneyRunsWidget', JourneyRunsSection, ({ objectId }) => ({ journeyId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'JourneyRunsSection as a card of the journey page\'s Overview tab (PqJourney).',
+	},
+	CampaignReportSection: {
+		kind: 'section',
+		component: CampaignReportView,
+		_note: 'The campaign report as a section of the declarative CampaignDetail page (PqCampagne): the same component with a campaignId (@objectId), which drops the campaign picker and draws the tiles and the per-channel table under the attribution model picker. One GET /api/campaigns/{id}/report, as on the report page.',
+	},
 	CampaignReportView: {
 		kind: 'page',
 		component: CampaignReportView,
@@ -986,7 +999,7 @@ const registry = {
 	ServiceDetailView: {
 		kind: 'page',
 		component: ServiceDetailView,
-		_note: 'Service detail + edit page with the multiStep sub-table editor, deposit / cancellation policy cards and a best-effort availabilityCache invalidation hook on save (REQ-APT-015).',
+		_note: 'Service detail + edit page with the multiStep sub-table editor and deposit / cancellation policy cards; the server expires the cached availability on save (REQ-APT-015).',
 	},
 	ResourceDetailView: {
 		kind: 'page',
