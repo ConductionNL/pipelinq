@@ -43,6 +43,18 @@ describe.each([
 		expect(ends.widgetProps.variantWhen).toEqual([{ op: 'lt', value: 0, variant: 'error' }])
 	})
 
+	it('says Active or Ended beside the end date, as before', () => {
+		const ends = list.content.columns.find((c) => c.key === 'endDate')
+		expect(ends.widgetProps).toMatchObject({ pastText: 'Ended', otherText: 'Active' })
+	})
+
+	it('orders the groups for the kind of record, as before', () => {
+		const expected = kind === 'client'
+			? ['Organisatie', 'Professioneel', 'Familie', 'CRM Rol']
+			: ['Familie', 'Professioneel', 'Organisatie', 'CRM Rol']
+		expect(list.content.groupOrder).toEqual(expected)
+	})
+
 	it('opens the other party on its own page', () => {
 		expect(list.content).toMatchObject({ rowRouteField: 'toType', rowRouteMap: { client: 'ClientDetail', contact: 'ContactDetail' }, rowRouteIdField: 'toContact' })
 	})

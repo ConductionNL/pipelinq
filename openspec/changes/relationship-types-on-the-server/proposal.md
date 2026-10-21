@@ -10,7 +10,7 @@ The relationships card was an app-local component holding the relationship type 
 - `POST /api/relationships` creates a relationship: the type must be known, the parties different, and the same relationship must not exist yet (409).
 - `RelationshipTypeListener` sets `inverseType`, `category` and `toType` before any relationship is stored.
 - `RelationshipInverseListener` also removes the inverse at the old party when a relationship is moved to another party.
-- ClientDetail and ContactDetail list relationships with an `object-list` (grouped by category, the end date red once past, the other party opens on its own page, add through the endpoint, edit and delete in place).
+- ClientDetail and ContactDetail list relationships with an `object-list` (grouped by category in the order the page kind had, the end date red once past with Active or Ended beside it, the other party opens on its own page, add through the endpoint, edit and delete in place).
 - The relationship schema (1.2.0) shows notes, dates and strength on the form.
 - Removed: `ContactRelationships`, `RemoveRelationshipDialog` and the `ContactRelationships` and `ContactRelationshipsWidget` registry entries.
 

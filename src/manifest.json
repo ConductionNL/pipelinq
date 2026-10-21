@@ -2393,7 +2393,7 @@
 								},
 								{
 									"key": "endDate",
-									"label": "Ends",
+									"label": "Status",
 									"widget": "date",
 									"widgetProps": {
 										"variantWhen": [
@@ -2402,7 +2402,9 @@
 												"value": 0,
 												"variant": "error"
 											}
-										]
+										],
+										"pastText": "Ended",
+										"otherText": "Active"
 									}
 								}
 							],
@@ -2469,7 +2471,13 @@
 									"default": "medium"
 								}
 							},
-							"emptyText": "No relationships yet."
+							"emptyText": "No relationships yet.",
+							"groupOrder": [
+								"Organisatie",
+								"Professioneel",
+								"Familie",
+								"CRM Rol"
+							]
 						}
 					},
 					{
@@ -3374,7 +3382,7 @@
 								},
 								{
 									"key": "endDate",
-									"label": "Ends",
+									"label": "Status",
 									"widget": "date",
 									"widgetProps": {
 										"variantWhen": [
@@ -3383,7 +3391,9 @@
 												"value": 0,
 												"variant": "error"
 											}
-										]
+										],
+										"pastText": "Ended",
+										"otherText": "Active"
 									}
 								}
 							],
@@ -3450,7 +3460,13 @@
 									"default": "medium"
 								}
 							},
-							"emptyText": "No relationships yet."
+							"emptyText": "No relationships yet.",
+							"groupOrder": [
+								"Familie",
+								"Professioneel",
+								"Organisatie",
+								"CRM Rol"
+							]
 						}
 					},
 					{

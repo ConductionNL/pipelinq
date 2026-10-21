@@ -39,4 +39,4 @@ When a relationship's parties change, the server SHALL remove the inverse row at
 
 ### Requirement: Detail pages list relationships as an object list
 
-The client and contact detail pages SHALL list the record's relationships grouped by category with the other party, the type and the end date (red once past), open the other party on a click, and add, edit and remove relationships in place.
+The client and contact detail pages SHALL list the record's relationships grouped by category (an organisation's Organisatie first, a person's Familie first) with the other party, the type, the end date (red once past) and Active or Ended, open the other party on a click, and add, edit and remove relationships in place.
