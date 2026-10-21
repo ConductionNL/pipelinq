@@ -7059,7 +7059,7 @@
 		},
 		{
 			"id": "RapportageContactmomenten",
-			"_note": "Contact-reporting monitor as a declarative type:dashboard page (pipelinq-dashboards-declarative). The four headline KPIs (Total Contacts, FCR %, Avg Handling Time, SLA Compliance) are endpoint-bound stat widgets reading GET /apps/pipelinq/api/rapportage/kpis (avgHandlingTime is a pre-formatted 'H:MM' string the stat widget renders verbatim). A period pageFilter (today/week/month -> @page.period) drives the query; ReportingController now resolves that relative period to a from/to window server-side (today=[today,today], week=[Monday,today], month=[1st,today]) so one select re-queries every KPI without client-side date math. The hand-rendered per-channel bar chart + the CSV export the stat grid cannot express live in one kind:'section' bodyWidget (ChannelDistributionSection) that reads the same period (via @workspace.period) and self-fetches /api/rapportage/channels. The 60s auto-refresh + 'last updated' label of the legacy view are dropped (the page-level Refresh action covers manual reload).",
+			"_note": "Contact reporting. The four headline figures read GET /apps/pipelinq/api/rapportage/kpis, the channel bars read the channel rows of GET /apps/pipelinq/api/rapportage/channels, and Export downloads the contact moments of the chosen period as CSV. ReportingController resolves the period token (today, week, month) to a from/to window.",
 			"route": "/rapportage/contactmomenten",
 			"type": "dashboard",
 			"title": "Contact reporting",
@@ -7145,6 +7145,24 @@
 								"params": { "period": "@page.period" }
 							}
 						}
+					},
+					{
+						"id": "rap-channels",
+						"type": "chart",
+						"title": "Channel distribution",
+						"content": {
+							"chartKind": "bar-list",
+							"emptyLabel": "No contact moments registered for this period",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/channels",
+								"params": { "period": "@workspace.period" },
+								"responsePath": "rows",
+								"labelsPath": "label",
+								"series": [
+									{ "name": "Contacts", "path": "total" }
+								]
+							}
+						}
 					}
 				],
 				"layout": [
@@ -7183,21 +7201,28 @@
 						"gridWidth": 3,
 						"gridHeight": 2,
 						"showTitle": false
-					}
+					},
+					{ "id": 5, "widgetId": "rap-channels", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 4 }
 				],
-				"bodyWidgets": [
+				"headerActions": [
 					{
-						"id": "rap-channels",
-						"component": "ChannelDistributionSection",
-						"placement": "after-grid",
-						"props": { "period": "@workspace.period" }
+						"id": "export-contact-moments",
+						"label": "Export CSV",
+						"type": "api-call",
+						"icon": "Download",
+						"method": "GET",
+						"url": "/apps/pipelinq/api/rapportage/export",
+						"params": { "period": "@workspace.period" },
+						"download": true,
+						"filename": "contact-moments.csv",
+						"successMessage": "Export downloaded"
 					}
 				]
 			}
 		},
 		{
 			"id": "ChannelAnalyticsView",
-			"_note": "Cross-channel comparison as a declarative type:dashboard page (pipelinq-dashboards-declarative). It has no headline KPI cards — the cross-channel comparison table (total / FCR / SLA per channel, colour-keyed) lives entirely in one kind:'section' bodyWidget (ChannelComparisonSection). Two pageFilters drive it: period (today/week/month -> @page.period, resolved to from/to server-side by ReportingController) and granularity (daily/weekly -> @page.granularity); the section reads both via @workspace.* and self-fetches /api/rapportage/channels + /api/rapportage/sla.",
+			"_note": "Cross-channel comparison: one row per channel from GET /apps/pipelinq/api/rapportage/channels (rows), counted server-side from the contact moments of the chosen period: total, first-contact resolution and SLA attainment against the channel's target.",
 			"route": "/rapportage/channels",
 			"type": "dashboard",
 			"title": "Channel analytics",
@@ -7214,34 +7239,45 @@
 							{ "value": "week", "label": "This week" },
 							{ "value": "month", "label": "This month" }
 						]
-					},
-					{
-						"key": "granularity",
-						"label": "Granularity",
-						"type": "select",
-						"default": "daily",
-						"options": [
-							{ "value": "daily", "label": "Daily" },
-							{ "value": "weekly", "label": "Weekly" }
-						]
 					}
 				],
-				"bodyWidgets": [
+				"widgets": [
 					{
 						"id": "channel-comparison",
-						"component": "ChannelComparisonSection",
-						"placement": "before-grid",
-						"props": {
-							"period": "@workspace.period",
-							"granularity": "@workspace.granularity"
+						"type": "object-table",
+						"title": "Channel comparison",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/channels",
+								"params": { "period": "@workspace.period" },
+								"responsePath": "rows"
+							},
+							"columns": [
+								{ "key": "label", "label": "Channel", "cellClass": "cn-cell--strong" },
+								{ "key": "total", "label": "Total", "format": { "style": "number" } },
+								{ "key": "fcrRate", "label": "FCR rate", "format": { "style": "percent", "decimals": 1 } },
+								{ "key": "slaCompliance", "label": "SLA", "format": { "style": "percent", "decimals": 1 } },
+								{
+									"key": "slaStatus",
+									"label": "SLA status",
+									"widget": "badge",
+									"enum": ["green", "orange", "red"],
+									"enumLabels": { "green": "On target", "orange": "Just below target", "red": "Below target" },
+									"widgetProps": { "colorMap": { "green": "success", "orange": "warning", "red": "error" } }
+								}
+							],
+							"emptyText": "No data available for the selected period"
 						}
 					}
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "channel-comparison", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6 }
 				]
 			}
 		},
 		{
 			"id": "AgentPerformanceView",
-			"_note": "Per-agent performance as a declarative type:dashboard page (pipelinq-dashboards-declarative). It has no headline KPI cards — the sortable per-agent leaderboard (contacts / avg time / FCR) plus the team-summary footer (total contacts, team FCR, both derived from the same agents map) live in one kind:'section' bodyWidget (AgentPerformanceSection). A period pageFilter (today/week/month -> @page.period, resolved to from/to server-side) drives the query; the section reads @workspace.period and self-fetches /api/rapportage/agents.",
+			"_note": "Per-agent performance: the rows and team totals of GET /apps/pipelinq/api/rapportage/agents for the chosen period. The server names each agent by display name and answers the handling time in seconds, so the column sorts as a number.",
 			"route": "/rapportage/agents",
 			"type": "dashboard",
 			"title": "Agent performance",
@@ -7260,13 +7296,85 @@
 						]
 					}
 				],
-				"bodyWidgets": [
+				"widgets": [
+					{
+						"id": "agents-contacts",
+						"type": "stat",
+						"title": "Total contacts",
+						"content": {
+							"label": "Total contacts",
+							"caption": "contact moments",
+							"icon": "MessageText",
+							"format": { "style": "number", "decimals": 0 },
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/agents",
+								"path": "totals.contacts",
+								"params": { "period": "@page.period" }
+							}
+						}
+					},
+					{
+						"id": "agents-fcr",
+						"type": "stat",
+						"title": "Team FCR",
+						"content": {
+							"label": "Team FCR",
+							"caption": "first-contact resolution",
+							"icon": "CheckCircle",
+							"format": { "style": "percent", "decimals": 1 },
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/agents",
+								"path": "totals.fcrRate",
+								"params": { "period": "@page.period" }
+							}
+						}
+					},
 					{
 						"id": "agent-performance",
-						"component": "AgentPerformanceSection",
-						"placement": "before-grid",
-						"props": { "period": "@workspace.period" }
+						"type": "object-table",
+						"title": "Agent performance",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/agents",
+								"params": { "period": "@workspace.period" },
+								"responsePath": "rows"
+							},
+							"columns": [
+								{ "key": "agentName", "label": "Agent", "cellClass": "cn-cell--strong" },
+								{ "key": "count", "label": "Contacts", "format": { "style": "number" } },
+								{
+									"key": "avgHandlingSeconds",
+									"label": "Avg time",
+									"format": { "style": "duration", "unit": "seconds" }
+								},
+								{ "key": "fcrRate", "label": "FCR %", "format": { "style": "percent", "decimals": 1 } }
+							],
+							"emptyText": "No agent data for this period"
+						}
 					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "agents-contacts",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 2,
+						"widgetId": "agents-fcr",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{ "id": 3, "widgetId": "agent-performance", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 6 }
 				]
 			}
 		},

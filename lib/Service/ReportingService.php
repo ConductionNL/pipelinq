@@ -357,29 +357,34 @@ class ReportingService {
 	}//end getAgentRows()
 
 	/**
-	 * The contact moments of the given date range as CSV, one line each.
+	 * The report of the given date range as CSV: the totals, one line per
+	 * channel and one line per agent, the figures the reporting pages show.
 	 *
 	 * @param string $from ISO 8601 start date.
 	 * @param string $to ISO 8601 end date.
 	 *
 	 * @return string The CSV content.
 	 *
-	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
+	 * @spec openspec/changes/wire-rapportage-csv-export/specs/contactmomenten-rapportage/spec.md#requirement-csv-export
 	 */
-	public function exportContactMomentsCsv(string $from, string $to): string {
-		$rows = [];
-		foreach ($this->fetchContactmomenten(from: $from, to: $to) as $moment) {
-			$rows[] = [
-				(string)$moment['contactedAt'],
-				(string)$moment['channel'],
-				(string)$moment['agent'],
-				(string)$moment['outcome'],
-				(string)($moment['duration'] ?? ''),
-			];
+	public function exportReportCsv(string $from, string $to): string {
+		$kpis = $this->getKpis(from: $from, to: $to);
+		$rows = [['Total', 'All channels', $kpis['total'], $kpis['fcrRate'], $kpis['avgHandlingTime'], $kpis['slaCompliance']]];
+		foreach ($this->getChannelRows(from: $from, to: $to) as $channel) {
+			$rows[] = ['Channel', $channel['label'], $channel['total'], $channel['fcrRate'], '', $channel['slaCompliance']];
 		}
 
-		return $this->generateCsv(headers: ['Date', 'Channel', 'Agent', 'Outcome', 'Duration'], rows: $rows);
-	}//end exportContactMomentsCsv()
+		foreach ($this->getAgentRows(from: $from, to: $to)['rows'] as $agent) {
+			$seconds = $agent['avgHandlingSeconds'];
+			$time = intdiv($seconds, 60) . ':' . str_pad((string)($seconds % 60), 2, '0', STR_PAD_LEFT);
+			$rows[] = ['Agent', $agent['agentName'], $agent['count'], $agent['fcrRate'], $time, ''];
+		}
+
+		return $this->generateCsv(
+			headers: ['Section', 'Name', 'Contacts', 'FCR %', 'Avg handling time', 'SLA %'],
+			rows: $rows,
+		);
+	}//end exportReportCsv()
 
 	/**
 	 * Get SLA compliance percentage for a given channel and date range.

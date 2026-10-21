@@ -924,18 +924,15 @@ test('Contact reporting: four endpoint-bound KPIs + a channel section, both re-q
 	})
 	await expect(content.locator('.cn-stat-widget__error')).toHaveCount(0)
 
-	// The per-channel distribution chart + its CSV export live in the body as a
-	// kind:"section" bodyWidget (ChannelDistributionSection).
-	await expect(page.locator('[data-section-id="rap-channels"]')).toHaveCount(1)
-	await expect(
-		page.locator('[data-testid^="cn-body-section-error-"]'),
-	).toHaveCount(0)
+	// The per-channel distribution is a bar-list chart widget on the channel
+	// rows, and the CSV export is a header action.
+	await expect(content.locator('[data-testid="cn-chart-widget-bar-list"]').or(content.getByText('No contact moments registered for this period')).first()).toBeVisible({ timeout: 15000 })
 	await expect(
 		content.getByRole('button', { name: 'Export CSV' }).first(),
 	).toBeVisible({ timeout: 15000 })
 
 	// Changing the period pageFilter must re-query BOTH the KPI endpoint and the
-	// section with the new `period` token. Both waiters are armed before the
+	// channel chart with the new `period` token. Both waiters are armed before the
 	// interaction so neither can be missed.
 	const kpiRequery = page.waitForRequest(
 		(req) =>
@@ -970,74 +967,61 @@ test('Contact reporting: four endpoint-bound KPIs + a channel section, both re-q
 		),
 		'RapportageDashboard.vue must not have come back',
 	).toBe(false)
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'components', 'rapportage', 'ChannelDistributionSection.vue')),
+		'ChannelDistributionSection.vue must not have come back',
+	).toBe(false)
 	await assertNoHardError(page)
 })
 
-// @e2e openspec/specs/declarative-view-system/spec.md#channel-analytics-renders-a-comparison-table-driven-by-period-and-granularity
-test('Channel analytics: a body-hosted comparison table driven by BOTH pageFilters', async ({
+// @e2e openspec/specs/declarative-view-system/spec.md#channel-analytics-renders-a-comparison-table-driven-by-period
+test('Channel analytics: a comparison table on the channel rows, driven by period', async ({
 	page,
 }) => {
+	const firstRead = page.waitForResponse(
+		(res) => res.url().includes('/api/rapportage/channels') && res.url().includes('period=month'),
+		{ timeout: 20000 },
+	)
 	await gotoPage(page, '/rapportage/channels')
 	const content = page.locator('#content-vue')
 
 	await expect(
 		content.getByRole('heading', { name: /Channel Analytics/i }).first(),
 	).toBeVisible({ timeout: 20000 })
+	await expect(page.locator('[data-testid="cn-page-filter-period"]')).toHaveCount(1)
 
-	// Both pageFilters are declared, and CnDashboardPage stamps each with its key.
-	await expect(page.locator('[data-testid="cn-page-filter-period"]')).toHaveCount(
-		1,
-	)
-	await expect(
-		page.locator('[data-testid="cn-page-filter-granularity"]'),
-	).toHaveCount(1)
+	// The rows come from the server, which counts FCR and SLA per channel.
+	const body = await (await firstRead).json()
+	expect(Array.isArray(body.rows), 'the channels endpoint answers rows').toBe(true)
+	for (const row of body.rows) {
+		expect(typeof row.fcrRate).toBe('number')
+		expect(['green', 'orange', 'red']).toContain(row.slaStatus)
+	}
+	await expect(content.locator('.cn-widget-object-table').first()).toBeVisible({ timeout: 15000 })
 
-	// The comparison table itself is the body section — the page declares no
-	// grid widgets at all, so if the section failed to resolve the page would be
-	// empty rather than wrong.
-	await expect(page.locator('[data-section-id="channel-comparison"]')).toHaveCount(
-		1,
-	)
-	await expect(
-		page.locator('[data-testid^="cn-body-section-error-"]'),
-	).toHaveCount(0)
-	await expect(content.getByText('Channel Comparison').first()).toBeVisible({
-		timeout: 15000,
-	})
-
-	// The section reads BOTH filters via `@workspace.*`: flipping granularity
-	// alone must re-issue the channels query carrying the new granularity.
 	const requery = page.waitForRequest(
 		(req) =>
 			req.url().includes('/api/rapportage/channels')
-			&& req.url().includes('granularity=weekly'),
+			&& req.url().includes('period=week'),
 		{ timeout: 20000 },
 	)
-	await page.locator('[data-testid="cn-page-filter-granularity"]').first().click()
+	await page.locator('[data-testid="cn-page-filter-period"]').first().click()
 	await page
 		.locator('li[role="option"], .vs__dropdown-option')
-		.filter({ hasText: 'Weekly' })
+		.filter({ hasText: 'This week' })
 		.first()
 		.click()
 	await requery
 
 	expect(
-		fs.existsSync(
-			path.join(
-				APP_ROOT,
-				'src',
-				'views',
-				'rapportage',
-				'ChannelAnalytics.vue',
-			),
-		),
-		'ChannelAnalytics.vue must not have come back',
+		fs.existsSync(path.join(APP_ROOT, 'src', 'components', 'rapportage', 'ChannelComparisonSection.vue')),
+		'ChannelComparisonSection.vue must not have come back',
 	).toBe(false)
 	await assertNoHardError(page)
 })
 
 // @e2e openspec/specs/declarative-view-system/spec.md#agent-performance-renders-a-leaderboard-driven-by-period
-test('Agent performance: a body-hosted leaderboard + team summary driven by period', async ({
+test('Agent performance: team totals and a leaderboard on the agent rows, driven by period', async ({
 	page,
 }) => {
 	await gotoPage(page, '/rapportage/agents')
@@ -1050,27 +1034,14 @@ test('Agent performance: a body-hosted leaderboard + team summary driven by peri
 		1,
 	)
 
-	// The leaderboard + team-summary footer are one kind:"section" bodyWidget.
-	await expect(page.locator('[data-section-id="agent-performance"]')).toHaveCount(
-		1,
-	)
-	await expect(
-		page.locator('[data-testid^="cn-body-section-error-"]'),
-	).toHaveCount(0)
-	// AgentPerformanceSection renders EITHER the sortable table + "Team Summary"
-	// footer or its own "No agent data available" state — the default period is
-	// `today` and the seeded contactmomenten carry fixed historical dates, so
-	// which branch paints is a property of the data, not of the declaration
-	// under test. Both are the section rendering correctly.
-	await expect(
-		content
-			.locator('.agent-performance__table')
-			.or(content.locator('.agent-performance__empty'))
-			.first(),
-	).toBeVisible({ timeout: 20000 })
+	// The team totals are two stat tiles and the leaderboard an object-table
+	// on the agent rows.
+	await expect(content.locator('.cn-stat-widget__value').first()).toBeVisible({ timeout: 20000 })
+	await expect(content.locator('.cn-stat-widget__error')).toHaveCount(0)
+	await expect(content.locator('.cn-widget-object-table').first()).toBeVisible({ timeout: 20000 })
 
 	// "driven by period" — the assertion that does not depend on the data: the
-	// section re-queries its endpoint with the newly selected token.
+	// widgets re-query the endpoint with the newly selected token.
 	const requery = page.waitForRequest(
 		(req) =>
 			req.url().includes('/api/rapportage/agents')
@@ -1096,6 +1067,10 @@ test('Agent performance: a body-hosted leaderboard + team summary driven by peri
 			),
 		),
 		'AgentPerformance.vue must not have come back',
+	).toBe(false)
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'components', 'rapportage', 'AgentPerformanceSection.vue')),
+		'AgentPerformanceSection.vue must not have come back',
 	).toBe(false)
 	await assertNoHardError(page)
 })

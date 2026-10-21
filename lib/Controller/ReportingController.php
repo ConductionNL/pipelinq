@@ -273,7 +273,7 @@ class ReportingController extends Controller {
 	}//end updateSla()
 
 	/**
-	 * Export the contact moments of a period as CSV.
+	 * Export the report of a period as CSV: totals, channels and agents.
 	 *
 	 * The period is read like the other reports: `from`/`to`, or a relative
 	 * `period` token.
@@ -283,6 +283,7 @@ class ReportingController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
+	 * @spec openspec/changes/wire-rapportage-csv-export/specs/contactmomenten-rapportage/spec.md#requirement-csv-export
 	 */
 	public function exportCsv(): DataDownloadResponse|JSONResponse {
 		$user = $this->userSession->getUser();
@@ -305,13 +306,13 @@ class ReportingController extends Controller {
 		}
 
 		try {
-			$csv = $this->reportingService->exportContactMomentsCsv(from: $from, to: $to);
+			$csv = $this->reportingService->exportReportCsv(from: $from, to: $to);
 		} catch (\Throwable) {
 			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
-		$name = 'contact-moments-' . substr($from, 0, 10) . '-' . substr($to, 0, 10) . '.csv';
-		return new DataDownloadResponse($csv, $name, 'text/csv; charset=utf-8');
+		$name = 'rapportage-' . substr($from, 0, 10) . '-' . substr($to, 0, 10) . '.csv';
+		return new DataDownloadResponse($csv, $name, 'text/csv; charset=UTF-8');
 	}//end exportCsv()
 
 	/**

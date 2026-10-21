@@ -34,6 +34,7 @@ use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\ReportingService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -555,7 +556,8 @@ class ReportingControllerTest extends TestCase {
 
 	/**
 	 * GET /api/rapportage/export must return a CSV download whose cells are
-	 * neutralised against formula injection and correctly quoted.
+	 * neutralised against formula injection: an agent named like a formula
+	 * stays text.
 	 *
 	 * @return void
 	 */
@@ -580,7 +582,6 @@ class ReportingControllerTest extends TestCase {
 
 		$body = $response->render();
 		$this->assertStringContainsString("\"'=cmd|calc!A1\"", $body);
-		$this->assertStringContainsString('"Klant zei ""prima"", en vertrok"', $body);
 	}//end testExportCsvReturnsANeutralisedCsvDownload()
 
 	/**
@@ -680,21 +681,26 @@ class ReportingControllerTest extends TestCase {
 	}//end testGetAgentsAnswersRowsWithNamesSecondsAndTotals()
 
 	/**
-	 * The CSV export holds only the contact moments of the requested period.
+	 * The CSV export holds the totals, channel and agent lines of the
+	 * requested period only.
 	 *
 	 * @return void
 	 */
-	public function testExportCsvHoldsOnlyThePeriod(): void {
+	public function testExportCsvHoldsTheReportOfThePeriod(): void {
 		$this->signIn();
 		$this->seedContactmomenten();
 		$this->withParams(['from' => '2026-06-11', 'to' => '2026-06-11']);
 
-		$body = $this->buildController()->exportCsv()->render();
+		$response = $this->buildController()->exportCsv();
+		$body = $response->render();
 
-		$this->assertStringContainsString('"2026-06-11T09:00:00+00:00";"telefoon";"alice";"referred";"PT15M"', $body);
-		$this->assertStringNotContainsString('2026-06-10', $body);
-		$this->assertStringNotContainsString('2026-06-12', $body);
-	}//end testExportCsvHoldsOnlyThePeriod()
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertStringStartsWith("\xEF\xBB\xBF\"Section\";\"Name\";\"Contacts\"", $body);
+		$this->assertStringContainsString('"Total";"All channels";"1";"0";"15:00";"0"', $body);
+		$this->assertStringContainsString('"Channel";"Phone";"1";"0";"";"0"', $body);
+		$this->assertStringContainsString('"Agent";"alice";"1";"0";"15:00";""', $body);
+		$this->assertStringNotContainsString('"bob"', $body);
+	}//end testExportCsvHoldsTheReportOfThePeriod()
 
 	/**
 	 * An export without a period is refused with 400.

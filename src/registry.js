@@ -110,10 +110,6 @@ import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWid
 //     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
 import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
 import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
-import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
-import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
-// --- Reporting dashboards (lib gap: no chart-widget page type). ---
-import ChannelDistributionSection from './components/rapportage/ChannelDistributionSection.vue'
 // --- Lead-management analytics dashboard (lead-management REQ-LM-006..008).
 //     Declarative type:"dashboard" (pipelinq-dashboards-declarative): the four
 //     bespoke chart/table widgets are hosted in one kind:'section' bodyWidget
@@ -521,27 +517,6 @@ const registry = {
 
 	// --- Surveys + Forms migrated to the OpenRegister forms leaf (NC Forms). ---
 	// See openspec/changes/migrate-forms-to-forms-leaf.
-
-	// --- Reporting dashboards (declarative type:"dashboard", pipelinq-dashboards-declarative).
-	//     The headline KPIs are endpoint-bound stat widgets; each bespoke chart/table is
-	//     hosted in-body as a kind:'section' bodyWidget reading the page period via
-	//     @workspace.period. The ReportingController resolves the relative period
-	//     (today/week/month) to a from/to window server-side, so no client-side date math. ---
-	ChannelDistributionSection: {
-		kind: 'section',
-		component: ChannelDistributionSection,
-		_note: 'In-body channel bar chart + CSV export for the declarative RapportageContactmomenten dashboard; the 4 KPIs (total/FCR/avg-handling-time/SLA) are endpoint stat widgets reading /api/rapportage/kpis. Reads @workspace.period and self-fetches /api/rapportage/channels.',
-	},
-	ChannelComparisonSection: {
-		kind: 'section',
-		component: ChannelComparisonSection,
-		_note: 'In-body per-channel comparison table (total/FCR/SLA with colour dots) for the declarative ChannelAnalyticsView dashboard (no headline KPIs). Reads @workspace.period + @workspace.granularity and self-fetches /api/rapportage/channels + /api/rapportage/sla.',
-	},
-	AgentPerformanceSection: {
-		kind: 'section',
-		component: AgentPerformanceSection,
-		_note: 'In-body sortable per-agent leaderboard + team-summary footer for the declarative AgentPerformanceView dashboard (no headline KPIs — the summary is derived from the same agents map). Reads @workspace.period and self-fetches /api/rapportage/agents.',
-	},
 
 	// --- Pipeline board (kanban + list with in-memory search). ---
 	PipelineBoardView: {
