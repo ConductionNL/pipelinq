@@ -7804,7 +7804,8 @@ OC.L10N.register(
         "No recent requests": "No recent requests",
         "Lead title (required)": "Lead title (required)",
         "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in @config.lead_stale_threshold_days days is called stale.": "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in @config.lead_stale_threshold_days days is called stale.",
-        "Connection tested; the status column shows the result": "Connection tested; the status column shows the result"
+        "Connection tested; the status column shows the result": "Connection tested; the status column shows the result",
+        "Changes": "Changes"
     },
     "nplurals=2; plural=(n != 1);"
 )

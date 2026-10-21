@@ -207,7 +207,6 @@ import ExportJobFormView from './views/export/ExportJobForm.vue'
 //     actions on the export controllers, nor the run-detail manifest +
 //     schema-snapshot drill-down). Object CRUD still flows through the shared
 //     object store; these views add the action surface. ---
-import ExportRunDetailView from './views/export/ExportRunDetail.vue'
 // --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
 import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
 import ForecastTrendView from './views/forecast/ForecastTrend.vue'
@@ -923,11 +922,6 @@ const registry = {
 		kind: 'page',
 		component: ExportDestinationFormView,
 		_note: 'Export-destination create/edit form (type, OpenConnector source, path template, compression, encryption) with an inline Test-connection action.',
-	},
-	ExportRunDetailView: {
-		kind: 'page',
-		component: ExportRunDetailView,
-		_note: 'Export-run detail: file manifest, schema snapshots with detected drift, error log and a Retry action; fetched via the export run-detail endpoint.',
 	},
 
 	// CTI telephony, outbound WhatsApp/SMS messaging and the POS payment providers

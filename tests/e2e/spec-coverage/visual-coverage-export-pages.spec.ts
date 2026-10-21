@@ -14,14 +14,14 @@
  * named a component. `src/main.js` now builds `createWebHistory(routerBase())`,
  * so a path-shaped deep link resolves to the page it names.
  *
- * The two lists are `type: "index"` manifest pages; the other three are
- * `type: "custom"` entries that map straight onto their .vue file:
+ * The lists are `type: "index"` and the run a `type: "detail"` manifest page;
+ * the two forms are `type: "custom"` entries that map onto their .vue file:
  *
  *   /export/destinations       index page (exportDestination)
  *   /export/destinations/new   ExportDestinationFormView ExportDestinationForm.vue
  *   /export/jobs/new           ExportJobFormView        ExportJobForm.vue
  *   /export/runs               index page (exportRun)
- *   /export/runs/:id           ExportRunDetailView      ExportRunDetail.vue
+ *   /export/runs/:id           detail page (exportRun)
  */
 
 import type { Page } from '@playwright/test'
@@ -33,13 +33,7 @@ import {
 	dismissWalkthrough,
 } from '../helpers/pipelinq.ts'
 
-/**
- * A run id that deliberately does not exist. `ExportRunDetail.load()` answers a
- * failed fetch with `showError()` and leaves `run = {}`, so the DETAIL SHELL —
- * which is the page component under test — still renders. Pinning the test to a
- * seeded run instead would make it depend on export history that `ci-seed.sh`
- * does not create.
- */
+/** A run id that deliberately does not exist, so the test needs no seeded export history. */
 const ABSENT_RUN_ID = 'e2e-gate26-no-such-run'
 
 /**
@@ -162,37 +156,16 @@ test('ExportRuns: /export/runs mounts the run index page', async ({
 	await expect(indexTitle(page)).toHaveText('Export runs')
 })
 
-// ── src/views/export/ExportRunDetail.vue — route `/export/runs/:id` ───────────
-test('ExportRunDetail: /export/runs/:id mounts src/views/export/ExportRunDetail.vue', async ({
+// ── detail page `ExportRunDetail` — route `/export/runs/:id` ───────────
+test('ExportRunDetail: /export/runs/:id mounts the run detail page', async ({
 	page,
 }) => {
 	await openSpaRoute(page, `/export/runs/${ABSENT_RUN_ID}`)
 
-	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
-	await expect(detail).toBeVisible({ timeout: 15000 })
-
-	// ⚠️ THIS PAGE RENDERS NO TITLE AT ALL, so it cannot be pinned on one.
-	// The first version of this file asserted `.cn-detail-page__title` here and
-	// CI answered `element(s) not found` — NOT a wrong literal, an absent
-	// element. Cause: ExportRunDetail is the only one of the four CnDetailPage
-	// consumers in this app that overrides `<template #header>` (the other three
-	// use `#actions`), and CnDetailPage's `header` slot DEFAULT CONTENT is the
-	// whole left header block — icon, type eyebrow and the
-	// `<h2 class="cn-detail-page__title">`. Supplying `#header` replaces all of
-	// it, so the status badge and Retry button this page puts there come at the
-	// cost of the page heading. The captured DOM confirms it: `<main>` goes
-	// straight from the optional-dependency banners to `heading "Summary"
-	// [level=3]`, with no h1 or h2 anywhere — an unlabelled `<main>` landmark
-	// (WCAG 1.3.1 / 2.4.6). Reported as a product defect rather than asserted
-	// into place, and rather than papered over by relaxing the matcher.
-	//
-	// Pinned instead on the two CnDetailCards this component always renders —
-	// both read verbatim out of the failing run's own ARIA snapshot, so they are
-	// observed rather than guessed, and both are unique to this page.
+	// A run that does not exist still mounts the detail page shell; its
+	// widgets (Summary, File manifest, Schema snapshots) need a seeded run,
+	// which ci-seed.sh does not create.
 	await expect(
-		detail.getByRole('heading', { name: 'Summary', level: 3 }),
+		content(page).locator('[data-testid="cn-detail-page"]').first(),
 	).toBeVisible({ timeout: 15000 })
-	await expect(
-		detail.getByRole('heading', { name: 'File manifest', level: 3 }),
-	).toBeVisible()
 })

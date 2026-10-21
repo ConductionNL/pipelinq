@@ -7808,14 +7808,196 @@
 		},
 		{
 			"id": "ExportRunDetail",
-			"_note": "ExportRunDetail.vue is a CnDetailPage with run-specific CnDetailCard panels (row counts, duration, error log) and a CnStatusBadge; the flat 'detail' type cannot lay out these execution-result cards.",
 			"route": "/export/runs/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Export run",
-			"component": "ExportRunDetailView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "exportRun"
+				"schema": "exportRun",
+				"statusPill": {
+					"field": "status",
+					"colorMap": {
+						"pending": "info",
+						"running": "info",
+						"succeeded": "success",
+						"partial": "warning",
+						"failed": "error",
+						"skipped_overlap": "warning"
+					},
+					"labels": {
+						"pending": "Queued",
+						"running": "Running",
+						"succeeded": "Succeeded",
+						"partial": "Partial",
+						"failed": "Failed",
+						"skipped_overlap": "Skipped (overlap)"
+					}
+				},
+				"headerActions": [
+					{
+						"id": "retry",
+						"label": "Retry",
+						"type": "api-call",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/export/runs/@objectId/retry",
+						"variant": "primary",
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"failed",
+								"partial",
+								"skipped_overlap"
+							]
+						},
+						"successMessage": "A new run has been queued",
+						"errorMessage": "Could not retry the run"
+					}
+				],
+				"widgets": [
+					{
+						"id": "run-summary",
+						"type": "data",
+						"title": "Summary",
+						"content": {
+							"title": "Summary",
+							"columns": 2,
+							"include": [
+								"status",
+								"modeUsed",
+								"rowCount",
+								"byteCount",
+								"fileCount",
+								"startedAt",
+								"endedAt",
+								"errorMessage"
+							],
+							"overrides": {
+								"status": {
+									"editable": false,
+									"enumLabels": {
+										"pending": "Queued",
+										"running": "Running",
+										"succeeded": "Succeeded",
+										"partial": "Partial",
+										"failed": "Failed",
+										"skipped_overlap": "Skipped (overlap)"
+									}
+								},
+								"modeUsed": {
+									"editable": false,
+									"label": "Mode"
+								},
+								"rowCount": {
+									"editable": false,
+									"label": "Rows"
+								},
+								"byteCount": {
+									"editable": false,
+									"label": "Bytes"
+								},
+								"fileCount": {
+									"editable": false,
+									"label": "Files"
+								},
+								"startedAt": {
+									"editable": false,
+									"label": "Started"
+								},
+								"endedAt": {
+									"editable": false,
+									"label": "Ended"
+								},
+								"errorMessage": {
+									"editable": false,
+									"label": "Error"
+								}
+							}
+						}
+					},
+					{
+						"id": "run-files",
+						"type": "object-table",
+						"title": "File manifest",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/export/runs/@objectId",
+								"responsePath": "run.fileManifestJson"
+							},
+							"columns": [
+								{
+									"key": "path",
+									"label": "Path"
+								},
+								{
+									"key": "size_bytes",
+									"label": "Size"
+								},
+								{
+									"key": "rows_in_file",
+									"label": "Rows"
+								},
+								{
+									"key": "sha256",
+									"label": "SHA-256"
+								},
+								{
+									"key": "upload_status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No files in this run"
+						}
+					},
+					{
+						"id": "run-snapshots",
+						"type": "object-table",
+						"title": "Schema snapshots",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/export/runs/@objectId",
+								"responsePath": "snapshots"
+							},
+							"columns": [
+								{
+									"key": "pipelinqSchemaName",
+									"label": "Schema"
+								},
+								{
+									"key": "comparedToPrevious",
+									"label": "Changes"
+								}
+							],
+							"emptyText": "No schema snapshots"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "run-summary",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": "2",
+						"widgetId": "run-files",
+						"gridX": 0,
+						"gridY": 4,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": "3",
+						"widgetId": "run-snapshots",
+						"gridX": 0,
+						"gridY": 9,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				]
 			}
 		},
 		{

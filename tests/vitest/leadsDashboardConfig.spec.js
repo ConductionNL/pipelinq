@@ -248,3 +248,14 @@ describe('the export lists', () => {
 		expect(registrySource).toMatch(/ExportTestRunModal: \{\s*kind: 'modal'/)
 	})
 })
+
+describe('an export run', () => {
+	it('is a detail page with its summary, files, snapshots and a Retry where it applies', () => {
+		const run = page('ExportRunDetail')
+		expect(run.type).toBe('detail')
+		expect(run.config.widgets.map((w) => w.id)).toEqual(['run-summary', 'run-files', 'run-snapshots'])
+		expect(run.config.widgets[1].content.endpointSource).toEqual({ url: '/apps/pipelinq/api/export/runs/@objectId', responsePath: 'run.fileManifestJson' })
+		expect(run.config.headerActions[0].visibleWhen.value).toEqual(['failed', 'partial', 'skipped_overlap'])
+		expect(registrySource).not.toMatch(/ExportRunDetailView/)
+	})
+})
