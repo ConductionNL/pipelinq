@@ -144,6 +144,34 @@ class JourneyService {
 	}//end save()
 
 	/**
+	 * Pause or resume a journey and compile it again, so its flow is
+	 * switched off while paused and back on when resumed.
+	 *
+	 * @param string $journeyId Journey UUID or slug.
+	 * @param string $status `active` or `paused`.
+	 * @param string $runAs The identity a scheduled journey runs as.
+	 *
+	 * @return array<string, mixed>|null The journey with its flow status, or null when unknown.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 */
+	public function setStatus(string $journeyId, string $status, string $runAs = ''): ?array {
+		$journey = $this->find(journeyId: $journeyId);
+		if ($journey === null) {
+			return null;
+		}
+
+		$journey['status'] = $status;
+		$journey['updatedAt'] = date('c', $this->time->getTime());
+		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $journey, id: $journeyId);
+		if ($stored === null) {
+			return null;
+		}
+
+		return $this->compile(journeyId: $journeyId, runAs: $runAs);
+	}//end setStatus()
+
+	/**
 	 * Compile one journey into a published flow.
 	 *
 	 * @param string $journeyId Journey UUID or slug.
