@@ -3010,7 +3010,17 @@
 										},
 										"default": "Sending failed again. Try again later."
 									},
-									"errorText": "Sending failed again. Try again later."
+									"errorText": "Sending failed again. Try again later.",
+									"onStatus": {
+										"template-required": {
+											"type": "open-modal",
+											"target": "SendMessageModal",
+											"props": {
+												"clientId": "@objectId",
+												"initialChannel": "whatsapp"
+											}
+										}
+									}
 								}
 							],
 							"allowReply": false,
@@ -4318,7 +4328,17 @@
 										},
 										"default": "Sending failed again. Try again later."
 									},
-									"errorText": "Sending failed again. Try again later."
+									"errorText": "Sending failed again. Try again later.",
+									"onStatus": {
+										"template-required": {
+											"type": "open-modal",
+											"target": "SendMessageModal",
+											"props": {
+												"contactId": "@objectId",
+												"initialChannel": "whatsapp"
+											}
+										}
+									}
 								}
 							],
 							"allowReply": false,
@@ -4329,6 +4349,23 @@
 								"target": "SendMessageModal",
 								"props": {
 									"contactId": "@objectId"
+								}
+							},
+							"statusBadge": {
+								"source": {
+									"register": "pipelinq",
+									"schema": "channelConversation",
+									"filter": {
+										"contactId": "@objectId"
+									},
+									"limit": 50
+								},
+								"sortField": "lastInboundAt",
+								"path": "status",
+								"map": {
+									"open": "Open",
+									"assigned": "Assigned",
+									"closed": "Closed"
 								}
 							}
 						}

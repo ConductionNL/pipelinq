@@ -85,3 +85,22 @@ describe('every string the cards show is in the catalogues', () => {
 		}
 	})
 })
+
+describe('the messages on a page, restored behaviour', () => {
+	it.each([
+		['contact', contactCard, { contactId: '@objectId' }],
+		['client', clientCard, { clientId: '@objectId' }],
+	])('on a %s page, a closed WhatsApp session opens the composer on WhatsApp', (kind, card, party) => {
+		const [resend] = card.content.messageActions
+		expect(resend.onStatus['template-required']).toEqual({ type: 'open-modal', target: 'SendMessageModal', props: { ...party, initialChannel: 'whatsapp' } })
+	})
+
+	it('shows the status of the contact\'s latest conversation thread', () => {
+		expect(contactCard.content.statusBadge).toMatchObject({
+			source: { register: 'pipelinq', schema: 'channelConversation', filter: { contactId: '@objectId' } },
+			sortField: 'lastInboundAt',
+			path: 'status',
+			map: { open: 'Open', assigned: 'Assigned', closed: 'Closed' },
+		})
+	})
+})
