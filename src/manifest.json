@@ -625,97 +625,6 @@
 			"type": "dashboard",
 			"title": "Sales overview",
 			"config": {
-				"fieldOverrides": {
-					"priceTiers": {
-						"widget": "sub-objects",
-						"inline": true,
-						"label": "Price tiers",
-						"itemLabel": "Price tier",
-						"addLabel": "Add price tier",
-						"emptyText": "No price tiers. The unit price applies to every quantity.",
-						"itemOverrides": {
-							"minQuantity": {
-								"label": "From quantity"
-							},
-							"unitPrice": {
-								"label": "Unit price"
-							},
-							"label": {
-								"label": "Label"
-							}
-						}
-					},
-					"variants": {
-						"widget": "sub-objects",
-						"label": "Variants",
-						"itemLabel": "Variant",
-						"addLabel": "Add variant",
-						"emptyText": "No variants.",
-						"newItem": {
-							"status": "active"
-						},
-						"itemOverrides": {
-							"sku": {
-								"label": "SKU"
-							},
-							"name": {
-								"label": "Name"
-							},
-							"unitPrice": {
-								"label": "Unit price"
-							},
-							"barcode": {
-								"label": "Barcode"
-							},
-							"status": {
-								"label": "Status",
-								"enumLabels": {
-									"active": "Active",
-									"inactive": "Inactive"
-								}
-							},
-							"attributes": {
-								"label": "Attributes"
-							}
-						}
-					},
-					"modifierGroups": {
-						"widget": "sub-objects",
-						"label": "Modifier groups",
-						"itemLabel": "Modifier group",
-						"addLabel": "Add modifier group",
-						"emptyText": "No modifier groups.",
-						"newItem": {
-							"required": false,
-							"multiSelect": false,
-							"min": 0,
-							"max": 1
-						},
-						"itemOverrides": {
-							"name": {
-								"label": "Name"
-							},
-							"required": {
-								"label": "Required"
-							},
-							"multiSelect": {
-								"label": "More than one"
-							},
-							"min": {
-								"label": "At least"
-							},
-							"max": {
-								"label": "At most"
-							},
-							"options": {
-								"widget": "sub-objects",
-								"label": "Options",
-								"itemLabel": "Option",
-								"addLabel": "Add option"
-							}
-						}
-					}
-				},
 				"showRefresh": true,
 				"widgetShowRefresh": false,
 				"headerActions": [
@@ -4500,6 +4409,97 @@
 			"type": "index",
 			"title": "Products",
 			"config": {
+				"fieldOverrides": {
+					"priceTiers": {
+						"widget": "sub-objects",
+						"inline": true,
+						"label": "Price tiers",
+						"itemLabel": "Price tier",
+						"addLabel": "Add price tier",
+						"emptyText": "No price tiers. The unit price applies to every quantity.",
+						"itemOverrides": {
+							"minQuantity": {
+								"label": "From quantity"
+							},
+							"unitPrice": {
+								"label": "Unit price"
+							},
+							"label": {
+								"label": "Label"
+							}
+						}
+					},
+					"variants": {
+						"widget": "sub-objects",
+						"label": "Variants",
+						"itemLabel": "Variant",
+						"addLabel": "Add variant",
+						"emptyText": "No variants.",
+						"newItem": {
+							"status": "active"
+						},
+						"itemOverrides": {
+							"sku": {
+								"label": "SKU"
+							},
+							"name": {
+								"label": "Name"
+							},
+							"unitPrice": {
+								"label": "Unit price"
+							},
+							"barcode": {
+								"label": "Barcode"
+							},
+							"status": {
+								"label": "Status",
+								"enumLabels": {
+									"active": "Active",
+									"inactive": "Inactive"
+								}
+							},
+							"attributes": {
+								"label": "Attributes"
+							}
+						}
+					},
+					"modifierGroups": {
+						"widget": "sub-objects",
+						"label": "Modifier groups",
+						"itemLabel": "Modifier group",
+						"addLabel": "Add modifier group",
+						"emptyText": "No modifier groups.",
+						"newItem": {
+							"required": false,
+							"multiSelect": false,
+							"min": 0,
+							"max": 1
+						},
+						"itemOverrides": {
+							"name": {
+								"label": "Name"
+							},
+							"required": {
+								"label": "Required"
+							},
+							"multiSelect": {
+								"label": "More than one"
+							},
+							"min": {
+								"label": "At least"
+							},
+							"max": {
+								"label": "At most"
+							},
+							"options": {
+								"widget": "sub-objects",
+								"label": "Options",
+								"itemLabel": "Option",
+								"addLabel": "Add option"
+							}
+						}
+					}
+				},
 				"register": "pipelinq",
 				"schema": "product",
 				"documentationUrl": "https://pipelinq.conduction.nl",
