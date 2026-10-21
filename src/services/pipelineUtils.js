@@ -1,8 +1,6 @@
 /**
- * Shared pipeline utilities for aging, stale detection, and formatting.
+ * Shared pipeline utilities: record kinds, pipeline scope and the stale threshold.
  */
-
-import { translate as t } from '@nextcloud/l10n'
 
 /**
  * Logical entity types that were folded into the unified `ticket` schema by
@@ -77,20 +75,6 @@ export function pipelineAppliesTo(pipeline, slug) {
 }
 
 /**
- * Days since an item was last modified (0 when it carries no timestamp).
- *
- * @param {object} item The object, carrying `_dateModified`.
- * @return {number} Whole days elapsed.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-30
- */
-export function getDaysAge(item) {
-	if (!item._dateModified) return 0
-	return Math.floor(
-		(Date.now() - new Date(item._dateModified).getTime()) / 86400000,
-	)
-}
-
-/**
  * Resolve the stale-threshold (days) from the Pipelinq settings config.
  * Falls back to 14 when the value is missing or unparseable so consumers
  * never need to special-case an empty store.
@@ -108,76 +92,3 @@ export function getStaleThreshold(config) {
 	return 14
 }
 
-/**
- * Whether a lead has gone untouched past the stale threshold. Only leads age.
- *
- * @param {object} item The object, carrying `_dateModified`.
- * @param {string} entityType The logical entity slug; anything but 'lead' is never stale.
- * @param {number} [threshold] Optional explicit threshold (days); defaults to 14.
- * @return {boolean} True when the lead is stale.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-31
- */
-export function isStale(item, entityType, threshold = 14) {
-	if (entityType !== 'lead') return false
-	return getDaysAge(item) >= threshold
-}
-
-/**
- * True when a lead has an expectedCloseDate in the past and the lead is
- * not in a closed/won/lost state. Pure function — used by LeadList row
- * highlighting and PipelineCard isOverdue logic.
- *
- * @param {object} lead The lead object.
- * @param {Array<{name:string,isClosed?:boolean}>} stages Pipeline stages.
- * @return {boolean}
- * @spec openspec/specs/lead-management/spec.md
- */
-export function isLeadOverdue(lead, stages = []) {
-	if (!lead || !lead.expectedCloseDate) return false
-	if (lead.status === 'won' || lead.status === 'lost') return false
-	const currentStage = stages.find((s) => s.name === lead.stage)
-	if (currentStage && currentStage.isClosed) return false
-	return new Date(lead.expectedCloseDate) < new Date()
-}
-
-/**
- * Days a lead has been overdue (always >= 0). Returns 0 when not overdue.
- *
- * @param {object} lead The lead object.
- * @param {Array<{name:string,isClosed?:boolean}>} stages Pipeline stages.
- * @return {number}
- * @spec openspec/specs/lead-management/spec.md
- */
-export function getOverdueDays(lead, stages = []) {
-	if (!isLeadOverdue(lead, stages)) return 0
-	const due = new Date(lead.expectedCloseDate).getTime()
-	const now = Date.now()
-	const days = Math.floor((now - due) / 86400000)
-	return days > 0 ? days : 0
-}
-
-/**
- * CSS modifier for an age, escalating at one and two weeks.
- *
- * @param {number} days Whole days elapsed.
- * @return {string} The modifier class, or '' below the first threshold.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-29
- */
-export function getAgingClass(days) {
-	if (days >= 14) return 'aging-alert'
-	if (days >= 7) return 'aging-warning'
-	return ''
-}
-
-/**
- * Compact age label for a list cell ('Today', '1d', '12d').
- *
- * @param {number} days Whole days elapsed.
- * @return {string} The display label.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-28
- */
-export function formatAge(days) {
-	if (days === 0) return t('pipelinq', 'Today')
-	if (days === 1) return '1d'
-	return `${days}d`
-}

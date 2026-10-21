@@ -8055,7 +8055,19 @@ OC.L10N.register(
         "Permission sets a cashier can hold at the register: voiding, refunds, opening the cash drawer.": "Permission sets a cashier can hold at the register: voiding, refunds, opening the cash drawer.",
         "%1$s is still used by %2$s leads. Give them another source first.": "%1$s is still used by %2$s leads. Give them another source first.",
         "%1$s is still used by %2$s requests. Give them another channel first.": "%1$s is still used by %2$s requests. Give them another channel first.",
-        "Remove {name}": "Remove {name}"
+        "Remove {name}": "Remove {name}",
+        "Client added": "Client added",
+        "No recent requests": "No recent requests",
+        "Lead title (required)": "Lead title (required)",
+        "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in @config.lead_stale_threshold_days days is called stale.": "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in @config.lead_stale_threshold_days days is called stale.",
+        "Connection tested; the status column shows the result": "Connection tested; the status column shows the result",
+        "Changes": "Changes",
+        "Not tested": "Not tested",
+        "Last tested": "Last tested",
+        "Choose a pipeline on the board first.": "Choose a pipeline on the board first.",
+        "Could not save the pipeline.": "Could not save the pipeline.",
+        "Could not save the change.": "Could not save the change.",
+        "Every lead and request on the chosen pipeline, by stage": "Every lead and request on the chosen pipeline, by stage"
     },
     "nplurals=2; plural=(n != 1);"
 )

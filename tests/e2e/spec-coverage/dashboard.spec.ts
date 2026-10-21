@@ -165,11 +165,12 @@ async function askNavi(page: Page, question: string): Promise<void> {
 	await widget.getByRole('button', { name: 'Send' }).click()
 }
 
-/** The Report Export panel host (a `bodyWidget`-less custom grid widget). */
-async function reportExportPanel(page: Page) {
-	const panel = page.locator('.report-export')
-	await expect(panel).toBeVisible({ timeout: 25000 })
-	return panel
+/** Open the operational dashboard's header Export action and return its dialog. */
+async function openExportDialog(page: Page) {
+	await page.getByRole('button', { name: 'Export' }).first().click()
+	const dialog = page.locator('.modal-container, [role="dialog"]').first()
+	await expect(dialog).toBeVisible({ timeout: 15000 })
+	return dialog
 }
 
 // @e2e openspec/specs/dashboard/spec.md#dashboard-page-title-and-empty-state
@@ -963,90 +964,40 @@ test('GET /api/analytics/trends rejects an unsupported metric with a static 400'
 })
 
 // ---------------------------------------------------------------------------
-// Requirement: Funder Reporting Export Panel (REQ-DASH-020)
+// Requirement: Funder Reporting Export (REQ-DASH-020)
 // ---------------------------------------------------------------------------
 
-// @e2e openspec/specs/dashboard/spec.md#panel-collapsed-by-default
-test('Report Export: the panel starts collapsed, showing only its title and description', async ({
-	page,
-}) => {
-	await openOperationalInteractive(page)
-	const panel = await reportExportPanel(page)
-
-	const header = panel.locator('.report-export__header')
-	await expect(header).toHaveAttribute('aria-expanded', 'false')
-	await expect(panel.getByText('Report Export').first()).toBeVisible()
-	await expect(
-		panel.getByText(/Download CSV \/ Excel \/ JSON reports/),
-	).toBeVisible()
-	// The body is not merely hidden by CSS — it is not rendered at all (`v-if`).
-	await expect(panel.locator('#report-export-body')).toHaveCount(0)
-
-	// Clicking the header expands it.
-	await header.click()
-	await expect(header).toHaveAttribute('aria-expanded', 'true')
-	await expect(panel.locator('#report-export-body')).toBeVisible()
-})
-
 // @e2e openspec/specs/dashboard/spec.md#configure-and-download-a-report
-test('Report Export: configuring a report opens the shared mass-export dialog', async ({
+test('Export: the header action downloads the picked records through OpenRegister', async ({
 	page,
 }) => {
 	await openOperationalInteractive(page)
-	const panel = await reportExportPanel(page)
-	await panel.locator('.report-export__header').click()
+	const dialog = await openExportDialog(page)
 
-	// Entity type: Requests.
-	await panel.locator('.report-export__field').first().click()
+	await dialog.locator('.vs__dropdown-toggle').first().click()
 	await page
 		.locator('li[role="option"], .vs__dropdown-option')
 		.filter({ hasText: 'Requests' })
 		.first()
 		.click()
-	// Period: This quarter.
-	await panel.locator('.report-export__field').nth(1).click()
-	await page
-		.locator('li[role="option"], .vs__dropdown-option')
-		.filter({ hasText: 'This quarter' })
-		.first()
-		.click()
 
-	await panel.getByRole('button', { name: 'Download Report' }).click()
-
-	// "the frontend MUST open CnMassExportDialog with the appropriate entity
-	// type and applied period filter" — the dialog is the shared component, and
-	// its title/description are built from the two selections above, so the
-	// assertion proves the configuration was carried across rather than just
-	// that a dialog appeared.
-	const dialog = page.locator('.modal-container, [role="dialog"]').first()
-	await expect(dialog).toBeVisible({ timeout: 15000 })
-	await expect(dialog).toContainText('Requests')
-	await expect(dialog).toContainText('This quarter')
-	// "the export MUST be performed by ExportService — no custom export
-	// controller is permitted": the app ships no export route of its own for
-	// this panel, which is why the dialog is the only download path.
-	expect(
-		fs.readFileSync(path.join(APP_ROOT, 'appinfo', 'routes.php'), 'utf8'),
-	).not.toMatch(/reportExport#|report-export/)
+	// "the download MUST NOT be reported as done without a file being
+	// requested": the confirm must ask OpenRegister for the export.
+	const request = page.waitForRequest((r) =>
+		/\/apps\/openregister\/api\/objects\/pipelinq\/ticket\/export\?.*ticketType=request/.test(r.url()),
+	)
+	await dialog.getByRole('button', { name: /export/i }).last().click()
+	await request
 })
 
-/*
- * SPEC/IMPLEMENTATION MISMATCH — reported, not fixed. The scenario lists the
- * entity types under Dutch labels ("Verzoeken", "Contactmomenten",
- * "Tevredenheidsscores"). ReportExportPanel ships them in English ("Requests",
- * "Contact moments", "Satisfaction scores"), which is what the fleet's
- * all-code-is-English rule requires — so the spec wording is the stale half.
- * The four ENTITIES are the ones the scenario enumerates.
- */
 // @e2e openspec/specs/dashboard/spec.md#supported-entity-types-in-report
-test('Report Export: the entity selector offers all four reportable entities', async ({
+test('Export: the entity selector offers all four reportable entities', async ({
 	page,
 }) => {
 	await openOperationalInteractive(page)
-	const panel = await reportExportPanel(page)
-	await panel.locator('.report-export__header').click()
+	const dialog = await openExportDialog(page)
 
-	await panel.locator('.report-export__field').first().click()
+	await dialog.locator('.vs__dropdown-toggle').first().click()
 	const options = page.locator('li[role="option"], .vs__dropdown-option')
 	for (const label of [
 		'Leads',
@@ -1060,43 +1011,10 @@ test('Report Export: the entity selector offers all four reportable entities', a
 		).toBeVisible({ timeout: 10000 })
 	}
 
-	// Selecting an entity changes what the export dialog is opened for.
-	await options.filter({ hasText: 'Contact moments' }).first().click()
-	await panel.getByRole('button', { name: 'Download Report' }).click()
-	await expect(
-		page.locator('.modal-container, [role="dialog"]').first(),
-	).toContainText('Contact moments', { timeout: 15000 })
-})
-
-// @e2e openspec/specs/dashboard/spec.md#report-export-widget-registration
-test('Report Export: the panel is a full-width grid slot below the analytics widgets', async ({
-	page,
-}) => {
-	await openOperationalInteractive(page)
-
-	const slot = page.locator(
-		`.grid-stack-item[gs-id="${layoutSlotFor('report-export')}"]`,
-	)
-	await expect(slot).toHaveCount(1)
-	await expect(slot.locator('.report-export')).toHaveCount(1)
-	await expect(slot).toHaveAttribute('gs-w', '12')
-
-	// "the widget MUST appear below the Analytics panel in the default layout" —
-	// compared against the analytics widgets' own rows rather than a hard-coded
-	// gridY, since the row numbers moved when the mega-panel was decomposed.
-	const layout = operationalPage().config.layout
-	const rowOf = (widgetId: string) =>
-		layout.find((l: any) => l.widgetId === widgetId).gridY
-	for (const analytics of [
-		'lead-conversion',
-		'avg-resolution',
-		'contact-volume',
-	]) {
-		expect(
-			rowOf('report-export'),
-			`report-export must sit below ${analytics}`,
-		).toBeGreaterThan(rowOf(analytics))
-	}
+	// The panel that used to sit on the grid is gone: one export, in the header.
+	expect(
+		operationalPage().config.layout.some((l: any) => l.widgetId === 'report-export'),
+	).toBe(false)
 })
 
 // ---------------------------------------------------------------------------
@@ -1104,46 +1022,27 @@ test('Report Export: the panel is a full-width grid slot below the analytics wid
 // ---------------------------------------------------------------------------
 
 // @e2e openspec/specs/dashboard/spec.md#keyboard-navigable-controls
-test('Report Export: the panel is operable from the keyboard alone', async ({
+test('Export: the action and its dialog are operable from the keyboard alone', async ({
 	page,
 }) => {
 	await openOperationalInteractive(page)
-	const panel = await reportExportPanel(page)
-	const header = panel.locator('.report-export__header')
-
-	// The toggle is a real control for assistive tech: it exposes a button role,
-	// is in the tab order, and describes its own state.
-	await expect(header).toHaveAttribute('role', 'button')
-	await expect(header).toHaveAttribute('tabindex', '0')
-	await expect(header).toHaveAttribute('aria-controls', 'report-export-body')
-
-	// Enter expands…
-	await header.focus()
-	await expect(header).toBeFocused()
+	const button = page.getByRole('button', { name: 'Export' }).first()
+	await button.focus()
+	await expect(button).toBeFocused()
 	await page.keyboard.press('Enter')
-	await expect(header).toHaveAttribute('aria-expanded', 'true')
-	await expect(panel.locator('#report-export-body')).toBeVisible()
 
-	// …and Space collapses. Both are required; a panel wired to only one of them
-	// would still pass a click-only test.
-	await page.keyboard.press('Space')
-	await expect(header).toHaveAttribute('aria-expanded', 'false')
-
-	// Every control in the expanded body can take focus. (The FORMAT picker the
-	// scenario also lists is not in this panel — CnMassExportDialog owns it, see
-	// `exportFormats` passed to the dialog — so it is reachable only once the
-	// dialog is open, and is that component's contract.)
-	await page.keyboard.press('Enter')
-	const body = panel.locator('#report-export-body')
-	await expect(body).toBeVisible()
+	const dialog = page.locator('.modal-container, [role="dialog"]').first()
+	await expect(dialog).toBeVisible({ timeout: 15000 })
 	for (const control of [
-		body.locator('.report-export__field').first().locator('input').first(),
-		body.locator('.report-export__field').nth(1).locator('input').first(),
-		body.getByRole('button', { name: 'Download Report' }),
+		dialog.locator('.vs__dropdown-toggle input').first(),
+		dialog.getByRole('button', { name: /export/i }).last(),
 	]) {
 		await control.focus()
 		await expect(control).toBeFocused()
 	}
+
+	await page.keyboard.press('Escape')
+	await expect(dialog).toBeHidden()
 })
 
 // ---------------------------------------------------------------------------
@@ -1152,7 +1051,7 @@ test('Report Export: the panel is operable from the keyboard alone', async ({
 
 /*
  * SPEC/IMPLEMENTATION DRIFT — reported, not fixed. The scenario pins absolute
- * rows (navi-analytics at gridY 4, unified-analytics at 3, report-export at 10)
+ * rows (navi-analytics at gridY 4, unified-analytics at 3)
  * and a total of 10 widget definitions. Both numbers moved: the
  * unified-analytics mega-panel was decomposed into five individual widgets and
  * the layout was re-flowed around them, so the Operational dashboard now
@@ -1166,8 +1065,8 @@ test('Layout: the analytics widgets were added without displacing the original o
 }) => {
 	await openOperationalInteractive(page)
 
-	// The three surfaces this requirement adds.
-	for (const widgetId of ['navi-analytics', 'report-export', 'lead-conversion']) {
+	// The surfaces this requirement adds that are still on the grid.
+	for (const widgetId of ['navi-analytics', 'lead-conversion']) {
 		await expect(
 			page.locator(`.grid-stack-item[gs-id="${layoutSlotFor(widgetId)}"]`),
 			`added widget "${widgetId}" must render`,

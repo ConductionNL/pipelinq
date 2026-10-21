@@ -104,7 +104,7 @@ class DealsOverviewWidget implements IWidget {
 		// Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).
 		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-vendor');
 		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-nc-vue');
-		Util::addScript(Application::APP_ID, Application::APP_ID . '-dealsOverviewWidget');
+		Util::addScript(Application::APP_ID, Application::APP_ID . '-ncDashboardWidgets');
 		Util::addStyle(Application::APP_ID, 'dashboardWidgets');
 
 	}//end load()

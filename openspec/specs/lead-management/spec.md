@@ -1250,7 +1250,7 @@ See DESIGN-REFERENCES.md Section 3.2 card anatomy:
 Implemented:
 - **Data model**: `lib/Settings/pipelinq_register.json` defines the `lead` schema with: `title` (required), `client`, `contact`, `source`, `value`, `probability` (0-100), `expectedCloseDate`, `assignee`, `priority` (low/normal/high/urgent), `pipeline`, `stage`, `stageOrder`, `notes`, `status` (open/won/lost). Mapped to `schema:Demand`.
 - **Lead CRUD**: Handled via the generic object store (`src/store/modules/object.js`) calling OpenRegister's object API. No dedicated lead controller -- all CRUD goes through OpenRegister.
-- **Lead List View**: `src/views/leads/LeadList.vue` -- table with columns for title, value, stage, priority, source, assignee, expected close date. Supports search, sort, filter, and pagination via OpenRegister's query API.
+- **Lead List View**: manifest page `Leads` (`type: "index"`, `src/manifest.json`) -- table with columns for title, value, stage, priority, source, assignee, expected close date. Supports search, sort, filter, and pagination via OpenRegister's query API.
 - **Lead Detail View**: `src/views/leads/LeadDetail.vue` -- displays core info (value formatted as EUR, probability as %, source, priority, expected close date, category), pipeline progress indicator, client/contact links, assignee section, activity timeline via sidebar. Edit/delete actions with confirmation dialog.
 - **Lead Form**: `src/views/leads/LeadForm.vue` -- create/edit form with all lead fields.
 - **Lead Create Dialog**: `src/views/leads/LeadCreateDialog.vue` -- quick-create dialog used from dashboard.

@@ -488,7 +488,7 @@ transactional email templates beyond the OR `email` channel's subject-as-body.
   - All support independent stream/email toggles, grouped under "Pipelinq".
 - **User-level notification preferences:** `NotificationService::send()` checks per-user settings via `IConfig::getUserValue()` with `SUBJECT_SETTING_MAP`.
 - **Event listener:** `lib/Listener/ObjectEventListener.php` listens for OpenRegister object events and triggers notifications/activities via `ObjectEventHandlerService.php`.
-- **Recent Activities Widget:** `RecentActivitiesWidget.php` and `src/views/widgets/RecentActivitiesWidget.vue` provide dashboard widget.
+- **Recent Activities Widget:** `RecentActivitiesWidget.php` and its configuration in `src/ncDashboardWidgets.js` provide the dashboard widget.
 
 **Not yet implemented:**
 - **Deal Won/Lost notifications:** No distinct `lead_won` or `lead_lost` subjects. Stage changes use generic `lead_stage_changed`.

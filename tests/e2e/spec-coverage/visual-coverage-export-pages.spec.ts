@@ -14,14 +14,14 @@
  * named a component. `src/main.js` now builds `createWebHistory(routerBase())`,
  * so a path-shaped deep link resolves to the page it names.
  *
- * All five pages are `type: "custom"` manifest entries, so the route maps
- * straight onto the .vue file rather than onto the manifest renderer:
+ * The lists are `type: "index"` and the run and destination `type: "detail"`
+ * manifest pages; the job form is a `type: "custom"` entry over its .vue file:
  *
- *   /export/destinations       ExportDestinationsView   ExportDestinations.vue
- *   /export/destinations/new   ExportDestinationFormView ExportDestinationForm.vue
+ *   /export/destinations       index page (exportDestination)
+ *   /export/destinations/:id   detail page (exportDestination); new ones through the list's Add form
  *   /export/jobs/new           ExportJobFormView        ExportJobForm.vue
- *   /export/runs               ExportRunsView           ExportRuns.vue
- *   /export/runs/:id           ExportRunDetailView      ExportRunDetail.vue
+ *   /export/runs               index page (exportRun)
+ *   /export/runs/:id           detail page (exportRun)
  */
 
 import type { Page } from '@playwright/test'
@@ -33,13 +33,7 @@ import {
 	dismissWalkthrough,
 } from '../helpers/pipelinq.ts'
 
-/**
- * A run id that deliberately does not exist. `ExportRunDetail.load()` answers a
- * failed fetch with `showError()` and leaves `run = {}`, so the DETAIL SHELL —
- * which is the page component under test — still renders. Pinning the test to a
- * seeded run instead would make it depend on export history that `ci-seed.sh`
- * does not create.
- */
+/** A run id that deliberately does not exist, so the test needs no seeded export history. */
 const ABSENT_RUN_ID = 'e2e-gate26-no-such-run'
 
 /**
@@ -91,8 +85,8 @@ function indexTitle(page: Page) {
 		.first()
 }
 
-// ── src/views/export/ExportDestinations.vue — route `/export/destinations` ────
-test('ExportDestinations: /export/destinations mounts src/views/export/ExportDestinations.vue', async ({
+// ── index page `ExportDestinations` — route `/export/destinations` ────
+test('ExportDestinations: /export/destinations mounts the destination index page', async ({
 	page,
 }) => {
 	await openSpaRoute(page, '/export/destinations')
@@ -103,38 +97,16 @@ test('ExportDestinations: /export/destinations mounts src/views/export/ExportDes
 	await expect(indexTitle(page)).toHaveText('Export destinations')
 })
 
-// ── src/views/export/ExportDestinationForm.vue — `/export/destinations/new` ───
-test('ExportDestinationForm: /export/destinations/new mounts src/views/export/ExportDestinationForm.vue', async ({
+// ── New destination: the destination list's create form ───
+test('ExportDestinations: New destination opens the destination form', async ({
 	page,
 }) => {
-	await openSpaRoute(page, '/export/destinations/new')
+	await openSpaRoute(page, '/export/destinations')
+	await content(page).getByRole('button', { name: 'New destination' }).first().click()
 
-	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
-	await expect(detail).toBeVisible({ timeout: 15000 })
-	// ⚠️ THIS HEADING'S SOURCE HAS CHANGED — read before editing the literal.
-	//
-	// This file used to record the opposite rule: that a manifest page `title`
-	// reaches CnDetailPage as a fallthrough attribute on a single-root
-	// component and beats the component's own `:title`. Run 33253937930
-	// measured the reverse — `33 × locator resolved to <h2
-	// class="cn-detail-page__title">New destination</h2>`, i.e. the
-	// COMPONENT's binding is what renders — so `src/manifest.json` (page
-	// `ExportDestinationNew`) is no longer the string the user sees here.
-	//
-	// Nothing else in the suite can see that flip: this was the only page
-	// whose manifest title and component literal disagreed. The
-	// `/kassakoppeling/audit/:id` case looks like a counter-example but is
-	// not — its own comment says it asserts the COMPONENT's fallback, which
-	// merely happens to equal the manifest title.
-	//
-	// The component now says 'New export destination' too, so both layers
-	// agree and the heading is right whichever one wins. That does mean this
-	// assertion no longer discriminates between them: if you need to know
-	// which layer renders, make them disagree deliberately rather than
-	// reading this test's result as an answer.
-	await expect(detail.locator('.cn-detail-page__title')).toHaveText(
-		'New export destination',
-	)
+	const dialog = page.locator('.modal-container, [role="dialog"]').first()
+	await expect(dialog).toBeVisible({ timeout: 15000 })
+	await expect(dialog.getByText('OpenConnector source ID').first()).toBeVisible()
 })
 
 // ── src/views/export/ExportJobForm.vue — route `/export/jobs/new` ─────────────
@@ -150,8 +122,8 @@ test('ExportJobForm: /export/jobs/new mounts src/views/export/ExportJobForm.vue'
 	)
 })
 
-// ── src/views/export/ExportRuns.vue — route `/export/runs` ────────────────────
-test('ExportRuns: /export/runs mounts src/views/export/ExportRuns.vue', async ({
+// ── index page `ExportRuns` — route `/export/runs` ────────────────────
+test('ExportRuns: /export/runs mounts the run index page', async ({
 	page,
 }) => {
 	await openSpaRoute(page, '/export/runs')
@@ -162,37 +134,16 @@ test('ExportRuns: /export/runs mounts src/views/export/ExportRuns.vue', async ({
 	await expect(indexTitle(page)).toHaveText('Export runs')
 })
 
-// ── src/views/export/ExportRunDetail.vue — route `/export/runs/:id` ───────────
-test('ExportRunDetail: /export/runs/:id mounts src/views/export/ExportRunDetail.vue', async ({
+// ── detail page `ExportRunDetail` — route `/export/runs/:id` ───────────
+test('ExportRunDetail: /export/runs/:id mounts the run detail page', async ({
 	page,
 }) => {
 	await openSpaRoute(page, `/export/runs/${ABSENT_RUN_ID}`)
 
-	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
-	await expect(detail).toBeVisible({ timeout: 15000 })
-
-	// ⚠️ THIS PAGE RENDERS NO TITLE AT ALL, so it cannot be pinned on one.
-	// The first version of this file asserted `.cn-detail-page__title` here and
-	// CI answered `element(s) not found` — NOT a wrong literal, an absent
-	// element. Cause: ExportRunDetail is the only one of the four CnDetailPage
-	// consumers in this app that overrides `<template #header>` (the other three
-	// use `#actions`), and CnDetailPage's `header` slot DEFAULT CONTENT is the
-	// whole left header block — icon, type eyebrow and the
-	// `<h2 class="cn-detail-page__title">`. Supplying `#header` replaces all of
-	// it, so the status badge and Retry button this page puts there come at the
-	// cost of the page heading. The captured DOM confirms it: `<main>` goes
-	// straight from the optional-dependency banners to `heading "Summary"
-	// [level=3]`, with no h1 or h2 anywhere — an unlabelled `<main>` landmark
-	// (WCAG 1.3.1 / 2.4.6). Reported as a product defect rather than asserted
-	// into place, and rather than papered over by relaxing the matcher.
-	//
-	// Pinned instead on the two CnDetailCards this component always renders —
-	// both read verbatim out of the failing run's own ARIA snapshot, so they are
-	// observed rather than guessed, and both are unique to this page.
+	// A run that does not exist still mounts the detail page shell; its
+	// widgets (Summary, File manifest, Schema snapshots) need a seeded run,
+	// which ci-seed.sh does not create.
 	await expect(
-		detail.getByRole('heading', { name: 'Summary', level: 3 }),
+		content(page).locator('[data-testid="cn-detail-page"]').first(),
 	).toBeVisible({ timeout: 15000 })
-	await expect(
-		detail.getByRole('heading', { name: 'File manifest', level: 3 }),
-	).toBeVisible()
 })

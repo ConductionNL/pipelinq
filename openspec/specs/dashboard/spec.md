@@ -272,7 +272,7 @@ Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\
 #### Scenario: Widget script loading
 @e2e exclude webpack bundle loading; covered by smoke test
 - WHEN a Nextcloud dashboard widget's `load()` method is called
-- THEN it MUST register the widget's JavaScript bundle via `Util::addScript(APP_ID, APP_ID . '-{widgetName}')` (e.g., `pipelinq-dealsOverviewWidget`)
+- THEN it MUST register the one dashboard widget bundle via `Util::addScript(APP_ID, APP_ID . '-ncDashboardWidgets')`, which registers every `pipelinq_*` widget from configuration (`src/ncDashboardWidgets.js`, nextcloud-vue `registerNcDashboardWidgets`)
 - AND it MUST load shared dashboard widget styles via `Util::addStyle(APP_ID, 'dashboardWidgets')`
 
 ---
@@ -597,59 +597,45 @@ The `AnalyticsController` MUST provide aggregate endpoints consumed by the Analy
 
 ---
 
-### Requirement: Funder Reporting Export Panel (REQ-DASH-020)
+### Requirement: Funder Reporting Export (REQ-DASH-020)
 
-The dashboard MUST include a collapsible "Report Export" panel (`ReportExportPanel.vue`) allowing users to generate and download structured CRM performance reports.
+The operational dashboard MUST offer an Export action in its header that downloads the records behind it for funders and stakeholders.
 
 **Feature tier**: V1
-**Frontend**: `ReportExportPanel.vue`
-**Reuses**: `ExportService` via `CnMassExportDialog`
+**Frontend**: manifest header action `{ type: "export" }` on the `OperationalDashboard` page
+**Reuses**: the shared export dialog (`CnMassExportDialog`) and OpenRegister's object export
 
 #### Scenario: Configure and download a report
 
-- GIVEN the user expands the Report Export panel
-- WHEN the user selects: entity type (Leads / Requests / Contact Moments / Satisfaction), period (week/month/quarter/year), and format (CSV / Excel / JSON)
-- AND clicks "Download Report"
-- THEN the frontend MUST open `CnMassExportDialog` with the appropriate entity type and applied period filter
-- AND the export MUST be performed by `ExportService` — no custom export controller is permitted
-
-#### Scenario: Panel collapsed by default
-
-- WHEN the dashboard loads
-- THEN the Report Export panel MUST render in a collapsed state showing only the panel title and a brief description
-- AND the user MUST be able to expand it by clicking the panel header
-
-#### Scenario: Report export widget registration
-
-- WHEN the dashboard initializes
-- THEN the Report Export panel MUST be registered as `widget-id: "report-export"` in `CnDashboardPage`
-- AND the widget MUST span 12 columns
-- AND the widget MUST appear below the Analytics panel in the default layout
+- GIVEN the user is on the operational dashboard
+- WHEN the user opens Export in the page header
+- AND picks an entity type and a format (Excel or CSV) and confirms
+- THEN the browser MUST download that entity's records through OpenRegister's export
+- AND the download MUST NOT be reported as done without a file being requested
 
 #### Scenario: Supported entity types in report
 
-- WHEN the user opens the Report Export panel
+- WHEN the user opens the Export dialog
 - THEN the entity type selector MUST list at minimum:
-  - "Leads" (queries `lead` schema)
-  - "Verzoeken" (queries `request` schema)
-  - "Contactmomenten" (queries `contactmoment` schema)
-  - "Tevredenheidsscores" (queries `surveyResponse` schema)
-- AND selecting an entity type MUST update the available field columns shown in `CnMassExportDialog`
+  - "Leads" (the `lead` schema)
+  - "Requests" (the `ticket` schema with `ticketType` `request`)
+  - "Contact moments" (the `ticket` schema with `ticketType` `interaction`)
+  - "Satisfaction scores" (the `surveyResponse` schema)
+- AND the labels MUST be translated (Dutch: "Verzoeken", "Contactmomenten", "Tevredenheidsscores")
 
 ---
 
 ### Requirement: Report Export Accessibility (REQ-DASH-021)
 
-The Report Export panel MUST meet WCAG AA accessibility standards.
+The Export action MUST meet WCAG AA accessibility standards.
 
 **Feature tier**: V1
 
 #### Scenario: Keyboard-navigable controls
 
-- WHEN the user navigates the Report Export panel using keyboard only
-- THEN all controls (period selector, entity type selector, format picker, download button) MUST be reachable via Tab
-- AND the expand/collapse toggle MUST respond to Enter and Space keys
-- AND focus MUST not be trapped inside the panel
+- WHEN the user navigates the Export action and its dialog using keyboard only
+- THEN the header button, the entity type selector, the format picker and the confirm button MUST be reachable via Tab
+- AND focus MUST return to the page when the dialog closes
 
 ---
 
@@ -666,7 +652,6 @@ The existing default dashboard layout MUST be extended to include the three new 
 - THEN the default layout MUST include (in addition to existing widgets):
   - `navi-analytics` widget at gridY: 4, 12 columns, gridHeight: 6
   - `unified-analytics` widget at gridY: 3, 12 columns, gridHeight: 5
-  - `report-export` widget at gridY: 10, 12 columns, gridHeight: 3
 - AND all existing widget positions (KPI cards at row 1, chart + My Work at row 2, Client Overview at row 3) MUST remain unchanged
 
 #### Scenario: Total widget count updated

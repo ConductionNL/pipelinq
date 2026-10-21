@@ -43,7 +43,7 @@
  *
  * Deduplication check (Task 0.1):
  *   - ChatService + ContextRetrievalHandler — reused for free-form LLM summary.
- *   - ExportService + CnMassExportDialog    — reused by ReportExportPanel.
+ *   - CnMassExportDialog                    — reused by the dashboard Export action.
  *   - CnChartWidget / CnStatsBlock / CnKpiGrid / CnDashboardPage — UI only.
  *   - No custom LLM wrapper, chart component, dashboard layout or export
  *     controller is added by this change.

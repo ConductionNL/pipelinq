@@ -122,10 +122,13 @@ import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 import ArticleEditModal from './modals/ArticleEditModal.vue'
+import ExportTestRunModal from './modals/ExportTestRunModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import ForecastOverrideModal from './modals/ForecastOverrideModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
+import PipelineCardFieldModal from './modals/PipelineCardFieldModal.vue'
+import PipelineSettingsModal from './modals/PipelineSettingsModal.vue'
 import SendMessageModal from './modals/SendMessageModal.vue'
 import SocialPostComposeModal from './modals/SocialPostComposeModal.vue'
 import SubscriptionManageModal from './modals/SubscriptionManageModal.vue'
@@ -142,37 +145,14 @@ import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 //     renderer from the manifest.d fragment at render time. ---
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
 import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
-// --- Dashboard (manifest-driven type:"dashboard") — header actions and
-//     per-widget slot components. The page itself is rendered by
-//     CnDashboardPage from `config.widgets[]` + `config.layout[]`. ---
-import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 // --- Navi AI conversational analytics (openspec/changes/dashboard). ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
-import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
-// --- xWiki integration (xwiki-integration): dashboard widget wrapper +
-//     reusable widget / sidebar / viewer / list components. ---
-import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget.vue'
-import ExportDestinationFormView from './views/export/ExportDestinationForm.vue'
-import ExportDestinationsView from './views/export/ExportDestinations.vue'
 import ExportJobFormView from './views/export/ExportJobForm.vue'
 // --- BI export + data-warehouse sink (lib gap: declarative index/detail pages
 //     cannot express the bespoke test-connection / test-run / enable / retry
 //     actions on the export controllers, nor the run-detail manifest +
 //     schema-snapshot drill-down). Object CRUD still flows through the shared
 //     object store; these views add the action surface. ---
-import ExportJobsView from './views/export/ExportJobs.vue'
-import ExportRunDetailView from './views/export/ExportRunDetail.vue'
-import ExportRunsView from './views/export/ExportRuns.vue'
-// --- Features & roadmap page. Was type:"roadmap", dispatched straight to
-//     the library's CnFeaturesAndRoadmapPage, which renders two tabs and
-//     declares no slots. FeaturesRoadmapView renders that page unchanged and
-//     adds one link to the help desk comparison on pipelinq.conduction.nl. ---
-import FeaturesRoadmapView from './views/FeaturesRoadmapView.vue'
-// --- Flows (ADR-110 Decision 4). The list and the canvas are the shared
-//     `flows` / `flow-detail` manifest page types; only the SIDEBAR is an
-//     app component, because CnFlowSidebar has to mount in the NC app
-//     sidebar for the canvas to keep full width. ---
-import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import KassakoppelingAuditDetailView from './views/kassakoppeling/KassakoppelingAuditDetail.vue'
 // --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit):
 //     append-only HMAC-SHA256 signed register actions chained per-register
@@ -181,18 +161,12 @@ import KassakoppelingAuditDetailView from './views/kassakoppeling/Kassakoppeling
 //     endpoint, the verify-button + verification badge ramp on the detail
 //     view, or the date-range + format export modal. ---
 import KassakoppelingAuditListView from './views/kassakoppeling/KassakoppelingAuditList.vue'
-import LeadForecastTab from './views/leads/LeadForecastTab.vue'
-// --- Leads list (lead-management spec REQ-LM-002 / REQ-LM-004 / REQ-LM-005).
-//     Wraps CnIndexPage to add the stale filter, overdue row highlighting
-//     and CSV import/export via the platform mass dialogs. ---
-import LeadListView from './views/leads/LeadList.vue'
 // --- Search intelligence (marketing-search-intelligence, phase 5): the
 //     four derivations over those same rows, the competitor watches, and
 //     the follow audit. Each is a computed read, not a row list. ---
 import KeywordIntelligenceView from './views/marketing/KeywordIntelligence.vue'
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
-import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 // --- POS cash drawer. The detail page is now a declarative type:"detail" page
 //     (pipelinq-pos-mdm-detail-declarative): the shift's float fields auto-render,
 //     the drops are a relatedCollections table, and the variance/diff projection
@@ -212,7 +186,6 @@ import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
-import StoreGallery from './views/store/StoreGallery.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 import ContactAwareObjectListWidget from './components/widgets/ContactAwareObjectListWidget.js'
@@ -270,62 +243,23 @@ const registry = {
 		component: ProspectsView,
 		_note: 'Full-page expansion of ProspectWidget (refactor-pipelinq-ia-alignment): scored-prospect list with sortable columns + convert-to-lead action over the prospect Pinia store; lib has no declarative type for scored external-source enrichment.',
 	},
-	FeaturesRoadmapView: {
-		kind: 'page',
-		component: FeaturesRoadmapView,
-		_note: 'Wraps the library\'s CnFeaturesAndRoadmapPage and adds one link to the help desk capability comparison on pipelinq.conduction.nl/compare. The library component declares no slots, so the link cannot be added from the manifest; the page moves back to type:"roadmap" the day the library can carry it.',
-	},
 
-	StoreGallery: {
-		kind: 'page',
-		component: StoreGallery,
-		_note: "ADR-080 store plane. Reads /api/store/items, a thin action over AppHost GenericStoreService, so the SSRF guard, the redirect refusal and the token all live in the engine and pipelinq builds no registry URL. A custom component rather than type:index because store items are REMOTE objects and the object-backed index renderer resolves a local register plus schema, which cannot address them. With no registry configured the engine answers not_configured WITHOUT a network call and the page renders pipelinq's built-in templates, which is Decision 4 and the only reason this surface may carry the word Store at all. Install is pipelinq's own and admin-guarded (Decision 3), and it writes commercial CONFIGURATION only; the record schemas are refused by StoreController::INSTALLABLE_SLUGS.",
-	},
 
 	// --- Dashboard widgets (rendered as #widget-{id} slots inside
 	//     CnDashboardPage via the manifest Dashboard page's `slots` map). ---
-	MyWorkWidget: {
-		kind: 'widget',
-		component: MyWorkWidget,
-		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4). Thin wrapper over the canonical GET /apps/pipelinq/api/worklist/mine union endpoint (leads + tickets, server-sorted overdue → priority → due date). NOT dissolved into the built-in object-table widget because each row navigates to a DIFFERENT route (LeadDetail vs TicketDetail via the row\'s routeName field) and object-table\'s rowRoute is a single static route name — nextcloud-vue#91 Wave 2 has no per-row-route field. Dissolvable once the object-table widget gains a per-row route resolver. NOTE: WorklistService still emits the pre-migration routeName "RequestDetail"; the widget maps legacy detail-route names onto TicketDetail (unify-ticket-supertype).',
-	},
 	NaviAnalyticsWidget: {
 		kind: 'widget',
 		component: NaviAnalyticsWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnDataTable / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
 	},
-	ReportExportPanel: {
-		kind: 'widget',
-		component: ReportExportPanel,
-		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — dashboard export-action gap). Collapsible funder-reporting export panel; delegates format picker + download to CnMassExportDialog / ExportService. NOT dissolvable to the Wave-1 type:"export" action: that action is dispatched via cnDispatchAction from an index/toolbar surface, but CnDashboardPage renders no dispatchable page-level actions (it exposes only Refresh/Docs/Request-feature + the header-actions slot), so an in-body dashboard export panel has no declarative equivalent. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
-	},
 
 	// --- Surveys + Forms migrated to the OpenRegister forms leaf (NC Forms). ---
 	// See openspec/changes/migrate-forms-to-forms-leaf.
 
 	// --- Pipeline board (kanban + list with in-memory search). ---
-	PipelineBoardView: {
-		kind: 'page',
-		component: PipelineBoardView,
-		_note: 'Pipeline kanban/list board with in-memory title search (REQ-PIPE-022). Restored after migrate-pipeline-to-deck-leaf; coexists with Deck integration.',
-	},
 
-	LeadForecastTab: {
-		kind: 'widget',
-		component: LeadForecastTab,
-		...SIDEBAR_TAB_META,
-		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
-	},
 
-	// --- Leads list with lead-management enhancements. ---
-	LeadListView: {
-		kind: 'page',
-		component: LeadListView,
-		_note: 'Wraps CnIndexPage with the lead-management stale filter, overdue row highlighting and platform mass import/export dialogs (REQ-LM-002/004/005).',
-	},
 
 	// --- POS transactions. The PosTransactions list + detail are now declarative
 	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
@@ -636,35 +570,10 @@ const registry = {
 	},
 
 	// --- BI export + data-warehouse sink. ---
-	ExportJobsView: {
-		kind: 'page',
-		component: ExportJobsView,
-		_note: 'Export-job list with per-row Test-run + Enable/Disable actions calling the export controller; declarative index cannot trigger the test/enable endpoints.',
-	},
 	ExportJobFormView: {
 		kind: 'page',
 		component: ExportJobFormView,
 		_note: 'Export-job create/edit form (schemas multi-select, destination, format/mode, watermark, cron, row filter, PII column allowlist) with an inline Test-run action.',
-	},
-	ExportDestinationsView: {
-		kind: 'page',
-		component: ExportDestinationsView,
-		_note: 'Export-destination list with a per-row Test-connection action calling the export controller.',
-	},
-	ExportDestinationFormView: {
-		kind: 'page',
-		component: ExportDestinationFormView,
-		_note: 'Export-destination create/edit form (type, OpenConnector source, path template, compression, encryption) with an inline Test-connection action.',
-	},
-	ExportRunsView: {
-		kind: 'page',
-		component: ExportRunsView,
-		_note: 'Export-run history list with a per-row Retry action for failed/partial runs.',
-	},
-	ExportRunDetailView: {
-		kind: 'page',
-		component: ExportRunDetailView,
-		_note: 'Export-run detail: file manifest, schema snapshots with detected drift, error log and a Retry action; fetched via the export run-detail endpoint.',
 	},
 
 	// CTI telephony, outbound WhatsApp/SMS messaging and the POS payment providers
@@ -784,12 +693,6 @@ const registry = {
 	},
 
 	// --- xWiki integration (xwiki-integration). ---
-	XWikiDashboardWidget: {
-		kind: 'widget',
-		component: XWikiDashboardWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Dashboard wrapper for the reusable XWikiWidget — pre-binds admin-configured xwiki_default_space + showSearch=true. Rendered as widget-xwiki on the Dashboard page.',
-	},
 	XWikiWidget: {
 		kind: 'widget',
 		component: XWikiWidgetComponent,
@@ -826,11 +729,6 @@ const registry = {
 	// native flow store, scoped `app: "pipelinq"` so this app sees only its
 	// own. Only the SIDEBAR is an app component; the list and the canvas are
 	// the shared `flows` / `flow-detail` manifest page types.
-	FlowDetailSidebar: {
-		kind: 'page',
-		component: FlowDetailSidebar,
-		_note: 'CnFlowSidebar in the NC app sidebar; shares useFlowStore with the canvas.',
-	},
 
 	// --- Create modals (kind:"modal"), opened by a manifest header action's
 	//     type:"open-modal" + target. These keep the BESPOKE create forms —
@@ -844,6 +742,27 @@ const registry = {
 		component: LetterFromTemplateModal,
 		propsSchema: null,
 		_note: 'Make a letter. Target of the make-letter header action on ClientDetail and TicketDetail; reads the record id from the route.',
+	},
+
+	PipelineCardFieldModal: {
+		kind: 'modal',
+		component: PipelineCardFieldModal,
+		propsSchema: null,
+		_note: 'Set the assignee or the priority of a Pipeline board card. Target of the Assign and Set priority card actions.',
+	},
+
+	PipelineSettingsModal: {
+		kind: 'modal',
+		component: PipelineSettingsModal,
+		propsSchema: null,
+		_note: 'The settings of the pipeline the board is narrowed to. Target of the Pipeline settings header action.',
+	},
+
+	ExportTestRunModal: {
+		kind: 'modal',
+		component: ExportTestRunModal,
+		propsSchema: null,
+		_note: 'Test run of an export job. Target of the Test run row action on the BI export jobs list.',
 	},
 
 	LeadCreateDialog: {
