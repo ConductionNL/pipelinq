@@ -194,10 +194,6 @@ import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 //     renderer from the manifest.d fragment at render time. ---
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
 import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
-// --- Dashboard (manifest-driven type:"dashboard") — header actions and
-//     per-widget slot components. The page itself is rendered by
-//     CnDashboardPage from `config.widgets[]` + `config.layout[]`. ---
-import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 // --- Navi AI conversational analytics (openspec/changes/dashboard). ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
 // --- xWiki integration (xwiki-integration): dashboard widget wrapper +
@@ -364,12 +360,6 @@ const registry = {
 
 	// --- Dashboard widgets (rendered as #widget-{id} slots inside
 	//     CnDashboardPage via the manifest Dashboard page's `slots` map). ---
-	MyWorkWidget: {
-		kind: 'widget',
-		component: MyWorkWidget,
-		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4). Thin wrapper over the canonical GET /apps/pipelinq/api/worklist/mine union endpoint (leads + tickets, server-sorted overdue → priority → due date). NOT dissolved into the built-in object-table widget because each row navigates to a DIFFERENT route (LeadDetail vs TicketDetail via the row\'s routeName field) and object-table\'s rowRoute is a single static route name — nextcloud-vue#91 Wave 2 has no per-row-route field. Dissolvable once the object-table widget gains a per-row route resolver. NOTE: WorklistService still emits the pre-migration routeName "RequestDetail"; the widget maps legacy detail-route names onto TicketDetail (unify-ticket-supertype).',
-	},
 	NaviAnalyticsWidget: {
 		kind: 'widget',
 		component: NaviAnalyticsWidget,

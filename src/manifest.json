@@ -1425,7 +1425,31 @@
 							]
 						}
 					},
-					{ "id": "my-work", "type": "custom", "title": "My Work" },
+					{
+						"id": "my-work",
+						"type": "work-queue",
+						"title": "My Work",
+						"content": {
+							"source": {
+								"url": "/apps/pipelinq/api/worklist/mine",
+								"params": { "limit": 5 }
+							},
+							"itemsPath": "items",
+							"totalPath": "total",
+							"dueField": "dueDate",
+							"lateField": "isOverdue",
+							"subField": "stageOrStatus",
+							"kind": {
+								"field": "entityType",
+								"labels": { "lead": "Lead", "request": "Request" }
+							},
+							"viewAll": {
+								"route": { "name": "MyWork" },
+								"label": "View all ({count})"
+							},
+							"emptyText": "No items assigned to you"
+						}
+					},
 					{
 						"id": "client-overview",
 						"type": "object-table",
@@ -1628,7 +1652,6 @@
 			},
 			"_note": "The Customer Satisfaction KPI (SatisfactionKpiWidget, widget id 'satisfaction', layout slot 17) was removed 2026-07 because its data source was empty after the forms-leaf migration. Satisfaction returns as the survey response-rate widget (survey-response-rate), fed by the closed-loop invitations of customer-satisfaction-closed-loop.",
 			"slots": {
-				"widget-my-work": "MyWorkWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
 				"widget-xwiki-knowledge": "XWikiDashboardWidget",
