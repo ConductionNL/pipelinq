@@ -13,25 +13,6 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 
 /**
- * The whole campaign report, in one request.
- *
- * One call on purpose: the page paints from this response and never asks
- * again per lead, per blast or per touchpoint (pipelinq#1781).
- *
- * @param {string} campaignId The campaign id.
- * @param {object} window Optional `{from, to}` as `YYYY-MM-DD`.
- * @return {Promise<object>} The report.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
- */
-export async function fetchCampaignReport(campaignId, window = {}) {
-	const { data } = await axios.get(
-		generateUrl(`/apps/pipelinq/api/campaigns/${campaignId}/report`),
-		{ params: { from: window.from, to: window.to } },
-	)
-	return data
-}
-
-/**
  * Ask portaliq for a landing page with a lead-capture form.
  *
  * Portaliq's own failure code comes back in the body on every non-2xx, and
@@ -57,25 +38,6 @@ export async function createCampaignLandingPage(campaignId, options = {}) {
 		}
 		throw error
 	}
-}
-
-/**
- * Every campaign, newest first, through the generic object API.
- *
- * The report page needs a picker before it has an id, and the object store
- * is not mounted on a page that is not bound to a schema, so the read goes
- * straight to OpenRegister the way the search-queries page does.
- *
- * @param {number} limit Page size.
- * @return {Promise<Array<object>>} The campaigns.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
- */
-export async function fetchCampaigns(limit = 100) {
-	const { data } = await axios.get(
-		generateUrl('/apps/openregister/api/objects/pipelinq/campaign'),
-		{ params: { _limit: limit } },
-	)
-	return data?.results || data?.data || []
 }
 
 /**

@@ -197,7 +197,6 @@ import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 //     Wraps CnIndexPage to add the stale filter, overdue row highlighting
 //     and CSV import/export via the platform mass dialogs. ---
 import LeadListView from './views/leads/LeadList.vue'
-import CampaignReportView from './views/marketing/CampaignReport.vue'
 // --- Search intelligence (marketing-search-intelligence, phase 5): the
 //     four derivations over those same rows, the competitor watches, and
 //     the follow audit. Each is a computed read, not a row list. ---
@@ -837,23 +836,10 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'CampaignLandingPageSection as a card of the campaign page\'s Overview tab (PqCampagne).',
 	},
-	CampaignReportWidget: {
-		kind: 'widget',
-		component: sectionWidget('CampaignReportWidget', CampaignReportView, ({ objectId }) => ({ campaignId: objectId })),
-		...PANEL_WIDGET_META,
-		_note: 'The campaign report as a card of the campaign page\'s Overview tab (PqCampagne): one GET /api/campaigns/{id}/report.',
-	},
 
-	CampaignReportSection: {
-		kind: 'section',
-		component: CampaignReportView,
-		_note: 'The campaign report as a section of the declarative CampaignDetail page (PqCampagne): the same component with a campaignId (@objectId), which drops the campaign picker and draws the tiles and the per-channel table under the attribution model picker. One GET /api/campaigns/{id}/report, as on the report page.',
-	},
-	CampaignReportView: {
-		kind: 'page',
-		component: CampaignReportView,
-		_note: 'The campaign report (marketing-campaigns, ADR-112): reach and clicks per channel, submissions, leads with the basis each one closed on, attributed value under first touch, last touch and linear, and the recorded cost, all from ONE GET /api/campaigns/{id}/report. Custom because the response joins four schemas plus shillinq AR invoices and carries three precomputed models, which no declarative index or dashboard primitive expresses; switching the model re-reads nothing.',
-	},
+
+
+
 	KeywordIntelligenceView: {
 		kind: 'page',
 		component: KeywordIntelligenceView,

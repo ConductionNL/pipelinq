@@ -155,7 +155,8 @@
 									"widgetIds": [
 										"campaign-data",
 										"campaign-landing",
-										"campaign-report"
+										"campaign-report",
+										"campaign-report-channels"
 									],
 									"label": "Overview"
 								},
@@ -258,10 +259,34 @@
 					},
 					{
 						"id": "campaign-report",
-						"type": "CampaignReportWidget",
+						"type": "facts",
 						"title": "Campaign report",
 						"content": {
-							"title": "Campaign report"
+							"endpointSource": { "url": "/apps/pipelinq/api/campaigns/@objectId/report" },
+							"fields": [
+								{ "label": "Clicks", "path": "view.tiles.clicks", "format": "number" },
+								{ "label": "Submissions", "path": "view.tiles.submissions", "format": "number" },
+								{ "label": "Leads", "path": "view.tiles.leads", "format": "number" },
+								{ "label": "Attributed value", "path": "view.tiles.attributedValue", "format": "currency" },
+								{ "label": "Cost", "path": "view.tiles.cost", "format": "currency" }
+							]
+						}
+					},
+					{
+						"id": "campaign-report-channels",
+						"type": "object-table",
+						"title": "Per channel",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/campaigns/@objectId/report", "responsePath": "view.channelRows" },
+							"columns": [
+								{ "key": "channel", "label": "Channel", "cellClass": "cn-cell--strong" },
+								{ "key": "reach", "label": "Reach", "format": { "style": "number" } },
+								{ "key": "opened", "label": "Opened", "format": { "style": "number" } },
+								{ "key": "clicks", "label": "Clicks", "format": { "style": "number" } },
+								{ "key": "visits", "label": "Visits", "format": { "style": "number" } },
+								{ "key": "submissions", "label": "Submissions", "format": { "style": "number" } }
+							],
+							"emptyText": "No channel has run for this campaign yet."
 						}
 					}
 				],
@@ -314,15 +339,235 @@
 		},
 		{
 			"id": "CampaignReportPage",
-			"_note": "The campaign report (marketing-campaigns, ADR-112). Reached as a card on the Reports page and never as a menu entry of its own. Custom because the page renders ONE aggregate response that joins blasts, touchpoints, leads and shillinq invoices across four schemas, with three attribution models already computed in it; no declarative index or dashboard primitive expresses that, and building it from per-object reads is the fan-out pipelinq#1781 removed from the blast performance page. Missing primitive: an aggregation-backed report page.",
+			"_note": "The campaign report (marketing-campaigns, ADR-112), reached as a card on the Reports page and from a campaign's landing page card (?campaign=<id>). One GET /api/campaigns/{id}/report joins blasts, touchpoints, leads and shillinq invoices server-side and answers the page's rows in `view`, split by the chosen attribution model.",
 			"route": "/reports/campaign",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Campaign report",
-			"component": "CampaignReportView",
 			"config": {
-				"register": "pipelinq",
-				"schema": "campaign",
-				"documentationUrl": "https://pipelinq.conduction.nl"
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"pageFilters": [
+					{
+						"key": "campaign",
+						"label": "Campaign",
+						"type": "select",
+						"fromQuery": "campaign",
+						"optionsFrom": { "register": "pipelinq", "schema": "campaign", "labelField": "name" }
+					},
+					{
+						"key": "model",
+						"label": "Attribution model",
+						"type": "select",
+						"clearable": true,
+						"placeholder": "The campaign's own model",
+						"options": [
+							{ "value": "first", "label": "First touch" },
+							{ "value": "last", "label": "Last touch" },
+							{ "value": "linear", "label": "Linear" }
+						]
+					}
+				],
+				"widgets": [
+					{
+						"id": "campaign-report-clicks",
+						"type": "stat",
+						"title": "Clicks",
+						"content": {
+							"label": "Clicks",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/campaigns/@workspace.campaign/report",
+								"params": { "model": "@workspace.model?" }
+							},
+							"valueField": "view.tiles.clicks"
+						}
+					},
+					{
+						"id": "campaign-report-submissions",
+						"type": "stat",
+						"title": "Submissions",
+						"content": {
+							"label": "Submissions",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/campaigns/@workspace.campaign/report",
+								"params": { "model": "@workspace.model?" }
+							},
+							"valueField": "view.tiles.submissions"
+						}
+					},
+					{
+						"id": "campaign-report-leads",
+						"type": "stat",
+						"title": "Leads",
+						"content": {
+							"label": "Leads",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/campaigns/@workspace.campaign/report",
+								"params": { "model": "@workspace.model?" }
+							},
+							"valueField": "view.tiles.leads"
+						}
+					},
+					{
+						"id": "campaign-report-attributed",
+						"type": "stat",
+						"title": "Attributed value",
+						"content": {
+							"label": "Attributed value",
+							"format": { "style": "currency", "decimals": 2 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/campaigns/@workspace.campaign/report",
+								"params": { "model": "@workspace.model?" }
+							},
+							"valueField": "view.tiles.attributedValue"
+						}
+					},
+					{
+						"id": "campaign-report-cost",
+						"type": "stat",
+						"title": "Cost",
+						"content": {
+							"label": "Cost",
+							"format": { "style": "currency", "decimals": 2 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/campaigns/@workspace.campaign/report",
+								"params": { "model": "@workspace.model?" }
+							},
+							"valueField": "view.tiles.cost",
+							"emptyText": "Not recorded"
+						}
+					},
+					{
+						"id": "campaign-report-channels",
+						"type": "object-table",
+						"title": "Per channel",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/campaigns/@workspace.campaign/report",
+								"params": { "model": "@workspace.model?" },
+								"responsePath": "view.channelRows"
+							},
+							"columns": [
+								{ "key": "channel", "label": "Channel", "cellClass": "cn-cell--strong" },
+								{ "key": "reach", "label": "Reach", "format": { "style": "number" } },
+								{ "key": "opened", "label": "Opened", "format": { "style": "number" } },
+								{ "key": "clicks", "label": "Clicks", "format": { "style": "number" } },
+								{ "key": "visits", "label": "Visits", "format": { "style": "number" } },
+								{ "key": "submissions", "label": "Submissions", "format": { "style": "number" } }
+							],
+							"emptyText": "No channel has run for this campaign yet."
+						}
+					},
+					{
+						"id": "campaign-report-model",
+						"type": "object-table",
+						"title": "Attributed value per channel",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/campaigns/@workspace.campaign/report",
+								"params": { "model": "@workspace.model?" },
+								"responsePath": "view.modelRows"
+							},
+							"columns": [
+								{ "key": "channel", "label": "Channel", "cellClass": "cn-cell--strong" },
+								{ "key": "value", "label": "Attributed value", "format": { "style": "currency", "decimals": 2 } },
+								{ "key": "sharePercent", "label": "Share", "format": { "style": "percent", "decimals": 1 } }
+							],
+							"emptyText": "Nothing is attributed yet."
+						}
+					},
+					{
+						"id": "campaign-report-leads-table",
+						"type": "object-table",
+						"title": "Leads",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/campaigns/@workspace.campaign/report",
+								"params": { "model": "@workspace.model?" },
+								"responsePath": "view.leadRows"
+							},
+							"columns": [
+								{ "key": "title", "label": "Lead", "cellClass": "cn-cell--strong" },
+								{
+									"key": "basis",
+									"label": "Closed on",
+									"widget": "badge",
+									"enum": ["paid_invoice", "won_lead", "open"],
+									"enumLabels": { "paid_invoice": "Paid invoice", "won_lead": "Won lead", "open": "Open" },
+									"widgetProps": { "colorMap": { "paid_invoice": "success", "won_lead": "warning", "open": "default" } }
+								},
+								{ "key": "value", "label": "Value", "format": { "style": "currency", "decimals": 2 } }
+							],
+							"rowRoute": "LeadDetail",
+							"emptyText": "No lead came from this campaign yet."
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "campaign-report-clicks",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 2,
+						"widgetId": "campaign-report-submissions",
+						"gridX": 2,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 3,
+						"widgetId": "campaign-report-leads",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 4,
+						"widgetId": "campaign-report-attributed",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 5,
+						"widgetId": "campaign-report-cost",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 6,
+						"widgetId": "campaign-report-channels",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{ "id": 7, "widgetId": "campaign-report-model", "gridX": 0, "gridY": 7, "gridWidth": 6, "gridHeight": 5 },
+					{
+						"id": 8,
+						"widgetId": "campaign-report-leads-table",
+						"gridX": 6,
+						"gridY": 7,
+						"gridWidth": 6,
+						"gridHeight": 5
+					}
+				]
 			}
 		}
 	]

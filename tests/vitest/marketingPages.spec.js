@@ -177,3 +177,35 @@ describe('weekly review', () => {
 		expect(page.config.headerActions[0]).toMatchObject({ type: 'api-call', method: 'POST', url: '/apps/pipelinq/api/weekly-review/generate' })
 	})
 })
+
+describe('campaign report', () => {
+	const doc = readJson('src', 'manifest.d', '78-marketing-campaigns.json')
+	const report = doc.pages.find((p) => p.id === 'CampaignReportPage')
+
+	it('is a dashboard on the one report read, opened on the campaign the link names', () => {
+		expect(report.type).toBe('dashboard')
+		expect(report.config.pageFilters[0]).toMatchObject({ key: 'campaign', fromQuery: 'campaign' })
+		expect(report.config.pageFilters[1]).toMatchObject({ key: 'model', clearable: true })
+		for (const w of report.config.widgets) {
+			const read = w.content.endpointSource
+			expect(read.url).toBe('/apps/pipelinq/api/campaigns/@workspace.campaign/report')
+			expect(read.params).toEqual({ model: '@workspace.model?' })
+		}
+	})
+
+	it('keeps an unrecorded cost apart from zero, and names what a lead closed on', () => {
+		const cost = report.config.widgets.find((w) => w.id === 'campaign-report-cost')
+		expect(cost.content.emptyText).toBe('Not recorded')
+		const leads = report.config.widgets.find((w) => w.id === 'campaign-report-leads-table')
+		const basis = leads.content.columns.find((c) => c.key === 'basis')
+		expect(basis.enumLabels).toEqual({ paid_invoice: 'Paid invoice', won_lead: 'Won lead', open: 'Open' })
+		expect(Object.values(basis.widgetProps.colorMap)).toEqual(['success', 'warning', 'default'])
+	})
+
+	it('shows the headline figures and channels on the campaign page', () => {
+		const detail = doc.pages.find((p) => p.id === 'CampaignDetail')
+		const figures = detail.config.widgets.find((w) => w.id === 'campaign-report')
+		expect(figures.type).toBe('facts')
+		expect(figures.content.fields.map((f) => f.path)).toEqual(['view.tiles.clicks', 'view.tiles.submissions', 'view.tiles.leads', 'view.tiles.attributedValue', 'view.tiles.cost'])
+	})
+})
