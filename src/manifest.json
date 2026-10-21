@@ -5046,18 +5046,6 @@
 			}
 		},
 		{
-			"id": "PosRefundEdit",
-			"_note": "Reuses PosRefundForm.vue (bespoke refund editor with per-line refund selection and tender NcSelect) in edit mode; the interactive line-selection logic has no standard form page-type equivalent.",
-			"route": "/pos/refunds/:id/edit",
-			"type": "custom",
-			"title": "Retour bewerken",
-			"component": "PosRefundFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "posRefund"
-			}
-		},
-		{
 			"id": "PosRefundDetail",
 			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields auto-render via CnObjectDataWidget. The manager-gated Confirm / Reject actions are the header's actionsComponent (PosRefundHeaderActions). The refund totals (PosRefundTotalsWidget) and the 'Returned items' table (PosRefundItemsWidget) are grid widgets. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) 'Returned items' is a custom widget because it is a CROSS-SCHEMA JOIN: each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer), and an object-list renders ONE schema and cannot resolve a column off a second schema. Missing primitive: an object-list column resolved off a SECOND schema (cross-schema join lookup).",
 			"route": "/pos/refunds/:id",
@@ -5604,14 +5592,6 @@
 			"type": "custom",
 			"title": "POS customer lookup",
 			"component": "PosCustomerSettingsView"
-		},
-		{
-			"id": "BrpMonitor",
-			"_note": "BrpMonitor.vue is a bespoke operational monitor for BRP (Dutch persons-registry) connection health and recent lookups, with its own status/refresh layout; it is a live diagnostics panel, not a list or detail of register objects, so no standard page type fits.",
-			"route": "/admin/brp-monitor",
-			"type": "custom",
-			"title": "BRP Monitor",
-			"component": "BrpMonitorView"
 		},
 		{
 			"id": "KassakoppelingAuditList",
@@ -6939,24 +6919,6 @@
 						"sizeToContent": true
 					}
 				]
-			}
-		},
-		{
-			"id": "SyncSettings",
-			"route": "/sync-settings",
-			"type": "settings",
-			"title": "Sync settings",
-			"config": {
-				"sections": [
-					{
-						"id": "sync",
-						"title": "Integrations",
-						"component": "SyncSettingsView"
-					}
-				]
-			},
-			"slots": {
-				"section-sync": "SyncSettingsView"
 			}
 		},
 		{

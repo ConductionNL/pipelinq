@@ -46,7 +46,7 @@ describe('the admin page', () => {
 			'<CnRegisterMapping',
 			"t('pipelinq', 'Lead Sources')",
 			"t('pipelinq', 'Request Channels')",
-			"t('pipelinq', 'Lead Management')",
+			'v-bind="sections.leadManagement"',
 			'<ProductCategoryManager',
 			'<MenuStructureSettings',
 			'<SkillSettings',
@@ -63,16 +63,16 @@ describe('the admin page', () => {
 
 	it('keeps every section it had', () => {
 		for (const tag of [
-			'<ProvisionDataSection',
-			'<SetupWizardSection',
+			'v-bind="sections.provisionData"',
+			':showSetup="isAdmin"',
 			'<DetectedIntegrations',
 			'<VatRatesSettings',
 			'<PipelineManager',
 			'<ForecastSettings',
 			'<ProspectSettings',
-			'<ExportConfigurationSettings',
+			'v-bind="sections.exportConfiguration"',
 			'<MailingListEmbedSettings',
-			"t('pipelinq', 'Shillinq integration')",
+			'v-bind="sections.shillinq"',
 			"t('pipelinq', 'xWiki integration')",
 			'<MessagingSettings',
 			'<DeliverabilitySettings',
@@ -83,7 +83,8 @@ describe('the admin page', () => {
 			'<PosStaffManager',
 			'<PosRoleManager',
 			'<MarketingTrafficSettings',
-			'<MarketingIntelSettings',
+			'v-bind="sections.marketingIntel"',
+			'v-bind="sections.brpMonitor"',
 		]) {
 			at(tag)
 		}

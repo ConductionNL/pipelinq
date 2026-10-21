@@ -55,7 +55,7 @@ export default {
 		 */
 		items() {
 			return this.activities.map((activity) => {
-				const typeLabel = activity.entityType === 'lead' ? 'Lead' : 'Request'
+				const typeLabel = activity.entityType === 'lead' ? t('pipelinq', 'Lead') : t('pipelinq', 'Request')
 				const timeAgo = this.formatTimeAgo(activity.modified)
 
 				return {

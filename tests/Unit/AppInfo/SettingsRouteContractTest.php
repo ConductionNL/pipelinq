@@ -115,8 +115,7 @@ class SettingsRouteContractTest extends TestCase {
 	/**
 	 * The legacy POST alias must survive the conversion.
 	 *
-	 * `src/store/modules/settings.js::saveSettings()` and
-	 * `src/views/settings/ExportConfigurationSettings.vue::save()` both POST
+	 * `src/store/modules/settings.js::saveSettings()` posts
 	 * to this exact url, so removing the alias would break the live admin UI.
 	 *
 	 * @return void
@@ -128,7 +127,7 @@ class SettingsRouteContractTest extends TestCase {
 
 		$this->assertNotNull($this->indexOfRoute($routes, 'settings#create', '/api/settings', 'POST'),
 			'The legacy POST /api/settings route was removed — the settings store '
-			. 'and ExportConfigurationSettings.vue still call it.'
+			. 'still calls it.'
 		);
 
 		$this->assertNotNull($this->indexOfRoute($routes, 'settings#index', '/api/settings', 'GET'),
