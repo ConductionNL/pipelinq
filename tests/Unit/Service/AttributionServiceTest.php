@@ -105,7 +105,11 @@ class AttributionServiceTest extends TestCase {
 				$out = [];
 				foreach ($this->attributionLinks as $row) {
 					foreach ($filters as $k => $v) {
-						if (($row[$k] ?? null) !== $v) {
+						if (is_array($v) === true && in_array(($row[$k] ?? null), $v, true) === false) {
+							continue 2;
+						}
+
+						if (is_array($v) === false && ($row[$k] ?? null) !== $v) {
 							continue 2;
 						}
 					}
@@ -346,4 +350,26 @@ class AttributionServiceTest extends TestCase {
 		$sum = $this->service->getBlastAttributedValue('nonexistent');
 		$this->assertSame(0.0, $sum);
 	}//end testGetBlastAttributedValueReturnsZeroWhenEmpty()
+
+	/**
+	 * getBlastAttributionSummaries answers one row per requested blast, in
+	 * the order asked, from a single IN query; a blast with no links is zero.
+	 *
+	 * @return void
+	 */
+	public function testGetBlastAttributionSummariesAnswersOneRowPerBlast(): void {
+		$this->objectService->attributionLinks = [
+			['blastId' => 'blast-1', 'dealId' => 'deal-1', 'attributedValue' => 100.0],
+			['blastId' => 'blast-1', 'dealId' => 'deal-1', 'attributedValue' => 50.0],
+			['blastId' => 'blast-2', 'dealId' => 'deal-2', 'attributedValue' => 25.5],
+			['blastId' => 'blast-9', 'dealId' => 'deal-9', 'attributedValue' => 999.0],
+		];
+
+		$rows = $this->service->getBlastAttributionSummaries(['blast-2', 'blast-1', 'blast-3', 'blast-1']);
+
+		$this->assertSame(['blast-2', 'blast-1', 'blast-3'], array_column($rows, 'blastId'));
+		$this->assertSame([1, 1, 0], array_column($rows, 'dealCount'));
+		$this->assertSame([25.5, 150.0, 0.0], array_column($rows, 'attributedValue'));
+		$this->assertSame([], $this->service->getBlastAttributionSummaries([]));
+	}//end testGetBlastAttributionSummariesAnswersOneRowPerBlast()
 }//end class

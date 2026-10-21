@@ -447,7 +447,7 @@ test.describe('Blast performance dashboard', () => {
 
 	/*
 	 * SAME SLUG-VS-UUID MISMATCH AS THE A/B TAB, ON A DIFFERENT JOIN.
-	 * `fetchAttributionRows()` calls `GET /api/blasts/:id/attribution` with
+	 * `fetchAttributionRows()` calls `GET /api/blasts/attribution?ids=` with
 	 * `blast.id || blast.uuid || blast.slug` — the UUID — and
 	 * `AttributionService::getBlastAttributionSummary()` resolves that through
 	 * an exact-match `filters: ['blastId' => …]` query. The two seeded
@@ -558,7 +558,7 @@ test.describe('Blast performance dashboard', () => {
 			// when the blast's OWN attribution read comes back non-zero
 			// (`dealCount > 0 || attributedValue > 0` in fetchAttributionRows),
 			// so the attributionLink objects have to be visible to
-			// `GET /api/blasts/:id/attribution`, not merely written.
+			// the attribution read, not merely written.
 			//
 			// So poll the read that decides, and poll it for THIS blast: an
 			// older blast with attribution would satisfy a weaker check while

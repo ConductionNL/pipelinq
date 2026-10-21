@@ -721,6 +721,7 @@ return [
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
         ['name' => 'blast#create',     'url' => '/api/blasts',                     'verb' => 'POST'],
+        ['name' => 'blast#attributions', 'url' => '/api/blasts/attribution',      'verb' => 'GET'],
         ['name' => 'blast#send',       'url' => '/api/blasts/{id}/send',           'verb' => 'POST'],
         ['name' => 'blast#cancel',     'url' => '/api/blasts/{id}/cancel',         'verb' => 'POST'],
         ['name' => 'blast#deliveries', 'url' => '/api/blasts/{id}/deliveries',     'verb' => 'GET'],
