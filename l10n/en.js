@@ -1,6 +1,11 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "{provider}: {method}": "{provider}: {method}",
+        "The customer pays at the {provider} card terminal.": "The customer pays at the {provider} card terminal.",
+        "The customer is sent to {provider} to finish the payment.": "The customer is sent to {provider} to finish the payment.",
+        "No VAT breakdown: the report is empty.": "No VAT breakdown: the report is empty.",
+        "Payment balanced, ready to settle.": "Payment balanced, ready to settle.",
         "Take the oldest": "Take the oldest",
         "Longest waiting": "Longest waiting",
         "the oldest ticket nobody has picked up": "the oldest ticket nobody has picked up",

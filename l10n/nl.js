@@ -1,6 +1,11 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "{provider}: {method}": "{provider}: {method}",
+        "The customer pays at the {provider} card terminal.": "De klant betaalt op de pinautomaat van {provider}.",
+        "The customer is sent to {provider} to finish the payment.": "De klant gaat naar {provider} om de betaling af te ronden.",
+        "No VAT breakdown: the report is empty.": "Geen btw-uitsplitsing: het rapport is leeg.",
+        "Payment balanced, ready to settle.": "Betaling sluitend, klaar om af te rekenen.",
         "Take the oldest": "Pak de oudste",
         "Longest waiting": "Langst wachtend",
         "the oldest ticket nobody has picked up": "het oudste ticket dat nog niemand heeft opgepakt",
