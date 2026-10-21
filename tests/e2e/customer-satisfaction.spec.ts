@@ -208,8 +208,10 @@ test.describe('customer satisfaction, closed loop', () => {
 				'rate',
 				'suppressed',
 				'failed',
+				'channels',
 			]),
 		)
+		expect(Array.isArray(rate.body.channels), 'the per-channel figures come as rows').toBe(true)
 	})
 	test('a resident answers on the public survey page (PublicSurveyForm) and opts out', async ({
 		page,
@@ -276,9 +278,9 @@ test.describe('customer satisfaction, closed loop', () => {
 		})
 
 		await page.goto(`/index.php/apps/pipelinq/clients/${client}`)
-		await expect(page.getByTestId('client-satisfaction-empty')).toBeVisible({
-			timeout: 30000,
-		})
+		await expect(
+			page.getByText('No satisfaction data has been collected for this client yet').first(),
+		).toBeVisible({ timeout: 30000 })
 
 		await page.goto('/index.php/apps/pipelinq/operational')
 		await expect(page.getByText('Survey response rate').first()).toBeVisible({

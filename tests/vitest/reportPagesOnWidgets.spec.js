@@ -186,3 +186,40 @@ describe('SLA attainment', () => {
 		}
 	})
 })
+
+describe('satisfaction', () => {
+	it('shows the response rate on the Operational dashboard as a tile and a channel table', () => {
+		const p = page('OperationalDashboard')
+		const rate = widget(p, 'survey-response-rate')
+		expect(rate.type).toBe('stat')
+		expect(rate.content.endpointSource).toEqual({
+			url: '/apps/pipelinq/api/satisfaction/response-rate',
+			params: { from: '@workspace.dateFrom?', to: '@workspace.dateTo?' },
+		})
+		expect(rate.content.valueField).toBe('rate')
+		expect(rate.content.caption).toBe('{responded} of {delivered} delivered invitations answered')
+		expect(rate.content.note).toBe('Not delivered: {suppressed} held back, {failed} failed')
+		const channels = widget(p, 'survey-response-channels')
+		expect(channels.content.endpointSource.responsePath).toBe('channels')
+		expect(channels.content.columns.find((c) => c.key === 'channel').enumLabels.sms).toBe('SMS')
+		const placed = p.config.layout.map((l) => l.widgetId)
+		expect(placed).toEqual(expect.arrayContaining(['survey-response-rate', 'survey-response-channels']))
+		expect(p.slots['widget-survey-response-rate']).toBeUndefined()
+	})
+
+	it("shows a client's satisfaction as facts and its latest three comments", () => {
+		const p = page('ClientDetail')
+		expect((p.config.bodyWidgets || []).some((b) => b.component === 'ClientSatisfactionSection')).toBe(false)
+		const facts = widget(p, 'client-satisfaction')
+		expect(facts.type).toBe('facts')
+		expect(facts.content.endpointSource.url).toBe('/apps/pipelinq/api/satisfaction/client/@objectId')
+		expect(facts.content.emptyWhen).toBe('empty')
+		expect(facts.content.emptyText).toMatch(/^No satisfaction data has been collected/)
+		const trend = facts.content.fields.find((f) => f.path === 'trend')
+		expect(trend.map.up).toBe('Better than the 90 days before')
+		expect(trend.map.unknown).toBe('Not enough responses to compare')
+		const comments = widget(p, 'client-satisfaction-comments')
+		expect(comments.content).toMatchObject({ limit: 3, title: '{text}' })
+		expect(comments.content.endpointSource.responsePath).toBe('verbatims')
+	})
+})

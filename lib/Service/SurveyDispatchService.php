@@ -491,6 +491,21 @@ class SurveyDispatchService {
 	}//end responseRate()
 
 	/**
+	 * The invitations that fell due between two dates, both inclusive.
+	 *
+	 * @param array<int, array<string, mixed>> $invitations The invitations.
+	 * @param string                           $from        The first day (ISO 8601), or ''.
+	 * @param string                           $to          The last day (ISO 8601), or ''.
+	 *
+	 * @return array<int, array<string, mixed>> The invitations inside the window.
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 */
+	public function withinRange(array $invitations, string $from, string $to): array {
+		return (new SurveyInvitationFigures())->withinRange(invitations: $invitations, from: $from, to: $to);
+	}//end withinRange()
+
+	/**
 	 * The invitations that fell due in the last `$days` days.
 	 *
 	 * @param array<int, array<string, mixed>> $invitations The invitations.

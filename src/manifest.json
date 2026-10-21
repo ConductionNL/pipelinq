@@ -1461,8 +1461,42 @@
 					},
 					{
 						"id": "survey-response-rate",
-						"type": "custom",
-						"title": "Survey response rate"
+						"type": "stat",
+						"title": "Survey response rate",
+						"content": {
+							"label": "Survey response rate",
+							"icon": "MessageReplyText",
+							"format": { "style": "percent", "decimals": 1 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/satisfaction/response-rate",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "rate",
+							"caption": "{responded} of {delivered} delivered invitations answered",
+							"note": "Not delivered: {suppressed} held back, {failed} failed",
+							"dateRange": {}
+						}
+					},
+					{
+						"id": "survey-response-channels",
+						"type": "object-table",
+						"title": "Response rate per channel",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/satisfaction/response-rate",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" },
+								"responsePath": "channels"
+							},
+							"columns": [
+								{ "key": "channel", "label": "Channel", "enum": ["email", "sms", "whatsapp", "unknown"], "enumLabels": { "email": "Email", "sms": "SMS", "whatsapp": "WhatsApp", "unknown": "Unknown" } },
+								{ "key": "delivered", "label": "Delivered", "format": { "style": "number" } },
+								{ "key": "responded", "label": "Answered", "format": { "style": "number" } },
+								{ "key": "rate", "label": "Rate", "format": { "style": "percent", "decimals": 1 } },
+								{ "key": "suppressed", "label": "Held back", "format": { "style": "number" } },
+								{ "key": "failed", "label": "Failed", "format": { "style": "number" } }
+							],
+							"emptyText": "When a dispatch rule sends satisfaction surveys, the response rate shows here."
+						}
 					}
 				],
 				"layout": [
@@ -1618,7 +1652,16 @@
 						"gridX": 6,
 						"gridY": 31,
 						"gridWidth": 6,
-						"gridHeight": 5
+						"gridHeight": 2,
+						"dateChip": true
+					},
+					{
+						"id": "21",
+						"widgetId": "survey-response-channels",
+						"gridX": 6,
+						"gridY": 33,
+						"gridWidth": 6,
+						"gridHeight": 3
 					}
 				]
 			},
@@ -1628,8 +1671,7 @@
 				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
 				"widget-report-export": "ReportExportPanel",
-				"widget-xwiki-knowledge": "XWikiDashboardWidget",
-				"widget-survey-response-rate": "SurveyResponseRateWidget"
+				"widget-xwiki-knowledge": "XWikiDashboardWidget"
 			}
 		},
 		{
@@ -2348,6 +2390,44 @@
 						"icon": "History"
 					},
 					{
+						"id": "client-satisfaction",
+						"type": "facts",
+						"title": "Satisfaction",
+						"icon": "EmoticonHappyOutline",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/satisfaction/client/@objectId" },
+							"emptyWhen": "empty",
+							"emptyText": "No satisfaction data has been collected for this client yet. It appears here once they answer a survey.",
+							"fields": [
+								{ "label": "NPS", "path": "nps", "format": "number", "decimals": 1 },
+								{ "label": "Average rating", "path": "averageRating", "format": "number", "decimals": 1 },
+								{ "label": "Responses", "path": "responseCount", "format": "number" },
+								{
+									"label": "Trend",
+									"path": "trend",
+									"map": {
+										"up": "Better than the 90 days before",
+										"down": "Worse than the 90 days before",
+										"flat": "The same as the 90 days before",
+										"unknown": "Not enough responses to compare"
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "client-satisfaction-comments",
+						"type": "record-list",
+						"title": "Latest comments",
+						"icon": "CommentQuoteOutline",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/satisfaction/client/@objectId", "responsePath": "verbatims" },
+							"limit": 3,
+							"title": "{text}",
+							"emptyText": "No comments yet."
+						}
+					},
+					{
 						"id": "client-channels",
 						"type": "ContactChannelsWidget",
 						"title": "Contact channels",
@@ -2476,7 +2556,9 @@
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
-					}
+					},
+					{ "id": "10", "widgetId": "client-satisfaction", "gridX": 0, "gridY": 22, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "11", "widgetId": "client-satisfaction-comments", "gridX": 6, "gridY": 22, "gridWidth": 6, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
 					{
@@ -2526,17 +2608,6 @@
 						"props": {
 							"clientId": "@objectId",
 							"inline": true
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "satisfaction",
-						"component": "ClientSatisfactionSection",
-						"title": "Satisfaction",
-						"placement": "end",
-						"props": {
-							"clientId": "@objectId"
 						},
 						"colSpan": 6,
 						"card": true

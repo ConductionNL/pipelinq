@@ -163,4 +163,39 @@ class SatisfactionControllerTest extends TestCase {
 
 		$this->assertSame([['surveyRef' => 'survey-1', 'channel' => 'sms']], $this->readWith);
 	}//end testAChannelNarrowsTheRead()
+
+	/**
+	 * A from/to window, as a dashboard date range sends it, is applied to
+	 * what was read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 */
+	public function testAWindowNarrowsTheInvitationsRated(): void {
+		$controller = $this->controller();
+		$this->dispatch = $this->getMockBuilder(SurveyDispatchService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['read', 'responseRate'])
+			->getMock();
+		$this->dispatch->method('read')->willReturn(
+			[
+				['status' => 'sent', 'scheduledFor' => '2026-10-02T09:00:00+00:00'],
+				['status' => 'sent', 'scheduledFor' => '2026-08-02T09:00:00+00:00'],
+			]
+		);
+		$rated = [];
+		$this->dispatch->method('responseRate')->willReturnCallback(
+			function (array $invitations) use (&$rated): array {
+				$rated = $invitations;
+
+				return [];
+			}
+		);
+		$controller = new SatisfactionController($this->createMock(IRequest::class), $this->aggregation, $this->dispatch);
+
+		$controller->responseRate(from: '2026-10-01', to: '2026-10-31');
+
+		$this->assertSame(['2026-10-02T09:00:00+00:00'], array_column($rated, 'scheduledFor'));
+	}//end testAWindowNarrowsTheInvitationsRated()
 }//end class
