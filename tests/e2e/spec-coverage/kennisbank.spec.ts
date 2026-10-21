@@ -92,10 +92,9 @@ test('the knowledge-base surface is reachable: the widget mounts and the proxy a
 
 	/*
 	 * The widget reached a SETTLED, rendered state — either its card (titled
-	 * from the manifest) painted, or it announced that the integration is
-	 * unavailable (XWikiWidget renders `.xwiki-widget__unavailable` with
-	 * "xWiki integration unavailable" once `store.available === false` and a
-	 * status has actually been fetched). Written as an `or` because which of
+	 * from the manifest; a `kb-search` widget over the OpenRegister xWiki
+	 * integration, scoped to the admin's default space) painted, or the page
+	 * announced that the integration is unavailable. Written as an `or` because which of
 	 * the two shows depends on whether an xWiki source is configured, and both
 	 * are correct behaviour — a widget stuck on neither would be the failure.
 	 */

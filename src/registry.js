@@ -197,9 +197,6 @@ import ServiceDetailView from './views/bookings/ServiceDetail.vue'
 import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
 // --- Navi AI conversational analytics (openspec/changes/dashboard). ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
-// --- xWiki integration (xwiki-integration): dashboard widget wrapper +
-//     reusable widget / sidebar / viewer / list components. ---
-import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget.vue'
 import ExportJobFormView from './views/export/ExportJobForm.vue'
 // --- BI export + data-warehouse sink (lib gap: declarative index/detail pages
 //     cannot express the bespoke test-connection / test-run / enable / retry
@@ -1060,12 +1057,6 @@ const registry = {
 	},
 
 	// --- xWiki integration (xwiki-integration). ---
-	XWikiDashboardWidget: {
-		kind: 'widget',
-		component: XWikiDashboardWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Dashboard wrapper for the reusable XWikiWidget — pre-binds admin-configured xwiki_default_space + showSearch=true. Rendered as widget-xwiki on the Dashboard page.',
-	},
 	XWikiWidget: {
 		kind: 'widget',
 		component: XWikiWidgetComponent,

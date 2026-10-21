@@ -98,11 +98,12 @@ export default {
 			// Legacy channel — kept so bespoke index views (CnIndexPage
 			// wrappers) continue to inject it.
 			sidebarState: this.sidebarState,
-			// The app settings `@config.<key>` tokens read on index pages: the
-			// Leads list's Out of date chip and footer note name the stale
-			// threshold.
+			// The app settings `@config.<key>` tokens read: the Leads list's Out
+			// of date chip and footer note name the stale threshold, the
+			// knowledge-base widget searches the default xWiki space.
 			cnAppConfig: computed(() => ({
 				lead_stale_threshold_days: getStaleThreshold(useSettingsStore().config),
+				xwiki_default_space: useSettingsStore().config?.xwiki_default_space || '',
 			})),
 		}
 	},

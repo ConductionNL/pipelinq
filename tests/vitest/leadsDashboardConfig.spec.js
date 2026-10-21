@@ -273,3 +273,13 @@ describe('an export destination', () => {
 		expect(registrySource).not.toMatch(/ExportDestinationFormView/)
 	})
 })
+
+describe('the knowledge base on the operational dashboard', () => {
+	it('is a kb-search widget scoped to the admin\'s default xWiki space', () => {
+		const widget = page('OperationalDashboard').config.widgets.find((w) => w.id === 'xwiki-knowledge')
+		expect(widget.type).toBe('kb-search')
+		expect(widget.content).toEqual({ space: '@config.xwiki_default_space?', limit: 5 })
+		expect(fs.readFileSync(path.join(ROOT, 'src/App.vue'), 'utf8')).toMatch(/xwiki_default_space: useSettingsStore\(\)\.config\?\.xwiki_default_space/)
+		expect(registrySource).not.toMatch(/XWikiDashboardWidget/)
+	})
+})
