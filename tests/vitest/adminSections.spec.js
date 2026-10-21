@@ -85,8 +85,10 @@ describe('the declared admin sections', () => {
 
 	it('names every certificate state of the BRP monitor in its tone', () => {
 		const certificate = sections.brpMonitor.fields.find((field) => field.key === 'cert.status')
-		expect(Object.keys(certificate.textMap)).toEqual(['ok', 'warning', 'critical', '', '*'])
-		expect(certificate.toneMap).toMatchObject({ ok: 'success', warning: 'warning', critical: 'error' })
+		expect(Object.keys(certificate.textMap)).toEqual(['ok', 'warning', 'critical', '*'])
+		expect(certificate.toneMap).toEqual({ ok: 'success', warning: 'warning', critical: 'error' })
+		const none = sections.brpMonitor.fields.find((field) => field.key === 'noCertificate')
+		expect(none.visibleWhen).toEqual({ key: 'cert', empty: true })
 		const empty = sections.brpMonitor.fields.find((field) => field.key === 'noLookups')
 		expect(empty.visibleWhen).toEqual({ key: 'report', empty: true })
 	})

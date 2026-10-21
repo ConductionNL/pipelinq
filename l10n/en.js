@@ -7811,7 +7811,6 @@ OC.L10N.register(
         "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.",
         "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.",
         "No mTLS certificate is configured.": "No mTLS certificate is configured.",
-        "mTLS certificate: {value}.": "mTLS certificate: {value}.",
         "Delete skill": "Delete skill",
         "Delete agent profile": "Delete agent profile",
         "Deleting failed.": "Deleting failed."

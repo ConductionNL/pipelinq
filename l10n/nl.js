@@ -7761,7 +7761,6 @@ OC.L10N.register(
         "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.": "Het mTLS-certificaat verloopt op {cert.expiry}, over {cert.daysLeft} dagen. Vervang het binnenkort.",
         "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.": "Het mTLS-certificaat verloopt op {cert.expiry}, over {cert.daysLeft} dagen. Vervang het nu.",
         "No mTLS certificate is configured.": "Er is geen mTLS-certificaat ingesteld.",
-        "mTLS certificate: {value}.": "mTLS-certificaat: {value}.",
         "Delete skill": "Vaardigheid verwijderen",
         "Delete agent profile": "Agentprofiel verwijderen",
         "Deleting failed.": "Verwijderen is mislukt."

@@ -59,7 +59,12 @@
 				"type": "select",
 				"required": true,
 				"default": "none",
-				"options": ["none", "gzip", "snappy", "zstd"],
+				"options": [
+					"none",
+					"gzip",
+					"snappy",
+					"zstd"
+				],
 				"hint": "Used when a destination does not specify its own compression."
 			},
 			{
@@ -87,7 +92,11 @@
 		"description": "Where the keyword, Matomo and competitor reads leave the instance, and how relevance is scored. Every outbound read goes through an OpenConnector source, so this section holds source ids and never a key.",
 		"valuesPath": "config",
 		"fields": [
-			{ "key": "keywordsHeading", "label": "Keywords", "type": "heading" },
+			{
+				"key": "keywordsHeading",
+				"label": "Keywords",
+				"type": "heading"
+			},
 			{
 				"key": "search.crawl_source",
 				"label": "Crawl source for our own pages",
@@ -103,14 +112,22 @@
 				"placeholder": "100",
 				"hint": "How many impressions a query needs over the window before any keyword finding names it. Lower it for a small site."
 			},
-			{ "key": "matomoHeading", "label": "Matomo", "type": "heading" },
+			{
+				"key": "matomoHeading",
+				"label": "Matomo",
+				"type": "heading"
+			},
 			{
 				"key": "matomo.base_url",
 				"label": "Matomo address",
 				"placeholder": "https://matomo.example.org",
 				"hint": "Used for links out of the reports. The reads go through the source below."
 			},
-			{ "key": "matomo.site_id", "label": "Matomo site id", "placeholder": "1" },
+			{
+				"key": "matomo.site_id",
+				"label": "Matomo site id",
+				"placeholder": "1"
+			},
 			{
 				"key": "matomo.source_id",
 				"label": "Matomo connector source",
@@ -123,7 +140,11 @@
 				"placeholder": "b7f4a9c1-2d3e-4f56-8a90-1b2c3d4e5f60",
 				"hint": "The id of the credential the OpenRegister broker holds for Matomo. Store the token there, not here: a value that looks like a Matomo token is refused."
 			},
-			{ "key": "competitorsHeading", "label": "Competitors", "type": "heading" },
+			{
+				"key": "competitorsHeading",
+				"label": "Competitors",
+				"type": "heading"
+			},
 			{
 				"key": "competitor.egress_source",
 				"label": "Egress source for competitor reads",
@@ -177,19 +198,28 @@
 				"key": "lookups",
 				"type": "status",
 				"text": "Last 24 hours: {report.totalLookups} lookups, {report.cacheHits} from the cache, {report.errorCount} errors, {report.avgResponseMs} ms average response time.",
-				"visibleWhen": { "key": "report", "empty": false }
+				"visibleWhen": {
+					"key": "report",
+					"empty": false
+				}
 			},
 			{
 				"key": "period",
 				"type": "status",
 				"text": "Reporting period {report.windowStart} to {report.windowEnd}, generated on {report.generatedAt}.",
-				"visibleWhen": { "key": "report", "empty": false }
+				"visibleWhen": {
+					"key": "report",
+					"empty": false
+				}
 			},
 			{
 				"key": "noLookups",
 				"type": "status",
 				"text": "No BRP lookups have been reported yet.",
-				"visibleWhen": { "key": "report", "empty": true }
+				"visibleWhen": {
+					"key": "report",
+					"empty": true
+				}
 			},
 			{
 				"key": "cert.status",
@@ -198,10 +228,22 @@
 					"ok": "The mTLS certificate is valid until {cert.expiry}, {cert.daysLeft} days from now.",
 					"warning": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.",
 					"critical": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.",
-					"": "No mTLS certificate is configured.",
-					"*": "mTLS certificate: {value}."
+					"*": ""
 				},
-				"toneMap": { "ok": "success", "warning": "warning", "critical": "error", "*": "info" }
+				"toneMap": {
+					"ok": "success",
+					"warning": "warning",
+					"critical": "error"
+				}
+			},
+			{
+				"key": "noCertificate",
+				"type": "status",
+				"text": "No mTLS certificate is configured.",
+				"visibleWhen": {
+					"key": "cert",
+					"empty": true
+				}
 			}
 		]
 	}
