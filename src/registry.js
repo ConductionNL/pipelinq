@@ -142,9 +142,7 @@ import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
 //     missing-consent modal) and the live monitor, which polls /api/blasts/:id
-//     every 2s and stops on terminal status.
-//     SegmentBuilder + SegmentRuleNode live under components/, mounted by
-//     SegmentFormDialog above (marketing-segments-ui-repair, pipelinq#773). ---
+//     every 2s and stops on terminal status. ---
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
 import ResourceDetailView from './views/bookings/ResourceDetail.vue'
@@ -1052,7 +1050,7 @@ const registry = {
 		kind: 'modal',
 		component: SegmentFormDialog,
 		propsSchema: null,
-		_note: "Segment create/edit, mounted in the Segments index page's form-dialog slot. Custom rather than the built-in form: SegmentBuilder is a recursive rule-tree editor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.",
+		_note: "Segment create/edit, mounted in the Segments index page's form-dialog slot. Custom rather than the built-in form: the rule tree is edited in the library's CnConditionTreeEditor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.",
 	},
 	TemplateFormDialog: {
 		kind: 'modal',

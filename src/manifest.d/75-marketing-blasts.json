@@ -39,7 +39,7 @@
 	"pages": [
 		{
 			"id": "Segments",
-			"_note": "Segment list as a declarative type:index page (marketing-segments-ui-repair, pipelinq#773). Add and the row Edit action open SegmentFormDialog in the form-dialog slot, which mounts SegmentBuilder, a recursive rule-tree editor rather than a declarative form. Rows have no detail page, so selection is off and a row click does nothing.",
+			"_note": "Segment list as a declarative type:index page (marketing-segments-ui-repair, pipelinq#773). Add and the row Edit action open SegmentFormDialog in the form-dialog slot, which mounts the library's CnConditionTreeEditor, a rule-tree editor rather than a declarative form. Rows have no detail page, so selection is off and a row click does nothing.",
 			"route": "/segments",
 			"type": "index",
 			"title": "Segments",

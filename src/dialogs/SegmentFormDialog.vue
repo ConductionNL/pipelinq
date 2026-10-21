@@ -67,11 +67,17 @@
 				</section>
 
 				<section class="segment-form__rules">
-					<SegmentBuilder
+					<h3 class="segment-form__rules-title">
+						{{ t('pipelinq', 'Rules') }}
+					</h3>
+					<CnConditionTreeEditor
 						:key="model.entityType"
 						v-model="model.rules"
-						:entityType="model.entityType"
 						:fieldOptions="fieldOptions"
+						:previewEndpoint="previewEndpoint"
+						:countLabel="t('pipelinq', 'Estimated members:')"
+						:countNote="t('pipelinq', 'Updates as the data changes. A segment is a living rule, not a fixed list.')"
+						:emptyText="t('pipelinq', 'No conditions yet. Add a condition to decide who belongs to this segment.')"
 						@statusChange="rulesStatus = $event" />
 				</section>
 
@@ -107,6 +113,7 @@
 </template>
 
 <script>
+import { CnConditionTreeEditor } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -120,7 +127,6 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import Check from 'vue-material-design-icons/Check.vue'
-import SegmentBuilder from '../components/SegmentBuilder.vue'
 import { fieldOptionsFor } from '../services/segmentFieldOptions.js'
 
 /**
@@ -139,6 +145,7 @@ export default {
 	name: 'SegmentFormDialog',
 	components: {
 		Check,
+		CnConditionTreeEditor,
 		NcButton,
 		NcDialog,
 		NcLoadingIcon,
@@ -146,7 +153,6 @@ export default {
 		NcSelect,
 		NcTextArea,
 		NcTextField,
-		SegmentBuilder,
 	},
 
 	inheritAttrs: false,
@@ -276,6 +282,21 @@ export default {
 		 */
 		fieldOptions() {
 			return fieldOptionsFor(this.model.entityType)
+		},
+
+		/**
+		 * Where the rules are checked and counted: the segments preview, for
+		 * the chosen entity type.
+		 *
+		 * @return {object}
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
+		 */
+		previewEndpoint() {
+			return {
+				url: '/apps/pipelinq/api/segments/preview',
+				body: { entityType: this.model.entityType },
+				countPath: 'estimatedSize',
+			}
 		},
 
 		/**
@@ -476,6 +497,11 @@ export default {
 .segment-form__rules {
 	padding-top: 16px;
 	border-top: 1px solid var(--color-border);
+}
+
+.segment-form__rules-title {
+	margin: 0 0 12px;
+	font-weight: 600;
 }
 
 .segment-form__save-error {
