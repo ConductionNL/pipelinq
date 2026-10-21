@@ -10,11 +10,9 @@
   ServiceStepsEditor in its multiStep slot; creating a service (id "new")
   still uses the full-page ServiceForm.
 
-  On save we delegate to the central ObjectService and then fire a best-effort
-  availability-cache invalidation for every Resource that lists this service
-  in its requiredResourceTypes (REQ-APT-015 scenario "AvailabilityCache MUST
-  be invalidated"). Failures are non-fatal — the per-resource refresh job
-  rebuilds the cache hourly.
+  On save we delegate to the central ObjectService; the server expires the
+  cached availability of the resources the service runs on
+  (AvailabilityCacheInvalidationListener, REQ-APT-015).
 
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
   @spec openspec/specs/appointment-booking/spec.md
@@ -726,8 +724,7 @@ export default {
 		},
 
 		/**
-		 * Save the edited steps, then expire the cached availability, as
-		 * every service save does.
+		 * Save the edited steps.
 		 *
 		 * @return {Promise<void>}
 		 *
@@ -753,7 +750,6 @@ export default {
 				}
 				showSuccess(t('pipelinq', 'Steps saved.'))
 				this.editingSteps = false
-				await this.invalidateAvailability(this.serviceId)
 				await this.objectStore.fetchObject(
 					'appointmentService',
 					this.serviceId,
@@ -801,7 +797,6 @@ export default {
 				return
 			}
 			dialog?.setResult({ success: true })
-			await this.invalidateAvailability(saved.id || this.serviceId)
 			await this.objectStore.fetchObject('appointmentService', this.serviceId)
 		},
 
@@ -816,7 +811,6 @@ export default {
 				return
 			}
 			showSuccess(t('pipelinq', 'Service saved.'))
-			await this.invalidateAvailability(saved.id || formData.id)
 			this.$router.push({
 				name: 'ServiceDetail',
 				params: { id: saved.id },
@@ -840,55 +834,6 @@ export default {
 				showError(
 					error?.message || t('pipelinq', 'Failed to delete service.'),
 				)
-			}
-		},
-
-		/**
-		 * Best-effort availability-cache invalidation after a service save.
-		 *
-		 * Fetches every Resource whose `requiredResourceTypes` overlaps the
-		 * service and deletes its cached availability rows so the next
-		 * portal slot search recomputes. Failures are silent — the hourly
-		 * AvailabilityCacheRefreshJob converges the cache eventually.
-		 *
-		 * @param {string} serviceId The saved service id.
-		 * @return {Promise<void>}
-		 *
-		 * @spec openspec/specs/appointment-booking/spec.md
-		 */
-		async invalidateAvailability(serviceId) {
-			if (!serviceId) return
-			try {
-				const resources = await this.objectStore.fetchCollection(
-					'appointmentResource',
-					{ _limit: 200 },
-				)
-				const types = this.serviceData.requiredResourceTypes || []
-				const targets = (resources || []).filter((r) => {
-					if (!types.length) return true
-					return types.includes(r.type)
-				})
-				for (const resource of targets) {
-					try {
-						const cached = await this.objectStore.fetchCollection(
-							'availabilityCache',
-							{
-								resourceId: resource.id,
-								_limit: 200,
-							},
-						)
-						for (const row of cached || []) {
-							await this.objectStore.deleteObject(
-								'availabilityCache',
-								row.id,
-							)
-						}
-					} catch {
-						// Per-resource invalidation failure must not block save.
-					}
-				}
-			} catch {
-				// Resource list fetch failure: cache is regenerated hourly.
 			}
 		},
 
