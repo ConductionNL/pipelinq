@@ -19,6 +19,8 @@
 			t('pipelinq', 'Information about the current Pipelinq installation')
 		"
 		:reimportUrl="reimportUrl"
+		:showSetup="isAdmin"
+		:setupSteps="setupSteps"
 		@reimported="onReimported"
 		@reimportError="onReimportError">
 		<!-- Register & Schema Mapping -->
@@ -62,41 +64,11 @@
 			@remove="removeRequestChannel"
 			@rename="renameRequestChannel" />
 
-		<!-- Lead Management — stale threshold (REQ-LM-002).
-		     Persisted via IAppConfig under key `lead_stale_threshold_days`. -->
-		<NcSettingsSection
+		<CnSettingsFieldsSection
 			v-if="isAdmin"
-			:name="t('pipelinq', 'Lead Management')"
-			:description="
-				t(
-					'pipelinq',
-					'Tune lead staleness detection for kanban badges and the lead list filter.',
-				)
-			">
-			<NcTextField
-				v-model="staleThresholdInput"
-				type="number"
-				:label="t('pipelinq', 'Stale after (days)')"
-				placeholder="14"
-				:helperText="
-					t(
-						'pipelinq',
-						'Number of days a lead can stay untouched before it is flagged as stale. Default: 14.',
-					)
-				" />
-			<NcButton
-				variant="primary"
-				:disabled="savingStale"
-				@click="saveStaleThreshold">
-				<template #icon>
-					<NcLoadingIcon v-if="savingStale" :size="16" />
-				</template>
-				{{ t('pipelinq', 'Save lead settings') }}
-			</NcButton>
-			<NcNoteCard v-if="staleMessage" :type="staleMessageType">
-				{{ staleMessage }}
-			</NcNoteCard>
-		</NcSettingsSection>
+			v-bind="sections.leadManagement"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- Product Categories -->
 		<ProductCategoryManager v-if="isConfigured" />
@@ -113,10 +85,10 @@
 
 		<!-- Provisioning is an admin action, never a wizard step
 		     (pipelinq-setup-wizard-review). -->
-		<ProvisionDataSection v-if="isAdmin" />
-
-		<!-- Reopen the first-time setup (pipelinq-audit-admin-forms-pos, A1). -->
-		<SetupWizardSection v-if="isAdmin" />
+		<CnSettingsFieldsSection
+			v-if="isAdmin"
+			v-bind="sections.provisionData"
+			appId="pipelinq" />
 
 		<!-- Shillinq and XWiki, detected rather than typed. -->
 		<DetectedIntegrations v-if="isAdmin" />
@@ -133,11 +105,11 @@
 		<!-- Prospect Discovery Settings -->
 		<ProspectSettings v-if="isConfigured" />
 
-		<!-- BI Export Configuration -->
-		<ExportConfigurationSettings
+		<CnSettingsFieldsSection
 			v-if="isAdmin"
-			:config="config"
-			@saved="onExportConfigSaved" />
+			v-bind="sections.exportConfiguration"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- Mailing list signup embed (marketing-lists-and-double-opt-in) -->
 		<MailingListEmbedSettings v-if="isConfigured" />
@@ -145,48 +117,11 @@
 		<!-- Shillinq integration. Nobody types a webhook URL: the hand-offs
 		     follow the detected Shillinq app (pipelinq-audit-admin-forms-pos).
 		     Without Shillinq, DetectedIntegrations says it is not installed. -->
-		<NcSettingsSection
+		<CnSettingsFieldsSection
 			v-if="isAdmin && shillinqInstalled"
-			:name="t('pipelinq', 'Shillinq integration')"
-			:description="
-				t(
-					'pipelinq',
-					'Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.',
-				)
-			">
-			<!-- Real time-intake emit (time-billing-handoff-emit). Default off — an
-			     unconfigured install keeps the deep-link-only handoff unchanged. -->
-			<NcCheckboxRadioSwitch v-model="shillinqTimeIntakeEnabled" type="switch">
-				{{
-					t(
-						'pipelinq',
-						'Send approved hours to Shillinq as draft invoices',
-					)
-				}}
-			</NcCheckboxRadioSwitch>
-			<NcTextField
-				v-model="config.billing_handoff_manager_group"
-				:label="t('pipelinq', 'Billing handoff manager group')"
-				placeholder="billing-managers"
-				:helperText="
-					t(
-						'pipelinq',
-						'Nextcloud group allowed to trigger \'Send to billing\'. Leave empty to restrict it to Nextcloud administrators.',
-					)
-				" />
-			<NcButton
-				variant="primary"
-				:disabled="savingShillinq"
-				@click="saveShillinq">
-				<template #icon>
-					<NcLoadingIcon v-if="savingShillinq" :size="16" />
-				</template>
-				{{ t('pipelinq', 'Save Shillinq Configuration') }}
-			</NcButton>
-			<NcNoteCard v-if="shillinqMessage" :type="shillinqMessageType">
-				{{ shillinqMessage }}
-			</NcNoteCard>
-		</NcSettingsSection>
+			v-bind="sections.shillinq"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- xWiki Integration (xwiki-integration) -->
 		<NcSettingsSection
@@ -308,10 +243,17 @@
 		     sources the keyword, Matomo and competitor reads leave through,
 		     and the relevance switch. No secret is entered here: the Matomo
 		     token lives in the credential broker. -->
-		<MarketingIntelSettings
+		<CnSettingsFieldsSection
 			v-if="isAdmin"
-			:config="config"
-			@saved="onMarketingTrafficSaved" />
+			v-bind="sections.marketingIntel"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
+
+		<!-- BRP lookups and the mTLS certificate (bsn-validatie-en-brp-lookup). -->
+		<CnSettingsFieldsSection
+			v-if="isAdmin"
+			v-bind="sections.brpMonitor"
+			appId="pipelinq" />
 
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
@@ -323,12 +265,15 @@
 </template>
 
 <script>
-import { CnAdminSettingsShell, CnRegisterMapping } from '@conduction/nextcloud-vue'
+import {
+	CnAdminSettingsShell,
+	CnRegisterMapping,
+	CnSettingsFieldsSection,
+} from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
-	NcCheckboxRadioSwitch,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSettingsSection,
@@ -342,9 +287,7 @@ import CtiPage from './CtiPage.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
 import DeliverabilitySettings from './DeliverabilitySettings.vue'
 import DetectedIntegrations from './DetectedIntegrations.vue'
-import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
-import MarketingIntelSettings from './MarketingIntelSettings.vue'
 import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
 import MenuStructureSettings from './MenuStructureSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
@@ -357,16 +300,16 @@ import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
-import ProvisionDataSection from './ProvisionDataSection.vue'
-import SetupWizardSection from './SetupWizardSection.vue'
 import TagManager from './TagManager.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
+import manifest from '../../manifest.json'
 import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
+import adminSections from './adminSections.json'
 
 /**
  * Whether the server detected the Shillinq app (IntegrationDetector).
@@ -392,8 +335,8 @@ export default {
 		PortalSettings,
 		CnAdminSettingsShell,
 		CnRegisterMapping,
+		CnSettingsFieldsSection,
 		NcButton,
-		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSettingsSection,
@@ -405,14 +348,10 @@ export default {
 		SkillSettings,
 		AgentProfileSettings,
 		ForecastSettings,
-		ExportConfigurationSettings,
 		MailingListEmbedSettings,
-		MarketingIntelSettings,
 		MarketingTrafficSettings,
 		MenuStructureSettings,
 		DetectedIntegrations,
-		ProvisionDataSection,
-		SetupWizardSection,
 		VatRatesSettings,
 	},
 
@@ -431,21 +370,16 @@ export default {
 			],
 
 			reimportUrl: generateUrl('/apps/pipelinq/api/settings/reimport'),
+			// The declared settings sections, and the first-time setup the
+			// shell's "Run setup wizard" opens again.
+			sections: adminSections,
+			setupSteps: (manifest.setup && manifest.setup.steps) || [],
 			saving: false,
 			message: '',
 			messageType: 'success',
 			isAdmin: false,
-			// Shillinq ledger integration.
-			savingShillinq: false,
-			shillinqMessage: '',
-			shillinqMessageType: 'success',
 			// Shillinq is detected, never configured (pipelinq-audit-admin-forms-pos).
 			shillinqInstalled: shillinqDetected(),
-			// Lead management — stale threshold (REQ-LM-002).
-			staleThresholdInput: 14,
-			savingStale: false,
-			staleMessage: '',
-			staleMessageType: 'success',
 			// xWiki integration (xwiki-integration).
 			savingXwiki: false,
 			testingXwiki: false,
@@ -487,26 +421,6 @@ export default {
 
 		isConfigured() {
 			return !!this.config.register
-		},
-
-		/**
-		 * The real time-intake emit flag (time-billing-handoff-emit), converted
-		 * between the backend's string 'true'/'false' config value and a
-		 * checkbox boolean.
-		 *
-		 * @spec openspec/specs/time-approval-workflow/spec.md
-		 */
-		shillinqTimeIntakeEnabled: {
-			get() {
-				return this.config.shillinq_time_intake_enabled === 'true'
-			},
-
-			set(value) {
-				this.config = {
-					...this.config,
-					shillinq_time_intake_enabled: value ? 'true' : 'false',
-				}
-			},
 		},
 
 		/**
@@ -567,11 +481,6 @@ export default {
 		if (data) {
 			this.config = data.config || {}
 			this.isAdmin = this.settingsStore.isAdmin
-			// Seed the stale-threshold input from the persisted config
-			// (REQ-LM-002). Falls back to 14 days when unset.
-			const parsed = parseInt(this.config.lead_stale_threshold_days, 10)
-			this.staleThresholdInput =
-				Number.isFinite(parsed) && parsed > 0 ? parsed : 14
 		}
 
 		if (this.isConfigured) {
@@ -632,6 +541,17 @@ export default {
 		 */
 		onMarketingTrafficSaved(updated) {
 			this.config = updated || this.config
+		},
+
+		/**
+		 * Keep the page's config in step with what a declared section saved,
+		 * so the register mapping does not write an older value back.
+		 *
+		 * @param {object} sent What the section sent, by setting key.
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-admin-forms-are-declared-sections
+		 */
+		onSectionSaved(sent) {
+			this.config = { ...this.config, ...(sent || {}) }
 		},
 
 		/**
@@ -721,83 +641,6 @@ export default {
 			return this.countObjectsWithField('ticket', 'channel', channelName, {
 				ticketType: 'request',
 			})
-		},
-
-		/**
-		 * Persist the Shillinq hand-off options through the standard settings endpoint.
-		 *
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
-		 */
-		async saveShillinq() {
-			this.savingShillinq = true
-			this.shillinqMessage = ''
-			try {
-				const result = await this.settingsStore.saveSettings({
-					...this.config,
-				})
-				if (result) {
-					this.config = this.settingsStore.config || result
-				}
-				this.shillinqMessage = t('pipelinq', 'Shillinq configuration saved.')
-				this.shillinqMessageType = 'success'
-			} catch (e) {
-				this.shillinqMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save Shillinq configuration.')
-				this.shillinqMessageType = 'error'
-			} finally {
-				this.savingShillinq = false
-			}
-		},
-
-		/**
-		 * Reflect a saved export-configuration payload back into local state.
-		 *
-		 * @param {object} updated The updated config returned by the section.
-		 * @spec openspec/changes/bi-export-and-data-warehouse-sink/tasks.md#task-14.1
-		 */
-		onExportConfigSaved(updated) {
-			if (updated && typeof updated === 'object') {
-				this.config = { ...this.config, ...updated }
-			}
-		},
-
-		/**
-		 * Persist the lead stale threshold through the standard settings endpoint.
-		 *
-		 * @spec openspec/specs/lead-management/spec.md
-		 */
-		async saveStaleThreshold() {
-			this.savingStale = true
-			this.staleMessage = ''
-			const days = parseInt(this.staleThresholdInput, 10)
-			if (!Number.isFinite(days) || days <= 0) {
-				this.staleMessage = t(
-					'pipelinq',
-					'Stale threshold must be a positive number of days.',
-				)
-				this.staleMessageType = 'error'
-				this.savingStale = false
-				return
-			}
-			try {
-				const result = await this.settingsStore.saveSettings({
-					...this.config,
-					lead_stale_threshold_days: String(days),
-				})
-				if (result) {
-					this.config = this.settingsStore.config || result
-				}
-				this.staleMessage = t('pipelinq', 'Lead settings saved.')
-				this.staleMessageType = 'success'
-			} catch (e) {
-				this.staleMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save lead settings.')
-				this.staleMessageType = 'error'
-			} finally {
-				this.savingStale = false
-			}
 		},
 
 		/**

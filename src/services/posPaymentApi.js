@@ -22,6 +22,18 @@ export async function listProviders() {
 }
 
 /**
+ * The payment methods a cashier can choose: one entry per method of every
+ * active provider. Readable by any signed-in user.
+ *
+ * @return {Promise<Array<{provider: string, providerLabel: string, type: string, method: string}>>} The methods.
+ * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+ */
+export async function listPaymentMethods() {
+	const { data } = await axios.get(base('/api/pos-payments/methods'))
+	return data && Array.isArray(data.methods) ? data.methods : []
+}
+
+/**
  * Fetch a single provider config.
  *
  * @param {string} name The provider name.
@@ -110,6 +122,7 @@ export async function refundPayment(transactionId, reason) {
 
 export default {
 	listProviders,
+	listPaymentMethods,
 	getProvider,
 	updateProvider,
 	testConnection,
