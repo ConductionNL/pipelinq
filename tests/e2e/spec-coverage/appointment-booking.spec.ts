@@ -163,7 +163,7 @@ test.describe('Booking admin surfaces (seeded)', () => {
 			.click()
 		const dialog = fxPage.locator('[data-testid="client-create-dialog"]').first()
 		await expect(dialog).toBeVisible({ timeout: 15000 })
-		await dialog.locator('[data-testid="client-name-input"]').fill(CUSTOMER_NAME)
+		await dialog.getByLabel('Name', { exact: true }).fill(CUSTOMER_NAME)
 		// Email and phone are filled even though this capability does not read
 		// them: the register is SHARED across the whole parallel run, and a client
 		// carrying only a name and a type is a degraded row that other specs can
@@ -173,12 +173,12 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		// test now selects a populated client, and this fixture no longer leaves a
 		// half-filled row for anyone else to trip over.
 		await dialog
-			.locator('[data-testid="client-email-input"]')
+			.getByLabel('Email', { exact: true })
 			.fill('gate19-booking@example.test')
 		await dialog
-			.locator('[data-testid="client-phone-input"]')
+			.getByLabel('Phone', { exact: true })
 			.fill('+31 20 000 0000')
-		await dialog.locator('[data-testid="client-type-select"]').click()
+		await dialog.getByRole('combobox', { name: /^Type/ }).click()
 		// NcSelect teleports its dropdown, so the option is matched page-wide, and
 		// it is awaited rather than clicked blind — the list is populated
 		// asynchronously (workflows/client-crud.spec.ts sleeps here instead).
@@ -188,7 +188,7 @@ test.describe('Booking admin surfaces (seeded)', () => {
 			.first()
 		await expect(typeOption).toBeVisible({ timeout: 10000 })
 		await typeOption.click()
-		await dialog.locator('[data-testid="client-form-save"]').click()
+		await dialog.getByRole('button', { name: /^(Create|Save)$/ }).click()
 		await expect(dialog).toBeHidden({ timeout: 20000 })
 
 		const created = (

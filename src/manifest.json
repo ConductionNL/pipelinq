@@ -1641,6 +1641,19 @@
 				"register": "pipelinq",
 				"schema": "client",
 				"createModal": "ClientCreateDialog",
+				"includeFields": [
+					"name",
+					"type",
+					"email",
+					"phone",
+					"website",
+					"industry",
+					"accountOwner",
+					"correspondenceLanguage",
+					"timezone",
+					"address",
+					"notes"
+				],
 				"fieldOverrides": {
 					"industry": {
 						"widget": "multiselect",
@@ -1667,19 +1680,62 @@
 						}
 					},
 					"name": {
-						"readOnly": false
+						"readOnly": false,
+						"validation": {
+							"maxLength": 255
+						}
 					},
 					"email": {
-						"readOnly": false
+						"readOnly": false,
+						"validation": {
+							"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+							"patternMessage": "Invalid email format"
+						}
 					},
 					"phone": {
-						"readOnly": false
+						"readOnly": false,
+						"validation": {
+							"pattern": "^[+]?[\\d\\s\\-().]{7,20}$",
+							"patternMessage": "Invalid phone format"
+						}
 					},
 					"correspondenceLanguage": {
-						"widget": "language"
+						"widget": "select",
+						"optionsFrom": {
+							"url": "/apps/pipelinq/api/correspondence-languages",
+							"responsePath": "options",
+							"valueField": "value",
+							"labelField": "label"
+						},
+						"defaultToken": "current-language"
 					},
 					"timezone": {
 						"widget": "timezone"
+					},
+					"website": {
+						"hidden": false,
+						"validation": {
+							"pattern": "^https?://.+\\..+",
+							"patternMessage": "Invalid URL format"
+						}
+					},
+					"address": {
+						"hidden": false,
+						"widget": "textarea"
+					},
+					"notes": {
+						"hidden": false,
+						"widget": "textarea"
+					},
+					"accountOwner": {
+						"widget": "user",
+						"default": "@me"
+					},
+					"type": {
+						"enumLabels": {
+							"person": "Person",
+							"organization": "Organization"
+						}
 					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -3836,16 +3892,28 @@
 						"readOnly": false
 					},
 					"email": {
-						"readOnly": false
+						"readOnly": false,
+						"validation": {
+							"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+							"patternMessage": "Invalid email format"
+						}
 					},
 					"phone": {
-						"readOnly": false
+						"readOnly": false,
+						"validation": {
+							"pattern": "^[+]?[\\d\\s\\-().]{7,20}$",
+							"patternMessage": "Invalid phone format"
+						}
 					},
 					"correspondenceLanguage": {
 						"widget": "language"
 					},
 					"timezone": {
 						"widget": "timezone"
+					},
+					"client": {
+						"required": true,
+						"placeholder": "Select or create a client"
 					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",

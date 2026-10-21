@@ -112,13 +112,13 @@ test.describe('Clients — full CRUD with persistence', () => {
 		}
 	})
 
-	// CREATE drives the bespoke ClientForm via Dashboard → "New Client".
+	// CREATE drives the New Client dialog (the library form over the client schema) via Dashboard → "New Client".
 	//
 	// The `client` schema (OR schema 60) marks `contactsUid` REQUIRED — the
 	// authoritative identity is the Nextcloud addressbook contact, never minted
 	// locally — so a plain saveObject('client', …) is rejected 400 by OpenRegister
 	// ("The required property (contactsUid) is missing"). The fix wires the bespoke
-	// ClientCreateDialog (Dashboard → "New Client" → ClientForm.vue) through the
+	// ClientCreateDialog (Dashboard → "New Client" → CnFormDialog) through the
 	// contact-FIRST create endpoint POST /api/contacts-sync/create, which provisions
 	// the NC contact via ContactVcardService and saves the client with the resolved
 	// contactsUid + the denormalised name/email/phone mirror.
@@ -149,14 +149,14 @@ test.describe('Clients — full CRUD with persistence', () => {
 		await expect(dialog).toBeVisible({ timeout: 10000 })
 
 		// NcTextField forwards data-testid onto the <input> element itself.
-		await dialog.locator('[data-testid="client-name-input"]').fill(NAME)
+		await dialog.getByLabel('Name', { exact: true }).fill(NAME)
 		await pickOption(
-			dialog.locator('[data-testid="client-type-select"]'),
+			dialog.getByRole('combobox', { name: /^Type/ }),
 			'organi',
 		) // organization
-		await dialog.locator('[data-testid="client-email-input"]').fill(EMAIL)
-		await dialog.locator('[data-testid="client-phone-input"]').fill(PHONE)
-		await dialog.locator('[data-testid="client-form-save"]').click()
+		await dialog.getByLabel('Email', { exact: true }).fill(EMAIL)
+		await dialog.getByLabel('Phone', { exact: true }).fill(PHONE)
+		await dialog.getByRole('button', { name: /^(Create|Save)$/ }).click()
 		// On success the dialog emits `created` and the Dashboard routes to
 		// /clients/:id (ClientDetail), so the create overlay is gone.
 		await expect(dialog).toBeHidden({ timeout: 15000 })
