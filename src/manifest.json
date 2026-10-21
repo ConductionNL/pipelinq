@@ -7359,12 +7359,16 @@
 		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
-			"type": "custom",
-			"component": "FeaturesRoadmapView",
+			"type": "roadmap",
 			"title": "Features & roadmap",
-			"_note": "Was type:\"roadmap\". The library's CnFeaturesAndRoadmapPage renders exactly two tabs and declares zero slots. FeaturesRoadmapView renders that library page unchanged and adds one link above it: how pipelinq compares, on pipelinq.conduction.nl/compare. The comparison itself left the app on 2026-10-07 (Ruben: how an app compares belongs on its public site, for every app); the docs page reads src/data/capabilityComparison.json, the same file the in-app section read. Revert to type:\"roadmap\" the day the library page can carry that link.",
+			"_note": "How pipelinq compares lives on its public site (Ruben, 2026-10-07: for every app), read from src/data/capabilityComparison.json; the page links to it in the reader's language.",
 			"config": {
-				"documentationUrl": "https://pipelinq.conduction.nl"
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"compareUrl": {
+					"default": "https://pipelinq.conduction.nl/compare",
+					"nl": "https://pipelinq.conduction.nl/nl/compare"
+				},
+				"compareLabel": "How pipelinq compares to other help desks"
 			}
 		},
 		{
@@ -7477,8 +7481,7 @@
 			"type": "flow",
 			"title": "Flow",
 			"config": { "app": "pipelinq" },
-			"sidebarComponent": "FlowDetailSidebar",
-			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors procest/src/manifest.json:FlowDetail."
+			"_note": "The shared CnFlowDetail canvas over the same single engine. The flow page type mounts CnFlowSidebar in the NC app sidebar, so the canvas keeps full width and the flow can be named, described, triggered and step-edited."
 		}
 	]
 }

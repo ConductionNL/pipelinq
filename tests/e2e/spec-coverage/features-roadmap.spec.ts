@@ -6,10 +6,9 @@
  * (/features-roadmap). Maps to openspec/specs/notifications-activity/spec.md
  * (closest in-app surface) and to openspec/specs/features-roadmap/spec.md.
  *
- * The screen under test is manifest page `FeaturesRoadmap`, rendered by
- * `FeaturesRoadmapView` (src/views/FeaturesRoadmapView.vue). That component
- * wraps the library's product page and adds one link to the help desk
- * comparison on the docs site.
+ * The screen under test is manifest page `FeaturesRoadmap`, a `type: "roadmap"`
+ * page whose `compareUrl` adds one link to the help desk comparison on the
+ * docs site.
  */
 import { expect, test } from '@playwright/test'
 import {

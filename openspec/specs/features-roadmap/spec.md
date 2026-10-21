@@ -27,8 +27,8 @@ those in would compare products nobody puts side by side.
 
 **Surfaces**:
 
-- In the app: `src/manifest.json#FeaturesRoadmap` (`type: "custom"`,
-  `component: "FeaturesRoadmapView"`, registered in `src/registry.js`), route
+- In the app: `src/manifest.json#FeaturesRoadmap` (`type: "roadmap"`, with
+  `config.compareUrl` and `config.compareLabel` for the link), route
   `/features-roadmap`, reachable from the footer menu entry
   `FeaturesRoadmapMenu`.
 - On the docs site: `docs/src/pages/compare.js`, served in English at

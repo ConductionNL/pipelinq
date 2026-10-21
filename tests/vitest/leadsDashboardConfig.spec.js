@@ -47,3 +47,23 @@ describe('operational dashboard', () => {
 		expect(registrySource).not.toMatch(/MyWorkWidget/)
 	})
 })
+
+describe('features and roadmap, flows', () => {
+	it('links to the comparison on the public site in the reader\'s language, from the library page', () => {
+		const roadmap = page('FeaturesRoadmap')
+		expect(roadmap.type).toBe('roadmap')
+		expect(roadmap.component).toBeUndefined()
+		expect(roadmap.config.compareUrl).toEqual({
+			default: 'https://pipelinq.conduction.nl/compare',
+			nl: 'https://pipelinq.conduction.nl/nl/compare',
+		})
+		expect(roadmap.config.compareLabel).toBe('How pipelinq compares to other help desks')
+	})
+
+	it('opens a flow with the library flow sidebar, not an app wrapper', () => {
+		const flow = page('FlowDetail')
+		expect(flow.type).toBe('flow')
+		expect(flow.sidebarComponent).toBeUndefined()
+		expect(registrySource).not.toMatch(/FlowDetailSidebar|FeaturesRoadmapView/)
+	})
+})

@@ -210,16 +210,6 @@ import ExportJobFormView from './views/export/ExportJobForm.vue'
 import ExportJobsView from './views/export/ExportJobs.vue'
 import ExportRunDetailView from './views/export/ExportRunDetail.vue'
 import ExportRunsView from './views/export/ExportRuns.vue'
-// --- Features & roadmap page. Was type:"roadmap", dispatched straight to
-//     the library's CnFeaturesAndRoadmapPage, which renders two tabs and
-//     declares no slots. FeaturesRoadmapView renders that page unchanged and
-//     adds one link to the help desk comparison on pipelinq.conduction.nl. ---
-import FeaturesRoadmapView from './views/FeaturesRoadmapView.vue'
-// --- Flows (ADR-110 Decision 4). The list and the canvas are the shared
-//     `flows` / `flow-detail` manifest page types; only the SIDEBAR is an
-//     app component, because CnFlowSidebar has to mount in the NC app
-//     sidebar for the canvas to keep full width. ---
-import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 // --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
 import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
 import ForecastTrendView from './views/forecast/ForecastTrend.vue'
@@ -345,11 +335,6 @@ const registry = {
 		kind: 'page',
 		component: ProspectsView,
 		_note: 'Full-page expansion of ProspectWidget (refactor-pipelinq-ia-alignment): scored-prospect list with sortable columns + convert-to-lead action over the prospect Pinia store; lib has no declarative type for scored external-source enrichment.',
-	},
-	FeaturesRoadmapView: {
-		kind: 'page',
-		component: FeaturesRoadmapView,
-		_note: 'Wraps the library\'s CnFeaturesAndRoadmapPage and adds one link to the help desk capability comparison on pipelinq.conduction.nl/compare. The library component declares no slots, so the link cannot be added from the manifest; the page moves back to type:"roadmap" the day the library can carry it.',
 	},
 
 	StoreGallery: {
@@ -1170,11 +1155,6 @@ const registry = {
 	// native flow store, scoped `app: "pipelinq"` so this app sees only its
 	// own. Only the SIDEBAR is an app component; the list and the canvas are
 	// the shared `flows` / `flow-detail` manifest page types.
-	FlowDetailSidebar: {
-		kind: 'page',
-		component: FlowDetailSidebar,
-		_note: 'CnFlowSidebar in the NC app sidebar; shares useFlowStore with the canvas.',
-	},
 
 	// --- Create modals (kind:"modal"), opened by a manifest header action's
 	//     type:"open-modal" + target. These keep the BESPOKE create forms —
