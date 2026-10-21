@@ -131,7 +131,7 @@ describe('callers', () => {
 			/<LeadScoreBadge/,
 		)
 		const board = read('src/views/pipeline/PipelineBoard.vue')
-		expect(board).toMatch(/toggleSort\('score'\)/)
+		expect(board).toMatch(/\{ key: 'score', label: this\.t\('pipelinq', 'Score'\) \}/)
 		expect(board).toMatch(/compareCallFirst/)
 	})
 })
