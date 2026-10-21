@@ -630,6 +630,7 @@ class ReportingControllerTest extends TestCase {
 			[
 				[
 					'channel' => 'telefoon',
+					'label' => 'Phone',
 					'total' => 2,
 					'share' => 66.7,
 					'fcrRate' => 50.0,
@@ -639,6 +640,7 @@ class ReportingControllerTest extends TestCase {
 				],
 				[
 					'channel' => 'email',
+					'label' => 'Email',
 					'total' => 1,
 					'share' => 33.3,
 					'fcrRate' => 100.0,

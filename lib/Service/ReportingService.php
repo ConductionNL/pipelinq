@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 use DateInterval;
 use DateTimeImmutable;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 
@@ -68,12 +69,14 @@ class ReportingService {
 	 * @param LoggerInterface $logger The logger.
 	 * @param TicketService $ticketService The unified ticket resolver (unify-ticket-supertype).
 	 * @param IUserManager|null $userManager Names the agents in the agent rows.
+	 * @param IL10N|null $l10n Words the channels in the channel rows.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private TicketService $ticketService,
 		private ?IUserManager $userManager = null,
+		private ?IL10N $l10n = null,
 	) {
 	}//end __construct()
 
@@ -265,7 +268,7 @@ class ReportingService {
 	 * @param string $from ISO 8601 start date.
 	 * @param string $to ISO 8601 end date.
 	 *
-	 * @return array<int, array{channel: string, total: int, share: float, fcrRate: float, slaCompliance: float, slaTarget: float, slaStatus: string}> The rows.
+	 * @return array<int, array{channel: string, label: string, total: int, share: float, fcrRate: float, slaCompliance: float, slaTarget: float, slaStatus: string}> The rows.
 	 *
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
 	 */
@@ -287,6 +290,7 @@ class ReportingService {
 				);
 				$rows[] = [
 					'channel' => $channel,
+					'label' => $this->channelLabel(channel: $channel),
 					'total' => $total,
 					'share' => round(($total / $all) * 100, 1),
 					'fcrRate' => $this->calculateFcr(contactmomenten: $moments),
@@ -640,6 +644,41 @@ class ReportingService {
 
 		return (int)($totalSeconds / $counted);
 	}//end averageHandlingSeconds()
+
+	/**
+	 * The words for a stored channel value, translated; an unknown value is
+	 * answered as it is stored.
+	 *
+	 * @param string $channel The stored channel.
+	 *
+	 * @return string The label.
+	 */
+	private function channelLabel(string $channel): string {
+		$labels = [
+			'telefoon' => 'Phone',
+			'phone' => 'Phone',
+			'email' => 'Email',
+			'balie' => 'Counter',
+			'counter' => 'Counter',
+			'chat' => 'Chat',
+			'social' => 'Social media',
+			'brief' => 'Letter',
+			'letter' => 'Letter',
+			'web' => 'Web',
+			'sms' => 'SMS',
+			'unknown' => 'Unknown',
+		];
+		$label = ($labels[$channel] ?? null);
+		if ($label === null) {
+			return $channel;
+		}
+
+		if ($this->l10n === null) {
+			return $label;
+		}
+
+		return $this->l10n->t($label);
+	}//end channelLabel()
 
 	/**
 	 * The display name of an agent's Nextcloud user, or the uid when the user
