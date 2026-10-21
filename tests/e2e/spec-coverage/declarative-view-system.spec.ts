@@ -974,7 +974,7 @@ test('Contact reporting: four endpoint-bound KPIs + a channel section, both re-q
 	await assertNoHardError(page)
 })
 
-// @e2e openspec/specs/declarative-view-system/spec.md#channel-analytics-renders-a-comparison-table-driven-by-period
+// @e2e openspec/changes/report-pages-on-widgets/specs/declarative-view-system/spec.md#channel-analytics-renders-a-comparison-table-driven-by-period
 test('Channel analytics: a comparison table on the channel rows, driven by period', async ({
 	page,
 }) => {
