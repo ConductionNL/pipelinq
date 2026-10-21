@@ -339,90 +339,23 @@
 				<thead>
 					<tr>
 						<th
+							v-for="column in listColumns"
+							:key="column.key"
 							scope="col"
 							class="sortable"
-							@click="toggleSort('title')">
-							{{ t('pipelinq', 'Title') }}
-							<span v-if="sortBy === 'title'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('schemaSlug')">
-							{{ t('pipelinq', 'Type') }}
-							<span
-								v-if="sortBy === 'schemaSlug'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('stage')">
-							{{ t('pipelinq', 'Stage') }}
-							<span v-if="sortBy === 'stage'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('assignee')">
-							{{ t('pipelinq', 'Assignee') }}
-							<span
-								v-if="sortBy === 'assignee'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('value')">
-							{{ t('pipelinq', 'Value') }}
-							<span v-if="sortBy === 'value'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('dueDate')">
-							{{ t('pipelinq', 'Due Date') }}
-							<span
-								v-if="sortBy === 'dueDate'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('priority')">
-							{{ t('pipelinq', 'Priority') }}
-							<span
-								v-if="sortBy === 'priority'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('score')">
-							{{ t('pipelinq', 'Score') }}
-							<span v-if="sortBy === 'score'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th scope="col" class="sortable" @click="toggleSort('age')">
-							{{ t('pipelinq', 'Age') }}
-							<span v-if="sortBy === 'age'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
+							:aria-sort="ariaSortOf(column.key)">
+							<button
+								type="button"
+								class="sort-button"
+								@click="toggleSort(column.key)">
+								{{ column.label }}
+								<span
+									v-if="sortBy === column.key"
+									class="sort-indicator"
+									aria-hidden="true"
+									>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
+								>
+							</button>
 						</th>
 					</tr>
 				</thead>
@@ -859,6 +792,26 @@ export default {
 					total: this.allItems.length,
 				},
 			)
+		},
+
+		/**
+		 * The list view's sortable columns, in order.
+		 *
+		 * @return {Array<{key: string, label: string}>}
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 */
+		listColumns() {
+			return [
+				{ key: 'title', label: this.t('pipelinq', 'Title') },
+				{ key: 'schemaSlug', label: this.t('pipelinq', 'Type') },
+				{ key: 'stage', label: this.t('pipelinq', 'Stage') },
+				{ key: 'assignee', label: this.t('pipelinq', 'Assignee') },
+				{ key: 'value', label: this.t('pipelinq', 'Value') },
+				{ key: 'dueDate', label: this.t('pipelinq', 'Due Date') },
+				{ key: 'priority', label: this.t('pipelinq', 'Priority') },
+				{ key: 'score', label: this.t('pipelinq', 'Score') },
+				{ key: 'age', label: this.t('pipelinq', 'Age') },
+			]
 		},
 
 		/**
@@ -1564,6 +1517,20 @@ export default {
 		},
 
 		/**
+		 * The list header's sort state for assistive technology.
+		 *
+		 * @param {string} column The list-view column key.
+		 * @return {string} `ascending`, `descending` or `none`.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 */
+		ariaSortOf(column) {
+			if (this.sortBy !== column) {
+				return 'none'
+			}
+			return this.sortDir === 'asc' ? 'ascending' : 'descending'
+		},
+
+		/**
 		 * @param {string} column The list-view column key to sort by
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
 		 */
@@ -2019,12 +1986,24 @@ export default {
 	user-select: none;
 }
 
-.list-table th.sortable {
+.list-table .sort-button {
+	display: inline-flex;
+	align-items: center;
+	padding: 0;
+	border: none;
+	background: none;
+	font: inherit;
+	color: inherit;
 	cursor: pointer;
 }
 
-.list-table th.sortable:hover {
+.list-table .sort-button:hover {
 	color: var(--color-main-text);
+}
+
+.list-table .sort-button:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .sort-indicator {
