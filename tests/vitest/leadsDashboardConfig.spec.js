@@ -225,3 +225,26 @@ describe('the lead forecast', () => {
 		expect(registrySource).not.toMatch(/LeadForecastTab/)
 	})
 })
+
+describe('the export lists', () => {
+	it('are index pages whose row actions call the export endpoints', () => {
+		const jobs = page('ExportJobs').config
+		expect(page('ExportJobs').type).toBe('index')
+		expect(jobs.actions.map((a) => a.id)).toEqual(['test-run', 'enable', 'disable'])
+		expect(jobs.actions[0]).toMatchObject({ type: 'open-modal', target: 'ExportTestRunModal' })
+		expect(jobs.actions[1]).toMatchObject({ type: 'api-call', url: '/apps/pipelinq/api/export/jobs/{objectId}/enable', visibleWhen: { field: 'enabled', value: false } })
+		expect(jobs.actions[2]).toMatchObject({ type: 'api-call', url: '/apps/pipelinq/api/export/jobs/{objectId}/disable', visibleWhen: { field: 'enabled', value: true } })
+		expect(jobs.headerButtons[0].action).toBe(jobs.headerActions[0].id)
+		expect(jobs.headerActions[0]).toMatchObject({ type: 'open-page', target: 'ExportJobNew' })
+
+		const runs = page('ExportRuns').config
+		expect(runs.actions[0]).toMatchObject({ type: 'api-call', url: '/apps/pipelinq/api/export/runs/{objectId}/retry' })
+		expect(runs.actions[0].visibleWhen.value).toEqual(['failed', 'partial', 'skipped_overlap'])
+		expect(runs.showAdd).toBe(false)
+
+		const dests = page('ExportDestinations').config
+		expect(dests.actions[0]).toMatchObject({ type: 'api-call', url: '/apps/pipelinq/api/export/destinations/{objectId}/test' })
+		expect(registrySource).not.toMatch(/ExportJobsView|ExportRunsView|ExportDestinationsView/)
+		expect(registrySource).toMatch(/ExportTestRunModal: \{\s*kind: 'modal'/)
+	})
+})

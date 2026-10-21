@@ -14,13 +14,13 @@
  * named a component. `src/main.js` now builds `createWebHistory(routerBase())`,
  * so a path-shaped deep link resolves to the page it names.
  *
- * All five pages are `type: "custom"` manifest entries, so the route maps
- * straight onto the .vue file rather than onto the manifest renderer:
+ * The two lists are `type: "index"` manifest pages; the other three are
+ * `type: "custom"` entries that map straight onto their .vue file:
  *
- *   /export/destinations       ExportDestinationsView   ExportDestinations.vue
+ *   /export/destinations       index page (exportDestination)
  *   /export/destinations/new   ExportDestinationFormView ExportDestinationForm.vue
  *   /export/jobs/new           ExportJobFormView        ExportJobForm.vue
- *   /export/runs               ExportRunsView           ExportRuns.vue
+ *   /export/runs               index page (exportRun)
  *   /export/runs/:id           ExportRunDetailView      ExportRunDetail.vue
  */
 
@@ -91,8 +91,8 @@ function indexTitle(page: Page) {
 		.first()
 }
 
-// ── src/views/export/ExportDestinations.vue — route `/export/destinations` ────
-test('ExportDestinations: /export/destinations mounts src/views/export/ExportDestinations.vue', async ({
+// ── index page `ExportDestinations` — route `/export/destinations` ────
+test('ExportDestinations: /export/destinations mounts the destination index page', async ({
 	page,
 }) => {
 	await openSpaRoute(page, '/export/destinations')
@@ -150,8 +150,8 @@ test('ExportJobForm: /export/jobs/new mounts src/views/export/ExportJobForm.vue'
 	)
 })
 
-// ── src/views/export/ExportRuns.vue — route `/export/runs` ────────────────────
-test('ExportRuns: /export/runs mounts src/views/export/ExportRuns.vue', async ({
+// ── index page `ExportRuns` — route `/export/runs` ────────────────────
+test('ExportRuns: /export/runs mounts the run index page', async ({
 	page,
 }) => {
 	await openSpaRoute(page, '/export/runs')

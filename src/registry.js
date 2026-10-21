@@ -172,6 +172,7 @@ import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
+import ExportTestRunModal from './modals/ExportTestRunModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
@@ -200,16 +201,13 @@ import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.v
 //     reusable widget / sidebar / viewer / list components. ---
 import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget.vue'
 import ExportDestinationFormView from './views/export/ExportDestinationForm.vue'
-import ExportDestinationsView from './views/export/ExportDestinations.vue'
 import ExportJobFormView from './views/export/ExportJobForm.vue'
 // --- BI export + data-warehouse sink (lib gap: declarative index/detail pages
 //     cannot express the bespoke test-connection / test-run / enable / retry
 //     actions on the export controllers, nor the run-detail manifest +
 //     schema-snapshot drill-down). Object CRUD still flows through the shared
 //     object store; these views add the action surface. ---
-import ExportJobsView from './views/export/ExportJobs.vue'
 import ExportRunDetailView from './views/export/ExportRunDetail.vue'
-import ExportRunsView from './views/export/ExportRuns.vue'
 // --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
 import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
 import ForecastTrendView from './views/forecast/ForecastTrend.vue'
@@ -916,30 +914,15 @@ const registry = {
 	},
 
 	// --- BI export + data-warehouse sink. ---
-	ExportJobsView: {
-		kind: 'page',
-		component: ExportJobsView,
-		_note: 'Export-job list with per-row Test-run + Enable/Disable actions calling the export controller; declarative index cannot trigger the test/enable endpoints.',
-	},
 	ExportJobFormView: {
 		kind: 'page',
 		component: ExportJobFormView,
 		_note: 'Export-job create/edit form (schemas multi-select, destination, format/mode, watermark, cron, row filter, PII column allowlist) with an inline Test-run action.',
 	},
-	ExportDestinationsView: {
-		kind: 'page',
-		component: ExportDestinationsView,
-		_note: 'Export-destination list with a per-row Test-connection action calling the export controller.',
-	},
 	ExportDestinationFormView: {
 		kind: 'page',
 		component: ExportDestinationFormView,
 		_note: 'Export-destination create/edit form (type, OpenConnector source, path template, compression, encryption) with an inline Test-connection action.',
-	},
-	ExportRunsView: {
-		kind: 'page',
-		component: ExportRunsView,
-		_note: 'Export-run history list with a per-row Retry action for failed/partial runs.',
 	},
 	ExportRunDetailView: {
 		kind: 'page',
@@ -1144,6 +1127,13 @@ const registry = {
 		component: LetterFromTemplateModal,
 		propsSchema: null,
 		_note: 'Make a letter. Target of the make-letter header action on ClientDetail and TicketDetail; reads the record id from the route.',
+	},
+
+	ExportTestRunModal: {
+		kind: 'modal',
+		component: ExportTestRunModal,
+		propsSchema: null,
+		_note: 'Test run of an export job. Target of the Test run row action on the BI export jobs list.',
 	},
 
 	LeadCreateDialog: {

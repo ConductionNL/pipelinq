@@ -7597,14 +7597,74 @@
 		},
 		{
 			"id": "ExportJobs",
-			"_note": "ExportJobs.vue is a CnIndexPage specialised for BI export jobs with run/schedule controls in the page header; kept as a host-app component while those export-trigger actions live outside the library.",
 			"route": "/export/jobs",
-			"type": "custom",
+			"type": "index",
 			"title": "BI export jobs",
-			"component": "ExportJobsView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "exportJob"
+				"schema": "exportJob",
+				"showTitle": true,
+				"description": "Scheduled exports of pipelinq data to a data warehouse or BI tool",
+				"includeColumns": [
+					"name",
+					"destinationId",
+					"format",
+					"mode",
+					"scheduleCron",
+					"enabled"
+				],
+				"rowRoute": "ExportJobDetail",
+				"showAdd": false,
+				"emptyText": "No export jobs yet",
+				"headerActions": [
+					{
+						"id": "new-export-job",
+						"label": "New export job",
+						"type": "open-page",
+						"target": "ExportJobNew",
+						"icon": "Plus"
+					}
+				],
+				"headerButtons": [
+					{
+						"action": "new-export-job",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New export job"
+					}
+				],
+				"actions": [
+					{
+						"id": "test-run",
+						"label": "Test run",
+						"type": "open-modal",
+						"target": "ExportTestRunModal"
+					},
+					{
+						"id": "enable",
+						"label": "Enable",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/export/jobs/{objectId}/enable",
+						"visibleWhen": {
+							"field": "enabled",
+							"value": false
+						},
+						"successMessage": "Job enabled",
+						"errorMessage": "Could not change job status"
+					},
+					{
+						"id": "disable",
+						"label": "Disable",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/export/jobs/{objectId}/disable",
+						"visibleWhen": {
+							"field": "enabled",
+							"value": true
+						},
+						"successMessage": "Job disabled",
+						"errorMessage": "Could not change job status"
+					}
+				]
 			}
 		},
 		{
@@ -7633,14 +7693,51 @@
 		},
 		{
 			"id": "ExportDestinations",
-			"_note": "ExportDestinations.vue is a CnIndexPage specialised for export destinations with a connection-test action in the header; kept as a host-app component while that test-connection action lives outside the library.",
 			"route": "/export/destinations",
-			"type": "custom",
+			"type": "index",
 			"title": "Export destinations",
-			"component": "ExportDestinationsView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "exportDestination"
+				"schema": "exportDestination",
+				"showTitle": true,
+				"description": "Data-warehouse and object-storage targets for BI exports",
+				"includeColumns": [
+					"name",
+					"type",
+					"connectorSourceId",
+					"validationStatus",
+					"lastValidatedAt"
+				],
+				"rowRoute": "ExportDestinationDetail",
+				"showAdd": false,
+				"emptyText": "No destinations yet",
+				"headerActions": [
+					{
+						"id": "new-destination",
+						"label": "New destination",
+						"type": "open-page",
+						"target": "ExportDestinationNew",
+						"icon": "Plus"
+					}
+				],
+				"headerButtons": [
+					{
+						"action": "new-destination",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New destination"
+					}
+				],
+				"actions": [
+					{
+						"id": "test-connection",
+						"label": "Test connection",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/export/destinations/{objectId}/test",
+						"successMessage": "Connection tested; the status column shows the result",
+						"errorMessage": "Connection test failed"
+					}
+				]
 			}
 		},
 		{
@@ -7669,14 +7766,44 @@
 		},
 		{
 			"id": "ExportRuns",
-			"_note": "ExportRuns.vue is a CnIndexPage specialised for the export run history with a re-run action in the header; kept as a host-app component while that re-run action lives outside the library.",
 			"route": "/export/runs",
-			"type": "custom",
+			"type": "index",
 			"title": "Export runs",
-			"component": "ExportRunsView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "exportRun"
+				"schema": "exportRun",
+				"showTitle": true,
+				"description": "History of scheduled and manual export runs",
+				"includeColumns": [
+					"jobId",
+					"status",
+					"rowCount",
+					"byteCount",
+					"startedAt",
+					"endedAt"
+				],
+				"rowRoute": "ExportRunDetail",
+				"emptyText": "No export runs yet",
+				"showAdd": false,
+				"actions": [
+					{
+						"id": "retry",
+						"label": "Retry",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/export/runs/{objectId}/retry",
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"failed",
+								"partial",
+								"skipped_overlap"
+							]
+						},
+						"successMessage": "A new run has been queued",
+						"errorMessage": "Could not retry the run"
+					}
+				]
 			}
 		},
 		{
