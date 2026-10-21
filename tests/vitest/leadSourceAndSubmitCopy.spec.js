@@ -138,10 +138,9 @@ describe('admin lead sources list', () => {
 describe('lead form source select', () => {
 	it('offers each source with its label and stores the tag', () => {
 		const form = readFileSync(
-			resolve(__dirname, '../../src/views/leads/LeadForm.vue'),
+			resolve(__dirname, '../../src/dialogs/LeadCreateDialog.vue'),
 			'utf8',
 		)
-		expect(form).toMatch(/:reduce="\(o\) => o\.id"/)
-		expect(form).toContain('label: leadSourceLabel(id)')
+		expect(form).toContain('sourceLabel: leadSourceLabel')
 	})
 })

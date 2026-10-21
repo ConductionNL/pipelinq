@@ -69,6 +69,12 @@ export default {
 			type: String,
 			default: '',
 		},
+
+		/** The values a picker hands over (`{ name: term }`), as a form's createModal does. */
+		initialData: {
+			type: Object,
+			default: null,
+		},
 	},
 
 	emits: ['created', 'close'],
@@ -96,8 +102,9 @@ export default {
 		 */
 		seed() {
 			const seed = {}
-			if (this.name) {
-				seed.name = this.name
+			const name = this.name || this.initialData?.name
+			if (name) {
+				seed.name = name
 			}
 			if (this.client) {
 				seed.client = this.client

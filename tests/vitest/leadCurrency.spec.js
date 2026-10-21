@@ -30,9 +30,9 @@ describe('lead currency helpers', () => {
 
 describe('the screens use them', () => {
 	it('the lead form edits the currency next to the value', () => {
-		const form = read('src/views/leads/LeadForm.vue')
-		expect(form).toContain(':modelValue="form.currency"')
-		expect(form).toMatch(/currency: this\.lead\.currency/)
+		const form = read('src/services/leadCreateForm.js')
+		expect(form).toContain("key: 'currency'")
+		expect(read('src/dialogs/LeadCreateDialog.vue')).toContain('reportingCurrency()')
 	})
 
 	it('Forecast settings edits the rate table as currency-to-rate rows, refusing a bad code or a rate not above zero', () => {

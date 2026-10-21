@@ -32,20 +32,22 @@ async function openNewLeadDialog(page: Page) {
 	await expect(button).toBeVisible({ timeout: 20000 })
 	await button.click()
 
-	const dialog = page.locator('[data-testid="lead-create-dialog"]')
+	const dialog = page
+		.getByRole('dialog')
+		.filter({ has: page.locator('[data-cn-field="pipeline"]') })
 	await expect(dialog).toBeVisible({ timeout: 15000 })
 	return dialog
 }
 
-/** The search input inside one of the form's pickers. */
+/** The search input inside one of the form's pickers, by field key. */
 function pickerInput(dialog: ReturnType<Page['locator']>, testid: string) {
-	return dialog.locator(`[data-testid="${testid}"] input`).first()
+	return dialog.locator(`[data-cn-field="${testid}"] input`).first()
 }
 
 // @e2e openspec/specs/lead-management/spec.md#add-tags-to-a-lead
 test('the client picker can be browsed without typing', async ({ page }) => {
 	const dialog = await openNewLeadDialog(page)
-	await pickerInput(dialog, 'lead-form-client').click()
+	await pickerInput(dialog, 'client').click()
 
 	await expect(
 		page.locator('.vs__dropdown-menu li').first(),
@@ -56,7 +58,7 @@ test('the client picker can be browsed without typing', async ({ page }) => {
 // @e2e openspec/specs/lead-management/spec.md#add-tags-to-a-lead
 test('an unknown client name offers to create one', async ({ page }) => {
 	const dialog = await openNewLeadDialog(page)
-	const input = pickerInput(dialog, 'lead-form-client')
+	const input = pickerInput(dialog, 'client')
 	await input.click()
 	await input.pressSequentially('Zzz Onbekend Bedrijf')
 
@@ -71,7 +73,7 @@ test('the contact picker is open without a client and scopes to a chosen one', a
 	page,
 }) => {
 	const dialog = await openNewLeadDialog(page)
-	const contactField = dialog.locator('[data-testid="lead-form-contact"]')
+	const contactField = dialog.locator('[data-cn-field="contact"]')
 
 	// Resting state: no client. A client is optional (decision 207), so the
 	// contact picker is usable from the start and not waiting on one.
@@ -86,8 +88,8 @@ test('the contact picker is open without a client and scopes to a chosen one', a
 	// a debounced query, and clicking the first match that appears can land on
 	// a preload option that the arriving results then replace, so the click
 	// hits a detached node and the selection silently does not take.
-	const clientField = dialog.locator('[data-testid="lead-form-client"]')
-	const clientInput = pickerInput(dialog, 'lead-form-client')
+	const clientField = dialog.locator('[data-cn-field="client"]')
+	const clientInput = pickerInput(dialog, 'client')
 	await clientInput.click()
 	await clientInput.pressSequentially('Bakkerij')
 
@@ -117,7 +119,7 @@ test('the contact picker is open without a client and scopes to a chosen one', a
 	).toContainText('Bakkerij', { timeout: 10000 })
 
 	// With a client chosen the picker is scoped: only that client's contacts, not every contact seeded.
-	await pickerInput(dialog, 'lead-form-contact').click()
+	await pickerInput(dialog, 'contact').click()
 	const options = page.locator('.vs__dropdown-menu li')
 	await expect(options.first()).toBeVisible({ timeout: 10000 })
 

@@ -293,10 +293,9 @@ describe('RoutingSuggestionSection', () => {
 		expect(schema.required || []).not.toContain('category')
 
 		const form = readFileSync(
-			resolve(__dirname, '../../src/views/leads/LeadForm.vue'),
+			resolve(__dirname, '../../src/services/leadCreateForm.js'),
 			'utf8',
 		)
-		expect(form).toContain(':modelValue="form.category"')
-		expect(form).toMatch(/category: this\.lead\.category/)
+		expect(form).toContain("key: 'category'")
 	})
 })
