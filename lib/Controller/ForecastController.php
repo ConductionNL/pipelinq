@@ -52,6 +52,10 @@ use Psr\Log\LoggerInterface;
  *
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The forecast's export, override
+ *  and summary services, the access policy and the response types it answers with
+ *  are one REST surface; splitting the controller per action would only move them.
  */
 class ForecastController extends Controller {
 	/**

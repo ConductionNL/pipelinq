@@ -100,10 +100,11 @@ class SatisfactionController extends Controller {
 
 		$invitations = $this->dispatchService->read(filters: $filters);
 		if (trim($from) !== '' || trim($to) !== '') {
-			$invitations = $this->dispatchService->withinRange(invitations: $invitations, from: trim($from), to: trim($to));
-		} else {
-			$invitations = $this->dispatchService->withinDays(invitations: $invitations, days: $days);
+			$windowed = $this->dispatchService->withinRange(invitations: $invitations, from: trim($from), to: trim($to));
+			return new JSONResponse($this->dispatchService->responseRate(invitations: $windowed), 200);
 		}
+
+		$invitations = $this->dispatchService->withinDays(invitations: $invitations, days: $days);
 
 		return new JSONResponse($this->dispatchService->responseRate(invitations: $invitations), 200);
 	}//end responseRate()

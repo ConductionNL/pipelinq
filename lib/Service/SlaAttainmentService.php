@@ -56,6 +56,19 @@ class SlaAttainmentService {
 	public const VALID_GROUPS = ['policy', 'customer', 'tier', 'team', 'target'];
 
 	/**
+	 * The words for each grouping, to head the group column.
+	 *
+	 * @var array<string, string>
+	 */
+	private const GROUP_LABELS = [
+		'policy' => 'Policy',
+		'customer' => 'Customer',
+		'tier' => 'Customer tier',
+		'team' => 'Team',
+		'target' => 'Target kind',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container.
@@ -146,31 +159,9 @@ class SlaAttainmentService {
 				'byTarget' => $byTargetOut,
 				'byGroup' => $byGroup,
 			],
-			'labels' => ['group' => $this->groupLabel(groupBy: $groupBy)],
+			'labels' => ['group' => ($this->l10n?->t(self::GROUP_LABELS[$groupBy]) ?? self::GROUP_LABELS[$groupBy])],
 		];
 	}//end compute()
-
-	/**
-	 * The words for a grouping, translated, to head the group column.
-	 *
-	 * @param string $groupBy One of VALID_GROUPS.
-	 *
-	 * @return string The label.
-	 */
-	private function groupLabel(string $groupBy): string {
-		$label = [
-			'policy' => 'Policy',
-			'customer' => 'Customer',
-			'tier' => 'Customer tier',
-			'team' => 'Team',
-			'target' => 'Target kind',
-		][$groupBy];
-		if ($this->l10n === null) {
-			return $label;
-		}
-
-		return $this->l10n->t($label);
-	}//end groupLabel()
 
 	/**
 	 * Walk the breach events and accumulate per-target/per-group breach counts.

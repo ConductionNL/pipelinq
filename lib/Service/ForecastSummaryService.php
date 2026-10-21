@@ -72,6 +72,9 @@ class ForecastSummaryService {
 	 * @param DateTimeImmutable $now The clock.
 	 *
 	 * @return array{periodId: string, quarter: int, year: int, daysRemaining: int}
+	 *
+	 * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+	 *   scenario to admin-settings, which never grew one
 	 */
 	public function currentPeriod(DateTimeImmutable $now): array {
 		$quarter = intdiv(((int)$now->format('n') - 1), 3) + 1;
@@ -94,6 +97,9 @@ class ForecastSummaryService {
 	 * @param string|null $ownerId  One owner, or null for every owner.
 	 *
 	 * @return array<int, array<string, mixed>> The snapshots, oldest first.
+	 *
+	 * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+	 *   scenario to admin-settings, which never grew one
 	 */
 	public function snapshots(string $periodId, string $level, ?string $ownerId = null): array {
 		$all = [];
@@ -101,9 +107,10 @@ class ForecastSummaryService {
 		do {
 			$page = $this->exportService->exportSnapshots(periodId: $periodId, level: $level, ownerId: $ownerId, limit: 200, offset: $offset);
 			$rows = $page['snapshots'];
+			$read = count($rows);
 			$all = array_merge($all, $rows);
 			$offset += 200;
-		} while (count($rows) === 200 && $offset < (int)$page['total'] && $offset < 5000);
+		} while ($read === 200 && $offset < (int)$page['total'] && $offset < 5000);
 
 		return $all;
 	}//end snapshots()
@@ -116,6 +123,9 @@ class ForecastSummaryService {
 	 * @param string|null       $ownerId One seller's own figures instead of a level's.
 	 *
 	 * @return array<string, mixed> period, summary, rows and trend.
+	 *
+	 * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+	 *   scenario to admin-settings, which never grew one
 	 */
 	public function summary(string $level, DateTimeImmutable $now, ?string $ownerId = null): array {
 		$period = $this->currentPeriod(now: $now);
@@ -140,6 +150,9 @@ class ForecastSummaryService {
 	 * @param array<string, mixed>             $period    The period, as currentPeriod() answers it.
 	 *
 	 * @return array<string, mixed> period, summary, rows and trend.
+	 *
+	 * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+	 *   scenario to admin-settings, which never grew one
 	 */
 	public function summarize(array $snapshots, array $period): array {
 		$latest = [];
