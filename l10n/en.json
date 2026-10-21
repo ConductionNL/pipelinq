@@ -1,5 +1,11 @@
 {
     "translations": {
+        "Visa": "Visa",
+        "Mastercard": "Mastercard",
+        "Digital wallet": "Digital wallet",
+        "Refunded to": "Refunded to",
+        "No refund lines yet.": "No refund lines yet.",
+        "Opening amount": "Opening amount",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "The customer pays at the {provider} card terminal.",
         "The customer is sent to {provider} to finish the payment.": "The customer is sent to {provider} to finish the payment.",

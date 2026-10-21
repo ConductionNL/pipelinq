@@ -91,7 +91,6 @@ import CashShiftVarianceWidget from './components/pos/CashShiftVarianceWidget.vu
 //     join and the totals are grid widgets. ---
 import PosRefundHeaderActions from './components/pos/PosRefundHeaderActions.vue'
 import PosRefundItemsWidget from './components/pos/PosRefundItemsWidget.vue'
-import PosRefundTotalsWidget from './components/pos/PosRefundTotalsWidget.vue'
 // --- POS transactions. The detail page is a declarative type:"detail" page
 //     (pipelinq-pos-mdm-detail-declarative). The status-gated actions are its
 //     actionsComponent (bespoke /api/pos-transactions endpoints); the totals
@@ -267,7 +266,6 @@ import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 //     the drops are a relatedCollections table, and the variance/diff projection
 //     + drop/count/reconcile actions (bespoke /api/pos-shifts endpoints) are a
 //     kind:'section' bodyWidget. ---
-import CashShiftListView from './views/pos/CashShiftList.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
 import ProspectsView from './views/prospects/ProspectsView.vue'
@@ -512,12 +510,6 @@ const registry = {
 		...HEADER_ACTIONS_META,
 		_note: 'PosRefundDetail actionsComponent: manager-gated Confirm/Reject, which POST to bespoke /api/pos-refunds/{id}/{action} endpoints (posRefund has no x-openregister-lifecycle).',
 	},
-	PosRefundTotalsWidget: {
-		kind: 'widget',
-		component: PosRefundTotalsWidget,
-		...PANEL_WIDGET_META,
-		_note: 'PosRefundDetail grid widget: refund amount excl. VAT, VAT and total refund over the refund lines. Re-reads on cn:page:refresh.',
-	},
 	PosRefundItemsWidget: {
 		kind: 'widget',
 		component: PosRefundItemsWidget,
@@ -531,11 +523,6 @@ const registry = {
 	},
 
 	// --- POS cash drawer. ---
-	CashShiftListView: {
-		kind: 'page',
-		component: CashShiftListView,
-		_note: 'Cash-shift list; custom so rows navigate to the drawer-reconciliation detail and the empty state offers "Shift openen".',
-	},
 	CashShiftHeaderActions: {
 		kind: 'widget',
 		component: CashShiftHeaderActions,

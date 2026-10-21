@@ -5046,7 +5046,7 @@
 		},
 		{
 			"id": "PosRefundDetail",
-			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields auto-render via CnObjectDataWidget. The manager-gated Confirm / Reject actions are the header's actionsComponent (PosRefundHeaderActions). The refund totals (PosRefundTotalsWidget) and the 'Returned items' table (PosRefundItemsWidget) are grid widgets. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) 'Returned items' is a custom widget because it is a CROSS-SCHEMA JOIN: each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer), and an object-list renders ONE schema and cannot resolve a column off a second schema. Missing primitive: an object-list column resolved off a SECOND schema (cross-schema join lookup).",
+			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields auto-render via CnObjectDataWidget. The manager-gated Confirm / Reject actions are the header's actionsComponent (PosRefundHeaderActions). The refund totals are a facts card over the amounts the server stored on the refund; the 'Returned items' table (PosRefundItemsWidget) is a grid widget. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) 'Returned items' is a custom widget because it is a CROSS-SCHEMA JOIN: each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer), and an object-list renders ONE schema and cannot resolve a column off a second schema. Missing primitive: an object-list column resolved off a SECOND schema (cross-schema join lookup).",
 			"route": "/pos/refunds/:id",
 			"type": "detail",
 			"title": "Retour",
@@ -5109,9 +5109,17 @@
 					},
 					{
 						"id": "pos-refund-totals",
-						"type": "PosRefundTotalsWidget",
+						"type": "facts",
 						"title": "Refund totals",
-						"icon": "Cash"
+						"icon": "Cash",
+						"content": {
+							"fields": [
+								{ "path": "refundAmount", "label": "Excl. VAT", "format": "currency" },
+								{ "path": "totalTax", "label": "VAT", "format": "currency" },
+								{ "path": "paymentMethod", "label": "Refunded to", "map": { "cash": "Cash", "card_visa": "Visa", "card_mastercard": "Mastercard", "digital_wallet": "Digital wallet" } }
+							],
+							"emptyText": "No refund lines yet."
+						}
 					},
 					{
 						"id": "pos-refund-items",
@@ -5221,14 +5229,42 @@
 		},
 		{
 			"id": "CashShifts",
-			"_note": "CashShiftList.vue is a CnIndexPage specialised for the cash-drawer shift register (shift-specific columns/state on the cashShift schema); kept as a host-app component while those presets live outside the library.",
+			"_note": "The cash-drawer shift register as a declarative type:index page. Open shift is a header form that posts to the server-authoritative /api/pos-shifts endpoint (operator and float time are set from the session) and opens the new shift.",
 			"route": "/pos/shifts",
-			"type": "custom",
-			"title": "Kassalade",
-			"component": "CashShiftListView",
+			"type": "index",
+			"title": "Cash drawer",
 			"config": {
 				"register": "pipelinq",
-				"schema": "cashShift"
+				"schema": "cashShift",
+				"description": "Manage cash shifts: opening float, drops, blind counting and reconciliation",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"selectable": true,
+				"rowRoute": "CashShiftDetail",
+				"emptyText": "No shifts found",
+				"columns": ["reference", "drawer", "operator", { "key": "floatAmount", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }, { "key": "status", "widget": "badge", "widgetProps": { "colorMap": { "open": "success", "closed": "warning", "reconciled": "default" } } }, "floatAt", "closedAt"],
+				"headerActions": [
+					{
+						"id": "open-shift",
+						"label": "Open shift",
+						"type": "open-form",
+						"icon": "Plus",
+						"variant": "primary",
+						"endpoint": { "url": "/apps/pipelinq/api/pos-shifts", "method": "POST" },
+						"formProperties": {
+							"drawer": { "type": "string", "title": "Drawer", "required": true },
+							"floatAmount": { "type": "number", "minimum": 0, "title": "Opening amount", "required": true },
+							"reference": { "type": "string", "title": "Reference" },
+							"notes": { "type": "string", "title": "Notes" }
+						},
+						"successMessage": "Shift opened.",
+						"onSuccessRoute": { "name": "CashShiftDetail", "idPath": "shift.id" }
+					}
+				]
 			}
 		},
 		{

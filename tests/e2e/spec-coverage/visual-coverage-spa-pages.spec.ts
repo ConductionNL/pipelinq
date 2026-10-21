@@ -150,8 +150,8 @@ test('PipelineBoard: /pipeline mounts src/views/pipeline/PipelineBoard.vue', asy
 	).toBeVisible()
 })
 
-// ── src/views/pos/CashShiftList.vue — page `CashShifts`, route `/pos/shifts` ──
-test('CashShiftList: /pos/shifts mounts src/views/pos/CashShiftList.vue', async ({
+// ── page `CashShifts` (declarative index), route `/pos/shifts` ──
+test('CashShifts: /pos/shifts mounts the cash drawer index', async ({
 	page,
 }) => {
 	await openSpaRoute(page, '/pos/shifts')

@@ -1,6 +1,12 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Visa": "Visa",
+        "Mastercard": "Mastercard",
+        "Digital wallet": "Digitale portemonnee",
+        "Refunded to": "Terug naar",
+        "No refund lines yet.": "Nog geen retourregels.",
+        "Opening amount": "Beginsaldo",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "De klant betaalt op de pinautomaat van {provider}.",
         "The customer is sent to {provider} to finish the payment.": "De klant gaat naar {provider} om de betaling af te ronden.",
