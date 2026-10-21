@@ -118,10 +118,10 @@ export default {
 			successLink: '',
 			recentRequests: [],
 			categoryOptions: [
-				t('pipelinq', 'General'),
-				t('pipelinq', 'Technical'),
-				t('pipelinq', 'Billing'),
-				t('pipelinq', 'Support'),
+				{ id: 'general', label: t('pipelinq', 'General') },
+				{ id: 'technical', label: t('pipelinq', 'Technical') },
+				{ id: 'billing', label: t('pipelinq', 'Billing') },
+				{ id: 'support', label: t('pipelinq', 'Support') },
 			],
 
 			priorityOptions: [
@@ -200,7 +200,7 @@ export default {
 				if (this.form.category) {
 					body.category =
 						typeof this.form.category === 'object'
-							? this.form.category.id || this.form.category.label
+							? this.form.category.id
 							: this.form.category
 				}
 				if (this.form.channel) {

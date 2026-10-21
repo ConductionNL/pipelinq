@@ -116,3 +116,55 @@ export function createUserDisplayNameFormatter(lookup = fetchUserDisplayName) {
 		return PENDING_LABEL
 	}
 }
+
+let assignableUsers = null
+
+/**
+ * The uids a record can be assigned to, from core autocomplete. One request
+ * serves every caller; a failed request answers an empty list and is retried
+ * on the next call.
+ *
+ * @param {number} [limit] How many users to ask for.
+ * @return {Promise<Array<string>>} The uids.
+ * @spec openspec/specs/lead-management/spec.md
+ */
+export function listAssignableUserIds(limit = 200) {
+	if (assignableUsers === null) {
+		assignableUsers = Promise.all([
+			import('@nextcloud/axios'),
+			import('@nextcloud/router'),
+		])
+			.then(([{ default: axios }, { generateOcsUrl }]) =>
+				axios.get(generateOcsUrl('core/autocomplete/get'), {
+					headers: { 'OCS-APIRequest': 'true', Accept: 'application/json' },
+					params: {
+						search: '',
+						itemType: ' ',
+						itemId: ' ',
+						'shareTypes[]': 0,
+						limit,
+					},
+				}),
+			)
+			.then((response) => {
+				const list = response?.data?.ocs?.data
+				return (Array.isArray(list) ? list : [])
+					.map((entry) => (entry && entry.id ? String(entry.id) : ''))
+					.filter(Boolean)
+			})
+			.catch(() => {
+				assignableUsers = null
+				return []
+			})
+	}
+	return assignableUsers
+}
+
+/**
+ * Forget the assignable users, so the next call asks the server again.
+ *
+ * @return {void}
+ */
+export function resetAssignableUsers() {
+	assignableUsers = null
+}
