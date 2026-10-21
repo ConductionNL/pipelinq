@@ -166,13 +166,13 @@ describe('the full profile', () => {
 		expect(count('integrations')).toBe(0)
 	})
 
-	it('holds the header controls back on index pages only, and the simple profile draws the board header', () => {
+	it('holds the header controls back on index pages only, and the simple profile draws the board header with its column filters', () => {
 		expect(fullFile.pageDefaults).toEqual({ index: { headerFilters: false } })
 		expect(simpleFile.pageDefaults).toEqual({
 			index: {
 				showTitle: true,
 				showTitleIcon: false,
-				headerFilters: false,
+				headerFilters: true,
 				headerButtons: [
 					{ action: 'export', label: 'Download' },
 					{ action: 'actions-menu' },
@@ -185,7 +185,7 @@ describe('the full profile', () => {
 		)
 		expect(simpleIndex.length).toBeGreaterThan(0)
 		for (const page of simpleIndex) {
-			expect(page.config?.headerFilters, page.id).toBe(false)
+			expect(page.config?.headerFilters, page.id).toBe(true)
 			expect(page.config?.showTitle, page.id).toBe(true)
 		}
 		const unchanged = { pages: [{ id: 'x', type: 'detail', config: {} }] }
@@ -441,11 +441,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 97 pages as the full profile, so every route stays', () => {
+	it('builds the same 94 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(97)
+		expect(built.pages).toHaveLength(94)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)
@@ -590,6 +590,18 @@ describe('the modules', () => {
 				if (entry.label) continue
 				expect(known.has(entry.id), `${key}: ${entry.id}`).toBe(true)
 			}
+		}
+	})
+
+	it('marketing shows Campaigns and Newsletters only, as the boards draw it; its other pages open from the Modules page', () => {
+		const shown = flat(buildSimple(['marketing']).menu).map((entry) => entry.id)
+		expect(shown).toEqual(expect.arrayContaining(['MarketingCaption', 'CampaignsMenu', 'BlastsMenu']))
+		for (const id of ['MarketingGroup', 'Segments', 'Templates', 'Journeys', 'SocialPosts', 'KeywordIntelligence', 'SearchQueries']) {
+			expect(shown, id).not.toContain(id)
+		}
+		const routes = new Set(buildSimple(['marketing']).pages.map((page) => page.id))
+		for (const id of ['Segments', 'Templates', 'Journeys', 'SocialPosts', 'KeywordIntelligence', 'SearchQueries']) {
+			expect(routes.has(id), id).toBe(true)
 		}
 	})
 
