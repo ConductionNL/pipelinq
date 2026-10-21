@@ -33,14 +33,14 @@ test.describe('mail block editor', () => {
 		await page.getByLabel('Template name').fill(`E2E blocks ${STAMP}`)
 		await page.getByLabel('Reply-to email').fill('reply@example.nl')
 		await editor
-			.getByTestId('mail-block-heading')
-			.locator('.mail-block-editor__select')
+			.getByTestId('cn-block-heading')
+			.locator('.cn-block-list-editor__select')
 			.click()
 		await page.getByLabel('Heading text').fill('Autumn news')
-		await editor.getByTestId('mail-block-add-button').click()
+		await editor.getByTestId('cn-block-add-button').click()
 		await page.getByLabel('Button text').fill('Read more')
 		await page.getByLabel('Link (https://)').fill('https://www.example.nl')
-		await editor.getByTestId('mail-block-add-articles').click()
+		await editor.getByTestId('cn-block-add-articles').click()
 
 		// Move the button up with the keyboard; focus stays on the moved block.
 		const up = editor.getByRole('button', { name: 'Move Button up' })
@@ -70,7 +70,7 @@ test.describe('mail block editor', () => {
 		await expect(page.getByTestId('template-block-editor')).toBeVisible({
 			timeout: 30000,
 		})
-		await expect(page.getByTestId('mail-block-button')).toBeVisible()
+		await expect(page.getByTestId('cn-block-button')).toBeVisible()
 		await expect(page.getByLabel('Reply-to email')).toHaveValue(
 			'reply@example.nl',
 		)

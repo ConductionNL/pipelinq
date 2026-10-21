@@ -6,7 +6,7 @@
   - than the slot's `confirm`, because only that endpoint runs the compliance
   - check, and then calls the slot's `refresh` so the list shows the result.
   -
-  - An email template is built from blocks (MailBlockEditor) or written as
+  - An email template is built from blocks (CnBlockListEditor) or written as
   - HTML (marketing-block-editor). A new email template opens in Blocks mode;
   - one saved without blocks opens in HTML mode as before. The server renders
   - the blocks on save and for the preview.
@@ -198,9 +198,14 @@
 						referrerpolicy="no-referrer"
 						:title="t('pipelinq', 'HTML body preview')"
 						:srcdoc="previewDocument" />
-					<MailBlockEditor
+					<CnBlockListEditor
 						v-else-if="isBlocks"
 						v-model="model.blocks"
+						:types="blockTypes"
+						pinnedLast="footer"
+						:createBlock="createMailBlock"
+						:addLabel="t('pipelinq', 'Add a block')"
+						:listLabel="t('pipelinq', 'Blocks')"
 						data-testid="template-block-editor" />
 					<NcTextArea
 						v-else
@@ -292,6 +297,7 @@
 </template>
 
 <script>
+import { CnBlockListEditor } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -306,9 +312,8 @@ import {
 } from '@nextcloud/vue'
 import CodeTags from 'vue-material-design-icons/CodeTags.vue'
 import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
-import MailBlockEditor from '../components/templates/MailBlockEditor.vue'
 import { fetchArticles } from '../services/articlesApi.js'
-import { starterBlocks, withFooterLast } from '../services/mailBlocks.js'
+import { mailBlockTypes, newBlock, starterBlocks, withFooterLast } from '../services/mailBlocks.js'
 import {
 	orderedArticleIds,
 	publishedOnly,
@@ -376,9 +381,9 @@ function blankModel() {
 export default {
 	name: 'TemplateFormDialog',
 	components: {
+		CnBlockListEditor,
 		CodeTags,
 		EyeOutline,
-		MailBlockEditor,
 		NcButton,
 		NcDialog,
 		NcLoadingIcon,
@@ -437,6 +442,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The mail block types for the block editor, in the reader's language.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
+		 */
+		blockTypes() {
+			return mailBlockTypes((text) => this.t('pipelinq', text))
+		},
+
 		/**
 		 * The id of the template being edited, or null when creating one.
 		 *
@@ -750,6 +765,17 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * A new mail block of a type, with its empty content.
+		 *
+		 * @param {string} type The block type.
+		 * @return {object} The block.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
+		 */
+		createMailBlock(type) {
+			return newBlock(type)
+		},
+
 		/**
 		 * Clear the form, load the articles, and read the template when editing one.
 		 *

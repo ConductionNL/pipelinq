@@ -32,19 +32,19 @@ vi.mock('@nextcloud/dialogs', () => ({ showSuccess: vi.fn() }))
 vi.mock('../../src/services/articlesApi.js', () => ({
 	fetchArticles: () => Promise.resolve([]),
 }))
+// The block editor is the library's CnBlockListEditor; here it only has to
+// show that it is mounted with the mail block types and hand back what it is
+// given.
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnMarkdownEditor: { render: () => null },
-}))
-// The block editor is tested on its own (mailBlockEditor.spec.js); here it
-// only has to show that it is mounted and hand back what it is given.
-vi.mock('../../src/components/templates/MailBlockEditor.vue', () => ({
-	default: {
-		name: 'MailBlockEditor',
-		props: ['modelValue'],
+	CnBlockListEditor: {
+		name: 'CnBlockListEditor',
+		props: ['modelValue', 'types', 'pinnedLast'],
 		render() {
 			return h('div', {
 				'data-stub': 'block-editor',
 				'data-count': String((this.modelValue || []).length),
+				'data-pinned': this.pinnedLast,
 			})
 		},
 	},
