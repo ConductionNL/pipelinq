@@ -526,7 +526,6 @@ const registry = {
 		_note: 'Wraps CnIndexPage with the lead-management stale filter, overdue row highlighting and platform mass import/export dialogs (REQ-LM-002/004/005).',
 	},
 
-
 	// --- Admin managers. ---
 	PipelineManagerView: {
 		kind: 'page',
