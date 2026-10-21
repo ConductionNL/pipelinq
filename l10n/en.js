@@ -7983,7 +7983,25 @@ OC.L10N.register(
         "{summary.gapPercent}% below quota": "{summary.gapPercent}% below quota",
         "Quarter %1$s of %2$s": "Quarter %1$s of %2$s",
         "This team is %1$s%% below quota with %2$s days to close. Action recommended.": "This team is %1$s%% below quota with %2$s days to close. Action recommended.",
-        "Weekly snapshots, taken every Monday": "Weekly snapshots, taken every Monday"
+        "Weekly snapshots, taken every Monday": "Weekly snapshots, taken every Monday",
+        "An agent wrote this summary": "An agent wrote this summary",
+        "Authentication required": "Authentication required",
+        "Forbidden": "Forbidden",
+        "Linear": "Linear",
+        "No channel has run for this campaign yet.": "No channel has run for this campaign yet.",
+        "No lead came from this campaign yet.": "No lead came from this campaign yet.",
+        "No review yet. Send a mailing, publish a post or connect Search Console, and last week's numbers appear here.": "No review yet. Send a mailing, publish a post or connect Search Console, and last week's numbers appear here.",
+        "No suggestions this week.": "No suggestions this week.",
+        "No topic ideas this week.": "No topic ideas this week.",
+        "Nothing is attributed yet.": "Nothing is attributed yet.",
+        "Nothing moved last week.": "Nothing moved last week.",
+        "Sources with nothing yet: missing data, not a zero": "Sources with nothing yet: missing data, not a zero",
+        "The campaign's own model": "The campaign's own model",
+        "This journey has not run yet. Once its trigger fires, every contact it reached and every contact it refused is listed here.": "This journey has not run yet. Once its trigger fires, every contact it reached and every contact it refused is listed here.",
+        "Week of": "Week of",
+        "Paid invoice": "Paid invoice",
+        "Won lead": "Won lead",
+        "{counts.sent} sent, {counts.refused} refused, {counts.failed} failed": "{counts.sent} sent, {counts.refused} refused, {counts.failed} failed"
     },
     "nplurals=2; plural=(n != 1);"
 )

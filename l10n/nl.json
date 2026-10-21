@@ -7966,6 +7966,26 @@
         "{summary.gapPercent}% below quota": "{summary.gapPercent}% onder de quota",
         "Quarter %1$s of %2$s": "Kwartaal %1$s van %2$s",
         "This team is %1$s%% below quota with %2$s days to close. Action recommended.": "Dit team zit %1$s%% onder de quota met nog %2$s dagen te gaan. Actie aanbevolen.",
-        "Weekly snapshots, taken every Monday": "Wekelijkse momentopnamen, elke maandag gemaakt"
+        "Weekly snapshots, taken every Monday": "Wekelijkse momentopnamen, elke maandag gemaakt",
+        "An agent wrote this summary": "Een agent schreef deze samenvatting",
+        "Authentication required": "Aanmelden vereist",
+        "Compose again": "Opnieuw samenstellen",
+        "Forbidden": "Geen toegang",
+        "No channel has run for this campaign yet.": "Er is nog geen kanaal gedraaid voor deze campagne.",
+        "No lead came from this campaign yet.": "Er is nog geen lead uit deze campagne gekomen.",
+        "No review yet. Send a mailing, publish a post or connect Search Console, and last week's numbers appear here.": "Nog geen terugblik. Verstuur een mailing, publiceer een bericht of koppel Search Console, en de cijfers van vorige week verschijnen hier.",
+        "No suggestions this week.": "Deze week geen suggesties.",
+        "No topic ideas this week.": "Deze week geen onderwerpideeën.",
+        "Nothing is attributed yet.": "Er is nog niets toegerekend.",
+        "Nothing moved last week.": "Vorige week is er niets veranderd.",
+        "Sources with nothing yet: missing data, not a zero": "Bronnen zonder gegevens: ontbrekende data, geen nul",
+        "The campaign's own model": "Het eigen model van de campagne",
+        "This journey has not run yet. Once its trigger fires, every contact it reached and every contact it refused is listed here.": "Deze journey is nog niet gedraaid. Zodra de trigger afgaat, staat hier elk contact dat bereikt is en elk contact dat geweigerd is.",
+        "Week of": "Week van",
+        "What moved": "Wat veranderde",
+        "What to try": "Wat te proberen",
+        "Paid invoice": "Betaalde factuur",
+        "Won lead": "Gewonnen lead",
+        "{counts.sent} sent, {counts.refused} refused, {counts.failed} failed": "{counts.sent} verstuurd, {counts.refused} geweigerd, {counts.failed} mislukt"
     }
 }
