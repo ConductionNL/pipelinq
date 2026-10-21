@@ -226,7 +226,7 @@ class PosPaymentController extends Controller {
 
 		if ($providerName === '' || $paymentMethod === '') {
 			return new JSONResponse(
-				['error' => $this->l10n->t('Betaalmethode niet geconfigureerd')],
+				['error' => $this->l10n->t('Choose a payment method.')],
 				Http::STATUS_UNPROCESSABLE_ENTITY
 			);
 		}
