@@ -2865,14 +2865,69 @@
 					},
 					{
 						"id": "resident-view",
-						"component": "ResidentViewSection",
+						"type": "facts",
+						"title": "What the resident sees",
 						"placement": "after-data",
-						"_note": "No title: the section draws its own heading, because it renders nothing on complaint and interaction tickets (portal-resident-view-preview).",
-						"props": {
-							"ticketId": "@objectId",
-							"ticketType": "@object.ticketType",
-							"customerMessage": "@object.customerMessage",
-							"status": "@object.status"
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"_note": "The resident-view preview (portal-resident-view-preview): the server answers the panels as labelled rows (ResidentViewRows), so these are facts cards. Complaint and interaction tickets get none: the portal does not serve them.",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "residentRows",
+							"fields": [],
+							"hideEmpty": false,
+							"notice": {
+								"text": "Everything else on this ticket stays internal."
+							},
+							"emptyText": "The resident portal does not show this ticket.",
+							"errorText": "What the resident sees could not be loaded."
+						}
+					},
+					{
+						"id": "resident-view-portal",
+						"type": "facts",
+						"title": "In the organisation portal",
+						"placement": "after-data",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "portalRows",
+							"fields": [],
+							"hideEmpty": false,
+							"emptyText": "This ticket is not shown in an organisation portal.",
+							"errorText": "What the resident sees could not be loaded."
+						}
+					},
+					{
+						"id": "resident-view-internal",
+						"type": "facts",
+						"title": "Stays internal",
+						"placement": "after-data",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "internalRows",
+							"fields": [],
+							"hideEmpty": false,
+							"emptyText": "Nothing on this ticket stays internal.",
+							"errorText": "What the resident sees could not be loaded."
 						}
 					},
 					{
