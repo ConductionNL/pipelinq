@@ -1,5 +1,17 @@
 {
     "translations": {
+        "Price tier": "Price tier",
+        "Add price tier": "Add price tier",
+        "No price tiers. The unit price applies to every quantity.": "No price tiers. The unit price applies to every quantity.",
+        "Variant": "Variant",
+        "No variants.": "No variants.",
+        "Modifier group": "Modifier group",
+        "Add modifier group": "Add modifier group",
+        "No modifier groups.": "No modifier groups.",
+        "More than one": "More than one",
+        "At least": "At least",
+        "At most": "At most",
+        "None yet. Add them with Edit.": "None yet. Add them with Edit.",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "The customer pays at the {provider} card terminal.",
         "The customer is sent to {provider} to finish the payment.": "The customer is sent to {provider} to finish the payment.",

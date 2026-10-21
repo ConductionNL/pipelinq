@@ -625,6 +625,97 @@
 			"type": "dashboard",
 			"title": "Sales overview",
 			"config": {
+				"fieldOverrides": {
+					"priceTiers": {
+						"widget": "sub-objects",
+						"inline": true,
+						"label": "Price tiers",
+						"itemLabel": "Price tier",
+						"addLabel": "Add price tier",
+						"emptyText": "No price tiers. The unit price applies to every quantity.",
+						"itemOverrides": {
+							"minQuantity": {
+								"label": "From quantity"
+							},
+							"unitPrice": {
+								"label": "Unit price"
+							},
+							"label": {
+								"label": "Label"
+							}
+						}
+					},
+					"variants": {
+						"widget": "sub-objects",
+						"label": "Variants",
+						"itemLabel": "Variant",
+						"addLabel": "Add variant",
+						"emptyText": "No variants.",
+						"newItem": {
+							"status": "active"
+						},
+						"itemOverrides": {
+							"sku": {
+								"label": "SKU"
+							},
+							"name": {
+								"label": "Name"
+							},
+							"unitPrice": {
+								"label": "Unit price"
+							},
+							"barcode": {
+								"label": "Barcode"
+							},
+							"status": {
+								"label": "Status",
+								"enumLabels": {
+									"active": "Active",
+									"inactive": "Inactive"
+								}
+							},
+							"attributes": {
+								"label": "Attributes"
+							}
+						}
+					},
+					"modifierGroups": {
+						"widget": "sub-objects",
+						"label": "Modifier groups",
+						"itemLabel": "Modifier group",
+						"addLabel": "Add modifier group",
+						"emptyText": "No modifier groups.",
+						"newItem": {
+							"required": false,
+							"multiSelect": false,
+							"min": 0,
+							"max": 1
+						},
+						"itemOverrides": {
+							"name": {
+								"label": "Name"
+							},
+							"required": {
+								"label": "Required"
+							},
+							"multiSelect": {
+								"label": "More than one"
+							},
+							"min": {
+								"label": "At least"
+							},
+							"max": {
+								"label": "At most"
+							},
+							"options": {
+								"widget": "sub-objects",
+								"label": "Options",
+								"itemLabel": "Option",
+								"addLabel": "Add option"
+							}
+						}
+					}
+				},
 				"showRefresh": true,
 				"widgetShowRefresh": false,
 				"headerActions": [
@@ -4548,6 +4639,97 @@
 			"type": "detail",
 			"title": "Product",
 			"config": {
+				"fieldOverrides": {
+					"priceTiers": {
+						"widget": "sub-objects",
+						"inline": true,
+						"label": "Price tiers",
+						"itemLabel": "Price tier",
+						"addLabel": "Add price tier",
+						"emptyText": "No price tiers. The unit price applies to every quantity.",
+						"itemOverrides": {
+							"minQuantity": {
+								"label": "From quantity"
+							},
+							"unitPrice": {
+								"label": "Unit price"
+							},
+							"label": {
+								"label": "Label"
+							}
+						}
+					},
+					"variants": {
+						"widget": "sub-objects",
+						"label": "Variants",
+						"itemLabel": "Variant",
+						"addLabel": "Add variant",
+						"emptyText": "No variants.",
+						"newItem": {
+							"status": "active"
+						},
+						"itemOverrides": {
+							"sku": {
+								"label": "SKU"
+							},
+							"name": {
+								"label": "Name"
+							},
+							"unitPrice": {
+								"label": "Unit price"
+							},
+							"barcode": {
+								"label": "Barcode"
+							},
+							"status": {
+								"label": "Status",
+								"enumLabels": {
+									"active": "Active",
+									"inactive": "Inactive"
+								}
+							},
+							"attributes": {
+								"label": "Attributes"
+							}
+						}
+					},
+					"modifierGroups": {
+						"widget": "sub-objects",
+						"label": "Modifier groups",
+						"itemLabel": "Modifier group",
+						"addLabel": "Add modifier group",
+						"emptyText": "No modifier groups.",
+						"newItem": {
+							"required": false,
+							"multiSelect": false,
+							"min": 0,
+							"max": 1
+						},
+						"itemOverrides": {
+							"name": {
+								"label": "Name"
+							},
+							"required": {
+								"label": "Required"
+							},
+							"multiSelect": {
+								"label": "More than one"
+							},
+							"min": {
+								"label": "At least"
+							},
+							"max": {
+								"label": "At most"
+							},
+							"options": {
+								"widget": "sub-objects",
+								"label": "Options",
+								"itemLabel": "Option",
+								"addLabel": "Add option"
+							}
+						}
+					}
+				},
 				"register": "pipelinq",
 				"schema": "product",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -4568,6 +4750,7 @@
 										"product-data",
 										"product-tiers",
 										"product-variants",
+										"product-modifiers",
 										"product-lines",
 										"product-files"
 									]
@@ -4612,28 +4795,107 @@
 					},
 					{
 						"id": "product-tiers",
-						"type": "data",
+						"type": "field-list",
 						"title": "Price tiers",
 						"icon": "Stairs",
 						"content": {
-							"columns": 1,
-							"include": [
-								"priceTiers"
+							"field": "priceTiers",
+							"variant": "table",
+							"readOnly": true,
+							"columns": [
+								{
+									"header": "From quantity",
+									"path": "minQuantity"
+								},
+								{
+									"header": "Unit price",
+									"path": "unitPrice"
+								},
+								{
+									"header": "Label",
+									"path": "label"
+								}
 							],
-							"hideEmpty": false
+							"emptyText": "None yet. Add them with Edit."
 						}
 					},
 					{
 						"id": "product-variants",
-						"type": "data",
+						"type": "field-list",
 						"title": "Variants",
 						"icon": "ShapeOutline",
 						"content": {
-							"columns": 1,
-							"include": [
-								"variants"
+							"field": "variants",
+							"variant": "table",
+							"readOnly": true,
+							"columns": [
+								{
+									"header": "SKU",
+									"path": "sku",
+									"strong": true
+								},
+								{
+									"header": "Name",
+									"path": "name"
+								},
+								{
+									"header": "Unit price",
+									"path": "unitPrice"
+								},
+								{
+									"header": "Barcode",
+									"path": "barcode"
+								},
+								{
+									"header": "Status",
+									"path": "status",
+									"pill": true,
+									"map": {
+										"active": "Active",
+										"inactive": "Inactive"
+									},
+									"variantMap": {
+										"active": "success",
+										"inactive": "default"
+									}
+								}
 							],
-							"hideEmpty": false
+							"emptyText": "None yet. Add them with Edit."
+						}
+					},
+					{
+						"id": "product-modifiers",
+						"type": "field-list",
+						"title": "Modifier groups",
+						"icon": "PlaylistPlus",
+						"content": {
+							"field": "modifierGroups",
+							"variant": "table",
+							"readOnly": true,
+							"columns": [
+								{
+									"header": "Name",
+									"path": "name",
+									"strong": true
+								},
+								{
+									"header": "Required",
+									"path": "required",
+									"map": {
+										"true": "Yes",
+										"false": "No"
+									}
+								},
+								{
+									"header": "At least",
+									"path": "min"
+								},
+								{
+									"header": "At most",
+									"path": "max"
+								}
+							],
+							"emptyText": "None yet. Add them with Edit."
 						}
 					},
 					{

@@ -141,6 +141,7 @@ import Phone from 'vue-material-design-icons/Phone.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
+import PlaylistPlus from 'vue-material-design-icons/PlaylistPlus.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
 import Receipt from 'vue-material-design-icons/Receipt.vue'
@@ -152,6 +153,7 @@ import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
 import SchoolOutline from 'vue-material-design-icons/SchoolOutline.vue'
 import SendCheckOutline from 'vue-material-design-icons/SendCheckOutline.vue'
 import Server from 'vue-material-design-icons/Server.vue'
+import ShapeOutline from 'vue-material-design-icons/ShapeOutline.vue'
 import ShieldAccountOutline from 'vue-material-design-icons/ShieldAccountOutline.vue'
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
@@ -159,6 +161,7 @@ import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import SortDescending from 'vue-material-design-icons/SortDescending.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import SourceMerge from 'vue-material-design-icons/SourceMerge.vue'
+import Stairs from 'vue-material-design-icons/Stairs.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import TableColumn from 'vue-material-design-icons/TableColumn.vue'
@@ -284,6 +287,9 @@ export default {
 	Heart,
 	History,
 	HomeOutline,
+	PlaylistPlus,
+	ShapeOutline,
+	Stairs,
 	ViewDashboardOutline,
 	InboxOutline,
 	InformationOutline,

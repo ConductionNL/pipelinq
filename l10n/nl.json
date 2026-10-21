@@ -1,5 +1,17 @@
 {
     "translations": {
+        "Price tier": "Staffelprijs",
+        "Add price tier": "Staffelprijs toevoegen",
+        "No price tiers. The unit price applies to every quantity.": "Geen staffelprijzen. De stukprijs geldt voor elke hoeveelheid.",
+        "Variant": "Variant",
+        "No variants.": "Geen varianten.",
+        "Modifier group": "Optiegroep",
+        "Add modifier group": "Optiegroep toevoegen",
+        "No modifier groups.": "Geen optiegroepen.",
+        "More than one": "Meer dan een",
+        "At least": "Minstens",
+        "At most": "Hoogstens",
+        "None yet. Add them with Edit.": "Nog geen. Voeg ze toe met Bewerken.",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "De klant betaalt op de pinautomaat van {provider}.",
         "The customer is sent to {provider} to finish the payment.": "De klant gaat naar {provider} om de betaling af te ronden.",
