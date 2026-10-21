@@ -7726,7 +7726,10 @@ OC.L10N.register(
         "The ticket": "Het ticket",
         "People": "Mensen",
         "Dates and links": "Datums en koppelingen",
-        "Visible to the customer": "Zichtbaar voor de klant"
+        "Visible to the customer": "Zichtbaar voor de klant",
+        "Client added": "Klant toegevoegd",
+        "No recent requests": "Geen recente verzoeken",
+        "Lead title (required)": "Leadtitel (verplicht)"
     },
     "nplurals=2; plural=(n != 1);"
 )

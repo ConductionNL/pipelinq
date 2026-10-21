@@ -272,7 +272,7 @@ Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\
 #### Scenario: Widget script loading
 @e2e exclude webpack bundle loading; covered by smoke test
 - WHEN a Nextcloud dashboard widget's `load()` method is called
-- THEN it MUST register the widget's JavaScript bundle via `Util::addScript(APP_ID, APP_ID . '-{widgetName}')` (e.g., `pipelinq-dealsOverviewWidget`)
+- THEN it MUST register the one dashboard widget bundle via `Util::addScript(APP_ID, APP_ID . '-ncDashboardWidgets')`, which registers every `pipelinq_*` widget from configuration (`src/ncDashboardWidgets.js`, nextcloud-vue `registerNcDashboardWidgets`)
 - AND it MUST load shared dashboard widget styles via `Util::addStyle(APP_ID, 'dashboardWidgets')`
 
 ---

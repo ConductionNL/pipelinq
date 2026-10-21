@@ -7799,7 +7799,10 @@ OC.L10N.register(
         "The ticket": "The ticket",
         "People": "People",
         "Dates and links": "Dates and links",
-        "Visible to the customer": "Visible to the customer"
+        "Visible to the customer": "Visible to the customer",
+        "Client added": "Client added",
+        "No recent requests": "No recent requests",
+        "Lead title (required)": "Lead title (required)"
     },
     "nplurals=2; plural=(n != 1);"
 )
