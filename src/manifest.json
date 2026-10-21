@@ -1441,8 +1441,23 @@
 					},
 					{
 						"id": "billing-categories",
-						"type": "custom",
-						"title": "Hours by billing category"
+						"type": "chart",
+						"title": "Hours by billing category",
+						"content": {
+							"chartKind": "donut",
+							"emptyLabel": "When approved time entries are present, hours will be shown per billing category here.",
+							"dataSource": {
+								"register": "pipelinq",
+								"schema": "billingTimeEntry",
+								"filter": { "status": "approved" },
+								"aggregate": {
+									"groupBy": "billingCategory",
+									"metric": "sum",
+									"sumField": "hours",
+									"labelResolve": { "schema": "billingCategory", "labelField": "name", "colorField": "color" }
+								}
+							}
+						}
 					},
 					{
 						"id": "navi-analytics",
@@ -1668,7 +1683,6 @@
 			"_note": "The Customer Satisfaction KPI (SatisfactionKpiWidget, widget id 'satisfaction', layout slot 17) was removed 2026-07 because its data source was empty after the forms-leaf migration. Satisfaction returns as the survey response-rate widget (survey-response-rate), fed by the closed-loop invitations of customer-satisfaction-closed-loop.",
 			"slots": {
 				"widget-my-work": "MyWorkWidget",
-				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
 				"widget-report-export": "ReportExportPanel",
 				"widget-xwiki-knowledge": "XWikiDashboardWidget"

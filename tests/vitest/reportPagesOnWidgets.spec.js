@@ -223,3 +223,24 @@ describe('satisfaction', () => {
 		expect(comments.content.endpointSource.responsePath).toBe('verbatims')
 	})
 })
+
+describe('billing categories', () => {
+	it('charts approved hours per billing category, aggregated on the server', () => {
+		const p = page('OperationalDashboard')
+		const chart = widget(p, 'billing-categories')
+		expect(chart.type).toBe('chart')
+		expect(chart.content.chartKind).toBe('donut')
+		expect(chart.content.dataSource).toEqual({
+			register: 'pipelinq',
+			schema: 'billingTimeEntry',
+			filter: { status: 'approved' },
+			aggregate: {
+				groupBy: 'billingCategory',
+				metric: 'sum',
+				sumField: 'hours',
+				labelResolve: { schema: 'billingCategory', labelField: 'name', colorField: 'color' },
+			},
+		})
+		expect(p.slots['widget-billing-categories']).toBeUndefined()
+	})
+})

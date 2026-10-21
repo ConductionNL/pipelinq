@@ -47,11 +47,6 @@ import ContactLinks from './components/ContactLinks.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
 import CustomerReplySection from './components/CustomerReplySection.vue'
-// --- Billing categories (billable-categories-and-tags): list view with a
-//     bespoke color-swatch + DBA / active badge column layout the
-//     declarative type:"index" page cannot express. Donut widget for the
-//     dashboard (hours per billing category) registered as a slot. ---
-import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
 import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
 // --- Articles — the content hub for a mailing and a post (marketing-article-hub).
@@ -675,17 +670,6 @@ const registry = {
 		kind: 'page',
 		component: KassakoppelingAuditDetailView,
 		_note: 'Read-only Kassakoppeling audit entry detail: verification status badge ramp (green ok / red tampered / grey pending), summary + entry + crypto cards with truncated hex digests + copy buttons, an optional transaction-link card linking to pos-transaction-core and the manual server-side verify action (pos-kassakoppeling-audit REQ-AUDIT-002 / REQ-AUDIT-004 / REQ-AUDIT-006).',
-	},
-
-	// --- Billing categories (billable-categories-and-tags). The Billing categories
-	//     PAGES are gone (nav-ia-cleanup) but the schema and its objects stay:
-	//     ShillinqWipService reads them, and this widget still charts hours by
-	//     category on the Operational dashboard. ---
-	BillingCategoryWidget: {
-		kind: 'widget',
-		component: BillingCategoryWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Donut chart of hours per billing category for the Dashboard (REQ-BCT-004). Clicking a segment navigates to the time entry list filtered by that category.',
 	},
 
 	// --- Client / Contact 360 detail in-body sections (kind:'section').
