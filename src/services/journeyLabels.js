@@ -39,28 +39,3 @@ export function flowStatusMessage(journey, t) {
 	return ''
 }
 
-/**
- * The sources a review found nothing in at all.
- *
- * An empty source is NEVER a zero. "0 competitor moves" on an instance with
- * no watches configured is the kind of number a reader believes.
- *
- * @param {object} review The composed review.
- * @return {Array<string>} The empty source slugs.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
- */
-export function degradedSources(review) {
-	const degraded = review?.degraded
-	return Array.isArray(degraded) ? degraded : []
-}
-
-/**
- * Whether a review's narrative was written by an agent (ADR-088).
- *
- * @param {object} review The composed review.
- * @return {boolean} True when an agent wrote it.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-narrative-mark-has-storage-and-a-renderer-and-no-writer-yet
- */
-export function isAgentAuthored(review) {
-	return Boolean(review?.agentAuthored) && Boolean(review?.agentAuthoredBy)
-}

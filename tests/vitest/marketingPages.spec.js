@@ -159,3 +159,21 @@ describe('journey runs', () => {
 		expect(columns.reason.enumLabels.no_consent).not.toBe(columns.reason.enumLabels.no_transport)
 	})
 })
+
+describe('weekly review', () => {
+	const page = readJson('src', 'manifest.d', '79-marketing-journeys.json').pages.find((p) => p.id === 'WeeklyReviewPage')
+
+	it('reads the review in one response and names the sources that held nothing', () => {
+		expect(page.type).toBe('dashboard')
+		const summary = page.config.widgets.find((w) => w.id === 'weekly-review-summary')
+		expect(summary.content.endpointSource).toEqual({ url: '/apps/pipelinq/api/weekly-review' })
+		const degraded = summary.content.fields.find((f) => f.path === 'degraded')
+		expect(degraded).toMatchObject({ format: 'list' })
+		expect(degraded.label).toMatch(/missing data, not a zero/)
+		expect(summary.content.fields.some((f) => f.path === 'agentAuthoredBy')).toBe(true)
+		for (const [id, path] of [['weekly-review-highlights', 'highlights'], ['weekly-review-suggestions', 'suggestions'], ['weekly-review-ideas', 'topicIdeas']]) {
+			expect(page.config.widgets.find((w) => w.id === id).content.endpointSource.responsePath).toBe(path)
+		}
+		expect(page.config.headerActions[0]).toMatchObject({ type: 'api-call', method: 'POST', url: '/apps/pipelinq/api/weekly-review/generate' })
+	})
+})

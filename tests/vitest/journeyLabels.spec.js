@@ -13,9 +13,7 @@
 
 import { describe, expect, it } from 'vitest'
 import {
-	degradedSources,
 	flowStatusMessage,
-	isAgentAuthored,
 } from '../../src/services/journeyLabels.js'
 
 /**
@@ -53,27 +51,3 @@ describe('flowStatusMessage', () => {
 	})
 })
 
-describe('degradedSources', () => {
-	it('names an absent source', () => {
-		expect(degradedSources({ degraded: ['watchEvent'] })).toEqual(['watchEvent'])
-	})
-
-	it('answers an empty list, never a zero, when nothing is absent', () => {
-		expect(degradedSources({ degraded: [] })).toEqual([])
-		expect(degradedSources({})).toEqual([])
-		expect(degradedSources(null)).toEqual([])
-	})
-})
-
-describe('isAgentAuthored', () => {
-	it('needs both the flag and the author before it claims one', () => {
-		expect(
-			isAgentAuthored({ agentAuthored: true, agentAuthoredBy: 'hermiq:x' }),
-		).toBe(true)
-		expect(isAgentAuthored({ agentAuthored: true, agentAuthoredBy: '' })).toBe(
-			false,
-		)
-		expect(isAgentAuthored({ agentAuthored: false })).toBe(false)
-		expect(isAgentAuthored(null)).toBe(false)
-	})
-})

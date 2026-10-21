@@ -57,32 +57,6 @@ export async function saveJourney(payload, journeyId = '') {
 }
 
 /**
- * The weekly review, in one request.
- *
- * @return {Promise<object>} The review.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
- */
-export async function fetchWeeklyReview() {
-	const { data } = await axios.get(generateUrl('/apps/pipelinq/api/weekly-review'))
-	return data
-}
-
-/**
- * Compose the review again for one week.
- *
- * @param {string} weekStarting The Monday as `YYYY-MM-DD`, empty for last week.
- * @return {Promise<object>} The stored review.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
- */
-export async function generateWeeklyReview(weekStarting = '') {
-	const { data } = await axios.post(
-		generateUrl('/apps/pipelinq/api/weekly-review/generate'),
-		{ weekStarting },
-	)
-	return data
-}
-
-/**
  * The derived segment fields, and whether the bookkeeping behind them reads.
  *
  * @return {Promise<object>} `{catalogue, availability}`.
