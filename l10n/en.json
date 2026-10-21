@@ -1,5 +1,9 @@
 {
     "translations": {
+        "Question about the dossier \"{subjectReference.title}\"": "Question about the dossier \"{subjectReference.title}\"",
+        "{workload}/{maxConcurrent} items": "{workload}/{maxConcurrent} items",
+        "Assign to {displayName}": "Assign to {displayName}",
+        "{value} matching colleagues at capacity": "{value} matching colleagues at capacity",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "The customer pays at the {provider} card terminal.",
         "The customer is sent to {provider} to finish the payment.": "The customer is sent to {provider} to finish the payment.",

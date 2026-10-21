@@ -1208,9 +1208,24 @@
 					},
 					{
 						"id": "ticket-dossier",
-						"type": "DossierSnapshotWidget",
+						"type": "field-list",
 						"title": "Asked about",
-						"icon": "FolderOutline"
+						"icon": "FolderOutline",
+						"visibleWhen": {
+							"field": "subjectReference",
+							"op": "notEmpty"
+						},
+						"content": {
+							"field": "subjectReference.items",
+							"readOnly": true,
+							"lead": "Question about the dossier \"{subjectReference.title}\"",
+							"row": {
+								"title": "title",
+								"href": "url"
+							},
+							"hint": "This is what the resident saw when they asked.",
+							"emptyText": "The dossier held no documents when the question was asked."
+						}
 					},
 					{
 						"id": "ticket-woo",

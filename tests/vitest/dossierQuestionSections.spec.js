@@ -8,8 +8,10 @@
  * sections on TicketDetail, each mounted with the HTTP layer and the object
  * store replaced:
  *
- * - DossierSnapshotSection lists the dossier as the resident saw it, with
- *   links, and renders nothing for an ordinary ticket.
+ * - The dossier as the resident saw it is a read-only `field-list` over the
+ *   ticket's snapshot, with links, shown only on a ticket that has one. Its
+ *   drawing is nextcloud-vue's (CnFieldListWidgetLinksLeadAfterSave.spec.js);
+ *   this file pins the config.
  * - CustomerReplySection writes customerMessage (and awaiting_customer on
  *   "Send answer" with the wait box ticked) while keeping the rest of the ticket, since
  *   the store's save is a PUT that replaces the object.
@@ -100,8 +102,6 @@ vi.mock('@nextcloud/vue', () => ({
 	},
 }))
 
-const { default: DossierSnapshotSection } =
-	await import('../../src/components/DossierSnapshotSection.vue')
 const { default: CustomerReplySection } =
 	await import('../../src/components/CustomerReplySection.vue')
 const { default: WooConversionSection } =
@@ -151,51 +151,30 @@ async function mountFor(component) {
 	return wrapper
 }
 
-describe('DossierSnapshotSection', () => {
-	beforeEach(() => {
-		storeMock.fetchObject.mockReset()
-	})
-
-	it('shows the dossier title and its three items with links (REQ-QCD-006)', async () => {
-		storeMock.fetchObject.mockResolvedValue({ ...question })
-		const wrapper = await mountFor(DossierSnapshotSection)
-
-		expect(storeMock.fetchObject).toHaveBeenCalledWith('ticket', 't-9')
-		expect(wrapper.text()).toContain(
-			'Question about the dossier "Windpark Noord"',
+describe('the dossier snapshot', () => {
+	const section = () =>
+		JSON.parse(
+			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
 		)
-		const items = wrapper.findAll('li')
-		expect(items).toHaveLength(3)
-		const links = wrapper.findAll('a')
-		expect(links.map((a) => a.attributes('href'))).toEqual([
-			'https://gemeente.example/index.php/apps/opencatalogi/api/search/p-1',
-			'https://gemeente.example/index.php/apps/opencatalogi/api/search/p-2',
-		])
-		expect(links[0].attributes('rel')).toBe('noopener noreferrer')
-		expect(items[2].text()).toBe('Mijn eigen notitie')
+			.pages.find((p) => p.id === 'TicketDetail')
+			.config.bodyWidgets.find((w) => w.id === 'dossier-snapshot')
+
+	it('lists the snapshot items as links under the dossier title (REQ-QCD-006)', () => {
+		const { type, content } = section()
+		expect(type).toBe('field-list')
+		expect(content.field).toBe('subjectReference.items')
+		expect(content.readOnly).toBe(true)
+		expect(content.row).toEqual({ title: 'title', href: 'url' })
+		expect(content.lead).toBe('Question about the dossier "{subjectReference.title}"')
+		expect(question.subjectReference.items).toHaveLength(3)
 	})
 
-	it('renders nothing for a ticket without a snapshot', async () => {
-		const { subjectReference, ...ordinary } = question
-		storeMock.fetchObject.mockResolvedValue(ordinary)
-		const wrapper = await mountFor(DossierSnapshotSection)
-
-		expect(subjectReference).toBeTruthy()
-		expect(wrapper.find('section').exists()).toBe(false)
+	it('shows nothing on a ticket without a snapshot', () => {
+		expect(section().visibleWhen).toEqual({ field: 'subjectReference', op: 'notEmpty' })
 	})
 
-	it('never turns a non-http value into a link', async () => {
-		storeMock.fetchObject.mockResolvedValue({
-			...question,
-			subjectReference: {
-				...question.subjectReference,
-				items: [{ title: 'Gevaarlijk', url: 'javascript:alert(1)' }],
-			},
-		})
-		const wrapper = await mountFor(DossierSnapshotSection)
-
-		expect(wrapper.find('a').exists()).toBe(false)
-		expect(wrapper.text()).toContain('Gevaarlijk')
+	it('reads the ticket only, never the dossier', () => {
+		expect(JSON.stringify(section())).not.toContain('opencatalogi')
 	})
 })
 
@@ -470,11 +449,11 @@ describe('TicketDetail', () => {
 			'utf8',
 		)
 
-		for (const name of [
-			'DossierSnapshotSection',
-			'CustomerReplySection',
-			'WooConversionSection',
-		]) {
+		expect(
+			(page.config.bodyWidgets || []).find((w) => w.id === 'dossier-snapshot').type,
+		).toBe('field-list')
+
+		for (const name of ['CustomerReplySection', 'WooConversionSection']) {
 			const widget = (page.config.bodyWidgets || []).find(
 				(w) => w.component === name,
 			)

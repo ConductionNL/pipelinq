@@ -509,11 +509,7 @@ describe('the body', () => {
 			'routing-suggestions',
 		])
 		const moved = {
-			'dossier-snapshot': [
-				'ticket-dossier',
-				'DossierSnapshotWidget',
-				'DossierSnapshotSection',
-			],
+			'dossier-snapshot': ['ticket-dossier', 'field-list', null],
 			'woo-conversion': [
 				'ticket-woo',
 				'WooConversionWidget',
@@ -533,9 +529,15 @@ describe('the body', () => {
 				continue
 			}
 			const [id, type, component] = moved[section.id]
-			expect(section.component).toBe(component)
 			const widget = simple.widgets.find((item) => item.id === id)
 			expect(widget.type, section.id).toBe(type)
+			if (component === null) {
+				// A library widget: the section and the tab declare the same content.
+				expect(section.type).toBe(type)
+				expect(widget.content).toEqual(section.content)
+				continue
+			}
+			expect(section.component).toBe(component)
 			expect(registrySource).toMatch(
 				new RegExp(
 					`\\n\\t${type}: \\{\\s+kind: 'widget',\\s+component: sectionWidget\\(\\s+'${type}',\\s+${component},`,
@@ -579,6 +581,10 @@ describe('the words', () => {
 				value.forEach((item) => collect(item, key))
 			} else if (value && typeof value === 'object') {
 				for (const [name, inner] of Object.entries(value)) {
+					// A field-list `row` names paths, not words.
+					if (name === 'row') {
+						continue
+					}
 					collect(
 						inner,
 						name === 'labels' ? 'label' : key === 'label' ? key : name,

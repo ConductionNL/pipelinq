@@ -69,12 +69,12 @@ describe('lead list board look', () => {
 		expect(ctx.viewSwitchLinks).toEqual({ board: { route: 'Pipeline' } })
 	})
 
-	it('registers the suggested colleagues side card', () => {
-		const registry = readFileSync(
-			resolve(__dirname, '../../src/registry.js'),
-			'utf8',
+	it('declares the suggested colleagues side card as a record list', () => {
+		const manifest = JSON.parse(
+			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
 		)
-		expect(registry).toMatch(/RoutingSuggestionWidget: \{\s*kind: 'widget'/)
+		const lead = manifest.pages.find((p) => p.id === 'LeadDetail')
+		expect(lead.config.widgets.find((w) => w.id === 'side-suggested').type).toBe('record-list')
 	})
 })
 

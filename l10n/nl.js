@@ -1,6 +1,10 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Question about the dossier \"{subjectReference.title}\"": "Vraag over het dossier \"{subjectReference.title}\"",
+        "{workload}/{maxConcurrent} items": "{workload}/{maxConcurrent} items",
+        "Assign to {displayName}": "Toewijzen aan {displayName}",
+        "{value} matching colleagues at capacity": "{value} passende collega's op volle capaciteit",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "De klant betaalt op de pinautomaat van {provider}.",
         "The customer is sent to {provider} to finish the payment.": "De klant gaat naar {provider} om de betaling af te ronden.",

@@ -1,6 +1,10 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Question about the dossier \"{subjectReference.title}\"": "Question about the dossier \"{subjectReference.title}\"",
+        "{workload}/{maxConcurrent} items": "{workload}/{maxConcurrent} items",
+        "Assign to {displayName}": "Assign to {displayName}",
+        "{value} matching colleagues at capacity": "{value} matching colleagues at capacity",
         "Take the oldest": "Take the oldest",
         "Longest waiting": "Longest waiting",
         "the oldest ticket nobody has picked up": "the oldest ticket nobody has picked up",

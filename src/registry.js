@@ -52,7 +52,6 @@ import CustomerReplySection from './components/CustomerReplySection.vue'
 //     declarative type:"index" page cannot express. Donut widget for the
 //     dashboard (hours per billing category) registered as a slot. ---
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
-import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
 // --- Articles — the content hub for a mailing and a post (marketing-article-hub).
 //     ArticleDetail is a declarative type:"detail" page; the rendered body, the
@@ -123,7 +122,6 @@ import ChannelDistributionSection from './components/rapportage/ChannelDistribut
 import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
 // What the resident reads of a request ticket (portal-resident-view-preview). ---
 import ResidentViewSection from './components/ResidentViewSection.vue'
-import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 // Customer satisfaction, closed loop (customer-satisfaction-closed-loop): the
 //     client page's satisfaction panel and the Operational dashboard's
 //     response-rate widget. ---
@@ -717,18 +715,10 @@ const registry = {
 	},
 	ContactRelationshipsWidget: {
 		kind: 'widget',
-		component: sectionWidget(
-			'ContactRelationshipsWidget',
-			ContactRelationships,
-			({ objectId, objectData, content }) => ({
-				entityId: objectId,
-				entityType: content.entityType || 'contact',
-				entityName: objectData.name || '',
-			}),
-			{ card: true },
-		),
+		component: ContactRelationships,
+		chrome: 'card',
 		...PANEL_WIDGET_META,
-		_note: 'ContactRelationships as a grid widget: entityId from the page object, entityType from content (default contact).',
+		_note: 'ContactRelationships as a side card; its props (entityId, entityType, entityName) come from the manifest.',
 	},
 	TicketDecisionRoutesWidget: {
 		kind: 'widget',
@@ -757,16 +747,6 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: 'TicketConversationSection as a tab widget; it reads the ticket from cnSectionContext, which the wrapper provides.',
-	},
-	DossierSnapshotWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'DossierSnapshotWidget',
-			DossierSnapshotSection,
-			({ objectId }) => ({ objectId }),
-		),
-		...PANEL_WIDGET_META,
-		_note: 'DossierSnapshotSection as a tab widget.',
 	},
 	WooConversionWidget: {
 		kind: 'widget',
@@ -806,31 +786,17 @@ const registry = {
 	},
 	ContactChannelsWidget: {
 		kind: 'widget',
-		component: sectionWidget(
-			'ContactChannelsWidget',
-			ContactChannelsSection,
-			({ objectId, content }) => ({
-				entityId: objectId,
-				entityType: content.entityType || 'contact',
-			}),
-			{ card: true },
-		),
+		component: ContactChannelsSection,
+		chrome: 'card',
 		...PANEL_WIDGET_META,
-		_note: 'ContactChannelsSection as a grid widget.',
+		_note: 'ContactChannelsSection as a side card; its props (entityId, entityType) come from the manifest.',
 	},
 	MessagingConversationWidget: {
 		kind: 'widget',
-		component: sectionWidget(
-			'MessagingConversationWidget',
-			MessagingConversationSection,
-			({ objectId, content }) => ({
-				entityId: objectId,
-				entityType: content.entityType || 'contact',
-			}),
-			{ card: true },
-		),
+		component: MessagingConversationSection,
+		chrome: 'card',
 		...PANEL_WIDGET_META,
-		_note: 'MessagingConversationSection as a grid widget.',
+		_note: 'MessagingConversationSection as a side card; its props (entityId, entityType) come from the manifest.',
 	},
 	SubscriptionsWidget: {
 		kind: 'widget',
@@ -847,15 +813,9 @@ const registry = {
 	},
 	BrpContactWidget: {
 		kind: 'widget',
-		component: sectionWidget(
-			'BrpContactWidget',
-			BrpContactPanel,
-			({ objectId }) => ({
-				contactId: objectId,
-			}),
-		),
+		component: BrpContactPanel,
 		...PANEL_WIDGET_META,
-		_note: 'BrpContactPanel as a grid widget, for the Profile tab of ContactDetail.',
+		_note: 'BrpContactPanel as a side card of ContactDetail; its contactId comes from the manifest.',
 	},
 	BrpContactPanel: {
 		kind: 'section',
@@ -894,11 +854,6 @@ const registry = {
 		component: RequestConversionSection,
 		_note: '"Convert to case" action for the TicketDetail page (semantic-handoff-emit; formerly RequestDetail, retired by unify-ticket-supertype). Self-fetches GET /api/handoff/request/{id}/availability by @objectId; renders the button only when canConvert (an ns#Case implementer is installed AND status is in_progress). On success shows the converted notice + a copyable caseReference — the target app is kind-addressed and unknown to the frontend, so no precise cross-app route can be built.',
 	},
-	DossierSnapshotSection: {
-		kind: 'section',
-		component: DossierSnapshotSection,
-		_note: "The dossier a resident asked about, on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-006): reads the ticket's subjectReference snapshot and lists the documents as links to the public publications. Never reads the dossier itself; renders nothing for a ticket without a snapshot.",
-	},
 	TicketConversationSection: {
 		kind: 'section',
 		component: TicketConversationSection,
@@ -918,28 +873,6 @@ const registry = {
 		kind: 'section',
 		component: ResidentViewSection,
 		_note: 'What the resident sees on a request ticket (portal-resident-view-preview): the resident portal panel and, with portaliq and a client, the organisation portal panel, both from GET /api/tickets/{id}/resident-view, plus the line that everything else stays internal. Renders nothing on complaint and interaction tickets, so it carries its own heading instead of a section title.',
-	},
-	RoutingSuggestionWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'RoutingSuggestionWidget',
-			RoutingSuggestionSection,
-			({ objectId, objectData, content }) => ({
-				objectId,
-				category: objectData.category || '',
-				entityType: content.entityType || 'request',
-				objectType: content.objectType || 'ticket',
-				assignee: objectData.assignee || '',
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'RoutingSuggestionSection as a side-column card (PqLead "Voorgestelde medewerkers"): the record category and assignee come from the page object.',
-	},
-	RoutingSuggestionSection: {
-		kind: 'section',
-		component: RoutingSuggestionSection,
-		_note: 'Suggested colleagues for the TicketDetail and LeadDetail pages (pipelinq#2039, pipelinq#2049): mounts RoutingSuggestionPanel for @objectId (ranked by skill match on the record category, availability and workload, capped per agent by maxConcurrent) and writes the chosen colleague into the record assignee through the object store.',
 	},
 	ContractInvoicingSection: {
 		kind: 'section',
