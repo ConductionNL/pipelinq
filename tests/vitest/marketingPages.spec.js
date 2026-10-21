@@ -117,3 +117,27 @@ describe('Dutch', () => {
 		}
 	})
 })
+
+describe('subscriptions', () => {
+	const lists = readJson('src', 'manifest.d', '76-marketing-lists.json')
+	const subscription = readJson('lib', 'Settings', 'register.d', '96-marketing-lists-and-double-opt-in.json').components.schemas.subscription.properties
+
+	it('lists a mailing list\'s subscribers from the subscription objects, state in words', () => {
+		const detail = lists.pages.find((p) => p.id === 'MailingListDetail')
+		expect(detail.config.bodyWidgets).toBeUndefined()
+		const table = detail.config.widgets.find((w) => w.id === 'list-subscriptions')
+		expect(table.content.source).toMatchObject({ register: 'pipelinq', schema: 'subscription', filter: { listId: '@objectId' } })
+		expect(table.content.columns.find((c) => c.key === 'contactId').widget).toBe('fkResolve')
+		expect(subscription.state['x-enum-labels'].bounced).toBe('Undeliverable')
+		expect(subscription.state['x-color-map']).toEqual({ pending: 'warning', confirmed: 'success', unsubscribed: 'default', bounced: 'error' })
+		expect(subscription.lawfulBasis['x-enum-labels']['soft-opt-in']).toBe('soft opt-in')
+	})
+
+	it('shows a contact\'s lists by name and manages them from the header', () => {
+		const contact = readJson('src', 'manifest.json').pages.find((p) => p.id === 'ContactDetail')
+		const table = contact.config.widgets.find((w) => w.id === 'contact-subscriptions')
+		expect(table.type).toBe('object-table')
+		expect(table.content.columns.find((c) => c.key === 'listId').widgetProps).toEqual({ register: 'pipelinq', schema: 'mailingList', labelField: 'name' })
+		expect(contact.config.headerActions.find((a) => a.id === 'manage-subscriptions')).toMatchObject({ type: 'open-modal', target: 'SubscriptionManageModal', props: { contactId: '@objectId' } })
+	})
+})

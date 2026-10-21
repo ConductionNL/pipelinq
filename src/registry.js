@@ -55,15 +55,6 @@ import ListSignupFormSection from './components/marketing/ListSignupFormSection.
 import ListSubscriberViewSection from './components/marketing/ListSubscriberViewSection.vue'
 import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
 import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
-// --- Mailing-list memberships (marketing-lists-and-double-opt-in). One
-//     kind:'section' bound either to a list (the mailing list detail page) or
-//     to a contact (the contact detail page): the row is the same row read
-//     from two directions, and a state that means "not reachable" must not
-//     look reachable in one of them. Not a declarative object-list widget,
-//     because a membership is read through its STATE and needs the chip
-//     vocabulary, and because the list view leads with per-state counts that
-//     summaryAggregates cannot express. ---
-import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
 import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 // --- Cash-shift detail — declarative type:"detail": the closing count is its
 //     actionsComponent; the drops (with Add drop) and the latest/pending
@@ -147,6 +138,7 @@ import ArticleEditModal from './modals/ArticleEditModal.vue'
 import ForecastOverrideModal from './modals/ForecastOverrideModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 import SocialPostComposeModal from './modals/SocialPostComposeModal.vue'
+import SubscriptionManageModal from './modals/SubscriptionManageModal.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
@@ -485,11 +477,7 @@ const registry = {
 		component: ContactChannelsSection,
 		_note: 'Typed emails/phones/social profiles for a client or contact (contact-channel-details); self-fetches by entityId/entityType.',
 	},
-	SubscriptionsSection: {
-		kind: 'section',
-		component: SubscriptionsSection,
-		_note: 'Mailing-list memberships, bound either to a list (listId) or to a contact (contactId); self-fetches the matching endpoint. Kept custom because a membership row renders a STATE chip the declarative object-list widget cannot express, and because the list view leads with per-state counts that summaryAggregates (equality-only, one schema) cannot break out of one field.',
-	},
+
 
 	ListSignupFormWidget: {
 		kind: 'widget',
@@ -692,19 +680,7 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'MessagingConversationSection as a grid widget.',
 	},
-	SubscriptionsWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'SubscriptionsWidget',
-			SubscriptionsSection,
-			({ objectId }) => ({
-				contactId: objectId,
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'SubscriptionsSection bound to the page contact, as a grid widget.',
-	},
+
 	BrpContactWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -1088,6 +1064,12 @@ const registry = {
 		component: ForecastOverrideModal,
 		propsSchema: null,
 		_note: 'Override one owner\'s committed amount for the quarter, with a reason; the Override row action of the Forecast page opens it with that row\'s period, owner, level and commit.',
+	},
+	SubscriptionManageModal: {
+		kind: 'modal',
+		component: SubscriptionManageModal,
+		propsSchema: null,
+		_note: 'Take a contact off one mailing list or all of them, or make a preference link; the contact page\'s Manage subscriptions header action opens it.',
 	},
 	ArticleDetailFormDialog: {
 		kind: 'modal',

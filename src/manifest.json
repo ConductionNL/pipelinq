@@ -3330,11 +3330,23 @@
 					},
 					{
 						"id": "contact-subscriptions",
-						"type": "SubscriptionsWidget",
+						"type": "object-table",
 						"title": "Subscriptions",
 						"icon": "EmailMultipleOutline",
 						"content": {
-							"title": "Subscriptions"
+							"source": {
+								"register": "pipelinq",
+								"schema": "subscription",
+								"filter": { "contactId": "@objectId" },
+								"order": { "createdAt": "desc" }
+							},
+							"columns": [
+								{ "key": "listId", "label": "Mailing list", "widget": "fkResolve", "widgetProps": { "register": "pipelinq", "schema": "mailingList", "labelField": "name" } },
+								{ "key": "state", "label": "Status" },
+								{ "key": "lawfulBasis", "label": "Ground" },
+								{ "key": "confirmedAt", "label": "Confirmed", "widget": "date" }
+							],
+							"emptyText": "This person is on no mailing list. Add them from a list, or send them a preference link."
 						}
 					},
 					{
@@ -3434,6 +3446,14 @@
 						"type": "navigate",
 						"target": "mailto:@object.email",
 						"icon": "EmailOutline"
+					},
+					{
+						"id": "manage-subscriptions",
+						"label": "Manage subscriptions",
+						"type": "open-modal",
+						"target": "SubscriptionManageModal",
+						"icon": "EmailMultipleOutline",
+						"props": { "contactId": "@objectId" }
 					}
 				],
 				"quickActions": [
