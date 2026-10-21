@@ -1255,8 +1255,6 @@ test('ReportingController resolves a relative period token server-side, and expl
  */
 const KEPT_CUSTOM_PAGES: Array<{ doc: string; id: string }> = [
 	{ doc: 'src/manifest.json', id: 'Pipeline' },
-	{ doc: 'src/manifest.d/50-forecast.json', id: 'Forecast' },
-	{ doc: 'src/manifest.d/50-forecast.json', id: 'ForecastTrend' },
 	{ doc: 'src/manifest.d/75-marketing-blasts.json', id: 'BlastPerformance' },
 ]
 
@@ -1279,37 +1277,21 @@ test('every kept-custom reporting page is still type:"custom" and names why', as
 test('a kept-custom page keeps its host component AND its behaviour — it is not half-converted', async ({
 	page,
 }) => {
-	// This test is TWO kept-custom surfaces, each a full document load followed
-	// by a bespoke view that fetches its own data. Measured against a running
-	// instance it takes about a minute, and it was left on the 30s default, so
-	// it failed inside `page.goto` before reaching a single assertion. That
-	// reads as "the page is broken" when it means "this test ran out of time",
-	// and it fails or passes with host load, which is the definition of flaky.
-	//
-	// Reducing the work already happened once: gotoPage() above documents
-	// cutting three navigations per call down to one after this same test blew
-	// a 60s budget. What is left is genuinely two page loads, so the budget is
-	// what has to move. Same reasoning, and the same number, as
-	// rapportage.spec.ts.
+	// A full document load followed by a bespoke view that fetches its own
+	// data takes most of a minute on a busy instance; the 30s default failed
+	// inside `page.goto`, which reads as a broken page.
 	test.setTimeout(180_000)
 
-	// Forecast is the clearest case: it stays custom because its mandatory
-	// `periodId` is derived client-side, and it keeps a bespoke export entry
-	// point that no declarative index action expresses.
-	await gotoPage(page, '/forecast')
+	// Blast performance stays custom: its A/B verdict is a chi-square test the
+	// browser works out, and its tabs hold interactive tables.
+	await gotoPage(page, '/blasts/performance')
 	const content = page.locator('#content-vue')
 
 	await expect(
-		content.getByRole('heading', { name: 'Forecast' }).first(),
+		content.getByRole('heading', { name: 'Blast performance' }).first(),
 	).toBeVisible({ timeout: 20000 })
-	// Its existing entry point is preserved, not dropped in a partial conversion.
-	await expect(content.getByRole('button', { name: 'Export CSV' })).toBeVisible({
-		timeout: 15000,
-	})
-	// And it is genuinely NOT rendering through the declarative index host — a
+	// It is genuinely NOT rendering through the declarative index host — a
 	// half-conversion would have swapped the shell while losing the behaviour.
 	await expect(page.locator('[data-testid="cn-index-page"]')).toHaveCount(0)
-	await assertNoHardError(page)
-
 	await assertNoHardError(page)
 })

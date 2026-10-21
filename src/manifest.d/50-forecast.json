@@ -11,21 +11,306 @@
 	"pages": [
 		{
 			"id": "Forecast",
-			"_note": "KEPT CUSTOM (pipelinq-dashboards-declarative). The forecast roll-up is not expressible as a declarative type:dashboard today. (1) Its primary scope key, periodId (e.g. 'Q2-2026'), is DERIVED CLIENT-SIDE from the current fiscal quarter and is mandatory on GET /api/forecast/snapshots (400 without it) — pageFilters only emit static option values, not a computed 'current quarter', so no token can supply it. (2) There is NO summary endpoint: the snapshots endpoint returns a PAGINATED rows array and the four KPIs (Quota / Closed Won / Committed / Gap-to-close) are summed over rows client-side, with Gap = max(0, quota - projected) where 'projected' comes from forecastMath.js — a derived computation a single endpoint/aggregation stat source cannot produce. (3) The surface is built around bespoke side-effecting actions a stat grid + section cannot host declaratively: the per-owner Override modal (POST /api/forecast/overrides), the at-risk warning, the stacked closed/committed progress bar, and the CSV export link. Missing primitives: (a) a pageFilter value derived from 'now' (current period/quarter token) and (b) a derived/ratio stat source (or a server summary endpoint aggregating the whole matched set, incl. the projected math). Until those exist the view stays custom and nothing is dropped.",
+			"_note": "The forecast of the current quarter for the chosen level, worked out by GET /apps/pipelinq/api/forecast/summary (ForecastSummaryService): the latest snapshot per owner one level down, quota, won, committed and still to get (projected = won + committed + half of best case), the progress, the at-risk warning (below 90% of quota with under 30 days left), and the weekly trend. Override on an owner opens ForecastOverrideModal; Download exports the latest snapshot per owner as CSV.",
 			"route": "/forecast",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Forecast",
-			"component": "ForecastDashboardView",
-			"config": { "register": "pipelinq", "schema": "forecastSnapshot" }
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"pageFilters": [
+					{
+						"key": "level",
+						"label": "Level",
+						"type": "select",
+						"control": "segmented",
+						"default": "team",
+						"options": [
+							{ "value": "rep", "label": "Seller" },
+							{ "value": "team", "label": "Team" },
+							{ "value": "division", "label": "Division" },
+							{ "value": "company", "label": "Company" }
+						]
+					}
+				],
+				"headerActions": [
+					{
+						"id": "forecast-download",
+						"label": "Download",
+						"type": "api-call",
+						"icon": "Download",
+						"method": "GET",
+						"url": "/apps/pipelinq/api/forecast/summary",
+						"params": { "level": "@workspace.level", "format": "csv" },
+						"download": true,
+						"filename": "forecast.csv",
+						"successMessage": "Export downloaded"
+					}
+				],
+				"widgets": [
+					{
+						"id": "forecast-quota",
+						"type": "stat",
+						"title": "Quota",
+						"content": {
+							"label": "Quota",
+							"format": { "style": "currency", "decimals": 0 },
+							"endpointSource": { "url": "/apps/pipelinq/api/forecast/summary", "params": { "level": "@workspace.level" } },
+							"valueField": "summary.quota"
+						}
+					},
+					{
+						"id": "forecast-won",
+						"type": "stat",
+						"title": "Won",
+						"content": {
+							"label": "Won",
+							"format": { "style": "currency", "decimals": 0 },
+							"endpointSource": { "url": "/apps/pipelinq/api/forecast/summary", "params": { "level": "@workspace.level" } },
+							"valueField": "summary.closedWon"
+						}
+					},
+					{
+						"id": "forecast-commit",
+						"type": "stat",
+						"title": "Committed",
+						"content": {
+							"label": "Committed",
+							"format": { "style": "currency", "decimals": 0 },
+							"endpointSource": { "url": "/apps/pipelinq/api/forecast/summary", "params": { "level": "@workspace.level" } },
+							"valueField": "summary.commit"
+						}
+					},
+					{
+						"id": "forecast-gap",
+						"type": "stat",
+						"title": "Still to get",
+						"content": {
+							"label": "Still to get",
+							"format": { "style": "currency", "decimals": 0 },
+							"endpointSource": { "url": "/apps/pipelinq/api/forecast/summary", "params": { "level": "@workspace.level" } },
+							"valueField": "summary.gap",
+							"caption": "{summary.gapPercent}% below quota",
+							"variantWhen": [
+								{ "op": "gt", "value": 0, "variant": "warning" }
+							]
+						}
+					},
+					{
+						"id": "forecast-progress",
+						"type": "facts",
+						"title": "This quarter",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/forecast/summary", "params": { "level": "@workspace.level" } },
+							"fields": [
+								{ "path": "period.label", "as": "title" },
+								{ "label": "On track", "path": "summary.onTrack", "limitPath": "summary.quota", "as": "meter" }
+							]
+						}
+					},
+					{
+						"id": "forecast-at-risk",
+						"type": "facts",
+						"title": "Risk",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/forecast/summary", "params": { "level": "@workspace.level" } },
+							"fields": [
+								{ "path": "summary.atRiskText", "as": "text" }
+							],
+							"emptyText": "Nothing to act on this quarter."
+						}
+					},
+					{
+						"id": "forecast-owners",
+						"type": "object-table",
+						"title": "Per owner",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/forecast/summary",
+								"params": { "level": "@workspace.level" },
+								"responsePath": "rows"
+							},
+							"columns": [
+								{ "key": "ownerName", "label": "Owner", "sortable": true, "cellClass": "cn-cell--strong" },
+								{
+									"key": "commit",
+									"label": "Commit",
+									"sortable": true,
+									"format": { "style": "currency", "decimals": 0 },
+									"secondary": "{overrideReason}"
+								},
+								{
+									"key": "bestCase",
+									"label": "Best case",
+									"sortable": true,
+									"format": { "style": "currency", "decimals": 0 }
+								},
+								{
+									"key": "pipeline",
+									"label": "Pipeline",
+									"sortable": true,
+									"format": { "style": "currency", "decimals": 0 }
+								},
+								{
+									"key": "closedWon",
+									"label": "Closed won",
+									"sortable": true,
+									"format": { "style": "currency", "decimals": 0 }
+								},
+								{
+									"key": "quota",
+									"label": "Quota",
+									"sortable": true,
+									"format": { "style": "currency", "decimals": 0 }
+								}
+							],
+							"actions": [
+								{
+									"id": "override",
+									"label": "Override",
+									"icon": "Pencil",
+									"type": "open-modal",
+									"target": "ForecastOverrideModal",
+									"props": {
+										"periodId": "@row.periodId",
+										"ownerId": "@row.ownerId",
+										"level": "@row.level",
+										"category": "commit",
+										"currentAmount": "@row.commit"
+									}
+								}
+							],
+							"emptyText": "No snapshots yet. Forecast snapshots are generated every Monday. Check back after the next run."
+						}
+					},
+					{
+						"id": "forecast-trend",
+						"type": "chart",
+						"title": "Commit, best case and pipeline over time",
+						"subtitle": "Weekly snapshots, taken every Monday",
+						"content": {
+							"chartKind": "line",
+							"valueFormat": "currency",
+							"emptyLabel": "Forecast snapshots are generated every Monday. Check back after the next run.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/forecast/summary",
+								"params": { "level": "@workspace.level" },
+								"responsePath": "trend",
+								"labelsPath": "labels",
+								"series": [
+									{ "name": "Commit", "path": "commit" },
+									{ "name": "Best case", "path": "bestCase" },
+									{ "name": "Pipeline", "path": "pipeline" }
+								]
+							}
+						}
+					},
+					{
+						"id": "forecast-moves",
+						"type": "facts",
+						"title": "Deal movements, week on week",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/forecast/summary", "params": { "level": "@workspace.level" } },
+							"fields": [
+								{ "label": "Moved into commit", "path": "trend.intoCommit", "format": "currency", "decimals": 0 },
+								{ "label": "Taken out of commit", "path": "trend.outOfCommit", "format": "currency", "decimals": 0 }
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "forecast-quota",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 2,
+						"widgetId": "forecast-won",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 3,
+						"widgetId": "forecast-commit",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 4,
+						"widgetId": "forecast-gap",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{ "id": 5, "widgetId": "forecast-progress", "gridX": 0, "gridY": 2, "gridWidth": 8, "gridHeight": 3 },
+					{ "id": 6, "widgetId": "forecast-at-risk", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": 7, "widgetId": "forecast-owners", "gridX": 0, "gridY": 5, "gridWidth": 12, "gridHeight": 6 },
+					{ "id": 8, "widgetId": "forecast-trend", "gridX": 0, "gridY": 11, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": 9, "widgetId": "forecast-moves", "gridX": 8, "gridY": 11, "gridWidth": 4, "gridHeight": 5 }
+				]
+			}
 		},
 		{
 			"id": "ForecastTrend",
-			"_note": "KEPT CUSTOM (pipelinq-dashboards-declarative). A rep-scoped TIME-SERIES analysis, not a KPI dashboard: it draws a multi-line commit/best-case/pipeline trend as inline SVG polylines over the rep's historical snapshots plus a week-over-week 'moved into/out of commit' delta and a forecast-accuracy leaderboard. It carries no headline KPI cards to map to stat widgets, and the trend/delta/accuracy visualisations are bespoke SVG/tables with no declarative chart-widget representation (the period is again the client-derived current quarter, and the owner is a free-text rep filter, not a static pageFilter option). Missing primitive: a multi-series time-series chart widget fed from a host endpoint + a current-period token. Kept custom; no data dropped.",
+			"_note": "The signed-in seller's own forecast trend for the current quarter: GET /apps/pipelinq/api/forecast/summary with ownerId @me, which a seller may read for themself (ForecastAccessPolicy). The team view of the same trend is on the Forecast page.",
 			"route": "/forecast/trend",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Forecast trend",
-			"component": "ForecastTrendView",
-			"config": { "register": "pipelinq", "schema": "forecastSnapshot" }
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"widgets": [
+					{
+						"id": "forecast-own-trend",
+						"type": "chart",
+						"title": "Commit, best case and pipeline over time",
+						"subtitle": "Weekly snapshots, taken every Monday",
+						"content": {
+							"chartKind": "line",
+							"valueFormat": "currency",
+							"emptyLabel": "Forecast snapshots are generated every Monday. Check back after the next run.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/forecast/summary",
+								"params": { "level": "rep", "ownerId": "@me" },
+								"responsePath": "trend",
+								"labelsPath": "labels",
+								"series": [
+									{ "name": "Commit", "path": "commit" },
+									{ "name": "Best case", "path": "bestCase" },
+									{ "name": "Pipeline", "path": "pipeline" }
+								]
+							}
+						}
+					},
+					{
+						"id": "forecast-own-moves",
+						"type": "facts",
+						"title": "Deal movements, week on week",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/forecast/summary", "params": { "level": "rep", "ownerId": "@me" } },
+							"fields": [
+								{ "label": "Moved into commit", "path": "trend.intoCommit", "format": "currency", "decimals": 0 },
+								{ "label": "Taken out of commit", "path": "trend.outOfCommit", "format": "currency", "decimals": 0 }
+							]
+						}
+					}
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "forecast-own-trend", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": 2, "widgetId": "forecast-own-moves", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 }
+				]
+			}
 		}
 	]
 }

@@ -399,6 +399,7 @@ return [
         // paths precede the {id} wildcard (ADR-016); all are #[NoAdminRequired]
         // with per-action scope enforced in ForecastAccessPolicy (ADR-005).
         ['name' => 'forecast#snapshots',      'url' => '/api/forecast/snapshots',     'verb' => 'GET'],
+        ['name' => 'forecast#summary',        'url' => '/api/forecast/summary',       'verb' => 'GET'],
         ['name' => 'forecast#createOverride', 'url' => '/api/forecast/overrides',     'verb' => 'POST'],
         ['name' => 'forecast#deleteOverride', 'url' => '/api/forecast/overrides/{id}', 'verb' => 'DELETE'],
 

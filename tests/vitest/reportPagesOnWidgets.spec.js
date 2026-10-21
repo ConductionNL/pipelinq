@@ -271,3 +271,48 @@ describe('loyalty reporting', () => {
 		expect(Object.keys(actions['loyalty-enrol'].formProperties)).toEqual(['customerId', 'programmeId', 'termsVersion', 'optIn'])
 	})
 })
+
+describe('forecast', () => {
+	const URL = '/apps/pipelinq/api/forecast/summary'
+
+	it('reads every figure of the chosen level from the server summary', () => {
+		const p = page('Forecast')
+		expect(p.type).toBe('dashboard')
+		expectWidgetsOnly(p)
+		expect(p.config.pageFilters[0]).toMatchObject({ key: 'level', control: 'segmented', default: 'team' })
+		expect(p.config.pageFilters[0].options.map((o) => o.value)).toEqual(['rep', 'team', 'division', 'company'])
+		for (const w of p.config.widgets) {
+			expect(w.content.endpointSource).toMatchObject({ url: URL, params: { level: '@workspace.level' } })
+		}
+	})
+
+	it('overrides one owner through the override modal with that row\'s values', () => {
+		const owners = widget(page('Forecast'), 'forecast-owners')
+		expect(owners.content.actions[0]).toEqual({
+			id: 'override',
+			label: 'Override',
+			icon: 'Pencil',
+			type: 'open-modal',
+			target: 'ForecastOverrideModal',
+			props: { periodId: '@row.periodId', ownerId: '@row.ownerId', level: '@row.level', category: 'commit', currentAmount: '@row.commit' },
+		})
+		expect(owners.content.columns.find((c) => c.key === 'ownerName').label).toBe('Owner')
+	})
+
+	it('downloads the latest snapshot per owner of the level', () => {
+		expect(page('Forecast').config.headerActions[0]).toMatchObject({
+			type: 'api-call', method: 'GET', download: true, url: URL, params: { level: '@workspace.level', format: 'csv' },
+		})
+	})
+
+	it('shows a seller their own trend', () => {
+		const p = page('ForecastTrend')
+		expectWidgetsOnly(p)
+		expect(widget(p, 'forecast-own-trend').content.endpointSource).toMatchObject({
+			url: URL,
+			params: { level: 'rep', ownerId: '@me' },
+			responsePath: 'trend',
+			labelsPath: 'labels',
+		})
+	})
+})

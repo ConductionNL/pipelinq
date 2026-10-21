@@ -7883,6 +7883,18 @@
         "on-time": "on-time",
         "over-deadline": "over-deadline",
         "targets in period": "targets in period",
-        "within target": "within target"
+        "within target": "within target",
+        "Commit, best case and pipeline over time": "Commit, best case and pipeline over time",
+        "Deal movements, week on week": "Deal movements, week on week",
+        "No snapshots yet. Forecast snapshots are generated every Monday. Check back after the next run.": "No snapshots yet. Forecast snapshots are generated every Monday. Check back after the next run.",
+        "Nothing to act on this quarter.": "Nothing to act on this quarter.",
+        "On track": "On track",
+        "Per owner": "Per owner",
+        "Risk": "Risk",
+        "Taken out of commit": "Taken out of commit",
+        "{summary.gapPercent}% below quota": "{summary.gapPercent}% below quota",
+        "Quarter %1$s of %2$s": "Quarter %1$s of %2$s",
+        "This team is %1$s%% below quota with %2$s days to close. Action recommended.": "This team is %1$s%% below quota with %2$s days to close. Action recommended.",
+        "Weekly snapshots, taken every Monday": "Weekly snapshots, taken every Monday"
     }
 }

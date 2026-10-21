@@ -73,11 +73,11 @@ test('Forecast: opens from the reports page and shows the forecast surface', asy
 })
 
 // @e2e openspec/changes/forecast-roll-up-and-categories/specs.md#forecast-export
-test('Forecast: exposes the Export CSV action', async ({ page }) => {
+test('Forecast: exposes the Download action', async ({ page }) => {
 	await openForecast(page)
 
 	await expect(
-		page.locator('#content-vue').getByRole('button', { name: 'Export CSV' }),
+		page.locator('#content-vue').getByRole('button', { name: 'Download' }),
 	).toBeVisible()
 })
 

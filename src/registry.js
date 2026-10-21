@@ -142,6 +142,7 @@ import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 import ArticleEditModal from './modals/ArticleEditModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
+import ForecastOverrideModal from './modals/ForecastOverrideModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 import SocialPostComposeModal from './modals/SocialPostComposeModal.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
@@ -190,9 +191,6 @@ import FeaturesRoadmapView from './views/FeaturesRoadmapView.vue'
 //     app component, because CnFlowSidebar has to mount in the NC app
 //     sidebar for the canvas to keep full width. ---
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
-// --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
-import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
-import ForecastTrendView from './views/forecast/ForecastTrend.vue'
 import KassakoppelingAuditDetailView from './views/kassakoppeling/KassakoppelingAuditDetail.vue'
 // --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit):
 //     append-only HMAC-SHA256 signed register actions chained per-register
@@ -340,17 +338,6 @@ const registry = {
 		_note: 'Pipeline kanban/list board with in-memory title search (REQ-PIPE-022). Restored after migrate-pipeline-to-deck-leaf; coexists with Deck integration.',
 	},
 
-	// --- Forecast roll-up dashboards. ---
-	ForecastDashboardView: {
-		kind: 'page',
-		component: ForecastDashboardView,
-		_note: 'Manager forecast view: hierarchy/level selector, quota progress bar, at-risk banner, per-owner table with manager-override badges; lib gap: no forecast/quota page type. All amounts are server-computed.',
-	},
-	ForecastTrendView: {
-		kind: 'page',
-		component: ForecastTrendView,
-		_note: 'Forecast trend (inline SVG sparkline of commit/best-case/pipeline), week-over-week delta panel and accuracy table with colour bands; lib gap: no chart-widget page type.',
-	},
 	LeadForecastTab: {
 		kind: 'widget',
 		component: LeadForecastTab,
@@ -1058,6 +1045,12 @@ const registry = {
 		component: SocialPostComposeModal,
 		propsSchema: null,
 		_note: 'Write a social post: the body, a variant per network with its character count against that network\'s limit, and submit for approval. The Social posts page opens it to write one, which then opens on its detail page.',
+	},
+	ForecastOverrideModal: {
+		kind: 'modal',
+		component: ForecastOverrideModal,
+		propsSchema: null,
+		_note: 'Override one owner\'s committed amount for the quarter, with a reason; the Override row action of the Forecast page opens it with that row\'s period, owner, level and commit.',
 	},
 	ArticleDetailFormDialog: {
 		kind: 'modal',
