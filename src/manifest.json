@@ -2543,12 +2543,53 @@
 					},
 					{
 						"id": "activity",
-						"component": "ActivityTimeline",
+						"type": "timeline",
 						"title": "Activity",
 						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "client"
+						"content": {
+							"order": "desc",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/timeline",
+								"params": {
+									"entityType": "client",
+									"entityId": "@objectId"
+								},
+								"itemsPath": "items",
+								"pagesPath": "pages",
+								"dateField": "date",
+								"labelField": "title",
+								"detailField": "description",
+								"typeField": "type",
+								"userField": "user",
+								"typeLabels": {
+									"interaction": "Contact moment",
+									"worklog": "Worklog",
+									"task": "Task",
+									"email": "Email",
+									"calendar": "Calendar"
+								},
+								"typesParam": "types[]",
+								"limit": 20
+							},
+							"typeChips": [
+								{
+									"value": "interaction",
+									"label": "Contact moments"
+								},
+								{
+									"value": "task",
+									"label": "Tasks"
+								},
+								{
+									"value": "email",
+									"label": "Email"
+								},
+								{
+									"value": "calendar",
+									"label": "Calendar"
+								}
+							],
+							"emptyText": "Activities will appear here once contactmomenten, tasks, emails or calendar entries are linked to this record."
 						},
 						"colSpan": 12,
 						"card": true

@@ -19,7 +19,6 @@
 //   - openspec/changes/pipelinq-manifest-v1/design.md
 //   - hydra/openspec/architecture/adr-036-manifest-v2.md
 
-import ActivityTimeline from './components/ActivityTimeline.vue'
 // --- Shillinq time-intake billing handoff (time-billing-handoff-emit): the
 //     real emit side of the delegated time-approval-workflow. Self-fetches
 //     its availability endpoint and falls back to the existing Shillinq
@@ -679,11 +678,7 @@ const registry = {
 		component: SocialPublicationsSection,
 		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement end). One row per account the post named, with the failure reason where it did not go out. The Retry button appears only on the two of six failure codes a retry can fix, because a Retry on a dead grant or an unfiled developer application is a button that cannot work. Also hosts the share path for accounts no application may post to: the prepared text, a copy action, a link into the network\'s own composer and the confirmation.',
 	},
-	ActivityTimeline: {
-		kind: 'section',
-		component: ActivityTimeline,
-		_note: 'Chronological activity feed for an entity; self-fetches by entityType/entityId.',
-	},
+
 	CommunicationHistory: {
 		kind: 'section',
 		component: CommunicationHistory,
