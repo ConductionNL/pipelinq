@@ -16,15 +16,12 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 	CnDetailPage: {},
 	CnFormDialog: {},
 	CnStatusBadge: {},
+	CnSubObjectsField: {},
 	useObjectSubscription: vi.fn(),
 }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 vi.mock('@nextcloud/vue', () => ({ NcButton: {} }))
-vi.mock('../../src/components/bookings/ServiceStepsEditor.vue', () => ({
-	default: {},
-}))
 vi.mock('../../src/dialogs/DeleteServiceDialog.vue', () => ({ default: {} }))
-vi.mock('../../src/views/bookings/ServiceForm.vue', () => ({ default: {} }))
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => ({}) }))
 
 let methods
@@ -45,7 +42,6 @@ function context(fetchObject) {
 	const ctx = { productNames: {}, objectStore: { fetchObject } }
 	ctx.productName = methods.productName.bind(ctx)
 	ctx.loadProductNames = methods.loadProductNames.bind(ctx)
-	ctx.rememberProductNames = methods.rememberProductNames.bind(ctx)
 	return ctx
 }
 
@@ -62,16 +58,5 @@ describe('composition step product names', () => {
 
 		expect(fetchObject).toHaveBeenCalledTimes(2)
 		expect(ctx.productName('p-1')).toBe('Adviesuur')
-	})
-
-	it('names a step from the editor catalogue without a read', () => {
-		const fetchObject = vi.fn()
-		const ctx = context(fetchObject)
-
-		ctx.rememberProductNames([{ id: 'p-2', name: 'Knipbeurt' }, { id: 'p-3' }])
-
-		expect(ctx.productName('p-2')).toBe('Knipbeurt')
-		expect(ctx.productName('p-3')).toBe('p-3')
-		expect(fetchObject).not.toHaveBeenCalled()
 	})
 })

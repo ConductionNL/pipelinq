@@ -1,5 +1,7 @@
 {
     "translations": {
+        "Vacation": "Vakantie",
+        "{sum:durationMinutes} of {@object.durationMinutes} min": "{sum:durationMinutes} van {@object.durationMinutes} min",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "De klant betaalt op de pinautomaat van {provider}.",
         "The customer is sent to {provider} to finish the payment.": "De klant gaat naar {provider} om de betaling af te ronden.",

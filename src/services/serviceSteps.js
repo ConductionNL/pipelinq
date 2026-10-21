@@ -89,3 +89,46 @@ export function serializeStep(step) {
 	}
 	return saved
 }
+
+/**
+ * How a service form edits its composition: rows of the library row editor
+ * (CnSubObjectsField, a dialog per step), the product picked from the
+ * catalogue, and a line that adds the step minutes up against the service
+ * duration (REQ-APT-001 "duration sums to multi-step total").
+ *
+ * @return {object} The `multiStep` field override, translated.
+ * @spec openspec/changes/pl2-booking-row-editors/specs/appointment-booking/spec.md#requirement-booking-rows-are-edited-with-the-library-row-editor
+ */
+export function serviceStepsOverride() {
+	return {
+		label: t('pipelinq', 'Multi-step composition'),
+		order: 10,
+		widget: 'sub-objects',
+		itemLabel: t('pipelinq', 'Step'),
+		addLabel: t('pipelinq', 'Add step'),
+		emptyText: t('pipelinq', 'Single-step service. Add steps to split it across resources.'),
+		newItem: { durationMinutes: 0, resourceType: 'staff', allowGap: false },
+		summary: t('pipelinq', '{sum:durationMinutes} of {@object.durationMinutes} min'),
+		itemOverrides: {
+			durationMinutes: { label: t('pipelinq', 'Duration (min)'), order: 1 },
+			resourceType: {
+				label: t('pipelinq', 'Resource type'),
+				order: 2,
+				enumLabels: Object.fromEntries(Object.entries({ staff: 'Staff', room: 'Room', equipment: 'Equipment' }).map(([value, label]) => [value, t('pipelinq', label)])),
+			},
+			skillRequired: { label: t('pipelinq', 'Skill required'), order: 3 },
+			allowGap: { label: t('pipelinq', 'Allow gap'), order: 4 },
+			productId: {
+				label: t('pipelinq', 'Product'),
+				order: 5,
+				optionsFrom: { register: 'pipelinq', schema: 'product', labelField: 'name' },
+			},
+			quantity: { label: t('pipelinq', 'Quantity'), order: 6 },
+			unit: {
+				label: t('pipelinq', 'Unit'),
+				order: 7,
+				enumLabels: Object.fromEntries(STEP_UNITS.map((unit) => [unit, unitLabel(unit)])),
+			},
+		},
+	}
+}

@@ -6,9 +6,9 @@
   View mode uses CnDetailPage: Service information and Policies side by side,
   the composition full width below them. The composition card edits its own
   steps in place (Edit steps), and a step can name a product with a quantity
-  and a unit. Edit opens the schema-driven CnFormDialog, with
-  ServiceStepsEditor in its multiStep slot; creating a service (id "new")
-  still uses the full-page ServiceForm.
+  and a unit. Edit opens the schema-driven CnFormDialog, which edits the steps
+  as rows (CnSubObjectsField); creating a service (id "new") opens the same
+  dialog empty.
 
   On save we delegate to the central ObjectService; the server expires the
   cached availability of the resources the service runs on
@@ -19,18 +19,18 @@
 -->
 <template>
 	<div v-if="isNew">
-		<div class="service-detail__header">
-			<NcButton :to="{ name: 'Services' }">
-				{{ t('pipelinq', 'Back to list') }}
-			</NcButton>
-			<h2>
-				{{ t('pipelinq', 'New service') }}
-			</h2>
-		</div>
-		<ServiceForm
-			:service="serviceData"
-			@save="onFormSave"
-			@cancel="onFormCancel" />
+		<CnFormDialog
+			v-if="serviceSchema"
+			ref="createDialog"
+			:schema="serviceSchema"
+			:item="null"
+			:dialogTitle="t('pipelinq', 'New service')"
+			:excludeFields="['requiredResourceTypes']"
+			:fieldOverrides="editFieldOverrides"
+			size="large"
+			:columns="2"
+			@confirm="onFormSave"
+			@close="onFormCancel" />
 	</div>
 
 	<CnDetailPage
@@ -177,11 +177,20 @@
 					{{ t('pipelinq', 'Edit steps') }}
 				</NcButton>
 			</template>
-			<ServiceStepsEditor
+			<CnSubObjectsField
 				v-if="editingSteps"
 				v-model="draftSteps"
-				:durationMinutes="serviceData.durationMinutes"
-				@catalogue="rememberProductNames" />
+				:items="stepItems"
+				:inputLabel="stepsOverride.label"
+				:itemLabel="stepsOverride.itemLabel"
+				:addLabel="stepsOverride.addLabel"
+				:emptyText="stepsOverride.emptyText"
+				:newItem="stepsOverride.newItem"
+				:fieldOverrides="stepsOverride.itemOverrides"
+				:summary="stepsOverride.summary"
+				:parentData="serviceData"
+				:maxColumns="4"
+				data-testid="service-steps-editor" />
 			<div v-else-if="!steps.length" class="section-empty">
 				<p>{{ t('pipelinq', 'This service has one step.') }}</p>
 			</div>
@@ -238,22 +247,7 @@
 			size="large"
 			:columns="2"
 			@confirm="onEditConfirm"
-			@close="showEditDialog = false">
-			<!-- The schema form cannot edit an array of step objects. The
-			     duration is read off the dialog's live form data, with the
-			     saved value until the ref is set. -->
-			<template #field-multiStep="{ value, updateField }">
-				<ServiceStepsEditor
-					:modelValue="value || []"
-					:durationMinutes="
-						$refs.editDialog?.formData?.durationMinutes
-						?? serviceData.durationMinutes
-					"
-					@update:modelValue="
-						(steps) => updateField('multiStep', steps)
-					" />
-			</template>
-		</CnFormDialog>
+			@close="showEditDialog = false" />
 	</CnDetailPage>
 </template>
 
@@ -263,6 +257,7 @@ import {
 	CnDetailPage,
 	CnFormDialog,
 	CnStatusBadge,
+	CnSubObjectsField,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -270,11 +265,9 @@ import { translate } from '@nextcloud/l10n'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
-import ServiceForm from './ServiceForm.vue'
 import { currencyOr } from '../../services/reportingCurrency.js'
-import { stepAmount } from '../../services/serviceSteps.js'
+import { serializeStep, serviceStepsOverride, stepAmount } from '../../services/serviceSteps.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import {
 	CANCELLATION_POLICY_LABELS,
@@ -344,8 +337,7 @@ export default {
 		CnDetailCard,
 		CnFormDialog,
 		CnStatusBadge,
-		ServiceForm,
-		ServiceStepsEditor,
+		CnSubObjectsField,
 		DeleteServiceDialog,
 	},
 
@@ -386,6 +378,7 @@ export default {
 			editingSteps: false,
 			savingSteps: false,
 			draftSteps: [],
+			created: false,
 			productNames: {},
 		}
 	},
@@ -490,12 +483,32 @@ export default {
 		 *
 		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
+		/**
+		 * The composition editor's config, the same the service form uses.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/pl2-booking-row-editors/specs/appointment-booking/spec.md#requirement-booking-rows-are-edited-with-the-library-row-editor
+		 */
+		stepsOverride() {
+			return serviceStepsOverride()
+		},
+
+		/**
+		 * The schema of one composition step.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/pl2-booking-row-editors/specs/appointment-booking/spec.md#requirement-booking-rows-are-edited-with-the-library-row-editor
+		 */
+		stepItems() {
+			return this.serviceSchema?.properties?.multiStep?.items || { properties: {} }
+		},
+
 		serviceSchema() {
 			return this.objectStore.getSchema('appointmentService')
 		},
 
 		/**
-		 * Labels, order and the rules ServiceForm enforced, for the edit
+		 * Labels, order and the rules for the create and edit
 		 * dialog's schema-generated fields (the schema carries no titles).
 		 *
 		 * @return {object} fieldOverrides for CnFormDialog.
@@ -549,11 +562,7 @@ export default {
 					order: 9,
 				},
 
-				multiStep: {
-					label: t('pipelinq', 'Multi-step composition'),
-					order: 10,
-					widget: 'json',
-				},
+				multiStep: serviceStepsOverride(),
 
 				bookableOnline: {
 					label: t('pipelinq', 'Online to book'),
@@ -624,9 +633,11 @@ export default {
 	},
 
 	async mounted() {
-		if (!this.isNew) {
-			await this.objectStore.fetchObject('appointmentService', this.serviceId)
+		if (this.isNew) {
+			await this.objectStore.fetchSchema('appointmentService')
+			return
 		}
+		await this.objectStore.fetchObject('appointmentService', this.serviceId)
 	},
 
 	methods: {
@@ -684,31 +695,12 @@ export default {
 		},
 
 		/**
-		 * Remember the names of the products the step editor loaded, so a
-		 * step saved with a product shows its name at once.
-		 *
-		 * @param {Array<object>} products The catalogue rows.
-		 * @return {void}
-		 *
-		 * @spec openspec/changes/review-audit-fixes-b/specs/appointment-booking/spec.md#requirement-a-saved-composition-step-shows-its-product-name-req-raf-040
-		 */
-		rememberProductNames(products) {
-			const names = { ...this.productNames }
-			for (const product of products || []) {
-				const name = product?.name || product?.title
-				if (product?.id && name) {
-					names[product.id] = name
-				}
-			}
-			this.productNames = names
-		},
-
-		/**
 		 * Edit the composition in its own card, on a copy of the steps.
 		 *
 		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
 		 */
-		startEditSteps() {
+		async startEditSteps() {
+			await this.objectStore.fetchSchema('appointmentService')
 			this.draftSteps = this.steps.map((step) => ({ ...step }))
 			this.editingSteps = true
 		},
@@ -737,7 +729,7 @@ export default {
 					'appointmentService',
 					{
 						...this.serviceData,
-						multiStep: this.draftSteps,
+						multiStep: this.draftSteps.map(serializeStep),
 						id: this.serviceId,
 					},
 				)
@@ -786,6 +778,7 @@ export default {
 			const dialog = this.$refs.editDialog
 			const saved = await this.objectStore.saveObject('appointmentService', {
 				...formData,
+				multiStep: (formData.multiStep || []).map(serializeStep),
 				id: this.serviceId,
 			})
 			if (!saved) {
@@ -800,16 +793,25 @@ export default {
 			await this.objectStore.fetchObject('appointmentService', this.serviceId)
 		},
 
+		/**
+		 * Create the service from the new-service dialog and open it.
+		 *
+		 * @param {object} formData The dialog's form data.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/pl2-booking-row-editors/specs/appointment-booking/spec.md#requirement-booking-rows-are-edited-with-the-library-row-editor
+		 */
 		async onFormSave(formData) {
+			const dialog = this.$refs.createDialog
 			const saved = await this.objectStore.saveObject(
 				'appointmentService',
-				formData,
+				{ ...formData, multiStep: (formData.multiStep || []).map(serializeStep) },
 			)
 			if (!saved) {
 				const error = this.objectStore.getError?.('appointmentService')
-				showError(error?.message || t('pipelinq', 'Failed to save service.'))
+				dialog?.setResult({ error: error?.message || t('pipelinq', 'Failed to save service.') })
 				return
 			}
+			this.created = true
 			showSuccess(t('pipelinq', 'Service saved.'))
 			this.$router.push({
 				name: 'ServiceDetail',
@@ -817,7 +819,13 @@ export default {
 			})
 		},
 
+		/**
+		 * Leave the new-service dialog for the list, unless it just saved.
+		 */
 		onFormCancel() {
+			if (this.created) {
+				return
+			}
 			this.$router.push({ name: 'Services' })
 		},
 

@@ -1,5 +1,7 @@
 {
     "translations": {
+        "Vacation": "Vacation",
+        "{sum:durationMinutes} of {@object.durationMinutes} min": "{sum:durationMinutes} of {@object.durationMinutes} min",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "The customer pays at the {provider} card terminal.",
         "The customer is sent to {provider} to finish the payment.": "The customer is sent to {provider} to finish the payment.",

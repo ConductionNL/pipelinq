@@ -95,8 +95,8 @@ test('Services: "New service" opens the ServiceDetail form with editable fields'
 	await clickHeaderAction(page, 'New service')
 	await expect(page).toHaveURL(/\/services\/new/, { timeout: 10000 })
 
-	// ServiceDetail renders the ServiceForm branch for id === 'new'
-	// (src/views/bookings/ServiceDetail.vue, `v-if="editing || isNew"`).
+	// ServiceDetail opens its service form dialog empty for id === 'new'
+	// (src/views/bookings/ServiceDetail.vue, `v-if="isNew"`).
 	await expect(
 		page
 			.locator('#content-vue')

@@ -4,9 +4,9 @@
   Resource detail + edit page — appointment-booking member 11.
 
   View mode renders headline info, the weekly working-hours grid and the
-  vacation list. Edit opens the schema-driven CnFormDialog, with the
-  working-hours and vacation editors in its field slots; creating a resource
-  (id "new") still uses the full-page ResourceForm. On save we delegate to the
+  vacation list. Edit opens the schema-driven CnFormDialog, which edits the
+  working hours and vacations as rows (CnSubObjectsField, inline); creating a
+  resource (id "new") opens the same dialog empty. On save we delegate to the
   ObjectService; the server expires this resource's cached availability
   (AvailabilityCacheInvalidationListener, REQ-APT-002).
 
@@ -14,18 +14,17 @@
 -->
 <template>
 	<div v-if="isNew">
-		<div class="resource-detail__header">
-			<NcButton :to="{ name: 'Resources' }">
-				{{ t('pipelinq', 'Back to list') }}
-			</NcButton>
-			<h2>
-				{{ t('pipelinq', 'New resource') }}
-			</h2>
-		</div>
-		<ResourceForm
-			:resource="resourceData"
-			@save="onFormSave"
-			@cancel="onFormCancel" />
+		<CnFormDialog
+			v-if="resourceSchema"
+			ref="createDialog"
+			:schema="resourceSchema"
+			:item="null"
+			:dialogTitle="t('pipelinq', 'New resource')"
+			:fieldOverrides="editFieldOverrides"
+			size="large"
+			:columns="2"
+			@confirm="onFormSave"
+			@close="onFormCancel" />
 	</div>
 
 	<CnDetailPage
@@ -153,23 +152,7 @@
 			size="large"
 			:columns="2"
 			@confirm="onEditConfirm"
-			@close="showEditDialog = false">
-			<!-- The schema form cannot edit arrays of objects. -->
-			<template #field-workingHours="{ value, error, updateField }">
-				<ResourceHoursEditor
-					:modelValue="value || []"
-					:error="error || ''"
-					@update:modelValue="
-						(rows) => updateField('workingHours', rows)
-					" />
-			</template>
-			<template #field-vacations="{ value, error, updateField }">
-				<ResourceVacationsEditor
-					:modelValue="value || []"
-					:error="error || ''"
-					@update:modelValue="(rows) => updateField('vacations', rows)" />
-			</template>
-		</CnFormDialog>
+			@close="showEditDialog = false" />
 	</CnDetailPage>
 </template>
 
@@ -183,12 +166,9 @@ import {
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
-import ResourceHoursEditor from '../../components/bookings/ResourceHoursEditor.vue'
-import ResourceVacationsEditor from '../../components/bookings/ResourceVacationsEditor.vue'
 import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
-import ResourceForm from './ResourceForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
-import { vacationsError, workingHoursError } from '../../utils/resourceValidation.js'
+import { resourceRowOverrides } from '../../utils/resourceValidation.js'
 
 export default {
 	name: 'ResourceDetail',
@@ -197,9 +177,6 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		CnFormDialog,
-		ResourceForm,
-		ResourceHoursEditor,
-		ResourceVacationsEditor,
 		DeleteResourceDialog,
 	},
 
@@ -237,6 +214,7 @@ export default {
 		return {
 			showEditDialog: false,
 			showDelete: false,
+			created: false,
 		}
 	},
 
@@ -294,9 +272,9 @@ export default {
 		},
 
 		/**
-		 * Translated labels and order for the edit dialog's schema fields, as
-		 * ResourceForm had them. The schema's English descriptions are cleared
-		 * because they are not translated.
+		 * Translated labels and order for the create and edit dialog's schema
+		 * fields. The schema's English descriptions are cleared because they
+		 * are not translated.
 		 *
 		 * @return {object} fieldOverrides for CnFormDialog.
 		 *
@@ -342,17 +320,7 @@ export default {
 					order: 8,
 				},
 
-				workingHours: {
-					label: t('pipelinq', 'Working hours'),
-					order: 9,
-					widget: 'json',
-				},
-
-				vacations: {
-					label: t('pipelinq', 'Vacations / unavailable windows'),
-					order: 10,
-					widget: 'json',
-				},
+				...resourceRowOverrides(),
 			}
 			for (const key of Object.keys(overrides)) {
 				overrides[key].description = ''
@@ -373,12 +341,11 @@ export default {
 	},
 
 	async mounted() {
-		if (!this.isNew) {
-			await this.objectStore.fetchObject(
-				'appointmentResource',
-				this.resourceId,
-			)
+		if (this.isNew) {
+			await this.objectStore.fetchSchema('appointmentResource')
+			return
 		}
+		await this.objectStore.fetchObject('appointmentResource', this.resourceId)
 	},
 
 	methods: {
@@ -409,20 +376,6 @@ export default {
 		 */
 		async onEditConfirm(formData) {
 			const dialog = this.$refs.editDialog
-			const fieldErrors = {}
-			const hoursError = workingHoursError(formData.workingHours)
-			const vacationError = vacationsError(formData.vacations)
-			if (hoursError) {
-				fieldErrors.workingHours = hoursError
-			}
-			if (vacationError) {
-				fieldErrors.vacations = vacationError
-			}
-			if (Object.keys(fieldErrors).length > 0) {
-				dialog?.setValidationErrors(fieldErrors)
-				return
-			}
-
 			const saved = await this.objectStore.saveObject('appointmentResource', {
 				...formData,
 				id: this.resourceId,
@@ -452,18 +405,28 @@ export default {
 			)
 		},
 
+		/**
+		 * Create the resource from the new-resource dialog and open it.
+		 *
+		 * @param {object} formData The dialog's form data.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/pl2-booking-row-editors/specs/appointment-booking/spec.md#requirement-booking-rows-are-edited-with-the-library-row-editor
+		 */
 		async onFormSave(formData) {
+			const dialog = this.$refs.createDialog
 			const saved = await this.objectStore.saveObject(
 				'appointmentResource',
 				formData,
 			)
 			if (!saved) {
 				const error = this.objectStore.getError?.('appointmentResource')
-				showError(
-					error?.message || t('pipelinq', 'Failed to save resource.'),
-				)
+				dialog?.setResult({
+					error:
+						error?.message || t('pipelinq', 'Failed to save resource.'),
+				})
 				return
 			}
+			this.created = true
 			showSuccess(t('pipelinq', 'Resource saved.'))
 			this.$router.push({
 				name: 'ResourceDetail',
@@ -471,7 +434,13 @@ export default {
 			})
 		},
 
+		/**
+		 * Leave the new-resource dialog for the list, unless it just saved.
+		 */
 		onFormCancel() {
+			if (this.created) {
+				return
+			}
 			this.$router.push({ name: 'Resources' })
 		},
 
