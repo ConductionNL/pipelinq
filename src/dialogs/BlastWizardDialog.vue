@@ -13,7 +13,7 @@
 <template>
 	<NcDialog
 		v-if="show"
-		:name="t('pipelinq', 'New blast')"
+		:name="t('pipelinq', 'New newsletter')"
 		:open="true"
 		size="large"
 		:closeOnClickOutside="false"

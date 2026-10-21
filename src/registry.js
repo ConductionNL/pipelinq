@@ -66,6 +66,8 @@ import ArticleContentSection from './components/marketing/ArticleContentSection.
 import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
 import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
+import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
+import ListSubscriberViewSection from './components/marketing/ListSubscriberViewSection.vue'
 import SocialPostHeaderActions from './components/marketing/SocialPostHeaderActions.vue'
 import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
 import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
@@ -629,6 +631,18 @@ const registry = {
 		component: SubscriptionsSection,
 		_note: 'Mailing-list memberships, bound either to a list (listId) or to a contact (contactId); self-fetches the matching endpoint. Kept custom because a membership row renders a STATE chip the declarative object-list widget cannot express, and because the list view leads with per-state counts that summaryAggregates (equality-only, one schema) cannot break out of one field.',
 	},
+	ListSignupFormWidget: {
+		kind: 'widget',
+		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'The embed code of a mailing list sign-up form, posting to the public subscribe endpoint, with a copy button. Side card on MailingListDetail (PqMailinglijst).',
+	},
+	ListSubscriberViewWidget: {
+		kind: 'widget',
+		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
+	},
 	ArticleContentSection: {
 		kind: 'section',
 		component: ArticleContentSection,
@@ -1023,6 +1037,29 @@ const registry = {
 		kind: 'page',
 		component: WeeklyReviewView,
 		_note: 'The weekly marketing review (marketing-integrated-campaigns, ADR-112): what moved, what to try and three topic ideas, from ONE GET /api/weekly-review. Reached as a card on the Reports page and never as a menu entry of its own. Custom because the response aggregates four collections into one narrative record and names the sources it could not read, which no declarative index or dashboard primitive expresses. It also renders the ADR-088 mark when an agent wrote the summary.',
+	},
+	CampaignLandingPageWidget: {
+		kind: 'widget',
+		component: sectionWidget('CampaignLandingPageWidget', CampaignLandingPageSection, ({ objectId }) => ({ campaignId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'CampaignLandingPageSection as a card of the campaign page\'s Overview tab (PqCampagne).',
+	},
+	CampaignReportWidget: {
+		kind: 'widget',
+		component: sectionWidget('CampaignReportWidget', CampaignReportView, ({ objectId }) => ({ campaignId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'The campaign report as a card of the campaign page\'s Overview tab (PqCampagne): one GET /api/campaigns/{id}/report.',
+	},
+	JourneyRunsWidget: {
+		kind: 'widget',
+		component: sectionWidget('JourneyRunsWidget', JourneyRunsSection, ({ objectId }) => ({ journeyId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'JourneyRunsSection as a card of the journey page\'s Overview tab (PqJourney).',
+	},
+	CampaignReportSection: {
+		kind: 'section',
+		component: CampaignReportView,
+		_note: 'The campaign report as a section of the declarative CampaignDetail page (PqCampagne): the same component with a campaignId (@objectId), which drops the campaign picker and draws the tiles and the per-channel table under the attribution model picker. One GET /api/campaigns/{id}/report, as on the report page.',
 	},
 	CampaignReportView: {
 		kind: 'page',

@@ -72,7 +72,7 @@ test.describe('Blast wizard transport step', () => {
 			.first()
 			.click()
 
-		const dialog = page.getByRole('dialog', { name: 'New blast' })
+		const dialog = page.getByRole('dialog', { name: 'New newsletter' })
 		await expect(dialog).toBeVisible({ timeout: 20000 })
 
 		// The stepper names every step, including Delivery, which holds the
