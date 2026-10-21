@@ -11,13 +11,10 @@
   - Self-fetches the full client/contact object by entityId/entityType (the
   - array fields need the whole object for a PUT — OpenRegister's object
   - endpoint replaces the full representation, so a partial payload would
-  - drop every other field). On save, the legacy scalar `email`/`phone`
-  - mirror is recomputed from the primary entry of `emails`/`phones` in
-  - THIS save path — ADR-031's `x-openregister-calculations` has no
-  - documented grammar for "select the array entry where primary == true"
-  - (see design.md, Decisions), so the mirror is kept here rather than
-  - declaratively. After a successful save, write-back sync is triggered
-  - so the linked Nextcloud Contact vCard picks up the new channels too.
+  - drop every other field). The server fills the single `email`/`phone`
+  - fields from the primary entry on save. After a successful save,
+  - write-back sync is triggered so the linked Nextcloud Contact vCard
+  - picks up the new channels too.
   -
   - @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
   -->
@@ -607,11 +604,7 @@ export default {
 
 		/**
 		 * Merge a channel-array patch onto the full entity and save it.
-		 * `email`/`phone` are recomputed from the primary entry of
-		 * `emails`/`phones` here — the save path decided in design.md,
-		 * since ADR-031 has no declarative "mirror the primary array
-		 * entry" grammar. Falls back to the first entry when none is
-		 * marked primary, and clears the scalar when the array is empty.
+		 * The server fills `email`/`phone` from the primary entry.
 		 *
 		 * After a successful save, write-back sync is triggered so the
 		 * linked Nextcloud Contact vCard picks up the new channels too
@@ -624,18 +617,6 @@ export default {
 		 */
 		async persist(patch) {
 			const merged = { ...this.entity, ...patch }
-
-			if ('emails' in patch) {
-				const primary =
-					merged.emails.find((e) => e.primary) || merged.emails[0]
-				merged.email = primary ? primary.value : ''
-			}
-			if ('phones' in patch) {
-				const primary =
-					merged.phones.find((e) => e.primary) || merged.phones[0]
-				merged.phone = primary ? primary.value : ''
-			}
-
 			const saved = await this.objectStore.saveObject(this.entityType, merged)
 			if (!saved) {
 				const error = this.objectStore.getError?.(this.entityType)

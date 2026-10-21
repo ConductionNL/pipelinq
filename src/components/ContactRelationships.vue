@@ -575,61 +575,30 @@ export default {
 				? toEntityOption.entityType
 				: 'contact'
 
+			const fields = {
+				type: this.addForm.type,
+				inverseType,
+				category,
+				notes: this.addForm.notes,
+				startDate: this.addForm.startDate || null,
+				endDate: this.addForm.endDate || null,
+				strength: this.addForm.strength,
+			}
+
 			try {
 				if (this.editingRelationship) {
-					// Update existing relationship
-					await this.objectStore.saveObject('relationship', {
-						id: this.editingRelationship.id,
-						type: this.addForm.type,
-						inverseType,
-						category,
-						notes: this.addForm.notes,
-						startDate: this.addForm.startDate || null,
-						endDate: this.addForm.endDate || null,
-						strength: this.addForm.strength,
-					})
-					// Update inverse if it exists
-					if (this.editingRelationship._inverseId) {
-						await this.objectStore.saveObject('relationship', {
-							id: this.editingRelationship._inverseId,
-							type: inverseType,
-							inverseType: this.addForm.type,
-							category,
-							notes: this.addForm.notes,
-							startDate: this.addForm.startDate || null,
-							endDate: this.addForm.endDate || null,
-							strength: this.addForm.strength,
-						})
-					}
+					await this.objectStore.patchObject(
+						'relationship',
+						this.editingRelationship.id,
+						fields,
+					)
 				} else {
-					// Create primary relationship
 					await this.objectStore.saveObject('relationship', {
 						fromContact: this.entityId,
 						toContact: this.addForm.toContact,
 						fromType: this.entityType,
 						toType: toEntityType,
-						type: this.addForm.type,
-						inverseType,
-						category,
-						notes: this.addForm.notes,
-						startDate: this.addForm.startDate || null,
-						endDate: this.addForm.endDate || null,
-						strength: this.addForm.strength,
-					})
-
-					// Create inverse relationship
-					await this.objectStore.saveObject('relationship', {
-						fromContact: this.addForm.toContact,
-						toContact: this.entityId,
-						fromType: toEntityType,
-						toType: this.entityType,
-						type: inverseType,
-						inverseType: this.addForm.type,
-						category,
-						notes: this.addForm.notes,
-						startDate: this.addForm.startDate || null,
-						endDate: this.addForm.endDate || null,
-						strength: this.addForm.strength,
+						...fields,
 					})
 				}
 
@@ -647,14 +616,6 @@ export default {
 		 */
 		editRelationship(rel) {
 			this.editingRelationship = { ...rel }
-			// Find the inverse relationship to track it
-			const inverseRels = this.relationships.filter(
-				(r) =>
-					r.toContact === this.entityId && r.fromContact === rel.toContact,
-			)
-			if (inverseRels.length > 0) {
-				this.editingRelationship._inverseId = inverseRels[0].id
-			}
 
 			this.addForm = {
 				toContact: rel.toContact,
@@ -685,24 +646,10 @@ export default {
 			}
 
 			try {
-				// Delete the primary relationship
 				await this.objectStore.deleteObject(
 					'relationship',
 					this.deletingRelationship.id,
 				)
-
-				// Find and delete inverse relationship
-				const inverseRels = await this.objectStore.fetchCollection(
-					'relationship',
-					{
-						_limit: 10,
-						fromContact: this.deletingRelationship.toContact,
-						toContact: this.entityId,
-					},
-				)
-				for (const inv of inverseRels || []) {
-					await this.objectStore.deleteObject('relationship', inv.id)
-				}
 
 				showSuccess(t('pipelinq', 'Relationship removed'))
 				this.showDeleteDialog = false
