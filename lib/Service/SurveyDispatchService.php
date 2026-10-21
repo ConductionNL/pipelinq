@@ -477,7 +477,7 @@ class SurveyDispatchService {
 	 *
 	 * @param array<int, array<string, mixed>> $invitations The invitations.
 	 *
-	 * @return array<string, mixed> delivered, responded, rate, suppressed, failed, byChannel.
+	 * @return array<string, mixed> delivered, responded, rate, suppressed, failed, byChannel, and the same per channel as `channels` rows.
 	 *
 	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
@@ -485,6 +485,7 @@ class SurveyDispatchService {
 		$figures = new SurveyInvitationFigures();
 		$out     = $figures->rate(invitations: $invitations);
 		$out['byChannel'] = $figures->byChannel(invitations: $invitations);
+		$out['channels']  = $figures->channelRows(invitations: $invitations);
 
 		return $out;
 	}//end responseRate()

@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 use DateInterval;
 use DateTimeImmutable;
 use OCP\IAppConfig;
+use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -66,11 +67,13 @@ class ReportingService {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
 	 * @param TicketService $ticketService The unified ticket resolver (unify-ticket-supertype).
+	 * @param IUserManager|null $userManager Names the agents in the agent rows.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private TicketService $ticketService,
+		private ?IUserManager $userManager = null,
 	) {
 	}//end __construct()
 
@@ -251,6 +254,128 @@ class ReportingService {
 			return [];
 		}//end try
 	}//end getAgentPerformance()
+
+	/**
+	 * One row per channel for the given date range, largest first.
+	 *
+	 * Every figure is counted from the contact moments themselves: the share of
+	 * all contacts, the first-contact resolution rate, and the share handled
+	 * within the channel's SLA threshold against its configured target.
+	 *
+	 * @param string $from ISO 8601 start date.
+	 * @param string $to ISO 8601 end date.
+	 *
+	 * @return array<int, array{channel: string, total: int, share: float, fcrRate: float, slaCompliance: float, slaTarget: float, slaStatus: string}> The rows.
+	 *
+	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
+	 */
+	public function getChannelRows(string $from, string $to): array {
+		try {
+			$byChannel = [];
+			foreach ($this->fetchContactmomenten(from: $from, to: $to) as $moment) {
+				$byChannel[(string)($moment['channel'] ?? 'unknown')][] = $moment;
+			}
+
+			$all = array_sum(array_map('count', $byChannel));
+			$rows = [];
+			foreach ($byChannel as $channel => $moments) {
+				$total = count($moments);
+				$sla = $this->calculateSlaCompliance(
+					channel: $channel,
+					totalContacts: $total,
+					withinSla: $this->countWithinSla(channel: $channel, moments: $moments),
+				);
+				$rows[] = [
+					'channel' => $channel,
+					'total' => $total,
+					'share' => round(($total / $all) * 100, 1),
+					'fcrRate' => $this->calculateFcr(contactmomenten: $moments),
+					'slaCompliance' => $sla['compliance'],
+					'slaTarget' => $sla['target'],
+					'slaStatus' => $sla['status'],
+				];
+			}
+
+			usort($rows, static fn (array $a, array $b): int => [$b['total'], $a['channel']] <=> [$a['total'], $b['channel']]);
+			return $rows;
+		} catch (\Throwable $e) {
+			$this->logger->error('ReportingService::getChannelRows failed', ['exception' => $e]);
+			return [];
+		}//end try
+	}//end getChannelRows()
+
+	/**
+	 * One row per agent for the given date range, most contacts first, with the
+	 * team totals beside them.
+	 *
+	 * The average handling time is answered in seconds so it sorts as a number;
+	 * the agent is named by the display name of the Nextcloud user.
+	 *
+	 * @param string $from ISO 8601 start date.
+	 * @param string $to ISO 8601 end date.
+	 *
+	 * @return array{rows: array<int, array{agent: string, agentName: string, count: int, fcrRate: float, avgHandlingSeconds: int}>, totals: array{contacts: int, fcrRate: float}} The rows and totals.
+	 *
+	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 */
+	public function getAgentRows(string $from, string $to): array {
+		try {
+			$moments = $this->fetchContactmomenten(from: $from, to: $to);
+			$byAgent = [];
+			foreach ($moments as $moment) {
+				$byAgent[(string)($moment['agent'] ?? 'unknown')][] = $moment;
+			}
+
+			$rows = [];
+			foreach ($byAgent as $agent => $own) {
+				$rows[] = [
+					'agent' => $agent,
+					'agentName' => $this->agentName(uid: $agent),
+					'count' => count($own),
+					'fcrRate' => $this->calculateFcr(contactmomenten: $own),
+					'avgHandlingSeconds' => $this->averageHandlingSeconds(durations: array_column($own, 'duration')),
+				];
+			}
+
+			usort($rows, static fn (array $a, array $b): int => [$b['count'], $a['agent']] <=> [$a['count'], $b['agent']]);
+
+			return [
+				'rows' => $rows,
+				'totals' => [
+					'contacts' => count($moments),
+					'fcrRate' => $this->calculateFcr(contactmomenten: $moments),
+				],
+			];
+		} catch (\Throwable $e) {
+			$this->logger->error('ReportingService::getAgentRows failed', ['exception' => $e]);
+			return ['rows' => [], 'totals' => ['contacts' => 0, 'fcrRate' => 0.0]];
+		}//end try
+	}//end getAgentRows()
+
+	/**
+	 * The contact moments of the given date range as CSV, one line each.
+	 *
+	 * @param string $from ISO 8601 start date.
+	 * @param string $to ISO 8601 end date.
+	 *
+	 * @return string The CSV content.
+	 *
+	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
+	 */
+	public function exportContactMomentsCsv(string $from, string $to): string {
+		$rows = [];
+		foreach ($this->fetchContactmomenten(from: $from, to: $to) as $moment) {
+			$rows[] = [
+				(string)$moment['contactedAt'],
+				(string)$moment['channel'],
+				(string)$moment['agent'],
+				(string)$moment['outcome'],
+				(string)($moment['duration'] ?? ''),
+			];
+		}
+
+		return $this->generateCsv(headers: ['Date', 'Channel', 'Agent', 'Outcome', 'Duration'], rows: $rows);
+	}//end exportContactMomentsCsv()
 
 	/**
 	 * Get SLA compliance percentage for a given channel and date range.
@@ -476,33 +601,66 @@ class ReportingService {
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
 	 */
 	public function calculateAverageHandlingTime(array $durations): string {
-		if (count($durations) === 0) {
-			return '0:00';
-		}
-
-		$totalSeconds = 0;
-		$counted = 0;
-		foreach ($durations as $duration) {
-			try {
-				$interval = new DateInterval($duration);
-				$totalSeconds += ($interval->h * 3600) + ($interval->i * 60) + $interval->s;
-				$counted++;
-			} catch (\Exception) {
-				// Skip invalid durations.
-				continue;
-			}
-		}
-
-		if ($counted === 0) {
-			return '0:00';
-		}
-
-		$avgSeconds = (int)($totalSeconds / $counted);
+		$avgSeconds = $this->averageHandlingSeconds(durations: $durations);
 		$minutes = (int)($avgSeconds / 60);
 		$seconds = $avgSeconds % 60;
 
 		return $minutes . ':' . str_pad((string)$seconds, 2, '0', STR_PAD_LEFT);
 	}//end calculateAverageHandlingTime()
+
+	/**
+	 * Average of ISO 8601 durations in whole seconds; empty and unreadable
+	 * durations are skipped, and no readable duration answers 0.
+	 *
+	 * @param array<mixed> $durations ISO 8601 duration strings.
+	 *
+	 * @return int The average in seconds.
+	 */
+	private function averageHandlingSeconds(array $durations): int {
+		$totalSeconds = 0;
+		$counted = 0;
+		foreach ($durations as $duration) {
+			if (is_string($duration) === false || $duration === '') {
+				continue;
+			}
+
+			try {
+				$interval = new DateInterval($duration);
+			} catch (\Exception) {
+				continue;
+			}
+
+			$totalSeconds += ($interval->h * 3600) + ($interval->i * 60) + $interval->s;
+			$counted++;
+		}
+
+		if ($counted === 0) {
+			return 0;
+		}
+
+		return (int)($totalSeconds / $counted);
+	}//end averageHandlingSeconds()
+
+	/**
+	 * The display name of an agent's Nextcloud user, or the uid when the user
+	 * is unknown.
+	 *
+	 * @param string $uid The user id.
+	 *
+	 * @return string The name.
+	 */
+	private function agentName(string $uid): string {
+		if ($this->userManager === null) {
+			return $uid;
+		}
+
+		$name = $this->userManager->getDisplayName($uid);
+		if ($name === null || $name === '') {
+			return $uid;
+		}
+
+		return $name;
+	}//end agentName()
 
 	/**
 	 * Fetch the contactmoment tickets that fall inside the given date range.

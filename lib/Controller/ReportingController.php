@@ -110,7 +110,7 @@ class ReportingController extends Controller {
 	/**
 	 * Get channel distribution and trend data.
 	 *
-	 * @return JSONResponse Channel distribution counts and time-series trend.
+	 * @return JSONResponse One row per channel (`rows`), the counts by channel and the time-series trend.
 	 *
 	 * @NoAdminRequired
 	 *
@@ -144,6 +144,7 @@ class ReportingController extends Controller {
 
 			return new JSONResponse(
 				[
+					'rows' => $this->reportingService->getChannelRows($from, $to),
 					'distribution' => $distribution,
 					'trend' => $trend,
 				]
@@ -156,7 +157,7 @@ class ReportingController extends Controller {
 	/**
 	 * Get per-agent performance table.
 	 *
-	 * @return JSONResponse Per-agent metrics: count, FCR %, avg handling time.
+	 * @return JSONResponse One row per agent (`rows`), the team `totals`, and the per-agent metrics keyed by agent.
 	 *
 	 * @NoAdminRequired
 	 *
@@ -185,7 +186,8 @@ class ReportingController extends Controller {
 
 		try {
 			$agents = $this->reportingService->getAgentPerformance($from, $to);
-			return new JSONResponse(['agents' => $agents]);
+			$report = $this->reportingService->getAgentRows($from, $to);
+			return new JSONResponse(['rows' => $report['rows'], 'totals' => $report['totals'], 'agents' => $agents]);
 		} catch (\Throwable) {
 			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}//end try
@@ -271,7 +273,10 @@ class ReportingController extends Controller {
 	}//end updateSla()
 
 	/**
-	 * Export reporting data as CSV.
+	 * Export the contact moments of a period as CSV.
+	 *
+	 * The period is read like the other reports: `from`/`to`, or a relative
+	 * `period` token.
 	 *
 	 * @return DataDownloadResponse|JSONResponse The CSV download or error.
 	 *
@@ -290,12 +295,23 @@ class ReportingController extends Controller {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
-		// CSV export requires OpenRegister data integration.
-		// Returning 501 until OR contactmoment retrieval is wired.
-		return new JSONResponse(
-			['message' => 'Export not yet implemented'],
-			Http::STATUS_NOT_IMPLEMENTED,
-		);
+		[$from, $to] = $this->resolvePeriodRange();
+		if ($from === '' || $to === '') {
+			return new JSONResponse(['message' => 'Missing required parameters: from, to (or period)'], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
+			return new JSONResponse(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], Http::STATUS_BAD_REQUEST);
+		}
+
+		try {
+			$csv = $this->reportingService->exportContactMomentsCsv(from: $from, to: $to);
+		} catch (\Throwable) {
+			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		$name = 'contact-moments-' . substr($from, 0, 10) . '-' . substr($to, 0, 10) . '.csv';
+		return new DataDownloadResponse($csv, $name, 'text/csv; charset=utf-8');
 	}//end exportCsv()
 
 	/**

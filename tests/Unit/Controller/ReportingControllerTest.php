@@ -38,6 +38,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUser;
+use OCP\IUserManager;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -82,6 +83,13 @@ class ReportingControllerTest extends TestCase {
 	private ReportingService $reporting;
 
 	/**
+	 * The app config double.
+	 *
+	 * @var IAppConfig
+	 */
+	private IAppConfig $appConfig;
+
+	/**
 	 * Set up the doubles and the real service graph.
 	 *
 	 * @return void
@@ -114,19 +122,32 @@ class ReportingControllerTest extends TestCase {
 			}
 		);
 
+		$this->appConfig = $appConfig;
+		$this->reporting = $this->buildReporting(userManager: null);
+	}//end setUp()
+
+	/**
+	 * Build the real reporting service over the in-memory store.
+	 *
+	 * @param IUserManager|null $userManager Names the agents, or null for none.
+	 *
+	 * @return ReportingService
+	 */
+	private function buildReporting(?IUserManager $userManager): ReportingService {
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->reporting = new ReportingService(
-			appConfig: $appConfig,
+		return new ReportingService(
+			appConfig: $this->appConfig,
 			logger: $logger,
 			ticketService: new TicketService(
-				appConfig: $appConfig,
+				appConfig: $this->appConfig,
 				logger: $logger,
 				objectService: $this->objects,
 				mcp: new McpAnswer(new NullLogger()),
 			),
+			userManager: $userManager,
 		);
-	}//end setUp()
+	}//end buildReporting()
 
 	/**
 	 * Build the in-memory ObjectService double.
@@ -557,17 +578,6 @@ class ReportingControllerTest extends TestCase {
 
 		$response = $this->buildController()->exportCsv();
 
-		if ($response instanceof JSONResponse && $response->getStatus() === Http::STATUS_NOT_IMPLEMENTED) {
-			$this->markTestSkipped(
-				'BUG: ReportingController::exportCsv() (lib/Controller/ReportingController.php:260-273) '
-				. 'is a stub — it returns 501 "Export not yet implemented" for every authenticated '
-				. 'caller, while its docblock claims @spec ...#requirement-export-and-bi-integration '
-				. 'and ReportingService::generateCsv()/neutralizeCsvCell() already exist unused by '
-				. 'this route. The CSV escaping contract cannot be exercised through the endpoint. '
-				. 'See coordinator report.'
-			);
-		}
-
 		$body = $response->render();
 		$this->assertStringContainsString("\"'=cmd|calc!A1\"", $body);
 		$this->assertStringContainsString('"Klant zei ""prima"", en vertrok"', $body);
@@ -601,4 +611,100 @@ class ReportingControllerTest extends TestCase {
 		$this->assertStringContainsString("\"'@here\"", $csv);
 		$this->assertStringContainsString('"alice"', $csv);
 	}//end testCsvWriterNeutralisesInjectionPrefixesAndQuotes()
+
+	/**
+	 * GET /api/rapportage/channels answers one row per channel with figures
+	 * counted from the contact moments: share, first-contact resolution and the
+	 * share handled within the channel's SLA against its target.
+	 *
+	 * @return void
+	 */
+	public function testGetChannelsAnswersRealPerChannelRows(): void {
+		$this->signIn();
+		$this->seedContactmomenten();
+		$this->withParams(['from' => '2026-06-01', 'to' => '2026-06-30']);
+
+		$rows = $this->buildController()->getChannels()->getData()['rows'];
+
+		$this->assertSame(
+			[
+				[
+					'channel' => 'telefoon',
+					'total' => 2,
+					'share' => 66.7,
+					'fcrRate' => 50.0,
+					'slaCompliance' => 50.0,
+					'slaTarget' => 90.0,
+					'slaStatus' => 'red',
+				],
+				[
+					'channel' => 'email',
+					'total' => 1,
+					'share' => 33.3,
+					'fcrRate' => 100.0,
+					'slaCompliance' => 100.0,
+					'slaTarget' => 90.0,
+					'slaStatus' => 'green',
+				],
+			],
+			$rows
+		);
+	}//end testGetChannelsAnswersRealPerChannelRows()
+
+	/**
+	 * GET /api/rapportage/agents answers one row per agent, the handling time in
+	 * seconds, the agent's display name, and the team totals.
+	 *
+	 * @return void
+	 */
+	public function testGetAgentsAnswersRowsWithNamesSecondsAndTotals(): void {
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->method('getDisplayName')->willReturnMap([['alice', 'Alice Jansen'], ['bob', null]]);
+		$this->reporting = $this->buildReporting(userManager: $userManager);
+		$this->signIn();
+		$this->seedContactmomenten();
+		$this->withParams(['from' => '2026-06-01', 'to' => '2026-06-30']);
+
+		$data = $this->buildController()->getAgents()->getData();
+
+		$this->assertSame(
+			[
+				['agent' => 'alice', 'agentName' => 'Alice Jansen', 'count' => 2, 'fcrRate' => 50.0, 'avgHandlingSeconds' => 600],
+				['agent' => 'bob', 'agentName' => 'bob', 'count' => 1, 'fcrRate' => 100.0, 'avgHandlingSeconds' => 1800],
+			],
+			$data['rows']
+		);
+		$this->assertSame(['contacts' => 3, 'fcrRate' => 66.7], $data['totals']);
+	}//end testGetAgentsAnswersRowsWithNamesSecondsAndTotals()
+
+	/**
+	 * The CSV export holds only the contact moments of the requested period.
+	 *
+	 * @return void
+	 */
+	public function testExportCsvHoldsOnlyThePeriod(): void {
+		$this->signIn();
+		$this->seedContactmomenten();
+		$this->withParams(['from' => '2026-06-11', 'to' => '2026-06-11']);
+
+		$body = $this->buildController()->exportCsv()->render();
+
+		$this->assertStringContainsString('"2026-06-11T09:00:00+00:00";"telefoon";"alice";"referred";"PT15M"', $body);
+		$this->assertStringNotContainsString('2026-06-10', $body);
+		$this->assertStringNotContainsString('2026-06-12', $body);
+	}//end testExportCsvHoldsOnlyThePeriod()
+
+	/**
+	 * An export without a period is refused with 400.
+	 *
+	 * @return void
+	 */
+	public function testExportCsvRejectsAMissingPeriod(): void {
+		$this->signIn();
+		$this->withParams([]);
+
+		$response = $this->buildController()->exportCsv();
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+	}//end testExportCsvRejectsAMissingPeriod()
 }//end class

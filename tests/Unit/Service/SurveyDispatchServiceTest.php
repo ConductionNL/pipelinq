@@ -360,6 +360,11 @@ class SurveyDispatchServiceTest extends TestCase {
 		$this->assertSame(1, $figures['byChannel']['sms']['suppressed']);
 		$this->assertSame(1, $figures['byChannel']['unknown']['failed']);
 		$this->assertArrayNotHasKey('byChannel', $figures['byChannel']['email']);
+		$this->assertSame(['email', 'sms', 'unknown'], array_column($figures['channels'], 'channel'));
+		$this->assertSame(
+			['channel' => 'email', 'delivered' => 2, 'responded' => 1, 'rate' => 50.0, 'suppressed' => 0, 'failed' => 0],
+			$figures['channels'][0]
+		);
 	}//end testTheResponseRateBreaksDownPerChannel()
 
 	/**
