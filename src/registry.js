@@ -51,7 +51,6 @@ import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
 import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
-import SocialPostHeaderActions from './components/marketing/SocialPostHeaderActions.vue'
 import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
 import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
 // --- Mailing-list memberships (marketing-lists-and-double-opt-in). One
@@ -145,6 +144,7 @@ import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 import ArticleEditModal from './modals/ArticleEditModal.vue'
+import SocialPostComposeModal from './modals/SocialPostComposeModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
@@ -281,7 +281,6 @@ import RequestConversionSection from './views/requests/RequestConversionSection.
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
-import SocialPostFormView from './views/social/SocialPostFormView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
 import StoreGallery from './views/store/StoreGallery.vue'
@@ -681,14 +680,9 @@ const registry = {
 	SocialPostVariantsSection: {
 		kind: 'section',
 		component: SocialPostVariantsSection,
-		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement before-body). Shows the RESOLVED text per network (the post body with that network\'s variant merged onto it, the same rule SocialPostService::resolveVariant() applies on the way out), and the approvals taken. NOT a declarative text widget: that widget renders a literal manifest string, not a per-network merge. Re-reads on cn:page:refresh, which SocialPostHeaderActions bumps after a move.',
+		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement before-body). Shows the RESOLVED text per network (the post body with that network\'s variant merged onto it, the same rule SocialPostService::resolveVariant() applies on the way out), and the approvals taken. NOT a declarative text widget: that widget renders a literal manifest string, not a per-network merge. Re-reads on cn:page:refresh, which the approval header actions bump after a move.',
 	},
-	SocialPostHeaderActions: {
-		kind: 'widget',
-		component: SocialPostHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'SocialPostDetail actionsComponent: the approval step beside Edit, Submit for approval on a draft and Approve / Reject while it waits. POSTs to /api/social-posts/{id}/{submit|approve|reject}, not lifecycleActions (ADR-062 rule 10): an approval has to record WHO decided and when, stamped from the session, which the transition grammar has no field for.',
-	},
+
 	SocialPublicationsSection: {
 		kind: 'section',
 		component: SocialPublicationsSection,
@@ -1023,11 +1017,7 @@ const registry = {
 		component: SocialAccountsView,
 		_note: "Connected social accounts, and the only place a connection is started, restarted or ended (social-publishing). Custom rather than type:index because Connect is a three-step conversation the grammar has no verb for: Pipelinq answers WHAT to connect, the BROWSER posts that to OpenRegister's own connect endpoint with the user's session, and the consent screen returns to this page's own path. The authorization code and the token never pass through Pipelinq (rule 2 of the marketing architecture, ADR-064). One component serves both SocialAccounts and SocialAccountDetail: the account has to be in the PATH because OpenRegister's safeReturnUrl() drops a query string.",
 	},
-	SocialPostFormView: {
-		kind: 'page',
-		component: SocialPostFormView,
-		_note: 'New-post route wrapper (social-publishing). Mounts SocialPostComposeModal in create mode. The per-network variants, the live character count against each network\'s own limit and the submit-for-approval step have no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new post\'s SocialPostDetail.',
-	},
+
 	SocialPerformanceView: {
 		kind: 'page',
 		component: SocialPerformanceView,
@@ -1238,6 +1228,12 @@ const registry = {
 		component: ArticleEditModal,
 		propsSchema: null,
 		_note: 'Create or edit an article: the markdown body and the Files hero picker. The Articles page opens it to create one, which then opens on its detail page.',
+	},
+	SocialPostComposeModal: {
+		kind: 'modal',
+		component: SocialPostComposeModal,
+		propsSchema: null,
+		_note: 'Write a social post: the body, a variant per network with its character count against that network\'s limit, and submit for approval. The Social posts page opens it to write one, which then opens on its detail page.',
 	},
 	ArticleDetailFormDialog: {
 		kind: 'modal',

@@ -329,7 +329,8 @@ export default {
 		},
 
 		/**
-		 * Save the post, and optionally put it up for approval.
+		 * Save the post, and optionally put it up for approval. A new post
+		 * opens on its detail page.
 		 *
 		 * @param {boolean} submit Whether to submit it after saving.
 		 * @return {Promise<void>} Resolves once saved.
@@ -352,6 +353,10 @@ export default {
 				}
 
 				this.$emit('saved', saved)
+				if (!existingId && id && this.$router) {
+					this.$router.push({ name: 'SocialPostDetail', params: { id } })
+					this.$emit('close')
+				}
 			} catch (error) {
 				this.error =
 					error?.response?.data?.error
