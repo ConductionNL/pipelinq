@@ -128,13 +128,21 @@ class ArticleController extends Controller {
 
 		$rows = [];
 		foreach ($links as $link) {
-			$url = trim((string)(is_array($link) === true ? ($link['url'] ?? '') : ''));
+			if (is_array($link) === false) {
+				continue;
+			}
+
+			$url = trim((string)($link['url'] ?? ''));
 			if ($url === '') {
 				continue;
 			}
 
 			$label = trim((string)($link['label'] ?? ''));
-			$rows[] = ['label' => $label === '' ? $url : $label, 'value' => $url, 'format' => 'url'];
+			if ($label === '') {
+				$label = $url;
+			}
+
+			$rows[] = ['label' => $label, 'value' => $url, 'format' => 'url'];
 		}
 
 		return $rows;

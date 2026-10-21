@@ -268,7 +268,8 @@ class ReportingService {
 	 * @param string $from ISO 8601 start date.
 	 * @param string $to ISO 8601 end date.
 	 *
-	 * @return array<int, array{channel: string, label: string, total: int, share: float, fcrRate: float, slaCompliance: float, slaTarget: float, slaStatus: string}> The rows.
+	 * @return array<int, array<string, string|int|float>> The rows: channel, label, total, share,
+	 *                                                     fcrRate, slaCompliance, slaTarget and slaStatus.
 	 *
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
 	 */
@@ -318,7 +319,8 @@ class ReportingService {
 	 * @param string $from ISO 8601 start date.
 	 * @param string $to ISO 8601 end date.
 	 *
-	 * @return array{rows: array<int, array{agent: string, agentName: string, count: int, fcrRate: float, avgHandlingSeconds: int}>, totals: array{contacts: int, fcrRate: float}} The rows and totals.
+	 * @return array{rows: array<int, array<string, string|int|float>>, totals: array{contacts: int, fcrRate: float}}
+	 *         The rows (agent, agentName, count, fcrRate, avgHandlingSeconds) and totals.
 	 *
 	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
 	 */

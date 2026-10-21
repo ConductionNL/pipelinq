@@ -121,12 +121,17 @@ class LoyaltyController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Choose a customer and a programme.')], Http::STATUS_BAD_REQUEST);
 		}
 
+		$version = trim($termsVersion);
+		if ($version === '') {
+			$version = '1.0';
+		}
+
 		try {
 			$account = $this->accountService->createAccount(
 				customerId: trim($customerId),
 				programmeId: trim($programmeId),
 				optIn: true,
-				termsVersion: trim($termsVersion) === '' ? '1.0' : trim($termsVersion),
+				termsVersion: $version,
 			);
 		} catch (Throwable) {
 			return new JSONResponse(['error' => $this->l10n->t('The account could not be created.')], Http::STATUS_INTERNAL_SERVER_ERROR);

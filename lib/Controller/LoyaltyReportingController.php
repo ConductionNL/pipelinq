@@ -116,7 +116,18 @@ class LoyaltyReportingController extends Controller {
 
 		$kpis = $this->reportingService->getKpis(programmeId: $programmeId, from: $from, to: $to);
 		$lines = ['metric,value'];
-		foreach (['activeAccounts', 'pointsIssued', 'pointsRedeemed', 'pointsExpired', 'breakagePercent', 'redemptionRate', 'outstandingPoints', 'estimatedLiability', 'pointValue'] as $metric) {
+		$metrics = [
+			'activeAccounts',
+			'pointsIssued',
+			'pointsRedeemed',
+			'pointsExpired',
+			'breakagePercent',
+			'redemptionRate',
+			'outstandingPoints',
+			'estimatedLiability',
+			'pointValue',
+		];
+		foreach ($metrics as $metric) {
 			$lines[] = $metric . ',' . (float)($kpis[$metric] ?? 0);
 		}
 
