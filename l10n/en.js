@@ -7802,7 +7802,21 @@ OC.L10N.register(
         "The ticket": "The ticket",
         "People": "People",
         "Dates and links": "Dates and links",
-        "Visible to the customer": "Visible to the customer"
+        "Visible to the customer": "Visible to the customer",
+        "Enter an email address, such as alerts@example.com.": "Enter an email address, such as alerts@example.com.",
+        "Pipelinq competitor watch": "Pipelinq competitor watch",
+        "BRP monitor": "BRP monitor",
+        "Lookups in the persons registry over the last 24 hours, and the mTLS client certificate.": "Lookups in the persons registry over the last 24 hours, and the mTLS client certificate.",
+        "Last 24 hours: {report.totalLookups} lookups, {report.cacheHits} from the cache, {report.errorCount} errors, {report.avgResponseMs} ms average response time.": "Last 24 hours: {report.totalLookups} lookups, {report.cacheHits} from the cache, {report.errorCount} errors, {report.avgResponseMs} ms average response time.",
+        "Reporting period {report.windowStart} to {report.windowEnd}, generated on {report.generatedAt}.": "Reporting period {report.windowStart} to {report.windowEnd}, generated on {report.generatedAt}.",
+        "No BRP lookups have been reported yet.": "No BRP lookups have been reported yet.",
+        "The mTLS certificate is valid until {cert.expiry}, {cert.daysLeft} days from now.": "The mTLS certificate is valid until {cert.expiry}, {cert.daysLeft} days from now.",
+        "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.",
+        "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.",
+        "No mTLS certificate is configured.": "No mTLS certificate is configured.",
+        "Delete skill": "Delete skill",
+        "Delete agent profile": "Delete agent profile",
+        "Deleting failed.": "Deleting failed."
     },
     "nplurals=2; plural=(n != 1);"
 )
