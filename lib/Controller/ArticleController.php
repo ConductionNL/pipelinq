@@ -109,8 +109,36 @@ class ArticleController extends Controller {
 			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 		}
 
+		$article['linkRows'] = $this->linkRows(links: $article['links'] ?? []);
+
 		return new JSONResponse(['article' => $article]);
 	}//end show()
+
+	/**
+	 * The article's links as rows a facts card draws as links.
+	 *
+	 * @param mixed $links The stored links: `[{ label?, url }]`.
+	 *
+	 * @return array<int, array{label: string, value: string, format: string}> The rows.
+	 */
+	private function linkRows(mixed $links): array {
+		if (is_array($links) === false) {
+			return [];
+		}
+
+		$rows = [];
+		foreach ($links as $link) {
+			$url = trim((string)(is_array($link) === true ? ($link['url'] ?? '') : ''));
+			if ($url === '') {
+				continue;
+			}
+
+			$label = trim((string)($link['label'] ?? ''));
+			$rows[] = ['label' => $label === '' ? $url : $label, 'value' => $url, 'format' => 'url'];
+		}
+
+		return $rows;
+	}//end linkRows()
 
 	/**
 	 * POST /api/articles — create an article as a draft.

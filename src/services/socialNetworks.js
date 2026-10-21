@@ -5,7 +5,7 @@
  * What the interface needs to know about each social network.
  *
  * Pure and dependency-free, so it can be unit-tested offline the way
- * `articleStatus.js` is.
+ * `subscriptionState.js` is.
  *
  * THE LIMITS ARE A MIRROR, NOT A SECOND OPINION. Every number here is the
  * same number the matching PHP adapter's `bodyLimit()` returns, and the

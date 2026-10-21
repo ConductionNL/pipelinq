@@ -113,8 +113,8 @@ test.describe('Articles page', () => {
 })
 
 /* ══════════════════════════════════════════════════════════════════════════
- * The detail page — ArticleContentSection renders the markdown body as
- * formatted HTML (cnRenderMarkdown), never as the raw markdown source.
+ * The detail page — the markdown widget renders the body as formatted HTML
+ * (cnRenderMarkdown), never as the raw markdown source.
  * ══════════════════════════════════════════════════════════════════════════ */
 test.describe('Article detail page', () => {
 	// @e2e marketing-articles::the-detail-page-renders-the-body-as-formatted-text
@@ -137,7 +137,7 @@ test.describe('Article detail page', () => {
 		await expect(
 			page.getByRole('heading', { name: 'Wat er nieuw is' }),
 		).toBeVisible({ timeout: 15000 })
-		await expect(page.locator('.article-content__body li').first()).toBeVisible()
+		await expect(page.locator('[data-testid="cn-markdown-widget"] li').first()).toBeVisible()
 		await expect(page.locator('body')).not.toContainText('## Wat er nieuw is')
 		await assertNoHardError(page)
 	})
@@ -145,7 +145,7 @@ test.describe('Article detail page', () => {
 
 /* ══════════════════════════════════════════════════════════════════════════
  * Create → publish, through ArticleEditModal (the one editing surface the
- * change owns) and the lifecycle action on ArticleContentSection.
+ * change owns) and the Publish header action on the detail page.
  * ══════════════════════════════════════════════════════════════════════════ */
 test.describe('Create then publish', () => {
 	// @e2e marketing-articles::a-marketer-writes-a-new-article-and-publishes-it
@@ -164,7 +164,6 @@ test.describe('Create then publish', () => {
 			.first()
 			.click()
 		await page.getByRole('menuitem', { name: /New article/i }).click()
-		await expect(page).toHaveURL(/\/articles\/new/, { timeout: 10000 })
 
 		const title = `E2E article ${Date.now()}`
 		await page.locator('#article-edit-title').fill(title)
@@ -181,7 +180,7 @@ test.describe('Create then publish', () => {
 		})
 		await expect(page.getByText('Draft', { exact: false }).first()).toBeVisible()
 
-		await page.getByTestId('article-action-publish').click()
+		await page.getByTestId('cn-action-publish').click()
 		await expect(
 			page.getByText('Published', { exact: false }).first(),
 		).toBeVisible({ timeout: 15000 })

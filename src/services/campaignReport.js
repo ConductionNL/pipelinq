@@ -4,8 +4,8 @@
 /**
  * The campaign report, as the page reads it.
  *
- * Pure and dependency-free, the way `articleStatus.js` and
- * `subscriptionState.js` are, so the shaping the report page does can be
+ * Pure and dependency-free, the way
+ * `subscriptionState.js` is, so the shaping the report page does can be
  * unit-tested offline. Three jobs:
  *
  *   • turn the per-channel rows into table rows, keeping "not recorded"
