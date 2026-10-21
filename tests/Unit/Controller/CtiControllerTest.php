@@ -53,6 +53,7 @@ use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -146,8 +147,20 @@ class CtiControllerTest extends TestCase {
 			$groupManager ?? $this->createMock(originalClassName: IGroupManager::class),
 			$this->createMock(originalClassName: LoggerInterface::class),
 			$reports ?? $this->createMock(originalClassName: ConnectionReportService::class),
+			$this->l10n(),
 		);
 	}//end controller()
+
+	/**
+	 * A translator that returns the source string.
+	 *
+	 * @return IL10N The stubbed translator.
+	 */
+	private function l10n(): IL10N {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+		return $l10n;
+	}//end l10n()
 
 	/**
 	 * A group manager that reads $uid as an administrator.
@@ -422,6 +435,7 @@ class CtiControllerTest extends TestCase {
 	 */
 	public function testClickToDialRejectsAnonymousCaller(): void {
 		$service = $this->createMock(CtiService::class);
+		$service->method('extensionFor')->willReturnArgument(1);
 		$service->expects($this->never())->method('originateCall');
 
 		$response = $this->controller($service, null)->clickToDial();
@@ -437,8 +451,9 @@ class CtiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testClickToDialRequiresTargetNumberAndExtension(): void {
-		$this->params = ['targetNumber' => '+31612345678'];
+		$this->params = ['extension' => '201'];
 		$service = $this->createMock(CtiService::class);
+		$service->method('extensionFor')->willReturnArgument(1);
 		$service->expects($this->never())->method('originateCall');
 
 		$response = $this->controller($service)->clickToDial();
@@ -449,6 +464,59 @@ class CtiControllerTest extends TestCase {
 			$response->getData()
 		);
 	}//end testClickToDialRequiresTargetNumberAndExtension()
+
+	/**
+	 * Without an extension in the body, the agent's own extension dials; without
+	 * one there either, the agent reads why.
+	 *
+	 * @return void
+	 */
+	public function testClickToDialFallsBackToTheAgentsExtension(): void {
+		$this->params = ['targetNumber' => '+31612345678'];
+		$service = $this->createMock(CtiService::class);
+		$service->method('extensionFor')->with('agent-1', '')->willReturn('204');
+		$service->expects($this->once())->method('originateCall')->with('agent-1', '204', '+31612345678')
+			->willReturn(new OriginateResult(success: true, platform: 'callvoip'));
+
+		$this->assertSame(Http::STATUS_OK, $this->controller($service)->clickToDial()->getStatus());
+
+		$none = $this->createMock(CtiService::class);
+		$none->method('extensionFor')->willReturn('');
+		$none->expects($this->never())->method('originateCall');
+		$response = $this->controller($none)->clickToDial();
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertSame('Your phone extension is not set. Ask an administrator to add it to your agent profile.', $response->getData()['error']);
+	}//end testClickToDialFallsBackToTheAgentsExtension()
+
+	/**
+	 * The service dials from the requested extension, else from the agent profile's.
+	 *
+	 * @return void
+	 */
+	public function testTheServiceFindsTheAgentsExtension(): void {
+		$objectService = $this->createMock(\OCA\OpenRegister\Contract\ObjectServiceInterface::class);
+		$objectService->method('findAll')->willReturnCallback(
+			static fn (array $config = []): array => ($config['filters']['userId'] ?? '') === 'agent-1' ? [['userId' => 'agent-1', 'extension' => '204']] : []
+		);
+		$tickets = $this->createMock(TicketService::class);
+		$tickets->method('getObjectService')->willReturn($objectService);
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default = ''): string => ['register' => 'reg-1', 'agentProfile_schema' => 'sch-agent'][$key] ?? $default);
+		$service = new CtiService(
+			$this->createMock(ContainerInterface::class),
+			$appConfig,
+			$this->createMock(AdapterRegistry::class),
+			$this->createMock(PhoneNormaliser::class),
+			$this->createMock(CtiContactMatcher::class),
+			$this->createMock(CtiDispositionService::class),
+			$tickets,
+			$this->createMock(LoggerInterface::class),
+		);
+
+		$this->assertSame('301', $service->extensionFor(userId: 'agent-1', requested: '301'));
+		$this->assertSame('204', $service->extensionFor(userId: 'agent-1', requested: ''));
+		$this->assertSame('', $service->extensionFor(userId: 'agent-2', requested: ''));
+	}//end testTheServiceFindsTheAgentsExtension()
 
 	/**
 	 * A successful originate is 200 with the five-key originate envelope, and
@@ -465,6 +533,7 @@ class CtiControllerTest extends TestCase {
 		];
 
 		$service = $this->createMock(CtiService::class);
+		$service->method('extensionFor')->willReturnArgument(1);
 		$service->expects($this->once())
 			->method('originateCall')
 			->with('agent-1', '201', '+31612345678')
@@ -500,6 +569,7 @@ class CtiControllerTest extends TestCase {
 		$this->params = ['targetNumber' => '+31612345678', 'extension' => '201'];
 
 		$service = $this->createMock(CtiService::class);
+		$service->method('extensionFor')->willReturnArgument(1);
 		$service->method('originateCall')->willReturn(
 			new OriginateResult(success: false, error: 'No CTI platform configured.')
 		);
@@ -527,6 +597,7 @@ class CtiControllerTest extends TestCase {
 		];
 
 		$service = $this->createMock(CtiService::class);
+		$service->method('extensionFor')->willReturnArgument(1);
 		$service->expects($this->never())->method('originateCall');
 
 		$response = $this->controller($service)->clickToDial();

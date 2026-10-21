@@ -270,4 +270,23 @@ class PartyIndicatorServiceTest extends TestCase {
 		$this->assertCount(1, $resolved);
 		$this->assertSame('bewindvoering', $resolved[0]['code']);
 	}//end testAValueAgainstAnUndeclaredIndicatorIsStillReported()
+	/**
+	 * Indicators come critical first, then warning, then information, by label within.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/party-band-as-configuration/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-come-loudest-first
+	 */
+	public function testIndicatorsComeLoudestFirst(): void {
+		$sorted = PartyIndicatorService::loudestFirst(
+			indicators: [
+				['label' => 'Note', 'severity' => 'info'],
+				['label' => 'Debt', 'severity' => 'warning'],
+				['label' => 'Deceased', 'severity' => 'critical'],
+				['label' => 'Aggression', 'severity' => 'warning'],
+			]
+		);
+
+		$this->assertSame(['Deceased', 'Aggression', 'Debt', 'Note'], array_column($sorted, 'label'));
+	}//end testIndicatorsComeLoudestFirst()
 }//end class

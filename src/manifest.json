@@ -2481,22 +2481,169 @@
 				"bodyWidgets": [
 					{
 						"id": "party-indicators",
-						"component": "PartyIndicatorPanel",
+						"type": "party-actions",
 						"placement": "before-body",
-						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
-						"props": {
-							"partyId": "@objectId"
-						}
-					},
-					{
-						"id": "contact-links",
-						"component": "ContactLinks",
-						"placement": "before-body",
-						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
-						"props": {
-							"phone": "@object.phone",
-							"email": "@object.email",
-							"address": "@object.address"
+						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made; then call, dial from the agent's extension, mail and directions.",
+						"content": {
+							"indicatorSource": {
+								"url": "/apps/pipelinq/api/leaves/party/@objectId",
+								"itemsPath": "indicators",
+								"labelPath": "label",
+								"tonePath": "severity",
+								"toneMap": {
+									"critical": "error",
+									"warning": "warning",
+									"info": "info"
+								},
+								"toneLabels": {
+									"critical": "Critical",
+									"warning": "Warning",
+									"info": "Information"
+								},
+								"meta": [
+									[
+										"From {validFrom|date} until {validUntil|date}",
+										"Since {validFrom|date}"
+									],
+									[
+										"Source: {source}"
+									]
+								],
+								"ack": {
+									"whenPath": "requiresAcknowledgement",
+									"donePath": "acknowledgedAt",
+									"endpoint": "/apps/pipelinq/api/party-indicator-values/{id}/acknowledge",
+									"label": "I have seen this",
+									"seen": "Seen by {acknowledgedBy} on {acknowledgedAt|date}",
+									"errorText": "The acknowledgement could not be saved."
+								},
+								"errorText": "The list of warnings could not be loaded."
+							},
+							"emptyText": "No warnings on this record.",
+							"emptyActions": [
+								{
+									"id": "add-warning",
+									"label": "Add a warning",
+									"type": "open-form",
+									"variant": "tertiary",
+									"formTitle": "Add a warning",
+									"register": "pipelinq",
+									"schema": "partyIndicatorValue",
+									"props": {
+										"party": "@objectId"
+									},
+									"includeFields": [
+										"indicator",
+										"validFrom",
+										"validUntil",
+										"source"
+									],
+									"fieldOverrides": {
+										"indicator": {
+											"label": "Warning",
+											"widget": "select",
+											"optionsFrom": {
+												"register": "pipelinq",
+												"schema": "partyIndicator",
+												"valueField": "code",
+												"labelField": "label"
+											}
+										},
+										"validFrom": {
+											"label": "Valid from",
+											"default": "@today"
+										},
+										"validUntil": {
+											"label": "Valid until (optional)"
+										},
+										"source": {
+											"label": "Source (optional)"
+										}
+									}
+								}
+							],
+							"indicatorActions": [
+								{
+									"id": "add-warning",
+									"label": "Add a warning",
+									"type": "open-form",
+									"variant": "tertiary",
+									"formTitle": "Add a warning",
+									"register": "pipelinq",
+									"schema": "partyIndicatorValue",
+									"props": {
+										"party": "@objectId"
+									},
+									"includeFields": [
+										"indicator",
+										"validFrom",
+										"validUntil",
+										"source"
+									],
+									"fieldOverrides": {
+										"indicator": {
+											"label": "Warning",
+											"widget": "select",
+											"optionsFrom": {
+												"register": "pipelinq",
+												"schema": "partyIndicator",
+												"valueField": "code",
+												"labelField": "label"
+											}
+										},
+										"validFrom": {
+											"label": "Valid from",
+											"default": "@today"
+										},
+										"validUntil": {
+											"label": "Valid until (optional)"
+										},
+										"source": {
+											"label": "Source (optional)"
+										}
+									}
+								}
+							],
+							"actions": [
+								{
+									"id": "call",
+									"label": "Call {phone}",
+									"icon": "PhoneOutline",
+									"type": "navigate",
+									"target": "@object.phone|tel"
+								},
+								{
+									"id": "dial",
+									"label": "Call from my extension",
+									"icon": "PhoneOutgoing",
+									"type": "api-call",
+									"method": "POST",
+									"url": "/apps/pipelinq/api/cti/click-to-dial",
+									"payload": {
+										"targetNumber": "@object.phone"
+									},
+									"successMessage": "Call started. Your extension will ring.",
+									"refresh": false,
+									"visibleWhen": {
+										"field": "phone",
+										"op": "exists"
+									}
+								},
+								{
+									"id": "mail",
+									"label": "Mail {email}",
+									"icon": "EmailOutline",
+									"type": "navigate",
+									"target": "@object.email|mailto"
+								},
+								{
+									"id": "route",
+									"label": "Directions",
+									"icon": "MapMarkerOutline",
+									"type": "navigate",
+									"target": "@object.address|geo"
+								}
+							]
 						}
 					},
 					{
@@ -3297,11 +3444,169 @@
 				"bodyWidgets": [
 					{
 						"id": "party-indicators",
-						"component": "PartyIndicatorPanel",
+						"type": "party-actions",
 						"placement": "before-body",
-						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
-						"props": {
-							"partyId": "@objectId"
+						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made; then call, dial from the agent's extension, mail and directions.",
+						"content": {
+							"indicatorSource": {
+								"url": "/apps/pipelinq/api/leaves/party/@objectId",
+								"itemsPath": "indicators",
+								"labelPath": "label",
+								"tonePath": "severity",
+								"toneMap": {
+									"critical": "error",
+									"warning": "warning",
+									"info": "info"
+								},
+								"toneLabels": {
+									"critical": "Critical",
+									"warning": "Warning",
+									"info": "Information"
+								},
+								"meta": [
+									[
+										"From {validFrom|date} until {validUntil|date}",
+										"Since {validFrom|date}"
+									],
+									[
+										"Source: {source}"
+									]
+								],
+								"ack": {
+									"whenPath": "requiresAcknowledgement",
+									"donePath": "acknowledgedAt",
+									"endpoint": "/apps/pipelinq/api/party-indicator-values/{id}/acknowledge",
+									"label": "I have seen this",
+									"seen": "Seen by {acknowledgedBy} on {acknowledgedAt|date}",
+									"errorText": "The acknowledgement could not be saved."
+								},
+								"errorText": "The list of warnings could not be loaded."
+							},
+							"emptyText": "No warnings on this record.",
+							"emptyActions": [
+								{
+									"id": "add-warning",
+									"label": "Add a warning",
+									"type": "open-form",
+									"variant": "tertiary",
+									"formTitle": "Add a warning",
+									"register": "pipelinq",
+									"schema": "partyIndicatorValue",
+									"props": {
+										"party": "@objectId"
+									},
+									"includeFields": [
+										"indicator",
+										"validFrom",
+										"validUntil",
+										"source"
+									],
+									"fieldOverrides": {
+										"indicator": {
+											"label": "Warning",
+											"widget": "select",
+											"optionsFrom": {
+												"register": "pipelinq",
+												"schema": "partyIndicator",
+												"valueField": "code",
+												"labelField": "label"
+											}
+										},
+										"validFrom": {
+											"label": "Valid from",
+											"default": "@today"
+										},
+										"validUntil": {
+											"label": "Valid until (optional)"
+										},
+										"source": {
+											"label": "Source (optional)"
+										}
+									}
+								}
+							],
+							"indicatorActions": [
+								{
+									"id": "add-warning",
+									"label": "Add a warning",
+									"type": "open-form",
+									"variant": "tertiary",
+									"formTitle": "Add a warning",
+									"register": "pipelinq",
+									"schema": "partyIndicatorValue",
+									"props": {
+										"party": "@objectId"
+									},
+									"includeFields": [
+										"indicator",
+										"validFrom",
+										"validUntil",
+										"source"
+									],
+									"fieldOverrides": {
+										"indicator": {
+											"label": "Warning",
+											"widget": "select",
+											"optionsFrom": {
+												"register": "pipelinq",
+												"schema": "partyIndicator",
+												"valueField": "code",
+												"labelField": "label"
+											}
+										},
+										"validFrom": {
+											"label": "Valid from",
+											"default": "@today"
+										},
+										"validUntil": {
+											"label": "Valid until (optional)"
+										},
+										"source": {
+											"label": "Source (optional)"
+										}
+									}
+								}
+							],
+							"actions": [
+								{
+									"id": "call",
+									"label": "Call {phone}",
+									"icon": "PhoneOutline",
+									"type": "navigate",
+									"target": "@object.phone|tel"
+								},
+								{
+									"id": "dial",
+									"label": "Call from my extension",
+									"icon": "PhoneOutgoing",
+									"type": "api-call",
+									"method": "POST",
+									"url": "/apps/pipelinq/api/cti/click-to-dial",
+									"payload": {
+										"targetNumber": "@object.phone"
+									},
+									"successMessage": "Call started. Your extension will ring.",
+									"refresh": false,
+									"visibleWhen": {
+										"field": "phone",
+										"op": "exists"
+									}
+								},
+								{
+									"id": "mail",
+									"label": "Mail {email}",
+									"icon": "EmailOutline",
+									"type": "navigate",
+									"target": "@object.email|mailto"
+								},
+								{
+									"id": "route",
+									"label": "Directions",
+									"icon": "MapMarkerOutline",
+									"type": "navigate",
+									"target": "@object.address|geo"
+								}
+							]
 						}
 					}
 				],

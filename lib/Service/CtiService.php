@@ -32,6 +32,7 @@ use InvalidArgumentException;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Core CTI orchestration service.
@@ -83,6 +84,61 @@ class CtiService {
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
+
+	/**
+	 * The extension to dial from: the requested one, else the agent's own.
+	 *
+	 * @param string $userId    The user uid.
+	 * @param string $requested The extension the request names, '' for none.
+	 *
+	 * @return string The extension, '' when there is none.
+	 *
+	 * @spec openspec/changes/party-band-as-configuration/specs/cti-screenpop-adapter/spec.md#requirement-call-dials-through-the-telephony-from-the-agents-own-extension
+	 */
+	public function extensionFor(string $userId, string $requested): string {
+		if ($requested !== '') {
+			return $requested;
+		}
+
+		return $this->agentExtension(userId: $userId);
+	}//end extensionFor()
+
+	/**
+	 * The phone extension on a user's agent profile.
+	 *
+	 * RBAC is off on purpose: only the extension of the signed-in user's own
+	 * profile is read, to dial from it.
+	 *
+	 * @param string $userId The user uid.
+	 *
+	 * @return string The extension, '' when the user has none.
+	 *
+	 * @spec openspec/changes/party-band-as-configuration/specs/cti-screenpop-adapter/spec.md#requirement-call-dials-through-the-telephony-from-the-agents-own-extension
+	 */
+	public function agentExtension(string $userId): string {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(Application::APP_ID, 'agentProfile_schema', '');
+		if ($userId === '' || $register === '' || $schema === '') {
+			return '';
+		}
+
+		try {
+			$rows = $this->ticketService->getObjectService()->findAll(
+				config: ['filters' => ['register' => $register, 'schema' => $schema, 'userId' => $userId], 'limit' => 1],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (Throwable) {
+			return '';
+		}
+
+		$profile = ($rows[0] ?? []);
+		if (is_array($profile) === false) {
+			$profile = (array)$profile->getObject();
+		}
+
+		return trim((string)($profile['extension'] ?? ''));
+	}//end agentExtension()
 
 	/**
 	 * Handle an inbound webhook payload.
