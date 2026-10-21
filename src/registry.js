@@ -247,7 +247,6 @@ import CampaignReportView from './views/marketing/CampaignReport.vue'
 // --- Search intelligence (marketing-search-intelligence, phase 5): the
 //     four derivations over those same rows, the competitor watches, and
 //     the follow audit. Each is a computed read, not a row list. ---
-import CompetitorWatchesView from './views/marketing/CompetitorWatches.vue'
 import KeywordIntelligenceView from './views/marketing/KeywordIntelligence.vue'
 // --- Search Console top queries (marketing-campaign-attribution): an
 //     aggregation over searchQueryDaily rows, not a row list. ---
@@ -1037,11 +1036,7 @@ const registry = {
 		component: KeywordIntelligenceView,
 		_note: 'Keyword proposals (marketing-search-intelligence): position buckets, striking-distance queries, cannibalisation findings and content gaps, all derived at read time from the searchQueryDaily rows and served by ONE GET /api/marketing/keyword-proposals. Custom because none of the four is a collection: they are computations over rows, and the keywordTarget objects the page can create are the output rather than the input. Confirming a proposal opens KeywordTargetConfirmModal, which is the only path in the product that writes a keywordTarget.',
 	},
-	CompetitorWatchesView: {
-		kind: 'page',
-		component: CompetitorWatchesView,
-		_note: 'Competitor watches and their events (marketing-search-intelligence). Custom rather than a declarative index over watchEvent because the page joins three schemas in one read and shows each watch\'s LAST OUTCOME next to it, which is what tells "they published nothing" apart from "we could not read it"; a plain event list renders both as an empty table. It also carries a per-watch run action, and renders an unscored event as "not scored" rather than as a zero.',
-	},
+
 
 	SearchQueriesView: {
 		kind: 'page',

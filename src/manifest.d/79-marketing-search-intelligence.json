@@ -46,15 +46,156 @@
 		},
 		{
 			"id": "CompetitorWatches",
-			"_note": "Competitor watches and what they saw (marketing-search-intelligence). Custom rather than a declarative type:index over watchEvent, because the page has to join three schemas in one read (competitor, competitorWatch, watchEvent) and, more importantly, because a watch's LAST OUTCOME is what tells 'they published nothing' apart from 'we could not read it'. A plain event list would render both as an empty table. It also carries a per-watch run action, which the declarative grammar has no verb for.",
+			"_note": "Competitor watches and what they saw (marketing-search-intelligence), read from one GET /apps/pipelinq/api/marketing/watch-events that joins competitor, competitorWatch and watchEvent. A watch's last outcome tells 'they published nothing' apart from 'we could not read it', and Run now runs one watch (POST /api/marketing/competitor-watches/{id}/run). When no egress source is set, a card says so with the server's reason.",
 			"route": "/marketing/competitors",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Competitors",
-			"component": "CompetitorWatchesView",
 			"config": {
-				"register": "pipelinq",
-				"schema": "watchEvent",
-				"documentationUrl": "https://pipelinq.conduction.nl"
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"widgets": [
+					{
+						"id": "competitors-unconfigured",
+						"type": "facts",
+						"title": "Watches are off",
+						"visibleWhen": {
+							"endpoint": "/apps/pipelinq/api/marketing/watch-events",
+							"field": "configured",
+							"op": "eq",
+							"value": false
+						},
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/marketing/watch-events" },
+							"fields": [
+								{ "path": "reason", "as": "text" }
+							],
+							"notice": {
+								"text": "Set an egress source under Settings, Marketing intelligence to switch the watches on.",
+								"variant": "warning"
+							}
+						}
+					},
+					{
+						"id": "competitor-watches",
+						"type": "object-table",
+						"title": "Watches",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/marketing/watch-events", "responsePath": "watches" },
+							"columns": [
+								{
+									"key": "competitorId",
+									"label": "Competitor",
+									"widget": "fkResolve",
+									"widgetProps": { "register": "pipelinq", "schema": "competitor", "labelField": "name" }
+								},
+								{
+									"key": "kind",
+									"label": "Watching",
+									"secondary": "{target}",
+									"enum": ["rss", "sitemap", "page", "fediverse", "search"],
+									"enumLabels": {
+										"rss": "Feed",
+										"sitemap": "Sitemap",
+										"page": "Page fragment",
+										"fediverse": "Public timeline",
+										"search": "Saved search"
+									}
+								},
+								{
+									"key": "schedule",
+									"label": "How often",
+									"enum": ["hourly", "daily", "weekly"],
+									"enumLabels": { "hourly": "Every hour", "daily": "Every day", "weekly": "Every week" }
+								},
+								{ "key": "lastRunAt", "label": "Last run", "widget": "date", "widgetProps": { "showTime": true } },
+								{
+									"key": "lastOutcome",
+									"label": "Outcome",
+									"widget": "badge",
+									"secondary": "{lastReason}",
+									"enum": ["ok", "not_configured", "unavailable", "refused", "unparsable"],
+									"enumLabels": {
+										"ok": "Read",
+										"not_configured": "Not configured",
+										"unavailable": "Could not reach it",
+										"refused": "Refused",
+										"unparsable": "Could not read it"
+									},
+									"widgetProps": {
+										"colorMap": {
+											"ok": "success",
+											"not_configured": "warning",
+											"unavailable": "error",
+											"refused": "error",
+											"unparsable": "error"
+										}
+									}
+								}
+							],
+							"actions": [
+								{
+									"id": "run",
+									"label": "Run now",
+									"type": "api-call",
+									"method": "POST",
+									"url": "/apps/pipelinq/api/marketing/competitor-watches/@row.id/run",
+									"successMessage": "The watch ran"
+								}
+							],
+							"emptyText": "No watches yet. Add a competitor and give it something to watch: a feed, a sitemap, a page fragment, a public fediverse timeline, or a saved search. LinkedIn and Meta are deliberately not options: neither offers a legitimate way to read another organisation's posts."
+						}
+					},
+					{
+						"id": "competitor-events",
+						"type": "object-table",
+						"title": "What changed",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/marketing/watch-events", "responsePath": "events" },
+							"columns": [
+								{
+									"key": "title",
+									"label": "Item",
+									"widget": "link",
+									"widgetProps": { "href": "{url}" },
+									"secondary": "{diffSummary}",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "competitorId",
+									"label": "Competitor",
+									"widget": "fkResolve",
+									"widgetProps": { "register": "pipelinq", "schema": "competitor", "labelField": "name" }
+								},
+								{
+									"key": "kind",
+									"label": "Source",
+									"enum": ["rss", "sitemap", "page", "fediverse", "search"],
+									"enumLabels": {
+										"rss": "Feed",
+										"sitemap": "Sitemap",
+										"page": "Page fragment",
+										"fediverse": "Public timeline",
+										"search": "Saved search"
+									}
+								},
+								{ "key": "seenAt", "label": "Seen", "widget": "date", "widgetProps": { "showTime": true } },
+								{ "key": "relevanceScore", "label": "Relevance", "format": { "style": "number", "decimals": 2 } }
+							],
+							"emptyText": "Nothing has been seen yet. A watch records an item once, so a second run over unchanged sources adds nothing here."
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "competitors-unconfigured",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 2
+					},
+					{ "id": 2, "widgetId": "competitor-watches", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 6 },
+					{ "id": 3, "widgetId": "competitor-events", "gridX": 0, "gridY": 8, "gridWidth": 12, "gridHeight": 6 }
+				]
 			}
 		},
 		{
