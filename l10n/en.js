@@ -2933,6 +2933,7 @@ OC.L10N.register(
         "Postal address block printed in the footer of every mailing to this list, as the anti-spam rules require.": "Postal address block printed in the footer of every mailing to this list, as the anti-spam rules require.",
         "Posts": "Posts",
         "Pound Sterling (GBP)": "Pound Sterling (GBP)",
+        "Contact preferences": "Contact preferences",
         "Preferred channel": "Preferred channel",
         "Preferred time slot": "Preferred time slot",
         "Preferred time:": "Preferred time:",

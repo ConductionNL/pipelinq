@@ -2349,12 +2349,439 @@
 					},
 					{
 						"id": "client-channels",
-						"type": "ContactChannelsWidget",
+						"type": "tabs",
 						"title": "Contact channels",
 						"icon": "CardAccountPhoneOutline",
 						"content": {
-							"entityType": "client",
-							"title": "Contact channels"
+							"ariaLabel": "Contact channels",
+							"tabs": [
+								{
+									"widgetId": "client-channels-emails",
+									"label": "Emails",
+									"countField": "emails"
+								},
+								{
+									"widgetId": "client-channels-phones",
+									"label": "Phones",
+									"countField": "phones"
+								},
+								{
+									"widgetId": "client-channels-social",
+									"label": "Social profiles",
+									"countField": "socialProfiles"
+								}
+							]
+						}
+					},
+					{
+						"id": "client-channels-emails",
+						"type": "field-list",
+						"title": "Emails",
+						"content": {
+							"field": "emails",
+							"row": {
+								"title": "value",
+								"href": {
+									"path": "value",
+									"scheme": "mailto"
+								},
+								"pill": {
+									"path": "kind",
+									"map": {
+										"work": "Work",
+										"private": "Private",
+										"mobile": "Mobile",
+										"whatsapp": "WhatsApp",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "primary",
+										"map": {
+											"true": "Primary",
+											"false": ""
+										}
+									},
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"exclusive": [
+									"primary"
+								],
+								"fields": [
+									{
+										"key": "kind",
+										"label": "Kind",
+										"type": "select",
+										"default": "work",
+										"options": [
+											{
+												"value": "work",
+												"label": "Work"
+											},
+											{
+												"value": "private",
+												"label": "Private"
+											},
+											{
+												"value": "mobile",
+												"label": "Mobile"
+											},
+											{
+												"value": "whatsapp",
+												"label": "WhatsApp"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "value",
+										"label": "Email address",
+										"required": true,
+										"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+										"patternMessage": "Invalid email format"
+									},
+									{
+										"key": "primary",
+										"label": "Primary",
+										"type": "checkbox"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"rowActions": [
+								{
+									"id": "write-email",
+									"label": "Write email",
+									"dialog": "WriteEmailModal",
+									"props": {
+										"address": "@row.value",
+										"clientId": "@objectId"
+									}
+								}
+							],
+							"emptyText": "No email addresses yet.",
+							"afterSave": {
+								"url": "/apps/pipelinq/api/contacts-sync/write-back",
+								"method": "POST",
+								"body": {
+									"objectType": "client",
+									"objectId": "@objectId"
+								},
+								"failureText": "Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details."
+							}
+						}
+					},
+					{
+						"id": "client-channels-phones",
+						"type": "field-list",
+						"title": "Phones",
+						"content": {
+							"field": "phones",
+							"row": {
+								"title": "value",
+								"href": {
+									"path": "value",
+									"scheme": "tel"
+								},
+								"pill": {
+									"path": "kind",
+									"map": {
+										"work": "Work",
+										"private": "Private",
+										"mobile": "Mobile",
+										"whatsapp": "WhatsApp",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "primary",
+										"map": {
+											"true": "Primary",
+											"false": ""
+										}
+									},
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"exclusive": [
+									"primary"
+								],
+								"fields": [
+									{
+										"key": "kind",
+										"label": "Kind",
+										"type": "select",
+										"default": "work",
+										"options": [
+											{
+												"value": "work",
+												"label": "Work"
+											},
+											{
+												"value": "private",
+												"label": "Private"
+											},
+											{
+												"value": "mobile",
+												"label": "Mobile"
+											},
+											{
+												"value": "whatsapp",
+												"label": "WhatsApp"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "value",
+										"label": "Phone number",
+										"required": true,
+										"pattern": "^[+]?[\\d\\s\\-().]{7,20}$",
+										"patternMessage": "Invalid phone format"
+									},
+									{
+										"key": "primary",
+										"label": "Primary",
+										"type": "checkbox"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"emptyText": "No phone numbers yet.",
+							"afterSave": {
+								"url": "/apps/pipelinq/api/contacts-sync/write-back",
+								"method": "POST",
+								"body": {
+									"objectType": "client",
+									"objectId": "@objectId"
+								},
+								"failureText": "Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details."
+							}
+						}
+					},
+					{
+						"id": "client-channels-social",
+						"type": "field-list",
+						"title": "Social profiles",
+						"content": {
+							"field": "socialProfiles",
+							"row": {
+								"title": "handle",
+								"titleFallback": "url",
+								"href": "url",
+								"pill": {
+									"path": "network",
+									"map": {
+										"linkedin": "LinkedIn",
+										"x": "X",
+										"mastodon": "Mastodon",
+										"bluesky": "Bluesky",
+										"facebook": "Facebook",
+										"instagram": "Instagram",
+										"threads": "Threads",
+										"tiktok": "TikTok",
+										"youtube": "YouTube",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									},
+									{
+										"path": "followedByUs",
+										"map": {
+											"true": "Followed by us",
+											"false": ""
+										}
+									},
+									{
+										"path": "followsUs",
+										"map": {
+											"true": "Follows us",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"requireOneOf": [
+									"handle",
+									"url"
+								],
+								"requireOneOfMessage": "A handle or a profile URL is required",
+								"fields": [
+									{
+										"key": "network",
+										"label": "Network",
+										"type": "select",
+										"default": "linkedin",
+										"options": [
+											{
+												"value": "linkedin",
+												"label": "LinkedIn"
+											},
+											{
+												"value": "x",
+												"label": "X"
+											},
+											{
+												"value": "mastodon",
+												"label": "Mastodon"
+											},
+											{
+												"value": "bluesky",
+												"label": "Bluesky"
+											},
+											{
+												"value": "facebook",
+												"label": "Facebook"
+											},
+											{
+												"value": "instagram",
+												"label": "Instagram"
+											},
+											{
+												"value": "threads",
+												"label": "Threads"
+											},
+											{
+												"value": "tiktok",
+												"label": "TikTok"
+											},
+											{
+												"value": "youtube",
+												"label": "YouTube"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "handle",
+										"label": "Handle"
+									},
+									{
+										"key": "url",
+										"label": "Profile URL",
+										"pattern": "^https?://.+\\..+",
+										"patternMessage": "Invalid URL format"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									},
+									{
+										"key": "followedByUs",
+										"label": "Followed by us",
+										"type": "checkbox"
+									},
+									{
+										"key": "followsUs",
+										"label": "Follows us",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"emptyText": "No social profiles yet."
+						}
+					},
+					{
+						"id": "client-preferences",
+						"type": "facts",
+						"title": "Contact preferences",
+						"icon": "TuneVariant",
+						"content": {
+							"fields": [
+								{
+									"path": "preferredChannel",
+									"label": "Preferred channel",
+									"map": {
+										"email": "Email",
+										"phone": "Phone",
+										"whatsapp": "WhatsApp",
+										"linkedin": "LinkedIn",
+										"x": "X",
+										"mastodon": "Mastodon",
+										"bluesky": "Bluesky",
+										"other": "Other"
+									}
+								},
+								{
+									"path": "timezone",
+									"label": "Timezone"
+								},
+								{
+									"path": "correspondenceLanguage",
+									"label": "Language"
+								}
+							],
+							"hideEmpty": true
 						}
 					},
 					{
@@ -2898,6 +3325,7 @@
 					"client-kpis-sales",
 					"client-related",
 					"client-channels",
+					"client-preferences",
 					"client-relationships",
 					"client-email",
 					"client-notes",
@@ -3615,12 +4043,439 @@
 					},
 					{
 						"id": "contact-channels",
-						"type": "ContactChannelsWidget",
+						"type": "tabs",
 						"title": "Channels",
 						"icon": "CardAccountPhoneOutline",
 						"content": {
-							"entityType": "contact",
-							"title": "Channels"
+							"ariaLabel": "Channels",
+							"tabs": [
+								{
+									"widgetId": "contact-channels-emails",
+									"label": "Emails",
+									"countField": "emails"
+								},
+								{
+									"widgetId": "contact-channels-phones",
+									"label": "Phones",
+									"countField": "phones"
+								},
+								{
+									"widgetId": "contact-channels-social",
+									"label": "Social profiles",
+									"countField": "socialProfiles"
+								}
+							]
+						}
+					},
+					{
+						"id": "contact-channels-emails",
+						"type": "field-list",
+						"title": "Emails",
+						"content": {
+							"field": "emails",
+							"row": {
+								"title": "value",
+								"href": {
+									"path": "value",
+									"scheme": "mailto"
+								},
+								"pill": {
+									"path": "kind",
+									"map": {
+										"work": "Work",
+										"private": "Private",
+										"mobile": "Mobile",
+										"whatsapp": "WhatsApp",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "primary",
+										"map": {
+											"true": "Primary",
+											"false": ""
+										}
+									},
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"exclusive": [
+									"primary"
+								],
+								"fields": [
+									{
+										"key": "kind",
+										"label": "Kind",
+										"type": "select",
+										"default": "work",
+										"options": [
+											{
+												"value": "work",
+												"label": "Work"
+											},
+											{
+												"value": "private",
+												"label": "Private"
+											},
+											{
+												"value": "mobile",
+												"label": "Mobile"
+											},
+											{
+												"value": "whatsapp",
+												"label": "WhatsApp"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "value",
+										"label": "Email address",
+										"required": true,
+										"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+										"patternMessage": "Invalid email format"
+									},
+									{
+										"key": "primary",
+										"label": "Primary",
+										"type": "checkbox"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"rowActions": [
+								{
+									"id": "write-email",
+									"label": "Write email",
+									"dialog": "WriteEmailModal",
+									"props": {
+										"address": "@row.value",
+										"contactId": "@objectId"
+									}
+								}
+							],
+							"emptyText": "No email addresses yet.",
+							"afterSave": {
+								"url": "/apps/pipelinq/api/contacts-sync/write-back",
+								"method": "POST",
+								"body": {
+									"objectType": "contact",
+									"objectId": "@objectId"
+								},
+								"failureText": "Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details."
+							}
+						}
+					},
+					{
+						"id": "contact-channels-phones",
+						"type": "field-list",
+						"title": "Phones",
+						"content": {
+							"field": "phones",
+							"row": {
+								"title": "value",
+								"href": {
+									"path": "value",
+									"scheme": "tel"
+								},
+								"pill": {
+									"path": "kind",
+									"map": {
+										"work": "Work",
+										"private": "Private",
+										"mobile": "Mobile",
+										"whatsapp": "WhatsApp",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "primary",
+										"map": {
+											"true": "Primary",
+											"false": ""
+										}
+									},
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"exclusive": [
+									"primary"
+								],
+								"fields": [
+									{
+										"key": "kind",
+										"label": "Kind",
+										"type": "select",
+										"default": "work",
+										"options": [
+											{
+												"value": "work",
+												"label": "Work"
+											},
+											{
+												"value": "private",
+												"label": "Private"
+											},
+											{
+												"value": "mobile",
+												"label": "Mobile"
+											},
+											{
+												"value": "whatsapp",
+												"label": "WhatsApp"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "value",
+										"label": "Phone number",
+										"required": true,
+										"pattern": "^[+]?[\\d\\s\\-().]{7,20}$",
+										"patternMessage": "Invalid phone format"
+									},
+									{
+										"key": "primary",
+										"label": "Primary",
+										"type": "checkbox"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"emptyText": "No phone numbers yet.",
+							"afterSave": {
+								"url": "/apps/pipelinq/api/contacts-sync/write-back",
+								"method": "POST",
+								"body": {
+									"objectType": "contact",
+									"objectId": "@objectId"
+								},
+								"failureText": "Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details."
+							}
+						}
+					},
+					{
+						"id": "contact-channels-social",
+						"type": "field-list",
+						"title": "Social profiles",
+						"content": {
+							"field": "socialProfiles",
+							"row": {
+								"title": "handle",
+								"titleFallback": "url",
+								"href": "url",
+								"pill": {
+									"path": "network",
+									"map": {
+										"linkedin": "LinkedIn",
+										"x": "X",
+										"mastodon": "Mastodon",
+										"bluesky": "Bluesky",
+										"facebook": "Facebook",
+										"instagram": "Instagram",
+										"threads": "Threads",
+										"tiktok": "TikTok",
+										"youtube": "YouTube",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									},
+									{
+										"path": "followedByUs",
+										"map": {
+											"true": "Followed by us",
+											"false": ""
+										}
+									},
+									{
+										"path": "followsUs",
+										"map": {
+											"true": "Follows us",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"requireOneOf": [
+									"handle",
+									"url"
+								],
+								"requireOneOfMessage": "A handle or a profile URL is required",
+								"fields": [
+									{
+										"key": "network",
+										"label": "Network",
+										"type": "select",
+										"default": "linkedin",
+										"options": [
+											{
+												"value": "linkedin",
+												"label": "LinkedIn"
+											},
+											{
+												"value": "x",
+												"label": "X"
+											},
+											{
+												"value": "mastodon",
+												"label": "Mastodon"
+											},
+											{
+												"value": "bluesky",
+												"label": "Bluesky"
+											},
+											{
+												"value": "facebook",
+												"label": "Facebook"
+											},
+											{
+												"value": "instagram",
+												"label": "Instagram"
+											},
+											{
+												"value": "threads",
+												"label": "Threads"
+											},
+											{
+												"value": "tiktok",
+												"label": "TikTok"
+											},
+											{
+												"value": "youtube",
+												"label": "YouTube"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "handle",
+										"label": "Handle"
+									},
+									{
+										"key": "url",
+										"label": "Profile URL",
+										"pattern": "^https?://.+\\..+",
+										"patternMessage": "Invalid URL format"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									},
+									{
+										"key": "followedByUs",
+										"label": "Followed by us",
+										"type": "checkbox"
+									},
+									{
+										"key": "followsUs",
+										"label": "Follows us",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"emptyText": "No social profiles yet."
+						}
+					},
+					{
+						"id": "contact-preferences",
+						"type": "facts",
+						"title": "Contact preferences",
+						"icon": "TuneVariant",
+						"content": {
+							"fields": [
+								{
+									"path": "preferredChannel",
+									"label": "Preferred channel",
+									"map": {
+										"email": "Email",
+										"phone": "Phone",
+										"whatsapp": "WhatsApp",
+										"linkedin": "LinkedIn",
+										"x": "X",
+										"mastodon": "Mastodon",
+										"bluesky": "Bluesky",
+										"other": "Other"
+									}
+								},
+								{
+									"path": "timezone",
+									"label": "Timezone"
+								},
+								{
+									"path": "correspondenceLanguage",
+									"label": "Language"
+								}
+							],
+							"hideEmpty": true
 						}
 					},
 					{
@@ -4054,6 +4909,7 @@
 					"contact-kpis-deals",
 					"contact-related",
 					"contact-channels",
+					"contact-preferences",
 					"contact-relationships",
 					"contact-subscriptions",
 					"contact-brp",

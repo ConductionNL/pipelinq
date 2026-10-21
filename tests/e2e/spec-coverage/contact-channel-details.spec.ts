@@ -5,8 +5,9 @@
  * Gate-19 e2e coverage for
  * openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md.
  *
- * UI-observable scenarios: the Contact channels body section on the Client
- * and Contact detail pages (display + add affordance). Backend mapping
+ * UI-observable scenarios: the channels card (Emails, Phones and Social
+ * profiles as field lists) on the Client and Contact detail pages (display +
+ * add affordance). Backend mapping
  * (vCard write-back/import, the upgrade backfill, and the segment rule
  * builder's dotted-field support) is excluded per-scenario in the spec
  * deltas themselves — those are PHP service methods with no browser-visible
@@ -39,7 +40,7 @@ async function gotoPage(page: Page, hash: string): Promise<void> {
 	await dismissWalkthrough(page)
 }
 
-test.describe('Contact channels body section', () => {
+test.describe('Contact channels card', () => {
 	// MEASURED, not guessed. The client detail page fires 48 API requests, and
 	// on a warm local instance with no other load the last of them lands at
 	// 22.9 s — the page is genuinely that expensive, and this spec is the only
@@ -83,18 +84,15 @@ test.describe('Contact channels body section', () => {
 
 		await gotoPage(page, `/clients/${clientId}`)
 
-		const section = page.locator('[data-section-id="channels"]')
-		await expect(section).toHaveCount(1)
-		await expect(section).toBeVisible({ timeout: 15000 })
-
+		// The channels card is a tab strip of field lists: Emails, Phones, Social profiles.
+		await page.getByRole('tab', { name: /Phones/ }).click()
 		// The seeded mobile phone renders as a tel: link.
-		await expect(section.locator('a[href="tel:+31612345678"]')).toBeVisible()
+		await expect(page.locator('a[href="tel:+31612345678"]')).toBeVisible({ timeout: 15000 })
 
+		await page.getByRole('tab', { name: /Social profiles/ }).click()
 		// The seeded LinkedIn profile renders as a clickable external link.
 		await expect(
-			section.locator(
-				'a[href="https://www.linkedin.com/in/anna-jansen-demo"]',
-			),
+			page.locator('a[href="https://www.linkedin.com/in/anna-jansen-demo"]'),
 		).toBeVisible()
 	})
 
@@ -116,7 +114,7 @@ test.describe('Contact channels body section', () => {
 
 		await gotoPage(page, `/contacts/${contactId}`)
 
-		await expect(page.locator('[data-section-id="channels"]')).toHaveCount(1)
+		await expect(page.getByRole('tab', { name: /Emails/ })).toBeVisible({ timeout: 15000 })
 		// An unresolvable section degrades to an inline error card instead of
 		// breaking the page — same guard declarative-view-system.spec.ts uses.
 		await expect(
@@ -125,7 +123,7 @@ test.describe('Contact channels body section', () => {
 	})
 
 	// @e2e openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
-	test('clicking Add on the Emails list opens the add-email modal', async ({
+	test('clicking Add on the Emails list opens the add form', async ({
 		page,
 	}) => {
 		// FixtureSession issues its reads with `page.evaluate(fetch('/index.php/…'))`,
@@ -142,15 +140,14 @@ test.describe('Contact channels body section', () => {
 
 		await gotoPage(page, `/clients/${clientId}`)
 
-		const section = page.locator('[data-section-id="channels"]')
-		await expect(section).toBeVisible({ timeout: 15000 })
+		await page.getByRole('tab', { name: /Emails/ }).click()
+		const emails = page.getByTestId('cn-field-list-widget').filter({ has: page.getByTestId('cn-field-list-open-add') }).first()
+		await emails.getByTestId('cn-field-list-open-add').click()
 
-		await section.getByTestId('add-email-button').click()
-
-		await expect(page.getByTestId('channel-value-input')).toBeVisible({
+		await expect(page.getByTestId('cn-field-list-input-value')).toBeVisible({
 			timeout: 10000,
 		})
-		await expect(page.getByTestId('channel-modal-save')).toBeVisible()
+		await expect(page.getByTestId('cn-field-list-submit')).toBeVisible()
 	})
 })
 

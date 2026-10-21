@@ -263,7 +263,8 @@ test.describe('saved replies and send again', () => {
 		})
 
 		await gotoAppRoute(page, `/contacts/${contactId}`)
-		await page.getByTestId('write-email-button').first().click()
+		await page.getByRole('tab', { name: /Emails/ }).click()
+		await page.locator('[data-testid^="cn-field-list-action-write-email-"]').first().click()
 		await page.getByLabel('Subject').fill('Uw vraag')
 		await page.getByLabel('Saved reply').click()
 		await page.getByRole('option', { name: title }).click()
