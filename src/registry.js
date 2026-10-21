@@ -42,7 +42,6 @@ import CommunicationHistory from './components/CommunicationHistory.vue'
 //     org link from `relationLinks`, and these rich sub-features stay in the
 //     page body via `bodyWidgets` (kind:'section'). Each reads the live object
 //     via props (token-resolved `@objectId`) — no page host needed. ---
-import ContactChannelsSection from './components/ContactChannelsSection.vue'
 import ContactLinks from './components/ContactLinks.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
@@ -174,6 +173,7 @@ import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 import SendMessageModal from './modals/SendMessageModal.vue'
+import WriteEmailModal from './modals/WriteEmailModal.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
@@ -613,11 +613,6 @@ const registry = {
 		component: ContactRelationships,
 		_note: 'Outbound/inbound relationship graph for a client or contact; self-fetches by entityId/entityType.',
 	},
-	ContactChannelsSection: {
-		kind: 'section',
-		component: ContactChannelsSection,
-		_note: 'Typed emails/phones/social profiles for a client or contact (contact-channel-details); self-fetches by entityId/entityType.',
-	},
 	SubscriptionsSection: {
 		kind: 'section',
 		component: SubscriptionsSection,
@@ -798,20 +793,6 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: 'ResidentViewSection as a tab widget.',
-	},
-	ContactChannelsWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'ContactChannelsWidget',
-			ContactChannelsSection,
-			({ objectId, content }) => ({
-				entityId: objectId,
-				entityType: content.entityType || 'contact',
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'ContactChannelsSection as a grid widget.',
 	},
 	SubscriptionsWidget: {
 		kind: 'widget',
@@ -1191,6 +1172,13 @@ const registry = {
 		component: SendMessageModal,
 		propsSchema: null,
 		_note: "Send a WhatsApp or SMS message. Target of the Send message action of the messages conversation on ContactDetail (props contactId) and ClientDetail (props clientId: the modal asks which of the client's contacts).",
+	},
+
+	WriteEmailModal: {
+		kind: 'modal',
+		component: WriteEmailModal,
+		propsSchema: null,
+		_note: 'Write an email in Nextcloud Mail. Target of the Write email row action of the Emails field-list on ClientDetail and ContactDetail (props address, contactId or clientId).',
 	},
 
 	RequestCreateDialog: {

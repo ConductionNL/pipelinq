@@ -2898,6 +2898,7 @@ OC.L10N.register(
         "Postal address block printed in the footer of every mailing to this list, as the anti-spam rules require.": "Postadres in de voettekst van elke mailing naar deze lijst, zoals de antispamregels vragen.",
         "Posts": "Posts",
         "Pound Sterling (GBP)": "Britse pond (GBP)",
+        "Contact preferences": "Contactvoorkeuren",
         "Preferred channel": "Voorkeurskanaal",
         "Preferred time slot": "Voorkeurstijdslot",
         "Preferred time:": "Voorkeurtijd:",

@@ -3,7 +3,7 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
   - Write email (messaging-saved-replies-and-resend, D7). Opened from the
-  - Write email button next to an address in ContactChannelsSection. The agent
+  - Write email action on an address in the Emails list of a client or contact. The agent
   - types a subject and picks a saved reply for email; Open in Mail opens the
   - Nextcloud Mail composer in a new tab with the address, subject and text
   - filled in. pipelinq sends no mail itself. When the Mail app is not enabled
