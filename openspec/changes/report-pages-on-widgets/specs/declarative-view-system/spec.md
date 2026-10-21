@@ -43,3 +43,25 @@ section component.
 - THEN the funnel, source table, aging donut, win/loss pie and win/loss figures MUST read their own part of one
   `GET /api/rapportage/pipeline-stats` answer, sent once for all of them
 - AND the page date range MUST re-fetch it with `dateFrom`/`dateTo`, and the pipeline filter with `pipelineId`
+
+### Requirement: Reporting surfaces needing an unavailable declarative primitive MUST stay custom with a recorded reason
+
+The system MUST keep the Pipeline analytics and Blast performance surfaces as host-app `type:"custom"` pages until the
+declarative primitive each needs exists, and MUST record a precise `_note` on the page definition naming the missing
+primitive. Forecast, Forecast trend and Loyalty reporting are dashboards: the server works out the forecast summary and
+the current quarter (`GET /api/forecast/summary`), and the loyalty programme is a page filter with options read from the
+loyaltyProgramme objects.
+
+#### Scenario: kept-custom reporting pages carry a recorded reason
+
+- GIVEN the Pipelinq manifest
+- WHEN the Pipeline analytics and Blast performance pages are inspected
+- THEN each MUST remain `type:"custom"`
+- AND each MUST carry a `_note` naming the missing declarative primitive
+
+#### Scenario: the forecast reads its figures from the server
+
+- GIVEN a manager on the Forecast page
+- WHEN they pick the Team level
+- THEN the figures, the per-owner rows and the trend MUST come from `GET /api/forecast/summary?level=team`
+- AND an owner's Override MUST open the override dialog with that owner's period, level and commit

@@ -11,6 +11,7 @@
 - [x] Social approval as header actions
 - [x] Connection audit, competitor watches and search queries as tables (`tests/vitest/marketingPages.spec.js`)
 - [x] Mail block editor on CnBlockListEditor (`tests/vitest/mailBlocks.spec.js`)
+- [x] Forecast and forecast trend as dashboards on `GET /api/forecast/summary` (`tests/Unit/Service/ForecastSummaryServiceTest.php`)
 - [ ] Segment builder on CnConditionTreeEditor, after #2555
 - [ ] Subscriptions, blast monitor, blast performance, campaign landing page, journey runs, campaign report and weekly
       review, after #2555 and #2553
