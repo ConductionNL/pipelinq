@@ -2359,12 +2359,117 @@
 					},
 					{
 						"id": "client-relationships",
-						"type": "ContactRelationshipsWidget",
+						"type": "object-list",
 						"title": "Relationships",
 						"icon": "AccountMultipleOutline",
 						"content": {
-							"entityType": "client",
-							"title": "Relationships"
+							"register": "pipelinq",
+							"schema": "relationship",
+							"filter": {
+								"fromContact": "@objectId"
+							},
+							"limit": 100,
+							"fit": false,
+							"columns": [
+								{
+									"key": "toContact",
+									"label": "Name",
+									"widget": "fkResolve",
+									"widgetProps": {
+										"register": "pipelinq",
+										"schemaFrom": {
+											"field": "toType",
+											"map": {
+												"client": "client",
+												"contact": "contact"
+											}
+										},
+										"labelField": "name"
+									}
+								},
+								{
+									"key": "type",
+									"label": "Relationship"
+								},
+								{
+									"key": "endDate",
+									"label": "Ends",
+									"widget": "date",
+									"widgetProps": {
+										"variantWhen": [
+											{
+												"op": "lt",
+												"value": 0,
+												"variant": "error"
+											}
+										]
+									}
+								}
+							],
+							"groupBy": "category",
+							"rowRouteField": "toType",
+							"rowRouteMap": {
+								"client": "ClientDetail",
+								"contact": "ContactDetail"
+							},
+							"rowRouteIdField": "toContact",
+							"editable": true,
+							"deletable": true,
+							"addLabel": "Add relationship",
+							"createEndpoint": {
+								"url": "/apps/pipelinq/api/relationships",
+								"extra": {
+									"fromType": "client"
+								}
+							},
+							"formIncludeFields": [
+								"toContact",
+								"type",
+								"notes",
+								"startDate",
+								"endDate",
+								"strength"
+							],
+							"formFieldOverrides": {
+								"toContact": {
+									"label": "Related entity",
+									"widget": "party",
+									"sources": [
+										{
+											"id": "contact",
+											"register": "pipelinq",
+											"schema": "contact",
+											"label": "Contact",
+											"title": "{name}",
+											"secondary": "{email}"
+										},
+										{
+											"id": "client",
+											"register": "pipelinq",
+											"schema": "client",
+											"label": "Client",
+											"title": "{name}",
+											"secondary": "{email}"
+										}
+									],
+									"placeholder": "Search contacts and clients…"
+								},
+								"type": {
+									"label": "Relationship type",
+									"widget": "select",
+									"optionsFrom": {
+										"url": "/apps/pipelinq/api/relationship-types",
+										"responsePath": "results",
+										"valueField": "value",
+										"labelField": "label",
+										"groupField": "category"
+									}
+								},
+								"strength": {
+									"default": "medium"
+								}
+							},
+							"emptyText": "No relationships yet."
 						}
 					},
 					{
@@ -3235,12 +3340,117 @@
 					},
 					{
 						"id": "contact-relationships",
-						"type": "ContactRelationshipsWidget",
+						"type": "object-list",
 						"title": "Relationships",
 						"icon": "AccountMultipleOutline",
 						"content": {
-							"entityType": "contact",
-							"title": "Relationships"
+							"register": "pipelinq",
+							"schema": "relationship",
+							"filter": {
+								"fromContact": "@objectId"
+							},
+							"limit": 100,
+							"fit": false,
+							"columns": [
+								{
+									"key": "toContact",
+									"label": "Name",
+									"widget": "fkResolve",
+									"widgetProps": {
+										"register": "pipelinq",
+										"schemaFrom": {
+											"field": "toType",
+											"map": {
+												"client": "client",
+												"contact": "contact"
+											}
+										},
+										"labelField": "name"
+									}
+								},
+								{
+									"key": "type",
+									"label": "Relationship"
+								},
+								{
+									"key": "endDate",
+									"label": "Ends",
+									"widget": "date",
+									"widgetProps": {
+										"variantWhen": [
+											{
+												"op": "lt",
+												"value": 0,
+												"variant": "error"
+											}
+										]
+									}
+								}
+							],
+							"groupBy": "category",
+							"rowRouteField": "toType",
+							"rowRouteMap": {
+								"client": "ClientDetail",
+								"contact": "ContactDetail"
+							},
+							"rowRouteIdField": "toContact",
+							"editable": true,
+							"deletable": true,
+							"addLabel": "Add relationship",
+							"createEndpoint": {
+								"url": "/apps/pipelinq/api/relationships",
+								"extra": {
+									"fromType": "contact"
+								}
+							},
+							"formIncludeFields": [
+								"toContact",
+								"type",
+								"notes",
+								"startDate",
+								"endDate",
+								"strength"
+							],
+							"formFieldOverrides": {
+								"toContact": {
+									"label": "Related entity",
+									"widget": "party",
+									"sources": [
+										{
+											"id": "contact",
+											"register": "pipelinq",
+											"schema": "contact",
+											"label": "Contact",
+											"title": "{name}",
+											"secondary": "{email}"
+										},
+										{
+											"id": "client",
+											"register": "pipelinq",
+											"schema": "client",
+											"label": "Client",
+											"title": "{name}",
+											"secondary": "{email}"
+										}
+									],
+									"placeholder": "Search contacts and clients…"
+								},
+								"type": {
+									"label": "Relationship type",
+									"widget": "select",
+									"optionsFrom": {
+										"url": "/apps/pipelinq/api/relationship-types",
+										"responsePath": "results",
+										"valueField": "value",
+										"labelField": "label",
+										"groupField": "category"
+									}
+								},
+								"strength": {
+									"default": "medium"
+								}
+							},
+							"emptyText": "No relationships yet."
 						}
 					},
 					{

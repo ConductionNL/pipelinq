@@ -150,6 +150,18 @@ class RelationshipInverseListenerTest extends TestCase {
 		$this->assertSame('partner', $inverse[0]['inverseType']);
 	}//end testChangingTheTypeMovesTheInverseInsteadOfAddingOne()
 
+	public function testMovingTheRelationshipToAnotherPartyLeavesNoInverseAtTheOldOne(): void {
+		$uuid = $this->create($this->relationship(from: 'jan', to: 'sophie', type: 'ouder', inverse: 'kind'));
+		$this->settle();
+
+		$this->update($uuid, ['toContact' => 'piet']);
+		$this->settle();
+
+		$this->assertSame([], $this->rowsFrom('sophie'), 'The old party keeps no inverse');
+		$this->assertCount(1, $this->rowsFrom('piet'));
+		$this->assertSame('jan', $this->rowsFrom('piet')[0]['toContact']);
+	}//end testMovingTheRelationshipToAnotherPartyLeavesNoInverseAtTheOldOne()
+
 	public function testAnEditThatTouchesNoPairFieldQueuesNothing(): void {
 		$uuid = $this->create($this->relationship(from: 'jan', to: 'sophie', type: 'ouder', inverse: 'kind'));
 		$this->settle();

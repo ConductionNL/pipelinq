@@ -116,6 +116,12 @@ class RelationshipInverseListener implements IEventListener, DeferredObjectWork 
 			return;
 		}
 
+		// A relationship moved to another party leaves no inverse at the old one.
+		$this->inverses->removeInverse(
+			fromContact: (string)($entry['movedFromContact'] ?? ''),
+			toContact: (string)($entry['movedToContact'] ?? ''),
+			inverseType: (string)($entry['previousInverseType'] ?? '')
+		);
 		$this->inverses->syncInverse(
 			uuid: (string)($entry['uuid'] ?? ''),
 			previousInverseType: (string)($entry['previousInverseType'] ?? '')
@@ -176,10 +182,29 @@ class RelationshipInverseListener implements IEventListener, DeferredObjectWork 
 		$entry = $this->entry(entity: $entity, action: 'save');
 		if ($entry !== null) {
 			$entry['previousInverseType'] = (string)($previousData['inverseType'] ?? '');
+			$entry = array_merge($entry, $this->movedFrom(previous: $previousData, current: (array)$entity->getObject()));
 		}
 
 		return $entry;
 	}//end updateEntry()
+
+	/**
+	 * The old pair of a relationship whose parties changed, for its inverse to be removed.
+	 *
+	 * @param array<string, mixed> $previous The relationship before the edit.
+	 * @param array<string, mixed> $current  The relationship after the edit.
+	 *
+	 * @return array<string, string> `movedFromContact` and `movedToContact`, [] when the pair stayed.
+	 */
+	private function movedFrom(array $previous, array $current): array {
+		$from = (string)($previous['fromContact'] ?? '');
+		$toContact = (string)($previous['toContact'] ?? '');
+		if ($from === (string)($current['fromContact'] ?? '') && $toContact === (string)($current['toContact'] ?? '')) {
+			return [];
+		}
+
+		return ['movedFromContact' => $from, 'movedToContact' => $toContact];
+	}//end movedFrom()
 
 	/**
 	 * The delete entry for a relationship, carrying the pair it named.

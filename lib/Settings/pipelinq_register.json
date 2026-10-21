@@ -1727,7 +1727,7 @@
         "slug": "relationship",
         "title": "Relationship",
         "icon": "AccountMultiple",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "summary": "A typed bidirectional relationship between two contacts or clients",
         "description": "Represents a relationship between two entities (contacts and/or clients) with a typed, bidirectional link. Inverse relationships are auto-created. Mapped to Schema.org Person.knows.",
         "x-schema-org": "schema:Relationship",
@@ -1805,21 +1805,18 @@
           "notes": {
             "type": "string",
             "description": "Optional free text context for this relationship",
-            "visible": false,
             "title": "Notes"
           },
           "startDate": {
             "type": "string",
             "description": "Date when the relationship started",
             "format": "date",
-            "visible": false,
             "title": "Start Date"
           },
           "endDate": {
             "type": "string",
             "description": "Date when the relationship ended (null = active)",
             "format": "date",
-            "visible": false,
             "title": "End Date"
           },
           "strength": {
@@ -1831,7 +1828,6 @@
               "weak"
             ],
             "default": "medium",
-            "visible": false,
             "title": "Relationship Strength"
           }
         }

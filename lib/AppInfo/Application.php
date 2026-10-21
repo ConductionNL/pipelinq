@@ -66,6 +66,7 @@ use OCA\Pipelinq\Listener\WebFormBindingListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\QuestionAnsweredListener;
 use OCA\Pipelinq\Listener\RelationshipInverseListener;
+use OCA\Pipelinq\Listener\RelationshipTypeListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\SchemaChangeListener;
@@ -233,6 +234,15 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatingEvent::class,
 			listener: ContactChannelMirrorListener::class
+		);
+		// A relationship carries what its type and target imply, whoever wrote it.
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: RelationshipTypeListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: RelationshipTypeListener::class
 		);
 		// Every relationship has its inverse row, whoever wrote it.
 		$context->registerEventListener(
