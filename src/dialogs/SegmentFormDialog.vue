@@ -17,6 +17,9 @@
 		:closeOnClickOutside="false"
 		@closing="close()">
 		<div class="segment-form">
+			<p class="segment-form__subtitle">
+				{{ t('pipelinq', 'Who belongs to it follows from the rules, every time the segment is used') }}
+			</p>
 			<NcLoadingIcon v-if="loading" :size="32" class="segment-form__loading" />
 			<NcNoteCard v-else-if="loadError" type="error">
 				{{ loadError }}
@@ -85,12 +88,13 @@
 			<span v-if="saveHint" class="segment-form__save-hint">
 				{{ saveHint }}
 			</span>
-			<NcButton variant="tertiary" @click="close()">
+			<NcButton variant="secondary" @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="primary" :disabled="!canSave" @click="save">
-				<template v-if="saving" #icon>
-					<NcLoadingIcon :size="20" />
+				<template #icon>
+					<NcLoadingIcon v-if="saving" :size="20" />
+					<Check v-else :size="20" />
 				</template>
 				{{
 					isEditing
@@ -115,6 +119,7 @@ import {
 	NcTextArea,
 	NcTextField,
 } from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import SegmentBuilder from '../components/SegmentBuilder.vue'
 import { fieldOptionsFor } from '../services/segmentFieldOptions.js'
 
@@ -133,6 +138,7 @@ function blankModel() {
 export default {
 	name: 'SegmentFormDialog',
 	components: {
+		Check,
 		NcButton,
 		NcDialog,
 		NcLoadingIcon,
@@ -414,6 +420,11 @@ export default {
 </script>
 
 <style scoped>
+.segment-form__subtitle {
+	margin: -8px 0 12px;
+	color: var(--color-text-maxcontrast);
+}
+
 .segment-form {
 	display: flex;
 	flex-direction: column;
