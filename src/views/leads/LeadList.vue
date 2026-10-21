@@ -10,11 +10,6 @@
   Note: the built-in flow is openregister's generic server-side bulk import/
   export; the spec's lead-specific behaviour (default-stage assignment, title
   validation, "X geïmporteerd / Y overgeslagen" summary) is not yet wired.
-
-  The base CnIndexPage from @conduction/nextcloud-vue handles search, sort,
-  pagination and the column rendering driven by the manifest `columns` list.
-  We provide a slot override for the expectedCloseDate cell so overdue leads
-  render the "Xd te laat" treatment without forking the index page.
 -->
 <template>
 	<CnIndexPage
@@ -23,6 +18,7 @@
 		:register="register"
 		:schema="schema"
 		:columns="columns"
+		:rowClass="rowClassFor"
 		:sidebar="sidebarConfig"
 		:quickFilters="quickFilters"
 		:quickFilterMaxVisible="6"
