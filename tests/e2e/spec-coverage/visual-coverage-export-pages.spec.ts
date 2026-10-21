@@ -14,11 +14,11 @@
  * named a component. `src/main.js` now builds `createWebHistory(routerBase())`,
  * so a path-shaped deep link resolves to the page it names.
  *
- * The lists are `type: "index"` and the run a `type: "detail"` manifest page;
- * the two forms are `type: "custom"` entries that map onto their .vue file:
+ * The lists are `type: "index"` and the run and destination `type: "detail"`
+ * manifest pages; the job form is a `type: "custom"` entry over its .vue file:
  *
  *   /export/destinations       index page (exportDestination)
- *   /export/destinations/new   ExportDestinationFormView ExportDestinationForm.vue
+ *   /export/destinations/:id   detail page (exportDestination); new ones through the list's Add form
  *   /export/jobs/new           ExportJobFormView        ExportJobForm.vue
  *   /export/runs               index page (exportRun)
  *   /export/runs/:id           detail page (exportRun)
@@ -97,38 +97,16 @@ test('ExportDestinations: /export/destinations mounts the destination index page
 	await expect(indexTitle(page)).toHaveText('Export destinations')
 })
 
-// ── src/views/export/ExportDestinationForm.vue — `/export/destinations/new` ───
-test('ExportDestinationForm: /export/destinations/new mounts src/views/export/ExportDestinationForm.vue', async ({
+// ── New destination: the destination list's create form ───
+test('ExportDestinations: New destination opens the destination form', async ({
 	page,
 }) => {
-	await openSpaRoute(page, '/export/destinations/new')
+	await openSpaRoute(page, '/export/destinations')
+	await content(page).getByRole('button', { name: 'New destination' }).first().click()
 
-	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
-	await expect(detail).toBeVisible({ timeout: 15000 })
-	// ⚠️ THIS HEADING'S SOURCE HAS CHANGED — read before editing the literal.
-	//
-	// This file used to record the opposite rule: that a manifest page `title`
-	// reaches CnDetailPage as a fallthrough attribute on a single-root
-	// component and beats the component's own `:title`. Run 33253937930
-	// measured the reverse — `33 × locator resolved to <h2
-	// class="cn-detail-page__title">New destination</h2>`, i.e. the
-	// COMPONENT's binding is what renders — so `src/manifest.json` (page
-	// `ExportDestinationNew`) is no longer the string the user sees here.
-	//
-	// Nothing else in the suite can see that flip: this was the only page
-	// whose manifest title and component literal disagreed. The
-	// `/kassakoppeling/audit/:id` case looks like a counter-example but is
-	// not — its own comment says it asserts the COMPONENT's fallback, which
-	// merely happens to equal the manifest title.
-	//
-	// The component now says 'New export destination' too, so both layers
-	// agree and the heading is right whichever one wins. That does mean this
-	// assertion no longer discriminates between them: if you need to know
-	// which layer renders, make them disagree deliberately rather than
-	// reading this test's result as an answer.
-	await expect(detail.locator('.cn-detail-page__title')).toHaveText(
-		'New export destination',
-	)
+	const dialog = page.locator('.modal-container, [role="dialog"]').first()
+	await expect(dialog).toBeVisible({ timeout: 15000 })
+	await expect(dialog.getByText('OpenConnector source ID').first()).toBeVisible()
 })
 
 // ── src/views/export/ExportJobForm.vue — route `/export/jobs/new` ─────────────

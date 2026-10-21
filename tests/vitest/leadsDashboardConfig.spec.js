@@ -259,3 +259,17 @@ describe('an export run', () => {
 		expect(registrySource).not.toMatch(/ExportRunDetailView/)
 	})
 })
+
+describe('an export destination', () => {
+	it('is made through the list\'s schema form and kept on a detail page with Test connection', () => {
+		const list = page('ExportDestinations').config
+		expect(list.headerButtons[0].action).toBe('add')
+		expect(list.fieldOverrides.validationStatus.hidden).toBe(true)
+		expect(page('ExportDestinationNew')).toBeUndefined()
+		const detail = page('ExportDestinationDetail')
+		expect(detail.type).toBe('detail')
+		expect(detail.config.headerActions[0]).toMatchObject({ type: 'api-call', url: '/apps/pipelinq/api/export/destinations/@objectId/test' })
+		expect(detail.config.widgets[0].content.overrides.validationStatus.editable).toBe(false)
+		expect(registrySource).not.toMatch(/ExportDestinationFormView/)
+	})
+})

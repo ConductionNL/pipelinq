@@ -200,7 +200,6 @@ import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.v
 // --- xWiki integration (xwiki-integration): dashboard widget wrapper +
 //     reusable widget / sidebar / viewer / list components. ---
 import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget.vue'
-import ExportDestinationFormView from './views/export/ExportDestinationForm.vue'
 import ExportJobFormView from './views/export/ExportJobForm.vue'
 // --- BI export + data-warehouse sink (lib gap: declarative index/detail pages
 //     cannot express the bespoke test-connection / test-run / enable / retry
@@ -917,11 +916,6 @@ const registry = {
 		kind: 'page',
 		component: ExportJobFormView,
 		_note: 'Export-job create/edit form (schemas multi-select, destination, format/mode, watermark, cron, row filter, PII column allowlist) with an inline Test-run action.',
-	},
-	ExportDestinationFormView: {
-		kind: 'page',
-		component: ExportDestinationFormView,
-		_note: 'Export-destination create/edit form (type, OpenConnector source, path template, compression, encryption) with an inline Test-connection action.',
 	},
 
 	// CTI telephony, outbound WhatsApp/SMS messaging and the POS payment providers

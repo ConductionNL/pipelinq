@@ -7709,20 +7709,11 @@
 					"lastValidatedAt"
 				],
 				"rowRoute": "ExportDestinationDetail",
-				"showAdd": false,
+				"showAdd": true,
 				"emptyText": "No destinations yet",
-				"headerActions": [
-					{
-						"id": "new-destination",
-						"label": "New destination",
-						"type": "open-page",
-						"target": "ExportDestinationNew",
-						"icon": "Plus"
-					}
-				],
 				"headerButtons": [
 					{
-						"action": "new-destination",
+						"action": "add",
 						"variant": "primary",
 						"icon": "Plus",
 						"label": "New destination"
@@ -7737,31 +7728,104 @@
 						"successMessage": "Connection tested; the status column shows the result",
 						"errorMessage": "Connection test failed"
 					}
-				]
-			}
-		},
-		{
-			"id": "ExportDestinationNew",
-			"_note": "ExportDestinationForm.vue is a bespoke connection editor: transport NcSelect plus credential NcTextFields and an NcCheckboxRadioSwitch whose visible fields change per destination type; this conditional connection form has no standard form page-type representation.",
-			"route": "/export/destinations/new",
-			"type": "custom",
-			"title": "New export destination",
-			"component": "ExportDestinationFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "exportDestination"
+				],
+				"fieldOverrides": {
+					"validationStatus": {
+						"hidden": true
+					},
+					"lastValidatedAt": {
+						"hidden": true
+					},
+					"connectorSourceId": {
+						"label": "OpenConnector source ID",
+						"description": "The OpenConnector source that holds the warehouse credentials"
+					},
+					"encryptionEnabled": {
+						"label": "Encryption at rest"
+					}
+				}
 			}
 		},
 		{
 			"id": "ExportDestinationDetail",
-			"_note": "Reuses ExportDestinationForm.vue (bespoke connection editor with type-conditional credential fields) in edit mode; this conditional connection form has no standard form/detail page-type representation.",
 			"route": "/export/destinations/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Export destination",
-			"component": "ExportDestinationFormView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "exportDestination"
+				"schema": "exportDestination",
+				"statusPill": {
+					"field": "validationStatus",
+					"colorMap": {
+						"untested": "default",
+						"valid": "success",
+						"invalid": "error"
+					},
+					"labels": {
+						"untested": "Not tested",
+						"valid": "Connection valid",
+						"invalid": "Connection failed"
+					}
+				},
+				"headerActions": [
+					{
+						"id": "test-connection",
+						"label": "Test connection",
+						"type": "api-call",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/export/destinations/@objectId/test",
+						"successMessage": "Connection tested; the status column shows the result",
+						"errorMessage": "Connection test failed"
+					}
+				],
+				"widgets": [
+					{
+						"id": "destination",
+						"type": "data",
+						"title": "Destination",
+						"content": {
+							"title": "Destination",
+							"columns": 2,
+							"include": [
+								"name",
+								"type",
+								"connectorSourceId",
+								"pathTemplate",
+								"compression",
+								"namingConvention",
+								"encryptionEnabled",
+								"validationStatus",
+								"lastValidatedAt"
+							],
+							"overrides": {
+								"connectorSourceId": {
+									"label": "OpenConnector source ID"
+								},
+								"encryptionEnabled": {
+									"label": "Encryption at rest"
+								},
+								"validationStatus": {
+									"editable": false,
+									"label": "Connection"
+								},
+								"lastValidatedAt": {
+									"editable": false,
+									"label": "Last tested"
+								}
+							}
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "destination",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				]
 			}
 		},
 		{
