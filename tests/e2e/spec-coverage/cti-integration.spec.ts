@@ -17,7 +17,7 @@
  *    mounted as sections on the admin page instead."
  *
  * Concretely: `src/views/settings/Settings.vue` renders `<CtiPage>` (guarded by
- * `isAdmin && isConfigured`), and CtiPage stacks `CtiSettings` (name "CTI
+ * `isAdmin && isConfigured`), and CtiPage stacks the declared CTI section (name "CTI
  * integration", Test connection + Save) over `CtiEventLog` (name "CTI webhook
  * event log", Reload + `[data-testid="cti-event-log-table"]`). All four tests
  * previously died in the sidebar navigation helper.
@@ -55,7 +55,7 @@ test('CTI integration: exposes Test connection + Save controls', async ({
 	await expect(section).toBeVisible({ timeout: 15000 })
 
 	// SCOPED 2026-08-06 — page-wide this was a strict-mode violation: the admin
-	// page carries TWO "Test connection" buttons, CtiSettings' and the XWiki
+	// page carries TWO "Test connection" buttons, the CTI section's and the XWiki
 	// section's (Settings.vue line ~229). Matching both and taking `.first()`
 	// would have been worse than the error: whichever section happens to render
 	// first would have carried the assertion, so the CTI section could vanish

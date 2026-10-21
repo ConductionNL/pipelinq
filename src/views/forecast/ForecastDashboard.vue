@@ -367,7 +367,7 @@ export default {
 
 		/**
 		 * @spec exclude forecast snapshots have no owning requirement, see
-		 *   ForecastSettings::load for the same gap
+		 *   the forecast admin section for the same gap
 		 */
 		async loadSnapshots() {
 			this.loading = true
@@ -389,7 +389,7 @@ export default {
 		 *
 		 * @param {string} level The level chosen.
 		 * @spec exclude forecast snapshots have no owning requirement, see
-		 *   ForecastSettings::load for the same gap
+		 *   the forecast admin section for the same gap
 		 */
 		setLevel(level) {
 			this.level = level

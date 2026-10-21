@@ -7781,9 +7781,21 @@
         "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.": "Het mTLS-certificaat verloopt op {cert.expiry}, over {cert.daysLeft} dagen. Vervang het binnenkort.",
         "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.": "Het mTLS-certificaat verloopt op {cert.expiry}, over {cert.daysLeft} dagen. Vervang het nu.",
         "No mTLS certificate is configured.": "Er is geen mTLS-certificaat ingesteld.",
-        "mTLS certificate: {value}.": "mTLS-certificaat: {value}.",
         "Delete skill": "Vaardigheid verwijderen",
         "Delete agent profile": "Agentprofiel verwijderen",
-        "Deleting failed.": "Verwijderen is mislukt."
+        "Deleting failed.": "Verwijderen is mislukt.",
+        "Forecast team groups": "Prognoseteamgroepen",
+        "Dutch Standard Industrial Classification codes. One code per line.": "SBI-codes (Standaard Bedrijfsindeling). Eén code per regel.",
+        "Used for OpenCorporates search. One keyword per line.": "Gebruikt voor zoeken in OpenCorporates. Eén trefwoord per regel.",
+        "Last 10 transactions": "Laatste 10 transacties",
+        "Last 20 transactions": "Laatste 20 transacties",
+        "Last 50 transactions": "Laatste 50 transacties",
+        "CallVoip": "CallVoip",
+        "RingCentral": "RingCentral",
+        "Asterisk": "Asterisk",
+        "Basic": "Basic",
+        "API key": "API-sleutel",
+        "NL": "NL",
+        "xWiki reachable at {baseUrl}": "xWiki bereikbaar op {baseUrl}"
     }
 }

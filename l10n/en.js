@@ -7811,10 +7811,22 @@ OC.L10N.register(
         "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.",
         "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.",
         "No mTLS certificate is configured.": "No mTLS certificate is configured.",
-        "mTLS certificate: {value}.": "mTLS certificate: {value}.",
         "Delete skill": "Delete skill",
         "Delete agent profile": "Delete agent profile",
-        "Deleting failed.": "Deleting failed."
+        "Deleting failed.": "Deleting failed.",
+        "Forecast team groups": "Forecast team groups",
+        "Dutch Standard Industrial Classification codes. One code per line.": "Dutch Standard Industrial Classification codes. One code per line.",
+        "Used for OpenCorporates search. One keyword per line.": "Used for OpenCorporates search. One keyword per line.",
+        "Last 10 transactions": "Last 10 transactions",
+        "Last 20 transactions": "Last 20 transactions",
+        "Last 50 transactions": "Last 50 transactions",
+        "CallVoip": "CallVoip",
+        "RingCentral": "RingCentral",
+        "Asterisk": "Asterisk",
+        "Basic": "Basic",
+        "API key": "API key",
+        "NL": "NL",
+        "xWiki reachable at {baseUrl}": "xWiki reachable at {baseUrl}"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -96,7 +96,7 @@ export function attainmentPercent(value, quota) {
  * @param {Array<object>} snapshots Rows with as_of_date, commit, best_case and pipeline.
  * @return {Array<{date: string, commit: number, best_case: number, pipeline: number}>}
  * @spec exclude forecast snapshots have no owning requirement, see
- *   ForecastSettings::load for the same gap
+ *   the forecast admin section for the same gap
  */
 export function sumSnapshotsByDate(snapshots) {
 	const byDate = new Map()
@@ -125,7 +125,7 @@ export function sumSnapshotsByDate(snapshots) {
  * @param {Array<object>} snapshots Rows with owner_id and as_of_date.
  * @return {Array<object>} One row per owner, in the order owners first appear.
  * @spec exclude forecast snapshots have no owning requirement, see
- *   ForecastSettings::load for the same gap
+ *   the forecast admin section for the same gap
  */
 export function latestPerOwner(snapshots) {
 	const latest = new Map()

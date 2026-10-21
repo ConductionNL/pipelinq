@@ -161,7 +161,7 @@ export default {
 		 * Read the trend again when the page shows another level.
 		 *
 		 * @spec exclude forecast snapshots have no owning requirement, see
-		 *   ForecastSettings::load for the same gap
+		 *   the forecast admin section for the same gap
 		 */
 		level() {
 			if (this.embedded) {
@@ -174,7 +174,7 @@ export default {
 	 * Inside the forecast page the trend loads at once for its level.
 	 *
 	 * @spec exclude forecast snapshots have no owning requirement, see
-	 *   ForecastSettings::load for the same gap
+	 *   the forecast admin section for the same gap
 	 */
 	mounted() {
 		if (this.embedded) {
@@ -185,7 +185,7 @@ export default {
 	methods: {
 		/**
 		 * @spec exclude forecast snapshots have no owning requirement, see
-		 *   ForecastSettings::load for the same gap
+		 *   the forecast admin section for the same gap
 		 */
 		async loadTrend() {
 			if (!this.embedded && !this.ownerId) {

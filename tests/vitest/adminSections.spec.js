@@ -52,8 +52,8 @@ describe('the declared admin sections', () => {
 		}
 	})
 
-	it('reads and saves the app settings, except the provision action and the BRP monitor', () => {
-		for (const id of ['leadManagement', 'shillinq', 'exportConfiguration', 'marketingIntel']) {
+	it('reads and saves the app settings, except the sections with an endpoint of their own', () => {
+		for (const id of ['leadManagement', 'shillinq', 'exportConfiguration', 'marketingIntel', 'menuStructure', 'vatRates', 'xwiki']) {
 			expect(sections[id].valuesPath, id).toBe('config')
 			expect(sections[id].url, id).toBeUndefined()
 		}
@@ -61,6 +61,22 @@ describe('the declared admin sections', () => {
 		expect(sections.provisionData.fields[0].url).toBe('/apps/pipelinq/api/setup/action/provision-register')
 		expect(sections.brpMonitor.url).toBe('/apps/pipelinq/api/brp/monitor')
 		expect(sections.brpMonitor.fields.every((field) => field.type === 'status')).toBe(true)
+	})
+
+	// The settings write answers success for a key it does not know, so a
+	// declared key the server does not store would say "Saved." and keep nothing.
+	it('saves only keys the settings write stores', () => {
+		const service = readFileSync(resolve(__dirname, '../../lib/Service/SettingsService.php'), 'utf8')
+		const stored = new Set([...service.matchAll(/^\t\t'([a-z0-9_.]+)'(?: =>|,)/gm)].map((match) => match[1]))
+		for (const id of ['leadManagement', 'shillinq', 'exportConfiguration', 'marketingIntel', 'menuStructure', 'vatRates', 'xwiki']) {
+			for (const field of sections[id].fields) {
+				if (['heading', 'status', 'action'].includes(field.type)) {
+					continue
+				}
+				const key = field.path ? field.path.split('.')[0] : field.key
+				expect(stored.has(key), `${id}: ${key}`).toBe(true)
+			}
+		}
 	})
 
 	it('keeps the checks the hand-built forms had', () => {
@@ -85,8 +101,10 @@ describe('the declared admin sections', () => {
 
 	it('names every certificate state of the BRP monitor in its tone', () => {
 		const certificate = sections.brpMonitor.fields.find((field) => field.key === 'cert.status')
-		expect(Object.keys(certificate.textMap)).toEqual(['ok', 'warning', 'critical', '', '*'])
-		expect(certificate.toneMap).toMatchObject({ ok: 'success', warning: 'warning', critical: 'error' })
+		expect(Object.keys(certificate.textMap)).toEqual(['ok', 'warning', 'critical', '*'])
+		expect(certificate.toneMap).toEqual({ ok: 'success', warning: 'warning', critical: 'error' })
+		const none = sections.brpMonitor.fields.find((field) => field.key === 'noCertificate')
+		expect(none.visibleWhen).toEqual({ key: 'cert', empty: true })
 		const empty = sections.brpMonitor.fields.find((field) => field.key === 'noLookups')
 		expect(empty.visibleWhen).toEqual({ key: 'report', empty: true })
 	})
@@ -99,11 +117,51 @@ describe('the declared admin sections', () => {
 			shillinq: 'isAdmin && shillinqInstalled',
 			marketingIntel: 'isAdmin',
 			brpMonitor: 'isAdmin',
+			menuStructure: 'isAdmin',
+			vatRates: 'isAdmin',
+			forecast: 'isConfigured',
+			prospect: 'isConfigured',
+			xwiki: 'isAdmin',
+			posCustomer: 'isAdmin && isConfigured',
 		}
-		expect(Object.keys(guards).sort()).toEqual(Object.keys(sections).sort())
+		expect([...Object.keys(guards), 'cti'].sort()).toEqual(Object.keys(sections).sort())
 		for (const [id, guard] of Object.entries(guards)) {
 			expect(settings, id).toMatch(new RegExp(`<CnSettingsFieldsSection\\s+v-if="${guard.replace(/[&]/g, '\\$&')}"\\s+v-bind="sections\\.${id}"`))
 		}
+	})
+})
+
+describe('the sections with an endpoint of their own', () => {
+	it('edits one key per VAT class inside the vat_rates setting, with the Dutch defaults', () => {
+		expect(sections.vatRates.fields.map((field) => [field.path, field.default])).toEqual([
+			['vat_rates.high', 21], ['vat_rates.low', 9], ['vat_rates.zero', 0], ['vat_rates.exempt', 0],
+		])
+	})
+
+	it('reads the prospect settings where the server serves them', () => {
+		const routes = readFileSync(resolve(__dirname, '../../appinfo/routes.php'), 'utf8')
+		expect(routes).toContain("'url' => '/api/prospect-settings', 'verb' => 'GET'")
+		expect(routes).toContain("'url' => '/api/prospect-settings', 'verb' => 'PUT'")
+		expect(sections.prospect.url).toBe('/apps/pipelinq/api/prospect-settings')
+		expect(sections.prospect.fields.find((field) => field.key === 'kvkApiKey').type).toBe('secret')
+	})
+
+	it('saves the POS customer lookup on its own endpoint, with at least one search field', () => {
+		expect(sections.posCustomer).toMatchObject({ url: '/apps/pipelinq/api/admin/pos-customer-settings', valuesPath: 'settings', saveMethod: 'POST' })
+		expect(sections.posCustomer.fields[0]).toMatchObject({ key: 'customerSearchFields', type: 'checkboxes', required: true })
+	})
+
+	it('saves the CTI configuration whole and tests the connection with the server\'s verdict', () => {
+		expect(sections.cti).toMatchObject({ url: '/apps/pipelinq/api/cti/config', saveAll: true })
+		const test = sections.cti.fields.find((field) => field.type === 'action')
+		expect(test).toMatchObject({ method: 'GET', url: '/apps/pipelinq/api/cti/test-connection', okPath: 'ok' })
+		const page = readFileSync(resolve(__dirname, '../../src/views/settings/CtiPage.vue'), 'utf8')
+		expect(page).toMatch(/<div data-testid="cti-settings">\s*<CnSettingsFieldsSection v-bind="section"/)
+	})
+
+	it('shows whether xWiki is reachable only when asked, and its connection once, in Detected integrations', () => {
+		expect(settings).not.toMatch(/testXwiki|xwikiStatus/)
+		expect(settings).toContain('<DetectedIntegrations')
 	})
 })
 
@@ -111,8 +169,9 @@ describe('the admin surfaces that were in-app routes', () => {
 	const manifest = readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8')
 	const registry = readFileSync(resolve(__dirname, '../../src/registry.js'), 'utf8')
 
-	it('has no BRP monitor or sync settings page, and no unreferenced pipeline manager key', () => {
-		expect(manifest).not.toMatch(/"route": "\/admin\/brp-monitor"|"route": "\/sync-settings"/)
+	it('has no BRP monitor, POS customer or sync settings page, and no unreferenced pipeline manager key', () => {
+		expect(manifest).not.toMatch(/"route": "\/admin\/brp-monitor"|"route": "\/sync-settings"|"route": "\/admin\/pos-customer-link"/)
+		expect(registry).not.toMatch(/PosCustomerSettingsView/)
 		expect(registry).not.toMatch(/BrpMonitorView|SyncSettingsView|PipelineManagerView/)
 	})
 })

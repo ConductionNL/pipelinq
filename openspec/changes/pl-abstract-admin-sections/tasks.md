@@ -10,3 +10,7 @@
   - **spec_ref**: `specs/admin-settings/spec.md#requirement-no-admin-surface-is-an-in-app-route`
 - [x] 5 Ask in a dialog before deleting a skill or an agent profile
   - **spec_ref**: `specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog`
+- [x] 6 Declare the menu structure, VAT rates, forecast, prospect discovery, CTI and xWiki sections
+  - **spec_ref**: `specs/admin-settings/spec.md#requirement-settings-with-lists-rows-or-a-json-value-are-declared-too`
+- [x] 7 Show the POS customer lookup settings on the admin page and drop its in-app route
+  - **spec_ref**: `specs/admin-settings/spec.md#requirement-no-admin-surface-is-an-in-app-route`

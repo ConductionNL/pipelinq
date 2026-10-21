@@ -3,8 +3,8 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
   - CtiPage is the single CTI (telephony) settings page. It composes the CTI
-  - integration configuration (CtiSettings) and the webhook event log
-  - (CtiEventLog) into one settings-section page so administrators manage the
+  - integration configuration (the declared `cti` section) and the webhook
+  - event log (CtiEventLog) into one settings-section page so administrators manage the
   - screen-pop / click-to-dial adapter and inspect its inbound webhooks in one
   - place. Both child views render their own NcSettingsSection, so stacking them
   - keeps the native Nextcloud settings look while merging the two former
@@ -14,18 +14,25 @@
   -->
 <template>
 	<div id="section-cti" class="cti-page">
-		<CtiSettings />
+		<div data-testid="cti-settings">
+			<CnSettingsFieldsSection v-bind="section" appId="pipelinq" />
+		</div>
 		<CtiEventLog />
 	</div>
 </template>
 
 <script>
+import { CnSettingsFieldsSection } from '@conduction/nextcloud-vue'
 import CtiEventLog from './CtiEventLog.vue'
-import CtiSettings from './CtiSettings.vue'
+import adminSections from './adminSections.json'
 
 export default {
 	name: 'CtiPage',
-	components: { CtiSettings, CtiEventLog },
+	components: { CnSettingsFieldsSection, CtiEventLog },
+
+	data() {
+		return { section: adminSections.cti }
+	},
 }
 </script>
 

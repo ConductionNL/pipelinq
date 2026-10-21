@@ -212,16 +212,3 @@ test('KassakoppelingAuditDetail: /kassakoppeling/audit/:id mounts src/views/kass
 	// and this page passes no object). The shell is what is under test.
 	await expect(detail.locator('.cn-detail-page__title')).toHaveText('Audit entry')
 })
-
-// ── src/views/admin/PosCustomerSettings.vue — `/admin/pos-customer-link` ──────
-test('PosCustomerSettings: /admin/pos-customer-link mounts src/views/admin/PosCustomerSettings.vue', async ({
-	page,
-}) => {
-	await openSpaRoute(page, '/admin/pos-customer-link')
-
-	// The whole template is one NcSettingsSection, and its `name` prop is the
-	// section heading — rendered by the component before any fetch resolves.
-	await expect(
-		content(page).getByRole('heading', { name: 'POS customer lookup' }),
-	).toBeVisible({ timeout: 15000 })
-})
