@@ -467,6 +467,7 @@ return [
         ['name' => 'bookingAdmin#confirmDeposit', 'url' => '/api/bookings/{id}/confirm-deposit', 'verb' => 'POST'],
 
         // Loyalty program (loyalty-program — REQ-LOY-001..010).
+        ['name' => 'loyalty#createAccount',      'url' => '/api/loyalty/accounts',                      'verb' => 'POST'],
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
         ['name' => 'loyalty#getAccountHistory',  'url' => '/api/loyalty/accounts/{accountId}/history',  'verb' => 'GET'],
         ['name' => 'loyalty#getRedemptionOptions',    'url' => '/api/loyalty/redemption/options/{programmeId}/{accountId}', 'verb' => 'GET'],
@@ -479,6 +480,7 @@ return [
         ['name' => 'loyalty#activateGiftCard',  'url' => '/api/loyalty/gift-card/activate/{giftCardId}', 'verb' => 'POST'],
         ['name' => 'loyalty#activateProgramme', 'url' => '/api/loyalty/programme/{programmeId}/activate', 'verb' => 'POST'],
         ['name' => 'loyaltyReporting#kpis',               'url' => '/api/loyalty/reporting/{programmeId}/kpis',          'verb' => 'GET'],
+        ['name' => 'loyaltyReporting#kpisCsv',            'url' => '/api/loyalty/reporting/{programmeId}/kpis/export',   'verb' => 'GET'],
         ['name' => 'loyaltyReporting#liability',          'url' => '/api/loyalty/reporting/{programmeId}/liability',     'verb' => 'GET'],
         ['name' => 'loyaltyReporting#tierDistribution',   'url' => '/api/loyalty/reporting/{programmeId}/tiers',         'verb' => 'GET'],
         ['name' => 'loyaltyReporting#expiryForecast',     'url' => '/api/loyalty/reporting/{programmeId}/expiry-forecast', 'verb' => 'GET'],

@@ -1257,7 +1257,6 @@ const KEPT_CUSTOM_PAGES: Array<{ doc: string; id: string }> = [
 	{ doc: 'src/manifest.json', id: 'Pipeline' },
 	{ doc: 'src/manifest.d/50-forecast.json', id: 'Forecast' },
 	{ doc: 'src/manifest.d/50-forecast.json', id: 'ForecastTrend' },
-	{ doc: 'src/manifest.d/70-loyalty-program.json', id: 'LoyaltyReporting' },
 	{ doc: 'src/manifest.d/75-marketing-blasts.json', id: 'BlastPerformance' },
 ]
 
@@ -1312,14 +1311,5 @@ test('a kept-custom page keeps its host component AND its behaviour — it is no
 	await expect(page.locator('[data-testid="cn-index-page"]')).toHaveCount(0)
 	await assertNoHardError(page)
 
-	// Loyalty reporting, the other surface with a dynamic-selector blocker.
-	await gotoPage(page, '/loyalty/reporting')
-	await expect(
-		page
-			.locator('#content-vue')
-			.getByRole('heading', { name: 'Loyalty programme reporting' })
-			.first(),
-	).toBeVisible({ timeout: 20000 })
-	await expect(page.locator('[data-testid="cn-index-page"]')).toHaveCount(0)
 	await assertNoHardError(page)
 })

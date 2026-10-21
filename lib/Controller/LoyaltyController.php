@@ -85,6 +85,57 @@ class LoyaltyController extends Controller {
 	}//end __construct()
 
 	/**
+	 * Enrol a customer in a programme. The customer's opt-in is mandatory: the
+	 * service refuses an account without it.
+	 *
+	 * @param string $customerId  The customer.
+	 * @param string $programmeId The programme.
+	 * @param bool   $optIn       Whether the customer accepted the terms.
+	 * @param string $termsVersion The version of the terms accepted.
+	 *
+	 * @return JSONResponse The account (201), or why it was refused.
+	 *
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010-01
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $optIn is the customer's answer, not a behaviour switch.
+	 */
+	#[NoAdminRequired]
+	public function createAccount(string $customerId = '', string $programmeId = '', bool $optIn = false, string $termsVersion = '1.0'): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
+
+		if ($optIn === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('The customer has to accept the programme terms before an account is made.')],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		if (trim($customerId) === '' || trim($programmeId) === '') {
+			return new JSONResponse(['error' => $this->l10n->t('Choose a customer and a programme.')], Http::STATUS_BAD_REQUEST);
+		}
+
+		try {
+			$account = $this->accountService->createAccount(
+				customerId: trim($customerId),
+				programmeId: trim($programmeId),
+				optIn: true,
+				termsVersion: trim($termsVersion) === '' ? '1.0' : trim($termsVersion),
+			);
+		} catch (Throwable) {
+			return new JSONResponse(['error' => $this->l10n->t('The account could not be created.')], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		return new JSONResponse($account, Http::STATUS_CREATED);
+	}//end createAccount()
+
+	/**
 	 * Get an account by its UUID (the caller MUST own the underlying klantId).
 	 *
 	 * @param string $accountId The account UUID.

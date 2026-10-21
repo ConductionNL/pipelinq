@@ -11,12 +11,286 @@
 	"pages": [
 		{
 			"id": "LoyaltyReporting",
-			"_note": "KEPT CUSTOM (pipelinq-dashboards-declarative). The eight KPIs DO come from one summary endpoint (GET /api/loyalty/reporting/{programmeId}/kpis), but {programmeId} is a PATH segment that must be a specific loyalty-programme UUID chosen from a selector whose options are loaded dynamically from the OR loyaltyProgramme collection. A declarative stat widget can interpolate @page.<key> into the URL, but pageFilters only offer STATIC option lists — they cannot enumerate the programmes — and there is no 'all programmes' aggregate endpoint. The period control (30d / 90d / 365d) is also resolved to from/to ISO bounds client-side. The tier-distribution table + CSV export are bespoke. Missing primitives: (a) a pageFilter whose options come from an OR collection (so @page.programmeId can drive the URL path) and (b) a relative-window period token resolving to from/to. Until those exist, converting would hardcode a single programme — so the view stays custom and nothing is lost. (Same dynamic-selector blocker as PipelineAnalytics / Forecast.)",
+			"_note": "Loyalty programme reporting: the eight figures read GET /apps/pipelinq/api/loyalty/reporting/{programme}/kpis for the programme chosen in the page filter (options from the loyaltyProgramme objects) and the page date range; the tier distribution reads /tiers. Download exports the figures as CSV, and Enrol a customer posts to /api/loyalty/accounts, which refuses an account without the customer's opt-in.",
 			"route": "/loyalty/reporting",
-			"type": "custom",
-			"title": "Loyalty reporting",
-			"component": "LoyaltyReportingView",
-			"config": { "register": "pipelinq", "schema": "loyaltyProgramme" }
+			"type": "dashboard",
+			"title": "Loyalty programme reporting",
+			"config": {
+				"description": "Points, tiers and what the outstanding points are worth",
+				"pageFilters": [
+					{
+						"key": "programme",
+						"label": "Programme",
+						"type": "select",
+						"optionsFrom": { "register": "pipelinq", "schema": "loyaltyProgramme", "labelField": "name" }
+					}
+				],
+				"dateRange": {
+					"enabled": true,
+					"persistKey": "pipelinq-loyalty-range",
+					"default": { "preset": "90d" },
+					"presets": [
+						{ "id": "30d", "label": "Last 30 days", "days": 30 },
+						{ "id": "90d", "label": "Last 90 days", "days": 90 },
+						{ "id": "365d", "label": "Last 365 days", "days": 365 }
+					]
+				},
+				"headerActions": [
+					{
+						"id": "loyalty-download",
+						"label": "Download",
+						"type": "api-call",
+						"icon": "Download",
+						"method": "GET",
+						"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/kpis/export",
+						"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" },
+						"download": true,
+						"filename": "loyalty-kpis.csv",
+						"successMessage": "Export downloaded"
+					},
+					{
+						"id": "loyalty-enrol",
+						"label": "Enrol a customer",
+						"type": "open-form",
+						"icon": "AccountPlus",
+						"endpoint": { "url": "/apps/pipelinq/api/loyalty/accounts", "method": "POST" },
+						"formProperties": {
+							"customerId": { "type": "string", "title": "Customer" },
+							"programmeId": { "type": "string", "title": "Programme" },
+							"termsVersion": { "type": "string", "title": "Accepted version of the terms" },
+							"optIn": {
+								"type": "boolean",
+								"title": "The customer agrees to the storage of their loyalty data and to offers"
+							}
+						},
+						"props": { "programmeId": "@workspace.programme?", "termsVersion": "1.0" },
+						"formTitle": "Enrol a customer",
+						"formSubtitle": "The GDPR asks for the customer's consent."
+					}
+				],
+				"widgets": [
+					{
+						"id": "loyalty-active",
+						"type": "stat",
+						"title": "Active accounts",
+						"content": {
+							"label": "Active accounts",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/kpis",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "activeAccounts"
+						}
+					},
+					{
+						"id": "loyalty-issued",
+						"type": "stat",
+						"title": "Points issued",
+						"content": {
+							"label": "Points issued",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/kpis",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "pointsIssued"
+						}
+					},
+					{
+						"id": "loyalty-redeemed",
+						"type": "stat",
+						"title": "Points redeemed",
+						"content": {
+							"label": "Points redeemed",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/kpis",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "pointsRedeemed"
+						}
+					},
+					{
+						"id": "loyalty-expired",
+						"type": "stat",
+						"title": "Points expired",
+						"content": {
+							"label": "Points expired",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/kpis",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "pointsExpired"
+						}
+					},
+					{
+						"id": "loyalty-breakage",
+						"type": "stat",
+						"title": "Breakage %",
+						"content": {
+							"label": "Breakage %",
+							"format": { "style": "percent", "decimals": 1 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/kpis",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "breakagePercent"
+						}
+					},
+					{
+						"id": "loyalty-redemption",
+						"type": "stat",
+						"title": "Redemption rate %",
+						"content": {
+							"label": "Redemption rate %",
+							"format": { "style": "percent", "decimals": 1 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/kpis",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "redemptionRate"
+						}
+					},
+					{
+						"id": "loyalty-outstanding",
+						"type": "stat",
+						"title": "Outstanding points",
+						"content": {
+							"label": "Outstanding points",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/kpis",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "outstandingPoints"
+						}
+					},
+					{
+						"id": "loyalty-liability",
+						"type": "stat",
+						"title": "Estimated liability",
+						"content": {
+							"label": "Estimated liability",
+							"format": { "style": "currency", "decimals": 0 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/kpis",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "estimatedLiability"
+						}
+					},
+					{
+						"id": "loyalty-tiers",
+						"type": "chart",
+						"title": "Tier distribution",
+						"content": {
+							"chartKind": "bar-list",
+							"emptyLabel": "No tier data yet.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/tiers",
+								"responsePath": "tiers",
+								"labelsPath": "tierId",
+								"series": [
+									{ "name": "Accounts", "path": "accountCount" }
+								]
+							}
+						}
+					},
+					{
+						"id": "loyalty-tier-table",
+						"type": "object-table",
+						"title": "Accounts per tier",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/tiers", "responsePath": "tiers" },
+							"columns": [
+								{ "key": "tierId", "label": "Tier" },
+								{ "key": "accountCount", "label": "Accounts", "format": { "style": "number" } }
+							],
+							"exportCsv": true,
+							"exportFileName": "loyalty-tiers",
+							"emptyText": "No tier data yet."
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "loyalty-active",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 2,
+						"widgetId": "loyalty-issued",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 3,
+						"widgetId": "loyalty-redeemed",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 4,
+						"widgetId": "loyalty-expired",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 5,
+						"widgetId": "loyalty-breakage",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 6,
+						"widgetId": "loyalty-redemption",
+						"gridX": 3,
+						"gridY": 2,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 7,
+						"widgetId": "loyalty-outstanding",
+						"gridX": 6,
+						"gridY": 2,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 8,
+						"widgetId": "loyalty-liability",
+						"gridX": 9,
+						"gridY": 2,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{ "id": 9, "widgetId": "loyalty-tiers", "gridX": 0, "gridY": 4, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": 10, "widgetId": "loyalty-tier-table", "gridX": 6, "gridY": 4, "gridWidth": 6, "gridHeight": 5 }
+				]
+			}
 		}
 	]
 }

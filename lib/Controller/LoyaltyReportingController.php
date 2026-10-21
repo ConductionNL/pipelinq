@@ -31,6 +31,7 @@ use OCA\Pipelinq\Service\LoyaltyReportingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -90,6 +91,37 @@ class LoyaltyReportingController extends Controller {
 			$this->reportingService->getKpis(programmeId: $programmeId, from: $from, to: $to)
 		);
 	}//end kpis()
+
+	/**
+	 * The KPIs of a programme as CSV, one metric per line.
+	 *
+	 * @param string $programmeId The programme UUID.
+	 * @param ?string $from ISO-8601 date lower bound.
+	 * @param ?string $to ISO-8601 date upper bound.
+	 *
+	 * @return DataDownloadResponse|JSONResponse
+	 *
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008-01
+	 */
+	#[NoAdminRequired]
+	public function kpisCsv(string $programmeId, ?string $from = null, ?string $to = null): DataDownloadResponse|JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
+		$kpis = $this->reportingService->getKpis(programmeId: $programmeId, from: $from, to: $to);
+		$lines = ['metric,value'];
+		foreach (['activeAccounts', 'pointsIssued', 'pointsRedeemed', 'pointsExpired', 'breakagePercent', 'redemptionRate', 'outstandingPoints', 'estimatedLiability', 'pointValue'] as $metric) {
+			$lines[] = $metric . ',' . (float)($kpis[$metric] ?? 0);
+		}
+
+		return new DataDownloadResponse(implode("\n", $lines) . "\n", 'loyalty-kpis.csv', 'text/csv; charset=UTF-8');
+	}//end kpisCsv()
 
 	/**
 	 * GET liability snapshot (IFRS 15 / RJ 270).

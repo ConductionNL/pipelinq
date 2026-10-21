@@ -244,3 +244,30 @@ describe('billing categories', () => {
 		expect(p.slots['widget-billing-categories']).toBeUndefined()
 	})
 })
+
+describe('loyalty reporting', () => {
+	const p = page('LoyaltyReporting')
+
+	it('is a dashboard on the programme the page filter picks', () => {
+		expect(p.type).toBe('dashboard')
+		expectWidgetsOnly(p)
+		expect(p.config.pageFilters[0]).toMatchObject({
+			key: 'programme',
+			optionsFrom: { register: 'pipelinq', schema: 'loyaltyProgramme', labelField: 'name' },
+		})
+		for (const w of p.config.widgets) {
+			expect(w.content.endpointSource.url).toMatch(/^\/apps\/pipelinq\/api\/loyalty\/reporting\/@workspace\.programme\//)
+		}
+		expect(JSON.stringify(p)).not.toMatch(/objects\/pipelinq\//)
+	})
+
+	it('downloads the figures and enrols a customer through the server', () => {
+		const actions = Object.fromEntries(p.config.headerActions.map((a) => [a.id, a]))
+		expect(actions['loyalty-download']).toMatchObject({ type: 'api-call', method: 'GET', download: true })
+		expect(actions['loyalty-enrol']).toMatchObject({
+			type: 'open-form',
+			endpoint: { url: '/apps/pipelinq/api/loyalty/accounts', method: 'POST' },
+		})
+		expect(Object.keys(actions['loyalty-enrol'].formProperties)).toEqual(['customerId', 'programmeId', 'termsVersion', 'optIn'])
+	})
+})
