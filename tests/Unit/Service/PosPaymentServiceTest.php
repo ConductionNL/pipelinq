@@ -413,14 +413,14 @@ class PosPaymentServiceTest extends TestCase {
 		$methods = $this->buildService()->listPaymentMethods();
 
 		$this->assertSame(
-			[
+			expected: [
 				['provider' => 'mollie', 'providerLabel' => 'Mollie', 'type' => 'online', 'method' => 'ideal'],
 				['provider' => 'mollie', 'providerLabel' => 'Mollie', 'type' => 'online', 'method' => 'bancontact'],
 				['provider' => 'mollie', 'providerLabel' => 'Mollie', 'type' => 'online', 'method' => 'creditcard'],
 				['provider' => 'ccv', 'providerLabel' => 'CCV', 'type' => 'terminal', 'method' => 'card'],
 				['provider' => 'ccv', 'providerLabel' => 'CCV', 'type' => 'terminal', 'method' => 'maestro'],
 			],
-			$methods
+			actual: $methods
 		);
 	}//end testListPaymentMethodsNamesTheMethodsOfActiveProvidersOnly()
 
@@ -430,7 +430,7 @@ class PosPaymentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testListPaymentMethodsIsEmptyWithoutActiveProviders(): void {
-		$this->assertSame([], $this->buildService()->listPaymentMethods());
+		$this->assertSame(expected: [], actual: $this->buildService()->listPaymentMethods());
 	}//end testListPaymentMethodsIsEmptyWithoutActiveProviders()
 
 	/**

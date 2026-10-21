@@ -99,9 +99,14 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 
 		$entry = ['handler' => self::HANDLER_KEY, 'uuid' => $uuid, 'kind' => $kind];
 		if ($kind === 'service') {
+			$before = null;
+			if ($previous !== null) {
+				$before = $this->resourceTypes(data: (array)$previous->getObject());
+			}
+
 			$entry['resourceTypes'] = $this->affectedTypes(
 				current: $this->resourceTypes(data: (array)$entity->getObject()),
-				previous: $previous === null ? null : $this->resourceTypes(data: (array)$previous->getObject())
+				previous: $before
 			);
 		}
 
@@ -129,8 +134,12 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 		}
 
 		if (($entry['kind'] ?? '') === 'service') {
-			$types = $entry['resourceTypes'] ?? [];
-			$this->availability->invalidateForResourceTypes(resourceTypes: is_array($types) === true ? $types : []);
+			$types = ($entry['resourceTypes'] ?? []);
+			if (is_array($types) === false) {
+				$types = [];
+			}
+
+			$this->availability->invalidateForResourceTypes(resourceTypes: $types);
 		}
 	}//end runDeferredWork()
 

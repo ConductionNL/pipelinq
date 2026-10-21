@@ -476,8 +476,8 @@ class PosPaymentControllerTest extends TestCase {
 
 		$response = $this->controller->methods();
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['methods' => $methods], $response->getData());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['methods' => $methods], actual: $response->getData());
 	}//end testMethodsAnswersTheCashierReadableList()
 
 	/**
@@ -492,9 +492,9 @@ class PosPaymentControllerTest extends TestCase {
 		$open = static fn (string $method): bool => (new \ReflectionMethod(PosPaymentController::class, $method))
 			->getAttributes(\OCP\AppFramework\Http\Attribute\NoAdminRequired::class) !== [];
 
-		$this->assertTrue($open('methods'));
-		$this->assertFalse($open('index'));
-		$this->assertFalse($open('show'));
+		$this->assertTrue(condition: $open('methods'));
+		$this->assertFalse(condition: $open('index'));
+		$this->assertFalse(condition: $open('show'));
 	}//end testMethodsIsOpenToCashiersAndProviderConfigIsNot()
 
 	/**

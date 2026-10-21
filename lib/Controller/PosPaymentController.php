@@ -191,6 +191,9 @@ class PosPaymentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
+	 * @no-admin-idor-exempt Takes no object id: the same instance-wide list of provider and method names
+	 *       for every signed-in user, with no credential and no per-object data.
+	 *
 	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
 	 */
 	#[NoAdminRequired]

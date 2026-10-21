@@ -74,9 +74,9 @@ class AvailabilityCacheInvalidationListenerTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->availability = $this->createMock(AvailabilityService::class);
+		$this->availability = $this->createMock(originalClassName: AvailabilityService::class);
 		$this->deferral = new RecordingDeferralService();
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default = ''): string => ([
 				'resource_schema' => '11',
@@ -116,10 +116,15 @@ class AvailabilityCacheInvalidationListenerTest extends TestCase {
 		$this->availability->expects($this->once())->method('invalidateResource')->with('res-1');
 		$this->availability->expects($this->never())->method('invalidateForResourceTypes');
 
-		$this->listener->handle(new ObjectUpdatedEvent($this->entity('11', 'res-1', ['type' => 'room']), $this->entity('11', 'res-1')));
+		$this->listener->handle(
+			new ObjectUpdatedEvent(
+				$this->entity(schema: '11', uuid: 'res-1', data: ['type' => 'room']),
+				$this->entity(schema: '11', uuid: 'res-1')
+			)
+		);
 
-		$this->assertSame([DeferredObjectListenerJob::class], $this->deferral->jobClasses);
-		$this->assertSame('availability-cache-invalidation|res-1', $this->deferral->dedupeKeys[0]);
+		$this->assertSame(expected: [DeferredObjectListenerJob::class], actual: $this->deferral->jobClasses);
+		$this->assertSame(expected: 'availability-cache-invalidation|res-1', actual: $this->deferral->dedupeKeys[0]);
 		DeferredJobDrain::run($this, $this->deferral, $this->listener);
 	}//end testAChangedResourceExpiresItsOwnCache()
 
@@ -129,11 +134,11 @@ class AvailabilityCacheInvalidationListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testACreatedOrDeletedResourceExpiresItsCache(): void {
-		$this->listener->handle(new ObjectCreatedEvent($this->entity('11', 'res-1')));
-		$this->listener->handle(new ObjectDeletedEvent($this->entity('11', 'res-2')));
+		$this->listener->handle(new ObjectCreatedEvent($this->entity(schema: '11', uuid: 'res-1')));
+		$this->listener->handle(new ObjectDeletedEvent($this->entity(schema: '11', uuid: 'res-2')));
 
-		$this->assertSame(['res-1', 'res-2'], array_column($this->deferral->entries, 'uuid'));
-		$this->assertSame(['resource', 'resource'], array_column($this->deferral->entries, 'kind'));
+		$this->assertSame(expected: ['res-1', 'res-2'], actual: array_column($this->deferral->entries, 'uuid'));
+		$this->assertSame(expected: ['resource', 'resource'], actual: array_column($this->deferral->entries, 'kind'));
 	}//end testACreatedOrDeletedResourceExpiresItsCache()
 
 	/**
@@ -148,8 +153,8 @@ class AvailabilityCacheInvalidationListenerTest extends TestCase {
 
 		$this->listener->handle(
 			new ObjectUpdatedEvent(
-				$this->entity('12', 'svc-1', ['requiredResourceTypes' => ['room', 'staff']]),
-				$this->entity('12', 'svc-1', ['requiredResourceTypes' => ['room']])
+				$this->entity(schema: '12', uuid: 'svc-1', data: ['requiredResourceTypes' => ['room', 'staff']]),
+				$this->entity(schema: '12', uuid: 'svc-1', data: ['requiredResourceTypes' => ['room']])
 			)
 		);
 		DeferredJobDrain::run($this, $this->deferral, $this->listener);
@@ -163,13 +168,13 @@ class AvailabilityCacheInvalidationListenerTest extends TestCase {
 	public function testAServiceWithoutTypesExpiresEveryResource(): void {
 		$this->listener->handle(
 			new ObjectUpdatedEvent(
-				$this->entity('12', 'svc-1', ['requiredResourceTypes' => ['room']]),
-				$this->entity('12', 'svc-1', ['requiredResourceTypes' => []])
+				$this->entity(schema: '12', uuid: 'svc-1', data: ['requiredResourceTypes' => ['room']]),
+				$this->entity(schema: '12', uuid: 'svc-1', data: ['requiredResourceTypes' => []])
 			)
 		);
-		$this->listener->handle(new ObjectCreatedEvent($this->entity('12', 'svc-2', ['requiredResourceTypes' => ['staff']])));
+		$this->listener->handle(new ObjectCreatedEvent($this->entity(schema: '12', uuid: 'svc-2', data: ['requiredResourceTypes' => ['staff']])));
 
-		$this->assertSame([[], ['staff']], array_column($this->deferral->entries, 'resourceTypes'));
+		$this->assertSame(expected: [[], ['staff']], actual: array_column($this->deferral->entries, 'resourceTypes'));
 	}//end testAServiceWithoutTypesExpiresEveryResource()
 
 	/**
@@ -178,9 +183,9 @@ class AvailabilityCacheInvalidationListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testOtherSchemasAreIgnored(): void {
-		$this->listener->handle(new ObjectUpdatedEvent($this->entity('99', 'cache-1'), $this->entity('99', 'cache-1')));
-		$this->listener->handle(new ObjectCreatedEvent($this->entity('', 'x-1')));
+		$this->listener->handle(new ObjectUpdatedEvent($this->entity(schema: '99', uuid: 'cache-1'), $this->entity(schema: '99', uuid: 'cache-1')));
+		$this->listener->handle(new ObjectCreatedEvent($this->entity(schema: '', uuid: 'x-1')));
 
-		$this->assertSame([], $this->deferral->entries);
+		$this->assertSame(expected: [], actual: $this->deferral->entries);
 	}//end testOtherSchemasAreIgnored()
 }//end class

@@ -138,6 +138,7 @@ export default {
 		 *
 		 * @param {string} method The method id.
 		 * @return {string} The label.
+		 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
 		 */
 		methodLabel(method) {
 			const labels = {

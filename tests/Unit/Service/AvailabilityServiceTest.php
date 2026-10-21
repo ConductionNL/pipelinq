@@ -479,7 +479,7 @@ class AvailabilityServiceTest extends TestCase {
 			->method('findAll')
 			->with(['filters' => ['register' => 'pipelinq', 'schema' => 'availability-cache', 'resourceId' => 'res-sarah']])
 			->willReturn([
-				self::entity(['@self' => ['id' => 'day-1'], 'resourceId' => 'res-sarah']),
+				self::entity(row: ['@self' => ['id' => 'day-1'], 'resourceId' => 'res-sarah']),
 				['@self' => ['id' => 'day-2'], 'resourceId' => 'res-sarah'],
 				['@self' => ['id' => 'day-3'], 'resourceId' => 'res-sarah'],
 			]);
@@ -497,8 +497,8 @@ class AvailabilityServiceTest extends TestCase {
 
 		[$service] = $this->buildService(objectService: $object);
 
-		$this->assertSame(2, $service->invalidateResource(resourceId: 'res-sarah'));
-		$this->assertSame(['day-1', 'day-3'], $deleted);
+		$this->assertSame(expected: 2, actual: $service->invalidateResource(resourceId: 'res-sarah'));
+		$this->assertSame(expected: ['day-1', 'day-3'], actual: $deleted);
 	}//end testInvalidateResourceDeletesEveryCachedDay()
 
 	/**
@@ -532,11 +532,11 @@ class AvailabilityServiceTest extends TestCase {
 
 		[$service] = $this->buildService(objectService: $object);
 
-		$this->assertSame(2, $service->invalidateForResourceTypes(resourceTypes: ['room', 'staff']));
-		$this->assertSame(['room-1', 'staff-1'], $asked);
+		$this->assertSame(expected: 2, actual: $service->invalidateForResourceTypes(resourceTypes: ['room', 'staff']));
+		$this->assertSame(expected: ['room-1', 'staff-1'], actual: $asked);
 
 		$asked = [];
-		$this->assertSame(3, $service->invalidateForResourceTypes(resourceTypes: []));
-		$this->assertSame(['room-1', 'staff-1', 'car-1'], $asked);
+		$this->assertSame(expected: 3, actual: $service->invalidateForResourceTypes(resourceTypes: []));
+		$this->assertSame(expected: ['room-1', 'staff-1', 'car-1'], actual: $asked);
 	}//end testInvalidateForResourceTypesExpiresTheMatchingResources()
 }//end class
