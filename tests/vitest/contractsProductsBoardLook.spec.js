@@ -72,8 +72,16 @@ describe('contract page', () => {
 	})
 
 	it('keeps sending to invoicing and the status transitions', () => {
-		expect(detail.config.bodyWidgets[0].component).toBe(
-			'ContractInvoicingSection',
+		const invoicing = detail.config.bodyWidgets[0]
+		expect(invoicing.type).toBe('handoff')
+		expect(invoicing.content.availability.url).toBe(
+			'/apps/pipelinq/api/handoff/contract/@objectId/availability',
+		)
+		expect(invoicing.content.canPath).toBe('canSend')
+		// A recurring contract is invoiced again next period.
+		expect(invoicing.content.repeatable).toBe(true)
+		expect(invoicing.content.action.url).toBe(
+			'/apps/pipelinq/api/handoff/contract/@objectId/send-to-invoicing',
 		)
 		expect(detail.config.lifecycleActions).toEqual({ field: 'status' })
 	})

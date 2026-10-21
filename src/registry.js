@@ -23,7 +23,6 @@
 //     real emit side of the delegated time-approval-workflow. Self-fetches
 //     its availability endpoint and falls back to the existing Shillinq
 //     deep-link — same self-fetching-by-props pattern as the sections above. ---
-import ClientBillingHandoffSection from './components/billing/ClientBillingHandoffSection.vue'
 // BookingDetail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
 // declarative); its array-on-object tables + computed timeline + notes editor
 // stay in the page body via this kind:'section', and its TIME-WINDOW-gated admin
@@ -82,8 +81,6 @@ import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSectio
 import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
 // What the resident reads of a request ticket (portal-resident-view-preview). ---
 import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
-import TicketDecisionRoutes from './components/tickets/TicketDecisionRoutes.vue'
-import WooConversionSection from './components/WooConversionSection.vue'
 // --- AVG (GDPR data-subject request) workflow removed by consume-or-dsar
 //     (ADR-047 Phase 3): the data-subject request workflow is owned by
 //     OpenRegister's case engine; pipelinq deep-links handlers into OR's AVG
@@ -141,7 +138,6 @@ import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 //     Service / Resource / Booking list + detail views; resolved by the v2
 //     renderer from the manifest.d fragment at render time. ---
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
-import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
 // --- Navi AI conversational analytics (openspec/changes/dashboard). ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
 import ExportJobFormView from './views/export/ExportJobForm.vue'
@@ -173,12 +169,6 @@ import CashShiftListView from './views/pos/CashShiftList.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
 import ProspectsView from './views/prospects/ProspectsView.vue'
-// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit):
-//     "Convert to case" (request → ns#Case) and "Send to invoicing"
-//     (contract → ns#Invoice) in-body actions. Both self-fetch their
-//     availability endpoint and hide when no installed app implements the
-//     kind — same self-fetching-by-props pattern as the sections above. ---
-import RequestConversionSection from './views/requests/RequestConversionSection.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
@@ -445,20 +435,6 @@ const registry = {
 		_note: 'CnObjectListWidget whose create goes through POST /api/contacts-sync/create for client and contact, so the required contactsUid is provisioned. The Contacts tab on the client page uses it; a plain object-list POSTs straight to OpenRegister and gets 400 (round5-contact-create-and-task-links).',
 	},
 
-	TicketDecisionRoutesWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'TicketDecisionRoutesWidget',
-			TicketDecisionRoutes,
-			({ objectId, content }) => ({
-				ticketId: objectId,
-				hideConvert: content.convert === false,
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: "Head of the ticket page's Decisions tab (ticket-decisions-tab): what the tab holds, the two routes to a decision, and Convert to case. The decision lists are decidiq's leaf, mounted by the manifest.",
-	},
 	// --- The ticket page's Overview sections as tab widgets (board PqTicket):
 	//     the conversation, the dossier asked about, the Woo request and the case
 	//     sit inside the Overview tab rather than in a tail below the tab strip. ---
@@ -471,27 +447,6 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: 'DossierSnapshotSection as a tab widget.',
-	},
-	WooConversionWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'WooConversionWidget',
-			WooConversionSection,
-			({ objectId }) => ({ objectId }),
-		),
-		...PANEL_WIDGET_META,
-		_note: 'WooConversionSection as a tab widget.',
-	},
-	RequestConversionWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'RequestConversionWidget',
-			RequestConversionSection,
-			({ objectId }) => ({ requestId: objectId }),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'RequestConversionSection (Convert to case) as a tab widget.',
 	},
 
 	BrpContactWidget: {
@@ -511,31 +466,12 @@ const registry = {
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
-	ClientBillingHandoffSection: {
-		kind: 'section',
-		component: ClientBillingHandoffSection,
-		_note: 'Manager-gated "Send to billing" action for a client (time-billing-handoff-emit): self-fetches GET /api/billing/handoff/{clientId}/availability and posts the chosen period\'s approved, un-billed time entries to shillinq\'s time-intake as one idempotent batch. Falls back to the existing Shillinq deep-link when the real emit is disabled/unavailable or the user is not a billing-handoff manager.',
-	},
 
-	// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit).
-	//     Registered for TicketDetail / ContractDetail's declarative
-	//     `config.bodyWidgets`. Each self-fetches its GET .../availability
-	//     endpoint by @objectId and hides entirely (not disabled) when no
-	//     installed app implements the target kind. ---
-	RequestConversionSection: {
-		kind: 'section',
-		component: RequestConversionSection,
-		_note: '"Convert to case" action for the TicketDetail page (semantic-handoff-emit; formerly RequestDetail, retired by unify-ticket-supertype). Self-fetches GET /api/handoff/request/{id}/availability by @objectId; renders the button only when canConvert (an ns#Case implementer is installed AND status is in_progress). On success shows the converted notice + a copyable caseReference — the target app is kind-addressed and unknown to the frontend, so no precise cross-app route can be built.',
-	},
+
 	DossierSnapshotSection: {
 		kind: 'section',
 		component: DossierSnapshotSection,
 		_note: "The dossier a resident asked about, on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-006): reads the ticket's subjectReference snapshot and lists the documents as links to the public publications. Never reads the dossier itself; renders nothing for a ticket without a snapshot.",
-	},
-	WooConversionSection: {
-		kind: 'section',
-		component: WooConversionSection,
-		_note: '"Convert to Woo request" on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-008, hydra woo-citizen-journey C5): self-fetches GET /api/tickets/{id}/woo-request/availability and renders only when dossiq\'s WooRequestIntake answers and the ticket is an unconverted question about a dossier.',
 	},
 
 	RoutingSuggestionWidget: {
@@ -559,11 +495,6 @@ const registry = {
 		kind: 'section',
 		component: RoutingSuggestionSection,
 		_note: 'Suggested colleagues for the TicketDetail and LeadDetail pages (pipelinq#2039, pipelinq#2049): mounts RoutingSuggestionPanel for @objectId (ranked by skill match on the record category, availability and workload, capped per agent by maxConcurrent) and writes the chosen colleague into the record assignee through the object store.',
-	},
-	ContractInvoicingSection: {
-		kind: 'section',
-		component: ContractInvoicingSection,
-		_note: '"Send to invoicing" action for the ContractDetail page (semantic-handoff-emit). Self-fetches GET /api/handoff/contract/{id}/availability by @objectId; renders the button only when canSend (an ns#Invoice implementer is installed AND status is active). Sending does not change the contract\'s own status (a recurring contract stays active for the next interval), so the button remains available after a send; shows a success notice + copyable invoiceReference for the most recent send.',
 	},
 
 	// --- BI export + data-warehouse sink. ---

@@ -497,10 +497,45 @@
 				"bodyWidgets": [
 					{
 						"id": "contract-invoicing",
-						"component": "ContractInvoicingSection",
+						"type": "handoff",
 						"placement": "after-related",
-						"props": {
-							"contractId": "@objectId"
+						"content": {
+							"availability": {
+								"url": "/apps/pipelinq/api/handoff/contract/@objectId/availability"
+							},
+							"canPath": "canSend",
+							"repeatable": true,
+							"referencePath": "invoiceReference",
+							"copyReference": true,
+							"action": {
+								"url": "/apps/pipelinq/api/handoff/contract/@objectId/send-to-invoicing",
+								"label": "Send to invoicing"
+							},
+							"labels": {
+								"done": "Contract sent to invoicing.",
+								"reference": "Invoice reference",
+								"success": "Contract sent to invoicing.",
+								"copy": "Copy",
+								"copied": "Invoice reference copied.",
+								"copyFailed": "Could not copy the invoice reference."
+							},
+							"errors": {
+								"path": "status",
+								"map": {
+									"invalid-status": {
+										"text": "Sending to invoicing is no longer available for this contract.",
+										"reload": true
+									},
+									"not-available": {
+										"text": "Sending to invoicing is no longer available for this contract.",
+										"reload": true
+									},
+									"handoff-failed": {
+										"text": "Could not send this contract to invoicing: {reason}"
+									}
+								},
+								"default": "Could not send this contract to invoicing."
+							}
 						}
 					}
 				],

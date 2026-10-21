@@ -8067,7 +8067,10 @@ OC.L10N.register(
         "Choose a pipeline on the board first.": "Choose a pipeline on the board first.",
         "Could not save the pipeline.": "Could not save the pipeline.",
         "Could not save the change.": "Could not save the change.",
-        "Every lead and request on the chosen pipeline, by stage": "Every lead and request on the chosen pipeline, by stage"
+        "Every lead and request on the chosen pipeline, by stage": "Every lead and request on the chosen pipeline, by stage",
+        "Already sent. Shillinq returned the existing draft invoice {invoiceNumber}.": "Already sent. Shillinq returned the existing draft invoice {invoiceNumber}.",
+        "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries).": "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries).",
+        "Shillinq is already processing this batch. Try again shortly.": "Shillinq is already processing this batch. Try again shortly."
     },
     "nplurals=2; plural=(n != 1);"
 )

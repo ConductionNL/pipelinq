@@ -8052,6 +8052,9 @@
         "Choose a pipeline on the board first.": "Kies eerst een pijplijn op het bord.",
         "Could not save the pipeline.": "De pijplijn kon niet worden opgeslagen.",
         "Could not save the change.": "De wijziging kon niet worden opgeslagen.",
-        "Every lead and request on the chosen pipeline, by stage": "Elke lead en elk verzoek op de gekozen pijplijn, per fase"
+        "Every lead and request on the chosen pipeline, by stage": "Elke lead en elk verzoek op de gekozen pijplijn, per fase",
+        "Already sent. Shillinq returned the existing draft invoice {invoiceNumber}.": "Al verstuurd. Shillinq gaf de bestaande conceptfactuur {invoiceNumber} terug.",
+        "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries).": "Naar facturatie verstuurd. Conceptfactuur {invoiceNumber} aangemaakt ({entryCount} regels).",
+        "Shillinq is already processing this batch. Try again shortly.": "Shillinq verwerkt deze batch al. Probeer het zo opnieuw."
     }
 }
