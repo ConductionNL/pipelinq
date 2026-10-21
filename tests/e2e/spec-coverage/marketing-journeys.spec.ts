@@ -275,20 +275,16 @@ test.describe('Weekly review', () => {
 		await expect(page).toHaveURL(/\/reports\/weekly-review(\?|$)/, {
 			timeout: 15000,
 		})
-		await expect(
-			page
-				.getByTestId('weekly-review-body')
-				.or(page.getByTestId('weekly-review-empty')),
-		).toBeVisible({ timeout: 15000 })
+		await expect(page.getByText('What moved').first()).toBeVisible({ timeout: 15000 })
 
 		// This instance holds no watch events and no Search Console rows, so
 		// the review names them. It never reports them as zero: an empty week
 		// and an unconnected source render as the same missing line, and only
 		// one of the two is a result.
-		await expect(page.getByTestId('weekly-review-degraded')).toContainText(
-			'watchEvent',
-			{ timeout: 15000 },
-		)
+		await expect(
+			page.getByText('Sources with nothing yet', { exact: false }).first(),
+		).toBeVisible({ timeout: 15000 })
+		await expect(page.getByText('watchEvent', { exact: false }).first()).toBeVisible()
 		await assertNoHardError(page)
 	})
 

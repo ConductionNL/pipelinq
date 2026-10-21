@@ -47,6 +47,8 @@ use OCP\IUserSession;
  * the `createdBy` field is always server-authoritative.
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) One action per blast route.
  */
 class BlastController extends Controller {
 	/**
@@ -267,6 +269,31 @@ class BlastController extends Controller {
 		$envelope = $this->blastService->listDeliveriesForBlast(blastId: $id, page: $page, limit: $limit);
 		return new JSONResponse($envelope);
 	}//end deliveries()
+
+	/**
+	 * GET /api/blasts/attribution?ids=a,b,c: the attribution summary of each
+	 * listed Blast in one request, one row per id in the order given.
+	 *
+	 * @param string $ids Comma-separated Blast UUIDs or slugs.
+	 *
+	 * @return JSONResponse 200 with `[{blastId, dealCount, attributedValue, currency}]`, or 401/403.
+	 *
+	 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+	 */
+	#[NoAdminRequired]
+	public function attributions(string $ids = ''): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
+
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
+
+		$blastIds = array_values(array_filter(array_map('trim', explode(',', $ids)), static fn (string $id): bool => $id !== ''));
+		return new JSONResponse($this->attributionService->getBlastAttributionSummaries(blastIds: $blastIds));
+	}//end attributions()
 
 	/**
 	 * GET /api/blasts/:id/attribution — attributed deal count + summed

@@ -1569,4 +1569,55 @@ class LoyaltyObjectStoreFake extends ObjectService {
 		unset($this->tables[(string)$schema][$uuid]);
 		return true;
 	}//end deleteObject()
+	/**
+	 * Enrolment without the customer's opt-in is refused before anything is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010-01
+	 */
+	public function testEnrolmentWithoutOptInIsRefused(): void {
+		$accounts = $this->createMock(LoyaltyAccountService::class);
+		$accounts->expects($this->never())->method('createAccount');
+
+		$response = $this->buildController(accountService: $accounts)
+			->createAccount(customerId: 'c-1', programmeId: 'p-1', optIn: false);
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+	}//end testEnrolmentWithoutOptInIsRefused()
+
+	/**
+	 * Enrolment with the opt-in creates the account through the service.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010-01
+	 */
+	public function testEnrolmentWithOptInCreatesTheAccount(): void {
+		$accounts = $this->createMock(LoyaltyAccountService::class);
+		$accounts->expects($this->once())->method('createAccount')
+			->with('c-1', 'p-1', true, '2.0')
+			->willReturn(['id' => 'a-1', 'optInAccepted' => true]);
+
+		$response = $this->buildController(accountService: $accounts)
+			->createAccount(customerId: ' c-1 ', programmeId: 'p-1', optIn: true, termsVersion: '2.0');
+
+		$this->assertSame(Http::STATUS_CREATED, $response->getStatus());
+		$this->assertSame('a-1', $response->getData()['id']);
+	}//end testEnrolmentWithOptInCreatesTheAccount()
+
+	/**
+	 * A caller without the CRM capability may not enrol anyone.
+	 *
+	 * @return void
+	 */
+	public function testEnrolmentNeedsTheCrmCapability(): void {
+		$accounts = $this->createMock(LoyaltyAccountService::class);
+		$accounts->expects($this->never())->method('createAccount');
+
+		$response = $this->buildController(accountService: $accounts, privileged: false)
+			->createAccount(customerId: 'c-1', programmeId: 'p-1', optIn: true);
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}//end testEnrolmentNeedsTheCrmCapability()
 }//end class

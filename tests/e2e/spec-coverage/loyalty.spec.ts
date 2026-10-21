@@ -70,8 +70,11 @@ test('Loyalty: reporting content area renders below the heading', async ({
 }) => {
 	await openLoyaltyReporting(page)
 
-	const text = (await page.locator('#content-vue').textContent()) || ''
-	expect(text.replace(/\s+/g, ' ').trim().length).toBeGreaterThan(20)
+	const content = page.locator('#content-vue')
+	for (const label of ['Active accounts', 'Points issued', 'Estimated liability']) {
+		await expect(content.getByText(label).first()).toBeVisible({ timeout: 20000 })
+	}
+	await expect(content.getByRole('button', { name: 'Enrol a customer' }).first()).toBeVisible()
 })
 
 /*

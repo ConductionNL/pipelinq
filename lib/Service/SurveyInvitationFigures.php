@@ -98,6 +98,24 @@ class SurveyInvitationFigures {
 	}//end byChannel()
 
 	/**
+	 * The per-channel figures as rows, one per channel, each naming its channel.
+	 *
+	 * @param array<int, array<string, mixed>> $invitations The invitations.
+	 *
+	 * @return array<int, array<string, int|float|string>> The rows, sorted by channel.
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 */
+	public function channelRows(array $invitations): array {
+		$rows = [];
+		foreach ($this->byChannel(invitations: $invitations) as $channel => $figures) {
+			$rows[] = ['channel' => (string)$channel] + $figures;
+		}
+
+		return $rows;
+	}//end channelRows()
+
+	/**
 	 * The invitations that fell due in the last `$days` days.
 	 *
 	 * Every invitation carries `scheduledFor`, suppressed ones included, so
@@ -129,6 +147,39 @@ class SurveyInvitationFigures {
 
 		return $kept;
 	}//end withinDays()
+
+	/**
+	 * The invitations that fell due between two dates, both inclusive; an
+	 * empty bound leaves that side open.
+	 *
+	 * @param array<int, array<string, mixed>> $invitations The invitations.
+	 * @param string                           $from        The first day (ISO 8601), or ''.
+	 * @param string                           $to          The last day (ISO 8601), or ''.
+	 *
+	 * @return array<int, array<string, mixed>> The invitations inside the window.
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 */
+	public function withinRange(array $invitations, string $from, string $to): array {
+		$first = substr($from, 0, 10);
+		$last  = substr($to, 0, 10);
+		$kept  = [];
+		foreach ($invitations as $invitation) {
+			$dueAt = $this->dueAt(invitation: $invitation);
+			if ($dueAt === null) {
+				continue;
+			}
+
+			$day = $dueAt->format('Y-m-d');
+			if (($first !== '' && $day < $first) || ($last !== '' && $day > $last)) {
+				continue;
+			}
+
+			$kept[] = $invitation;
+		}
+
+		return $kept;
+	}//end withinRange()
 
 	/**
 	 * When an invitation fell due, or null when it does not say.

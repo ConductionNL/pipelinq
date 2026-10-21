@@ -88,8 +88,8 @@ class RapportageControllerTest extends TestCase {
 		$this->service->method('getSourcePerformance')->willReturn([]);
 		$this->service->method('getAgingBuckets')->willReturn([]);
 		$this->service->method('getWinLossAnalysis')->willReturn([
-			'wonCount' => 0,
-			'lostCount' => 0,
+			'wonCount' => 3,
+			'lostCount' => 1,
 			'winRate' => 0.0,
 			'avgWonValue' => 0.0,
 			'avgLostValue' => 0.0,
@@ -104,6 +104,10 @@ class RapportageControllerTest extends TestCase {
 		$this->assertArrayHasKey('sourcePerformance', $data);
 		$this->assertArrayHasKey('agingBuckets', $data);
 		$this->assertArrayHasKey('winLoss', $data);
+		$this->assertSame(
+			[['label' => 'Won', 'count' => 3], ['label' => 'Lost', 'count' => 1]],
+			$data['winLossSlices']
+		);
 
 	}//end testGetPipelineStatsReturnsAllSections()
 

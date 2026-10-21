@@ -1441,8 +1441,23 @@
 					},
 					{
 						"id": "billing-categories",
-						"type": "custom",
-						"title": "Hours by billing category"
+						"type": "chart",
+						"title": "Hours by billing category",
+						"content": {
+							"chartKind": "donut",
+							"emptyLabel": "When approved time entries are present, hours will be shown per billing category here.",
+							"dataSource": {
+								"register": "pipelinq",
+								"schema": "billingTimeEntry",
+								"filter": { "status": "approved" },
+								"aggregate": {
+									"groupBy": "billingCategory",
+									"metric": "sum",
+									"sumField": "hours",
+									"labelResolve": { "schema": "billingCategory", "labelField": "name", "colorField": "color" }
+								}
+							}
+						}
 					},
 					{
 						"id": "navi-analytics",
@@ -1461,8 +1476,42 @@
 					},
 					{
 						"id": "survey-response-rate",
-						"type": "custom",
-						"title": "Survey response rate"
+						"type": "stat",
+						"title": "Survey response rate",
+						"content": {
+							"label": "Survey response rate",
+							"icon": "MessageReplyText",
+							"format": { "style": "percent", "decimals": 1 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/satisfaction/response-rate",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "rate",
+							"caption": "{responded} of {delivered} delivered invitations answered",
+							"note": "Not delivered: {suppressed} held back, {failed} failed",
+							"dateRange": {}
+						}
+					},
+					{
+						"id": "survey-response-channels",
+						"type": "object-table",
+						"title": "Response rate per channel",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/satisfaction/response-rate",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" },
+								"responsePath": "channels"
+							},
+							"columns": [
+								{ "key": "channel", "label": "Channel", "enum": ["email", "sms", "whatsapp", "unknown"], "enumLabels": { "email": "Email", "sms": "SMS", "whatsapp": "WhatsApp", "unknown": "Unknown" } },
+								{ "key": "delivered", "label": "Delivered", "format": { "style": "number" } },
+								{ "key": "responded", "label": "Answered", "format": { "style": "number" } },
+								{ "key": "rate", "label": "Rate", "format": { "style": "percent", "decimals": 1 } },
+								{ "key": "suppressed", "label": "Held back", "format": { "style": "number" } },
+								{ "key": "failed", "label": "Failed", "format": { "style": "number" } }
+							],
+							"emptyText": "When a dispatch rule sends satisfaction surveys, the response rate shows here."
+						}
 					}
 				],
 				"layout": [
@@ -1618,18 +1667,25 @@
 						"gridX": 6,
 						"gridY": 31,
 						"gridWidth": 6,
-						"gridHeight": 5
+						"gridHeight": 2,
+						"dateChip": true
+					},
+					{
+						"id": "21",
+						"widgetId": "survey-response-channels",
+						"gridX": 6,
+						"gridY": 33,
+						"gridWidth": 6,
+						"gridHeight": 3
 					}
 				]
 			},
 			"_note": "The Customer Satisfaction KPI (SatisfactionKpiWidget, widget id 'satisfaction', layout slot 17) was removed 2026-07 because its data source was empty after the forms-leaf migration. Satisfaction returns as the survey response-rate widget (survey-response-rate), fed by the closed-loop invitations of customer-satisfaction-closed-loop.",
 			"slots": {
 				"widget-my-work": "MyWorkWidget",
-				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
 				"widget-report-export": "ReportExportPanel",
-				"widget-xwiki-knowledge": "XWikiDashboardWidget",
-				"widget-survey-response-rate": "SurveyResponseRateWidget"
+				"widget-xwiki-knowledge": "XWikiDashboardWidget"
 			}
 		},
 		{
@@ -2404,6 +2460,44 @@
 						"icon": "History"
 					},
 					{
+						"id": "client-satisfaction",
+						"type": "facts",
+						"title": "Satisfaction",
+						"icon": "EmoticonHappyOutline",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/satisfaction/client/@objectId" },
+							"emptyWhen": "empty",
+							"emptyText": "No satisfaction data has been collected for this client yet. It appears here once they answer a survey.",
+							"fields": [
+								{ "label": "NPS", "path": "nps", "format": "number", "decimals": 1 },
+								{ "label": "Average rating", "path": "averageRating", "format": "number", "decimals": 1 },
+								{ "label": "Responses", "path": "responseCount", "format": "number" },
+								{
+									"label": "Trend",
+									"path": "trend",
+									"map": {
+										"up": "Better than the 90 days before",
+										"down": "Worse than the 90 days before",
+										"flat": "The same as the 90 days before",
+										"unknown": "Not enough responses to compare"
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "client-satisfaction-comments",
+						"type": "record-list",
+						"title": "Latest comments",
+						"icon": "CommentQuoteOutline",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/satisfaction/client/@objectId", "responsePath": "verbatims" },
+							"limit": 3,
+							"title": "{text}",
+							"emptyText": "No comments yet."
+						}
+					},
+					{
 						"id": "client-channels",
 						"type": "tabs",
 						"title": "Contact channels",
@@ -3072,7 +3166,9 @@
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
-					}
+					},
+					{ "id": "10", "widgetId": "client-satisfaction", "gridX": 0, "gridY": 22, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "11", "widgetId": "client-satisfaction-comments", "gridX": 6, "gridY": 22, "gridWidth": 6, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
 					{
@@ -3360,17 +3456,6 @@
 						"props": {
 							"clientId": "@objectId",
 							"inline": true
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "satisfaction",
-						"component": "ClientSatisfactionSection",
-						"title": "Satisfaction",
-						"placement": "end",
-						"props": {
-							"clientId": "@objectId"
 						},
 						"colSpan": 6,
 						"card": true
@@ -4784,11 +4869,23 @@
 					},
 					{
 						"id": "contact-subscriptions",
-						"type": "SubscriptionsWidget",
+						"type": "object-table",
 						"title": "Subscriptions",
 						"icon": "EmailMultipleOutline",
 						"content": {
-							"title": "Subscriptions"
+							"source": {
+								"register": "pipelinq",
+								"schema": "subscription",
+								"filter": { "contactId": "@objectId" },
+								"order": { "createdAt": "desc" }
+							},
+							"columns": [
+								{ "key": "listId", "label": "Mailing list", "widget": "fkResolve", "widgetProps": { "register": "pipelinq", "schema": "mailingList", "labelField": "name" } },
+								{ "key": "state", "label": "Status" },
+								{ "key": "lawfulBasis", "label": "Ground" },
+								{ "key": "confirmedAt", "label": "Confirmed", "widget": "date" }
+							],
+							"emptyText": "This person is on no mailing list. Add them from a list, or send them a preference link."
 						}
 					},
 					{
@@ -5193,6 +5290,14 @@
 						"type": "navigate",
 						"target": "mailto:@object.email",
 						"icon": "EmailOutline"
+					},
+					{
+						"id": "manage-subscriptions",
+						"label": "Manage subscriptions",
+						"type": "open-modal",
+						"target": "SubscriptionManageModal",
+						"icon": "EmailMultipleOutline",
+						"props": { "contactId": "@objectId" }
 					}
 				],
 				"quickActions": [
@@ -8850,24 +8955,318 @@
 		},
 		{
 			"id": "Rapportage",
-			"_note": "Lead analytics as a declarative type:dashboard page (pipelinq-dashboards-declarative). The surface has no headline KPI cards to lift into endpoint stat widgets — its four bespoke widgets (pipeline-value funnel bar chart, source-performance table, lead-aging donut, win/loss pie + KPI block) are fed from ONE GET /api/rapportage/pipeline-stats fetch and the interactivity lives INSIDE the widgets (the funnel's OR-sourced pipeline selector filters in memory; the win/loss date-range selector re-fetches with dateFrom/dateTo). All four therefore live in one kind:'section' bodyWidget (LeadAnalyticsSection) which preserves the legacy single-fetch + in-widget filtering verbatim. KEPT-AS-NOTE: no page-level period pageFilter — the date window is derived inside the win/loss range selector (a from/to pair a static select cannot emit) and the pipeline selector's options are OR-sourced; missing primitives: derived-date-range pageFilter + OR-collection pageFilter options.",
+			"_note": "Lead analytics: every widget reads GET /apps/pipelinq/api/rapportage/pipeline-stats at its own responsePath, and the shared endpoint source sends one request for all of them. The pipeline filter narrows the funnel, and the date range narrows source performance and win/loss.",
 			"route": "/rapportage",
 			"type": "dashboard",
 			"title": "Analytics",
 			"config": {
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"bodyWidgets": [
+				"pageFilters": [
 					{
-						"id": "lead-analytics",
-						"component": "LeadAnalyticsSection",
-						"placement": "before-grid"
+						"key": "pipeline",
+						"label": "Pipeline",
+						"type": "select",
+						"clearable": true,
+						"placeholder": "All pipelines",
+						"optionsFrom": { "register": "pipelinq", "schema": "pipeline", "labelField": "title" }
 					}
+				],
+				"dateRange": {
+					"enabled": true,
+					"persistKey": "pipelinq-lead-analytics-range",
+					"default": { "preset": "all" },
+					"presets": [
+						{ "id": "30d", "label": "Last 30 days", "days": 30 },
+						{ "id": "90d", "label": "Last 90 days", "days": 90 },
+						{ "id": "12m", "label": "Last 12 months", "days": 365 },
+						{ "id": "all", "label": "All time", "days": null }
+					]
+				},
+				"widgets": [
+					{
+						"id": "lead-funnel",
+						"type": "chart",
+						"title": "Pipeline funnel",
+						"content": {
+							"chartKind": "bar",
+							"emptyLabel": "There are no leads in this pipeline yet.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "stageValues",
+								"labelsPath": "stage",
+								"series": [
+									{ "name": "Total value", "path": "totalValue" },
+									{ "name": "Weighted value", "path": "weightedValue" }
+								]
+							},
+							"valueFormat": "currency"
+						}
+					},
+					{
+						"id": "lead-sources",
+						"type": "object-table",
+						"title": "Source performance",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "sourcePerformance"
+							},
+							"columns": [
+								{
+									"key": "source",
+									"label": "Source",
+									"enum": [
+										"website",
+										"email",
+										"phone",
+										"referral",
+										"partner",
+										"campaign",
+										"social_media",
+										"event",
+										"tender",
+										"other",
+										"cold-call",
+										"advertisement",
+										"landing-page",
+										"unknown"
+									],
+									"enumLabels": {
+										"website": "Website",
+										"email": "Email",
+										"phone": "Phone",
+										"referral": "Referral",
+										"partner": "Partner",
+										"campaign": "Campaign",
+										"social_media": "Social media",
+										"event": "Event or fair",
+										"tender": "Public tender",
+										"other": "Other",
+										"cold-call": "Cold call",
+										"advertisement": "Advertisement",
+										"landing-page": "Landing page",
+										"unknown": "No source"
+									}
+								},
+								{ "key": "total", "label": "Total leads", "format": { "style": "number" } },
+								{ "key": "won", "label": "Won", "format": { "style": "number" } },
+								{ "key": "conversionRate", "label": "Conversion %", "format": { "style": "percent", "decimals": 1 } },
+								{ "key": "avgWonValue", "label": "Avg deal value", "format": { "style": "currency", "decimals": 0 } }
+							],
+							"emptyText": "No lead source performance to report yet."
+						}
+					},
+					{
+						"id": "lead-aging",
+						"type": "chart",
+						"title": "Lead aging",
+						"content": {
+							"chartKind": "donut",
+							"emptyLabel": "There are no open leads to distribute into aging buckets.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "agingBuckets",
+								"labelsPath": "bucket",
+								"series": [
+									{ "name": "Leads", "path": "count" }
+								]
+							}
+						}
+					},
+					{
+						"id": "lead-win-loss",
+						"type": "chart",
+						"title": "Won vs lost",
+						"content": {
+							"chartKind": "pie",
+							"emptyLabel": "No won or lost leads in the selected range.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "winLossSlices",
+								"labelsPath": "label",
+								"series": [
+									{ "name": "Leads", "path": "count" }
+								]
+							}
+						}
+					},
+					{
+						"id": "lead-win-rate",
+						"type": "stat",
+						"title": "Win rate",
+						"content": {
+							"label": "Win rate",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.winRate",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "Trophy",
+							"format": { "style": "percent", "decimals": 1 }
+						}
+					},
+					{
+						"id": "lead-won",
+						"type": "stat",
+						"title": "Won",
+						"content": {
+							"label": "Won",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.wonCount",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CheckCircle",
+							"format": { "style": "number" }
+						}
+					},
+					{
+						"id": "lead-lost",
+						"type": "stat",
+						"title": "Lost",
+						"content": {
+							"label": "Lost",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.lostCount",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CloseCircle",
+							"format": { "style": "number" }
+						}
+					},
+					{
+						"id": "lead-avg-won",
+						"type": "stat",
+						"title": "Avg won deal value",
+						"content": {
+							"label": "Avg won deal value",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.avgWonValue",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CurrencyEur",
+							"format": { "style": "currency", "decimals": 0 }
+						}
+					},
+					{
+						"id": "lead-days-to-close",
+						"type": "stat",
+						"title": "Avg days to close",
+						"content": {
+							"label": "Avg days to close",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.avgDaysToClose",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CalendarClock",
+							"format": { "style": "decimal", "suffix": " days" }
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "lead-win-rate",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 2,
+						"widgetId": "lead-won",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 3,
+						"widgetId": "lead-lost",
+						"gridX": 5,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 4,
+						"widgetId": "lead-avg-won",
+						"gridX": 7,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 5,
+						"widgetId": "lead-days-to-close",
+						"gridX": 10,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{ "id": 6, "widgetId": "lead-funnel", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": 7, "widgetId": "lead-sources", "gridX": 0, "gridY": 7, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": 8, "widgetId": "lead-aging", "gridX": 0, "gridY": 12, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": 9, "widgetId": "lead-win-loss", "gridX": 6, "gridY": 12, "gridWidth": 6, "gridHeight": 5 }
 				]
 			}
 		},
 		{
 			"id": "RapportageContactmomenten",
-			"_note": "Contact-reporting monitor as a declarative type:dashboard page (pipelinq-dashboards-declarative). The four headline KPIs (Total Contacts, FCR %, Avg Handling Time, SLA Compliance) are endpoint-bound stat widgets reading GET /apps/pipelinq/api/rapportage/kpis (avgHandlingTime is a pre-formatted 'H:MM' string the stat widget renders verbatim). A period pageFilter (today/week/month -> @page.period) drives the query; ReportingController now resolves that relative period to a from/to window server-side (today=[today,today], week=[Monday,today], month=[1st,today]) so one select re-queries every KPI without client-side date math. The hand-rendered per-channel bar chart + the CSV export the stat grid cannot express live in one kind:'section' bodyWidget (ChannelDistributionSection) that reads the same period (via @workspace.period) and self-fetches /api/rapportage/channels. The 60s auto-refresh + 'last updated' label of the legacy view are dropped (the page-level Refresh action covers manual reload).",
+			"_note": "Contact reporting. The four headline figures read GET /apps/pipelinq/api/rapportage/kpis, the channel bars read the channel rows of GET /apps/pipelinq/api/rapportage/channels, and Export downloads the contact moments of the chosen period as CSV. ReportingController resolves the period token (today, week, month) to a from/to window.",
 			"route": "/rapportage/contactmomenten",
 			"type": "dashboard",
 			"title": "Contact reporting",
@@ -8953,6 +9352,24 @@
 								"params": { "period": "@page.period" }
 							}
 						}
+					},
+					{
+						"id": "rap-channels",
+						"type": "chart",
+						"title": "Channel distribution",
+						"content": {
+							"chartKind": "bar-list",
+							"emptyLabel": "No contact moments registered for this period",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/channels",
+								"params": { "period": "@workspace.period" },
+								"responsePath": "rows",
+								"labelsPath": "label",
+								"series": [
+									{ "name": "Contacts", "path": "total" }
+								]
+							}
+						}
 					}
 				],
 				"layout": [
@@ -8991,21 +9408,28 @@
 						"gridWidth": 3,
 						"gridHeight": 2,
 						"showTitle": false
-					}
+					},
+					{ "id": 5, "widgetId": "rap-channels", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 4 }
 				],
-				"bodyWidgets": [
+				"headerActions": [
 					{
-						"id": "rap-channels",
-						"component": "ChannelDistributionSection",
-						"placement": "after-grid",
-						"props": { "period": "@workspace.period" }
+						"id": "export-contact-moments",
+						"label": "Export CSV",
+						"type": "api-call",
+						"icon": "Download",
+						"method": "GET",
+						"url": "/apps/pipelinq/api/rapportage/export",
+						"params": { "period": "@workspace.period" },
+						"download": true,
+						"filename": "contact-moments.csv",
+						"successMessage": "Export downloaded"
 					}
 				]
 			}
 		},
 		{
 			"id": "ChannelAnalyticsView",
-			"_note": "Cross-channel comparison as a declarative type:dashboard page (pipelinq-dashboards-declarative). It has no headline KPI cards — the cross-channel comparison table (total / FCR / SLA per channel, colour-keyed) lives entirely in one kind:'section' bodyWidget (ChannelComparisonSection). Two pageFilters drive it: period (today/week/month -> @page.period, resolved to from/to server-side by ReportingController) and granularity (daily/weekly -> @page.granularity); the section reads both via @workspace.* and self-fetches /api/rapportage/channels + /api/rapportage/sla.",
+			"_note": "Cross-channel comparison: one row per channel from GET /apps/pipelinq/api/rapportage/channels (rows), counted server-side from the contact moments of the chosen period: total, first-contact resolution and SLA attainment against the channel's target.",
 			"route": "/rapportage/channels",
 			"type": "dashboard",
 			"title": "Channel analytics",
@@ -9022,34 +9446,56 @@
 							{ "value": "week", "label": "This week" },
 							{ "value": "month", "label": "This month" }
 						]
-					},
-					{
-						"key": "granularity",
-						"label": "Granularity",
-						"type": "select",
-						"default": "daily",
-						"options": [
-							{ "value": "daily", "label": "Daily" },
-							{ "value": "weekly", "label": "Weekly" }
-						]
 					}
 				],
-				"bodyWidgets": [
+				"widgets": [
 					{
 						"id": "channel-comparison",
-						"component": "ChannelComparisonSection",
-						"placement": "before-grid",
-						"props": {
-							"period": "@workspace.period",
-							"granularity": "@workspace.granularity"
+						"type": "object-table",
+						"title": "Channel comparison",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/channels",
+								"params": { "period": "@workspace.period" },
+								"responsePath": "rows"
+							},
+							"columns": [
+								{ "key": "label", "label": "Channel", "cellClass": "cn-cell--strong", "sortable": true },
+								{ "key": "total", "label": "Total", "format": { "style": "number" }, "sortable": true },
+								{
+									"key": "fcrRate",
+									"label": "FCR rate",
+									"format": { "style": "percent", "decimals": 1 },
+									"sortable": true
+								},
+								{
+									"key": "slaCompliance",
+									"label": "SLA",
+									"format": { "style": "percent", "decimals": 1 },
+									"sortable": true
+								},
+								{
+									"key": "slaStatus",
+									"label": "SLA status",
+									"widget": "badge",
+									"enum": ["green", "orange", "red"],
+									"enumLabels": { "green": "On target", "orange": "Just below target", "red": "Below target" },
+									"widgetProps": { "colorMap": { "green": "success", "orange": "warning", "red": "error" } },
+									"sortable": true
+								}
+							],
+							"emptyText": "No data available for the selected period"
 						}
 					}
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "channel-comparison", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6 }
 				]
 			}
 		},
 		{
 			"id": "AgentPerformanceView",
-			"_note": "Per-agent performance as a declarative type:dashboard page (pipelinq-dashboards-declarative). It has no headline KPI cards — the sortable per-agent leaderboard (contacts / avg time / FCR) plus the team-summary footer (total contacts, team FCR, both derived from the same agents map) live in one kind:'section' bodyWidget (AgentPerformanceSection). A period pageFilter (today/week/month -> @page.period, resolved to from/to server-side) drives the query; the section reads @workspace.period and self-fetches /api/rapportage/agents.",
+			"_note": "Per-agent performance: the rows and team totals of GET /apps/pipelinq/api/rapportage/agents for the chosen period. The server names each agent by display name and answers the handling time in seconds, so the column sorts as a number.",
 			"route": "/rapportage/agents",
 			"type": "dashboard",
 			"title": "Agent performance",
@@ -9068,13 +9514,91 @@
 						]
 					}
 				],
-				"bodyWidgets": [
+				"widgets": [
+					{
+						"id": "agents-contacts",
+						"type": "stat",
+						"title": "Total contacts",
+						"content": {
+							"label": "Total contacts",
+							"caption": "contact moments",
+							"icon": "MessageText",
+							"format": { "style": "number", "decimals": 0 },
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/agents",
+								"path": "totals.contacts",
+								"params": { "period": "@page.period" }
+							}
+						}
+					},
+					{
+						"id": "agents-fcr",
+						"type": "stat",
+						"title": "Team FCR",
+						"content": {
+							"label": "Team FCR",
+							"caption": "first-contact resolution",
+							"icon": "CheckCircle",
+							"format": { "style": "percent", "decimals": 1 },
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/agents",
+								"path": "totals.fcrRate",
+								"params": { "period": "@page.period" }
+							}
+						}
+					},
 					{
 						"id": "agent-performance",
-						"component": "AgentPerformanceSection",
-						"placement": "before-grid",
-						"props": { "period": "@workspace.period" }
+						"type": "object-table",
+						"title": "Agent performance",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/agents",
+								"params": { "period": "@workspace.period" },
+								"responsePath": "rows"
+							},
+							"columns": [
+								{ "key": "agentName", "label": "Agent", "cellClass": "cn-cell--strong", "sortable": true },
+								{ "key": "count", "label": "Contacts", "format": { "style": "number" }, "sortable": true },
+								{
+									"key": "avgHandlingSeconds",
+									"label": "Avg time",
+									"format": { "style": "duration", "unit": "seconds" },
+									"sortable": true
+								},
+								{
+									"key": "fcrRate",
+									"label": "FCR %",
+									"format": { "style": "percent", "decimals": 1 },
+									"sortable": true
+								}
+							],
+							"emptyText": "No agent data for this period"
+						}
 					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "agents-contacts",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 2,
+						"widgetId": "agents-fcr",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{ "id": 3, "widgetId": "agent-performance", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 6 }
 				]
 			}
 		},

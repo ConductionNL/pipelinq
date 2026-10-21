@@ -139,7 +139,8 @@
 							"tabs": [
 								{
 									"widgetIds": [
-										"mailing-list-data"
+										"mailing-list-data",
+										"list-subscriptions"
 									],
 									"label": "Overview"
 								},
@@ -235,6 +236,58 @@
 						"content": {
 							"title": "What a subscriber sees"
 						}
+					},
+					{
+						"id": "list-subscriptions",
+						"type": "object-table",
+						"title": "Subscribers on this list",
+						"subtitle": "An unconfirmed sign-up never gets a blast. The person is only added after opening the confirmation link.",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "subscription",
+								"filter": {
+									"listId": "@objectId"
+								},
+								"order": {
+									"createdAt": "desc"
+								},
+								"limit": 200
+							},
+							"columns": [
+								{
+									"key": "contactId",
+									"label": "Subscriber",
+									"widget": "fkResolve",
+									"widgetProps": {
+										"register": "pipelinq",
+										"schema": "contact",
+										"labelField": "name"
+									},
+									"secondary": "{email}",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "state",
+									"label": "Status"
+								},
+								{
+									"key": "source",
+									"label": "Source"
+								},
+								{
+									"key": "lawfulBasis",
+									"label": "Ground"
+								},
+								{
+									"key": "confirmedAt",
+									"label": "Confirmed",
+									"widget": "date"
+								}
+							],
+							"pageSize": 10,
+							"emptyText": "Nobody has joined this list yet."
+						}
 					}
 				],
 				"layout": [
@@ -247,19 +300,6 @@
 						"gridHeight": 6,
 						"showTitle": false,
 						"sizeToContent": true
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "list-subscriptions",
-						"component": "SubscriptionsSection",
-						"title": "Subscribers",
-						"placement": "end",
-						"props": {
-							"listId": "@objectId"
-						},
-						"card": true,
-						"colSpan": 12
 					}
 				],
 				"sidebar": {

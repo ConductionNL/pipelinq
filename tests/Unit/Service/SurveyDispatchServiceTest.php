@@ -360,6 +360,11 @@ class SurveyDispatchServiceTest extends TestCase {
 		$this->assertSame(1, $figures['byChannel']['sms']['suppressed']);
 		$this->assertSame(1, $figures['byChannel']['unknown']['failed']);
 		$this->assertArrayNotHasKey('byChannel', $figures['byChannel']['email']);
+		$this->assertSame(['email', 'sms', 'unknown'], array_column($figures['channels'], 'channel'));
+		$this->assertSame(
+			['channel' => 'email', 'delivered' => 2, 'responded' => 1, 'rate' => 50.0, 'suppressed' => 0, 'failed' => 0],
+			$figures['channels'][0]
+		);
 	}//end testTheResponseRateBreaksDownPerChannel()
 
 	/**
@@ -388,4 +393,29 @@ class SurveyDispatchServiceTest extends TestCase {
 			$this->service()->withinDays(invitations: [['a' => 1], ['b' => 2], ['c' => 3]], days: 0, now: $now)
 		);
 	}//end testAPeriodKeepsTheInvitationsDueInsideIt()
+
+	/**
+	 * A from/to window keeps the invitations due on its days, both included.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 */
+	public function testAWindowKeepsTheInvitationsDueOnItsDays(): void {
+		$invitations = [
+			['status' => 'sent', 'scheduledFor' => '2026-09-30T23:00:00+00:00'],
+			['status' => 'sent', 'scheduledFor' => '2026-10-01T09:00:00+00:00'],
+			['status' => 'sent', 'scheduledFor' => '2026-10-31T18:00:00+00:00'],
+			['status' => 'sent', 'scheduledFor' => '2026-11-01T00:00:00+00:00'],
+			['status' => 'sent'],
+		];
+
+		$kept = $this->service()->withinRange(invitations: $invitations, from: '2026-10-01T00:00:00.000Z', to: '2026-10-31');
+
+		$this->assertSame(
+			['2026-10-01T09:00:00+00:00', '2026-10-31T18:00:00+00:00'],
+			array_column($kept, 'scheduledFor')
+		);
+		$this->assertCount(4, $this->service()->withinRange(invitations: $invitations, from: '', to: ''));
+	}//end testAWindowKeepsTheInvitationsDueOnItsDays()
 }//end class

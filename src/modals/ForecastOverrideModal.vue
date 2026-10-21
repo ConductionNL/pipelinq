@@ -49,6 +49,7 @@
 </template>
 
 <script>
+import { emit } from '@nextcloud/event-bus'
 import { NcButton, NcDialog, NcTextArea, NcTextField } from '@nextcloud/vue'
 import { createOverride } from '../services/forecastApi.js'
 
@@ -108,6 +109,7 @@ export default {
 					reason: this.reason.trim(),
 				})
 				this.$emit('saved', created)
+				emit('cn:page:refresh', {})
 				this.$emit('close')
 			} catch (error) {
 				this.errorMessage =

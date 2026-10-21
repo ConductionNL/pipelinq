@@ -31,6 +31,7 @@ use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -55,18 +56,33 @@ class SlaAttainmentService {
 	public const VALID_GROUPS = ['policy', 'customer', 'tier', 'team', 'target'];
 
 	/**
+	 * The words for each grouping, to head the group column.
+	 *
+	 * @var array<string, string>
+	 */
+	private const GROUP_LABELS = [
+		'policy' => 'Policy',
+		'customer' => 'Customer',
+		'tier' => 'Customer tier',
+		'team' => 'Team',
+		'target' => 'Target kind',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig App config.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
 	 * @param LoggerInterface $logger PSR logger.
+	 * @param IL10N|null $l10n Words the grouping in `labels.group`.
 	 */
 	public function __construct(
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private TicketService $ticketService,
 		private LoggerInterface $logger,
+		private ?IL10N $l10n = null,
 	) {
 	}//end __construct()
 
@@ -143,6 +159,7 @@ class SlaAttainmentService {
 				'byTarget' => $byTargetOut,
 				'byGroup' => $byGroup,
 			],
+			'labels' => ['group' => ($this->l10n?->t(self::GROUP_LABELS[$groupBy]) ?? self::GROUP_LABELS[$groupBy])],
 		];
 	}//end compute()
 
@@ -288,6 +305,7 @@ class SlaAttainmentService {
 				'groupKey' => (string)$key,
 				'groupName' => (string)($entry['name'] ?? $key),
 				'attainment' => $groupAttainment,
+				'attainmentPercent' => round(($groupAttainment * 100), 1),
 				'total' => $denom,
 				'met' => $withE,
 				'breached' => (int)$entry['breached'],

@@ -240,6 +240,38 @@ class ArticleControllerTest extends TestCase {
 	}//end testShowAnswersNotFoundForAMissingArticle()
 
 	/**
+	 * show() answers the article's links as rows a facts card draws as links,
+	 * named by their label or else their url; a link without a url is left out.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+	 */
+	public function testShowAnswersTheLinksAsRows(): void {
+		$this->signInAsCrmUser();
+		$this->articles->method('getArticleById')->with('article-1')->willReturn(
+			[
+				'id' => 'article-1',
+				'links' => [
+					['label' => 'Opening hours', 'url' => 'https://example.org/open'],
+					['url' => 'https://example.org/map'],
+					['label' => 'Broken'],
+				],
+			]
+		);
+
+		$article = $this->buildController()->show('article-1')->getData()['article'];
+
+		$this->assertSame(
+			[
+				['label' => 'Opening hours', 'value' => 'https://example.org/open', 'format' => 'url'],
+				['label' => 'https://example.org/map', 'value' => 'https://example.org/map', 'format' => 'url'],
+			],
+			$article['linkRows']
+		);
+	}//end testShowAnswersTheLinksAsRows()
+
+	/**
 	 * One call per routed method, each returning that call's JSONResponse —
 	 * used to assert the shared refusal uniformly across every route.
 	 *

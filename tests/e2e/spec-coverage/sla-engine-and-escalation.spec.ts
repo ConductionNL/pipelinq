@@ -169,6 +169,7 @@ function expectAttainmentEnvelope(payload: any): void {
 		'attainmentPercent must be attainment × 100, rounded to one decimal',
 	).toBeLessThanOrEqual(0.0501)
 	expect(payload.details, 'the envelope carries a details object').toBeTruthy()
+	expect(typeof payload.labels?.group, 'the envelope names its grouping').toBe('string')
 	expect(payload.details).toHaveProperty('byTarget')
 	expect(payload.details).toHaveProperty('byGroup')
 	expect(Array.isArray(payload.details.byGroup), 'byGroup is a list of rows').toBe(
@@ -273,12 +274,13 @@ test.describe('SLA attainment reporting', () => {
 			expectAttainmentEnvelope(res.json)
 
 			for (const row of res.json.details.byGroup) {
-				// The five columns the breakdown table (SlaAttainmentBreakdownSection)
-				// renders. A row missing any of them would paint an empty cell.
+				// The columns the breakdown table renders. A row missing any of
+				// them would paint an empty cell.
 				for (const column of [
 					'groupKey',
 					'groupName',
 					'attainment',
+					'attainmentPercent',
 					'total',
 					'met',
 					'breached',

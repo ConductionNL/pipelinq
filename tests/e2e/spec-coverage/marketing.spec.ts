@@ -447,7 +447,7 @@ test.describe('Blast performance dashboard', () => {
 
 	/*
 	 * SAME SLUG-VS-UUID MISMATCH AS THE A/B TAB, ON A DIFFERENT JOIN.
-	 * `fetchAttributionRows()` calls `GET /api/blasts/:id/attribution` with
+	 * `fetchAttributionRows()` calls `GET /api/blasts/attribution?ids=` with
 	 * `blast.id || blast.uuid || blast.slug` — the UUID — and
 	 * `AttributionService::getBlastAttributionSummary()` resolves that through
 	 * an exact-match `filters: ['blastId' => …]` query. The two seeded
@@ -558,7 +558,7 @@ test.describe('Blast performance dashboard', () => {
 			// when the blast's OWN attribution read comes back non-zero
 			// (`dealCount > 0 || attributedValue > 0` in fetchAttributionRows),
 			// so the attributionLink objects have to be visible to
-			// `GET /api/blasts/:id/attribution`, not merely written.
+			// the attribution read, not merely written.
 			//
 			// So poll the read that decides, and poll it for THIS blast: an
 			// older blast with attribution would satisfy a weaker check while
@@ -716,8 +716,8 @@ test.describe('Blasts ledger and wizard', () => {
 /* ══════════════════════════════════════════════════════════════════════════
  * Segments and Templates — marketing-segments-ui-repair (pipelinq#773).
  *
- * `SegmentFormDialog.vue` hosts the rule-tree editor (`SegmentBuilder.vue` /
- * `SegmentRuleNode.vue`) as a modal in the Segments index page's form-dialog
+ * `SegmentFormDialog.vue` hosts the rule-tree editor (the library's
+ * CnConditionTreeEditor) as a modal in the Segments index page's form-dialog
  * slot, opened by the page's Add button and its row Edit action.
  * ══════════════════════════════════════════════════════════════════════════ */
 test.describe('Segments', () => {
@@ -743,7 +743,7 @@ test.describe('Segments', () => {
 
 		await dialog.getByLabel('Segment name').fill('E2E gate-19 segment')
 
-		const builder = dialog.locator('.segment-builder')
+		const builder = dialog.locator('[data-testid="cn-condition-tree-editor"]')
 		await expect(builder).toBeVisible({ timeout: 20000 })
 		const saveButton = dialog.getByRole('button', { name: 'Create segment' })
 
@@ -756,12 +756,12 @@ test.describe('Segments', () => {
 		await expect(dialog).toContainText(
 			'Complete or remove the unfinished conditions.',
 		)
-		await expect(builder.locator('.segment-rule__error')).toHaveCount(0)
+		await expect(builder.locator('.cn-condition__error')).toHaveCount(0)
 		await expect(saveButton).toBeDisabled()
 
 		// NcSelect (vue-select) appends its dropdown to <body>, so the option
 		// is matched page-wide.
-		await builder.locator('.segment-rule__field .vs__dropdown-toggle').click()
+		await builder.locator('.cn-condition__field .vs__dropdown-toggle').click()
 		await page
 			.locator('li[role="option"], .vs__dropdown-option')
 			.filter({ hasText: 'Marketing consent' })
@@ -771,7 +771,7 @@ test.describe('Segments', () => {
 		// A boolean field defaults to Yes, so the condition is complete. The
 		// debounced preview (400ms) validates it, Save enables, and the estimate
 		// renders as "Estimated members: N".
-		await expect(builder.locator('.segment-builder__estimate')).toContainText(
+		await expect(builder.locator('[data-testid="cn-condition-tree-preview"]')).toContainText(
 			'Estimated members:',
 			{ timeout: 10000 },
 		)

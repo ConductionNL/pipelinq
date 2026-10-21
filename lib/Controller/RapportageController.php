@@ -36,6 +36,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -52,12 +53,14 @@ class RapportageController extends Controller {
 	 * @param RapportageService $rapportageService Analytics aggregation service.
 	 * @param IUserSession $userSession The user session.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
+	 * @param IL10N|null $l10n Words the win/loss slices.
 	 */
 	public function __construct(
 		IRequest $request,
 		private RapportageService $rapportageService,
 		private IUserSession $userSession,
 		private ObjectOwnerAccessPolicy $accessPolicy,
+		private ?IL10N $l10n = null,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -128,8 +131,26 @@ class RapportageController extends Controller {
 				'sourcePerformance' => $sourcePerformance,
 				'agingBuckets' => $agingBuckets,
 				'winLoss' => $winLoss,
+				'winLossSlices' => [
+					['label' => $this->word(text: 'Won'), 'count' => $winLoss['wonCount']],
+					['label' => $this->word(text: 'Lost'), 'count' => $winLoss['lostCount']],
+				],
 			]
 		);
 
 	}//end getPipelineStats()
+	/**
+	 * A label in the reader's language.
+	 *
+	 * @param string $text The English source text.
+	 *
+	 * @return string The translated text.
+	 */
+	private function word(string $text): string {
+		if ($this->l10n === null) {
+			return $text;
+		}
+
+		return $this->l10n->t($text);
+	}//end word()
 }//end class

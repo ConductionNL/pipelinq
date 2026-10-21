@@ -16,9 +16,7 @@
 -->
 <template>
 	<section class="campaign-landing">
-		<NcLoadingIcon v-if="loading" :size="24" />
-
-		<div v-else-if="page" data-testid="campaign-landing-page">
+		<div v-if="page" data-testid="campaign-landing-page">
 			<p class="campaign-landing__subtitle">
 				{{ t('pipelinq', 'Published by portaliq with a sign-up form') }}
 			</p>
@@ -103,9 +101,9 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
+import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcNoteCard, NcTextField } from '@nextcloud/vue'
 import ChartBox from 'vue-material-design-icons/ChartBox.vue'
 import { createCampaignLandingPage } from '../../services/campaignsApi.js'
 
@@ -114,7 +112,6 @@ export default {
 	components: {
 		ChartBox,
 		NcButton,
-		NcLoadingIcon,
 		NcNoteCard,
 		NcTextField,
 	},
@@ -125,14 +122,18 @@ export default {
 			type: String,
 			required: true,
 		},
+
+		/** The campaign as the detail page read it; the page reads it again after a change. */
+		campaign: {
+			type: Object,
+			default: null,
+		},
 	},
 
 	data() {
 		return {
-			loading: true,
 			creating: false,
 			failure: '',
-			campaign: null,
 			route: '',
 		}
 	},
@@ -176,35 +177,7 @@ export default {
 		},
 	},
 
-	mounted() {
-		this.fetchCampaign()
-	},
-
 	methods: {
-		/**
-		 * Read the campaign this section is bound to.
-		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
-		 */
-		async fetchCampaign() {
-			this.loading = true
-			try {
-				const { data } = await axios.get(
-					generateUrl(
-						`/apps/openregister/api/objects/pipelinq/campaign/${this.campaignId}`,
-					),
-				)
-				this.campaign = data?.data || data || null
-			} catch (e) {
-				this.campaign = null
-				this.failure =
-					e?.response?.data?.error
-					|| this.t('pipelinq', 'Could not load this campaign.')
-			} finally {
-				this.loading = false
-			}
-		},
-
 		/**
 		 * Ask portaliq for the page, and show its answer as it came.
 		 *
@@ -221,7 +194,7 @@ export default {
 					this.failure = this.explain(result.error)
 					return
 				}
-				await this.fetchCampaign()
+				emit('cn:page:refresh', {})
 			} catch (e) {
 				this.failure =
 					e?.response?.data?.error

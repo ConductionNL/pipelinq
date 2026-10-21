@@ -106,7 +106,7 @@ class SearchQueryReportServiceTest extends TestCase {
 		$out = $this->build()->aggregate(rows: $rows);
 
 		$this->assertCount(2, $out);
-		$this->assertSame(['query' => 'woo', 'clicks' => 10, 'impressions' => 400, 'ctr' => 0.025, 'position' => 3.5, 'pages' => 2], $out[0]);
+		$this->assertSame(['query' => 'woo', 'clicks' => 10, 'impressions' => 400, 'ctr' => 0.025, 'ctrPercent' => 2.5, 'position' => 3.5, 'pages' => 2], $out[0]);
 		$this->assertSame('contact', $out[1]['query']);
 	}//end testAggregatesPerQueryAcrossDaysAndPages()
 
@@ -168,4 +168,17 @@ class SearchQueryReportServiceTest extends TestCase {
 		$this->assertSame('2026-08-10', $report['to']);
 		$this->assertSame('sc-domain:example.org', $this->objectService->calls[0]['config']['filters']['property']);
 	}//end testExplicitWindowAndPropertyAreForwarded()
+
+	/**
+	 * A window sent as ISO 8601 moments, as a dashboard date range sends it,
+	 * is read by its days.
+	 *
+	 * @return void
+	 */
+	public function testAWindowOfIsoMomentsIsReadByItsDays(): void {
+		$report = $this->build()->topQueries(from: '2026-08-01T00:00:00.000Z', to: '2026-08-10T21:59:59+02:00');
+
+		$this->assertSame('2026-08-01', $report['from']);
+		$this->assertSame('2026-08-10', $report['to']);
+	}//end testAWindowOfIsoMomentsIsReadByItsDays()
 }//end class

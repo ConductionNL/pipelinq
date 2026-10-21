@@ -231,28 +231,57 @@ class AttributionService {
 	 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 	 */
 	public function getBlastAttributionSummary(string $blastId): array {
-		$rows = $this->loadAttributionLinks(filters: ['blastId' => $blastId]);
-		$total = 0.0;
-		$deals = [];
-		foreach ($rows as $row) {
+		return $this->getBlastAttributionSummaries(blastIds: [$blastId])[0];
+	}//end getBlastAttributionSummary()
+
+	/**
+	 * The attribution summary for each of several Blasts, read in one query.
+	 * Every requested id answers one row, in the order asked, zeros included.
+	 *
+	 * @param array<int, string> $blastIds Blast UUIDs or slugs.
+	 *
+	 * @return array<int, array{blastId: string, dealCount: int, attributedValue: float, currency: string}>
+	 *
+	 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+	 */
+	public function getBlastAttributionSummaries(array $blastIds): array {
+		$blastIds = array_values(array_unique($blastIds));
+		if ($blastIds === []) {
+			return [];
+		}
+
+		$totals = array_fill_keys($blastIds, 0.0);
+		$deals = array_fill_keys($blastIds, []);
+		foreach ($this->loadAttributionLinks(filters: ['blastId' => $blastIds]) as $row) {
+			$blastId = (string)($row['blastId'] ?? '');
+			if (array_key_exists($blastId, $totals) === false) {
+				continue;
+			}
+
 			$raw = ($row['attributedValue'] ?? null);
 			if (is_numeric($raw) === true) {
-				$total += (float)$raw;
+				$totals[$blastId] += (float)$raw;
 			}
 
 			$dealId = (string)($row['dealId'] ?? '');
 			if ($dealId !== '') {
-				$deals[$dealId] = true;
+				$deals[$blastId][$dealId] = true;
 			}
 		}
 
-		return [
-			'blastId' => $blastId,
-			'dealCount' => count($deals),
-			'attributedValue' => $total,
-			'currency' => $this->reportingCurrency(),
-		];
-	}//end getBlastAttributionSummary()
+		$currency = $this->reportingCurrency();
+		$rows = [];
+		foreach ($blastIds as $blastId) {
+			$rows[] = [
+				'blastId' => $blastId,
+				'dealCount' => count($deals[$blastId]),
+				'attributedValue' => $totals[$blastId],
+				'currency' => $currency,
+			];
+		}
+
+		return $rows;
+	}//end getBlastAttributionSummaries()
 
 	/**
 	 * Extract a click timestamp from a webhook event.

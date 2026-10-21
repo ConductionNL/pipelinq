@@ -163,8 +163,7 @@ test.describe('Contact channels card', () => {
  * covered by PHPUnit (BackfillContactChannelArraysTest)
  * @e2e exclude rule-fields-reach-into-array-of-object-properties — the
  * segment rule-builder UI has no page wiring real fieldOptions yet
- * (SegmentBuilder/SegmentRuleNode are reusable components awaiting a
- * forthcoming SegmentEditor surface, per src/registry.js); the engine is
+ * (the rule editor is the library's CnConditionTreeEditor); the engine is
  * covered by PHPUnit (SegmentServiceTest)
  * @e2e exclude client-and-contact-schemas-carry-typed-channel-arrays —
  * schema validation is enforced by OpenRegister at save time; exercised

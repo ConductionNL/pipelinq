@@ -11,7 +11,7 @@
                         a chi-square p-value on click rate and interpret it.
                         Below threshold display a "not-yet-available" notice.
   Tab 3 Attribution     attributed deal count + summed attributed EUR value
-                        per blast, fetched from GET /api/blasts/:id/attribution.
+                        per blast, fetched in one GET /api/blasts/attribution?ids=.
 
   @spec openspec/specs/marketing-analytics/spec.md#requirement-overview-metrics-table
   @spec openspec/specs/marketing-analytics/spec.md#requirement-a-b-significance-reported-in-dashboard
@@ -378,8 +378,6 @@ import Download from 'vue-material-design-icons/Download.vue'
 import { trafficOutcome } from '../../services/campaignTraffic.js'
 
 const OVERVIEW_LIMIT = 50
-/** How many per-blast attribution reads may be in flight at once. */
-const ATTRIBUTION_CONCURRENCY = 6
 const AB_MIN_DELIVERED = 500
 const AB_MIN_ELAPSED_MS = 24 * 60 * 60 * 1000
 const P_VALUE_ALPHA = 0.05
@@ -725,66 +723,46 @@ export default {
 		},
 
 		/**
-		 * For every loaded blast, fetch its attribution summary from
-		 * `GET /api/blasts/:id/attribution` and collect non-zero rows into
-		 * the Attribution tab table.
+		 * Read the attribution summary of every loaded blast in one
+		 * `GET /api/blasts/attribution?ids=` request and keep the non-zero rows
+		 * for the Attribution tab table, in the order the blasts were listed.
 		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
 		 */
 		async fetchAttributionRows() {
-			// One request per blast, run a few at a time. Strictly sequential
-			// it took as many round trips as there are blasts before the tab
-			// could say anything; unbounded it would open fifty at once.
 			const ids = this.blasts
 				.map((blast) => ({
 					id: blast.id || blast.uuid || blast.slug,
 					name: blast.name,
 				}))
 				.filter((entry) => Boolean(entry.id))
-			const found = new Map()
-
-			const worker = async (queue) => {
-				for (;;) {
-					const entry = queue.shift()
-					if (entry === undefined) {
-						return
-					}
-					try {
-						const url = generateUrl(
-							`/apps/pipelinq/api/blasts/${entry.id}/attribution`,
-						)
-						const { data } = await axios.get(url)
-						if (
-							(data?.dealCount || 0) > 0
-							|| (data?.attributedValue || 0) > 0
-						) {
-							found.set(entry.id, {
-								id: entry.id,
-								name: entry.name || entry.id,
-								dealCount: data.dealCount || 0,
-								attributedValue: data.attributedValue || 0,
-							})
-						}
-					} catch {
-						// Skip; keep the queue draining.
-					}
-				}
+			if (ids.length === 0) {
+				this.attributionRows = []
+				return
 			}
 
-			const queue = ids.slice()
-			await Promise.all(
-				Array.from(
-					{ length: Math.min(ATTRIBUTION_CONCURRENCY, queue.length) },
-					() => worker(queue),
-				),
-			)
+			let summaries = []
+			try {
+				const { data } = await axios.get(
+					generateUrl('/apps/pipelinq/api/blasts/attribution'),
+					{ params: { ids: ids.map((entry) => entry.id).join(',') } },
+				)
+				summaries = Array.isArray(data) ? data : []
+			} catch {
+				// No summaries: the tab says there is no attribution data yet.
+			}
 
-			// Report in the order the blasts were listed, not the order the
-			// answers happened to arrive.
+			const byId = new Map(summaries.map((row) => [row.blastId, row]))
 			this.attributionRows = ids
-				.map((entry) => found.get(entry.id))
-				.filter(Boolean)
+				.map((entry) => ({ entry, summary: byId.get(entry.id) }))
+				.filter(({ summary }) => (summary?.dealCount || 0) > 0 || (summary?.attributedValue || 0) > 0)
+				.map(({ entry, summary }) => ({
+					id: entry.id,
+					name: entry.name || entry.id,
+					dealCount: summary.dealCount || 0,
+					attributedValue: summary.attributedValue || 0,
+				}))
 		},
 
 		/**

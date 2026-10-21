@@ -184,10 +184,9 @@ test.describe('Search intelligence pages', () => {
 
 		// No egress source is configured on this instance, so the page must
 		// say so rather than render an empty list of events.
-		await expect(page.getByTestId('competitors-unconfigured')).toContainText(
-			'Marketing intelligence',
-			{ timeout: 15000 },
-		)
+		await expect(
+			page.getByText('Set an egress source under Settings, Marketing intelligence', { exact: false }).first(),
+		).toBeVisible({ timeout: 15000 })
 	})
 
 	// @e2e openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#the-page-renders-its-empty-state-and-issues-one-read
@@ -208,9 +207,8 @@ test.describe('Search intelligence pages', () => {
 			page.getByRole('heading', { name: 'Connection audit' }),
 		).toBeVisible({ timeout: 15000 })
 
-		const empty = page.getByTestId('connection-audit-empty')
+		const empty = page.getByText('Nothing to compare yet', { exact: false }).first()
 		await expect(empty).toBeVisible({ timeout: 15000 })
-		await expect(empty).toContainText('Nothing to compare yet')
 		await expect(empty).toContainText('Mastodon')
 
 		expect(
