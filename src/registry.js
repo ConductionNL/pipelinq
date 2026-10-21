@@ -200,7 +200,6 @@ import ContractInvoicingSection from './views/contracts/ContractInvoicingSection
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 // --- Navi AI conversational analytics (openspec/changes/dashboard). ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
-import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
 // --- xWiki integration (xwiki-integration): dashboard widget wrapper +
 //     reusable widget / sidebar / viewer / list components. ---
 import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget.vue'
@@ -376,12 +375,6 @@ const registry = {
 		component: NaviAnalyticsWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnDataTable / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
-	},
-	ReportExportPanel: {
-		kind: 'widget',
-		component: ReportExportPanel,
-		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — dashboard export-action gap). Collapsible funder-reporting export panel; delegates format picker + download to CnMassExportDialog / ExportService. NOT dissolvable to the Wave-1 type:"export" action: that action is dispatched via cnDispatchAction from an index/toolbar surface, but CnDashboardPage renders no dispatchable page-level actions (it exposes only Refresh/Docs/Request-feature + the header-actions slot), so an in-body dashboard export panel has no declarative equivalent. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
 	},
 
 	// --- Surveys + Forms migrated to the OpenRegister forms leaf (NC Forms). ---

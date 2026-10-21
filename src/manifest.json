@@ -1195,6 +1195,23 @@
 						"type": "open-modal",
 						"target": "ClientCreateDialog",
 						"icon": "Plus"
+					},
+					{
+						"id": "export-report",
+						"label": "Export",
+						"type": "export",
+						"icon": "Download",
+						"description": "Download the records behind this dashboard as a spreadsheet.",
+						"entities": [
+							{ "id": "leads", "label": "Leads", "register": "pipelinq", "schema": "lead" },
+							{ "id": "requests", "label": "Requests", "register": "pipelinq", "schema": "ticket", "filter": { "ticketType": "request" } },
+							{ "id": "contact-moments", "label": "Contact moments", "register": "pipelinq", "schema": "ticket", "filter": { "ticketType": "interaction" } },
+							{ "id": "satisfaction", "label": "Satisfaction scores", "register": "pipelinq", "schema": "surveyResponse" }
+						],
+						"formats": [
+							{ "id": "excel", "label": "Excel (.xlsx)" },
+							{ "id": "csv", "label": "CSV (.csv)" }
+						]
 					}
 				],
 				"description": "Leads, requests, service and team workload",
@@ -1450,11 +1467,6 @@
 						"title": "Ask Navi"
 					},
 					{
-						"id": "report-export",
-						"type": "custom",
-						"title": "Report Export"
-					},
-					{
 						"id": "xwiki-knowledge",
 						"type": "custom",
 						"title": "Knowledge base"
@@ -1597,18 +1609,10 @@
 						"gridHeight": 4
 					},
 					{
-						"id": "12",
-						"widgetId": "report-export",
-						"gridX": 0,
-						"gridY": 28,
-						"gridWidth": 12,
-						"gridHeight": 3
-					},
-					{
 						"id": "13",
 						"widgetId": "xwiki-knowledge",
 						"gridX": 0,
-						"gridY": 31,
+						"gridY": 28,
 						"gridWidth": 6,
 						"gridHeight": 5
 					},
@@ -1616,7 +1620,7 @@
 						"id": "20",
 						"widgetId": "survey-response-rate",
 						"gridX": 6,
-						"gridY": 31,
+						"gridY": 28,
 						"gridWidth": 6,
 						"gridHeight": 5
 					}
@@ -1627,7 +1631,6 @@
 				"widget-my-work": "MyWorkWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
-				"widget-report-export": "ReportExportPanel",
 				"widget-xwiki-knowledge": "XWikiDashboardWidget",
 				"widget-survey-response-rate": "SurveyResponseRateWidget"
 			}
