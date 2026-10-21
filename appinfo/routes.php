@@ -741,14 +741,6 @@ return [
         ['name' => 'kccWerkplek#stateAction',           'url' => '/api/kcc-werkplek/state',        'verb' => 'GET'],
         ['name' => 'kccWerkplek#setAvailabilityAction', 'url' => '/api/kcc-werkplek/availability', 'verb' => 'PUT'],
 
-        // xWiki integration proxy (xwiki-integration). Thin GET proxy to the
-        // xWiki REST API; all endpoints are #[NoAdminRequired] + #[NoCSRFRequired]
-        // and admin-tunable via xwiki_* settings.
-        ['name' => 'xWiki#search', 'url' => '/api/xwiki/search',                    'verb' => 'GET'],
-        ['name' => 'xWiki#pages',  'url' => '/api/xwiki/pages',                     'verb' => 'GET'],
-        ['name' => 'xWiki#page',   'url' => '/api/xwiki/page/{wiki}/{page}',        'verb' => 'GET', 'requirements' => ['page' => '.+']],
-        ['name' => 'xWiki#status', 'url' => '/api/xwiki/status',                    'verb' => 'GET'],
-
         // AVG / DSAR (GDPR data-subject request) — the entire app-side workflow
         // (avgVerzoek#*, avgEvidence#*, avgRedaction#*, avgDenial#*, avgBundle#*)
         // and the MDM right-of-deletion workflow (mdmAvgWorkflow#*) were removed

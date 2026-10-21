@@ -1,0 +1,3 @@
+- [x] 1. ClientDetail sidebar Knowledge base tab → `{ type: integration, integrationId: xwiki }`.
+- [x] 2. Delete the proxy (controller, service, routes, PHPUnit tests) and the store and components.
+- [x] 3. Port e2e: `kennisbank.spec.ts` and `xwiki-integration.spec.ts` to OpenRegister's endpoints; `master-data-management.spec.ts` takes `/api/party-kinds` as its live control.

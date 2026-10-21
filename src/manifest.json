@@ -2594,7 +2594,8 @@
 							"icon": "BookOpenVariantOutline",
 							"widgets": [
 								{
-									"type": "XWikiSidebarTab"
+									"type": "integration",
+									"integrationId": "xwiki"
 								}
 							]
 						}
