@@ -214,10 +214,10 @@ test.describe('Mailing lists page', () => {
 		// The seeded list holds one confirmed, one pending, one unsubscribed
 		// and one bounced membership, so every chip label is on screen.
 		await expect(
-			page.getByText('Subscribed', { exact: false }).first(),
+			page.getByText('Confirmed', { exact: false }).first(),
 		).toBeVisible()
 		await expect(
-			page.getByText('Awaiting confirmation', { exact: false }).first(),
+			page.getByText('Waiting', { exact: false }).first(),
 		).toBeVisible()
 		await assertNoHardError(page)
 	})

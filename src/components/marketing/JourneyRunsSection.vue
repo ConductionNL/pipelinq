@@ -17,6 +17,9 @@
 -->
 <template>
 	<section class="journey-runs" data-testid="journey-runs-section">
+		<p class="journey-runs__subtitle">
+			{{ t('pipelinq', 'Every contact reached and every contact refused') }}
+		</p>
 		<NcLoadingIcon v-if="loading" :size="24" />
 
 		<NcEmptyContent
@@ -49,22 +52,34 @@
 				}}
 			</p>
 
-			<ul class="journey-runs__list">
-				<li
-					v-for="run in runs"
-					:key="run.id || run['@self']?.uuid || run.contactId"
-					class="journey-runs__row"
-					data-testid="journey-runs-row">
-					<span class="journey-runs__state">{{
-						stateLabel(run.state)
-					}}</span>
-					<span class="journey-runs__contact">{{ run.contactId }}</span>
-					<span v-if="run.reason" class="journey-runs__reason">
-						{{ reasonLabel(run.reason) }}
-					</span>
-					<span class="journey-runs__when">{{ run.occurredAt }}</span>
-				</li>
-			</ul>
+			<div class="journey-runs__frame">
+				<table class="journey-runs__table">
+					<thead>
+						<tr>
+							<th scope="col">{{ t('pipelinq', 'Reached contact') }}</th>
+							<th scope="col">{{ t('pipelinq', 'When') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Outcome') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Why') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="run in runs"
+							:key="run.id || run['@self']?.uuid || run.contactId"
+							data-testid="journey-runs-row">
+							<td>{{ run.contactName || run.contactId }}</td>
+							<td>{{ when(run.occurredAt) }}</td>
+							<td>
+								<CnStatusBadge
+									:label="stateLabel(run.state)"
+									:variant="stateVariant(run.state)"
+									size="small" />
+							</td>
+							<td>{{ run.reason ? reasonLabel(run.reason) : '' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</template>
 
 		<p v-if="error" class="journey-runs__error" role="alert">{{ error }}</p>
@@ -72,6 +87,7 @@
 </template>
 
 <script>
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import {
@@ -84,6 +100,7 @@ import { fetchJourneyRuns } from '../../services/journeysApi.js'
 export default {
 	name: 'JourneyRunsSection',
 	components: {
+		CnStatusBadge,
 		MapMarkerPath,
 		NcEmptyContent,
 		NcLoadingIcon,
@@ -163,48 +180,77 @@ export default {
 		reasonLabel(reason) {
 			return runReasonLabel(reason, this.t)
 		},
+
+		/**
+		 * The tone of the outcome pill.
+		 *
+		 * @param {string} state The stored state.
+		 * @return {string} A CnStatusBadge variant.
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 */
+		stateVariant(state) {
+			return { sent: 'success', 'task-created': 'success', refused: 'warning', failed: 'error' }[state] || 'default'
+		},
+
+		/**
+		 * The moment of a run in the short form the lists use ("6 okt, 09:00").
+		 *
+		 * @param {string} value An ISO date-time.
+		 * @return {string} The moment, or the value as stored when it is not a date.
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 */
+		when(value) {
+			const date = new Date(value)
+			if (!value || Number.isNaN(date.getTime())) {
+				return value || ''
+			}
+			return date.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+		},
 	},
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .journey-runs {
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
-	padding: 1rem 0;
+}
+
+.journey-runs__subtitle {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+	margin: -8px 0 4px;
 }
 
 .journey-runs__counts {
-	color: var(--color-text-maxcontrast);
-}
-
-.journey-runs__list {
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-}
-
-.journey-runs__row {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.75rem;
-	padding: 0.35rem 0;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.journey-runs__state {
 	font-weight: 600;
-	min-width: 7rem;
 }
 
-.journey-runs__reason {
-	color: var(--color-text-maxcontrast);
+.journey-runs__frame {
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	overflow-x: auto;
 }
 
-.journey-runs__when {
-	margin-inline-start: auto;
-	color: var(--color-text-maxcontrast);
+.journey-runs__table {
+	width: 100%;
+	border-collapse: collapse;
+
+	th,
+	td {
+		padding: 10px 18px;
+		text-align: start;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	th {
+		font-weight: 600;
+	}
+
+	tbody tr:last-child td {
+		border-bottom: none;
+	}
 }
 
 .journey-runs__error {
