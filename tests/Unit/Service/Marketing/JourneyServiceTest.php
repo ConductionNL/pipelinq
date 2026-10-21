@@ -85,6 +85,27 @@ class JourneyServiceTest extends TestCase {
 	}//end testACleanCompileRecordsTheFlowAndPublishesIt()
 
 	/**
+	 * Pausing stores the status and compiles a switched-off flow; resuming
+	 * switches it on again. An unknown journey is null.
+	 *
+	 * @return void
+	 */
+	public function testPausingSwitchesTheFlowOffAndResumingOn(): void {
+		$flowService = new FakeFlowService();
+		$service = $this->service(flowService: $flowService, versionService: new FakeFlowVersionService());
+
+		$paused = $service->setStatus(journeyId: 'journey-1', status: 'paused', runAs: 'admin');
+		$this->assertSame('paused', $paused['status']);
+		$this->assertSame('paused', $this->store->rows['journey']['journey-1']['status']);
+		$this->assertFalse($flowService->lastDocument['enabled']);
+
+		$service->setStatus(journeyId: 'journey-1', status: 'active', runAs: 'admin');
+		$this->assertTrue($flowService->lastDocument['enabled']);
+
+		$this->assertNull($service->setStatus(journeyId: 'nope', status: 'paused'));
+	}//end testPausingSwitchesTheFlowOffAndResumingOn()
+
+	/**
 	 * With no flow service the journey is stored and inert, and says so.
 	 * It must NOT fall back to a pipelinq-side loop: that would be the
 	 * second engine ADR-094 exists to prevent.
