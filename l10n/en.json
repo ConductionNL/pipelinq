@@ -1,5 +1,10 @@
 {
     "translations": {
+        "Reason for rejection": "Reason for rejection",
+        "The cashier sees this reason on the refund.": "The cashier sees this reason on the refund.",
+        "Enter the counted amount.": "Enter the counted amount.",
+        "Print receipt": "Print receipt",
+        "Email receipt": "Email receipt",
         "Take the oldest": "Take the oldest",
         "Longest waiting": "Longest waiting",
         "the oldest ticket nobody has picked up": "the oldest ticket nobody has picked up",

@@ -145,6 +145,7 @@ class CashShiftController extends Controller {
 	 * @return JSONResponse The count, diff and updated shift.
 	 *
 	 * @spec openspec/changes/pos-cash-management/tasks.md#4.1
+	 * @spec openspec/changes/pl2-pos-header-actions/specs/pos-cash-management/spec.md#requirement-a-shift-is-counted-only-with-an-amount
 	 */
 	#[NoAdminRequired]
 	public function count(string $id): JSONResponse {
@@ -153,7 +154,16 @@ class CashShiftController extends Controller {
 			return $uid;
 		}
 
-		$amount = (float)$this->request->getParam('amount', 0);
+		// A missing amount used to count as 0 and close the shift on an empty drawer.
+		$rawAmount = $this->request->getParam('amount', null);
+		if (is_numeric($rawAmount) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Enter the counted amount.')],
+				Http::STATUS_UNPROCESSABLE_ENTITY
+			);
+		}
+
+		$amount = (float)$rawAmount;
 		$notes = (string)$this->request->getParam('notes', '');
 
 		return $this->run(

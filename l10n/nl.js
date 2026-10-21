@@ -1,6 +1,11 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Reason for rejection": "Reden van afwijzing",
+        "The cashier sees this reason on the refund.": "De kassamedewerker ziet deze reden bij de retour.",
+        "Enter the counted amount.": "Vul het getelde bedrag in.",
+        "Print receipt": "Bon printen",
+        "Email receipt": "Bon mailen",
         "Take the oldest": "Pak de oudste",
         "Longest waiting": "Langst wachtend",
         "the oldest ticket nobody has picked up": "het oudste ticket dat nog niemand heeft opgepakt",

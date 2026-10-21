@@ -5058,12 +5058,37 @@
 		},
 		{
 			"id": "PosRefundDetail",
-			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields auto-render via CnObjectDataWidget. The manager-gated Confirm / Reject actions are the header's actionsComponent (PosRefundHeaderActions). The refund totals (PosRefundTotalsWidget) and the 'Returned items' table (PosRefundItemsWidget) are grid widgets. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) 'Returned items' is a custom widget because it is a CROSS-SCHEMA JOIN: each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer), and an object-list renders ONE schema and cannot resolve a column off a second schema. Missing primitive: an object-list column resolved off a SECOND schema (cross-schema join lookup).",
+			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields auto-render via CnObjectDataWidget. Confirm (the pending refund's primary button) and Reject (with a reason) are declared header actions for admins; they POST to /api/pos-refunds/{id}/{action}. The refund totals (PosRefundTotalsWidget) and the 'Returned items' table (PosRefundItemsWidget) are grid widgets. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) 'Returned items' is a custom widget because it is a CROSS-SCHEMA JOIN: each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer), and an object-list renders ONE schema and cannot resolve a column off a second schema. Missing primitive: an object-list column resolved off a SECOND schema (cross-schema join lookup).",
 			"route": "/pos/refunds/:id",
 			"type": "detail",
 			"title": "Retour",
-			"actionsComponent": "PosRefundHeaderActions",
 			"config": {
+				"stageField": "status",
+				"primaryActionByStage": { "pending": "refund-confirm" },
+				"headerActions": [
+					{
+						"id": "refund-confirm",
+						"label": "Confirm",
+						"type": "api-call",
+						"icon": "Check",
+						"adminOnly": true,
+						"url": "/apps/pipelinq/api/pos-refunds/@objectId/confirm",
+						"successMessage": "Refund completed.",
+						"visibleWhen": { "field": "status", "value": "pending" }
+					},
+					{
+						"id": "refund-reject",
+						"label": "Reject",
+						"type": "open-form",
+						"adminOnly": true,
+						"endpoint": { "url": "/apps/pipelinq/api/pos-refunds/@objectId/reject", "method": "POST" },
+						"formProperties": {
+							"reason": { "type": "string", "title": "Reason for rejection", "description": "The cashier sees this reason on the refund.", "required": true }
+						},
+						"successMessage": "Refund rejected.",
+						"visibleWhen": { "field": "status", "value": "pending" }
+					}
+				],
 				"register": "pipelinq",
 				"schema": "posRefund",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -5245,12 +5270,28 @@
 		},
 		{
 			"id": "CashShiftDetail",
-			"_note": "Cash-shift record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The shift's flat fields auto-render via CnObjectDataWidget; the drops are an object-list (cashDrop, FK 'shift') inside CashShiftDropsWidget, whose Add drop posts to /api/pos-shifts/{id}/drop rather than creating the object directly. Close and count shift is the header's actionsComponent (CashShiftHeaderActions); the cash-reconciliation VARIANCE with its manager-gated approve/reject is a grid widget (CashShiftVarianceWidget). KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: drop / count / reconcile POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints that recompute variance server-side (NOT OR /transition); cashShift/cashDiff have no x-openregister-lifecycle; (2) the variance is a custom widget because it is a LATEST/PENDING-child projection: an object-list lists ALL children and cannot pick and lay out the single most-relevant cashDiff with its tolerance verdict and inline approve/reject. Missing primitive: a 'latest/pending child object' projection primitive.",
+			"_note": "Cash-shift record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The shift's flat fields auto-render via CnObjectDataWidget; the drops are an object-list (cashDrop, FK 'shift') inside CashShiftDropsWidget, whose Add drop posts to /api/pos-shifts/{id}/drop rather than creating the object directly. Close and count shift is the open shift's primary header action, a POST form to /api/pos-shifts/{id}/count; the cash-reconciliation VARIANCE with its manager-gated approve/reject is a grid widget (CashShiftVarianceWidget). KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: drop / count / reconcile POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints that recompute variance server-side (NOT OR /transition); cashShift/cashDiff have no x-openregister-lifecycle; (2) the variance is a custom widget because it is a LATEST/PENDING-child projection: an object-list lists ALL children and cannot pick and lay out the single most-relevant cashDiff with its tolerance verdict and inline approve/reject. Missing primitive: a 'latest/pending child object' projection primitive.",
 			"route": "/pos/shifts/:id",
 			"type": "detail",
 			"title": "Shift",
-			"actionsComponent": "CashShiftHeaderActions",
 			"config": {
+				"stageField": "status",
+				"primaryActionByStage": { "open": "shift-count" },
+				"headerActions": [
+					{
+						"id": "shift-count",
+						"label": "Close and count shift",
+						"type": "open-form",
+						"icon": "CashRegister",
+						"endpoint": { "url": "/apps/pipelinq/api/pos-shifts/@objectId/count", "method": "POST" },
+						"formProperties": {
+							"amount": { "type": "number", "minimum": 0, "title": "Counted amount", "description": "Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).", "required": true },
+							"notes": { "type": "string", "title": "Notes" }
+						},
+						"successMessage": "Count recorded.",
+						"visibleWhen": { "field": "status", "value": "open" }
+					}
+				],
 				"register": "pipelinq",
 				"schema": "cashShift",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -5638,12 +5679,101 @@
 		},
 		{
 			"id": "PosTransactionDetail",
-			"_note": "POS transaction record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). Two columns: all of the transaction's fields (data widget) beside the line count and the stored totals (PosTransactionTotalsWidget: tax return per rate, subtotal/discount/VAT/total, invoice split, REQ-BTW-005, which also carries the old Total and VAT tiles); the line items (object-list on posTransactionLine, FK 'transaction') beside Related; then the tenders and provider status full width (PosTransactionPaymentWidget). The status-gated actions and 'Edit line items' (the cart editor) are the header's actionsComponent (PosTransactionHeaderActions), beside the page's own Edit. They POST to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects, NOT OR's /transition, and posTransaction has no x-openregister-lifecycle, so lifecycleActions is not wired.",
+			"_note": "POS transaction record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). Two columns: all of the transaction's fields (data widget) beside the line count and the stored totals (PosTransactionTotalsWidget: tax return per rate, subtotal/discount/VAT/total, invoice split, REQ-BTW-005, which also carries the old Total and VAT tiles); the line items (object-list on posTransactionLine, FK 'transaction') beside Related; then the tenders and provider status full width (PosTransactionPaymentWidget). The header follows the stage (Q9): one primary button (Confirm for a draft with lines, Resume when parked, Check out when confirmed), the receipts and Register refund as quick actions, and Edit line items, Park and the admin Reverse in the Actions menu. They POST to /api/pos-transactions/{id}/{action} endpoints with side-effects, NOT OR's /transition, and posTransaction has no x-openregister-lifecycle, so lifecycleActions is not wired.",
 			"route": "/pos/:id",
 			"type": "detail",
 			"title": "Transactie",
-			"actionsComponent": "PosTransactionHeaderActions",
 			"config": {
+				"stageField": "status",
+				"primaryActionByStage": { "draft": "tx-confirm", "parked": "tx-resume", "confirmed": "tx-settle" },
+				"quickActions": ["tx-print-receipt", "tx-email-receipt", "tx-register-refund"],
+				"headerActions": [
+					{
+						"id": "tx-confirm",
+						"label": "Confirm",
+						"type": "api-call",
+						"icon": "Check",
+						"url": "/apps/pipelinq/api/pos-transactions/@objectId/confirm",
+						"successMessage": "Transaction confirmed.",
+						"visibleWhen": {
+							"all": [
+								{ "field": "status", "op": "in", "value": ["draft", "parked"] },
+								{ "source": { "register": "pipelinq", "schema": "posTransactionLine", "filter": { "transaction": "@objectId" } }, "field": "@total", "op": "gt", "value": 0 }
+							]
+						}
+					},
+					{
+						"id": "tx-resume",
+						"label": "Resume",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/pos-transactions/@objectId/resume",
+						"successMessage": "Transaction resumed.",
+						"visibleWhen": { "field": "status", "value": "parked" }
+					},
+					{
+						"id": "tx-settle",
+						"label": "Check out",
+						"type": "api-call",
+						"icon": "CashRegister",
+						"url": "/apps/pipelinq/api/pos-transactions/@objectId/settle",
+						"successMessage": "Transaction settled.",
+						"visibleWhen": { "field": "status", "value": "confirmed" }
+					},
+					{
+						"id": "tx-print-receipt",
+						"label": "Print receipt",
+						"type": "open-modal",
+						"icon": "Printer",
+						"target": "PrintReceiptModal",
+						"props": { "transactionId": "@objectId" },
+						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled", "refunded"] }
+					},
+					{
+						"id": "tx-email-receipt",
+						"label": "Email receipt",
+						"type": "open-modal",
+						"icon": "EmailOutline",
+						"target": "EmailReceiptModal",
+						"props": { "transactionId": "@objectId" },
+						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled", "refunded"] }
+					},
+					{
+						"id": "tx-register-refund",
+						"label": "Register refund",
+						"type": "navigate",
+						"icon": "CashRefund",
+						"target": "/pos/refunds/new/@objectId",
+						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled"] }
+					},
+					{
+						"id": "tx-edit-lines",
+						"label": "Edit line items",
+						"type": "navigate",
+						"icon": "PencilOutline",
+						"target": "/pos/@objectId/edit",
+						"visibleWhen": { "field": "status", "op": "in", "value": ["draft", "parked"] }
+					},
+					{
+						"id": "tx-park",
+						"label": "Park",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/pos-transactions/@objectId/park",
+						"successMessage": "Transaction parked.",
+						"visibleWhen": { "field": "status", "value": "draft" }
+					},
+					{
+						"id": "tx-reverse",
+						"label": "Reverse",
+						"type": "open-form",
+						"adminOnly": true,
+						"endpoint": { "url": "/apps/pipelinq/api/pos-transactions/@objectId/refund", "method": "POST" },
+						"formProperties": {
+							"reason": { "type": "string", "title": "Reason", "description": "This will reverse the transaction. Enter a reason for the refund.", "required": true }
+						},
+						"successMessage": "Transaction refunded.",
+						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled"] }
+					}
+				],
 				"register": "pipelinq",
 				"schema": "posTransaction",
 				"documentationUrl": "https://pipelinq.conduction.nl",

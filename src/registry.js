@@ -83,13 +83,11 @@ import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 //     actionsComponent; the drops (with Add drop) and the latest/pending
 //     cashDiff variance are grid widgets. ---
 import CashShiftDropsWidget from './components/pos/CashShiftDropsWidget.vue'
-import CashShiftHeaderActions from './components/pos/CashShiftHeaderActions.vue'
 import CashShiftVarianceWidget from './components/pos/CashShiftVarianceWidget.vue'
 // --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
 //     declarative): refund fields auto-render; the manager-gated confirm/reject
 //     actions are its actionsComponent, and the cross-schema "Returned items"
 //     join and the totals are grid widgets. ---
-import PosRefundHeaderActions from './components/pos/PosRefundHeaderActions.vue'
 import PosRefundItemsWidget from './components/pos/PosRefundItemsWidget.vue'
 import PosRefundTotalsWidget from './components/pos/PosRefundTotalsWidget.vue'
 // --- POS transactions. The detail page is a declarative type:"detail" page
@@ -98,7 +96,6 @@ import PosRefundTotalsWidget from './components/pos/PosRefundTotalsWidget.vue'
 //     and the tender / provider payment panel are grid widgets beside the
 //     schema-driven data, related and line-item widgets. The form is a bespoke
 //     cart editor. ---
-import PosTransactionHeaderActions from './components/pos/PosTransactionHeaderActions.vue'
 import PosTransactionPaymentWidget from './components/pos/PosTransactionPaymentWidget.vue'
 import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWidget.vue'
 // --- POS end-of-day Z-report. The per-report page is now a declarative
@@ -178,7 +175,9 @@ import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
+import EmailReceiptModal from './modals/EmailReceiptModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
+import PrintReceiptModal from './modals/PrintReceiptModal.vue'
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
 //     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
 //     avg response time) and the mTLS client-certificate expiry countdown. ---
@@ -633,12 +632,6 @@ const registry = {
 	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
 	//     declarative); only the bespoke cart-editor form view, the detail's
 	//     header actions and its two grid widgets stay registered. ---
-	PosTransactionHeaderActions: {
-		kind: 'widget',
-		component: PosTransactionHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'PosTransactionDetail actionsComponent: Edit (to the cart editor) and the status-gated confirm/park/resume/settle/refund/receipt actions. They POST to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects, NOT OR /transition, and posTransaction has no x-openregister-lifecycle, so CnLifecycleActions cannot drive them. The page sets showEditAction:false because the schema form cannot edit line items.',
-	},
 	PosTransactionTotalsWidget: {
 		kind: 'widget',
 		component: PosTransactionTotalsWidget,
@@ -660,12 +653,6 @@ const registry = {
 	// --- POS refunds / returns. The PosRefunds list + detail are now declarative
 	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
 	//     declarative). ---
-	PosRefundHeaderActions: {
-		kind: 'widget',
-		component: PosRefundHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'PosRefundDetail actionsComponent: manager-gated Confirm/Reject, which POST to bespoke /api/pos-refunds/{id}/{action} endpoints (posRefund has no x-openregister-lifecycle).',
-	},
 	PosRefundTotalsWidget: {
 		kind: 'widget',
 		component: PosRefundTotalsWidget,
@@ -689,12 +676,6 @@ const registry = {
 		kind: 'page',
 		component: CashShiftListView,
 		_note: 'Cash-shift list; custom so rows navigate to the drawer-reconciliation detail and the empty state offers "Shift openen".',
-	},
-	CashShiftHeaderActions: {
-		kind: 'widget',
-		component: CashShiftHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'CashShiftDetail actionsComponent: Close and count shift, which POSTs to the bespoke /api/pos-shifts/{id}/count endpoint (cashShift has no x-openregister-lifecycle).',
 	},
 	CashShiftDropsWidget: {
 		kind: 'widget',
@@ -1335,6 +1316,20 @@ const registry = {
 	//     dialog cannot express. Placement stays declarative; only the form
 	//     body is app-owned. CnAppRoot mounts these and forwards `close`, so
 	//     each dialog routes to its own detail page on success. ---
+	PrintReceiptModal: {
+		kind: 'modal',
+		component: PrintReceiptModal,
+		propsSchema: null,
+		_note: 'Print a receipt. Target of the print-receipt header action on PosTransactionDetail (props: transactionId); reads the active receipt templates itself.',
+	},
+
+	EmailReceiptModal: {
+		kind: 'modal',
+		component: EmailReceiptModal,
+		propsSchema: null,
+		_note: 'Email a receipt. Target of the email-receipt header action on PosTransactionDetail (props: transactionId); reads the active receipt templates itself.',
+	},
+
 	LetterFromTemplateModal: {
 		kind: 'modal',
 		component: LetterFromTemplateModal,
