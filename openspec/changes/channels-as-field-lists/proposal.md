@@ -9,7 +9,7 @@ The emails, phone numbers and social profiles of a client or contact were drawn 
 - ClientDetail and ContactDetail show a `tabs` card (Emails, Phones, Social profiles) whose tabs are `field-list` widgets, and a `facts` card with the preferred channel, timezone and language.
 - Write email on an address opens the registered `WriteEmailModal`.
 - Every save of emails or phones calls the Nextcloud Contacts write-back; when it fails the save stands and a notice says so.
-- The single `email` and `phone` follow the primary entry of `emails` and `phones` in a pre-save listener, so every edit path keeps them equal, not only this card.
+- The single `email` and `phone` follow the primary entry on the server (`ContactChannelMirrorListener`, change `relationship-and-channel-rules-on-the-server`), so the card does not compute them.
 - Removed: `ContactChannelsSection`, `ContactEmailPhoneModal`, `ContactSocialProfileModal` and the `ContactChannelsWidget` registry entry.
 
 ## Needs

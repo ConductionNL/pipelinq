@@ -9,7 +9,8 @@
  * the after-save call are nextcloud-vue's (CnFieldListWidgetEdit.spec.js);
  * this file pins the config, including the validation the add and edit forms
  * check. The single `email` and `phone` follow the primary entry on the
- * server (ContactChannelMirrorListenerTest).
+ * server (ContactChannelMirrorListenerTest, change
+ * relationship-and-channel-rules-on-the-server).
  *
  * @spec openspec/changes/channels-as-field-lists/specs/contact-channel-details/spec.md#requirement-detail-pages-show-channels-as-field-lists
  */
