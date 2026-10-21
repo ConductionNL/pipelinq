@@ -833,7 +833,7 @@ const registry = {
 
 	CampaignLandingPageWidget: {
 		kind: 'widget',
-		component: sectionWidget('CampaignLandingPageWidget', CampaignLandingPageSection, ({ objectId }) => ({ campaignId: objectId })),
+		component: sectionWidget('CampaignLandingPageWidget', CampaignLandingPageSection, ({ objectId, objectData }) => ({ campaignId: objectId, campaign: objectData })),
 		...PANEL_WIDGET_META,
 		_note: 'CampaignLandingPageSection as a card of the campaign page\'s Overview tab (PqCampagne).',
 	},
