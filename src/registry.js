@@ -33,7 +33,6 @@ import BookingDetailSection from './components/bookings/BookingDetailSection.vue
 import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
-import CommunicationHistory from './components/CommunicationHistory.vue'
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
 //     declarative). The ClientDetail / ContactDetail monolithic page-host views
 //     are gone — the pages are declarative type:"detail" manifest entries whose
@@ -342,7 +341,7 @@ const registry = {
 	ProspectsView: {
 		kind: 'page',
 		component: ProspectsView,
-		_note: 'Full-page expansion of ProspectWidget (refactor-pipelinq-ia-alignment): scored-prospect list with sortable columns + convert-to-lead action over the prospect Pinia store; lib has no declarative type for scored external-source enrichment.',
+		_note: 'Prospects page (refactor-pipelinq-ia-alignment): scored-prospect list with sortable columns + convert-to-lead action over the prospect Pinia store; lib has no declarative type for scored external-source enrichment.',
 	},
 	FeaturesRoadmapView: {
 		kind: 'page',
@@ -669,11 +668,6 @@ const registry = {
 		kind: 'section',
 		component: ActivityTimeline,
 		_note: 'Chronological activity feed for an entity; self-fetches by entityType/entityId.',
-	},
-	CommunicationHistory: {
-		kind: 'section',
-		component: CommunicationHistory,
-		_note: 'Paginated contactmoment feed for an entity; self-fetches by entityType/entityId.',
 	},
 	ProductSupplyWidget: {
 		kind: 'widget',

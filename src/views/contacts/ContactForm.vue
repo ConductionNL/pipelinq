@@ -4,21 +4,9 @@
   -
   - ContactForm — contact-person create/edit form.
   -
-  - ⚠️ THIS COMPONENT IS CURRENTLY UNMOUNTABLE. It is the last file left in
-  - src/views/contacts/; its former siblings ContactList.vue and
-  - ContactDetail.vue were removed when contacts moved to the manifest renderer
-  - (`src/manifest.json` pages `Contacts` → /contacts and `ContactDetail` →
-  - /contacts/:id, both schema-driven, neither naming a component). Nothing
-  - imports this file: a repo-wide search for `ContactForm` outside the file
-  - itself returns only openspec prose, and `grep -rn "views/contacts/" src/`
-  - returns nothing at all. With no importer, no manifest entry and no router
-  - entry, no URL on any instance can render it — so there is no page for a
-  - Playwright test to navigate to, and no screen for a baseline to capture.
+  - Mounted by dialogs/ContactCreateDialog.vue.
   -
-  - The remedy is deletion or re-wiring, which is a product decision and is
-  - raised separately rather than taken here.
-  -
-  - @visual exclude unreachable: zero importers in src/, no manifest page and no router entry name this component, so it is never mounted on any instance and no e2e route exists to drive it
+  - @visual exclude a form inside ContactCreateDialog; it is captured with that dialog
   -->
 <template>
 	<div class="contact-form">

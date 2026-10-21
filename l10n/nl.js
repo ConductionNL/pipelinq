@@ -1,6 +1,8 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "BRP is unavailable right now. Try again in a few minutes.": "De BRP is nu niet bereikbaar. Probeer het over een paar minuten opnieuw.",
+        "Address shown. An audit record was created.": "Adres getoond. Er is een auditregel vastgelegd.",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "De klant betaalt op de pinautomaat van {provider}.",
         "The customer is sent to {provider} to finish the payment.": "De klant gaat naar {provider} om de betaling af te ronden.",

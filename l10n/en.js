@@ -1,6 +1,8 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "BRP is unavailable right now. Try again in a few minutes.": "BRP is unavailable right now. Try again in a few minutes.",
+        "Address shown. An audit record was created.": "Address shown. An audit record was created.",
         "Take the oldest": "Take the oldest",
         "Longest waiting": "Longest waiting",
         "the oldest ticket nobody has picked up": "the oldest ticket nobody has picked up",

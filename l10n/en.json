@@ -1,5 +1,7 @@
 {
     "translations": {
+        "BRP is unavailable right now. Try again in a few minutes.": "BRP is unavailable right now. Try again in a few minutes.",
+        "Address shown. An audit record was created.": "Address shown. An audit record was created.",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "The customer pays at the {provider} card terminal.",
         "The customer is sent to {provider} to finish the payment.": "The customer is sent to {provider} to finish the payment.",

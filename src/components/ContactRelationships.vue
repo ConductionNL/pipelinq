@@ -76,116 +76,16 @@
 			</NcButton>
 		</div>
 
-		<!-- Add relationship dialog -->
-		<!-- The backdrop no longer dismisses on click. That was a MOUSE-ONLY
-		     affordance with no keyboard equivalent, which is what hydra gate-32
-		     reports; the fix is not to give a backdrop role="button" +
-		     tabindex, because a backdrop is presentational and putting it in
-		     the tab order announces it as a control. Dismissal is via the ×
-		     in the header and Cancel, both keyboard-reachable.
-		     This form should follow LeadContactRoles into an NcDialog under
-		     src/dialogs/, which would restore backdrop dismissal along with
-		     Escape and a focus trap; that is a larger change than this one
-		     because of the edit-mode seeding, and is not done here. -->
-		<div v-if="showAddDialog" class="create-overlay">
-			<div class="create-dialog">
-				<div class="create-dialog__header">
-					<h3>
-						{{
-							editingRelationship
-								? t('pipelinq', 'Edit relationship')
-								: t('pipelinq', 'Add relationship')
-						}}
-					</h3>
-					<NcButton variant="tertiary" @click="closeDialog">
-						&times;
-					</NcButton>
-				</div>
-				<div class="create-dialog__body">
-					<div v-if="!editingRelationship" class="form-group">
-						<label>{{ t('pipelinq', 'Related entity') }} *</label>
-						<NcSelect
-							v-model="addForm.toContact"
-							:options="entityOptions"
-							:aria-label-combobox="t('pipelinq', 'Related entity')"
-							labelOutside
-							:placeholder="
-								t('pipelinq', 'Search contacts and clients…')
-							"
-							label="name"
-							:reduce="(opt) => opt.id"
-							@search="searchEntities" />
-					</div>
-					<div class="form-group">
-						<label>{{ t('pipelinq', 'Relationship type') }} *</label>
-						<NcSelect
-							v-model="addForm.type"
-							:options="typeOptions"
-							:aria-label-combobox="t('pipelinq', 'Relationship type')"
-							labelOutside
-							:placeholder="t('pipelinq', 'Select type…')"
-							label="label"
-							:reduce="(opt) => opt.value"
-							@update:modelValue="onTypeSelect" />
-					</div>
-					<div class="form-group">
-						<label for="contact-relationship-notes">{{
-							t('pipelinq', 'Notes')
-						}}</label>
-						<textarea
-							id="contact-relationship-notes"
-							v-model="addForm.notes"
-							rows="2" />
-					</div>
-					<div class="form-row">
-						<div class="form-group">
-							<label for="contact-relationship-start-date">{{
-								t('pipelinq', 'Start date')
-							}}</label>
-							<input
-								id="contact-relationship-start-date"
-								v-model="addForm.startDate"
-								type="date" />
-						</div>
-						<div class="form-group">
-							<label for="contact-relationship-end-date">{{
-								t('pipelinq', 'End date')
-							}}</label>
-							<input
-								id="contact-relationship-end-date"
-								v-model="addForm.endDate"
-								type="date" />
-						</div>
-					</div>
-					<div class="form-group">
-						<label>{{ t('pipelinq', 'Strength') }}</label>
-						<NcSelect
-							v-model="addForm.strength"
-							:options="strengthOptions"
-							:aria-label-combobox="t('pipelinq', 'Strength')"
-							labelOutside
-							:placeholder="t('pipelinq', 'Select strength…')"
-							label="label"
-							:reduce="(opt) => opt.value" />
-					</div>
-					<div class="form-actions">
-						<NcButton
-							variant="primary"
-							:disabled="!addForm.toContact || !addForm.type"
-							@click="saveRelationship">
-							{{
-								editingRelationship
-									? t('pipelinq', 'Save')
-									: t('pipelinq', 'Add')
-							}}
-						</NcButton>
-						<NcButton @click="closeDialog">
-							{{ t('pipelinq', 'Cancel') }}
-						</NcButton>
-					</div>
-				</div>
-			</div>
-		</div>
+		<RelationshipFormDialog
+			v-if="showAddDialog"
+			:editing="Boolean(editingRelationship)"
+			:form="addForm"
+			:entityOptions="entityOptions"
+			:typeOptions="typeOptions"
+			:strengthOptions="strengthOptions"
+			@search="searchEntities"
+			@save="onDialogSave"
+			@close="closeDialog" />
 
 		<!-- Delete confirmation dialog — own file per ADR-004 (modal-isolation). -->
 		<RemoveRelationshipDialog
@@ -200,7 +100,8 @@
 <script>
 import { openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import RelationshipFormDialog from '../dialogs/RelationshipFormDialog.vue'
 import RemoveRelationshipDialog from '../dialogs/RemoveRelationshipDialog.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -304,7 +205,7 @@ export default {
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
-		NcSelect,
+		RelationshipFormDialog,
 		RemoveRelationshipDialog,
 	},
 
@@ -485,20 +386,6 @@ export default {
 			)
 		},
 
-		/**
-		 * @param {string} typeValue The relationship type the user picked.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
-		 */
-		onTypeSelect(typeValue) {
-			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(
-				(t) => t.value === typeValue,
-			)
-			if (typeObj) {
-				this.addForm._inverse = typeObj.inverse
-				this.addForm._category = typeObj.category
-				this.addForm._symmetric = typeObj.symmetric
-			}
-		},
 
 		/**
 		 * @param {string} query The search term typed by the user.
@@ -540,6 +427,17 @@ export default {
 					this.entityOptions = []
 				}
 			}, 300)
+		},
+
+		/**
+		 * Take the dialog's fields and save them.
+		 *
+		 * @param {object} draft The fields the dialog collected.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
+		 */
+		async onDialogSave(draft) {
+			this.addForm = { ...this.addForm, ...draft }
+			await this.saveRelationship()
 		},
 
 		/**
@@ -822,79 +720,6 @@ export default {
 }
 
 /* Dialog styles */
-.create-overlay {
-	position: fixed;
-	top: 0;
-	inset-inline: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 10000;
-}
-
-.create-dialog {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius-large);
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-	width: 500px;
-	max-width: 90vw;
-	max-height: 85vh;
-	overflow-y: auto;
-}
-
-.create-dialog__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 16px 20px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.create-dialog__header h3 {
-	margin: 0;
-}
-
-.create-dialog__body {
-	padding: 20px;
-}
-
-.form-group {
-	margin-bottom: 12px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
-	font-size: 13px;
-}
-
-.form-group textarea,
-.form-group input[type='date'] {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	resize: vertical;
-}
-
-.form-row {
-	display: flex;
-	gap: 12px;
-}
-
-.form-row .form-group {
-	flex: 1;
-}
-
-.form-actions {
-	display: flex;
-	gap: 8px;
-	margin-top: 16px;
-}
-
 @media (prefers-reduced-motion: reduce) {
 	.viewTableRow {
 		transition: none;

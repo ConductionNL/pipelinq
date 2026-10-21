@@ -2,21 +2,21 @@
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <!-- @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1 -->
 <template>
-	<div class="werkplek-agent-status">
+	<div class="agent-availability-toggle">
 		<button
 			type="button"
-			class="werkplek-agent-status__toggle"
+			class="agent-availability-toggle__toggle"
 			:class="{
-				'werkplek-agent-status__toggle--available': isAvailable,
-				'werkplek-agent-status__toggle--unavailable': !isAvailable,
+				'agent-availability-toggle__toggle--available': isAvailable,
+				'agent-availability-toggle__toggle--unavailable': !isAvailable,
 			}"
 			:disabled="saving"
 			:aria-pressed="isAvailable"
 			:aria-label="description"
 			:title="description"
 			@click="toggle">
-			<span class="werkplek-agent-status__dot" />
-			<span class="werkplek-agent-status__label">{{ label }}</span>
+			<span class="agent-availability-toggle__dot" />
+			<span class="agent-availability-toggle__label">{{ label }}</span>
 		</button>
 	</div>
 </template>
@@ -39,7 +39,7 @@ import { generateUrl } from '@nextcloud/router'
  * @spec openspec/specs/kcc-werkplek/spec.md
  */
 export default {
-	name: 'WerkplekAgentStatus',
+	name: 'AgentAvailabilityToggle',
 
 	props: {
 		/**
@@ -125,7 +125,7 @@ export default {
 				} catch {
 					// dialogs lib may be missing in tests — ignore.
 				}
-				console.warn('[WerkplekAgentStatus] availability update failed', e)
+				console.warn('[AgentAvailabilityToggle] availability update failed', e)
 			} finally {
 				this.saving = false
 			}
@@ -135,12 +135,12 @@ export default {
 </script>
 
 <style scoped>
-.werkplek-agent-status {
+.agent-availability-toggle {
 	display: inline-flex;
 	align-items: center;
 }
 
-.werkplek-agent-status__toggle {
+.agent-availability-toggle__toggle {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
@@ -152,34 +152,34 @@ export default {
 	font: inherit;
 }
 
-.werkplek-agent-status__toggle:disabled {
+.agent-availability-toggle__toggle:disabled {
 	opacity: 0.6;
 	cursor: progress;
 }
 
-.werkplek-agent-status__dot {
+.agent-availability-toggle__dot {
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
 	background: var(--color-text-maxcontrast);
 }
 
-.werkplek-agent-status__toggle--unavailable:hover:not(:disabled) {
+.agent-availability-toggle__toggle--unavailable:hover:not(:disabled) {
 	background: var(--color-background-hover);
 }
 
 /* --color-success is a background tint; --color-success-text is the matching foreground. */
-.werkplek-agent-status__toggle--available {
+.agent-availability-toggle__toggle--available {
 	background: var(--color-success);
 	border-color: var(--color-success-hover);
 	color: var(--color-success-text);
 }
 
-.werkplek-agent-status__toggle--available:hover:not(:disabled) {
+.agent-availability-toggle__toggle--available:hover:not(:disabled) {
 	background: var(--color-success-hover);
 }
 
-.werkplek-agent-status__toggle--available .werkplek-agent-status__dot {
+.agent-availability-toggle__toggle--available .agent-availability-toggle__dot {
 	background: var(--color-success-text);
 }
 </style>

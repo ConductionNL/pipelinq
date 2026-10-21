@@ -45,7 +45,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * publishes to the Nextcloud Activity Stream) and from
  * `ActivityTimelineService` (which exposes the multi-source
  * `/api/timeline` endpoint). It serves a single purpose: provide the
- * narrow v1 wire format consumed by `CommunicationHistory.vue`.
+ * narrow v1 wire format of `/api/activity/{entityType}/{entityId}`.
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class is a flat pipeline of
  *  guard-heavy normalisers (OR rows and note payloads arrive in several shapes, each

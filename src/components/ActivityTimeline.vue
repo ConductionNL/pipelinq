@@ -100,6 +100,7 @@ import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Message from 'vue-material-design-icons/Message.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import TimelineTextOutline from 'vue-material-design-icons/TimelineTextOutline.vue'
+import { getUserLocale } from '../services/localeUtils.js'
 
 export default {
 	name: 'ActivityTimeline',
@@ -310,7 +311,7 @@ export default {
 			if (!dateStr) return ''
 			const date = new Date(dateStr)
 			if (isNaN(date.getTime())) return ''
-			return date.toLocaleString('nl-NL', {
+			return date.toLocaleString(getUserLocale(), {
 				day: '2-digit',
 				month: '2-digit',
 				year: 'numeric',
