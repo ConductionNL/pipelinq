@@ -221,7 +221,6 @@ import KassakoppelingAuditDetailView from './views/kassakoppeling/Kassakoppeling
 //     endpoint, the verify-button + verification badge ramp on the detail
 //     view, or the date-range + format export modal. ---
 import KassakoppelingAuditListView from './views/kassakoppeling/KassakoppelingAuditList.vue'
-import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
 // --- Loyalty program (loyalty-program). ---
 import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
@@ -383,12 +382,6 @@ const registry = {
 		kind: 'page',
 		component: ForecastTrendView,
 		_note: 'Forecast trend (inline SVG sparkline of commit/best-case/pipeline), week-over-week delta panel and accuracy table with colour bands; lib gap: no chart-widget page type.',
-	},
-	LeadForecastTab: {
-		kind: 'widget',
-		component: LeadForecastTab,
-		...SIDEBAR_TAB_META,
-		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
 	},
 
 	// --- Lead-management analytics. ---

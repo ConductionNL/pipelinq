@@ -3631,6 +3631,38 @@
 					"showMetadata": true,
 					"tabs": [
 						{
+							"id": "forecast",
+							"label": "Forecast",
+							"icon": "ChartLine",
+							"widgets": [
+								{
+									"type": "data",
+									"content": {
+										"title": "Forecast",
+										"include": ["forecast_category", "commit_justification"],
+										"overrides": {
+											"forecast_category": {
+												"label": "Forecast category",
+												"enumLabels": {
+													"commit": "Commit",
+													"best_case": "Best-case",
+													"pipeline": "Pipeline",
+													"omitted": "Omitted",
+													"closed_won": "Closed Won",
+													"closed_lost": "Closed Lost"
+												},
+												"readOnlyWhen": { "field": "forecast_category", "in": ["closed_won", "closed_lost"] }
+											},
+											"commit_justification": {
+												"label": "Commit justification",
+												"visibleWhen": { "field": "forecast_category", "value": "commit" }
+											}
+										}
+									}
+								}
+							]
+						},
+						{
 							"id": "audit",
 							"label": "History",
 							"icon": "History",

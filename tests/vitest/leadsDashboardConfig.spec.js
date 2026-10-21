@@ -211,3 +211,17 @@ describe('the store', () => {
 		expect(registrySource).not.toMatch(/StoreGallery/)
 	})
 })
+
+describe('the lead forecast', () => {
+	it('is a Forecast tab in the lead sidebar, locked once the deal is closed', () => {
+		const tab = page('LeadDetail').config.sidebar.tabs.find((t) => t.id === 'forecast')
+		const widget = tab.widgets[0]
+		expect(widget.type).toBe('data')
+		expect(widget.content.include).toEqual(['forecast_category', 'commit_justification'])
+		const category = widget.content.overrides.forecast_category
+		expect(category.readOnlyWhen).toEqual({ field: 'forecast_category', in: ['closed_won', 'closed_lost'] })
+		expect(Object.keys(category.enumLabels)).toEqual(['commit', 'best_case', 'pipeline', 'omitted', 'closed_won', 'closed_lost'])
+		expect(widget.content.overrides.commit_justification.visibleWhen).toEqual({ field: 'forecast_category', value: 'commit' })
+		expect(registrySource).not.toMatch(/LeadForecastTab/)
+	})
+})
