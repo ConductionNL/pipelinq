@@ -61,6 +61,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<{value: string, label: string}>} The priorities.
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		priorityOptions() {
 			return [
@@ -72,6 +73,9 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec openspec/specs/lead-management/spec.md
+	 */
 	async mounted() {
 		if (this.field === 'assignee') {
 			this.users = await listAssignableUserIds()

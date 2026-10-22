@@ -68,9 +68,7 @@ describe('the lead side', () => {
 		expect(schema.properties.category.type).toBe('string')
 		expect(schema.required || []).not.toContain('category')
 
-		const form = read('src', 'views', 'leads', 'LeadForm.vue')
-		expect(form).toContain(':modelValue="form.category"')
-		expect(form).toMatch(/category: this\.lead\.category/)
+		expect(read('src', 'services', 'leadCreateForm.js')).toContain("key: 'category'")
 	})
 })
 

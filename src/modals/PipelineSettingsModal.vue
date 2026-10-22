@@ -51,6 +51,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The id of the pipeline the board shows, or ''.
+		 * @spec openspec/specs/pipeline/spec.md#requirement-kanban-board-view-mvp
 		 */
 		pipelineId() {
 			const raw = this.activeFilters?.pipeline
@@ -59,6 +60,9 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec openspec/specs/pipeline/spec.md#requirement-kanban-board-view-mvp
+	 */
 	async mounted() {
 		if (this.pipelineId !== '') {
 			this.pipeline = await useObjectStore().fetchObject('pipeline', this.pipelineId)

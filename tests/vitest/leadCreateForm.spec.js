@@ -181,16 +181,3 @@ describe('the New lead dialog', () => {
 		expect(wrapper.emitted('close')).toBeUndefined()
 	})
 })
-
-describe('the lead category', () => {
-	it('lets a lead carry a category on the form, which routing suggestions read', async () => {
-		const { readFileSync } = await import('node:fs')
-		const { resolve } = await import('node:path')
-		const schema = JSON.parse(
-			readFileSync(resolve(__dirname, '../../lib/Settings/pipelinq_register.json'), 'utf8'),
-		).components.schemas.lead
-		expect(schema.properties.category.type).toBe('string')
-		expect(schema.required || []).not.toContain('category')
-		expect(fieldsOf().map((field) => field.key)).toContain('category')
-	})
-})

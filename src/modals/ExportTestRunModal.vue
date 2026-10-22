@@ -207,6 +207,8 @@ export default {
 	methods: {
 		/**
 		 * Execute the test run and update local result.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md
 		 */
 		async rerun() {
 			this.busy = true

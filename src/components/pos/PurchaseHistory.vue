@@ -94,6 +94,7 @@ export default {
 		 *
 		 * @param {string} iso The ISO timestamp.
 		 * @return {string} The formatted date.
+		 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-003
 		 */
 		formatDate(iso) {
 			if (!iso) {

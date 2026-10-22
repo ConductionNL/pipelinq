@@ -30,6 +30,7 @@ const PRIORITIES = ['low', 'normal', 'high', 'urgent']
  *
  * @param {Array<object>} pipelines The stored pipelines.
  * @return {Array<object>} The lead pipelines.
+ * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
  */
 export function leadPipelines(pipelines) {
 	return (Array.isArray(pipelines) ? pipelines : []).filter((p) => p && p.id && pipelineAppliesTo(p, 'lead'))

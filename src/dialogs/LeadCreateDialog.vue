@@ -47,6 +47,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<object>} The stored pipelines.
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
 		pipelines() {
 			return useObjectStore().collections.pipeline || []
@@ -75,6 +76,9 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
+	 */
 	async created() {
 		await Promise.all([
 			useObjectStore().fetchCollection('pipeline', { _limit: 100 }),

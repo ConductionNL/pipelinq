@@ -8077,7 +8077,14 @@ OC.L10N.register(
         "{workload}/{maxConcurrent} items": "{workload}/{maxConcurrent} items",
         "Assign to {displayName}": "Assign to {displayName}",
         "{value} matching colleagues at capacity": "{value} matching colleagues at capacity",
-        "Choose a payment method.": "Choose a payment method."
+        "Choose a payment method.": "Choose a payment method.",
+        "CSV (.csv)": "CSV (.csv)",
+        "Excel (.xlsx)": "Excel (.xlsx)",
+        "Download the records behind this dashboard as a spreadsheet.": "Download the records behind this dashboard as a spreadsheet.",
+        "Facebook": "Facebook",
+        "Instagram": "Instagram",
+        "TikTok": "TikTok",
+        "YouTube": "YouTube"
     },
     "nplurals=2; plural=(n != 1);"
 )
