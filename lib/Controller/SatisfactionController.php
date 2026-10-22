@@ -80,13 +80,15 @@ class SatisfactionController extends Controller {
 	 * @param string $surveyId The survey's uuid, or '' for every survey.
 	 * @param string $channel  One channel, or '' for every channel.
 	 * @param int    $days     The period in days, 0 for all time.
+	 * @param string $from     The first day of the period (ISO 8601); with `to`, replaces `days`.
+	 * @param string $to       The last day of the period (ISO 8601).
 	 *
 	 * @return JSONResponse The figures, with a per-channel breakdown.
 	 *
 	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	#[NoAdminRequired]
-	public function responseRate(string $surveyId = '', string $channel = '', int $days = 0): JSONResponse {
+	public function responseRate(string $surveyId = '', string $channel = '', int $days = 0, string $from = '', string $to = ''): JSONResponse {
 		$filters = [];
 		if (trim($surveyId) !== '') {
 			$filters['surveyRef'] = trim($surveyId);
@@ -96,10 +98,13 @@ class SatisfactionController extends Controller {
 			$filters['channel'] = trim($channel);
 		}
 
-		$invitations = $this->dispatchService->withinDays(
-			invitations: $this->dispatchService->read(filters: $filters),
-			days: $days
-		);
+		$invitations = $this->dispatchService->read(filters: $filters);
+		if (trim($from) !== '' || trim($to) !== '') {
+			$windowed = $this->dispatchService->withinRange(invitations: $invitations, from: trim($from), to: trim($to));
+			return new JSONResponse($this->dispatchService->responseRate(invitations: $windowed), 200);
+		}
+
+		$invitations = $this->dispatchService->withinDays(invitations: $invitations, days: $days);
 
 		return new JSONResponse($this->dispatchService->responseRate(invitations: $invitations), 200);
 	}//end responseRate()

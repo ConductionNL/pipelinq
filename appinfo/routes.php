@@ -39,6 +39,9 @@ return [
         // Contacts sync (camelCase slug matches ContactSyncController class name)
         ['name' => 'contactSync#search', 'url' => '/api/contacts-sync/search', 'verb' => 'GET'],
         ['name' => 'contactSync#import', 'url' => '/api/contacts-sync/import', 'verb' => 'POST'],
+        // The relationship types and the relationship create (relationship-types-on-the-server).
+        ['name' => 'relationship#types',              'url' => '/api/relationship-types',                    'verb' => 'GET'],
+        ['name' => 'relationship#create',             'url' => '/api/relationships',                         'verb' => 'POST'],
         ['name' => 'contactSync#writeBack', 'url' => '/api/contacts-sync/write-back', 'verb' => 'POST'],
         // Contact-FIRST create — provisions the NC contact and saves the object
         // with the required contactsUid (client-contact unification).
@@ -96,6 +99,8 @@ return [
         // My-work worklist — canonical server-side union of the current user's
         // leads + requests (replaces the MyWorkWidget/MyWork client-side union).
         ['name' => 'worklist#mine', 'url' => '/api/worklist/mine', 'verb' => 'GET'],
+        // The cards of one pipeline's board (leads, requests and the other kinds it applies to).
+        ['name' => 'pipelineBoard#items', 'url' => '/api/pipeline-items', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
         ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
@@ -399,6 +404,7 @@ return [
         // paths precede the {id} wildcard (ADR-016); all are #[NoAdminRequired]
         // with per-action scope enforced in ForecastAccessPolicy (ADR-005).
         ['name' => 'forecast#snapshots',      'url' => '/api/forecast/snapshots',     'verb' => 'GET'],
+        ['name' => 'forecast#summary',        'url' => '/api/forecast/summary',       'verb' => 'GET'],
         ['name' => 'forecast#createOverride', 'url' => '/api/forecast/overrides',     'verb' => 'POST'],
         ['name' => 'forecast#deleteOverride', 'url' => '/api/forecast/overrides/{id}', 'verb' => 'DELETE'],
 
@@ -409,6 +415,7 @@ return [
         // Admin / DPO (Nextcloud admin only; no #[PublicPage] — admin-default).
         ['name' => 'portalAdmin#getConfig',    'url' => '/portal/api/admin/tenant-config', 'verb' => 'GET'],
         ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
+        ['name' => 'portalAdmin#tenants',      'url' => '/portal/api/admin/tenants',       'verb' => 'GET'],
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
         ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
         ['name' => 'portalAdmin#getServiceAccount',  'url' => '/portal/api/admin/service-account', 'verb' => 'GET'],
@@ -468,6 +475,7 @@ return [
         ['name' => 'bookingAdmin#confirmDeposit', 'url' => '/api/bookings/{id}/confirm-deposit', 'verb' => 'POST'],
 
         // Loyalty program (loyalty-program — REQ-LOY-001..010).
+        ['name' => 'loyalty#createAccount',      'url' => '/api/loyalty/accounts',                      'verb' => 'POST'],
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
         ['name' => 'loyalty#getAccountHistory',  'url' => '/api/loyalty/accounts/{accountId}/history',  'verb' => 'GET'],
         ['name' => 'loyalty#getRedemptionOptions',    'url' => '/api/loyalty/redemption/options/{programmeId}/{accountId}', 'verb' => 'GET'],
@@ -480,6 +488,7 @@ return [
         ['name' => 'loyalty#activateGiftCard',  'url' => '/api/loyalty/gift-card/activate/{giftCardId}', 'verb' => 'POST'],
         ['name' => 'loyalty#activateProgramme', 'url' => '/api/loyalty/programme/{programmeId}/activate', 'verb' => 'POST'],
         ['name' => 'loyaltyReporting#kpis',               'url' => '/api/loyalty/reporting/{programmeId}/kpis',          'verb' => 'GET'],
+        ['name' => 'loyaltyReporting#kpisCsv',            'url' => '/api/loyalty/reporting/{programmeId}/kpis/export',   'verb' => 'GET'],
         ['name' => 'loyaltyReporting#liability',          'url' => '/api/loyalty/reporting/{programmeId}/liability',     'verb' => 'GET'],
         ['name' => 'loyaltyReporting#tierDistribution',   'url' => '/api/loyalty/reporting/{programmeId}/tiers',         'verb' => 'GET'],
         ['name' => 'loyaltyReporting#expiryForecast',     'url' => '/api/loyalty/reporting/{programmeId}/expiry-forecast', 'verb' => 'GET'],
@@ -576,6 +585,9 @@ return [
         ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
         // What the resident reads of a ticket, for the preview on TicketDetail (portal-resident-view-preview).
         ['name' => 'residentView#show',               'url' => '/api/tickets/{id}/resident-view',            'verb' => 'GET'],
+        // The answer to the customer, and the saved replies to start it from (answer-and-saved-replies-on-the-server).
+        ['name' => 'ticketAnswer#answer',             'url' => '/api/tickets/{id}/answer',                   'verb' => 'POST'],
+        ['name' => 'savedReply#index',                'url' => '/api/saved-replies',                         'verb' => 'GET'],
 
         // Shillinq time-intake billing handoff — real emit side of the
         // time-approval-workflow delegation (time-billing-handoff-emit).
@@ -718,6 +730,7 @@ return [
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
         ['name' => 'blast#create',     'url' => '/api/blasts',                     'verb' => 'POST'],
+        ['name' => 'blast#attributions', 'url' => '/api/blasts/attribution',      'verb' => 'GET'],
         ['name' => 'blast#send',       'url' => '/api/blasts/{id}/send',           'verb' => 'POST'],
         ['name' => 'blast#cancel',     'url' => '/api/blasts/{id}/cancel',         'verb' => 'POST'],
         ['name' => 'blast#deliveries', 'url' => '/api/blasts/{id}/deliveries',     'verb' => 'GET'],
@@ -742,14 +755,6 @@ return [
         // Specific routes precede any wildcard {path} catch-all (ADR-016).
         ['name' => 'kccWerkplek#stateAction',           'url' => '/api/kcc-werkplek/state',        'verb' => 'GET'],
         ['name' => 'kccWerkplek#setAvailabilityAction', 'url' => '/api/kcc-werkplek/availability', 'verb' => 'PUT'],
-
-        // xWiki integration proxy (xwiki-integration). Thin GET proxy to the
-        // xWiki REST API; all endpoints are #[NoAdminRequired] + #[NoCSRFRequired]
-        // and admin-tunable via xwiki_* settings.
-        ['name' => 'xWiki#search', 'url' => '/api/xwiki/search',                    'verb' => 'GET'],
-        ['name' => 'xWiki#pages',  'url' => '/api/xwiki/pages',                     'verb' => 'GET'],
-        ['name' => 'xWiki#page',   'url' => '/api/xwiki/page/{wiki}/{page}',        'verb' => 'GET', 'requirements' => ['page' => '.+']],
-        ['name' => 'xWiki#status', 'url' => '/api/xwiki/status',                    'verb' => 'GET'],
 
         // AVG / DSAR (GDPR data-subject request) — the entire app-side workflow
         // (avgVerzoek#*, avgEvidence#*, avgRedaction#*, avgDenial#*, avgBundle#*)

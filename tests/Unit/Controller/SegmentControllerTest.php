@@ -526,7 +526,7 @@ class SegmentControllerTest extends TestCase {
 	/**
 	 * The preview endpoint delegates straight to
 	 * `SegmentService.previewRulePayload()` and answers whatever it returns —
-	 * this is the endpoint SegmentBuilder.vue calls before a Segment has an
+	 * this is the endpoint the segment rule editor calls before a Segment has an
 	 * id (marketing-segments-ui-repair, pipelinq#773).
 	 *
 	 * @return void

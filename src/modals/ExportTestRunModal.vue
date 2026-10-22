@@ -74,10 +74,20 @@ export default {
 		NcNoteCard,
 	},
 
+	// An open-modal row action also hands over the row as `object`.
+	inheritAttrs: false,
+
 	props: {
+		/** The job to test; a list row's open-modal action passes it as `objectId`. */
 		jobId: {
 			type: String,
-			required: true,
+			default: '',
+		},
+
+		/** The job id an index row action hands over (`open-modal`). */
+		objectId: {
+			type: String,
+			default: '',
 		},
 
 		initialResult: {
@@ -197,11 +207,13 @@ export default {
 	methods: {
 		/**
 		 * Execute the test run and update local result.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md
 		 */
 		async rerun() {
 			this.busy = true
 			try {
-				const data = await exportApi.testRun(this.jobId)
+				const data = await exportApi.testRun(this.jobId || this.objectId)
 				this.result = data || { success: false, errors: ['No response'] }
 			} catch (e) {
 				this.result = {

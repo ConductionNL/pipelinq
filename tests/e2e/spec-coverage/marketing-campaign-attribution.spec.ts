@@ -366,7 +366,7 @@ test.describe('Search queries page', () => {
 		).toBeVisible({
 			timeout: 15000,
 		})
-		const empty = page.getByTestId('search-queries-empty')
+		const empty = page.getByText('No search data yet', { exact: false }).first()
 		await expect(empty).toBeVisible({ timeout: 15000 })
 		await expect(empty).toContainText('No search data yet')
 		await expect(empty).toContainText('Search Console')

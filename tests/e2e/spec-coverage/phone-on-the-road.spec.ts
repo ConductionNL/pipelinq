@@ -96,7 +96,7 @@ test('a client number is a call link that keeps the number as typed', async ({
 	})
 	await gotoAppRoute(page, `/clients/${client}`)
 
-	const link = page.locator('[data-testid="contact-link-phone"]')
+	const link = page.locator('[data-testid="cn-action-call"]')
 	await expect(link).toBeVisible({ timeout: 20000 })
 	await expect(link).toHaveAttribute('href', 'tel:0612345678')
 	await expect(link).toContainText('06 12 34 56 78')

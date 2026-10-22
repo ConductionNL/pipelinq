@@ -33,7 +33,6 @@ import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 import { applyMenuModules } from '../../src/utils/menuModules.js'
 import { buildProfiledManifest } from '../../src/utils/structureProfile.js'
-import { ticketConversation } from '../../src/utils/ticketConversation.js'
 
 // The library barrel does not load outside a bundler. The stand-in draws what
 // it is handed, so the section's own work (which ticket, which messages,
@@ -245,7 +244,7 @@ describe('the primary button', () => {
 		)
 	})
 
-	it('opens the answer dialog, which is CustomerReplySection and nothing else', () => {
+	it('opens the answer dialog, which saves through the one answer endpoint', () => {
 		const answer = actionsById['ticket-answer']
 		expect(answer).toMatchObject({
 			type: 'open-modal',
@@ -255,9 +254,8 @@ describe('the primary button', () => {
 			/TicketAnswerDialog: \{\s+kind: 'modal',\s+component: TicketAnswerDialog,/,
 		)
 		const dialog = read('src', 'dialogs', 'TicketAnswerDialog.vue')
-		expect(dialog).toMatch(/<CustomerReplySection\s+v-if="ticketId"/)
-		expect(dialog).toContain(':objectId="ticketId"')
-		expect(dialog).toContain('inDialog')
+		expect(dialog).toContain("'/apps/pipelinq/api/tickets/{id}/answer'")
+		expect(dialog).toContain('url="/apps/pipelinq/api/saved-replies"')
 		expect(dialog).toContain("emit('cn:page:refresh', {})")
 	})
 })
@@ -385,6 +383,8 @@ describe('the pills and the side column', () => {
 			'side-case',
 			'ticket-related',
 			'ticket-resident-view',
+			'ticket-resident-view-portal',
+			'ticket-resident-view-internal',
 		])
 		for (const card of simple.sideColumn.filter(
 			(item) => typeof item !== 'string',
@@ -419,7 +419,7 @@ describe('the body', () => {
 		}
 	})
 
-	it('keeps every widget the page had, as a tab', () => {
+	it('keeps every widget the page had, as a tab, except the Decisions tab\'s Convert to case', () => {
 		const panels = simple.widgets.find((widget) => widget.id === 'ticket-panels')
 		const tabbed = panels.content.tabs.flatMap(
 			(tab) => tab.widgetIds || [tab.widgetId],
@@ -429,8 +429,13 @@ describe('the body', () => {
 			(widget) => widget.id !== 'ticket-panels',
 		)
 		for (const widget of children) {
+			if (widget.id === 'ticket-decision-convert') {
+				// The simple page offers it in its Case section: see the test below.
+				expect(tabbed).not.toContain(widget.id)
+				continue
+			}
 			expect(tabbed, widget.id).toContain(widget.id)
-			if (['ticket-decision-routes', 'ticket-data'].includes(widget.id)) {
+			if (widget.id === 'ticket-data') {
 				// The widgets the simple page changes: see the tests below.
 				continue
 			}
@@ -444,21 +449,23 @@ describe('the body', () => {
 	})
 
 	it('offers Convert to case once: in the Case section, not again on the Decisions tab', () => {
-		const head = (config) =>
-			config.widgets.find((widget) => widget.id === 'ticket-decision-routes')
-		const section = (config) =>
-			(config.widgets || []).filter(
-				(item) => item.type === 'RequestConversionWidget',
-			)
-		// The simple page has the Case section, so the tab's head leaves it out.
-		expect(section(simple)).toHaveLength(1)
-		expect(head(simple).content.convert).toBe(false)
-		expect(head(simple).type).toBe('TicketDecisionRoutesWidget')
-		// The full page has no Case section, so the tab's head offers it.
-		expect(section(full.config)).toHaveLength(0)
-		expect(head(full.config).content.convert).toBeUndefined()
-		// The widget reads the switch from its content; the action shows by default.
-		expect(registrySource).toContain('hideConvert: content.convert === false')
+		const converts = (config) =>
+			(config.widgets || [])
+				.filter(
+					(item) =>
+						item.type === 'handoff'
+						&& item.content.action.url.endsWith('/convert-to-case'),
+				)
+				.map((item) => item.id)
+		// The simple page has the Case section, so the Decisions tab leaves it out.
+		expect(converts(simple)).toEqual(['ticket-case'])
+		// The full page has no Case section, so the Decisions tab offers it.
+		expect(converts(full.config)).toEqual(['ticket-decision-convert'])
+		const ticketCase = simple.widgets.find((item) => item.id === 'ticket-case')
+		const tabConvert = full.config.widgets.find(
+			(item) => item.id === 'ticket-decision-convert',
+		)
+		expect(ticketCase.content).toEqual(tabConvert.content)
 	})
 
 	it('lists the contact moments logged on this ticket, which is what Log contact writes', () => {
@@ -509,33 +516,27 @@ describe('the body', () => {
 			'routing-suggestions',
 		])
 		const moved = {
-			'dossier-snapshot': [
-				'ticket-dossier',
-				'DossierSnapshotWidget',
-				'DossierSnapshotSection',
-			],
-			'woo-conversion': [
-				'ticket-woo',
-				'WooConversionWidget',
-				'WooConversionSection',
-			],
-			'resident-view': [
-				'ticket-resident-view',
-				'ResidentViewWidget',
-				'ResidentViewSection',
-			],
+			'dossier-snapshot': ['ticket-dossier', 'field-list', null],
+			'woo-conversion': ['ticket-woo', 'handoff', null],
 		}
 		for (const section of full.config.bodyWidgets) {
 			if (
 				section.id === 'customer-reply'
 				|| section.id === 'routing-suggestions'
+				|| section.type === 'facts'
 			) {
 				continue
 			}
 			const [id, type, component] = moved[section.id]
-			expect(section.component).toBe(component)
 			const widget = simple.widgets.find((item) => item.id === id)
 			expect(widget.type, section.id).toBe(type)
+			if (component === null) {
+				// A library widget: the section and the tab declare the same content.
+				expect(section.type).toBe(type)
+				expect(widget.content).toEqual(section.content)
+				continue
+			}
+			expect(section.component).toBe(component)
 			expect(registrySource).toMatch(
 				new RegExp(
 					`\\n\\t${type}: \\{\\s+kind: 'widget',\\s+component: sectionWidget\\(\\s+'${type}',\\s+${component},`,
@@ -543,27 +544,31 @@ describe('the body', () => {
 			)
 		}
 		for (const [id, type] of [
-			['ticket-conversation', 'TicketConversationWidget'],
-			['ticket-case', 'RequestConversionWidget'],
+			['ticket-conversation', 'conversation'],
+			['ticket-case', 'handoff'],
 		]) {
 			expect(simple.widgets.find((item) => item.id === id).type).toBe(type)
 		}
-		expect(registrySource).toMatch(
-			/sectionWidget\(\s+'TicketConversationWidget',\s+TicketConversationSection,\s+\(\) => \(\{\}\),\s+\{ card: true, context: true \},/,
-		)
+	})
+
+	it('shows the resident view as the same facts cards on both pages', () => {
+		for (const [full_, simple_] of [['resident-view', 'ticket-resident-view'], ['resident-view-portal', 'ticket-resident-view-portal'], ['resident-view-internal', 'ticket-resident-view-internal']]) {
+			const section = full.config.bodyWidgets.find((item) => item.id === full_)
+			const widget = simple.widgets.find((item) => item.id === simple_)
+			expect(section.type).toBe('facts')
+			expect(widget.type).toBe('facts')
+			expect(widget.content.endpointSource).toEqual(section.content.endpointSource)
+			expect(widget.content.rowsPath).toBe(section.content.rowsPath)
+			expect(widget.visibleWhen).toEqual({ field: 'ticketType', op: 'eq', value: 'request' })
+		}
 	})
 
 	it('offers convert to case through the section that asks first whether it can', () => {
-		const source = read(
-			'src',
-			'views',
-			'requests',
-			'RequestConversionSection.vue',
+		const ticketCase = simple.widgets.find((item) => item.id === 'ticket-case')
+		expect(ticketCase.content.availability.url).toBe(
+			'/apps/pipelinq/api/handoff/request/@objectId/availability',
 		)
-		expect(registrySource).toContain(
-			'({ objectId }) => ({ requestId: objectId })',
-		)
-		expect(source).toContain('requestId: {')
+		expect(ticketCase.content.canPath).toBe('canConvert')
 		expect(read('appinfo', 'routes.php')).toContain(
 			"'/api/handoff/request/{id}/convert-to-case'",
 		)
@@ -579,6 +584,10 @@ describe('the words', () => {
 				value.forEach((item) => collect(item, key))
 			} else if (value && typeof value === 'object') {
 				for (const [name, inner] of Object.entries(value)) {
+					// A field-list `row` names paths, not words.
+					if (name === 'row') {
+						continue
+					}
 					collect(
 						inner,
 						name === 'labels' ? 'label' : key === 'label' ? key : name,
@@ -649,103 +658,30 @@ describe('the built page', () => {
 })
 
 describe('the conversation', () => {
-	it('puts replies and answers in one thread, oldest first', () => {
-		expect(
-			ticketConversation({
-				portalReplies: [
-					{
-						message: 'Second question',
-						createdAt: '2026-10-03T10:00:00Z',
-					},
-					{ message: 'First question', createdAt: '2026-10-01T10:00:00Z' },
-				],
-				portalAnswers: [
-					{ message: 'First answer', createdAt: '2026-10-02T10:00:00Z' },
-				],
-				customerMessage: 'First answer',
-			}).map((message) => [message.side, message.text]),
-		).toEqual([
-			['them', 'First question'],
-			['us', 'First answer'],
-			['them', 'Second question'],
-		])
+	const thread = () => simple.widgets.find((widget) => widget.id === 'ticket-conversation')
+
+	it('puts replies and answers in one thread, read only', () => {
+		expect(thread().type).toBe('conversation')
+		expect(thread().content).toMatchObject({
+			fields: [
+				{ field: 'portalReplies', side: 'them' },
+				{ field: 'portalAnswers', side: 'us' },
+			],
+			textField: 'message',
+			timeField: 'createdAt',
+			usLabel: 'Employee',
+			allowReply: false,
+		})
 	})
 
-	it('adds an answer saved before answers were kept with their moment', () => {
-		expect(
-			ticketConversation({
-				portalReplies: [
-					{ message: 'Hello', createdAt: '2026-10-01T10:00:00Z' },
-				],
-				customerMessage: ' We are on it. ',
-			}),
-		).toEqual([
-			{
-				id: 'them-0',
-				text: 'Hello',
-				time: '2026-10-01T10:00:00Z',
-				side: 'them',
-			},
-			{ id: 'us-current', text: 'We are on it.', time: '', side: 'us' },
-		])
+	it('shows nothing on a contact moment', () => {
+		expect(thread().visibleWhen).toEqual({ field: 'ticketType', op: 'neq', value: 'interaction' })
 	})
 
-	it('is empty for a ticket without messages, and skips entries that are not messages', () => {
-		expect(ticketConversation(null)).toEqual([])
-		expect(ticketConversation({})).toEqual([])
-		expect(
-			ticketConversation({
-				portalReplies: [null, 'text', { message: '  ' }, { createdAt: 'x' }],
-				portalAnswers: 'no list',
-			}),
-		).toEqual([])
-	})
-
-	it('is read from fields the ticket has', () => {
+	it('is read from fields the ticket has; an answer saved before answers were kept is backfilled on the server', () => {
 		for (const field of ['portalReplies', 'portalAnswers', 'customerMessage']) {
 			expect(ticketProperties[field], field).toBeTruthy()
 		}
-	})
-})
-
-describe('the conversation section', () => {
-	it('draws the thread from the ticket the page holds, and nothing for a contact moment', async () => {
-		const { mount } = await import('@vue/test-utils')
-		const { ref } = await import('vue')
-		const { default: Section } =
-			await import('../../src/components/TicketConversationSection.vue')
-		const context = ref({
-			object: {
-				ticketType: 'request',
-				portalReplies: [
-					{ message: 'Where is my permit?', createdAt: '2026-10-01' },
-				],
-				portalAnswers: [
-					{ message: 'It is on its way.', createdAt: '2026-10-02' },
-				],
-			},
-		})
-		const wrapper = mount(Section, {
-			global: { provide: { cnSectionContext: context } },
-		})
-		expect(wrapper.find('[data-testid="ticket-conversation"]').exists()).toBe(
-			true,
-		)
-		expect(wrapper.text()).toContain('them:Where is my permit?')
-		expect(wrapper.text()).toContain('us:It is on its way.')
-		expect(wrapper.find('textarea').exists()).toBe(false)
-
-		// The page reloaded after an answer: the thread follows.
-		context.value = {
-			object: { ...context.value.object, customerMessage: 'Sent today.' },
-		}
-		await wrapper.vm.$nextTick()
-		expect(wrapper.text()).toContain('us:Sent today.')
-
-		context.value = { object: { ticketType: 'interaction' } }
-		await wrapper.vm.$nextTick()
-		expect(wrapper.find('[data-testid="ticket-conversation"]').exists()).toBe(
-			false,
-		)
+		expect(read('appinfo', 'info.xml')).toContain('BackfillConversationFields')
 	})
 })

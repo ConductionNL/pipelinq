@@ -41,75 +41,12 @@
  *   turned a silent no-op into a TypeError, so the affordance was deleted
  *   rather than left advertising a feature nobody had built.
  *
- *   ⚠️ And it could never have fired anyway: NOTHING imports ProspectWidget,
- *   so it and ProspectCard are tree-shaken out — `prospect-widget` appears
- *   zero times in the built bundle. `/prospects` is served by ProspectsView,
- *   which does not use ProspectCard at all. Both components are orphaned,
- *   which is a larger cleanup than removing one button and is left alone here.
+ *   It could never have fired anyway: nothing imported ProspectWidget, and
+ *   `/prospects` is served by ProspectsView. ProspectWidget and ProspectCard
+ *   have since been deleted (PL-ABSTRACT PL1).
  * - `validateLeaf` / `searchContacts` live in components nothing imports, so
  *   they are absent from every built chunk and cannot be reached at all.
  */
-import { expect, test } from '@playwright/test'
-import { gotoAppRoute } from './helpers/pipelinq.ts'
-
-test.describe('rapportage win/loss range events', () => {
-	test.setTimeout(120000)
-
-	/**
-	 * WinLossWidget emits `rangeChange`; LeadAnalyticsSection.onRangeChange
-	 * stores the range and calls loadStats(), which re-fetches
-	 * GET /api/rapportage/pipeline-stats with dateFrom/dateTo.
-	 *
-	 * That re-fetch is the whole assertion, and it is a clean one because the
-	 * widget mounts on "All time", which sends NO date parameters. So a request
-	 * carrying `dateFrom` can only exist if the emit reached the parent. Under
-	 * the kebab/camel casing bug the selector still changed and the chart still
-	 * looked alive — nothing re-fetched, and the numbers silently stayed on the
-	 * all-time window.
-	 */
-	test('rangeChange reaches LeadAnalyticsSection and re-fetches the stats', async ({
-		page,
-	}) => {
-		const datedRequests: string[] = []
-		page.on('request', (request) => {
-			const url = request.url()
-			if (url.includes('pipeline-stats') && url.includes('dateFrom')) {
-				datedRequests.push(url)
-			}
-		})
-
-		// One load, not two: openApp() booted the Dashboard and the next
-		// line navigated straight off it.
-		await gotoAppRoute(page, '/rapportage')
-
-		// The initial mount fetch carries no date parameters, so nothing should
-		// have been recorded yet; if it has, the assertion below would pass for
-		// the wrong reason.
-		const rangeSelect = page
-			.locator('.vs__dropdown-toggle, .v-select')
-			.filter({ hasText: /All time|Last 30 days|Last 90 days|Last 12 months/ })
-			.first()
-		await expect(rangeSelect).toBeVisible({ timeout: 60000 })
-		expect(
-			datedRequests,
-			'a dated pipeline-stats request fired before the range was ever changed — the assertion below would not prove anything',
-		).toHaveLength(0)
-
-		await rangeSelect.click()
-		await page
-			.locator('.vs__dropdown-menu li', { hasText: 'Last 30 days' })
-			.first()
-			.click()
-
-		await expect
-			.poll(() => datedRequests.length, {
-				message:
-					'selecting "Last 30 days" produced no pipeline-stats request carrying dateFrom — onRangeChange() never ran, which means the rangeChange event did not reach LeadAnalyticsSection',
-				timeout: 30000,
-			})
-			.toBeGreaterThan(0)
-	})
-})
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ⚠️ THE CONSENT-MODAL CHAINS ARE NOT TESTED HERE. This is the measurement,

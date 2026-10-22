@@ -88,10 +88,11 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 					method: 'DELETE',
 					headers: headers(),
 				})
+				// A refused remove (a value records still use) answers its reason.
+				const data = await response.json().catch(() => ({}))
 				if (!response.ok) {
-					throw new Error(`Failed to remove channel (${response.status})`)
+					throw new Error(data.message || `Failed to remove channel (${response.status})`)
 				}
-				const data = await response.json()
 
 				if (!data.success) {
 					throw new Error(data.message || 'Failed to remove channel')

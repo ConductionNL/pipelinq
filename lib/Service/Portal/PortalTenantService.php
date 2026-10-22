@@ -145,6 +145,40 @@ class PortalTenantService {
 	}//end getConfig()
 
 	/**
+	 * Every tenant with a stored config, once each, by its display name, with
+	 * the default tenant first whether or not it is stored.
+	 *
+	 * @return array<int, array{id: string, label: string}> The tenants.
+	 *
+	 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-portal-tenant-is-picked-from-the-tenants
+	 */
+	public function listTenants(): array {
+		$labels = [self::DEFAULT_TENANT => self::DEFAULT_TENANT];
+		foreach ($this->repository->findAll(self::SCHEMA) as $config) {
+			$tenantId = trim((string) ($config['tenantId'] ?? ''));
+			if ($tenantId === '' || ($tenantId !== self::DEFAULT_TENANT && isset($labels[$tenantId]) === true)) {
+				continue;
+			}
+
+			$name = trim((string) ($config['displayName'] ?? ''));
+			$labels[$tenantId] = $tenantId;
+			if ($name !== '') {
+				$labels[$tenantId] = $name;
+			}
+		}
+
+		$others = array_diff_key($labels, [self::DEFAULT_TENANT => true]);
+		ksort($others);
+
+		$tenants = [];
+		foreach ([self::DEFAULT_TENANT => $labels[self::DEFAULT_TENANT]] + $others as $tenantId => $label) {
+			$tenants[] = ['id' => (string) $tenantId, 'label' => $label];
+		}
+
+		return $tenants;
+	}//end listTenants()
+
+	/**
 	 * The full admin view of a tenant's config: the stored record, or the
 	 * defaults the portal applies when no record exists yet.
 	 *

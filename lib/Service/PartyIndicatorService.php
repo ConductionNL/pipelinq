@@ -78,6 +78,13 @@ class PartyIndicatorService {
 	private const VALUE_LIMIT = 200;
 
 	/**
+	 * The order indicators are shown in: the loudest first.
+	 *
+	 * @var array<string, int>
+	 */
+	private const SEVERITY_RANK = ['critical' => 0, 'warning' => 1, 'info' => 2];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config, holding the schema ids.
@@ -174,8 +181,33 @@ class PartyIndicatorService {
 			];
 		}
 
-		return $resolved;
+		return self::loudestFirst(indicators: $resolved);
 	}//end resolve()
+
+	/**
+	 * Indicators ordered critical, warning, info, then by label.
+	 *
+	 * @param array<int, array<string, mixed>> $indicators The indicators.
+	 *
+	 * @return array<int, array<string, mixed>> The same indicators, sorted.
+	 *
+	 * @spec openspec/changes/party-band-as-configuration/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-come-loudest-first
+	 */
+	public static function loudestFirst(array $indicators): array {
+		usort(
+			$indicators,
+			static function (array $a, array $b): int {
+				$rank = (self::SEVERITY_RANK[$a['severity'] ?? ''] ?? 1) <=> (self::SEVERITY_RANK[$b['severity'] ?? ''] ?? 1);
+				if ($rank !== 0) {
+					return $rank;
+				}
+
+				return strcmp((string)($a['label'] ?? ''), (string)($b['label'] ?? ''));
+			}
+		);
+
+		return $indicators;
+	}//end loudestFirst()
 
 	/**
 	 * Whether an act on a party is blocked, and by which indicator.

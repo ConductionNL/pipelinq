@@ -36,6 +36,8 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IRequest;
+use OCA\Pipelinq\Service\ResidentViewRows;
+use OCP\IL10N;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -93,6 +95,7 @@ class ResidentViewControllerTest extends TestCase {
 			new PortalContributionProvider(),
 			$tenant,
 			$apps,
+			new ResidentViewRows($this->l10n()),
 		);
 	}//end controller()
 
@@ -228,4 +231,42 @@ class ResidentViewControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 		$this->assertArrayNotHasKey('bespoke', $response->getData());
 	}//end testAnUnreadableTicketIsNotFound()
+	/**
+	 * A translator that marks what it translated.
+	 *
+	 * @return IL10N The stub.
+	 */
+	private function l10n(): IL10N {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text): string => 'nl:' . $text);
+		return $l10n;
+	}//end l10n()
+
+	/**
+	 * The panels come as labelled, translated rows a facts card draws.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/resident-view-as-configuration/specs/resident-view-preview/spec.md#requirement-the-server-answers-the-preview-as-labelled-rows
+	 */
+	public function testThePanelsComeAsLabelledRows(): void {
+		$rows = new ResidentViewRows($this->l10n());
+
+		$resident = $rows->residentRows(
+			bespoke: [
+				'number' => 'Z-1', 'subject' => 'Bin', 'category' => null, 'status' => 'new', 'date' => '2026-10-01', 'body' => 'Full',
+				'assigneeHidden' => true,
+				'notes' => [['author' => 'handler', 'message' => 'On it'], ['author' => 'resident', 'message' => 'Thanks']],
+			]
+		);
+		$this->assertSame(['label' => 'nl:Number', 'value' => 'Z-1'], $resident[0]);
+		$this->assertSame(['label' => 'nl:Category', 'value' => '-'], $resident[2]);
+		$this->assertSame(['nl:Number', 'nl:Subject', 'nl:Category', 'nl:Status', 'nl:Date', 'nl:Description', 'nl:You', 'nl:Resident'], array_column($resident, 'label'));
+		$this->assertCount(7, $rows->residentRows(bespoke: ['assignee' => 'Pieter', 'notes' => []]), 'The handler shows when the portal exposes it');
+		$this->assertSame([], $rows->residentRows(bespoke: null));
+
+		$this->assertSame([['label' => 'nl:Subject', 'value' => 'Bin'], ['label' => 'nl:custom', 'value' => '-']], $rows->portalRows(portal: ['fields' => ['title' => 'Bin', 'custom' => '']]));
+		$this->assertSame([['label' => 'nl:Stays internal', 'value' => 'nl:Notes, nl:Priority']], $rows->internalRows(fields: ['notes', 'priority']));
+		$this->assertSame([], $rows->internalRows(fields: []));
+	}//end testThePanelsComeAsLabelledRows()
 }//end class

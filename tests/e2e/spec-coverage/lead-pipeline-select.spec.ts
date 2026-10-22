@@ -38,7 +38,9 @@ async function openNewLeadDialog(page: Page) {
 	await expect(button).toBeVisible({ timeout: 20000 })
 	await button.click()
 
-	const dialog = page.locator('[data-testid="lead-create-dialog"]')
+	const dialog = page
+		.getByRole('dialog')
+		.filter({ has: page.locator('[data-cn-field="pipeline"]') })
 	await expect(dialog).toBeVisible({ timeout: 15000 })
 	return dialog
 }
@@ -48,7 +50,7 @@ test('the New Lead form offers a pipeline rather than an empty list', async ({
 	page,
 }) => {
 	const dialog = await openNewLeadDialog(page)
-	const pipelineField = dialog.locator('[data-testid="lead-form-pipeline"]')
+	const pipelineField = dialog.locator('[data-cn-field="pipeline"]')
 	await expect(pipelineField).toBeVisible({ timeout: 10000 })
 
 	// A default pipeline is auto-assigned when one is marked default, so the
@@ -69,8 +71,8 @@ test('the New Lead form offers a pipeline rather than an empty list', async ({
 // @e2e openspec/specs/lead-management/spec.md#pipeline-value-summary-by-stage
 test('a chosen pipeline unlocks its stages', async ({ page }) => {
 	const dialog = await openNewLeadDialog(page)
-	const pipelineField = dialog.locator('[data-testid="lead-form-pipeline"]')
-	const stageField = dialog.locator('[data-testid="lead-form-stage"]')
+	const pipelineField = dialog.locator('[data-cn-field="pipeline"]')
+	const stageField = dialog.locator('[data-cn-field="stage"]')
 	await expect(stageField).toBeVisible({ timeout: 10000 })
 
 	// Ensure a pipeline is selected — pick the first option when nothing was

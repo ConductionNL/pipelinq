@@ -12,41 +12,14 @@
 
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { beforeAll, describe, expect, it, vi } from 'vitest'
-import { STAGE_COLORS } from '../../src/services/stageColors.js'
+import { describe, expect, it } from 'vitest'
 
-vi.mock('@conduction/nextcloud-vue', () => ({
-	CnIndexPage: {},
-	openRowTarget: vi.fn(),
-}))
-vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => ({}) }))
-vi.mock('../../src/store/modules/settings.js', () => ({
-	useSettingsStore: () => ({ config: {} }),
-}))
-
-let LeadList
-
-beforeAll(async () => {
-	globalThis.t = (app, text) => text
-	LeadList = (await import('../../src/views/leads/LeadList.vue')).default
-})
-
-/**
- * The list's computed values over its own data.
- *
- * @return {object}
- */
-function list() {
-	const ctx = { ...LeadList.data.call({}), settingsStore: { config: {} } }
-	ctx.staleThreshold = LeadList.computed.staleThreshold.call(ctx)
-	return ctx
-}
+const manifest = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'))
+const leads = manifest.pages.find((p) => p.route === '/leads')
 
 describe('lead list board look', () => {
 	it('offers Closes this month on open leads due this month', () => {
-		const chip = LeadList.computed.quickFilters
-			.call(list())
-			.find((f) => f.label === 'Closes this month')
+		const chip = leads.config.quickFilters.find((f) => f.label === 'Closes this month')
 		expect(chip.filter).toEqual({
 			status: 'open',
 			'expectedCloseDate[gte]': '@monthStart',
@@ -56,30 +29,23 @@ describe('lead list board look', () => {
 	})
 
 	it('draws the stage as a pill coloured per stage', () => {
-		const stage = list().columns.find((c) => c.key === 'stage')
+		const stage = leads.config.columns.find((c) => c.key === 'stage')
 		expect(stage.widget).toBe('badge')
-		expect(stage.widgetProps.colorMap).toBe(STAGE_COLORS)
-		expect(STAGE_COLORS.gekwalificeerd).toBe('purple')
-		expect(STAGE_COLORS.won).toBe('success')
+		expect(stage.widgetProps.colorMap.gekwalificeerd).toBe('purple')
+		expect(stage.widgetProps.colorMap.won).toBe('success')
+		expect(stage.widgetProps.colorMap.lost).toBe('error')
 	})
 
 	it('switches between table, cards, the pipeline board and the map', () => {
-		const ctx = list()
-		expect(ctx.viewSwitch).toEqual(['table', 'cards', 'board', 'map'])
-		expect(ctx.viewSwitchLinks).toEqual({ board: { route: 'Pipeline' } })
+		expect(leads.config.viewSwitch).toEqual(['table', 'cards', 'board', 'map'])
+		expect(leads.config.viewSwitchLinks).toEqual({ board: { route: 'Pipeline' } })
 	})
 
-	it('registers the suggested colleagues side card', () => {
-		const registry = readFileSync(
-			resolve(__dirname, '../../src/registry.js'),
-			'utf8',
+	it('declares the suggested colleagues side card as a record list', () => {
+		const manifest = JSON.parse(
+			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
 		)
-		expect(registry).toMatch(/RoutingSuggestionWidget: \{\s*kind: 'widget'/)
-	})
-})
-
-describe('lead list config', () => {
-	it('does not let the page config fall through onto the index page', () => {
-		expect(LeadList.inheritAttrs).toBe(false)
+		const lead = manifest.pages.find((p) => p.id === 'LeadDetail')
+		expect(lead.config.widgets.find((w) => w.id === 'side-suggested').type).toBe('record-list')
 	})
 })

@@ -140,7 +140,13 @@
             ],
             "default": "draft",
             "description": "Where the article stands. Only a published article may be embedded in a mailing or a post.",
-            "title": "Status"
+            "title": "Status",
+            "x-enum-labels": {
+              "draft": "Draft",
+              "review": "In review",
+              "published": "Published",
+              "archived": "Archived"
+            }
           },
           "author": {
             "type": "string",

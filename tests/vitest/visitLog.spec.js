@@ -2,8 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Phone on the road (platform-phone-on-the-road): the tap links and the
- * visit note.
+ * Phone on the road (platform-phone-on-the-road): the visit note. The tap
+ * links are the party-actions band (partyBandConfig.spec.js).
  *
  * The visit payloads are validated against the REAL `ticket` and `crmTask`
  * schemas, assembled the way OpenRegister merges them: every register file
@@ -20,7 +20,6 @@ import addFormats from 'ajv-formats'
 import { readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { mailtoHref, mapHref, telHref } from '../../src/services/contactLinks.js'
 import { buildVisitPayloads, followUpDeadline } from '../../src/services/visitLog.js'
 
 const SETTINGS = resolve(__dirname, '../../lib/Settings')
@@ -77,35 +76,6 @@ const validateTask = ajv.compile(mergedSchema('crmTask'))
 
 const CLIENT = '6f1c1d2e-3b4a-4c5d-8e9f-0a1b2c3d4e5f'
 const LEAD = '7a2b3c4d-5e6f-4a1b-9c2d-3e4f5a6b7c8d'
-
-describe('tap links', () => {
-	it.each([
-		['06 12 34 56 78', 'tel:0612345678'],
-		['+31 6-1234 5678', 'tel:+31612345678'],
-		['0031 20 123 4567', 'tel:+31201234567'],
-		['020/123.45.67', 'tel:0201234567'],
-	])('dials %s as %s', (typed, href) => {
-		expect(telHref(typed)).toBe(href)
-	})
-
-	it.each([null, '', 'n.v.t.'])('makes no call link for %s', (typed) => {
-		expect(telHref(typed)).toBeNull()
-	})
-
-	it('mails an address and ignores something that is not one', () => {
-		expect(mailtoHref(' info@bakkerijdejong.nl ')).toBe(
-			'mailto:info@bakkerijdejong.nl',
-		)
-		expect(mailtoHref('bakkerij')).toBeNull()
-	})
-
-	it('hands an address to the map app, one line per comma', () => {
-		expect(mapHref('Dorpsstraat 1\n1234 AB Utrecht')).toBe(
-			'geo:0,0?q=' + encodeURIComponent('Dorpsstraat 1, 1234 AB Utrecht'),
-		)
-		expect(mapHref('   ')).toBeNull()
-	})
-})
 
 describe('the visit payloads', () => {
 	const base = {

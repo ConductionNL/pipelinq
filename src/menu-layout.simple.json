@@ -881,7 +881,9 @@
 						}
 					},
 					"ticket-related",
-					"ticket-resident-view"
+					"ticket-resident-view",
+					"ticket-resident-view-portal",
+					"ticket-resident-view-internal"
 				],
 				"layout": [
 					{
@@ -1017,18 +1019,14 @@
 					"dossier-snapshot": null,
 					"woo-conversion": null,
 					"resident-view": null,
+					"resident-view-portal": null,
+					"resident-view-internal": null,
 					"routing-suggestions": {
 						"title": "Suggested colleagues"
 					}
 				},
 				"widgets": {
-					"ticket-decision-routes": {
-						"content": {
-							"title": "Decisions",
-							"convert": false
-						},
-						"_note": "The simple page offers Convert to case in its Case section below, with or without decidiq. The Decisions tab does not repeat it."
-					},
+					"ticket-decision-convert": null,
 					"ticket-panels": {
 						"type": "tabs",
 						"title": "Ticket",
@@ -1060,6 +1058,7 @@
 								},
 								{
 									"widgetIds": [
+										"ticket-decision-lead",
 										"ticket-decision-routes",
 										"ticket-decisions",
 										"ticket-case-decisions"
@@ -1199,32 +1198,132 @@
 					},
 					{
 						"id": "ticket-conversation",
-						"type": "TicketConversationWidget",
+						"type": "conversation",
 						"title": "Conversation",
 						"icon": "ForumOutline",
 						"content": {
-							"title": "Conversation"
+							"fields": [
+								{
+									"field": "portalReplies",
+									"side": "them"
+								},
+								{
+									"field": "portalAnswers",
+									"side": "us"
+								}
+							],
+							"textField": "message",
+							"timeField": "createdAt",
+							"usLabel": "Employee",
+							"emptyText": "No messages with the customer yet.",
+							"allowReply": false
+						},
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
 						}
 					},
 					{
 						"id": "ticket-dossier",
-						"type": "DossierSnapshotWidget",
+						"type": "field-list",
 						"title": "Asked about",
-						"icon": "FolderOutline"
+						"icon": "FolderOutline",
+						"visibleWhen": {
+							"field": "subjectReference",
+							"op": "notEmpty"
+						},
+						"content": {
+							"field": "subjectReference.items",
+							"readOnly": true,
+							"lead": "Question about the dossier \"{subjectReference.title}\"",
+							"row": {
+								"title": "title",
+								"href": "url"
+							},
+							"hint": "This is what the resident saw when they asked.",
+							"emptyText": "The dossier held no documents when the question was asked."
+						}
 					},
 					{
 						"id": "ticket-woo",
-						"type": "WooConversionWidget",
+						"type": "handoff",
 						"title": "Woo request",
-						"icon": "FileDocumentOutline"
+						"icon": "FileDocumentOutline",
+						"content": {
+							"availability": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/woo-request/availability"
+							},
+							"canPath": "canConvert",
+							"donePath": "status",
+							"doneValue": "converted",
+							"linkPath": "caseUrl",
+							"action": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/woo-request",
+								"label": "Convert to Woo request"
+							},
+							"labels": {
+								"done": "This question is now a Woo request.",
+								"link": "Open the Woo request"
+							},
+							"errors": {
+								"path": "status",
+								"map": {
+									"intake-failed": {
+										"text": "dossiq could not start the Woo request. Try again later.",
+										"reload": true
+									}
+								},
+								"default": {
+									"text": "This question can no longer be converted.",
+									"reload": true
+								}
+							}
+						}
 					},
 					{
 						"id": "ticket-case",
-						"type": "RequestConversionWidget",
+						"type": "handoff",
 						"title": "Case",
 						"icon": "Gavel",
 						"content": {
-							"title": "Case"
+							"availability": {
+								"url": "/apps/pipelinq/api/handoff/request/@objectId/availability"
+							},
+							"canPath": "canConvert",
+							"donePath": "status",
+							"doneValue": "converted",
+							"referencePath": "caseReference",
+							"copyReference": true,
+							"action": {
+								"url": "/apps/pipelinq/api/handoff/request/@objectId/convert-to-case",
+								"label": "Convert to case"
+							},
+							"labels": {
+								"done": "This request has been converted to a case.",
+								"reference": "Case reference",
+								"success": "Request converted to case.",
+								"copy": "Copy",
+								"copied": "Case reference copied.",
+								"copyFailed": "Could not copy the case reference."
+							},
+							"errors": {
+								"path": "status",
+								"map": {
+									"invalid-status": {
+										"text": "Conversion is no longer available for this request.",
+										"reload": true
+									},
+									"not-available": {
+										"text": "Conversion is no longer available for this request.",
+										"reload": true
+									},
+									"handoff-failed": {
+										"text": "Could not create the case: {reason}"
+									}
+								},
+								"default": "Could not convert this request to a case."
+							}
 						}
 					},
 					{
@@ -1235,9 +1334,69 @@
 					},
 					{
 						"id": "ticket-resident-view",
-						"type": "ResidentViewWidget",
+						"type": "facts",
 						"title": "What the resident sees",
-						"icon": "EyeOutline"
+						"icon": "EyeOutline",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "residentRows",
+							"fields": [],
+							"hideEmpty": false,
+							"notice": {
+								"text": "Everything else on this ticket stays internal."
+							},
+							"emptyText": "The resident portal does not show this ticket.",
+							"errorText": "What the resident sees could not be loaded."
+						}
+					},
+					{
+						"id": "ticket-resident-view-portal",
+						"type": "facts",
+						"title": "In the organisation portal",
+						"icon": "OfficeBuildingOutline",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "portalRows",
+							"fields": [],
+							"hideEmpty": false,
+							"emptyText": "This ticket is not shown in an organisation portal.",
+							"errorText": "What the resident sees could not be loaded."
+						}
+					},
+					{
+						"id": "ticket-resident-view-internal",
+						"type": "facts",
+						"title": "Stays internal",
+						"icon": "EyeOff",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "internalRows",
+							"fields": [],
+							"hideEmpty": false,
+							"emptyText": "Nothing on this ticket stays internal.",
+							"errorText": "What the resident sees could not be loaded."
+						}
 					}
 				]
 			}

@@ -172,3 +172,11 @@
 	.cn-widget-wrapper__content:not(#cn-ground-a):not(#cn-ground-b) {
 	background: transparent;
 }
+
+/* An open lead past its expected close date (the Leads list's `rowClass`
+ * rule): an inset edge in the error colour, as the library's selected row
+ * draws its accent, so the content does not shift. A selected row keeps the
+ * selection accent. */
+.cn-table-row.lead-overdue:not(.cn-table-row--selected) {
+	box-shadow: inset 3px 0 0 0 var(--color-element-error);
+}

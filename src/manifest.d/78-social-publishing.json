@@ -56,7 +56,7 @@
     },
     {
       "id": "SocialPosts",
-      "_note": "Social posts as a declarative type:index page. Add navigates to SocialPostNew, which mounts the one composing surface the change owns (SocialPostComposeModal): the per-network variants, the live character count against each network's own limit and the submit-for-approval step have no declarative equivalent, so showAdd and showFormDialog stay off. Row view opens SocialPostDetail.",
+      "_note": "Social posts as a declarative type:index page. New post opens the one composing surface the change owns (SocialPostComposeModal): the per-network variants, the live character count against each network's own limit and the submit-for-approval step have no declarative equivalent, so showAdd and showFormDialog stay off. Row view opens SocialPostDetail.",
       "route": "/social-posts",
       "type": "index",
       "title": "Social posts",
@@ -78,31 +78,18 @@
             "id": "create",
             "label": "New post",
             "icon": "Plus",
-            "handler": "navigate",
-            "route": "SocialPostNew"
+            "type": "open-modal",
+            "target": "SocialPostComposeModal"
           }
         ]
       }
     },
     {
-      "id": "SocialPostNew",
-      "route": "/social-posts/new",
-      "type": "custom",
-      "title": "New post",
-      "component": "SocialPostFormView",
-      "_note": "Mounts SocialPostComposeModal in create mode (social-publishing). Matches the ArticleNew / SegmentNew / TemplateNew convention of a thin route wrapper around the one editing surface the change owns.",
-      "config": {
-        "register": "pipelinq",
-        "schema": "socialPost"
-      }
-    },
-    {
       "id": "SocialPostDetail",
-      "_note": "Post record as a declarative type:detail page (ADR-062 grid). The post's own metadata auto-renders in the data widget. The approval step is the header's actionsComponent (SocialPostHeaderActions), beside Edit. The RESOLVED text per network and the approvals taken live in SocialPostVariantsSection (placement before-body, because what the post says is the reason a marketer opened the page), and the per-account outcomes with their retry and share actions live in SocialPublicationsSection (placement end). The approval is not lifecycleActions: it has to record WHO decided, which the transition grammar has no field for.",
+      "_note": "Post record as a declarative type:detail page (ADR-062 grid). The post's own metadata auto-renders in the data widget. The approval step is three api-call header actions shown by status, beside Edit: Submit for approval on a draft, Reject and Approve while it waits. The RESOLVED text per network and the approvals taken live in SocialPostVariantsSection (placement before-body, because what the post says is the reason a marketer opened the page), and the per-account outcomes with their retry and share actions live in SocialPublicationsSection (placement end). The approval is not lifecycleActions: it has to record WHO decided, which the transition grammar has no field for.",
       "route": "/social-posts/:id",
       "type": "detail",
       "title": "Social post",
-      "actionsComponent": "SocialPostHeaderActions",
       "config": {
         "register": "pipelinq",
         "schema": "socialPost",
@@ -144,18 +131,14 @@
             "component": "SocialPostVariantsSection",
             "title": "What this says per network",
             "placement": "before-body",
-            "props": {
-              "postId": "@objectId"
-            }
+            "props": { "postId": "@objectId" }
           },
           {
             "id": "social-post-publications",
             "component": "SocialPublicationsSection",
             "title": "Where it went",
             "placement": "end",
-            "props": {
-              "postId": "@objectId"
-            }
+            "props": { "postId": "@objectId" }
           }
         ],
         "sidebar": {
@@ -167,13 +150,42 @@
               "label": "History",
               "icon": "History",
               "widgets": [
-                {
-                  "type": "audit"
-                }
+                { "type": "audit" }
               ]
             }
           ]
-        }
+        },
+        "headerActions": [
+          {
+            "id": "submit",
+            "label": "Submit for approval",
+            "type": "api-call",
+            "method": "POST",
+            "url": "/apps/pipelinq/api/social-posts/@objectId/submit",
+            "variant": "primary",
+            "visibleWhen": { "field": "status", "op": "eq", "value": "draft" },
+            "successMessage": "Submitted for approval"
+          },
+          {
+            "id": "reject",
+            "label": "Reject",
+            "type": "api-call",
+            "method": "POST",
+            "url": "/apps/pipelinq/api/social-posts/@objectId/reject",
+            "visibleWhen": { "field": "status", "op": "eq", "value": "approval" },
+            "successMessage": "Rejected"
+          },
+          {
+            "id": "approve",
+            "label": "Approve",
+            "type": "api-call",
+            "method": "POST",
+            "url": "/apps/pipelinq/api/social-posts/@objectId/approve",
+            "variant": "primary",
+            "visibleWhen": { "field": "status", "op": "eq", "value": "approval" },
+            "successMessage": "Approved"
+          }
+        ]
       }
     },
     {

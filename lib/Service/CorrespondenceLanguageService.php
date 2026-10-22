@@ -103,6 +103,38 @@ class CorrespondenceLanguageService {
 	}//end __construct()
 
 	/**
+	 * The available languages as select options, named as Nextcloud names them.
+	 *
+	 * @return array<int, array{value: string, label: string}> The options, a tag Nextcloud does not name labelled by its tag.
+	 *
+	 * @spec openspec/changes/party-forms-as-configuration/specs/client-forms/spec.md#requirement-the-client-form-is-configuration-shared-by-every-create
+	 */
+	public function options(): array {
+		$names = [];
+		try {
+			$languages = $this->l10nFactory->getLanguages();
+		} catch (Throwable) {
+			$languages = [];
+		}
+
+		foreach (array_merge(($languages['commonLanguages'] ?? []), ($languages['otherLanguages'] ?? [])) as $language) {
+			$names[(string)($language['code'] ?? '')] = (string)($language['name'] ?? '');
+		}
+
+		$options = [];
+		foreach ($this->available() as $tag) {
+			$label = ($names[$tag] ?? '');
+			if ($label === '') {
+				$label = $tag;
+			}
+
+			$options[] = ['value' => $tag, 'label' => $label];
+		}
+
+		return $options;
+	}//end options()
+
+	/**
 	 * The language tags this instance can actually render.
 	 *
 	 * @return array<int, string> The available tags, sorted, always including

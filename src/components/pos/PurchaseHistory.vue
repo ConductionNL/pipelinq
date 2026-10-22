@@ -38,7 +38,7 @@
 						<td>{{ formatDate(row.createdAt) }}</td>
 						<td>{{ row.reference || '—' }}</td>
 						<td>{{ row.itemCount || 0 }}</td>
-						<td>€{{ formatMoney(row.total) }}</td>
+						<td>{{ formatMoney(row) }}</td>
 						<td>
 							<span
 								class="purchase-history__tender"
@@ -54,6 +54,10 @@
 </template>
 
 <script>
+import { getUserLocale } from '../../services/localeUtils.js'
+import { formatEur } from '../../services/posTotals.js'
+import { reportingCurrency } from '../../services/reportingCurrency.js'
+
 export default {
 	name: 'PurchaseHistory',
 	props: {
@@ -86,17 +90,18 @@ export default {
 		},
 
 		/**
-		 * Format an ISO date to a Dutch locale day.
+		 * Format an ISO date as a day in the user's locale.
 		 *
 		 * @param {string} iso The ISO timestamp.
 		 * @return {string} The formatted date.
+		 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-003
 		 */
 		formatDate(iso) {
 			if (!iso) {
 				return '—'
 			}
 			try {
-				return new Date(iso).toLocaleDateString('nl-NL', {
+				return new Date(iso).toLocaleDateString(getUserLocale(), {
 					day: '2-digit',
 					month: '2-digit',
 					year: 'numeric',
@@ -107,14 +112,15 @@ export default {
 		},
 
 		/**
-		 * Format a money amount to two decimals.
+		 * A purchase's total as money, in the purchase's own currency (else the
+		 * reporting currency) and the user's locale.
 		 *
-		 * @param {number} value The amount.
+		 * @param {{total?: number, currency?: string}} row The purchase.
 		 * @return {string} The formatted amount.
+		 * @spec openspec/changes/pl2-pos-locale-fixes/specs/pos-display/spec.md#requirement-a-purchase-total-follows-its-currency-and-the-users-locale
 		 */
-		formatMoney(value) {
-			const num = typeof value === 'number' ? value : Number(value || 0)
-			return num.toFixed(2)
+		formatMoney(row) {
+			return formatEur(Number(row.total || 0), row.currency || reportingCurrency())
 		},
 
 		/**

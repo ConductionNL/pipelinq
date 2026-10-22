@@ -249,6 +249,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 non-empty array.
             -->
             <step>OCA\Pipelinq\Repair\BackfillContactChannelArrays</step>
+            <step>OCA\Pipelinq\Repair\BackfillConversationFields</step>
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
             <!-- Hermiq is an optional peer: the step is a silent no-op without it. -->
             <step>OCA\Pipelinq\Repair\SeedWeeklyReviewAgentTemplate</step>

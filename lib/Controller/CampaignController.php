@@ -34,6 +34,7 @@ use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\CampaignReportService;
 use OCA\Pipelinq\Service\CampaignService;
 use OCA\Pipelinq\Service\LandingPageProvisioningService;
+use OCA\Pipelinq\Service\Marketing\CampaignReportView;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -94,6 +95,7 @@ class CampaignController extends Controller {
 	 * @param LandingPageProvisioningService $landingPages The Portaliq hand-off.
 	 * @param IUserSession $userSession Session.
 	 * @param ObjectOwnerAccessPolicy $policy CRM privilege check.
+	 * @param CampaignReportView $view Shapes the report into the page's rows.
 	 *
 	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
@@ -105,6 +107,7 @@ class CampaignController extends Controller {
 		private readonly LandingPageProvisioningService $landingPages,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly CampaignReportView $view = new CampaignReportView(),
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -169,13 +172,14 @@ class CampaignController extends Controller {
 	 * @param string $id The campaign id or slug.
 	 * @param string|null $from Window start `YYYY-MM-DD`.
 	 * @param string|null $to Window end `YYYY-MM-DD`.
+	 * @param string $model The attribution model the `view` rows split by; '' for the campaign's own.
 	 *
-	 * @return JSONResponse `{campaign, window, channels[], engagement, leads[], totals, models, cost}`.
+	 * @return JSONResponse `{campaign, window, channels[], engagement, leads[], totals, models, cost, view}`.
 	 *
 	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	#[NoAdminRequired]
-	public function report(string $id, ?string $from = null, ?string $to = null): JSONResponse {
+	public function report(string $id, ?string $from = null, ?string $to = null, string $model = ''): JSONResponse {
 		$denied = $this->guard();
 		if ($denied !== null) {
 			return $denied;
@@ -185,6 +189,8 @@ class CampaignController extends Controller {
 		if ($record === null) {
 			return new JSONResponse(['error' => 'not_found'], Http::STATUS_NOT_FOUND);
 		}
+
+		$record['view'] = $this->view->rows(report: $record, model: $model);
 
 		return new JSONResponse($record);
 	}//end report()

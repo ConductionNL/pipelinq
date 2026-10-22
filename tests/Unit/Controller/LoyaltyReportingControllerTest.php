@@ -558,4 +558,39 @@ class LoyaltyGroupedCountRunnerFake extends AggregationRunner {
 	public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query, bool $bypassRbac=false): array {
 		return ['groups' => $this->groups, 'backend' => 'fake', 'cached' => false];
 	}//end runAdhocByRef()
+	/**
+	 * The KPI export downloads one line per metric for the programme.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008-01
+	 */
+	public function testKpiExportDownloadsOneLinePerMetric(): void {
+		$service = $this->realReportingService(
+			accounts: [['status' => 'active', 'currentBalance' => 150], ['status' => 'closed', 'currentBalance' => 50]],
+			programme: ['pointValue' => 0.5],
+		);
+
+		$response = $this->buildController($service)->kpisCsv(programmeId: 'prog-1');
+
+		$this->assertInstanceOf(\OCP\AppFramework\Http\DataDownloadResponse::class, $response);
+		$body = $response->render();
+		$this->assertStringStartsWith("metric,value\n", $body);
+		$this->assertStringContainsString("activeAccounts,1\n", $body);
+		$this->assertStringContainsString("outstandingPoints,200\n", $body);
+		$this->assertStringContainsString("estimatedLiability,100\n", $body);
+	}//end testKpiExportDownloadsOneLinePerMetric()
+
+	/**
+	 * A caller without the CRM capability gets no export.
+	 *
+	 * @return void
+	 */
+	public function testKpiExportRefusesANonPrivilegedUser(): void {
+		$service = $this->realReportingService(accounts: []);
+
+		$response = $this->buildController($service, privileged: false)->kpisCsv(programmeId: 'prog-1');
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}//end testKpiExportRefusesANonPrivilegedUser()
 }//end class

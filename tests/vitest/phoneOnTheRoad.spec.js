@@ -46,12 +46,10 @@ vi.mock('@nextcloud/vue', () => ({
 	},
 }))
 
-let ContactLinks
 let LogVisitAction
 
 beforeAll(async () => {
 	globalThis.t = (app, text) => text
-	ContactLinks = (await import('../../src/components/ContactLinks.vue')).default
 	LogVisitAction = (await import('../../src/components/LogVisitAction.vue'))
 		.default
 })
@@ -65,30 +63,6 @@ beforeEach(() => {
 
 const global = { mixins: [{ methods: { t: (app, text) => text } }] }
 const read = (p) => readFileSync(resolve(__dirname, '../..', p), 'utf8')
-
-describe('ContactLinks', () => {
-	it('dials 0612345678 and still shows the number as typed', () => {
-		const w = mount(ContactLinks, { props: { phone: '06 12 34 56 78' }, global })
-		const link = w.find('[data-testid="contact-link-phone"]')
-		expect(link.attributes('href')).toBe('tel:0612345678')
-		expect(link.text()).toContain('06 12 34 56 78')
-	})
-
-	it('opens the map app with the address', () => {
-		const w = mount(ContactLinks, {
-			props: { address: 'Dorpsstraat 1, Utrecht' },
-			global,
-		})
-		expect(
-			w.find('[data-testid="contact-link-address"]').attributes('href'),
-		).toBe('geo:0,0?q=' + encodeURIComponent('Dorpsstraat 1, Utrecht'))
-	})
-
-	it('renders nothing when there is nothing to link', () => {
-		const w = mount(ContactLinks, { props: {}, global })
-		expect(w.find('ul').exists()).toBe(false)
-	})
-})
 
 describe('LogVisitAction', () => {
 	/**
@@ -159,11 +133,8 @@ describe('LogVisitAction', () => {
 })
 
 describe('callers', () => {
-	it('the registry resolves both sections', () => {
+	it('the registry resolves the visit section', () => {
 		const registry = read('src/registry.js')
-		expect(registry).toMatch(
-			/ContactLinks: \{[\s\S]{0,80}component: ContactLinks/,
-		)
 		expect(registry).toMatch(
 			/LogVisitAction: \{[\s\S]{0,80}component: LogVisitAction/,
 		)
@@ -173,9 +144,10 @@ describe('callers', () => {
 		const pages = JSON.parse(read('src/manifest.json')).pages
 		const widgets = (id) =>
 			pages.find((p) => p.id === id).config.bodyWidgets.map((w) => w.component)
-		expect(widgets('ClientDetail')).toEqual(
-			expect.arrayContaining(['ContactLinks', 'LogVisitAction']),
-		)
+		expect(widgets('ClientDetail')).toContain('LogVisitAction')
+		// Call, mail and directions are the party-actions band's tel:, mailto: and geo: links (partyBandConfig.spec.js).
+		const band = pages.find((p) => p.id === 'ClientDetail').config.bodyWidgets.find((w) => w.id === 'party-indicators')
+		expect(band.content.actions.map((a) => a.target)).toEqual(expect.arrayContaining(['@object.phone|tel', '@object.email|mailto', '@object.address|geo']))
 		// The contact person page calls and mails from its header instead
 		// (PqContactpersoon on the shared relation frame): tel: and mailto:
 		// links, quick actions, so a phone still reaches them in one tap.

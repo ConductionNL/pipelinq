@@ -199,7 +199,8 @@ export default {
 			if (this.postId) {
 				return this.postId
 			}
-			const context = this.cnSectionContext || {}
+			const ctx = this.cnSectionContext
+			const context = (ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx) || {}
 			return context.objectId || context.id || ''
 		},
 

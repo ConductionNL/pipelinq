@@ -9,19 +9,101 @@
 //
 // @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 
-/** The block types a marketer can add; the footer is always present. */
-export const ADDABLE_TYPES = [
-	'heading',
-	'text',
-	'image',
-	'button',
-	'divider',
-	'spacer',
-	'articles',
-]
-
 /** The footer tokens the compliance check needs. */
 export const FOOTER_TOKENS = ['{{physical_address}}', '{{unsubscribe_link}}']
+
+/**
+ * The block types as CnBlockListEditor takes them: label, the fields of the
+ * properties panel and the footer's fixed tokens, in the reader's language.
+ *
+ * @param {(text: string) => string} translate Translates an English source text.
+ * @param {string} [buttonColor] The default button colour.
+ * @return {Array<object>} The types, in palette order, the footer last.
+ * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
+ */
+export function mailBlockTypes(translate, buttonColor = '#00679e') {
+	const tr = translate
+	return [
+		{
+			type: 'heading',
+			label: tr('Heading'),
+			fields: [
+				{ key: 'text', label: tr('Heading text') },
+				{
+					key: 'level',
+					label: tr('Size'),
+					type: 'select',
+					default: 2,
+					options: [
+						{ value: 1, label: tr('Large') },
+						{ value: 2, label: tr('Medium') },
+					],
+				},
+			],
+		},
+		{
+			type: 'text',
+			label: tr('Text'),
+			fields: [
+				{
+					key: 'markdown',
+					label: tr('Text'),
+					type: 'markdown',
+					helperText: tr('Bold, italic, links and lists are kept. Anything else is sent as plain text.'),
+				},
+			],
+		},
+		{
+			type: 'image',
+			label: tr('Image'),
+			summary: ['alt', 'src'],
+			fields: [
+				{ key: 'src', label: tr('Image address (https://)'), type: 'url' },
+				{
+					key: 'alt',
+					label: tr('Alternative text'),
+					required: true,
+					requiredHint: tr('Describe the image for people who cannot see it.'),
+				},
+				{ key: 'href', label: tr('Link (optional)'), type: 'url' },
+			],
+		},
+		{
+			type: 'button',
+			label: tr('Button'),
+			fields: [
+				{ key: 'label', label: tr('Button text') },
+				{ key: 'href', label: tr('Link (https://)'), type: 'url' },
+				{ key: 'color', label: tr('Colour'), type: 'color', default: buttonColor },
+			],
+		},
+		{ type: 'divider', label: tr('Divider'), hint: tr('This block has nothing to set.') },
+		{
+			type: 'spacer',
+			label: tr('Spacer'),
+			fields: [{ key: 'height', label: tr('Height in pixels'), type: 'number', min: 8, max: 96, default: 24 }],
+		},
+		{ type: 'articles', label: tr('Articles'), hint: tr('The articles picked below appear here.') },
+		{
+			type: 'footer',
+			label: tr('Footer'),
+			addable: false,
+			fields: [
+				{
+					key: 'text',
+					label: tr('Footer text'),
+					type: 'textarea',
+					rows: 3,
+					fixedTokensHint: tr('The footer always ends with these two, so the mail can be sent:'),
+					fixedTokens: [
+						{ token: FOOTER_TOKENS[0], label: tr('Your physical address') },
+						{ token: FOOTER_TOKENS[1], label: tr('The unsubscribe link') },
+					],
+				},
+			],
+		},
+	]
+}
 
 let counter = 0
 
@@ -72,54 +154,4 @@ export function withFooterLast(blocks) {
 		: []
 	const footer = list.find((b) => b.type === 'footer') || newBlock('footer')
 	return [...list.filter((b) => b.type !== 'footer'), footer]
-}
-
-/**
- * Move a block up (-1) or down (+1); the footer and the slot above it stay put.
- *
- * @param {Array<object>} blocks The blocks.
- * @param {number} index The block to move.
- * @param {number} delta -1 or +1.
- * @return {Array<object>} The new list (the same list when the move is not possible).
- * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
- */
-export function moveBlock(blocks, index, delta) {
-	const target = index + delta
-	const lastMovable = blocks.length - 2
-	if (blocks[index]?.type === 'footer' || target < 0 || target > lastMovable) {
-		return blocks
-	}
-	const next = blocks.slice()
-	const [moved] = next.splice(index, 1)
-	next.splice(target, 0, moved)
-	return next
-}
-
-/**
- * Remove a block; the footer cannot be removed.
- *
- * @param {Array<object>} blocks The blocks.
- * @param {number} index The block to remove.
- * @return {Array<object>} The new list.
- * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
- */
-export function removeBlock(blocks, index) {
-	if (blocks[index]?.type === 'footer') {
-		return blocks
-	}
-	return blocks.filter((_b, i) => i !== index)
-}
-
-/**
- * Insert a new block of a type just above the footer.
- *
- * @param {Array<object>} blocks The blocks.
- * @param {string} type The block type.
- * @return {Array<object>} The new list.
- * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
- */
-export function addBlock(blocks, type) {
-	const list = withFooterLast(blocks)
-	list.splice(list.length - 1, 0, newBlock(type))
-	return list
 }

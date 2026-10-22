@@ -132,7 +132,7 @@ class RelationshipProvenanceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheSchemaVersionMovedWithIt(): void {
-		$this->assertSame('1.1.0', ($this->schema()['version'] ?? null));
+		$this->assertTrue(version_compare((string)($this->schema()['version'] ?? '0'), '1.1.0', '>='), 'The version that added provenance, or a later one.');
 	}//end testTheSchemaVersionMovedWithIt()
 
 	/**

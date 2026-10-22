@@ -3,8 +3,8 @@
 /**
  * Pipelinq EntityActivityController.
  *
- * REST controller exposing the per-entity activity feed consumed by the
- * `CommunicationHistory.vue` panel and by third-party integrations.
+ * REST controller exposing the per-entity activity feed consumed by
+ * third-party integrations.
  *
  * SPDX-FileCopyrightText: 2024 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2

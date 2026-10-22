@@ -31,6 +31,7 @@ use OCA\Pipelinq\Controller\ForecastController;
 use OCA\Pipelinq\Lifecycle\ForecastAccessPolicy;
 use OCA\Pipelinq\Service\ForecastExportService;
 use OCA\Pipelinq\Service\ForecastOverrideService;
+use OCA\Pipelinq\Service\ForecastSummaryService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -497,4 +498,120 @@ class ForecastControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
 		$this->assertSame(['error' => 'Could not delete the override.'], $response->getData());
 	}//end testDeleteOverrideReportsFailure()
+	/**
+	 * Build a controller that has the summary service.
+	 *
+	 * @param ForecastSummaryService $summary The summary double.
+	 *
+	 * @return ForecastController
+	 */
+	private function withSummary(ForecastSummaryService $summary): ForecastController {
+		return new ForecastController(
+			$this->request,
+			$this->userSession,
+			$this->accessPolicy,
+			$this->exportService,
+			$this->overrideService,
+			$this->createMock(LoggerInterface::class),
+			$summary
+		);
+	}//end withSummary()
+
+	/**
+	 * The page's figures are read one level down, for a manager.
+	 *
+	 * @return void
+	 */
+	public function testSummaryReadsTheLevelBelowForAManager(): void {
+		$this->authenticate('manager');
+		$this->accessPolicy->expects($this->once())->method('canRead')->with('manager', 'rep', null)->willReturn(true);
+		$summary = $this->createMock(ForecastSummaryService::class);
+		$summary->method('summary')->willReturn(['summary' => ['quota' => 1.0]]);
+
+		$response = $this->withSummary($summary)->summary(level: 'team');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['summary' => ['quota' => 1.0]], $response->getData());
+	}//end testSummaryReadsTheLevelBelowForAManager()
+
+	/**
+	 * Someone who may not read the level gets nothing.
+	 *
+	 * @return void
+	 */
+	public function testSummaryForbiddenOutsideScope(): void {
+		$this->authenticate('rep-bob');
+		$this->accessPolicy->method('canRead')->willReturn(false);
+		$summary = $this->createMock(ForecastSummaryService::class);
+		$summary->expects($this->never())->method('summary');
+
+		$response = $this->withSummary($summary)->summary(level: 'division');
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}//end testSummaryForbiddenOutsideScope()
+
+	/**
+	 * An unknown level is refused, and so is a caller without a session.
+	 *
+	 * @return void
+	 */
+	public function testSummaryRefusesAnUnknownLevelAndNoSession(): void {
+		$summary = $this->createMock(ForecastSummaryService::class);
+		$this->authenticate(null);
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->withSummary($summary)->summary(level: 'team')->getStatus());
+	}//end testSummaryRefusesAnUnknownLevelAndNoSession()
+
+	/**
+	 * An unknown level is a 400.
+	 *
+	 * @return void
+	 */
+	public function testSummaryRefusesAnUnknownLevel(): void {
+		$this->authenticate('manager');
+		$summary = $this->createMock(ForecastSummaryService::class);
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->withSummary($summary)->summary(level: 'planet')->getStatus());
+	}//end testSummaryRefusesAnUnknownLevel()
+
+	/**
+	 * The CSV holds the latest snapshot per owner of the current quarter.
+	 *
+	 * @return void
+	 */
+	public function testSummaryCsvHoldsTheLatestSnapshotPerOwner(): void {
+		$this->authenticate('manager');
+		$this->accessPolicy->method('canRead')->willReturn(true);
+		$summary = $this->createMock(ForecastSummaryService::class);
+		$summary->method('currentPeriod')->willReturn(['periodId' => 'Q4-2026', 'quarter' => 4, 'year' => 2026, 'daysRemaining' => 10]);
+		$summary->method('snapshots')->willReturn([
+			['owner_id' => 'a', 'as_of_date' => '2026-10-01', 'commit' => 1],
+			['owner_id' => 'a', 'as_of_date' => '2026-10-08', 'commit' => 2],
+			['owner_id' => 'b', 'as_of_date' => '2026-10-08', 'commit' => 3],
+		]);
+		$this->exportService->expects($this->once())->method('toCsv')
+			->with([
+				['owner_id' => 'a', 'as_of_date' => '2026-10-08', 'commit' => 2],
+				['owner_id' => 'b', 'as_of_date' => '2026-10-08', 'commit' => 3],
+			])
+			->willReturn('csv');
+
+		$response = $this->withSummary($summary)->summary(level: 'team', format: 'csv');
+
+		$this->assertInstanceOf(\OCP\AppFramework\Http\DataDownloadResponse::class, $response);
+	}//end testSummaryCsvHoldsTheLatestSnapshotPerOwner()
+
+	/**
+	 * A seller reads their own figures at the rep level.
+	 *
+	 * @return void
+	 */
+	public function testSummaryOfOneSellerIsReadAtTheRepLevel(): void {
+		$this->authenticate('rep-bob');
+		$this->accessPolicy->expects($this->once())->method('canRead')->with('rep-bob', 'rep', 'rep-bob')->willReturn(true);
+		$summary = $this->createMock(ForecastSummaryService::class);
+		$summary->expects($this->once())->method('summary')->with('rep', $this->anything(), 'rep-bob')->willReturn([]);
+
+		$response = $this->withSummary($summary)->summary(level: 'rep', ownerId: 'rep-bob');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+	}//end testSummaryOfOneSellerIsReadAtTheRepLevel()
 }//end class

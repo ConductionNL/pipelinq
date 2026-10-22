@@ -48,6 +48,31 @@ async function request(path, method, body) {
 
 export const exportApi = {
 	/**
+	 * Create an export job through the server, which validates it, stamps
+	 * who made it and when, and keeps it disabled until it is tested.
+	 *
+	 * @param {object} job The job config.
+	 * @return {Promise<object>} `{ job }`.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
+	 */
+	createJob(job) {
+		return request('/jobs', 'POST', job)
+	},
+
+	/**
+	 * Update an export job through the server, which validates it and
+	 * disables it until it is tested again.
+	 *
+	 * @param {string} id The job UUID.
+	 * @param {object} job The job config.
+	 * @return {Promise<object>} `{ job }`.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
+	 */
+	updateJob(id, job) {
+		return request(`/jobs/${id}`, 'PUT', job)
+	},
+
+	/**
 	 * Test connectivity to a destination.
 	 *
 	 * @param {string} id The destination UUID.

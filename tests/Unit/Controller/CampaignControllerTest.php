@@ -156,8 +156,21 @@ class CampaignControllerTest extends TestCase {
 		$response = $this->build()->report(id: 'camp-1');
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['campaign' => ['id' => 'camp-1']], $response->getData());
+		$data = $response->getData();
+		$this->assertSame(['id' => 'camp-1'], $data['campaign']);
+		$this->assertSame('last', $data['view']['model']);
 	}//end testTheReportIsReturnedAsBuilt()
+
+	/**
+	 * The report carries the rows of the chosen attribution model.
+	 *
+	 * @return void
+	 */
+	public function testTheReportSplitsByTheChosenModel(): void {
+		$response = $this->build()->report(id: 'camp-1', model: 'linear');
+
+		$this->assertSame('linear', $response->getData()['view']['model']);
+	}//end testTheReportSplitsByTheChosenModel()
 
 	/**
 	 * @return void

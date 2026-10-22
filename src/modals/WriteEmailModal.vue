@@ -3,7 +3,7 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
   - Write email (messaging-saved-replies-and-resend, D7). Opened from the
-  - Write email button next to an address in ContactChannelsSection. The agent
+  - Write email action on an address in the Emails list of a client or contact. The agent
   - types a subject and picks a saved reply for email; Open in Mail opens the
   - Nextcloud Mail composer in a new tab with the address, subject and text
   - filled in. pipelinq sends no mail itself. When the Mail app is not enabled
@@ -24,11 +24,12 @@
 				{{ t('pipelinq', 'To {address}', { address }) }}
 			</p>
 			<NcTextField v-model="subject" :label="t('pipelinq', 'Subject')" />
-			<SavedReplyPicker
-				channel="email"
-				:language="language"
-				:values="placeholderValues"
-				@pick="body = $event" />
+			<CnTemplateSelect
+				url="/apps/pipelinq/api/saved-replies"
+				:params="{ channel: 'email', contact: contactId, client: clientId }"
+				:inputLabel="t('pipelinq', 'Saved reply')"
+				data-testid="saved-reply-picker"
+				@apply="applyReply" />
 			<NcTextArea
 				v-model="body"
 				:label="t('pipelinq', 'Message')"
@@ -66,21 +67,21 @@
 </template>
 
 <script>
+import { CnTemplateSelect } from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcModal, NcTextArea, NcTextField } from '@nextcloud/vue'
-import SavedReplyPicker from '../components/SavedReplyPicker.vue'
 import { composeUrl } from '../services/savedReplies.js'
 
 export default {
 	name: 'WriteEmailModal',
 	components: {
+		CnTemplateSelect,
 		NcButton,
 		NcModal,
 		NcTextArea,
 		NcTextField,
-		SavedReplyPicker,
 	},
 
 	props: {
@@ -91,13 +92,14 @@ export default {
 		},
 
 		/** Placeholder values for a saved reply, e.g. `{'contact.name': 'Jan'}`. */
-		placeholderValues: {
-			type: Object,
-			default: () => ({}),
+		/** The contact written to, for the saved replies' placeholders and language. */
+		contactId: {
+			type: String,
+			default: '',
 		},
 
-		/** The party's correspondence language; its saved replies sort first. */
-		language: {
+		/** The client written to, for the saved replies' placeholders and language. */
+		clientId: {
 			type: String,
 			default: '',
 		},
@@ -147,6 +149,18 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Put a picked saved reply in the message.
+		 *
+		 * @param {object|null} option The template option.
+		 * @spec openspec/changes/answer-and-saved-replies-on-the-server/specs/messaging-saved-replies/spec.md#requirement-the-server-offers-saved-replies-filled-for-the-record
+		 */
+		applyReply(option) {
+			if (option && option.values && typeof option.values.body === 'string') {
+				this.body = option.values.body
+			}
+		},
+
 		t,
 
 		/**

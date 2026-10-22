@@ -146,7 +146,7 @@ test('the board card carries the score with its band as its accessible name', as
 	await createLeads(page)
 	await gotoAppRoute(page, '/pipeline')
 
-	const card = page.locator('.pipeline-card', { hasText: `${RUN} high` })
+	const card = page.locator('[data-testid="cn-board-card"]', { hasText: `${RUN} high` })
 	await expect(card).toBeVisible({ timeout: 20000 })
 	await expect(card.getByRole('button', { name: 'Score 80, high' })).toBeVisible()
 })

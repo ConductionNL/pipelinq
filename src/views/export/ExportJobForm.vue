@@ -112,6 +112,7 @@ import { CnDetailCard, CnDetailPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
+import { exportApi } from '../../services/exportApi.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 // The pipelinq schemas the export pipeline may read. `ticket` is the unified
@@ -363,7 +364,8 @@ export default {
 		},
 
 		/**
-		 * Persist the job via the shared object store.
+		 * Persist the job through the export API: the server validates it,
+		 * stamps createdBy and createdAt, and keeps it disabled until tested.
 		 *
 		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
 		 */
@@ -375,13 +377,14 @@ export default {
 					columnAllowlist: this.parsedAllowlist(),
 				}
 				if (this.isEdit) {
-					payload.id = this.jobId
+					await exportApi.updateJob(this.jobId, payload)
+				} else {
+					await exportApi.createJob(payload)
 				}
-				await this.objectStore.saveObject('exportJob', payload)
 				showSuccess(this.t('pipelinq', 'Export job saved'))
 				this.$router.push({ name: 'ExportJobs' })
-			} catch {
-				showError(this.t('pipelinq', 'Could not save the job'))
+			} catch (error) {
+				showError(error?.message || this.t('pipelinq', 'Could not save the job'))
 			} finally {
 				this.busy = false
 			}

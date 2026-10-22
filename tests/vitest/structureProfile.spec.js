@@ -30,7 +30,6 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import { describe, expect, it, vi } from 'vitest'
-import { saveMenuStructure } from '../../src/services/menuStructureSetting.js'
 import {
 	applyHomePage,
 	applyMenuModules,
@@ -50,6 +49,7 @@ import {
 	STRUCTURE_SETTING,
 	STRUCTURE_SIMPLE,
 } from '../../src/utils/structureProfile.js'
+import adminSections from '../../src/views/settings/adminSections.json'
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (...parts) => fs.readFileSync(path.join(ROOT, ...parts), 'utf8')
@@ -441,11 +441,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 94 pages as the full profile, so every route stays', () => {
+	it('builds the same 89 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(94)
+		expect(built.pages).toHaveLength(89)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)
@@ -970,75 +970,19 @@ describe('the structure setting', () => {
 		)
 	})
 
-	const answer = (config) => async () => ({
-		ok: true,
-		status: 200,
-		json: async () => ({ success: true, config }),
+	it('is saved with the modules under their own keys, through the settings write', () => {
+		const section = adminSections.menuStructure
+		expect(section.valuesPath).toBe('config')
+		expect(section.url).toBeUndefined()
+		const [structure, modules] = section.fields
+		expect(structure).toMatchObject({ key: STRUCTURE_SETTING, type: 'radio', default: 'simple' })
+		expect(structure.options.map((option) => option.value)).toEqual(['simple', 'full'])
+		expect(modules).toMatchObject({ key: MODULES_SETTING, type: 'checkboxes', saveAs: 'csv' })
+		expect(modules.visibleWhen).toEqual({ key: STRUCTURE_SETTING, equals: 'simple' })
 	})
 
-	it('is saved with the modules under their own keys, through the settings write', async () => {
-		const calls = []
-		const fetchImpl = async (url, init) => {
-			calls.push({ url, init })
-			return answer({
-				[STRUCTURE_SETTING]: 'full',
-				[MODULES_SETTING]: 'sales,pos',
-			})()
-		}
-		const stored = await saveMenuStructure(
-			{ structure: 'full', modules: ['sales', 'pos'] },
-			{ url: '/apps/pipelinq/api/settings', requestToken: 'token', fetchImpl },
-		)
-		expect(stored).toEqual({ structure: 'full', modules: ['sales', 'pos'] })
-		expect(calls).toHaveLength(1)
-		expect(calls[0].init.method).toBe('PUT')
-		expect(calls[0].init.headers.requesttoken).toBe('token')
-		expect(JSON.parse(calls[0].init.body)).toEqual({
-			menu_structure: 'full',
-			menu_modules: 'sales,pos',
-		})
-	})
-
-	it('does not report a refused save as saved', async () => {
-		const refused = async () => ({
-			ok: false,
-			status: 403,
-			json: async () => ({}),
-		})
-		await expect(
-			saveMenuStructure(
-				{ structure: 'full', modules: [] },
-				{ url: '/x', requestToken: 't', fetchImpl: refused },
-			),
-		).rejects.toThrow('403')
-	})
-
-	it('does not report a save the server dropped as saved', async () => {
-		// The settings write answers success for a key it does not know.
-		for (const wanted of [
-			{ structure: 'full', modules: [] },
-			// Simple is the default, so a dropped save of it would read back as
-			// simple by accident. The stored word itself has to come back.
-			{ structure: 'simple', modules: [] },
-		]) {
-			await expect(
-				saveMenuStructure(wanted, {
-					url: '/x',
-					requestToken: 't',
-					fetchImpl: answer({}),
-				}),
-			).rejects.toThrow('did not store')
-		}
-		// The structure came back and the modules did not.
-		await expect(
-			saveMenuStructure(
-				{ structure: 'simple', modules: ['sales'] },
-				{
-					url: '/x',
-					requestToken: 't',
-					fetchImpl: answer({ [STRUCTURE_SETTING]: 'simple' }),
-				},
-			),
-		).rejects.toThrow('did not store')
+	it('offers exactly the modules the simple profile declares, in its order and with its labels', () => {
+		const modules = adminSections.menuStructure.fields[1].options
+		expect(modules).toEqual(Object.entries(simpleFile.modules).map(([value, module]) => ({ value, label: module.label })))
 	})
 })

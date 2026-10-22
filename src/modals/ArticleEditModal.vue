@@ -322,7 +322,8 @@ export default {
 		},
 
 		/**
-		 * Create or update the article.
+		 * Create or update the article. A new article opens on its detail
+		 * page, where its lifecycle moves are.
 		 *
 		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves when the caller has been told.
@@ -344,6 +345,11 @@ export default {
 						)
 					: await createArticle(payload)
 				this.$emit('saved', saved)
+				const id = saved && (saved.id || saved.uuid)
+				if (!this.isEditing && id && this.$router) {
+					this.$router.push({ name: 'ArticleDetail', params: { id } })
+					this.$emit('close')
+				}
 			} catch (e) {
 				this.error =
 					e?.response?.data?.error

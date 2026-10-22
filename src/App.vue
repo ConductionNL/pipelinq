@@ -68,16 +68,17 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import IncomingCallCard from './components/IncomingCallCard.vue'
-import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
-import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
 import { createAppFormatters } from './services/cellFormatters.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
+import { createPipelineStageMove } from './services/pipelineStageMove.js'
+import { getStaleThreshold } from './services/pipelineUtils.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
 import { useObjectStore } from './store/modules/object.js'
+import { useSettingsStore } from './store/modules/settings.js'
 
 export default {
 	name: 'App',
@@ -100,6 +101,13 @@ export default {
 			// Legacy channel — kept so bespoke index views (CnIndexPage
 			// wrappers) continue to inject it.
 			sidebarState: this.sidebarState,
+			// The app settings `@config.<key>` tokens read: the Leads list's Out
+			// of date chip and footer note name the stale threshold, the
+			// knowledge-base widget searches the default xWiki space.
+			cnAppConfig: computed(() => ({
+				lead_stale_threshold_days: getStaleThreshold(useSettingsStore().config),
+				xwiki_default_space: useSettingsStore().config?.xwiki_default_space || '',
+			})),
 		}
 	},
 
@@ -203,19 +211,14 @@ export default {
 
 		/**
 		 * Cell-widget registry for CnAppRoot, keyed by the `widget` id a
-		 * manifest column references (ADR-036).
+		 * manifest column or board card cell references: the lead score badge
+		 * with its explanation.
 		 *
 		 * @return {Record<string, object>}
-		 * @spec openspec/specs/customer-360/spec.md
-		 * @spec openspec/specs/lead-scoring-win-probability/spec.md#requirement-win-probability-is-surfaced-on-the-pipeline-list-and-deal-detail
-		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		cellWidgets() {
-			return {
-				'lead-close-date': LeadCloseDateCell,
-				'lead-probability': LeadProbabilityCell,
-				'lead-score': LeadScoreCell,
-			}
+			return { 'lead-score': LeadScoreCell }
 		},
 
 		/**
@@ -231,6 +234,12 @@ export default {
 				...createConnectionHandlers({
 					generateUrl,
 					assign: (url) => window.location.assign(url),
+				}),
+
+				// The Pipeline board's move: a card dropped on another stage.
+				pipelineStageMove: createPipelineStageMove({
+					objectStore: () => useObjectStore(),
+					translate: ncT,
 				}),
 
 				// "Assign to me" on the Queue rows (detail-pages-read-at-a-glance).

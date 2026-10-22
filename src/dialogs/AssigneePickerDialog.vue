@@ -6,7 +6,7 @@
   - emits the choice on Assign; the parent owns the store write.
   -
   - It lives in its own file because a modal must never be written inline
-  - inside its parent (ADR-004); it was extracted out of PipelineCard.vue.
+  - inside its parent (ADR-004).
   -->
 <template>
 	<NcDialog :name="t('pipelinq', 'Assign user')" @closing="$emit('close')">

@@ -15,8 +15,7 @@
  *    picks out, which is what a page watch compares.
  *
  * Parsing uses `DOMDocument` with libxml's own error collection turned on and
- * restored afterwards, the way `LogiusConnector` and `XWikiService` already do
- * it here. Real-world HTML is malformed and libxml complains loudly about it;
+ * restored afterwards, as `LogiusConnector` does. Real-world HTML is malformed and libxml complains loudly about it;
  * a warning per unclosed tag in the Nextcloud log is not information.
  *
  * @category Service

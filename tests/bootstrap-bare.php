@@ -108,7 +108,7 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
 			$autoloader->addPsr4('Psr\\Http\\Message\\', $ncBase . '/3rdparty/psr/http-message/src/');
 		}
 
-		// Symfony\Component\HttpFoundation (needed by XWikiService + others)
+		// Symfony\Component\HttpFoundation (needed by several services)
 		if (is_dir($ncBase . '/3rdparty/symfony/http-foundation') === true) {
 			$autoloader->addPsr4('Symfony\\Component\\HttpFoundation\\', $ncBase . '/3rdparty/symfony/http-foundation/');
 		}
