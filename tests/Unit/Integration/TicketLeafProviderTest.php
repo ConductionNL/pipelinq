@@ -43,6 +43,13 @@ class TicketLeafProviderTest extends TestCase {
 	private array $queries = [];
 
 	/**
+	 * The RBAC and multitenancy flags each findAll ran with, in order.
+	 *
+	 * @var array<int, array{rbac: bool, multitenancy: bool}>
+	 */
+	private array $postures = [];
+
+	/**
 	 * Build the provider over a store holding two clients and four tickets.
 	 *
 	 * @param bool $configured Whether the register and schemas are configured.
@@ -75,8 +82,9 @@ class TicketLeafProviderTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('findAll')->willReturnCallback(
-			function (array $config) use ($clients, $tickets): array {
-				$this->queries[] = $config;
+			function (array $config, bool $_rbac=true, bool $_multitenancy=true) use ($clients, $tickets): array {
+				$this->queries[]  = $config;
+				$this->postures[] = ['rbac' => $_rbac, 'multitenancy' => $_multitenancy];
 				$filters = ($config['filters'] ?? []);
 				if (($filters['schema'] ?? '') === 'sch-client') {
 					$refs = ($filters['masterEntityRef']['in'] ?? []);
@@ -133,6 +141,22 @@ class TicketLeafProviderTest extends TestCase {
 		$this->assertSame(['in' => ['request', 'complaint']], $ticketQuery['ticketType']);
 		$this->assertSame(['notIn' => TicketLeafProvider::CLOSED_STATUSES], $ticketQuery['status']);
 	}//end testTheTicketReadAsksForOpenRequestsAndComplaintsOnly()
+
+	/**
+	 * Both reads run as the calling user: OpenRegister's RBAC and organisation
+	 * scoping stay on, so a caller outside the ticket and client schemas' read
+	 * groups gets no tickets and no counts, whatever master entity they name.
+	 *
+	 * @return void
+	 */
+	public function testBothReadsKeepRbacAndMultitenancyOn(): void {
+		$this->provider()->openByMasterEntity(refs: ['m-slagerij']);
+
+		$this->assertCount(2, $this->postures);
+		foreach ($this->postures as $posture) {
+			$this->assertSame(['rbac' => true, 'multitenancy' => true], $posture);
+		}
+	}//end testBothReadsKeepRbacAndMultitenancyOn()
 
 	/**
 	 * No reference, or no client behind them, asks for no tickets at all.

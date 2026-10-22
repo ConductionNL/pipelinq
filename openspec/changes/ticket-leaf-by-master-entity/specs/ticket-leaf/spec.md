@@ -16,3 +16,8 @@ The ticket leaf MUST return, for every master entity it is asked about, the open
 #### Scenario: too many references
 - WHEN a host app asks for more than 200 master entities
 - THEN the leaf answers 400
+
+#### Scenario: a caller outside the ticket schema's read groups
+- GIVEN a signed-in user in none of the ticket and client schemas' read groups
+- WHEN a host app asks for any master entity on their behalf
+- THEN both reads run with OpenRegister's RBAC and organisation scoping on, and the leaf returns no tickets
