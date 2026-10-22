@@ -1,6 +1,6 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged.",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint.",
 	"appConfig": [
 		{
 			"key": "crm_group",
@@ -31,7 +31,8 @@
 				"preferredChannel": "phone",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "Belt liever dan dat hij mailt. Zijn dochter Linda Bakker helpt hem soms."
+				"notes": "Belt liever dan dat hij mailt. Zijn dochter Linda Bakker helpt hem soms.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000011"
 			}
 		},
 		{
@@ -49,7 +50,8 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan."
+				"notes": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000012"
 			}
 		},
 		{
@@ -67,7 +69,8 @@
 				"preferredChannel": "phone",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "Wil graag uitleg in eenvoudige taal."
+				"notes": "Wil graag uitleg in eenvoudige taal.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000013"
 			}
 		},
 		{
@@ -89,7 +92,8 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:slagerij.kvk}}."
+				"notes": "KVK-nummer {{cast:slagerij.kvk}}.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000001"
 			}
 		},
 		{
@@ -127,7 +131,8 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:cloudgemeente.kvk}}.",
-				"website": "https://cloudgemeente.zuiddrecht.example"
+				"website": "https://cloudgemeente.zuiddrecht.example",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000002"
 			}
 		},
 		{
@@ -164,7 +169,8 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:vandam.kvk}}."
+				"notes": "KVK-nummer {{cast:vandam.kvk}}.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000003"
 			}
 		},
 		{
@@ -890,6 +896,63 @@
 				"complaintCategory": "communication",
 				"occurredAt": "{{datetime:0 11:05}}",
 				"slaDeadline": "{{datetime:42 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-slagerij-uitstalling",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over de uitstalling op de stoep",
+				"description": "Slagerij Van der Berg vraagt of de reclameborden en de koeltoonbank voor de winkel op de stoep mogen staan.",
+				"client": "{{object:client-slagerij.id}}",
+				"contactsUid": "{{cast:slagerij.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "email",
+				"category": "vergunningen",
+				"occurredAt": "{{datetime:-3 10:20}}",
+				"slaDeadline": "{{datetime:4 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-cloudgemeente-koppeling",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over de koppeling met het zaaksysteem",
+				"description": "CloudGemeente B.V. vraagt welke berichten het zaaksysteem aanneemt voor hun koppeling.",
+				"client": "{{object:client-cloudgemeente.id}}",
+				"contactsUid": "{{cast:cloudgemeente.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"status": "new",
+				"priority": "normal",
+				"channel": "email",
+				"category": "overig",
+				"occurredAt": "{{datetime:-1 14:05}}",
+				"slaDeadline": "{{datetime:5 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-cloudgemeente-factuur",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "complaint",
+				"title": "Klacht over een late betaling",
+				"description": "CloudGemeente B.V. meldt dat hun factuur van september nog niet betaald is.",
+				"client": "{{object:client-cloudgemeente.id}}",
+				"contactsUid": "{{cast:cloudgemeente.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"status": "in_progress",
+				"priority": "high",
+				"channel": "phone",
+				"category": "financien",
+				"occurredAt": "{{datetime:-6 11:40}}",
+				"slaDeadline": "{{datetime:1 17:00}}"
 			}
 		},
 		{
