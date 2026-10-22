@@ -8041,7 +8041,8 @@ OC.L10N.register(
         "Question about the dossier \"{subjectReference.title}\"": "Vraag over het dossier \"{subjectReference.title}\"",
         "{workload}/{maxConcurrent} items": "{workload}/{maxConcurrent} items",
         "Assign to {displayName}": "Toewijzen aan {displayName}",
-        "{value} matching colleagues at capacity": "{value} passende collega's op volle capaciteit"
+        "{value} matching colleagues at capacity": "{value} passende collega's op volle capaciteit",
+        "Choose a payment method.": "Kies een betaalmethode."
     },
     "nplurals=2; plural=(n != 1);"
 )

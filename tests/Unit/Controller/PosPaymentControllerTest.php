@@ -404,7 +404,7 @@ class PosPaymentControllerTest extends TestCase {
 		$response = $this->controller->initiate(id: 'tx-1');
 
 		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
-		$this->assertArrayHasKey('error', $response->getData());
+		$this->assertSame(expected: 'Choose a payment method.', actual: $response->getData()['error']);
 	}//end testInitiateRejectsMissingProviderOrMethod()
 
 	/**

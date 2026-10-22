@@ -8076,7 +8076,8 @@ OC.L10N.register(
         "Question about the dossier \"{subjectReference.title}\"": "Question about the dossier \"{subjectReference.title}\"",
         "{workload}/{maxConcurrent} items": "{workload}/{maxConcurrent} items",
         "Assign to {displayName}": "Assign to {displayName}",
-        "{value} matching colleagues at capacity": "{value} matching colleagues at capacity"
+        "{value} matching colleagues at capacity": "{value} matching colleagues at capacity",
+        "Choose a payment method.": "Choose a payment method."
     },
     "nplurals=2; plural=(n != 1);"
 )
