@@ -40,7 +40,6 @@ import BrpContactPanel from './components/BrpContactPanel.vue'
 //     page body via `bodyWidgets` (kind:'section'). Each reads the live object
 //     via props (token-resolved `@objectId`) — no page host needed. ---
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
-import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
 import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
@@ -79,7 +78,6 @@ import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWid
 import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
 import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
 // What the resident reads of a request ticket (portal-resident-view-preview). ---
-import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 // --- AVG (GDPR data-subject request) workflow removed by consume-or-dsar
 //     (ADR-047 Phase 3): the data-subject request workflow is owned by
 //     OpenRegister's case engine; pipelinq deep-links handlers into OR's AVG
@@ -204,13 +202,6 @@ const HEADER_ACTIONS_META = {
 	minSize: { w: 1, h: 1 },
 	maxSize: { w: 12, h: 1 },
 	allowedSlots: ['header-actions'],
-	propsSchema: null,
-}
-const SIDEBAR_TAB_META = {
-	defaultSize: { w: 1, h: 2 },
-	minSize: { w: 1, h: 1 },
-	maxSize: { w: 1, h: 6 },
-	allowedSlots: ['sidebar'],
 	propsSchema: null,
 }
 
@@ -432,28 +423,12 @@ const registry = {
 	// --- The ticket page's Overview sections as tab widgets (board PqTicket):
 	//     the conversation, the dossier asked about, the Woo request and the case
 	//     sit inside the Overview tab rather than in a tail below the tab strip. ---
-	DossierSnapshotWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'DossierSnapshotWidget',
-			DossierSnapshotSection,
-			({ objectId }) => ({ objectId }),
-		),
-		...PANEL_WIDGET_META,
-		_note: 'DossierSnapshotSection as a tab widget.',
-	},
 
 	BrpContactWidget: {
 		kind: 'widget',
-		component: sectionWidget(
-			'BrpContactWidget',
-			BrpContactPanel,
-			({ objectId }) => ({
-				contactId: objectId,
-			}),
-		),
+		component: BrpContactPanel,
 		...PANEL_WIDGET_META,
-		_note: 'BrpContactPanel as a grid widget, for the Profile tab of ContactDetail.',
+		_note: 'BrpContactPanel as a side card of ContactDetail; its contactId comes from the manifest.',
 	},
 	BrpContactPanel: {
 		kind: 'section',
@@ -462,34 +437,7 @@ const registry = {
 	},
 
 
-	DossierSnapshotSection: {
-		kind: 'section',
-		component: DossierSnapshotSection,
-		_note: "The dossier a resident asked about, on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-006): reads the ticket's subjectReference snapshot and lists the documents as links to the public publications. Never reads the dossier itself; renders nothing for a ticket without a snapshot.",
-	},
 
-	RoutingSuggestionWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'RoutingSuggestionWidget',
-			RoutingSuggestionSection,
-			({ objectId, objectData, content }) => ({
-				objectId,
-				category: objectData.category || '',
-				entityType: content.entityType || 'request',
-				objectType: content.objectType || 'ticket',
-				assignee: objectData.assignee || '',
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'RoutingSuggestionSection as a side-column card (PqLead "Voorgestelde medewerkers"): the record category and assignee come from the page object.',
-	},
-	RoutingSuggestionSection: {
-		kind: 'section',
-		component: RoutingSuggestionSection,
-		_note: 'Suggested colleagues for the TicketDetail and LeadDetail pages (pipelinq#2039, pipelinq#2049): mounts RoutingSuggestionPanel for @objectId (ranked by skill match on the record category, availability and workload, capped per agent by maxConcurrent) and writes the chosen colleague into the record assignee through the object store.',
-	},
 
 	// --- BI export + data-warehouse sink. ---
 	ExportJobFormView: {

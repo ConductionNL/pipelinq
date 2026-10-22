@@ -516,11 +516,7 @@ describe('the body', () => {
 			'routing-suggestions',
 		])
 		const moved = {
-			'dossier-snapshot': [
-				'ticket-dossier',
-				'DossierSnapshotWidget',
-				'DossierSnapshotSection',
-			],
+			'dossier-snapshot': ['ticket-dossier', 'field-list', null],
 			'woo-conversion': ['ticket-woo', 'handoff', null],
 		}
 		for (const section of full.config.bodyWidgets) {
@@ -588,6 +584,10 @@ describe('the words', () => {
 				value.forEach((item) => collect(item, key))
 			} else if (value && typeof value === 'object') {
 				for (const [name, inner] of Object.entries(value)) {
+					// A field-list `row` names paths, not words.
+					if (name === 'row') {
+						continue
+					}
 					collect(
 						inner,
 						name === 'labels' ? 'label' : key === 'label' ? key : name,

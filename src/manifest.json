@@ -3997,15 +3997,27 @@
 						"gridHeight": 6
 					}
 				],
-				"_bodyWidgetsNote": "Woo citizen journey J4 (questions-about-a-citizen-dossier): DossierSnapshotSection shows the dossier a resident asked about, before the body; CustomerReplySection is the answer control (customerMessage, the resident's replies) and the woo-conversion handoff converts a question into a dossiq Woo request, after the data. Each renders nothing when it does not apply. Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
+				"_bodyWidgetsNote": "Woo citizen journey J4 (questions-about-a-citizen-dossier): a read-only field-list shows the dossier a resident asked about, before the body, only when the ticket has one; the answer to the customer is a conversation, and the woo-conversion handoff converts a question into a dossiq Woo request, after the data. Each renders nothing when it does not apply. Suggested colleagues (pipelinq#2039): a record-list over /api/routing/suggestions whose set-field action writes the chosen colleague into the ticket's assignee.",
 				"bodyWidgets": [
 					{
 						"id": "dossier-snapshot",
-						"component": "DossierSnapshotSection",
+						"type": "field-list",
 						"title": "Asked about",
 						"placement": "before-body",
-						"props": {
-							"objectId": "@objectId"
+						"visibleWhen": {
+							"field": "subjectReference",
+							"op": "notEmpty"
+						},
+						"content": {
+							"field": "subjectReference.items",
+							"readOnly": true,
+							"lead": "Question about the dossier \"{subjectReference.title}\"",
+							"row": {
+								"title": "title",
+								"href": "url"
+							},
+							"hint": "This is what the resident saw when they asked.",
+							"emptyText": "The dossier held no documents when the question was asked."
 						}
 					},
 					{
@@ -4163,15 +4175,49 @@
 					},
 					{
 						"id": "routing-suggestions",
-						"component": "RoutingSuggestionSection",
+						"type": "record-list",
 						"title": "Suggested agents",
 						"placement": "end",
-						"props": {
-							"objectId": "@objectId",
-							"category": "@object.category",
-							"entityType": "request",
-							"objectType": "ticket",
-							"assignee": "@object.assignee"
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/routing/suggestions",
+								"params": {
+									"entityType": "request",
+									"entityId": "@objectId"
+								},
+								"responsePath": "suggestions"
+							},
+							"presentation": "rows",
+							"title": [
+								"{displayName}",
+								"{userId}"
+							],
+							"meta": "{workload}/{maxConcurrent} items",
+							"pill": {
+								"field": "matchedSkill"
+							},
+							"bar": {
+								"valueField": "workload",
+								"maxField": "maxConcurrent",
+								"overVariant": "error"
+							},
+							"rowActions": [
+								{
+									"type": "set-field",
+									"field": "assignee",
+									"value": "{userId}",
+									"label": "Assign",
+									"ariaLabel": "Assign to {displayName}",
+									"doneLabel": "Assigned",
+									"errorText": "Could not save the assignee."
+								}
+							],
+							"footnote": {
+								"path": "atCapacity",
+								"text": "{value} matching colleagues at capacity"
+							},
+							"emptyText": "No agents with matching skills",
+							"errorText": "Failed to load suggestions"
 						}
 					}
 				]
@@ -5111,7 +5157,9 @@
 						"type": "BrpContactWidget",
 						"title": "BSN and BRP",
 						"icon": "CardAccountDetailsOutline",
-						"content": {}
+						"props": {
+							"contactId": "@objectId"
+						}
 					},
 					{
 						"id": "contact-email",
@@ -6278,13 +6326,49 @@
 					},
 					{
 						"id": "side-suggested",
-						"type": "RoutingSuggestionWidget",
+						"type": "record-list",
 						"title": "Suggested colleagues",
 						"icon": "AccountArrowRight",
 						"content": {
-							"title": "Suggested colleagues",
-							"entityType": "lead",
-							"objectType": "lead"
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/routing/suggestions",
+								"params": {
+									"entityType": "lead",
+									"entityId": "@objectId"
+								},
+								"responsePath": "suggestions"
+							},
+							"presentation": "rows",
+							"title": [
+								"{displayName}",
+								"{userId}"
+							],
+							"meta": "{workload}/{maxConcurrent} items",
+							"pill": {
+								"field": "matchedSkill"
+							},
+							"bar": {
+								"valueField": "workload",
+								"maxField": "maxConcurrent",
+								"overVariant": "error"
+							},
+							"rowActions": [
+								{
+									"type": "set-field",
+									"field": "assignee",
+									"value": "{userId}",
+									"label": "Assign",
+									"ariaLabel": "Assign to {displayName}",
+									"doneLabel": "Assigned",
+									"errorText": "Could not save the assignee."
+								}
+							],
+							"footnote": {
+								"path": "atCapacity",
+								"text": "{value} matching colleagues at capacity"
+							},
+							"emptyText": "No agents with matching skills",
+							"errorText": "Failed to load suggestions"
 						}
 					},
 					{

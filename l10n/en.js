@@ -8072,7 +8072,11 @@ OC.L10N.register(
         "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries).": "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries).",
         "Shillinq is already processing this batch. Try again shortly.": "Shillinq is already processing this batch. Try again shortly.",
         "BRP is unavailable right now. Try again in a few minutes.": "BRP is unavailable right now. Try again in a few minutes.",
-        "Address shown. An audit record was created.": "Address shown. An audit record was created."
+        "Address shown. An audit record was created.": "Address shown. An audit record was created.",
+        "Question about the dossier \"{subjectReference.title}\"": "Question about the dossier \"{subjectReference.title}\"",
+        "{workload}/{maxConcurrent} items": "{workload}/{maxConcurrent} items",
+        "Assign to {displayName}": "Assign to {displayName}",
+        "{value} matching colleagues at capacity": "{value} matching colleagues at capacity"
     },
     "nplurals=2; plural=(n != 1);"
 )

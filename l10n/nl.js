@@ -8037,7 +8037,11 @@ OC.L10N.register(
         "Sent to billing. Draft invoice {invoiceNumber} created ({entryCount} entries).": "Naar facturatie verstuurd. Conceptfactuur {invoiceNumber} aangemaakt ({entryCount} regels).",
         "Shillinq is already processing this batch. Try again shortly.": "Shillinq verwerkt deze batch al. Probeer het zo opnieuw.",
         "BRP is unavailable right now. Try again in a few minutes.": "De BRP is nu niet bereikbaar. Probeer het over een paar minuten opnieuw.",
-        "Address shown. An audit record was created.": "Adres getoond. Er is een auditregel vastgelegd."
+        "Address shown. An audit record was created.": "Adres getoond. Er is een auditregel vastgelegd.",
+        "Question about the dossier \"{subjectReference.title}\"": "Vraag over het dossier \"{subjectReference.title}\"",
+        "{workload}/{maxConcurrent} items": "{workload}/{maxConcurrent} items",
+        "Assign to {displayName}": "Toewijzen aan {displayName}",
+        "{value} matching colleagues at capacity": "{value} passende collega's op volle capaciteit"
     },
     "nplurals=2; plural=(n != 1);"
 )
