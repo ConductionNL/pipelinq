@@ -1441,8 +1441,23 @@
 					},
 					{
 						"id": "billing-categories",
-						"type": "custom",
-						"title": "Hours by billing category"
+						"type": "chart",
+						"title": "Hours by billing category",
+						"content": {
+							"chartKind": "donut",
+							"emptyLabel": "When approved time entries are present, hours will be shown per billing category here.",
+							"dataSource": {
+								"register": "pipelinq",
+								"schema": "billingTimeEntry",
+								"filter": { "status": "approved" },
+								"aggregate": {
+									"groupBy": "billingCategory",
+									"metric": "sum",
+									"sumField": "hours",
+									"labelResolve": { "schema": "billingCategory", "labelField": "name", "colorField": "color" }
+								}
+							}
+						}
 					},
 					{
 						"id": "navi-analytics",
@@ -1461,8 +1476,42 @@
 					},
 					{
 						"id": "survey-response-rate",
-						"type": "custom",
-						"title": "Survey response rate"
+						"type": "stat",
+						"title": "Survey response rate",
+						"content": {
+							"label": "Survey response rate",
+							"icon": "MessageReplyText",
+							"format": { "style": "percent", "decimals": 1 },
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/satisfaction/response-rate",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" }
+							},
+							"valueField": "rate",
+							"caption": "{responded} of {delivered} delivered invitations answered",
+							"note": "Not delivered: {suppressed} held back, {failed} failed",
+							"dateRange": {}
+						}
+					},
+					{
+						"id": "survey-response-channels",
+						"type": "object-table",
+						"title": "Response rate per channel",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/satisfaction/response-rate",
+								"params": { "from": "@workspace.dateFrom?", "to": "@workspace.dateTo?" },
+								"responsePath": "channels"
+							},
+							"columns": [
+								{ "key": "channel", "label": "Channel", "enum": ["email", "sms", "whatsapp", "unknown"], "enumLabels": { "email": "Email", "sms": "SMS", "whatsapp": "WhatsApp", "unknown": "Unknown" } },
+								{ "key": "delivered", "label": "Delivered", "format": { "style": "number" } },
+								{ "key": "responded", "label": "Answered", "format": { "style": "number" } },
+								{ "key": "rate", "label": "Rate", "format": { "style": "percent", "decimals": 1 } },
+								{ "key": "suppressed", "label": "Held back", "format": { "style": "number" } },
+								{ "key": "failed", "label": "Failed", "format": { "style": "number" } }
+							],
+							"emptyText": "When a dispatch rule sends satisfaction surveys, the response rate shows here."
+						}
 					}
 				],
 				"layout": [
@@ -1618,18 +1667,25 @@
 						"gridX": 6,
 						"gridY": 31,
 						"gridWidth": 6,
-						"gridHeight": 5
+						"gridHeight": 2,
+						"dateChip": true
+					},
+					{
+						"id": "21",
+						"widgetId": "survey-response-channels",
+						"gridX": 6,
+						"gridY": 33,
+						"gridWidth": 6,
+						"gridHeight": 3
 					}
 				]
 			},
 			"_note": "The Customer Satisfaction KPI (SatisfactionKpiWidget, widget id 'satisfaction', layout slot 17) was removed 2026-07 because its data source was empty after the forms-leaf migration. Satisfaction returns as the survey response-rate widget (survey-response-rate), fed by the closed-loop invitations of customer-satisfaction-closed-loop.",
 			"slots": {
 				"widget-my-work": "MyWorkWidget",
-				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
 				"widget-report-export": "ReportExportPanel",
-				"widget-xwiki-knowledge": "XWikiDashboardWidget",
-				"widget-survey-response-rate": "SurveyResponseRateWidget"
+				"widget-xwiki-knowledge": "XWikiDashboardWidget"
 			}
 		},
 		{
@@ -1641,6 +1697,19 @@
 				"register": "pipelinq",
 				"schema": "client",
 				"createModal": "ClientCreateDialog",
+				"includeFields": [
+					"name",
+					"type",
+					"email",
+					"phone",
+					"website",
+					"industry",
+					"accountOwner",
+					"correspondenceLanguage",
+					"timezone",
+					"address",
+					"notes"
+				],
 				"fieldOverrides": {
 					"industry": {
 						"widget": "multiselect",
@@ -1667,19 +1736,62 @@
 						}
 					},
 					"name": {
-						"readOnly": false
+						"readOnly": false,
+						"validation": {
+							"maxLength": 255
+						}
 					},
 					"email": {
-						"readOnly": false
+						"readOnly": false,
+						"validation": {
+							"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+							"patternMessage": "Invalid email format"
+						}
 					},
 					"phone": {
-						"readOnly": false
+						"readOnly": false,
+						"validation": {
+							"pattern": "^[+]?[\\d\\s\\-().]{7,20}$",
+							"patternMessage": "Invalid phone format"
+						}
 					},
 					"correspondenceLanguage": {
-						"widget": "language"
+						"widget": "select",
+						"optionsFrom": {
+							"url": "/apps/pipelinq/api/correspondence-languages",
+							"responsePath": "options",
+							"valueField": "value",
+							"labelField": "label"
+						},
+						"defaultToken": "current-language"
 					},
 					"timezone": {
 						"widget": "timezone"
+					},
+					"website": {
+						"hidden": false,
+						"validation": {
+							"pattern": "^https?://.+\\..+",
+							"patternMessage": "Invalid URL format"
+						}
+					},
+					"address": {
+						"hidden": false,
+						"widget": "textarea"
+					},
+					"notes": {
+						"hidden": false,
+						"widget": "textarea"
+					},
+					"accountOwner": {
+						"widget": "user",
+						"default": "@me"
+					},
+					"type": {
+						"enumLabels": {
+							"person": "Person",
+							"organization": "Organization"
+						}
 					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -2348,23 +2460,601 @@
 						"icon": "History"
 					},
 					{
+						"id": "client-satisfaction",
+						"type": "facts",
+						"title": "Satisfaction",
+						"icon": "EmoticonHappyOutline",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/satisfaction/client/@objectId" },
+							"emptyWhen": "empty",
+							"emptyText": "No satisfaction data has been collected for this client yet. It appears here once they answer a survey.",
+							"fields": [
+								{ "label": "NPS", "path": "nps", "format": "number", "decimals": 1 },
+								{ "label": "Average rating", "path": "averageRating", "format": "number", "decimals": 1 },
+								{ "label": "Responses", "path": "responseCount", "format": "number" },
+								{
+									"label": "Trend",
+									"path": "trend",
+									"map": {
+										"up": "Better than the 90 days before",
+										"down": "Worse than the 90 days before",
+										"flat": "The same as the 90 days before",
+										"unknown": "Not enough responses to compare"
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "client-satisfaction-comments",
+						"type": "record-list",
+						"title": "Latest comments",
+						"icon": "CommentQuoteOutline",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/satisfaction/client/@objectId", "responsePath": "verbatims" },
+							"limit": 3,
+							"title": "{text}",
+							"emptyText": "No comments yet."
+						}
+					},
+					{
 						"id": "client-channels",
-						"type": "ContactChannelsWidget",
+						"type": "tabs",
 						"title": "Contact channels",
 						"icon": "CardAccountPhoneOutline",
 						"content": {
-							"entityType": "client",
-							"title": "Contact channels"
+							"ariaLabel": "Contact channels",
+							"tabs": [
+								{
+									"widgetId": "client-channels-emails",
+									"label": "Emails",
+									"countField": "emails"
+								},
+								{
+									"widgetId": "client-channels-phones",
+									"label": "Phones",
+									"countField": "phones"
+								},
+								{
+									"widgetId": "client-channels-social",
+									"label": "Social profiles",
+									"countField": "socialProfiles"
+								}
+							]
+						}
+					},
+					{
+						"id": "client-channels-emails",
+						"type": "field-list",
+						"title": "Emails",
+						"content": {
+							"field": "emails",
+							"row": {
+								"title": "value",
+								"href": {
+									"path": "value",
+									"scheme": "mailto"
+								},
+								"pill": {
+									"path": "kind",
+									"map": {
+										"work": "Work",
+										"private": "Private",
+										"mobile": "Mobile",
+										"whatsapp": "WhatsApp",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "primary",
+										"map": {
+											"true": "Primary",
+											"false": ""
+										}
+									},
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"exclusive": [
+									"primary"
+								],
+								"fields": [
+									{
+										"key": "kind",
+										"label": "Kind",
+										"type": "select",
+										"default": "work",
+										"options": [
+											{
+												"value": "work",
+												"label": "Work"
+											},
+											{
+												"value": "private",
+												"label": "Private"
+											},
+											{
+												"value": "mobile",
+												"label": "Mobile"
+											},
+											{
+												"value": "whatsapp",
+												"label": "WhatsApp"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "value",
+										"label": "Email address",
+										"required": true,
+										"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+										"patternMessage": "Invalid email format"
+									},
+									{
+										"key": "primary",
+										"label": "Primary",
+										"type": "checkbox"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"rowActions": [
+								{
+									"id": "write-email",
+									"label": "Write email",
+									"dialog": "WriteEmailModal",
+									"props": {
+										"address": "@row.value",
+										"clientId": "@objectId"
+									}
+								}
+							],
+							"emptyText": "No email addresses yet.",
+							"afterSave": {
+								"url": "/apps/pipelinq/api/contacts-sync/write-back",
+								"method": "POST",
+								"body": {
+									"objectType": "client",
+									"objectId": "@objectId"
+								},
+								"failureText": "Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details."
+							}
+						}
+					},
+					{
+						"id": "client-channels-phones",
+						"type": "field-list",
+						"title": "Phones",
+						"content": {
+							"field": "phones",
+							"row": {
+								"title": "value",
+								"href": {
+									"path": "value",
+									"scheme": "tel"
+								},
+								"pill": {
+									"path": "kind",
+									"map": {
+										"work": "Work",
+										"private": "Private",
+										"mobile": "Mobile",
+										"whatsapp": "WhatsApp",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "primary",
+										"map": {
+											"true": "Primary",
+											"false": ""
+										}
+									},
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"exclusive": [
+									"primary"
+								],
+								"fields": [
+									{
+										"key": "kind",
+										"label": "Kind",
+										"type": "select",
+										"default": "work",
+										"options": [
+											{
+												"value": "work",
+												"label": "Work"
+											},
+											{
+												"value": "private",
+												"label": "Private"
+											},
+											{
+												"value": "mobile",
+												"label": "Mobile"
+											},
+											{
+												"value": "whatsapp",
+												"label": "WhatsApp"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "value",
+										"label": "Phone number",
+										"required": true,
+										"pattern": "^[+]?[\\d\\s\\-().]{7,20}$",
+										"patternMessage": "Invalid phone format"
+									},
+									{
+										"key": "primary",
+										"label": "Primary",
+										"type": "checkbox"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"emptyText": "No phone numbers yet.",
+							"afterSave": {
+								"url": "/apps/pipelinq/api/contacts-sync/write-back",
+								"method": "POST",
+								"body": {
+									"objectType": "client",
+									"objectId": "@objectId"
+								},
+								"failureText": "Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details."
+							}
+						}
+					},
+					{
+						"id": "client-channels-social",
+						"type": "field-list",
+						"title": "Social profiles",
+						"content": {
+							"field": "socialProfiles",
+							"row": {
+								"title": "handle",
+								"titleFallback": "url",
+								"href": "url",
+								"pill": {
+									"path": "network",
+									"map": {
+										"linkedin": "LinkedIn",
+										"x": "X",
+										"mastodon": "Mastodon",
+										"bluesky": "Bluesky",
+										"facebook": "Facebook",
+										"instagram": "Instagram",
+										"threads": "Threads",
+										"tiktok": "TikTok",
+										"youtube": "YouTube",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									},
+									{
+										"path": "followedByUs",
+										"map": {
+											"true": "Followed by us",
+											"false": ""
+										}
+									},
+									{
+										"path": "followsUs",
+										"map": {
+											"true": "Follows us",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"requireOneOf": [
+									"handle",
+									"url"
+								],
+								"requireOneOfMessage": "A handle or a profile URL is required",
+								"fields": [
+									{
+										"key": "network",
+										"label": "Network",
+										"type": "select",
+										"default": "linkedin",
+										"options": [
+											{
+												"value": "linkedin",
+												"label": "LinkedIn"
+											},
+											{
+												"value": "x",
+												"label": "X"
+											},
+											{
+												"value": "mastodon",
+												"label": "Mastodon"
+											},
+											{
+												"value": "bluesky",
+												"label": "Bluesky"
+											},
+											{
+												"value": "facebook",
+												"label": "Facebook"
+											},
+											{
+												"value": "instagram",
+												"label": "Instagram"
+											},
+											{
+												"value": "threads",
+												"label": "Threads"
+											},
+											{
+												"value": "tiktok",
+												"label": "TikTok"
+											},
+											{
+												"value": "youtube",
+												"label": "YouTube"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "handle",
+										"label": "Handle"
+									},
+									{
+										"key": "url",
+										"label": "Profile URL",
+										"pattern": "^https?://.+\\..+",
+										"patternMessage": "Invalid URL format"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									},
+									{
+										"key": "followedByUs",
+										"label": "Followed by us",
+										"type": "checkbox"
+									},
+									{
+										"key": "followsUs",
+										"label": "Follows us",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"emptyText": "No social profiles yet."
+						}
+					},
+					{
+						"id": "client-preferences",
+						"type": "facts",
+						"title": "Contact preferences",
+						"icon": "TuneVariant",
+						"content": {
+							"fields": [
+								{
+									"path": "preferredChannel",
+									"label": "Preferred channel",
+									"map": {
+										"email": "Email",
+										"phone": "Phone",
+										"whatsapp": "WhatsApp",
+										"linkedin": "LinkedIn",
+										"x": "X",
+										"mastodon": "Mastodon",
+										"bluesky": "Bluesky",
+										"other": "Other"
+									}
+								},
+								{
+									"path": "timezone",
+									"label": "Timezone"
+								},
+								{
+									"path": "correspondenceLanguage",
+									"label": "Language"
+								}
+							],
+							"hideEmpty": true
 						}
 					},
 					{
 						"id": "client-relationships",
-						"type": "ContactRelationshipsWidget",
+						"type": "object-list",
 						"title": "Relationships",
 						"icon": "AccountMultipleOutline",
 						"content": {
-							"entityType": "client",
-							"title": "Relationships"
+							"register": "pipelinq",
+							"schema": "relationship",
+							"filter": {
+								"fromContact": "@objectId"
+							},
+							"limit": 100,
+							"fit": false,
+							"columns": [
+								{
+									"key": "toContact",
+									"label": "Name",
+									"widget": "fkResolve",
+									"widgetProps": {
+										"register": "pipelinq",
+										"schemaFrom": {
+											"field": "toType",
+											"map": {
+												"client": "client",
+												"contact": "contact"
+											}
+										},
+										"labelField": "name"
+									}
+								},
+								{
+									"key": "type",
+									"label": "Relationship"
+								},
+								{
+									"key": "endDate",
+									"label": "Status",
+									"widget": "date",
+									"widgetProps": {
+										"variantWhen": [
+											{
+												"op": "lt",
+												"value": 0,
+												"variant": "error"
+											}
+										],
+										"pastText": "Ended",
+										"otherText": "Active"
+									}
+								}
+							],
+							"groupBy": "category",
+							"rowRouteField": "toType",
+							"rowRouteMap": {
+								"client": "ClientDetail",
+								"contact": "ContactDetail"
+							},
+							"rowRouteIdField": "toContact",
+							"editable": true,
+							"deletable": true,
+							"addLabel": "Add relationship",
+							"createEndpoint": {
+								"url": "/apps/pipelinq/api/relationships",
+								"extra": {
+									"fromType": "client"
+								}
+							},
+							"formIncludeFields": [
+								"toContact",
+								"type",
+								"notes",
+								"startDate",
+								"endDate",
+								"strength"
+							],
+							"formFieldOverrides": {
+								"toContact": {
+									"label": "Related entity",
+									"widget": "party",
+									"sources": [
+										{
+											"id": "contact",
+											"register": "pipelinq",
+											"schema": "contact",
+											"label": "Contact",
+											"title": "{name}",
+											"secondary": "{email}"
+										},
+										{
+											"id": "client",
+											"register": "pipelinq",
+											"schema": "client",
+											"label": "Client",
+											"title": "{name}",
+											"secondary": "{email}"
+										}
+									],
+									"placeholder": "Search contacts and clients…"
+								},
+								"type": {
+									"label": "Relationship type",
+									"widget": "select",
+									"optionsFrom": {
+										"url": "/apps/pipelinq/api/relationship-types",
+										"responsePath": "results",
+										"valueField": "value",
+										"labelField": "label",
+										"groupField": "category"
+									}
+								},
+								"strength": {
+									"default": "medium"
+								}
+							},
+							"emptyText": "No relationships yet.",
+							"groupOrder": [
+								"Organisatie",
+								"Professioneel",
+								"Familie",
+								"CRM Rol"
+							]
 						}
 					},
 					{
@@ -2476,27 +3166,176 @@
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
-					}
+					},
+					{ "id": "10", "widgetId": "client-satisfaction", "gridX": 0, "gridY": 22, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "11", "widgetId": "client-satisfaction-comments", "gridX": 6, "gridY": 22, "gridWidth": 6, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
 					{
 						"id": "party-indicators",
-						"component": "PartyIndicatorPanel",
+						"type": "party-actions",
 						"placement": "before-body",
-						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
-						"props": {
-							"partyId": "@objectId"
-						}
-					},
-					{
-						"id": "contact-links",
-						"component": "ContactLinks",
-						"placement": "before-body",
-						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
-						"props": {
-							"phone": "@object.phone",
-							"email": "@object.email",
-							"address": "@object.address"
+						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made; then call, dial from the agent's extension, mail and directions.",
+						"content": {
+							"indicatorSource": {
+								"url": "/apps/pipelinq/api/leaves/party/@objectId",
+								"itemsPath": "indicators",
+								"labelPath": "label",
+								"tonePath": "severity",
+								"toneMap": {
+									"critical": "error",
+									"warning": "warning",
+									"info": "info"
+								},
+								"toneLabels": {
+									"critical": "Critical",
+									"warning": "Warning",
+									"info": "Information"
+								},
+								"meta": [
+									[
+										"From {validFrom|date} until {validUntil|date}",
+										"Since {validFrom|date}"
+									],
+									[
+										"Source: {source}"
+									]
+								],
+								"ack": {
+									"whenPath": "requiresAcknowledgement",
+									"donePath": "acknowledgedAt",
+									"endpoint": "/apps/pipelinq/api/party-indicator-values/{id}/acknowledge",
+									"label": "I have seen this",
+									"seen": "Seen by {acknowledgedBy} on {acknowledgedAt|date}",
+									"errorText": "The acknowledgement could not be saved."
+								},
+								"errorText": "The list of warnings could not be loaded."
+							},
+							"emptyText": "No warnings on this record.",
+							"emptyActions": [
+								{
+									"id": "add-warning",
+									"label": "Add a warning",
+									"type": "open-form",
+									"variant": "tertiary",
+									"formTitle": "Add a warning",
+									"register": "pipelinq",
+									"schema": "partyIndicatorValue",
+									"props": {
+										"party": "@objectId"
+									},
+									"includeFields": [
+										"indicator",
+										"validFrom",
+										"validUntil",
+										"source"
+									],
+									"fieldOverrides": {
+										"indicator": {
+											"label": "Warning",
+											"widget": "select",
+											"optionsFrom": {
+												"register": "pipelinq",
+												"schema": "partyIndicator",
+												"valueField": "code",
+												"labelField": "label"
+											}
+										},
+										"validFrom": {
+											"label": "Valid from",
+											"default": "@today"
+										},
+										"validUntil": {
+											"label": "Valid until (optional)"
+										},
+										"source": {
+											"label": "Source (optional)"
+										}
+									}
+								}
+							],
+							"indicatorActions": [
+								{
+									"id": "add-warning",
+									"label": "Add a warning",
+									"type": "open-form",
+									"variant": "tertiary",
+									"formTitle": "Add a warning",
+									"register": "pipelinq",
+									"schema": "partyIndicatorValue",
+									"props": {
+										"party": "@objectId"
+									},
+									"includeFields": [
+										"indicator",
+										"validFrom",
+										"validUntil",
+										"source"
+									],
+									"fieldOverrides": {
+										"indicator": {
+											"label": "Warning",
+											"widget": "select",
+											"optionsFrom": {
+												"register": "pipelinq",
+												"schema": "partyIndicator",
+												"valueField": "code",
+												"labelField": "label"
+											}
+										},
+										"validFrom": {
+											"label": "Valid from",
+											"default": "@today"
+										},
+										"validUntil": {
+											"label": "Valid until (optional)"
+										},
+										"source": {
+											"label": "Source (optional)"
+										}
+									}
+								}
+							],
+							"actions": [
+								{
+									"id": "call",
+									"label": "Call {phone}",
+									"icon": "PhoneOutline",
+									"type": "navigate",
+									"target": "@object.phone|tel"
+								},
+								{
+									"id": "dial",
+									"label": "Call from my extension",
+									"icon": "PhoneOutgoing",
+									"type": "api-call",
+									"method": "POST",
+									"url": "/apps/pipelinq/api/cti/click-to-dial",
+									"payload": {
+										"targetNumber": "@object.phone"
+									},
+									"successMessage": "Call started. Your extension will ring.",
+									"refresh": false,
+									"visibleWhen": {
+										"field": "phone",
+										"op": "exists"
+									}
+								},
+								{
+									"id": "mail",
+									"label": "Mail {email}",
+									"icon": "EmailOutline",
+									"type": "navigate",
+									"target": "@object.email|mailto"
+								},
+								{
+									"id": "route",
+									"label": "Directions",
+									"icon": "MapMarkerOutline",
+									"type": "navigate",
+									"target": "@object.address|geo"
+								}
+							]
 						}
 					},
 					{
@@ -2509,14 +3348,105 @@
 					},
 					{
 						"id": "messaging-conversation",
-						"component": "MessagingConversationSection",
+						"type": "conversation",
 						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "client"
-						},
 						"colSpan": 6,
-						"card": true
+						"card": true,
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "channelMessage",
+								"filter": {
+									"clientId": "@objectId"
+								},
+								"limit": 200
+							},
+							"textField": "body",
+							"timeField": "sentAt",
+							"sideField": "direction",
+							"usValue": "outbound",
+							"channelField": "channel",
+							"channelMap": {
+								"sms": "SMS",
+								"whatsapp": "WhatsApp"
+							},
+							"statusField": "deliveryStatus",
+							"statusMap": {
+								"queued": "Queued",
+								"sent": "Sent",
+								"delivered": "Delivered",
+								"read": "Read",
+								"failed": "Failed",
+								"expired": "Expired"
+							},
+							"messageActions": [
+								{
+									"id": "resend",
+									"label": "Send again",
+									"endpoint": "/apps/pipelinq/api/messaging/messages/{id}/resend",
+									"method": "POST",
+									"when": [
+										{
+											"field": "direction",
+											"equals": "outbound"
+										},
+										{
+											"field": "channel",
+											"in": [
+												"sms",
+												"whatsapp"
+											]
+										},
+										{
+											"field": "deliveryStatus",
+											"in": [
+												"failed",
+												"expired"
+											]
+										},
+										{
+											"field": "metadata.resentAs",
+											"empty": true
+										}
+									],
+									"errors": {
+										"path": "status",
+										"map": {
+											"consent-missing": "Not sent: the contact has not given consent for this channel.",
+											"budget-exceeded": "Not sent: the messaging budget for this period is used up.",
+											"no-provider": "Not sent: no provider is set up for this channel.",
+											"template-invalid": "Not sent: the template is no longer approved.",
+											"template-required": "Not sent: the WhatsApp session is closed. Use Send message with an approved template.",
+											"already-resent": "This message was already sent again.",
+											"not-failed": "This message did not fail, so it is not sent again."
+										},
+										"default": "Sending failed again. Try again later."
+									},
+									"errorText": "Sending failed again. Try again later.",
+									"onStatus": {
+										"template-required": {
+											"type": "open-modal",
+											"target": "SendMessageModal",
+											"props": {
+												"clientId": "@objectId",
+												"initialChannel": "whatsapp"
+											}
+										}
+									}
+								}
+							],
+							"allowReply": false,
+							"emptyText": "No messages yet.",
+							"headerAction": {
+								"label": "Send message",
+								"type": "open-modal",
+								"target": "SendMessageModal",
+								"props": {
+									"clientId": "@objectId"
+								}
+							},
+							"title": "Messages"
+						}
 					},
 					{
 						"id": "contactmoment-quick-log",
@@ -2531,24 +3461,69 @@
 						"card": true
 					},
 					{
-						"id": "satisfaction",
-						"component": "ClientSatisfactionSection",
-						"title": "Satisfaction",
-						"placement": "end",
-						"props": {
-							"clientId": "@objectId"
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
 						"id": "activity",
-						"component": "ActivityTimeline",
+						"type": "timeline",
 						"title": "Activity",
 						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "client"
+						"content": {
+							"order": "desc",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/timeline",
+								"params": {
+									"entityType": "client",
+									"entityId": "@objectId"
+								},
+								"itemsPath": "items",
+								"pagesPath": "pages",
+								"dateField": "date",
+								"labelField": "title",
+								"detailField": "description",
+								"typeField": "type",
+								"userField": "user",
+								"typeLabels": {
+									"interaction": "Contact moment",
+									"worklog": "Worklog",
+									"task": "Task",
+									"email": "Email",
+									"calendar": "Calendar"
+								},
+								"typesParam": "types[]",
+								"limit": 20,
+								"icons": {
+									"path": "metadata.channel",
+									"map": {
+										"phone": "Phone",
+										"email": "Email"
+									},
+									"typeMap": {
+										"interaction": "Message",
+										"worklog": "ClockOutline",
+										"task": "CheckCircle",
+										"email": "EmailOutline",
+										"calendar": "Calendar"
+									},
+									"default": "Message"
+								}
+							},
+							"typeChips": [
+								{
+									"value": "interaction",
+									"label": "Contact moments"
+								},
+								{
+									"value": "task",
+									"label": "Tasks"
+								},
+								{
+									"value": "email",
+									"label": "Email"
+								},
+								{
+									"value": "calendar",
+									"label": "Calendar"
+								}
+							],
+							"emptyText": "Activities will appear here once contactmomenten, tasks, emails or calendar entries are linked to this record."
 						},
 						"colSpan": 12,
 						"card": true
@@ -2604,6 +3579,7 @@
 					"client-kpis-sales",
 					"client-related",
 					"client-channels",
+					"client-preferences",
 					"client-relationships",
 					"client-email",
 					"client-notes",
@@ -2847,11 +3823,52 @@
 					},
 					{
 						"id": "customer-reply",
-						"component": "CustomerReplySection",
+						"type": "conversation",
 						"title": "Customer contact",
 						"placement": "after-data",
-						"props": {
-							"objectId": "@objectId"
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "in",
+							"value": [
+								"request",
+								"complaint"
+							]
+						},
+						"content": {
+							"fields": [
+								{
+									"field": "portalReplies",
+									"side": "them"
+								},
+								{
+									"field": "portalAnswers",
+									"side": "us"
+								}
+							],
+							"textField": "message",
+							"timeField": "createdAt",
+							"usLabel": "Employee",
+							"emptyText": "No messages with the customer yet.",
+							"replyLabel": "Message to the customer",
+							"placeholder": "The customer reads this on the portal. Everything else on the ticket stays internal.",
+							"sendLabel": "Send answer",
+							"endpoint": "/apps/pipelinq/api/tickets/@objectId/answer",
+							"templates": {
+								"url": "/apps/pipelinq/api/saved-replies",
+								"params": {
+									"channel": "portal",
+									"ticket": "@objectId"
+								},
+								"inputLabel": "Saved reply",
+								"textField": "body"
+							},
+							"replyOptions": [
+								{
+									"key": "waitForCustomer",
+									"label": "Also set the ticket to waiting for the customer",
+									"default": true
+								}
+							]
 						}
 					},
 					{
@@ -2865,14 +3882,69 @@
 					},
 					{
 						"id": "resident-view",
-						"component": "ResidentViewSection",
+						"type": "facts",
+						"title": "What the resident sees",
 						"placement": "after-data",
-						"_note": "No title: the section draws its own heading, because it renders nothing on complaint and interaction tickets (portal-resident-view-preview).",
-						"props": {
-							"ticketId": "@objectId",
-							"ticketType": "@object.ticketType",
-							"customerMessage": "@object.customerMessage",
-							"status": "@object.status"
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"_note": "The resident-view preview (portal-resident-view-preview): the server answers the panels as labelled rows (ResidentViewRows), so these are facts cards. Complaint and interaction tickets get none: the portal does not serve them.",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "residentRows",
+							"fields": [],
+							"hideEmpty": false,
+							"notice": {
+								"text": "Everything else on this ticket stays internal."
+							},
+							"emptyText": "The resident portal does not show this ticket.",
+							"errorText": "What the resident sees could not be loaded."
+						}
+					},
+					{
+						"id": "resident-view-portal",
+						"type": "facts",
+						"title": "In the organisation portal",
+						"placement": "after-data",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "portalRows",
+							"fields": [],
+							"hideEmpty": false,
+							"emptyText": "This ticket is not shown in an organisation portal.",
+							"errorText": "What the resident sees could not be loaded."
+						}
+					},
+					{
+						"id": "resident-view-internal",
+						"type": "facts",
+						"title": "Stays internal",
+						"placement": "after-data",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "internalRows",
+							"fields": [],
+							"hideEmpty": false,
+							"emptyText": "Nothing on this ticket stays internal.",
+							"errorText": "What the resident sees could not be loaded."
 						}
 					},
 					{
@@ -2905,16 +3977,28 @@
 						"readOnly": false
 					},
 					"email": {
-						"readOnly": false
+						"readOnly": false,
+						"validation": {
+							"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+							"patternMessage": "Invalid email format"
+						}
 					},
 					"phone": {
-						"readOnly": false
+						"readOnly": false,
+						"validation": {
+							"pattern": "^[+]?[\\d\\s\\-().]{7,20}$",
+							"patternMessage": "Invalid phone format"
+						}
 					},
 					"correspondenceLanguage": {
 						"widget": "language"
 					},
 					"timezone": {
 						"widget": "timezone"
+					},
+					"client": {
+						"required": true,
+						"placeholder": "Select or create a client"
 					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -3225,31 +4309,583 @@
 					},
 					{
 						"id": "contact-channels",
-						"type": "ContactChannelsWidget",
+						"type": "tabs",
 						"title": "Channels",
 						"icon": "CardAccountPhoneOutline",
 						"content": {
-							"entityType": "contact",
-							"title": "Channels"
+							"ariaLabel": "Channels",
+							"tabs": [
+								{
+									"widgetId": "contact-channels-emails",
+									"label": "Emails",
+									"countField": "emails"
+								},
+								{
+									"widgetId": "contact-channels-phones",
+									"label": "Phones",
+									"countField": "phones"
+								},
+								{
+									"widgetId": "contact-channels-social",
+									"label": "Social profiles",
+									"countField": "socialProfiles"
+								}
+							]
+						}
+					},
+					{
+						"id": "contact-channels-emails",
+						"type": "field-list",
+						"title": "Emails",
+						"content": {
+							"field": "emails",
+							"row": {
+								"title": "value",
+								"href": {
+									"path": "value",
+									"scheme": "mailto"
+								},
+								"pill": {
+									"path": "kind",
+									"map": {
+										"work": "Work",
+										"private": "Private",
+										"mobile": "Mobile",
+										"whatsapp": "WhatsApp",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "primary",
+										"map": {
+											"true": "Primary",
+											"false": ""
+										}
+									},
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"exclusive": [
+									"primary"
+								],
+								"fields": [
+									{
+										"key": "kind",
+										"label": "Kind",
+										"type": "select",
+										"default": "work",
+										"options": [
+											{
+												"value": "work",
+												"label": "Work"
+											},
+											{
+												"value": "private",
+												"label": "Private"
+											},
+											{
+												"value": "mobile",
+												"label": "Mobile"
+											},
+											{
+												"value": "whatsapp",
+												"label": "WhatsApp"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "value",
+										"label": "Email address",
+										"required": true,
+										"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+										"patternMessage": "Invalid email format"
+									},
+									{
+										"key": "primary",
+										"label": "Primary",
+										"type": "checkbox"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"rowActions": [
+								{
+									"id": "write-email",
+									"label": "Write email",
+									"dialog": "WriteEmailModal",
+									"props": {
+										"address": "@row.value",
+										"contactId": "@objectId"
+									}
+								}
+							],
+							"emptyText": "No email addresses yet.",
+							"afterSave": {
+								"url": "/apps/pipelinq/api/contacts-sync/write-back",
+								"method": "POST",
+								"body": {
+									"objectType": "contact",
+									"objectId": "@objectId"
+								},
+								"failureText": "Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details."
+							}
+						}
+					},
+					{
+						"id": "contact-channels-phones",
+						"type": "field-list",
+						"title": "Phones",
+						"content": {
+							"field": "phones",
+							"row": {
+								"title": "value",
+								"href": {
+									"path": "value",
+									"scheme": "tel"
+								},
+								"pill": {
+									"path": "kind",
+									"map": {
+										"work": "Work",
+										"private": "Private",
+										"mobile": "Mobile",
+										"whatsapp": "WhatsApp",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "primary",
+										"map": {
+											"true": "Primary",
+											"false": ""
+										}
+									},
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"exclusive": [
+									"primary"
+								],
+								"fields": [
+									{
+										"key": "kind",
+										"label": "Kind",
+										"type": "select",
+										"default": "work",
+										"options": [
+											{
+												"value": "work",
+												"label": "Work"
+											},
+											{
+												"value": "private",
+												"label": "Private"
+											},
+											{
+												"value": "mobile",
+												"label": "Mobile"
+											},
+											{
+												"value": "whatsapp",
+												"label": "WhatsApp"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "value",
+										"label": "Phone number",
+										"required": true,
+										"pattern": "^[+]?[\\d\\s\\-().]{7,20}$",
+										"patternMessage": "Invalid phone format"
+									},
+									{
+										"key": "primary",
+										"label": "Primary",
+										"type": "checkbox"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"emptyText": "No phone numbers yet.",
+							"afterSave": {
+								"url": "/apps/pipelinq/api/contacts-sync/write-back",
+								"method": "POST",
+								"body": {
+									"objectType": "contact",
+									"objectId": "@objectId"
+								},
+								"failureText": "Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details."
+							}
+						}
+					},
+					{
+						"id": "contact-channels-social",
+						"type": "field-list",
+						"title": "Social profiles",
+						"content": {
+							"field": "socialProfiles",
+							"row": {
+								"title": "handle",
+								"titleFallback": "url",
+								"href": "url",
+								"pill": {
+									"path": "network",
+									"map": {
+										"linkedin": "LinkedIn",
+										"x": "X",
+										"mastodon": "Mastodon",
+										"bluesky": "Bluesky",
+										"facebook": "Facebook",
+										"instagram": "Instagram",
+										"threads": "Threads",
+										"tiktok": "TikTok",
+										"youtube": "YouTube",
+										"other": "Other"
+									}
+								},
+								"meta": [
+									{
+										"path": "verified",
+										"map": {
+											"true": "Verified",
+											"false": ""
+										}
+									},
+									{
+										"path": "followedByUs",
+										"map": {
+											"true": "Followed by us",
+											"false": ""
+										}
+									},
+									{
+										"path": "followsUs",
+										"map": {
+											"true": "Follows us",
+											"false": ""
+										}
+									}
+								]
+							},
+							"add": {
+								"label": "Add",
+								"trigger": "button",
+								"placement": "header",
+								"requireOneOf": [
+									"handle",
+									"url"
+								],
+								"requireOneOfMessage": "A handle or a profile URL is required",
+								"fields": [
+									{
+										"key": "network",
+										"label": "Network",
+										"type": "select",
+										"default": "linkedin",
+										"options": [
+											{
+												"value": "linkedin",
+												"label": "LinkedIn"
+											},
+											{
+												"value": "x",
+												"label": "X"
+											},
+											{
+												"value": "mastodon",
+												"label": "Mastodon"
+											},
+											{
+												"value": "bluesky",
+												"label": "Bluesky"
+											},
+											{
+												"value": "facebook",
+												"label": "Facebook"
+											},
+											{
+												"value": "instagram",
+												"label": "Instagram"
+											},
+											{
+												"value": "threads",
+												"label": "Threads"
+											},
+											{
+												"value": "tiktok",
+												"label": "TikTok"
+											},
+											{
+												"value": "youtube",
+												"label": "YouTube"
+											},
+											{
+												"value": "other",
+												"label": "Other"
+											}
+										]
+									},
+									{
+										"key": "handle",
+										"label": "Handle"
+									},
+									{
+										"key": "url",
+										"label": "Profile URL",
+										"pattern": "^https?://.+\\..+",
+										"patternMessage": "Invalid URL format"
+									},
+									{
+										"key": "verified",
+										"label": "Verified",
+										"type": "checkbox"
+									},
+									{
+										"key": "followedByUs",
+										"label": "Followed by us",
+										"type": "checkbox"
+									},
+									{
+										"key": "followsUs",
+										"label": "Follows us",
+										"type": "checkbox"
+									}
+								]
+							},
+							"edit": {
+								"label": "Edit"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"emptyText": "No social profiles yet."
+						}
+					},
+					{
+						"id": "contact-preferences",
+						"type": "facts",
+						"title": "Contact preferences",
+						"icon": "TuneVariant",
+						"content": {
+							"fields": [
+								{
+									"path": "preferredChannel",
+									"label": "Preferred channel",
+									"map": {
+										"email": "Email",
+										"phone": "Phone",
+										"whatsapp": "WhatsApp",
+										"linkedin": "LinkedIn",
+										"x": "X",
+										"mastodon": "Mastodon",
+										"bluesky": "Bluesky",
+										"other": "Other"
+									}
+								},
+								{
+									"path": "timezone",
+									"label": "Timezone"
+								},
+								{
+									"path": "correspondenceLanguage",
+									"label": "Language"
+								}
+							],
+							"hideEmpty": true
 						}
 					},
 					{
 						"id": "contact-relationships",
-						"type": "ContactRelationshipsWidget",
+						"type": "object-list",
 						"title": "Relationships",
 						"icon": "AccountMultipleOutline",
 						"content": {
-							"entityType": "contact",
-							"title": "Relationships"
+							"register": "pipelinq",
+							"schema": "relationship",
+							"filter": {
+								"fromContact": "@objectId"
+							},
+							"limit": 100,
+							"fit": false,
+							"columns": [
+								{
+									"key": "toContact",
+									"label": "Name",
+									"widget": "fkResolve",
+									"widgetProps": {
+										"register": "pipelinq",
+										"schemaFrom": {
+											"field": "toType",
+											"map": {
+												"client": "client",
+												"contact": "contact"
+											}
+										},
+										"labelField": "name"
+									}
+								},
+								{
+									"key": "type",
+									"label": "Relationship"
+								},
+								{
+									"key": "endDate",
+									"label": "Status",
+									"widget": "date",
+									"widgetProps": {
+										"variantWhen": [
+											{
+												"op": "lt",
+												"value": 0,
+												"variant": "error"
+											}
+										],
+										"pastText": "Ended",
+										"otherText": "Active"
+									}
+								}
+							],
+							"groupBy": "category",
+							"rowRouteField": "toType",
+							"rowRouteMap": {
+								"client": "ClientDetail",
+								"contact": "ContactDetail"
+							},
+							"rowRouteIdField": "toContact",
+							"editable": true,
+							"deletable": true,
+							"addLabel": "Add relationship",
+							"createEndpoint": {
+								"url": "/apps/pipelinq/api/relationships",
+								"extra": {
+									"fromType": "contact"
+								}
+							},
+							"formIncludeFields": [
+								"toContact",
+								"type",
+								"notes",
+								"startDate",
+								"endDate",
+								"strength"
+							],
+							"formFieldOverrides": {
+								"toContact": {
+									"label": "Related entity",
+									"widget": "party",
+									"sources": [
+										{
+											"id": "contact",
+											"register": "pipelinq",
+											"schema": "contact",
+											"label": "Contact",
+											"title": "{name}",
+											"secondary": "{email}"
+										},
+										{
+											"id": "client",
+											"register": "pipelinq",
+											"schema": "client",
+											"label": "Client",
+											"title": "{name}",
+											"secondary": "{email}"
+										}
+									],
+									"placeholder": "Search contacts and clients…"
+								},
+								"type": {
+									"label": "Relationship type",
+									"widget": "select",
+									"optionsFrom": {
+										"url": "/apps/pipelinq/api/relationship-types",
+										"responsePath": "results",
+										"valueField": "value",
+										"labelField": "label",
+										"groupField": "category"
+									}
+								},
+								"strength": {
+									"default": "medium"
+								}
+							},
+							"emptyText": "No relationships yet.",
+							"groupOrder": [
+								"Familie",
+								"Professioneel",
+								"Organisatie",
+								"CRM Rol"
+							]
 						}
 					},
 					{
 						"id": "contact-subscriptions",
-						"type": "SubscriptionsWidget",
+						"type": "object-table",
 						"title": "Subscriptions",
 						"icon": "EmailMultipleOutline",
 						"content": {
-							"title": "Subscriptions"
+							"source": {
+								"register": "pipelinq",
+								"schema": "subscription",
+								"filter": { "contactId": "@objectId" },
+								"order": { "createdAt": "desc" }
+							},
+							"columns": [
+								{ "key": "listId", "label": "Mailing list", "widget": "fkResolve", "widgetProps": { "register": "pipelinq", "schema": "mailingList", "labelField": "name" } },
+								{ "key": "state", "label": "Status" },
+								{ "key": "lawfulBasis", "label": "Ground" },
+								{ "key": "confirmedAt", "label": "Confirmed", "widget": "date" }
+							],
+							"emptyText": "This person is on no mailing list. Add them from a list, or send them a preference link."
 						}
 					},
 					{
@@ -3268,11 +4904,158 @@
 					},
 					{
 						"id": "contact-messages",
-						"type": "MessagingConversationWidget",
+						"type": "conversation",
 						"title": "Messages",
 						"icon": "MessageTextOutline",
 						"content": {
-							"entityType": "contact"
+							"source": {
+								"register": "pipelinq",
+								"schema": "channelMessage",
+								"filter": {
+									"contactId": "@objectId"
+								},
+								"limit": 200
+							},
+							"textField": "body",
+							"timeField": "sentAt",
+							"sideField": "direction",
+							"usValue": "outbound",
+							"channelField": "channel",
+							"channelMap": {
+								"sms": "SMS",
+								"whatsapp": "WhatsApp"
+							},
+							"statusField": "deliveryStatus",
+							"statusMap": {
+								"queued": "Queued",
+								"sent": "Sent",
+								"delivered": "Delivered",
+								"read": "Read",
+								"failed": "Failed",
+								"expired": "Expired"
+							},
+							"messageActions": [
+								{
+									"id": "resend",
+									"label": "Send again",
+									"endpoint": "/apps/pipelinq/api/messaging/messages/{id}/resend",
+									"method": "POST",
+									"when": [
+										{
+											"field": "direction",
+											"equals": "outbound"
+										},
+										{
+											"field": "channel",
+											"in": [
+												"sms",
+												"whatsapp"
+											]
+										},
+										{
+											"field": "deliveryStatus",
+											"in": [
+												"failed",
+												"expired"
+											]
+										},
+										{
+											"field": "metadata.resentAs",
+											"empty": true
+										}
+									],
+									"errors": {
+										"path": "status",
+										"map": {
+											"consent-missing": "Not sent: the contact has not given consent for this channel.",
+											"budget-exceeded": "Not sent: the messaging budget for this period is used up.",
+											"no-provider": "Not sent: no provider is set up for this channel.",
+											"template-invalid": "Not sent: the template is no longer approved.",
+											"template-required": "Not sent: the WhatsApp session is closed. Use Send message with an approved template.",
+											"already-resent": "This message was already sent again.",
+											"not-failed": "This message did not fail, so it is not sent again."
+										},
+										"default": "Sending failed again. Try again later."
+									},
+									"errorText": "Sending failed again. Try again later.",
+									"onStatus": {
+										"template-required": {
+											"type": "open-modal",
+											"target": "SendMessageModal",
+											"props": {
+												"contactId": "@objectId",
+												"initialChannel": "whatsapp"
+											}
+										}
+									}
+								}
+							],
+							"allowReply": false,
+							"emptyText": "No messages yet.",
+							"headerAction": {
+								"label": "Send message",
+								"type": "open-modal",
+								"target": "SendMessageModal",
+								"props": {
+									"contactId": "@objectId"
+								}
+							},
+							"statusBadge": {
+								"source": {
+									"register": "pipelinq",
+									"schema": "channelConversation",
+									"filter": {
+										"contactId": "@objectId"
+									},
+									"limit": 50
+								},
+								"sortField": "lastInboundAt",
+								"path": "status",
+								"map": {
+									"open": "Open",
+									"assigned": "Assigned",
+									"closed": "Closed"
+								}
+							}
+						}
+					},
+					{
+						"id": "contact-messaging-consent",
+						"type": "facts",
+						"title": "Messaging consent",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"source": {
+								"url": "/apps/pipelinq/api/messaging/preflight/@objectId"
+							},
+							"fields": [
+								{
+									"path": "consent.sms",
+									"label": "SMS consent",
+									"map": {
+										"opted-in": "Opted in",
+										"opted-out": "Opted out",
+										"unknown": "Unknown"
+									}
+								},
+								{
+									"path": "consent.whatsapp",
+									"label": "WhatsApp consent",
+									"map": {
+										"opted-in": "Opted in",
+										"opted-out": "Opted out",
+										"unknown": "Unknown"
+									}
+								},
+								{
+									"path": "whatsappSessionOpen",
+									"label": "WhatsApp session",
+									"map": {
+										"true": "Open (24h window)",
+										"false": "Closed, template required"
+									}
+								}
+							]
 						}
 					},
 					{
@@ -3297,11 +5080,169 @@
 				"bodyWidgets": [
 					{
 						"id": "party-indicators",
-						"component": "PartyIndicatorPanel",
+						"type": "party-actions",
 						"placement": "before-body",
-						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
-						"props": {
-							"partyId": "@objectId"
+						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made; then call, dial from the agent's extension, mail and directions.",
+						"content": {
+							"indicatorSource": {
+								"url": "/apps/pipelinq/api/leaves/party/@objectId",
+								"itemsPath": "indicators",
+								"labelPath": "label",
+								"tonePath": "severity",
+								"toneMap": {
+									"critical": "error",
+									"warning": "warning",
+									"info": "info"
+								},
+								"toneLabels": {
+									"critical": "Critical",
+									"warning": "Warning",
+									"info": "Information"
+								},
+								"meta": [
+									[
+										"From {validFrom|date} until {validUntil|date}",
+										"Since {validFrom|date}"
+									],
+									[
+										"Source: {source}"
+									]
+								],
+								"ack": {
+									"whenPath": "requiresAcknowledgement",
+									"donePath": "acknowledgedAt",
+									"endpoint": "/apps/pipelinq/api/party-indicator-values/{id}/acknowledge",
+									"label": "I have seen this",
+									"seen": "Seen by {acknowledgedBy} on {acknowledgedAt|date}",
+									"errorText": "The acknowledgement could not be saved."
+								},
+								"errorText": "The list of warnings could not be loaded."
+							},
+							"emptyText": "No warnings on this record.",
+							"emptyActions": [
+								{
+									"id": "add-warning",
+									"label": "Add a warning",
+									"type": "open-form",
+									"variant": "tertiary",
+									"formTitle": "Add a warning",
+									"register": "pipelinq",
+									"schema": "partyIndicatorValue",
+									"props": {
+										"party": "@objectId"
+									},
+									"includeFields": [
+										"indicator",
+										"validFrom",
+										"validUntil",
+										"source"
+									],
+									"fieldOverrides": {
+										"indicator": {
+											"label": "Warning",
+											"widget": "select",
+											"optionsFrom": {
+												"register": "pipelinq",
+												"schema": "partyIndicator",
+												"valueField": "code",
+												"labelField": "label"
+											}
+										},
+										"validFrom": {
+											"label": "Valid from",
+											"default": "@today"
+										},
+										"validUntil": {
+											"label": "Valid until (optional)"
+										},
+										"source": {
+											"label": "Source (optional)"
+										}
+									}
+								}
+							],
+							"indicatorActions": [
+								{
+									"id": "add-warning",
+									"label": "Add a warning",
+									"type": "open-form",
+									"variant": "tertiary",
+									"formTitle": "Add a warning",
+									"register": "pipelinq",
+									"schema": "partyIndicatorValue",
+									"props": {
+										"party": "@objectId"
+									},
+									"includeFields": [
+										"indicator",
+										"validFrom",
+										"validUntil",
+										"source"
+									],
+									"fieldOverrides": {
+										"indicator": {
+											"label": "Warning",
+											"widget": "select",
+											"optionsFrom": {
+												"register": "pipelinq",
+												"schema": "partyIndicator",
+												"valueField": "code",
+												"labelField": "label"
+											}
+										},
+										"validFrom": {
+											"label": "Valid from",
+											"default": "@today"
+										},
+										"validUntil": {
+											"label": "Valid until (optional)"
+										},
+										"source": {
+											"label": "Source (optional)"
+										}
+									}
+								}
+							],
+							"actions": [
+								{
+									"id": "call",
+									"label": "Call {phone}",
+									"icon": "PhoneOutline",
+									"type": "navigate",
+									"target": "@object.phone|tel"
+								},
+								{
+									"id": "dial",
+									"label": "Call from my extension",
+									"icon": "PhoneOutgoing",
+									"type": "api-call",
+									"method": "POST",
+									"url": "/apps/pipelinq/api/cti/click-to-dial",
+									"payload": {
+										"targetNumber": "@object.phone"
+									},
+									"successMessage": "Call started. Your extension will ring.",
+									"refresh": false,
+									"visibleWhen": {
+										"field": "phone",
+										"op": "exists"
+									}
+								},
+								{
+									"id": "mail",
+									"label": "Mail {email}",
+									"icon": "EmailOutline",
+									"type": "navigate",
+									"target": "@object.email|mailto"
+								},
+								{
+									"id": "route",
+									"label": "Directions",
+									"icon": "MapMarkerOutline",
+									"type": "navigate",
+									"target": "@object.address|geo"
+								}
+							]
 						}
 					}
 				],
@@ -3349,6 +5290,14 @@
 						"type": "navigate",
 						"target": "mailto:@object.email",
 						"icon": "EmailOutline"
+					},
+					{
+						"id": "manage-subscriptions",
+						"label": "Manage subscriptions",
+						"type": "open-modal",
+						"target": "SubscriptionManageModal",
+						"icon": "EmailMultipleOutline",
+						"props": { "contactId": "@objectId" }
 					}
 				],
 				"quickActions": [
@@ -3359,11 +5308,13 @@
 					"contact-kpis-deals",
 					"contact-related",
 					"contact-channels",
+					"contact-preferences",
 					"contact-relationships",
 					"contact-subscriptions",
 					"contact-brp",
 					"contact-email",
 					"contact-messages",
+					"contact-messaging-consent",
 					"contact-calendar",
 					"contact-history"
 				]
@@ -5585,14 +7536,6 @@
 			}
 		},
 		{
-			"id": "PosCustomerSettings",
-			"_note": "PosCustomerSettings.vue is an in-app settings surface (NcSettingsSection with the POS customer-lookup configuration form); it edits app configuration rather than register objects, so no object-oriented page type applies.",
-			"route": "/admin/pos-customer-link",
-			"type": "custom",
-			"title": "POS customer lookup",
-			"component": "PosCustomerSettingsView"
-		},
-		{
 			"id": "KassakoppelingAuditList",
 			"_note": "KassakoppelingAuditList.vue is a bespoke audit-trail viewer for the kassakoppeling (cash-register fiscalisation link) with append-only entries and verification actions rendered in a custom layout; the generic 'index' type cannot express the immutable-audit presentation and per-row verify controls.",
 			"route": "/kassakoppeling/audit",
@@ -7004,24 +8947,318 @@
 		},
 		{
 			"id": "Rapportage",
-			"_note": "Lead analytics as a declarative type:dashboard page (pipelinq-dashboards-declarative). The surface has no headline KPI cards to lift into endpoint stat widgets — its four bespoke widgets (pipeline-value funnel bar chart, source-performance table, lead-aging donut, win/loss pie + KPI block) are fed from ONE GET /api/rapportage/pipeline-stats fetch and the interactivity lives INSIDE the widgets (the funnel's OR-sourced pipeline selector filters in memory; the win/loss date-range selector re-fetches with dateFrom/dateTo). All four therefore live in one kind:'section' bodyWidget (LeadAnalyticsSection) which preserves the legacy single-fetch + in-widget filtering verbatim. KEPT-AS-NOTE: no page-level period pageFilter — the date window is derived inside the win/loss range selector (a from/to pair a static select cannot emit) and the pipeline selector's options are OR-sourced; missing primitives: derived-date-range pageFilter + OR-collection pageFilter options.",
+			"_note": "Lead analytics: every widget reads GET /apps/pipelinq/api/rapportage/pipeline-stats at its own responsePath, and the shared endpoint source sends one request for all of them. The pipeline filter narrows the funnel, and the date range narrows source performance and win/loss.",
 			"route": "/rapportage",
 			"type": "dashboard",
 			"title": "Analytics",
 			"config": {
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"bodyWidgets": [
+				"pageFilters": [
 					{
-						"id": "lead-analytics",
-						"component": "LeadAnalyticsSection",
-						"placement": "before-grid"
+						"key": "pipeline",
+						"label": "Pipeline",
+						"type": "select",
+						"clearable": true,
+						"placeholder": "All pipelines",
+						"optionsFrom": { "register": "pipelinq", "schema": "pipeline", "labelField": "title" }
 					}
+				],
+				"dateRange": {
+					"enabled": true,
+					"persistKey": "pipelinq-lead-analytics-range",
+					"default": { "preset": "all" },
+					"presets": [
+						{ "id": "30d", "label": "Last 30 days", "days": 30 },
+						{ "id": "90d", "label": "Last 90 days", "days": 90 },
+						{ "id": "12m", "label": "Last 12 months", "days": 365 },
+						{ "id": "all", "label": "All time", "days": null }
+					]
+				},
+				"widgets": [
+					{
+						"id": "lead-funnel",
+						"type": "chart",
+						"title": "Pipeline funnel",
+						"content": {
+							"chartKind": "bar",
+							"emptyLabel": "There are no leads in this pipeline yet.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "stageValues",
+								"labelsPath": "stage",
+								"series": [
+									{ "name": "Total value", "path": "totalValue" },
+									{ "name": "Weighted value", "path": "weightedValue" }
+								]
+							},
+							"valueFormat": "currency"
+						}
+					},
+					{
+						"id": "lead-sources",
+						"type": "object-table",
+						"title": "Source performance",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "sourcePerformance"
+							},
+							"columns": [
+								{
+									"key": "source",
+									"label": "Source",
+									"enum": [
+										"website",
+										"email",
+										"phone",
+										"referral",
+										"partner",
+										"campaign",
+										"social_media",
+										"event",
+										"tender",
+										"other",
+										"cold-call",
+										"advertisement",
+										"landing-page",
+										"unknown"
+									],
+									"enumLabels": {
+										"website": "Website",
+										"email": "Email",
+										"phone": "Phone",
+										"referral": "Referral",
+										"partner": "Partner",
+										"campaign": "Campaign",
+										"social_media": "Social media",
+										"event": "Event or fair",
+										"tender": "Public tender",
+										"other": "Other",
+										"cold-call": "Cold call",
+										"advertisement": "Advertisement",
+										"landing-page": "Landing page",
+										"unknown": "No source"
+									}
+								},
+								{ "key": "total", "label": "Total leads", "format": { "style": "number" } },
+								{ "key": "won", "label": "Won", "format": { "style": "number" } },
+								{ "key": "conversionRate", "label": "Conversion %", "format": { "style": "percent", "decimals": 1 } },
+								{ "key": "avgWonValue", "label": "Avg deal value", "format": { "style": "currency", "decimals": 0 } }
+							],
+							"emptyText": "No lead source performance to report yet."
+						}
+					},
+					{
+						"id": "lead-aging",
+						"type": "chart",
+						"title": "Lead aging",
+						"content": {
+							"chartKind": "donut",
+							"emptyLabel": "There are no open leads to distribute into aging buckets.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "agingBuckets",
+								"labelsPath": "bucket",
+								"series": [
+									{ "name": "Leads", "path": "count" }
+								]
+							}
+						}
+					},
+					{
+						"id": "lead-win-loss",
+						"type": "chart",
+						"title": "Won vs lost",
+						"content": {
+							"chartKind": "pie",
+							"emptyLabel": "No won or lost leads in the selected range.",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								},
+								"responsePath": "winLossSlices",
+								"labelsPath": "label",
+								"series": [
+									{ "name": "Leads", "path": "count" }
+								]
+							}
+						}
+					},
+					{
+						"id": "lead-win-rate",
+						"type": "stat",
+						"title": "Win rate",
+						"content": {
+							"label": "Win rate",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.winRate",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "Trophy",
+							"format": { "style": "percent", "decimals": 1 }
+						}
+					},
+					{
+						"id": "lead-won",
+						"type": "stat",
+						"title": "Won",
+						"content": {
+							"label": "Won",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.wonCount",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CheckCircle",
+							"format": { "style": "number" }
+						}
+					},
+					{
+						"id": "lead-lost",
+						"type": "stat",
+						"title": "Lost",
+						"content": {
+							"label": "Lost",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.lostCount",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CloseCircle",
+							"format": { "style": "number" }
+						}
+					},
+					{
+						"id": "lead-avg-won",
+						"type": "stat",
+						"title": "Avg won deal value",
+						"content": {
+							"label": "Avg won deal value",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.avgWonValue",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CurrencyEur",
+							"format": { "style": "currency", "decimals": 0 }
+						}
+					},
+					{
+						"id": "lead-days-to-close",
+						"type": "stat",
+						"title": "Avg days to close",
+						"content": {
+							"label": "Avg days to close",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/pipeline-stats",
+								"path": "winLoss.avgDaysToClose",
+								"params": {
+									"pipelineId": "@workspace.pipeline?",
+									"dateFrom": "@workspace.dateFrom?",
+									"dateTo": "@workspace.dateTo?"
+								}
+							},
+							"icon": "CalendarClock",
+							"format": { "style": "decimal", "suffix": " days" }
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "lead-win-rate",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 2,
+						"widgetId": "lead-won",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 3,
+						"widgetId": "lead-lost",
+						"gridX": 5,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 4,
+						"widgetId": "lead-avg-won",
+						"gridX": 7,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 5,
+						"widgetId": "lead-days-to-close",
+						"gridX": 10,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{ "id": 6, "widgetId": "lead-funnel", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": 7, "widgetId": "lead-sources", "gridX": 0, "gridY": 7, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": 8, "widgetId": "lead-aging", "gridX": 0, "gridY": 12, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": 9, "widgetId": "lead-win-loss", "gridX": 6, "gridY": 12, "gridWidth": 6, "gridHeight": 5 }
 				]
 			}
 		},
 		{
 			"id": "RapportageContactmomenten",
-			"_note": "Contact-reporting monitor as a declarative type:dashboard page (pipelinq-dashboards-declarative). The four headline KPIs (Total Contacts, FCR %, Avg Handling Time, SLA Compliance) are endpoint-bound stat widgets reading GET /apps/pipelinq/api/rapportage/kpis (avgHandlingTime is a pre-formatted 'H:MM' string the stat widget renders verbatim). A period pageFilter (today/week/month -> @page.period) drives the query; ReportingController now resolves that relative period to a from/to window server-side (today=[today,today], week=[Monday,today], month=[1st,today]) so one select re-queries every KPI without client-side date math. The hand-rendered per-channel bar chart + the CSV export the stat grid cannot express live in one kind:'section' bodyWidget (ChannelDistributionSection) that reads the same period (via @workspace.period) and self-fetches /api/rapportage/channels. The 60s auto-refresh + 'last updated' label of the legacy view are dropped (the page-level Refresh action covers manual reload).",
+			"_note": "Contact reporting. The four headline figures read GET /apps/pipelinq/api/rapportage/kpis, the channel bars read the channel rows of GET /apps/pipelinq/api/rapportage/channels, and Export downloads the contact moments of the chosen period as CSV. ReportingController resolves the period token (today, week, month) to a from/to window.",
 			"route": "/rapportage/contactmomenten",
 			"type": "dashboard",
 			"title": "Contact reporting",
@@ -7107,6 +9344,24 @@
 								"params": { "period": "@page.period" }
 							}
 						}
+					},
+					{
+						"id": "rap-channels",
+						"type": "chart",
+						"title": "Channel distribution",
+						"content": {
+							"chartKind": "bar-list",
+							"emptyLabel": "No contact moments registered for this period",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/channels",
+								"params": { "period": "@workspace.period" },
+								"responsePath": "rows",
+								"labelsPath": "label",
+								"series": [
+									{ "name": "Contacts", "path": "total" }
+								]
+							}
+						}
 					}
 				],
 				"layout": [
@@ -7145,21 +9400,28 @@
 						"gridWidth": 3,
 						"gridHeight": 2,
 						"showTitle": false
-					}
+					},
+					{ "id": 5, "widgetId": "rap-channels", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 4 }
 				],
-				"bodyWidgets": [
+				"headerActions": [
 					{
-						"id": "rap-channels",
-						"component": "ChannelDistributionSection",
-						"placement": "after-grid",
-						"props": { "period": "@workspace.period" }
+						"id": "export-contact-moments",
+						"label": "Export CSV",
+						"type": "api-call",
+						"icon": "Download",
+						"method": "GET",
+						"url": "/apps/pipelinq/api/rapportage/export",
+						"params": { "period": "@workspace.period" },
+						"download": true,
+						"filename": "contact-moments.csv",
+						"successMessage": "Export downloaded"
 					}
 				]
 			}
 		},
 		{
 			"id": "ChannelAnalyticsView",
-			"_note": "Cross-channel comparison as a declarative type:dashboard page (pipelinq-dashboards-declarative). It has no headline KPI cards — the cross-channel comparison table (total / FCR / SLA per channel, colour-keyed) lives entirely in one kind:'section' bodyWidget (ChannelComparisonSection). Two pageFilters drive it: period (today/week/month -> @page.period, resolved to from/to server-side by ReportingController) and granularity (daily/weekly -> @page.granularity); the section reads both via @workspace.* and self-fetches /api/rapportage/channels + /api/rapportage/sla.",
+			"_note": "Cross-channel comparison: one row per channel from GET /apps/pipelinq/api/rapportage/channels (rows), counted server-side from the contact moments of the chosen period: total, first-contact resolution and SLA attainment against the channel's target.",
 			"route": "/rapportage/channels",
 			"type": "dashboard",
 			"title": "Channel analytics",
@@ -7176,34 +9438,56 @@
 							{ "value": "week", "label": "This week" },
 							{ "value": "month", "label": "This month" }
 						]
-					},
-					{
-						"key": "granularity",
-						"label": "Granularity",
-						"type": "select",
-						"default": "daily",
-						"options": [
-							{ "value": "daily", "label": "Daily" },
-							{ "value": "weekly", "label": "Weekly" }
-						]
 					}
 				],
-				"bodyWidgets": [
+				"widgets": [
 					{
 						"id": "channel-comparison",
-						"component": "ChannelComparisonSection",
-						"placement": "before-grid",
-						"props": {
-							"period": "@workspace.period",
-							"granularity": "@workspace.granularity"
+						"type": "object-table",
+						"title": "Channel comparison",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/channels",
+								"params": { "period": "@workspace.period" },
+								"responsePath": "rows"
+							},
+							"columns": [
+								{ "key": "label", "label": "Channel", "cellClass": "cn-cell--strong", "sortable": true },
+								{ "key": "total", "label": "Total", "format": { "style": "number" }, "sortable": true },
+								{
+									"key": "fcrRate",
+									"label": "FCR rate",
+									"format": { "style": "percent", "decimals": 1 },
+									"sortable": true
+								},
+								{
+									"key": "slaCompliance",
+									"label": "SLA",
+									"format": { "style": "percent", "decimals": 1 },
+									"sortable": true
+								},
+								{
+									"key": "slaStatus",
+									"label": "SLA status",
+									"widget": "badge",
+									"enum": ["green", "orange", "red"],
+									"enumLabels": { "green": "On target", "orange": "Just below target", "red": "Below target" },
+									"widgetProps": { "colorMap": { "green": "success", "orange": "warning", "red": "error" } },
+									"sortable": true
+								}
+							],
+							"emptyText": "No data available for the selected period"
 						}
 					}
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "channel-comparison", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6 }
 				]
 			}
 		},
 		{
 			"id": "AgentPerformanceView",
-			"_note": "Per-agent performance as a declarative type:dashboard page (pipelinq-dashboards-declarative). It has no headline KPI cards — the sortable per-agent leaderboard (contacts / avg time / FCR) plus the team-summary footer (total contacts, team FCR, both derived from the same agents map) live in one kind:'section' bodyWidget (AgentPerformanceSection). A period pageFilter (today/week/month -> @page.period, resolved to from/to server-side) drives the query; the section reads @workspace.period and self-fetches /api/rapportage/agents.",
+			"_note": "Per-agent performance: the rows and team totals of GET /apps/pipelinq/api/rapportage/agents for the chosen period. The server names each agent by display name and answers the handling time in seconds, so the column sorts as a number.",
 			"route": "/rapportage/agents",
 			"type": "dashboard",
 			"title": "Agent performance",
@@ -7222,13 +9506,91 @@
 						]
 					}
 				],
-				"bodyWidgets": [
+				"widgets": [
+					{
+						"id": "agents-contacts",
+						"type": "stat",
+						"title": "Total contacts",
+						"content": {
+							"label": "Total contacts",
+							"caption": "contact moments",
+							"icon": "MessageText",
+							"format": { "style": "number", "decimals": 0 },
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/agents",
+								"path": "totals.contacts",
+								"params": { "period": "@page.period" }
+							}
+						}
+					},
+					{
+						"id": "agents-fcr",
+						"type": "stat",
+						"title": "Team FCR",
+						"content": {
+							"label": "Team FCR",
+							"caption": "first-contact resolution",
+							"icon": "CheckCircle",
+							"format": { "style": "percent", "decimals": 1 },
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/rapportage/agents",
+								"path": "totals.fcrRate",
+								"params": { "period": "@page.period" }
+							}
+						}
+					},
 					{
 						"id": "agent-performance",
-						"component": "AgentPerformanceSection",
-						"placement": "before-grid",
-						"props": { "period": "@workspace.period" }
+						"type": "object-table",
+						"title": "Agent performance",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/rapportage/agents",
+								"params": { "period": "@workspace.period" },
+								"responsePath": "rows"
+							},
+							"columns": [
+								{ "key": "agentName", "label": "Agent", "cellClass": "cn-cell--strong", "sortable": true },
+								{ "key": "count", "label": "Contacts", "format": { "style": "number" }, "sortable": true },
+								{
+									"key": "avgHandlingSeconds",
+									"label": "Avg time",
+									"format": { "style": "duration", "unit": "seconds" },
+									"sortable": true
+								},
+								{
+									"key": "fcrRate",
+									"label": "FCR %",
+									"format": { "style": "percent", "decimals": 1 },
+									"sortable": true
+								}
+							],
+							"emptyText": "No agent data for this period"
+						}
 					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "agents-contacts",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 2,
+						"widgetId": "agents-fcr",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{ "id": 3, "widgetId": "agent-performance", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 6 }
 				]
 			}
 		},

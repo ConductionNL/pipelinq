@@ -19,7 +19,6 @@
 //   - openspec/changes/pipelinq-manifest-v1/design.md
 //   - hydra/openspec/architecture/adr-036-manifest-v2.md
 
-import ActivityTimeline from './components/ActivityTimeline.vue'
 // --- Shillinq time-intake billing handoff (time-billing-handoff-emit): the
 //     real emit side of the delegated time-approval-workflow. Self-fetches
 //     its availability endpoint and falls back to the existing Shillinq
@@ -42,45 +41,14 @@ import CommunicationHistory from './components/CommunicationHistory.vue'
 //     org link from `relationLinks`, and these rich sub-features stay in the
 //     page body via `bodyWidgets` (kind:'section'). Each reads the live object
 //     via props (token-resolved `@objectId`) — no page host needed. ---
-import ContactChannelsSection from './components/ContactChannelsSection.vue'
-import ContactLinks from './components/ContactLinks.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
-import ContactRelationships from './components/ContactRelationships.vue'
-import CustomerReplySection from './components/CustomerReplySection.vue'
-// --- Billing categories (billable-categories-and-tags): list view with a
-//     bespoke color-swatch + DBA / active badge column layout the
-//     declarative type:"index" page cannot express. Donut widget for the
-//     dashboard (hours per billing category) registered as a slot. ---
-import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
 import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
-// --- Articles — the content hub for a mailing and a post (marketing-article-hub).
-//     ArticleDetail is a declarative type:"detail" page; the rendered body, the
-//     hero image, the agent-authored mark, the Edit action and the lifecycle
-//     moves live in ArticleContentSection (no declarative widget resolves
-//     @object.<field> the way a bodyWidget prop does — see that file's header),
-//     and ArticleUsageSection answers where the article has been used, joined
-//     server-side from two schemas no single-schema object-list widget can
-//     express. ---
-import ArticleContentSection from './components/marketing/ArticleContentSection.vue'
-import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
-import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
 import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
 import ListSubscriberViewSection from './components/marketing/ListSubscriberViewSection.vue'
-import SocialPostHeaderActions from './components/marketing/SocialPostHeaderActions.vue'
 import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
 import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
-// --- Mailing-list memberships (marketing-lists-and-double-opt-in). One
-//     kind:'section' bound either to a list (the mailing list detail page) or
-//     to a contact (the contact detail page): the row is the same row read
-//     from two directions, and a state that means "not reachable" must not
-//     look reachable in one of them. Not a declarative object-list widget,
-//     because a membership is read through its STATE and needs the chip
-//     vocabulary, and because the list view leads with per-state counts that
-//     summaryAggregates cannot express. ---
-import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
-import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 // --- Cash-shift detail — declarative type:"detail": the closing count is its
 //     actionsComponent; the drops (with Add drop) and the latest/pending
 //     cashDiff variance are grid widgets. ---
@@ -112,29 +80,8 @@ import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWid
 //     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
 import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
 import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
-import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
-import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
-// --- Reporting dashboards (lib gap: no chart-widget page type). ---
-import ChannelDistributionSection from './components/rapportage/ChannelDistributionSection.vue'
-// --- Lead-management analytics dashboard (lead-management REQ-LM-006..008).
-//     Declarative type:"dashboard" (pipelinq-dashboards-declarative): the four
-//     bespoke chart/table widgets are hosted in one kind:'section' bodyWidget
-//     (LeadAnalyticsSection) that self-fetches /api/rapportage/pipeline-stats
-//     once and keeps the in-widget filtering (pipeline selector + win/loss
-//     date-range re-fetch) the legacy view had. ---
-import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
 // What the resident reads of a request ticket (portal-resident-view-preview). ---
-import ResidentViewSection from './components/ResidentViewSection.vue'
 import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
-// Customer satisfaction, closed loop (customer-satisfaction-closed-loop): the
-//     client page's satisfaction panel and the Operational dashboard's
-//     response-rate widget. ---
-import ClientSatisfactionSection from './components/satisfaction/ClientSatisfactionSection.vue'
-import SurveyResponseRateWidget from './components/satisfaction/SurveyResponseRateWidget.vue'
-import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
-// --- Ticket page, simple structure (simple-ticket-page): the conversation to
-//     read, and the Answer dialog that wraps CustomerReplySection. ---
-import TicketConversationSection from './components/TicketConversationSection.vue'
 import TicketDecisionRoutes from './components/tickets/TicketDecisionRoutes.vue'
 import WooConversionSection from './components/WooConversionSection.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
@@ -174,16 +121,19 @@ import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
+import ArticleEditModal from './modals/ArticleEditModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
+import ForecastOverrideModal from './modals/ForecastOverrideModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
-import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
+import SendMessageModal from './modals/SendMessageModal.vue'
+import SocialPostComposeModal from './modals/SocialPostComposeModal.vue'
+import SubscriptionManageModal from './modals/SubscriptionManageModal.vue'
+import WriteEmailModal from './modals/WriteEmailModal.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
 //     missing-consent modal) and the live monitor, which polls /api/blasts/:id
-//     every 2s and stops on terminal status.
-//     SegmentBuilder + SegmentRuleNode live under components/, mounted by
-//     SegmentFormDialog above (marketing-segments-ui-repair, pipelinq#773). ---
+//     every 2s and stops on terminal status. ---
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
 import ResourceDetailView from './views/bookings/ResourceDetail.vue'
@@ -223,9 +173,6 @@ import FeaturesRoadmapView from './views/FeaturesRoadmapView.vue'
 //     app component, because CnFlowSidebar has to mount in the NC app
 //     sidebar for the canvas to keep full width. ---
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
-// --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
-import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
-import ForecastTrendView from './views/forecast/ForecastTrend.vue'
 import KassakoppelingAuditDetailView from './views/kassakoppeling/KassakoppelingAuditDetail.vue'
 // --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit):
 //     append-only HMAC-SHA256 signed register actions chained per-register
@@ -239,28 +186,10 @@ import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 //     Wraps CnIndexPage to add the stale filter, overdue row highlighting
 //     and CSV import/export via the platform mass dialogs. ---
 import LeadListView from './views/leads/LeadList.vue'
-import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
-// --- Loyalty program (loyalty-program). ---
-import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
-// --- Articles new/edit route wrapper (marketing-article-hub): thin host for
-//     ArticleEditModal, the one editing surface the change owns. ---
-import ArticleFormView from './views/marketing/ArticleFormView.vue'
-import CampaignReportView from './views/marketing/CampaignReport.vue'
 // --- Search intelligence (marketing-search-intelligence, phase 5): the
 //     four derivations over those same rows, the competitor watches, and
 //     the follow audit. Each is a computed read, not a row list. ---
-import CompetitorWatchesView from './views/marketing/CompetitorWatches.vue'
-import ConnectionAuditView from './views/marketing/ConnectionAudit.vue'
 import KeywordIntelligenceView from './views/marketing/KeywordIntelligence.vue'
-// --- Search Console top queries (marketing-campaign-attribution): an
-//     aggregation over searchQueryDaily rows, not a row list. ---
-import SearchQueriesView from './views/marketing/SearchQueries.vue'
-import WeeklyReviewView from './views/marketing/WeeklyReview.vue'
-// --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
-//     provider-wiring): self-fetches conversation/message rows by contactId
-//     + the composer preflight facts, and hosts the SendMessageModal
-//     composer. Same self-fetching-by-props pattern as the sections above. ---
-import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
@@ -273,10 +202,6 @@ import CashShiftListView from './views/pos/CashShiftList.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
 import ProspectsView from './views/prospects/ProspectsView.vue'
-import LeadAgingWidget from './views/rapportage/LeadAgingWidget.vue'
-import PipelineFunnelWidget from './views/rapportage/PipelineFunnelWidget.vue'
-import SourcePerformanceWidget from './views/rapportage/SourcePerformanceWidget.vue'
-import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 // --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit):
 //     "Convert to case" (request → ns#Case) and "Send to invoicing"
 //     (contract → ns#Invoice) in-body actions. Both self-fetch their
@@ -285,7 +210,6 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
-import SocialPostFormView from './views/social/SocialPostFormView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
 import StoreGallery from './views/store/StoreGallery.vue'
@@ -299,7 +223,7 @@ import { sectionWidget } from './components/widgets/sectionWidget.js'
 //     overview are all widgets on the standard dashboard grid (header + actions
 //     + single scroll region). One small host widget remains: the header
 //     agent-availability toggle. ---
-import { createWithContact } from './services/contactSyncApi.js'
+import { createClientWithContact, createWithContact } from './services/contactSyncApi.js'
 
 /*
  * Grid metadata required for every kind:"widget" entry by the ADR-036
@@ -382,27 +306,6 @@ const registry = {
 	// --- Surveys + Forms migrated to the OpenRegister forms leaf (NC Forms). ---
 	// See openspec/changes/migrate-forms-to-forms-leaf.
 
-	// --- Reporting dashboards (declarative type:"dashboard", pipelinq-dashboards-declarative).
-	//     The headline KPIs are endpoint-bound stat widgets; each bespoke chart/table is
-	//     hosted in-body as a kind:'section' bodyWidget reading the page period via
-	//     @workspace.period. The ReportingController resolves the relative period
-	//     (today/week/month) to a from/to window server-side, so no client-side date math. ---
-	ChannelDistributionSection: {
-		kind: 'section',
-		component: ChannelDistributionSection,
-		_note: 'In-body channel bar chart + CSV export for the declarative RapportageContactmomenten dashboard; the 4 KPIs (total/FCR/avg-handling-time/SLA) are endpoint stat widgets reading /api/rapportage/kpis. Reads @workspace.period and self-fetches /api/rapportage/channels.',
-	},
-	ChannelComparisonSection: {
-		kind: 'section',
-		component: ChannelComparisonSection,
-		_note: 'In-body per-channel comparison table (total/FCR/SLA with colour dots) for the declarative ChannelAnalyticsView dashboard (no headline KPIs). Reads @workspace.period + @workspace.granularity and self-fetches /api/rapportage/channels + /api/rapportage/sla.',
-	},
-	AgentPerformanceSection: {
-		kind: 'section',
-		component: AgentPerformanceSection,
-		_note: 'In-body sortable per-agent leaderboard + team-summary footer for the declarative AgentPerformanceView dashboard (no headline KPIs — the summary is derived from the same agents map). Reads @workspace.period and self-fetches /api/rapportage/agents.',
-	},
-
 	// --- Pipeline board (kanban + list with in-memory search). ---
 	PipelineBoardView: {
 		kind: 'page',
@@ -410,17 +313,6 @@ const registry = {
 		_note: 'Pipeline kanban/list board with in-memory title search (REQ-PIPE-022). Restored after migrate-pipeline-to-deck-leaf; coexists with Deck integration.',
 	},
 
-	// --- Forecast roll-up dashboards. ---
-	ForecastDashboardView: {
-		kind: 'page',
-		component: ForecastDashboardView,
-		_note: 'Manager forecast view: hierarchy/level selector, quota progress bar, at-risk banner, per-owner table with manager-override badges; lib gap: no forecast/quota page type. All amounts are server-computed.',
-	},
-	ForecastTrendView: {
-		kind: 'page',
-		component: ForecastTrendView,
-		_note: 'Forecast trend (inline SVG sparkline of commit/best-case/pipeline), week-over-week delta panel and accuracy table with colour bands; lib gap: no chart-widget page type.',
-	},
 	LeadForecastTab: {
 		kind: 'widget',
 		component: LeadForecastTab,
@@ -433,48 +325,6 @@ const registry = {
 		kind: 'page',
 		component: LeadListView,
 		_note: 'Wraps CnIndexPage with the lead-management stale filter, overdue row highlighting and platform mass import/export dialogs (REQ-LM-002/004/005).',
-	},
-
-	// --- Lead-management analytics. ---
-	LeadAnalyticsSection: {
-		kind: 'section',
-		component: LeadAnalyticsSection,
-		_note: "In-body lead-analytics surface (pipeline funnel + source table + aging donut + win/loss) for the declarative LeadAnalytics dashboard. Self-fetches /api/rapportage/pipeline-stats ONCE and distributes the four slices to the presentational child widgets, preserving the legacy view's in-widget filtering (funnel pipeline selector, win/loss date-range re-fetch). KEPT-IN-SECTION because the filters live INSIDE the widgets and the win/loss date-range derives dateFrom/dateTo no page-level period pageFilter can emit.",
-	},
-	PipelineFunnelWidget: {
-		kind: 'widget',
-		component: PipelineFunnelWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Pipeline value per stage (count, total, weighted) — bar chart with pipeline filter (REQ-LM-006).',
-	},
-	SourcePerformanceWidget: {
-		kind: 'widget',
-		component: SourcePerformanceWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Source conversion table (total, won, rate, avg) sortable per column (REQ-LM-007).',
-	},
-	LeadAgingWidget: {
-		kind: 'widget',
-		component: LeadAgingWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Aging-bucket donut chart (≤7d / 8-14d / 15-30d / >30d) (REQ-LM-006).',
-	},
-	WinLossWidget: {
-		kind: 'widget',
-		component: WinLossWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
-	},
-	// --- Loyalty program (loyalty-program). ---
-	LoyaltyReportingView: {
-		kind: 'page',
-		component: LoyaltyReportingView,
-		_note: 'KEPT CUSTOM (pipelinq-dashboards-declarative): programme reporting (active accounts, points issued/redeemed/expired, breakage %, redemption rate, outstanding-points liability per IFRS 15 / RJ 270, tier distribution, CSV export). The 8 KPIs come from one summary endpoint GET /api/loyalty/reporting/{programmeId}/kpis, but {programmeId} is a PATH segment requiring a programme UUID picked from a DYNAMIC selector (options from the OR loyaltyProgramme collection); pageFilters only support static options, so @page.programmeId cannot enumerate programmes, and there is no all-programmes aggregate. Missing primitives: an OR-collection-sourced pageFilter (dynamic options) + a relative-window period token (30d/90d/365d -> from/to). Same dynamic-selector blocker as PipelineAnalytics/Forecast; kept custom.',
-	},
-	LoyaltyAccountCreationView: {
-		kind: 'page',
-		component: LoyaltyAccountCreationView,
-		_note: 'GDPR-compliant loyalty account enrollment form: mandatory opt-in checkbox, terms version capture, customerId+programmeId input (REQ-LOY-010-01).',
 	},
 
 	// --- POS transactions. The PosTransactions list + detail are now declarative
@@ -559,9 +409,9 @@ const registry = {
 
 	// POS staff, POS roles and POS tender types are administrator configuration,
 	// not operator surfaces, so they are no longer manifest pages: they render as
-	// sections on the Nextcloud admin page (/settings/admin/pipelinq) instead —
-	// see PosStaffManager / PosRoleManager / PosTenderTypeManager. The views are
-	// imported directly by those managers, so they need no registry entry here.
+	// sections on the Nextcloud admin page (/settings/admin/pipelinq) instead:
+	// index pages declared in views/settings/adminLists.js, with no registry
+	// entry here.
 	// (nav-ia-cleanup)
 
 	// --- POS end-of-day bookkeeping. The Z-report list is a declarative
@@ -573,11 +423,6 @@ const registry = {
 		kind: 'section',
 		component: ZReportBookkeepingSection,
 		_note: 'Z-report in-body section for the declarative type:"detail" ZReportDetail page: BTW + payment-method breakdown tables (array fields on the object, not FK children) plus the shillinq bookkeeping-status projection and the manager-gated, idempotent re-raise action (POST /api/pos-bookkeeping/post). Self-fetches by @objectId so it stays in sync after a re-raise. The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
-	},
-	PosCustomerSettingsView: {
-		kind: 'page',
-		component: PosCustomerSettingsView,
-		_note: 'Admin settings panel for the POS customer-link lookup: search fields, purchase-history depth, marketing-consent sync toggle and the on-account-requires-customer invariant (pos-customer-link, REQ-PCL-006).',
 	},
 
 	// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit). ---
@@ -592,45 +437,14 @@ const registry = {
 		_note: 'Read-only Kassakoppeling audit entry detail: verification status badge ramp (green ok / red tampered / grey pending), summary + entry + crypto cards with truncated hex digests + copy buttons, an optional transaction-link card linking to pos-transaction-core and the manual server-side verify action (pos-kassakoppeling-audit REQ-AUDIT-002 / REQ-AUDIT-004 / REQ-AUDIT-006).',
 	},
 
-	// --- Billing categories (billable-categories-and-tags). The Billing categories
-	//     PAGES are gone (nav-ia-cleanup) but the schema and its objects stay:
-	//     ShillinqWipService reads them, and this widget still charts hours by
-	//     category on the Operational dashboard. ---
-	BillingCategoryWidget: {
-		kind: 'widget',
-		component: BillingCategoryWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Donut chart of hours per billing category for the Dashboard (REQ-BCT-004). Clicking a segment navigates to the time entry list filtered by that category.',
-	},
-
-	// --- SLA engine — attainment dashboard (sla-engine-and-escalation Feature 12). ---
-	SlaAttainmentBreakdownSection: {
-		kind: 'section',
-		component: SlaAttainmentBreakdownSection,
-		_note: 'In-body section for the declarative type:"dashboard" SlaAttainment page (pipelinq-dashboards-declarative). The four headline KPIs (overall attainment % + total/met/breached) are endpoint-bound stat widgets reading GET /api/sla/attainment, driven by the page bucket + groupBy pageFilters. This section renders the per-group breakdown table (by policy/tier/team/target/customer) the stat grid cannot express; it reads bucket + groupBy props (from @workspace.*) and self-fetches the same endpoint, re-querying on change. The SlaAttainmentService now defaults the period to the current bucket window when no explicit date param is sent, so the dashboard needs no client-side date math.',
-	},
-
 	// --- Client / Contact 360 detail in-body sections (kind:'section').
 	//     Registered for the declarative type:"detail" ClientDetail /
 	//     ContactDetail pages' `config.bodyWidgets`. Each is a self-fetching
 	//     sub-feature that reads the live object via props (token-resolved
 	//     `@objectId`). CnBodySections renders them as titled body sections
 	//     (NOT sidebar tabs) and also `provide`s `cnSectionContext`. ---
-	ContactRelationships: {
-		kind: 'section',
-		component: ContactRelationships,
-		_note: 'Outbound/inbound relationship graph for a client or contact; self-fetches by entityId/entityType.',
-	},
-	ContactChannelsSection: {
-		kind: 'section',
-		component: ContactChannelsSection,
-		_note: 'Typed emails/phones/social profiles for a client or contact (contact-channel-details); self-fetches by entityId/entityType.',
-	},
-	SubscriptionsSection: {
-		kind: 'section',
-		component: SubscriptionsSection,
-		_note: 'Mailing-list memberships, bound either to a list (listId) or to a contact (contactId); self-fetches the matching endpoint. Kept custom because a membership row renders a STATE chip the declarative object-list widget cannot express, and because the list view leads with per-state counts that summaryAggregates (equality-only, one schema) cannot break out of one field.',
-	},
+
+
 	ListSignupFormWidget: {
 		kind: 'widget',
 		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId })),
@@ -643,47 +457,25 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
-	ArticleContentSection: {
-		kind: 'section',
-		component: ArticleContentSection,
-		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement before-body). Renders the markdown body (cnRenderMarkdown), the hero image, the agent-authored mark (ADR-088) and the lifecycle actions (submit for review / publish / return to draft / archive / restore), and hosts ArticleEditModal. NOT a declarative text widget: that widget renders a literal manifest string, and only bodyWidgets props carry @object.<field> token resolution on a detail page. NOT lifecycleActions either (ADR-062 rule 10): OR\'s TransitionEngine would flip status, but ArticleService::publish() stamps publishedAt once and never moves it, which the grammar cannot express. Self-fetches by articleId (@objectId).',
-	},
-	JourneyRunsSection: {
-		kind: 'section',
-		component: JourneyRunsSection,
-		_note: 'In-body section for the declarative type:"detail" JourneyDetail page (marketing-integrated-campaigns, placement end). Lists every contact a journey reached and every contact it REFUSED, with the reason in words. Not a declarative object-list widget: that widget renders the stored enum value, and "suppressed_dunning" tells a marketer nothing. The refusal is the whole point of the section, because a journey that reached nobody looks exactly like a journey with a small audience. Self-fetches by journeyId (@objectId).',
-	},
+
 	CampaignLandingPageSection: {
 		kind: 'section',
 		component: CampaignLandingPageSection,
 		_note: 'In-body section for the declarative type:"detail" CampaignDetail page (marketing-campaigns, placement end). Hosts the Create landing page action, which dispatches portaliq\'s LandingPageRequestedEvent through POST /api/campaigns/{id}/landing-page and shows portaliq\'s own typed error code verbatim. Not a declarative action: the grammar has no cross-app command, and a generic write dialog would collapse five distinct failure codes into one save error. Self-fetches by campaignId (@objectId).',
 	},
-	ArticleUsageSection: {
-		kind: 'section',
-		component: ArticleUsageSection,
-		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement end). Answers where the article has been used by self-fetching GET /api/articles/{id}/usages, a read-time join of TWO schemas (campaignTemplate, blast) the declarative object-list widget (one schema per instance) cannot express. Nothing is written here.',
-	},
+
 	SocialPostVariantsSection: {
 		kind: 'section',
 		component: SocialPostVariantsSection,
-		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement before-body). Shows the RESOLVED text per network (the post body with that network\'s variant merged onto it, the same rule SocialPostService::resolveVariant() applies on the way out), and the approvals taken. NOT a declarative text widget: that widget renders a literal manifest string, not a per-network merge. Re-reads on cn:page:refresh, which SocialPostHeaderActions bumps after a move.',
+		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement before-body). Shows the RESOLVED text per network (the post body with that network\'s variant merged onto it, the same rule SocialPostService::resolveVariant() applies on the way out), and the approvals taken. NOT a declarative text widget: that widget renders a literal manifest string, not a per-network merge. Re-reads on cn:page:refresh, which the approval header actions bump after a move.',
 	},
-	SocialPostHeaderActions: {
-		kind: 'widget',
-		component: SocialPostHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'SocialPostDetail actionsComponent: the approval step beside Edit, Submit for approval on a draft and Approve / Reject while it waits. POSTs to /api/social-posts/{id}/{submit|approve|reject}, not lifecycleActions (ADR-062 rule 10): an approval has to record WHO decided and when, stamped from the session, which the transition grammar has no field for.',
-	},
+
 	SocialPublicationsSection: {
 		kind: 'section',
 		component: SocialPublicationsSection,
 		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement end). One row per account the post named, with the failure reason where it did not go out. The Retry button appears only on the two of six failure codes a retry can fix, because a Retry on a dead grant or an unfiled developer application is a button that cannot work. Also hosts the share path for accounts no application may post to: the prepared text, a copy action, a link into the network\'s own composer and the confirmation.',
 	},
-	ActivityTimeline: {
-		kind: 'section',
-		component: ActivityTimeline,
-		_note: 'Chronological activity feed for an entity; self-fetches by entityType/entityId.',
-	},
+
 	CommunicationHistory: {
 		kind: 'section',
 		component: CommunicationHistory,
@@ -705,21 +497,13 @@ const registry = {
 		component: ContactmomentQuickLog,
 		_note: 'Inline contactmoment quick-log form pre-bound to the client (clientId, inline mode). On save it emits @saved; in declarative mode the page is refreshed via the CnDetailPage Refresh action rather than an imperative re-fetch.',
 	},
-	ContactLinks: {
-		kind: 'section',
-		component: ContactLinks,
-		_note: 'Call, mail and directions links for a client or contact (platform-phone-on-the-road, REQ-MOB-001): tel:, mailto: and geo: links that keep the value as typed. Placed before the body so they are one tap away on a phone.',
-	},
+
 	LogVisitAction: {
 		kind: 'section',
 		component: LogVisitAction,
 		_note: 'Log a visit on a client or lead (REQ-MOB-003): one note and an optional follow-up day; writes an outbound visit contact moment (ticket) and a follow-up crmTask through the object store. Also the LeadDetail actionsComponent, where it binds to the lead and its client from the slot.',
 	},
-	PartyIndicatorPanel: {
-		kind: 'section',
-		component: PartyIndicatorPanel,
-		_note: 'The warnings on a client or contact (pipelinq#2036): every party indicator in force, loudest first, with acknowledgement and an add-warning form. Self-fetches GET /api/leaves/party/{partyId}; rendered before the body on ClientDetail and ContactDetail so it is read before contact is made.',
-	},
+
 	// --- Contact page sections as grid widgets (detail-pages-read-at-a-glance).
 	//     The same components as the section entries above, wrapped so they
 	//     sit in the grid and in tab strips instead of a tail below the grid. ---
@@ -729,21 +513,7 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'CnObjectListWidget whose create goes through POST /api/contacts-sync/create for client and contact, so the required contactsUid is provisioned. The Contacts tab on the client page uses it; a plain object-list POSTs straight to OpenRegister and gets 400 (round5-contact-create-and-task-links).',
 	},
-	ContactRelationshipsWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'ContactRelationshipsWidget',
-			ContactRelationships,
-			({ objectId, objectData, content }) => ({
-				entityId: objectId,
-				entityType: content.entityType || 'contact',
-				entityName: objectData.name || '',
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'ContactRelationships as a grid widget: entityId from the page object, entityType from content (default contact).',
-	},
+
 	TicketDecisionRoutesWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -761,17 +531,6 @@ const registry = {
 	// --- The ticket page's Overview sections as tab widgets (board PqTicket):
 	//     the conversation, the dossier asked about, the Woo request and the case
 	//     sit inside the Overview tab rather than in a tail below the tab strip. ---
-	TicketConversationWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'TicketConversationWidget',
-			TicketConversationSection,
-			() => ({}),
-			{ card: true, context: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'TicketConversationSection as a tab widget; it reads the ticket from cnSectionContext, which the wrapper provides.',
-	},
 	DossierSnapshotWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -803,62 +562,7 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'RequestConversionSection (Convert to case) as a tab widget.',
 	},
-	ResidentViewWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'ResidentViewWidget',
-			ResidentViewSection,
-			({ objectId, objectData }) => ({
-				ticketId: objectId,
-				ticketType: objectData.ticketType || '',
-				customerMessage: objectData.customerMessage || '',
-				status: objectData.status || '',
-			}),
-		),
-		...PANEL_WIDGET_META,
-		_note: 'ResidentViewSection as a tab widget.',
-	},
-	ContactChannelsWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'ContactChannelsWidget',
-			ContactChannelsSection,
-			({ objectId, content }) => ({
-				entityId: objectId,
-				entityType: content.entityType || 'contact',
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'ContactChannelsSection as a grid widget.',
-	},
-	MessagingConversationWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'MessagingConversationWidget',
-			MessagingConversationSection,
-			({ objectId, content }) => ({
-				entityId: objectId,
-				entityType: content.entityType || 'contact',
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'MessagingConversationSection as a grid widget.',
-	},
-	SubscriptionsWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'SubscriptionsWidget',
-			SubscriptionsSection,
-			({ objectId }) => ({
-				contactId: objectId,
-			}),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'SubscriptionsSection bound to the page contact, as a grid widget.',
-	},
+
 	BrpContactWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -876,26 +580,10 @@ const registry = {
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
-	ClientSatisfactionSection: {
-		kind: 'section',
-		component: ClientSatisfactionSection,
-		_note: 'Per-client satisfaction panel (customer-satisfaction-closed-loop): NPS, average rating, response count, 90-day trend and the three latest comments from GET /api/satisfaction/client/{clientId}, with an empty state for a client nobody has surveyed.',
-	},
-	SurveyResponseRateWidget: {
-		kind: 'widget',
-		component: SurveyResponseRateWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Satisfaction survey response rate for the Operational dashboard (customer-satisfaction-closed-loop): answered out of delivered, suppressed and failed counted beside the rate, one line per channel, from GET /api/satisfaction/response-rate.',
-	},
 	ClientBillingHandoffSection: {
 		kind: 'section',
 		component: ClientBillingHandoffSection,
 		_note: 'Manager-gated "Send to billing" action for a client (time-billing-handoff-emit): self-fetches GET /api/billing/handoff/{clientId}/availability and posts the chosen period\'s approved, un-billed time entries to shillinq\'s time-intake as one idempotent batch. Falls back to the existing Shillinq deep-link when the real emit is disabled/unavailable or the user is not a billing-handoff manager.',
-	},
-	MessagingConversationSection: {
-		kind: 'section',
-		component: MessagingConversationSection,
-		_note: "Outbound WhatsApp/SMS conversation feed for a client or contact (outbound-messaging-provider-wiring). Self-fetches message/conversation rows by contactId + the composer preflight facts; on ClientDetail (no client-level FK on message/conversation) it resolves the client's linked contacts client-side and lets the agent pick which contact to converse with. Hosts the SendMessageModal composer.",
 	},
 
 	// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit).
@@ -913,26 +601,12 @@ const registry = {
 		component: DossierSnapshotSection,
 		_note: "The dossier a resident asked about, on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-006): reads the ticket's subjectReference snapshot and lists the documents as links to the public publications. Never reads the dossier itself; renders nothing for a ticket without a snapshot.",
 	},
-	TicketConversationSection: {
-		kind: 'section',
-		component: TicketConversationSection,
-		_note: "simple-ticket-page. The customer's portal replies and the employee's answers as one thread (library CnConversationThread), read only. It reads the ticket from cnSectionContext. Answers are written in TicketAnswerDialog, so one component saves them.",
-	},
-	CustomerReplySection: {
-		kind: 'section',
-		component: CustomerReplySection,
-		_note: "Answer the customer on a request or complaint (questions-about-a-citizen-dossier REQ-QCD-007, messaging-saved-replies-and-resend D5): portal replies oldest first, a text area bound to customerMessage, a saved reply picker (messaging-saved-replies-and-resend) and Send answer with a waiting-for-the-customer checkbox (status awaiting_customer, PqTicketAntwoord board). Writes through the object store, so portaliq's change rule pipelinq.question.answered hears the change.",
-	},
 	WooConversionSection: {
 		kind: 'section',
 		component: WooConversionSection,
 		_note: '"Convert to Woo request" on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-008, hydra woo-citizen-journey C5): self-fetches GET /api/tickets/{id}/woo-request/availability and renders only when dossiq\'s WooRequestIntake answers and the ticket is an unconverted question about a dossier.',
 	},
-	ResidentViewSection: {
-		kind: 'section',
-		component: ResidentViewSection,
-		_note: 'What the resident sees on a request ticket (portal-resident-view-preview): the resident portal panel and, with portaliq and a client, the organisation portal panel, both from GET /api/tickets/{id}/resident-view, plus the line that everything else stays internal. Renders nothing on complaint and interaction tickets, so it carries its own heading instead of a section title.',
-	},
+
 	RoutingSuggestionWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -1013,78 +687,30 @@ const registry = {
 		component: BlastPerformanceDashboardView,
 		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
 	},
-	ArticleFormView: {
-		kind: 'page',
-		component: ArticleFormView,
-		_note: 'New-article route wrapper (marketing-article-hub). Mounts ArticleEditModal in create mode — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new article\'s ArticleDetail.',
-	},
+
 	SocialAccountsView: {
 		kind: 'page',
 		component: SocialAccountsView,
 		_note: "Connected social accounts, and the only place a connection is started, restarted or ended (social-publishing). Custom rather than type:index because Connect is a three-step conversation the grammar has no verb for: Pipelinq answers WHAT to connect, the BROWSER posts that to OpenRegister's own connect endpoint with the user's session, and the consent screen returns to this page's own path. The authorization code and the token never pass through Pipelinq (rule 2 of the marketing architecture, ADR-064). One component serves both SocialAccounts and SocialAccountDetail: the account has to be in the PATH because OpenRegister's safeReturnUrl() drops a query string.",
 	},
-	SocialPostFormView: {
-		kind: 'page',
-		component: SocialPostFormView,
-		_note: 'New-post route wrapper (social-publishing). Mounts SocialPostComposeModal in create mode. The per-network variants, the live character count against each network\'s own limit and the submit-for-approval step have no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new post\'s SocialPostDetail.',
-	},
+
 	SocialPerformanceView: {
 		kind: 'page',
 		component: SocialPerformanceView,
 		_note: 'Engagement ranking per network (social-publishing). Custom because the ranking divides engagement by the follower count the daily pull recorded onto the account, which no single-schema declarative view expresses. Renders its table shell BEFORE the one request that fills it, which is the pipelinq#1781 rule: never await a per-object fan-out before painting.',
 	},
-	WeeklyReviewView: {
-		kind: 'page',
-		component: WeeklyReviewView,
-		_note: 'The weekly marketing review (marketing-integrated-campaigns, ADR-112): what moved, what to try and three topic ideas, from ONE GET /api/weekly-review. Reached as a card on the Reports page and never as a menu entry of its own. Custom because the response aggregates four collections into one narrative record and names the sources it could not read, which no declarative index or dashboard primitive expresses. It also renders the ADR-088 mark when an agent wrote the summary.',
-	},
+
 	CampaignLandingPageWidget: {
 		kind: 'widget',
-		component: sectionWidget('CampaignLandingPageWidget', CampaignLandingPageSection, ({ objectId }) => ({ campaignId: objectId })),
+		component: sectionWidget('CampaignLandingPageWidget', CampaignLandingPageSection, ({ objectId, objectData }) => ({ campaignId: objectId, campaign: objectData })),
 		...PANEL_WIDGET_META,
 		_note: 'CampaignLandingPageSection as a card of the campaign page\'s Overview tab (PqCampagne).',
 	},
-	CampaignReportWidget: {
-		kind: 'widget',
-		component: sectionWidget('CampaignReportWidget', CampaignReportView, ({ objectId }) => ({ campaignId: objectId })),
-		...PANEL_WIDGET_META,
-		_note: 'The campaign report as a card of the campaign page\'s Overview tab (PqCampagne): one GET /api/campaigns/{id}/report.',
-	},
-	JourneyRunsWidget: {
-		kind: 'widget',
-		component: sectionWidget('JourneyRunsWidget', JourneyRunsSection, ({ objectId }) => ({ journeyId: objectId })),
-		...PANEL_WIDGET_META,
-		_note: 'JourneyRunsSection as a card of the journey page\'s Overview tab (PqJourney).',
-	},
-	CampaignReportSection: {
-		kind: 'section',
-		component: CampaignReportView,
-		_note: 'The campaign report as a section of the declarative CampaignDetail page (PqCampagne): the same component with a campaignId (@objectId), which drops the campaign picker and draws the tiles and the per-channel table under the attribution model picker. One GET /api/campaigns/{id}/report, as on the report page.',
-	},
-	CampaignReportView: {
-		kind: 'page',
-		component: CampaignReportView,
-		_note: 'The campaign report (marketing-campaigns, ADR-112): reach and clicks per channel, submissions, leads with the basis each one closed on, attributed value under first touch, last touch and linear, and the recorded cost, all from ONE GET /api/campaigns/{id}/report. Custom because the response joins four schemas plus shillinq AR invoices and carries three precomputed models, which no declarative index or dashboard primitive expresses; switching the model re-reads nothing.',
-	},
+
 	KeywordIntelligenceView: {
 		kind: 'page',
 		component: KeywordIntelligenceView,
 		_note: 'Keyword proposals (marketing-search-intelligence): position buckets, striking-distance queries, cannibalisation findings and content gaps, all derived at read time from the searchQueryDaily rows and served by ONE GET /api/marketing/keyword-proposals. Custom because none of the four is a collection: they are computations over rows, and the keywordTarget objects the page can create are the output rather than the input. Confirming a proposal opens KeywordTargetConfirmModal, which is the only path in the product that writes a keywordTarget.',
-	},
-	CompetitorWatchesView: {
-		kind: 'page',
-		component: CompetitorWatchesView,
-		_note: 'Competitor watches and their events (marketing-search-intelligence). Custom rather than a declarative index over watchEvent because the page joins three schemas in one read and shows each watch\'s LAST OUTCOME next to it, which is what tells "they published nothing" apart from "we could not read it"; a plain event list renders both as an empty table. It also carries a per-watch run action, and renders an unscored event as "not scored" rather than as a zero.',
-	},
-	ConnectionAuditView: {
-		kind: 'page',
-		component: ConnectionAuditView,
-		_note: 'The follow audit (marketing-search-intelligence): per client and network, whether we follow them and whether they follow us. Custom rather than a declarative index over socialConnection because the REASON an answer is unknown has to render next to the answer. Only Mastodon and Bluesky publish a follower list an audit can read, so most rows are unknown, and a declarative index would show a bare enum label with the reason dropped.',
-	},
-	SearchQueriesView: {
-		kind: 'page',
-		component: SearchQueriesView,
-		_note: 'Search Console top queries (marketing-campaign-attribution): one row per query with clicks and impressions summed and an impression-weighted position over a selectable window, from GET /api/marketing/search-queries; empty state points at the Marketing traffic settings. Custom because the page is an aggregation, which no declarative index primitive expresses.',
 	},
 
 	// --- Appointment booking — admin views (appointment-booking 11 of 12). ---
@@ -1231,7 +857,21 @@ const registry = {
 		kind: 'modal',
 		component: TicketAnswerDialog,
 		propsSchema: null,
-		_note: 'simple-ticket-page. Target of the ticket page Answer action in the simple structure. Wraps CustomerReplySection unchanged and asks the page to reload on close.',
+		_note: 'simple-ticket-page. Target of the ticket page Answer action in the simple structure. Saves through POST /api/tickets/{id}/answer, as the page conversation does, and asks the page to reload on close.',
+	},
+
+	SendMessageModal: {
+		kind: 'modal',
+		component: SendMessageModal,
+		propsSchema: null,
+		_note: "Send a WhatsApp or SMS message. Target of the Send message action of the messages conversation on ContactDetail (props contactId) and ClientDetail (props clientId: the modal asks which of the client's contacts).",
+	},
+
+	WriteEmailModal: {
+		kind: 'modal',
+		component: WriteEmailModal,
+		propsSchema: null,
+		_note: 'Write an email in Nextcloud Mail. Target of the Write email row action of the Emails field-list on ClientDetail and ContactDetail (props address, contactId or clientId).',
 	},
 
 	RequestCreateDialog: {
@@ -1256,6 +896,30 @@ const registry = {
 		propsSchema: null,
 		_note: "New-blast wizard in the Blasts index page's form-dialog slot: basics, audience, content, delivery, A/B test and review, gated on template validation and a consent preflight before POST /api/blasts, then opens the new blast's monitor.",
 	},
+	ArticleEditModal: {
+		kind: 'modal',
+		component: ArticleEditModal,
+		propsSchema: null,
+		_note: 'Create or edit an article: the markdown body and the Files hero picker. The Articles page opens it to create one, which then opens on its detail page.',
+	},
+	SocialPostComposeModal: {
+		kind: 'modal',
+		component: SocialPostComposeModal,
+		propsSchema: null,
+		_note: 'Write a social post: the body, a variant per network with its character count against that network\'s limit, and submit for approval. The Social posts page opens it to write one, which then opens on its detail page.',
+	},
+	ForecastOverrideModal: {
+		kind: 'modal',
+		component: ForecastOverrideModal,
+		propsSchema: null,
+		_note: 'Override one owner\'s committed amount for the quarter, with a reason; the Override row action of the Forecast page opens it with that row\'s period, owner, level and commit.',
+	},
+	SubscriptionManageModal: {
+		kind: 'modal',
+		component: SubscriptionManageModal,
+		propsSchema: null,
+		_note: 'Take a contact off one mailing list or all of them, or make a preference link; the contact page\'s Manage subscriptions header action opens it.',
+	},
 	ArticleDetailFormDialog: {
 		kind: 'modal',
 		component: ArticleDetailFormDialog,
@@ -1266,7 +930,7 @@ const registry = {
 		kind: 'modal',
 		component: SegmentFormDialog,
 		propsSchema: null,
-		_note: "Segment create/edit, mounted in the Segments index page's form-dialog slot. Custom rather than the built-in form: SegmentBuilder is a recursive rule-tree editor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.",
+		_note: "Segment create/edit, mounted in the Segments index page's form-dialog slot. Custom rather than the built-in form: the rule tree is edited in the library's CnConditionTreeEditor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.",
 	},
 	TemplateFormDialog: {
 		kind: 'modal',
@@ -1290,7 +954,7 @@ const registry = {
 	// Contact-aware create for the generic Add button on the Clients index page.
 	createClientContactAware: {
 		kind: 'create-override',
-		handler: (formData) => createWithContact('client', formData),
+		handler: (formData) => createClientWithContact(formData),
 		_note: 'Routes a generic client create through POST /api/contacts-sync/create so the required contactsUid (FK to a NC addressbook contact) is provisioned + filled instead of 400ing on a straight OpenRegister save.',
 	},
 

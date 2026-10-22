@@ -881,7 +881,9 @@
 						}
 					},
 					"ticket-related",
-					"ticket-resident-view"
+					"ticket-resident-view",
+					"ticket-resident-view-portal",
+					"ticket-resident-view-internal"
 				],
 				"layout": [
 					{
@@ -1017,6 +1019,8 @@
 					"dossier-snapshot": null,
 					"woo-conversion": null,
 					"resident-view": null,
+					"resident-view-portal": null,
+					"resident-view-internal": null,
 					"routing-suggestions": {
 						"title": "Suggested colleagues"
 					}
@@ -1199,11 +1203,30 @@
 					},
 					{
 						"id": "ticket-conversation",
-						"type": "TicketConversationWidget",
+						"type": "conversation",
 						"title": "Conversation",
 						"icon": "ForumOutline",
 						"content": {
-							"title": "Conversation"
+							"fields": [
+								{
+									"field": "portalReplies",
+									"side": "them"
+								},
+								{
+									"field": "portalAnswers",
+									"side": "us"
+								}
+							],
+							"textField": "message",
+							"timeField": "createdAt",
+							"usLabel": "Employee",
+							"emptyText": "No messages with the customer yet.",
+							"allowReply": false
+						},
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
 						}
 					},
 					{
@@ -1235,9 +1258,69 @@
 					},
 					{
 						"id": "ticket-resident-view",
-						"type": "ResidentViewWidget",
+						"type": "facts",
 						"title": "What the resident sees",
-						"icon": "EyeOutline"
+						"icon": "EyeOutline",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "residentRows",
+							"fields": [],
+							"hideEmpty": false,
+							"notice": {
+								"text": "Everything else on this ticket stays internal."
+							},
+							"emptyText": "The resident portal does not show this ticket.",
+							"errorText": "What the resident sees could not be loaded."
+						}
+					},
+					{
+						"id": "ticket-resident-view-portal",
+						"type": "facts",
+						"title": "In the organisation portal",
+						"icon": "OfficeBuildingOutline",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "portalRows",
+							"fields": [],
+							"hideEmpty": false,
+							"emptyText": "This ticket is not shown in an organisation portal.",
+							"errorText": "What the resident sees could not be loaded."
+						}
+					},
+					{
+						"id": "ticket-resident-view-internal",
+						"type": "facts",
+						"title": "Stays internal",
+						"icon": "EyeOff",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "request"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/tickets/@objectId/resident-view"
+							},
+							"rowsPath": "internalRows",
+							"fields": [],
+							"hideEmpty": false,
+							"emptyText": "Nothing on this ticket stays internal.",
+							"errorText": "What the resident sees could not be loaded."
+						}
 					}
 				]
 			}

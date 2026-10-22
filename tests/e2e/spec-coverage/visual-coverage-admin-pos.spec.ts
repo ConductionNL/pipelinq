@@ -2,20 +2,20 @@
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Gate-26 (visual-coverage) e2e proof for the four POS master-data page
- * components that live on the Nextcloud ADMIN page rather than in the SPA.
+ * Gate-26 (visual-coverage) e2e proof for the POS master-data lists and forms
+ * that live on the Nextcloud ADMIN page rather than in the SPA.
  *
  * WHERE THESE PAGES ACTUALLY LIVE. The `nav-ia-cleanup` change moved POS staff
  * and POS roles off the app navigation onto `/settings/admin/pipelinq`, which is
  * its own webpack entry (`src/settings.js` → `views/settings/Settings.vue`,
  * mounted on `#pipelinq-settings`) with NO vue-router. So:
  *
- *   PosStaffList.vue  rendered by PosStaffManager, an NcSettingsSection
+ *   POS staff         an embedded CnIndexPage (views/settings/adminLists.js)
  *   PosStaffForm.vue  rendered by PosStaffFormDialog, opened from that list
- *   PosRoleList.vue   rendered by PosRoleManager, an NcSettingsSection
+ *   POS roles         an embedded CnIndexPage (views/settings/adminLists.js)
  *   PosRoleForm.vue   rendered by PosRoleFormDialog, opened from that list
  *
- * There is no route for any of the four, and the forms are unreachable without
+ * There is no route for any of them, and the forms are unreachable without
  * a click — which is why these are click-driven journeys rather than deep links.
  *
  * ⚠️ NOTE FOR GATE-26 MAINTAINERS. The gate lists all four as PAGE components
@@ -62,107 +62,70 @@ async function openAdminSettings(page: Page): Promise<void> {
 	await expect(page.locator('#pipelinq-settings')).toBeVisible({ timeout: 20000 })
 }
 
-// ── src/views/pos/PosStaffList.vue ───────────────────────────────────────────
-test('PosStaffList: the POS staff admin section mounts src/views/pos/PosStaffList.vue', async ({
-	page,
-}) => {
+/**
+ * The admin page's index page with this title.
+ *
+ * @param page The Playwright page.
+ * @param title The list's title.
+ * @return The index page locator.
+ */
+function adminList(page: Page, title: string) {
+	return page
+		.locator('[data-testid="cn-index-page"]')
+		.filter({ has: page.locator('[data-testid="cn-page-title"]', { hasText: title }) })
+		.first()
+}
+
+/**
+ * Open the create form of an admin list through its Add button.
+ *
+ * @param page The Playwright page.
+ * @param title The list's title.
+ */
+async function addTo(page: Page, title: string): Promise<void> {
 	await openAdminSettings(page)
-
-	// Precondition: PosStaffManager rendered at all (isAdmin && isConfigured).
-	await expect(
-		page.getByRole('heading', { name: 'POS staff' }).first(),
-	).toBeVisible({ timeout: 20000 })
-
-	// PosStaffList reads `/api/pos/staff` with plain axios rather than through
-	// the object store, and its root + header sit above the loading `v-if`, so
-	// both render whether the fetch succeeds, fails or returns nothing.
-	const list = page.locator('.pos-staff-list')
+	await expect(page.getByRole('heading', { name: title }).first()).toBeVisible({ timeout: 20000 })
+	const list = adminList(page, title)
 	await expect(list).toBeVisible({ timeout: 15000 })
-	await expect(
-		list.getByRole('button', { name: 'New staff member' }),
-	).toBeVisible()
+	// The list is embedded: Add opens its `createModal` through the page.
+	await list.locator('[data-testid="cn-cta-primary"]').click()
+}
+
+// ── POS staff list ───────────────────────────────────────────────────────────
+test('POS staff: the admin section shows the staff list', async ({ page }) => {
+	await openAdminSettings(page)
+	// Precondition: the section rendered at all (isAdmin && isConfigured).
+	await expect(page.getByRole('heading', { name: 'POS staff' }).first()).toBeVisible({ timeout: 20000 })
+	const list = adminList(page, 'POS staff')
+	await expect(list).toBeVisible({ timeout: 15000 })
+	await expect(list.locator('[data-testid="cn-cta-primary"]')).toBeVisible()
 })
 
 // ── src/views/pos/PosStaffForm.vue ───────────────────────────────────────────
 test('PosStaffForm: the POS staff create dialog mounts src/views/pos/PosStaffForm.vue', async ({
 	page,
 }) => {
-	await openAdminSettings(page)
-	await expect(
-		page.getByRole('heading', { name: 'POS staff' }).first(),
-	).toBeVisible({ timeout: 20000 })
-
-	const list = page.locator('.pos-staff-list')
-	await expect(list).toBeVisible({ timeout: 15000 })
-	await list.getByRole('button', { name: 'New staff member' }).click()
-
+	await addTo(page, 'POS staff')
 	// PosStaffFormDialog wraps the form in an NcDialog, which teleports to
-	// document.body — so the form is matched page-wide, not inside the list.
+	// document.body, so the form is matched page-wide.
 	const form = page.locator('.pos-staff-form')
 	await expect(form).toBeVisible({ timeout: 15000 })
-	// `staffId` is '' on the create path, so `isNew` is true and the form's own
-	// header reads "New staff member" — proof the CREATE branch mounted.
-	await expect(
-		form.getByRole('heading', { name: 'New staff member' }),
-	).toBeVisible()
+	await expect(form.getByRole('heading', { name: 'New staff member' })).toBeVisible()
 	await expect(form.locator('.pos-staff-form__fields')).toBeVisible()
 })
 
-// ── src/views/pos/PosRoleList.vue ────────────────────────────────────────────
-test('PosRoleList: the POS roles admin section mounts src/views/pos/PosRoleList.vue', async ({
-	page,
-}) => {
+// ── POS roles list ───────────────────────────────────────────────────────────
+test('POS roles: the admin section shows the roles list', async ({ page }) => {
 	await openAdminSettings(page)
-
-	await expect(
-		page.getByRole('heading', { name: 'POS roles' }).first(),
-	).toBeVisible({ timeout: 20000 })
-
-	// PosRoleList is nothing but a CnIndexPage, and the admin page hosts several
-	// of them — so identify THIS one by the title its own component passes.
-	// CnIndexPage's root div and CnPageHeader's <h1> are both unconditional, so
-	// this holds even when the `posRole` collection fetch comes back empty.
-	const roleIndex = page.locator('[data-testid="cn-index-page"]').filter({
-		has: page.locator('[data-testid="cn-page-title"]', {
-			hasText: 'POS roles',
-		}),
-	})
-	await expect(roleIndex).toHaveCount(1, { timeout: 15000 })
-	await expect(roleIndex.first()).toBeVisible()
+	await expect(page.getByRole('heading', { name: 'POS roles' }).first()).toBeVisible({ timeout: 20000 })
+	await expect(adminList(page, 'POS roles')).toBeVisible({ timeout: 15000 })
 })
 
 // ── src/views/pos/PosRoleForm.vue ────────────────────────────────────────────
 test('PosRoleForm: the POS role create dialog mounts src/views/pos/PosRoleForm.vue', async ({
 	page,
 }) => {
-	await openAdminSettings(page)
-	await expect(
-		page.getByRole('heading', { name: 'POS roles' }).first(),
-	).toBeVisible({ timeout: 20000 })
-
-	const roleIndex = page
-		.locator('[data-testid="cn-index-page"]')
-		.filter({
-			has: page.locator('[data-testid="cn-page-title"]', {
-				hasText: 'POS roles',
-			}),
-		})
-		.first()
-	await expect(roleIndex).toBeVisible({ timeout: 15000 })
-
-	// CnIndexPage's `showAdd` defaults to true, so CnActionsBar always renders
-	// the primary Add button with `data-testid="cn-cta-primary"`; it emits
-	// `add`, which PosRoleList forwards as `create` to PosRoleManager. The
-	// empty-state action is offered as an alternative because on a register with
-	// no roles the operator's real entry point is the one labelled "New role".
-	const addRole = roleIndex
-		.locator('[data-testid="cn-cta-primary"]')
-		.or(roleIndex.getByRole('button', { name: 'New role' }))
-		.first()
-	await expect(addRole).toBeVisible({ timeout: 15000 })
-	await addRole.click()
-
-	// PosRoleFormDialog's NcDialog teleports to document.body.
+	await addTo(page, 'POS roles')
 	const form = page.locator('.pos-role-form')
 	await expect(form).toBeVisible({ timeout: 15000 })
 	await expect(form.getByRole('heading', { name: 'New POS role' })).toBeVisible()

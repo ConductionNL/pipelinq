@@ -18,7 +18,7 @@
 	"pages": [
 		{
 			"id": "Articles",
-			"_note": "Article list as a declarative type:index page (marketing-article-hub), opened in table view; the cards view stays one toggle away, its title/description/image coming from the article schema's own `configuration.objectNameField/objectDescriptionField/objectImageField`. Add navigates to ArticleNew, which mounts the one editing surface the change owns (ArticleEditModal) — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so `showAdd`/`showFormDialog` stay off. The built-in View action and a row click open ArticleDetail.",
+			"_note": "Article list as a declarative type:index page (marketing-article-hub), opened in table view; the cards view stays one toggle away, its title/description/image coming from the article schema's own configuration.objectNameField/objectDescriptionField/objectImageField. New article opens ArticleEditModal, the one editing surface the change owns: the ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) is reached through it, so showAdd/showFormDialog stay off. A saved article opens on its detail page. The built-in View action and a row click open ArticleDetail.",
 			"route": "/articles",
 			"type": "index",
 			"title": "Articles",
@@ -40,38 +40,46 @@
 						"id": "create",
 						"label": "New article",
 						"icon": "Plus",
-						"handler": "navigate",
-						"route": "ArticleNew"
+						"type": "open-modal",
+						"target": "ArticleEditModal"
 					}
 				]
 			}
 		},
 		{
-			"id": "ArticleNew",
-			"route": "/articles/new",
-			"type": "custom",
-			"title": "New article",
-			"component": "ArticleFormView",
-			"_note": "Mounts ArticleEditModal in create mode (marketing-article-hub). Matches the SegmentNew / TemplateNew / BlastNew convention of a thin route wrapper around the one editing surface the change owns, rather than a second declarative create dialog that could not host CnMarkdownEditor or the Files hero-image picker anyway.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "article"
-			}
-		},
-		{
 			"id": "ArticleDetail",
-			"_note": "Article record as a declarative type:detail page (ADR-062 grid). The article's own metadata (status, language, author, publication moment, portal page, tags) auto-renders in the 'Article details' data widget. The rendered body, the hero image, the agent-authored mark, the Edit action and the lifecycle moves live in ArticleContentSection (placement before-body, ahead of the data widget, because the body is the reason a marketer opened the page) — see that component's file header and design.md 'The body renders through an in-body section, not a declarative widget' for why: the built-in text widget renders a literal manifest string, not @object.<field>, and only bodyWidgets props carry that token on a detail page. ArticleUsageSection (placement end) answers where the article has been used, joined server-side from two schemas (campaignTemplate, blast) that no single-schema object-list widget can express.",
+			"_note": "Article record as a declarative type:detail page (ADR-062 grid). The hero image and the markdown body are image and markdown widgets on the record's heroImage and body fields, the summary, links and agent mark a facts card on GET /api/articles/{id} (which answers the links as rows), and the article's metadata the data widget. The five lifecycle moves are api-call header actions shown by status; the server keeps stamping publishedAt on publish. Where the article is used is two stat tiles and a table on GET /api/articles/{id}/usages, joined server-side from campaignTemplate and blast.",
 			"route": "/articles/:id",
 			"type": "detail",
 			"title": "Article",
-			"slots": {
-				"form-dialog": "ArticleDetailFormDialog"
-			},
+			"slots": { "form-dialog": "ArticleDetailFormDialog" },
 			"config": {
 				"register": "pipelinq",
 				"schema": "article",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"widgets": [
+					{
+						"id": "article-hero",
+						"type": "image",
+						"title": "Hero image",
+						"content": { "field": "heroImage", "altField": "title" }
+					},
+					{ "id": "article-body", "type": "markdown", "title": "Text", "content": { "field": "body" } },
+					{
+						"id": "article-about",
+						"type": "facts",
+						"title": "Article",
+						"icon": "NewspaperVariantOutline",
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/articles/@objectId", "responsePath": "article" },
+							"fields": [
+								{ "path": "summary", "as": "text" },
+								{ "label": "Drafted by", "path": "agentAuthoredBy" }
+							],
+							"rowsPath": "linkRows",
+							"emptyText": "No summary or links yet."
+						}
+					},
 					{
 						"id": "article-data",
 						"type": "data",
@@ -79,48 +87,94 @@
 						"icon": "InformationOutline",
 						"content": {
 							"columns": 2,
-							"include": [
-								"status",
-								"language",
-								"author",
-								"publishedAt",
-								"portalPageRef",
-								"tags",
-								"slug"
-							],
+							"include": ["status", "language", "author", "publishedAt", "portalPageRef", "tags", "slug"],
 							"overrides": { "author": { "formatter": "userDisplayName" } }
 						}
-					}
-				],
-				"layout": [
+					},
 					{
-						"id": "1",
-						"widgetId": "article-data",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 5
-					}
-				],
-				"bodyWidgets": [
+						"id": "article-used-templates",
+						"type": "stat",
+						"title": "Templates",
+						"content": {
+							"label": "Templates",
+							"caption": "campaign templates use this article",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": { "url": "/apps/pipelinq/api/articles/@objectId/usages" },
+							"valueField": "counts.template"
+						}
+					},
 					{
-						"id": "article-content",
-						"component": "ArticleContentSection",
-						"title": "Article",
-						"placement": "before-body",
-						"props": {
-							"articleId": "@objectId"
+						"id": "article-used-blasts",
+						"type": "stat",
+						"title": "Blasts",
+						"content": {
+							"label": "Blasts",
+							"caption": "blasts use this article",
+							"format": { "style": "number", "decimals": 0 },
+							"endpointSource": { "url": "/apps/pipelinq/api/articles/@objectId/usages" },
+							"valueField": "counts.blast"
 						}
 					},
 					{
 						"id": "article-usage",
-						"component": "ArticleUsageSection",
+						"type": "object-table",
 						"title": "Where this is used",
-						"placement": "end",
-						"props": {
-							"articleId": "@objectId"
+						"content": {
+							"endpointSource": { "url": "/apps/pipelinq/api/articles/@objectId/usages", "responsePath": "data" },
+							"columns": [
+								{
+									"key": "kind",
+									"label": "Kind",
+									"enum": ["template", "blast"],
+									"enumLabels": { "template": "Campaign template", "blast": "Blast" }
+								},
+								{ "key": "name", "label": "Name", "cellClass": "cn-cell--strong" },
+								{
+									"key": "status",
+									"label": "Status",
+									"widget": "badge",
+									"enum": ["draft", "scheduled", "sending", "sent", "paused", "failed", "cancelled", "email", "sms"],
+									"enumLabels": {
+										"draft": "Draft",
+										"scheduled": "Scheduled",
+										"sending": "Sending",
+										"sent": "Sent",
+										"paused": "Paused",
+										"failed": "Failed",
+										"cancelled": "Cancelled",
+										"email": "Email",
+										"sms": "SMS"
+									}
+								}
+							],
+							"emptyText": "This article has not been used anywhere yet."
 						}
 					}
+				],
+				"layout": [
+					{ "id": "2", "widgetId": "article-hero", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": "3", "widgetId": "article-body", "gridX": 0, "gridY": 5, "gridWidth": 8, "gridHeight": 10 },
+					{ "id": "4", "widgetId": "article-about", "gridX": 8, "gridY": 5, "gridWidth": 4, "gridHeight": 5 },
+					{ "id": "1", "widgetId": "article-data", "gridX": 8, "gridY": 10, "gridWidth": 4, "gridHeight": 5 },
+					{
+						"id": "5",
+						"widgetId": "article-used-templates",
+						"gridX": 0,
+						"gridY": 15,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "6",
+						"widgetId": "article-used-blasts",
+						"gridX": 6,
+						"gridY": 15,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{ "id": "7", "widgetId": "article-usage", "gridX": 0, "gridY": 17, "gridWidth": 12, "gridHeight": 5 }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -130,10 +184,62 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{ "type": "audit" }
+							]
 						}
 					]
-				}
+				},
+				"headerActions": [
+					{
+						"id": "submitForReview",
+						"label": "Submit for review",
+						"type": "api-call",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/articles/@objectId/transition",
+						"successMessage": "The article was moved",
+						"payload": { "transition": "submitForReview" },
+						"visibleWhen": { "field": "status", "op": "eq", "value": "draft" }
+					},
+					{
+						"id": "returnToDraft",
+						"label": "Return to draft",
+						"type": "api-call",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/articles/@objectId/transition",
+						"successMessage": "The article was moved",
+						"payload": { "transition": "returnToDraft" },
+						"visibleWhen": { "field": "status", "op": "eq", "value": "review" }
+					},
+					{
+						"id": "publish",
+						"label": "Publish",
+						"type": "api-call",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/articles/@objectId/publish",
+						"successMessage": "The article was moved",
+						"visibleWhen": { "field": "status", "op": "in", "value": ["draft", "review"] }
+					},
+					{
+						"id": "archive",
+						"label": "Archive",
+						"type": "api-call",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/articles/@objectId/archive",
+						"successMessage": "The article was moved",
+						"visibleWhen": { "field": "status", "op": "eq", "value": "published" }
+					},
+					{
+						"id": "restore",
+						"label": "Restore as draft",
+						"type": "api-call",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/articles/@objectId/transition",
+						"successMessage": "The article was moved",
+						"payload": { "transition": "restore" },
+						"visibleWhen": { "field": "status", "op": "eq", "value": "archived" }
+					}
+				]
 			}
 		}
 	]

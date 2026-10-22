@@ -275,7 +275,7 @@ export default {
 		},
 
 		/**
-		 * Leave the form. The host (PosStaffManager, on the admin page) closes the
+		 * Leave the form. The host (the admin page) closes the
 		 * dialog — this form no longer routes back to a list page of its own.
 		 *
 		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page

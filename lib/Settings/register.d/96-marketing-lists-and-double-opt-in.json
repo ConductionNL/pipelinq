@@ -152,7 +152,19 @@
             ],
             "default": "pending",
             "description": "Membership state. Only 'confirmed' may receive a mailing.",
-            "title": "State"
+            "title": "State",
+            "x-enum-labels": {
+              "pending": "Waiting for confirmation",
+              "confirmed": "Confirmed",
+              "unsubscribed": "Unsubscribed",
+              "bounced": "Undeliverable"
+            },
+            "x-color-map": {
+              "pending": "warning",
+              "confirmed": "success",
+              "unsubscribed": "default",
+              "bounced": "error"
+            }
           },
           "source": {
             "type": "string",
@@ -168,7 +180,13 @@
               "contract"
             ],
             "description": "GDPR Art. 6 ground this membership rests on. 'soft-opt-in' is only usable with the objection recorded in the consent record's evidence.",
-            "title": "Lawful Basis"
+            "title": "Lawful Basis",
+            "x-enum-labels": {
+              "consent": "consent",
+              "soft-opt-in": "soft opt-in",
+              "legitimate-interest": "legitimate interest",
+              "contract": "contract"
+            }
           },
           "confirmTokenHash": {
             "type": "string",

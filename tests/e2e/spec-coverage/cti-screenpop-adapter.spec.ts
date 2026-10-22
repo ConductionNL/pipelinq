@@ -75,7 +75,7 @@ async function openAdminSettings(page: Page) {
 
 /**
  * The CTI configuration form. Scoped by `data-testid="cti-settings"`, which
- * CtiSettings.vue sets on its `<form>` precisely because the admin page carries
+ * CtiPage sets around the declared CTI section precisely because the admin page carries
  * a SECOND "Test connection" button (XWiki's) — an unscoped match would let the
  * whole CTI section disappear while the assertion stayed green on XWiki's.
  */
@@ -94,7 +94,7 @@ test('CTI config: the admin form exposes every declared configuration control', 
 	// The scenario enumerates the sections the form MUST offer. Each is asserted
 	// by its rendered label rather than by input order, so re-ordering the form
 	// is free but DROPPING a control fails. `credentials_ref` is the
-	// "Credentials selector" of the scenario: CtiSettings.vue implements it as an
+	// "Credentials selector" of the scenario: the declared CTI section implements it as an
 	// OpenConnector source reference field rather than as a populated dropdown +
 	// "Link credentials" button, which is noted here rather than asserted as if
 	// the dropdown existed.
@@ -126,11 +126,10 @@ test('CTI config: "Test connection" runs the probe and reports a verdict', async
 	const cti = ctiSettings(section)
 	await expect(cti).toBeVisible({ timeout: 15000 })
 
-	// Nothing is rendered in `.cti-settings__status` until the probe has run —
-	// CtiSettings.vue initialises `status: ''` and clears it again at the top of
-	// `test()`. So its appearance is a positive signal that the round-trip to
-	// `GET /api/cti/test-connection` completed, not merely that a paragraph exists.
-	const status = cti.locator('.cti-settings__status')
+	// The action's result note is not rendered until the probe has run, so its
+	// appearance is a positive signal that the round-trip to
+	// `GET /api/cti/test-connection` completed, not merely that a note exists.
+	const status = cti.locator('[data-testid="cn-settings-field-action-result-test"]')
 	await expect(status).toHaveCount(0)
 
 	await cti.getByRole('button', { name: 'Test connection' }).click()

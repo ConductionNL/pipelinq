@@ -53,6 +53,8 @@ use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
+use OCA\Pipelinq\Listener\ChannelMessageClientListener;
+use OCA\Pipelinq\Listener\ContactChannelMirrorListener;
 use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
@@ -64,6 +66,8 @@ use OCA\Pipelinq\Listener\SubmittedLeadListener;
 use OCA\Pipelinq\Listener\WebFormBindingListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\QuestionAnsweredListener;
+use OCA\Pipelinq\Listener\RelationshipInverseListener;
+use OCA\Pipelinq\Listener\RelationshipTypeListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\SchemaChangeListener;
@@ -222,6 +226,46 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectCreatingEvent::class,
 			listener: LeadStageCreatingListener::class
+		);
+		// A message names the client of its contact, so a client page lists it.
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: ChannelMessageClientListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: ChannelMessageClientListener::class
+		);
+		// A client's or contact's single email/phone follows the primary entry of its lists.
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: ContactChannelMirrorListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: ContactChannelMirrorListener::class
+		);
+		// A relationship carries what its type and target imply, whoever wrote it.
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: RelationshipTypeListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: RelationshipTypeListener::class
+		);
+		// Every relationship has its inverse row, whoever wrote it.
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: RelationshipInverseListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: RelationshipInverseListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectDeletedEvent::class,
+			listener: RelationshipInverseListener::class
 		);
 		// A lead a form created gets its contact and client before it is stored
 		// and its submit touchpoint once it is (decision 179: the submit creates

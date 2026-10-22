@@ -337,7 +337,7 @@
         "slug": "channelMessage",
         "title": "Message",
         "icon": "MessageOutline",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A single message exchanged on a conversation (email, web-form, whatsapp, sms).",
         "description": "Message is the omnichannel exchange record: one row per inbound or outbound message persisted across all supported channels. The whatsapp-sms-channel-adapter change extends it with providerId, externalMessageId, templateId, costEur, deliveryStatus and windowExpiresAt. channel.enum is extended to include whatsapp and sms.",
         "required": [
@@ -354,6 +354,12 @@
             "type": "string",
             "description": "FK to client-management Contact (UUID).",
             "title": "Contact ID"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "The client the contact belongs to (UUID), stamped by the server on save so a client page can list the messages of all its contacts.",
+            "title": "Client ID",
+            "facetable": true
           },
           "channel": {
             "type": "string",

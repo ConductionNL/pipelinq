@@ -10,3 +10,15 @@
   - **spec_ref**: `specs/admin-settings/spec.md#requirement-no-admin-surface-is-an-in-app-route`
 - [x] 5 Ask in a dialog before deleting a skill or an agent profile
   - **spec_ref**: `specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog`
+- [x] 6 Declare the menu structure, VAT rates, forecast, prospect discovery, CTI and xWiki sections
+  - **spec_ref**: `specs/admin-settings/spec.md#requirement-settings-with-lists-rows-or-a-json-value-are-declared-too`
+- [x] 7 Show the POS customer lookup settings on the admin page and drop its in-app route
+  - **spec_ref**: `specs/admin-settings/spec.md#requirement-no-admin-surface-is-an-in-app-route`
+- [x] 8 Product categories, skills, agent profiles and the POS lists as embedded index pages, with the page as modal host
+  - **spec_ref**: `specs/admin-settings/spec.md#requirement-the-admin-lists-are-declared-index-pages`
+- [x] 9 Pick the portal tenant from the configured tenants (Q15)
+  - **spec_ref**: `specs/admin-settings/spec.md#requirement-the-portal-tenant-is-picked-from-the-tenants`
+- [x] 10 Refuse removing a lead source or request channel in use, on the server
+  - **spec_ref**: `specs/admin-settings/spec.md#requirement-a-vocabulary-value-in-use-cannot-be-removed`
+- [x] 11 Marketing traffic as a declared section, with "Remove the stored key"
+  - **spec_ref**: `specs/admin-settings/spec.md#requirement-marketing-traffic-is-declared-with-a-way-to-remove-the-stored-key`

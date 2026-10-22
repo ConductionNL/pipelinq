@@ -68,6 +68,7 @@ class CorrespondenceLanguageController extends Controller {
 		return new JSONResponse(
 			[
 				'languages' => $this->service->available(),
+				'options' => $this->service->options(),
 				'instanceDefault' => $this->service->instanceDefault(),
 			],
 			200

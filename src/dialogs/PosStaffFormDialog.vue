@@ -12,7 +12,7 @@
   -->
 <template>
 	<NcDialog :name="dialogTitle" size="normal" @closing="$emit('done')">
-		<PosStaffForm :id="staffId" @done="$emit('done')" />
+		<PosStaffForm :id="objectId" @done="$emit('done')" />
 	</NcDialog>
 </template>
 
@@ -31,7 +31,7 @@ export default {
 		/**
 		 * The staff member to edit, or '' to create a new one.
 		 */
-		staffId: {
+		objectId: {
 			type: String,
 			default: '',
 		},
@@ -45,7 +45,7 @@ export default {
 		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
 		 */
 		dialogTitle() {
-			return this.staffId
+			return this.objectId
 				? t('pipelinq', 'Edit POS staff member')
 				: t('pipelinq', 'New POS staff member')
 		},

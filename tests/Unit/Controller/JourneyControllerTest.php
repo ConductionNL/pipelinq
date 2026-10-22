@@ -208,6 +208,8 @@ class JourneyControllerTest extends TestCase {
 	public function testRunsReturnsTheRefusalsWithTheirContacts(): void {
 		$this->journeys->method('runsFor')->willReturn([
 			['contactId' => 'contact-1', 'state' => 'refused', 'reason' => 'no_consent'],
+			['contactId' => 'contact-2', 'state' => 'task-created'],
+			['contactId' => 'contact-3', 'state' => 'failed'],
 		]);
 
 		$response = $this->controller->runs('journey-1');
@@ -216,6 +218,7 @@ class JourneyControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame('contact-1', $results[0]['contactId']);
 		$this->assertSame('no_consent', $results[0]['reason']);
+		$this->assertSame(['sent' => 1, 'refused' => 1, 'failed' => 1], $response->getData()['counts']);
 	}//end testRunsReturnsTheRefusalsWithTheirContacts()
 
 	/**

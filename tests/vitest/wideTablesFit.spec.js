@@ -120,12 +120,20 @@ describe('kassakoppeling audit log', () => {
 })
 
 describe('competitor watches', () => {
-	it('lets the table cells wrap', () => {
-		const source = readFileSync(
-			resolve(__dirname, '../../src/views/marketing/CompetitorWatches.vue'),
-			'utf8',
-		)
-		const table = source.match(/\.competitors__table \{[\s\S]*?\n\}/)[0]
-		expect(table).toMatch(/white-space: normal/)
+	it('are library object-tables, whose cells wrap, instead of a page with its own table', () => {
+		const file = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.d/79-marketing-search-intelligence.json'), 'utf8'))
+		const widgets = []
+		const walk = (node) => {
+			if (Array.isArray(node)) {
+				node.forEach(walk)
+			} else if (node && typeof node === 'object') {
+				if (node.id === 'competitor-watches' || node.id === 'competitor-events') {
+					widgets.push(node)
+				}
+				Object.values(node).forEach(walk)
+			}
+		}
+		walk(file)
+		expect(widgets.map((w) => w.type)).toEqual(['object-table', 'object-table'])
 	})
 })

@@ -227,7 +227,13 @@ test.describe('Social posts page', () => {
 
 	// @e2e marketing-ui::a-marketer-writes-a-variant-for-one-network-only
 	test('the composer opens and takes a body and a variant', async ({ page }) => {
-		await gotoAppRoute(page, `${APP}/social-posts/new`)
+		await gotoAppRoute(page, `${APP}/social-posts`)
+		await page
+			.locator('#content-vue')
+			.getByRole('button', { name: /^Actions$/ })
+			.first()
+			.click()
+		await page.getByRole('menuitem', { name: /New post/i }).click()
 		await assertNoHardError(page)
 
 		const body = page.getByTestId('social-compose-body')

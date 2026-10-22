@@ -35,21 +35,6 @@ export async function incomingCall() {
 }
 
 /**
- * Ask the PBX to place a call from the agent's extension to a number.
- *
- * @param {string} targetNumber The number to dial.
- * @param {string} extension The agent's own extension to originate from.
- * @return {Promise<object>} The dial result from CtiController.
- */
-export async function clickToDial(targetNumber, extension) {
-	const { data } = await axios.post(base('/api/cti/click-to-dial'), {
-		targetNumber,
-		extension,
-	})
-	return data
-}
-
-/**
  * Record how a call ended against its contactmoment.
  *
  * @param {string} contactmomentId The contactmoment the call belongs to.
@@ -140,7 +125,6 @@ export async function getEventLog(filters = {}) {
 export default {
 	screenPop,
 	incomingCall,
-	clickToDial,
 	submitDisposition,
 	attachRecording,
 	getConfig,

@@ -373,7 +373,7 @@ test.describe('Campaign report page', () => {
 		await card.click()
 
 		await expect(page).toHaveURL(/\/reports\/campaign/, { timeout: 15000 })
-		await expect(page.getByTestId('campaign-report-body')).toBeVisible({
+		await expect(page.getByText('Per channel').first()).toBeVisible({
 			timeout: 15000,
 		})
 		await assertNoHardError(page)
@@ -385,21 +385,18 @@ test.describe('Campaign report page', () => {
 	}) => {
 		await gotoRoute(page, '/reports/campaign')
 
-		const tiles = page.getByTestId('campaign-report-tiles')
-		await expect(tiles).toBeVisible({ timeout: 15000 })
+		const content = page.locator('#content-vue')
 		for (const label of [
 			'Clicks',
 			'Submissions',
 			'Leads',
 			'Attributed value',
 			'Cost',
+			'Per channel',
+			'Attributed value per channel',
 		]) {
-			await expect(tiles).toContainText(label)
+			await expect(content.getByText(label, { exact: true }).first()).toBeVisible({ timeout: 15000 })
 		}
-
-		await expect(page.getByTestId('campaign-report-channels')).toBeVisible()
-		await expect(page.getByTestId('campaign-report-model-rows')).toBeVisible()
-		await expect(page.getByTestId('campaign-report-leads')).toBeVisible()
 		await assertNoHardError(page)
 	})
 

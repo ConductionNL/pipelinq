@@ -87,16 +87,27 @@
 		<NcNoteCard v-if="error" type="error">
 			{{ error }}
 		</NcNoteCard>
+
+		<CnDeleteDialog
+			v-if="deleting"
+			ref="deleteDialog"
+			:item="deleting"
+			:nameFormatter="labelOf"
+			:dialogTitle="t('pipelinq', 'Remove {name}', { name: labelOf(deleting) })"
+			:confirmLabel="t('pipelinq', 'Remove')"
+			@confirm="confirmDelete"
+			@close="deleting = null" />
 	</CnSettingsSection>
 </template>
 
 <script>
-import { CnSettingsSection } from '@conduction/nextcloud-vue'
+import { CnDeleteDialog, CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 export default {
 	name: 'TagManager',
 	components: {
+		CnDeleteDialog,
 		CnSettingsSection,
 		NcButton,
 		NcLoadingIcon,
@@ -139,9 +150,13 @@ export default {
 			},
 		},
 
-		usageCheck: {
+		/**
+		 * Remove a value: `(id) => Promise`. The server refuses a value that
+		 * records still use, and the dialog shows its sentence.
+		 */
+		remove: {
 			type: Function,
-			default: null,
+			required: true,
 		},
 
 		/**
@@ -154,7 +169,6 @@ export default {
 		},
 	},
 
-	emits: ['remove'],
 
 	data() {
 		return {
@@ -163,6 +177,8 @@ export default {
 			editingId: null,
 			editName: '',
 			error: null,
+			// The value the remove dialog asks about.
+			deleting: null,
 		}
 	},
 
@@ -286,33 +302,27 @@ export default {
 		},
 
 		/**
+		 * Ask before removing a value.
+		 *
 		 * @param {object} tag The tag the user asked to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-90
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-vocabulary-value-in-use-cannot-be-removed
 		 */
-		async confirmRemove(tag) {
-			let message = t(
-				'pipelinq',
-				'Are you sure you want to remove "{name}"?',
-				{ name: this.labelOf(tag) },
-			)
+		confirmRemove(tag) {
+			this.deleting = tag
+		},
 
-			if (this.usageCheck) {
-				try {
-					const count = await this.usageCheck(tag.name)
-					if (count > 0) {
-						message = t(
-							'pipelinq',
-							'{count} items currently use "{name}". They will retain their value, but it will no longer be available for new items.',
-							{ count, name: this.labelOf(tag) },
-						)
-					}
-				} catch {
-					// Non-blocking — proceed with generic message
-				}
-			}
-
-			if (confirm(message)) {
-				this.$emit('remove', tag.id)
+		/**
+		 * Remove the value, and show the server's refusal when records still use it.
+		 *
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-vocabulary-value-in-use-cannot-be-removed
+		 */
+		async confirmDelete() {
+			const dialog = this.$refs.deleteDialog
+			try {
+				await this.remove(this.deleting.id)
+				dialog?.setResult({ success: true })
+			} catch (error) {
+				dialog?.setResult({ error: error?.message || t('pipelinq', 'Deleting failed.') })
 			}
 		},
 	},

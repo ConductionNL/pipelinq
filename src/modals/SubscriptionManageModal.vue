@@ -26,16 +26,16 @@
 				{{ message }}
 			</NcNoteCard>
 
-			<p v-if="subscriptions.length === 0">
+			<p v-if="rows.length === 0">
 				{{ t('pipelinq', 'This person is on no mailing list.') }}
 			</p>
 
 			<ul v-else class="subscription-manage__list">
 				<li
-					v-for="row in subscriptions"
+					v-for="row in rows"
 					:key="row.listId"
 					class="subscription-manage__row">
-					<span>{{ row.listId }}</span>
+					<span>{{ listName(row.listId) }}</span>
 					<span class="subscription-manage__state">{{
 						stateLabel(row)
 					}}</span>
@@ -52,7 +52,7 @@
 			<div class="subscription-manage__actions">
 				<NcButton
 					variant="error"
-					:disabled="busy || subscriptions.length === 0"
+					:disabled="busy || rows.length === 0"
 					data-testid="subscription-remove-all"
 					@click="removeAll">
 					<template #icon>
@@ -77,8 +77,11 @@
 </template>
 
 <script>
+import { emit } from '@nextcloud/event-bus'
 import { NcButton, NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
 import {
+	fetchContactSubscriptions,
+	fetchMailingLists,
 	fetchPreferenceLink,
 	unsubscribeContact,
 } from '../services/mailingListApi.js'
@@ -101,7 +104,7 @@ export default {
 			required: true,
 		},
 
-		/** The memberships, as the section already loaded them. */
+		/** The memberships, when the opener already loaded them; otherwise the modal reads them. */
 		subscriptions: {
 			type: Array,
 			default: () => [],
@@ -116,10 +119,56 @@ export default {
 			message: '',
 			messageType: 'success',
 			preferenceUrl: '',
+			loaded: null,
+			listNames: {},
 		}
 	},
 
+	computed: {
+		/**
+		 * The memberships shown: read here, else those handed over.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-unsubscribe-is-first-party-and-takes-one-click
+		 */
+		rows() {
+			return this.loaded || this.subscriptions
+		},
+	},
+
+	mounted() {
+		this.load()
+	},
+
 	methods: {
+		/**
+		 * Read the contact's memberships and the list names, so a list reads
+		 * by its name rather than its id.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-unsubscribe-is-first-party-and-takes-one-click
+		 */
+		async load() {
+			try {
+				const [subscriptions, lists] = await Promise.all([
+					fetchContactSubscriptions(this.contactId),
+					fetchMailingLists(),
+				])
+				this.loaded = subscriptions
+				this.listNames = Object.fromEntries(lists.map((list) => [String(list.id || list.uuid || ''), list.name || '']))
+			} catch {
+				this.loaded = null
+			}
+		},
+
+		/**
+		 * @param {string} listId A list id.
+		 * @return {string} The list's name, else the id.
+		 */
+		listName(listId) {
+			return this.listNames[String(listId)] || listId || ''
+		},
+
 		/**
 		 * @param {object} row A subscription payload.
 		 * @spec openspec/specs/marketing-lists/spec.md#requirement-unsubscribe-is-first-party-and-takes-one-click
@@ -147,7 +196,7 @@ export default {
 		 */
 		removeLabel(row) {
 			return this.t('pipelinq', 'Remove from {list}', {
-				list: (row && row.listId) || '',
+				list: row ? this.listName(row.listId) : '',
 			})
 		},
 
@@ -195,6 +244,8 @@ export default {
 					{ count: result.count || 0 },
 				)
 				this.$emit('changed')
+				emit('cn:page:refresh', {})
+				await this.load()
 			} catch {
 				this.messageType = 'error'
 				this.message = this.t(

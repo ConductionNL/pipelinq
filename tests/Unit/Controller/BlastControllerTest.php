@@ -88,7 +88,7 @@ class BlastControllerTest extends TestCase {
 	 *
 	 * Register/schema context is taken ONLY from `$config['filters']`, exactly
 	 * as ObjectService::prepareFindAllConfig() does; the remaining filter keys
-	 * are object-field equality filters; soft-deleted rows are excluded from
+	 * are object-field filters (a scalar is equality, an array is IN); soft-deleted rows are excluded from
 	 * both reads and counts; `limit`/`offset` page the result.
 	 *
 	 * @return object The store.
@@ -202,7 +202,12 @@ class BlastControllerTest extends TestCase {
 
 					$matches = true;
 					foreach ($fields as $key => $value) {
-						if (($row[$key] ?? null) !== $value) {
+						$wanted = $value;
+						if (is_array($value) === false) {
+							$wanted = [$value];
+						}
+
+						if (in_array(($row[$key] ?? null), $wanted, true) === false) {
 							$matches = false;
 							break;
 						}
@@ -599,6 +604,42 @@ class BlastControllerTest extends TestCase {
 			$response->getData()
 		);
 	}//end testAttributionSumsTheSeededLinks()
+
+	/**
+	 * GET /api/blasts/attribution?ids= answers every listed Blast in one
+	 * request: one row per id, in the order given, zeros included.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+	 */
+	public function testAttributionsAnswersOneRowPerListedBlast(): void {
+		$this->signIn();
+		$this->objects->seed('al-1', 'pipelinq', 'attributionLink', ['blastId' => 'blast-1', 'dealId' => 'deal-1', 'attributedValue' => 1500]);
+		$this->objects->seed('al-2', 'pipelinq', 'attributionLink', ['blastId' => 'blast-2', 'dealId' => 'deal-2', 'attributedValue' => 250]);
+		$this->objects->seed('al-3', 'pipelinq', 'attributionLink', ['blastId' => 'blast-9', 'dealId' => 'deal-9', 'attributedValue' => 99999]);
+
+		$response = $this->buildController()->attributions(ids: 'blast-2, blast-1,,blast-3');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$rows = $response->getData();
+		$this->assertSame(['blast-2', 'blast-1', 'blast-3'], array_column($rows, 'blastId'));
+		$this->assertSame([250.0, 1500.0, 0.0], array_column($rows, 'attributedValue'));
+		$this->assertSame([1, 1, 0], array_column($rows, 'dealCount'));
+	}//end testAttributionsAnswersOneRowPerListedBlast()
+
+	/**
+	 * The batch attribution read is refused with 401 when signed out.
+	 *
+	 * @return void
+	 */
+	public function testAttributionsRequiresAuthentication(): void {
+		$this->userSession->method('getUser')->willReturn(null);
+
+		$response = $this->buildController()->attributions(ids: 'blast-1');
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testAttributionsRequiresAuthentication()
 
 	/**
 	 * A Blast with no attribution links returns an explicit zero summary — the

@@ -14,8 +14,6 @@
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
@@ -31,9 +29,6 @@ vi.mock('../../src/dialogs/CtiPayloadDialog.vue', () => ({
 }))
 vi.mock('../../src/dialogs/ConfirmDialog.vue', () => ({
 	default: { name: 'ConfirmDialog', render: () => h('div') },
-}))
-vi.mock('../../src/modals/PosTenderTypeFormDialog.vue', () => ({
-	default: { name: 'PosTenderTypeFormDialog', render: () => h('div') },
 }))
 
 function stub(name, tag = 'div') {
@@ -65,8 +60,7 @@ const mountOptions = { global: { mocks: { t: globalThis.t } } }
 
 const { default: CtiEventLog } =
 	await import('../../src/views/settings/CtiEventLog.vue')
-const { default: PosTenderTypeList } =
-	await import('../../src/views/pos/PosTenderTypeList.vue')
+const { adminLists } = await import('../../src/views/settings/adminLists.js')
 
 /**
  * The facts of one record as {label: text}.
@@ -123,60 +117,35 @@ describe('CTI event log', () => {
 	})
 })
 
-describe('POS tender types', () => {
-	it('lists a tender type with code, GL account, flags, sort and actions', async () => {
-		axiosMock.get.mockResolvedValue({
-			data: {
-				results: [
-					{
-						id: 'tt1',
-						name: 'Pin',
-						code: 'PIN',
-						glAccount: '1100',
-						requiresPin: true,
-						allowsChange: false,
-						isActive: true,
-						sortOrder: 2,
-					},
-				],
-			},
-		})
-		const wrapper = mount(PosTenderTypeList, mountOptions)
-		await flushPromises()
+describe('POS tender types, roles and staff', () => {
+	const lists = adminLists((app, text) => text, (slug) => ({ register: 'pipelinq', schema: slug }), vi.fn())
 
-		expect(wrapper.find('table').exists()).toBe(false)
-		const type = wrapper.get('[data-testid="pos-tender-type"]')
-		expect(type.get('h3').text()).toBe('Pin')
-		expect(type.text()).toContain('Active')
-		expect(factsOf(type)).toEqual({
-			Code: 'PIN',
-			'GL account': '1100',
-			Flags: 'PIN',
-			Sort: '2',
-		})
-		const actions = type
-			.findAll('.pos-tender-type-list__row-actions button')
-			.map((b) => b.text())
-		expect(actions).toEqual(['Edit', 'Delete'])
+	it('lists the tender types from their endpoint as cards, opening one in its form, with a delete that asks', () => {
+		const list = lists.posTenderType
+		expect(list).toMatchObject({ embedded: true, viewMode: 'cards', entitySource: 'endpoint', rowModal: 'PosTenderTypeFormDialog', createModal: 'PosTenderTypeFormDialog' })
+		expect(list.sourceConfig).toEqual({ url: '/apps/pipelinq/api/pos/tender-types', rowsPath: 'results' })
+		expect(list.columns.map((column) => column.label)).toEqual(['Name', 'Code', 'GL account', 'Active', 'Sort'])
+		expect(list.actions.map((action) => action.label)).toEqual(['Delete'])
 	})
-})
 
-describe('POS roles and staff', () => {
+	it('deletes a tender type through a dialog that names it and calls the endpoint', () => {
+		const openModal = vi.fn()
+		const withModal = adminLists((app, text) => text, () => undefined, openModal)
+		withModal.posTenderType.actions[0].handler({ id: 'tt1', name: 'Pin', code: 'PIN' })
+		const [name, props] = openModal.mock.calls[0]
+		expect(name).toBe('CnActionDialog')
+		expect(props.objectId).toBe('tt1')
+		expect(props.config.summary.title).toBe('{name}')
+		expect(props.config.confirm.request).toEqual({ method: 'DELETE', url: '/apps/pipelinq/api/pos/tender-types/@objectId' })
+	})
+
 	it('opens the POS roles as cards', () => {
-		const source = readFileSync(
-			resolve(__dirname, '../../src/views/pos/PosRoleList.vue'),
-			'utf8',
-		)
-		expect(source).toMatch(/viewMode="cards"/)
+		expect(lists.posRole).toMatchObject({ viewMode: 'cards', rowModal: 'PosRoleFormDialog', sourceConfig: { url: '/apps/pipelinq/api/pos/roles', rowsPath: 'roles' } })
 	})
 
-	it('lets the POS staff headers wrap and drops the doubled padding', () => {
-		const source = readFileSync(
-			resolve(__dirname, '../../src/views/pos/PosStaffList.vue'),
-			'utf8',
-		)
-		const root = source.match(/\.pos-staff-list \{[^}]*\}/)[0]
-		expect(root).not.toMatch(/padding/)
-		expect(source).toMatch(/white-space: normal/)
+	it('names the POS role of a staff member, not its id', () => {
+		const role = lists.posStaff.columns.find((column) => column.key === 'posRole')
+		expect(role).toMatchObject({ widget: 'fkResolve', widgetProps: { register: 'pipelinq', schema: 'posRole', labelField: 'name' } })
+		expect(lists.posStaff.rowModal).toBe('PosStaffFormDialog')
 	})
 })

@@ -35,6 +35,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -69,6 +70,7 @@ class CtiController extends Controller {
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ConnectionReportService $connectionReports Reports the CTI check to integriq's connection registry.
+	 * @param IL10N $l10n Translates the refusal the agent reads.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -78,6 +80,7 @@ class CtiController extends Controller {
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 		private ConnectionReportService $connectionReports,
+		private IL10N $l10n,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -221,12 +224,17 @@ class CtiController extends Controller {
 		}
 
 		$targetNumber = (string)$this->request->getParam('targetNumber', '');
-		$extension = (string)$this->request->getParam('extension', '');
+		$extension = $this->ctiService->extensionFor(
+			userId: $user->getUID(),
+			requested: (string)$this->request->getParam('extension', '')
+		);
 		if ($targetNumber === '' || $extension === '') {
-			return new JSONResponse(
-				['error' => 'targetNumber and extension are required'],
-				Http::STATUS_BAD_REQUEST
-			);
+			// Without an extension anywhere the agent reads what to do; a missing target is an API misuse.
+			$errors = [
+				true => $this->l10n->t('Your phone extension is not set. Ask an administrator to add it to your agent profile.'),
+				false => 'targetNumber and extension are required',
+			];
+			return new JSONResponse(['error' => $errors[$extension === '']], Http::STATUS_BAD_REQUEST);
 		}
 
 		// 🔴 NON-EMPTY IS NOT DIALABLE.

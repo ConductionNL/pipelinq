@@ -37,6 +37,19 @@ export async function createWithContact(objectType, form) {
 }
 
 /**
+ * Create a client through the contacts-sync create, with its schema.org type
+ * (`schema:Person` or `schema:Organization`) taken from `type`.
+ *
+ * @param {object} form The client's values.
+ * @return {Promise<object>} The created client.
+ * @spec openspec/changes/party-forms-as-configuration/specs/client-forms/spec.md#requirement-the-client-form-is-configuration-shared-by-every-create
+ */
+export function createClientWithContact(form) {
+	const type = form?.type === 'organization' ? 'schema:Organization' : 'schema:Person'
+	return createWithContact('client', { ...form, '@type': type })
+}
+
+/**
  * Write-back sync of an existing client/contact to its linked Nextcloud
  * Contact vCard (contacts-sync spec, write-back requirement). A failure never
  * blocks the caller's own save flow, since the Pipelinq object is already

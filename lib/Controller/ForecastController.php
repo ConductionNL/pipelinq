@@ -30,6 +30,8 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ForecastAccessPolicy;
 use OCA\Pipelinq\Service\ForecastExportService;
 use OCA\Pipelinq\Service\ForecastOverrideService;
+use OCA\Pipelinq\Service\ForecastSummaryService;
+use DateTimeImmutable;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -50,6 +52,10 @@ use Psr\Log\LoggerInterface;
  *
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The forecast's export, override
+ *  and summary services, the access policy and the response types it answers with
+ *  are one REST surface; splitting the controller per action would only move them.
  */
 class ForecastController extends Controller {
 	/**
@@ -68,6 +74,7 @@ class ForecastController extends Controller {
 	 * @param ForecastExportService $exportService The snapshot export service.
 	 * @param ForecastOverrideService $overrideService The override management service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ForecastSummaryService|null $summaryService The forecast page's figures.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -76,9 +83,65 @@ class ForecastController extends Controller {
 		private ForecastExportService $exportService,
 		private ForecastOverrideService $overrideService,
 		private LoggerInterface $logger,
+		private ?ForecastSummaryService $summaryService = null,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
+
+	/**
+	 * The forecast page's figures for a level of the current quarter: the
+	 * period, the totals, one row per owner one level down, and the trend.
+	 * With `format=csv` the latest snapshot per owner downloads as CSV.
+	 *
+	 * @param string $level   The level the page shows: rep, team, division or company.
+	 * @param string $format  `json` or `csv`.
+	 * @param string $ownerId One seller's own figures, at the rep level.
+	 *
+	 * @return Response The figures, or the CSV.
+	 *
+	 * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+	 *   scenario to admin-settings, which never grew one
+	 */
+	#[NoAdminRequired]
+	public function summary(string $level = 'team', string $format = 'json', string $ownerId = ''): Response {
+		$uid = $this->currentUserId();
+		if ($uid === '') {
+			return new JSONResponse(['error' => 'Unauthenticated.'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if (in_array($level, self::READ_LEVELS, true) === false || $this->summaryService === null) {
+			return new JSONResponse(['error' => 'A valid level is required.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$childLevel = ForecastSummaryService::CHILD_LEVEL[$level];
+		$owner = null;
+		if (trim($ownerId) !== '') {
+			$childLevel = 'rep';
+			$owner = trim($ownerId);
+		}
+
+		if ($this->accessPolicy->canRead(userId: $uid, level: $childLevel, ownerId: $owner) === false) {
+			$this->logger->warning('Pipelinq: forecast summary denied', ['uid' => $uid, 'level' => $level]);
+			return new JSONResponse(['error' => 'You may not read forecasts at this scope.'], Http::STATUS_FORBIDDEN);
+		}
+
+		$now = new DateTimeImmutable();
+		if (strtolower($format) === 'csv') {
+			$period = $this->summaryService->currentPeriod(now: $now);
+			$latest = [];
+			foreach ($this->summaryService->snapshots(periodId: $period['periodId'], level: $childLevel, ownerId: $owner) as $row) {
+				$latest[(string)($row['owner_id'] ?? '')] = $row;
+			}
+
+			return new DataDownloadResponse(
+				data: $this->exportService->toCsv(array_values($latest)),
+				filename: sprintf('forecast-%s-%s.csv', $period['periodId'], $childLevel),
+				contentType: 'text/csv; charset=UTF-8'
+			);
+		}
+
+		return new JSONResponse($this->summaryService->summary(level: $level, now: $now, ownerId: $owner));
+	}//end summary()
 
 	/**
 	 * Export forecast snapshots (JSON or CSV) for a period and level.

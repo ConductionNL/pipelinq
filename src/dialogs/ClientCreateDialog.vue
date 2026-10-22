@@ -1,65 +1,59 @@
+<!--
+  - SPDX-License-Identifier: EUPL-1.2
+  - SPDX-FileCopyrightText: 2026 Conduction B.V.
+  -
+  - New client: the library form dialog over the client schema, with the
+  - fields and checks the Clients page declares (`includeFields`,
+  - `fieldOverrides`), so the index's edit form, this dialog and any app that
+  - reuses the config ask the same. The save goes through the contacts-sync
+  - create, which provisions the Nextcloud contact a client requires. Opened
+  - from the Clients page, the dashboards and the request form's client
+  - picker; a picker gets the new client back and its form stays.
+  -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'New Client')"
-		:open="true"
-		size="normal"
+	<CnFormDialog
+		v-if="schema"
+		ref="form"
+		:schema="schema"
+		:item="null"
+		register="pipelinq"
+		:initialData="prefill"
+		:dialogTitle="t('pipelinq', 'New Client')"
+		:includeFields="formConfig.includeFields"
+		:fieldOverrides="formConfig.fieldOverrides"
 		data-testid="client-create-dialog"
-		@closing="$emit('close')">
-		<ClientForm
-			ref="form"
-			:initialName="prefillName"
-			:showActions="false"
-			@save="onSave"
-			@update:valid="(v) => (valid = v)" />
-		<template #actions>
-			<NcButton data-testid="client-create-cancel" @click="$emit('close')">
-				{{ t('pipelinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="!valid || saving"
-				data-testid="client-form-save"
-				@click="submit">
-				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
-			</NcButton>
-		</template>
-	</NcDialog>
+		@confirm="onConfirm"
+		@close="$emit('close')" />
 </template>
 
 <script>
-import { showError } from '@nextcloud/dialogs'
-import { NcButton, NcDialog } from '@nextcloud/vue'
-import ClientForm from '../views/clients/ClientForm.vue'
-import { createWithContact } from '../services/contactSyncApi.js'
+import { CnFormDialog } from '@conduction/nextcloud-vue'
+import manifest from '../manifest.json'
+import { createClientWithContact } from '../services/contactSyncApi.js'
+import { useObjectStore } from '../store/modules/object.js'
+
+const CLIENTS_PAGE = manifest.pages.find((page) => page.id === 'Clients')
 
 export default {
 	name: 'ClientCreateDialog',
 	components: {
-		NcButton,
-		NcDialog,
-		ClientForm,
+		CnFormDialog,
 	},
 
 	props: {
-		/** The name typed into a client picker, prefilled in the form. */
+		/** A name to start from (typed in a picker). */
 		name: {
 			type: String,
 			default: '',
 		},
 
-		/**
-		 * Initial values from nextcloud-vue's select-or-create picker
-		 * (`{ name: term }`). Its presence means a form opened this dialog.
-		 */
+		/** Values to start from; set when a form opened this dialog. */
 		initialData: {
 			type: Object,
 			default: null,
 		},
 
-		/**
-		 * Stay on the page that opened the dialog and hand the new client
-		 * back, instead of opening the client. Set by every picker.
-		 */
+		/** Stay on the page after the create instead of opening the client. */
 		stayOnPage: {
 			type: Boolean,
 			default: false,
@@ -67,28 +61,34 @@ export default {
 	},
 
 	emits: ['created', 'close'],
+
 	data() {
 		return {
-			valid: false,
-			saving: false,
+			schema: null,
 		}
 	},
 
 	computed: {
 		/**
-		 * The name to start the form with.
-		 *
-		 * @return {string} The typed name, or ''.
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 * @return {{includeFields: string[], fieldOverrides: object}} The Clients page's form config.
+		 * @spec openspec/changes/party-forms-as-configuration/specs/client-forms/spec.md#requirement-the-client-form-is-configuration-shared-by-every-create
 		 */
-		prefillName() {
-			return this.name || this.initialData?.name || ''
+		formConfig() {
+			const config = (CLIENTS_PAGE && CLIENTS_PAGE.config) || {}
+			return { includeFields: config.includeFields || null, fieldOverrides: config.fieldOverrides || {} }
 		},
 
 		/**
-		 * Whether a form opened this dialog, so the new client goes back to it.
-		 *
-		 * @return {boolean} True when opened from a picker.
+		 * @return {object} The values the form starts from.
+		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 */
+		prefill() {
+			const name = this.name || this.initialData?.name || ''
+			return name ? { name } : {}
+		},
+
+		/**
+		 * @return {boolean} Whether a form behind this dialog gets the client back.
 		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
 		returnsToForm() {
@@ -96,92 +96,40 @@ export default {
 		},
 	},
 
+	async mounted() {
+		const store = useObjectStore()
+		await store.fetchSchema('client')
+		this.schema = store.getSchema('client')
+	},
+
 	methods: {
 		/**
-		 * Navigate to the created record and close.
+		 * Create the client, then open it, or hand it back to the form that asked.
 		 *
-		 * A registry modal is mounted by CnAppRoot, which forwards only
-		 * `close` — there is no parent to route on the dialog's behalf the way
-		 * the old bespoke header-actions component did.
-		 *
-		 * @param {string} route The detail route name.
-		 * @param {string} id The created object's id.
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
-		 */
-		goToDetail(route, id) {
-			this.$emit('close')
-			if (id && this.$router) {
-				this.$router.push({ name: route, params: { id } }).catch(() => {})
-			}
-		},
-
-		/**
-		 * Tell the getting-started tour a client was created, so its
-		 * `create-client` step advances. This dialog saves through the
-		 * contact-first endpoint, not through the index page, so the page's
-		 * own `cn-walkthrough:object-created` dispatch never runs for it.
-		 *
-		 * @param {object} created The created client.
-		 * @return {void}
-		 * @spec openspec/changes/pipelinq-forms-review/specs/walkthrough/spec.md
-		 */
-		notifyWalkthrough(created) {
-			window.dispatchEvent(
-				new CustomEvent('cn-walkthrough:object-created', {
-					detail: { ...created, register: 'pipelinq', schema: 'client' },
-				}),
-			)
-		},
-
-		/**
-		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
-		 *
-		 * @spec openspec/specs/unify-client-contact/spec.md
-		 */
-		submit() {
-			this.$refs.form.onSave()
-		},
-
-		/**
-		 * Contact-FIRST create: the `client` schema marks `contactsUid` REQUIRED
-		 * (the authoritative identity is the Nextcloud addressbook contact, never
-		 * minted locally), so a plain objectStore.saveObject('client', …) 400s
-		 * with "The required property (contactsUid) is missing". We post the raw
-		 * form fields to the backend, which provisions (resolves or creates) the
-		 * NC contact via ContactVcardService and saves the client with the
-		 * resolved contactsUid + the denormalised name/email/phone mirror.
-		 *
-		 * Opened from a picker, it hands the new client back and stays on the
-		 * page; opened from the Clients index, it opens the new client.
-		 *
-		 * @param {object} formData The raw create-form fields.
-		 * @spec openspec/specs/unify-client-contact/spec.md
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-2
+		 * @param {object} formData The form's values.
 		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
-		async onSave(formData) {
-			this.saving = true
+		async onConfirm(formData) {
+			let created
 			try {
-				const created = await createWithContact('client', formData)
-				const id = created?.id ?? created?.['@self']?.id
-				if (id) {
-					this.notifyWalkthrough({ ...created, id })
-					this.$emit('created', id, { ...created, id })
-					if (this.returnsToForm) {
-						// A picker opened this dialog: the form behind it stays.
-						this.$emit('close')
-						return
-					}
-					this.goToDetail('ClientDetail', id)
-					return
-				}
-				showError(t('pipelinq', 'Failed to create client.'))
+				created = await createClientWithContact(formData)
 			} catch (error) {
-				const message = error?.response?.data?.error
-				showError(message || t('pipelinq', 'Failed to create client.'))
-			} finally {
-				this.saving = false
+				this.$refs.form?.setResult({ error: error?.response?.data?.error || t('pipelinq', 'Failed to create client.') })
+				return
+			}
+			const id = created?.id ?? created?.['@self']?.id
+			if (!id) {
+				this.$refs.form?.setResult({ error: t('pipelinq', 'Failed to create client.') })
+				return
+			}
+			this.$refs.form?.setResult({ success: true })
+			window.dispatchEvent(new CustomEvent('cn-walkthrough:object-created', {
+				detail: { ...created, id, register: 'pipelinq', schema: 'client' },
+			}))
+			this.$emit('created', id, { ...created, id })
+			this.$emit('close')
+			if (!this.returnsToForm && this.$router) {
+				this.$router.push({ name: 'ClientDetail', params: { id } }).catch(() => {})
 			}
 		},
 	},

@@ -51,21 +51,19 @@
 				"
 				defaultGroup="pipelinq-portal-service" />
 
+			<!-- The tenants that have a configuration; typing a new id starts one. -->
 			<div class="portal-row">
 				<div class="portal-field">
-					<label for="portal-tenant-id">{{
-						t('pipelinq', 'Tenant')
-					}}</label>
-					<input
-						id="portal-tenant-id"
-						v-model.trim="tenantId"
-						type="text"
-						@keyup.enter="loadAll" />
-				</div>
-				<div class="portal-field portal-field--action">
-					<NcButton :disabled="loading" @click="loadAll">
-						{{ t('pipelinq', 'Load') }}
-					</NcButton>
+					<NcSelect
+						:modelValue="selectedTenant"
+						:options="tenants"
+						:inputLabel="t('pipelinq', 'Tenant')"
+						:clearable="false"
+						:taggable="true"
+						:createOption="(id) => ({ id: String(id).trim(), label: String(id).trim() })"
+						label="label"
+						data-testid="portal-tenant"
+						@update:modelValue="onTenantPicked" />
 				</div>
 			</div>
 
@@ -259,6 +257,7 @@ import {
 	NcCheckboxRadioSwitch,
 	NcLoadingIcon,
 	NcNoteCard,
+	NcSelect,
 	NcSettingsSection,
 } from '@nextcloud/vue'
 import ServiceAccountPicker from './ServiceAccountPicker.vue'
@@ -273,6 +272,7 @@ export default {
 		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
+		NcSelect,
 		NcSettingsSection,
 		ServiceAccountPicker,
 	},
@@ -280,6 +280,8 @@ export default {
 	data() {
 		return {
 			tenantId: 'default',
+			// The tenants with a stored configuration, `{ id, label }`, the default first.
+			tenants: [{ id: 'default', label: 'default' }],
 			loading: true,
 			saving: false,
 			configured: false,
@@ -320,6 +322,16 @@ export default {
 		recentEvents() {
 			return this.events.slice(0, RECENT_EVENT_LIMIT)
 		},
+
+		/**
+		 * The picked tenant as a select option.
+		 *
+		 * @return {{id: string, label: string}} The option.
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-portal-tenant-is-picked-from-the-tenants
+		 */
+		selectedTenant() {
+			return this.tenants.find((tenant) => tenant.id === this.tenantId) || { id: this.tenantId, label: this.tenantId }
+		},
 	},
 
 	/**
@@ -329,11 +341,44 @@ export default {
 	 *   specifies only the widget-mode origin allow-list (pipelinq#2041)
 	 */
 	mounted() {
+		this.loadTenants()
 		this.loadAll()
 	},
 
 	methods: {
 		t,
+
+		/**
+		 * Read the tenants that have a configuration. Without an answer the
+		 * picker keeps the default tenant.
+		 *
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-portal-tenant-is-picked-from-the-tenants
+		 */
+		async loadTenants() {
+			try {
+				const { data } = await axios.get(this.adminUrl('tenants'))
+				if (Array.isArray(data?.tenants) && data.tenants.length > 0) {
+					this.tenants = data.tenants
+				}
+			} catch {
+				// The default tenant stays pickable.
+			}
+		},
+
+		/**
+		 * Switch to the picked tenant, or to a new id the admin typed.
+		 *
+		 * @param {{id: string}|null} option The picked option.
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-portal-tenant-is-picked-from-the-tenants
+		 */
+		onTenantPicked(option) {
+			const id = option && String(option.id || '').trim()
+			if (!id || id === this.tenantId) {
+				return
+			}
+			this.tenantId = id
+			this.loadAll()
+		},
 
 		/**
 		 * Build an admin portal API url.
@@ -468,11 +513,6 @@ export default {
 	flex-direction: column;
 	gap: 2px;
 	flex: 1 1 200px;
-}
-
-.portal-field--action {
-	flex: 0 0 auto;
-	justify-content: flex-end;
 }
 
 .portal-field label {
