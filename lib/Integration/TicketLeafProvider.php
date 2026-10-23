@@ -151,6 +151,28 @@ class TicketLeafProvider {
 	}//end openByMasterEntity()
 
 	/**
+	 * The clients that map to one master entity: what a host app's link to
+	 * that party's ticket list filters on. None when the reference is empty,
+	 * unknown, or the ticket surface is not configured.
+	 *
+	 * @param string $ref The master entity reference.
+	 *
+	 * @return array<int, string> The client ids.
+	 *
+	 * @spec openspec/changes/tickets-list-by-party/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
+	 */
+	public function clientIdsOf(string $ref): array {
+		$ref = trim($ref);
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		if ($ref === '' || $register === '' || $clientSchema === '') {
+			return [];
+		}
+
+		return array_keys($this->refOfClients(register: $register, schema: $clientSchema, refs: [$ref]));
+	}//end clientIdsOf()
+
+	/**
 	 * The master entity of each client that maps to one of the references, by client id.
 	 *
 	 * @param string $register The register id.
