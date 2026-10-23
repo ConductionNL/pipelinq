@@ -10,11 +10,9 @@
   ServiceStepsEditor in its multiStep slot; creating a service (id "new")
   still uses the full-page ServiceForm.
 
-  On save we delegate to the central ObjectService and then fire a best-effort
-  availability-cache invalidation for every Resource that lists this service
-  in its requiredResourceTypes (REQ-APT-015 scenario "AvailabilityCache MUST
-  be invalidated"). Failures are non-fatal — the per-resource refresh job
-  rebuilds the cache hourly.
+  On save we delegate to the central ObjectService; the server expires the
+  cached availability of the resources the service runs on
+  (AvailabilityCacheInvalidationListener, REQ-APT-015).
 
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
   @spec openspec/specs/appointment-booking/spec.md
@@ -43,20 +41,27 @@
 		:backLabel="t('pipelinq', 'Back to list')"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
-		objectType="pipelinq_service"
+		objectType="appointmentService"
 		:objectId="serviceId"
-		:sidebarProps="sidebarProps">
+		:sidebarProps="sidebarProps"
+		:breadcrumb="boardHeader.breadcrumb"
+		:statusPill="boardHeader.statusPill"
+		:headerMeta="boardHeader.headerMeta"
+		:sideColumn="sideColumn"
+		:headerActions="headerActions"
+		:actionsMenu="{ label: t('pipelinq', 'More') }"
+		:follow="false">
 		<template #actions>
-			<NcButton variant="primary" @click="openEditDialog">
+			<NcButton @click="openEditDialog">
+				<template #icon>
+					<Pencil :size="20" />
+				</template>
 				{{ t('pipelinq', 'Edit') }}
-			</NcButton>
-			<NcButton variant="error" @click="showDelete = true">
-				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>
 
-		<div class="service-detail__pair">
-			<CnDetailCard :title="t('pipelinq', 'Service information')">
+		<div class="service-detail__stack">
+			<CnDetailCard :title="t('pipelinq', 'Service details')">
 				<div class="info-grid">
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Name') }}</label>
@@ -64,7 +69,10 @@
 					</div>
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Status') }}</label>
-						<span>{{ statusLabel(serviceData.status) }}</span>
+						<CnStatusBadge
+							:label="statusLabel(serviceData.status)"
+							:colorMap="{ active: 'success' }"
+							:colorKey="serviceData.status" />
 					</div>
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Duration') }}</label>
@@ -86,7 +94,7 @@
 						>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Bookable online') }}</label>
+						<label>{{ t('pipelinq', 'Online to book') }}</label>
 						<span>{{
 							serviceData.bookableOnline
 								? t('pipelinq', 'Yes')
@@ -101,10 +109,10 @@
 					<p>{{ serviceData.description }}</p>
 				</div>
 			</CnDetailCard>
-			<CnDetailCard :title="t('pipelinq', 'Policies')">
+			<CnDetailCard :title="t('pipelinq', 'Rules')">
 				<div class="info-grid">
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Requires deposit') }}</label>
+						<label>{{ t('pipelinq', 'Deposit required') }}</label>
 						<span>{{
 							serviceData.requiresDeposit
 								? t('pipelinq', 'Yes')
@@ -112,12 +120,14 @@
 						}}</span>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Deposit amount') }}</label>
+						<label>{{ t('pipelinq', 'Amount of deposit') }}</label>
 						<span>{{
-							formatCurrency(
-								serviceData.depositAmount,
-								serviceData.currency,
-							)
+							serviceData.depositAmount
+								? formatCurrency(
+										serviceData.depositAmount,
+										serviceData.currency,
+									)
+								: t('pipelinq', 'not set')
 						}}</span>
 					</div>
 					<div class="info-field">
@@ -134,14 +144,14 @@
 						<span>{{ cancellationPolicyLabel }}</span>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Cancellation window') }}</label>
+						<label>{{ t('pipelinq', 'Cancellation term') }}</label>
 						<span
 							>{{ serviceData.cancellationHoursBefore || 0 }}
 							{{ t('pipelinq', 'hours') }}</span
 						>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Required skills') }}</label>
+						<label>{{ t('pipelinq', 'Skills required') }}</label>
 						<span>{{ requiredSkillsLabel }}</span>
 					</div>
 				</div>
@@ -149,7 +159,7 @@
 		</div>
 
 		<CnDetailCard
-			:title="t('pipelinq', 'Multi-step composition')"
+			:title="t('pipelinq', 'Built in steps')"
 			data-testid="service-composition">
 			<template #actions>
 				<template v-if="editingSteps">
@@ -252,12 +262,14 @@ import {
 	CnDetailCard,
 	CnDetailPage,
 	CnFormDialog,
+	CnStatusBadge,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate } from '@nextcloud/l10n'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import ServiceForm from './ServiceForm.vue'
@@ -270,6 +282,53 @@ import {
 	RESOURCE_TYPE_LABELS,
 } from '../../utils/enumLabels.js'
 
+/** The page header the PqService board draws. */
+const SERVICE_BOARD_HEADER = Object.freeze({
+	breadcrumb: { label: 'Services', route: 'Services', separator: '/' },
+	statusPill: {
+		field: 'status',
+		colorMap: { active: 'success', draft: 'default', archived: 'default' },
+		labels: { draft: 'Draft', active: 'Active', archived: 'Archived' },
+	},
+	headerMeta: '{durationMinutes} minutes · {price|currency}',
+})
+
+/** The side cards the PqService board draws. */
+const SERVICE_SIDE_COLUMN = Object.freeze([
+	{
+		id: 'service-bookings',
+		type: 'stat',
+		title: 'Bookings',
+		content: {
+			label: 'Bookings',
+			caption: 'this week',
+			source: {
+				register: 'pipelinq',
+				schema: 'appointmentBooking',
+				metric: 'count',
+				filter: { serviceId: '@objectId', 'startAt[gte]': '@today-7d' },
+			},
+			clickRoute: 'Bookings',
+		},
+	},
+	{
+		id: 'service-resources',
+		type: 'record-list',
+		title: 'Resources that can do this',
+		content: {
+			register: 'pipelinq',
+			schema: 'appointmentResource',
+			filter: { type: '@object.requiredResourceTypes', status: 'active' },
+			limit: 3,
+			presentation: 'rows',
+			title: '{name}',
+			meta: '{type}',
+			rowRoute: 'ResourceDetail',
+			emptyText: 'No resource can carry this service yet',
+		},
+	},
+])
+
 const STATUS_LABELS = {
 	draft: 'Draft',
 	active: 'Active',
@@ -280,9 +339,11 @@ export default {
 	name: 'ServiceDetail',
 	components: {
 		NcButton,
+		Pencil,
 		CnDetailPage,
 		CnDetailCard,
 		CnFormDialog,
+		CnStatusBadge,
 		ServiceForm,
 		ServiceStepsEditor,
 		DeleteServiceDialog,
@@ -330,6 +391,47 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The board header of the service page (PqService): the status pill,
+		 * the breadcrumb back to the list and the duration as the meta line.
+		 *
+		 * @return {object}
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		boardHeader() {
+			return SERVICE_BOARD_HEADER
+		},
+
+		/**
+		 * The side cards of the service page: its bookings and the resources
+		 * that can carry it.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		sideColumn() {
+			return SERVICE_SIDE_COLUMN
+		},
+
+		/**
+		 * Delete sits in the More menu, as the board draws it.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		headerActions() {
+			return [
+				{
+					id: 'delete-service',
+					label: t('pipelinq', 'Delete'),
+					icon: 'Delete',
+					onSelect: () => {
+						this.showDelete = true
+					},
+				},
+			]
+		},
+
 		/**
 		 * The service's cancellation policy as words; a service without one
 		 * has the schema default, free cancellation.
@@ -454,12 +556,12 @@ export default {
 				},
 
 				bookableOnline: {
-					label: t('pipelinq', 'Bookable online'),
+					label: t('pipelinq', 'Online to book'),
 					order: 11,
 				},
 
 				requiresDeposit: {
-					label: t('pipelinq', 'Requires deposit'),
+					label: t('pipelinq', 'Deposit required'),
 					order: 12,
 				},
 
@@ -622,8 +724,7 @@ export default {
 		},
 
 		/**
-		 * Save the edited steps, then expire the cached availability, as
-		 * every service save does.
+		 * Save the edited steps.
 		 *
 		 * @return {Promise<void>}
 		 *
@@ -649,7 +750,6 @@ export default {
 				}
 				showSuccess(t('pipelinq', 'Steps saved.'))
 				this.editingSteps = false
-				await this.invalidateAvailability(this.serviceId)
 				await this.objectStore.fetchObject(
 					'appointmentService',
 					this.serviceId,
@@ -697,7 +797,6 @@ export default {
 				return
 			}
 			dialog?.setResult({ success: true })
-			await this.invalidateAvailability(saved.id || this.serviceId)
 			await this.objectStore.fetchObject('appointmentService', this.serviceId)
 		},
 
@@ -712,7 +811,6 @@ export default {
 				return
 			}
 			showSuccess(t('pipelinq', 'Service saved.'))
-			await this.invalidateAvailability(saved.id || formData.id)
 			this.$router.push({
 				name: 'ServiceDetail',
 				params: { id: saved.id },
@@ -736,55 +834,6 @@ export default {
 				showError(
 					error?.message || t('pipelinq', 'Failed to delete service.'),
 				)
-			}
-		},
-
-		/**
-		 * Best-effort availability-cache invalidation after a service save.
-		 *
-		 * Fetches every Resource whose `requiredResourceTypes` overlaps the
-		 * service and deletes its cached availability rows so the next
-		 * portal slot search recomputes. Failures are silent — the hourly
-		 * AvailabilityCacheRefreshJob converges the cache eventually.
-		 *
-		 * @param {string} serviceId The saved service id.
-		 * @return {Promise<void>}
-		 *
-		 * @spec openspec/specs/appointment-booking/spec.md
-		 */
-		async invalidateAvailability(serviceId) {
-			if (!serviceId) return
-			try {
-				const resources = await this.objectStore.fetchCollection(
-					'appointmentResource',
-					{ _limit: 200 },
-				)
-				const types = this.serviceData.requiredResourceTypes || []
-				const targets = (resources || []).filter((r) => {
-					if (!types.length) return true
-					return types.includes(r.type)
-				})
-				for (const resource of targets) {
-					try {
-						const cached = await this.objectStore.fetchCollection(
-							'availabilityCache',
-							{
-								resourceId: resource.id,
-								_limit: 200,
-							},
-						)
-						for (const row of cached || []) {
-							await this.objectStore.deleteObject(
-								'availabilityCache',
-								row.id,
-							)
-						}
-					} catch {
-						// Per-resource invalidation failure must not block save.
-					}
-				}
-			} catch {
-				// Resource list fetch failure: cache is regenerated hourly.
 			}
 		},
 
@@ -836,17 +885,16 @@ export default {
 	padding: 20px 20px 0;
 }
 
-/* Service information and Policies side by side; one column on a phone. */
-.service-detail__pair {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+/* The service details and its rules stacked, as the board draws them. */
+.service-detail__stack {
+	display: flex;
+	flex-direction: column;
 	gap: 16px;
-	align-items: start;
 }
 
 .info-grid {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
 	gap: 16px;
 }
 
@@ -854,12 +902,21 @@ export default {
 	margin-bottom: 8px;
 }
 
+.info-field {
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--color-border);
+}
+
 .info-field label {
 	display: block;
-	font-weight: bold;
+	font-weight: normal;
 	margin-bottom: 2px;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
+}
+
+.info-field span {
+	font-weight: 600;
 }
 
 .info-field--full {
