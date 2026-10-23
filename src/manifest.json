@@ -2733,6 +2733,15 @@
 				"schema": "ticket",
 				"headerActions": [
 					{
+						"id": "link-to-client",
+						"label": "Link to a client",
+						"type": "open-modal",
+						"target": "LinkSubmissionToClientModal",
+						"icon": "AccountArrowRightOutline",
+						"props": { "ticketId": "@objectId" },
+						"visibleWhen": { "field": "client", "op": "empty" }
+					},
+					{
 						"id": "make-letter",
 						"label": "Make a letter",
 						"type": "open-modal",
