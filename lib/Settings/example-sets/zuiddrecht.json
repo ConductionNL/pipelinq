@@ -820,6 +820,45 @@
 			}
 		},
 		{
+			"key": "ticket-sanne-straatfeest",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over vergunning straatfeest Parkstraat",
+				"description": "Mevrouw De Vries wil met de buurt een straatfeest houden in de Parkstraat en vraagt welke vergunning daarvoor nodig is.",
+				"client": "{{object:client-sanne.id}}",
+				"contactsUid": "{{cast:sanne.contactsUid}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "email",
+				"category": "vergunningen",
+				"occurredAt": "{{datetime:-4 11:20}}",
+				"slaDeadline": "{{datetime:3 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-sanne-afvalinzameling",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over afvalinzameling",
+				"description": "Mevrouw De Vries vraagt waarom de groene container in de Lindelaan niet is geleegd.",
+				"client": "{{object:client-sanne.id}}",
+				"contactsUid": "{{cast:sanne.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"status": "resolved",
+				"priority": "normal",
+				"channel": "phone",
+				"category": "afval",
+				"occurredAt": "{{datetime:-40 09:05}}",
+				"resolvedAt": "{{datetime:-38 15:00}}",
+				"resolution": "De container is alsnog geleegd; de route is aangepast."
+			}
+		},
+		{
 			"key": "ticket-henk-afvalkalender",
 			"register": "pipelinq",
 			"schema": "ticket",
