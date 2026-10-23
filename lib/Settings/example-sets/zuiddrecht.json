@@ -1,6 +1,6 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint.",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint. Sanne also has a confirmed site visit on the Parkstraat a week after the install, so a booking that can still be moved exists.",
 	"appConfig": [
 		{
 			"key": "crm_group",
@@ -1023,6 +1023,45 @@
 				"assignee": "{{cast:daan.uid}}",
 				"stageEnteredAt": "{{datetime:-3 14:00}}",
 				"category": "bedrijfsvestiging"
+			}
+		},
+		{
+			"key": "service-locatiebezoek",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Locatiebezoek",
+				"description": "Een medewerker bekijkt samen met de aanvrager de plek ter plaatse.",
+				"durationMinutes": 60,
+				"bookableOnline": false,
+				"requiresDeposit": false,
+				"cancellationPolicy": "free",
+				"cancellationHoursBefore": 24,
+				"status": "active"
+			}
+		},
+		{
+			"key": "booking-locatiebezoek-parkstraat",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-sanne.id}}",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"startAt": "{{datetime:7 14:00}}",
+				"endAt": "{{datetime:7 15:00}}",
+				"status": "confirmed",
+				"statusHistory": [
+					{
+						"status": "confirmed",
+						"reason": "Telefonisch geboekt",
+						"changedAt": "{{datetime:-3 09:18}}",
+						"changedBy": "{{cast:pieter.uid}}"
+					}
+				],
+				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest.",
+				"internalNotes": "Controleer de calamiteitenroute en waar de brandweer langs kan.",
+				"source": "phone",
+				"confirmationSentAt": "{{datetime:-3 09:20}}"
 			}
 		}
 	]
