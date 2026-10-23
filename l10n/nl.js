@@ -7888,7 +7888,17 @@ OC.L10N.register(
         "This contact has no email address": "Dit contact heeft geen e-mailadres",
         "The mail transport rejected it": "De verzendroute heeft het geweigerd",
         "This journey is saved but it will not run: this instance has no flow engine.": "Deze journey is opgeslagen maar draait niet: deze omgeving heeft geen flow-engine.",
-        "The flow engine refused this journey: {reason}": "De flow-engine heeft deze journey geweigerd: {reason}"
+        "The flow engine refused this journey: {reason}": "De flow-engine heeft deze journey geweigerd: {reason}",
+        "All open": "Alle open",
+        "Columns": "Kolommen",
+        "One column per value of the property. Drag a card to change its status.": "Een kolom per waarde van de eigenschap. Sleep een kaart om de status te wijzigen.",
+        "No channel": "Geen kanaal",
+        "Nobody": "Niemand",
+        "status": "status",
+        "type": "type",
+        "channel": "kanaal",
+        "handler": "behandelaar",
+        "You cannot move this ticket from {from} to {to}.": "U kunt dit ticket niet van {from} naar {to} verplaatsen."
     },
     "nplurals=2; plural=(n != 1);"
 )

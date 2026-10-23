@@ -7926,7 +7926,17 @@ OC.L10N.register(
         "The journey is paused. Its flow no longer runs.": "The journey is paused. Its flow no longer runs.",
         "Could not pause this journey.": "Could not pause this journey.",
         "The journey runs again.": "The journey runs again.",
-        "Could not resume this journey.": "Could not resume this journey."
+        "Could not resume this journey.": "Could not resume this journey.",
+        "All open": "All open",
+        "Columns": "Columns",
+        "One column per value of the property. Drag a card to change its status.": "One column per value of the property. Drag a card to change its status.",
+        "No channel": "No channel",
+        "Nobody": "Nobody",
+        "status": "status",
+        "type": "type",
+        "channel": "channel",
+        "handler": "handler",
+        "You cannot move this ticket from {from} to {to}.": "You cannot move this ticket from {from} to {to}."
     },
     "nplurals=2; plural=(n != 1);"
 )

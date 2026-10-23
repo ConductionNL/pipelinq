@@ -2652,7 +2652,7 @@
 			"id": "Tickets",
 			"route": "/tickets",
 			"type": "index",
-			"title": "All tickets",
+			"title": "Questions and reports",
 			"_note": "Unified ticket workspace (unify-ticket-supertype). One index over the ticket schema replacing the former Requests/Complaints/Contactmomenten pages; a ticketType quickFilter tab strip narrows to each subtype. Type-specific columns (complaintCategory, outcome) are omitted from the shared table — they surface on the detail page.",
 			"config": {
 				"register": "pipelinq",
@@ -2662,8 +2662,32 @@
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"showViewAction": false,
+				"viewModes": ["table", "cards", "board"],
+				"_boardNote": "tickets-board-view (LijstBord). The board's columns are the ticket status; the switch also offers type, channel and handler. A drop runs moveTicketStatus, which checks the move against the ticket lifecycle (requestStatus.js) and writes the status, and ticketStatusTargets fades the columns the lifecycle does not allow. Type and channel are read-only: a drag does not change what a ticket is or how it came in. The enum's legacy and closing statuses show as columns until nextcloud-vue board.states (board-declared-states) is released.",
+				"board": {
+					"statusField": "status",
+					"wrap": true,
+					"columnLimit": 3,
+					"columnSwitchLabel": "Columns",
+					"hint": "One column per value of the property. Drag a card to change its status.",
+					"moveHandler": "moveTicketStatus",
+					"moveTargetsHandler": "ticketStatusTargets",
+					"card": { "title": "title", "sub": ["channel"], "pill": "ticketType", "due": "slaDeadline", "owner": "assignee" },
+					"columnFields": [
+						{ "field": "status", "label": "status" },
+						{ "field": "ticketType", "label": "type", "readOnly": true },
+						{ "field": "channel", "label": "channel", "kind": "values", "emptyLabel": "No channel", "readOnly": true },
+						{ "field": "assignee", "label": "handler", "kind": "values", "emptyLabel": "Nobody" }
+					]
+				},
+				"_quickFiltersNote": "The work lenses the LijstBord board draws come first; All and the ticket type lenses stay after them, so nobody loses a filter.",
 				"quickFilters": [
-					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "All open", "filter": { "status": ["new", "in_progress", "awaiting_customer"] }, "default": true },
+					{ "label": "Mine", "filter": { "assignee": "@me", "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "Unassigned", "filter": { "assignee": "IS NULL", "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "Waiting for customer", "filter": { "status": "awaiting_customer" } },
+					{ "label": "Past the deadline", "filter": { "slaDeadline": { "lt": "@now" }, "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "All", "filter": {} },
 					{ "label": "Requests", "filter": { "ticketType": "request" } },
 					{
 						"label": "Complaints",
