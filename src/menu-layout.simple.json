@@ -1891,6 +1891,7 @@
 				"quickFilters": {
 					"All": {
 						"showCount": true,
+						"default": true,
 						"filter": {
 							"ticketType[ne]": "interaction"
 						}
@@ -1902,6 +1903,26 @@
 						"showCount": true
 					},
 					"Contactmomenten": {
+						"showCount": true
+					},
+					"All open": {
+						"showCount": true,
+						"default": false
+					},
+					"Mine": {
+						"showCount": true
+					},
+					"Unassigned": {
+						"showCount": true
+					},
+					"Waiting for customer": {
+						"showCount": true,
+						"filter": {
+							"assignee": "@me",
+							"status": "awaiting_customer"
+						}
+					},
+					"Past the deadline": {
 						"showCount": true
 					}
 				}
@@ -1920,14 +1941,6 @@
 						"label": "New",
 						"filter": {
 							"status": "new"
-						},
-						"showCount": true
-					},
-					{
-						"label": "Waiting for customer",
-						"filter": {
-							"assignee": "@me",
-							"status": "awaiting_customer"
 						},
 						"showCount": true
 					}
