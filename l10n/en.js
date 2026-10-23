@@ -7999,7 +7999,9 @@ OC.L10N.register(
         "This campaign holds no events yet.": "This campaign holds no events yet.",
         "Campaign event": "Campaign event",
         "Campaign events": "Campaign events",
-        "Fully booked": "Fully booked"
+        "Fully booked": "Fully booked",
+        "An event a campaign holds, with its places": "An event a campaign holds, with its places",
+        "One sign-up for a campaign event": "One sign-up for a campaign event"
     },
     "nplurals=2; plural=(n != 1);"
 )

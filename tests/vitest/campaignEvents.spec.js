@@ -10,7 +10,11 @@
 
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@nextcloud/l10n', () => ({ translate: (_app, text) => text }))
+globalThis.t = (_app, text) => text
+const { objectTypes } = await import('../../src/config/objectTypes.js')
 
 const read = (...parts) => JSON.parse(readFileSync(resolve(__dirname, '../..', ...parts), 'utf8'))
 const register = read('lib', 'Settings', 'register.d', '98-campaign-events.json')
@@ -33,6 +37,14 @@ describe('the schemas', () => {
 
 	it('keeps a registration confirmed, waiting or cancelled', () => {
 		expect(schemas.eventRegistration.properties.status.enum).toEqual(['confirmed', 'waitlist', 'cancelled'])
+	})
+})
+
+describe('the object store', () => {
+	it('registers both slugs, so the lists and the event page can fetch them', () => {
+		const slugs = objectTypes().map((type) => type.slug)
+		expect(slugs).toContain('campaignEvent')
+		expect(slugs).toContain('eventRegistration')
 	})
 })
 

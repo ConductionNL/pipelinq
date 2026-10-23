@@ -7961,7 +7961,9 @@ OC.L10N.register(
         "This campaign holds no events yet.": "Deze campagne heeft nog geen evenementen.",
         "Campaign event": "Evenement",
         "Campaign events": "Evenementen",
-        "Fully booked": "Volgeboekt"
+        "Fully booked": "Volgeboekt",
+        "An event a campaign holds, with its places": "Een evenement van een campagne, met zijn plaatsen",
+        "One sign-up for a campaign event": "Eén aanmelding voor een evenement"
     },
     "nplurals=2; plural=(n != 1);"
 )
