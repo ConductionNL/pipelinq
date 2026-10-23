@@ -174,7 +174,8 @@
 						"title": "Location",
 						"content": {
 							"columns": 1,
-							"include": ["room", "capacity", "hosts", "reminderAt"]
+							"include": ["room", "capacity", "hosts", "reminderAt"],
+							"overrides": { "hosts": { "formatter": "userDisplayName" } }
 						}
 					},
 					{
