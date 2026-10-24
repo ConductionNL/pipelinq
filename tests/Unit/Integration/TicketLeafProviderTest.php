@@ -109,6 +109,19 @@ class TicketLeafProviderTest extends TestCase {
 	}//end provider()
 
 	/**
+	 * The clients of one master entity, for a host app that links to that
+	 * party's ticket list; unknown or unconfigured reads as none.
+	 *
+	 * @return void
+	 */
+	public function testClientIdsOfOneMasterEntity(): void {
+		$this->assertSame(expected: ['c-slagerij'], actual: $this->provider()->clientIdsOf(ref: 'm-slagerij'));
+		$this->assertSame(expected: [], actual: $this->provider()->clientIdsOf(ref: 'm-unknown'));
+		$this->assertSame(expected: [], actual: $this->provider()->clientIdsOf(ref: ' '));
+		$this->assertSame(expected: [], actual: $this->provider(configured: false)->clientIdsOf(ref: 'm-slagerij'));
+	}//end testClientIdsOfOneMasterEntity()
+
+	/**
 	 * Open tickets are grouped by the master entity their client maps to.
 	 *
 	 * @return void
