@@ -1,0 +1,418 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "close-pipelinq-register-to-staff (Zuiddrecht RBAC lane, 2026-10-14). A live probe found that any signed-in Nextcloud account, including one that self-registered into the resident group, read all 96 tickets and 49 clients through OpenRegister's objects API: the registers had no authorization block, so 120 schemas were open to every signed-in account, and 8 schemas named 'authenticated' themselves. This fragment sorts last, so it decides. Each of the three registers gets a block naming only the staff: the built-in 'sales' group and 'user:pipelinq-system', the account OrphanedLeadRepairService and DefaultPipelineService write as (SystemServiceAccount). OpenRegister applies a register block to every schema that declares none of its own, so a schema added later is closed the day it ships. A schema's own block replaces the register's, so every schema rule that named 'authenticated' names the staff instead; the service-account groups (pipelinq-messaging-service, pipelinq-portal-service) and the 'public' create on lead (the web form) are kept. export follows read. The deployment's CRM group (app config crm_group, ObjectOwnerAccessPolicy) cannot be named in a file, so RegisterAccessSync adds it wherever 'sales' is granted: on saving the setting, after every import and in the SyncCrmGroupAccess repair step. The shared vocabularies other apps read as the signed-in user (partyKind, partyFieldSet, partyIndicator for dossiq's party panel; product and productCategory for shillinq's catalog) stay readable by every signed-in account: they hold no personal data. Their writes, open to every account before, are closed to the staff. The register versions move to 1.1.0 because OpenRegister writes a register's own fields only when its version is newer. client, contact and partyIndicatorValue carry the register's staff block as their own, so the CRM read group (crm_read_group, granted read and export by RegisterAccessSync on client, contact, ticket and partyIndicatorValue) reaches exactly those schemas and not every schema that follows the register. The three register blocks live in 99-zzz-register-access-registers.json, which sorts just before this file; they are kept apart so the demo-data gate does not pair the registers with these schemas."
+  },
+  "components": {
+    "schemas": {
+      "lead": {
+        "slug": "lead",
+        "authorization": {
+          "create": [
+            "public",
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "ticket": {
+        "slug": "ticket",
+        "authorization": {
+          "create": [
+            "sales",
+            "user:pipelinq-system",
+            "pipelinq-messaging-service"
+          ],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system",
+            "pipelinq-messaging-service"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "webForm": {
+        "slug": "webForm",
+        "authorization": {
+          "create": [],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [],
+          "delete": [],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "enquiry": {
+        "slug": "enquiry",
+        "authorization": {
+          "create": [],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "messagingConsentRecord": {
+        "slug": "messagingConsentRecord",
+        "authorization": {
+          "create": [
+            "sales",
+            "user:pipelinq-system",
+            "pipelinq-messaging-service"
+          ],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system",
+            "pipelinq-messaging-service"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "channelMessage": {
+        "slug": "channelMessage",
+        "authorization": {
+          "create": [
+            "sales",
+            "user:pipelinq-system",
+            "pipelinq-messaging-service"
+          ],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system",
+            "pipelinq-messaging-service"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "channelConversation": {
+        "slug": "channelConversation",
+        "authorization": {
+          "create": [
+            "sales",
+            "user:pipelinq-system",
+            "pipelinq-messaging-service"
+          ],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system",
+            "pipelinq-messaging-service"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "savedReply": {
+        "slug": "savedReply",
+        "authorization": {
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "partyKind": {
+        "slug": "partyKind",
+        "authorization": {
+          "read": [
+            "sales",
+            "user:pipelinq-system",
+            "authenticated"
+          ],
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system",
+            "authenticated"
+          ]
+        }
+      },
+      "partyFieldSet": {
+        "slug": "partyFieldSet",
+        "authorization": {
+          "read": [
+            "sales",
+            "user:pipelinq-system",
+            "authenticated"
+          ],
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system",
+            "authenticated"
+          ]
+        }
+      },
+      "partyIndicator": {
+        "slug": "partyIndicator",
+        "authorization": {
+          "read": [
+            "sales",
+            "user:pipelinq-system",
+            "authenticated"
+          ],
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system",
+            "authenticated"
+          ]
+        }
+      },
+      "product": {
+        "slug": "product",
+        "authorization": {
+          "read": [
+            "sales",
+            "user:pipelinq-system",
+            "authenticated"
+          ],
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system",
+            "authenticated"
+          ]
+        }
+      },
+      "productCategory": {
+        "slug": "productCategory",
+        "authorization": {
+          "read": [
+            "sales",
+            "user:pipelinq-system",
+            "authenticated"
+          ],
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system",
+            "authenticated"
+          ]
+        }
+      },
+      "client": {
+        "slug": "client",
+        "authorization": {
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "authorization": {
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      },
+      "partyIndicatorValue": {
+        "slug": "partyIndicatorValue",
+        "authorization": {
+          "create": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "update": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "delete": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ]
+        }
+      }
+    }
+  }
+}

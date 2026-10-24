@@ -10,11 +10,6 @@
   Note: the built-in flow is openregister's generic server-side bulk import/
   export; the spec's lead-specific behaviour (default-stage assignment, title
   validation, "X geïmporteerd / Y overgeslagen" summary) is not yet wired.
-
-  The base CnIndexPage from @conduction/nextcloud-vue handles search, sort,
-  pagination and the column rendering driven by the manifest `columns` list.
-  We provide a slot override for the expectedCloseDate cell so overdue leads
-  render the "Xd te laat" treatment without forking the index page.
 -->
 <template>
 	<CnIndexPage
@@ -23,17 +18,18 @@
 		:register="register"
 		:schema="schema"
 		:columns="columns"
+		:rowClass="rowClassFor"
 		:sidebar="sidebarConfig"
 		:quickFilters="quickFilters"
 		:quickFilterMaxVisible="6"
 		:showTitle="true"
 		:showTitleIcon="false"
-		:headerFilters="false"
+		:viewSwitch="viewSwitch"
+		:viewSwitchLinks="viewSwitchLinks"
 		rowTitle="plain"
 		:searchPlaceholder="t('pipelinq', 'Filter by title or client')"
 		:headerButtons="headerButtons"
-		:headerActions="headerActions"
-		:countText="t('pipelinq', '{shown} of {total} leads')"
+		:countText="t('pipelinq', '{shown} of {total} leads · win chance first')"
 		:footerNote="
 			t(
 				'pipelinq',
@@ -56,6 +52,7 @@ import {
 	getStaleThreshold,
 	isLeadOverdue,
 } from '../../services/pipelineUtils.js'
+import { STAGE_COLORS } from '../../services/stageColors.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 
@@ -64,6 +61,10 @@ export default {
 	components: {
 		CnIndexPage,
 	},
+
+	// The page config the renderer hands a custom page (columns, sort, actions)
+	// would fall through onto CnIndexPage and replace what this list declares.
+	inheritAttrs: false,
 
 	data() {
 		return {
@@ -75,7 +76,12 @@ export default {
 					label: t('pipelinq', 'Lead'),
 					secondary: '{source}',
 				},
-				{ key: 'stage', label: t('pipelinq', 'Stage') },
+				{
+					key: 'stage',
+					label: t('pipelinq', 'Stage'),
+					widget: 'badge',
+					widgetProps: { colorMap: STAGE_COLORS },
+				},
 				{
 					key: 'value',
 					label: t('pipelinq', 'Value'),
@@ -86,7 +92,17 @@ export default {
 					key: 'qualificationScore',
 					label: t('pipelinq', 'Win chance'),
 					sortable: true,
-					widget: 'lead-win-chance',
+					widget: 'progress',
+					widgetProps: {
+						fallbackFields: ['probability'],
+						thresholds: { good: 60, warn: 30 },
+						badge: {
+							label: t('pipelinq', 'Out of date {days} days'),
+							dateField: '@self.updated',
+							afterDays: 14,
+							when: { status: 'open' },
+						},
+					},
 				},
 				{
 					key: 'expectedCloseDate',
@@ -107,6 +123,10 @@ export default {
 				},
 			],
 
+			// The board's view switch: table and cards in place, the
+			// board is the Pipeline page.
+			viewSwitch: ['table', 'cards', 'board', 'map'],
+			viewSwitchLinks: { board: { route: 'Pipeline' } },
 			callFirst: false,
 			// The sort Call first replaced, restored when it is switched off.
 			sortBeforeCallFirst: [],
@@ -161,6 +181,16 @@ export default {
 					showCount: true,
 				},
 				{
+					label: t('pipelinq', 'Closes this month'),
+					filter: {
+						status: 'open',
+						'expectedCloseDate[gte]': '@monthStart',
+						'expectedCloseDate[lte]': '@monthEnd',
+					},
+
+					showCount: true,
+				},
+				{
 					label: t('pipelinq', 'Out of date'),
 					filter: {
 						status: 'open',
@@ -188,7 +218,7 @@ export default {
 		},
 
 		/**
-		 * The header buttons in the board's order: Download, Actions, New lead.
+		 * The header buttons in the board's order: Download, then New lead.
 		 *
 		 * @return {Array<object>}
 		 *
@@ -197,32 +227,11 @@ export default {
 		headerButtons() {
 			return [
 				{ action: 'export', label: t('pipelinq', 'Download') },
-				{ action: 'actions-menu' },
 				{
 					action: 'add',
 					variant: 'primary',
 					icon: 'Plus',
 					label: t('pipelinq', 'New lead'),
-				},
-			]
-		},
-
-		/**
-		 * Call first sits in the Actions menu: it sorts by score, highest first.
-		 *
-		 * @return {Array<object>}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
-		 */
-		headerActions() {
-			return [
-				{
-					id: 'call-first',
-					label: this.callFirst
-						? t('pipelinq', 'Sort as before')
-						: t('pipelinq', 'Call first'),
-
-					icon: 'SortDescending',
-					handler: () => this.setCallFirst(!this.callFirst),
 				},
 			]
 		},
@@ -236,14 +245,14 @@ export default {
 	},
 
 	/**
-	 * Keep the Call first button in step with the list's sort, then load the
-	 * settings and the default pipeline's stages.
+	 * Track whether the list is sorted Call first, open it that way, then load
+	 * the settings and the default pipeline's stages.
 	 *
 	 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 	 */
 	async mounted() {
 		// Read from the page's own sort, so a column click, a saved view or a
-		// sort restored from the URL all show on the button.
+		// sort restored from the URL all count.
 		this.$watch(
 			() => this.$refs.index?.effectiveSortKeys,
 			(keys) => {
@@ -251,6 +260,11 @@ export default {
 			},
 			{ immediate: true },
 		)
+		// The list opens win chance first, as its count line says, unless the
+		// address already carries a sort.
+		if (!this.$route?.query?._order && !this.callFirst) {
+			this.setCallFirst(true)
+		}
 		await this.settingsStore.fetchSettings()
 		await this.loadDefaultPipeline()
 	},

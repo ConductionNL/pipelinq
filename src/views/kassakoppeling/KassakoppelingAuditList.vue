@@ -120,9 +120,6 @@
 			<template #column-operatorId="{ row }">
 				{{ row.operatorId || '—' }}
 			</template>
-			<template #column-registerNumber="{ row }">
-				{{ row.registerNumber || '—' }}
-			</template>
 			<template #column-action="{ row }">
 				<CnStatusBadge
 					:label="actionLabel(row.action)"
@@ -279,9 +276,17 @@ export default {
 		 */
 		columns() {
 			return [
-				{ key: 'timestamp', label: t('pipelinq', 'Time') },
-				{ key: 'operatorId', label: t('pipelinq', 'Operator') },
-				{ key: 'registerNumber', label: t('pipelinq', 'Register') },
+				{
+					key: 'timestamp',
+					label: t('pipelinq', 'Time'),
+					cellClass: 'cn-cell--wrap',
+				},
+				{
+					key: 'operatorId',
+					label: t('pipelinq', 'Operator and register'),
+					cellClass: 'cn-cell--wrap',
+					secondary: (row) => row.registerNumber || '—',
+				},
 				{ key: 'action', label: t('pipelinq', 'Action') },
 				{
 					key: 'amount',

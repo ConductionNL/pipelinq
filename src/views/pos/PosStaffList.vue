@@ -150,7 +150,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	padding: 16px;
 }
 
 .pos-staff-list__header {
@@ -168,6 +167,7 @@ export default {
 .pos-staff-list__table td {
 	padding: 8px;
 	text-align: start;
+	white-space: normal;
 	border-bottom: 1px solid var(--color-border);
 }
 

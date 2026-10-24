@@ -149,7 +149,7 @@ test('CTI config: "Test connection" runs the probe and reports a verdict', async
 })
 
 // @e2e openspec/specs/cti-screenpop-adapter/spec.md#event-log-displays-webhook-history
-test('CTI event log: the webhook history table renders with its declared columns', async ({
+test('CTI event log: the webhook history renders each event with its labelled values', async ({
 	page,
 }) => {
 	const section = await openAdminSettings(page)
@@ -161,37 +161,36 @@ test('CTI event log: the webhook history table renders with its declared columns
 	const table = section.locator('[data-testid="cti-event-log-table"]')
 	await expect(table).toBeVisible({ timeout: 15000 })
 
-	// SPEC/IMPLEMENTATION DIVERGENCE, reported not fixed: the scenario asks for a
-	// single "Status (✓ Processed | ✗ Error)" column; CtiEventLog.vue renders the
-	// same information as TWO columns, "Signature" (✓/✗) and "Error". The columns
-	// asserted below are the ones the implementation actually guarantees.
-	for (const header of [
-		'Received at',
-		'Platform',
-		'Event type',
-		'Call ID',
-		'Signature',
-		'Error',
-	]) {
-		await expect(
-			table.locator('thead th').filter({ hasText: header }).first(),
-			`column "${header}"`,
-		).toBeVisible()
-	}
-
 	// Newest-first ordering is a server-side `sort: ['received_at' => 'desc']` in
 	// CtiService::listEventLog() over rows only an inbound platform webhook can
 	// create, and the CI instance provisions no platform and seeds no ctiEventLog
 	// objects (lib/Settings/register.d/70-cti.json has no `components.objects[]`).
-	// So the table's DATA state is asserted as "settled into one of its two legal
-	// states" — a populated body or the explicit empty row — rather than as a row
-	// count that would only ever be reachable on a live telephony instance.
+	// So the log's DATA state is asserted as "settled into one of its two legal
+	// states" — a populated list or the explicit empty line — rather than as a
+	// row count that would only ever be reachable on a live telephony instance.
+	const firstEvent = table.locator('[data-testid="cti-event"]').first()
 	await expect(
-		table
-			.locator('tbody tr td.cti-event-log__actions')
-			.or(table.getByText('No webhook events in the selected range.'))
-			.first(),
+		firstEvent.or(table.getByText('No webhook events in the selected range.')),
 	).toBeVisible({ timeout: 15000 })
+
+	// Each event lists its values under their own labels. SPEC/IMPLEMENTATION
+	// DIVERGENCE, reported not fixed: the scenario asks for a single "Status
+	// (✓ Processed | ✗ Error)" value; CtiEventLog.vue shows the same information
+	// as "Signature" (✓/✗) and, when there is one, "Error".
+	if (await firstEvent.count()) {
+		for (const label of [
+			'Received at',
+			'Platform',
+			'Event type',
+			'Call ID',
+			'Signature',
+		]) {
+			await expect(
+				firstEvent.locator('dt').filter({ hasText: label }).first(),
+				`label "${label}"`,
+			).toBeVisible()
+		}
+	}
 
 	await assertNoHardError(page)
 })

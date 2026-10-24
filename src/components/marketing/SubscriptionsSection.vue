@@ -20,6 +20,18 @@
   -->
 <template>
 	<div class="subscriptions-section">
+		<header v-if="listId" class="subscriptions-section__head">
+			<p class="subscriptions-section__subtitle">
+				{{ t('pipelinq', 'Subscribers on this list') }}
+			</p>
+			<NcButton variant="secondary" @click="load">
+				<template #icon>
+					<Refresh :size="18" />
+				</template>
+				{{ t('pipelinq', 'Refresh') }}
+			</NcButton>
+		</header>
+
 		<NcLoadingIcon v-if="loading" :size="24" />
 
 		<NcNoteCard v-else-if="error" type="error">
@@ -27,26 +39,12 @@
 		</NcNoteCard>
 
 		<template v-else>
-			<ul v-if="showCounts" class="subscriptions-section__counts">
-				<li
-					v-for="entry in countEntries"
-					:key="entry.state"
-					class="subscriptions-section__count">
-					<span
-						class="subscriptions-section__swatch"
-						:style="{ backgroundColor: entry.color }"
-						aria-hidden="true" />
-					<strong>{{ entry.value }}</strong>
-					<span>{{ entry.label }}</span>
-				</li>
-			</ul>
-
 			<p v-if="rows.length === 0" class="subscriptions-section__empty">
 				{{ emptyText }}
 			</p>
 
 			<table v-else class="subscriptions-section__table">
-				<caption class="subscriptions-section__caption">
+				<caption class="hidden-visually">
 					{{
 						tableCaption
 					}}
@@ -54,7 +52,7 @@
 				<thead>
 					<tr>
 						<th scope="col">{{ t('pipelinq', 'Subscriber') }}</th>
-						<th scope="col">{{ t('pipelinq', 'State') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
 						<th scope="col">{{ t('pipelinq', 'Source') }}</th>
 						<th scope="col">{{ t('pipelinq', 'Ground') }}</th>
 						<th scope="col">{{ t('pipelinq', 'Confirmed') }}</th>
@@ -62,28 +60,31 @@
 				</thead>
 				<tbody>
 					<tr v-for="row in rows" :key="rowKey(row)">
-						<td>{{ subscriberLabel(row) }}</td>
 						<td>
-							<span
-								class="subscriptions-section__chip"
-								:style="{ borderColor: chip(row).color }">
-								<span
-									class="subscriptions-section__swatch"
-									:style="{ backgroundColor: chip(row).color }"
-									aria-hidden="true" />
-								{{ chip(row).label }}
-							</span>
+							<strong class="subscriptions-section__who">{{ subscriberLabel(row) }}</strong>
+							<span v-if="listId && row.name && row.email" class="subscriptions-section__email">{{ row.email }}</span>
+						</td>
+						<td>
+							<CnStatusBadge
+								:label="stateLabel(row.state)"
+								:variant="stateVariant(row.state)"
+								size="small" />
 						</td>
 						<td>{{ row.source || '—' }}</td>
-						<td>{{ row.lawfulBasis || '—' }}</td>
-						<td>{{ formatDate(row.confirmedAt) }}</td>
+						<td>{{ groundLabel(row.lawfulBasis) }}</td>
+						<td :class="{ 'subscriptions-section__muted': !row.confirmedAt }">
+							{{ row.confirmedAt ? formatDate(row.confirmedAt) : t('pipelinq', 'not yet') }}
+						</td>
 					</tr>
 				</tbody>
 			</table>
 
-			<div class="subscriptions-section__actions">
+			<NcNoteCard v-if="listId" type="info">
+				{{ t('pipelinq', 'An unconfirmed sign-up never gets a blast. The person is only added after opening the confirmation link.') }}
+			</NcNoteCard>
+
+			<div v-if="contactId" class="subscriptions-section__actions">
 				<NcButton
-					v-if="contactId"
 					variant="secondary"
 					data-testid="subscriptions-manage"
 					@click="showManage = true">
@@ -105,7 +106,9 @@
 </template>
 
 <script>
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import SubscriptionManageModal from '../../modals/SubscriptionManageModal.vue'
 import {
 	fetchContactSubscriptions,
@@ -114,16 +117,17 @@ import {
 import {
 	chipForState,
 	countByState,
-	SUBSCRIPTION_STATES,
 } from '../../services/subscriptionState.js'
 
 export default {
 	name: 'SubscriptionsSection',
 
 	components: {
+		CnStatusBadge,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
+		Refresh,
 		SubscriptionManageModal,
 	},
 
@@ -156,30 +160,6 @@ export default {
 	},
 
 	computed: {
-		/**
-		 * Counts are a property of a LIST. On a contact the same strip would
-		 * read as "this person is one of four states at once".
-		 *
-		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
-		 * @return {boolean} Whether to render the counts strip.
-		 */
-		showCounts() {
-			return Boolean(this.listId)
-		},
-
-		/**
-		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
-		 * @return {Array<object>} One entry per declared state.
-		 */
-		countEntries() {
-			return SUBSCRIPTION_STATES.map((state) => ({
-				state,
-				value: this.counts[state] || 0,
-				label: chipForState(state).label,
-				color: chipForState(state).color,
-			}))
-		},
-
 		/**
 		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
 		 * @return {string} What an empty result means here.
@@ -277,6 +257,51 @@ export default {
 		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
 		 * @return {object} The chip for the row's state.
 		 */
+		/**
+		 * A membership state in words, as the list board writes it.
+		 *
+		 * @param {string} state The stored state.
+		 * @return {string} The label.
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
+		 */
+		stateLabel(state) {
+			const labels = {
+				pending: this.t('pipelinq', 'Waiting for confirmation'),
+				confirmed: this.t('pipelinq', 'Confirmed'),
+				unsubscribed: this.t('pipelinq', 'Unsubscribed'),
+				bounced: this.t('pipelinq', 'Undeliverable'),
+			}
+			return labels[state] || state || '—'
+		},
+
+		/**
+		 * The tone of a membership state's pill.
+		 *
+		 * @param {string} state The stored state.
+		 * @return {string} A CnStatusBadge variant.
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
+		 */
+		stateVariant(state) {
+			return { pending: 'warning', confirmed: 'success', unsubscribed: 'default', bounced: 'error' }[state] || 'default'
+		},
+
+		/**
+		 * The lawful ground in words.
+		 *
+		 * @param {string} ground The stored lawful basis.
+		 * @return {string} The label.
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-soft-opt-in-records-its-ground-and-the-objection-offered
+		 */
+		groundLabel(ground) {
+			const labels = {
+				consent: this.t('pipelinq', 'consent'),
+				'soft-opt-in': this.t('pipelinq', 'soft opt-in'),
+				'legitimate-interest': this.t('pipelinq', 'legitimate interest'),
+				contract: this.t('pipelinq', 'contract'),
+			}
+			return labels[ground] || ground || '—'
+		},
+
 		chip(row) {
 			return chipForState(row && row.state)
 		},
@@ -301,7 +326,7 @@ export default {
 		 */
 		subscriberLabel(row) {
 			if (this.listId) {
-				return row.email || row.contactId || '—'
+				return row.name || row.email || row.contactId || '—'
 			}
 			return row.listId || '—'
 		},
@@ -315,13 +340,39 @@ export default {
 			if (!value) {
 				return '—'
 			}
-			return String(value).slice(0, 10)
+			const date = new Date(value)
+			if (Number.isNaN(date.getTime())) {
+				return String(value).slice(0, 10)
+			}
+			return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 		},
 	},
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.subscriptions-section__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.subscriptions-section__subtitle {
+	margin: -8px 0 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.subscriptions-section__who {
+	display: block;
+}
+
+.subscriptions-section__email,
+.subscriptions-section__muted {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
 .subscriptions-section__counts {
 	display: flex;
 	flex-wrap: wrap;
@@ -377,6 +428,9 @@ export default {
 
 .subscriptions-section__actions {
 	display: flex;
+	/* In the side column the two buttons are wider than the card: wrap
+	   them instead of squeezing the first one until its label is cut. */
+	flex-wrap: wrap;
 	gap: 0.5rem;
 	margin-block-start: 1rem;
 }

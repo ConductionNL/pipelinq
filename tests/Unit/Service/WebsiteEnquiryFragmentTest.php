@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md
+ * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md
  */
 
 declare(strict_types=1);
@@ -76,21 +76,28 @@ class WebsiteEnquiryFragmentTest extends TestCase {
 	}//end testRequiresOnlyTitle()
 
 	/**
-	 * Anonymous create, authenticated everything else.
+	 * Retired (decision 179): nobody creates an enquiry, and no form may name it.
+	 *
+	 * The schema stays only until the drain reports zero pending. A public
+	 * create would keep the in-between layer alive; `staging` makes
+	 * OpenRegister's form destination validator refuse any form into it.
 	 *
 	 * @return void
 	 */
-	public function testAllowsPublicCreateAndNothingElse(): void {
-		$authorization = $this->schema()['authorization'];
-		$this->assertContains('public', $authorization['create']);
+	public function testIsRetiredClosedToCreatesAndMarkedStaging(): void {
+		$schema = $this->schema();
+		$this->assertSame([], $schema['authorization']['create'], 'A retired enquiry takes no new creates');
 		foreach (['read', 'update', 'delete'] as $verb) {
 			$this->assertNotContains(
 				'public',
-				$authorization[$verb],
+				$schema['authorization'][$verb],
 				"A website visitor must not be able to {$verb} enquiries"
 			);
 		}
-	}//end testAllowsPublicCreateAndNothingElse()
+
+		$this->assertTrue($schema['configuration']['staging'], 'No form may submit into a retired holding schema');
+		$this->assertFalse($schema['x-openregister-notifications']['newEnquiry']['enabled']);
+	}//end testIsRetiredClosedToCreatesAndMarkedStaging()
 
 	/**
 	 * Status is constrained, and starts where the sales inbox looks.
@@ -130,7 +137,12 @@ class WebsiteEnquiryFragmentTest extends TestCase {
 		$this->assertContains(
 			'enquiry',
 			$slugs,
-			'enquiry must be in SCHEMA_SLUGS or its schema id never reaches app config'
+			'enquiry must stay in SCHEMA_SLUGS until the drain reports zero pending'
+		);
+		$this->assertContains(
+			'webForm',
+			$slugs,
+			'webForm must be in SCHEMA_SLUGS or WebFormFinder never finds a form'
 		);
 	}//end testSchemaSlugIsWiredIntoTheImport()
 }//end class

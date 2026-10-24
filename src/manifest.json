@@ -1577,22 +1577,22 @@
 						"widgetId": "my-work",
 						"gridX": 0,
 						"gridY": 18,
-						"gridWidth": 6,
-						"gridHeight": 4
+						"gridWidth": 12,
+						"gridHeight": 6
 					},
 					{
 						"id": "8",
 						"widgetId": "client-overview",
-						"gridX": 6,
-						"gridY": 18,
+						"gridX": 0,
+						"gridY": 24,
 						"gridWidth": 6,
-						"gridHeight": 4
+						"gridHeight": 6
 					},
 					{
 						"id": "9",
 						"widgetId": "billing-categories",
-						"gridX": 0,
-						"gridY": 22,
+						"gridX": 6,
+						"gridY": 24,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -1600,7 +1600,7 @@
 						"id": "12",
 						"widgetId": "report-export",
 						"gridX": 0,
-						"gridY": 26,
+						"gridY": 28,
 						"gridWidth": 12,
 						"gridHeight": 3
 					},
@@ -1608,7 +1608,7 @@
 						"id": "13",
 						"widgetId": "xwiki-knowledge",
 						"gridX": 0,
-						"gridY": 29,
+						"gridY": 31,
 						"gridWidth": 6,
 						"gridHeight": 5
 					},
@@ -1616,7 +1616,7 @@
 						"id": "20",
 						"widgetId": "survey-response-rate",
 						"gridX": 6,
-						"gridY": 29,
+						"gridY": 31,
 						"gridWidth": 6,
 						"gridHeight": 5
 					}
@@ -1666,11 +1666,21 @@
 							]
 						}
 					},
-					"name": { "readOnly": false },
-					"email": { "readOnly": false },
-					"phone": { "readOnly": false },
-					"correspondenceLanguage": { "widget": "language" },
-					"timezone": { "widget": "timezone" }
+					"name": {
+						"readOnly": false
+					},
+					"email": {
+						"readOnly": false
+					},
+					"phone": {
+						"readOnly": false
+					},
+					"correspondenceLanguage": {
+						"widget": "language"
+					},
+					"timezone": {
+						"widget": "timezone"
+					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
@@ -1683,11 +1693,36 @@
 						"route": "ClientDetail"
 					}
 				],
-				"columns": ["name", "type", "industry", "email", "phone"],
+				"columns": [
+					"name",
+					"type",
+					"industry",
+					"email",
+					"phone",
+					{
+						"key": "openTickets",
+						"label": "Open tickets",
+						"sortable": false,
+						"aggregate": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"op": "count",
+							"where": {
+								"client": "@self.id",
+								"status": {
+									"ne": "closed"
+								}
+							}
+						},
+						"widget": "badge"
+					}
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"rowIcon": "OfficeBuildingOutline",
+				"countText": "{shown} of {total} clients"
 			}
 		},
 		{
@@ -1724,11 +1759,21 @@
 							]
 						}
 					},
-					"name": { "readOnly": false },
-					"email": { "readOnly": false },
-					"phone": { "readOnly": false },
-					"correspondenceLanguage": { "widget": "language" },
-					"timezone": { "widget": "timezone" }
+					"name": {
+						"readOnly": false
+					},
+					"email": {
+						"readOnly": false
+					},
+					"phone": {
+						"readOnly": false
+					},
+					"correspondenceLanguage": {
+						"widget": "language"
+					},
+					"timezone": {
+						"widget": "timezone"
+					}
 				},
 				"headerActions": [
 					{
@@ -1758,11 +1803,20 @@
 							"columns": 2,
 							"include": [
 								"name",
+								"preferredName",
 								"email",
 								"phone",
 								"address",
 								"website"
-							]
+							],
+							"overrides": {
+								"preferredName": {
+									"visibleWhen": {
+										"field": "type",
+										"value": "person"
+									}
+								}
+							}
 						}
 					},
 					{
@@ -1773,7 +1827,11 @@
 						"content": {
 							"title": "Account",
 							"columns": 2,
-							"include": ["type", "industry", "notes"]
+							"include": [
+								"type",
+								"industry",
+								"notes"
+							]
 						}
 					},
 					{
@@ -1945,46 +2003,6 @@
 						"type": "related",
 						"title": "Related",
 						"icon": "LinkVariant"
-					},
-					{
-						"id": "client-records",
-						"type": "tabs",
-						"title": "Records",
-						"icon": "ViewDashboard",
-						"_note": "Everything that hangs off this client, one list at a time. The children stay in `widgets` and out of `layout`, or the tabs widget and the grid would each render them once.",
-						"content": {
-							"ariaLabel": "Client records",
-							"tabs": [
-								{
-									"widgetId": "client-quick-contacts",
-									"label": "Contacts"
-								},
-								{
-									"widgetId": "client-quick-requests",
-									"label": "Requests"
-								},
-								{
-									"widgetId": "client-leads",
-									"label": "Leads"
-								},
-								{
-									"widgetId": "client-contactmoments",
-									"label": "Contact moments"
-								},
-								{
-									"widgetId": "client-complaints",
-									"label": "Complaints"
-								},
-								{
-									"widgetId": "client-contracts",
-									"label": "Contracts"
-								},
-								{
-									"widgetId": "client-projects",
-									"label": "Projects"
-								}
-							]
-						}
 					},
 					{
 						"id": "client-quick-contacts",
@@ -2267,30 +2285,6 @@
 						}
 					},
 					{
-						"id": "client-communication",
-						"type": "tabs",
-						"title": "Communication",
-						"icon": "Email",
-						"_note": "Mail, notes and files for this client behind one strip. Children stay out of `layout` for the same reason as client-records.",
-						"content": {
-							"ariaLabel": "Client communication",
-							"tabs": [
-								{
-									"widgetId": "client-email",
-									"label": "Mail"
-								},
-								{
-									"widgetId": "client-notes",
-									"label": "Notes"
-								},
-								{
-									"widgetId": "client-files",
-									"label": "Files"
-								}
-							]
-						}
-					},
-					{
 						"id": "client-email",
 						"type": "integration",
 						"integrationId": "email",
@@ -2310,96 +2304,178 @@
 						"integrationId": "files",
 						"title": "Files",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "client-open-requests",
+						"type": "record-list",
+						"title": "Open requests",
+						"icon": "ClipboardCheckOutline",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"status": {
+									"ne": "closed"
+								}
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": "{ticketType} · {priority}",
+							"pill": {
+								"field": "status"
+							},
+							"trailing": [
+								"Deadline {deadline|date}"
+							],
+							"rowRoute": "TicketDetail",
+							"headerLink": {
+								"label": "View all {total} open requests",
+								"route": "Tickets"
+							},
+							"emptyText": "No open requests for this client."
+						}
+					},
+					{
+						"id": "client-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "client-channels",
+						"type": "ContactChannelsWidget",
+						"title": "Contact channels",
+						"icon": "CardAccountPhoneOutline",
+						"content": {
+							"entityType": "client",
+							"title": "Contact channels"
+						}
+					},
+					{
+						"id": "client-relationships",
+						"type": "ContactRelationshipsWidget",
+						"title": "Relationships",
+						"icon": "AccountMultipleOutline",
+						"content": {
+							"entityType": "client",
+							"title": "Relationships"
+						}
+					},
+					{
+						"id": "client-panels",
+						"type": "tabs",
+						"title": "Client",
+						"icon": "OfficeBuilding",
+						"_note": "One strip, at most seven tabs (shared relation frame, PqKlant and PqOrganisatie). Overview stacks the data cards and the open requests; Requests holds requests and complaints; Contracts holds contracts and projects. Mail, notes and files moved to the side column. Children stay out of layout, or the tabs widget and the grid would each render them once.",
+						"content": {
+							"ariaLabel": "Client",
+							"tabs": [
+								{
+									"widgetIds": [
+										"client-identity",
+										"client-commercial",
+										"client-open-requests"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "client-quick-contacts",
+									"label": "Contacts",
+									"countFrom": "widget"
+								},
+								{
+									"widgetIds": [
+										"client-quick-requests",
+										"client-complaints"
+									],
+									"label": "Requests",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "client-contactmoments",
+									"label": "Contact moments",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "client-leads",
+									"label": "Leads",
+									"countFrom": "widget"
+								},
+								{
+									"widgetIds": [
+										"client-contracts",
+										"client-projects"
+									],
+									"label": "Contracts"
+								},
+								{
+									"widgetId": "client-history",
+									"label": "History"
+								}
+							]
+						}
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "client-identity",
+						"widgetId": "client-summary-open-tickets",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 3
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
 					},
 					{
 						"id": "2",
-						"widgetId": "client-kpis-sales",
-						"gridX": 8,
+						"widgetId": "client-summary-sla-breached",
+						"gridX": 6,
 						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 5
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
 					},
 					{
 						"id": "3",
-						"widgetId": "client-commercial",
+						"widgetId": "client-summary-new-requests",
 						"gridX": 0,
-						"gridY": 3,
-						"gridWidth": 8,
-						"gridHeight": 2
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
 					},
 					{
 						"id": "4",
-						"widgetId": "client-summary-open-tickets",
-						"gridX": 0,
-						"gridY": 5,
-						"gridWidth": 3,
-						"gridHeight": 2
+						"widgetId": "client-summary-sla-at-risk",
+						"gridX": 4,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
 					},
 					{
 						"id": "5",
-						"widgetId": "client-summary-new-requests",
-						"gridX": 3,
-						"gridY": 5,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "6",
-						"widgetId": "client-summary-sla-breached",
-						"gridX": 5,
-						"gridY": 5,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "7",
-						"widgetId": "client-summary-sla-at-risk",
-						"gridX": 7,
-						"gridY": 5,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "8",
 						"widgetId": "client-summary-last-activity",
-						"gridX": 9,
-						"gridY": 5,
-						"gridWidth": 3,
-						"gridHeight": 2
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
 					},
 					{
 						"id": "9",
-						"widgetId": "client-records",
+						"widgetId": "client-panels",
 						"gridX": 0,
-						"gridY": 7,
-						"gridWidth": 8,
-						"gridHeight": 7
-					},
-					{
-						"id": "11",
-						"widgetId": "client-related",
-						"gridX": 8,
-						"gridY": 7,
-						"gridWidth": 4,
-						"gridHeight": 7
-					},
-					{
-						"id": "10",
-						"widgetId": "client-communication",
-						"gridX": 0,
-						"gridY": 14,
+						"gridY": 4,
 						"gridWidth": 12,
-						"gridHeight": 6
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
 				"bodyWidgets": [
@@ -2408,7 +2484,9 @@
 						"component": "PartyIndicatorPanel",
 						"placement": "before-body",
 						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
-						"props": { "partyId": "@objectId" }
+						"props": {
+							"partyId": "@objectId"
+						}
 					},
 					{
 						"id": "contact-links",
@@ -2425,32 +2503,9 @@
 						"id": "log-visit",
 						"component": "LogVisitAction",
 						"placement": "before-body",
-						"props": { "clientId": "@objectId" }
-					},
-					{
-						"id": "relationships",
-						"component": "ContactRelationships",
-						"title": "Relationships",
-						"placement": "end",
 						"props": {
-							"entityId": "@objectId",
-							"entityType": "client",
-							"entityName": "@object.name"
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "channels",
-						"component": "ContactChannelsSection",
-						"title": "Contact channels",
-						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "client"
-						},
-						"colSpan": 6,
-						"card": true
+							"clientId": "@objectId"
+						}
 					},
 					{
 						"id": "messaging-conversation",
@@ -2544,14 +2599,60 @@
 							]
 						}
 					]
-				}
+				},
+				"sideColumn": [
+					"client-kpis-sales",
+					"client-related",
+					"client-channels",
+					"client-relationships",
+					"client-email",
+					"client-notes",
+					"client-files"
+				],
+				"breadcrumb": {
+					"label": "Residents and businesses",
+					"route": "Clients"
+				},
+				"typePill": {
+					"field": "type",
+					"labels": {
+						"person": "Resident",
+						"organization": "Organisation"
+					},
+					"colorMap": {
+						"person": "info",
+						"organization": "teal"
+					}
+				},
+				"statusPill": {
+					"countFrom": {
+						"register": "pipelinq",
+						"schema": "ticket",
+						"filter": {
+							"client": "@objectId",
+							"status": {
+								"ne": "closed"
+							}
+						}
+					},
+					"countLabel": {
+						"one": "{count} open ticket",
+						"other": "{count} open tickets"
+					},
+					"variant": "purple"
+				},
+				"headerMeta": "{address}",
+				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip, so an organisation and a person without one show nothing.",
+				"headerFields": [
+					"preferredName"
+				]
 			}
 		},
 		{
 			"id": "Tickets",
 			"route": "/tickets",
 			"type": "index",
-			"title": "All tickets",
+			"title": "Questions and reports",
 			"_note": "Unified ticket workspace (unify-ticket-supertype). One index over the ticket schema replacing the former Requests/Complaints/Contactmomenten pages; a ticketType quickFilter tab strip narrows to each subtype. Type-specific columns (complaintCategory, outcome) are omitted from the shared table — they surface on the detail page.",
 			"config": {
 				"register": "pipelinq",
@@ -2561,8 +2662,32 @@
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"showViewAction": false,
+				"viewModes": ["table", "cards", "board"],
+				"_boardNote": "tickets-board-view (LijstBord). The board's columns are the ticket status; the switch also offers type, channel and handler. A drop runs moveTicketStatus, which checks the move against the ticket lifecycle (requestStatus.js) and writes the status, and ticketStatusTargets fades the columns the lifecycle does not allow. Type and channel are read-only: a drag does not change what a ticket is or how it came in. The enum's legacy and closing statuses show as columns until nextcloud-vue board.states (board-declared-states) is released.",
+				"board": {
+					"statusField": "status",
+					"wrap": true,
+					"columnLimit": 3,
+					"columnSwitchLabel": "Columns",
+					"hint": "One column per value of the property. Drag a card to change its status.",
+					"moveHandler": "moveTicketStatus",
+					"moveTargetsHandler": "ticketStatusTargets",
+					"card": { "title": "title", "sub": ["channel"], "pill": "ticketType", "due": "slaDeadline", "owner": "assignee" },
+					"columnFields": [
+						{ "field": "status", "label": "status" },
+						{ "field": "ticketType", "label": "type", "readOnly": true },
+						{ "field": "channel", "label": "channel", "kind": "values", "emptyLabel": "No channel", "readOnly": true },
+						{ "field": "assignee", "label": "handler", "kind": "values", "emptyLabel": "Nobody" }
+					]
+				},
+				"_quickFiltersNote": "The work lenses the LijstBord board draws come first; All and the ticket type lenses stay after them, so nobody loses a filter.",
 				"quickFilters": [
-					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "All open", "filter": { "status": ["new", "in_progress", "awaiting_customer"] }, "default": true },
+					{ "label": "Mine", "filter": { "assignee": "@me", "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "Unassigned", "filter": { "assignee": "IS NULL", "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "Waiting for customer", "filter": { "status": "awaiting_customer" } },
+					{ "label": "Past the deadline", "filter": { "slaDeadline": { "lt": "@now" }, "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "All", "filter": {} },
 					{ "label": "Requests", "filter": { "ticketType": "request" } },
 					{
 						"label": "Complaints",
@@ -2633,7 +2758,7 @@
 				],
 				"hideEmpty": true,
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_widgetsNote": "Widgets are declared (rather than left to the auto-body) only so the Besluitvorming leaf survives: development added a decidesk-decisions integration widget to RequestDetail (ADR-066) while this change was retiring that page. The relation belongs to the matter, not to whichever of the three names it used to have, so it moves onto the ticket alongside the `decisions` property on the schema. `content.hideEmpty` keeps the data widget type-aware — the page-level `hideEmpty` above only reaches the AUTO-body, which a declared widgets[] replaces.",
+				"_widgetsNote": "Widgets are declared (rather than left to the auto-body) so the page can place them. `content.hideEmpty` keeps the data widget type-aware: the page-level `hideEmpty` above only reaches the auto-body, which a declared widgets[] replaces. The decisions (decidiq's decidesk-decisions leaf, the `decisions` property on the schema) sit in the Decisions tab of `ticket-panels`.",
 				"widgets": [
 					{
 						"id": "ticket-data",
@@ -2645,7 +2770,9 @@
 							"columns": 2,
 							"hideEmpty": true,
 							"overrides": {
-								"assignee": { "formatter": "userDisplayName" }
+								"assignee": {
+									"formatter": "userDisplayName"
+								}
 							}
 						}
 					},
@@ -2656,22 +2783,71 @@
 						"icon": "LinkVariant"
 					},
 					{
+						"id": "ticket-decision-routes",
+						"type": "TicketDecisionRoutesWidget",
+						"title": "Decisions",
+						"icon": "Gavel",
+						"content": {
+							"title": "Decisions"
+						}
+					},
+					{
 						"id": "ticket-decisions",
 						"type": "integration",
 						"integrationId": "decidesk-decisions",
-						"title": "Besluitvorming",
+						"title": "On this ticket",
 						"icon": "Gavel"
+					},
+					{
+						"id": "ticket-case-decisions",
+						"type": "integration",
+						"integrationId": "decidesk-decisions",
+						"title": "On the linked case",
+						"icon": "Gavel",
+						"_note": "The decisions on the case this ticket became (REQ-TDT-002). The same decidiq leaf, mounted for the case: the host resolves the tokens (nextcloud-vue#1520) and does not mount the widget while one has no value, so a ticket without a case shows no second list. `caseReference` names no app (ADR-048), so neither does this widget: register and schema are whatever the installed case app answers, read on the server (DashboardController, `case_target`) and handed to the page as app config. A created proposal is stamped with them; the list itself only reads the id.",
+						"props": {
+							"register": "@config.caseRegister",
+							"schema": "@config.caseSchema",
+							"objectId": "@object.caseReference"
+						}
+					},
+					{
+						"id": "ticket-panels",
+						"type": "tabs",
+						"title": "Ticket panels",
+						"icon": "ViewDashboard",
+						"_note": "Board PqTicketBesluitvorming: the decisions are a tab beside the overview, not a card at the foot of it. The children stay in `widgets` and are absent from `layout`, because the tabs widget renders them. Without decidiq the Decisions tab is absent.",
+						"content": {
+							"ariaLabel": "Ticket details",
+							"tabs": [
+								{
+									"widgetId": "ticket-data",
+									"label": "Overview"
+								},
+								{
+									"widgetIds": [
+										"ticket-decision-routes",
+										"ticket-decisions",
+										"ticket-case-decisions"
+									],
+									"label": "Decisions",
+									"visibleWhen": {
+										"appInstalled": "decidiq"
+									}
+								}
+							]
+						}
 					}
 				],
-				"_layoutNote": "A declared widgets[] replaces the auto-body, and the auto-body was also what used to place them — so without an explicit layout every widget mapped to 0 grid cells (ADR-062 rule 8) and the page rendered its widgets unplaced. One cell per widget, in reading order: the two-column data block with Related beside it, then Besluitvorming across the full width beneath them.",
+				"_layoutNote": "A declared widgets[] replaces the auto-body, which also used to place them, so every widget needs a cell. The tab strip (overview and decisions) with Related beside it. The tabs' children have no cell of their own: the strip renders them.",
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "ticket-data",
+						"widgetId": "ticket-panels",
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 5
+						"gridHeight": 6
 					},
 					{
 						"id": "2",
@@ -2679,15 +2855,7 @@
 						"gridX": 8,
 						"gridY": 0,
 						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "3",
-						"widgetId": "ticket-decisions",
-						"gridX": 0,
-						"gridY": 5,
-						"gridWidth": 12,
-						"gridHeight": 4
+						"gridHeight": 6
 					}
 				],
 				"_bodyWidgetsNote": "Woo citizen journey J4 (questions-about-a-citizen-dossier): DossierSnapshotSection shows the dossier a resident asked about, before the body; CustomerReplySection is the answer control (customerMessage, the resident's replies) and WooConversionSection converts a question into a dossiq Woo request, after the data. Each renders nothing when it does not apply. Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
@@ -2757,11 +2925,21 @@
 				"schema": "contact",
 				"createOverride": "createContactContactAware",
 				"fieldOverrides": {
-					"name": { "readOnly": false },
-					"email": { "readOnly": false },
-					"phone": { "readOnly": false },
-					"correspondenceLanguage": { "widget": "language" },
-					"timezone": { "widget": "timezone" }
+					"name": {
+						"readOnly": false
+					},
+					"email": {
+						"readOnly": false
+					},
+					"phone": {
+						"readOnly": false
+					},
+					"correspondenceLanguage": {
+						"widget": "language"
+					},
+					"timezone": {
+						"widget": "timezone"
+					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
@@ -2774,11 +2952,32 @@
 						"route": "ContactDetail"
 					}
 				],
-				"columns": ["name", "email", "phone", "role"],
+				"columns": [
+					"name",
+					"email",
+					"phone",
+					"role",
+					{
+						"key": "client.name",
+						"label": "Client",
+						"sortable": false
+					}
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"extend": [
+					"client"
+				],
+				"countText": "{shown} of {total} contacts",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					}
+				]
 			}
 		},
 		{
@@ -2791,8 +2990,55 @@
 				"register": "pipelinq",
 				"schema": "contact",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Contact record as a declarative type:detail page. Layout, top to bottom, all inside the grid (pipelinq review E2): the contact's fields with one Open deals KPI and the Related graph beside them; a Records tab strip (deals, requests, contact moments, bookings) with a Profile tab strip beside it (relationships, subscriptions, BSN and BRP); then a Communication tab strip (channels, mail, messages, meetings, files). The former body sections (relationships, channels, messaging, subscriptions, BRP) are grid widgets now, through the sectionWidget() wrappers in registry.js, so nothing renders below the grid. Children of a tabs widget stay out of `layout`, or the tabs widget and the grid would each render them once.",
+				"_note": "Contact person page on the shared relation frame (nextcloud-vue screens-relation-pages, PqContactpersoon, Ruben 11 Oct 2026: at most seven tabs, Kanalen and Relaties as side cards). Header: the type pill, the breadcrumb back to Contacts, the meta line 'role at client' (the page extends client), and Call and Mail as tel:/mailto: links. One tab strip fills the body: Overview (the contact data card and the deals table, as the board draws them), Deals, Requests, Contact moments, Bookings, Files, History. Mail, Messages, Meetings, Subscriptions and BSN and BRP moved to the side column with Channels and Relationships, before History. Children of the tabs widget stay out of layout, or the tabs widget and the grid would each render them once.",
 				"widgets": [
+					{
+						"id": "contact-panels",
+						"type": "tabs",
+						"title": "Contact",
+						"icon": "AccountBoxOutline",
+						"_note": "One strip, at most seven tabs. Overview stacks the data card and the deals table; the list tabs count their list.",
+						"content": {
+							"ariaLabel": "Contact",
+							"tabs": [
+								{
+									"widgetIds": [
+										"contact-data",
+										"contact-deals"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "contact-deals",
+									"label": "Deals",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "contact-requests",
+									"label": "Requests",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "contact-contactmoments",
+									"label": "Contact moments",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "contact-bookings",
+									"label": "Bookings",
+									"countFrom": "widget"
+								},
+								{
+									"widgetId": "contact-files",
+									"label": "Files"
+								},
+								{
+									"widgetId": "contact-history",
+									"label": "History"
+								}
+							]
+						}
+					},
 					{
 						"id": "contact-data",
 						"type": "data",
@@ -2800,68 +3046,7 @@
 						"icon": "AccountBoxOutline",
 						"content": {
 							"title": "Contact details",
-							"columns": 2
-						}
-					},
-					{
-						"id": "contact-kpis-deals",
-						"type": "stat",
-						"title": "Open deals",
-						"icon": "HandshakeOutline",
-						"_note": "One KPI for the person's open deals: the value in the reporting currency, the count as its caption. It used to be a stats block with the count and an unformatted amount, read as Open deals twice (pipelinq review E2). The endpoint reads under the user's RBAC.",
-						"content": {
-							"label": "Open deals",
-							"icon": "HandshakeOutline",
-							"caption": "{openDealCount} open",
-							"format": {
-								"style": "currency",
-								"currency": "@config.currency",
-								"decimals": 0
-							},
-							"endpointSource": {
-								"url": "/apps/pipelinq/api/analytics/open-deals",
-								"params": {
-									"contact": "@objectId"
-								}
-							},
-							"valueField": "openDealValue",
-							"route": {
-								"name": "Leads"
-							}
-						}
-					},
-					{
-						"id": "contact-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
-					},
-					{
-						"id": "contact-records",
-						"type": "tabs",
-						"title": "Records",
-						"icon": "ViewDashboard",
-						"_note": "What this person is part of, one list at a time. The children stay in `widgets` and out of `layout`, or the tabs widget and the grid would each render them once.",
-						"content": {
-							"ariaLabel": "Contact records",
-							"tabs": [
-								{
-									"widgetId": "contact-deals",
-									"label": "Deals"
-								},
-								{
-									"widgetId": "contact-requests",
-									"label": "Requests"
-								},
-								{
-									"widgetId": "contact-contactmoments",
-									"label": "Contact moments"
-								},
-								{
-									"widgetId": "contact-bookings",
-									"label": "Bookings"
-								}
-							]
+							"columns": 3
 						}
 					},
 					{
@@ -3019,52 +3204,6 @@
 						}
 					},
 					{
-						"id": "contact-communication",
-						"type": "tabs",
-						"title": "Communication",
-						"icon": "Email",
-						"_note": "Channels, mail, messages, meetings and files for this person behind one strip. Children stay out of `layout` for the same reason as contact-records.",
-						"content": {
-							"ariaLabel": "Contact communication",
-							"tabs": [
-								{
-									"widgetId": "contact-channels",
-									"label": "Channels"
-								},
-								{
-									"widgetId": "contact-email",
-									"label": "Mail"
-								},
-								{
-									"widgetId": "contact-messages",
-									"label": "Messages"
-								},
-								{
-									"widgetId": "contact-calendar",
-									"label": "Meetings"
-								},
-								{
-									"widgetId": "contact-files",
-									"label": "Files"
-								}
-							]
-						}
-					},
-					{
-						"id": "contact-email",
-						"type": "integration",
-						"integrationId": "email",
-						"title": "Emails",
-						"icon": "Email"
-					},
-					{
-						"id": "contact-calendar",
-						"type": "integration",
-						"integrationId": "calendar",
-						"title": "Meetings",
-						"icon": "Calendar"
-					},
-					{
 						"id": "contact-files",
 						"type": "integration",
 						"integrationId": "files",
@@ -3072,27 +3211,50 @@
 						"icon": "FolderOutline"
 					},
 					{
-						"id": "contact-profile",
-						"type": "tabs",
-						"title": "Profile",
-						"icon": "AccountDetailsOutline",
-						"_note": "Who this person is connected to and what they signed up for. Children stay out of `layout`.",
+						"id": "contact-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "contact-kpis-deals",
+						"type": "stat",
+						"title": "Open deals",
+						"icon": "HandshakeOutline",
+						"_note": "One KPI for the person's open deals: the value in the reporting currency, the count as its caption. It used to be a stats block with the count and an unformatted amount, read as Open deals twice (pipelinq review E2). The endpoint reads under the user's RBAC. In the side column the card draws the title, so the stat carries no label of its own.",
 						"content": {
-							"ariaLabel": "Contact profile",
-							"tabs": [
-								{
-									"widgetId": "contact-relationships",
-									"label": "Relationships"
-								},
-								{
-									"widgetId": "contact-subscriptions",
-									"label": "Subscriptions"
-								},
-								{
-									"widgetId": "contact-brp",
-									"label": "BSN and BRP"
+							"caption": "{openDealCount} open",
+							"format": {
+								"style": "currency",
+								"currency": "@config.currency",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/analytics/open-deals",
+								"params": {
+									"contact": "@objectId"
 								}
-							]
+							},
+							"valueField": "openDealValue",
+							"route": {
+								"name": "Leads"
+							}
+						}
+					},
+					{
+						"id": "contact-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					},
+					{
+						"id": "contact-channels",
+						"type": "ContactChannelsWidget",
+						"title": "Channels",
+						"icon": "CardAccountPhoneOutline",
+						"content": {
+							"entityType": "contact",
+							"title": "Channels"
 						}
 					},
 					{
@@ -3101,7 +3263,8 @@
 						"title": "Relationships",
 						"icon": "AccountMultipleOutline",
 						"content": {
-							"entityType": "contact"
+							"entityType": "contact",
+							"title": "Relationships"
 						}
 					},
 					{
@@ -3109,7 +3272,9 @@
 						"type": "SubscriptionsWidget",
 						"title": "Subscriptions",
 						"icon": "EmailMultipleOutline",
-						"content": {}
+						"content": {
+							"title": "Subscriptions"
+						}
 					},
 					{
 						"id": "contact-brp",
@@ -3119,13 +3284,11 @@
 						"content": {}
 					},
 					{
-						"id": "contact-channels",
-						"type": "ContactChannelsWidget",
-						"title": "Contact channels",
-						"icon": "CardAccountPhoneOutline",
-						"content": {
-							"entityType": "contact"
-						}
+						"id": "contact-email",
+						"type": "integration",
+						"integrationId": "email",
+						"title": "Emails",
+						"icon": "Email"
 					},
 					{
 						"id": "contact-messages",
@@ -3135,57 +3298,24 @@
 						"content": {
 							"entityType": "contact"
 						}
+					},
+					{
+						"id": "contact-calendar",
+						"type": "integration",
+						"integrationId": "calendar",
+						"title": "Meetings",
+						"icon": "Calendar"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "contact-data",
+						"widgetId": "contact-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 5
-					},
-					{
-						"id": "2",
-						"widgetId": "contact-kpis-deals",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2,
-						"showTitle": false
-					},
-					{
-						"id": "4",
-						"widgetId": "contact-related",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "3",
-						"widgetId": "contact-records",
-						"gridX": 0,
-						"gridY": 5,
-						"gridWidth": 8,
-						"gridHeight": 7
-					},
-					{
-						"id": "6",
-						"widgetId": "contact-profile",
-						"gridX": 8,
-						"gridY": 7,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "5",
-						"widgetId": "contact-communication",
-						"gridX": 0,
-						"gridY": 12,
 						"gridWidth": 12,
-						"gridHeight": 7
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
 				"bodyWidgets": [
@@ -3194,16 +3324,8 @@
 						"component": "PartyIndicatorPanel",
 						"placement": "before-body",
 						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
-						"props": { "partyId": "@objectId" }
-					},
-					{
-						"id": "contact-links",
-						"component": "ContactLinks",
-						"placement": "before-body",
-						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
 						"props": {
-							"phone": "@object.phone",
-							"email": "@object.email"
+							"partyId": "@objectId"
 						}
 					}
 				],
@@ -3222,7 +3344,53 @@
 							]
 						}
 					]
-				}
+				},
+				"extend": [
+					"client"
+				],
+				"breadcrumb": {
+					"label": "Contacts",
+					"route": "Contacts"
+				},
+				"typePill": {
+					"text": "Contact",
+					"variant": "info"
+				},
+				"headerMeta": "{role} at {client.name}",
+				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip.",
+				"headerFields": ["preferredName"],
+				"headerActions": [
+					{
+						"id": "call",
+						"label": "Call",
+						"type": "navigate",
+						"target": "tel:@object.phone",
+						"icon": "PhoneOutline"
+					},
+					{
+						"id": "mail",
+						"label": "Mail",
+						"type": "navigate",
+						"target": "mailto:@object.email",
+						"icon": "EmailOutline"
+					}
+				],
+				"quickActions": [
+					"call",
+					"mail"
+				],
+				"sideColumn": [
+					"contact-kpis-deals",
+					"contact-related",
+					"contact-channels",
+					"contact-relationships",
+					"contact-subscriptions",
+					"contact-brp",
+					"contact-email",
+					"contact-messages",
+					"contact-calendar",
+					"contact-history"
+				]
 			}
 		},
 		{
@@ -3282,22 +3450,142 @@
 				"register": "pipelinq",
 				"schema": "lead",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). One Deal data widget carries every deal field, titled through content.title (pipelinq review E3); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; the deal value is a stat widget formatted in the reporting currency (@config.currency). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule.",
+				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). One Deal data widget carries every deal field, titled through content.title (pipelinq review E3); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; the deal value is a stat widget formatted in the reporting currency (@config.currency). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule. Board look (PqLead, round 12): a two-row header (Lead pill, the stage as status pill, the breadcrumb and the meta line), Log contact and the two close buttons as quick actions, the next-step card for the open stages, one tab strip as the body and a side column with the client, suggested colleagues, win chance, the next step and related records. The deal value and line-count KPIs stay declared for the dashboard catalogue but are not placed.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
 				"widgets": [
+					{
+						"id": "lead-panels",
+						"type": "tabs",
+						"title": "Lead parts",
+						"icon": "ViewDashboard",
+						"_note": "The board's tab strip (PqLead). Overview stacks the stage strip, the deal, its products, the contacts with their role and the flow runs; the other tabs each hold one list. History is the record's audit trail, which the board look draws as the last tab. The children stay out of `layout` because the tabs widget renders them.",
+						"content": {
+							"ariaLabel": "Lead parts",
+							"tabs": [
+								{
+									"label": "Overview",
+									"widgetIds": [
+										"lead-stages",
+										"lead-deal",
+										"lead-lines",
+										"lead-contacts",
+										"lead-flow-runs"
+									]
+								},
+								{
+									"label": "Contacts",
+									"widgetId": "lead-contacts-tab",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "contact",
+										"filter": {
+											"leads": "@objectId"
+										}
+									}
+								},
+								{
+									"label": "Contact moments",
+									"widgetId": "lead-contactmoments",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "ticket",
+										"filter": {
+											"lead": "@objectId",
+											"ticketType": "interaction"
+										}
+									}
+								},
+								{
+									"label": "Tasks",
+									"widgetId": "lead-tasks",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "crmTask",
+										"filter": {
+											"lead": "@objectId"
+										}
+									}
+								},
+								{
+									"label": "Appointments",
+									"widgetId": "lead-calendar",
+									"countFrom": "widget"
+								},
+								{
+									"label": "Mail",
+									"widgetId": "lead-email",
+									"countFrom": "widget"
+								},
+								{
+									"label": "Notes",
+									"widgetId": "lead-notes",
+									"countFrom": "widget"
+								},
+								{
+									"label": "Files",
+									"widgetId": "lead-files",
+									"countFrom": "widget"
+								},
+								{
+									"label": "Decisions",
+									"widgetId": "lead-decisions",
+									"countFrom": "widget"
+								},
+								{
+									"label": "History",
+									"widgetId": "lead-history"
+								}
+							]
+						}
+					},
+					{
+						"id": "lead-stages",
+						"type": "stages",
+						"title": "Stages",
+						"icon": "ChevronDoubleRight",
+						"_note": "The board's stage strip at the top of the Overview tab: the stages of the lead's own pipeline, read from the pipeline record, with the current one from `stage`.",
+						"content": {
+							"currentField": "stage",
+							"stagesEndpoint": {
+								"url": "/apps/openregister/api/objects/pipelinq/pipeline/@object.pipeline",
+								"path": "stages",
+								"idField": "name",
+								"labelField": "name",
+								"orderField": "order",
+								"finalField": "isClosed"
+							},
+							"transition": {
+								"kind": "lifecycle"
+							},
+							"variant": "bars"
+						}
+					},
 					{
 						"id": "lead-deal",
 						"type": "data",
 						"title": "Deal",
 						"icon": "HandshakeOutline",
-						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out.",
+						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out. The client sits here too (decision 207): a lead can exist with no client linked, and the Related card only lists a client once there is one, so this field is where a client is read, added and taken off.",
 						"content": {
 							"title": "Deal",
 							"columns": 2,
 							"include": [
-								"title",
 								"value",
-								"status",
-								"stage",
 								"qualificationScore",
 								"expectedCloseDate",
 								"priority",
@@ -3305,93 +3593,42 @@
 								"category",
 								"assignee",
 								"stageEnteredAt",
+								"title",
+								"client",
+								"status",
+								"stage",
 								"description",
 								"notes"
 							],
 							"overrides": {
-								"assignee": { "formatter": "userDisplayName" },
-								"status": { "editable": false },
-								"stageEnteredAt": { "editable": false },
-								"qualificationScore": { "label": "Win chance" }
-							}
-						}
-					},
-					{
-						"id": "lead-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
-					},
-					{
-						"id": "lead-kpi-value",
-						"type": "stat",
-						"title": "Deal value",
-						"icon": "Cash",
-						"content": {
-							"label": "Deal value",
-							"icon": "Cash",
-							"format": {
-								"style": "currency",
-								"currency": "@config.currency",
-								"decimals": 0
-							},
-							"source": {
-								"register": "pipelinq",
-								"schema": "lead",
-								"metric": "sum",
-								"field": "value",
-								"filter": { "id": "@objectId" }
-							}
-						}
-					},
-					{
-						"id": "lead-kpi-lines",
-						"type": "stats-block",
-						"title": "Line items",
-						"icon": "ClipboardList",
-						"content": {
-							"entries": [
-								{
-									"title": "Line items",
-									"countLabel": "on this deal",
-									"register": "pipelinq",
-									"schema": "leadProduct",
-									"metric": "count",
-									"filter": { "lead": "@objectId" }
+								"assignee": {
+									"formatter": "userDisplayName"
+								},
+								"status": {
+									"editable": false
+								},
+								"stageEnteredAt": {
+									"editable": false,
+									"label": "In this stage since"
+								},
+								"qualificationScore": {
+									"label": "Win chance"
 								}
-							]
+							},
+							"hideEmpty": true
 						}
-					},
-					{
-						"id": "lead-email",
-						"type": "integration",
-						"integrationId": "email",
-						"title": "Emails",
-						"icon": "Email"
-					},
-					{
-						"id": "lead-files",
-						"type": "integration",
-						"integrationId": "files",
-						"title": "Files",
-						"icon": "FolderOutline"
-					},
-					{
-						"id": "lead-calendar",
-						"type": "integration",
-						"integrationId": "calendar",
-						"title": "Meetings",
-						"icon": "Calendar"
 					},
 					{
 						"id": "lead-lines",
 						"type": "object-list",
-						"title": "Deal line items",
+						"title": "Products on this lead",
 						"icon": "Package",
 						"content": {
 							"register": "pipelinq",
 							"schema": "leadProduct",
-							"filter": { "lead": "@objectId" },
+							"filter": {
+								"lead": "@objectId"
+							},
 							"columns": [
 								{
 									"key": "product",
@@ -3403,16 +3640,22 @@
 										"labelField": "name"
 									}
 								},
-								{ "key": "quantity", "label": "Qty" },
+								{
+									"key": "quantity",
+									"label": "Quantity"
+								},
 								{
 									"key": "unitPrice",
-									"label": "Unit price",
+									"label": "Price",
 									"format": {
 										"style": "currency",
 										"currency": "@config.currency"
 									}
 								},
-								{ "key": "discount", "label": "Discount %" },
+								{
+									"key": "discount",
+									"label": "Discount"
+								},
 								{
 									"key": "total",
 									"label": "Line total",
@@ -3424,25 +3667,49 @@
 							],
 							"allowEdit": true,
 							"limit": 25,
-							"emptyText": "No products quoted on this deal yet. Add a line to build the quote."
+							"emptyText": "No products quoted on this deal yet. Add a line to build the quote.",
+							"addLabel": "Add product",
+							"footerNote": "The value of the lead follows the line totals. Change a line and the value changes with it."
 						}
 					},
 					{
-						"id": "lead-notes",
-						"type": "integration",
-						"integrationId": "notes",
-						"title": "Notes",
-						"icon": "NoteTextOutline"
-					},
-					{
-						"id": "lead-decisions",
-						"type": "integration",
-						"integrationId": "decidesk-decisions",
-						"title": "Besluitvorming",
-						"icon": "Gavel"
-					},
-					{
 						"id": "lead-contacts",
+						"type": "object-list",
+						"title": "Contacts and their role",
+						"icon": "AccountGroup",
+						"_note": "The people this deal is worked with, read from contact.leads (97-lead-activity). allowCreate is OFF and that is not an oversight: the widget pre-fills a created object by merging its resolved filter into the payload as a SCALAR, and `leads` is an array. OpenRegister answers a scalar written into an array property with 400, so an Add button here would offer a create that always fails. A person is linked to the deal from the contact form instead.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "contact",
+							"filter": {
+								"leads": "@objectId"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Name"
+								},
+								{
+									"key": "role",
+									"label": "Role"
+								},
+								{
+									"key": "email",
+									"label": "Email"
+								},
+								{
+									"key": "phone",
+									"label": "Phone"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "ContactDetail",
+							"allowCreate": false,
+							"emptyText": "Nobody is linked to this deal yet. Open a contact and add this deal to their leads."
+						}
+					},
+					{
+						"id": "lead-contacts-tab",
 						"type": "object-list",
 						"title": "Contacts",
 						"icon": "AccountGroup",
@@ -3475,6 +3742,20 @@
 							"rowRoute": "ContactDetail",
 							"allowCreate": false,
 							"emptyText": "Nobody is linked to this deal yet. Open a contact and add this deal to their leads."
+						}
+					},
+					{
+						"id": "lead-flow-runs",
+						"type": "flow-runs",
+						"title": "Flow runs",
+						"icon": "Sitemap",
+						"_note": "Takes the cell the line-items list used to hold, which moved into the tab strip. `subject: '@objectId'` binds this deal, so OpenRegister scopes the active and finished reads to it server-side. `rowRoute` rather than `runRoute`, for the reason dossiq records on case-flow-runs: pipelinq has no run detail page, and FlowDetail (/flows/:id) resolves a FLOW id, so pointing a run uuid at it would open nothing.",
+						"content": {
+							"subject": "@objectId",
+							"limit": 5,
+							"pollSeconds": 15,
+							"rowRoute": "FlowDetail",
+							"emptyText": "No flow is running for this deal"
 						}
 					},
 					{
@@ -3559,63 +3840,206 @@
 						}
 					},
 					{
-						"id": "lead-flow-runs",
-						"type": "flow-runs",
-						"title": "Flow runs",
-						"icon": "Sitemap",
-						"_note": "Takes the cell the line-items list used to hold, which moved into the tab strip. `subject: '@objectId'` binds this deal, so OpenRegister scopes the active and finished reads to it server-side. `rowRoute` rather than `runRoute`, for the reason dossiq records on case-flow-runs: pipelinq has no run detail page, and FlowDetail (/flows/:id) resolves a FLOW id, so pointing a run uuid at it would open nothing.",
+						"id": "lead-calendar",
+						"type": "integration",
+						"integrationId": "calendar",
+						"title": "Meetings",
+						"icon": "Calendar"
+					},
+					{
+						"id": "lead-email",
+						"type": "integration",
+						"integrationId": "email",
+						"title": "Emails",
+						"icon": "Email"
+					},
+					{
+						"id": "lead-notes",
+						"type": "integration",
+						"integrationId": "notes",
+						"title": "Notes",
+						"icon": "NoteTextOutline"
+					},
+					{
+						"id": "lead-files",
+						"type": "integration",
+						"integrationId": "files",
+						"title": "Files",
+						"icon": "FolderOutline"
+					},
+					{
+						"id": "lead-decisions",
+						"type": "integration",
+						"integrationId": "decidesk-decisions",
+						"title": "Besluitvorming",
+						"icon": "Gavel"
+					},
+					{
+						"id": "lead-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "side-client",
+						"type": "facts",
+						"title": "Client",
+						"icon": "OfficeBuildingOutline",
 						"content": {
-							"subject": "@objectId",
-							"limit": 5,
-							"pollSeconds": 15,
-							"rowRoute": "FlowDetail",
-							"emptyText": "No flow is running for this deal"
+							"source": {
+								"register": "pipelinq",
+								"schema": "client",
+								"id": "@object.client"
+							},
+							"fields": [
+								{
+									"as": "lead",
+									"initialsPath": "name",
+									"title": "name",
+									"subtitle": [
+										{
+											"path": "type",
+											"map": {
+												"organization": "Organisation",
+												"person": "Resident"
+											}
+										}
+									]
+								},
+								{
+									"label": "Email",
+									"path": "email",
+									"format": "email"
+								},
+								{
+									"label": "Phone",
+									"path": "phone",
+									"format": "phone"
+								},
+								{
+									"label": "Website",
+									"path": "website",
+									"format": "url"
+								}
+							],
+							"link": {
+								"label": "Client page",
+								"route": {
+									"name": "ClientDetail",
+									"params": {
+										"id": "@object.client"
+									}
+								}
+							},
+							"emptyText": "No client linked to this lead yet"
 						}
 					},
 					{
-						"id": "lead-panels",
-						"type": "tabs",
-						"title": "Deal panels",
-						"icon": "ViewDashboard",
-						"_note": "Nine panels describing one deal used to be nine cards stacked down the page, each with its own header and Actions menu, only one of them ever read. The strip takes over the title and the card, the children render bare, and the Actions menu is hoisted into the bar where it rebinds to whichever tab is open. The nine children stay in `widgets` and are DELIBERATELY absent from `layout`: the tabs widget renders them, so a layout entry would render each one twice.",
+						"id": "side-suggested",
+						"type": "RoutingSuggestionWidget",
+						"title": "Suggested colleagues",
+						"icon": "AccountArrowRight",
 						"content": {
-							"ariaLabel": "Deal details",
-							"tabs": [
+							"title": "Suggested colleagues",
+							"entityType": "lead",
+							"objectType": "lead"
+						}
+					},
+					{
+						"id": "side-win-chance",
+						"type": "facts",
+						"title": "Win chance",
+						"icon": "Percent",
+						"content": {
+							"fields": [
 								{
-									"widgetId": "lead-lines",
-									"label": "Line items"
+									"as": "title",
+									"path": "qualificationScore"
 								},
 								{
-									"widgetId": "lead-notes",
-									"label": "Notes"
+									"as": "line",
+									"path": "stage",
+									"label": "Stage"
 								},
 								{
-									"widgetId": "lead-files",
-									"label": "Files"
-								},
+									"as": "line",
+									"text": "The chance of the stage, raised by recent contact and lowered when the lead stands still for 14 days."
+								}
+							]
+						}
+					},
+					{
+						"id": "side-next-step",
+						"type": "record-list",
+						"title": "Next step",
+						"icon": "CalendarArrowRight",
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"lead": "@objectId",
+								"status": {
+									"ne": "completed"
+								}
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"limit": 1,
+							"presentation": "rows",
+							"title": "{subject}",
+							"meta": "{deadline|date}",
+							"rowRoute": "TaskDetail",
+							"emptyText": "No next step planned"
+						}
+					},
+					{
+						"id": "side-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					},
+					{
+						"id": "lead-kpi-value",
+						"type": "stat",
+						"title": "Deal value",
+						"icon": "Cash",
+						"content": {
+							"label": "Deal value",
+							"icon": "Cash",
+							"format": {
+								"style": "currency",
+								"currency": "@config.currency",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "lead",
+								"metric": "sum",
+								"field": "value",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "lead-kpi-lines",
+						"type": "stats-block",
+						"title": "Line items",
+						"icon": "ClipboardList",
+						"content": {
+							"entries": [
 								{
-									"widgetId": "lead-email",
-									"label": "Mail"
-								},
-								{
-									"widgetId": "lead-calendar",
-									"label": "Appointments"
-								},
-								{
-									"widgetId": "lead-decisions",
-									"label": "Decisions"
-								},
-								{
-									"widgetId": "lead-contacts",
-									"label": "Contacts"
-								},
-								{
-									"widgetId": "lead-contactmoments",
-									"label": "Contact moments"
-								},
-								{
-									"widgetId": "lead-tasks",
-									"label": "Tasks"
+									"title": "Line items",
+									"countLabel": "on this deal",
+									"register": "pipelinq",
+									"schema": "leadProduct",
+									"metric": "count",
+									"filter": {
+										"lead": "@objectId"
+									}
 								}
 							]
 						}
@@ -3624,102 +4048,264 @@
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "lead-deal",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 8
-					},
-					{
-						"id": "7",
-						"widgetId": "lead-kpi-value",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 3,
-						"showTitle": false
-					},
-					{
-						"id": "9",
-						"widgetId": "lead-kpi-lines",
-						"gridX": 8,
-						"gridY": 3,
-						"gridWidth": 4,
-						"gridHeight": 3,
-						"showTitle": false
-					},
-					{
-						"id": "3",
-						"widgetId": "lead-related",
-						"gridX": 8,
-						"gridY": 6,
-						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "8",
-						"widgetId": "lead-flow-runs",
-						"gridX": 8,
-						"gridY": 10,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "12",
 						"widgetId": "lead-panels",
 						"gridX": 0,
-						"gridY": 8,
-						"gridWidth": 8,
-						"gridHeight": 7
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
-				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2049): RoutingSuggestionSection ranks colleagues whose skills cover the lead category, and writes the chosen colleague into the lead assignee.",
-				"bodyWidgets": [
-					{
-						"id": "routing-suggestions",
-						"component": "RoutingSuggestionSection",
-						"title": "Suggested agents",
-						"placement": "end",
-						"props": {
-							"objectId": "@objectId",
-							"category": "@object.category",
-							"entityType": "lead",
-							"objectType": "lead",
-							"assignee": "@object.assignee"
-						}
-					}
+				"sideColumn": [
+					"side-client",
+					"side-suggested",
+					"side-win-chance",
+					"side-next-step",
+					"side-related"
 				],
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "win",
-							"from": "open",
-							"to": "won",
-							"label": "Close as win",
-							"confirm": "Close this lead as won?"
-						},
-						{
-							"action": "lose",
-							"from": "open",
-							"to": "lost",
-							"label": "Close as lose",
-							"confirm": "Close this lead as lost?"
-						}
-					]
+				"breadcrumb": {
+					"label": "Leads",
+					"route": "Leads",
+					"separator": "/"
 				},
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "audit",
-							"label": "History",
-							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+				"typePill": {
+					"text": "Lead",
+					"variant": "info"
+				},
+				"statusPill": {
+					"field": "stage",
+					"variant": "purple"
+				},
+				"headerMeta": "via {source} · {stageEnteredAt|days} days in this stage · owner {assignee}",
+				"stageField": "stage",
+				"headerActions": [
+					{
+						"id": "close-won",
+						"type": "api-call",
+						"label": "Close as won",
+						"icon": "TrophyOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"payload": {
+							"action": "win"
+						},
+						"confirm": true,
+						"successMessage": "Lead closed as won.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "open"
 						}
-					]
-				}
+					},
+					{
+						"id": "close-lost",
+						"type": "api-call",
+						"label": "Close as lost",
+						"icon": "CloseCircleOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"payload": {
+							"action": "lose"
+						},
+						"confirm": true,
+						"successMessage": "Lead closed as lost.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "open"
+						}
+					}
+				],
+				"quickActions": [
+					"close-won",
+					"close-lost"
+				],
+				"actionsMenu": {
+					"label": "More"
+				},
+				"nextStep": {
+					"field": "stage",
+					"stages": {
+						"Nieuw": {
+							"title": "What now? Stage 1 of 5: new",
+							"after": "Then: to Contacted",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "Make the first contact",
+									"doneField": "lastTouch",
+									"hint": "Log the call or visit on this lead"
+								}
+							]
+						},
+						"Benaderd": {
+							"title": "What now? Stage 2 of 5: contacted",
+							"after": "Then: to Qualified",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "Plan a follow-up appointment"
+								}
+							]
+						},
+						"Gekwalificeerd": {
+							"title": "What now? Stage 3 of 5: qualified",
+							"after": "Then: to Proposal",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "A proposal has been sent",
+									"hint": "Add products and then make the quote"
+								}
+							]
+						},
+						"Voorstel": {
+							"title": "What now? Stage 4 of 5: proposal",
+							"after": "Then: close as won or lost",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "Follow up on the proposal",
+									"hint": "An expected close date is set"
+								}
+							]
+						},
+						"New": {
+							"title": "What now? Stage 1 of 5: new",
+							"after": "Then: to Contacted",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "Make the first contact",
+									"doneField": "lastTouch",
+									"hint": "Log the call or visit on this lead"
+								}
+							]
+						},
+						"Contacted": {
+							"title": "What now? Stage 2 of 5: contacted",
+							"after": "Then: to Qualified",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "Plan a follow-up appointment"
+								}
+							]
+						},
+						"Qualified": {
+							"title": "What now? Stage 3 of 5: qualified",
+							"after": "Then: to Proposal",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "A proposal has been sent",
+									"hint": "Add products and then make the quote"
+								}
+							]
+						},
+						"Proposal": {
+							"title": "What now? Stage 4 of 5: proposal",
+							"after": "Then: close as won or lost",
+							"checklist": [
+								{
+									"label": "The client is linked",
+									"doneField": "client"
+								},
+								{
+									"label": "The value is set",
+									"doneWhen": {
+										"field": "value",
+										"op": "gt",
+										"value": 0
+									}
+								},
+								{
+									"label": "Follow up on the proposal",
+									"hint": "An expected close date is set"
+								}
+							]
+						}
+					}
+				},
+				"identifierField": "id",
+				"follow": false
 			}
 		},
 		{
@@ -3862,8 +4448,15 @@
 				],
 				"_searchNote": "The dedicated 'Barcode lookup' page is gone (nav-ia-cleanup): this index's search already matches on barcode, so scanning into the search box resolves the product here — one surface instead of two for the same question. Verified live: searching '8714100838623' returns exactly the matching product. `barcode` is a column so the value is visible on the row you land on, not just the key you searched by.",
 				"columns": [
-					{ "key": "name", "label": "Name" },
-					{ "key": "barcode", "label": "Barcode" },
+					{
+						"key": "name",
+						"label": "Name",
+						"secondary": "{unit}"
+					},
+					{
+						"key": "barcode",
+						"label": "Barcode"
+					},
 					{
 						"key": "category",
 						"label": "Category",
@@ -3874,19 +4467,103 @@
 							"labelField": "name"
 						}
 					},
-					{ "key": "type", "label": "Type" },
-					{ "key": "status", "label": "Status" },
+					{
+						"key": "type",
+						"label": "Type",
+						"formatter": "enumLabel"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"active": "success",
+								"inactive": "default"
+							}
+						},
+						"formatter": "enumLabel"
+					},
 					{
 						"key": "unitPrice",
 						"label": "Price",
 						"formatter": "objectCurrency",
-						"formatterOptions": { "decimals": 2 }
+						"formatterOptions": {
+							"decimals": 2
+						}
+					},
+					{
+						"key": "onDeals",
+						"label": "On deals",
+						"sortable": false,
+						"aggregate": {
+							"register": "pipelinq",
+							"schema": "leadProduct",
+							"op": "count",
+							"where": {
+								"product": "@self.id"
+							}
+						}
 					}
 				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"_boardNote": "Board look (PqProducten, round 12): count line, quick filters by type and status, the name with its category and unit under it, the status as a pill and how many deals carry the product.",
+				"showTitle": true,
+				"showTitleIcon": false,
+				"rowTitle": "plain",
+				"countText": "{shown} of {total} products and services · prices excl. VAT",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New product"
+					}
+				],
+				"searchPlaceholder": "Filter by name, barcode or category",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Products",
+						"filter": {
+							"type": "product"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Services",
+						"filter": {
+							"type": "service"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Discontinued",
+						"filter": {
+							"status": "inactive"
+						},
+						"showCount": true
+					}
+				],
+				"viewSwitch": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"footerNote": "A product that is on a deal or a receipt is discontinued and not deleted, so old quotes stay readable."
 			}
 		},
 		{
@@ -3901,45 +4578,86 @@
 				"_note": "Catalog archetype (bespoke-detail-pages). A product is a catalog master, not a conversation — so there are deliberately NO comms leaves (product declares no email/calendar linkedType). The body leads with the catalog fields (name, sku/barcode/gtin, unitPrice/cost/taxRate/btwClass, category, type, unit, variants/modifierGroups/priceTiers) 8-wide and the related graph (category, preferredSupplier, MDM masterEntityRef) at 4-wide. A stats-block KPI card (rule 2, replacing the retired summaryAggregates) chips the live On-deals count @objectId-scoped; below sits a read-only object-list of the deal lines that reference this product (leadProduct, FK 'product', allowCreate:false — deal lines are authored on the deal, never from the catalog) so a product manager can see demand at a glance, then the product image/spec files full-width. Two-tone grid (catalog + usage) makes it read very differently from the comms-first person pages.",
 				"widgets": [
 					{
+						"id": "product-panels",
+						"type": "tabs",
+						"title": "Product parts",
+						"icon": "ViewDashboard",
+						"_note": "The board's tab strip (PqProduct): Overview stacks the product, its price tiers and variants, the deals it is on and its files; History is the audit trail.",
+						"content": {
+							"ariaLabel": "Product parts",
+							"tabs": [
+								{
+									"label": "Overview",
+									"widgetIds": [
+										"product-data",
+										"product-tiers",
+										"product-variants",
+										"product-lines",
+										"product-files"
+									]
+								},
+								{
+									"label": "History",
+									"widgetId": "product-history"
+								}
+							]
+						}
+					},
+					{
 						"id": "product-data",
 						"type": "data",
 						"title": "Product",
 						"icon": "Package",
 						"content": {
-							"columns": 2,
+							"columns": 3,
 							"overrides": {
-								"unitPrice": { "formatter": "objectCurrency" },
-								"cost": { "formatter": "objectCurrency" }
-							}
+								"unitPrice": {
+									"formatter": "objectCurrency"
+								},
+								"cost": {
+									"formatter": "objectCurrency"
+								}
+							},
+							"include": [
+								"name",
+								"sku",
+								"barcode",
+								"unitPrice",
+								"cost",
+								"taxRate",
+								"vatClass",
+								"category",
+								"type",
+								"unit",
+								"description"
+							],
+							"hideEmpty": false
 						}
 					},
 					{
-						"id": "product-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
-					},
-					{
-						"id": "product-supply",
-						"type": "ProductSupplyWidget",
-						"title": "Supply",
-						"icon": "TruckOutline"
-					},
-					{
-						"id": "product-kpis",
-						"type": "stats-block",
-						"title": "Demand",
-						"icon": "ChartBar",
+						"id": "product-tiers",
+						"type": "data",
+						"title": "Price tiers",
+						"icon": "Stairs",
 						"content": {
-							"entries": [
-								{
-									"title": "On deals",
-									"register": "pipelinq",
-									"schema": "leadProduct",
-									"metric": "count",
-									"filter": { "product": "@objectId" }
-								}
-							]
+							"columns": 1,
+							"include": [
+								"priceTiers"
+							],
+							"hideEmpty": false
+						}
+					},
+					{
+						"id": "product-variants",
+						"type": "data",
+						"title": "Variants",
+						"icon": "ShapeOutline",
+						"content": {
+							"columns": 1,
+							"include": [
+								"variants"
+							],
+							"hideEmpty": false
 						}
 					},
 					{
@@ -3950,7 +4668,9 @@
 						"content": {
 							"register": "pipelinq",
 							"schema": "leadProduct",
-							"filter": { "product": "@objectId" },
+							"filter": {
+								"product": "@objectId"
+							},
 							"columns": [
 								{
 									"key": "lead",
@@ -3962,7 +4682,10 @@
 										"labelField": "title"
 									}
 								},
-								{ "key": "quantity", "label": "Qty" },
+								{
+									"key": "quantity",
+									"label": "Qty"
+								},
 								{
 									"key": "unitPrice",
 									"label": "Unit price",
@@ -3971,7 +4694,10 @@
 										"currency": "@config.currency"
 									}
 								},
-								{ "key": "discount", "label": "Discount %" },
+								{
+									"key": "discount",
+									"label": "Discount %"
+								},
 								{
 									"key": "total",
 									"label": "Line total",
@@ -3992,56 +4718,150 @@
 						"integrationId": "files",
 						"title": "Images & spec sheets",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "product-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "product-kpi-deals",
+						"type": "stat",
+						"title": "On deals",
+						"content": {
+							"label": "On deals",
+							"caption": "deal lines with this product",
+							"source": {
+								"register": "pipelinq",
+								"schema": "leadProduct",
+								"metric": "count",
+								"filter": {
+									"product": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "product-kpi-value",
+						"type": "stat",
+						"title": "Value on deals",
+						"content": {
+							"label": "Value on deals",
+							"caption": "line totals, excl. VAT",
+							"format": {
+								"style": "currency",
+								"currency": "@config.currency",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "leadProduct",
+								"metric": "sum",
+								"field": "total",
+								"filter": {
+									"product": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "product-kpi-counter",
+						"type": "stat",
+						"title": "Sold at the counter",
+						"content": {
+							"label": "Sold at the counter",
+							"caption": "receipt lines",
+							"source": {
+								"register": "pipelinq",
+								"schema": "posTransactionLine",
+								"metric": "count",
+								"filter": {
+									"product": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "product-supply",
+						"type": "ProductSupplyWidget",
+						"title": "Delivery",
+						"icon": "TruckOutline",
+						"content": {
+							"title": "Delivery"
+						}
+					},
+					{
+						"id": "product-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					},
+					{
+						"id": "product-kpis",
+						"type": "stats-block",
+						"title": "Demand",
+						"icon": "ChartBar",
+						"content": {
+							"entries": [
+								{
+									"title": "On deals",
+									"register": "pipelinq",
+									"schema": "leadProduct",
+									"metric": "count",
+									"filter": {
+										"product": "@objectId"
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"content": {
+							"limit": 4
+						}
 					}
 				],
 				"layout": [
 					{
+						"id": "k1",
+						"widgetId": "product-kpi-deals",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "k2",
+						"widgetId": "product-kpi-value",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "k3",
+						"widgetId": "product-kpi-counter",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
 						"id": "1",
-						"widgetId": "product-data",
+						"widgetId": "product-panels",
 						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 10
-					},
-					{
-						"id": "5",
-						"widgetId": "product-kpis",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "2",
-						"widgetId": "product-related",
-						"gridX": 8,
 						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "6",
-						"widgetId": "product-supply",
-						"gridX": 8,
-						"gridY": 6,
-						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "3",
-						"widgetId": "product-lines",
-						"gridX": 0,
-						"gridY": 10,
 						"gridWidth": 12,
-						"gridHeight": 5
-					},
-					{
-						"id": "4",
-						"widgetId": "product-files",
-						"gridX": 0,
-						"gridY": 15,
-						"gridWidth": 12,
-						"gridHeight": 3
+						"gridHeight": 18,
+						"showTitle": false
 					}
 				],
 				"sidebar": {
@@ -4052,10 +4872,51 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
-				}
+				},
+				"sideColumn": [
+					"product-supply",
+					"product-related",
+					"side-history"
+				],
+				"breadcrumb": {
+					"label": "Products",
+					"route": "Products",
+					"currentField": "sku",
+					"separator": "/"
+				},
+				"statusPill": {
+					"field": "status",
+					"colorMap": {
+						"active": "success",
+						"inactive": "default"
+					},
+					"labels": {
+						"active": "Active",
+						"inactive": "Discontinued"
+					}
+				},
+				"typePill": {
+					"field": "type",
+					"variant": "info",
+					"labels": {
+						"product": "Product",
+						"service": "Service"
+					}
+				},
+				"headerMeta": "{unit} · prices excl. VAT",
+				"actionsMenu": {
+					"label": "More"
+				},
+				"identifierField": "sku",
+				"_boardNote": "Board look (PqProduct, round 12): pills, breadcrumb and meta in the header, three KPI tiles, one tab strip as the body and the supply and related cards beside it.",
+				"follow": false
 			}
 		},
 		{
@@ -4201,18 +5062,6 @@
 			"route": "/pos/refunds/new",
 			"type": "custom",
 			"title": "Nieuwe retour",
-			"component": "PosRefundFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "posRefund"
-			}
-		},
-		{
-			"id": "PosRefundEdit",
-			"_note": "Reuses PosRefundForm.vue (bespoke refund editor with per-line refund selection and tender NcSelect) in edit mode; the interactive line-selection logic has no standard form page-type equivalent.",
-			"route": "/pos/refunds/:id/edit",
-			"type": "custom",
-			"title": "Retour bewerken",
 			"component": "PosRefundFormView",
 			"config": {
 				"register": "pipelinq",
@@ -4768,14 +5617,6 @@
 			"component": "PosCustomerSettingsView"
 		},
 		{
-			"id": "BrpMonitor",
-			"_note": "BrpMonitor.vue is a bespoke operational monitor for BRP (Dutch persons-registry) connection health and recent lookups, with its own status/refresh layout; it is a live diagnostics panel, not a list or detail of register objects, so no standard page type fits.",
-			"route": "/admin/brp-monitor",
-			"type": "custom",
-			"title": "BRP Monitor",
-			"component": "BrpMonitorView"
-		},
-		{
 			"id": "KassakoppelingAuditList",
 			"_note": "KassakoppelingAuditList.vue is a bespoke audit-trail viewer for the kassakoppeling (cash-register fiscalisation link) with append-only entries and verification actions rendered in a custom layout; the generic 'index' type cannot express the immutable-audit presentation and per-row verify controls.",
 			"route": "/kassakoppeling/audit",
@@ -4908,7 +5749,7 @@
 						"gridX": 8,
 						"gridY": 2,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 8
 					},
 					{
 						"id": "4",
@@ -4922,7 +5763,7 @@
 						"id": "5",
 						"widgetId": "pos-tx-related",
 						"gridX": 8,
-						"gridY": 7,
+						"gridY": 10,
 						"gridWidth": 4,
 						"gridHeight": 5
 					},
@@ -4930,7 +5771,7 @@
 						"id": "6",
 						"widgetId": "pos-tx-payment",
 						"gridX": 0,
-						"gridY": 12,
+						"gridY": 15,
 						"gridWidth": 12,
 						"gridHeight": 5
 					}
@@ -4970,22 +5811,43 @@
 						"closed"
 					]
 				},
+				"_extendNote": "The customer of a ticket is a reference to a client. Extending it gives the row the client's name, which the title column draws as its second line, as the PqWachtrij board does. A ticket without a client shows the title alone.",
+				"extend": [
+					"client"
+				],
 				"quickFilters": [
-					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Requests", "filter": { "ticketType": "request" } },
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Requests",
+						"filter": {
+							"ticketType": "request"
+						},
+						"showCount": true
+					},
 					{
 						"label": "Complaints",
-						"filter": { "ticketType": "complaint" }
+						"filter": {
+							"ticketType": "complaint"
+						},
+						"showCount": true
 					},
 					{
 						"label": "Contactmomenten",
-						"filter": { "ticketType": "interaction" }
+						"filter": {
+							"ticketType": "interaction"
+						},
+						"showCount": true
 					}
 				],
 				"actions": [
 					{
 						"id": "assign-to-me",
-						"label": "Assign to me",
+						"label": "Take it on",
 						"icon": "AccountArrowLeftOutline",
 						"handler": "assignTicketToMe"
 					},
@@ -4998,44 +5860,1088 @@
 					}
 				],
 				"columns": [
+					{
+						"key": "occurredAt",
+						"label": "Waiting",
+						"widget": "age",
+						"widgetProps": {
+							"variantWhen": [
+								{
+									"op": "gte",
+									"value": 2,
+									"variant": "error"
+								}
+							]
+						},
+						"sortable": true
+					},
+					{
+						"key": "title",
+						"label": "Title",
+						"secondary": "{client.name}",
+						"sortable": true
+					},
 					"ticketType",
-					"title",
-					"status",
 					"priority",
 					"channel",
-					"occurredAt"
+					"status"
 				],
 				"emptyText": "Nothing is waiting. Every open ticket has someone on it.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"sortKey": "occurredAt",
+				"sortOrder": "asc",
+				"countText": "{shown} of {total} unassigned tickets · customer contact · oldest first",
+				"statRow": [
+					{
+						"id": "queue-unassigned",
+						"type": "stat",
+						"title": "Unassigned",
+						"content": {
+							"label": "Unassigned",
+							"caption": "tickets nobody has picked up",
+							"icon": "ClipboardTextClockOutline",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": {
+										"isnull": true
+									},
+									"status": {
+										"notIn": [
+											"resolved",
+											"completed",
+											"rejected",
+											"converted",
+											"closed"
+										]
+									}
+								}
+							}
+						}
+					},
+					{
+						"id": "queue-past-deadline",
+						"type": "stat",
+						"title": "Past the deadline",
+						"content": {
+							"label": "Past the deadline",
+							"caption": "pick these up first",
+							"icon": "AlertCircleOutline",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"variant": "error",
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": {
+										"isnull": true
+									},
+									"status": {
+										"notIn": [
+											"resolved",
+											"completed",
+											"rejected",
+											"converted",
+											"closed"
+										]
+									},
+									"slaDeadline[lt]": "@now"
+								}
+							}
+						}
+					}
+				]
 			}
 		},
 		{
 			"id": "MyWork",
-			"_note": "MyWork.vue is a personal cross-entity worklist: it merges tasks, deals and contactmomenten assigned to the current user into grouped, due-date-coloured sections with entity badges and quick-filter buttons; no single-register 'index' page can aggregate across these schemas.",
 			"route": "/my-work",
-			"type": "custom",
-			"title": "My Work",
-			"component": "MyWorkView"
-		},
-		{
-			"id": "SyncSettings",
-			"route": "/sync-settings",
-			"type": "settings",
-			"title": "Sync settings",
+			"type": "dashboard",
+			"title": "My work",
+			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. Not here, each named in the pull request: the share answered within the deadline (needs a ticket.answeredInTime flag), the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
 			"config": {
-				"sections": [
+				"showRefresh": true,
+				"showWidgetActions": false,
+				"gridFloat": false,
+				"description": "Tickets, leads and follow-ups that are yours, the most urgent first",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"kpiRow": [
+					"my-lens"
+				],
+				"widgets": [
 					{
-						"id": "sync",
-						"title": "Integrations",
-						"component": "SyncSettingsView"
+						"id": "my-lens",
+						"type": "workspace-filter",
+						"title": "Show",
+						"showTitle": false,
+						"content": {
+							"layout": "bar",
+							"controls": [
+								{
+									"style": "chips",
+									"label": "Show",
+									"writes": "@workspace.lens",
+									"urlKey": "lens",
+									"default": "all",
+									"options": [
+										{
+											"value": "all",
+											"label": "All",
+											"countFrom": [
+												{
+													"register": "pipelinq",
+													"schema": "ticket",
+													"filter": {
+														"assignee": "@me",
+														"status": {
+															"notIn": [
+																"resolved",
+																"completed",
+																"rejected",
+																"converted",
+																"closed"
+															]
+														}
+													}
+												},
+												{
+													"register": "pipelinq",
+													"schema": "lead",
+													"filter": {
+														"assignee": "@me",
+														"status": "open"
+													}
+												},
+												{
+													"register": "pipelinq",
+													"schema": "crmTask",
+													"filter": {
+														"assigneeUserId": "@me",
+														"status": "open"
+													}
+												}
+											]
+										},
+										{
+											"value": "tickets",
+											"label": "Tickets",
+											"countFrom": {
+												"register": "pipelinq",
+												"schema": "ticket",
+												"filter": {
+													"assignee": "@me",
+													"status": {
+														"notIn": [
+															"resolved",
+															"completed",
+															"rejected",
+															"converted",
+															"closed"
+														]
+													}
+												}
+											}
+										},
+										{
+											"value": "leads",
+											"label": "Leads",
+											"countFrom": {
+												"register": "pipelinq",
+												"schema": "lead",
+												"filter": {
+													"assignee": "@me",
+													"status": "open"
+												}
+											}
+										},
+										{
+											"value": "tasks",
+											"label": "Follow-ups",
+											"countFrom": {
+												"register": "pipelinq",
+												"schema": "crmTask",
+												"filter": {
+													"assigneeUserId": "@me",
+													"status": "open"
+												}
+											}
+										}
+									]
+								},
+								{
+									"style": "toggle",
+									"label": "Show completed",
+									"writes": "@workspace.showDone",
+									"urlKey": "done",
+									"align": "end"
+								},
+								{
+									"style": "select",
+									"label": "Sorting",
+									"writes": "@workspace.sort",
+									"urlKey": "sort",
+									"default": "deadline",
+									"options": [
+										{
+											"value": "deadline",
+											"label": "Deadline first"
+										},
+										{
+											"value": "priority",
+											"label": "Priority first"
+										},
+										{
+											"value": "waiting",
+											"label": "Waiting longest first"
+										},
+										{
+											"value": "newest",
+											"label": "Newest first"
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"id": "my-week",
+						"type": "stats-block",
+						"title": "Your week so far",
+						"showTitle": true,
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
+						"content": {
+							"layout": "grid",
+							"columns": 2,
+							"stats": [
+								{
+									"label": "Answered",
+									"caption": "this week",
+									"format": {
+										"style": "number",
+										"decimals": 0
+									},
+									"source": {
+										"register": "pipelinq",
+										"schema": "ticket",
+										"metric": "count",
+										"filter": {
+											"assignee": "@me",
+											"status": {
+												"in": [
+													"resolved",
+													"completed"
+												]
+											},
+											"resolvedAt[gte]": "@today-7d"
+										}
+									}
+								},
+								{
+									"label": "Average answer time",
+									"caption": "agreement: 2 working days",
+									"format": {
+										"style": "decimal",
+										"decimals": 1,
+										"suffix": " days"
+									},
+									"source": {
+										"kind": "elapsed",
+										"register": "pipelinq",
+										"schema": "ticket",
+										"from": "occurredAt",
+										"to": "resolvedAt",
+										"unit": "days",
+										"filter": {
+											"assignee": "@me",
+											"status": {
+												"in": [
+													"resolved",
+													"completed"
+												]
+											},
+											"resolvedAt[gte]": "@today-30d"
+										}
+									}
+								},
+								{
+									"label": "Turned into a case",
+									"caption": "converted in 7 days",
+									"format": {
+										"style": "number",
+										"decimals": 0
+									},
+									"source": {
+										"register": "pipelinq",
+										"schema": "ticket",
+										"metric": "count",
+										"filter": {
+											"assignee": "@me",
+											"status": "converted",
+											"resolvedAt[gte]": "@today-7d"
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "my-start-here",
+						"type": "banner",
+						"title": "Start here",
+						"showTitle": false,
+						"content": {
+							"layout": "attention",
+							"stacked": true,
+							"variant": "info",
+							"kicker": "Start here",
+							"title": "{subject.title}",
+							"reason": "This ticket has waited {subject.occurredAt|days} days. The agreement is an answer within 2 working days.",
+							"visibleWhen": {
+								"source": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"filter": {
+										"assignee": "@me",
+										"status": "in_progress",
+										"slaDeadline[lt]": "@today+1d"
+									},
+									"order": {
+										"slaDeadline": "asc"
+									}
+								},
+								"field": "id",
+								"op": "notEmpty"
+							},
+							"actions": [
+								{
+									"label": "Answer now",
+									"route": {
+										"name": "TicketDetail",
+										"params": {
+											"id": "@subject.id"
+										}
+									},
+									"primary": true
+								}
+							]
+						}
+					},
+					{
+						"id": "my-answer-today",
+						"type": "record-list",
+						"title": "Answer today",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
+						"headerLink": {
+							"label": "View all my tickets",
+							"route": "Tickets",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": {
+									"in": [
+										"new",
+										"in_progress"
+									]
+								},
+								"slaDeadline[lt]": "@today+1d"
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "slaDeadline",
+											"dir": "asc"
+										},
+										"waiting": {
+											"field": "occurredAt",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "occurredAt",
+											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "slaDeadline",
+												"dir": "asc"
+											}
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"extend": [
+								"client"
+							],
+							"avatar": "{client.name}",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Waiting for customer",
+									"resolved": "Resolved",
+									"completed": "Completed"
+								},
+								"colorMap": {
+									"new": "info",
+									"in_progress": "warning",
+									"awaiting_customer": "default",
+									"resolved": "success",
+									"completed": "success"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No ticket of yours is due today",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								}
+							],
+							"due": {
+								"field": "slaDeadline",
+								"emptyText": "No due date"
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "Phone",
+									"telefoon": "Phone",
+									"Telefoon": "Phone",
+									"email": "Email",
+									"E-mail": "Email",
+									"balie": "Counter",
+									"Balie": "Counter",
+									"portal": "Portal",
+									"web": "Website",
+									"chat": "Chat",
+									"post": "Letter",
+									"brief": "Letter",
+									"social": "Social media"
+								}
+							}
+						}
+					},
+					{
+						"id": "my-waiting-on-me",
+						"type": "record-list",
+						"title": "Waiting on me",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
+						"headerLink": {
+							"label": "View all my tickets",
+							"route": "Tickets",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": {
+									"in": [
+										"new",
+										"in_progress"
+									]
+								}
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "slaDeadline",
+											"dir": "asc"
+										},
+										"waiting": {
+											"field": "occurredAt",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "occurredAt",
+											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "slaDeadline",
+												"dir": "asc"
+											}
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"extend": [
+								"client"
+							],
+							"avatar": "{client.name}",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Waiting for customer",
+									"resolved": "Resolved",
+									"completed": "Completed"
+								},
+								"colorMap": {
+									"new": "info",
+									"in_progress": "warning",
+									"awaiting_customer": "default",
+									"resolved": "success",
+									"completed": "success"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No tickets assigned to you",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								}
+							],
+							"due": {
+								"field": "slaDeadline",
+								"emptyText": "No due date"
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "Phone",
+									"telefoon": "Phone",
+									"Telefoon": "Phone",
+									"email": "Email",
+									"E-mail": "Email",
+									"balie": "Counter",
+									"Balie": "Counter",
+									"portal": "Portal",
+									"web": "Website",
+									"chat": "Chat",
+									"post": "Letter",
+									"brief": "Letter",
+									"social": "Social media"
+								}
+							}
+						}
+					},
+					{
+						"id": "my-waiting-on-customer",
+						"type": "record-list",
+						"title": "Waiting on the customer",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tickets"
+							]
+						},
+						"headerLink": {
+							"label": "View all my tickets",
+							"route": "Tickets",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": "awaiting_customer"
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "slaDeadline",
+											"dir": "asc"
+										},
+										"waiting": {
+											"field": "occurredAt",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "occurredAt",
+											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "slaDeadline",
+												"dir": "asc"
+											}
+										}
+									}
+								}
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"extend": [
+								"client"
+							],
+							"avatar": "{client.name}",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Waiting for customer",
+									"resolved": "Resolved",
+									"completed": "Completed"
+								},
+								"colorMap": {
+									"new": "info",
+									"in_progress": "warning",
+									"awaiting_customer": "default",
+									"resolved": "success",
+									"completed": "success"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No ticket of yours waits for the customer",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								}
+							],
+							"due": {
+								"field": "slaDeadline",
+								"emptyText": "No due date"
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "Phone",
+									"telefoon": "Phone",
+									"Telefoon": "Phone",
+									"email": "Email",
+									"E-mail": "Email",
+									"balie": "Counter",
+									"Balie": "Counter",
+									"portal": "Portal",
+									"web": "Website",
+									"chat": "Chat",
+									"post": "Letter",
+									"brief": "Letter",
+									"social": "Social media"
+								}
+							}
+						}
+					},
+					{
+						"id": "my-saved-views",
+						"type": "saved-views",
+						"title": "Saved views",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"route": "Tickets",
+							"showCounts": true,
+							"limit": 5,
+							"emptyText": "You have no saved views yet. Save a view on the tickets list."
+						}
+					},
+					{
+						"id": "my-leads",
+						"type": "record-list",
+						"title": "My leads",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"leads"
+							]
+						},
+						"headerLink": {
+							"label": "View all my leads",
+							"route": "Leads",
+							"query": {
+								"assignee": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "lead",
+							"filter": {
+								"assignee": "@me",
+								"status": "open"
+							},
+							"sort": {
+								"field": "expectedCloseDate",
+								"dir": "asc"
+							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "expectedCloseDate",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "expectedCloseDate",
+											"dir": "desc"
+										},
+										"priority": {
+											"field": "priority",
+											"rank": [
+												"urgent",
+												"high",
+												"normal",
+												"low"
+											],
+											"then": {
+												"field": "expectedCloseDate",
+												"dir": "asc"
+											}
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"extend": [
+								"client",
+								"pipeline"
+							],
+							"avatar": "{client.name}",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{pipeline.title}",
+									"{stage}"
+								]
+							},
+							"trailing": "{value|currency:currency}",
+							"rowRoute": "LeadDetail",
+							"emptyText": "No leads assigned to you",
+							"badges": [
+								{
+									"field": "priority",
+									"labels": {
+										"urgent": "Urgent",
+										"high": "High",
+										"low": "Low"
+									},
+									"colorMap": {
+										"urgent": "error",
+										"high": "warning",
+										"low": "default"
+									},
+									"hideValues": [
+										"normal",
+										"low"
+									]
+								},
+								{
+									"kind": "stale",
+									"field": "@self.updated",
+									"afterDays": 14,
+									"label": "Out of date {days} days",
+									"variant": "warning"
+								}
+							],
+							"due": {
+								"field": "expectedCloseDate",
+								"emptyText": "No due date"
+							}
+						}
+					},
+					{
+						"id": "my-follow-ups",
+						"type": "record-list",
+						"title": "My follow-ups",
+						"visibleWhen": {
+							"workspace": "lens",
+							"op": "in",
+							"value": [
+								"all",
+								"tasks"
+							]
+						},
+						"headerLink": {
+							"label": "View all my tasks",
+							"route": "Tasks",
+							"query": {
+								"assigneeUserId": "@me"
+							}
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"assigneeUserId": "@me",
+								"status": "open"
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"pageControls": {
+								"sort": {
+									"key": "sort",
+									"map": {
+										"deadline": {
+											"field": "deadline",
+											"dir": "asc"
+										},
+										"newest": {
+											"field": "deadline",
+											"dir": "desc"
+										}
+									}
+								},
+								"toggle": {
+									"key": "showDone",
+									"removes": [
+										"status"
+									]
+								}
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{subject}",
+							"meta": "{type}",
+							"rowRoute": "TaskDetail",
+							"emptyText": "No follow-ups assigned to you",
+							"due": {
+								"field": "deadline",
+								"emptyText": "No due date"
+							}
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "0",
+						"widgetId": "my-answer-today",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "1",
+						"widgetId": "my-week",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3,
+						"sizeToContent": true
+					},
+					{
+						"id": "2",
+						"widgetId": "my-waiting-on-me",
+						"gridX": 0,
+						"gridY": 4,
+						"gridWidth": 8,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "3",
+						"widgetId": "my-start-here",
+						"gridX": 8,
+						"gridY": 3,
+						"gridWidth": 4,
+						"gridHeight": 3,
+						"sizeToContent": true
+					},
+					{
+						"id": "4",
+						"widgetId": "my-saved-views",
+						"gridX": 8,
+						"gridY": 6,
+						"gridWidth": 4,
+						"gridHeight": 3,
+						"sizeToContent": true
+					},
+					{
+						"id": "5",
+						"widgetId": "my-waiting-on-customer",
+						"gridX": 0,
+						"gridY": 8,
+						"gridWidth": 8,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "6",
+						"widgetId": "my-leads",
+						"gridX": 0,
+						"gridY": 12,
+						"gridWidth": 6,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "7",
+						"widgetId": "my-follow-ups",
+						"gridX": 6,
+						"gridY": 12,
+						"gridWidth": 6,
+						"gridHeight": 4,
+						"sizeToContent": true
 					}
 				]
-			},
-			"slots": {
-				"section-sync": "SyncSettingsView"
 			}
 		},
 		{

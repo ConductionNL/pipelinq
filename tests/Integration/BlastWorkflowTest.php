@@ -299,6 +299,7 @@ class BlastWorkflowTest extends TestCase {
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
 			new PhysicalAddressRenderer(),
+			new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($this->container, $this->appConfig, new \Psr\Log\NullLogger()),
 		);
 		$blastService = new BlastService($this->container,
 			$this->appConfig,

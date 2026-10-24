@@ -27,6 +27,7 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
 use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
 use OCA\Pipelinq\Adapter\BigQueryExportAdapter;
@@ -50,13 +51,17 @@ use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
+use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
 use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
+use OCA\Pipelinq\Listener\FormsSubmissionListener;
 use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
 use OCA\Pipelinq\Listener\LeadStageCreatingListener;
+use OCA\Pipelinq\Listener\SubmittedLeadListener;
+use OCA\Pipelinq\Listener\WebFormBindingListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\QuestionAnsweredListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
@@ -218,6 +223,37 @@ class Application extends App implements IBootstrap {
 			event: ObjectCreatingEvent::class,
 			listener: LeadStageCreatingListener::class
 		);
+		// A lead a form created gets its contact and client before it is stored
+		// and its submit touchpoint once it is (decision 179: the submit creates
+		// the lead itself, so nothing relays it afterwards).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: SubmittedLeadListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: SubmittedLeadListener::class
+		);
+		// A published website form is checked against its destination on every
+		// save, and refused on any finding (website-forms-submit-into-tickets,
+		// decisions 179 and 181 Q9).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: WebFormBindingListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: WebFormBindingListener::class
+		);
+		// A Nextcloud Forms answer creates the object its binding names (Q6).
+		// Forms is optional; a `::class` string does not autoload, and the guard
+		// keeps an instance without Forms from registering anything.
+		if (class_exists(FormsSubmissionListener::EVENT) === true) {
+			$context->registerEventListener(
+				event: FormsSubmissionListener::EVENT,
+				listener: FormsSubmissionListener::class
+			);
+		}
 		// A new task records who created it (round3-review-points).
 		$context->registerEventListener(
 			event: ObjectCreatingEvent::class,
@@ -226,6 +262,20 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
 			listener: DealUpdatedListener::class
+		);
+		// A changed resource or service expires the cached availability it
+		// made wrong, for every writer (appointment-booking, REQ-APT-015).
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectDeletedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
 		);
 		// Burgerportaal / MijnOverheid Berichtenbox bridge:
 		// listen for zaak status transitions and queue an outbound

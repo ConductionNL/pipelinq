@@ -43,9 +43,9 @@ via de REST-API `/api/brp/settings`:
 - Lijst toegestane groepen (default `behandelaar-burgerzaken`, `behandelaar-avg`).
 
 ### BRP Monitor
-Onder *Beheer → BRP Monitor* (route `/admin/brp-monitor`) staan dagelijkse
-KPI's: aantal lookups, cache-hit ratio, foutpercentage en gemiddelde
-responstijd. Daarnaast de mTLS-certificaat-status met een aftellende klok:
+Op de beheerpagina van Pipelinq (*Beheerinstellingen → Pipelinq*, sectie
+*BRP-monitor*) staan de cijfers van de laatste 24 uur: aantal lookups, hoeveel
+daarvan uit de cache kwamen, aantal fouten en gemiddelde responstijd. Daarnaast de mTLS-certificaat-status met een aftellende klok:
 - 🟢 OK
 - 🟡 verloopt binnen 30 dagen
 - 🔴 verloopt binnen 7 dagen (admin krijgt automatisch een NC-notificatie)

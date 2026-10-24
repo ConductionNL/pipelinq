@@ -179,7 +179,7 @@ describe('the dashboard', () => {
 			'stat',
 			'stat',
 			'stat',
-			'custom',
+			'workspace-filter',
 		])
 		// PqDashboard has one header: the page header is hidden and the
 		// greeting row carries the kicker date and the heading on the ground.
@@ -472,17 +472,22 @@ describe('the tickets list', () => {
 	it('keeps every view it had, with the same filter, and counts them', () => {
 		for (const old of before.quickFilters) {
 			// The board's list leaves contact moments out of All (they have their
-			// own view), so All carries that one filter; every other view is untouched.
-			const expected =
-				old.label === 'All'
-					? { ...old, filter: { 'ticketType[ne]': 'interaction' } }
-					: old
+			// own view), so All carries that one filter and stays the view the
+			// list opens on. Waiting for customer is the agent's own, as the
+			// dashboard number that links here counts it. Every other view is
+			// untouched.
+			const changed = {
+				'All': { default: true, filter: { 'ticketType[ne]': 'interaction' } },
+				'All open': { default: false },
+				'Waiting for customer': { filter: { assignee: '@me', status: 'awaiting_customer' } },
+			}
+			const expected = { ...old, ...(changed[old.label] || {}) }
 			expect(view(old.label), old.label).toEqual({
 				...expected,
 				showCount: true,
 			})
 		}
-		expect(simple.quickFilters).toHaveLength(before.quickFilters.length + 3)
+		expect(simple.quickFilters).toHaveLength(before.quickFilters.length + 2)
 		expect(simple.quickFilters.every((item) => item.showCount)).toBe(true)
 	})
 
@@ -495,6 +500,10 @@ describe('the tickets list', () => {
 			'Waiting for customer',
 			'Requests',
 			'Complaints',
+			'All open',
+			'Mine',
+			'Unassigned',
+			'Past the deadline',
 			'Contactmomenten',
 		])
 		expect(simple.quickFilters.filter((item) => item.default)).toHaveLength(1)
@@ -617,16 +626,24 @@ describe('the hidden page header loses nothing', () => {
 		expect(simple.slots['widget-simple-availability']).toBe(
 			full.actionsComponent,
 		)
-		// The card wraps the same client picker the full page shows beside its title.
-		expect(simple.slots['widget-simple-client-in-focus']).toBe(
-			'WerkplekContactStart',
+		// The card is the library's start card (workspace-filter), not a slot:
+		// it writes the same workspace key the full page's picker writes.
+		const startCard = simple.config.widgets.find(
+			(widget) => widget.id === 'simple-client-in-focus',
 		)
+		expect(startCard.type).toBe('workspace-filter')
+		expect(startCard.content.layout).toBe('start')
+		expect(startCard.content.writes).toBe('@workspace.selectedClient')
+		expect(simple.slots['widget-simple-client-in-focus']).toBeUndefined()
 		expect(full.slots['title-meta']).toBe('WerkplekClientSelect')
 		expect(layoutOf('simple-availability')).toMatchObject({
 			gridY: 0,
 			borderless: true,
 		})
 		const client = layoutOf('simple-client-in-focus')
+		// At 1100 wide the description wraps to three lines: a fixed two-row
+		// cell cut the client picker in half behind a scrollbar.
+		expect(client.sizeToContent).toBe(true)
 		const clientBound = full.config.widgets
 			.filter((widget) =>
 				JSON.stringify(widget.content || {}).includes(
