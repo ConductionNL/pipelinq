@@ -71,6 +71,7 @@ use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
+use OCA\Pipelinq\Listener\TicketReferenceCreatingListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
@@ -222,6 +223,11 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectCreatingEvent::class,
 			listener: LeadStageCreatingListener::class
+		);
+		// Every new request and complaint gets its reference number ("PQ-2026-0402").
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: TicketReferenceCreatingListener::class
 		);
 		// A lead a form created gets its contact and client before it is stored
 		// and its submit touchpoint once it is (decision 179: the submit creates

@@ -33,6 +33,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
+use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -60,6 +61,14 @@ class TicketLeafProvider {
 	public const TICKET_TYPES = [TicketService::TYPE_REQUEST, TicketService::TYPE_COMPLAINT];
 
 	/**
+	 * The status filters a read may ask for: the open tickets, the closed
+	 * ones, or both.
+	 *
+	 * @var array<int, string>
+	 */
+	public const STATUS_FILTERS = ['open', 'closed', 'all'];
+
+	/**
 	 * The most master entities one read may name, per ADR-058.
 	 *
 	 * @var int
@@ -78,11 +87,13 @@ class TicketLeafProvider {
 	 *
 	 * @param IAppConfig $appConfig The app config, holding the schema ids.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param IUserManager $userManager Names the assignee.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly IUserManager $userManager,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -98,6 +109,27 @@ class TicketLeafProvider {
 	 * @spec openspec/changes/ticket-leaf-by-master-entity/specs/ticket-leaf/spec.md
 	 */
 	public function openByMasterEntity(array $refs): array {
+		return $this->byMasterEntity(refs: $refs, status: 'open');
+	}//end openByMasterEntity()
+
+	/**
+	 * The tickets of the clients that map to each master entity, open, closed
+	 * or both, so a host app can list a party's handled tickets beside its
+	 * open ones.
+	 *
+	 * @param array<int, mixed> $refs The master entity references.
+	 * @param string $status `open`, `closed` or `all`.
+	 *
+	 * @return array<string, mixed> `status` plus either `tickets` (a list per reference, every
+	 *   asked reference present) or `error`.
+	 *
+	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-host-app-can-read-a-partys-closed-tickets-too
+	 */
+	public function byMasterEntity(array $refs, string $status = 'open'): array {
+		if (in_array($status, self::STATUS_FILTERS, true) === false) {
+			return ['status' => 400, 'error' => 'Unknown ticket status filter.'];
+		}
+
 		$refs = array_values(
 			array_unique(
 				array_filter(
@@ -125,30 +157,77 @@ class TicketLeafProvider {
 
 		[$register, $clientSchema, $ticketSchema] = array_values($ids);
 
-		$tickets = array_fill_keys($refs, []);
 		$refOfClient = $this->refOfClients(register: $register, schema: $clientSchema, refs: $refs);
+
+		return [
+			'status' => 200,
+			'tickets' => $this->ticketsOf(
+				refs: $refs,
+				refOfClient: $refOfClient,
+				filters: ['register' => $register, 'schema' => $ticketSchema],
+				status: $status
+			),
+		];
+	}//end byMasterEntity()
+
+	/**
+	 * The tickets of the clients, grouped by their master entity, every
+	 * reference present.
+	 *
+	 * @param array<int, string>    $refs        The master entity references.
+	 * @param array<string, string> $refOfClient Master entity per client id.
+	 * @param array<string, string> $filters     The register and ticket schema.
+	 * @param string                $status      `open`, `closed` or `all`.
+	 *
+	 * @return array<string, array<int, array<string, string>>> Tickets per reference.
+	 */
+	private function ticketsOf(array $refs, array $refOfClient, array $filters, string $status): array {
+		$tickets = array_fill_keys($refs, []);
 		if ($refOfClient === []) {
-			return ['status' => 200, 'tickets' => $tickets];
+			return $tickets;
 		}
 
-		$rows = $this->read(
-			filters: [
-				'register' => $register,
-				'schema' => $ticketSchema,
-				'client' => ['in' => array_keys($refOfClient)],
-				'ticketType' => ['in' => self::TICKET_TYPES],
-				'status' => ['notIn' => self::CLOSED_STATUSES],
-			]
-		);
-		foreach ($rows as $ticket) {
+		$filters['client'] = ['in' => array_keys($refOfClient)];
+		$filters['ticketType'] = ['in' => self::TICKET_TYPES];
+		if ($status === 'open') {
+			$filters['status'] = ['notIn' => self::CLOSED_STATUSES];
+		}
+
+		if ($status === 'closed') {
+			$filters['status'] = ['in' => self::CLOSED_STATUSES];
+		}
+
+		foreach ($this->read(filters: $filters) as $ticket) {
 			$ref = ($refOfClient[(string)($ticket['client'] ?? '')] ?? '');
-			if ($ref !== '' && in_array((string)($ticket['status'] ?? ''), self::CLOSED_STATUSES, true) === false) {
+			if ($ref !== '' && $this->matches(ticket: $ticket, status: $status) === true) {
 				$tickets[$ref][] = $this->present(ticket: $ticket);
 			}
 		}
 
-		return ['status' => 200, 'tickets' => $tickets];
-	}//end openByMasterEntity()
+		return $tickets;
+	}//end ticketsOf()
+
+	/**
+	 * Whether a ticket the store answered fits the asked status filter, so a
+	 * store that ignores the status filter still answers only what was asked.
+	 *
+	 * @param array<string, mixed> $ticket The stored ticket.
+	 * @param string $status `open`, `closed` or `all`.
+	 *
+	 * @return bool True when it fits.
+	 */
+	private function matches(array $ticket, string $status): bool {
+		if ($status === 'all') {
+			return true;
+		}
+
+		$closed = in_array((string)($ticket['status'] ?? ''), self::CLOSED_STATUSES, true);
+		if ($status === 'closed') {
+			return $closed;
+		}
+
+		return $closed === false;
+	}//end matches()
 
 	/**
 	 * The clients that map to one master entity: what a host app's link to
@@ -202,15 +281,40 @@ class TicketLeafProvider {
 	 * @return array<string, string> The leaf row.
 	 */
 	private function present(array $ticket): array {
+		$assignee = (string)($ticket['assignee'] ?? '');
+
 		return [
 			'id' => (string)($ticket['id'] ?? $ticket['uuid'] ?? ''),
+			'reference' => (string)($ticket['reference'] ?? ''),
 			'title' => (string)($ticket['title'] ?? ''),
 			'ticketType' => (string)($ticket['ticketType'] ?? ''),
 			'status' => (string)($ticket['status'] ?? ''),
-			'assignee' => (string)($ticket['assignee'] ?? ''),
+			'assignee' => $assignee,
+			'assigneeName' => $this->nameOf(uid: $assignee),
 			'slaDeadline' => (string)($ticket['slaDeadline'] ?? ''),
+			'resolvedAt' => (string)($ticket['resolvedAt'] ?? ''),
 		];
 	}//end present()
+
+	/**
+	 * The display name of a Nextcloud user, the uid when there is none, '' for no user.
+	 *
+	 * @param string $uid The user id.
+	 *
+	 * @return string The name.
+	 */
+	private function nameOf(string $uid): string {
+		if ($uid === '') {
+			return '';
+		}
+
+		$name = $this->userManager->getDisplayName($uid);
+		if ($name === null || $name === '') {
+			return $uid;
+		}
+
+		return $name;
+	}//end nameOf()
 
 	/**
 	 * Read objects as arrays; a failed read is logged and reads as none.
