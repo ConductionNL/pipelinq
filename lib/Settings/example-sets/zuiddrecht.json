@@ -174,6 +174,29 @@
 			}
 		},
 		{
+			"key": "client-buurtoost",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:buurtoost.name}}",
+				"type": "organization",
+				"email": "{{cast:buurtoost.email}}",
+				"address": "{{cast:buurtoost.address.street}} {{cast:buurtoost.address.number}}, {{cast:buurtoost.address.postcode}} {{cast:buurtoost.address.city}}",
+				"industry": [
+					"{{cast:buurtoost.sbi.description}}"
+				],
+				"contactsUid": "{{cast:buurtoost.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:buurtoost.kvk}}. Voorzitter Marja Verbeek, secretaris Kees de Wit.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000007"
+			}
+		},
+		{
 			"key": "contact-karin",
 			"register": "pipelinq",
 			"schema": "contact",
@@ -992,6 +1015,59 @@
 				"category": "financien",
 				"occurredAt": "{{datetime:-6 11:40}}",
 				"slaDeadline": "{{datetime:1 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-buurtoost-collectevergunning",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Aanvraag collectevergunning",
+				"description": "De buurtvereniging wil in november langs de deuren in Oosthaven collecteren voor de speeltuin en vraagt een collectevergunning.",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "{{cast:buurtoost.contactsUid}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "email",
+				"category": "vergunningen",
+				"occurredAt": "{{datetime:-3 10:15}}",
+				"assignee": "{{cast:daan.uid}}",
+				"slaDeadline": "{{datetime:4 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-buurtoost-buurthuis",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over huur buurthuis",
+				"description": "Mevrouw Verbeek vraagt wat de huur van het buurthuis aan de Oosthavenweg kost voor de jaarvergadering.",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "{{cast:buurtoost.contactsUid}}",
+				"status": "new",
+				"priority": "normal",
+				"channel": "phone",
+				"category": "overig",
+				"occurredAt": "{{datetime:-1 14:05}}"
+			}
+		},
+		{
+			"key": "ticket-buurtoost-verlichting",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Melding verlichting Oosthavenweg",
+				"description": "Twee lantaarnpalen bij het speelveld aan de Oosthavenweg branden al een week niet.",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "{{cast:buurtoost.contactsUid}}",
+				"status": "new",
+				"priority": "normal",
+				"channel": "email",
+				"category": "openbare-ruimte",
+				"occurredAt": "{{datetime:0 09:20}}"
 			}
 		},
 		{
