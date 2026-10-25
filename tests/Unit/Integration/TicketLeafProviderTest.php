@@ -26,6 +26,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Integration\TicketLeafProvider;
 use OCP\IAppConfig;
+use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -48,6 +49,13 @@ class TicketLeafProviderTest extends TestCase {
 	 * @var array<int, array{rbac: bool, multitenancy: bool}>
 	 */
 	private array $postures = [];
+
+	/**
+	 * Whether the store double applies the status filter, as OpenRegister does.
+	 *
+	 * @var bool
+	 */
+	private bool $storeFiltersStatus = true;
 
 	/**
 	 * Build the provider over a store holding two clients and four tickets.
@@ -78,6 +86,7 @@ class TicketLeafProviderTest extends TestCase {
 			['id' => 't1', 'title' => 'Vraag over de vergunning', 'ticketType' => 'request', 'status' => 'new', 'client' => 'c-slagerij', 'assignee' => 'pieter', 'slaDeadline' => '2026-10-30T12:00:00+00:00'],
 			['id' => 't2', 'title' => 'Klacht over de stoep', 'ticketType' => 'complaint', 'status' => 'in_progress', 'client' => 'c-slagerij'],
 			['id' => 't3', 'title' => 'Vraag beantwoord', 'ticketType' => 'request', 'status' => 'new', 'client' => 'c-cloud'],
+			['id' => 't4', 'reference' => 'PQ-2026-0377', 'title' => 'Vraag over huur van het buurthuis', 'ticketType' => 'request', 'status' => 'resolved', 'client' => 'c-slagerij', 'assignee' => 'gone', 'resolvedAt' => '2026-09-29T10:00:00+00:00'],
 		];
 
 		$objectService = $this->createMock(ObjectServiceInterface::class);
@@ -92,6 +101,12 @@ class TicketLeafProviderTest extends TestCase {
 				} else {
 					$ids = ($filters['client']['in'] ?? []);
 					$rows = array_values(array_filter($tickets, static fn (array $t): bool => in_array($t['client'], $ids, true)));
+					if ($this->storeFiltersStatus === true && isset($filters['status']) === true) {
+						$rows = array_values(array_filter($rows, static function (array $t) use ($filters): bool {
+							$closed = in_array($t['status'], TicketLeafProvider::CLOSED_STATUSES, true);
+							return isset($filters['status']['in']) === true ? $closed : ($closed === false);
+						}));
+					}
 				}
 
 				return array_map(
@@ -105,7 +120,12 @@ class TicketLeafProviderTest extends TestCase {
 			}
 		);
 
-		return new TicketLeafProvider($appConfig, $objectService, $this->createMock(LoggerInterface::class));
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->method('getDisplayName')->willReturnCallback(
+			static fn (string $uid): ?string => (['pieter' => 'Pieter Jansen'][$uid] ?? null)
+		);
+
+		return new TicketLeafProvider($appConfig, $objectService, $userManager, $this->createMock(LoggerInterface::class));
 	}//end provider()
 
 	/**
@@ -134,7 +154,7 @@ class TicketLeafProviderTest extends TestCase {
 		$this->assertSame(['t3'], array_column($result['tickets']['m-cloud'], 'id'));
 		$this->assertSame([], $result['tickets']['m-unknown']);
 		$this->assertSame(
-			['id' => 't1', 'title' => 'Vraag over de vergunning', 'ticketType' => 'request', 'status' => 'new', 'assignee' => 'pieter', 'slaDeadline' => '2026-10-30T12:00:00+00:00'],
+			['id' => 't1', 'reference' => '', 'title' => 'Vraag over de vergunning', 'ticketType' => 'request', 'status' => 'new', 'assignee' => 'pieter', 'assigneeName' => 'Pieter Jansen', 'slaDeadline' => '2026-10-30T12:00:00+00:00', 'resolvedAt' => ''],
 			$result['tickets']['m-slagerij'][0]
 		);
 	}//end testOpenTicketsAreGroupedByMasterEntity()
@@ -196,6 +216,44 @@ class TicketLeafProviderTest extends TestCase {
 		$this->assertSame(503, $result['status']);
 		$this->assertArrayNotHasKey('tickets', $result);
 	}//end testAnUnconfiguredStoreIsNotAnEmptyOne()
+
+	/**
+	 * A host app can ask for the closed tickets, or all of them, with the
+	 * reference, the assignee's name (the uid when the user is gone) and when
+	 * it was resolved.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-host-app-can-read-a-partys-closed-tickets-too
+	 */
+	public function testClosedAndAllTicketsCarryReferenceAndAssigneeName(): void {
+		$closed = $this->provider()->byMasterEntity(refs: ['m-slagerij'], status: 'closed');
+		$this->assertSame(['t4'], array_column($closed['tickets']['m-slagerij'], 'id'));
+		$this->assertSame(['in' => TicketLeafProvider::CLOSED_STATUSES], $this->queries[1]['filters']['status']);
+		$this->assertSame('PQ-2026-0377', $closed['tickets']['m-slagerij'][0]['reference']);
+		$this->assertSame('gone', $closed['tickets']['m-slagerij'][0]['assigneeName']);
+		$this->assertSame('2026-09-29T10:00:00+00:00', $closed['tickets']['m-slagerij'][0]['resolvedAt']);
+
+		$all = $this->provider()->byMasterEntity(refs: ['m-slagerij'], status: 'all');
+		$this->assertSame(['t1', 't2', 't4'], array_column($all['tickets']['m-slagerij'], 'id'));
+		$this->assertArrayNotHasKey('status', $this->queries[3]['filters']);
+	}//end testClosedAndAllTicketsCarryReferenceAndAssigneeName()
+
+	/**
+	 * The open read stays open even when the store ignores the status filter,
+	 * and an unknown filter is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-host-app-can-read-a-partys-closed-tickets-too
+	 */
+	public function testTheStatusFilterHoldsAndAnUnknownOneIsRefused(): void {
+		$this->storeFiltersStatus = false;
+		$open = $this->provider()->openByMasterEntity(refs: ['m-slagerij']);
+		$this->assertSame(['t1', 't2'], array_column($open['tickets']['m-slagerij'], 'id'));
+
+		$this->assertSame(400, $this->provider()->byMasterEntity(refs: ['m-slagerij'], status: 'deleted')['status']);
+	}//end testTheStatusFilterHoldsAndAnUnknownOneIsRefused()
 
 	/**
 	 * More references than the cap are refused rather than scanned.
