@@ -64,4 +64,12 @@ describe('contact write-back failure', () => {
 			},
 		)
 	})
+
+	it('stays quiet when the user turned write-back off', async () => {
+		post.mockResolvedValue({ data: { success: true, skipped: true } })
+		const notify = vi.fn()
+
+		expect(await writeBack('client', 'c-1', notify)).toBeNull()
+		expect(notify).not.toHaveBeenCalled()
+	})
 })

@@ -56,6 +56,7 @@
 		     PqPersoonlijk, PqSynchronisatie), between Notifications and
 		     Credentials. -->
 		<template #user-settings-sections>
+			<ContactsSyncSettingsSection />
 			<EmailCalendarSettingsSection />
 		</template>
 	</CnAppRoot>
@@ -77,6 +78,7 @@ import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import IncomingCallCard from './components/IncomingCallCard.vue'
+import ContactsSyncSettingsSection from './components/settings/ContactsSyncSettingsSection.vue'
 import EmailCalendarSettingsSection from './components/settings/EmailCalendarSettingsSection.vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
@@ -98,6 +100,7 @@ export default {
 	components: {
 		CnAppRoot,
 		CnObjectSidebar,
+		ContactsSyncSettingsSection,
 		EmailCalendarSettingsSection,
 		IncomingCallCard,
 	},

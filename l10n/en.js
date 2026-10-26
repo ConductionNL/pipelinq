@@ -8347,7 +8347,22 @@ OC.L10N.register(
         "Reference code": "Reference code",
         "{shown} of {total} transactions · newest first": "{shown} of {total} transactions · newest first",
         "Open a transaction to print or mail the receipt, or to register a refund.": "Open a transaction to print or mail the receipt, or to register a refund.",
-        "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it."
+        "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.",
+        "Your records in Pipelinq and your Nextcloud addressbook.": "Your records in Pipelinq and your Nextcloud addressbook.",
+        "Synced": "Synced",
+        "Not synced yet": "Not synced yet",
+        "{count} residents, businesses and contacts": "{count} residents, businesses and contacts",
+        "Addressbook": "Addressbook",
+        "No addressbook to write to": "No addressbook to write to",
+        "New cards go here. Other addressbooks are only read.": "New cards go here. Other addressbooks are only read.",
+        "Write changes back to Nextcloud Contacts": "Write changes back to Nextcloud Contacts",
+        "When you save a resident, business or contact, the card gets the change too.": "When you save a resident, business or contact, the card gets the change too.",
+        "Could not be written: {names}": "Could not be written: {names}",
+        "{when}, {count} cards updated": "{when}, {count} cards updated",
+        "Could not load the contacts settings.": "Could not load the contacts settings.",
+        "Could not save the contacts settings.": "Could not save the contacts settings.",
+        "Could not sync your contacts.": "Could not sync your contacts.",
+        "writeBack must be true or false": "writeBack must be true or false"
     },
     "nplurals=2; plural=(n != 1);"
 )

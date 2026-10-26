@@ -110,7 +110,7 @@ describe('EmailCalendarSettingsSection', () => {
 
 	it('is placed in the user settings dialog between Notifications and Credentials', () => {
 		const app = readFileSync(resolve(__dirname, '../../src/App.vue'), 'utf8')
-		expect(app).toMatch(/<template #user-settings-sections>\s*<EmailCalendarSettingsSection \/>/)
+		expect(app).toMatch(/<template #user-settings-sections>\s*<ContactsSyncSettingsSection \/>\s*<EmailCalendarSettingsSection \/>/)
 		expect(app).toContain("['notifications', 'app', 'credentials', 'walkthrough', 'views', 'integrations']")
 	})
 })

@@ -8318,7 +8318,22 @@ OC.L10N.register(
         "Reference code": "Kenmerk",
         "{shown} of {total} transactions · newest first": "{shown} van {total} transacties · nieuwste eerst",
         "Open a transaction to print or mail the receipt, or to register a refund.": "Open een transactie om de bon te printen of te mailen, of om een retour te registreren.",
-        "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "Het referentienummer van het ticket, PQ-<jaar>-<nummer>, dat elk nieuw verzoek en elke klacht krijgt bij het opslaan (TicketReferenceCreatingListener). Alleen-lezen voor gebruikers; een ticket dat met een referentie is aangemaakt, houdt die."
+        "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "Het referentienummer van het ticket, PQ-<jaar>-<nummer>, dat elk nieuw verzoek en elke klacht krijgt bij het opslaan (TicketReferenceCreatingListener). Alleen-lezen voor gebruikers; een ticket dat met een referentie is aangemaakt, houdt die.",
+        "Your records in Pipelinq and your Nextcloud addressbook.": "Je records in Pipelinq en je Nextcloud-adresboek.",
+        "Synced": "Gesynchroniseerd",
+        "Not synced yet": "Nog niet gesynchroniseerd",
+        "{count} residents, businesses and contacts": "{count} inwoners, bedrijven en contacten",
+        "Addressbook": "Adresboek",
+        "No addressbook to write to": "Geen adresboek om in te schrijven",
+        "New cards go here. Other addressbooks are only read.": "Nieuwe kaarten komen hier. Andere adresboeken worden alleen gelezen.",
+        "Write changes back to Nextcloud Contacts": "Wijzigingen terugschrijven naar Nextcloud Contacten",
+        "When you save a resident, business or contact, the card gets the change too.": "Sla je een inwoner, bedrijf of contact op, dan krijgt de kaart de wijziging ook.",
+        "Could not be written: {names}": "Kon niet worden geschreven: {names}",
+        "{when}, {count} cards updated": "{when}, {count} kaarten bijgewerkt",
+        "Could not load the contacts settings.": "De instellingen voor contacten konden niet worden geladen.",
+        "Could not save the contacts settings.": "De instellingen voor contacten konden niet worden opgeslagen.",
+        "Could not sync your contacts.": "Je contacten konden niet worden gesynchroniseerd.",
+        "writeBack must be true or false": "writeBack moet true of false zijn"
     },
     "nplurals=2; plural=(n != 1);"
 )
