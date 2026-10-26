@@ -657,6 +657,10 @@ class BlastServiceTest extends TestCase {
 		);
 		$finalBlast = end($blastSaves);
 		$this->assertSame('sending', $finalBlast['status']);
+
+		// The left-out contact is stored on the blast, for the consent tile.
+		$this->assertSame(1, $finalBlast['skippedNoConsent']);
+		$this->assertSame(0, $finalBlast['skippedSuppressed']);
 	}//end testSendBlastQueuesCompliantSkipsNonCompliant()
 
 	/**

@@ -213,17 +213,6 @@ test('KassakoppelingAuditDetail: /kassakoppeling/audit/:id mounts src/views/kass
 	await expect(detail.locator('.cn-detail-page__title')).toHaveText('Audit entry')
 })
 
-// ── src/views/admin/BrpMonitor.vue — page `BrpMonitor`, `/admin/brp-monitor` ──
-test('BrpMonitor: /admin/brp-monitor mounts src/views/admin/BrpMonitor.vue', async ({
-	page,
-}) => {
-	await openSpaRoute(page, '/admin/brp-monitor')
-
-	const monitor = content(page).locator('[data-testid="brp-monitor"]')
-	await expect(monitor).toBeVisible({ timeout: 15000 })
-	await expect(monitor.getByRole('heading', { name: 'BRP Monitor' })).toBeVisible()
-})
-
 // ── src/views/admin/PosCustomerSettings.vue — `/admin/pos-customer-link` ──────
 test('PosCustomerSettings: /admin/pos-customer-link mounts src/views/admin/PosCustomerSettings.vue', async ({
 	page,

@@ -15,11 +15,24 @@
   @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 -->
 <template>
-	<div class="campaign-report">
+	<div class="campaign-report" :class="{ 'campaign-report--embedded': embedded }">
 		<header class="campaign-report__header">
-			<h2>{{ t('pipelinq', 'Campaign report') }}</h2>
+			<div class="campaign-report__heading">
+				<component :is="embedded ? 'h3' : 'h2'">
+					{{ t('pipelinq', 'Campaign report') }}
+				</component>
+				<p v-if="embedded && report" class="campaign-report__window">
+					{{
+						t('pipelinq', '{from} to {to}', {
+							from: report.window.from,
+							to: report.window.to,
+						})
+					}}
+				</p>
+			</div>
 			<div class="campaign-report__pickers">
 				<NcSelect
+					v-if="!embedded"
 					v-model="campaign"
 					class="campaign-report__picker"
 					data-testid="campaign-report-picker"
@@ -58,7 +71,7 @@
 		</NcEmptyContent>
 
 		<section v-else data-testid="campaign-report-body">
-			<p class="campaign-report__meta">
+			<p v-if="!embedded" class="campaign-report__meta">
 				<span>{{ report.campaign.name }}</span>
 				<span>{{ report.campaign.utmCampaign }}</span>
 				<span>
@@ -72,39 +85,15 @@
 			</p>
 
 			<ul class="campaign-report__tiles" data-testid="campaign-report-tiles">
-				<li>
-					<span class="campaign-report__tile-value">{{
-						tiles.clicks
-					}}</span>
-					<span>{{ t('pipelinq', 'Clicks') }}</span>
-				</li>
-				<li>
-					<span class="campaign-report__tile-value">
-						{{ tiles.submissions }}
-					</span>
-					<span>{{ t('pipelinq', 'Submissions') }}</span>
-				</li>
-				<li>
-					<span class="campaign-report__tile-value">{{
-						tiles.leads
-					}}</span>
-					<span>{{ t('pipelinq', 'Leads') }}</span>
-				</li>
-				<li>
-					<span class="campaign-report__tile-value">
-						{{ money(tiles.attributedValue) }}
-					</span>
-					<span>{{ t('pipelinq', 'Attributed value') }}</span>
-				</li>
-				<li>
-					<span class="campaign-report__tile-value">
-						{{ moneyOrAbsent(tiles.cost) }}
-					</span>
-					<span>{{ t('pipelinq', 'Cost') }}</span>
+				<li v-for="tile in tileList" :key="tile.key">
+					<span>{{ tile.label }}</span>
+					<span class="campaign-report__tile-value">{{ tile.value }}</span>
 				</li>
 			</ul>
 
-			<h3>{{ t('pipelinq', 'Per channel') }}</h3>
+			<h3 v-if="!embedded">
+				{{ t('pipelinq', 'Per channel') }}
+			</h3>
 			<div class="campaign-report__scroll">
 				<table
 					class="campaign-report__table"
@@ -146,6 +135,7 @@
 				</table>
 			</div>
 
+			<template v-if="!embedded">
 			<h3>{{ t('pipelinq', 'Attributed value per channel') }}</h3>
 			<div class="campaign-report__scroll">
 				<table
@@ -208,6 +198,7 @@
 					</tbody>
 				</table>
 			</div>
+			</template>
 		</section>
 
 		<p v-if="error" class="campaign-report__error" role="alert">
@@ -238,6 +229,18 @@ export default {
 		NcSelect,
 	},
 
+	props: {
+		/**
+		 * The campaign to report on. Set, the report draws as a section of
+		 * that campaign's page: no campaign picker, the tiles and the channel
+		 * table only.
+		 */
+		campaignId: {
+			type: String,
+			default: '',
+		},
+	},
+
 	data() {
 		return {
 			loading: true,
@@ -250,6 +253,33 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Whether the report is a section of one campaign's page.
+		 *
+		 * @return {boolean} True with a campaignId.
+		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 */
+		embedded() {
+			return this.campaignId !== ''
+		},
+
+		/**
+		 * The headline tiles in board order, each a label over its value.
+		 *
+		 * @return {Array<object>} key, label and value per tile.
+		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 */
+		tileList() {
+			const tiles = this.tiles
+			return [
+				{ key: 'clicks', label: this.t('pipelinq', 'Clicks'), value: tiles.clicks },
+				{ key: 'submissions', label: this.t('pipelinq', 'Submissions'), value: tiles.submissions },
+				{ key: 'leads', label: this.t('pipelinq', 'Leads'), value: tiles.leads },
+				{ key: 'attributed', label: this.t('pipelinq', 'Attributed value'), value: this.money(tiles.attributedValue) },
+				{ key: 'cost', label: this.t('pipelinq', 'Cost'), value: this.moneyOrAbsent(tiles.cost) },
+			]
+		},
+
 		/**
 		 * The campaigns to pick from.
 		 *
@@ -333,6 +363,11 @@ export default {
 			this.loading = true
 			this.error = ''
 			this.model = this.modelOptions[1]
+			if (this.embedded) {
+				this.campaign = { id: this.campaignId, label: '' }
+				await this.fetchReport()
+				return
+			}
 			try {
 				this.campaigns = await fetchCampaigns(100)
 			} catch (e) {
@@ -448,6 +483,31 @@ export default {
 	gap: 16px;
 	flex-wrap: wrap;
 	margin-bottom: 16px;
+}
+
+.campaign-report__heading {
+	h3 {
+		margin: 0;
+	}
+}
+
+.campaign-report__window {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+	margin: 0;
+}
+
+.campaign-report--embedded {
+	padding: 0;
+
+	.campaign-report__header {
+		align-items: center;
+	}
+
+	.campaign-report__tiles li {
+		flex: 1 1 0;
+		min-width: 120px;
+	}
 }
 
 .campaign-report__pickers {

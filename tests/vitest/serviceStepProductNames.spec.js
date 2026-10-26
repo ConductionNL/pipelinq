@@ -15,6 +15,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 	CnDetailCard: {},
 	CnDetailPage: {},
 	CnFormDialog: {},
+	CnStatusBadge: {},
 	useObjectSubscription: vi.fn(),
 }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
