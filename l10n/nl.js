@@ -1,11 +1,14 @@
 OC.L10N.register(
     "pipelinq",
     {
-        "Reason for rejection": "Reden van afwijzing",
-        "The cashier sees this reason on the refund.": "De kassamedewerker ziet deze reden bij de retour.",
-        "Enter the counted amount.": "Vul het getelde bedrag in.",
-        "Print receipt": "Bon printen",
-        "Email receipt": "Bon mailen",
+        "Open the earlier booking": "Eerdere afspraak openen",
+        "paid": "betaald",
+        "Visa": "Visa",
+        "Mastercard": "Mastercard",
+        "Digital wallet": "Digitale portemonnee",
+        "Refunded to": "Terug naar",
+        "No refund lines yet.": "Nog geen retourregels.",
+        "Opening amount": "Beginsaldo",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "De klant betaalt op de pinautomaat van {provider}.",
         "The customer is sent to {provider} to finish the payment.": "De klant gaat naar {provider} om de betaling af te ronden.",
@@ -8055,7 +8058,12 @@ OC.L10N.register(
         "Progress": "Voortgang",
         "Set by hand": "Handmatig",
         "Open tasks": "Open taken",
-        "{shown} of {total} projects": "{shown} van {total} projecten"
+        "{shown} of {total} projects": "{shown} van {total} projecten",
+        "Reason for rejection": "Reden van afwijzing",
+        "The cashier sees this reason on the refund.": "De kassamedewerker ziet deze reden bij de retour.",
+        "Enter the counted amount.": "Vul het getelde bedrag in.",
+        "Print receipt": "Bon printen",
+        "Email receipt": "Bon mailen"
     },
     "nplurals=2; plural=(n != 1);"
 )

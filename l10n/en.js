@@ -1,6 +1,14 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Open the earlier booking": "Open the earlier booking",
+        "paid": "paid",
+        "Visa": "Visa",
+        "Mastercard": "Mastercard",
+        "Digital wallet": "Digital wallet",
+        "Refunded to": "Refunded to",
+        "No refund lines yet.": "No refund lines yet.",
+        "Opening amount": "Opening amount",
         "{provider}: {method}": "{provider}: {method}",
         "The customer pays at the {provider} card terminal.": "The customer pays at the {provider} card terminal.",
         "The customer is sent to {provider} to finish the payment.": "The customer is sent to {provider} to finish the payment.",
@@ -8088,7 +8096,12 @@ OC.L10N.register(
         "Progress": "Progress",
         "Set by hand": "Set by hand",
         "Open tasks": "Open tasks",
-        "{shown} of {total} projects": "{shown} of {total} projects"
+        "{shown} of {total} projects": "{shown} of {total} projects",
+        "Reason for rejection": "Reason for rejection",
+        "The cashier sees this reason on the refund.": "The cashier sees this reason on the refund.",
+        "Enter the counted amount.": "Enter the counted amount.",
+        "Print receipt": "Print receipt",
+        "Email receipt": "Email receipt"
     },
     "nplurals=2; plural=(n != 1);"
 )

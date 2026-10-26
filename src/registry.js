@@ -29,7 +29,7 @@ import ClientBillingHandoffSection from './components/billing/ClientBillingHando
 // declarative); its array-on-object tables + computed timeline + notes editor
 // stay in the page body via this kind:'section', and its TIME-WINDOW-gated admin
 // actions are the page's actionsComponent.
-import BookingDetailSection from './components/bookings/BookingDetailSection.vue'
+import BookingAssignments from './components/bookings/BookingAssignments.vue'
 import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
@@ -91,7 +91,6 @@ import CashShiftVarianceWidget from './components/pos/CashShiftVarianceWidget.vu
 //     actions are its actionsComponent, and the cross-schema "Returned items"
 //     join and the totals are grid widgets. ---
 import PosRefundItemsWidget from './components/pos/PosRefundItemsWidget.vue'
-import PosRefundTotalsWidget from './components/pos/PosRefundTotalsWidget.vue'
 // --- POS transactions. The detail page is a declarative type:"detail" page
 //     (pipelinq-pos-mdm-detail-declarative). The status-gated actions are its
 //     actionsComponent (bespoke /api/pos-transactions endpoints); the totals
@@ -269,7 +268,6 @@ import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 //     the drops are a relatedCollections table, and the variance/diff projection
 //     + drop/count/reconcile actions (bespoke /api/pos-shifts endpoints) are a
 //     kind:'section' bodyWidget. ---
-import CashShiftListView from './views/pos/CashShiftList.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
 import ProspectsView from './views/prospects/ProspectsView.vue'
@@ -503,12 +501,6 @@ const registry = {
 	// --- POS refunds / returns. The PosRefunds list + detail are now declarative
 	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
 	//     declarative). ---
-	PosRefundTotalsWidget: {
-		kind: 'widget',
-		component: PosRefundTotalsWidget,
-		...PANEL_WIDGET_META,
-		_note: 'PosRefundDetail grid widget: refund amount excl. VAT, VAT and total refund over the refund lines. Re-reads on cn:page:refresh.',
-	},
 	PosRefundItemsWidget: {
 		kind: 'widget',
 		component: PosRefundItemsWidget,
@@ -522,11 +514,6 @@ const registry = {
 	},
 
 	// --- POS cash drawer. ---
-	CashShiftListView: {
-		kind: 'page',
-		component: CashShiftListView,
-		_note: 'Cash-shift list; custom so rows navigate to the drawer-reconciliation detail and the empty state offers "Shift openen".',
-	},
 	CashShiftDropsWidget: {
 		kind: 'widget',
 		component: CashShiftDropsWidget,
@@ -1081,38 +1068,15 @@ const registry = {
 		component: ResourceDetailView,
 		_note: 'Resource detail + edit page with the 7-weekday workingHours grid, vacation list, validation (open<close, startDate<=endDate) and per-resource cache invalidation on save (REQ-APT-002).',
 	},
-	// --- Booking detail is now a declarative type:"detail" page
-	//     (pipelinq-pos-mdm-detail-declarative); the booking's flat fields
-	//     auto-render and this in-body section carries what no primitive
-	//     expresses: the inline notes editor, the resourceAssignments +
-	//     statusHistory array-on-object tables, and the computed timeline. The
-	//     six TIME-WINDOW-gated admin actions are the page's actionsComponent. ---
-	BookingDetailSection: {
-		kind: 'section',
-		component: BookingDetailSection,
-		_note: 'Booking in-body section for the declarative type:"detail" BookingDetail page. Self-fetches by @objectId and re-reads on cn:page:refresh.',
-	},
-	// --- Booking page parts as grid widgets (booking-and-service-pages). Each
-	//     renders one part of BookingDetailSection, so the page can put them in
-	//     its grid and its tab strip. The timeline is the library's `timeline`
-	//     widget type (review-part-two). ---
-	BookingContextWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'BookingContextWidget',
-			BookingDetailSection,
-			({ objectId }) => ({ bookingId: objectId, part: 'context' }),
-			{ card: true },
-		),
-		...PANEL_WIDGET_META,
-		_note: 'BookingDetail: the service and customer names and the deposit state, resolved across schemas.',
-	},
+	// --- Booking page grid widgets (booking-and-service-pages): the context
+	//     card is a facts widget and the timeline the library's `timeline`
+	//     widget; the resource assignments resolve resource names here. ---
 	BookingAssignmentsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
 			'BookingAssignmentsWidget',
-			BookingDetailSection,
-			({ objectId }) => ({ bookingId: objectId, part: 'assignments' }),
+			BookingAssignments,
+			({ objectId }) => ({ bookingId: objectId }),
 		),
 		...PANEL_WIDGET_META,
 		_note: 'BookingDetail: the resourceAssignments array-on-object table, with resource names.',
