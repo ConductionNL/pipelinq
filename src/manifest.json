@@ -4335,7 +4335,7 @@
 				"createDefaults": { "type": "callbackRequest" },
 				"headerButtons": [
 					{ "action": "export", "label": "Download", "icon": "Download" },
-					{ "action": "add", "variant": "primary", "icon": "PhoneClock", "label": "Plan a callback" }
+					{ "action": "add", "variant": "primary", "icon": "PhoneOutline", "label": "Plan a callback" }
 				],
 				"quickFilters": [
 					{ "label": "Mine", "filter": { "assigneeUserId": "@me" }, "showCount": true },
