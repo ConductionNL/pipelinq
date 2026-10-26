@@ -8087,7 +8087,12 @@ OC.L10N.register(
         "{count} d": "{count} d",
         "{count} h": "{count} u",
         "{count} min": "{count} min",
-        "{count} s": "{count} s"
+        "{count} s": "{count} s",
+        "Filter by job name": "Filter op taaknaam",
+        "{shown} of {total} export jobs · scheduled exports of pipelinq data to a data warehouse or BI tool": "{shown} van {total} exporttaken · geplande exports van pipelinq-gegevens naar een datawarehouse of BI-tool",
+        "A new job stays off until a test run has succeeded. Keys stay with the destination's source, never with the job.": "Een nieuwe taak blijft uit tot een testrun is geslaagd. Sleutels staan bij de bron van de bestemming, nooit bij de taak.",
+        "Job": "Taak",
+        "Dataset": "Dataset"
     },
     "nplurals=2; plural=(n != 1);"
 )

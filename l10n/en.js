@@ -8123,7 +8123,12 @@ OC.L10N.register(
         "{count} d": "{count} d",
         "{count} h": "{count} h",
         "{count} min": "{count} min",
-        "{count} s": "{count} s"
+        "{count} s": "{count} s",
+        "Filter by job name": "Filter by job name",
+        "{shown} of {total} export jobs · scheduled exports of pipelinq data to a data warehouse or BI tool": "{shown} of {total} export jobs · scheduled exports of pipelinq data to a data warehouse or BI tool",
+        "A new job stays off until a test run has succeeded. Keys stay with the destination's source, never with the job.": "A new job stays off until a test run has succeeded. Keys stay with the destination's source, never with the job.",
+        "Job": "Job",
+        "Dataset": "Dataset"
     },
     "nplurals=2; plural=(n != 1);"
 )

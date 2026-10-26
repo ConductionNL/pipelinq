@@ -5,31 +5,35 @@
 <template>
 	<div>
 		<CnIndexPage
-			:title="t('pipelinq', 'BI export jobs')"
-			:description="
+			ref="index"
+			:title="t('pipelinq', 'BI export')"
+			:register="register"
+			:schema="schema"
+			:columns="columns"
+			:quickFilters="quickFilters"
+			:showTitle="true"
+			:showTitleIcon="false"
+			:headerFilters="false"
+			rowTitle="plain"
+			:searchPlaceholder="t('pipelinq', 'Filter by job name')"
+			:headerButtons="headerButtons"
+			:countText="
 				t(
 					'pipelinq',
-					'Scheduled exports of pipelinq data to a data warehouse or BI tool',
+					'{shown} of {total} export jobs · scheduled exports of pipelinq data to a data warehouse or BI tool',
 				)
 			"
-			:schema="schema"
-			:objects="objects"
-			:pagination="pagination"
-			:loading="loading"
-			:refreshing="refreshing"
-			:sortKey="sortKey"
-			:sortOrder="sortOrder"
-			:includeColumns="visibleColumns"
-			:emptyTitle="t('pipelinq', 'No export jobs yet')"
-			:emptyActionLabel="t('pipelinq', 'New export job')"
+			:footerNote="
+				t(
+					'pipelinq',
+					'A new job stays off until a test run has succeeded. Keys stay with the destination\'s source, never with the job.',
+				)
+			"
+			:emptyText="t('pipelinq', 'No export jobs yet')"
 			rowClickToView
 			@add="createNew"
-			@emptyAction="createNew"
-			@refresh="onRefresh"
-			@sort="onSort"
 			@rowClick="openJob"
-			@view="openJob"
-			@pageChanged="onPageChange">
+			@view="openJob">
 			<template #row-actions="{ row }">
 				<NcButton
 					variant="tertiary"
@@ -57,13 +61,11 @@
 </template>
 
 <script>
-import { CnIndexPage, openRowTarget, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
-import { inject } from 'vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 import { exportApi } from '../../services/exportApi.js'
-import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ExportJobs',
@@ -73,54 +75,63 @@ export default {
 		ExportTestRunModal,
 	},
 
-	setup() {
-		const sidebarState = inject('sidebarState', null)
-		const objectStore = useObjectStore()
-		return useListView('exportJob', { sidebarState, objectStore })
-	},
-
 	data() {
 		return {
+			register: 'pipelinq',
+			schema: 'exportJob',
 			busyId: null,
 			testRunJobId: null,
-			refreshing: false,
+			columns: [
+				{
+					key: 'name',
+					label: t('pipelinq', 'Job'),
+					secondary: '{format} · {mode}',
+					cellClass: 'cn-cell--strong',
+				},
+				{ key: 'sourceSchemas', label: t('pipelinq', 'Dataset') },
+				{
+					key: 'destinationId',
+					label: t('pipelinq', 'Destination'),
+					widget: 'fkResolve',
+					widgetProps: {
+						register: 'pipelinq',
+						schema: 'exportDestination',
+						labelField: 'name',
+					},
+				},
+				{ key: 'scheduleCron', label: t('pipelinq', 'Schedule') },
+				{ key: 'enabled', label: t('pipelinq', 'Enabled') },
+			],
+
+			quickFilters: [
+				{ label: t('pipelinq', 'All'), filter: {}, default: true, showCount: true },
+				{ label: t('pipelinq', 'Enabled'), filter: { enabled: true }, showCount: true },
+			],
 		}
 	},
 
 	computed: {
 		/**
-		 * Columns shown on the list, in order.
+		 * The header buttons in the board's order: Download, Actions, New export job.
 		 *
-		 * @return {Array<string>} The column keys.
+		 * @return {Array<object>}
+		 * @spec exclude presentational header buttons of the export job list
 		 */
-		visibleColumns() {
+		headerButtons() {
 			return [
-				'name',
-				'destinationId',
-				'format',
-				'mode',
-				'scheduleCron',
-				'enabled',
+				{ action: 'export', label: t('pipelinq', 'Download'), icon: 'Download' },
+				{ action: 'actions-menu' },
+				{
+					action: 'add',
+					variant: 'primary',
+					icon: 'Plus',
+					label: t('pipelinq', 'New export job'),
+				},
 			]
 		},
 	},
 
 	methods: {
-		/**
-		 * Refresh handler for the Actions-menu Refresh item. Drives the
-		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
-		 *
-		 * @spec exclude presentational refresh-button spinner wiring — no business logic
-		 */
-		async onRefresh() {
-			this.refreshing = true
-			try {
-				await this.refresh()
-			} finally {
-				this.refreshing = false
-			}
-		},
-
 		/**
 		 * Navigate to a job's detail/edit form.
 		 *
@@ -168,7 +179,7 @@ export default {
 					await exportApi.enableJob(row.id)
 					showSuccess(this.t('pipelinq', 'Job enabled'))
 				}
-				await this.refresh()
+				await this.$refs.index?.onRefreshEvent()
 			} catch {
 				showError(this.t('pipelinq', 'Could not change job status'))
 			} finally {
