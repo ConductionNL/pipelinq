@@ -262,6 +262,14 @@
 						"icon": "ViewDashboard",
 						"category": "other",
 						"route": "OperationalDashboard"
+					},
+					{
+						"id": "WalkInQueue",
+						"label": "Walk-in queue",
+						"description": "Customers who walk in without an appointment, oldest first, and calling the next one.",
+						"icon": "AccountClockOutline",
+						"category": "other",
+						"route": "WalkInQueue"
 					}
 				]
 			}

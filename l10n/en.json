@@ -8114,6 +8114,27 @@
         "Progress": "Progress",
         "Set by hand": "Set by hand",
         "Open tasks": "Open tasks",
-        "{shown} of {total} projects": "{shown} of {total} projects"
+        "{shown} of {total} projects": "{shown} of {total} projects",
+        "Desks · today": "Desks · today",
+        "Call next calls the customer who has waited longest. A customer without a name shows as Anonymous customer.": "Call next calls the customer who has waited longest. A customer without a name shows as Anonymous customer.",
+        "Nobody has walked in yet today.": "Nobody has walked in yet today.",
+        "in the queue now": "in the queue now",
+        "Being helped": "Being helped",
+        "called to a desk": "called to a desk",
+        "Helped today": "Helped today",
+        "today": "today",
+        "Help": "Help",
+        "Left": "Left",
+        "Helped": "Helped",
+        "Customer called.": "Customer called.",
+        "Customer helped.": "Customer helped.",
+        "Marked as left.": "Marked as left.",
+        "Could not load the queue.": "Could not load the queue.",
+        "Nobody is waiting.": "Nobody is waiting.",
+        "Resource details": "Resource details",
+        "This resource cannot be booked in these periods.": "This resource cannot be booked in these periods.",
+        "Call in": "Call in",
+        "Customers who walk in without an appointment, oldest first, and calling the next one.": "Customers who walk in without an appointment, oldest first, and calling the next one.",
+        "Begin": "Begin"
     }
 }
