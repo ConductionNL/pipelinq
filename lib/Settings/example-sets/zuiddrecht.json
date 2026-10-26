@@ -1,6 +1,6 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint. Sanne also has a confirmed site visit on the Parkstraat a week after the install, so a booking that can still be moved exists.",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint. Sanne also has a confirmed site visit on the Parkstraat a week after the install, so a booking that can still be moved exists. The appointment samples (PqAfspraak, PqAfspraken, PqInloop) give the Locatiebezoek service its deposit, give Sanne's site visit its subject, place and handler (daan), and add four walk-in customers today.",
 	"appConfig": [
 		{
 			"key": "crm_group",
@@ -1106,12 +1106,14 @@
 			"schema": "appointmentService",
 			"data": {
 				"name": "Locatiebezoek",
-				"description": "Een medewerker bekijkt samen met de aanvrager de plek ter plaatse.",
+				"description": "Een medewerker komt ter plekke kijken, bijvoorbeeld voor een straatfeest of een bouwplan.",
 				"durationMinutes": 60,
+				"price": 0,
+				"currency": "EUR",
 				"bookableOnline": false,
-				"requiresDeposit": false,
+				"requiresDeposit": true,
+				"depositAmount": 25,
 				"cancellationPolicy": "free",
-				"cancellationHoursBefore": 24,
 				"status": "active"
 			}
 		},
@@ -1133,10 +1135,63 @@
 						"changedBy": "{{cast:pieter.uid}}"
 					}
 				],
-				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest.",
+				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest. Neem een schets van de kramen en het podium mee.",
 				"internalNotes": "Controleer de calamiteitenroute en waar de brandweer langs kan.",
 				"source": "phone",
-				"confirmationSentAt": "{{datetime:-3 09:20}}"
+				"confirmationSentAt": "{{datetime:-3 09:20}}",
+				"subject": "Locatiebezoek Parkstraat",
+				"location": "Parkstraat 24",
+				"assignee": "{{cast:daan.uid}}",
+				"depositAmount": 25,
+				"resourceAssignments": []
+			}
+		},
+		{
+			"key": "walkin-anna",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Anna de Vries",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:41}}",
+				"estimatedReadyAt": "{{datetime:0 09:55}}",
+				"status": "called"
+			}
+		},
+		{
+			"key": "walkin-rachid",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Rachid Yilmaz",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:43}}",
+				"estimatedReadyAt": "{{datetime:0 09:58}}",
+				"status": "called"
+			}
+		},
+		{
+			"key": "walkin-mohammed",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Mohammed El Amrani",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:50}}",
+				"estimatedReadyAt": "{{datetime:0 10:08}}",
+				"status": "waiting"
+			}
+		},
+		{
+			"key": "walkin-joke",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Joke Smit",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:52}}",
+				"estimatedReadyAt": "{{datetime:0 10:14}}",
+				"status": "waiting"
 			}
 		}
 	]

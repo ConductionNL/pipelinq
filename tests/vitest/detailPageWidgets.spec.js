@@ -147,7 +147,7 @@ describe('booking detail', () => {
 
 	it('gives the tab strip room for the whole timeline', () => {
 		expect(
-			layoutItem(booking, 'booking-tabs').gridHeight,
+			layoutItem(booking, 'booking-panels').gridHeight,
 		).toBeGreaterThanOrEqual(10)
 	})
 })

@@ -1125,6 +1125,28 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'BookingDetail: the service and customer names and the deposit state, resolved across schemas.',
 	},
+	BookingCustomerWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'BookingCustomerWidget',
+			BookingDetailSection,
+			({ objectId }) => ({ bookingId: objectId, part: 'customer' }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'BookingDetail side card (PqAfspraak Inwoner): the customer with phone, e-mail and a link to their page.',
+	},
+	BookingWhenWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'BookingWhenWidget',
+			BookingDetailSection,
+			({ objectId }) => ({ bookingId: objectId, part: 'when' }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'BookingDetail side card (PqAfspraak Wanneer en waar): the day and time, the location, the handler, the reminder and Send reminder.',
+	},
 	BookingAssignmentsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
