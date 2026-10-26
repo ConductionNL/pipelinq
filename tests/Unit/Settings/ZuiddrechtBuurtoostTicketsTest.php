@@ -43,7 +43,11 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 		$client = $objects['client-buurtoost'];
 		$this->assertSame(expected: ['organization', '0f5e0000-0000-4000-8000-000000000007'], actual: [$client['type'], $client['masterEntityRef']]);
 
-		$tickets = array_filter($objects, static fn (array $data): bool => ($data['client'] ?? null) === '{{object:client-buurtoost.id}}');
+		$ticketRows = array_filter($set['objects'], static fn (array $object): bool => $object['schema'] === 'ticket');
+		$tickets    = array_filter(
+			array_column($ticketRows, 'data'),
+			static fn (array $data): bool => ($data['client'] ?? null) === '{{object:client-buurtoost.id}}'
+		);
 		$this->assertSame(
 			expected: ['Aanvraag collectevergunning', 'Vraag over huur buurthuis', 'Melding verlichting Oosthavenweg'],
 			actual: array_values(array_column($tickets, 'title'))
