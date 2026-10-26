@@ -8142,6 +8142,13 @@
         "Apps and extensions that work with pipelinq.": "Apps and extensions that work with pipelinq.",
         "What pipelinq does now and what is coming.": "What pipelinq does now and what is coming.",
         "How pipelinq works, step by step, for employees and administrators.": "How pipelinq works, step by step, for employees and administrators.",
-        "Menu structure, telephony, mail routes and payment providers, on the Nextcloud admin page.": "Menu structure, telephony, mail routes and payment providers, on the Nextcloud admin page."
+        "Menu structure, telephony, mail routes and payment providers, on the Nextcloud admin page.": "Menu structure, telephony, mail routes and payment providers, on the Nextcloud admin page.",
+        "{shown} of {total} contact moments · all channels · newest first": "{shown} of {total} contact moments · all channels · newest first",
+        "Callback agreed": "Callback agreed",
+        "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone.": "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone.",
+        "{count} d": "{count} d",
+        "{count} h": "{count} h",
+        "{count} min": "{count} min",
+        "{count} s": "{count} s"
     }
 }

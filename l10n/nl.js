@@ -8080,7 +8080,14 @@ OC.L10N.register(
         "Apps and extensions that work with pipelinq.": "Apps en uitbreidingen die met pipelinq werken.",
         "What pipelinq does now and what is coming.": "Wat pipelinq nu doet en wat eraan komt.",
         "How pipelinq works, step by step, for employees and administrators.": "Hoe pipelinq werkt, stap voor stap, voor medewerkers en beheerders.",
-        "Menu structure, telephony, mail routes and payment providers, on the Nextcloud admin page.": "Menustructuur, telefonie, verzendroutes voor mail en betaalproviders, op de beheerpagina van Nextcloud."
+        "Menu structure, telephony, mail routes and payment providers, on the Nextcloud admin page.": "Menustructuur, telefonie, verzendroutes voor mail en betaalproviders, op de beheerpagina van Nextcloud.",
+        "{shown} of {total} contact moments · all channels · newest first": "{shown} van {total} contactmomenten · alle kanalen · nieuwste eerst",
+        "Callback agreed": "Terugbellen afgesproken",
+        "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone.": "Een contactmoment is één gesprek, via welk kanaal ook. De meeste horen bij een verzoek; sommige staan op zichzelf.",
+        "{count} d": "{count} d",
+        "{count} h": "{count} u",
+        "{count} min": "{count} min",
+        "{count} s": "{count} s"
     },
     "nplurals=2; plural=(n != 1);"
 )

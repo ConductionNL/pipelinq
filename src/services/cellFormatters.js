@@ -111,12 +111,47 @@ export function yesNo(value) {
 		: t('pipelinq', 'No')
 }
 
+/**
+ * Print an ISO 8601 duration ("PT6M", "PT1H5M", "PT45S") the way the lists
+ * read it: "6 min", "1 h 5 min", "45 s". A value that is not an ISO duration
+ * shows as stored.
+ *
+ * @param {unknown} value The stored value.
+ * @return {string} The readable duration, or '' when unset.
+ * @spec openspec/specs/contactmomenten/spec.md
+ */
+export function isoDuration(value) {
+	if (value === null || value === undefined || value === '') {
+		return ''
+	}
+	const match = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/.exec(String(value))
+	if (!match || match[0] === 'P' || match[0] === 'PT') {
+		return String(value)
+	}
+	const [, days, hours, minutes, seconds] = match
+	const parts = []
+	if (days) {
+		parts.push(t('pipelinq', '{count} d', { count: Number(days) }))
+	}
+	if (hours) {
+		parts.push(t('pipelinq', '{count} h', { count: Number(hours) }))
+	}
+	if (minutes) {
+		parts.push(t('pipelinq', '{count} min', { count: Number(minutes) }))
+	}
+	if (seconds && parts.length === 0) {
+		parts.push(t('pipelinq', '{count} s', { count: Math.round(Number(seconds)) }))
+	}
+	return parts.join(' ')
+}
+
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
 	enumText,
 	enumLabel,
 	yesNo,
+	isoDuration,
 }
 
 /**
