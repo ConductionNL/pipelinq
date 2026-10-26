@@ -8314,7 +8314,10 @@ OC.L10N.register(
         "This resource cannot be booked in these periods.": "In deze periodes kun je niet boeken.",
         "Call in": "Bellen",
         "Customers who walk in without an appointment, oldest first, and calling the next one.": "Klanten die zonder afspraak binnenlopen, de langst wachtende eerst, en de volgende oproepen.",
-        "Begin": "Begin"
+        "Begin": "Begin",
+        "Reference code": "Kenmerk",
+        "{shown} of {total} transactions · newest first": "{shown} van {total} transacties · nieuwste eerst",
+        "Open a transaction to print or mail the receipt, or to register a refund.": "Open een transactie om de bon te printen of te mailen, of om een retour te registreren."
     },
     "nplurals=2; plural=(n != 1);"
 )

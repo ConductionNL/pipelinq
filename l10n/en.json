@@ -8369,6 +8369,9 @@
         "This resource cannot be booked in these periods.": "This resource cannot be booked in these periods.",
         "Call in": "Call in",
         "Customers who walk in without an appointment, oldest first, and calling the next one.": "Customers who walk in without an appointment, oldest first, and calling the next one.",
-        "Begin": "Begin"
+        "Begin": "Begin",
+        "Reference code": "Reference code",
+        "{shown} of {total} transactions · newest first": "{shown} of {total} transactions · newest first",
+        "Open a transaction to print or mail the receipt, or to register a refund.": "Open a transaction to print or mail the receipt, or to register a refund."
     }
 }
