@@ -31,6 +31,7 @@ describe('CnObjectListWidget Add label', () => {
 	it('reads the Dutch text in a Dutch interface', () => {
 		const label = addLabel.call({
 			content: { addLabel: 'Add contact person' },
+			createState: { action: null },
 			cnTranslate: (text) => nl[text] || text,
 		})
 		expect(label).toBe('Contactpersoon toevoegen')
@@ -39,6 +40,7 @@ describe('CnObjectListWidget Add label', () => {
 	it('reads the English text in an English interface', () => {
 		const label = addLabel.call({
 			content: { addLabel: 'Add contact person' },
+			createState: { action: null },
 			cnTranslate: (text) => en[text] || text,
 		})
 		expect(label).toBe('Add contact person')

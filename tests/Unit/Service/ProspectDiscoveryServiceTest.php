@@ -95,10 +95,12 @@ class ProspectDiscoveryServiceTest extends TestCase {
 	 */
 	public function testDiscoverReturnsErrorWhenNotConfigured(): void {
 		$this->icpConfig->method('isConfigured')->willReturn(false);
+		$this->icpConfig->method('getCriteria')->willReturn(['sbiCodes' => [], 'provinces' => []]);
 
 		$result = $this->service->discover();
 
 		$this->assertSame('no_icp_configured', $result['error']);
+		$this->assertSame(['sbiCodes' => [], 'provinces' => []], $result['icp']);
 	}//end testDiscoverReturnsErrorWhenNotConfigured()
 
 	/**
@@ -180,6 +182,7 @@ class ProspectDiscoveryServiceTest extends TestCase {
 
 		$this->assertSame(1, $result['total']);
 		$this->assertSame('Polderwerk IT', $result['prospects'][0]['tradeName']);
+		$this->assertSame(['sbiCodes' => ['62']], $result['icp']);
 	}//end testDiscoverExcludesExistingClientsReturnedAsEntities()
 
 	/**
