@@ -202,8 +202,7 @@ class SettingsController extends Controller {
 	 *
 	 * The canonical AppHost route table keeps `settings#create` for the
 	 * fleet's pre-ADR-066 `index/create/load` dialect, and pipelinq has live
-	 * callers on it (`src/store/modules/settings.js::saveSettings()` and
-	 * `src/views/settings/ExportConfigurationSettings.vue::save()`), so the
+	 * callers on it (`src/store/modules/settings.js::saveSettings()`), so the
 	 * POST verb stays reachable and behaviourally identical (ADR-029).
 	 *
 	 * The attribute is repeated deliberately: Nextcloud's SecurityMiddleware

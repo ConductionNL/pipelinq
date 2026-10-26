@@ -1,0 +1,101 @@
+{
+	"_meta": {
+		"change": "campaign-events",
+		"license": "EUPL-1.2",
+		"copyright": "2026 Conduction B.V. <info@conduction.nl>",
+		"description": "An event a campaign holds (an information evening, a webinar, an open day) and the registrations for it. The PqEvenement board draws one event: when and where, how many places, the registrations with their status, where they came from and the form they used. Additive: two new schemas, nothing existing changes."
+	},
+	"components": {
+		"registers": {
+			"pipelinq": {
+				"schemas": [
+					"campaignEvent",
+					"eventRegistration"
+				]
+			}
+		},
+		"schemas": {
+			"campaignEvent": {
+				"slug": "campaignEvent",
+				"title": "Campaign event",
+				"icon": "CalendarStar",
+				"version": "1.0.0",
+				"summary": "One event a campaign holds, with its place, its capacity and its sign-up form.",
+				"description": "An event people register for: an information evening, a webinar, an open day. It belongs to a campaign, so its registrations count in the campaign's report. capacity is the number of places; a registration past it goes on the waiting list. The sign-up form is a portaliq form; formTitle, pageUrl and signupClosesAt say where it is and until when it takes sign-ups.",
+				"x-schema-org": "schema:Event",
+				"required": [
+					"title",
+					"startAt"
+				],
+				"properties": {
+					"title": { "type": "string", "title": "Title", "description": "What the event is called.", "minLength": 1, "maxLength": 255, "example": "Informatieavond warmtenet Oost" },
+					"reference": { "type": "string", "title": "Reference", "description": "The event's reference, as it appears on confirmations.", "maxLength": 40, "example": "EVT-2026-0012" },
+					"campaign": { "type": "string", "format": "uuid", "title": "Campaign", "description": "The campaign this event belongs to.", "$ref": "campaign", "facetable": true },
+					"signupStatus": {
+						"type": "string",
+						"title": "Registration",
+						"description": "Whether the event takes registrations.",
+						"enum": ["draft", "open", "full", "closed", "cancelled"],
+						"x-enum-labels": { "draft": "Draft", "open": "Registration open", "full": "Fully booked", "closed": "Registration closed", "cancelled": "Cancelled" },
+						"default": "draft",
+						"facetable": true
+					},
+					"startAt": { "type": "string", "format": "date-time", "title": "Starts", "description": "When the event starts." },
+					"endAt": { "type": "string", "format": "date-time", "title": "Ends", "description": "When the event ends." },
+					"venue": { "type": "string", "title": "Venue", "description": "Where the event is, as the invitation names it.", "maxLength": 255, "example": "Wijkcentrum De Linde, Lindelaan 2" },
+					"room": { "type": "string", "title": "Room", "description": "The room within the venue.", "maxLength": 255, "example": "Grote zaal" },
+					"capacity": { "type": "integer", "title": "Places", "description": "How many people can come. A registration past it goes on the waiting list.", "minimum": 0, "example": 80 },
+					"hosts": { "type": "array", "title": "Hosts", "description": "The colleagues who host the event (Nextcloud user ids).", "items": { "type": "string", "format": "user" } },
+					"reminderAt": { "type": "string", "format": "date-time", "title": "Reminder", "description": "When the reminder mail goes to everyone registered." },
+					"formTitle": { "type": "string", "title": "Form", "description": "The name of the portaliq sign-up form.", "maxLength": 255, "example": "Aanmelden informatieavond" },
+					"pageUrl": { "type": "string", "format": "uri", "title": "On page", "description": "The page the sign-up form is on.", "example": "https://zuiddrecht.nl/warmtenet-oost" },
+					"signupClosesAt": { "type": "string", "format": "date-time", "title": "Closes", "description": "Until when the form takes sign-ups." },
+					"description": { "type": "string", "title": "Description", "description": "What the event is about.", "maxLength": 5000 }
+				}
+			},
+			"eventRegistration": {
+				"slug": "eventRegistration",
+				"title": "Registration",
+				"icon": "TicketConfirmationOutline",
+				"version": "1.0.0",
+				"summary": "One person or household registered for an event.",
+				"description": "A sign-up for an event, from the portaliq form, a newsletter reply or a colleague. status says whether the person has a place, waits for one or cancelled; waitlistPosition orders the waiting list. contact links the person once known in pipelinq.",
+				"x-schema-org": "schema:RegisterAction",
+				"required": [
+					"event",
+					"name"
+				],
+				"properties": {
+					"event": { "type": "string", "format": "uuid", "title": "Campaign event", "description": "The event this registration is for.", "$ref": "campaignEvent", "facetable": true },
+					"name": { "type": "string", "title": "Name", "description": "Who registered.", "minLength": 1, "maxLength": 255, "example": "Sanne de Vries" },
+					"email": { "type": "string", "format": "email", "title": "Email", "description": "Where the confirmation goes." },
+					"address": { "type": "string", "title": "Address", "description": "The address the person gave.", "maxLength": 255, "example": "Lindelaan 14" },
+					"street": { "type": "string", "title": "Street", "description": "The street of the address, for filtering a neighbourhood.", "maxLength": 255, "facetable": true, "example": "Lindelaan" },
+					"partySize": { "type": "integer", "title": "People", "description": "How many people come on this registration.", "minimum": 1, "default": 1 },
+					"source": {
+						"type": "string",
+						"title": "Registered via",
+						"description": "Where the registration came from.",
+						"enum": ["web-form", "newsletter", "social", "colleague", "other"],
+						"x-enum-labels": { "web-form": "Web form", "newsletter": "Newsletter", "social": "Social post", "colleague": "Colleague", "other": "Other" },
+						"facetable": true
+					},
+					"registeredAt": { "type": "string", "format": "date-time", "title": "Registered on", "description": "When the registration came in." },
+					"status": {
+						"type": "string",
+						"title": "Status",
+						"description": "Whether the person has a place.",
+						"enum": ["confirmed", "waitlist", "cancelled"],
+						"x-enum-labels": { "confirmed": "Confirmed", "waitlist": "Waiting list", "cancelled": "Cancelled" },
+						"default": "confirmed",
+						"facetable": true
+					},
+					"waitlistPosition": { "type": "integer", "title": "Waiting list position", "description": "The place on the waiting list, 1 first.", "minimum": 1 },
+					"question": { "type": "string", "title": "Question", "description": "A question the person asked for the event.", "maxLength": 2000 },
+					"contact": { "type": "string", "format": "uuid", "title": "Contact", "description": "The person in pipelinq, once linked.", "$ref": "contact" },
+					"newContact": { "type": "boolean", "title": "New in pipelinq", "description": "The registration had no existing record and became a new contact.", "default": false, "facetable": true }
+				}
+			}
+		}
+	}
+}

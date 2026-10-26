@@ -472,17 +472,22 @@ describe('the tickets list', () => {
 	it('keeps every view it had, with the same filter, and counts them', () => {
 		for (const old of before.quickFilters) {
 			// The board's list leaves contact moments out of All (they have their
-			// own view), so All carries that one filter; every other view is untouched.
-			const expected =
-				old.label === 'All'
-					? { ...old, filter: { 'ticketType[ne]': 'interaction' } }
-					: old
+			// own view), so All carries that one filter and stays the view the
+			// list opens on. Waiting for customer is the agent's own, as the
+			// dashboard number that links here counts it. Every other view is
+			// untouched.
+			const changed = {
+				'All': { default: true, filter: { 'ticketType[ne]': 'interaction' } },
+				'All open': { default: false },
+				'Waiting for customer': { filter: { assignee: '@me', status: 'awaiting_customer' } },
+			}
+			const expected = { ...old, ...(changed[old.label] || {}) }
 			expect(view(old.label), old.label).toEqual({
 				...expected,
 				showCount: true,
 			})
 		}
-		expect(simple.quickFilters).toHaveLength(before.quickFilters.length + 3)
+		expect(simple.quickFilters).toHaveLength(before.quickFilters.length + 2)
 		expect(simple.quickFilters.every((item) => item.showCount)).toBe(true)
 	})
 
@@ -495,6 +500,10 @@ describe('the tickets list', () => {
 			'Waiting for customer',
 			'Requests',
 			'Complaints',
+			'All open',
+			'Mine',
+			'Unassigned',
+			'Past the deadline',
 			'Contactmomenten',
 		])
 		expect(simple.quickFilters.filter((item) => item.default)).toHaveLength(1)
