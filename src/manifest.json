@@ -5302,7 +5302,7 @@
 		},
 		{
 			"id": "CashShiftDetail",
-			"_note": "Cash-shift record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The shift's flat fields auto-render via CnObjectDataWidget; the drops are an object-list (cashDrop, FK 'shift') inside CashShiftDropsWidget, whose Add drop posts to /api/pos-shifts/{id}/drop rather than creating the object directly. Close and count shift is the open shift's primary header action, a POST form to /api/pos-shifts/{id}/count; the cash-reconciliation VARIANCE with its manager-gated approve/reject is a grid widget (CashShiftVarianceWidget). KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: drop / count / reconcile POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints that recompute variance server-side (NOT OR /transition); cashShift/cashDiff have no x-openregister-lifecycle; (2) the variance is a custom widget because it is a LATEST/PENDING-child projection: an object-list lists ALL children and cannot pick and lay out the single most-relevant cashDiff with its tolerance verdict and inline approve/reject. Missing primitive: a 'latest/pending child object' projection primitive.",
+			"_note": "Cash-shift record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The shift's flat fields auto-render via CnObjectDataWidget; the drops are an object-list (cashDrop, FK 'shift') inside CashShiftDropsWidget, whose Add drop posts to /api/pos-shifts/{id}/drop rather than creating the object directly. Close and count shift is the open shift's primary header action, a POST form to /api/pos-shifts/{id}/count; the cash difference is a facts card over the shift's latest cashDiff with admin approve/reject actions. lifecycleActions is NOT wired: drop / count / reconcile POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints that recompute variance server-side (NOT OR /transition); cashShift/cashDiff have no x-openregister-lifecycle.",
 			"route": "/pos/shifts/:id",
 			"type": "detail",
 			"title": "Shift",
@@ -5381,9 +5381,64 @@
 					},
 					{
 						"id": "shift-variance",
-						"type": "CashShiftVarianceWidget",
+						"type": "facts",
 						"title": "Cash difference",
-						"icon": "ScaleBalance"
+						"icon": "ScaleBalance",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "cashDiff",
+								"filter": { "shift": "@objectId" },
+								"sort": { "field": "@self.created", "dir": "desc" }
+							},
+							"headerPill": {
+								"path": "status",
+								"map": { "pending": "Pending", "approved": "Approved", "rejected": "Rejected" },
+								"variantMap": { "pending": "warning", "approved": "success", "rejected": "error" }
+							},
+							"fields": [
+								{ "path": "expectedAmount", "label": "Expected amount", "format": "currency" },
+								{ "path": "actualAmount", "label": "Counted amount", "format": "currency" },
+								{ "path": "diffAmount", "label": "Difference", "format": "currency" },
+								{ "path": "diffPercentage", "label": "Percentage", "format": "number", "suffix": "%" },
+								{
+									"as": "pill",
+									"key": "tolerance",
+									"path": "withinTolerance",
+									"map": { "true": "Within tolerance", "false": "Outside tolerance" },
+									"variantMap": { "true": "success", "false": "warning" }
+								},
+								{ "path": "approvedBy", "label": "Reviewed by", "format": "user" },
+								{ "path": "rejectionReason", "label": "Rejection reason" }
+							],
+							"actions": [
+								{
+									"id": "diff-approve",
+									"label": "Approve",
+									"type": "api-call",
+									"variant": "primary",
+									"adminOnly": true,
+									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
+									"payload": { "diffId": "@source.id" },
+									"successMessage": "Cash difference approved.",
+									"visibleWhen": { "field": "status", "value": "pending" }
+								},
+								{
+									"id": "diff-reject",
+									"label": "Reject",
+									"type": "open-form",
+									"variant": "error",
+									"adminOnly": true,
+									"endpoint": { "url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/reject?diffId=@source.id", "method": "POST" },
+									"formProperties": {
+										"reason": { "type": "string", "title": "Rejection reason", "description": "This rejects the cash difference and reopens the shift for a recount." }
+									},
+									"successMessage": "Cash difference rejected. The shift is open for a recount.",
+									"visibleWhen": { "field": "status", "value": "pending" }
+								}
+							],
+							"emptyText": "Not counted yet. The difference appears once the shift is closed and counted."
+						}
 					},
 					{
 						"id": "shift-drops",
@@ -5703,7 +5758,7 @@
 		},
 		{
 			"id": "PosTransactionDetail",
-			"_note": "POS transaction record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). Two columns: all of the transaction's fields (data widget) beside the line count and the stored totals (PosTransactionTotalsWidget: tax return per rate, subtotal/discount/VAT/total, invoice split, REQ-BTW-005, which also carries the old Total and VAT tiles); the line items (object-list on posTransactionLine, FK 'transaction') beside Related; then the tenders and provider status full width (PosTransactionPaymentWidget). The header follows the stage (Q9): one primary button (Confirm for a draft with lines, Resume when parked, Check out when confirmed), the receipts and Register refund as quick actions, and Edit line items, Park and the admin Reverse in the Actions menu. They POST to /api/pos-transactions/{id}/{action} endpoints with side-effects, NOT OR's /transition, and posTransaction has no x-openregister-lifecycle, so lifecycleActions is not wired.",
+			"_note": "POS transaction record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). Two columns: all of the transaction's fields (data widget) beside the line count and the stored totals (PosTransactionTotalsWidget: tax return per rate, subtotal/discount/VAT/total, invoice split, REQ-BTW-005, which also carries the old Total and VAT tiles); the line items (object-list on posTransactionLine, FK 'transaction') beside Related; then the payment provider as a facts card with its capture, retry and reverse actions, and the tenders full width (PosTransactionPaymentWidget). The header follows the stage (Q9): one primary button (Confirm for a draft with lines, Resume when parked, Check out when confirmed), the receipts and Register refund as quick actions, and Edit line items, Park and the admin Reverse in the Actions menu. They POST to /api/pos-transactions/{id}/{action} endpoints with side-effects, NOT OR's /transition, and posTransaction has no x-openregister-lifecycle, so lifecycleActions is not wired.",
 			"route": "/pos/:id",
 			"type": "detail",
 			"title": "Transactie",
@@ -5870,6 +5925,76 @@
 						"icon": "LinkVariant"
 					},
 					{
+						"id": "pos-tx-provider",
+						"type": "facts",
+						"title": "Payment provider",
+						"icon": "CreditCardOutline",
+						"visibleWhen": {
+							"any": [
+								{ "field": "paymentProvider", "op": "notEmpty" },
+								{ "field": "paymentStatus", "op": "notEmpty" }
+							]
+						},
+						"content": {
+							"headerPill": {
+								"path": "paymentStatus",
+								"map": { "pending": "In progress", "captured": "Authorized", "settled": "Settled", "failed": "Failed", "refunded": "Reversed" },
+								"variantMap": { "pending": "warning", "captured": "primary", "settled": "success", "failed": "error", "refunded": "default" }
+							},
+							"fields": [
+								{
+									"path": "paymentProvider",
+									"label": "Provider",
+									"map": { "mollie": "Mollie", "ccv": "CCV", "adyen": "Adyen", "stripe": "Stripe", "cash": "Cash", "voucher": "Gift voucher", "account": "Account" }
+								},
+								{
+									"path": "paymentMethod",
+									"label": "Method",
+									"map": { "ideal": "iDEAL", "bancontact": "Bancontact", "card": "Card", "creditcard": "Credit card", "cash": "Cash" }
+								},
+								{ "path": "paymentSessionId", "label": "Session", "copy": true }
+							],
+							"actions": [
+								{
+									"id": "payment-complete",
+									"label": "Complete",
+									"type": "api-call",
+									"variant": "primary",
+									"url": "/apps/pipelinq/api/pos-payments/@source.id/capture",
+									"successMessage": "Payment completed.",
+									"visibleWhen": { "field": "paymentStatus", "value": "pending" }
+								},
+								{
+									"id": "payment-retry",
+									"label": "Try again",
+									"type": "api-call",
+									"url": "/apps/pipelinq/api/pos-payments/@source.id/initiate",
+									"payload": { "providerName": "@source.paymentProvider", "paymentMethod": "@source.paymentMethod" },
+									"successMessage": "Payment started again.",
+									"visibleWhen": { "field": "paymentStatus", "value": "failed" }
+								},
+								{
+									"id": "payment-reverse",
+									"label": "Reverse",
+									"type": "open-form",
+									"adminOnly": true,
+									"variant": "error",
+									"endpoint": { "url": "/apps/pipelinq/api/pos-payments/@source.id/refund", "method": "POST" },
+									"formProperties": {
+										"reason": { "type": "string", "title": "Reason for reversal", "description": "Why is this payment being reversed?" }
+									},
+									"successMessage": "Payment reversed.",
+									"visibleWhen": {
+										"all": [
+											{ "field": "paymentStatus", "op": "in", "value": ["settled", "captured"] },
+											{ "field": "status", "op": "in", "value": ["confirmed", "settled"] }
+										]
+									}
+								}
+							]
+						}
+					},
+					{
 						"id": "pos-tx-payment",
 						"type": "PosTransactionPaymentWidget",
 						"title": "Payment",
@@ -5919,6 +6044,14 @@
 					},
 					{
 						"id": "6",
+						"widgetId": "pos-tx-provider",
+						"gridX": 0,
+						"gridY": 12,
+						"gridWidth": 8,
+						"gridHeight": 3
+					},
+					{
+						"id": "7",
 						"widgetId": "pos-tx-payment",
 						"gridX": 0,
 						"gridY": 15,
