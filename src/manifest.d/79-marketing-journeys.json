@@ -216,7 +216,9 @@
 										"leadStageChanged": "A lead moved stage",
 										"contractRenewalWindow": "A contract is up for renewal",
 										"listConfirmed": "Someone confirmed a subscription",
-										"shillinqSignal": "A bookkeeping signal changed"
+										"shillinqSignal": "A bookkeeping signal changed",
+										"addressChanged": "A resident or business got a new address",
+										"ticketClosed": "A ticket was closed"
 									}
 								},
 								{

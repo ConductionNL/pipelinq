@@ -8344,6 +8344,10 @@
         "Reference code": "Kenmerk",
         "{shown} of {total} transactions · newest first": "{shown} van {total} transacties · nieuwste eerst",
         "Open a transaction to print or mail the receipt, or to register a refund.": "Open een transactie om de bon te printen of te mailen, of om een retour te registreren.",
-        "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "Het referentienummer van het ticket, PQ-<jaar>-<nummer>, dat elk nieuw verzoek en elke klacht krijgt bij het opslaan (TicketReferenceCreatingListener). Alleen-lezen voor gebruikers; een ticket dat met een referentie is aangemaakt, houdt die."
+        "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "Het referentienummer van het ticket, PQ-<jaar>-<nummer>, dat elk nieuw verzoek en elke klacht krijgt bij het opslaan (TicketReferenceCreatingListener). Alleen-lezen voor gebruikers; een ticket dat met een referentie is aangemaakt, houdt die.",
+        "A resident or business got a new address": "Een inwoner of bedrijf kreeg een nieuw adres",
+        "A ticket was closed": "Een ticket is afgesloten",
+        "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "Een fasewissel, een contract dat verlengd kan worden, een bevestigde inschrijving, een boekhoudsignaal, een nieuw adres of een afgesloten ticket.",
+        "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem."
     }
 }
