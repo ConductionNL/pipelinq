@@ -41,6 +41,7 @@ import BellRing from 'vue-material-design-icons/BellRing.vue'
 import BellRingOutline from 'vue-material-design-icons/BellRingOutline.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import BriefcaseOutline from 'vue-material-design-icons/BriefcaseOutline.vue'
 import BullhornOutline from 'vue-material-design-icons/BullhornOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CalendarBlankOutline from 'vue-material-design-icons/CalendarBlankOutline.vue'
@@ -211,6 +212,7 @@ export default {
 	BellRingOutline,
 	BookOpenPageVariant,
 	BookOpenVariantOutline,
+	BriefcaseOutline,
 	BullhornOutline,
 	Calendar,
 	CalendarBlankOutline,
