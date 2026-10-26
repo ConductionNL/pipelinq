@@ -151,7 +151,7 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 50 entries: 41 main, 3 footer, 6 settings, 0 integrations', () => {
+	it('still counts 49 entries: 40 main, 3 footer, 6 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
@@ -159,8 +159,8 @@ describe('the full profile', () => {
 		// and BI export, which settingsSection moves there. nextcloud-vue before
 		// 2.84.0 dropped it in the relocation step's clean-up; 2.84.0 keeps a
 		// caption that has entries under it (nextcloud-vue #1608).
-		expect(flat(menu)).toHaveLength(50)
-		expect(count('main')).toBe(41)
+		expect(flat(menu)).toHaveLength(49)
+		expect(count('main')).toBe(40)
 		expect(count('footer')).toBe(3)
 		expect(count('settings')).toBe(6)
 		expect(count('integrations')).toBe(0)
@@ -441,11 +441,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 98 pages as the full profile, so every route stays', () => {
+	it('builds the same 99 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(98)
+		expect(built.pages).toHaveLength(99)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)

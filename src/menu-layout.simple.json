@@ -25,7 +25,6 @@
 		"SettingsIntegrationsCaption",
 		"MarketingGroup",
 		"Dashboard",
-		"Webchat",
 		"Prospects",
 		"Segments",
 		"Templates",
@@ -2185,7 +2184,7 @@
 		},
 		{
 			"id": "Contacts",
-			"_note": "The contacts list as its board draws it (PqContacten). Not drawn yet because no field or relation backs it: the chips With open deals and Not in Contacts, the Klant column and the Contacten sync column. The Nextcloud Contacten import dialog (src/dialogs/ContactImportDialog.vue) is not wired to any page yet.",
+			"_note": "The contacts list as its board draws it (PqContacten). The second chip lists the people on at least one deal (`leads` holds every deal a person is a stakeholder on), so it reads With deals: the list cannot ask whether those deals are still open. The import button opens the Nextcloud Contacts import (PqContactenImporteren).",
 			"config": {
 				"quickFilters": [
 					{
@@ -2193,12 +2192,36 @@
 						"filter": {},
 						"default": true,
 						"showCount": true
+					},
+					{
+						"label": "With deals",
+						"filter": {
+							"leads": "IS NOT NULL"
+						},
+						"showCount": true
+					}
+				],
+				"headerActions": [
+					{
+						"id": "import-contacts",
+						"label": "Import from Nextcloud Contacts",
+						"type": "open-modal",
+						"target": "ContactImportDialog",
+						"icon": "AccountPlusOutline",
+						"props": {
+							"importType": "contact"
+						}
 					}
 				],
 				"headerButtons": [
 					{
 						"action": "export",
 						"label": "Download"
+					},
+					{
+						"action": "import-contacts",
+						"label": "Import from Nextcloud Contacts",
+						"icon": "AccountPlusOutline"
 					},
 					{
 						"action": "add",
@@ -2382,6 +2405,125 @@
 				"statRow": [
 					"queue-unassigned",
 					"queue-longest-waiting"
+				]
+			}
+		},
+		{
+			"id": "Clients",
+			"_note": "The Organisations entry opens this list with ?type=organization; the preset gives that view the columns, lenses and copy of board PqOrganisaties. Open cases counts the client's requests that became a case (status converted). The board's With open case chip is not drawn: a lens filters clients by their own fields and cannot ask about their tickets.",
+			"config": {
+				"queryPresets": [
+					{
+						"id": "organisations",
+						"match": {
+							"type": "organization"
+						},
+						"title": "Organisations",
+						"countText": "{shown} of {total} organisations · sorted by name",
+						"searchPlaceholder": "Search by name, KvK number or place",
+						"footerNote": "click a column heading to sort",
+						"defaultSort": [
+							{
+								"field": "name",
+								"order": "asc"
+							}
+						],
+						"quickFilters": [
+							{
+								"label": "All",
+								"filter": {},
+								"default": true,
+								"showCount": true
+							},
+							{
+								"label": "Associations",
+								"filter": {
+									"legalForm": "vereniging"
+								},
+								"showCount": true
+							},
+							{
+								"label": "Foundations",
+								"filter": {
+									"legalForm": "stichting"
+								},
+								"showCount": true
+							},
+							{
+								"label": "Companies",
+								"filter": {
+									"legalForm": [
+										"eenmanszaak",
+										"vof",
+										"maatschap",
+										"cv",
+										"bv",
+										"nv",
+										"cooperatie"
+									]
+								},
+								"showCount": true
+							}
+						],
+						"columns": [
+							{
+								"key": "name",
+								"label": "Name"
+							},
+							{
+								"key": "kvkNumber",
+								"label": "KvK number"
+							},
+							{
+								"key": "legalForm",
+								"label": "Legal form"
+							},
+							{
+								"key": "industry",
+								"label": "Industry"
+							},
+							{
+								"key": "place",
+								"label": "Place"
+							},
+							{
+								"key": "openCases",
+								"label": "Open cases",
+								"sortable": false,
+								"aggregate": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"op": "count",
+									"where": {
+										"client": "@self.id",
+										"status": "converted"
+									}
+								},
+								"widget": "badge"
+							},
+							{
+								"key": "openTickets",
+								"label": "Open tickets",
+								"sortable": false,
+								"aggregate": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"op": "count",
+									"where": {
+										"client": "@self.id",
+										"status": {
+											"ne": "closed"
+										}
+									}
+								},
+								"widget": "badge"
+							},
+							{
+								"key": "phone",
+								"label": "Phone"
+							}
+						]
+					}
 				]
 			}
 		}
