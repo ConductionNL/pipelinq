@@ -1371,6 +1371,83 @@
 			}
 		},
 		{
+			"key": "kassa-audit-reg003-annulering-1038",
+			"register": "pipelinq",
+			"schema": "kassakoppelingAuditLog",
+			"data": {
+				"operatorId": "{{cast:joris.uid}}",
+				"registerNumber": "REG-003",
+				"action": "refund",
+				"amount": -990,
+				"itemCount": 2,
+				"taxAmount": -82,
+				"timestamp": "{{datetime:0 09:47}}",
+				"transactionUuid": "{{object:kassabon-1038.id}}",
+				"description": "Retour: verkeerd aangeslagen",
+				"signature": "9f2c415ec19a930cbc7b4c6b46644edcd8e83a809afdb207915fe51470d7e07a",
+				"previousHash": "77aa93f7c91aa68eb1d5c7d09c3cfb0d5531872eceda9689338713b626fbc2d8",
+				"currentHash": "b81d0c54aad1da199694b6d742904decc5dcc78f3e289cd592956edf63e344f1",
+				"verified": false
+			}
+		},
+		{
+			"key": "kassa-audit-reg001-geen-verkoop",
+			"register": "pipelinq",
+			"schema": "kassakoppelingAuditLog",
+			"data": {
+				"operatorId": "{{cast:fatmayildiz.uid}}",
+				"registerNumber": "REG-001",
+				"action": "no-sale",
+				"amount": 0,
+				"itemCount": 0,
+				"taxAmount": 0,
+				"timestamp": "{{datetime:0 11:20}}",
+				"description": "Lade geopend voor wisselgeld",
+				"signature": "4d745387a90852cb1db1142babe6404e27e7d052290201b2226395193cb11bea",
+				"previousHash": "de82bafac095cfdf5fca1c81cc91da11e4e0b45eabd8c8210741c6547912fbe5",
+				"currentHash": "9ca1ff92340d7dec259102d3007fc7bbe01e6a29aa0dd7d3365ee2c7855ed7ba",
+				"verified": true
+			}
+		},
+		{
+			"key": "kassa-audit-reg002-verkoop-1043",
+			"register": "pipelinq",
+			"schema": "kassakoppelingAuditLog",
+			"data": {
+				"operatorId": "{{cast:pieter.uid}}",
+				"registerNumber": "REG-002",
+				"action": "sale",
+				"amount": 9641,
+				"itemCount": 4,
+				"taxAmount": 291,
+				"timestamp": "{{datetime:0 11:43}}",
+				"transactionUuid": "{{object:kassabon-1043.id}}",
+				"signature": "5e91445bf3aded5eddaeac2b81f472e21734c52de8052e15fe6df8b82609097e",
+				"previousHash": "6a0b6ad2f665d0e3993c5daa1bff786356b8e8b8fb18a569bb1c47ebbc277431",
+				"currentHash": "552a973e4a118cdfce993a9bb51a89948e4c092e011b22c9f835f1df3d9fce43",
+				"verified": true
+			}
+		},
+		{
+			"key": "kassa-audit-reg002-retour-1043",
+			"register": "pipelinq",
+			"schema": "kassakoppelingAuditLog",
+			"data": {
+				"operatorId": "{{cast:pieter.uid}}",
+				"registerNumber": "REG-002",
+				"action": "refund",
+				"amount": -1250,
+				"itemCount": 1,
+				"taxAmount": -217,
+				"timestamp": "{{datetime:0 12:05}}",
+				"transactionUuid": "{{object:kassabon-1043.id}}",
+				"description": "Retour RF-2026-0058: verkeerd product",
+				"signature": "405ab26f09bc62dbd85b502931849a11ca4ea2a30764adc4dfcaad947637f718",
+				"previousHash": "552a973e4a118cdfce993a9bb51a89948e4c092e011b22c9f835f1df3d9fce43",
+				"currentHash": "f29028091ab7005fb9029565df44e19367cb13c87371a1389b3dbabbc0f005e0"
+			}
+		},
+		{
 			"key": "leadline-training",
 			"register": "pipelinq",
 			"schema": "leadProduct",
