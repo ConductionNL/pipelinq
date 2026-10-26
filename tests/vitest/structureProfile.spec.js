@@ -477,14 +477,14 @@ describe('the brand block', () => {
 
 	it('names the app over the instance the theming capabilities answer, and the full profile declares none', () => {
 		expect(simpleFile.nav.brand).toEqual({
-			name: 'pipelinq',
+			name: 'Pipelinq',
 			caption: '@theming.name',
 			logo: '@theming.emblem|@theming.logo',
 		})
 		expect(fullFile.nav).toBeUndefined()
 		// The set's emblem, never the wordmark beside the app's own name.
 		expect(withTheming().nav.brand).toEqual({
-			name: 'pipelinq',
+			name: 'Pipelinq',
 			caption: 'Gemeente Zuiddrecht',
 			logo: '/apps/thematiq/img/emblem.svg',
 		})
@@ -523,7 +523,7 @@ describe('the brand block', () => {
 	it('shows the app alone on an instance that answers nothing, and never a placeholder', () => {
 		for (const answer of [null, {}, { name: '', logo: 7 }]) {
 			expect(resolveNavPlaceholders(simpleFile.nav, answer).brand).toEqual({
-				name: 'pipelinq',
+				name: 'Pipelinq',
 				caption: '',
 				logo: '',
 			})

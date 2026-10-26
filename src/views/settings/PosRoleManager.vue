@@ -14,11 +14,11 @@
   -->
 <template>
 	<NcSettingsSection
-		:name="t('pipelinq', 'POS roles')"
+		:name="t('pipelinq', 'Till roles')"
 		:description="
 			t(
 				'pipelinq',
-				'Permission sets a cashier can hold at the register — voiding, refunds, opening the cash drawer.',
+				'Rights a till employee can have: cancelling, refunding, opening the cash drawer.',
 			)
 		">
 		<PosRoleList :key="reloadKey" @edit="openRole" @create="openNew" />

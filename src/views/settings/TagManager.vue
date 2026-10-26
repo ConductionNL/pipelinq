@@ -329,9 +329,6 @@ export default {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
 	min-height: 44px;
 	align-items: center;
 }
