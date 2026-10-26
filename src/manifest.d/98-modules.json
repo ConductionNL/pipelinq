@@ -254,6 +254,14 @@
 						"icon": "ViewDashboard",
 						"category": "other",
 						"route": "OperationalDashboard"
+					},
+					{
+						"id": "Webchat",
+						"label": "Webchat",
+						"description": "Chats the bot handed over to a colleague, the conversation and who is asking.",
+						"icon": "ChatOutline",
+						"category": "other",
+						"route": "Webchat"
 					}
 				]
 			}
