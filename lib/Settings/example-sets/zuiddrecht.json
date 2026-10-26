@@ -455,6 +455,380 @@
 			}
 		},
 		{
+			"key": "client-visserbouw",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:visserbouw.name}}",
+				"type": "organization",
+				"email": "{{cast:visserbouw.email}}",
+				"address": "{{cast:visserbouw.address.street}} {{cast:visserbouw.address.number}}, {{cast:visserbouw.address.postcode}} {{cast:visserbouw.address.city}}",
+				"industry": [
+					"{{cast:visserbouw.sbi.description}}"
+				],
+				"contactsUid": "{{cast:visserbouw.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:visserbouw.kvk}}."
+			}
+		},
+		{
+			"key": "client-vanwijk",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:vanwijk.name}}",
+				"type": "organization",
+				"email": "{{cast:vanwijk.email}}",
+				"address": "{{cast:vanwijk.address.street}} {{cast:vanwijk.address.number}}, {{cast:vanwijk.address.postcode}} {{cast:vanwijk.address.city}}",
+				"industry": [
+					"{{cast:vanwijk.sbi.description}}"
+				],
+				"contactsUid": "{{cast:vanwijk.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:vanwijk.kvk}}."
+			}
+		},
+		{
+			"key": "client-bewonerslindelaan",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:bewonerslindelaan.name}}",
+				"type": "organization",
+				"email": "{{cast:bewonerslindelaan.email}}",
+				"address": "{{cast:bewonerslindelaan.address.street}} {{cast:bewonerslindelaan.address.number}}, {{cast:bewonerslindelaan.address.postcode}} {{cast:bewonerslindelaan.address.city}}",
+				"industry": [
+					"{{cast:bewonerslindelaan.sbi.description}}"
+				],
+				"contactsUid": "{{cast:bewonerslindelaan.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:bewonerslindelaan.kvk}}."
+			}
+		},
+		{
+			"key": "client-bakkerijdemolen",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:bakkerijdemolen.name}}",
+				"type": "organization",
+				"email": "{{cast:bakkerijdemolen.email}}",
+				"address": "{{cast:bakkerijdemolen.address.street}} {{cast:bakkerijdemolen.address.number}}, {{cast:bakkerijdemolen.address.postcode}} {{cast:bakkerijdemolen.address.city}}",
+				"industry": [
+					"{{cast:bakkerijdemolen.sbi.description}}"
+				],
+				"contactsUid": "{{cast:bakkerijdemolen.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:bakkerijdemolen.kvk}}."
+			}
+		},
+		{
+			"key": "client-lumeninfra",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:lumeninfra.name}}",
+				"type": "organization",
+				"email": "{{cast:lumeninfra.email}}",
+				"address": "{{cast:lumeninfra.address.street}} {{cast:lumeninfra.address.number}}, {{cast:lumeninfra.address.postcode}} {{cast:lumeninfra.address.city}}",
+				"industry": [
+					"{{cast:lumeninfra.sbi.description}}"
+				],
+				"contactsUid": "{{cast:lumeninfra.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:lumeninfra.kvk}}."
+			}
+		},
+		{
+			"key": "client-groenenco",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:groenenco.name}}",
+				"type": "organization",
+				"email": "{{cast:groenenco.email}}",
+				"address": "{{cast:groenenco.address.street}} {{cast:groenenco.address.number}}, {{cast:groenenco.address.postcode}} {{cast:groenenco.address.city}}",
+				"industry": [
+					"{{cast:groenenco.sbi.description}}"
+				],
+				"contactsUid": "{{cast:groenenco.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:groenenco.kvk}}."
+			}
+		},
+		{
+			"key": "client-sportclub",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:sportclub.name}}",
+				"type": "organization",
+				"email": "{{cast:sportclub.email}}",
+				"address": "{{cast:sportclub.address.street}} {{cast:sportclub.address.number}}, {{cast:sportclub.address.postcode}} {{cast:sportclub.address.city}}",
+				"industry": [
+					"{{cast:sportclub.sbi.description}}"
+				],
+				"contactsUid": "{{cast:sportclub.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:sportclub.kvk}}."
+			}
+		},
+		{
+			"key": "client-vvekerkplein",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:vvekerkplein.name}}",
+				"type": "organization",
+				"email": "{{cast:vvekerkplein.email}}",
+				"address": "{{cast:vvekerkplein.address.street}} {{cast:vvekerkplein.address.number}}, {{cast:vvekerkplein.address.postcode}} {{cast:vvekerkplein.address.city}}",
+				"industry": [
+					"{{cast:vvekerkplein.sbi.description}}"
+				],
+				"contactsUid": "{{cast:vvekerkplein.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:vvekerkplein.kvk}}."
+			}
+		},
+		{
+			"key": "client-harmonie",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:harmonie.name}}",
+				"type": "organization",
+				"email": "{{cast:harmonie.email}}",
+				"address": "{{cast:harmonie.address.street}} {{cast:harmonie.address.number}}, {{cast:harmonie.address.postcode}} {{cast:harmonie.address.city}}",
+				"industry": [
+					"{{cast:harmonie.sbi.description}}"
+				],
+				"contactsUid": "{{cast:harmonie.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:harmonie.kvk}}."
+			}
+		},
+		{
+			"key": "client-tennisdekade",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:tennisdekade.name}}",
+				"type": "organization",
+				"email": "{{cast:tennisdekade.email}}",
+				"address": "{{cast:tennisdekade.address.street}} {{cast:tennisdekade.address.number}}, {{cast:tennisdekade.address.postcode}} {{cast:tennisdekade.address.city}}",
+				"industry": [
+					"{{cast:tennisdekade.sbi.description}}"
+				],
+				"contactsUid": "{{cast:tennisdekade.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:tennisdekade.kvk}}."
+			}
+		},
+		{
+			"key": "client-ondernemers",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:ondernemers.name}}",
+				"type": "organization",
+				"email": "{{cast:ondernemers.email}}",
+				"address": "{{cast:ondernemers.address.street}} {{cast:ondernemers.address.number}}, {{cast:ondernemers.address.postcode}} {{cast:ondernemers.address.city}}",
+				"industry": [
+					"{{cast:ondernemers.sbi.description}}"
+				],
+				"contactsUid": "{{cast:ondernemers.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:ondernemers.kvk}}."
+			}
+		},
+		{
+			"key": "client-scouting",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:scouting.name}}",
+				"type": "organization",
+				"email": "{{cast:scouting.email}}",
+				"address": "{{cast:scouting.address.street}} {{cast:scouting.address.number}}, {{cast:scouting.address.postcode}} {{cast:scouting.address.city}}",
+				"industry": [
+					"{{cast:scouting.sbi.description}}"
+				],
+				"contactsUid": "{{cast:scouting.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:scouting.kvk}}."
+			}
+		},
+		{
+			"key": "client-drechthof",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:drechthof.name}}",
+				"type": "organization",
+				"email": "{{cast:drechthof.email}}",
+				"address": "{{cast:drechthof.address.street}} {{cast:drechthof.address.number}}, {{cast:drechthof.address.postcode}} {{cast:drechthof.address.city}}",
+				"industry": [
+					"{{cast:drechthof.sbi.description}}"
+				],
+				"contactsUid": "{{cast:drechthof.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:drechthof.kvk}}."
+			}
+		},
+		{
+			"key": "client-voedselbank",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:voedselbank.name}}",
+				"type": "organization",
+				"email": "{{cast:voedselbank.email}}",
+				"address": "{{cast:voedselbank.address.street}} {{cast:voedselbank.address.number}}, {{cast:voedselbank.address.postcode}} {{cast:voedselbank.address.city}}",
+				"industry": [
+					"{{cast:voedselbank.sbi.description}}"
+				],
+				"contactsUid": "{{cast:voedselbank.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:voedselbank.kvk}}."
+			}
+		},
+		{
+			"key": "client-dorpshuis",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:dorpshuis.name}}",
+				"type": "organization",
+				"email": "{{cast:dorpshuis.email}}",
+				"address": "{{cast:dorpshuis.address.street}} {{cast:dorpshuis.address.number}}, {{cast:dorpshuis.address.postcode}} {{cast:dorpshuis.address.city}}",
+				"industry": [
+					"{{cast:dorpshuis.sbi.description}}"
+				],
+				"contactsUid": "{{cast:dorpshuis.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:dorpshuis.kvk}}."
+			}
+		},
+		{
+			"key": "client-jeugdtheater",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:jeugdtheater.name}}",
+				"type": "organization",
+				"email": "{{cast:jeugdtheater.email}}",
+				"address": "{{cast:jeugdtheater.address.street}} {{cast:jeugdtheater.address.number}}, {{cast:jeugdtheater.address.postcode}} {{cast:jeugdtheater.address.city}}",
+				"industry": [
+					"{{cast:jeugdtheater.sbi.description}}"
+				],
+				"contactsUid": "{{cast:jeugdtheater.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:jeugdtheater.kvk}}."
+			}
+		},
+		{
+			"key": "client-erfgoed",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:erfgoed.name}}",
+				"type": "organization",
+				"email": "{{cast:erfgoed.email}}",
+				"address": "{{cast:erfgoed.address.street}} {{cast:erfgoed.address.number}}, {{cast:erfgoed.address.postcode}} {{cast:erfgoed.address.city}}",
+				"industry": [
+					"{{cast:erfgoed.sbi.description}}"
+				],
+				"contactsUid": "{{cast:erfgoed.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:erfgoed.kvk}}."
+			}
+		},
+		{
 			"key": "client-degraaf",
 			"register": "pipelinq",
 			"schema": "client",
@@ -1436,6 +1810,83 @@
 				"totalTax": 0,
 				"rejectedAt": "{{datetime:-4 09:40}}",
 				"rejectionReason": "De vergunning was al ingegaan."
+			}
+		},
+		{
+			"key": "kassa-audit-reg003-annulering-1038",
+			"register": "pipelinq",
+			"schema": "kassakoppelingAuditLog",
+			"data": {
+				"operatorId": "{{cast:joris.uid}}",
+				"registerNumber": "REG-003",
+				"action": "refund",
+				"amount": -990,
+				"itemCount": 2,
+				"taxAmount": -82,
+				"timestamp": "{{datetime:0 09:47}}",
+				"transactionUuid": "{{object:kassabon-1038.id}}",
+				"description": "Retour: verkeerd aangeslagen",
+				"signature": "9f2c415ec19a930cbc7b4c6b46644edcd8e83a809afdb207915fe51470d7e07a",
+				"previousHash": "77aa93f7c91aa68eb1d5c7d09c3cfb0d5531872eceda9689338713b626fbc2d8",
+				"currentHash": "b81d0c54aad1da199694b6d742904decc5dcc78f3e289cd592956edf63e344f1",
+				"verified": false
+			}
+		},
+		{
+			"key": "kassa-audit-reg001-geen-verkoop",
+			"register": "pipelinq",
+			"schema": "kassakoppelingAuditLog",
+			"data": {
+				"operatorId": "{{cast:fatmayildiz.uid}}",
+				"registerNumber": "REG-001",
+				"action": "no-sale",
+				"amount": 0,
+				"itemCount": 0,
+				"taxAmount": 0,
+				"timestamp": "{{datetime:0 11:20}}",
+				"description": "Lade geopend voor wisselgeld",
+				"signature": "4d745387a90852cb1db1142babe6404e27e7d052290201b2226395193cb11bea",
+				"previousHash": "de82bafac095cfdf5fca1c81cc91da11e4e0b45eabd8c8210741c6547912fbe5",
+				"currentHash": "9ca1ff92340d7dec259102d3007fc7bbe01e6a29aa0dd7d3365ee2c7855ed7ba",
+				"verified": true
+			}
+		},
+		{
+			"key": "kassa-audit-reg002-verkoop-1043",
+			"register": "pipelinq",
+			"schema": "kassakoppelingAuditLog",
+			"data": {
+				"operatorId": "{{cast:pieter.uid}}",
+				"registerNumber": "REG-002",
+				"action": "sale",
+				"amount": 9641,
+				"itemCount": 4,
+				"taxAmount": 291,
+				"timestamp": "{{datetime:0 11:43}}",
+				"transactionUuid": "{{object:kassabon-1043.id}}",
+				"signature": "5e91445bf3aded5eddaeac2b81f472e21734c52de8052e15fe6df8b82609097e",
+				"previousHash": "6a0b6ad2f665d0e3993c5daa1bff786356b8e8b8fb18a569bb1c47ebbc277431",
+				"currentHash": "552a973e4a118cdfce993a9bb51a89948e4c092e011b22c9f835f1df3d9fce43",
+				"verified": true
+			}
+		},
+		{
+			"key": "kassa-audit-reg002-retour-1043",
+			"register": "pipelinq",
+			"schema": "kassakoppelingAuditLog",
+			"data": {
+				"operatorId": "{{cast:pieter.uid}}",
+				"registerNumber": "REG-002",
+				"action": "refund",
+				"amount": -1250,
+				"itemCount": 1,
+				"taxAmount": -217,
+				"timestamp": "{{datetime:0 12:05}}",
+				"transactionUuid": "{{object:kassabon-1043.id}}",
+				"description": "Retour RF-2026-0058: verkeerd product",
+				"signature": "405ab26f09bc62dbd85b502931849a11ca4ea2a30764adc4dfcaad947637f718",
+				"previousHash": "552a973e4a118cdfce993a9bb51a89948e4c092e011b22c9f835f1df3d9fce43",
+				"currentHash": "f29028091ab7005fb9029565df44e19367cb13c87371a1389b3dbabbc0f005e0"
 			}
 		},
 		{
