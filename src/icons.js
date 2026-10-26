@@ -86,6 +86,7 @@ import DatabaseExport from 'vue-material-design-icons/DatabaseExport.vue'
 import DatabaseExportOutline from 'vue-material-design-icons/DatabaseExportOutline.vue'
 import DatabaseImportOutline from 'vue-material-design-icons/DatabaseImportOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
+import Download from 'vue-material-design-icons/Download.vue'
 import Email from 'vue-material-design-icons/Email.vue'
 import EmailEditOutline from 'vue-material-design-icons/EmailEditOutline.vue'
 import EmailFastOutline from 'vue-material-design-icons/EmailFastOutline.vue'
@@ -182,6 +183,7 @@ import ViewDashboard from 'vue-material-design-icons/ViewDashboard.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
 import WalletOutline from 'vue-material-design-icons/WalletOutline.vue'
+import WebBox from 'vue-material-design-icons/WebBox.vue'
 
 export default {
 	Account,
@@ -257,6 +259,7 @@ export default {
 	DatabaseExportOutline,
 	DatabaseImportOutline,
 	Domain,
+	Download,
 	Email,
 	EmailEditOutline,
 	EmailFastOutline,
@@ -354,4 +357,5 @@ export default {
 	ViewGridOutline,
 	WalletOutline,
 	AccountPlusOutline,
+	WebBox,
 }

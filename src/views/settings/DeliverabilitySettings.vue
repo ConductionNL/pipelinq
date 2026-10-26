@@ -15,6 +15,7 @@
 <template>
 	<div id="section-mail-transports" class="deliverability-settings">
 		<NcSettingsSection
+			class="cn-settings-section--wide"
 			:name="t('pipelinq', 'Mail transports')"
 			:description="
 				t(

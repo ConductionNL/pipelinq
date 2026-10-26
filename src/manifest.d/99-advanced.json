@@ -1,0 +1,123 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "The Advanced page (board PqGeavanceerdHub): one page of link cards for everything that sets the app up and the overviews read now and then, grouped as the Advanced foldout in the navigation groups them. A `links` page (CnLinkCardsPage), so it is configuration only. The library leaves out a card whose route does not resolve."
+	},
+	"menu": [],
+	"pages": [
+		{
+			"id": "Advanced",
+			"route": "/advanced",
+			"type": "links",
+			"title": "Advanced",
+			"config": {
+				"description": "Everything to set up pipelinq, and the overviews you read now and then",
+				"categories": {
+					"reports": "Reports and automation",
+					"setup": "Set up the app",
+					"about": "About the app",
+					"admin": "Administrator"
+				},
+				"cards": [
+					{
+						"id": "Reports",
+						"label": "Reports",
+						"description": "Contact, channels, staff, forecast, loyalty and SLA on one page.",
+						"icon": "ChartBar",
+						"category": "reports",
+						"route": "Reports"
+					},
+					{
+						"id": "Flows",
+						"label": "Flows",
+						"description": "Automation that runs on its own once it is set up.",
+						"icon": "Sitemap",
+						"category": "reports",
+						"route": "Flows"
+					},
+					{
+						"id": "Pipelines",
+						"label": "Pipelines",
+						"description": "The stages a lead or request goes through.",
+						"icon": "ViewColumnOutline",
+						"category": "setup",
+						"route": "Pipelines"
+					},
+					{
+						"id": "Services",
+						"label": "Services and resources",
+						"description": "What residents can book, and who or what it is booked on.",
+						"icon": "ViewGridOutline",
+						"category": "setup",
+						"route": "Services"
+					},
+					{
+						"id": "Integrations",
+						"label": "Integrations",
+						"description": "Telephony, social networks, Berichtenbox and bulk mail, on the Nextcloud admin page.",
+						"icon": "PowerPlugOutline",
+						"category": "setup",
+						"route": "Integrations",
+						"query": {
+							"app": "pipelinq"
+						},
+						"permission": "admin",
+						"visibleIf": {
+							"appInstalled": "integriq"
+						}
+					},
+					{
+						"id": "ExportJobs",
+						"label": "BI export",
+						"description": "Scheduled exports to a data warehouse or BI tool.",
+						"icon": "DatabaseExportOutline",
+						"category": "setup",
+						"route": "ExportJobs"
+					},
+					{
+						"id": "Modules",
+						"label": "Modules",
+						"description": "Sales, marketing, point of sale and more. An administrator switches them on for everyone on the admin page.",
+						"icon": "PackageVariant",
+						"category": "setup",
+						"route": "Modules"
+					},
+					{
+						"id": "Store",
+						"label": "Store",
+						"description": "Apps and extensions that work with pipelinq.",
+						"icon": "StoreOutline",
+						"category": "about",
+						"route": "Store"
+					},
+					{
+						"id": "FeaturesRoadmap",
+						"label": "Features and roadmap",
+						"description": "What pipelinq does now and what is coming.",
+						"icon": "MapMarkerPath",
+						"category": "about",
+						"route": "FeaturesRoadmap"
+					},
+					{
+						"id": "Documentation",
+						"label": "Documentation",
+						"description": "How pipelinq works, step by step, for employees and administrators.",
+						"icon": "BookOpenVariantOutline",
+						"category": "about",
+						"href": "https://pipelinq.conduction.nl/docs/intro"
+					},
+					{
+						"id": "AdminSettings",
+						"label": "Administration settings",
+						"description": "Menu structure, telephony, mail routes and payment providers, on the Nextcloud admin page.",
+						"icon": "ShieldAccountOutline",
+						"category": "admin",
+						"href": "/index.php/settings/admin/pipelinq",
+						"permission": "admin"
+					}
+				]
+			}
+		}
+	]
+}

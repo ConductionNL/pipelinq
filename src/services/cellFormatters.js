@@ -10,6 +10,7 @@
  */
 
 import { translate as t } from '@nextcloud/l10n'
+import { timeRange } from '../utils/bookingTime.js'
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
 import { createUserDisplayNameFormatter } from './userDisplayName.js'
@@ -111,12 +112,62 @@ export function yesNo(value) {
 		: t('pipelinq', 'No')
 }
 
+/**
+ * Print an ISO 8601 duration ("PT6M", "PT1H5M", "PT45S") the way the lists
+ * read it: "6 min", "1 h 5 min", "45 s". A value that is not an ISO duration
+ * shows as stored.
+ *
+ * @param {unknown} value The stored value.
+ * @return {string} The readable duration, or '' when unset.
+ * @spec openspec/specs/contactmomenten/spec.md
+ */
+export function isoDuration(value) {
+	if (value === null || value === undefined || value === '') {
+		return ''
+	}
+	const match = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/.exec(String(value))
+	if (!match || match[0] === 'P' || match[0] === 'PT') {
+		return String(value)
+	}
+	const [, days, hours, minutes, seconds] = match
+	const parts = []
+	if (days) {
+		parts.push(t('pipelinq', '{count} d', { count: Number(days) }))
+	}
+	if (hours) {
+		parts.push(t('pipelinq', '{count} h', { count: Number(hours) }))
+	}
+	if (minutes) {
+		parts.push(t('pipelinq', '{count} min', { count: Number(minutes) }))
+	}
+	if (seconds && parts.length === 0) {
+		parts.push(t('pipelinq', '{count} s', { count: Math.round(Number(seconds)) }))
+	}
+	return parts.join(' ')
+}
+
+/**
+ * When an appointment is, as the PqAfspraken board writes it: the start and
+ * end time of day ("08:45 tot 09:00"). The row's `endAt` gives the end; a
+ * row without one shows the start alone.
+ *
+ * @param {unknown} value The start (`startAt`).
+ * @param {object} [row] The booking; its `endAt` is the end.
+ * @return {string} The time range, or '' for an empty start.
+ * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+ */
+export function bookingWhen(value, row) {
+	return timeRange(value, row?.endAt)
+}
+
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
 	enumText,
 	enumLabel,
 	yesNo,
+	callDuration: isoDuration,
+	bookingWhen,
 }
 
 /**

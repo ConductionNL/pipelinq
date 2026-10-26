@@ -20,6 +20,7 @@
 <template>
 	<div class="messaging-settings">
 		<NcSettingsSection
+			class="cn-settings-section--wide"
 			:name="t('pipelinq', 'Incoming messages')"
 			:description="
 				t(
@@ -67,6 +68,7 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			class="cn-settings-section--wide"
 			:name="t('pipelinq', 'Providers')"
 			:description="
 				t(
@@ -287,6 +289,7 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			class="cn-settings-section--wide"
 			:name="t('pipelinq', 'Send budgets')"
 			:description="
 				t(
@@ -436,6 +439,7 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			class="cn-settings-section--wide"
 			:name="t('pipelinq', 'Templates')"
 			:description="
 				t(

@@ -119,11 +119,13 @@ describe('the full structure', () => {
 		expect(full).toEqual(
 			manifest().pages.find((page) => page.id === 'TicketDetail'),
 		)
-		// The header actions on the full page are Make a letter
-		// (work-letter-from-filinq-template, shown only with filinq) and
-		// Assign to me (detail-pages-read-at-a-glance), which sets the assignee
-		// and changes no status.
+		// The header actions on the full page are Link to a client
+		// (website-submissions-link-to-client, shown while the ticket has no
+		// client), Make a letter (work-letter-from-filinq-template, shown only
+		// with filinq) and Assign to me (detail-pages-read-at-a-glance), which
+		// sets the assignee and changes no status.
 		expect(full.config.headerActions.map((action) => action.id)).toEqual([
+			'link-to-client',
 			'make-letter',
 			'assign-to-me',
 		])

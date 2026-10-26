@@ -15,11 +15,11 @@
   -->
 <template>
 	<NcSettingsSection
-		:name="t('pipelinq', 'POS staff')"
+		:name="t('pipelinq', 'Till staff')"
 		:description="
 			t(
 				'pipelinq',
-				'Cashiers who can sign in at the register, and the POS role each one holds.',
+				'Till staff who can sign in at the till, and the till role of each.',
 			)
 		">
 		<PosStaffList :key="reloadKey" @edit="openStaff" @create="openNew" />
