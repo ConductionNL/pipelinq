@@ -8,8 +8,8 @@
  * @spec openspec/changes/campaign-contents-counts/specs/marketing-campaigns/spec.md#requirement-a-campaign-names-how-much-it-holds
  */
 import { describe, expect, it } from 'vitest'
-import fragment from '../../src/manifest.d/78-marketing-campaigns.json'
 import nl from '../../l10n/nl.json'
+import fragment from '../../src/manifest.d/78-marketing-campaigns.json'
 
 const widget = fragment.pages.find((page) => page.id === 'CampaignDetail').config.widgets.find((w) => w.id === 'campaign-contents')
 
