@@ -16,7 +16,7 @@
 		},
 		{
 			"key": "ticket_reference_counter",
-			"value": "417",
+			"value": "423",
 			"type": "int"
 		},
 		{
@@ -452,6 +452,74 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:kindzorg.kvk}}."
+			}
+		},
+		{
+			"key": "client-degraaf",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "M. de Graaf",
+				"type": "person",
+				"address": "Dorpsstraat 8, 2999BA Zuiddrecht",
+				"contactsUid": "example-degraaf",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Belt het liefst 's ochtends."
+			}
+		},
+		{
+			"key": "client-dewit",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "J. de Wit",
+				"type": "person",
+				"address": "Kerkplein 3, 2999BC Zuiddrecht",
+				"contactsUid": "example-dewit",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "counter",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Komt meestal langs aan de balie."
+			}
+		},
+		{
+			"key": "client-kuiper",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Fam. Kuiper",
+				"type": "person",
+				"address": "Parkstraat 21, 2999BD Zuiddrecht",
+				"contactsUid": "example-kuiper",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Bereikbaar op 06 41 22 90 17."
+			}
+		},
+		{
+			"key": "client-hoekstra",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "L. Hoekstra",
+				"type": "person",
+				"address": "Havenstraat 5, 2999BE Zuiddrecht",
+				"contactsUid": "example-hoekstra",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Neemt contact op via de chat."
 			}
 		},
 		{
@@ -2064,6 +2132,146 @@
 				"channel": "email",
 				"category": "openbare-ruimte",
 				"occurredAt": "{{datetime:0 09:20}}"
+			}
+		},
+		{
+			"key": "ticket-degraaf-afvalpas",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Afvalpas werkt niet bij de container",
+				"reference": "PQ-2026-0409",
+				"description": "De afvalpas van de heer De Graaf wordt sinds maandag geweigerd door de container bij Dorpsstraat 8 en door een tweede container.",
+				"client": "{{object:client-degraaf.id}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "phone",
+				"category": "afval",
+				"occurredAt": "{{datetime:-3 10:05}}",
+				"slaDeadline": "{{datetime:2 17:00}}"
+			}
+		},
+		{
+			"key": "interaction-degraaf-afvalpas",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Telefoongesprek met M. de Graaf",
+				"reference": "PQ-2026-0423",
+				"direction": "inbound",
+				"channel": "telefoon",
+				"outcome": "transferred",
+				"status": "in_progress",
+				"client": "{{object:client-degraaf.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:0 09:12}}",
+				"description": "Meneer De Graaf belde over zijn afvalpas: de container bij Dorpsstraat 8 weigert die sinds maandag. Hij probeerde al een andere container, met hetzelfde resultaat. Ik heb gezegd dat we de pas gratis vervangen en dat het 3 werkdagen duurt. Hij vroeg of hij zijn afval intussen buiten mag zetten.",
+				"duration": "PT6M",
+				"parentTicket": "{{object:ticket-degraaf-afvalpas.id}}",
+				"category": "afval"
+			}
+		},
+		{
+			"key": "interaction-dewit-paspoort",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Paspoort opgehaald aan de balie",
+				"reference": "PQ-2026-0422",
+				"direction": "inbound",
+				"channel": "balie",
+				"outcome": "handled",
+				"status": "closed",
+				"client": "{{object:client-dewit.id}}",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"occurredAt": "{{datetime:0 08:51}}",
+				"description": "Paspoort uitgereikt na identiteitscontrole.",
+				"duration": "PT4M",
+				"category": "burgerzaken"
+			}
+		},
+		{
+			"key": "interaction-kuiper-parkeervergunning",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Terugbellen over de parkeervergunning",
+				"reference": "PQ-2026-0419",
+				"direction": "outbound",
+				"channel": "telefoon",
+				"outcome": "callbackRequest",
+				"status": "in_progress",
+				"client": "{{object:client-kuiper.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-1 16:40}}",
+				"description": "Familie Kuiper niet volledig kunnen helpen. Terugbelafspraak gemaakt.",
+				"duration": "PT3M",
+				"category": "parkeren"
+			}
+		},
+		{
+			"key": "interaction-sanne-straatfeest-antwoord",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Antwoord verstuurd: een evenementenvergunning is nodig",
+				"reference": "PQ-2026-0418",
+				"direction": "outbound",
+				"channel": "portal",
+				"outcome": "resolved",
+				"status": "closed",
+				"client": "{{object:client-sanne.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-4 11:02}}",
+				"description": "Via Mijn Zuiddrecht geantwoord: voor een straatfeest in de Parkstraat is een evenementenvergunning nodig.",
+				"parentTicket": "{{object:ticket-sanne-straatfeest.id}}",
+				"category": "vergunningen"
+			}
+		},
+		{
+			"key": "interaction-hoekstra-grofvuil",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Vraag over het ophalen van grofvuil",
+				"reference": "PQ-2026-0416",
+				"direction": "inbound",
+				"channel": "chat",
+				"outcome": "handled",
+				"status": "closed",
+				"client": "{{object:client-hoekstra.id}}",
+				"assignee": "{{cast:joris.uid}}",
+				"occurredAt": "{{datetime:-4 10:47}}",
+				"description": "Ophaaldag voor grofvuil doorgegeven.",
+				"duration": "PT7M",
+				"category": "afval"
+			}
+		},
+		{
+			"key": "interaction-sanne-straatfeest-gesprek",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Telefoongesprek over een straatfeest in de Parkstraat",
+				"reference": "PQ-2026-0415",
+				"direction": "inbound",
+				"channel": "telefoon",
+				"outcome": "followUpAction",
+				"status": "closed",
+				"client": "{{object:client-sanne.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-4 10:24}}",
+				"description": "Mevrouw De Vries belde over een straatfeest in de Parkstraat. Verzoek PQ-2026-0417 aangemaakt.",
+				"duration": "PT6M",
+				"parentTicket": "{{object:ticket-sanne-straatfeest.id}}",
+				"category": "vergunningen"
 			}
 		},
 		{
