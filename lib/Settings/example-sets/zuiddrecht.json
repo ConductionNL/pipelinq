@@ -237,33 +237,529 @@
 			}
 		},
 		{
+			"key": "pipeline-verkoop",
+			"register": "pipelinq",
+			"schema": "pipeline",
+			"data": {
+				"title": "Verkoop",
+				"description": "De verkoop van diensten en producten aan bedrijven en instellingen in Zuiddrecht.",
+				"isDefault": false,
+				"stages": [
+					{
+						"name": "Nieuw",
+						"order": 1,
+						"probability": 10,
+						"isDefault": true
+					},
+					{
+						"name": "Benaderd",
+						"order": 2,
+						"probability": 30
+					},
+					{
+						"name": "Gekwalificeerd",
+						"order": 3,
+						"probability": 50
+					},
+					{
+						"name": "Voorstel",
+						"order": 4,
+						"probability": 70
+					},
+					{
+						"name": "Gewonnen",
+						"order": 5,
+						"probability": 100,
+						"isWon": true,
+						"isClosed": true
+					},
+					{
+						"name": "Verloren",
+						"order": 6,
+						"probability": 0,
+						"isClosed": true
+					}
+				]
+			}
+		},
+		{
+			"key": "client-zorggroep-merwede",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Zorggroep Merwede",
+				"contactsUid": "example-zorggroep-merwede",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-bouwbedrijf-vandijk",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Bouwbedrijf Van Dijk",
+				"contactsUid": "example-bouwbedrijf-vandijk",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-schoonmaak-zuid",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Schoonmaak Zuid BV",
+				"contactsUid": "example-schoonmaak-zuid",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-energiecooperatie-zuid",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Energiecoöperatie Zuid",
+				"contactsUid": "example-energiecooperatie-zuid",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-cafe-dekroon",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Café De Kroon",
+				"contactsUid": "example-cafe-dekroon",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-drukkerij-hofman",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Drukkerij Hofman",
+				"contactsUid": "example-drukkerij-hofman",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-garage-bakker",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Garage Bakker",
+				"contactsUid": "example-garage-bakker",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-ingenieursbureau-delta",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Ingenieursbureau Delta",
+				"contactsUid": "example-ingenieursbureau-delta",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-fietsenmaker-peters",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Fietsenmaker Peters",
+				"contactsUid": "example-fietsenmaker-peters",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-sportvereniging-zuiddrecht",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Sportvereniging Zuiddrecht",
+				"contactsUid": "example-sportvereniging-zuiddrecht",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-dagblad",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:dagblad.name}}",
+				"type": "organization",
+				"email": "{{cast:dagblad.email}}",
+				"contactsUid": "{{cast:dagblad.contactsUid}}",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:dagblad.kvk}}."
+			}
+		},
+		{
+			"key": "client-kindzorg",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:kindzorg.name}}",
+				"type": "organization",
+				"email": "{{cast:kindzorg.email}}",
+				"contactsUid": "{{cast:kindzorg.contactsUid}}",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:kindzorg.kvk}}."
+			}
+		},
+		{
+			"key": "lead-energie-ledenportaal",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Ledenportaal energiecoöperatie",
+				"client": "{{object:client-energiecooperatie-zuid.id}}",
+				"source": "webformulier",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Nieuw",
+				"stageOrder": 1,
+				"status": "open",
+				"priority": "normal",
+				"probability": 15,
+				"value": 18000,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-2 09:10}}",
+				"category": "Software"
+			}
+		},
+		{
+			"key": "lead-sport-ledenadministratie",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Ledenadministratie en contributie",
+				"client": "{{object:client-sportvereniging-zuiddrecht.id}}",
+				"source": "balie",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Nieuw",
+				"stageOrder": 1,
+				"status": "open",
+				"priority": "normal",
+				"probability": 10,
+				"value": 6500,
+				"currency": "EUR",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"stageEnteredAt": "{{datetime:-4 14:20}}",
+				"category": "Software",
+				"expectedCloseDate": "{{date:45}}"
+			}
+		},
+		{
+			"key": "lead-hofman-drukwerk",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Drukwerk voor de gemeentegids",
+				"client": "{{object:client-drukkerij-hofman.id}}",
+				"source": "e-mail",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Nieuw",
+				"stageOrder": 1,
+				"status": "open",
+				"priority": "low",
+				"probability": 10,
+				"value": 4200,
+				"currency": "EUR",
+				"assignee": "{{cast:joris.uid}}",
+				"stageEnteredAt": "{{datetime:-9 10:45}}",
+				"category": "Inkoop",
+				"expectedCloseDate": "{{date:60}}"
+			}
+		},
+		{
+			"key": "lead-garage-wagenpark",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Onderhoud wagenpark buitendienst",
+				"client": "{{object:client-garage-bakker.id}}",
+				"source": "telefoon",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Nieuw",
+				"stageOrder": 1,
+				"status": "open",
+				"priority": "normal",
+				"probability": 10,
+				"value": 9800,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-1 16:05}}",
+				"category": "Inkoop",
+				"expectedCloseDate": "{{date:50}}"
+			}
+		},
+		{
+			"key": "lead-merwede-zorgplanning",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Koppeling zorgplanning",
+				"client": "{{object:client-zorggroep-merwede.id}}",
+				"source": "doorverwijzing",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Benaderd",
+				"stageOrder": 2,
+				"status": "open",
+				"priority": "normal",
+				"probability": 41,
+				"value": 64000,
+				"currency": "EUR",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"stageEnteredAt": "{{datetime:-6 09:10}}",
+				"category": "Software",
+				"expectedCloseDate": "{{date:39}}"
+			}
+		},
+		{
+			"key": "lead-schoonmaak-stadhuis",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Schoonmaakcontract stadhuis",
+				"client": "{{object:client-schoonmaak-zuid.id}}",
+				"source": "telefoon",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Benaderd",
+				"stageOrder": 2,
+				"status": "open",
+				"priority": "low",
+				"probability": 22,
+				"value": 27500,
+				"currency": "EUR",
+				"assignee": "{{cast:joris.uid}}",
+				"stageEnteredAt": "{{datetime:-12 14:20}}",
+				"category": "Inkoop",
+				"expectedCloseDate": "{{date:55}}"
+			}
+		},
+		{
+			"key": "lead-delta-rioleringsplan",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Advies rioleringsplan",
+				"client": "{{object:client-ingenieursbureau-delta.id}}",
+				"source": "e-mail",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Benaderd",
+				"stageOrder": 2,
+				"status": "open",
+				"priority": "normal",
+				"probability": 30,
+				"value": 41000,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-18 10:45}}",
+				"category": "Advies",
+				"expectedCloseDate": "{{date:70}}"
+			}
+		},
+		{
+			"key": "lead-vandijk-bouwkeet",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Inrichting bouwkeet",
+				"client": "{{object:client-bouwbedrijf-vandijk.id}}",
+				"source": "beurs",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Gekwalificeerd",
+				"stageOrder": 3,
+				"status": "open",
+				"priority": "normal",
+				"probability": 48,
+				"value": 85000,
+				"currency": "EUR",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"stageEnteredAt": "{{datetime:-15 16:05}}",
+				"category": "Inrichting",
+				"expectedCloseDate": "{{date:-5}}"
+			}
+		},
+		{
+			"key": "lead-kindzorg-roosterapp",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Roosterapp voor de kinderopvang",
+				"client": "{{object:client-kindzorg.id}}",
+				"source": "webformulier",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Gekwalificeerd",
+				"stageOrder": 3,
+				"status": "open",
+				"priority": "normal",
+				"probability": 50,
+				"value": 32000,
+				"currency": "EUR",
+				"assignee": "{{cast:joris.uid}}",
+				"stageEnteredAt": "{{datetime:-5 09:10}}",
+				"category": "Software",
+				"expectedCloseDate": "{{date:40}}"
+			}
+		},
+		{
+			"key": "lead-dagblad-nieuwsapp",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Regionale nieuwsapp",
+				"client": "{{object:client-dagblad.id}}",
+				"source": "e-mail",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Voorstel",
+				"stageOrder": 4,
+				"status": "open",
+				"priority": "high",
+				"probability": 70,
+				"value": 48000,
+				"currency": "EUR",
+				"assignee": "{{cast:joris.uid}}",
+				"stageEnteredAt": "{{datetime:-11 14:20}}",
+				"category": "Software",
+				"expectedCloseDate": "{{date:13}}"
+			}
+		},
+		{
+			"key": "lead-dekroon-terras",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Terrasmeubilair",
+				"client": "{{object:client-cafe-dekroon.id}}",
+				"source": "balie",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Voorstel",
+				"stageOrder": 4,
+				"status": "open",
+				"priority": "low",
+				"probability": 55,
+				"value": 7500,
+				"currency": "EUR",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"stageEnteredAt": "{{datetime:-24 10:45}}",
+				"category": "Inrichting",
+				"expectedCloseDate": "{{date:3}}"
+			}
+		},
+		{
+			"key": "lead-buurtoost-buurthuis",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Inrichting buurthuis Oost",
+				"client": "{{object:client-buurtoost.id}}",
+				"source": "balie",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Gewonnen",
+				"stageOrder": 5,
+				"status": "won",
+				"priority": "normal",
+				"probability": 100,
+				"value": 12500,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-3 16:05}}",
+				"category": "Inrichting",
+				"expectedCloseDate": "{{date:-3}}"
+			}
+		},
+		{
+			"key": "lead-peters-fietsenstalling",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Fietsenstalling bij het station",
+				"client": "{{object:client-fietsenmaker-peters.id}}",
+				"source": "telefoon",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Verloren",
+				"stageOrder": 6,
+				"status": "lost",
+				"priority": "normal",
+				"probability": 0,
+				"value": 5400,
+				"currency": "EUR",
+				"assignee": "{{cast:joris.uid}}",
+				"stageEnteredAt": "{{datetime:-30 09:10}}",
+				"category": "Inrichting",
+				"expectedCloseDate": "{{date:-30}}"
+			}
+		},
+		{
 			"key": "lead-woonportaal",
 			"register": "pipelinq",
 			"schema": "lead",
-			"lookups": {
-				"pipeline": {
-					"schema": "pipeline",
-					"where": {
-						"title": "Sales",
-						"isDefault": true
-					}
-				}
-			},
 			"data": {
 				"title": "Woonportaal voor huurders",
 				"description": "Een portaal waar huurders reparaties melden, hun huurcontract inzien en berichten van de corporatie lezen.",
 				"client": "{{object:client-drechtwonen.id}}",
-				"source": "via het webformulier",
-				"pipeline": "{{lookup:pipeline}}",
+				"source": "webformulier",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
 				"stage": "Gekwalificeerd",
-				"stageOrder": 2,
+				"stageOrder": 3,
 				"status": "open",
 				"priority": "high",
 				"probability": 62,
 				"value": 120000,
 				"currency": "EUR",
-				"expectedCloseDate": "{{date:14}}",
-				"assignee": "{{cast:daan.uid}}"
+				"expectedCloseDate": "{{date:23}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-8 14:02}}",
+				"category": "Software"
 			}
 		},
 		{
