@@ -154,6 +154,7 @@
 								{
 									"widgetIds": [
 										"campaign-data",
+										"campaign-events",
 										"campaign-landing",
 										"campaign-report"
 									],
@@ -262,6 +263,32 @@
 						"title": "Campaign report",
 						"content": {
 							"title": "Campaign report"
+						}
+					},
+					{
+						"id": "campaign-events",
+						"type": "record-list",
+						"title": "Events",
+						"_note": "campaign-events (PqEvenement): the events this campaign holds, each opening its event page.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "campaignEvent",
+							"filter": {
+								"campaign": "@objectId"
+							},
+							"sort": {
+								"field": "startAt",
+								"dir": "asc"
+							},
+							"limit": 10,
+							"title": "{title}",
+							"meta": "{startAt|date} · {venue}",
+							"rowRoute": "CampaignEventDetail",
+							"headerLink": {
+								"label": "All events",
+								"route": "CampaignEvents"
+							},
+							"emptyText": "This campaign holds no events yet."
 						}
 					}
 				],

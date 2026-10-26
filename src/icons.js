@@ -27,6 +27,7 @@ import AccountGroupOutline from 'vue-material-design-icons/AccountGroupOutline.v
 import AccountKey from 'vue-material-design-icons/AccountKey.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import AccountMultipleOutline from 'vue-material-design-icons/AccountMultipleOutline.vue'
+import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
 import AccountSearch from 'vue-material-design-icons/AccountSearch.vue'
 import AccountSearchOutline from 'vue-material-design-icons/AccountSearchOutline.vue'
 import AccountStarOutline from 'vue-material-design-icons/AccountStarOutline.vue'
@@ -40,6 +41,7 @@ import BellRing from 'vue-material-design-icons/BellRing.vue'
 import BellRingOutline from 'vue-material-design-icons/BellRingOutline.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import BriefcaseOutline from 'vue-material-design-icons/BriefcaseOutline.vue'
 import BullhornOutline from 'vue-material-design-icons/BullhornOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CalendarBlankOutline from 'vue-material-design-icons/CalendarBlankOutline.vue'
@@ -210,6 +212,7 @@ export default {
 	BellRingOutline,
 	BookOpenPageVariant,
 	BookOpenVariantOutline,
+	BriefcaseOutline,
 	BullhornOutline,
 	Calendar,
 	CalendarBlankOutline,
@@ -350,4 +353,5 @@ export default {
 	ViewDashboard,
 	ViewGridOutline,
 	WalletOutline,
+	AccountPlusOutline,
 }

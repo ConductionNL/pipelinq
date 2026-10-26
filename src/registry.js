@@ -167,6 +167,7 @@ import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+import ContactImportDialog from './dialogs/ContactImportDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
@@ -298,6 +299,7 @@ import { sectionWidget } from './components/widgets/sectionWidget.js'
 //     + single scroll region). One small host widget remains: the header
 //     agent-availability toggle. ---
 import { createWithContact } from './services/contactSyncApi.js'
+import { moveTicketStatus, ticketStatusTargets } from './utils/ticketBoardMoves.js'
 
 /*
  * Grid metadata required for every kind:"widget" entry by the ADR-036
@@ -1212,6 +1214,13 @@ const registry = {
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
 	},
 
+	ContactImportDialog: {
+		kind: 'modal',
+		component: ContactImportDialog,
+		propsSchema: null,
+		_note: 'Import from Nextcloud Contacts (PqContactenImporteren). Target of the import header button on the Contacts index; imports the marked addressbook cards as contacts.',
+	},
+
 	// Pages' form-dialog slot (page.slots), not header-action modals: the
 	// index or detail page mounts them for its Add and Edit.
 	BlastWizardDialog: {
@@ -1263,6 +1272,18 @@ const registry = {
 		kind: 'create-override',
 		handler: (formData) => createWithContact('contact', formData),
 		_note: 'Same contact-FIRST path for the contact schema (also marks contactsUid REQUIRED).',
+	},
+
+	// The tickets board (LijstBord): a drop follows the ticket lifecycle.
+	moveTicketStatus: {
+		kind: 'handler',
+		handler: moveTicketStatus,
+		_note: 'The Tickets board view\'s `board.moveHandler`: checks the move against requestStatus.js and writes the status, or refuses with a sentence.',
+	},
+	ticketStatusTargets: {
+		kind: 'handler',
+		handler: ticketStatusTargets,
+		_note: 'The Tickets board view\'s `board.moveTargetsHandler`: the statuses the lifecycle allows from the ticket\'s own.',
 	},
 }
 

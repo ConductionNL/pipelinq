@@ -125,6 +125,8 @@ return [
         // The contact moments leaf a host app renders on its own object
         // (contact-moments-on-pipelinq-schema, REQ-CMD-003). `hostId` is the
         // host's uuid and stays opaque to pipelinq.
+        // A host app's link to one party's tickets, by master entity (tickets-list-by-party).
+        ['name' => 'ticketParty#tickets', 'url' => '/tickets/party/{ref}', 'verb' => 'GET'],
         ['name' => 'contactMomentLeaf#index',  'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'GET'],
         ['name' => 'contactMomentLeaf#create', 'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'POST'],
         // Filing an EXISTING contact moment onto a further case, and taking it
