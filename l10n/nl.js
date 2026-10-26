@@ -7963,7 +7963,25 @@ OC.L10N.register(
         "Campaign events": "Evenementen",
         "Fully booked": "Volgeboekt",
         "An event a campaign holds, with its places": "Een evenement van een campagne, met zijn plaatsen",
-        "One sign-up for a campaign event": "Eén aanmelding voor een evenement"
+        "One sign-up for a campaign event": "Eén aanmelding voor een evenement",
+        "Tasks and callback requests": "Taken en terugbelverzoeken",
+        "{shown} of {total} tasks · whole team · deadline first": "{shown} van {total} taken · hele team · termijn eerst",
+        "Plan a callback": "Terugbelafspraak plannen",
+        "Callback requests today": "Terugbelverzoeken vandaag",
+        "{count} overdue": "{count} over tijd",
+        "Open follow-ups": "Open opvolgingen",
+        "{count} for you": "{count} voor jou",
+        "Information requests": "Informatieverzoeken",
+        "{count} unassigned": "{count} niet toegewezen",
+        "Expired this week": "Deze week verlopen",
+        "reassigned or closed": "opnieuw toegewezen of gesloten",
+        "For": "Voor",
+        "Time limit": "Termijn",
+        "Z reports": "Z-rapporten",
+        "{shown} of {total} day reports · the bookkeeping happens in shillinq": "{shown} van {total} dagrapporten · de boekhouding gebeurt in shillinq",
+        "Not posted": "Niet geboekt",
+        "Identifier": "Kenmerk",
+        "The day close makes one Z report per till every night. Z reports are read-only.": "De dagafsluiting maakt elke nacht één Z-rapport per kassa. Ze zijn alleen-lezen."
     },
     "nplurals=2; plural=(n != 1);"
 )
