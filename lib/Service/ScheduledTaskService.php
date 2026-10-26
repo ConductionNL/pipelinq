@@ -454,7 +454,7 @@ class ScheduledTaskService {
 					'filters' => [
 						'register' => $registerId,
 						'schema' => $schemaId,
-						'status' => 'open',
+						'status' => ['open', 'in_progress'],
 						'deadline' => [
 							'<' => $now->format(DateTimeInterface::ATOM),
 						],
@@ -560,7 +560,7 @@ class ScheduledTaskService {
 		$candidates = array_merge($overdue, $dueSoon);
 
 		$now = new DateTimeImmutable('now');
-		$expiryCut = $now->modify('-4 hours');
+		$expiryCut = $now->modify(modifier: sprintf('-%d minutes', $this->getExpiryCutMinutes()));
 
 		[$registerId, $schemaId] = $this->getRegisterAndSchema();
 		if ($registerId === '' || $schemaId === '') {
@@ -594,7 +594,8 @@ class ScheduledTaskService {
 	 * @return void
 	 */
 	private function processSingleTask(array $task, DateTimeImmutable $now, DateTimeImmutable $expiryCut, string $registerId, string $schemaId): void {
-		if (($task['status'] ?? '') !== 'open') {
+		$status = ($task['status'] ?? '');
+		if ($status !== 'open' && $status !== 'in_progress') {
 			return;
 		}
 
@@ -611,6 +612,11 @@ class ScheduledTaskService {
 
 		if ($deadline > $now) {
 			// Not due yet.
+			return;
+		}
+
+		if ($status === 'in_progress' && $deadline >= $expiryCut) {
+			// Already notified; it expires once it passes the cut.
 			return;
 		}
 
@@ -742,25 +748,84 @@ class ScheduledTaskService {
 	 * @spec openspec/specs/task-background-jobs/spec.md#requirement-deadline-escalation-notifications
 	 */
 	private function notifyTaskExpired(array $task): void {
-		$assignee = $task['assigneeUserId'] ?? '';
-		if ($assignee === '') {
-			return;
+		$recipients = [];
+		$assignee   = (string)($task['assigneeUserId'] ?? '');
+		if ($assignee !== '') {
+			$recipients[] = $assignee;
 		}
 
-		try {
-			$this->notificationService->notifyTaskExpired(
-				title: (string)($task['subject'] ?? 'Scheduled task'),
-				userId: (string)$assignee,
-				objectId: (string)($task['id'] ?? ''),
-				deadline: (string)($task['deadline'] ?? '')
-			);
-		} catch (Throwable $e) {
-			$this->logger->error(
-				'ScheduledTaskService: expiry notification dispatch failed',
-				['exception' => $e]
-			);
+		foreach ($this->getEscalationUserIds() as $userId) {
+			if (in_array(needle: $userId, haystack: $recipients, strict: true) === false) {
+				$recipients[] = $userId;
+			}
+		}
+
+		foreach ($recipients as $userId) {
+			try {
+				$this->notificationService->notifyTaskExpired(
+					title: (string)($task['subject'] ?? 'Scheduled task'),
+					userId: $userId,
+					objectId: (string)($task['id'] ?? ''),
+					deadline: (string)($task['deadline'] ?? '')
+				);
+			} catch (Throwable $e) {
+				$this->logger->error(
+					'ScheduledTaskService: expiry notification dispatch failed',
+					['exception' => $e]
+				);
+			}
 		}
 	}//end notifyTaskExpired()
+
+	/**
+	 * How long past its deadline an open task waits before it expires, in
+	 * minutes: the admin setting `task_expiry.escalation_threshold_seconds`
+	 * (4 hours when unset).
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/specs/task-background-jobs/spec.md#requirement-task-expiry-background-job
+	 */
+	private function getExpiryCutMinutes(): int {
+		$seconds = $this->appConfig->getValueString(
+			app: Application::APP_ID,
+			key: 'task_expiry.escalation_threshold_seconds',
+			default: ''
+		);
+		if (is_numeric(value: $seconds) === false || (int)$seconds < 0) {
+			return self::EXPIRY_THRESHOLD_MINUTES;
+		}
+
+		return intdiv(num1: (int)$seconds, num2: 60);
+	}//end getExpiryCutMinutes()
+
+	/**
+	 * The members of the escalation group (app config
+	 * `task_expiry.escalation_group`), who are told about every expired task
+	 * besides its assignee. Empty when no group is configured or it is gone.
+	 *
+	 * @return array<int,string> User ids.
+	 *
+	 * @spec openspec/specs/task-background-jobs/spec.md#requirement-deadline-escalation-notifications
+	 */
+	private function getEscalationUserIds(): array {
+		$groupId = $this->appConfig->getValueString(app: Application::APP_ID, key: 'task_expiry.escalation_group', default: '');
+		if ($groupId === '') {
+			return [];
+		}
+
+		$group = $this->groupManager->get(gid: $groupId);
+		if ($group === null) {
+			return [];
+		}
+
+		$userIds = [];
+		foreach ($group->getUsers() as $user) {
+			$userIds[] = $user->getUID();
+		}
+
+		return $userIds;
+	}//end getEscalationUserIds()
 
 	/**
 	 * Authorise a mutation on a task.
