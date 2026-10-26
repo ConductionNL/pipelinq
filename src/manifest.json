@@ -4313,8 +4313,8 @@
 			"route": "/tasks",
 			"type": "index",
 			"title": "Tasks and callback requests",
-			"_boardNote": "Board PqTaken: four counted tiles over the list, the lenses Mine, Team, Unassigned, Callback requests and Expired with their counts, and the subject with the customer under it. Plan a callback opens the create dialog with the kind already set.",
 			"config": {
+				"_boardNote": "Board PqTaken: four counted tiles over the list, the lenses Mine, Team, Unassigned, Callback requests and Expired with their counts, and the subject with the customer under it. Plan a callback opens the create dialog with the kind already set.",
 				"register": "pipelinq",
 				"schema": "crmTask",
 				"fieldOverrides": {
@@ -5527,8 +5527,8 @@
 			"route": "/pos/z-reports",
 			"type": "index",
 			"title": "Z reports",
-			"_boardNote": "Board PqZRapporten: the count line, the lenses All, Not posted and Failed with their counts, Download, and the reference, date, till, transactions, total, status and created columns.",
 			"config": {
+				"_boardNote": "Board PqZRapporten: the count line, the lenses All, Not posted and Failed with their counts, Download, and the reference, date, till, transactions, total, status and created columns.",
 				"register": "pipelinq",
 				"schema": "posZReport",
 				"documentationUrl": "https://pipelinq.conduction.nl",
