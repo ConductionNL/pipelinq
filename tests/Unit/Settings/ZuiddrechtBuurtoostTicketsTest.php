@@ -31,12 +31,13 @@ use PHPUnit\Framework\TestCase;
 class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 
 	/**
-	 * Three tickets on the association's client, which shares dossiq's master entity: the collection permit in
-	 * progress with Fatma Yildiz, the two older ones resolved by Pieter and Fatma, as DqOrganisatie draws them.
+	 * Four tickets on the association's client, which shares dossiq's master entity: the collection permit in
+	 * progress with Fatma Yildiz, the two older ones resolved by Pieter and Fatma, as DqOrganisatie draws them, and
+	 * the new question about subsidy documents with Fatma that PqNieuwVerzoek draws.
 	 *
 	 * @return void
 	 */
-	public function testTheAssociationHasItsThreeTickets(): void {
+	public function testTheAssociationHasItsFourTickets(): void {
 		$set     = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
 		$objects = array_column($set['objects'], 'data', 'key');
 
@@ -47,9 +48,15 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 		$tickets    = array_filter(
 			array_column($ticketRows, 'data'),
 			static fn (array $data): bool => ($data['client'] ?? null) === '{{object:client-buurtoost.id}}'
+				&& ($data['ticketType'] ?? null) !== 'interaction'
 		);
 		$this->assertSame(
-			expected: ['Aanvraag collectevergunning', 'Vraag over huur buurthuis', 'Melding verlichting Oosthavenweg'],
+			expected: [
+				'Aanvraag collectevergunning',
+				'Vraag over huur buurthuis',
+				'Melding verlichting Oosthavenweg',
+				'Subsidie voor een straatfeest: welke documenten?',
+			],
 			actual: array_values(array_column($tickets, 'title'))
 		);
 		$this->assertSame(
@@ -57,10 +64,11 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 				['in_progress', '{{cast:fatmayildiz.uid}}', false],
 				['resolved', '{{cast:pieter.uid}}', true],
 				['resolved', '{{cast:fatmayildiz.uid}}', true],
+				['new', '{{cast:fatmayildiz.uid}}', false],
 			],
 			actual: array_values(array_map(static fn (array $t): array => [$t['status'], $t['assignee'] ?? null, isset($t['resolvedAt'])], $tickets))
 		);
-	}//end testTheAssociationHasItsThreeTickets()
+	}//end testTheAssociationHasItsFourTickets()
 
 	/**
 	 * DqOrganisatie and the ticket leaf draw the three tickets by their references; a declared reference is kept

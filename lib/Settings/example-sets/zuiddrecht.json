@@ -897,6 +897,22 @@
 			}
 		},
 		{
+			"key": "client-henkvisser",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:henkvisser.displayName}}",
+				"type": "person",
+				"contactsUid": "{{cast:henkvisser.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "post",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Schrijft liever een brief."
+			}
+		},
+		{
 			"key": "client-abakker",
 			"register": "pipelinq",
 			"schema": "client",
@@ -2743,6 +2759,65 @@
 			}
 		},
 		{
+			"key": "ticket-buurtoost-subsidiedocumenten",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Subsidie voor een straatfeest: welke documenten?",
+				"reference": "PQ-2026-0414",
+				"description": "Buurtvereniging Oost wil subsidie aanvragen voor een straatfeest en vraagt welke documenten bij de aanvraag horen.",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "{{cast:buurtoost.contactsUid}}",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"status": "new",
+				"priority": "normal",
+				"channel": "email",
+				"category": "subsidie",
+				"occurredAt": "{{datetime:-5 09:40}}",
+				"slaDeadline": "{{datetime:2 17:00}}"
+			}
+		},
+		{
+			"key": "interaction-buurtoost-subsidiedocumenten",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "E-mail over de subsidiedocumenten",
+				"reference": "PQ-2026-0410",
+				"description": "E-mail van de buurtvereniging over de documenten voor de subsidieaanvraag, doorgezet naar het verzoek.",
+				"direction": "inbound",
+				"channel": "email",
+				"outcome": "transferred",
+				"status": "closed",
+				"client": "{{object:client-buurtoost.id}}",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"occurredAt": "{{datetime:-5 09:30}}",
+				"parentTicket": "{{object:ticket-buurtoost-subsidiedocumenten.id}}",
+				"category": "subsidie"
+			}
+		},
+		{
+			"key": "interaction-henkvisser-boom-beukenlaan",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Brief over de boom aan de Beukenlaan",
+				"reference": "PQ-2026-0411",
+				"description": "Brief van de heer Visser over de boom aan de Beukenlaan, gescand, 2 pagina's. Doorgezet naar het verzoek.",
+				"direction": "inbound",
+				"channel": "brief",
+				"outcome": "transferred",
+				"status": "closed",
+				"client": "{{object:client-henkvisser.id}}",
+				"assignee": "{{cast:lotte.uid}}",
+				"occurredAt": "{{datetime:-5 11:15}}",
+				"category": "openbare ruimte"
+			}
+		},
+		{
 			"key": "taak-kuiper-parkeervergunning",
 			"register": "pipelinq",
 			"schema": "crmTask",
@@ -2806,6 +2881,7 @@
 				"deadline": "{{datetime:2 17:00}}",
 				"assigneeGroupId": "{{cast:kcc.gid}}",
 				"clientId": "{{object:client-buurtoost.id}}",
+				"requestId": "{{object:ticket-buurtoost-subsidiedocumenten.id}}",
 				"createdBy": "{{cast:fatmayildiz.uid}}"
 			}
 		},
@@ -2870,6 +2946,7 @@
 				"assigneeUserId": "{{cast:pieter.uid}}",
 				"assigneeGroupId": "{{cast:kcc.gid}}",
 				"clientId": "{{object:client-degraaf.id}}",
+				"requestId": "{{object:ticket-degraaf-afvalpas.id}}",
 				"callbackPhoneNumber": "06 18 44 27 30",
 				"preferredTimeSlot": "Tussen 12:00 en 14:00",
 				"description": "Meneer De Graaf mist een identiteitsbewijs voor zijn aanvraag parkeervergunning. Leg uit welk document hij kan uploaden in Mijn Zuiddrecht.",
