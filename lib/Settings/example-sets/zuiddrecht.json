@@ -374,6 +374,507 @@
 			}
 		},
 		{
+			"key": "product-parkeervergunning-jaar",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Parkeervergunning bewoners, jaar",
+				"type": "service",
+				"status": "active",
+				"unitPrice": 75,
+				"taxRate": 0,
+				"unit": "Stuk",
+				"vatClass": "zero"
+			}
+		},
+		{
+			"key": "product-afvalpas-extra",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Afvalpas, extra",
+				"type": "product",
+				"status": "active",
+				"unitPrice": 12.5,
+				"taxRate": 21,
+				"unit": "Stuk",
+				"vatClass": "high"
+			}
+		},
+		{
+			"key": "product-stadsplattegrond",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Stadsplattegrond Zuiddrecht",
+				"type": "product",
+				"status": "active",
+				"unitPrice": 4.95,
+				"taxRate": 9,
+				"unit": "Stuk",
+				"vatClass": "low"
+			}
+		},
+		{
+			"key": "retourreden-verkeerd-product",
+			"register": "pipelinq",
+			"schema": "refundReason",
+			"data": {
+				"code": "verkeerd-product",
+				"label": "Verkeerd product",
+				"isActive": true
+			}
+		},
+		{
+			"key": "retourreden-defect",
+			"register": "pipelinq",
+			"schema": "refundReason",
+			"data": {
+				"code": "defect",
+				"label": "Defect",
+				"isActive": true
+			}
+		},
+		{
+			"key": "retourreden-bedacht",
+			"register": "pipelinq",
+			"schema": "refundReason",
+			"data": {
+				"code": "klant-bedacht",
+				"label": "Klant bedacht zich",
+				"isActive": true
+			}
+		},
+		{
+			"key": "retourreden-niet-nodig",
+			"register": "pipelinq",
+			"schema": "refundReason",
+			"data": {
+				"code": "niet-nodig",
+				"label": "Niet nodig",
+				"isActive": true
+			}
+		},
+		{
+			"key": "kassabon-1043",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1043",
+				"cashier": "{{cast:pieter.uid}}",
+				"terminalId": "Balie 2",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 93.5,
+				"discountTotal": 0.99,
+				"totalTax": 2.91,
+				"total": 96.41,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 10.33,
+						"tax": 2.17
+					},
+					{
+						"rate": 9,
+						"base": 8.17,
+						"tax": 0.74
+					},
+					{
+						"rate": 0,
+						"base": 75,
+						"tax": 0
+					}
+				],
+				"confirmedAt": "{{datetime:0 11:42}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 2",
+				"paymentSessionId": "7F3A-22",
+				"paymentStatus": "settled",
+				"client": "{{object:client-sanne.id}}",
+				"settledAt": "{{datetime:0 11:43}}"
+			}
+		},
+		{
+			"key": "kassabon-1043-regel-1",
+			"register": "pipelinq",
+			"schema": "posTransactionLine",
+			"data": {
+				"transaction": "{{object:kassabon-1043.id}}",
+				"product": "{{object:product-parkeervergunning-jaar.id}}",
+				"description": "Parkeervergunning bewoners, jaar",
+				"quantity": 1,
+				"unitPrice": 75,
+				"discount": 0,
+				"taxRate": 0,
+				"taxAmount": 0,
+				"lineTotal": 75,
+				"sortOrder": 1
+			}
+		},
+		{
+			"key": "kassabon-1043-regel-2",
+			"register": "pipelinq",
+			"schema": "posTransactionLine",
+			"data": {
+				"transaction": "{{object:kassabon-1043.id}}",
+				"product": "{{object:product-afvalpas-extra.id}}",
+				"description": "Afvalpas, extra",
+				"quantity": 1,
+				"unitPrice": 12.5,
+				"discount": 0,
+				"taxRate": 21,
+				"taxAmount": 2.17,
+				"lineTotal": 12.5,
+				"sortOrder": 2
+			}
+		},
+		{
+			"key": "kassabon-1043-regel-3",
+			"register": "pipelinq",
+			"schema": "posTransactionLine",
+			"data": {
+				"transaction": "{{object:kassabon-1043.id}}",
+				"product": "{{object:product-stadsplattegrond.id}}",
+				"description": "Stadsplattegrond Zuiddrecht",
+				"quantity": 2,
+				"unitPrice": 4.95,
+				"discount": 10,
+				"taxRate": 9,
+				"taxAmount": 0.74,
+				"lineTotal": 8.91,
+				"sortOrder": 3
+			}
+		},
+		{
+			"key": "kassabon-1042",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1042",
+				"cashier": "{{cast:fatmayildiz.uid}}",
+				"terminalId": "Balie 1",
+				"status": "parked",
+				"priceMode": "incl",
+				"subtotal": 17.36,
+				"discountTotal": 0,
+				"totalTax": 3.64,
+				"total": 21.0,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 17.36,
+						"tax": 3.64
+					}
+				],
+				"parkedAt": "{{datetime:0 11:20}}"
+			}
+		},
+		{
+			"key": "kassabon-1041",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1041",
+				"cashier": "{{cast:fatmayildiz.uid}}",
+				"terminalId": "Balie 1",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 75.0,
+				"discountTotal": 0,
+				"totalTax": 0,
+				"total": 75.0,
+				"taxBreakdown": [
+					{
+						"rate": 0,
+						"base": 75,
+						"tax": 0
+					}
+				],
+				"confirmedAt": "{{datetime:0 10:58}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 1",
+				"paymentSessionId": "7F3A-19",
+				"paymentStatus": "settled",
+				"settledAt": "{{datetime:0 10:58}}"
+			}
+		},
+		{
+			"key": "kassabon-1040",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1040",
+				"cashier": "{{cast:pieter.uid}}",
+				"terminalId": "Balie 2",
+				"status": "refunded",
+				"priceMode": "incl",
+				"subtotal": 10.33,
+				"discountTotal": 0,
+				"totalTax": 2.17,
+				"total": 12.5,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 10.33,
+						"tax": 2.17
+					}
+				],
+				"confirmedAt": "{{datetime:0 10:31}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 2",
+				"paymentSessionId": "7F3A-17",
+				"paymentStatus": "refunded",
+				"settledAt": "{{datetime:0 10:31}}",
+				"refundedAt": "{{datetime:0 10:40}}"
+			}
+		},
+		{
+			"key": "kassabon-1039",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1039",
+				"cashier": "{{cast:joris.uid}}",
+				"terminalId": "Balie 3",
+				"status": "confirmed",
+				"priceMode": "excl",
+				"subtotal": 340.0,
+				"discountTotal": 0,
+				"totalTax": 71.4,
+				"total": 411.4,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 340,
+						"tax": 71.4
+					}
+				],
+				"confirmedAt": "{{datetime:0 10:05}}",
+				"tenderType": "onAccount",
+				"client": "{{object:client-buurtoost.id}}"
+			}
+		},
+		{
+			"key": "kassabon-1038",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1038",
+				"cashier": "{{cast:joris.uid}}",
+				"terminalId": "Balie 3",
+				"status": "refunded",
+				"priceMode": "incl",
+				"subtotal": 9.08,
+				"discountTotal": 0,
+				"totalTax": 0.82,
+				"total": 9.9,
+				"taxBreakdown": [
+					{
+						"rate": 9,
+						"base": 9.08,
+						"tax": 0.82
+					}
+				],
+				"confirmedAt": "{{datetime:0 09:47}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 3",
+				"paymentSessionId": "7F3A-11",
+				"paymentStatus": "refunded",
+				"settledAt": "{{datetime:0 09:47}}",
+				"refundedAt": "{{datetime:0 09:52}}",
+				"refundReason": "Teruggeboekt: verkeerd aangeslagen"
+			}
+		},
+		{
+			"key": "kassabon-0990",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-0990",
+				"cashier": "{{cast:fatmayildiz.uid}}",
+				"terminalId": "Balie 1",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 4.54,
+				"discountTotal": 0,
+				"totalTax": 0.41,
+				"total": 4.95,
+				"taxBreakdown": [
+					{
+						"rate": 9,
+						"base": 4.54,
+						"tax": 0.41
+					}
+				],
+				"confirmedAt": "{{datetime:-2 14:50}}",
+				"tenderType": "cash",
+				"paymentMethod": "Contant",
+				"paymentProvider": "cash",
+				"paymentStatus": "settled",
+				"settledAt": "{{datetime:-2 14:50}}"
+			}
+		},
+		{
+			"key": "kassabon-0952",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-0952",
+				"cashier": "{{cast:pieter.uid}}",
+				"terminalId": "Balie 2",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 75.0,
+				"discountTotal": 0,
+				"totalTax": 0,
+				"total": 75.0,
+				"taxBreakdown": [
+					{
+						"rate": 0,
+						"base": 75,
+						"tax": 0
+					}
+				],
+				"confirmedAt": "{{datetime:-4 09:15}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 2",
+				"paymentSessionId": "6C11-04",
+				"paymentStatus": "settled",
+				"settledAt": "{{datetime:-4 09:15}}"
+			}
+		},
+		{
+			"key": "kassabon-0871",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-0871",
+				"cashier": "{{cast:pieter.uid}}",
+				"terminalId": "Balie 2",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 75.0,
+				"discountTotal": 0,
+				"totalTax": 0,
+				"total": 75.0,
+				"taxBreakdown": [
+					{
+						"rate": 0,
+						"base": 75,
+						"tax": 0
+					}
+				],
+				"confirmedAt": "{{datetime:-25 10:12}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 2",
+				"paymentSessionId": "5B02-31",
+				"paymentStatus": "settled",
+				"client": "{{object:client-sanne.id}}",
+				"settledAt": "{{datetime:-25 10:12}}"
+			}
+		},
+		{
+			"key": "kassabon-0214",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-0214",
+				"cashier": "{{cast:fatmayildiz.uid}}",
+				"terminalId": "Balie 1",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 10.33,
+				"discountTotal": 0,
+				"totalTax": 2.17,
+				"total": 12.5,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 10.33,
+						"tax": 2.17
+					}
+				],
+				"confirmedAt": "{{datetime:-218 15:30}}",
+				"tenderType": "cash",
+				"paymentMethod": "Contant",
+				"paymentProvider": "cash",
+				"paymentStatus": "settled",
+				"client": "{{object:client-sanne.id}}",
+				"settledAt": "{{datetime:-218 15:30}}"
+			}
+		},
+		{
+			"key": "retour-0058",
+			"register": "pipelinq",
+			"schema": "posRefund",
+			"data": {
+				"reference": "RF-2026-0058",
+				"originalTransaction": "{{object:kassabon-1043.id}}",
+				"cashier": "{{cast:pieter.uid}}",
+				"status": "pending",
+				"refundReason": "{{object:retourreden-verkeerd-product.id}}",
+				"paymentMethod": "card",
+				"paymentReference": "7F3A-22",
+				"refundAmount": 10.33,
+				"totalTax": 2.17,
+				"notes": "Inwoner had al een geldige afvalpas, de extra pas was niet nodig."
+			}
+		},
+		{
+			"key": "retour-0058-regel",
+			"register": "pipelinq",
+			"schema": "posRefundLine",
+			"data": {
+				"refund": "{{object:retour-0058.id}}",
+				"originalLine": "{{object:kassabon-1043-regel-2.id}}",
+				"returnedQuantity": 1,
+				"returnReason": "{{object:retourreden-niet-nodig.id}}",
+				"restock": true,
+				"taxAmount": 2.17,
+				"lineTotal": 12.5
+			}
+		},
+		{
+			"key": "retour-0057",
+			"register": "pipelinq",
+			"schema": "posRefund",
+			"data": {
+				"reference": "RF-2026-0057",
+				"originalTransaction": "{{object:kassabon-0990.id}}",
+				"cashier": "{{cast:fatmayildiz.uid}}",
+				"status": "completed",
+				"refundReason": "{{object:retourreden-defect.id}}",
+				"paymentMethod": "cash",
+				"refundAmount": 4.54,
+				"totalTax": 0.41,
+				"confirmedAt": "{{datetime:-2 15:12}}"
+			}
+		},
+		{
+			"key": "retour-0056",
+			"register": "pipelinq",
+			"schema": "posRefund",
+			"data": {
+				"reference": "RF-2026-0056",
+				"originalTransaction": "{{object:kassabon-0952.id}}",
+				"cashier": "{{cast:pieter.uid}}",
+				"status": "rejected",
+				"refundReason": "{{object:retourreden-bedacht.id}}",
+				"paymentMethod": "card",
+				"refundAmount": 75,
+				"totalTax": 0,
+				"rejectedAt": "{{datetime:-4 09:40}}",
+				"rejectionReason": "De vergunning was al ingegaan."
+			}
+		},
+		{
 			"key": "leadline-training",
 			"register": "pipelinq",
 			"schema": "leadProduct",
