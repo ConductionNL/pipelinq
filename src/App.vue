@@ -89,6 +89,7 @@ import {
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
+import { createWalkInHandlers } from './services/walkInQueue.js'
 import { useObjectStore } from './store/modules/object.js'
 
 export default {
@@ -272,6 +273,15 @@ export default {
 					generateUrl,
 					http: axios,
 					router: this.$router,
+					showSuccess,
+					showError,
+					translate: ncT,
+				}),
+
+				// The walk-in queue's call, help and left actions (PqInloop).
+				...createWalkInHandlers({
+					generateUrl,
+					http: axios,
 					showSuccess,
 					showError,
 					translate: ncT,
