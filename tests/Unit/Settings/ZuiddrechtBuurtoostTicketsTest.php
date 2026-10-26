@@ -69,4 +69,18 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 			]
 		);
 	}//end testTheBuurtoostTicketsCarryTheirReferences()
+
+	/**
+	 * The ticket counter starts above the highest reference the set names, so no new ticket repeats one; both keys are
+	 * integers, as TicketReferenceSequence reads them.
+	 *
+	 * @return void
+	 */
+	public function testTheTicketCounterStartsAboveTheSetsReferences(): void {
+		$set    = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
+		$config = array_column($set['appConfig'], null, 'key');
+
+		$this->assertSame(expected: ['value' => '402', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter'] ?? [], ['value' => 1, 'type' => 1]));
+		$this->assertSame(expected: ['value' => '2026', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter_year'] ?? [], ['value' => 1, 'type' => 1]));
+	}//end testTheTicketCounterStartsAboveTheSetsReferences()
 }//end class

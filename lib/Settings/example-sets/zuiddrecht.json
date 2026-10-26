@@ -13,6 +13,16 @@
 		{
 			"key": "brp.allowed_groups",
 			"value": "{{cast:kcc.gid}}"
+		},
+		{
+			"key": "ticket_reference_counter",
+			"value": "402",
+			"type": "int"
+		},
+		{
+			"key": "ticket_reference_counter_year",
+			"value": "2026",
+			"type": "int"
 		}
 	],
 	"objects": [
