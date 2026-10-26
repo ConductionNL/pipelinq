@@ -913,6 +913,23 @@
 			}
 		},
 		{
+			"key": "client-abakker",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "A. Bakker",
+				"type": "person",
+				"address": "Markt 14, 2999BF Zuiddrecht",
+				"contactsUid": "example-abakker",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Meldt geluidsoverlast van het terras aan de Markt."
+			}
+		},
+		{
 			"key": "lead-energie-ledenportaal",
 			"register": "pipelinq",
 			"schema": "lead",
@@ -2798,6 +2815,149 @@
 				"assignee": "{{cast:lotte.uid}}",
 				"occurredAt": "{{datetime:-5 11:15}}",
 				"category": "openbare ruimte"
+			}
+		},
+		{
+			"key": "taak-kuiper-parkeervergunning",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "callbackRequest",
+				"subject": "Terugbellen over de parkeervergunning",
+				"status": "open",
+				"priority": "high",
+				"deadline": "{{datetime:0 13:00}}",
+				"assigneeUserId": "{{cast:pieter.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-kuiper.id}}",
+				"callbackPhoneNumber": "06 41 22 90 17",
+				"contactMomentSummary": "Belde gisteren over de parkeervergunning. Wij bellen terug met het antwoord.",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "taak-sanne-locatiebezoek",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "callbackRequest",
+				"subject": "Terugbellen over de tijd van het locatiebezoek",
+				"status": "open",
+				"priority": "normal",
+				"deadline": "{{datetime:1 12:00}}",
+				"assigneeUserId": "{{cast:pieter.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-sanne.id}}",
+				"requestId": "{{object:ticket-sanne-straatfeest.id}}",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "taak-sanne-formulier-evenementenvergunning",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "followUpTask",
+				"subject": "Formulier evenementenvergunning sturen",
+				"status": "in_progress",
+				"priority": "normal",
+				"deadline": "{{datetime:1 17:00}}",
+				"assigneeUserId": "{{cast:fatmayildiz.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-sanne.id}}",
+				"requestId": "{{object:ticket-sanne-straatfeest.id}}",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "taak-buurtoost-subsidiedocumenten",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "informationRequest",
+				"subject": "Welke documenten voor een subsidie straatfeest",
+				"status": "open",
+				"priority": "normal",
+				"deadline": "{{datetime:2 17:00}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-buurtoost.id}}",
+				"requestId": "{{object:ticket-buurtoost-subsidiedocumenten.id}}",
+				"createdBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "taak-abakker-geluidsoverlast",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "callbackRequest",
+				"subject": "Terugbellen over de melding geluidsoverlast",
+				"status": "expired",
+				"priority": "high",
+				"deadline": "{{datetime:-1 16:00}}",
+				"assigneeUserId": "{{cast:joris.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-abakker.id}}",
+				"createdBy": "{{cast:joris.uid}}",
+				"attempts": [
+					{
+						"timestamp": "{{datetime:-2 10:15}}",
+						"result": "no-answer"
+					},
+					{
+						"timestamp": "{{datetime:-2 14:40}}",
+						"result": "no-answer"
+					},
+					{
+						"timestamp": "{{datetime:-1 11:05}}",
+						"result": "no-answer"
+					}
+				]
+			}
+		},
+		{
+			"key": "taak-dewit-paspoortafspraak",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "followUpTask",
+				"subject": "Paspoortafspraak bevestigen",
+				"status": "completed",
+				"priority": "low",
+				"deadline": "{{datetime:-1 17:00}}",
+				"assigneeUserId": "{{cast:fatmayildiz.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-dewit.id}}",
+				"completedAt": "{{datetime:-1 15:20}}",
+				"resultText": "Afspraak bevestigd per telefoon.",
+				"createdBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "taak-degraaf-terugbellen",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "callbackRequest",
+				"subject": "M. de Graaf terugbellen",
+				"status": "in_progress",
+				"priority": "high",
+				"deadline": "{{datetime:0 13:00}}",
+				"assigneeUserId": "{{cast:pieter.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-degraaf.id}}",
+				"requestId": "{{object:ticket-degraaf-afvalpas.id}}",
+				"callbackPhoneNumber": "06 18 44 27 30",
+				"preferredTimeSlot": "Tussen 12:00 en 14:00",
+				"description": "Meneer De Graaf mist een identiteitsbewijs voor zijn aanvraag parkeervergunning. Leg uit welk document hij kan uploaden in Mijn Zuiddrecht.",
+				"contactMomentSummary": "Belde op 6 okt over de parkeervergunning, vroeg om tussen de middag teruggebeld te worden.",
+				"createdBy": "{{cast:pieter.uid}}",
+				"attempts": [
+					{
+						"timestamp": "{{datetime:0 10:05}}",
+						"result": "no-answer"
+					}
+				]
 			}
 		},
 		{
