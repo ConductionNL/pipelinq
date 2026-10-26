@@ -178,6 +178,7 @@ import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
+import LinkSubmissionToClientModal from './modals/LinkSubmissionToClientModal.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
@@ -1126,6 +1127,28 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'BookingDetail: the service and customer names and the deposit state, resolved across schemas.',
 	},
+	BookingCustomerWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'BookingCustomerWidget',
+			BookingDetailSection,
+			({ objectId }) => ({ bookingId: objectId, part: 'customer' }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'BookingDetail side card (PqAfspraak Inwoner): the customer with phone, e-mail and a link to their page.',
+	},
+	BookingWhenWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'BookingWhenWidget',
+			BookingDetailSection,
+			({ objectId }) => ({ bookingId: objectId, part: 'when' }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'BookingDetail side card (PqAfspraak Wanneer en waar): the day and time, the location, the handler, the reminder and Send reminder.',
+	},
 	BookingAssignmentsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -1215,6 +1238,12 @@ const registry = {
 	//     dialog cannot express. Placement stays declarative; only the form
 	//     body is app-owned. CnAppRoot mounts these and forwards `close`, so
 	//     each dialog routes to its own detail page on success. ---
+	// Link to a client on the ticket page (PqAanvraagOmzetten, decision 179).
+	LinkSubmissionToClientModal: {
+		kind: 'modal',
+		component: LinkSubmissionToClientModal,
+		propsSchema: null,
+	},
 	LetterFromTemplateModal: {
 		kind: 'modal',
 		component: LetterFromTemplateModal,

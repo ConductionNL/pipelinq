@@ -23,7 +23,8 @@
 		:notificationLabels="notificationLabels"
 		:permissions="permissions"
 		:persistManifestDelta="persistManifestDelta"
-		:requiresApps="[]">
+		:requiresApps="[]"
+		:userSettingsSections="userSettingsSections">
 		<template #sidebar="{ pageSidebarComponent }">
 			<!--
 				Host-rendered CnObjectSidebar. Detail pages declare their tabs in
@@ -51,6 +52,12 @@
 			     fallback, which is what hid the flow sidebar. -->
 			<component :is="pageSidebarComponent" v-if="pageSidebarComponent" />
 		</template>
+		<!-- The app's own sections of the user settings dialog (boards
+		     PqPersoonlijk, PqSynchronisatie), between Notifications and
+		     Credentials. -->
+		<template #user-settings-sections>
+			<EmailCalendarSettingsSection />
+		</template>
 	</CnAppRoot>
 	<!-- The incoming-call card of board PqInkomendGesprek. It floats over
 	     whichever page the agent is on, and renders nothing at all on an
@@ -70,13 +77,19 @@ import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import IncomingCallCard from './components/IncomingCallCard.vue'
+import EmailCalendarSettingsSection from './components/settings/EmailCalendarSettingsSection.vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
 import { createAppFormatters } from './services/cellFormatters.js'
+import {
+	auditVerdict,
+	createConnectionAuditHandlers,
+} from './services/connectionAudit.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
+import { createWalkInHandlers } from './services/walkInQueue.js'
 import { useObjectStore } from './store/modules/object.js'
 
 export default {
@@ -85,6 +98,7 @@ export default {
 	components: {
 		CnAppRoot,
 		CnObjectSidebar,
+		EmailCalendarSettingsSection,
 		IncomingCallCard,
 	},
 
@@ -170,6 +184,17 @@ export default {
 
 	computed: {
 		/**
+		 * Order of the user settings dialog: Notifications, the app's own
+		 * sections, Credentials, the tour, then the library's other sections.
+		 *
+		 * @return {Array<string>}
+		 * @spec openspec/specs/email-calendar-sync/spec.md
+		 */
+		userSettingsSections() {
+			return ['notifications', 'app', 'credentials', 'walkthrough', 'views', 'integrations']
+		},
+
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-2
 		 */
 		permissions() {
@@ -186,7 +211,8 @@ export default {
 		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 		 */
 		cellFormatters() {
-			return createAppFormatters(useObjectStore())
+			// `auditVerdict` prints the connection audit's follow answers.
+			return { ...createAppFormatters(useObjectStore()), auditVerdict }
 		},
 
 		/**
@@ -233,11 +259,29 @@ export default {
 					assign: (url) => window.location.assign(url),
 				}),
 
+				// Check again on the connection audit (board PqVerbindingscontrole).
+				...createConnectionAuditHandlers({
+					generateUrl,
+					http: axios,
+					showSuccess,
+					showError,
+					translate: ncT,
+				}),
+
 				// "Assign to me" on the Queue rows (detail-pages-read-at-a-glance).
 				...createTicketHandlers({
 					generateUrl,
 					http: axios,
 					router: this.$router,
+					showSuccess,
+					showError,
+					translate: ncT,
+				}),
+
+				// The walk-in queue's call, help and left actions (PqInloop).
+				...createWalkInHandlers({
+					generateUrl,
+					http: axios,
 					showSuccess,
 					showError,
 					translate: ncT,

@@ -1,0 +1,446 @@
+{
+	"pages": [
+		{
+			"id": "Quotes",
+			"route": "/quotes",
+			"type": "index",
+			"title": "Quotes",
+			"config": {
+				"_note": "PqOfferte (round 12): the quotes made from leads. A quote is made on its lead; this list finds them again.",
+				"register": "pipelinq",
+				"schema": "salesQuote",
+				"showTitle": true,
+				"showTitleIcon": false,
+				"countText": "{shown} of {total} quotes · prices excl. VAT",
+				"sortKey": "expiresAt",
+				"sortOrder": "asc",
+				"columns": [
+					{
+						"key": "number",
+						"label": "Number",
+						"link": true
+					},
+					{
+						"key": "title",
+						"label": "Title"
+					},
+					{
+						"key": "client",
+						"label": "Client",
+						"labelField": "name"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"draft": "default",
+								"sent": "info",
+								"accepted": "success",
+								"rejected": "error",
+								"expired": "warning",
+								"ordered": "teal"
+							}
+						}
+					},
+					{
+						"key": "total",
+						"label": "Total",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 2
+						}
+					},
+					{
+						"key": "expiresAt",
+						"label": "Expires on"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Sent",
+						"filter": {
+							"status": "sent"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Accepted",
+						"filter": {
+							"status": "accepted"
+						},
+						"showCount": true
+					}
+				],
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "EyeOutline",
+						"handler": "navigate",
+						"route": "QuoteDetail"
+					}
+				]
+			}
+		},
+		{
+			"id": "QuoteDetail",
+			"route": "/quotes/:id",
+			"type": "detail",
+			"title": "Quote",
+			"config": {
+				"_note": "PqOfferte (round 12): the quote as one page. The quote's facts are edited in place, the lines are a list of their own with add and edit, the totals and the internal notes follow. Beside it the status, the client and the history. Send to client runs the lifecycle's send transition.",
+				"register": "pipelinq",
+				"schema": "salesQuote",
+				"breadcrumb": {
+					"label": "Leads",
+					"route": "Leads",
+					"separator": "/"
+				},
+				"statusPill": {
+					"field": "status",
+					"colorMap": {
+						"draft": "default",
+						"sent": "info",
+						"accepted": "success",
+						"rejected": "error",
+						"expired": "warning",
+						"ordered": "teal"
+					},
+					"labels": {
+						"draft": "Draft",
+						"sent": "Sent",
+						"accepted": "Accepted",
+						"rejected": "Rejected",
+						"expired": "Expired",
+						"ordered": "Ordered"
+					}
+				},
+				"headerFields": [
+					{
+						"key": "version",
+						"format": "badge"
+					}
+				],
+				"headerMeta": "{number} · prices excl. VAT",
+				"identifierField": "number",
+				"actionsMenu": {
+					"label": "More"
+				},
+				"stageField": "status",
+				"headerActions": [
+					{
+						"id": "send-quote",
+						"type": "api-call",
+						"label": "Send to client",
+						"icon": "SendOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"payload": {
+							"action": "send"
+						},
+						"confirm": true,
+						"successMessage": "Quote sent.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "draft"
+						}
+					},
+					{
+						"id": "open-lead",
+						"type": "navigate",
+						"label": "Back to the lead",
+						"icon": "TrendingUp",
+						"target": "/leads/@object.lead"
+					}
+				],
+				"quickActions": [
+					"send-quote"
+				],
+				"widgets": [
+					{
+						"id": "quote-facts",
+						"type": "data",
+						"title": "Quote",
+						"icon": "FileDocumentEditOutline",
+						"content": {
+							"title": "Quote",
+							"columns": 2,
+							"include": [
+								"lead",
+								"client",
+								"contact",
+								"title",
+								"sentAt",
+								"expiresAt",
+								"assignee",
+								"paymentTerm"
+							],
+							"overrides": {
+								"assignee": {
+									"formatter": "userDisplayName"
+								},
+								"sentAt": {
+									"editable": false
+								}
+							}
+						}
+					},
+					{
+						"id": "quote-lines",
+						"type": "object-list",
+						"title": "Lines",
+						"icon": "FormatListBulleted",
+						"content": {
+							"register": "pipelinq",
+							"schema": "salesQuoteLine",
+							"filter": {
+								"quote": "@objectId"
+							},
+							"sort": {
+								"field": "sortOrder",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "description",
+									"label": "Product"
+								},
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "quantity",
+									"label": "Quantity"
+								},
+								{
+									"key": "unitPrice",
+									"label": "Unit price",
+									"format": {
+										"style": "currency",
+										"currency": "@config.currency"
+									}
+								},
+								{
+									"key": "discount",
+									"label": "Discount %"
+								},
+								{
+									"key": "total",
+									"label": "Line total",
+									"format": {
+										"style": "currency",
+										"currency": "@config.currency"
+									}
+								}
+							],
+							"allowCreate": true,
+							"allowEdit": true,
+							"addLabel": "Add product",
+							"limit": 50,
+							"emptyText": "No lines yet. Add a product from the catalogue or a line of your own.",
+							"footerNote": "Products come from the catalogue at their current price. A line of your own is for work the catalogue does not hold."
+						}
+					},
+					{
+						"id": "quote-totals",
+						"type": "data",
+						"title": "Totals",
+						"icon": "Calculator",
+						"content": {
+							"title": "Totals",
+							"columns": 3,
+							"include": [
+								"subtotal",
+								"vatAmount",
+								"total"
+							],
+							"overrides": {
+								"subtotal": {
+									"editable": false
+								},
+								"vatAmount": {
+									"editable": false
+								},
+								"total": {
+									"editable": false
+								}
+							}
+						}
+					},
+					{
+						"id": "quote-notes",
+						"type": "data",
+						"title": "Notes",
+						"icon": "NoteTextOutline",
+						"content": {
+							"title": "Notes",
+							"columns": 1,
+							"include": [
+								"notes"
+							]
+						}
+					},
+					{
+						"id": "side-status",
+						"type": "facts",
+						"title": "Status",
+						"icon": "ProgressCheck",
+						"content": {
+							"fields": [
+								{
+									"as": "pill",
+									"path": "status",
+									"map": {
+										"draft": "Draft",
+										"sent": "Sent",
+										"accepted": "Accepted",
+										"rejected": "Rejected",
+										"expired": "Expired",
+										"ordered": "Ordered"
+									},
+									"variantMap": {
+										"draft": "default",
+										"sent": "info",
+										"accepted": "success",
+										"rejected": "error",
+										"expired": "warning",
+										"ordered": "teal"
+									}
+								},
+								{
+									"as": "line",
+									"text": "Draft, sent, then accepted or rejected. A sent quote expires after 30 days."
+								},
+								{
+									"as": "line",
+									"text": "Convert to order is available once the client accepts the quote."
+								}
+							]
+						}
+					},
+					{
+						"id": "side-client",
+						"type": "facts",
+						"title": "Client",
+						"icon": "OfficeBuildingOutline",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "client",
+								"id": "@object.client"
+							},
+							"fields": [
+								{
+									"as": "lead",
+									"initialsPath": "name",
+									"title": "name",
+									"subtitle": [
+										{
+											"path": "type",
+											"map": {
+												"organization": "Organisation",
+												"person": "Resident"
+											}
+										}
+									]
+								}
+							],
+							"link": {
+								"label": "Back to the lead",
+								"route": {
+									"name": "LeadDetail",
+									"params": {
+										"id": "@object.lead"
+									}
+								}
+							},
+							"emptyText": "No client linked to this quote yet"
+						}
+					},
+					{
+						"id": "side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "quote-facts",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": "2",
+						"widgetId": "quote-lines",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 12,
+						"gridHeight": 6
+					},
+					{
+						"id": "3",
+						"widgetId": "quote-totals",
+						"gridX": 0,
+						"gridY": 11,
+						"gridWidth": 12,
+						"gridHeight": 2
+					},
+					{
+						"id": "4",
+						"widgetId": "quote-notes",
+						"gridX": 0,
+						"gridY": 13,
+						"gridWidth": 12,
+						"gridHeight": 3
+					}
+				],
+				"sideColumn": [
+					"side-status",
+					"side-client",
+					"side-history"
+				],
+				"lifecycleActions": {
+					"field": "status"
+				},
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				}
+			}
+		}
+	]
+}

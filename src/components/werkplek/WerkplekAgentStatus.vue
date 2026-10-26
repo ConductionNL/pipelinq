@@ -17,6 +17,7 @@
 			@click="toggle">
 			<span class="werkplek-agent-status__dot" />
 			<span class="werkplek-agent-status__label">{{ label }}</span>
+			<ChevronDown :size="16" aria-hidden="true" />
 		</button>
 	</div>
 </template>
@@ -25,6 +26,7 @@
 import axios from '@nextcloud/axios'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
+import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 
 /**
  * Agent availability toggle button for the KCC Werkplek.
@@ -40,6 +42,8 @@ import { generateUrl } from '@nextcloud/router'
  */
 export default {
 	name: 'WerkplekAgentStatus',
+
+	components: { ChevronDown },
 
 	props: {
 		/**
@@ -140,16 +144,25 @@ export default {
 	align-items: center;
 }
 
+/* The board's availability control (PqDashboard): a neutral button with a
+   coloured dot, the state and a chevron; clicking switches the state. */
 .werkplek-agent-status__toggle {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
-	padding: 6px 14px;
-	border-radius: var(--border-radius-pill, 999px);
-	border: 1px solid var(--color-border);
-	background: var(--color-background-dark);
+	min-height: 40px;
+	padding: 0 12px 0 14px;
+	border-radius: var(--border-radius-element, 8px);
+	border: 1px solid var(--color-border-dark);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
 	cursor: pointer;
 	font: inherit;
+	font-weight: 600;
+}
+
+.werkplek-agent-status__toggle:hover:not(:disabled) {
+	background: var(--color-background-hover);
 }
 
 .werkplek-agent-status__toggle:disabled {
@@ -162,21 +175,6 @@ export default {
 	height: 10px;
 	border-radius: 50%;
 	background: var(--color-text-maxcontrast);
-}
-
-.werkplek-agent-status__toggle--unavailable:hover:not(:disabled) {
-	background: var(--color-background-hover);
-}
-
-/* --color-success is a background tint; --color-success-text is the matching foreground. */
-.werkplek-agent-status__toggle--available {
-	background: var(--color-success);
-	border-color: var(--color-success-hover);
-	color: var(--color-success-text);
-}
-
-.werkplek-agent-status__toggle--available:hover:not(:disabled) {
-	background: var(--color-success-hover);
 }
 
 .werkplek-agent-status__toggle--available .werkplek-agent-status__dot {

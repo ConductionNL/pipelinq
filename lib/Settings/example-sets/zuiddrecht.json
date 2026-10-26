@@ -1,6 +1,6 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint. Sanne also has a confirmed site visit on the Parkstraat a week after the install, so a booking that can still be moved exists.",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint. Sanne also has a confirmed site visit on the Parkstraat a week after the install, so a booking that can still be moved exists. The BI export part (board PqBiExport): two destinations, a data warehouse and a regional data lake, and four export jobs on them; three run on a schedule and the leads job is switched off.The appointment samples (PqAfspraak, PqAfspraken, PqInloop) give the Locatiebezoek service its deposit, give Sanne's site visit its subject, place and handler (daan), and add four walk-in customers today.",
 	"appConfig": [
 		{
 			"key": "crm_group",
@@ -913,6 +913,23 @@
 			}
 		},
 		{
+			"key": "client-abakker",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "A. Bakker",
+				"type": "person",
+				"address": "Markt 14, 2999BF Zuiddrecht",
+				"contactsUid": "example-abakker",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Meldt geluidsoverlast van het terras aan de Markt."
+			}
+		},
+		{
 			"key": "lead-energie-ledenportaal",
 			"register": "pipelinq",
 			"schema": "lead",
@@ -1269,6 +1286,51 @@
 			}
 		},
 		{
+			"key": "productcategorie-afval",
+			"register": "pipelinq",
+			"schema": "productCategory",
+			"data": {
+				"name": "Afval",
+				"order": 1
+			}
+		},
+		{
+			"key": "productcategorie-software",
+			"register": "pipelinq",
+			"schema": "productCategory",
+			"data": {
+				"name": "Software",
+				"order": 2
+			}
+		},
+		{
+			"key": "productcategorie-diensten",
+			"register": "pipelinq",
+			"schema": "productCategory",
+			"data": {
+				"name": "Diensten",
+				"order": 3
+			}
+		},
+		{
+			"key": "productcategorie-verhuur",
+			"register": "pipelinq",
+			"schema": "productCategory",
+			"data": {
+				"name": "Verhuur",
+				"order": 4
+			}
+		},
+		{
+			"key": "productcategorie-baliverkoop",
+			"register": "pipelinq",
+			"schema": "productCategory",
+			"data": {
+				"name": "Baliverkoop",
+				"order": 5
+			}
+		},
+		{
 			"key": "product-licentie",
 			"register": "pipelinq",
 			"schema": "product",
@@ -1276,7 +1338,13 @@
 				"name": "Licentie huurdersportaal",
 				"type": "product",
 				"status": "active",
-				"unitPrice": 72000
+				"unitPrice": 72000,
+				"barcode": "8710400123457",
+				"category": "{{object:productcategorie-software.id}}",
+				"unit": "Jaar",
+				"taxRate": 21,
+				"vatClass": "high",
+				"description": "Per jaar."
 			}
 		},
 		{
@@ -1300,7 +1368,12 @@
 				"name": "Implementatie, dagen",
 				"type": "service",
 				"status": "active",
-				"unitPrice": 1100
+				"unitPrice": 1100,
+				"category": "{{object:productcategorie-diensten.id}}",
+				"unit": "Dag",
+				"taxRate": 21,
+				"vatClass": "high",
+				"description": "Per dag."
 			}
 		},
 		{
@@ -1324,7 +1397,12 @@
 				"name": "Training voor medewerkers",
 				"type": "service",
 				"status": "active",
-				"unitPrice": 1400
+				"unitPrice": 1400,
+				"category": "{{object:productcategorie-diensten.id}}",
+				"unit": "Sessie",
+				"taxRate": 21,
+				"vatClass": "high",
+				"description": "Per sessie, maximaal 12 personen."
 			}
 		},
 		{
@@ -1367,6 +1445,152 @@
 				"taxRate": 9,
 				"unit": "Stuk",
 				"vatClass": "low"
+			}
+		},
+		{
+			"key": "product-afvalpas",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Afvalpas ondergrondse containers",
+				"type": "service",
+				"status": "active",
+				"sku": "AFV-PAS-001",
+				"barcode": "8710400334455",
+				"gtin": "8710400334455",
+				"unitPrice": 15,
+				"cost": 3.2,
+				"taxRate": 0,
+				"vatClass": "exempt",
+				"category": "{{object:productcategorie-afval.id}}",
+				"unit": "Stuk",
+				"unitOfMeasure": "Stuk",
+				"description": "Pas voor de ondergrondse containers. Tarieven uit de Legesverordening Zuiddrecht 2026, hoofdstuk 1.4. Over leges gaat geen btw.",
+				"priceTiers": [
+					{
+						"minQuantity": 1,
+						"unitPrice": 15,
+						"label": "Standaard"
+					},
+					{
+						"minQuantity": 50,
+						"unitPrice": 12.5,
+						"label": "Woningcorporaties"
+					},
+					{
+						"minQuantity": 250,
+						"unitPrice": 10,
+						"label": "Grote bestelling"
+					}
+				],
+				"variants": [
+					{
+						"sku": "AFV-PAS-001-R",
+						"name": "Bewonerspas",
+						"attributes": {
+							"voor": "Huishouden",
+							"containers": "grijze en blauwe containers"
+						},
+						"unitPrice": 15,
+						"barcode": "8710400334462",
+						"status": "active"
+					},
+					{
+						"sku": "AFV-PAS-001-B",
+						"name": "Bedrijfspas",
+						"attributes": {
+							"voor": "Bedrijf",
+							"containers": "alle containers, per jaar"
+						},
+						"unitPrice": 48,
+						"barcode": "8710400334479",
+						"status": "active"
+					},
+					{
+						"sku": "AFV-PAS-001-T",
+						"name": "Tijdelijke pas",
+						"attributes": {
+							"voor": "Bezoeker",
+							"geldig": "14 dagen"
+						},
+						"unitPrice": 7.5,
+						"status": "inactive"
+					}
+				],
+				"manufacturer": "Kaartdrukkerij Nederland BV",
+				"weight": 0.005,
+				"dimensions": {
+					"length": 85.6,
+					"width": 54,
+					"height": 0.8
+				},
+				"stockTracked": true
+			}
+		},
+		{
+			"key": "product-evenementenpakket",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Evenementenpakket, straatfeest",
+				"type": "product",
+				"status": "active",
+				"barcode": "8710400567891",
+				"unitPrice": 245,
+				"taxRate": 21,
+				"vatClass": "high",
+				"category": "{{object:productcategorie-verhuur.id}}",
+				"unit": "Pakket",
+				"description": "Hekken, borden en afvalbakken voor een straatfeest."
+			}
+		},
+		{
+			"key": "product-pasfoto",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Pasfoto",
+				"type": "product",
+				"status": "active",
+				"barcode": "8710400998812",
+				"unitPrice": 12.5,
+				"taxRate": 21,
+				"vatClass": "high",
+				"category": "{{object:productcategorie-baliverkoop.id}}",
+				"unit": "Stuk",
+				"description": "Verkocht aan de balie."
+			}
+		},
+		{
+			"key": "product-club-app",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Club-app, basis",
+				"type": "product",
+				"status": "inactive",
+				"unitPrice": 79,
+				"taxRate": 21,
+				"vatClass": "high",
+				"category": "{{object:productcategorie-software.id}}",
+				"unit": "Maand",
+				"description": "Per maand. Nog in concept."
+			}
+		},
+		{
+			"key": "product-archief-scannen",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Archief scannen, per doos",
+				"type": "service",
+				"status": "inactive",
+				"unitPrice": 38,
+				"taxRate": 21,
+				"vatClass": "high",
+				"category": "{{object:productcategorie-diensten.id}}",
+				"unit": "Doos",
+				"description": "Uitgefaseerd per 1 september."
 			}
 		},
 		{
@@ -1906,122 +2130,287 @@
 			}
 		},
 		{
-			"key": "z-rapport-0281",
+			"key": "kassadienst-7okt-balie2",
 			"register": "pipelinq",
-			"schema": "posZReport",
+			"schema": "cashShift",
 			"data": {
-				"reference": "Z-2026-0281",
-				"reportDate": "{{date:-1}}",
-				"terminalId": "Balie 3",
-				"transactionCount": 38,
-				"total": 1412.3,
-				"status": "posted",
-				"createdAt": "{{datetime:-1 23:00}}",
-				"settledAt": "{{datetime:-1 23:00}}",
-				"bookkeepingStatus": "raised",
-				"bookkeepingAttempts": 1,
-				"shillinqJournalEntryId": "JE-2026-04812"
+				"reference": "SHIFT-2026-0214",
+				"drawer": "Balie 2, stadskantoor",
+				"operator": "{{cast:pieter.uid}}",
+				"currency": "EUR",
+				"floatAmount": 150,
+				"floatAt": "{{datetime:0 08:30}}",
+				"status": "open"
 			}
 		},
 		{
-			"key": "z-rapport-0280",
+			"key": "kassadienst-7okt-balie2-afstorting-1",
 			"register": "pipelinq",
-			"schema": "posZReport",
+			"schema": "cashDrop",
 			"data": {
-				"reference": "Z-2026-0280",
-				"reportDate": "{{date:-1}}",
-				"terminalId": "Balie 2",
-				"transactionCount": 41,
-				"total": 1980.15,
-				"status": "posted",
-				"createdAt": "{{datetime:-1 23:00}}",
-				"settledAt": "{{datetime:-1 23:00}}",
-				"bookkeepingStatus": "raised",
-				"bookkeepingAttempts": 1,
-				"shillinqJournalEntryId": "JE-2026-04811"
+				"shift": "{{object:kassadienst-7okt-balie2.id}}",
+				"amount": 150,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:0 10:45}}",
+				"droppedBy": "{{cast:pieter.uid}}"
 			}
 		},
 		{
-			"key": "z-rapport-0279",
+			"key": "kassadienst-7okt-balie2-afstorting-2",
 			"register": "pipelinq",
-			"schema": "posZReport",
+			"schema": "cashDrop",
 			"data": {
-				"reference": "Z-2026-0279",
-				"reportDate": "{{date:-1}}",
-				"terminalId": "Balie 1",
-				"transactionCount": 29,
-				"total": 864.0,
-				"status": "failed",
-				"createdAt": "{{datetime:-1 23:00}}",
-				"settledAt": "{{datetime:-1 23:00}}",
-				"bookkeepingStatus": "failed",
-				"bookkeepingAttempts": 1,
-				"subtotal": 880.0,
-				"discountTotal": 16.0,
-				"totalTax": 97.42,
-				"taxBreakdown": [
-					{
-						"rate": 21,
-						"base": 412.4,
-						"tax": 86.6
-					},
-					{
-						"rate": 9,
-						"base": 120.18,
-						"tax": 10.82
-					},
-					{
-						"rate": 0,
-						"base": 234.0,
-						"tax": 0
-					}
-				],
-				"paymentMethodBreakdown": [
-					{
-						"method": "Pin",
-						"amount": 702.5
-					},
-					{
-						"method": "Contant",
-						"amount": 161.5
-					}
-				],
-				"notes": "Doorgeven aan shillinq mislukt: shillinq reageerde niet om 23:00."
+				"shift": "{{object:kassadienst-7okt-balie2.id}}",
+				"amount": 50,
+				"reason": "Wisselgeld voor Balie 1",
+				"droppedAt": "{{datetime:0 11:30}}",
+				"droppedBy": "{{cast:pieter.uid}}"
 			}
 		},
 		{
-			"key": "z-rapport-0278",
+			"key": "kassadienst-7okt-balie1",
 			"register": "pipelinq",
-			"schema": "posZReport",
+			"schema": "cashShift",
 			"data": {
-				"reference": "Z-2026-0278",
-				"reportDate": "{{date:-2}}",
-				"terminalId": "Balie 3",
-				"transactionCount": 35,
-				"total": 1120.8,
+				"reference": "SHIFT-2026-0213",
+				"drawer": "Balie 1, stadskantoor",
+				"operator": "{{cast:fatmayildiz.uid}}",
+				"currency": "EUR",
+				"floatAmount": 150,
+				"floatAt": "{{datetime:0 08:25}}",
+				"status": "open"
+			}
+		},
+		{
+			"key": "kassadienst-7okt-balie1-afstorting-1",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-7okt-balie1.id}}",
+				"amount": 100,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:0 11:05}}",
+				"droppedBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2",
+			"register": "pipelinq",
+			"schema": "cashShift",
+			"data": {
+				"reference": "SHIFT-2026-0212",
+				"drawer": "Balie 2, stadskantoor",
+				"operator": "{{cast:pieter.uid}}",
+				"currency": "EUR",
+				"floatAmount": 150,
+				"floatAt": "{{datetime:-1 08:30}}",
 				"status": "reconciled",
-				"createdAt": "{{datetime:-2 23:00}}",
-				"settledAt": "{{datetime:-2 23:00}}",
-				"bookkeepingStatus": "raised",
-				"bookkeepingAttempts": 1,
-				"shillinqJournalEntryId": "JE-2026-04790"
+				"closedAt": "{{datetime:-1 17:05}}",
+				"reconciliationStatus": "approved",
+				"managedBy": "{{cast:pieter.uid}}"
 			}
 		},
 		{
-			"key": "z-rapport-0277",
+			"key": "kassadienst-6okt-balie2-afstorting-1",
 			"register": "pipelinq",
-			"schema": "posZReport",
+			"schema": "cashDrop",
 			"data": {
-				"reference": "Z-2026-0277",
-				"reportDate": "{{date:-2}}",
-				"terminalId": "Balie 2",
-				"transactionCount": 44,
-				"total": 2031.4,
-				"status": "submitted",
-				"createdAt": "{{datetime:-2 23:00}}",
-				"settledAt": "{{datetime:-2 23:00}}",
-				"bookkeepingStatus": "pending",
-				"bookkeepingAttempts": 1
+				"shift": "{{object:kassadienst-6okt-balie2.id}}",
+				"amount": 150,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:-1 11:15}}",
+				"droppedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2-afstorting-2",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie2.id}}",
+				"amount": 150,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:-1 14:00}}",
+				"droppedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2-afstorting-3",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie2.id}}",
+				"amount": 50,
+				"reason": "Wisselgeld voor Balie 3",
+				"droppedAt": "{{datetime:-1 15:20}}",
+				"droppedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2-telling",
+			"register": "pipelinq",
+			"schema": "posCashCount",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie2.id}}",
+				"amount": 486.4,
+				"countedAt": "{{datetime:-1 17:05}}",
+				"countedBy": "{{cast:pieter.uid}}",
+				"notes": "Blind geteld bij het sluiten van de dienst."
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2-verschil",
+			"register": "pipelinq",
+			"schema": "cashDiff",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie2.id}}",
+				"count": "{{object:kassadienst-6okt-balie2-telling.id}}",
+				"expectedAmount": 486.4,
+				"actualAmount": 486.4,
+				"diffAmount": 0.0,
+				"diffPercentage": 0.0,
+				"withinTolerance": true,
+				"status": "approved",
+				"approvedBy": "{{cast:pieter.uid}}",
+				"approvedAt": "{{datetime:0 08:15}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie3",
+			"register": "pipelinq",
+			"schema": "cashShift",
+			"data": {
+				"reference": "SHIFT-2026-0211",
+				"drawer": "Balie 3, stadskantoor",
+				"operator": "{{cast:joris.uid}}",
+				"currency": "EUR",
+				"floatAmount": 100,
+				"floatAt": "{{datetime:-1 09:00}}",
+				"status": "closed",
+				"closedAt": "{{datetime:-1 16:45}}",
+				"reconciliationStatus": "pending",
+				"notes": "Marge € 5,00. 38 transacties in deze dienst."
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie3-afstorting-1",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie3.id}}",
+				"amount": 200,
+				"reason": "Afstorting in de kluis, te veel contant geld",
+				"droppedAt": "{{datetime:-1 12:10}}",
+				"droppedBy": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie3-afstorting-2",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie3.id}}",
+				"amount": 50,
+				"reason": "Wisselgeld voor Balie 1",
+				"droppedAt": "{{datetime:-1 14:30}}",
+				"droppedBy": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie3-telling",
+			"register": "pipelinq",
+			"schema": "posCashCount",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie3.id}}",
+				"amount": 399.9,
+				"countedAt": "{{datetime:-1 16:45}}",
+				"countedBy": "{{cast:joris.uid}}",
+				"notes": "Blind geteld bij het sluiten van de dienst."
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie3-verschil",
+			"register": "pipelinq",
+			"schema": "cashDiff",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie3.id}}",
+				"count": "{{object:kassadienst-6okt-balie3-telling.id}}",
+				"expectedAmount": 412.3,
+				"actualAmount": 399.9,
+				"diffAmount": -12.4,
+				"diffPercentage": 3.0,
+				"withinTolerance": false,
+				"status": "pending"
+			}
+		},
+		{
+			"key": "kassadienst-5okt-balie1",
+			"register": "pipelinq",
+			"schema": "cashShift",
+			"data": {
+				"reference": "SHIFT-2026-0210",
+				"drawer": "Balie 1, stadskantoor",
+				"operator": "{{cast:fatmayildiz.uid}}",
+				"currency": "EUR",
+				"floatAmount": 150,
+				"floatAt": "{{datetime:-2 08:25}}",
+				"status": "reconciled",
+				"closedAt": "{{datetime:-2 17:00}}",
+				"reconciliationStatus": "approved",
+				"managedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-5okt-balie1-afstorting-1",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-5okt-balie1.id}}",
+				"amount": 100,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:-2 12:00}}",
+				"droppedBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-5okt-balie1-afstorting-2",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-5okt-balie1.id}}",
+				"amount": 100,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:-2 15:30}}",
+				"droppedBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-5okt-balie1-telling",
+			"register": "pipelinq",
+			"schema": "posCashCount",
+			"data": {
+				"shift": "{{object:kassadienst-5okt-balie1.id}}",
+				"amount": 288.4,
+				"countedAt": "{{datetime:-2 17:00}}",
+				"countedBy": "{{cast:fatmayildiz.uid}}",
+				"notes": "Blind geteld bij het sluiten van de dienst."
+			}
+		},
+		{
+			"key": "kassadienst-5okt-balie1-verschil",
+			"register": "pipelinq",
+			"schema": "cashDiff",
+			"data": {
+				"shift": "{{object:kassadienst-5okt-balie1.id}}",
+				"count": "{{object:kassadienst-5okt-balie1-telling.id}}",
+				"expectedAmount": 287.6,
+				"actualAmount": 288.4,
+				"diffAmount": 0.8,
+				"diffPercentage": 0.3,
+				"withinTolerance": true,
+				"status": "approved",
+				"approvedBy": "{{cast:pieter.uid}}",
+				"approvedAt": "{{datetime:-1 08:15}}"
 			}
 		},
 		{
@@ -2920,6 +3309,149 @@
 			}
 		},
 		{
+			"key": "taak-kuiper-parkeervergunning",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "callbackRequest",
+				"subject": "Terugbellen over de parkeervergunning",
+				"status": "open",
+				"priority": "high",
+				"deadline": "{{datetime:0 13:00}}",
+				"assigneeUserId": "{{cast:pieter.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-kuiper.id}}",
+				"callbackPhoneNumber": "06 41 22 90 17",
+				"contactMomentSummary": "Belde gisteren over de parkeervergunning. Wij bellen terug met het antwoord.",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "taak-sanne-locatiebezoek",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "callbackRequest",
+				"subject": "Terugbellen over de tijd van het locatiebezoek",
+				"status": "open",
+				"priority": "normal",
+				"deadline": "{{datetime:1 12:00}}",
+				"assigneeUserId": "{{cast:pieter.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-sanne.id}}",
+				"requestId": "{{object:ticket-sanne-straatfeest.id}}",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "taak-sanne-formulier-evenementenvergunning",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "followUpTask",
+				"subject": "Formulier evenementenvergunning sturen",
+				"status": "in_progress",
+				"priority": "normal",
+				"deadline": "{{datetime:1 17:00}}",
+				"assigneeUserId": "{{cast:fatmayildiz.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-sanne.id}}",
+				"requestId": "{{object:ticket-sanne-straatfeest.id}}",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "taak-buurtoost-subsidiedocumenten",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "informationRequest",
+				"subject": "Welke documenten voor een subsidie straatfeest",
+				"status": "open",
+				"priority": "normal",
+				"deadline": "{{datetime:2 17:00}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-buurtoost.id}}",
+				"requestId": "{{object:ticket-buurtoost-subsidiedocumenten.id}}",
+				"createdBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "taak-abakker-geluidsoverlast",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "callbackRequest",
+				"subject": "Terugbellen over de melding geluidsoverlast",
+				"status": "expired",
+				"priority": "high",
+				"deadline": "{{datetime:-1 16:00}}",
+				"assigneeUserId": "{{cast:joris.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-abakker.id}}",
+				"createdBy": "{{cast:joris.uid}}",
+				"attempts": [
+					{
+						"timestamp": "{{datetime:-2 10:15}}",
+						"result": "no-answer"
+					},
+					{
+						"timestamp": "{{datetime:-2 14:40}}",
+						"result": "no-answer"
+					},
+					{
+						"timestamp": "{{datetime:-1 11:05}}",
+						"result": "no-answer"
+					}
+				]
+			}
+		},
+		{
+			"key": "taak-dewit-paspoortafspraak",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "followUpTask",
+				"subject": "Paspoortafspraak bevestigen",
+				"status": "completed",
+				"priority": "low",
+				"deadline": "{{datetime:-1 17:00}}",
+				"assigneeUserId": "{{cast:fatmayildiz.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-dewit.id}}",
+				"completedAt": "{{datetime:-1 15:20}}",
+				"resultText": "Afspraak bevestigd per telefoon.",
+				"createdBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "taak-degraaf-terugbellen",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "callbackRequest",
+				"subject": "M. de Graaf terugbellen",
+				"status": "in_progress",
+				"priority": "high",
+				"deadline": "{{datetime:0 13:00}}",
+				"assigneeUserId": "{{cast:pieter.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-degraaf.id}}",
+				"requestId": "{{object:ticket-degraaf-afvalpas.id}}",
+				"callbackPhoneNumber": "06 18 44 27 30",
+				"preferredTimeSlot": "Tussen 12:00 en 14:00",
+				"description": "Meneer De Graaf mist een identiteitsbewijs voor zijn aanvraag parkeervergunning. Leg uit welk document hij kan uploaden in Mijn Zuiddrecht.",
+				"contactMomentSummary": "Belde op 6 okt over de parkeervergunning, vroeg om tussen de middag teruggebeld te worden.",
+				"createdBy": "{{cast:pieter.uid}}",
+				"attempts": [
+					{
+						"timestamp": "{{datetime:0 10:05}}",
+						"result": "no-answer"
+					}
+				]
+			}
+		},
+		{
 			"key": "lead-cloudgemeente",
 			"register": "pipelinq",
 			"schema": "lead",
@@ -2956,12 +3488,14 @@
 			"schema": "appointmentService",
 			"data": {
 				"name": "Locatiebezoek",
-				"description": "Een medewerker bekijkt samen met de aanvrager de plek ter plaatse.",
+				"description": "Een medewerker komt ter plekke kijken, bijvoorbeeld voor een straatfeest of een bouwplan.",
 				"durationMinutes": 60,
+				"price": 0,
+				"currency": "EUR",
 				"bookableOnline": false,
-				"requiresDeposit": false,
+				"requiresDeposit": true,
+				"depositAmount": 25,
 				"cancellationPolicy": "free",
-				"cancellationHoursBefore": 24,
 				"status": "active"
 			}
 		},
@@ -2983,10 +3517,291 @@
 						"changedBy": "{{cast:pieter.uid}}"
 					}
 				],
-				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest.",
+				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest. Neem een schets van de kramen en het podium mee.",
 				"internalNotes": "Controleer de calamiteitenroute en waar de brandweer langs kan.",
 				"source": "phone",
-				"confirmationSentAt": "{{datetime:-3 09:20}}"
+				"confirmationSentAt": "{{datetime:-3 09:20}}",
+				"subject": "Locatiebezoek Parkstraat",
+				"location": "Parkstraat 24",
+				"assignee": "{{cast:daan.uid}}",
+				"depositAmount": 25,
+				"resourceAssignments": []
+			}
+		},
+		{
+			"key": "export-destination-warehouse",
+			"register": "pipelinq",
+			"schema": "exportDestination",
+			"data": {
+				"name": "Datawarehouse",
+				"type": "postgres",
+				"pathTemplate": "pipelinq/{schema}/{date}",
+				"compression": "none",
+				"encryptionEnabled": true,
+				"validationStatus": "valid",
+				"connectorSourceId": "zuiddrecht-datawarehouse"
+			}
+		},
+		{
+			"key": "export-destination-datalake",
+			"register": "pipelinq",
+			"schema": "exportDestination",
+			"data": {
+				"name": "Regionaal datameer",
+				"type": "azure_data_lake",
+				"pathTemplate": "zuiddrecht/pipelinq/{schema}/{date}",
+				"compression": "gzip",
+				"encryptionEnabled": true,
+				"validationStatus": "valid",
+				"connectorSourceId": "zuiddrecht-datameer"
+			}
+		},
+		{
+			"key": "export-job-kcc-tickets",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"data": {
+				"name": "Tickets voor het KCC-dashboard",
+				"description": "Elke nacht de tickets en klanten voor het dashboard van het klantcontactcentrum.",
+				"sourceSchemas": [
+					"ticket",
+					"client"
+				],
+				"destinationId": "{{object:export-destination-warehouse.id}}",
+				"format": "parquet",
+				"mode": "incremental",
+				"incrementalWatermarkColumn": "@self.updated",
+				"scheduleCron": "0 2 * * *",
+				"enabled": true,
+				"createdBy": "{{cast:daan.uid}}",
+				"createdAt": "{{datetime:-30 09:00}}"
+			}
+		},
+		{
+			"key": "export-job-contacts-per-channel",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"data": {
+				"name": "Contactmomenten per kanaal",
+				"description": "Elk uur de contactmomenten, voor de kanaalrapportage.",
+				"sourceSchemas": [
+					"ticket"
+				],
+				"destinationId": "{{object:export-destination-warehouse.id}}",
+				"format": "parquet",
+				"mode": "incremental",
+				"incrementalWatermarkColumn": "@self.updated",
+				"scheduleCron": "@hourly",
+				"rowFilterExpression": "ticketType = 'interaction'",
+				"enabled": true,
+				"createdBy": "{{cast:daan.uid}}",
+				"createdAt": "{{datetime:-30 09:00}}"
+			}
+		},
+		{
+			"key": "export-job-appointments",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"data": {
+				"name": "Afspraken en niet verschenen",
+				"description": "Elke maandag alle afspraken, met wie niet verscheen.",
+				"sourceSchemas": [
+					"appointmentBooking"
+				],
+				"destinationId": "{{object:export-destination-datalake.id}}",
+				"format": "csv",
+				"mode": "full",
+				"scheduleCron": "0 3 * * 1",
+				"enabled": true,
+				"createdBy": "{{cast:daan.uid}}",
+				"createdAt": "{{datetime:-30 09:00}}"
+			}
+		},
+		{
+			"key": "export-job-leads",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"data": {
+				"name": "Leads en waarde in de pijplijn",
+				"description": "Elke nacht de leads met hun fase en waarde. Staat uit tot de verbinding weer werkt.",
+				"sourceSchemas": [
+					"lead",
+					"pipeline"
+				],
+				"destinationId": "{{object:export-destination-warehouse.id}}",
+				"format": "jsonl",
+				"mode": "full",
+				"scheduleCron": "@daily",
+				"enabled": false,
+				"createdBy": "{{cast:daan.uid}}",
+				"createdAt": "{{datetime:-30 09:00}}"
+			}
+		},
+		{
+			"key": "walkin-anna",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Anna de Vries",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:41}}",
+				"estimatedReadyAt": "{{datetime:0 09:55}}",
+				"status": "called"
+			}
+		},
+		{
+			"key": "walkin-rachid",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Rachid Yilmaz",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:43}}",
+				"estimatedReadyAt": "{{datetime:0 09:58}}",
+				"status": "called"
+			}
+		},
+		{
+			"key": "walkin-mohammed",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Mohammed El Amrani",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:50}}",
+				"estimatedReadyAt": "{{datetime:0 10:08}}",
+				"status": "waiting"
+			}
+		},
+		{
+			"key": "walkin-joke",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Joke Smit",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:52}}",
+				"estimatedReadyAt": "{{datetime:0 10:14}}",
+				"status": "waiting"
+			}
+		},
+		{
+			"key": "z-rapport-0281",
+			"register": "pipelinq",
+			"schema": "posZReport",
+			"data": {
+				"reference": "Z-2026-0281",
+				"reportDate": "{{date:-1}}",
+				"terminalId": "Balie 3",
+				"transactionCount": 38,
+				"total": 1412.3,
+				"status": "posted",
+				"createdAt": "{{datetime:-1 23:00}}",
+				"settledAt": "{{datetime:-1 23:00}}",
+				"bookkeepingStatus": "raised",
+				"bookkeepingAttempts": 1,
+				"shillinqJournalEntryId": "JE-2026-04812"
+			}
+		},
+		{
+			"key": "z-rapport-0280",
+			"register": "pipelinq",
+			"schema": "posZReport",
+			"data": {
+				"reference": "Z-2026-0280",
+				"reportDate": "{{date:-1}}",
+				"terminalId": "Balie 2",
+				"transactionCount": 41,
+				"total": 1980.15,
+				"status": "posted",
+				"createdAt": "{{datetime:-1 23:00}}",
+				"settledAt": "{{datetime:-1 23:00}}",
+				"bookkeepingStatus": "raised",
+				"bookkeepingAttempts": 1,
+				"shillinqJournalEntryId": "JE-2026-04811"
+			}
+		},
+		{
+			"key": "z-rapport-0279",
+			"register": "pipelinq",
+			"schema": "posZReport",
+			"data": {
+				"reference": "Z-2026-0279",
+				"reportDate": "{{date:-1}}",
+				"terminalId": "Balie 1",
+				"transactionCount": 29,
+				"total": 864.0,
+				"status": "failed",
+				"createdAt": "{{datetime:-1 23:00}}",
+				"settledAt": "{{datetime:-1 23:00}}",
+				"bookkeepingStatus": "failed",
+				"bookkeepingAttempts": 1,
+				"subtotal": 880.0,
+				"discountTotal": 16.0,
+				"totalTax": 97.42,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 412.4,
+						"tax": 86.6
+					},
+					{
+						"rate": 9,
+						"base": 120.18,
+						"tax": 10.82
+					},
+					{
+						"rate": 0,
+						"base": 234.0,
+						"tax": 0
+					}
+				],
+				"paymentMethodBreakdown": [
+					{
+						"method": "Pin",
+						"amount": 702.5
+					},
+					{
+						"method": "Contant",
+						"amount": 161.5
+					}
+				],
+				"notes": "Doorgeven aan shillinq mislukt: shillinq reageerde niet om 23:00."
+			}
+		},
+		{
+			"key": "z-rapport-0278",
+			"register": "pipelinq",
+			"schema": "posZReport",
+			"data": {
+				"reference": "Z-2026-0278",
+				"reportDate": "{{date:-2}}",
+				"terminalId": "Balie 3",
+				"transactionCount": 35,
+				"total": 1120.8,
+				"status": "reconciled",
+				"createdAt": "{{datetime:-2 23:00}}",
+				"settledAt": "{{datetime:-2 23:00}}",
+				"bookkeepingStatus": "raised",
+				"bookkeepingAttempts": 1,
+				"shillinqJournalEntryId": "JE-2026-04790"
+			}
+		},
+		{
+			"key": "z-rapport-0277",
+			"register": "pipelinq",
+			"schema": "posZReport",
+			"data": {
+				"reference": "Z-2026-0277",
+				"reportDate": "{{date:-2}}",
+				"terminalId": "Balie 2",
+				"transactionCount": 44,
+				"total": 2031.4,
+				"status": "submitted",
+				"createdAt": "{{datetime:-2 23:00}}",
+				"settledAt": "{{datetime:-2 23:00}}",
+				"bookkeepingStatus": "pending",
+				"bookkeepingAttempts": 1
 			}
 		}
 	]
