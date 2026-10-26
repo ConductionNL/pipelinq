@@ -5725,14 +5725,6 @@
 			}
 		},
 		{
-			"id": "PosCustomerSettings",
-			"_note": "PosCustomerSettings.vue is an in-app settings surface (NcSettingsSection with the POS customer-lookup configuration form); it edits app configuration rather than register objects, so no object-oriented page type applies.",
-			"route": "/admin/pos-customer-link",
-			"type": "custom",
-			"title": "POS customer lookup",
-			"component": "PosCustomerSettingsView"
-		},
-		{
 			"id": "KassakoppelingAuditList",
 			"_note": "The cash register audit log: a bespoke viewer over /api/kassakoppeling/audit with a date range, register, operator and action filter and the admin export for the tax authority. The detail is declarative (KassakoppelingAuditDetail).",
 			"route": "/cash-register-audit",

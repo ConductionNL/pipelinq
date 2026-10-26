@@ -11,6 +11,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import sections from '../../src/views/settings/adminSections.json'
 
 const source = readFileSync(
 	resolve(__dirname, '../../src/views/settings/Settings.vue'),
@@ -48,7 +49,7 @@ describe('the admin page', () => {
 			"t('pipelinq', 'Request Channels')",
 			'v-bind="sections.leadManagement"',
 			'<ProductCategoryManager',
-			'<MenuStructureSettings',
+			'v-bind="sections.menuStructure"',
 			'<SkillSettings',
 			'<AgentProfileSettings',
 		].map(at)
@@ -56,9 +57,7 @@ describe('the admin page', () => {
 	})
 
 	it('spans the menu structure across the grid, as the board draws it', () => {
-		expect(template).toMatch(
-			/<MenuStructureSettings[^>]*class="cn-settings-section--wide"/,
-		)
+		expect(sections.menuStructure.wide).toBe(true)
 	})
 
 	it('keeps every section it had', () => {
@@ -66,19 +65,20 @@ describe('the admin page', () => {
 			'v-bind="sections.provisionData"',
 			':showSetup="isAdmin"',
 			'<DetectedIntegrations',
-			'<VatRatesSettings',
+			'v-bind="sections.vatRates"',
 			'<PipelineManager',
-			'<ForecastSettings',
-			'<ProspectSettings',
+			'v-bind="sections.forecast"',
+			'v-bind="sections.prospect"',
 			'v-bind="sections.exportConfiguration"',
 			'<MailingListEmbedSettings',
 			'v-bind="sections.shillinq"',
-			"t('pipelinq', 'xWiki integration')",
+			'v-bind="sections.xwiki"',
 			'<MessagingSettings',
 			'<DeliverabilitySettings',
 			'<CtiPage',
 			'<PortalSettings',
 			'<PaymentSettingsForm',
+			'v-bind="sections.posCustomer"',
 			'<PosTenderTypeManager',
 			'<PosStaffManager',
 			'<PosRoleManager',

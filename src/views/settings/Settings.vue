@@ -75,7 +75,11 @@
 
 		<!-- Menu structure: simple (default) or full, and the modules
 		     (simple-structure-profile). -->
-		<MenuStructureSettings v-if="isAdmin" class="cn-settings-section--wide" />
+		<CnSettingsFieldsSection
+			v-if="isAdmin"
+			v-bind="sections.menuStructure"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- Skill Management -->
 		<SkillSettings v-if="isConfigured" />
@@ -94,16 +98,24 @@
 		<DetectedIntegrations v-if="isAdmin" />
 
 		<!-- The VAT rate per VAT class (pipelinq-forms-review). -->
-		<VatRatesSettings v-if="isAdmin" :config="config" />
+		<CnSettingsFieldsSection
+			v-if="isAdmin"
+			v-bind="sections.vatRates"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- Pipeline Management -->
 		<PipelineManager v-if="isConfigured" />
 
-		<!-- Forecast Configuration -->
-		<ForecastSettings v-if="isConfigured" />
+		<CnSettingsFieldsSection
+			v-if="isConfigured"
+			v-bind="sections.forecast"
+			appId="pipelinq" />
 
-		<!-- Prospect Discovery Settings -->
-		<ProspectSettings v-if="isConfigured" />
+		<CnSettingsFieldsSection
+			v-if="isConfigured"
+			v-bind="sections.prospect"
+			appId="pipelinq" />
 
 		<CnSettingsFieldsSection
 			v-if="isAdmin"
@@ -123,95 +135,13 @@
 			appId="pipelinq"
 			@saved="onSectionSaved" />
 
-		<!-- xWiki Integration (xwiki-integration) -->
-		<NcSettingsSection
+		<!-- xWiki Integration (xwiki-integration). Whether and how xWiki is
+		     connected is shown once, in DetectedIntegrations. -->
+		<CnSettingsFieldsSection
 			v-if="isAdmin"
-			:name="t('pipelinq', 'xWiki integration')"
-			:description="
-				t(
-					'pipelinq',
-					'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. Pipelinq finds xWiki through the xWiki app or through OpenRegister.',
-				)
-			">
-			<NcNoteCard
-				v-if="xwikiStatus"
-				:type="xwikiStatus.available ? 'success' : 'warning'">
-				<span v-if="xwikiStatus.available">
-					{{
-						t('pipelinq', 'xWiki reachable at {url}', {
-							url: xwikiStatus.baseUrl,
-						})
-					}}
-					<template v-if="xwikiStatus.version">
-						({{
-							t('pipelinq', 'version {ver}', {
-								ver: xwikiStatus.version,
-							})
-						}})
-					</template>
-				</span>
-				<span v-else>
-					{{
-						t(
-							'pipelinq',
-							'xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq.',
-						)
-					}}
-				</span>
-			</NcNoteCard>
-			<NcNoteCard v-if="!xwikiAppInstalled" type="warning">
-				{{
-					t(
-						'pipelinq',
-						'The optional xWiki Nextcloud app is not installed. Pipelinq searches xWiki through OpenRegister instead.',
-					)
-				}}
-			</NcNoteCard>
-			<NcTextField
-				v-model="config.xwiki_default_space"
-				:label="t('pipelinq', 'Default xWiki space')"
-				placeholder="Kennisbank"
-				:helperText="
-					t(
-						'pipelinq',
-						'Space name pre-selected by the dashboard widget. Leave empty to search across all spaces.',
-					)
-				" />
-			<NcTextField
-				v-model="config.xwiki_cache_ttl"
-				type="number"
-				:label="t('pipelinq', 'Cache TTL (seconds)')"
-				placeholder="300"
-				:helperText="
-					t(
-						'pipelinq',
-						'How long search and page results are cached server-side. Default: 300.',
-					)
-				" />
-			<div class="xwiki-actions">
-				<NcButton
-					variant="primary"
-					:disabled="savingXwiki"
-					@click="saveXwiki">
-					<template #icon>
-						<NcLoadingIcon v-if="savingXwiki" :size="16" />
-					</template>
-					{{ t('pipelinq', 'Save xWiki settings') }}
-				</NcButton>
-				<NcButton
-					variant="secondary"
-					:disabled="testingXwiki"
-					@click="testXwiki">
-					<template #icon>
-						<NcLoadingIcon v-if="testingXwiki" :size="16" />
-					</template>
-					{{ t('pipelinq', 'Test connection') }}
-				</NcButton>
-			</div>
-			<NcNoteCard v-if="xwikiMessage" :type="xwikiMessageType">
-				{{ xwikiMessage }}
-			</NcNoteCard>
-		</NcSettingsSection>
+			v-bind="sections.xwiki"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
 		<!-- Channels & telephony. Configuration, not an operator surface, so it
 		     lives here rather than in the app nav (nav-ia-cleanup). -->
@@ -228,6 +158,10 @@
 		     the customer pays at the register) read as duplicates but are two
 		     different things; the labels are what confused them. -->
 		<PaymentSettingsForm v-if="isAdmin && isConfigured" />
+		<CnSettingsFieldsSection
+			v-if="isAdmin && isConfigured"
+			v-bind="sections.posCustomer"
+			appId="pipelinq" />
 		<PosTenderTypeManager v-if="isAdmin && isConfigured" />
 		<PosStaffManager v-if="isAdmin && isConfigured" />
 		<PosRoleManager v-if="isAdmin && isConfigured" />
@@ -272,15 +206,8 @@ import {
 } from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
 import { generateUrl } from '@nextcloud/router'
-import {
-	NcButton,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcSettingsSection,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcNoteCard } from '@nextcloud/vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
-import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import CtiPage from './CtiPage.vue'
@@ -289,7 +216,6 @@ import DeliverabilitySettings from './DeliverabilitySettings.vue'
 import DetectedIntegrations from './DetectedIntegrations.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
 import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
-import MenuStructureSettings from './MenuStructureSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
@@ -299,9 +225,7 @@ import PosRoleManager from './PosRoleManager.vue'
 import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
-import ProspectSettings from './ProspectSettings.vue'
 import TagManager from './TagManager.vue'
-import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import manifest from '../../manifest.json'
 import { leadSourceLabel } from '../../services/leadSourceLabels.js'
@@ -336,23 +260,15 @@ export default {
 		CnAdminSettingsShell,
 		CnRegisterMapping,
 		CnSettingsFieldsSection,
-		NcButton,
-		NcLoadingIcon,
 		NcNoteCard,
-		NcSettingsSection,
-		NcTextField,
 		PipelineManager,
 		ProductCategoryManager,
-		ProspectSettings,
 		TagManager,
 		SkillSettings,
 		AgentProfileSettings,
-		ForecastSettings,
 		MailingListEmbedSettings,
 		MarketingTrafficSettings,
-		MenuStructureSettings,
 		DetectedIntegrations,
-		VatRatesSettings,
 	},
 
 	data() {
@@ -380,13 +296,6 @@ export default {
 			isAdmin: false,
 			// Shillinq is detected, never configured (pipelinq-audit-admin-forms-pos).
 			shillinqInstalled: shillinqDetected(),
-			// xWiki integration (xwiki-integration).
-			savingXwiki: false,
-			testingXwiki: false,
-			xwikiMessage: '',
-			xwikiMessageType: 'success',
-			xwikiStatus: null,
-			xwikiAppInstalled: true,
 		}
 	},
 
@@ -486,12 +395,6 @@ export default {
 		if (this.isConfigured) {
 			this.leadSourcesStore.fetchSources()
 			this.requestChannelsStore.fetchChannels()
-		}
-
-		if (this.isAdmin) {
-			// xWiki integration (xwiki-integration): probe status so the
-			// admin section shows the reachable / unreachable badge on load.
-			this.testXwiki()
 		}
 	},
 
@@ -641,81 +544,6 @@ export default {
 			return this.countObjectsWithField('ticket', 'channel', channelName, {
 				ticketType: 'request',
 			})
-		},
-
-		/**
-		 * Persist xWiki integration settings (xwiki-integration).
-		 *
-		 * @spec openspec/changes/xwiki-integration/tasks.md#8.1
-		 */
-		async saveXwiki() {
-			this.savingXwiki = true
-			this.xwikiMessage = ''
-			try {
-				const result = await this.settingsStore.saveSettings({
-					...this.config,
-					xwiki_default_space: (
-						this.config.xwiki_default_space || ''
-					).trim(),
-					xwiki_cache_ttl: String(this.config.xwiki_cache_ttl || 300),
-				})
-				if (result) {
-					this.config = this.settingsStore.config || result
-				}
-				this.xwikiMessage = t('pipelinq', 'xWiki settings saved.')
-				this.xwikiMessageType = 'success'
-				await this.testXwiki()
-			} catch (e) {
-				this.xwikiMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save xWiki settings.')
-				this.xwikiMessageType = 'error'
-			} finally {
-				this.savingXwiki = false
-			}
-		},
-
-		/**
-		 * Test the xWiki connection via /api/xwiki/status.
-		 *
-		 * @spec openspec/changes/xwiki-integration/tasks.md#8.1
-		 */
-		async testXwiki() {
-			this.testingXwiki = true
-			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/xwiki/status'),
-					{
-						headers: {
-							requesttoken:
-								typeof OC !== 'undefined' && OC.requestToken
-									? OC.requestToken
-									: '',
-							'OCS-APIREQUEST': 'true',
-						},
-					},
-				)
-				const data = await response.json()
-				this.xwikiStatus = data
-				this.xwikiAppInstalled = data && data.source === 'xwiki-app'
-				if (data.available) {
-					this.xwikiMessage = t('pipelinq', 'xWiki connection successful.')
-					this.xwikiMessageType = 'success'
-				} else {
-					this.xwikiMessage = t(
-						'pipelinq',
-						'xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq.',
-					)
-					this.xwikiMessageType = 'warning'
-				}
-			} catch (e) {
-				this.xwikiMessage =
-					e.message
-					|| t('pipelinq', 'Failed to reach the xWiki status endpoint.')
-				this.xwikiMessageType = 'error'
-			} finally {
-				this.testingXwiki = false
-			}
 		},
 
 		/**

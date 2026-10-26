@@ -246,5 +246,523 @@
 				}
 			}
 		]
+	},
+	"menuStructure": {
+		"name": "Menu structure",
+		"description": "Choose how much the menu shows. No page is removed: both menus open the same pages.",
+		"valuesPath": "config",
+		"autoSave": true,
+		"savedMessage": "Saved. People see the change the next time they open Pipelinq.",
+		"fields": [
+			{
+				"key": "menu_structure",
+				"label": "Menu structure",
+				"type": "radio",
+				"hideLabel": true,
+				"default": "simple",
+				"options": [
+					{
+						"value": "simple",
+						"label": "Simple",
+						"description": "Nine menu entries for customer contact. Everything else is one step further, on the Modules page or in settings."
+					},
+					{
+						"value": "full",
+						"label": "Full",
+						"description": "Every entry in the menu, as it was before."
+					}
+				]
+			},
+			{
+				"key": "menu_modules",
+				"label": "Modules in the simple menu",
+				"type": "checkboxes",
+				"saveAs": "csv",
+				"hint": "Switch on what your organisation uses. A module that is off stays reachable from the Modules page.",
+				"visibleWhen": {
+					"key": "menu_structure",
+					"equals": "simple"
+				},
+				"options": [
+					{
+						"value": "sales",
+						"label": "Sales"
+					},
+					{
+						"value": "marketing",
+						"label": "Marketing"
+					},
+					{
+						"value": "pos",
+						"label": "Point of Sale"
+					},
+					{
+						"value": "products",
+						"label": "Products"
+					},
+					{
+						"value": "contracts",
+						"label": "Contracts"
+					},
+					{
+						"value": "loyalty",
+						"label": "Loyalty"
+					}
+				]
+			}
+		],
+		"wide": true
+	},
+	"vatRates": {
+		"name": "VAT rates",
+		"description": "Set the VAT rate for each VAT class. Products use these rates on receipts and invoices.",
+		"valuesPath": "config",
+		"columns": 2,
+		"fields": [
+			{
+				"key": "vatHigh",
+				"path": "vat_rates.high",
+				"label": "High rate (%)",
+				"type": "number",
+				"min": 0,
+				"max": 100,
+				"default": 21
+			},
+			{
+				"key": "vatLow",
+				"path": "vat_rates.low",
+				"label": "Low rate (%)",
+				"type": "number",
+				"min": 0,
+				"max": 100,
+				"default": 9
+			},
+			{
+				"key": "vatZero",
+				"path": "vat_rates.zero",
+				"label": "Zero rate (%)",
+				"type": "number",
+				"min": 0,
+				"max": 100,
+				"default": 0
+			},
+			{
+				"key": "vatExempt",
+				"path": "vat_rates.exempt",
+				"label": "Exempt (%)",
+				"type": "number",
+				"min": 0,
+				"max": 100,
+				"default": 0
+			}
+		]
+	},
+	"forecast": {
+		"name": "Forecast configuration",
+		"description": "Configure the sales forecast: commit threshold, weekly snapshot schedule, accuracy bands, at-risk warnings and the reporting currency.",
+		"url": "/apps/pipelinq/api/settings/forecast",
+		"columns": 2,
+		"fields": [
+			{
+				"key": "commit_threshold",
+				"label": "Commit threshold (in reporting currency)",
+				"type": "number",
+				"min": 0
+			},
+			{
+				"key": "pipeline_target",
+				"label": "Open pipeline target (in reporting currency)",
+				"type": "number",
+				"min": 0
+			},
+			{
+				"key": "reporting_currency",
+				"label": "Reporting currency",
+				"pattern": "^[A-Za-z]{3}$",
+				"patternMessage": "Use a three-letter currency code for every rate."
+			},
+			{
+				"key": "generation_timezone",
+				"label": "Forecast generation timezone"
+			},
+			{
+				"key": "generation_day",
+				"label": "Generation day (1 = Monday)",
+				"type": "number",
+				"min": 1,
+				"max": 7,
+				"integer": true
+			},
+			{
+				"key": "generation_hour",
+				"label": "Generation hour (0-23)",
+				"type": "number",
+				"min": 0,
+				"max": 23,
+				"integer": true
+			},
+			{
+				"key": "accuracy_green",
+				"label": "Accuracy green threshold (0-1)",
+				"type": "number",
+				"min": 0,
+				"max": 1
+			},
+			{
+				"key": "accuracy_amber",
+				"label": "Accuracy amber threshold (0-1)",
+				"type": "number",
+				"min": 0,
+				"max": 1
+			},
+			{
+				"key": "at_risk_percent",
+				"label": "At-risk attainment threshold (%)",
+				"type": "number",
+				"min": 0,
+				"max": 100
+			},
+			{
+				"key": "at_risk_days",
+				"label": "At-risk days remaining",
+				"type": "number",
+				"min": 0,
+				"integer": true
+			},
+			{
+				"key": "manager_group",
+				"label": "Forecast manager group",
+				"type": "select",
+				"optionsUrl": "/ocs/v2.php/cloud/groups?format=json",
+				"optionsPath": "ocs.data.groups"
+			},
+			{
+				"key": "team_groups",
+				"label": "Forecast team groups",
+				"type": "select",
+				"multiple": true,
+				"saveAs": "csv",
+				"optionsUrl": "/ocs/v2.php/cloud/groups?format=json",
+				"optionsPath": "ocs.data.groups"
+			},
+			{
+				"key": "exchange_rates",
+				"label": "Exchange rates",
+				"type": "pairs",
+				"wide": true,
+				"keyLabel": "Currency",
+				"valueLabel": "Rate",
+				"valueType": "number",
+				"keyMaxLength": 3,
+				"addLabel": "Add a rate",
+				"pattern": "^[A-Za-z]{3}$",
+				"patternMessage": "Use a three-letter currency code for every rate.",
+				"valueAbove": 0,
+				"valueMessage": "Every rate must be a number above zero."
+			}
+		]
+	},
+	"prospect": {
+		"name": "Prospect Discovery",
+		"description": "Configure your Ideal Customer Profile (ICP) to discover potential leads.",
+		"url": "/apps/pipelinq/api/prospect-settings",
+		"columns": 2,
+		"fields": [
+			{
+				"key": "sbiCodes",
+				"label": "SBI Codes",
+				"type": "lines",
+				"wide": true,
+				"hint": "Dutch Standard Industrial Classification codes. One code per line."
+			},
+			{
+				"key": "employeeCountMin",
+				"label": "Min Employees",
+				"type": "number",
+				"min": 0,
+				"integer": true
+			},
+			{
+				"key": "employeeCountMax",
+				"label": "Max Employees",
+				"type": "number",
+				"min": 0,
+				"integer": true
+			},
+			{
+				"key": "provinces",
+				"label": "Provinces",
+				"type": "select",
+				"multiple": true,
+				"placeholder": "Select provinces",
+				"options": [
+					"Drenthe",
+					"Flevoland",
+					"Friesland",
+					"Gelderland",
+					"Groningen",
+					"Limburg",
+					"Noord-Brabant",
+					"Noord-Holland",
+					"Overijssel",
+					"Utrecht",
+					"Zeeland",
+					"Zuid-Holland"
+				]
+			},
+			{
+				"key": "legalForms",
+				"label": "Legal Forms",
+				"type": "select",
+				"multiple": true,
+				"placeholder": "Select legal forms",
+				"options": [
+					"BV",
+					"NV",
+					"VOF",
+					"Eenmanszaak",
+					"Stichting",
+					"Vereniging",
+					"CV",
+					"Maatschap"
+				]
+			},
+			{
+				"key": "excludeInactive",
+				"label": "Exclude inactive companies",
+				"type": "switch",
+				"default": true
+			},
+			{
+				"key": "keywords",
+				"label": "Keywords",
+				"type": "lines",
+				"wide": true,
+				"hint": "Used for OpenCorporates search. One keyword per line."
+			},
+			{
+				"key": "kvkApiKey",
+				"label": "KVK API Key",
+				"type": "secret",
+				"hint": "Required for prospect discovery. Get one at developers.kvk.nl."
+			},
+			{
+				"key": "openCorporatesEnabled",
+				"label": "Enable OpenCorporates (supplementary data source)",
+				"type": "switch"
+			}
+		]
+	},
+	"posCustomer": {
+		"name": "POS customer lookup",
+		"description": "Configure how cashiers search for customers, how much history is shown at checkout, and how marketing consent is synced to the linked contact.",
+		"url": "/apps/pipelinq/api/admin/pos-customer-settings",
+		"valuesPath": "settings",
+		"saveMethod": "POST",
+		"fields": [
+			{
+				"key": "customerSearchFields",
+				"label": "Search fields",
+				"type": "checkboxes",
+				"required": true,
+				"options": [
+					{
+						"value": "name",
+						"label": "Name"
+					},
+					{
+						"value": "email",
+						"label": "E-mail"
+					},
+					{
+						"value": "phone",
+						"label": "Phone"
+					}
+				]
+			},
+			{
+				"key": "customerHistoryDepth",
+				"label": "Purchase history depth",
+				"type": "radio",
+				"default": 10,
+				"options": [
+					{
+						"value": 10,
+						"label": "Last 10 transactions"
+					},
+					{
+						"value": 20,
+						"label": "Last 20 transactions"
+					},
+					{
+						"value": 50,
+						"label": "Last 50 transactions"
+					}
+				]
+			},
+			{
+				"key": "integrationHeading",
+				"label": "Pipelinq integration",
+				"type": "heading"
+			},
+			{
+				"key": "enablePipelinqSync",
+				"label": "Automatically sync marketing consent to the linked contact.",
+				"type": "boolean",
+				"default": true
+			},
+			{
+				"key": "requireCustomerForOnAccount",
+				"label": "Require a customer for on-account transactions.",
+				"type": "boolean",
+				"default": true
+			}
+		]
+	},
+	"cti": {
+		"name": "CTI integration",
+		"description": "Configure the telephony platform that powers screen-pop and click-to-dial.",
+		"url": "/apps/pipelinq/api/cti/config",
+		"saveAll": true,
+		"columns": 2,
+		"fields": [
+			{
+				"key": "platform",
+				"label": "Platform",
+				"type": "select",
+				"required": true,
+				"default": "callvoip",
+				"options": [
+					{
+						"value": "callvoip",
+						"label": "CallVoip"
+					},
+					{
+						"value": "ringcentral",
+						"label": "RingCentral"
+					},
+					{
+						"value": "asterisk",
+						"label": "Asterisk"
+					},
+					{
+						"value": "other",
+						"label": "Other"
+					}
+				]
+			},
+			{
+				"key": "api_base_url",
+				"label": "API base URL",
+				"placeholder": "https://api.example.com/v2"
+			},
+			{
+				"key": "auth_method",
+				"label": "Auth method",
+				"type": "select",
+				"required": true,
+				"default": "webhook-secret",
+				"options": [
+					{
+						"value": "basic",
+						"label": "Basic"
+					},
+					{
+						"value": "oauth",
+						"label": "OAuth 2.0"
+					},
+					{
+						"value": "api_key",
+						"label": "API key"
+					},
+					{
+						"value": "webhook-secret",
+						"label": "Webhook shared secret"
+					}
+				]
+			},
+			{
+				"key": "credentials_ref",
+				"label": "OpenConnector credential reference",
+				"placeholder": "Source UUID / slug"
+			},
+			{
+				"key": "default_outbound_caller_id",
+				"label": "Default outbound caller ID",
+				"placeholder": "+31303033000"
+			},
+			{
+				"key": "screen_pop_delay_ms",
+				"label": "Screen-pop delay (ms)",
+				"type": "number",
+				"min": 0,
+				"max": 5000,
+				"integer": true,
+				"default": 0
+			},
+			{
+				"key": "default_country_code",
+				"label": "Default country code (ISO-3166)",
+				"placeholder": "NL",
+				"default": "NL"
+			},
+			{
+				"key": "screen_pop_enabled",
+				"label": "Enable inbound screen-pop",
+				"type": "switch",
+				"default": true
+			},
+			{
+				"key": "click_to_dial_enabled",
+				"label": "Enable outbound click-to-dial",
+				"type": "switch",
+				"default": true
+			},
+			{
+				"key": "test",
+				"label": "Test connection",
+				"type": "action",
+				"method": "GET",
+				"url": "/apps/pipelinq/api/cti/test-connection",
+				"okPath": "ok",
+				"resultPath": "none",
+				"successText": "Connection OK ({platform})",
+				"failureText": "Connection failed: {message}"
+			}
+		]
+	},
+	"xwiki": {
+		"name": "xWiki integration",
+		"description": "Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. Pipelinq finds xWiki through the xWiki app or through OpenRegister.",
+		"valuesPath": "config",
+		"fields": [
+			{
+				"key": "xwiki_default_space",
+				"label": "Default xWiki space",
+				"placeholder": "Kennisbank",
+				"hint": "Space name pre-selected by the dashboard widget. Leave empty to search across all spaces."
+			},
+			{
+				"key": "xwiki_cache_ttl",
+				"label": "Cache TTL (seconds)",
+				"type": "number",
+				"min": 0,
+				"integer": true,
+				"default": 300,
+				"placeholder": "300",
+				"hint": "How long search and page results are cached server-side. Default: 300."
+			},
+			{
+				"key": "test",
+				"label": "Test connection",
+				"type": "action",
+				"method": "GET",
+				"url": "/apps/pipelinq/api/xwiki/status",
+				"okPath": "available",
+				"resultPath": "none",
+				"successText": "xWiki reachable at {baseUrl}",
+				"failureText": "xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq."
+			}
+		]
 	}
 }

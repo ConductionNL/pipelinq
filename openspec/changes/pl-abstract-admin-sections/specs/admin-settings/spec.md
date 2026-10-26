@@ -30,7 +30,7 @@ The admin page SHALL pass `showSetup` and the manifest's `setup.steps` to CnAdmi
 
 ### Requirement: No admin surface is an in-app route
 
-No admin settings or diagnostics component SHALL be mounted by the app's vue-router. The BRP monitor SHALL be a read-only section on the admin page that shows the last 24 hours of lookups (count, cache hits, errors, average response time, the period) and the mTLS certificate's state and expiry, or says nothing was reported yet and no certificate is configured. The page `/sync-settings` SHALL NOT exist.
+No admin settings or diagnostics component SHALL be mounted by the app's vue-router. The POS customer lookup settings (search fields, at least one; purchase history depth; consent sync; a customer for on-account sales) SHALL be a section on the admin page. The BRP monitor SHALL be a read-only section on the admin page that shows the last 24 hours of lookups (count, cache hits, errors, average response time, the period) and the mTLS certificate's state and expiry, or says nothing was reported yet and no certificate is configured. The page `/sync-settings` SHALL NOT exist.
 
 #### Scenario: The certificate expires soon
 
@@ -49,3 +49,23 @@ Deleting a skill or an agent profile SHALL ask in CnDeleteDialog, which names th
 - THEN a dialog asks to delete "Parking", and only its confirm button deletes it
 
 @e2e exclude covered by tests/vitest/adminDeleteDialog.spec.js.
+
+### Requirement: Settings with lists, rows or a JSON value are declared too
+
+The menu structure (radio, and the simple menu's modules as checkboxes saved as comma text, shown while the structure is simple, saved on each change), the VAT rate per class (one key each inside the `vat_rates` JSON setting), the forecast configuration (groups picked from the server's groups, exchange rates as currency-to-rate rows that refuse a code that is not three letters and a rate not above zero), prospect discovery (provinces and legal forms as multi-selects, SBI codes and keywords one per line, a replace-only KVK key, on `/api/prospect-settings`), CTI and xWiki SHALL be declared sections. A connection test SHALL say the server's verdict: "Connection OK (<platform>)" or "Connection failed: <reason>" for CTI, "xWiki reachable at <address>" or why not for xWiki.
+
+#### Scenario: Adding an exchange rate
+
+- GIVEN the forecast section with the rate USD 0.92
+- WHEN the administrator adds GBP 1.17 and saves
+- THEN `exchange_rates` is saved as `{ "GBP": 1.17, "USD": 0.92 }`
+
+@e2e exclude the row editor is the library's, covered by its CnSettingsFieldsSectionLists spec; the declaration is asserted by tests/vitest/adminSections.spec.js and tests/vitest/leadCurrency.spec.js.
+
+#### Scenario: Prospect settings load
+
+- GIVEN ICP settings were saved
+- WHEN the administrator opens the admin page
+- THEN the Prospect Discovery section shows them, read from `/api/prospect-settings`
+
+@e2e exclude asserted against the route table by tests/vitest/adminSections.spec.js.

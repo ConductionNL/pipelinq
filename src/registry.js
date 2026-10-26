@@ -175,7 +175,6 @@ import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 import EmailReceiptModal from './modals/EmailReceiptModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 import PrintReceiptModal from './modals/PrintReceiptModal.vue'
-import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
 //     missing-consent modal) and the live monitor, which polls /api/blasts/:id
@@ -533,11 +532,6 @@ const registry = {
 		kind: 'section',
 		component: ZReportBookkeepingSection,
 		_note: 'Z-report in-body section for the declarative type:"detail" ZReportDetail page: BTW + payment-method breakdown tables (array fields on the object, not FK children) plus the shillinq bookkeeping-status projection and the manager-gated, idempotent re-raise action (POST /api/pos-bookkeeping/post). Self-fetches by @objectId so it stays in sync after a re-raise. The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
-	},
-	PosCustomerSettingsView: {
-		kind: 'page',
-		component: PosCustomerSettingsView,
-		_note: 'Admin settings panel for the POS customer-link lookup: search fields, purchase-history depth, marketing-consent sync toggle and the on-account-requires-customer invariant (pos-customer-link, REQ-PCL-006).',
 	},
 
 	// --- Cash register audit log (pos-kassakoppeling-audit). ---

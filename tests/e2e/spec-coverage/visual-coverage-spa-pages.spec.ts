@@ -208,16 +208,3 @@ test('KassakoppelingAuditDetail: the old /kassakoppeling/audit/:id address opens
 	// An absent entry: the endpoint answers 404 and the page shows its not-found state.
 	await expect(content(page).locator('[data-testid="cn-detail-page"]').first()).toBeVisible({ timeout: 15000 })
 })
-
-// ── src/views/admin/PosCustomerSettings.vue — `/admin/pos-customer-link` ──────
-test('PosCustomerSettings: /admin/pos-customer-link mounts src/views/admin/PosCustomerSettings.vue', async ({
-	page,
-}) => {
-	await openSpaRoute(page, '/admin/pos-customer-link')
-
-	// The whole template is one NcSettingsSection, and its `name` prop is the
-	// section heading — rendered by the component before any fetch resolves.
-	await expect(
-		content(page).getByRole('heading', { name: 'POS customer lookup' }),
-	).toBeVisible({ timeout: 15000 })
-})
