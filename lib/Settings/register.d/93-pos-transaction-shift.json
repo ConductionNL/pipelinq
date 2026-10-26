@@ -2,6 +2,7 @@
   "components": {
     "schemas": {
       "posTransaction": {
+        "slug": "posTransaction",
         "properties": {
           "shift": {
             "type": "string",
