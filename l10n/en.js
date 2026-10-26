@@ -8019,7 +8019,8 @@ OC.L10N.register(
         "{shown} of {total} day reports · the bookkeeping happens in shillinq": "{shown} of {total} day reports · the bookkeeping happens in shillinq",
         "Not posted": "Not posted",
         "Identifier": "Identifier",
-        "The day close makes one Z report per till every night. Z reports are read-only.": "The day close makes one Z report per till every night. Z reports are read-only."
+        "The day close makes one Z report per till every night. Z reports are read-only.": "The day close makes one Z report per till every night. Z reports are read-only.",
+        "A task that passes its deadline expires, and its handler and team lead are told.": "A task that passes its deadline expires, and its handler and team lead are told."
     },
     "nplurals=2; plural=(n != 1);"
 )

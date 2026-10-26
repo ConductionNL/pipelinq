@@ -8001,6 +8001,7 @@
         "{shown} of {total} day reports · the bookkeeping happens in shillinq": "{shown} van {total} dagrapporten · de boekhouding gebeurt in shillinq",
         "Not posted": "Niet geboekt",
         "Identifier": "Kenmerk",
-        "The day close makes one Z report per till every night. Z reports are read-only.": "De dagafsluiting maakt elke nacht één Z-rapport per kassa. Ze zijn alleen-lezen."
+        "The day close makes one Z report per till every night. Z reports are read-only.": "De dagafsluiting maakt elke nacht één Z-rapport per kassa. Ze zijn alleen-lezen.",
+        "A task that passes its deadline expires, and its handler and team lead are told.": "Een taak die over de termijn gaat, vervalt, en de behandelaar en teamleider krijgen bericht."
     }
 }
