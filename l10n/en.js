@@ -8001,7 +8001,10 @@ OC.L10N.register(
         "Campaign events": "Campaign events",
         "Fully booked": "Fully booked",
         "An event a campaign holds, with its places": "An event a campaign holds, with its places",
-        "One sign-up for a campaign event": "One sign-up for a campaign event"
+        "One sign-up for a campaign event": "One sign-up for a campaign event",
+        "Reference code": "Reference code",
+        "{shown} of {total} transactions · newest first": "{shown} of {total} transactions · newest first",
+        "Open a transaction to print or mail the receipt, or to register a refund.": "Open a transaction to print or mail the receipt, or to register a refund."
     },
     "nplurals=2; plural=(n != 1);"
 )

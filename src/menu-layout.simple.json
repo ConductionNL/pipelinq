@@ -2110,10 +2110,43 @@
 			"title": "Transactions",
 			"config": {
 				"addLabel": "New transaction",
+				"countText": "{shown} of {total} transactions · newest first",
+				"sortKey": "@self.created",
+				"sortOrder": "desc",
+				"footerNote": "Open a transaction to print or mail the receipt, or to register a refund.",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Today",
+						"filter": {
+							"@self[created][gte]": "@today"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Parked",
+						"filter": {
+							"status": "parked"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Refunded",
+						"filter": {
+							"status": "refunded"
+						},
+						"showCount": true
+					}
+				],
 				"columns": [
 					{
 						"key": "reference",
-						"label": "Reference"
+						"label": "Reference code"
 					},
 					{
 						"key": "cashier",
@@ -2141,6 +2174,11 @@
 						"formatterOptions": {
 							"decimals": 2
 						}
+					},
+					{
+						"key": "@self.created",
+						"label": "Created",
+						"formatter": "datetime"
 					}
 				]
 			}

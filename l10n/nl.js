@@ -7963,7 +7963,10 @@ OC.L10N.register(
         "Campaign events": "Evenementen",
         "Fully booked": "Volgeboekt",
         "An event a campaign holds, with its places": "Een evenement van een campagne, met zijn plaatsen",
-        "One sign-up for a campaign event": "Eén aanmelding voor een evenement"
+        "One sign-up for a campaign event": "Eén aanmelding voor een evenement",
+        "Reference code": "Kenmerk",
+        "{shown} of {total} transactions · newest first": "{shown} van {total} transacties · nieuwste eerst",
+        "Open a transaction to print or mail the receipt, or to register a refund.": "Open een transactie om de bon te printen of te mailen, of om een retour te registreren."
     },
     "nplurals=2; plural=(n != 1);"
 )
