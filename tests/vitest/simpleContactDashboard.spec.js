@@ -41,7 +41,6 @@ const fragments = fs
 	.map((name) => readJson('src', 'manifest.d', name))
 const fullFile = readJson('src', 'menu-layout.json')
 const simpleFile = readJson('src', 'menu-layout.simple.json')
-const iconsSource = read('src', 'icons.js')
 const en = readJson('l10n', 'en.json').translations
 const nl = readJson('l10n', 'nl.json').translations
 
@@ -131,7 +130,7 @@ describe('the dashboard', () => {
 			expect(byId[widget.id], widget.id).toEqual(widget)
 		}
 		expect(simple.widgets).toHaveLength(before.widgets.length + added.length)
-		expect(added).toHaveLength(12)
+		expect(added).toHaveLength(10)
 	})
 
 	it('moves the old cards down by one fixed number of rows and changes nothing else', () => {
@@ -142,7 +141,7 @@ describe('the dashboard', () => {
 			expect({ ...now, gridY: entry.gridY }, entry.id).toEqual(entry)
 			shifts.add(now.gridY - entry.gridY)
 		}
-		expect([...shifts]).toEqual([18])
+		expect([...shifts]).toEqual([16])
 	})
 
 	it('puts every card in the grid once, and no two cards in one cell', () => {
@@ -166,14 +165,12 @@ describe('the dashboard', () => {
 		)
 	})
 
-	it('opens with the greeting on the ground, the attention card and four numbers in a row', () => {
+	it('opens with the page header, the attention card and four numbers in a row', () => {
 		const top = simple.layout
-			.filter((entry) => entry.gridY < 9)
+			.filter((entry) => entry.gridY < 7)
 			.sort((a, b) => a.gridY - b.gridY || a.gridX - b.gridX)
 			.map((entry) => byId[entry.widgetId].type)
 		expect(top).toEqual([
-			'header',
-			'custom',
 			'banner',
 			'stat',
 			'stat',
@@ -181,15 +178,16 @@ describe('the dashboard', () => {
 			'stat',
 			'workspace-filter',
 		])
-		// PqDashboard has one header: the page header is hidden and the
-		// greeting row carries the kicker date and the heading on the ground.
-		expect(simple.showHeader).toBe(false)
-		expect(byId['simple-greeting'].content).toMatchObject({
-			ground: true,
-			showDate: true,
-		})
+		// PqDashboard (round 12): the page header carries the title, the
+		// greeting with the date and the actions; availability is the page's
+		// own actions component, so no grid cell repeats it.
+		expect(simple.showHeader).toBe(true)
+		expect(simple.greeting).toBe('first')
+		expect(page(builtSimple, 'KccWerkplek').title).toBe('My customer contact')
+		expect(byId['simple-greeting']).toBeUndefined()
+		expect(byId['simple-availability']).toBeUndefined()
 		const stats = simple.layout.filter(
-			(entry) => byId[entry.widgetId].type === 'stat' && entry.gridY === 4,
+			(entry) => byId[entry.widgetId].type === 'stat' && entry.gridY === 2,
 		)
 		expect(stats.map((entry) => entry.gridWidth)).toEqual([3, 3, 3, 3])
 	})
@@ -198,30 +196,32 @@ describe('the dashboard', () => {
 		const at = (id) => simple.layout.find((entry) => entry.widgetId === id)
 		expect(at('simple-waiting-list')).toMatchObject({
 			gridX: 0,
-			gridY: 9,
+			gridY: 7,
 			gridWidth: 8,
 		})
 		expect(at('simple-per-channel')).toMatchObject({
 			gridX: 0,
-			gridY: 14,
+			gridY: 12,
 			gridWidth: 8,
 		})
 		expect(at('simple-callback-list')).toMatchObject({
 			gridX: 8,
-			gridY: 9,
+			gridY: 7,
 			gridWidth: 4,
 		})
 		expect(at('simple-latest-contact')).toMatchObject({
 			gridX: 8,
-			gridY: 14,
+			gridY: 12,
 			gridWidth: 4,
 		})
-		// The cards the page had start at row 18. The board puts the Start a
-		// contact card (row 7) above the lists (amended 10 Oct 2026). Rows are
+		// The cards the page had start at row 16. The board puts the Start a
+		// contact card (row 5) above the lists (amended 10 Oct 2026). Rows are
 		// the heights the grid settles on once the cards size to their content.
 		for (const id of ['simple-per-channel', 'simple-latest-contact']) {
-			expect(at(id).gridY + at(id).gridHeight, id).toBeLessThanOrEqual(18)
+			expect(at(id).gridY + at(id).gridHeight, id).toBeLessThanOrEqual(16)
 		}
+		// The grid does not float, so every card closes up behind the one above.
+		expect(simple.gridFloat).toBe(false)
 	})
 
 	it('offers one primary action on the attention card: the late tickets', () => {
@@ -234,26 +234,26 @@ describe('the dashboard', () => {
 	})
 
 	it('shows the type of a waiting ticket as a pill with the labels the ticket page uses', () => {
-		const column = byId['simple-waiting-list'].content.columns.find(
-			(item) => item.key === 'ticketType',
+		const pill = byId['simple-waiting-list'].content.pill
+		expect(pill.field).toBe('ticketType')
+		expect(Object.keys(pill.labels).sort()).toEqual(
+			[...SCHEMAS.ticket.ticketType.enum].sort(),
 		)
-		expect(column.enum).toEqual(SCHEMAS.ticket.ticketType.enum)
-		expect(column.enumLabels).toEqual(
+		expect(pill.labels).toEqual(
 			page(builtSimple, 'TicketDetail').config.typePill.labels,
 		)
-		for (const label of Object.values(column.enumLabels)) {
+		for (const label of Object.values(pill.labels)) {
 			expect(en[label], `en "${label}"`).toBeTruthy()
 			expect(nl[label], `nl "${label}"`).toBeTruthy()
 		}
 	})
 
-	it('links Waiting for me to the whole list with the filter it counts by', () => {
-		const list = byId['simple-waiting-list'].content
-		expect(pageIds.has(list.viewAllRoute)).toBe(true)
-		expect(list.viewAllQuery).toEqual(list.filter)
-		expect(list.viewAllQuery).toEqual(
-			byId['simple-waiting-for-me'].content.source.filter,
+	it('links Waiting for me to the whole queue', () => {
+		const entry = simple.layout.find(
+			(item) => item.widgetId === 'simple-waiting-list',
 		)
+		expect(entry.headerLink.label).toBe('Whole queue')
+		expect(pageIds.has(entry.headerLink.route)).toBe(true)
 	})
 
 	it('counts only on fields the schema has', () => {
@@ -330,7 +330,9 @@ describe('the dashboard', () => {
 	})
 
 	it('opens a row on a page that exists', () => {
-		for (const widget of added.filter((item) => item.type === 'object-list')) {
+		const lists = added.filter((item) => item.type === 'record-list')
+		expect(lists).toHaveLength(3)
+		for (const widget of lists) {
 			expect(pageIds.has(widget.content.rowRoute), widget.id).toBe(true)
 		}
 	})
@@ -340,7 +342,8 @@ describe('the dashboard', () => {
 			const label = widget.content.label
 			expect(label.length, label).toBeLessThanOrEqual(22)
 			expect(nl[label].length, nl[label]).toBeLessThanOrEqual(22)
-			expect(iconsSource, widget.id).toContain(`\n\t${widget.content.icon},\n`)
+			// The board draws the four numbers without an icon.
+			expect(widget.content.icon, widget.id).toBeUndefined()
 		}
 	})
 })
@@ -445,18 +448,16 @@ describe('the attention card asks a question OpenRegister can answer', () => {
 	it('shows dates in the lists as dates, not as stored text', () => {
 		const widgets = page(builtSimple, 'KccWerkplek').config.widgets.filter(
 			(widget) =>
-				widget.id.startsWith('simple-') && widget.type === 'object-list',
+				widget.id.startsWith('simple-') && widget.type === 'record-list',
 		)
 		let dates = 0
 		for (const widget of widgets) {
-			for (const column of widget.content.columns) {
-				if (
-					SCHEMAS[widget.content.schema][column.key].format === 'date-time'
-				) {
+			const text = JSON.stringify(widget.content)
+			for (const [, field, format] of text.matchAll(/\{([\w.]+)(?:\|(\w+))?\}/g)) {
+				const property = SCHEMAS[widget.content.schema][field]
+				if (property?.format === 'date-time') {
 					dates += 1
-					expect(column.format, `${widget.id}: ${column.key}`).toBe(
-						'date-time',
-					)
+					expect(format, `${widget.id}: ${field}`).toBeTruthy()
 				}
 			}
 		}
@@ -577,7 +578,12 @@ describe('the words', () => {
 				for (const [name, inner] of Object.entries(value)) {
 					collect(inner, key === 'labels' ? 'label' : name)
 				}
-			} else if (typeof value === 'string' && TEXT.includes(key)) {
+			} else if (
+				typeof value === 'string'
+				&& TEXT.includes(key)
+				// A row template that is one field ("{title}") holds no words.
+				&& !/^\{[^}]+\}$/.test(value)
+			) {
 				words.add(value)
 			}
 		}
@@ -597,14 +603,14 @@ describe('the words', () => {
 	})
 })
 
-describe('the hidden page header loses nothing', () => {
+describe('the page header loses nothing', () => {
 	const simple = page(builtSimple, 'KccWerkplek')
 	const full = page(builtFull, 'KccWerkplek')
 	const layoutOf = (widgetId) =>
 		simple.config.layout.find((entry) => entry.widgetId === widgetId)
 
-	it('hides the header in the simple structure only', () => {
-		expect(simple.config.showHeader).toBe(false)
+	it('shows the header in the simple structure, and hides the widget actions there only', () => {
+		expect(simple.config.showHeader).toBe(true)
 		expect(simple.config.showWidgetActions).toBe(false)
 		expect(full.config.showHeader).toBeUndefined()
 		expect(full.config.showWidgetActions).toBeUndefined()
@@ -622,10 +628,8 @@ describe('the hidden page header loses nothing', () => {
 		expect(fullFile.nav?.primaryAction).toBeUndefined()
 	})
 
-	it('keeps the availability switch in the greeting row and the client in focus above the cards that use it', () => {
-		expect(simple.slots['widget-simple-availability']).toBe(
-			full.actionsComponent,
-		)
+	it('keeps the availability switch in the header and the client in focus above the cards that use it', () => {
+		expect(simple.actionsComponent).toBe(full.actionsComponent)
 		// The card is the library's start card (workspace-filter), not a slot:
 		// it writes the same workspace key the full page's picker writes.
 		const startCard = simple.config.widgets.find(
@@ -636,10 +640,8 @@ describe('the hidden page header loses nothing', () => {
 		expect(startCard.content.writes).toBe('@workspace.selectedClient')
 		expect(simple.slots['widget-simple-client-in-focus']).toBeUndefined()
 		expect(full.slots['title-meta']).toBe('WerkplekClientSelect')
-		expect(layoutOf('simple-availability')).toMatchObject({
-			gridY: 0,
-			borderless: true,
-		})
+		// The start card picks the client, so the header carries no second picker.
+		expect(simple.slots['title-meta']).toBeUndefined()
 		const client = layoutOf('simple-client-in-focus')
 		// At 1100 wide the description wraps to three lines: a fixed two-row
 		// cell cut the client picker in half behind a scrollbar.
