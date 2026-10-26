@@ -11,7 +11,7 @@
  *
  * The page is now `type: "links"`, the library's typed page of link cards.
  * That page leaves out a card whose route does not resolve, so a manifest
- * assertion still cannot tell 29 cards from none. This spec mounts the
+ * assertion still cannot tell 30 cards from none. This spec mounts the
  * library's real CnPageRenderer on the real `/modules` route, with the simple
  * structure's built manifest and a router built from its own pages, and counts
  * what a reader would see.
@@ -110,22 +110,22 @@ describe('the Modules page, through the page renderer', () => {
 		).not.toContain('ModulesPage')
 	})
 
-	it('names a route that resolves on every one of its 29 cards', async () => {
+	it('names a route that resolves on every one of its 30 cards', async () => {
 		const { router } = await openModules()
-		expect(page.config.cards).toHaveLength(29)
+		expect(page.config.cards).toHaveLength(30)
 		for (const card of page.config.cards) {
 			expect(router.hasRoute(card.route), card.id).toBe(true)
 		}
 	})
 
-	it('shows all 29 cards in seven groups, each a link to its own page', async () => {
+	it('shows all 30 cards in seven groups, each a link to its own page', async () => {
 		const { wrapper } = await openModules()
 		expect(wrapper.find('[data-testid="cn-link-cards-page"]').exists()).toBe(
 			true,
 		)
 
 		const cards = wrapper.findAll('[data-testid="cn-link-card"]')
-		expect(cards).toHaveLength(29)
+		expect(cards).toHaveLength(30)
 		const hrefs = cards.map((card) => card.attributes('href'))
 		const expected = page.config.cards.map(
 			(card) =>
@@ -133,7 +133,7 @@ describe('the Modules page, through the page renderer', () => {
 				+ manifest.pages.find((item) => item.id === card.route).route,
 		)
 		expect([...hrefs].sort()).toEqual([...expected].sort())
-		expect(new Set(hrefs).size).toBe(29)
+		expect(new Set(hrefs).size).toBe(30)
 		expect(hrefs).toContain('/apps/pipelinq/leads')
 		// The sales overview is reached at the address the start page gave it.
 		expect(hrefs).toContain('/apps/pipelinq/sales-overview')
@@ -170,7 +170,7 @@ describe('the Modules page, through the page renderer', () => {
 		expect(wrapper.text()).toContain('Modules en meer')
 		expect(wrapper.text()).toContain('Verkoopoverzicht')
 		expect(wrapper.text()).not.toContain('Sales overview')
-		expect(wrapper.findAll('[data-testid="cn-link-card"]')).toHaveLength(29)
+		expect(wrapper.findAll('[data-testid="cn-link-card"]')).toHaveLength(30)
 	})
 
 	it('opens the page a card names', async () => {

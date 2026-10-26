@@ -1,6 +1,6 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged.",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint. Sanne also has a confirmed site visit on the Parkstraat a week after the install, so a booking that can still be moved exists.",
 	"appConfig": [
 		{
 			"key": "crm_group",
@@ -13,6 +13,16 @@
 		{
 			"key": "brp.allowed_groups",
 			"value": "{{cast:kcc.gid}}"
+		},
+		{
+			"key": "ticket_reference_counter",
+			"value": "417",
+			"type": "int"
+		},
+		{
+			"key": "ticket_reference_counter_year",
+			"value": "2026",
+			"type": "int"
 		}
 	],
 	"objects": [
@@ -31,7 +41,8 @@
 				"preferredChannel": "phone",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "Belt liever dan dat hij mailt. Zijn dochter Linda Bakker helpt hem soms."
+				"notes": "Belt liever dan dat hij mailt. Zijn dochter Linda Bakker helpt hem soms.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000011"
 			}
 		},
 		{
@@ -49,7 +60,8 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan."
+				"notes": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000012"
 			}
 		},
 		{
@@ -67,7 +79,8 @@
 				"preferredChannel": "phone",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "Wil graag uitleg in eenvoudige taal."
+				"notes": "Wil graag uitleg in eenvoudige taal.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000013"
 			}
 		},
 		{
@@ -89,7 +102,8 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:slagerij.kvk}}."
+				"notes": "KVK-nummer {{cast:slagerij.kvk}}.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000001"
 			}
 		},
 		{
@@ -127,7 +141,8 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:cloudgemeente.kvk}}.",
-				"website": "https://cloudgemeente.zuiddrecht.example"
+				"website": "https://cloudgemeente.zuiddrecht.example",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000002"
 			}
 		},
 		{
@@ -164,7 +179,31 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:vandam.kvk}}."
+				"notes": "KVK-nummer {{cast:vandam.kvk}}.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000003"
+			}
+		},
+		{
+			"key": "client-buurtoost",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:buurtoost.name}}",
+				"type": "organization",
+				"email": "{{cast:buurtoost.email}}",
+				"address": "{{cast:buurtoost.address.street}} {{cast:buurtoost.address.number}}, {{cast:buurtoost.address.postcode}} {{cast:buurtoost.address.city}}",
+				"industry": [
+					"{{cast:buurtoost.sbi.description}}"
+				],
+				"contactsUid": "{{cast:buurtoost.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"accountOwner": "{{cast:daan.uid}}",
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:buurtoost.kvk}}. Voorzitter Marja Verbeek, secretaris Kees de Wit.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000007"
 			}
 		},
 		{
@@ -198,33 +237,529 @@
 			}
 		},
 		{
+			"key": "pipeline-verkoop",
+			"register": "pipelinq",
+			"schema": "pipeline",
+			"data": {
+				"title": "Verkoop",
+				"description": "De verkoop van diensten en producten aan bedrijven en instellingen in Zuiddrecht.",
+				"isDefault": false,
+				"stages": [
+					{
+						"name": "Nieuw",
+						"order": 1,
+						"probability": 10,
+						"isDefault": true
+					},
+					{
+						"name": "Benaderd",
+						"order": 2,
+						"probability": 30
+					},
+					{
+						"name": "Gekwalificeerd",
+						"order": 3,
+						"probability": 50
+					},
+					{
+						"name": "Voorstel",
+						"order": 4,
+						"probability": 70
+					},
+					{
+						"name": "Gewonnen",
+						"order": 5,
+						"probability": 100,
+						"isWon": true,
+						"isClosed": true
+					},
+					{
+						"name": "Verloren",
+						"order": 6,
+						"probability": 0,
+						"isClosed": true
+					}
+				]
+			}
+		},
+		{
+			"key": "client-zorggroep-merwede",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Zorggroep Merwede",
+				"contactsUid": "example-zorggroep-merwede",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-bouwbedrijf-vandijk",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Bouwbedrijf Van Dijk",
+				"contactsUid": "example-bouwbedrijf-vandijk",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-schoonmaak-zuid",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Schoonmaak Zuid BV",
+				"contactsUid": "example-schoonmaak-zuid",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-energiecooperatie-zuid",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Energiecoöperatie Zuid",
+				"contactsUid": "example-energiecooperatie-zuid",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-cafe-dekroon",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Café De Kroon",
+				"contactsUid": "example-cafe-dekroon",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-drukkerij-hofman",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Drukkerij Hofman",
+				"contactsUid": "example-drukkerij-hofman",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-garage-bakker",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Garage Bakker",
+				"contactsUid": "example-garage-bakker",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-ingenieursbureau-delta",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Ingenieursbureau Delta",
+				"contactsUid": "example-ingenieursbureau-delta",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-fietsenmaker-peters",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Fietsenmaker Peters",
+				"contactsUid": "example-fietsenmaker-peters",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-sportvereniging-zuiddrecht",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Sportvereniging Zuiddrecht",
+				"contactsUid": "example-sportvereniging-zuiddrecht",
+				"type": "organization",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "client-dagblad",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:dagblad.name}}",
+				"type": "organization",
+				"email": "{{cast:dagblad.email}}",
+				"contactsUid": "{{cast:dagblad.contactsUid}}",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:dagblad.kvk}}."
+			}
+		},
+		{
+			"key": "client-kindzorg",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:kindzorg.name}}",
+				"type": "organization",
+				"email": "{{cast:kindzorg.email}}",
+				"contactsUid": "{{cast:kindzorg.contactsUid}}",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "KVK-nummer {{cast:kindzorg.kvk}}."
+			}
+		},
+		{
+			"key": "lead-energie-ledenportaal",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Ledenportaal energiecoöperatie",
+				"client": "{{object:client-energiecooperatie-zuid.id}}",
+				"source": "webformulier",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Nieuw",
+				"stageOrder": 1,
+				"status": "open",
+				"priority": "normal",
+				"probability": 15,
+				"value": 18000,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-2 09:10}}",
+				"category": "Software"
+			}
+		},
+		{
+			"key": "lead-sport-ledenadministratie",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Ledenadministratie en contributie",
+				"client": "{{object:client-sportvereniging-zuiddrecht.id}}",
+				"source": "balie",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Nieuw",
+				"stageOrder": 1,
+				"status": "open",
+				"priority": "normal",
+				"probability": 10,
+				"value": 6500,
+				"currency": "EUR",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"stageEnteredAt": "{{datetime:-4 14:20}}",
+				"category": "Software",
+				"expectedCloseDate": "{{date:45}}"
+			}
+		},
+		{
+			"key": "lead-hofman-drukwerk",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Drukwerk voor de gemeentegids",
+				"client": "{{object:client-drukkerij-hofman.id}}",
+				"source": "e-mail",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Nieuw",
+				"stageOrder": 1,
+				"status": "open",
+				"priority": "low",
+				"probability": 10,
+				"value": 4200,
+				"currency": "EUR",
+				"assignee": "{{cast:joris.uid}}",
+				"stageEnteredAt": "{{datetime:-9 10:45}}",
+				"category": "Inkoop",
+				"expectedCloseDate": "{{date:60}}"
+			}
+		},
+		{
+			"key": "lead-garage-wagenpark",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Onderhoud wagenpark buitendienst",
+				"client": "{{object:client-garage-bakker.id}}",
+				"source": "telefoon",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Nieuw",
+				"stageOrder": 1,
+				"status": "open",
+				"priority": "normal",
+				"probability": 10,
+				"value": 9800,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-1 16:05}}",
+				"category": "Inkoop",
+				"expectedCloseDate": "{{date:50}}"
+			}
+		},
+		{
+			"key": "lead-merwede-zorgplanning",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Koppeling zorgplanning",
+				"client": "{{object:client-zorggroep-merwede.id}}",
+				"source": "doorverwijzing",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Benaderd",
+				"stageOrder": 2,
+				"status": "open",
+				"priority": "normal",
+				"probability": 41,
+				"value": 64000,
+				"currency": "EUR",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"stageEnteredAt": "{{datetime:-6 09:10}}",
+				"category": "Software",
+				"expectedCloseDate": "{{date:39}}"
+			}
+		},
+		{
+			"key": "lead-schoonmaak-stadhuis",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Schoonmaakcontract stadhuis",
+				"client": "{{object:client-schoonmaak-zuid.id}}",
+				"source": "telefoon",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Benaderd",
+				"stageOrder": 2,
+				"status": "open",
+				"priority": "low",
+				"probability": 22,
+				"value": 27500,
+				"currency": "EUR",
+				"assignee": "{{cast:joris.uid}}",
+				"stageEnteredAt": "{{datetime:-12 14:20}}",
+				"category": "Inkoop",
+				"expectedCloseDate": "{{date:55}}"
+			}
+		},
+		{
+			"key": "lead-delta-rioleringsplan",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Advies rioleringsplan",
+				"client": "{{object:client-ingenieursbureau-delta.id}}",
+				"source": "e-mail",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Benaderd",
+				"stageOrder": 2,
+				"status": "open",
+				"priority": "normal",
+				"probability": 30,
+				"value": 41000,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-18 10:45}}",
+				"category": "Advies",
+				"expectedCloseDate": "{{date:70}}"
+			}
+		},
+		{
+			"key": "lead-vandijk-bouwkeet",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Inrichting bouwkeet",
+				"client": "{{object:client-bouwbedrijf-vandijk.id}}",
+				"source": "beurs",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Gekwalificeerd",
+				"stageOrder": 3,
+				"status": "open",
+				"priority": "normal",
+				"probability": 48,
+				"value": 85000,
+				"currency": "EUR",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"stageEnteredAt": "{{datetime:-15 16:05}}",
+				"category": "Inrichting",
+				"expectedCloseDate": "{{date:-5}}"
+			}
+		},
+		{
+			"key": "lead-kindzorg-roosterapp",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Roosterapp voor de kinderopvang",
+				"client": "{{object:client-kindzorg.id}}",
+				"source": "webformulier",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Gekwalificeerd",
+				"stageOrder": 3,
+				"status": "open",
+				"priority": "normal",
+				"probability": 50,
+				"value": 32000,
+				"currency": "EUR",
+				"assignee": "{{cast:joris.uid}}",
+				"stageEnteredAt": "{{datetime:-5 09:10}}",
+				"category": "Software",
+				"expectedCloseDate": "{{date:40}}"
+			}
+		},
+		{
+			"key": "lead-dagblad-nieuwsapp",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Regionale nieuwsapp",
+				"client": "{{object:client-dagblad.id}}",
+				"source": "e-mail",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Voorstel",
+				"stageOrder": 4,
+				"status": "open",
+				"priority": "high",
+				"probability": 70,
+				"value": 48000,
+				"currency": "EUR",
+				"assignee": "{{cast:joris.uid}}",
+				"stageEnteredAt": "{{datetime:-11 14:20}}",
+				"category": "Software",
+				"expectedCloseDate": "{{date:13}}"
+			}
+		},
+		{
+			"key": "lead-dekroon-terras",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Terrasmeubilair",
+				"client": "{{object:client-cafe-dekroon.id}}",
+				"source": "balie",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Voorstel",
+				"stageOrder": 4,
+				"status": "open",
+				"priority": "low",
+				"probability": 55,
+				"value": 7500,
+				"currency": "EUR",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"stageEnteredAt": "{{datetime:-24 10:45}}",
+				"category": "Inrichting",
+				"expectedCloseDate": "{{date:3}}"
+			}
+		},
+		{
+			"key": "lead-buurtoost-buurthuis",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Inrichting buurthuis Oost",
+				"client": "{{object:client-buurtoost.id}}",
+				"source": "balie",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Gewonnen",
+				"stageOrder": 5,
+				"status": "won",
+				"priority": "normal",
+				"probability": 100,
+				"value": 12500,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-3 16:05}}",
+				"category": "Inrichting",
+				"expectedCloseDate": "{{date:-3}}"
+			}
+		},
+		{
+			"key": "lead-peters-fietsenstalling",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Fietsenstalling bij het station",
+				"client": "{{object:client-fietsenmaker-peters.id}}",
+				"source": "telefoon",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Verloren",
+				"stageOrder": 6,
+				"status": "lost",
+				"priority": "normal",
+				"probability": 0,
+				"value": 5400,
+				"currency": "EUR",
+				"assignee": "{{cast:joris.uid}}",
+				"stageEnteredAt": "{{datetime:-30 09:10}}",
+				"category": "Inrichting",
+				"expectedCloseDate": "{{date:-30}}"
+			}
+		},
+		{
 			"key": "lead-woonportaal",
 			"register": "pipelinq",
 			"schema": "lead",
-			"lookups": {
-				"pipeline": {
-					"schema": "pipeline",
-					"where": {
-						"title": "Sales",
-						"isDefault": true
-					}
-				}
-			},
 			"data": {
 				"title": "Woonportaal voor huurders",
 				"description": "Een portaal waar huurders reparaties melden, hun huurcontract inzien en berichten van de corporatie lezen.",
 				"client": "{{object:client-drechtwonen.id}}",
-				"source": "via het webformulier",
-				"pipeline": "{{lookup:pipeline}}",
+				"source": "webformulier",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
 				"stage": "Gekwalificeerd",
-				"stageOrder": 2,
+				"stageOrder": 3,
 				"status": "open",
 				"priority": "high",
 				"probability": 62,
 				"value": 120000,
 				"currency": "EUR",
-				"expectedCloseDate": "{{date:14}}",
-				"assignee": "{{cast:daan.uid}}"
+				"expectedCloseDate": "{{date:23}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-8 14:02}}",
+				"category": "Software"
 			}
 		},
 		{
@@ -332,6 +867,507 @@
 				"type": "service",
 				"status": "active",
 				"unitPrice": 1400
+			}
+		},
+		{
+			"key": "product-parkeervergunning-jaar",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Parkeervergunning bewoners, jaar",
+				"type": "service",
+				"status": "active",
+				"unitPrice": 75,
+				"taxRate": 0,
+				"unit": "Stuk",
+				"vatClass": "zero"
+			}
+		},
+		{
+			"key": "product-afvalpas-extra",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Afvalpas, extra",
+				"type": "product",
+				"status": "active",
+				"unitPrice": 12.5,
+				"taxRate": 21,
+				"unit": "Stuk",
+				"vatClass": "high"
+			}
+		},
+		{
+			"key": "product-stadsplattegrond",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Stadsplattegrond Zuiddrecht",
+				"type": "product",
+				"status": "active",
+				"unitPrice": 4.95,
+				"taxRate": 9,
+				"unit": "Stuk",
+				"vatClass": "low"
+			}
+		},
+		{
+			"key": "retourreden-verkeerd-product",
+			"register": "pipelinq",
+			"schema": "refundReason",
+			"data": {
+				"code": "verkeerd-product",
+				"label": "Verkeerd product",
+				"isActive": true
+			}
+		},
+		{
+			"key": "retourreden-defect",
+			"register": "pipelinq",
+			"schema": "refundReason",
+			"data": {
+				"code": "defect",
+				"label": "Defect",
+				"isActive": true
+			}
+		},
+		{
+			"key": "retourreden-bedacht",
+			"register": "pipelinq",
+			"schema": "refundReason",
+			"data": {
+				"code": "klant-bedacht",
+				"label": "Klant bedacht zich",
+				"isActive": true
+			}
+		},
+		{
+			"key": "retourreden-niet-nodig",
+			"register": "pipelinq",
+			"schema": "refundReason",
+			"data": {
+				"code": "niet-nodig",
+				"label": "Niet nodig",
+				"isActive": true
+			}
+		},
+		{
+			"key": "kassabon-1043",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1043",
+				"cashier": "{{cast:pieter.uid}}",
+				"terminalId": "Balie 2",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 93.5,
+				"discountTotal": 0.99,
+				"totalTax": 2.91,
+				"total": 96.41,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 10.33,
+						"tax": 2.17
+					},
+					{
+						"rate": 9,
+						"base": 8.17,
+						"tax": 0.74
+					},
+					{
+						"rate": 0,
+						"base": 75,
+						"tax": 0
+					}
+				],
+				"confirmedAt": "{{datetime:0 11:42}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 2",
+				"paymentSessionId": "7F3A-22",
+				"paymentStatus": "settled",
+				"client": "{{object:client-sanne.id}}",
+				"settledAt": "{{datetime:0 11:43}}"
+			}
+		},
+		{
+			"key": "kassabon-1043-regel-1",
+			"register": "pipelinq",
+			"schema": "posTransactionLine",
+			"data": {
+				"transaction": "{{object:kassabon-1043.id}}",
+				"product": "{{object:product-parkeervergunning-jaar.id}}",
+				"description": "Parkeervergunning bewoners, jaar",
+				"quantity": 1,
+				"unitPrice": 75,
+				"discount": 0,
+				"taxRate": 0,
+				"taxAmount": 0,
+				"lineTotal": 75,
+				"sortOrder": 1
+			}
+		},
+		{
+			"key": "kassabon-1043-regel-2",
+			"register": "pipelinq",
+			"schema": "posTransactionLine",
+			"data": {
+				"transaction": "{{object:kassabon-1043.id}}",
+				"product": "{{object:product-afvalpas-extra.id}}",
+				"description": "Afvalpas, extra",
+				"quantity": 1,
+				"unitPrice": 12.5,
+				"discount": 0,
+				"taxRate": 21,
+				"taxAmount": 2.17,
+				"lineTotal": 12.5,
+				"sortOrder": 2
+			}
+		},
+		{
+			"key": "kassabon-1043-regel-3",
+			"register": "pipelinq",
+			"schema": "posTransactionLine",
+			"data": {
+				"transaction": "{{object:kassabon-1043.id}}",
+				"product": "{{object:product-stadsplattegrond.id}}",
+				"description": "Stadsplattegrond Zuiddrecht",
+				"quantity": 2,
+				"unitPrice": 4.95,
+				"discount": 10,
+				"taxRate": 9,
+				"taxAmount": 0.74,
+				"lineTotal": 8.91,
+				"sortOrder": 3
+			}
+		},
+		{
+			"key": "kassabon-1042",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1042",
+				"cashier": "{{cast:fatmayildiz.uid}}",
+				"terminalId": "Balie 1",
+				"status": "parked",
+				"priceMode": "incl",
+				"subtotal": 17.36,
+				"discountTotal": 0,
+				"totalTax": 3.64,
+				"total": 21.0,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 17.36,
+						"tax": 3.64
+					}
+				],
+				"parkedAt": "{{datetime:0 11:20}}"
+			}
+		},
+		{
+			"key": "kassabon-1041",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1041",
+				"cashier": "{{cast:fatmayildiz.uid}}",
+				"terminalId": "Balie 1",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 75.0,
+				"discountTotal": 0,
+				"totalTax": 0,
+				"total": 75.0,
+				"taxBreakdown": [
+					{
+						"rate": 0,
+						"base": 75,
+						"tax": 0
+					}
+				],
+				"confirmedAt": "{{datetime:0 10:58}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 1",
+				"paymentSessionId": "7F3A-19",
+				"paymentStatus": "settled",
+				"settledAt": "{{datetime:0 10:58}}"
+			}
+		},
+		{
+			"key": "kassabon-1040",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1040",
+				"cashier": "{{cast:pieter.uid}}",
+				"terminalId": "Balie 2",
+				"status": "refunded",
+				"priceMode": "incl",
+				"subtotal": 10.33,
+				"discountTotal": 0,
+				"totalTax": 2.17,
+				"total": 12.5,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 10.33,
+						"tax": 2.17
+					}
+				],
+				"confirmedAt": "{{datetime:0 10:31}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 2",
+				"paymentSessionId": "7F3A-17",
+				"paymentStatus": "refunded",
+				"settledAt": "{{datetime:0 10:31}}",
+				"refundedAt": "{{datetime:0 10:40}}"
+			}
+		},
+		{
+			"key": "kassabon-1039",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1039",
+				"cashier": "{{cast:joris.uid}}",
+				"terminalId": "Balie 3",
+				"status": "confirmed",
+				"priceMode": "excl",
+				"subtotal": 340.0,
+				"discountTotal": 0,
+				"totalTax": 71.4,
+				"total": 411.4,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 340,
+						"tax": 71.4
+					}
+				],
+				"confirmedAt": "{{datetime:0 10:05}}",
+				"tenderType": "onAccount",
+				"client": "{{object:client-buurtoost.id}}"
+			}
+		},
+		{
+			"key": "kassabon-1038",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-1038",
+				"cashier": "{{cast:joris.uid}}",
+				"terminalId": "Balie 3",
+				"status": "refunded",
+				"priceMode": "incl",
+				"subtotal": 9.08,
+				"discountTotal": 0,
+				"totalTax": 0.82,
+				"total": 9.9,
+				"taxBreakdown": [
+					{
+						"rate": 9,
+						"base": 9.08,
+						"tax": 0.82
+					}
+				],
+				"confirmedAt": "{{datetime:0 09:47}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 3",
+				"paymentSessionId": "7F3A-11",
+				"paymentStatus": "refunded",
+				"settledAt": "{{datetime:0 09:47}}",
+				"refundedAt": "{{datetime:0 09:52}}",
+				"refundReason": "Teruggeboekt: verkeerd aangeslagen"
+			}
+		},
+		{
+			"key": "kassabon-0990",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-0990",
+				"cashier": "{{cast:fatmayildiz.uid}}",
+				"terminalId": "Balie 1",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 4.54,
+				"discountTotal": 0,
+				"totalTax": 0.41,
+				"total": 4.95,
+				"taxBreakdown": [
+					{
+						"rate": 9,
+						"base": 4.54,
+						"tax": 0.41
+					}
+				],
+				"confirmedAt": "{{datetime:-2 14:50}}",
+				"tenderType": "cash",
+				"paymentMethod": "Contant",
+				"paymentProvider": "cash",
+				"paymentStatus": "settled",
+				"settledAt": "{{datetime:-2 14:50}}"
+			}
+		},
+		{
+			"key": "kassabon-0952",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-0952",
+				"cashier": "{{cast:pieter.uid}}",
+				"terminalId": "Balie 2",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 75.0,
+				"discountTotal": 0,
+				"totalTax": 0,
+				"total": 75.0,
+				"taxBreakdown": [
+					{
+						"rate": 0,
+						"base": 75,
+						"tax": 0
+					}
+				],
+				"confirmedAt": "{{datetime:-4 09:15}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 2",
+				"paymentSessionId": "6C11-04",
+				"paymentStatus": "settled",
+				"settledAt": "{{datetime:-4 09:15}}"
+			}
+		},
+		{
+			"key": "kassabon-0871",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-0871",
+				"cashier": "{{cast:pieter.uid}}",
+				"terminalId": "Balie 2",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 75.0,
+				"discountTotal": 0,
+				"totalTax": 0,
+				"total": 75.0,
+				"taxBreakdown": [
+					{
+						"rate": 0,
+						"base": 75,
+						"tax": 0
+					}
+				],
+				"confirmedAt": "{{datetime:-25 10:12}}",
+				"tenderType": "card",
+				"paymentMethod": "Pin",
+				"paymentProvider": "Pinautomaat, Balie 2",
+				"paymentSessionId": "5B02-31",
+				"paymentStatus": "settled",
+				"client": "{{object:client-sanne.id}}",
+				"settledAt": "{{datetime:-25 10:12}}"
+			}
+		},
+		{
+			"key": "kassabon-0214",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"data": {
+				"reference": "POS-2026-0214",
+				"cashier": "{{cast:fatmayildiz.uid}}",
+				"terminalId": "Balie 1",
+				"status": "settled",
+				"priceMode": "incl",
+				"subtotal": 10.33,
+				"discountTotal": 0,
+				"totalTax": 2.17,
+				"total": 12.5,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 10.33,
+						"tax": 2.17
+					}
+				],
+				"confirmedAt": "{{datetime:-218 15:30}}",
+				"tenderType": "cash",
+				"paymentMethod": "Contant",
+				"paymentProvider": "cash",
+				"paymentStatus": "settled",
+				"client": "{{object:client-sanne.id}}",
+				"settledAt": "{{datetime:-218 15:30}}"
+			}
+		},
+		{
+			"key": "retour-0058",
+			"register": "pipelinq",
+			"schema": "posRefund",
+			"data": {
+				"reference": "RF-2026-0058",
+				"originalTransaction": "{{object:kassabon-1043.id}}",
+				"cashier": "{{cast:pieter.uid}}",
+				"status": "pending",
+				"refundReason": "{{object:retourreden-verkeerd-product.id}}",
+				"paymentMethod": "card",
+				"paymentReference": "7F3A-22",
+				"refundAmount": 10.33,
+				"totalTax": 2.17,
+				"notes": "Inwoner had al een geldige afvalpas, de extra pas was niet nodig."
+			}
+		},
+		{
+			"key": "retour-0058-regel",
+			"register": "pipelinq",
+			"schema": "posRefundLine",
+			"data": {
+				"refund": "{{object:retour-0058.id}}",
+				"originalLine": "{{object:kassabon-1043-regel-2.id}}",
+				"returnedQuantity": 1,
+				"returnReason": "{{object:retourreden-niet-nodig.id}}",
+				"restock": true,
+				"taxAmount": 2.17,
+				"lineTotal": 12.5
+			}
+		},
+		{
+			"key": "retour-0057",
+			"register": "pipelinq",
+			"schema": "posRefund",
+			"data": {
+				"reference": "RF-2026-0057",
+				"originalTransaction": "{{object:kassabon-0990.id}}",
+				"cashier": "{{cast:fatmayildiz.uid}}",
+				"status": "completed",
+				"refundReason": "{{object:retourreden-defect.id}}",
+				"paymentMethod": "cash",
+				"refundAmount": 4.54,
+				"totalTax": 0.41,
+				"confirmedAt": "{{datetime:-2 15:12}}"
+			}
+		},
+		{
+			"key": "retour-0056",
+			"register": "pipelinq",
+			"schema": "posRefund",
+			"data": {
+				"reference": "RF-2026-0056",
+				"originalTransaction": "{{object:kassabon-0952.id}}",
+				"cashier": "{{cast:pieter.uid}}",
+				"status": "rejected",
+				"refundReason": "{{object:retourreden-bedacht.id}}",
+				"paymentMethod": "card",
+				"refundAmount": 75,
+				"totalTax": 0,
+				"rejectedAt": "{{datetime:-4 09:40}}",
+				"rejectionReason": "De vergunning was al ingegaan."
 			}
 		},
 		{
@@ -814,6 +1850,47 @@
 			}
 		},
 		{
+			"key": "ticket-sanne-straatfeest",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over vergunning straatfeest Parkstraat",
+				"reference": "PQ-2026-0417",
+				"description": "Mevrouw De Vries wil met de buurt een straatfeest houden in de Parkstraat en vraagt welke vergunning daarvoor nodig is.",
+				"client": "{{object:client-sanne.id}}",
+				"contactsUid": "{{cast:sanne.contactsUid}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "email",
+				"category": "vergunningen",
+				"occurredAt": "{{datetime:-4 11:20}}",
+				"slaDeadline": "{{datetime:3 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-sanne-afvalinzameling",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over afvalinzameling",
+				"reference": "PQ-2026-0351",
+				"description": "Mevrouw De Vries vraagt waarom de groene container in de Lindelaan niet is geleegd.",
+				"client": "{{object:client-sanne.id}}",
+				"contactsUid": "{{cast:sanne.contactsUid}}",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"status": "resolved",
+				"priority": "normal",
+				"channel": "phone",
+				"category": "afval",
+				"occurredAt": "{{datetime:-40 09:05}}",
+				"resolvedAt": "{{datetime:-35 15:00}}",
+				"resolution": "De container is alsnog geleegd; de route is aangepast."
+			}
+		},
+		{
 			"key": "ticket-henk-afvalkalender",
 			"register": "pipelinq",
 			"schema": "ticket",
@@ -854,26 +1931,6 @@
 			}
 		},
 		{
-			"key": "ticket-sanne-woo",
-			"register": "pipelinq",
-			"schema": "ticket",
-			"data": {
-				"ticketType": "request",
-				"title": "Vraag over de stand van het Woo-verzoek fietspad Lindelaan",
-				"description": "Mevrouw De Vries vraagt wanneer zij een besluit krijgt op haar Woo-verzoek over de verlichting van het fietspad aan de Lindelaan.",
-				"client": "{{object:client-sanne.id}}",
-				"contactsUid": "{{cast:sanne.contactsUid}}",
-				"assignee": "{{cast:daan.uid}}",
-				"status": "in_progress",
-				"priority": "normal",
-				"channel": "email",
-				"category": "woo",
-				"occurredAt": "{{datetime:-1 09:12}}",
-				"slaDeadline": "{{datetime:2 17:00}}",
-				"notes": "Navraag gedaan bij {{cast:thomas.displayName}} ({{cast:thomas.function}}) over de termijn. Antwoord volgt."
-			}
-		},
-		{
 			"key": "ticket-fatima-klacht",
 			"register": "pipelinq",
 			"schema": "ticket",
@@ -890,6 +1947,123 @@
 				"complaintCategory": "communication",
 				"occurredAt": "{{datetime:0 11:05}}",
 				"slaDeadline": "{{datetime:42 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-slagerij-uitstalling",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over de uitstalling op de stoep",
+				"description": "Slagerij Van der Berg vraagt of de reclameborden en de koeltoonbank voor de winkel op de stoep mogen staan.",
+				"client": "{{object:client-slagerij.id}}",
+				"contactsUid": "{{cast:slagerij.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "email",
+				"category": "vergunningen",
+				"occurredAt": "{{datetime:-3 10:20}}",
+				"slaDeadline": "{{datetime:4 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-cloudgemeente-koppeling",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over de koppeling met het zaaksysteem",
+				"description": "CloudGemeente B.V. vraagt welke berichten het zaaksysteem aanneemt voor hun koppeling.",
+				"client": "{{object:client-cloudgemeente.id}}",
+				"contactsUid": "{{cast:cloudgemeente.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"status": "new",
+				"priority": "normal",
+				"channel": "email",
+				"category": "overig",
+				"occurredAt": "{{datetime:-1 14:05}}",
+				"slaDeadline": "{{datetime:5 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-cloudgemeente-factuur",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "complaint",
+				"title": "Klacht over een late betaling",
+				"description": "CloudGemeente B.V. meldt dat hun factuur van september nog niet betaald is.",
+				"client": "{{object:client-cloudgemeente.id}}",
+				"contactsUid": "{{cast:cloudgemeente.contactsUid}}",
+				"assignee": "{{cast:daan.uid}}",
+				"status": "in_progress",
+				"priority": "high",
+				"channel": "phone",
+				"category": "financien",
+				"occurredAt": "{{datetime:-6 11:40}}",
+				"slaDeadline": "{{datetime:1 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-buurtoost-collectevergunning",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"reference": "PQ-2026-0402",
+				"ticketType": "request",
+				"title": "Aanvraag collectevergunning",
+				"description": "De buurtvereniging wil in november langs de deuren in Oosthaven collecteren voor de speeltuin en vraagt een collectevergunning.",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "{{cast:buurtoost.contactsUid}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "email",
+				"category": "vergunningen",
+				"occurredAt": "{{datetime:-3 10:15}}",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"slaDeadline": "{{datetime:4 17:00}}"
+			}
+		},
+		{
+			"key": "ticket-buurtoost-buurthuis",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"reference": "PQ-2026-0377",
+				"ticketType": "request",
+				"title": "Vraag over huur buurthuis",
+				"description": "Mevrouw Verbeek vraagt wat de huur van het buurthuis aan de Oosthavenweg kost voor de jaarvergadering.",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "{{cast:buurtoost.contactsUid}}",
+				"status": "resolved",
+				"assignee": "{{cast:pieter.uid}}",
+				"resolvedAt": "{{datetime:-18 16:00}}",
+				"priority": "normal",
+				"channel": "phone",
+				"category": "overig",
+				"occurredAt": "{{datetime:-1 14:05}}"
+			}
+		},
+		{
+			"key": "ticket-buurtoost-verlichting",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"reference": "PQ-2026-0310",
+				"ticketType": "request",
+				"title": "Melding verlichting Oosthavenweg",
+				"description": "Twee lantaarnpalen bij het speelveld aan de Oosthavenweg branden al een week niet.",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "{{cast:buurtoost.contactsUid}}",
+				"status": "resolved",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"resolvedAt": "{{datetime:-45 11:00}}",
+				"priority": "normal",
+				"channel": "email",
+				"category": "openbare-ruimte",
+				"occurredAt": "{{datetime:0 09:20}}"
 			}
 		},
 		{
@@ -921,6 +2095,45 @@
 				"assignee": "{{cast:daan.uid}}",
 				"stageEnteredAt": "{{datetime:-3 14:00}}",
 				"category": "bedrijfsvestiging"
+			}
+		},
+		{
+			"key": "service-locatiebezoek",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Locatiebezoek",
+				"description": "Een medewerker bekijkt samen met de aanvrager de plek ter plaatse.",
+				"durationMinutes": 60,
+				"bookableOnline": false,
+				"requiresDeposit": false,
+				"cancellationPolicy": "free",
+				"cancellationHoursBefore": 24,
+				"status": "active"
+			}
+		},
+		{
+			"key": "booking-locatiebezoek-parkstraat",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-sanne.id}}",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"startAt": "{{datetime:7 14:00}}",
+				"endAt": "{{datetime:7 15:00}}",
+				"status": "confirmed",
+				"statusHistory": [
+					{
+						"status": "confirmed",
+						"reason": "Telefonisch geboekt",
+						"changedAt": "{{datetime:-3 09:18}}",
+						"changedBy": "{{cast:pieter.uid}}"
+					}
+				],
+				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest.",
+				"internalNotes": "Controleer de calamiteitenroute en waar de brandweer langs kan.",
+				"source": "phone",
+				"confirmationSentAt": "{{datetime:-3 09:20}}"
 			}
 		}
 	]
