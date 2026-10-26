@@ -4456,8 +4456,9 @@
 			"id": "Tasks",
 			"route": "/tasks",
 			"type": "index",
-			"title": "Tasks",
+			"title": "Tasks and callback requests",
 			"config": {
+				"_boardNote": "Board PqTaken: four counted tiles over the list, the lenses Mine, Team, Unassigned, Callback requests and Expired with their counts, and the subject with the customer under it. Plan a callback opens the create dialog with the kind already set.",
 				"register": "pipelinq",
 				"schema": "crmTask",
 				"fieldOverrides": {
@@ -4465,6 +4466,113 @@
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
+				"showTitle": true,
+				"showTitleIcon": false,
+				"rowTitle": "plain",
+				"selectable": true,
+				"rowRoute": "TaskDetail",
+				"extend": ["clientId"],
+				"countText": "{shown} of {total} tasks · whole team · deadline first",
+				"searchPlaceholder": "Search this list",
+				"sortKey": "deadline",
+				"sortOrder": "asc",
+				"createDefaults": { "type": "callbackRequest" },
+				"headerButtons": [
+					{ "action": "export", "label": "Download", "icon": "Download" },
+					{ "action": "add", "variant": "primary", "icon": "PhoneOutline", "label": "Plan a callback" }
+				],
+				"quickFilters": [
+					{ "label": "Mine", "filter": { "assigneeUserId": "@me" }, "showCount": true },
+					{ "label": "Team", "filter": {}, "default": true, "showCount": true },
+					{ "label": "Unassigned", "filter": { "assigneeUserId": "IS NULL" }, "showCount": true },
+					{ "label": "Callback requests", "filter": { "type": "callbackRequest" }, "showCount": true },
+					{ "label": "Expired", "filter": { "status": "expired" }, "showCount": true }
+				],
+				"statRow": [
+					{
+						"id": "tasks-callbacks-today",
+						"type": "stat",
+						"title": "Callback requests today",
+						"content": {
+							"label": "Callback requests today",
+							"caption": "{count} overdue",
+							"captionVariant": "error",
+							"format": { "style": "number", "decimals": 0 },
+							"source": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": { "type": "callbackRequest", "status": { "in": ["open", "in_progress"] }, "deadline[lt]": "@today+1d" }
+							},
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": { "type": "callbackRequest", "status": { "in": ["open", "in_progress"] }, "deadline[lt]": "@now" }
+							}
+						}
+					},
+					{
+						"id": "tasks-open-follow-ups",
+						"type": "stat",
+						"title": "Open follow-ups",
+						"content": {
+							"label": "Open follow-ups",
+							"caption": "{count} for you",
+							"format": { "style": "number", "decimals": 0 },
+							"source": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": { "type": "followUpTask", "status": { "in": ["open", "in_progress"] } }
+							},
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": { "type": "followUpTask", "status": { "in": ["open", "in_progress"] }, "assigneeUserId": "@me" }
+							}
+						}
+					},
+					{
+						"id": "tasks-information-requests",
+						"type": "stat",
+						"title": "Information requests",
+						"content": {
+							"label": "Information requests",
+							"caption": "{count} unassigned",
+							"format": { "style": "number", "decimals": 0 },
+							"source": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": { "type": "informationRequest", "status": { "in": ["open", "in_progress"] } }
+							},
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": { "type": "informationRequest", "status": { "in": ["open", "in_progress"] }, "assigneeUserId": { "isnull": true } }
+							}
+						}
+					},
+					{
+						"id": "tasks-expired-this-week",
+						"type": "stat",
+						"title": "Expired this week",
+						"content": {
+							"label": "Expired this week",
+							"caption": "reassigned or closed",
+							"format": { "style": "number", "decimals": 0 },
+							"source": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": { "status": "expired", "deadline[gte]": "@today-7d" }
+							}
+						}
+					}
+				],
 				"actions": [
 					{
 						"id": "view",
@@ -4475,17 +4583,14 @@
 					}
 				],
 				"columns": [
-					{ "key": "subject", "label": "Subject" },
-					{ "key": "type", "label": "Type" },
-					{ "key": "status", "label": "Status" },
-					{ "key": "priority", "label": "Priority" },
-					{
-						"key": "assigneeUserId",
-						"label": "Assignee",
-						"formatter": "userDisplayName"
-					},
-					{ "key": "deadline", "label": "Deadline" }
+					{ "key": "subject", "label": "Task", "secondary": "{clientId.name}" },
+					{ "key": "type", "label": "Kind", "formatter": "enumLabel" },
+					{ "key": "assigneeUserId", "label": "For", "formatter": "userDisplayName" },
+					{ "key": "deadline", "label": "Time limit", "formatter": "relativeDate", "formatterOptions": { "time": true } },
+					{ "key": "priority", "label": "Priority", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "high": "error", "normal": "default", "low": "default" } } },
+					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "open": "primary", "in_progress": "warning", "completed": "success", "expired": "error" } } }
 				],
+				"filterMenu": true,
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -5565,8 +5670,9 @@
 			"_note": "Daily Z-report (end-of-day close) ledger as a declarative type:index page (pipelinq-views-to-declarative-r1). Row click navigates to the bespoke ZReportDetail (per-tender totals / tax breakdown / resubmit), which stays custom. No Add (Z-reports are generated by the day-close job, not created by hand).",
 			"route": "/pos/z-reports",
 			"type": "index",
-			"title": "Boekhoudkundige Afhandeling",
+			"title": "Z reports",
 			"config": {
+				"_boardNote": "Board PqZRapporten: the count line, the lenses All, Not posted and Failed with their counts, Download, and the reference, date, till, transactions, total, status and created columns.",
 				"register": "pipelinq",
 				"schema": "posZReport",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -5580,38 +5686,56 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
+				"showTitle": true,
+				"showTitleIcon": false,
+				"rowTitle": "plain",
+				"rowRoute": "ZReportDetail",
+				"countText": "{shown} of {total} day reports · the bookkeeping happens in shillinq",
+				"searchPlaceholder": "Search this list",
+				"sortKey": "reportDate",
+				"sortOrder": "desc",
+				"headerButtons": [
+					{ "action": "export", "label": "Download", "icon": "Download" }
+				],
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true, "showCount": true },
+					{ "label": "Not posted", "filter": { "status_notIn": ["posted", "reconciled"] }, "showCount": true },
+					{ "label": "Failed", "filter": { "status": "failed" }, "showCount": true }
+				],
+				"filterMenu": true,
 				"columns": [
-					"reference",
-					{ "key": "reportDate", "label": "Datum", "format": "date" },
-					"terminalId",
-					"transactionCount",
-					"total",
+					{ "key": "reference", "label": "Identifier" },
+					{ "key": "reportDate", "label": "Date", "format": "date" },
+					{ "key": "terminalId", "label": "Till" },
+					{ "key": "transactionCount", "label": "Transactions" },
+					{ "key": "total", "label": "Total", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } },
 					{
 						"key": "status",
 						"label": "Status",
+						"formatter": "enumLabel",
 						"widget": "badge",
 						"widgetProps": {
 							"colorMap": {
 								"posted": "success",
+								"reconciled": "success",
 								"submitted": "primary",
-								"synced": "success",
-								"pending": "warning",
+								"ready": "info",
 								"failed": "error",
-								"draft": "default",
-								"open": "info"
+								"draft": "default"
 							}
 						}
 					},
 					{
 						"key": "createdAt",
-						"label": "Aangemaakt",
+						"label": "Created",
 						"format": "date-time"
 					}
 				],
+				"footerNote": "The day close makes one Z report per till every night. Z reports are read-only.",
 				"actions": [
 					{
 						"id": "view",
-						"label": "Openen",
+						"label": "Open",
 						"icon": "Eye",
 						"handler": "navigate",
 						"route": "ZReportDetail"

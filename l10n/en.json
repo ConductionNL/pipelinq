@@ -8285,6 +8285,24 @@
         "Could not save the email settings.": "Could not save the email settings.",
         "{linked} of {scanned} mails linked.": "{linked} of {scanned} mails linked.",
         "Could not sync your email.": "Could not sync your email.",
-        "Invalid account": "Invalid account"
+        "Invalid account": "Invalid account",
+        "Tasks and callback requests": "Tasks and callback requests",
+        "{shown} of {total} tasks · whole team · deadline first": "{shown} of {total} tasks · whole team · deadline first",
+        "Plan a callback": "Plan a callback",
+        "Callback requests today": "Callback requests today",
+        "{count} overdue": "{count} overdue",
+        "Open follow-ups": "Open follow-ups",
+        "{count} for you": "{count} for you",
+        "Information requests": "Information requests",
+        "{count} unassigned": "{count} unassigned",
+        "Expired this week": "Expired this week",
+        "reassigned or closed": "reassigned or closed",
+        "For": "For",
+        "Time limit": "Time limit",
+        "Z reports": "Z reports",
+        "{shown} of {total} day reports · the bookkeeping happens in shillinq": "{shown} of {total} day reports · the bookkeeping happens in shillinq",
+        "Not posted": "Not posted",
+        "Identifier": "Identifier",
+        "The day close makes one Z report per till every night. Z reports are read-only.": "The day close makes one Z report per till every night. Z reports are read-only."
     }
 }
