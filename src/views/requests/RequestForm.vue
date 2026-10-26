@@ -1,26 +1,64 @@
 <template>
-	<div class="request-form">
+	<div class="request-form" :class="{ 'request-form--board': boardLayout }">
+		<!-- The kind of ticket (board layout only; the edit form keeps the
+		     ticket's kind). -->
+		<div
+			v-if="boardLayout"
+			class="form-group rf-type"
+			data-testid="request-form-type">
+			<label :id="typeLabelId">{{ t('pipelinq', 'What is it?') }}</label>
+			<div
+				class="rf-type__options"
+				role="radiogroup"
+				:aria-labelledby="typeLabelId">
+				<NcCheckboxRadioSwitch
+					v-for="option in typeOptions"
+					:key="option.value"
+					v-model="form.ticketType"
+					:value="option.value"
+					name="request-form-type"
+					type="radio"
+					buttonVariant
+					buttonVariantGrouped="horizontal">
+					{{ option.label }}
+				</NcCheckboxRadioSwitch>
+			</div>
+		</div>
+
 		<!-- Title -->
-		<div class="form-group">
+		<div class="form-group rf-title">
 			<NcTextField
 				:modelValue="form.title"
-				:label="t('pipelinq', 'Title')"
+				:label="
+					boardLayout ? t('pipelinq', 'Subject') : t('pipelinq', 'Title')
+				"
 				:error="!!errors.title"
 				:helperText="errors.title"
 				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
 		<!-- Description -->
-		<div class="form-group">
+		<div class="form-group rf-description">
+			<NcTextArea
+				v-if="boardLayout"
+				:modelValue="form.description"
+				:label="t('pipelinq', 'What does the customer ask?')"
+				resize="vertical"
+				@update:modelValue="(v) => (form.description = v)" />
 			<NcTextField
+				v-else
 				:modelValue="form.description"
 				:label="t('pipelinq', 'Description')"
 				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
-		<!-- Status + Priority row -->
-		<div class="form-row">
-			<div class="form-group">
+		<!-- Status + Priority row; in the board layout Priority + Handler, and
+		     Status under More details. -->
+		<div class="form-row rf-priority">
+			<div
+				v-if="!boardLayout || showMore"
+				class="form-group"
+				:class="{ 'rf-status': boardLayout }">
 				<label>{{ t('pipelinq', 'Status') }}</label>
 				<NcSelect
 					v-model="form.status"
@@ -40,10 +78,27 @@
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Priority')" />
 			</div>
+			<div
+				v-if="boardLayout"
+				class="form-group"
+				data-testid="request-form-assignee">
+				<label>{{ t('pipelinq', 'Handler') }}</label>
+				<NcSelect
+					v-model="form.assignee"
+					:options="assigneeOptions"
+					:aria-label-combobox="t('pipelinq', 'Handler')"
+					labelOutside
+					label="label"
+					:reduce="(o) => o.value"
+					:clearable="false" />
+				<p class="rf-hint">
+					{{ t('pipelinq', 'Or leave it in the queue') }}
+				</p>
+			</div>
 		</div>
 
 		<!-- Channel + Category row -->
-		<div class="form-row">
+		<div class="form-row rf-channel">
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Channel') }}</label>
 				<NcSelect
@@ -63,7 +118,7 @@
 		</div>
 
 		<!-- Requested at -->
-		<div class="form-group">
+		<div v-if="!boardLayout || showMore" class="form-group rf-more">
 			<NcDateTimePickerNative
 				:modelValue="occurredAtDate"
 				:label="t('pipelinq', 'Requested at')"
@@ -74,7 +129,7 @@
 		<!-- Client + Contact. Contact is scoped to the chosen client and stays
 		     disabled until there is one — the same cascade Stage has on
 		     Pipeline below. Both can create what they cannot find. -->
-		<div class="form-row">
+		<div class="form-row rf-client">
 			<div class="form-group" data-testid="request-form-client">
 				<CnResourceSelect
 					register="pipelinq"
@@ -86,8 +141,25 @@
 					:preload="true"
 					:createHandler="createClient"
 					@update:modelValue="onClientChange" />
+				<div v-if="boardLayout" class="rf-client__actions">
+					<NcButton variant="secondary" size="small" @click="newClient">
+						<template #icon>
+							<AccountPlusOutline :size="16" />
+						</template>
+						{{ t('pipelinq', 'New client') }}
+					</NcButton>
+				</div>
+				<p v-if="boardLayout" class="rf-hint">
+					{{
+						t('pipelinq', 'or leave it empty for an anonymous question')
+					}}
+				</p>
 			</div>
-			<div class="form-group" data-testid="request-form-contact">
+			<div
+				v-if="!boardLayout || showMore"
+				class="form-group"
+				:class="{ 'rf-more': boardLayout }"
+				data-testid="request-form-contact">
 				<CnResourceSelect
 					register="pipelinq"
 					schema="contact"
@@ -121,7 +193,7 @@
 			@close="closeContactDialog" />
 
 		<!-- Pipeline + Stage row -->
-		<div class="form-row">
+		<div v-if="!boardLayout || showMore" class="form-row rf-more">
 			<div class="form-group" data-testid="request-form-pipeline">
 				<label>{{ t('pipelinq', 'Pipeline') }}</label>
 				<NcSelect
@@ -152,6 +224,28 @@
 			</div>
 		</div>
 
+		<NcNoteCard v-if="boardLayout" type="info" class="rf-note">
+			{{
+				t(
+					'pipelinq',
+					'The deadline follows from the kind of ticket and its service level. A conversation is also saved as a contact moment on this ticket.',
+				)
+			}}
+		</NcNoteCard>
+		<div v-if="boardLayout" class="rf-more-toggle">
+			<NcButton
+				variant="tertiary"
+				:aria-expanded="showMore ? 'true' : 'false'"
+				data-testid="request-form-more"
+				@click="showMore = !showMore">
+				{{
+					showMore
+						? t('pipelinq', 'Fewer details')
+						: t('pipelinq', 'More details')
+				}}
+			</NcButton>
+		</div>
+
 		<!-- Actions -->
 		<div v-if="showActions" class="form-actions">
 			<NcButton variant="tertiary" @click="$emit('cancel')">
@@ -166,12 +260,17 @@
 
 <script>
 import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { getCurrentUser } from '@nextcloud/auth'
 import {
 	NcButton,
+	NcCheckboxRadioSwitch,
 	NcDateTimePickerNative,
+	NcNoteCard,
 	NcSelect,
+	NcTextArea,
 	NcTextField,
 } from '@nextcloud/vue'
+import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
@@ -184,12 +283,16 @@ import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 export default {
 	name: 'RequestForm',
 	components: {
+		AccountPlusOutline,
 		ClientCreateDialog,
 		CnResourceSelect,
 		ContactCreateDialog,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcDateTimePickerNative,
+		NcNoteCard,
 		NcSelect,
+		NcTextArea,
 		NcTextField,
 	},
 
@@ -220,6 +323,17 @@ export default {
 			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
 		},
+
+		/**
+		 * The create form of board PqNieuwVerzoek: the kind of ticket first,
+		 * then the client, subject, question, channel and category, priority
+		 * and handler; status, requested at, contact, pipeline and stage sit
+		 * behind More details. Only for a new ticket.
+		 */
+		boardLayout: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	emits: ['cancel', 'save', 'update:valid'],
@@ -239,6 +353,9 @@ export default {
 				pipeline: null,
 				stage: null,
 			},
+
+			showMore: false,
+			typeLabelId: `request-form-type-${Math.random().toString(36).slice(2, 8)}`,
 
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
 
@@ -298,6 +415,43 @@ export default {
 		 */
 		channelOptions() {
 			return this.requestChannelsStore.channelNames
+		},
+
+		/**
+		 * The kinds of ticket the board layout offers.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 */
+		typeOptions() {
+			return [
+				{ value: 'request', label: t('pipelinq', 'Request') },
+				{ value: 'complaint', label: t('pipelinq', 'Complaint') },
+				{ value: 'interaction', label: t('pipelinq', 'Contact moment') },
+			]
+		},
+
+		/**
+		 * The handler choices: the person filling in the form, or nobody so the
+		 * ticket waits in the queue.
+		 *
+		 * @return {Array<{value: string|null, label: string}>}
+		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 */
+		assigneeOptions() {
+			const user = getCurrentUser()
+			const options = [
+				{ value: null, label: t('pipelinq', 'Nobody, the queue') },
+			]
+			if (user) {
+				options.unshift({
+					value: user.uid,
+					label: t('pipelinq', 'Me, {name}', {
+						name: user.displayName || user.uid,
+					}),
+				})
+			}
+			return options
 		},
 
 		isEdit() {
@@ -410,11 +564,28 @@ export default {
 			if (this.preLinkedClient) {
 				this.form.client = this.preLinkedClient
 			}
+			if (this.boardLayout) {
+				this.form.ticketType = 'request'
+				this.form.assignee = getCurrentUser()?.uid || null
+			}
 			this.autoAssignDefaultPipeline()
 		}
 	},
 
 	methods: {
+		/**
+		 * Create a client from the New client button and put it on the ticket.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
+		 */
+		async newClient() {
+			const created = await this.createClient('')
+			if (created && created.id) {
+				this.onClientChange(created.id)
+			}
+		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-37
 		 */
@@ -462,6 +633,8 @@ export default {
 			if (!data.pipeline) delete data.pipeline
 			if (!data.stage) delete data.stage
 			if (!data.category) delete data.category
+			if (!data.assignee) delete data.assignee
+			if (!data.ticketType) delete data.ticketType
 
 			this.$emit('save', data)
 		},
@@ -493,6 +666,67 @@ export default {
 
 .form-row .form-group {
 	flex: 1;
+}
+
+.request-form--board {
+	display: flex;
+	flex-direction: column;
+	max-width: none;
+}
+
+.request-form--board .rf-type {
+	order: 1;
+}
+
+.request-form--board .rf-client {
+	order: 2;
+}
+
+.request-form--board .rf-title {
+	order: 3;
+}
+
+.request-form--board .rf-description {
+	order: 4;
+}
+
+.request-form--board .rf-channel {
+	order: 5;
+}
+
+.request-form--board .rf-priority {
+	order: 6;
+}
+
+.request-form--board .rf-note {
+	order: 7;
+}
+
+.request-form--board .rf-more-toggle {
+	order: 8;
+}
+
+.request-form--board .rf-more {
+	order: 9;
+}
+
+.rf-type__options {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.rf-client__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.rf-hint {
+	margin: 4px 0 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
 }
 
 .form-actions {
