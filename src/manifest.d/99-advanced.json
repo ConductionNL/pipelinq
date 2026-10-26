@@ -12,7 +12,7 @@
 			"type": "links",
 			"title": "Advanced",
 			"config": {
-				"description": "Everything to set up Pipelinq, and the overviews you read now and then",
+				"description": "Everything to set up pipelinq, and the overviews you read now and then",
 				"categories": {
 					"reports": "Reports and automation",
 					"setup": "Set up the app",
@@ -55,7 +55,7 @@
 					{
 						"id": "Integrations",
 						"label": "Integrations",
-						"description": "Telephony, social networks, Berichtenbox and bulk mail.",
+						"description": "Telephony, social networks, Berichtenbox and bulk mail, on the Nextcloud admin page.",
 						"icon": "PowerPlugOutline",
 						"category": "setup",
 						"route": "Integrations",
@@ -78,7 +78,7 @@
 					{
 						"id": "Modules",
 						"label": "Modules",
-						"description": "Sales, marketing, point of sale and more, to switch on per organisation.",
+						"description": "Sales, marketing, point of sale and more. An administrator switches them on for everyone on the admin page.",
 						"icon": "PackageVariant",
 						"category": "setup",
 						"route": "Modules"
@@ -86,7 +86,7 @@
 					{
 						"id": "Store",
 						"label": "Store",
-						"description": "Apps and extensions that work with Pipelinq.",
+						"description": "Apps and extensions that work with pipelinq.",
 						"icon": "StoreOutline",
 						"category": "about",
 						"route": "Store"
@@ -94,7 +94,7 @@
 					{
 						"id": "FeaturesRoadmap",
 						"label": "Features and roadmap",
-						"description": "What Pipelinq does now and what is coming.",
+						"description": "What pipelinq does now and what is coming.",
 						"icon": "MapMarkerPath",
 						"category": "about",
 						"route": "FeaturesRoadmap"
@@ -102,7 +102,7 @@
 					{
 						"id": "Documentation",
 						"label": "Documentation",
-						"description": "How Pipelinq works, step by step, for staff and administrators.",
+						"description": "How pipelinq works, step by step, for employees and administrators.",
 						"icon": "BookOpenVariantOutline",
 						"category": "about",
 						"href": "https://pipelinq.conduction.nl/docs/intro"
@@ -110,7 +110,7 @@
 					{
 						"id": "AdminSettings",
 						"label": "Administration settings",
-						"description": "Telephony, mail routes and payment providers, on the Nextcloud administration page.",
+						"description": "Menu structure, telephony, mail routes and payment providers, on the Nextcloud admin page.",
 						"icon": "ShieldAccountOutline",
 						"category": "admin",
 						"href": "/index.php/settings/admin/pipelinq",
