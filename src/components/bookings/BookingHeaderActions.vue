@@ -15,7 +15,7 @@
   - can drive them. Reschedule creates a new booking and navigates to it.
   -
   - A successful action bumps `cn:page:refresh`, so the page and
-  - BookingDetailSection re-read the booking.
+  - the booking widgets re-read the booking.
   -
   - @spec openspec/specs/appointment-booking/spec.md
   -->

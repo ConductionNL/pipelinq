@@ -2,7 +2,7 @@
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
-  - BelastingdienstExportDialog — admin-only modal to confirm the date range
+  - TaxAuthorityExportDialog: admin-only modal to confirm the date range
   - and format (XML or JSON) for the kassakoppeling audit log export pack
   - delivered to the Dutch tax authority. Extracted to its own file per
   - ADR-004 (modal-isolation).
@@ -11,7 +11,7 @@
   -->
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'Export to Belastingdienst')"
+		:name="t('pipelinq', 'Export for the tax authority')"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">
@@ -20,7 +20,7 @@
 				{{
 					t(
 						'pipelinq',
-						'Select the period and export format for the Belastingdienst cash register audit package. All audit entries within the range are exported; the hash chain integrity is automatically included in the export metadata.',
+						'Select the period and export format for the cash register audit package for the tax authority. All audit entries within the range are exported; the hash chain integrity is automatically included in the export metadata.',
 					)
 				}}
 			</p>
@@ -52,7 +52,7 @@
 					value="xml"
 					name="bd-format"
 					type="radio">
-					{{ t('pipelinq', 'XML (canonical Belastingdienst format)') }}
+					{{ t('pipelinq', 'XML (the tax authority format)') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
 					v-model="format"
@@ -83,7 +83,7 @@
 import { NcButton, NcCheckboxRadioSwitch, NcDialog } from '@nextcloud/vue'
 
 export default {
-	name: 'BelastingdienstExportDialog',
+	name: 'TaxAuthorityExportDialog',
 	components: {
 		NcButton,
 		NcCheckboxRadioSwitch,
@@ -133,7 +133,7 @@ export default {
 			if (!this.fromDate || !this.toDate) {
 				this.errorMessage = t(
 					'pipelinq',
-					'Fill in both dates (required for the Belastingdienst).',
+					'Fill in both dates (the tax authority requires them).',
 				)
 				return
 			}
