@@ -49,4 +49,24 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 		);
 		$this->assertNotContains(needle: 'resolved', haystack: array_column($tickets, 'status'));
 	}//end testTheAssociationHasThreeOpenTickets()
+
+	/**
+	 * DqOrganisatie and the ticket leaf draw the three tickets by their references; a declared reference is kept
+	 * (TicketReferenceCreatingListener stamps only a ticket without one).
+	 *
+	 * @return void
+	 */
+	public function testTheBuurtoostTicketsCarryTheirReferences(): void {
+		$set     = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
+		$objects = array_column($set['objects'], null, 'key');
+
+		$this->assertSame(
+			expected: ['PQ-2026-0402', 'PQ-2026-0377', 'PQ-2026-0310'],
+			actual: [
+				$objects['ticket-buurtoost-collectevergunning']['data']['reference'] ?? null,
+				$objects['ticket-buurtoost-buurthuis']['data']['reference'] ?? null,
+				$objects['ticket-buurtoost-verlichting']['data']['reference'] ?? null,
+			]
+		);
+	}//end testTheBuurtoostTicketsCarryTheirReferences()
 }//end class
