@@ -51,8 +51,24 @@ class ZuiddrechtSanneTicketsTest extends TestCase {
 
 		$afval = $objects['ticket-sanne-afvalinzameling'];
 		$this->assertSame(
-			expected: ['Vraag over afvalinzameling', 'request', 'resolved', '{{object:client-sanne.id}}'],
-			actual: [$afval['title'], $afval['ticketType'], $afval['status'], $afval['client']]
+			expected: ['Vraag over afvalinzameling', 'request', 'resolved', '{{object:client-sanne.id}}', '{{cast:fatmayildiz.uid}}'],
+			actual: [$afval['title'], $afval['ticketType'], $afval['status'], $afval['client'], $afval['assignee']]
 		);
 	}//end testSanneHasAnOpenRequestAndAResolvedQuestion()
+
+	/**
+	 * DqContact draws Sanne's two tickets by their references, and no other ticket of hers.
+	 *
+	 * @return void
+	 */
+	public function testSannesTwoTicketsCarryTheirReferences(): void {
+		$set     = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
+		$objects = array_column($set['objects'], 'data', 'key');
+		$hers    = array_filter($objects, static fn (array $data): bool => ($data['client'] ?? null) === '{{object:client-sanne.id}}' && isset($data['ticketType']));
+
+		$this->assertSame(
+			expected: ['PQ-2026-0417', 'PQ-2026-0351'],
+			actual: array_values(array_column($hers, 'reference'))
+		);
+	}//end testSannesTwoTicketsCarryTheirReferences()
 }//end class

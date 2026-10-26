@@ -16,7 +16,7 @@
 		},
 		{
 			"key": "ticket_reference_counter",
-			"value": "402",
+			"value": "417",
 			"type": "int"
 		},
 		{
@@ -859,6 +859,7 @@
 			"data": {
 				"ticketType": "request",
 				"title": "Vraag over vergunning straatfeest Parkstraat",
+				"reference": "PQ-2026-0417",
 				"description": "Mevrouw De Vries wil met de buurt een straatfeest houden in de Parkstraat en vraagt welke vergunning daarvoor nodig is.",
 				"client": "{{object:client-sanne.id}}",
 				"contactsUid": "{{cast:sanne.contactsUid}}",
@@ -878,16 +879,17 @@
 			"data": {
 				"ticketType": "request",
 				"title": "Vraag over afvalinzameling",
+				"reference": "PQ-2026-0351",
 				"description": "Mevrouw De Vries vraagt waarom de groene container in de Lindelaan niet is geleegd.",
 				"client": "{{object:client-sanne.id}}",
 				"contactsUid": "{{cast:sanne.contactsUid}}",
-				"assignee": "{{cast:daan.uid}}",
+				"assignee": "{{cast:fatmayildiz.uid}}",
 				"status": "resolved",
 				"priority": "normal",
 				"channel": "phone",
 				"category": "afval",
 				"occurredAt": "{{datetime:-40 09:05}}",
-				"resolvedAt": "{{datetime:-38 15:00}}",
+				"resolvedAt": "{{datetime:-35 15:00}}",
 				"resolution": "De container is alsnog geleegd; de route is aangepast."
 			}
 		},
@@ -929,26 +931,6 @@
 				"occurredAt": "{{datetime:-2 10:25}}",
 				"duration": "PT15M",
 				"parentTicket": "{{object:ticket-henk-afvalkalender.id}}"
-			}
-		},
-		{
-			"key": "ticket-sanne-woo",
-			"register": "pipelinq",
-			"schema": "ticket",
-			"data": {
-				"ticketType": "request",
-				"title": "Vraag over de stand van het Woo-verzoek fietspad Lindelaan",
-				"description": "Mevrouw De Vries vraagt wanneer zij een besluit krijgt op haar Woo-verzoek over de verlichting van het fietspad aan de Lindelaan.",
-				"client": "{{object:client-sanne.id}}",
-				"contactsUid": "{{cast:sanne.contactsUid}}",
-				"assignee": "{{cast:daan.uid}}",
-				"status": "in_progress",
-				"priority": "normal",
-				"channel": "email",
-				"category": "woo",
-				"occurredAt": "{{datetime:-1 09:12}}",
-				"slaDeadline": "{{datetime:2 17:00}}",
-				"notes": "Navraag gedaan bij {{cast:thomas.displayName}} ({{cast:thomas.function}}) over de termijn. Antwoord volgt."
 			}
 		},
 		{
@@ -1043,7 +1025,7 @@
 				"channel": "email",
 				"category": "vergunningen",
 				"occurredAt": "{{datetime:-3 10:15}}",
-				"assignee": "{{cast:daan.uid}}",
+				"assignee": "{{cast:fatmayildiz.uid}}",
 				"slaDeadline": "{{datetime:4 17:00}}"
 			}
 		},
@@ -1058,7 +1040,9 @@
 				"description": "Mevrouw Verbeek vraagt wat de huur van het buurthuis aan de Oosthavenweg kost voor de jaarvergadering.",
 				"client": "{{object:client-buurtoost.id}}",
 				"contactsUid": "{{cast:buurtoost.contactsUid}}",
-				"status": "new",
+				"status": "resolved",
+				"assignee": "{{cast:pieter.uid}}",
+				"resolvedAt": "{{datetime:-18 16:00}}",
 				"priority": "normal",
 				"channel": "phone",
 				"category": "overig",
@@ -1076,7 +1060,9 @@
 				"description": "Twee lantaarnpalen bij het speelveld aan de Oosthavenweg branden al een week niet.",
 				"client": "{{object:client-buurtoost.id}}",
 				"contactsUid": "{{cast:buurtoost.contactsUid}}",
-				"status": "new",
+				"status": "resolved",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"resolvedAt": "{{datetime:-45 11:00}}",
 				"priority": "normal",
 				"channel": "email",
 				"category": "openbare-ruimte",
