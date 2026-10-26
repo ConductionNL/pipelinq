@@ -13,6 +13,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
 import { createUserDisplayNameFormatter } from './userDisplayName.js'
+import { MARKETING_FORMATTERS } from './valueFormatters.js'
 
 /**
  * Format an amount in the row's own currency (`row.currency`), or in the
@@ -142,5 +143,6 @@ export function createAppFormatters(store) {
 		// A user field shows the user's display name, not the uid
 		// (round3-review-points).
 		userDisplayName: createUserDisplayNameFormatter(),
+		...MARKETING_FORMATTERS,
 	}
 }

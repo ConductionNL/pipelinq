@@ -1,0 +1,3 @@
+- [x] TicketLeafProvider::openByMasterEntity
+- [x] Unit test tests/Unit/Integration/TicketLeafProviderTest.php
+- [x] Example set: masterEntityRef on the cast clients, open tickets for Slagerij and CloudGemeente

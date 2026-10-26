@@ -392,6 +392,10 @@ class EmailMatchService {
 			return ['linked' => 0, 'scanned' => 0];
 		}
 
+		if ($this->ownsAccount(userId: $userId, accountId: $settings['account']) === false) {
+			return ['linked' => 0, 'scanned' => 0];
+		}
+
 		$scanned = 0;
 		$linked = 0;
 		$lastId = (int)$settings['cursor'];
@@ -469,6 +473,65 @@ class EmailMatchService {
 		];
 
 	}//end getSettings()
+
+	/**
+	 * The user's own Nextcloud Mail accounts, the only accounts the matcher may read.
+	 *
+	 * Empty when Nextcloud Mail is not installed or the user has no account.
+	 *
+	 * @param string $userId The user id.
+	 *
+	 * @return array<int,array{id:int,email:string,name:string}>
+	 *
+	 * @spec openspec/specs/email-calendar-sync/spec.md
+	 */
+	public function listAccounts(string $userId): array {
+		try {
+			$qb = $this->db->getQueryBuilder();
+			$qb->select('id', 'email', 'name')
+				->from('mail_accounts')
+				->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+				->orderBy('id', 'ASC');
+
+			$result   = $qb->executeQuery();
+			$accounts = [];
+			while (($row = $result->fetch()) !== false) {
+				$accounts[] = [
+					'id' => (int)($row['id'] ?? 0),
+					'email' => (string)($row['email'] ?? ''),
+					'name' => (string)($row['name'] ?? ''),
+				];
+			}
+
+			$result->closeCursor();
+			return $accounts;
+		} catch (Throwable $e) {
+			$this->logger->warning('Pipelinq: listAccounts failed');
+			return [];
+		}//end try
+
+	}//end listAccounts()
+
+	/**
+	 * Whether a Nextcloud Mail account belongs to the user.
+	 *
+	 * @param string $userId    The user id.
+	 * @param int    $accountId The Mail account id.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/email-calendar-sync/spec.md
+	 */
+	public function ownsAccount(string $userId, int $accountId): bool {
+		foreach ($this->listAccounts(userId: $userId) as $account) {
+			if ($account['id'] === $accountId) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end ownsAccount()
 
 	/**
 	 * Persist the matching settings for a user.

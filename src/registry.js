@@ -66,6 +66,8 @@ import ArticleContentSection from './components/marketing/ArticleContentSection.
 import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
 import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
+import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
+import ListSubscriberViewSection from './components/marketing/ListSubscriberViewSection.vue'
 import SocialPostHeaderActions from './components/marketing/SocialPostHeaderActions.vue'
 import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
 import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
@@ -163,6 +165,7 @@ import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+import ContactImportDialog from './dialogs/ContactImportDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
@@ -297,6 +300,7 @@ import { sectionWidget } from './components/widgets/sectionWidget.js'
 //     + single scroll region). One small host widget remains: the header
 //     agent-availability toggle. ---
 import { createWithContact } from './services/contactSyncApi.js'
+import { moveTicketStatus, ticketStatusTargets } from './utils/ticketBoardMoves.js'
 
 /*
  * Grid metadata required for every kind:"widget" entry by the ADR-036
@@ -609,6 +613,18 @@ const registry = {
 		kind: 'section',
 		component: SubscriptionsSection,
 		_note: 'Mailing-list memberships, bound either to a list (listId) or to a contact (contactId); self-fetches the matching endpoint. Kept custom because a membership row renders a STATE chip the declarative object-list widget cannot express, and because the list view leads with per-state counts that summaryAggregates (equality-only, one schema) cannot break out of one field.',
+	},
+	ListSignupFormWidget: {
+		kind: 'widget',
+		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'The embed code of a mailing list sign-up form, posting to the public subscribe endpoint, with a copy button. Side card on MailingListDetail (PqMailinglijst).',
+	},
+	ListSubscriberViewWidget: {
+		kind: 'widget',
+		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
 	ArticleContentSection: {
 		kind: 'section',
@@ -1005,6 +1021,29 @@ const registry = {
 		component: WeeklyReviewView,
 		_note: 'The weekly marketing review (marketing-integrated-campaigns, ADR-112): what moved, what to try and three topic ideas, from ONE GET /api/weekly-review. Reached as a card on the Reports page and never as a menu entry of its own. Custom because the response aggregates four collections into one narrative record and names the sources it could not read, which no declarative index or dashboard primitive expresses. It also renders the ADR-088 mark when an agent wrote the summary.',
 	},
+	CampaignLandingPageWidget: {
+		kind: 'widget',
+		component: sectionWidget('CampaignLandingPageWidget', CampaignLandingPageSection, ({ objectId }) => ({ campaignId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'CampaignLandingPageSection as a card of the campaign page\'s Overview tab (PqCampagne).',
+	},
+	CampaignReportWidget: {
+		kind: 'widget',
+		component: sectionWidget('CampaignReportWidget', CampaignReportView, ({ objectId }) => ({ campaignId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'The campaign report as a card of the campaign page\'s Overview tab (PqCampagne): one GET /api/campaigns/{id}/report.',
+	},
+	JourneyRunsWidget: {
+		kind: 'widget',
+		component: sectionWidget('JourneyRunsWidget', JourneyRunsSection, ({ objectId }) => ({ journeyId: objectId })),
+		...PANEL_WIDGET_META,
+		_note: 'JourneyRunsSection as a card of the journey page\'s Overview tab (PqJourney).',
+	},
+	CampaignReportSection: {
+		kind: 'section',
+		component: CampaignReportView,
+		_note: 'The campaign report as a section of the declarative CampaignDetail page (PqCampagne): the same component with a campaignId (@objectId), which drops the campaign picker and draws the tiles and the per-channel table under the attribution model picker. One GET /api/campaigns/{id}/report, as on the report page.',
+	},
 	CampaignReportView: {
 		kind: 'page',
 		component: CampaignReportView,
@@ -1206,6 +1245,13 @@ const registry = {
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
 	},
 
+	ContactImportDialog: {
+		kind: 'modal',
+		component: ContactImportDialog,
+		propsSchema: null,
+		_note: 'Import from Nextcloud Contacts (PqContactenImporteren). Target of the import header button on the Contacts index; imports the marked addressbook cards as contacts.',
+	},
+
 	// Pages' form-dialog slot (page.slots), not header-action modals: the
 	// index or detail page mounts them for its Add and Edit.
 	BlastWizardDialog: {
@@ -1257,6 +1303,18 @@ const registry = {
 		kind: 'create-override',
 		handler: (formData) => createWithContact('contact', formData),
 		_note: 'Same contact-FIRST path for the contact schema (also marks contactsUid REQUIRED).',
+	},
+
+	// The tickets board (LijstBord): a drop follows the ticket lifecycle.
+	moveTicketStatus: {
+		kind: 'handler',
+		handler: moveTicketStatus,
+		_note: 'The Tickets board view\'s `board.moveHandler`: checks the move against requestStatus.js and writes the status, or refuses with a sentence.',
+	},
+	ticketStatusTargets: {
+		kind: 'handler',
+		handler: ticketStatusTargets,
+		_note: 'The Tickets board view\'s `board.moveTargetsHandler`: the statuses the lifecycle allows from the ticket\'s own.',
 	},
 }
 
