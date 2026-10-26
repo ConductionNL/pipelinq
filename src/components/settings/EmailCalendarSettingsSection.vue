@@ -123,6 +123,7 @@ export default {
 		 * When the last run happened, or Never.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/email-calendar-sync/spec.md
 		 */
 		lastRunText() {
 			if (!this.status.lastRunAt) {
@@ -144,6 +145,7 @@ export default {
 		 * Read the settings, the user's Mail accounts and the last run.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/email-calendar-sync/spec.md
 		 */
 		async load() {
 			this.loading = true
@@ -165,6 +167,7 @@ export default {
 
 		/**
 		 * @param {object} data A settings response.
+		 * @spec openspec/specs/email-calendar-sync/spec.md
 		 */
 		applySettings(data) {
 			const settings = data || {}
@@ -175,6 +178,7 @@ export default {
 
 		/**
 		 * @param {object} data A status response.
+		 * @spec openspec/specs/email-calendar-sync/spec.md
 		 */
 		applyStatus(data) {
 			const status = data || {}
@@ -188,6 +192,7 @@ export default {
 
 		/**
 		 * @param {boolean} value Whether email sync is on.
+		 * @spec openspec/specs/email-calendar-sync/spec.md
 		 */
 		setEnabled(value) {
 			this.form.enabled = value === true
@@ -199,6 +204,7 @@ export default {
 
 		/**
 		 * @param {string} value The chosen account id.
+		 * @spec openspec/specs/email-calendar-sync/spec.md
 		 */
 		setAccount(value) {
 			this.form.account = Number(value) || 0
@@ -209,6 +215,7 @@ export default {
 		 * Save the settings; the server answers with what it stored.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/email-calendar-sync/spec.md
 		 */
 		async save() {
 			this.saving = true
@@ -234,6 +241,7 @@ export default {
 		 * Run the matching now and show what it linked.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/email-calendar-sync/spec.md
 		 */
 		async trigger() {
 			this.triggering = true

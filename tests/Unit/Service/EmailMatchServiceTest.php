@@ -320,9 +320,9 @@ class EmailMatchServiceTest extends TestCase {
 			settings: ['account' => 12, 'enabled' => true, 'excludedAddresses' => [], 'cursor' => 0]
 		);
 
-		$this->assertSame([], $service->listAccounts(userId: 'bob'));
-		$this->assertFalse($service->ownsAccount(userId: 'bob', accountId: 12));
-		$this->assertSame(['linked' => 0, 'scanned' => 0], $service->runForUser(userId: 'bob'));
+		$this->assertSame(expected: [], actual: $service->listAccounts(userId: 'bob'));
+		$this->assertFalse(condition: $service->ownsAccount(userId: 'bob', accountId: 12));
+		$this->assertSame(expected: ['linked' => 0, 'scanned' => 0], actual: $service->runForUser(userId: 'bob'));
 
 	}//end testRunForUserNoopForAccountTheUserDoesNotOwn()
 
@@ -334,17 +334,17 @@ class EmailMatchServiceTest extends TestCase {
 	 */
 	public function testOwnsAccountOnlyForTheUsersOwnMailAccounts(): void {
 		$rows = [['id' => '3', 'email' => 'bob@example.org', 'name' => 'Bob'], false];
-		$result = $this->createMock(IResult::class);
+		$result = $this->createMock(originalClassName: IResult::class);
 		$result->method('fetch')->willReturnCallback(
 			static function () use (&$rows) {
 				return array_shift($rows);
 			}
 		);
 
-		$expr = $this->createMock(IExpressionBuilder::class);
+		$expr = $this->createMock(originalClassName: IExpressionBuilder::class);
 		$expr->expects($this->once())->method('eq')->with('user_id', ':bob')->willReturn('user_id = :bob');
 
-		$qb = $this->createMock(IQueryBuilder::class);
+		$qb = $this->createMock(originalClassName: IQueryBuilder::class);
 		$qb->method('select')->willReturnSelf();
 		$qb->expects($this->once())->method('from')->with('mail_accounts')->willReturnSelf();
 		$qb->method('where')->willReturnSelf();
@@ -353,19 +353,19 @@ class EmailMatchServiceTest extends TestCase {
 		$qb->method('createNamedParameter')->willReturnCallback(static fn ($value) => ':' . $value);
 		$qb->method('executeQuery')->willReturn($result);
 
-		$db = $this->createMock(IDBConnection::class);
+		$db = $this->createMock(originalClassName: IDBConnection::class);
 		$db->method('getQueryBuilder')->willReturn($qb);
 
 		$service = new EmailMatchService(
-			container: $this->createMock(ContainerInterface::class),
-			appConfig: $this->createMock(IAppConfig::class),
+			container: $this->createMock(originalClassName: ContainerInterface::class),
+			appConfig: $this->createMock(originalClassName: IAppConfig::class),
 			db: $db,
-			logger: $this->createMock(LoggerInterface::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
 		);
 
 		$this->assertSame(
-			[['id' => 3, 'email' => 'bob@example.org', 'name' => 'Bob']],
-			$service->listAccounts(userId: 'bob')
+			expected: [['id' => 3, 'email' => 'bob@example.org', 'name' => 'Bob']],
+			actual: $service->listAccounts(userId: 'bob')
 		);
 
 	}//end testOwnsAccountOnlyForTheUsersOwnMailAccounts()
