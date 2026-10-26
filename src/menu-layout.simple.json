@@ -2311,7 +2311,8 @@
 				"columns": [
 					{
 						"key": "reference",
-						"label": "Shift"
+						"label": "Shift",
+						"template": "Shift {floatAt|date}, {drawer}"
 					},
 					{
 						"key": "operator",

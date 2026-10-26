@@ -8355,7 +8355,11 @@ OC.L10N.register(
         "Reference code": "Kenmerk",
         "{shown} of {total} transactions · newest first": "{shown} van {total} transacties · nieuwste eerst",
         "Open a transaction to print or mail the receipt, or to register a refund.": "Open een transactie om de bon te printen of te mailen, of om een retour te registreren.",
-        "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "Het referentienummer van het ticket, PQ-<jaar>-<nummer>, dat elk nieuw verzoek en elke klacht krijgt bij het opslaan (TicketReferenceCreatingListener). Alleen-lezen voor gebruikers; een ticket dat met een referentie is aangemaakt, houdt die."
+        "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "Het referentienummer van het ticket, PQ-<jaar>-<nummer>, dat elk nieuw verzoek en elke klacht krijgt bij het opslaan (TicketReferenceCreatingListener). Alleen-lezen voor gebruikers; een ticket dat met een referentie is aangemaakt, houdt die.",
+        "Shift {floatAt|date}, {drawer}": "Dienst {floatAt|date}, {drawer}",
+        "Sales in this shift": "Verkopen in deze dienst",
+        "sales": "verkopen",
+        "The cash shift that was open at this till when the sale was confirmed. Set by the server, empty when no shift was open.": "De kassadienst die op deze kassa open stond toen de verkoop werd bevestigd. De server vult hem; leeg als er geen dienst open stond."
     },
     "nplurals=2; plural=(n != 1);"
 )

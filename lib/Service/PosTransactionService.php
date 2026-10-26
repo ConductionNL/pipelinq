@@ -571,12 +571,18 @@ class PosTransactionService {
 		$lines = $this->fetchLines(transactionId: $id);
 		$totals = $this->computeTotals(lines: $lines, priceMode: $mode);
 
+		$shiftId = ($transaction['shift'] ?? null);
+		if (is_string($shiftId) === false || $shiftId === '') {
+			$shiftId = $this->findOpenShiftId(transaction: $transaction, userId: $userId);
+		}
+
 		$transaction = array_merge(
 			$transaction,
 			$totals,
 			[
 				'confirmedAt' => $this->now(),
 				'parkedAt' => null,
+				'shift' => $shiftId,
 			]
 		);
 		$this->saveTransaction(id: $id, transaction: $transaction);
@@ -1226,6 +1232,56 @@ class PosTransactionService {
 
 		return $this->toArray(object: $object);
 	}//end fetchTransaction()
+
+	/**
+	 * The open cash shift a sale belongs to: the open shift on the till the
+	 * sale was rung up at, or, for a sale without a till, the cashier's open
+	 * shift. Null when none is open or the lookup fails.
+	 *
+	 * @param array<string, mixed> $transaction The transaction being confirmed.
+	 * @param string               $userId      The cashier's user id.
+	 *
+	 * @return string|null The shift's UUID, or null.
+	 *
+	 * @spec openspec/changes/pos-sale-in-shift/specs/pos-transaction-core/spec.md
+	 */
+	private function findOpenShiftId(array $transaction, string $userId): ?string {
+		$terminalId = (string)($transaction['terminalId'] ?? '');
+		$match = ['status' => 'open'];
+		if ($terminalId !== '') {
+			$match['drawer'] = $terminalId;
+		}
+
+		if ($terminalId === '') {
+			$match['operator'] = $userId;
+		}
+
+		try {
+			[$register, $schema] = $this->config(schemaKey: 'cashShift_schema');
+			$results = $this->getObjectService()->findAll(
+				config: [
+					'filters' => array_merge(
+						['@self' => ['register' => $register, 'schema' => $schema]],
+						$match
+					),
+					'limit' => 1,
+				]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: no open shift looked up for the sale', ['exception' => $e->getMessage()]);
+			return null;
+		}//end try
+
+		foreach (($results ?? []) as $result) {
+			$shift = $this->toArray(object: $result);
+			$shiftId = (string)($shift['id'] ?? ($shift['@self']['id'] ?? ''));
+			if ($shiftId !== '') {
+				return $shiftId;
+			}
+		}
+
+		return null;
+	}//end findOpenShiftId()
 
 	/**
 	 * Fetch all line items belonging to a transaction.
