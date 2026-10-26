@@ -18,12 +18,18 @@
 <template>
 	<div class="weekly-review">
 		<header class="weekly-review__header">
-			<h2>{{ t('pipelinq', 'Weekly review') }}</h2>
+			<div class="weekly-review__heading">
+				<h2 class="weekly-review__title">{{ t('pipelinq', 'Weekly review') }}</h2>
+				<p class="weekly-review__subtitle">{{ subtitle }}</p>
+			</div>
 			<NcButton
 				variant="secondary"
 				data-testid="weekly-review-refresh"
 				:disabled="loading"
 				@click="regenerate">
+				<template #icon>
+					<Refresh :size="20" />
+				</template>
 				{{ t('pipelinq', 'Compose again') }}
 			</NcButton>
 		</header>
@@ -45,48 +51,27 @@
 			</template>
 		</NcEmptyContent>
 
-		<section v-else data-testid="weekly-review-body">
-			<p class="weekly-review__week">
-				{{ t('pipelinq', 'Week of {week}', { week: review.weekStarting }) }}
-			</p>
+		<div v-else class="weekly-review__body" data-testid="weekly-review-body">
+			<section class="weekly-review__card">
+				<h3 class="weekly-review__week">
+					{{ t('pipelinq', 'Week of {week}', { week: weekLabel }) }}
+				</h3>
+				<p class="weekly-review__summary">{{ review.summary }}</p>
+				<p
+					v-if="agentAuthored"
+					class="weekly-review__agent"
+					data-testid="weekly-review-agent-mark">
+					{{
+						t('pipelinq', 'An agent wrote this summary: {agent}', {
+							agent: review.agentAuthoredBy,
+						})
+					}}
+				</p>
+			</section>
 
-			<p
-				v-if="agentAuthored"
-				class="weekly-review__agent"
-				data-testid="weekly-review-agent-mark">
-				{{
-					t('pipelinq', 'An agent wrote this summary: {agent}', {
-						agent: review.agentAuthoredBy,
-					})
-				}}
-			</p>
-
-			<p class="weekly-review__summary">{{ review.summary }}</p>
-
-			<h3>{{ t('pipelinq', 'What moved') }}</h3>
-			<ul data-testid="weekly-review-highlights">
-				<li v-for="(line, index) in review.highlights" :key="`h${index}`">
-					{{ line }}
-				</li>
-			</ul>
-
-			<h3>{{ t('pipelinq', 'What to try') }}</h3>
-			<ul data-testid="weekly-review-suggestions">
-				<li v-for="(line, index) in review.suggestions" :key="`s${index}`">
-					{{ line }}
-				</li>
-			</ul>
-
-			<h3>{{ t('pipelinq', 'Topic ideas') }}</h3>
-			<ul data-testid="weekly-review-ideas">
-				<li v-for="(line, index) in review.topicIdeas" :key="`i${index}`">
-					{{ line }}
-				</li>
-			</ul>
-
-			<p
+			<NcNoteCard
 				v-if="degraded.length > 0"
-				class="weekly-review__degraded"
+				type="warning"
 				data-testid="weekly-review-degraded">
 				{{
 					t(
@@ -95,16 +80,56 @@
 						{ sources: degraded.join(', ') },
 					)
 				}}
-			</p>
-		</section>
+			</NcNoteCard>
+
+			<div class="weekly-review__pair">
+				<section class="weekly-review__card">
+					<h3>{{ t('pipelinq', 'What moved') }}</h3>
+					<ul class="weekly-review__lines" data-testid="weekly-review-highlights">
+						<li v-for="(line, index) in review.highlights" :key="`h${index}`">
+							{{ line }}
+						</li>
+						<li v-if="!review.highlights || review.highlights.length === 0" class="weekly-review__none">
+							{{ t('pipelinq', 'Nothing moved that the sources can show.') }}
+						</li>
+					</ul>
+				</section>
+				<section class="weekly-review__card">
+					<h3>{{ t('pipelinq', 'What to try') }}</h3>
+					<ul class="weekly-review__lines" data-testid="weekly-review-suggestions">
+						<li v-for="(line, index) in review.suggestions" :key="`s${index}`">
+							{{ line }}
+						</li>
+						<li v-if="!review.suggestions || review.suggestions.length === 0" class="weekly-review__none">
+							{{ t('pipelinq', 'No suggestions this week.') }}
+						</li>
+					</ul>
+				</section>
+			</div>
+
+			<section class="weekly-review__card">
+				<h3>{{ t('pipelinq', 'Ideas for topics') }}</h3>
+				<ul class="weekly-review__ideas" data-testid="weekly-review-ideas">
+					<li v-for="(line, index) in review.topicIdeas" :key="`i${index}`">
+						<CnStatusBadge :label="line" variant="info" size="small" />
+					</li>
+				</ul>
+				<p v-if="!review.topicIdeas || review.topicIdeas.length === 0" class="weekly-review__none">
+					{{ t('pipelinq', 'No topic ideas this week.') }}
+				</p>
+			</section>
+		</div>
 
 		<p v-if="error" class="weekly-review__error" role="alert">{{ error }}</p>
 	</div>
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { getCanonicalLocale } from '@nextcloud/l10n'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import CalendarWeek from 'vue-material-design-icons/CalendarWeek.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { degradedSources, isAgentAuthored } from '../../services/journeyLabels.js'
 import {
 	fetchWeeklyReview,
@@ -115,9 +140,12 @@ export default {
 	name: 'WeeklyReviewView',
 	components: {
 		CalendarWeek,
+		CnStatusBadge,
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
+		NcNoteCard,
+		Refresh,
 	},
 
 	data() {
@@ -129,6 +157,41 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The line under the title: today's date and what the review covers.
+		 *
+		 * @return {string}
+		 * @spec exclude presentational subtitle of the weekly review
+		 */
+		subtitle() {
+			const today = new Intl.DateTimeFormat(getCanonicalLocale() || undefined, {
+				weekday: 'long',
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric',
+			}).format(new Date())
+			const lead = today.charAt(0).toUpperCase() + today.slice(1)
+			return `${lead} · ${this.t('pipelinq', 'newsletters, posts and search traffic of last week')}`
+		},
+
+		/**
+		 * The first day of the reviewed week as day and month ("28 september").
+		 *
+		 * @return {string}
+		 * @spec exclude presentational week label of the weekly review
+		 */
+		weekLabel() {
+			const raw = this.review?.weekStarting
+			const date = raw ? new Date(raw) : null
+			if (date === null || Number.isNaN(date.getTime())) {
+				return raw || ''
+			}
+			return new Intl.DateTimeFormat(getCanonicalLocale() || undefined, {
+				day: 'numeric',
+				month: 'long',
+			}).format(date)
+		},
+
 		/**
 		 * @return {boolean} Whether an agent wrote the summary (ADR-088).
 		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-narrative-mark-has-storage-and-a-renderer-and-no-writer-yet
@@ -193,26 +256,89 @@ export default {
 .weekly-review {
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
-	padding: 1rem;
-	max-width: 46rem;
+	gap: 20px;
+	padding: 24px 28px;
 }
 
 .weekly-review__header {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: space-between;
-	gap: 0.5rem;
+	gap: 12px;
 }
 
-.weekly-review__week,
-.weekly-review__agent,
-.weekly-review__degraded {
+.weekly-review__title {
+	font-size: 28px;
+	font-weight: 700;
+	line-height: 1.2;
+	margin: 0;
+}
+
+.weekly-review__subtitle {
+	color: var(--color-text-maxcontrast);
+	margin: 6px 0 0;
+}
+
+.weekly-review__none {
 	color: var(--color-text-maxcontrast);
 }
 
+.weekly-review__body {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.weekly-review__card {
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	padding: 20px 22px;
+}
+
+.weekly-review__card h3 {
+	margin: 0 0 12px;
+	font-size: 1.1rem;
+	font-weight: 700;
+}
+
+.weekly-review__pair {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	gap: 20px;
+	align-items: start;
+}
+
 .weekly-review__summary {
-	margin-block: 0.5rem;
+	font-size: 1.15rem;
+	line-height: 1.6;
+	margin: 0 0 12px;
+}
+
+.weekly-review__agent {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.85rem;
+	margin: 0;
+}
+
+.weekly-review__lines {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.weekly-review__lines li {
+	border-top: 1px solid var(--color-border);
+	padding: 10px 0;
+}
+
+.weekly-review__ideas {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
 }
 
 .weekly-review__error {
