@@ -25,7 +25,7 @@ describe('the cash drawer list', () => {
 		expect(open.endpoint).toEqual({ url: '/apps/pipelinq/api/pos-shifts', method: 'POST' })
 		expect(open.formProperties.drawer.required).toBe(true)
 		expect(open.formProperties.floatAmount.required).toBe(true)
-		expect(open.onSuccessRoute).toEqual({ name: 'CashShiftDetail', idPath: 'shift.id' })
+		expect(open.successMessage).toBe('Shift opened.')
 	})
 })
 

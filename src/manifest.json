@@ -5255,7 +5255,7 @@
 				"selectable": true,
 				"rowRoute": "CashShiftDetail",
 				"emptyText": "No shifts found",
-				"columns": ["reference", "drawer", "operator", { "key": "floatAmount", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }, { "key": "status", "widget": "badge", "widgetProps": { "colorMap": { "open": "success", "closed": "warning", "reconciled": "default" } } }, "floatAt", "closedAt"],
+				"columns": ["reference", "drawer", { "key": "operator", "formatter": "userDisplayName" }, { "key": "floatAmount", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }, { "key": "status", "widget": "badge", "widgetProps": { "colorMap": { "open": "success", "closed": "warning", "reconciled": "default" } } }, "floatAt", "closedAt"],
 				"headerActions": [
 					{
 						"id": "open-shift",
@@ -5270,8 +5270,7 @@
 							"reference": { "type": "string", "title": "Reference" },
 							"notes": { "type": "string", "title": "Notes" }
 						},
-						"successMessage": "Shift opened.",
-						"onSuccessRoute": { "name": "CashShiftDetail", "idPath": "shift.id" }
+						"successMessage": "Shift opened."
 					}
 				]
 			}
