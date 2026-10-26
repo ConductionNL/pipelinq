@@ -168,6 +168,7 @@ import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+import ContactImportDialog from './dialogs/ContactImportDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
@@ -1247,6 +1248,13 @@ const registry = {
 		component: ClientCreateDialog,
 		propsSchema: null,
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
+	},
+
+	ContactImportDialog: {
+		kind: 'modal',
+		component: ContactImportDialog,
+		propsSchema: null,
+		_note: 'Import from Nextcloud Contacts (PqContactenImporteren). Target of the import header button on the Contacts index; imports the marked addressbook cards as contacts.',
 	},
 
 	// Pages' form-dialog slot (page.slots), not header-action modals: the
