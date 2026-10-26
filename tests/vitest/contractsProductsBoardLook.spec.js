@@ -86,6 +86,16 @@ describe('contract page', () => {
 	})
 })
 
+describe('product status', () => {
+	const fragment = JSON.parse(readFileSync(resolve(__dirname, '../../lib/Settings/register.d/93-product-status.json'), 'utf8'))
+	const status = fragment.components.schemas.product.properties.status
+
+	it('knows draft, active and discontinued, and still reads the old inactive', () => {
+		expect(status.enum).toEqual(['active', 'draft', 'discontinued', 'inactive'])
+		expect(status['x-enum-labels'].inactive).toBe(status['x-enum-labels'].discontinued)
+	})
+})
+
 describe('product pages', () => {
 	it('filters the list on type and status and counts the deals a product is on', () => {
 		const list = page(base.pages, 'Products')
@@ -93,8 +103,11 @@ describe('product pages', () => {
 			'All',
 			'Products',
 			'Services',
+			'Draft',
 			'Discontinued',
 		])
+		const discontinued = list.config.quickFilters.find((f) => f.label === 'Discontinued')
+		expect(discontinued.filter.status).toEqual(['discontinued', 'inactive'])
 		const onDeals = list.config.columns.find((c) => c.key === 'onDeals')
 		expect(onDeals.aggregate).toMatchObject({
 			schema: 'leadProduct',
