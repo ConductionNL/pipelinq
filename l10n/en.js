@@ -8347,7 +8347,13 @@ OC.L10N.register(
         "Reference code": "Reference code",
         "{shown} of {total} transactions · newest first": "{shown} of {total} transactions · newest first",
         "Open a transaction to print or mail the receipt, or to register a refund.": "Open a transaction to print or mail the receipt, or to register a refund.",
-        "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it."
+        "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.",
+        "1 article, the content of the page": "1 article, the content of the page",
+        "{count} newsletter": "{count} newsletter",
+        "{count} newsletters": "{count} newsletters",
+        "{count} social post": "{count} social post",
+        "{count} social posts": "{count} social posts",
+        "{count} lead": "{count} lead"
     },
     "nplurals=2; plural=(n != 1);"
 )
