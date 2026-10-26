@@ -23,7 +23,8 @@
 		:notificationLabels="notificationLabels"
 		:permissions="permissions"
 		:persistManifestDelta="persistManifestDelta"
-		:requiresApps="[]">
+		:requiresApps="[]"
+		:userSettingsSections="userSettingsSections">
 		<template #sidebar="{ pageSidebarComponent }">
 			<!--
 				Host-rendered CnObjectSidebar. Detail pages declare their tabs in
@@ -51,6 +52,12 @@
 			     fallback, which is what hid the flow sidebar. -->
 			<component :is="pageSidebarComponent" v-if="pageSidebarComponent" />
 		</template>
+		<!-- The app's own sections of the user settings dialog (boards
+		     PqPersoonlijk, PqSynchronisatie), between Notifications and
+		     Credentials. -->
+		<template #user-settings-sections>
+			<EmailCalendarSettingsSection />
+		</template>
 	</CnAppRoot>
 	<!-- The incoming-call card of board PqInkomendGesprek. It floats over
 	     whichever page the agent is on, and renders nothing at all on an
@@ -70,6 +77,7 @@ import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import IncomingCallCard from './components/IncomingCallCard.vue'
+import EmailCalendarSettingsSection from './components/settings/EmailCalendarSettingsSection.vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
@@ -85,6 +93,7 @@ export default {
 	components: {
 		CnAppRoot,
 		CnObjectSidebar,
+		EmailCalendarSettingsSection,
 		IncomingCallCard,
 	},
 
@@ -169,6 +178,17 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Order of the user settings dialog: Notifications, the app's own
+		 * sections, Credentials, the tour, then the library's other sections.
+		 *
+		 * @return {Array<string>}
+		 * @spec openspec/specs/email-calendar-sync/spec.md
+		 */
+		userSettingsSections() {
+			return ['notifications', 'app', 'credentials', 'walkthrough', 'views', 'integrations']
+		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-2
 		 */

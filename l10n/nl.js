@@ -7963,7 +7963,23 @@ OC.L10N.register(
         "Campaign events": "Evenementen",
         "Fully booked": "Volgeboekt",
         "An event a campaign holds, with its places": "Een evenement van een campagne, met zijn plaatsen",
-        "One sign-up for a campaign event": "Eén aanmelding voor een evenement"
+        "One sign-up for a campaign event": "Eén aanmelding voor een evenement",
+        "Email and calendar": "E-mail en agenda",
+        "Mail and appointments linked to your customers. The mail itself stays in Nextcloud Mail.": "Mail en afspraken gekoppeld aan je klanten. De mail zelf blijft in Nextcloud Mail.",
+        "Turn on email sync": "E-mailsynchronisatie aanzetten",
+        "Mail from the chosen account goes to the contact with the same email address.": "Mail uit het gekozen account komt bij het contact met hetzelfde e-mailadres.",
+        "You have no Nextcloud Mail account yet.": "Je hebt nog geen account in Nextcloud Mail.",
+        "Skip, comma separated": "Overslaan, kommagescheiden",
+        "Mail from or to these addresses is not linked.": "Mail van of naar deze adressen wordt niet gekoppeld.",
+        "Last time": "Laatste keer",
+        "Linked": "Gekoppeld",
+        "{linked} of {scanned} mails in the last run": "{linked} van {scanned} mails bij de laatste keer",
+        "Pipelinq keeps the subject, sender and date. You read the content in Nextcloud Mail.": "Pipelinq bewaart onderwerp, afzender en datum. De inhoud lees je in Nextcloud Mail.",
+        "Could not load the email settings.": "De e-mailinstellingen konden niet worden geladen.",
+        "Could not save the email settings.": "De e-mailinstellingen konden niet worden opgeslagen.",
+        "{linked} of {scanned} mails linked.": "{linked} van {scanned} mails gekoppeld.",
+        "Could not sync your email.": "Je e-mail kon niet worden gesynchroniseerd.",
+        "Invalid account": "Ongeldig account"
     },
     "nplurals=2; plural=(n != 1);"
 )
