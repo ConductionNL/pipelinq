@@ -140,11 +140,9 @@ import {
 	getPriorityLabel,
 	getStatusLabel,
 } from '../../services/requestStatus.js'
+import { listAssignableUserIds } from '../../services/userDisplayName.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
-
-// Module-level user cache shared across all PipelineCard instances
-let usersCache = null
 
 export default {
 	name: 'PipelineCard',
@@ -375,10 +373,6 @@ export default {
 		},
 	},
 
-	async mounted() {
-		await this.loadUsers()
-	},
-
 	methods: {
 		formatNumber,
 		getPriorityLabel,
@@ -401,25 +395,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41
 		 */
 		async loadUsers() {
-			if (usersCache) {
-				this.users = usersCache
-				return
-			}
-			try {
-				const response = await fetch('/ocs/v2.php/cloud/users?format=json', {
-					headers: {
-						'OCS-APIREQUEST': 'true',
-						requesttoken: OC.requestToken,
-					},
-				})
-				if (response.ok) {
-					const data = await response.json()
-					usersCache = data?.ocs?.data?.users || []
-					this.users = usersCache
-				}
-			} catch {
-				this.users = []
-			}
+			this.users = await listAssignableUserIds()
 		},
 
 		/**
@@ -509,6 +485,7 @@ export default {
 		openAssignMenu() {
 			this.pickedAssignee = this.item.assignee || null
 			this.assignMenuOpen = true
+			this.loadUsers()
 		},
 
 		/**

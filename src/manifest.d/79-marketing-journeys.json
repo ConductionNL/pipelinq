@@ -29,10 +29,100 @@
 				"register": "pipelinq",
 				"schema": "journey",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"includeColumns": ["name", "status", "flowStatus", "waitFor"],
 				"addLabel": "New journey",
 				"showEditAction": true,
-				"showCopyAction": false
+				"showCopyAction": false,
+				"sortKey": "name",
+				"sortOrder": "asc",
+				"countText": "{shown} of {total} journeys",
+				"searchPlaceholder": "Filter by name",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"board": {
+					"statusField": "status"
+				},
+				"footerNote": "A journey is a trigger, a wait, a condition and an action. Pipelinq turns it into a flow.",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New journey"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Active",
+						"filter": {
+							"status": "active"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Paused",
+						"filter": {
+							"status": "paused"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						},
+						"showCount": true
+					}
+				],
+				"columns": [
+					"name",
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"active": "success",
+								"paused": "warning",
+								"draft": "default"
+							}
+						}
+					},
+					{
+						"key": "flowStatus",
+						"label": "Flow status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"compiled": "success",
+								"not_compiled": "default",
+								"engine_missing": "error",
+								"refused": "error"
+							}
+						}
+					},
+					"waitFor"
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
@@ -50,12 +140,34 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"widgets": [
 					{
+						"id": "journey-panels",
+						"type": "tabs",
+						"title": "Journey",
+						"content": {
+							"ariaLabel": "Journey",
+							"tabs": [
+								{
+									"widgetIds": [
+										"journey-data",
+										"journey-steps",
+										"journey-runs"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "journey-history",
+									"label": "History"
+								}
+							]
+						}
+					},
+					{
 						"id": "journey-data",
 						"type": "data",
 						"title": "Journey details",
-						"icon": "InformationOutline",
 						"content": {
-							"columns": 2,
+							"title": "Journey details",
+							"columns": 3,
 							"include": [
 								"description",
 								"status",
@@ -63,47 +175,207 @@
 								"waitFor",
 								"flowStatus",
 								"flowError"
+							],
+							"overrides": {
+								"description": {
+									"order": 0
+								},
+								"status": {
+									"order": 1,
+									"enumLabels": {
+										"draft": "Draft",
+										"active": "Active",
+										"paused": "Paused"
+									}
+								},
+								"audienceSegment": {
+									"order": 2
+								},
+								"waitFor": {
+									"order": 3
+								},
+								"flowStatus": {
+									"order": 4
+								},
+								"flowError": {
+									"order": 5
+								}
+							}
+						}
+					},
+					{
+						"id": "journey-steps",
+						"type": "facts",
+						"title": "Steps",
+						"content": {
+							"fields": [
+								{
+									"path": "trigger.kind",
+									"label": "Trigger",
+									"map": {
+										"leadStageChanged": "A lead moved stage",
+										"contractRenewalWindow": "A contract is up for renewal",
+										"listConfirmed": "Someone confirmed a subscription",
+										"shillinqSignal": "A bookkeeping signal changed"
+									}
+								},
+								{
+									"path": "waitFor",
+									"label": "Wait"
+								},
+								{
+									"path": "condition.field",
+									"label": "Condition"
+								},
+								{
+									"path": "action.kind",
+									"label": "Action",
+									"map": {
+										"sendMailing": "Send a mailing",
+										"createTask": "Create a task"
+									}
+								}
 							]
+						}
+					},
+					{
+						"id": "journey-history",
+						"type": "timeline",
+						"title": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc"
+						}
+					},
+					{
+						"id": "journey-flow",
+						"type": "facts",
+						"title": "Flow",
+						"content": {
+							"fields": [
+								{
+									"as": "text",
+									"path": "flowStatus",
+									"map": {
+										"compiled": "Converted into a flow. The flow runs in the automation engine.",
+										"not_compiled": "Not converted into a flow yet.",
+										"engine_missing": "There is no automation engine to run the flow.",
+										"refused": "The automation engine refused the flow."
+									}
+								}
+							],
+							"link": {
+								"label": "Open flow",
+								"route": {
+									"name": "FlowDetail",
+									"params": {
+										"id": "@object.flowUuid"
+									}
+								}
+							}
+						}
+					},
+					{
+						"id": "journey-side-history",
+						"type": "timeline",
+						"title": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc",
+							"limit": 3
+						}
+					},
+					{
+						"id": "journey-runs",
+						"type": "JourneyRunsWidget",
+						"title": "What this journey did",
+						"content": {
+							"title": "What this journey did"
 						}
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "journey-data",
+						"widgetId": "journey-panels",
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 5
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "journey-runs",
-						"component": "JourneyRunsSection",
-						"title": "What this journey did",
-						"placement": "end",
-						"props": {
-							"journeyId": "@objectId"
-						}
+						"gridHeight": 8,
+						"showTitle": false,
+						"sizeToContent": true
 					}
 				],
 				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "audit",
-							"label": "History",
-							"icon": "History",
-							"widgets": [
-								{
-									"type": "audit"
-								}
-							]
-						}
-					]
-				}
+					"enabled": false
+				},
+				"follow": false,
+				"showTypeEyebrow": false,
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"draft": "Draft",
+						"active": "Active",
+						"paused": "Paused"
+					},
+					"colorMap": {
+						"active": "success",
+						"paused": "warning",
+						"draft": "default"
+					}
+				},
+				"breadcrumb": {
+					"label": "Journeys",
+					"route": "Journeys",
+					"separator": "/"
+				},
+				"actionsMenu": {
+					"label": "More"
+				},
+				"sideColumn": [
+					"journey-flow",
+					"journey-side-history"
+				],
+				"headerActions": [
+					{
+						"id": "pause",
+						"label": "Pause",
+						"icon": "Pause",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/journeys/@objectId/status",
+						"method": "POST",
+						"payload": {
+							"status": "paused"
+						},
+						"visibleWhen": {
+							"field": "status",
+							"value": "active"
+						},
+						"successMessage": "The journey is paused. Its flow no longer runs.",
+						"errorMessage": "Could not pause this journey."
+					},
+					{
+						"id": "resume",
+						"label": "Resume",
+						"icon": "Play",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/journeys/@objectId/status",
+						"method": "POST",
+						"payload": {
+							"status": "active"
+						},
+						"visibleWhen": {
+							"field": "status",
+							"value": "paused"
+						},
+						"successMessage": "The journey runs again.",
+						"errorMessage": "Could not resume this journey."
+					}
+				],
+				"quickActions": [
+					"pause",
+					"resume"
+				]
 			}
 		},
 		{
