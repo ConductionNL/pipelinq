@@ -2,6 +2,7 @@
   "components": {
     "schemas": {
       "product": {
+        "slug": "product",
         "properties": {
           "status": {
             "type": "string",
