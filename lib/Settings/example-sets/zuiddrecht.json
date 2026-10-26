@@ -1906,6 +1906,125 @@
 			}
 		},
 		{
+			"key": "z-rapport-0281",
+			"register": "pipelinq",
+			"schema": "posZReport",
+			"data": {
+				"reference": "Z-2026-0281",
+				"reportDate": "{{date:-1}}",
+				"terminalId": "Balie 3",
+				"transactionCount": 38,
+				"total": 1412.3,
+				"status": "posted",
+				"createdAt": "{{datetime:-1 23:00}}",
+				"settledAt": "{{datetime:-1 23:00}}",
+				"bookkeepingStatus": "raised",
+				"bookkeepingAttempts": 1,
+				"shillinqJournalEntryId": "JE-2026-04812"
+			}
+		},
+		{
+			"key": "z-rapport-0280",
+			"register": "pipelinq",
+			"schema": "posZReport",
+			"data": {
+				"reference": "Z-2026-0280",
+				"reportDate": "{{date:-1}}",
+				"terminalId": "Balie 2",
+				"transactionCount": 41,
+				"total": 1980.15,
+				"status": "posted",
+				"createdAt": "{{datetime:-1 23:00}}",
+				"settledAt": "{{datetime:-1 23:00}}",
+				"bookkeepingStatus": "raised",
+				"bookkeepingAttempts": 1,
+				"shillinqJournalEntryId": "JE-2026-04811"
+			}
+		},
+		{
+			"key": "z-rapport-0279",
+			"register": "pipelinq",
+			"schema": "posZReport",
+			"data": {
+				"reference": "Z-2026-0279",
+				"reportDate": "{{date:-1}}",
+				"terminalId": "Balie 1",
+				"transactionCount": 29,
+				"total": 864.0,
+				"status": "failed",
+				"createdAt": "{{datetime:-1 23:00}}",
+				"settledAt": "{{datetime:-1 23:00}}",
+				"bookkeepingStatus": "failed",
+				"bookkeepingAttempts": 1,
+				"subtotal": 880.0,
+				"discountTotal": 16.0,
+				"totalTax": 97.42,
+				"taxBreakdown": [
+					{
+						"rate": 21,
+						"base": 412.4,
+						"tax": 86.6
+					},
+					{
+						"rate": 9,
+						"base": 120.18,
+						"tax": 10.82
+					},
+					{
+						"rate": 0,
+						"base": 234.0,
+						"tax": 0
+					}
+				],
+				"paymentMethodBreakdown": [
+					{
+						"method": "Pin",
+						"amount": 702.5
+					},
+					{
+						"method": "Contant",
+						"amount": 161.5
+					}
+				],
+				"notes": "Doorgeven aan shillinq mislukt: shillinq reageerde niet om 23:00."
+			}
+		},
+		{
+			"key": "z-rapport-0278",
+			"register": "pipelinq",
+			"schema": "posZReport",
+			"data": {
+				"reference": "Z-2026-0278",
+				"reportDate": "{{date:-2}}",
+				"terminalId": "Balie 3",
+				"transactionCount": 35,
+				"total": 1120.8,
+				"status": "reconciled",
+				"createdAt": "{{datetime:-2 23:00}}",
+				"settledAt": "{{datetime:-2 23:00}}",
+				"bookkeepingStatus": "raised",
+				"bookkeepingAttempts": 1,
+				"shillinqJournalEntryId": "JE-2026-04790"
+			}
+		},
+		{
+			"key": "z-rapport-0277",
+			"register": "pipelinq",
+			"schema": "posZReport",
+			"data": {
+				"reference": "Z-2026-0277",
+				"reportDate": "{{date:-2}}",
+				"terminalId": "Balie 2",
+				"transactionCount": 44,
+				"total": 2031.4,
+				"status": "submitted",
+				"createdAt": "{{datetime:-2 23:00}}",
+				"settledAt": "{{datetime:-2 23:00}}",
+				"bookkeepingStatus": "pending",
+				"bookkeepingAttempts": 1
+			}
+		},
+		{
 			"key": "leadline-training",
 			"register": "pipelinq",
 			"schema": "leadProduct",
