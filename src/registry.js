@@ -178,6 +178,7 @@ import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
+import LinkSubmissionToClientModal from './modals/LinkSubmissionToClientModal.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
@@ -1237,6 +1238,12 @@ const registry = {
 	//     dialog cannot express. Placement stays declarative; only the form
 	//     body is app-owned. CnAppRoot mounts these and forwards `close`, so
 	//     each dialog routes to its own detail page on success. ---
+	// Link to a client on the ticket page (PqAanvraagOmzetten, decision 179).
+	LinkSubmissionToClientModal: {
+		kind: 'modal',
+		component: LinkSubmissionToClientModal,
+		propsSchema: null,
+	},
 	LetterFromTemplateModal: {
 		kind: 'modal',
 		component: LetterFromTemplateModal,

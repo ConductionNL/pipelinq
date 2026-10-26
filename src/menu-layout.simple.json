@@ -57,6 +57,7 @@
 	},
 	"settingsSection": [
 		"Pipelines",
+		"WebsiteSubmissions",
 		"SettingsIntegrationsCaption",
 		"ExportJobs",
 		"Services",
