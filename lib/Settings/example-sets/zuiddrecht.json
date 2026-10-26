@@ -13,6 +13,16 @@
 		{
 			"key": "brp.allowed_groups",
 			"value": "{{cast:kcc.gid}}"
+		},
+		{
+			"key": "ticket_reference_counter",
+			"value": "402",
+			"type": "int"
+		},
+		{
+			"key": "ticket_reference_counter_year",
+			"value": "2026",
+			"type": "int"
 		}
 	],
 	"objects": [
@@ -1022,6 +1032,7 @@
 			"register": "pipelinq",
 			"schema": "ticket",
 			"data": {
+				"reference": "PQ-2026-0402",
 				"ticketType": "request",
 				"title": "Aanvraag collectevergunning",
 				"description": "De buurtvereniging wil in november langs de deuren in Oosthaven collecteren voor de speeltuin en vraagt een collectevergunning.",
@@ -1041,6 +1052,7 @@
 			"register": "pipelinq",
 			"schema": "ticket",
 			"data": {
+				"reference": "PQ-2026-0377",
 				"ticketType": "request",
 				"title": "Vraag over huur buurthuis",
 				"description": "Mevrouw Verbeek vraagt wat de huur van het buurthuis aan de Oosthavenweg kost voor de jaarvergadering.",
@@ -1058,6 +1070,7 @@
 			"register": "pipelinq",
 			"schema": "ticket",
 			"data": {
+				"reference": "PQ-2026-0310",
 				"ticketType": "request",
 				"title": "Melding verlichting Oosthavenweg",
 				"description": "Twee lantaarnpalen bij het speelveld aan de Oosthavenweg branden al een week niet.",

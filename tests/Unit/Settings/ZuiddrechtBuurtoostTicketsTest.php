@@ -49,4 +49,38 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 		);
 		$this->assertNotContains(needle: 'resolved', haystack: array_column($tickets, 'status'));
 	}//end testTheAssociationHasThreeOpenTickets()
+
+	/**
+	 * DqOrganisatie and the ticket leaf draw the three tickets by their references; a declared reference is kept
+	 * (TicketReferenceCreatingListener stamps only a ticket without one).
+	 *
+	 * @return void
+	 */
+	public function testTheBuurtoostTicketsCarryTheirReferences(): void {
+		$set     = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
+		$objects = array_column($set['objects'], null, 'key');
+
+		$this->assertSame(
+			expected: ['PQ-2026-0402', 'PQ-2026-0377', 'PQ-2026-0310'],
+			actual: [
+				$objects['ticket-buurtoost-collectevergunning']['data']['reference'] ?? null,
+				$objects['ticket-buurtoost-buurthuis']['data']['reference'] ?? null,
+				$objects['ticket-buurtoost-verlichting']['data']['reference'] ?? null,
+			]
+		);
+	}//end testTheBuurtoostTicketsCarryTheirReferences()
+
+	/**
+	 * The ticket counter starts above the highest reference the set names, so no new ticket repeats one; both keys are
+	 * integers, as TicketReferenceSequence reads them.
+	 *
+	 * @return void
+	 */
+	public function testTheTicketCounterStartsAboveTheSetsReferences(): void {
+		$set    = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
+		$config = array_column($set['appConfig'], null, 'key');
+
+		$this->assertSame(expected: ['value' => '402', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter'] ?? [], ['value' => 1, 'type' => 1]));
+		$this->assertSame(expected: ['value' => '2026', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter_year'] ?? [], ['value' => 1, 'type' => 1]));
+	}//end testTheTicketCounterStartsAboveTheSetsReferences()
 }//end class
