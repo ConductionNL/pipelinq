@@ -224,14 +224,6 @@ import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 // --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
 import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
 import ForecastTrendView from './views/forecast/ForecastTrend.vue'
-import KassakoppelingAuditDetailView from './views/kassakoppeling/KassakoppelingAuditDetail.vue'
-// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit):
-//     append-only HMAC-SHA256 signed register actions chained per-register
-//     with an admin-gated Belastingdienst export pack. Lib gap: declarative
-//     type:"index" cannot express the bespoke /api/kassakoppeling/audit
-//     endpoint, the verify-button + verification badge ramp on the detail
-//     view, or the date-range + format export modal. ---
-import KassakoppelingAuditListView from './views/kassakoppeling/KassakoppelingAuditList.vue'
 import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 // --- Leads list (lead-management spec REQ-LM-002 / REQ-LM-004 / REQ-LM-005).
 //     Wraps CnIndexPage to add the stale filter, overdue row highlighting
@@ -262,6 +254,11 @@ import MessagingConversationSection from './views/messaging/MessagingConversatio
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
+// --- Cash register audit log (pos-kassakoppeling-audit): append-only HMAC-SHA256
+//     signed register actions chained per register, with an admin-only tax
+//     authority export. The list keeps its date range and export dialog; the
+//     entry is a declarative detail page over the endpoint. ---
+import CashRegisterAuditListView from './views/pos/CashRegisterAuditList.vue'
 // --- POS cash drawer. The detail page is now a declarative type:"detail" page
 //     (pipelinq-pos-mdm-detail-declarative): the shift's float fields auto-render,
 //     the drops are a relatedCollections table, and the variance/diff projection
@@ -543,16 +540,11 @@ const registry = {
 		_note: 'Admin settings panel for the POS customer-link lookup: search fields, purchase-history depth, marketing-consent sync toggle and the on-account-requires-customer invariant (pos-customer-link, REQ-PCL-006).',
 	},
 
-	// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit). ---
-	KassakoppelingAuditListView: {
+	// --- Cash register audit log (pos-kassakoppeling-audit). ---
+	CashRegisterAuditListView: {
 		kind: 'page',
-		component: KassakoppelingAuditListView,
-		_note: 'Append-only Kassakoppeling audit log list: streams from the bespoke /api/kassakoppeling/audit endpoint (NOT the OR object store, which only stores entries), drives the date / register / operator / action filter bar and the admin-only Belastingdienst export modal (pos-kassakoppeling-audit REQ-AUDIT-003 / REQ-AUDIT-005).',
-	},
-	KassakoppelingAuditDetailView: {
-		kind: 'page',
-		component: KassakoppelingAuditDetailView,
-		_note: 'Read-only Kassakoppeling audit entry detail: verification status badge ramp (green ok / red tampered / grey pending), summary + entry + crypto cards with truncated hex digests + copy buttons, an optional transaction-link card linking to pos-transaction-core and the manual server-side verify action (pos-kassakoppeling-audit REQ-AUDIT-002 / REQ-AUDIT-004 / REQ-AUDIT-006).',
+		component: CashRegisterAuditListView,
+		_note: 'Append-only cash register audit log list: streams from the /api/kassakoppeling/audit endpoint (the OR object store only stores entries), drives the date / register / operator / action filter bar and the admin-only tax authority export modal (pos-kassakoppeling-audit REQ-AUDIT-003 / REQ-AUDIT-005).',
 	},
 
 	// --- Billing categories (billable-categories-and-tags). The Billing categories
