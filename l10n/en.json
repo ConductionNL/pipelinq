@@ -8021,6 +8021,13 @@
         "Campaign events": "Campaign events",
         "Fully booked": "Fully booked",
         "An event a campaign holds, with its places": "An event a campaign holds, with its places",
-        "One sign-up for a campaign event": "One sign-up for a campaign event"
+        "One sign-up for a campaign event": "One sign-up for a campaign event",
+        "{shown} of {total} contact moments · all channels · newest first": "{shown} of {total} contact moments · all channels · newest first",
+        "Callback agreed": "Callback agreed",
+        "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone.": "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone.",
+        "{count} d": "{count} d",
+        "{count} h": "{count} h",
+        "{count} min": "{count} min",
+        "{count} s": "{count} s"
     }
 }

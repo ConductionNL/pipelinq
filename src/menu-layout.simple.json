@@ -1885,7 +1885,136 @@
 				"showEditAction": false,
 				"showCopyAction": false,
 				"showDeleteAction": false,
-				"footerNote": "newest first · click a column header to sort"
+				"footerNote": "newest first · click a column header to sort",
+				"_queryPresetsNote": "The Contact moments entry opens this list with ?ticketType=interaction; the preset gives that view the lenses, columns and copy of board PqContactmomenten. The default lens is the last 30 days, so the list opens with the recent moments, as the board opens on this month. The board's Mijn Zuiddrecht lens is the online channel, labelled Online because the portal's name belongs to the instance. Channel lenses list both vocabularies the channel field carries (phone and telefoon, counter and balie).",
+				"queryPresets": [
+					{
+						"id": "contact-moments",
+						"match": {
+							"ticketType": "interaction"
+						},
+						"title": "Contact moments",
+						"countText": "{shown} of {total} contact moments · all channels · newest first",
+						"searchPlaceholder": "Filter by subject or client",
+						"defaultSort": [
+							{
+								"field": "occurredAt",
+								"order": "desc"
+							}
+						],
+						"quickFilters": [
+							{
+								"label": "Today",
+								"filter": {
+									"occurredAt[gte]": "@today"
+								},
+								"showCount": true
+							},
+							{
+								"label": "Mine",
+								"filter": {
+									"assignee": "@me"
+								},
+								"showCount": true
+							},
+							{
+								"label": "Phone",
+								"filter": {
+									"channel": [
+										"phone",
+										"telefoon"
+									]
+								},
+								"showCount": true
+							},
+							{
+								"label": "Counter",
+								"filter": {
+									"channel": [
+										"counter",
+										"balie"
+									]
+								},
+								"showCount": true
+							},
+							{
+								"label": "Online",
+								"filter": {
+									"channel": [
+										"web",
+										"portal"
+									]
+								},
+								"showCount": true
+							},
+							{
+								"label": "Callback agreed",
+								"filter": {
+									"outcome": "callbackRequest"
+								},
+								"showCount": true
+							},
+							{
+								"label": "Last 30 days",
+								"filter": {
+									"occurredAt[gte]": "@today-30d"
+								},
+								"default": true,
+								"showCount": true
+							}
+						],
+						"columns": [
+							{
+								"key": "title",
+								"label": "Subject"
+							},
+							{
+								"key": "client",
+								"label": "Client",
+								"labelField": "name"
+							},
+							{
+								"key": "channel",
+								"label": "Channel",
+								"formatter": "enumText"
+							},
+							{
+								"key": "outcome",
+								"label": "Outcome",
+								"formatter": "enumLabel"
+							},
+							{
+								"key": "duration",
+								"label": "Duration",
+								"formatter": "isoDuration"
+							},
+							{
+								"key": "status",
+								"label": "Status",
+								"widget": "badge",
+								"widgetProps": {
+									"colorMap": {
+										"new": "primary",
+										"in_progress": "purple",
+										"closed": "success",
+										"resolved": "success"
+									}
+								}
+							},
+							{
+								"key": "occurredAt",
+								"label": "When",
+								"formatter": "datetime"
+							},
+							{
+								"key": "assignee",
+								"label": "Handler",
+								"formatter": "userDisplayName"
+							}
+						],
+						"footerNote": "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone."
+					}
+				]
 			},
 			"configPatch": {
 				"quickFilters": {
