@@ -56,6 +56,14 @@
 						"route": "Pipeline"
 					},
 					{
+						"id": "Programmes",
+						"label": "Projects",
+						"description": "Delivery projects above the cases: plan, tasks, cycles and team.",
+						"icon": "BriefcaseOutline",
+						"category": "other",
+						"route": "Programmes"
+					},
+					{
 						"id": "Segments",
 						"label": "Segments",
 						"description": "Groups of contacts picked by rules, ready to mail.",
