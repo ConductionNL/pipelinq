@@ -677,27 +677,35 @@ export default {
 .request-form--board .rf-type {
 	order: 1;
 }
+
 .request-form--board .rf-client {
 	order: 2;
 }
+
 .request-form--board .rf-title {
 	order: 3;
 }
+
 .request-form--board .rf-description {
 	order: 4;
 }
+
 .request-form--board .rf-channel {
 	order: 5;
 }
+
 .request-form--board .rf-priority {
 	order: 6;
 }
+
 .request-form--board .rf-note {
 	order: 7;
 }
+
 .request-form--board .rf-more-toggle {
 	order: 8;
 }
+
 .request-form--board .rf-more {
 	order: 9;
 }
