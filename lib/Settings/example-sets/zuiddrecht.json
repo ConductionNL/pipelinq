@@ -1906,6 +1906,290 @@
 			}
 		},
 		{
+			"key": "kassadienst-7okt-balie2",
+			"register": "pipelinq",
+			"schema": "cashShift",
+			"data": {
+				"reference": "SHIFT-2026-0214",
+				"drawer": "Balie 2, stadskantoor",
+				"operator": "{{cast:pieter.uid}}",
+				"currency": "EUR",
+				"floatAmount": 150,
+				"floatAt": "{{datetime:0 08:30}}",
+				"status": "open"
+			}
+		},
+		{
+			"key": "kassadienst-7okt-balie2-afstorting-1",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-7okt-balie2.id}}",
+				"amount": 150,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:0 10:45}}",
+				"droppedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-7okt-balie2-afstorting-2",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-7okt-balie2.id}}",
+				"amount": 50,
+				"reason": "Wisselgeld voor Balie 1",
+				"droppedAt": "{{datetime:0 11:30}}",
+				"droppedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-7okt-balie1",
+			"register": "pipelinq",
+			"schema": "cashShift",
+			"data": {
+				"reference": "SHIFT-2026-0213",
+				"drawer": "Balie 1, stadskantoor",
+				"operator": "{{cast:fatmayildiz.uid}}",
+				"currency": "EUR",
+				"floatAmount": 150,
+				"floatAt": "{{datetime:0 08:25}}",
+				"status": "open"
+			}
+		},
+		{
+			"key": "kassadienst-7okt-balie1-afstorting-1",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-7okt-balie1.id}}",
+				"amount": 100,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:0 11:05}}",
+				"droppedBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2",
+			"register": "pipelinq",
+			"schema": "cashShift",
+			"data": {
+				"reference": "SHIFT-2026-0212",
+				"drawer": "Balie 2, stadskantoor",
+				"operator": "{{cast:pieter.uid}}",
+				"currency": "EUR",
+				"floatAmount": 150,
+				"floatAt": "{{datetime:-1 08:30}}",
+				"status": "reconciled",
+				"closedAt": "{{datetime:-1 17:05}}",
+				"reconciliationStatus": "approved",
+				"managedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2-afstorting-1",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie2.id}}",
+				"amount": 150,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:-1 11:15}}",
+				"droppedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2-afstorting-2",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie2.id}}",
+				"amount": 150,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:-1 14:00}}",
+				"droppedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2-afstorting-3",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie2.id}}",
+				"amount": 50,
+				"reason": "Wisselgeld voor Balie 3",
+				"droppedAt": "{{datetime:-1 15:20}}",
+				"droppedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2-telling",
+			"register": "pipelinq",
+			"schema": "posCashCount",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie2.id}}",
+				"amount": 486.4,
+				"countedAt": "{{datetime:-1 17:05}}",
+				"countedBy": "{{cast:pieter.uid}}",
+				"notes": "Blind geteld bij het sluiten van de dienst."
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie2-verschil",
+			"register": "pipelinq",
+			"schema": "cashDiff",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie2.id}}",
+				"count": "{{object:kassadienst-6okt-balie2-telling.id}}",
+				"expectedAmount": 486.4,
+				"actualAmount": 486.4,
+				"diffAmount": 0.0,
+				"diffPercentage": 0.0,
+				"withinTolerance": true,
+				"status": "approved",
+				"approvedBy": "{{cast:pieter.uid}}",
+				"approvedAt": "{{datetime:0 08:15}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie3",
+			"register": "pipelinq",
+			"schema": "cashShift",
+			"data": {
+				"reference": "SHIFT-2026-0211",
+				"drawer": "Balie 3, stadskantoor",
+				"operator": "{{cast:joris.uid}}",
+				"currency": "EUR",
+				"floatAmount": 100,
+				"floatAt": "{{datetime:-1 09:00}}",
+				"status": "closed",
+				"closedAt": "{{datetime:-1 16:45}}",
+				"reconciliationStatus": "pending",
+				"notes": "Marge € 5,00. 38 transacties in deze dienst."
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie3-afstorting-1",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie3.id}}",
+				"amount": 200,
+				"reason": "Afstorting in de kluis, te veel contant geld",
+				"droppedAt": "{{datetime:-1 12:10}}",
+				"droppedBy": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie3-afstorting-2",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie3.id}}",
+				"amount": 50,
+				"reason": "Wisselgeld voor Balie 1",
+				"droppedAt": "{{datetime:-1 14:30}}",
+				"droppedBy": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie3-telling",
+			"register": "pipelinq",
+			"schema": "posCashCount",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie3.id}}",
+				"amount": 399.9,
+				"countedAt": "{{datetime:-1 16:45}}",
+				"countedBy": "{{cast:joris.uid}}",
+				"notes": "Blind geteld bij het sluiten van de dienst."
+			}
+		},
+		{
+			"key": "kassadienst-6okt-balie3-verschil",
+			"register": "pipelinq",
+			"schema": "cashDiff",
+			"data": {
+				"shift": "{{object:kassadienst-6okt-balie3.id}}",
+				"count": "{{object:kassadienst-6okt-balie3-telling.id}}",
+				"expectedAmount": 412.3,
+				"actualAmount": 399.9,
+				"diffAmount": -12.4,
+				"diffPercentage": 3.0,
+				"withinTolerance": false,
+				"status": "pending"
+			}
+		},
+		{
+			"key": "kassadienst-5okt-balie1",
+			"register": "pipelinq",
+			"schema": "cashShift",
+			"data": {
+				"reference": "SHIFT-2026-0210",
+				"drawer": "Balie 1, stadskantoor",
+				"operator": "{{cast:fatmayildiz.uid}}",
+				"currency": "EUR",
+				"floatAmount": 150,
+				"floatAt": "{{datetime:-2 08:25}}",
+				"status": "reconciled",
+				"closedAt": "{{datetime:-2 17:00}}",
+				"reconciliationStatus": "approved",
+				"managedBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-5okt-balie1-afstorting-1",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-5okt-balie1.id}}",
+				"amount": 100,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:-2 12:00}}",
+				"droppedBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-5okt-balie1-afstorting-2",
+			"register": "pipelinq",
+			"schema": "cashDrop",
+			"data": {
+				"shift": "{{object:kassadienst-5okt-balie1.id}}",
+				"amount": 100,
+				"reason": "Afstorting in de kluis",
+				"droppedAt": "{{datetime:-2 15:30}}",
+				"droppedBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "kassadienst-5okt-balie1-telling",
+			"register": "pipelinq",
+			"schema": "posCashCount",
+			"data": {
+				"shift": "{{object:kassadienst-5okt-balie1.id}}",
+				"amount": 288.4,
+				"countedAt": "{{datetime:-2 17:00}}",
+				"countedBy": "{{cast:fatmayildiz.uid}}",
+				"notes": "Blind geteld bij het sluiten van de dienst."
+			}
+		},
+		{
+			"key": "kassadienst-5okt-balie1-verschil",
+			"register": "pipelinq",
+			"schema": "cashDiff",
+			"data": {
+				"shift": "{{object:kassadienst-5okt-balie1.id}}",
+				"count": "{{object:kassadienst-5okt-balie1-telling.id}}",
+				"expectedAmount": 287.6,
+				"actualAmount": 288.4,
+				"diffAmount": 0.8,
+				"diffPercentage": 0.3,
+				"withinTolerance": true,
+				"status": "approved",
+				"approvedBy": "{{cast:pieter.uid}}",
+				"approvedAt": "{{datetime:-1 08:15}}"
+			}
+		},
+		{
 			"key": "leadline-training",
 			"register": "pipelinq",
 			"schema": "leadProduct",
