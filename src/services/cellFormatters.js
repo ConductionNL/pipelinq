@@ -166,7 +166,7 @@ export const CELL_FORMATTERS = {
 	enumText,
 	enumLabel,
 	yesNo,
-	isoDuration,
+	callDuration: isoDuration,
 	bookingWhen,
 }
 

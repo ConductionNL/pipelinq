@@ -35,6 +35,6 @@ describe('isoDuration', () => {
 	})
 
 	it('is in the registry a manifest column names', () => {
-		expect(CELL_FORMATTERS.isoDuration).toBe(isoDuration)
+		expect(CELL_FORMATTERS.callDuration).toBe(isoDuration)
 	})
 })

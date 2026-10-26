@@ -1979,7 +1979,7 @@
 							{
 								"key": "duration",
 								"label": "Duration",
-								"formatter": "isoDuration"
+								"formatter": "callDuration"
 							},
 							{
 								"key": "status",
