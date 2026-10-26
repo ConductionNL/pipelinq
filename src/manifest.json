@@ -4590,6 +4590,7 @@
 					{ "key": "priority", "label": "Priority", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "high": "error", "normal": "default", "low": "default" } } },
 					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "open": "primary", "in_progress": "warning", "completed": "success", "expired": "error" } } }
 				],
+				"footerNote": "A task that passes its deadline expires, and its handler and team lead are told.",
 				"filterMenu": true,
 				"sidebar": {
 					"enabled": true,
