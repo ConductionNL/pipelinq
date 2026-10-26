@@ -22,7 +22,7 @@
 			:description="
 				t(
 					'pipelinq',
-					'Who processes the money: the payment service providers used for in-store and online payments (Mollie, CCV, Adyen, Stripe). Credentials are stored encrypted. Distinct from POS tender types below, which are how a customer can pay at the till.',
+					'Who processes the money: the payment providers for payments in the shop and online. Keys are stored encrypted.',
 				)
 			">
 			<div v-if="loading" class="payment-settings__loading">

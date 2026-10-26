@@ -76,7 +76,7 @@ describe('the admin page', () => {
 			"t('pipelinq', 'xWiki integration')",
 			'<MessagingSettings',
 			'<DeliverabilitySettings',
-			'<CtiPage',
+			'<CtiSettings',
 			'<PortalSettings',
 			'<PaymentSettingsForm',
 			'<PosTenderTypeManager',

@@ -14,11 +14,11 @@
   -->
 <template>
 	<NcSettingsSection
-		:name="t('pipelinq', 'POS tender types')"
+		:name="t('pipelinq', 'Payment methods at the till')"
 		:description="
 			t(
 				'pipelinq',
-				'How a customer can pay at the till — cash, pin, voucher — and the GL account each one posts to. Distinct from the payment providers above, which process the money.',
+				'How a customer can pay at the till, and the ledger account each payment method posts to.',
 			)
 		">
 		<PosTenderTypeList />
