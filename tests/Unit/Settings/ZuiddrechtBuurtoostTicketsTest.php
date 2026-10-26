@@ -31,11 +31,12 @@ use PHPUnit\Framework\TestCase;
 class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 
 	/**
-	 * Three open tickets on the association's client, which shares dossiq's master entity.
+	 * Three tickets on the association's client, which shares dossiq's master entity: the collection permit in
+	 * progress with Fatma Yildiz, the two older ones resolved by Pieter and Fatma, as DqOrganisatie draws them.
 	 *
 	 * @return void
 	 */
-	public function testTheAssociationHasThreeOpenTickets(): void {
+	public function testTheAssociationHasItsThreeTickets(): void {
 		$set     = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
 		$objects = array_column($set['objects'], 'data', 'key');
 
@@ -47,8 +48,15 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 			expected: ['Aanvraag collectevergunning', 'Vraag over huur buurthuis', 'Melding verlichting Oosthavenweg'],
 			actual: array_values(array_column($tickets, 'title'))
 		);
-		$this->assertNotContains(needle: 'resolved', haystack: array_column($tickets, 'status'));
-	}//end testTheAssociationHasThreeOpenTickets()
+		$this->assertSame(
+			expected: [
+				['in_progress', '{{cast:fatmayildiz.uid}}', false],
+				['resolved', '{{cast:pieter.uid}}', true],
+				['resolved', '{{cast:fatmayildiz.uid}}', true],
+			],
+			actual: array_values(array_map(static fn (array $t): array => [$t['status'], $t['assignee'] ?? null, isset($t['resolvedAt'])], $tickets))
+		);
+	}//end testTheAssociationHasItsThreeTickets()
 
 	/**
 	 * DqOrganisatie and the ticket leaf draw the three tickets by their references; a declared reference is kept
@@ -80,7 +88,7 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 		$set    = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
 		$config = array_column($set['appConfig'], null, 'key');
 
-		$this->assertSame(expected: ['value' => '402', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter'] ?? [], ['value' => 1, 'type' => 1]));
+		$this->assertSame(expected: ['value' => '417', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter'] ?? [], ['value' => 1, 'type' => 1]));
 		$this->assertSame(expected: ['value' => '2026', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter_year'] ?? [], ['value' => 1, 'type' => 1]));
 	}//end testTheTicketCounterStartsAboveTheSetsReferences()
 }//end class
