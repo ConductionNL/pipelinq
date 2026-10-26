@@ -1269,6 +1269,51 @@
 			}
 		},
 		{
+			"key": "productcategorie-afval",
+			"register": "pipelinq",
+			"schema": "productCategory",
+			"data": {
+				"name": "Afval",
+				"order": 1
+			}
+		},
+		{
+			"key": "productcategorie-software",
+			"register": "pipelinq",
+			"schema": "productCategory",
+			"data": {
+				"name": "Software",
+				"order": 2
+			}
+		},
+		{
+			"key": "productcategorie-diensten",
+			"register": "pipelinq",
+			"schema": "productCategory",
+			"data": {
+				"name": "Diensten",
+				"order": 3
+			}
+		},
+		{
+			"key": "productcategorie-verhuur",
+			"register": "pipelinq",
+			"schema": "productCategory",
+			"data": {
+				"name": "Verhuur",
+				"order": 4
+			}
+		},
+		{
+			"key": "productcategorie-baliverkoop",
+			"register": "pipelinq",
+			"schema": "productCategory",
+			"data": {
+				"name": "Baliverkoop",
+				"order": 5
+			}
+		},
+		{
 			"key": "product-licentie",
 			"register": "pipelinq",
 			"schema": "product",
@@ -1276,7 +1321,13 @@
 				"name": "Licentie huurdersportaal",
 				"type": "product",
 				"status": "active",
-				"unitPrice": 72000
+				"unitPrice": 72000,
+				"barcode": "8710400123457",
+				"category": "{{object:productcategorie-software.id}}",
+				"unit": "Jaar",
+				"taxRate": 21,
+				"vatClass": "high",
+				"description": "Per jaar."
 			}
 		},
 		{
@@ -1300,7 +1351,12 @@
 				"name": "Implementatie, dagen",
 				"type": "service",
 				"status": "active",
-				"unitPrice": 1100
+				"unitPrice": 1100,
+				"category": "{{object:productcategorie-diensten.id}}",
+				"unit": "Dag",
+				"taxRate": 21,
+				"vatClass": "high",
+				"description": "Per dag."
 			}
 		},
 		{
@@ -1324,7 +1380,12 @@
 				"name": "Training voor medewerkers",
 				"type": "service",
 				"status": "active",
-				"unitPrice": 1400
+				"unitPrice": 1400,
+				"category": "{{object:productcategorie-diensten.id}}",
+				"unit": "Sessie",
+				"taxRate": 21,
+				"vatClass": "high",
+				"description": "Per sessie, maximaal 12 personen."
 			}
 		},
 		{
@@ -1367,6 +1428,152 @@
 				"taxRate": 9,
 				"unit": "Stuk",
 				"vatClass": "low"
+			}
+		},
+		{
+			"key": "product-afvalpas",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Afvalpas ondergrondse containers",
+				"type": "service",
+				"status": "active",
+				"sku": "AFV-PAS-001",
+				"barcode": "8710400334455",
+				"gtin": "8710400334455",
+				"unitPrice": 15,
+				"cost": 3.2,
+				"taxRate": 0,
+				"vatClass": "exempt",
+				"category": "{{object:productcategorie-afval.id}}",
+				"unit": "Stuk",
+				"unitOfMeasure": "Stuk",
+				"description": "Pas voor de ondergrondse containers. Tarieven uit de Legesverordening Zuiddrecht 2026, hoofdstuk 1.4. Over leges gaat geen btw.",
+				"priceTiers": [
+					{
+						"minQuantity": 1,
+						"unitPrice": 15,
+						"label": "Standaard"
+					},
+					{
+						"minQuantity": 50,
+						"unitPrice": 12.5,
+						"label": "Woningcorporaties"
+					},
+					{
+						"minQuantity": 250,
+						"unitPrice": 10,
+						"label": "Grote bestelling"
+					}
+				],
+				"variants": [
+					{
+						"sku": "AFV-PAS-001-R",
+						"name": "Bewonerspas",
+						"attributes": {
+							"voor": "Huishouden",
+							"containers": "grijze en blauwe containers"
+						},
+						"unitPrice": 15,
+						"barcode": "8710400334462",
+						"status": "active"
+					},
+					{
+						"sku": "AFV-PAS-001-B",
+						"name": "Bedrijfspas",
+						"attributes": {
+							"voor": "Bedrijf",
+							"containers": "alle containers, per jaar"
+						},
+						"unitPrice": 48,
+						"barcode": "8710400334479",
+						"status": "active"
+					},
+					{
+						"sku": "AFV-PAS-001-T",
+						"name": "Tijdelijke pas",
+						"attributes": {
+							"voor": "Bezoeker",
+							"geldig": "14 dagen"
+						},
+						"unitPrice": 7.5,
+						"status": "inactive"
+					}
+				],
+				"manufacturer": "Kaartdrukkerij Nederland BV",
+				"weight": 0.005,
+				"dimensions": {
+					"length": 85.6,
+					"width": 54,
+					"height": 0.8
+				},
+				"stockTracked": true
+			}
+		},
+		{
+			"key": "product-evenementenpakket",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Evenementenpakket, straatfeest",
+				"type": "product",
+				"status": "active",
+				"barcode": "8710400567891",
+				"unitPrice": 245,
+				"taxRate": 21,
+				"vatClass": "high",
+				"category": "{{object:productcategorie-verhuur.id}}",
+				"unit": "Pakket",
+				"description": "Hekken, borden en afvalbakken voor een straatfeest."
+			}
+		},
+		{
+			"key": "product-pasfoto",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Pasfoto",
+				"type": "product",
+				"status": "active",
+				"barcode": "8710400998812",
+				"unitPrice": 12.5,
+				"taxRate": 21,
+				"vatClass": "high",
+				"category": "{{object:productcategorie-baliverkoop.id}}",
+				"unit": "Stuk",
+				"description": "Verkocht aan de balie."
+			}
+		},
+		{
+			"key": "product-club-app",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Club-app, basis",
+				"type": "product",
+				"status": "inactive",
+				"unitPrice": 79,
+				"taxRate": 21,
+				"vatClass": "high",
+				"category": "{{object:productcategorie-software.id}}",
+				"unit": "Maand",
+				"description": "Per maand. Nog in concept."
+			}
+		},
+		{
+			"key": "product-archief-scannen",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Archief scannen, per doos",
+				"type": "service",
+				"status": "inactive",
+				"unitPrice": 38,
+				"taxRate": 21,
+				"vatClass": "high",
+				"category": "{{object:productcategorie-diensten.id}}",
+				"unit": "Doos",
+				"description": "Uitgefaseerd per 1 september."
 			}
 		},
 		{
