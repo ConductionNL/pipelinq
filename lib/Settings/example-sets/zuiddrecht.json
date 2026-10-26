@@ -897,6 +897,22 @@
 			}
 		},
 		{
+			"key": "client-henkvisser",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "{{cast:henkvisser.displayName}}",
+				"type": "person",
+				"contactsUid": "{{cast:henkvisser.contactsUid}}",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "post",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Schrijft liever een brief."
+			}
+		},
+		{
 			"key": "lead-energie-ledenportaal",
 			"register": "pipelinq",
 			"schema": "lead",
@@ -2723,6 +2739,65 @@
 				"duration": "PT6M",
 				"parentTicket": "{{object:ticket-sanne-straatfeest.id}}",
 				"category": "vergunningen"
+			}
+		},
+		{
+			"key": "ticket-buurtoost-subsidiedocumenten",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Subsidie voor een straatfeest: welke documenten?",
+				"reference": "PQ-2026-0414",
+				"description": "Buurtvereniging Oost wil subsidie aanvragen voor een straatfeest en vraagt welke documenten bij de aanvraag horen.",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "{{cast:buurtoost.contactsUid}}",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"status": "new",
+				"priority": "normal",
+				"channel": "email",
+				"category": "subsidie",
+				"occurredAt": "{{datetime:-1 15:40}}",
+				"slaDeadline": "{{datetime:2 17:00}}"
+			}
+		},
+		{
+			"key": "interaction-buurtoost-subsidiedocumenten",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "E-mail over de subsidiedocumenten",
+				"reference": "PQ-2026-0410",
+				"description": "E-mail van de buurtvereniging over de documenten voor de subsidieaanvraag, doorgezet naar het verzoek.",
+				"direction": "inbound",
+				"channel": "email",
+				"outcome": "transferred",
+				"status": "closed",
+				"client": "{{object:client-buurtoost.id}}",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"occurredAt": "{{datetime:-5 09:30}}",
+				"parentTicket": "{{object:ticket-buurtoost-subsidiedocumenten.id}}",
+				"category": "subsidie"
+			}
+		},
+		{
+			"key": "interaction-henkvisser-boom-beukenlaan",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Brief over de boom aan de Beukenlaan",
+				"reference": "PQ-2026-0411",
+				"description": "Brief van de heer Visser over de boom aan de Beukenlaan, gescand, 2 pagina's. Doorgezet naar het verzoek.",
+				"direction": "inbound",
+				"channel": "brief",
+				"outcome": "transferred",
+				"status": "closed",
+				"client": "{{object:client-henkvisser.id}}",
+				"assignee": "{{cast:lotte.uid}}",
+				"occurredAt": "{{datetime:-5 11:15}}",
+				"category": "openbare ruimte"
 			}
 		},
 		{
