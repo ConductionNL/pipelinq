@@ -273,7 +273,12 @@
 								},
 								{
 									"label": "1 article, the content of the page",
-									"url": "/index.php/apps/pipelinq/articles"
+									"url": "/index.php/apps/pipelinq/articles",
+									"visibleIf": {
+										"object.articleBody": {
+											"truthy": true
+										}
+									}
 								},
 								{
 									"label": "Leads",

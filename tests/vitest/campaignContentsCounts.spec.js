@@ -25,6 +25,11 @@ describe('the campaign contents card', () => {
 		}
 	})
 
+	it('shows the article line only while the campaign has page content', () => {
+		const article = widget.content.items.find((item) => item.label === '1 article, the content of the page')
+		expect(article.visibleIf).toEqual({ 'object.articleBody': { truthy: true } })
+	})
+
 	it('reads as the board in Dutch', () => {
 		expect(nl.translations['{count} newsletters'].replace('{count}', 2)).toBe('2 nieuwsbrieven')
 		expect(nl.translations['1 article, the content of the page']).toBe('1 artikel, de inhoud van de pagina')

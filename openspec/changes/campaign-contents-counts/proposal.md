@@ -12,4 +12,5 @@ berichten", "1 artikel, de inhoud van de pagina", "208 leads". The live card lis
 
 The card is a `menu` widget. Newsletters, social posts and leads are counted per campaign: `countFrom` uses the
 filter `campaignId: @objectId`, and `countLabel` names the count in the line. This needs nextcloud-vue with
-menu-item-count-labels. The page's own article stays one line.
+menu-item-count-labels. The page's own article is one line, shown only while the campaign has page content (`visibleIf` on
+`object.articleBody`).
