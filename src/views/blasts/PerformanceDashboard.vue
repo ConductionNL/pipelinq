@@ -19,11 +19,36 @@
 -->
 <template>
 	<div class="performance-dashboard">
+		<NcButton
+			class="performance-dashboard__back"
+			variant="tertiary"
+			:to="{ name: 'Blasts' }">
+			<template #icon>
+				<ArrowLeft :size="18" />
+			</template>
+			{{ t('pipelinq', 'Back to blasts') }}
+		</NcButton>
 		<header class="performance-dashboard__header">
-			<NcButton variant="tertiary" :to="{ name: 'Blasts' }">
-				{{ t('pipelinq', 'Back to blasts') }}
+			<div>
+				<h2>{{ t('pipelinq', 'Blast performance') }}</h2>
+				<p class="performance-dashboard__subtitle">
+					{{
+						t('pipelinq', '{shown} of {total} newsletters · opened and clicked from our own measurements · newest first', {
+							shown: overviewRows.length,
+							total: blasts.length,
+						})
+					}}
+				</p>
+			</div>
+<div class="cn-header-actions">
+			<NcButton variant="secondary" :disabled="overviewRows.length === 0" @click="downloadOverview">
+				<template #icon>
+					<Download :size="18" />
+				</template>
+				{{ t('pipelinq', 'Download') }}
 			</NcButton>
-			<h2>{{ t('pipelinq', 'Blast performance') }}</h2>
+			<CnBuildiqEditButton />
+			</div>
 		</header>
 
 		<CnTabs
@@ -72,13 +97,10 @@
 								<td class="performance-dashboard__num">
 									{{ row.sent }}
 								</td>
-								<td class="performance-dashboard__num">
-									{{ row.delivered }}
-								</td>
-								<td class="performance-dashboard__num">
+								<td class="performance-dashboard__num performance-dashboard__strong">
 									{{ formatPercent(row.openRate) }}
 								</td>
-								<td class="performance-dashboard__num">
+								<td class="performance-dashboard__num performance-dashboard__strong">
 									{{ formatPercent(row.clickRate) }}
 								</td>
 								<td class="performance-dashboard__num">
@@ -347,10 +369,12 @@
 </template>
 
 <script>
-import { CnStatusBadge, CnTab, CnTabs } from '@conduction/nextcloud-vue'
+import { CnBuildiqEditButton, CnStatusBadge, CnTab, CnTabs } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
+import Download from 'vue-material-design-icons/Download.vue'
 import { trafficOutcome } from '../../services/campaignTraffic.js'
 
 const OVERVIEW_LIMIT = 50
@@ -363,6 +387,9 @@ const P_VALUE_ALPHA = 0.05
 export default {
 	name: 'PerformanceDashboard',
 	components: {
+		CnBuildiqEditButton,
+		ArrowLeft,
+		Download,
 		NcButton,
 		NcLoadingIcon,
 		CnStatusBadge,
@@ -421,7 +448,7 @@ export default {
 			return [
 				{ id: 'overview', label: this.t('pipelinq', 'Overview') },
 				{ id: 'ab', label: this.t('pipelinq', 'A/B testing') },
-				{ id: 'attribution', label: this.t('pipelinq', 'Attribution') },
+				{ id: 'attribution', label: this.t('pipelinq', 'Attribution to deals') },
 			]
 		},
 
@@ -437,7 +464,6 @@ export default {
 				{ key: 'segmentName', label: this.t('pipelinq', 'Segment') },
 				{ key: 'status', label: this.t('pipelinq', 'Status') },
 				{ key: 'sent', label: this.t('pipelinq', 'Sent') },
-				{ key: 'delivered', label: this.t('pipelinq', 'Delivered') },
 				{ key: 'openRate', label: this.t('pipelinq', 'Open rate') },
 				{ key: 'clickRate', label: this.t('pipelinq', 'Click rate') },
 				{ key: 'unsubscribed', label: this.t('pipelinq', 'Unsubscribed') },
@@ -547,6 +573,26 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Save the overview as a CSV file, the columns as the table shows them.
+		 *
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-overview-metrics-table
+		 */
+		downloadOverview() {
+			const keys = ['name', 'segmentName', 'status', 'sent', 'openRate', 'clickRate', 'unsubscribed']
+			const cell = (value) => {
+				const text = value === null || value === undefined ? '' : String(value)
+				return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+			}
+			const lines = [keys.join(';'), ...this.sortedOverviewRows.map((row) => keys.map((key) => cell(row[key])).join(';'))]
+			const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+			const link = document.createElement('a')
+			link.href = URL.createObjectURL(blob)
+			link.download = 'blast-performance.csv'
+			link.click()
+			URL.revokeObjectURL(link.href)
+		},
+
 		/**
 		 * Load blasts, segments (for name lookup) and per-blast attribution
 		 * summaries in parallel. Each block degrades independently —
@@ -1070,12 +1116,16 @@ export default {
 </script>
 
 <style scoped>
+.cn-header-actions {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
 .performance-dashboard {
 	box-sizing: border-box;
 	width: 100%;
-	max-width: 1240px;
-	margin: 0 auto;
-	padding: 24px 20px;
+	padding: 24px 28px;
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
@@ -1088,7 +1138,18 @@ export default {
 }
 
 .performance-dashboard__header h2 {
+	margin: 0 0 6px;
+	font-size: 28px;
+}
+
+.performance-dashboard__subtitle {
 	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.performance-dashboard__back {
+	align-self: flex-start;
+	margin-inline-start: -12px;
 }
 
 .performance-dashboard :deep(.performance-dashboard__body) {
@@ -1119,6 +1180,14 @@ export default {
 .performance-dashboard__table {
 	width: 100%;
 	border-collapse: collapse;
+	table-layout: auto;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+}
+
+.performance-dashboard__strong {
+	font-weight: 600;
 }
 
 .performance-dashboard__table th,

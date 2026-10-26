@@ -40,6 +40,7 @@ import BellRing from 'vue-material-design-icons/BellRing.vue'
 import BellRingOutline from 'vue-material-design-icons/BellRingOutline.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import BriefcaseOutline from 'vue-material-design-icons/BriefcaseOutline.vue'
 import BullhornOutline from 'vue-material-design-icons/BullhornOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CalendarBlankOutline from 'vue-material-design-icons/CalendarBlankOutline.vue'
@@ -136,11 +137,13 @@ import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutli
 import Package from 'vue-material-design-icons/Package.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
+import Pause from 'vue-material-design-icons/Pause.vue'
 import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
+import Play from 'vue-material-design-icons/Play.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
 import Receipt from 'vue-material-design-icons/Receipt.vue'
@@ -208,6 +211,7 @@ export default {
 	BellRingOutline,
 	BookOpenPageVariant,
 	BookOpenVariantOutline,
+	BriefcaseOutline,
 	BullhornOutline,
 	Calendar,
 	CalendarBlankOutline,
@@ -306,11 +310,13 @@ export default {
 	TruckOutline,
 	PackageVariant,
 	PackageVariantClosed,
+	Pause,
 	PencilOutline,
 	Phone,
 	PhoneMessage,
 	PhoneOutline,
 	Pipe,
+	Play,
 	Plus,
 	PowerPlugOutline,
 	Receipt,

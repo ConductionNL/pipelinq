@@ -51,6 +51,7 @@ use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
+use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
 use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
@@ -70,6 +71,7 @@ use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
+use OCA\Pipelinq\Listener\TicketReferenceCreatingListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
@@ -222,6 +224,11 @@ class Application extends App implements IBootstrap {
 			event: ObjectCreatingEvent::class,
 			listener: LeadStageCreatingListener::class
 		);
+		// Every new request and complaint gets its reference number ("PQ-2026-0402").
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: TicketReferenceCreatingListener::class
+		);
 		// A lead a form created gets its contact and client before it is stored
 		// and its submit touchpoint once it is (decision 179: the submit creates
 		// the lead itself, so nothing relays it afterwards).
@@ -261,6 +268,20 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
 			listener: DealUpdatedListener::class
+		);
+		// A changed resource or service expires the cached availability it
+		// made wrong, for every writer (appointment-booking, REQ-APT-015).
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectDeletedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
 		);
 		// Burgerportaal / MijnOverheid Berichtenbox bridge:
 		// listen for zaak status transitions and queue an outbound

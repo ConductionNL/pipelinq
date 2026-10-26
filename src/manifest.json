@@ -2652,7 +2652,7 @@
 			"id": "Tickets",
 			"route": "/tickets",
 			"type": "index",
-			"title": "All tickets",
+			"title": "Questions and reports",
 			"_note": "Unified ticket workspace (unify-ticket-supertype). One index over the ticket schema replacing the former Requests/Complaints/Contactmomenten pages; a ticketType quickFilter tab strip narrows to each subtype. Type-specific columns (complaintCategory, outcome) are omitted from the shared table — they surface on the detail page.",
 			"config": {
 				"register": "pipelinq",
@@ -2662,8 +2662,32 @@
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"showViewAction": false,
+				"viewModes": ["table", "cards", "board"],
+				"_boardNote": "tickets-board-view (LijstBord). The board's columns are the ticket status; the switch also offers type, channel and handler. A drop runs moveTicketStatus, which checks the move against the ticket lifecycle (requestStatus.js) and writes the status, and ticketStatusTargets fades the columns the lifecycle does not allow. Type and channel are read-only: a drag does not change what a ticket is or how it came in. The enum's legacy and closing statuses show as columns until nextcloud-vue board.states (board-declared-states) is released.",
+				"board": {
+					"statusField": "status",
+					"wrap": true,
+					"columnLimit": 3,
+					"columnSwitchLabel": "Columns",
+					"hint": "One column per value of the property. Drag a card to change its status.",
+					"moveHandler": "moveTicketStatus",
+					"moveTargetsHandler": "ticketStatusTargets",
+					"card": { "title": "title", "sub": ["channel"], "pill": "ticketType", "due": "slaDeadline", "owner": "assignee" },
+					"columnFields": [
+						{ "field": "status", "label": "status" },
+						{ "field": "ticketType", "label": "type", "readOnly": true },
+						{ "field": "channel", "label": "channel", "kind": "values", "emptyLabel": "No channel", "readOnly": true },
+						{ "field": "assignee", "label": "handler", "kind": "values", "emptyLabel": "Nobody" }
+					]
+				},
+				"_quickFiltersNote": "The work lenses the LijstBord board draws come first; All and the ticket type lenses stay after them, so nobody loses a filter.",
 				"quickFilters": [
-					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "All open", "filter": { "status": ["new", "in_progress", "awaiting_customer"] }, "default": true },
+					{ "label": "Mine", "filter": { "assignee": "@me", "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "Unassigned", "filter": { "assignee": "IS NULL", "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "Waiting for customer", "filter": { "status": "awaiting_customer" } },
+					{ "label": "Past the deadline", "filter": { "slaDeadline": { "lt": "@now" }, "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "All", "filter": {} },
 					{ "label": "Requests", "filter": { "ticketType": "request" } },
 					{
 						"label": "Complaints",
@@ -5045,18 +5069,6 @@
 			}
 		},
 		{
-			"id": "PosRefundEdit",
-			"_note": "Reuses PosRefundForm.vue (bespoke refund editor with per-line refund selection and tender NcSelect) in edit mode; the interactive line-selection logic has no standard form page-type equivalent.",
-			"route": "/pos/refunds/:id/edit",
-			"type": "custom",
-			"title": "Retour bewerken",
-			"component": "PosRefundFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "posRefund"
-			}
-		},
-		{
 			"id": "PosRefundDetail",
 			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields auto-render via CnObjectDataWidget. The manager-gated Confirm / Reject actions are the header's actionsComponent (PosRefundHeaderActions). The refund totals (PosRefundTotalsWidget) and the 'Returned items' table (PosRefundItemsWidget) are grid widgets. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) 'Returned items' is a custom widget because it is a CROSS-SCHEMA JOIN: each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer), and an object-list renders ONE schema and cannot resolve a column off a second schema. Missing primitive: an object-list column resolved off a SECOND schema (cross-schema join lookup).",
 			"route": "/pos/refunds/:id",
@@ -5603,14 +5615,6 @@
 			"type": "custom",
 			"title": "POS customer lookup",
 			"component": "PosCustomerSettingsView"
-		},
-		{
-			"id": "BrpMonitor",
-			"_note": "BrpMonitor.vue is a bespoke operational monitor for BRP (Dutch persons-registry) connection health and recent lookups, with its own status/refresh layout; it is a live diagnostics panel, not a list or detail of register objects, so no standard page type fits.",
-			"route": "/admin/brp-monitor",
-			"type": "custom",
-			"title": "BRP Monitor",
-			"component": "BrpMonitorView"
 		},
 		{
 			"id": "KassakoppelingAuditList",
@@ -6938,24 +6942,6 @@
 						"sizeToContent": true
 					}
 				]
-			}
-		},
-		{
-			"id": "SyncSettings",
-			"route": "/sync-settings",
-			"type": "settings",
-			"title": "Sync settings",
-			"config": {
-				"sections": [
-					{
-						"id": "sync",
-						"title": "Integrations",
-						"component": "SyncSettingsView"
-					}
-				]
-			},
-			"slots": {
-				"section-sync": "SyncSettingsView"
 			}
 		},
 		{

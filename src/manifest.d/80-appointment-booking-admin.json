@@ -33,7 +33,7 @@
 			"_note": "Service catalogue as a declarative type:index page (pipelinq-views-to-declarative-r2). price→the service's own currency (reporting currency when unset; objectCurrency formatter), durationMinutes→duration format, status→badge with its x-enum-labels label (enumLabel formatter), bookableOnline→Yes/No (yesNo formatter; the library's check mark was too pale to see). 'New service' navigates to the bespoke ServiceDetail create form (id:'new'); row open navigates to ServiceDetail. ServiceDetail stays custom (multiStep sub-table editor + policy cards + cache-invalidation hook).",
 			"route": "/services",
 			"type": "index",
-			"title": "Services",
+			"title": "Services and resources",
 			"config": {
 				"register": "pipelinq",
 				"schema": "appointmentService",
@@ -48,21 +48,142 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"selectable": false,
+				"selectable": true,
 				"rowRoute": "ServiceDetail",
 				"columns": [
-					"name",
-					{ "key": "durationMinutes", "label": "Duration", "format": { "style": "duration", "unit": "minutes" } },
-					{ "key": "price", "label": "Price", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } },
-					{ "key": "bookableOnline", "label": "Online", "type": "boolean", "formatter": "yesNo" },
-					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "active": "success", "draft": "default", "archived": "default" } } }
+					{
+						"key": "name",
+						"label": "Service",
+						"secondary": "{description}"
+					},
+					{
+						"key": "durationMinutes",
+						"label": "Duration",
+						"format": {
+							"style": "number",
+							"suffix": " min"
+						}
+					},
+					{
+						"key": "bufferBeforeMinutes",
+						"label": "Buffer before / after",
+						"format": {
+							"style": "number",
+							"suffix": " min"
+						}
+					},
+					{
+						"key": "price",
+						"label": "Price",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 2
+						}
+					},
+					{
+						"key": "bookableOnline",
+						"label": "Online",
+						"type": "boolean",
+						"formatter": "yesNo"
+					},
+					{
+						"key": "requiredResourceTypes",
+						"label": "Booked on",
+						"sortable": false,
+						"widget": "badge",
+						"formatter": "enumLabel"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumLabel",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"active": "success",
+								"draft": "default",
+								"archived": "default"
+							}
+						}
+					}
 				],
 				"headerActions": [
-					{ "id": "create", "label": "New service", "icon": "Plus", "handler": "navigate", "route": "ServiceDetail", "params": { "id": "new" } }
+					{
+						"id": "create",
+						"label": "New service",
+						"icon": "Plus",
+						"handler": "navigate",
+						"route": "ServiceDetail",
+						"params": {
+							"id": "new"
+						}
+					}
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "ServiceDetail" }
-				]
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "EyeOutline",
+						"handler": "navigate",
+						"route": "ServiceDetail"
+					}
+				],
+				"showTitle": true,
+				"showTitleIcon": false,
+				"rowTitle": "plain",
+				"countText": "{shown} of {total} services · what residents can book, and on whom or what it is booked",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "create",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New service"
+					}
+				],
+				"searchPlaceholder": "Filter by service name",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Online to book",
+						"filter": {
+							"bookableOnline": true
+						},
+						"showCount": true
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Archived",
+						"filter": {
+							"status": "archived"
+						},
+						"showCount": true
+					}
+				],
+				"viewSwitch": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"footerNote": "A service is booked on the resources with the requested kind and skills. A changed duration clears the saved free times.",
+				"_boardNote": "Board look (PqServices, round 12): count line, quick filters with counts, the name with its description under it, the buffer and what a service is booked on.",
+				"filterMenu": true
 			}
 		},
 		{
@@ -71,7 +192,7 @@
 			"type": "custom",
 			"title": "Service",
 			"component": "ServiceDetailView",
-			"_note": "Uses CnDetailPage/CnDetailCard, but a type:detail page cannot carry the SIDE EFFECT this one owes: every save calls invalidateAvailability, because changing a service's duration or required skills invalidates the cached booking-availability windows computed from it. Stale windows would offer slots that can no longer be honoured. It also derives display-only labels (formatDuration, formatCurrency, requiredSkillsLabel) that are not schema properties.",
+			"_note": "Uses CnDetailPage/CnDetailCard. The cached availability is expired on the server (AvailabilityCacheInvalidationListener). It derives display-only labels (formatDuration, formatCurrency, requiredSkillsLabel) that are not schema properties.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "appointmentService"
@@ -119,7 +240,7 @@
 			"type": "custom",
 			"title": "Resource",
 			"component": "ResourceDetailView",
-			"_note": "Same reason as ServiceDetail: a type:detail page cannot own the post-save invalidateAvailability side effect, and a resource's skills or working hours changing must expire the cached availability windows or the booking flow will offer slots this resource can no longer serve. It additionally holds a live useObjectSubscription so a concurrently edited resource updates in place, which declarative detail pages do not do.",
+			"_note": "The cached availability is expired on the server (AvailabilityCacheInvalidationListener). It holds a live useObjectSubscription so a concurrently edited resource updates in place.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "appointmentResource"
