@@ -8244,7 +8244,22 @@ OC.L10N.register(
         "No suggestions this week.": "No suggestions this week.",
         "No topic ideas this week.": "No topic ideas this week.",
         "Export the report": "Export the report",
-        "View all clients": "View all clients"
+        "View all clients": "View all clients",
+        "Email and calendar": "Email and calendar",
+        "Mail and appointments linked to your customers. The mail itself stays in Nextcloud Mail.": "Mail and appointments linked to your customers. The mail itself stays in Nextcloud Mail.",
+        "Turn on email sync": "Turn on email sync",
+        "Mail from the chosen account goes to the contact with the same email address.": "Mail from the chosen account goes to the contact with the same email address.",
+        "You have no Nextcloud Mail account yet.": "You have no Nextcloud Mail account yet.",
+        "Skip, comma separated": "Skip, comma separated",
+        "Mail from or to these addresses is not linked.": "Mail from or to these addresses is not linked.",
+        "Last time": "Last time",
+        "{linked} of {scanned} mails in the last run": "{linked} of {scanned} mails in the last run",
+        "Pipelinq keeps the subject, sender and date. You read the content in Nextcloud Mail.": "Pipelinq keeps the subject, sender and date. You read the content in Nextcloud Mail.",
+        "Could not load the email settings.": "Could not load the email settings.",
+        "Could not save the email settings.": "Could not save the email settings.",
+        "{linked} of {scanned} mails linked.": "{linked} of {scanned} mails linked.",
+        "Could not sync your email.": "Could not sync your email.",
+        "Invalid account": "Invalid account"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -55,6 +55,7 @@ return [
         ['name' => 'emailSync#saveSettings', 'url' => '/api/sync/email/settings', 'verb' => 'POST'],
         ['name' => 'emailSync#trigger', 'url' => '/api/sync/email/trigger', 'verb' => 'POST'],
         ['name' => 'emailSync#getStatus', 'url' => '/api/sync/email/status', 'verb' => 'GET'],
+        ['name' => 'emailSync#getAccounts', 'url' => '/api/sync/email/accounts', 'verb' => 'GET'],
 
         // Entity notes
         ['name' => 'notes#list', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'GET'],
