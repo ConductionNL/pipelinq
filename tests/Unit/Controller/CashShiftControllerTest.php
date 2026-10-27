@@ -138,7 +138,7 @@ class CashShiftControllerTest extends TestCase {
 	public function testCountDelegates(): void {
 		$this->loginAs('clerk');
 		$this->request->method('getParam')->willReturnMap([
-			['amount', 0, '625.50'],
+			['amount', null, '625.50'],
 			['notes', '', 'blind'],
 		]);
 
@@ -151,6 +151,28 @@ class CashShiftControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 	}//end testCountDelegates()
+
+	/**
+	 * A count without a number is refused and never reaches the service.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pl2-pos-header-actions/specs/pos-cash-management/spec.md#requirement-a-shift-is-counted-only-with-an-amount
+	 */
+	public function testCountWithoutAnAmountIsRefused(): void {
+		$this->loginAs(uid: 'clerk');
+		$this->request->method('getParam')->willReturnMap([
+			['amount', null, null],
+			['notes', '', ''],
+		]);
+
+		$this->service->expects($this->never())->method('recordCount');
+
+		$response = $this->controller->count(id: 'shift-1');
+
+		$this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
+		$this->assertSame(expected: 'Enter the counted amount.', actual: $response->getData()['error']);
+	}//end testCountWithoutAnAmountIsRefused()
 
 	/**
 	 * A service OCSForbiddenException maps to HTTP 403.

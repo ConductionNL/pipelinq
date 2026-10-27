@@ -2,28 +2,28 @@
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
-  - Kassakoppeling Audit List — append-only register of every POS-register
+  - Cash register audit log: an append-only register of every POS-register
   - action (sale / void / refund / no-sale) signed with HMAC-SHA256 and linked
   - into a per-register hash chain. The list streams from the bespoke
   - /api/kassakoppeling/audit endpoint (NOT the OR object store) because the
   - controller is the single authority for write / verify / export. The export
-  - button opens BelastingdienstExportDialog (admin-only).
+  - button opens TaxAuthorityExportDialog (admin-only).
   -
   - @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
   -->
 <template>
-	<div class="kassakoppeling-audit-list">
-		<div class="kassakoppeling-audit-list__header">
+	<div class="cash-register-audit-list">
+		<div class="cash-register-audit-list__header">
 			<CnPageHeader
 				:title="t('pipelinq', 'Cash register audit log')"
 				:description="
 					t(
 						'pipelinq',
-						'Immutable, cryptographically signed record of every register action for Belastingdienst audits.',
+						'Immutable, cryptographically signed record of every register action for tax authority audits.',
 					)
 				"
 				icon="ShieldCheckOutline" />
-			<div class="kassakoppeling-audit-list__actions">
+			<div class="cash-register-audit-list__actions">
 				<NcButton :disabled="loading" @click="refresh">
 					<template #icon>
 						<NcLoadingIcon v-if="loading" :size="20" />
@@ -34,23 +34,23 @@
 				<NcButton
 					v-if="isAdmin"
 					variant="primary"
-					data-testid="kassakoppeling-audit-export"
+					data-testid="cash-register-audit-export"
 					@click="showExport = true">
 					<template #icon>
 						<Download :size="20" />
 					</template>
-					{{ t('pipelinq', 'Export to Belastingdienst') }}
+					{{ t('pipelinq', 'Export for the tax authority') }}
 				</NcButton>
 			</div>
 		</div>
 
 		<form
-			class="kassakoppeling-audit-list__filters"
-			data-testid="kassakoppeling-audit-filters"
+			class="cash-register-audit-list__filters"
+			data-testid="cash-register-audit-filters"
 			@submit.prevent="applyFilters">
 			<NcDateTimePickerNative
 				id="kk-filter-from"
-				class="kassakoppeling-audit-list__filter"
+				class="cash-register-audit-list__filter"
 				type="date"
 				:label="t('pipelinq', 'From')"
 				:modelValue="fromDate"
@@ -58,7 +58,7 @@
 				@update:modelValue="fromDate = $event" />
 			<NcDateTimePickerNative
 				id="kk-filter-to"
-				class="kassakoppeling-audit-list__filter"
+				class="cash-register-audit-list__filter"
 				type="date"
 				:label="t('pipelinq', 'Up to and including')"
 				:modelValue="toDate"
@@ -67,26 +67,26 @@
 			<NcTextField
 				id="kk-filter-register"
 				v-model="filters.registerNumber"
-				class="kassakoppeling-audit-list__filter"
+				class="cash-register-audit-list__filter"
 				:label="t('pipelinq', 'Register')"
 				:placeholder="t('pipelinq', 'e.g. REG-001')"
 				:aria-label="t('pipelinq', 'Filter by register number')" />
 			<NcTextField
 				id="kk-filter-operator"
 				v-model="filters.operatorId"
-				class="kassakoppeling-audit-list__filter"
+				class="cash-register-audit-list__filter"
 				:label="t('pipelinq', 'Operator')"
 				:placeholder="t('pipelinq', 'e.g. user_john')"
 				:aria-label="t('pipelinq', 'Filter by operator')" />
 			<NcSelect
 				v-model="actionOption"
 				inputId="kk-filter-action"
-				class="kassakoppeling-audit-list__filter"
+				class="cash-register-audit-list__filter"
 				:inputLabel="t('pipelinq', 'Action')"
 				:options="actionOptions"
 				:clearable="false"
 				:aria-label-combobox="t('pipelinq', 'Filter by action')" />
-			<div class="kassakoppeling-audit-list__filter-buttons">
+			<div class="cash-register-audit-list__filter-buttons">
 				<NcButton type="submit" variant="secondary">
 					<template #icon>
 						<FilterOutline :size="20" />
@@ -103,8 +103,8 @@
 		</form>
 
 		<CnDataTable
-			class="kassakoppeling-audit-list__table"
-			data-testid="kassakoppeling-audit-table"
+			class="cash-register-audit-list__table"
+			data-testid="cash-register-audit-table"
 			:columns="columns"
 			:rows="pageEntries"
 			:loading="loading"
@@ -138,7 +138,7 @@
 			<template #column-chevron>
 				<ChevronRight
 					:size="20"
-					class="kassakoppeling-audit-list__chevron" />
+					class="cash-register-audit-list__chevron" />
 			</template>
 		</CnDataTable>
 
@@ -150,7 +150,7 @@
 			@pageChanged="page = $event"
 			@pageSizeChanged="onPageSizeChange" />
 
-		<BelastingdienstExportDialog
+		<TaxAuthorityExportDialog
 			v-if="showExport"
 			:submitting="exporting"
 			@close="showExport = false"
@@ -179,7 +179,7 @@ import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
-import BelastingdienstExportDialog from '../../dialogs/BelastingdienstExportDialog.vue'
+import TaxAuthorityExportDialog from '../../dialogs/TaxAuthorityExportDialog.vue'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 
 const PAGE_SIZE = 25
@@ -220,9 +220,9 @@ const ACTION_VARIANTS = {
 }
 
 export default {
-	name: 'KassakoppelingAuditList',
+	name: 'CashRegisterAuditList',
 	components: {
-		BelastingdienstExportDialog,
+		TaxAuthorityExportDialog,
 		ChevronRight,
 		CnDataTable,
 		CnPageHeader,
@@ -662,7 +662,7 @@ export default {
 		},
 
 		/**
-		 * Download the Belastingdienst export pack and stream it to disk.
+		 * Download the tax authority export pack and stream it to disk.
 		 *
 		 * @param {object} payload The selected from / to / format.
 		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
@@ -687,11 +687,11 @@ export default {
 						showError(
 							t(
 								'pipelinq',
-								'Only administrators may export to the Belastingdienst.',
+								'Only administrators may export for the tax authority.',
 							),
 						)
 					} else {
-						showError(t('pipelinq', 'Belastingdienst export failed.'))
+						showError(t('pipelinq', 'Tax authority export failed.'))
 					}
 					return
 				}
@@ -700,7 +700,7 @@ export default {
 				const matched = disposition.match(/filename="?([^";]+)"?/)
 				const filename = matched
 					? matched[1]
-					: `kassakoppeling-export-${payload.from}-to-${payload.to}.${payload.format}`
+					: `cash-register-audit-export-${payload.from}-to-${payload.to}.${payload.format}`
 				const objectUrl = window.URL.createObjectURL(blob)
 				const link = document.createElement('a')
 				link.href = objectUrl
@@ -709,11 +709,11 @@ export default {
 				link.click()
 				link.remove()
 				window.URL.revokeObjectURL(objectUrl)
-				showSuccess(t('pipelinq', 'Belastingdienst export downloaded.'))
+				showSuccess(t('pipelinq', 'Tax authority export downloaded.'))
 				this.showExport = false
 				await this.refresh()
 			} catch {
-				showError(t('pipelinq', 'Belastingdienst export failed.'))
+				showError(t('pipelinq', 'Tax authority export failed.'))
 			} finally {
 				this.exporting = false
 			}
@@ -723,14 +723,14 @@ export default {
 </script>
 
 <style scoped>
-.kassakoppeling-audit-list {
+.cash-register-audit-list {
 	padding: 16px;
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
 }
 
-.kassakoppeling-audit-list__header {
+.cash-register-audit-list__header {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: space-between;
@@ -738,13 +738,13 @@ export default {
 	gap: 16px;
 }
 
-.kassakoppeling-audit-list__actions {
+.cash-register-audit-list__actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
 }
 
-.kassakoppeling-audit-list__filters {
+.cash-register-audit-list__filters {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -754,28 +754,28 @@ export default {
 	border-radius: var(--border-radius-large);
 }
 
-.kassakoppeling-audit-list__filter {
+.cash-register-audit-list__filter {
 	flex: 1 1 160px;
 	min-width: 160px;
 	margin: 0;
 }
 
-.kassakoppeling-audit-list__filter-buttons {
+.cash-register-audit-list__filter-buttons {
 	display: flex;
 	gap: 8px;
 	margin-inline-start: auto;
 }
 
-.kassakoppeling-audit-list__table :deep(.num) {
+.cash-register-audit-list__table :deep(.num) {
 	text-align: end;
 }
 
-.kassakoppeling-audit-list__table :deep(.chevron-col) {
+.cash-register-audit-list__table :deep(.chevron-col) {
 	width: 1%;
 	padding-inline: 4px;
 }
 
-.kassakoppeling-audit-list__chevron {
+.cash-register-audit-list__chevron {
 	display: block;
 	color: var(--color-text-maxcontrast);
 }

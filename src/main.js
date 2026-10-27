@@ -233,6 +233,9 @@ function routesFromManifest(manifest) {
 	if (homePage && manifest.pages.some((page) => page.id === homePage)) {
 		routes.push({ path: '/', redirect: { name: homePage } })
 	}
+	// The cash register audit log moved from /kassakoppeling/audit; old links still land.
+	routes.push({ path: '/kassakoppeling/audit', redirect: '/cash-register-audit' })
+	routes.push({ path: '/kassakoppeling/audit/:id', redirect: (to) => `/cash-register-audit/${encodeURIComponent(to.params.id)}` })
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
 	//
 	// vue-router 4 REMOVED the bare `path: '*'` wildcard. It does not error —
