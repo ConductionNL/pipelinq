@@ -1,0 +1,62 @@
+{
+	"$comment": "pipelinq's BI export runs in the Zuiddrecht set: the last run of each of the four export jobs in the main file, as PqBiExport draws them (two succeeded, the appointments export wrote 2 of 3 files, the leads export failed on a refused connection). The board's total of 38 runs is a measurement and is recounted from the set.",
+	"objects": [
+		{
+			"key": "export-run-kcc-tickets",
+			"register": "pipelinq",
+			"schema": "exportRun",
+			"data": {
+				"jobId": "{{object:export-job-kcc-tickets.id}}",
+				"status": "succeeded",
+				"modeUsed": "incremental",
+				"startedAt": "{{datetime:0 02:00}}",
+				"endedAt": "{{datetime:0 02:04}}",
+				"rowCount": 12480,
+				"fileCount": 1
+			}
+		},
+		{
+			"key": "export-run-contacts-per-channel",
+			"register": "pipelinq",
+			"schema": "exportRun",
+			"data": {
+				"jobId": "{{object:export-job-contacts-per-channel.id}}",
+				"status": "succeeded",
+				"modeUsed": "incremental",
+				"startedAt": "{{datetime:0 10:00}}",
+				"endedAt": "{{datetime:0 10:01}}",
+				"rowCount": 214,
+				"fileCount": 1
+			}
+		},
+		{
+			"key": "export-run-appointments",
+			"register": "pipelinq",
+			"schema": "exportRun",
+			"data": {
+				"jobId": "{{object:export-job-appointments.id}}",
+				"status": "partial",
+				"modeUsed": "full",
+				"startedAt": "{{datetime:-2 03:00}}",
+				"endedAt": "{{datetime:-2 03:12}}",
+				"fileCount": 2,
+				"errorMessage": "2 van de 3 bestanden geschreven; het derde bestand kwam niet aan bij het datawarehouse."
+			}
+		},
+		{
+			"key": "export-run-leads",
+			"register": "pipelinq",
+			"schema": "exportRun",
+			"data": {
+				"jobId": "{{object:export-job-leads.id}}",
+				"status": "failed",
+				"modeUsed": "full",
+				"startedAt": "{{datetime:-1 01:00}}",
+				"endedAt": "{{datetime:-1 01:00}}",
+				"rowCount": 0,
+				"fileCount": 0,
+				"errorMessage": "verbinding geweigerd"
+			}
+		}
+	]
+}
