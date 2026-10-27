@@ -157,11 +157,15 @@ describe('the admin page tabs', () => {
 		expect(order).toEqual([...order].sort((a, b) => a - b))
 	})
 
-	it('opens the integrations from the Integraties tab', () => {
-		expect(tab('integrations')).toContain(':href="integrationsUrl"')
-		expect(source).toContain(
-			"generateUrl('/apps/pipelinq/settings/integrations?app=pipelinq')",
-		)
+	it('draws the connections on the Integraties tab, as board PqIntegrations', () => {
+		expect(tab('integrations')).toContain('<CnConnectionsPanel')
+		expect(tab('integrations')).toContain('app="pipelinq"')
+		expect(tab('integrations')).toContain(':addUrl="integriqUrl"')
+		expect(source).toContain('generateUrl(INTEGRIQ_CONNECTIONS_PATH)')
+		const declared = JSON.parse(readFileSync(resolve(__dirname, '../../lib/Settings/connections.json'), 'utf8')).connections.map((c) => c.key)
+		for (const key of declared) {
+			expect(source).toMatch(new RegExp(`'?${key}'?: (SOCIAL|\\{ kind:)`))
+		}
 	})
 
 	it('puts the till customer lookup on its own tab', () => {

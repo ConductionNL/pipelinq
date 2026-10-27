@@ -254,19 +254,12 @@
 			<!-- Board PqIntegrations: the connections this app declares, as
 			     integriq checks them. Until the library draws them here, the
 			     tab opens the in-app list scoped to this app. -->
-			<NcSettingsSection
-				class="cn-settings-section--wide"
-				:name="t('pipelinq', 'Integrations')"
-				:description="
-					t(
-						'pipelinq',
-						'The connections Pipelinq declares, checked by integriq.',
-					)
-				">
-				<a :href="integrationsUrl" class="pos-lookup-link">
-					{{ t('pipelinq', 'Open the integrations') }}
-				</a>
-			</NcSettingsSection>
+			<CnConnectionsPanel
+				app="pipelinq"
+				appName="Pipelinq"
+				:addUrl="integriqUrl"
+				:kinds="connectionKinds"
+				data-testid="pipelinq-connections" />
 		</template>
 
 		<template #tab-pos>
@@ -348,6 +341,7 @@
 <script>
 import {
 	CnAdminSettingsShell,
+	CnConnectionsPanel,
 	CnRegisterMapping,
 	CnSettingsFieldsSection,
 } from '@conduction/nextcloud-vue'
@@ -387,6 +381,7 @@ import TagManager from './TagManager.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import manifest from '../../manifest.json'
+import { INTEGRIQ_CONNECTIONS_PATH } from '../../services/connectionRegistry.js'
 import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -411,6 +406,21 @@ function shillinqDetected() {
  * page title and the line after the path while the tab is open. The strings
  * are catalogue keys, translated where they are read.
  */
+/** The kind and icon of each connection Pipelinq declares, by key. */
+const SOCIAL = { kind: 'Social network', icon: 'ShareVariant' }
+const CONNECTION_KINDS = {
+	cti: { kind: 'Telephony', icon: 'Headset' },
+	'social-mastodon': SOCIAL,
+	'social-bluesky': SOCIAL,
+	'social-linkedin': SOCIAL,
+	'social-x': SOCIAL,
+	'social-facebook': SOCIAL,
+	'social-instagram': SOCIAL,
+	'social-threads': SOCIAL,
+	berichtenbox: { kind: 'Messages', icon: 'EmailOutline' },
+	'mail-provider': { kind: 'Mail', icon: 'EmailFastOutline' },
+}
+
 const ADMIN_TABS = [
 	{
 		id: 'general',
@@ -471,6 +481,7 @@ function openTabFromAddress() {
 export default {
 	name: 'PipelinqAdminSettings',
 	components: {
+		CnConnectionsPanel,
 		MessagingSettings,
 		DeliverabilitySettings,
 		CtiEventLog,
@@ -598,13 +609,24 @@ export default {
 		},
 
 		/**
-		 * The in-app integrations list, scoped to this app.
+		 * Where Add integration and Open integriq go: integriq's connections, scoped to this app.
 		 *
 		 * @return {string}
 		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
 		 */
-		integrationsUrl() {
-			return generateUrl('/apps/pipelinq/settings/integrations?app=pipelinq')
+		integriqUrl() {
+			return generateUrl(INTEGRIQ_CONNECTIONS_PATH)
+		},
+
+		/**
+		 * The kind and icon of each connection lib/Settings/connections.json
+		 * declares, which integriq's declaration shape cannot carry.
+		 *
+		 * @return {object} By connection key.
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		connectionKinds() {
+			return CONNECTION_KINDS
 		},
 
 		/**
