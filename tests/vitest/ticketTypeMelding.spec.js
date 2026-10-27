@@ -93,24 +93,21 @@ describe('ticket type melding', () => {
 	})
 
 	it('has a lens wherever the other ticket types have one', () => {
-		for (const tree of [manifest, simple]) {
-			const lists = collect(tree, (node) => Array.isArray(node.quickFilters)
-				&& node.quickFilters.some((lens) => lens.filter && lens.filter.ticketType === 'complaint'))
-			expect(lists.length).toBeGreaterThan(0)
-			for (const list of lists) {
-				expect(list.quickFilters.some((lens) => lens.filter && lens.filter.ticketType === 'melding')).toBe(true)
-			}
+		const isComplaintLens = (lens) => !!lens && typeof lens === 'object' && !!lens.filter && lens.filter.ticketType === 'complaint'
+		const lists = collect([manifest, simple], (node) => Array.isArray(node.quickFilters) && node.quickFilters.some(isComplaintLens))
+		// The control: the lenses this test guards really exist.
+		expect(lists.length).toBeGreaterThan(0)
+		for (const list of lists) {
+			expect(list.quickFilters.some((lens) => !!lens && typeof lens === 'object' && !!lens.filter && lens.filter.ticketType === 'melding')).toBe(true)
 		}
 	})
 
 	it('has a label and a colour wherever a ticket-type pill or badge maps the others', () => {
-		for (const tree of [manifest, simple]) {
-			const maps = collect(tree, (node) => (node.labels && node.labels.complaint) || (node.colorMap && node.colorMap.complaint && node.colorMap.request))
-			expect(maps.length).toBeGreaterThan(0)
-			for (const map of maps) {
-				if (map.labels && map.labels.complaint) expect(map.labels.melding, JSON.stringify(map.labels)).toBeTruthy()
-				if (map.colorMap && map.colorMap.complaint) expect(map.colorMap.melding, JSON.stringify(map.colorMap)).toBeTruthy()
-			}
+		const maps = collect([manifest, simple], (node) => (node.labels && node.labels.complaint) || (node.colorMap && node.colorMap.complaint && node.colorMap.request))
+		expect(maps.length).toBeGreaterThan(0)
+		for (const map of maps) {
+			if (map.labels && map.labels.complaint) expect(map.labels.melding, JSON.stringify(map.labels)).toBeTruthy()
+			if (map.colorMap && map.colorMap.complaint) expect(map.colorMap.melding, JSON.stringify(map.colorMap)).toBeTruthy()
 		}
 	})
 })
