@@ -53,13 +53,28 @@
 				<CnDetailCard
 					:title="t('pipelinq', 'Deal movements (week over week)')"
 					class="forecast-trend__delta">
-					<p>
-						{{ t('pipelinq', 'Moved into commit') }}:
-						{{ delta?.intoCommit || t('pipelinq', 'none') }}
-					</p>
-					<p>
-						{{ t('pipelinq', 'Moved out of commit') }}:
-						{{ delta?.outOfCommit || t('pipelinq', 'none') }}
+					<table v-if="movements.length" class="accuracy-table" data-testid="forecast-movements">
+						<thead>
+							<tr>
+								<th scope="col">{{ t('pipelinq', 'Seller') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Movement') }}</th>
+								<th scope="col" class="forecast-trend__amount">{{ t('pipelinq', 'Value') }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="move in movements" :key="move.owner_id">
+								<td>{{ move.name || move.owner_id }}</td>
+								<td>
+									<span class="forecast-trend__move" :class="'forecast-trend__move--' + move.direction">
+										{{ move.direction === 'into' ? t('pipelinq', 'Moved into commit') : t('pipelinq', 'Moved out of commit') }}
+									</span>
+								</td>
+								<td class="forecast-trend__amount">{{ formatMoney(move.amount) }}</td>
+							</tr>
+						</tbody>
+					</table>
+					<p v-else class="forecast-trend__none">
+						{{ t('pipelinq', 'No commit moved since last week.') }}
 					</p>
 				</CnDetailCard>
 				<CnDetailCard
@@ -110,7 +125,7 @@ import { CnDetailCard } from '@conduction/nextcloud-vue'
 import { NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { formatEur } from '../../services/commercialFormat.js'
 import { fetchSnapshots } from '../../services/forecastApi.js'
-import { accuracyBand, accuracyRows, isoWeekOf, previousPeriodId, sumSnapshotsByDate } from '../../services/forecastMath.js'
+import { accuracyBand, accuracyRows, commitMovements, isoWeekOf, previousPeriodId, sumSnapshotsByDate } from '../../services/forecastMath.js'
 import { fetchUserDisplayName } from '../../services/userDisplayName.js'
 
 export default {
@@ -130,7 +145,7 @@ export default {
 			loading: false,
 			ownerId: '',
 			series: [],
-			delta: null,
+			movements: [],
 			accuracyRows: [],
 		}
 	},
@@ -219,13 +234,26 @@ export default {
 					limit: 100,
 				})
 				this.series = sumSnapshotsByDate(data.snapshots || [])
-				this.buildDelta()
+				await this.loadMovements(data.snapshots || [])
 				await this.loadAccuracy()
 			} catch {
 				this.series = []
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * The sellers whose commit moved since the previous snapshot, by name.
+		 *
+		 * @param {Array<object>} snapshots The period's snapshots.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		async loadMovements(snapshots) {
+			const moves = commitMovements(snapshots)
+			const names = await Promise.all(moves.map((move) => fetchUserDisplayName(move.owner_id).catch(() => move.owner_id)))
+			this.movements = moves.map((move, index) => ({ ...move, name: names[index] }))
 		},
 
 		/**
@@ -257,25 +285,6 @@ export default {
 			}
 		},
 
-		buildDelta() {
-			if (this.series.length < 2) {
-				this.delta = null
-				return
-			}
-			const prev = this.series[this.series.length - 2]
-			const curr = this.series[this.series.length - 1]
-			this.delta = {
-				intoCommit:
-					curr.commit > prev.commit
-						? this.formatMoney(curr.commit - prev.commit)
-						: '',
-
-				outOfCommit:
-					curr.commit < prev.commit
-						? this.formatMoney(prev.commit - curr.commit)
-						: '',
-			}
-		},
 
 
 		bandFor(score) {
@@ -355,6 +364,35 @@ export default {
 .forecast-trend__bar-value,
 .forecast-trend__bar-week {
 	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.forecast-trend__amount {
+	text-align: end;
+}
+
+/* A move is a pill: into commit green, out of it red (PqForecast). */
+.forecast-trend__move {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: var(--border-radius-pill, 12px);
+	font-size: 13px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.forecast-trend__move--into {
+	background: var(--color-success-hover, #e7f3ea);
+	color: var(--color-success-text, #1e6b2a);
+}
+
+.forecast-trend__move--out {
+	background: var(--color-error-hover, #fcedec);
+	color: var(--color-error-text, #a30000);
+}
+
+.forecast-trend__none {
+	margin: 0;
 	color: var(--color-text-maxcontrast);
 }
 

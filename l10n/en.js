@@ -8587,7 +8587,9 @@ OC.L10N.register(
         "level {level}": "level {level}",
         "snapshot of {date}": "snapshot of {date}",
         "Weekly snapshots, taken every Monday": "Weekly snapshots, taken every Monday",
-        "Quarter {quarter}, closed": "Quarter {quarter}, closed"
+        "Quarter {quarter}, closed": "Quarter {quarter}, closed",
+        "Movement": "Movement",
+        "No commit moved since last week.": "No commit moved since last week."
     },
     "nplurals=2; plural=(n != 1);"
 )

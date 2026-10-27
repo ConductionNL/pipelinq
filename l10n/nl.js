@@ -2324,8 +2324,8 @@ OC.L10N.register(
         "Move stage {name} up": "Fase {name} omhoog verplaatsen",
         "Move to stage": "Verplaats naar fase",
         "Move to {stage}": "Verplaatsen naar {stage}",
-        "Moved into commit": "Verplaatst naar toezegging",
-        "Moved out of commit": "Verplaatst uit toezegging",
+        "Moved into commit": "Naar toezegging verplaatst",
+        "Moved out of commit": "Uit toezegging gehaald",
         "Multi-step composition": "Samenstelling met meerdere stappen",
         "Multi-step total ({sum} min) does not match Duration ({duration} min).": "Totaal van meerdere stappen ({sum} min) komt niet overeen met Duur ({duration} min).",
         "Multiple contacts match {number}. Select one to open, or create a new contact.": "Meerdere contacten passen bij {number}. Kies er een om te openen, of maak een nieuw contact.",
@@ -8558,7 +8558,9 @@ OC.L10N.register(
         "level {level}": "niveau {level}",
         "snapshot of {date}": "momentopname van {date}",
         "Weekly snapshots, taken every Monday": "Wekelijkse momentopnamen, elke maandag gemaakt",
-        "Quarter {quarter}, closed": "Kwartaal {quarter}, afgesloten"
+        "Quarter {quarter}, closed": "Kwartaal {quarter}, afgesloten",
+        "Movement": "Beweging",
+        "No commit moved since last week.": "Sinds vorige week is er geen toezegging verschoven."
     },
     "nplurals=2; plural=(n != 1);"
 )

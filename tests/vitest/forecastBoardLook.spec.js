@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+	commitMovements,
 	isoWeekOf,
 	latestPerOwner,
 	sumSnapshotsByDate,
@@ -40,6 +41,28 @@ describe('sumSnapshotsByDate', () => {
 
 	it('answers an empty list with no points', () => {
 		expect(sumSnapshotsByDate([])).toEqual([])
+	})
+})
+
+describe('commitMovements', () => {
+	it('names each seller whose commit moved between the two newest snapshots, largest first', () => {
+		const moves = commitMovements([
+			{ owner_id: 'fatma', as_of_date: '2026-09-28', commit: 22000 },
+			{ owner_id: 'fatma', as_of_date: '2026-10-05', commit: 70000 },
+			{ owner_id: 'joris', as_of_date: '2026-09-28', commit: 25500 },
+			{ owner_id: 'joris', as_of_date: '2026-10-05', commit: 18000 },
+			{ owner_id: 'pieter', as_of_date: '2026-09-28', commit: 48000 },
+			{ owner_id: 'pieter', as_of_date: '2026-10-05', commit: 48000 },
+			{ owner_id: 'pieter', as_of_date: '2026-09-21', commit: 1 },
+		])
+		expect(moves).toEqual([
+			{ owner_id: 'fatma', direction: 'into', amount: 48000 },
+			{ owner_id: 'joris', direction: 'out', amount: 7500 },
+		])
+	})
+
+	it('has no moves with a single snapshot date', () => {
+		expect(commitMovements([{ owner_id: 'a', as_of_date: '2026-10-05', commit: 1 }])).toEqual([])
 	})
 })
 
@@ -99,6 +122,12 @@ describe('forecast page', () => {
 		expect(trend).toMatch(/data-testid="forecast-trend-bars"/)
 		expect(trend).toMatch(/Number\(point\.closed_won \|\| 0\) \+ Number\(point\.commit \|\| 0\)/)
 		expect(trend).not.toMatch(/<polyline/)
+	})
+
+	it('lists the week\'s commit moves per seller as a table with pills', () => {
+		const trend = view('ForecastTrend')
+		expect(trend).toMatch(/data-testid="forecast-movements"/)
+		expect(trend).toMatch(/forecast-trend__move--' \+ move\.direction/)
 	})
 
 	it('says what the chart and the accuracy cover', () => {
