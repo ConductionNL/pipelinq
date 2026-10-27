@@ -2,11 +2,22 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <template>
-	<div class="pipeline-board" data-walkthrough-id="pipeline-board">
+	<div class="pipeline-board" :class="lookClass" data-walkthrough-id="pipeline-board">
 		<CnPageHeader
 			:title="t('pipelinq', 'Pipeline')"
 			:description="headerCountLine">
 			<template #extra>
+				<NcButton
+					variant="secondary"
+					:disabled="filteredItems.length === 0"
+					data-testid="pipeline-download"
+					@click="downloadLeads">
+					<template #icon>
+						<Download :size="18" />
+					</template>
+					{{ t('pipelinq', 'Download') }}
+				</NcButton>
+				<CnBuildiqEditButton />
 				<NcButton
 					variant="primary"
 					data-testid="pipeline-new-lead"
@@ -434,9 +445,11 @@
 
 <script>
 import {
+	CnBuildiqEditButton,
 	CnPageHeader,
 	CnQuickFilterBar,
 	openRowTarget,
+	useLook,
 } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -450,6 +463,7 @@ import {
 } from '@nextcloud/vue'
 import Draggable from 'vuedraggable'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import Download from 'vue-material-design-icons/Download.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
@@ -457,6 +471,7 @@ import LeadScoreBadge from '../../components/leadScore/LeadScoreBadge.vue'
 import LeadCreateDialog from '../../dialogs/LeadCreateDialog.vue'
 import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import PipelineCard from './PipelineCard.vue'
+import { downloadCsv } from '../../services/csvExport.js'
 import { compareCallFirst } from '../../services/leadScore.js'
 import { formatDate } from '../../services/localeUtils.js'
 import { choosePipeline, findOrphanedLeads } from '../../services/pipelineOrphans.js'
@@ -493,6 +508,8 @@ const DRAG_OPTIONS = {
 export default {
 	name: 'PipelineBoard',
 	components: {
+		CnBuildiqEditButton,
+		Download,
 		LeadCreateDialog,
 		Plus,
 		CnPageHeader,
@@ -510,6 +527,11 @@ export default {
 		ViewColumn,
 		FormatListBulleted,
 		Cog,
+	},
+
+	setup() {
+		const { lookClass } = useLook()
+		return { lookClass }
 	},
 
 	data() {
@@ -1390,6 +1412,24 @@ export default {
 		onDragStart(stageName) {
 			this.dragSourceStage = stageName
 			this.dragLeftSource = false
+		},
+
+		/**
+		 * The leads on the board, as the board shows them, as a CSV file.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/pipeline-board-header/specs/pipeline/spec.md
+		 */
+		downloadLeads() {
+			const rows = this.filteredItems.map((item) => ({
+				title: item.title || '',
+				stage: item.stage || '',
+				value: item.value ?? '',
+				probability: item.probability ?? '',
+				assignee: item.assignee || '',
+				expectedCloseDate: item.expectedCloseDate || '',
+			}))
+			downloadCsv('pipeline.csv', rows, ['title', 'stage', 'value', 'probability', 'assignee', 'expectedCloseDate'])
 		},
 
 		/**
