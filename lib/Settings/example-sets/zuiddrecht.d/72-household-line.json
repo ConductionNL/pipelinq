@@ -1,0 +1,26 @@
+{
+	"$comment": "pipelinq's household line for Sanne de Vries in the Zuiddrecht set. Sanne, her partner J. de Vries and Buurtvereniging Oost all answer on 078 612 33 41, so PqInkomendGesprek's chooser lists three matches for a call from it. Sanne's own phone stays her mobile; the landline is on a contact for her own client, which the caller match also searches.",
+	"objects": [
+		{
+			"key": "contact-sanne-thuis",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "{{cast:sanne.displayName}}",
+				"client": "{{object:client-sanne.id}}",
+				"contactsUid": "example-sanne-thuis",
+				"phone": "078 612 33 41",
+				"phones": [
+					{
+						"kind": "private",
+						"value": "078 612 33 41",
+						"primary": true
+					}
+				],
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		}
+	]
+}
