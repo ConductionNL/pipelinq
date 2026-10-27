@@ -1751,7 +1751,10 @@
 								{
 									"key": "subject",
 									"label": "Subject",
-									"path": "category"
+									"firstOf": [
+										"disposition_subject",
+										"category"
+									]
 								}
 							]
 						}

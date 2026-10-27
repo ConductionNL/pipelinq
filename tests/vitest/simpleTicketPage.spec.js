@@ -665,6 +665,16 @@ describe('the contact moment (board PqContactmoment)', () => {
 		expect(ticket[widgetById['contact-notes'].content.field]).toBeTruthy()
 	})
 
+	it('names the call\'s own subject, else the request\'s category', () => {
+		const subject = widgetById['contact-details'].content.fields.find((field) => field.key === 'subject')
+		expect(subject.path).toBeUndefined()
+		expect(subject.firstOf).toEqual(['disposition_subject', 'category'])
+		const ticket = schemaProperties('ticket')
+		for (const name of subject.firstOf) {
+			expect(ticket[name], name).toBeTruthy()
+		}
+	})
+
 	it('offers outcomes the ticket schema knows, saved with their own button', () => {
 		const outcome = widgetById['contact-notes'].content.outcome
 		expect(widgetById['contact-notes'].type).toBe('record-notes')
