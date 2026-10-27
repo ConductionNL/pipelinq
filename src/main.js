@@ -52,6 +52,7 @@ import {
 	MODULES_SETTING,
 	resolveMenuModules,
 } from './utils/menuModules.js'
+import { menuRuntime, seedMenuRuntime } from './utils/menuRuntime.js'
 import { pageAppConfig, seedPageAppConfig } from './utils/pageAppConfig.js'
 import {
 	buildProfiledManifest,
@@ -160,16 +161,14 @@ const fragments = fragmentCtx
 const structureProfile = resolveStructureProfile(
 	loadState('pipelinq', STRUCTURE_SETTING, ''),
 )
+const enabledModules = resolveMenuModules(
+	loadState('pipelinq', MODULES_SETTING, ''),
+	simpleMenuLayout,
+)
 const profileFile =
 	structureProfile === STRUCTURE_FULL
 		? menuLayout
-		: applyMenuModules(
-				simpleMenuLayout,
-				resolveMenuModules(
-					loadState('pipelinq', MODULES_SETTING, ''),
-					simpleMenuLayout,
-				),
-			)
+		: applyMenuModules(simpleMenuLayout, enabledModules)
 const { manifest: profiledManifest, homePage } = applyHomePage(
 	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile, {
 		theming: navTheming(getCapabilities()),
@@ -199,6 +198,18 @@ const mergedManifest = seedVatClassLabels(
 )
 // The index pages' chips, count line and header buttons, in the same way.
 translateIndexPageLabels(mergedManifest, (text) => t('pipelinq', text))
+// The Advanced page's status pills and menu structure panel read the menu as
+// it is set from `runtime.menu`.
+seedMenuRuntime(
+	mergedManifest,
+	menuRuntime({
+		profile: structureProfile,
+		profileFile: simpleMenuLayout,
+		enabled: enabledModules,
+		manifest: mergedManifest,
+		translate: (text) => t('pipelinq', text),
+	}),
+)
 
 /**
  * Build the vue-router config from the manifest. Each manifest page
@@ -233,6 +244,9 @@ function routesFromManifest(manifest) {
 	if (homePage && manifest.pages.some((page) => page.id === homePage)) {
 		routes.push({ path: '/', redirect: { name: homePage } })
 	}
+	// The cash register audit log moved from /kassakoppeling/audit; old links still land.
+	routes.push({ path: '/kassakoppeling/audit', redirect: '/cash-register-audit' })
+	routes.push({ path: '/kassakoppeling/audit/:id', redirect: (to) => `/cash-register-audit/${encodeURIComponent(to.params.id)}` })
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
 	//
 	// vue-router 4 REMOVED the bare `path: '*'` wildcard. It does not error —

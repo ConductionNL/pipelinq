@@ -40,7 +40,7 @@
         "slug": "posZReport",
         "title": "POS Z-Report",
         "icon": "FileChart",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "summary": "Daily POS end-of-day settlement, aggregating confirmed transactions per terminal",
         "description": "Represents a daily Z-report (end-of-day settlement) for a POS terminal. Aggregates all confirmed/settled posTransaction objects for a given reportDate (and optional terminalId), computing per-rate tax breakdown, payment-method breakdown and gross/net totals server-authoritative: client-supplied figures are never trusted. Lifecycle: draft -> ready -> submitted -> posted -> reconciled, with a failed branch for retried submissions. Mapped to Schema.org Invoice.",
         "x-schema-org": "schema:Invoice",
@@ -157,6 +157,14 @@
               "failed",
               "reconciled"
             ],
+            "x-enum-labels": {
+              "draft": "Draft",
+              "ready": "Ready",
+              "submitted": "Submitted",
+              "posted": "Posted",
+              "failed": "Failed",
+              "reconciled": "Reconciled"
+            },
             "default": "draft",
             "title": "Status",
             "facetable": true

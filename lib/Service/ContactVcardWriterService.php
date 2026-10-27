@@ -255,6 +255,24 @@ class ContactVcardWriterService {
 	}//end findCardUri()
 
 	/**
+	 * The display name of the addressbook a new card goes to: the first
+	 * writable addressbook that is not the system one.
+	 *
+	 * @return string The name, or '' when the user has none.
+	 *
+	 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+	 */
+	public function newCardAddressBookName(): string {
+		foreach ($this->contactsManager->getUserAddressBooks() as $book) {
+			if ($this->isWritable(addressBook: $book) === true) {
+				return $book->getDisplayName();
+			}
+		}
+
+		return '';
+	}//end newCardAddressBookName()
+
+	/**
 	 * Whether pipelinq may write cards in this addressbook.
 	 *
 	 * @param IAddressBook $addressBook The addressbook.
