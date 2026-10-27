@@ -8322,7 +8322,9 @@ OC.L10N.register(
         "A resident or business got a new address": "Een inwoner of bedrijf kreeg een nieuw adres",
         "A ticket was closed": "Een ticket is afgesloten",
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "Een fasewissel, een contract dat verlengd kan worden, een bevestigde inschrijving, een boekhoudsignaal, een nieuw adres of een afgesloten ticket.",
-        "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem."
+        "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem.",
+        "Public-space report": "Melding",
+        "melding": "Melding"
     },
     "nplurals=2; plural=(n != 1);"
 )

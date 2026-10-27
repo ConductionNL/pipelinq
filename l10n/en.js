@@ -8351,7 +8351,9 @@ OC.L10N.register(
         "A resident or business got a new address": "A resident or business got a new address",
         "A ticket was closed": "A ticket was closed",
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.",
-        "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds."
+        "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.",
+        "Public-space report": "Public-space report",
+        "melding": "melding"
     },
     "nplurals=2; plural=(n != 1);"
 )

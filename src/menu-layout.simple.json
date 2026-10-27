@@ -818,6 +818,7 @@
 					"labels": {
 						"request": "Request",
 						"complaint": "Complaint",
+						"melding": "Public-space report",
 						"interaction": "Contact moment"
 					}
 				},
@@ -1658,11 +1659,13 @@
 								"labels": {
 									"request": "Request",
 									"complaint": "Complaint",
+									"melding": "Public-space report",
 									"interaction": "Contact moment"
 								},
 								"colorMap": {
 									"request": "info",
 									"complaint": "error",
+									"melding": "warning",
 									"interaction": "default"
 								}
 							},
@@ -1812,7 +1815,8 @@
 						"widgetProps": {
 							"colorMap": {
 								"request": "primary",
-								"complaint": "error"
+								"complaint": "error",
+								"melding": "warning"
 							}
 						}
 					},
@@ -2462,7 +2466,8 @@
 						"widgetProps": {
 							"colorMap": {
 								"request": "primary",
-								"complaint": "error"
+								"complaint": "error",
+								"melding": "warning"
 							}
 						}
 					},
