@@ -44,6 +44,9 @@ return [
         ['name' => 'contactSyncSettings#show', 'url' => '/api/contacts-sync/settings', 'verb' => 'GET'],
         ['name' => 'contactSyncSettings#update', 'url' => '/api/contacts-sync/settings', 'verb' => 'PUT'],
         ['name' => 'contactSyncSettings#run', 'url' => '/api/contacts-sync/run', 'verb' => 'POST'],
+        // Organisation enrichment from the KvK (organisation-enrichment).
+        ['name' => 'organisationEnrichment#propose', 'url' => '/api/organisations/enrich/proposals', 'verb' => 'POST'],
+        ['name' => 'organisationEnrichment#apply', 'url' => '/api/organisations/enrich/apply', 'verb' => 'POST'],
         // Contact-FIRST create — provisions the NC contact and saves the object
         // with the required contactsUid (client-contact unification).
         ['name' => 'contactSync#create', 'url' => '/api/contacts-sync/create', 'verb' => 'POST'],

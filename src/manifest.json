@@ -1842,7 +1842,17 @@
 					"showMetadata": true
 				},
 				"rowIcon": "OfficeBuildingOutline",
-				"countText": "{shown} of {total} clients"
+				"countText": "{shown} of {total} clients",
+				"_bulkActionsNote": "Board PqOrganisatiesVerrijken: selected organisations are looked up in the KvK and their empty registry fields filled (OrganisationEnrichDialog). People are never looked up; the server skips them.",
+				"bulkActions": [
+					{
+						"id": "enrich",
+						"label": "Fill in missing details",
+						"icon": "DatabaseSearchOutline",
+						"handler": "open-modal",
+						"target": "OrganisationEnrichDialog"
+					}
+				]
 			}
 		},
 		{
