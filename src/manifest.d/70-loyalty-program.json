@@ -11,7 +11,7 @@
 	"pages": [
 		{
 			"id": "LoyaltyReporting",
-			"_note": "Board PqLoyaliteit. A dashboard over the reporting endpoints: the programme filter reads its options from the loyaltyProgramme collection and seeds the first one, the period filter sends `days` (the kpis endpoint reads the last that many days), the tier card draws the bars and the table from GET .../tiers (tier names in rule order) and downloads it with `format=csv`, and the header Download takes the KPIs with `format=csv`. The enrolment card is the app widget LoyaltyEnrollmentWidget; the enrolment form also keeps its own page (LoyaltyEnrollment).",
+			"_note": "Board PqLoyaliteit. A dashboard over the reporting endpoints: the programme filter reads its options from the loyaltyProgramme collection and seeds the first one, the period filter sends `days` (the kpis endpoint reads the last that many days), the tier card draws the bars and the table from GET .../tiers (tier names in rule order) and downloads it with `format=csv`, and the header Download takes the KPIs with `format=csv`. The enrolment card is the library create-form widget: the opt-in is a required checkbox, so no account is created without it (AVG); the enrolment form also keeps its own page (LoyaltyEnrollment).",
 			"route": "/loyalty/reporting",
 			"type": "dashboard",
 			"title": "Loyalty programme reporting",
@@ -60,7 +60,7 @@
 						"id": "download-loyalty-kpis",
 						"type": "api-call",
 						"label": "Download",
-						"icon": "TrayArrowDown",
+						"icon": "Download",
 						"method": "GET",
 						"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/kpis",
 						"params": {
@@ -301,7 +301,7 @@
 						"headerActions": [
 							{
 								"label": "Export as CSV",
-								"icon": "TrayArrowDown",
+								"icon": "Download",
 								"variant": "tonal",
 								"action": {
 									"type": "api-call",
@@ -330,12 +330,66 @@
 					},
 					{
 						"id": "loyalty-enrollment",
-						"type": "LoyaltyEnrollmentWidget",
+						"type": "create-form",
 						"title": "Loyalty sign-up",
 						"subtitle": "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent.",
 						"content": {
-							"termsVersion": "2026-1",
-							"programmeKey": "programme"
+							"register": "pipelinq",
+							"schema": "customerLoyaltyAccount",
+							"submitLabel": "Create loyalty account",
+							"submitIcon": "Plus",
+							"fields": [
+								{
+									"key": "customerId",
+									"label": "Customer",
+									"type": "reference",
+									"schema": "client",
+									"labelField": "name",
+									"required": true
+								},
+								{
+									"key": "programmeId",
+									"label": "Programme",
+									"type": "select",
+									"required": true,
+									"default": "@workspace.programme",
+									"optionsFrom": {
+										"register": "pipelinq",
+										"schema": "loyaltyProgramme",
+										"labelField": "name",
+										"keepFields": [
+											"termsUrl"
+										]
+									}
+								},
+								{
+									"key": "optInTermsVersion",
+									"label": "Terms version accepted",
+									"default": "2026-1"
+								},
+								{
+									"key": "optInAccepted",
+									"label": "I agree to store my loyalty data and contact me with offers",
+									"type": "checkbox",
+									"required": true,
+									"link": {
+										"label": "Read the programme terms",
+										"from": {
+											"field": "programmeId",
+											"path": "termsUrl"
+										}
+									}
+								}
+							],
+							"values": {
+								"status": "active",
+								"currentBalance": 0,
+								"lifetimePoints": 0,
+								"optInTimestamp": "@now",
+								"createdOn": "@now",
+								"lastActivityDate": "@now"
+							},
+							"errorMessage": "Failed to create loyalty account"
 						}
 					}
 				],

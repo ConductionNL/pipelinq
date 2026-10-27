@@ -56,8 +56,6 @@ import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.
 import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LeadContactRoles from './components/LeadContactRoles.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
-// --- Loyalty program (loyalty-program). ---
-import LoyaltyEnrollmentWidget from './components/loyalty/LoyaltyEnrollmentWidget.vue'
 // --- Articles — the content hub for a mailing and a post (marketing-article-hub).
 //     ArticleDetail is a declarative type:"detail" page; the rendered body, the
 //     hero image, the agent-authored mark, the Edit action and the lifecycle
@@ -466,12 +464,6 @@ const registry = {
 		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
 	},
 	// --- Loyalty program (loyalty-program). ---
-	LoyaltyEnrollmentWidget: {
-		kind: 'widget',
-		component: LoyaltyEnrollmentWidget,
-		...PANEL_WIDGET_META,
-		_note: 'The enrolment card on the loyalty reporting dashboard (board PqLoyaliteit): customer, programme (the page programme by default), terms version and the opt-in the AVG requires before the account is created.',
-	},
 	LoyaltyAccountCreationView: {
 		kind: 'page',
 		component: LoyaltyAccountCreationView,

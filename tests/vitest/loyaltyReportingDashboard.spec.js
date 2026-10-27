@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
@@ -12,28 +11,8 @@
  *  change is archived and no spec inherited it (`ls openspec/specs/ | grep -i loyal`).
  */
 
-import { flushPromises, mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
-import { h, ref } from 'vue'
+import { describe, expect, it } from 'vitest'
 import fragment from '../../src/manifest.d/70-loyalty-program.json'
-
-const axiosMock = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }))
-
-vi.mock('@nextcloud/axios', () => ({ default: axiosMock }))
-vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
-vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => '/index.php' + path }))
-vi.mock('@conduction/nextcloud-vue', () => ({
-	CnFormWidgetBase: {
-		name: 'CnFormWidgetBase',
-		props: ['fields', 'model', 'canSubmit'],
-		render() {
-			return h('div', this.fields.map((field) => (this.$slots[`field-${field.key}`] ? this.$slots[`field-${field.key}`]() : h('span'))).concat(this.$slots.actions ? this.$slots.actions() : []))
-		},
-	},
-	CnResourceSelect: { name: 'CnResourceSelect', render: () => h('div') },
-}))
-
-const { default: LoyaltyEnrollmentWidget } = await import('../../src/components/loyalty/LoyaltyEnrollmentWidget.vue')
 
 const page = fragment.pages.find((p) => p.id === 'LoyaltyReporting')
 const config = page.config
@@ -74,53 +53,28 @@ describe('the loyalty reporting page', () => {
 		expect(widget('loyalty-tiers').content.sections.map((s) => s.widgetId)).toEqual(['loyalty-tier-bars', 'loyalty-tier-table'])
 		expect(widget('loyalty-tier-bars').content.chartKind).toBe('bar-list')
 		expect(config.layout.map((l) => [l.widgetId, l.gridX, l.gridWidth])).toEqual([['loyalty-tiers', 0, 8], ['loyalty-enrollment', 8, 4]])
-		expect(widget('loyalty-enrollment').type).toBe('LoyaltyEnrollmentWidget')
 	})
 })
 
 describe('the enrolment card', () => {
-	const programmes = { data: { results: [
-		{ '@self': { id: 'p-1' }, name: 'Zuiddrecht Spaarpas', termsUrl: 'https://example.org/voorwaarden' },
-		{ '@self': { id: 'p-2' }, name: 'Tweede programma' },
-	] } }
+	const content = widget('loyalty-enrollment').content
+	const field = (key) => content.fields.find((f) => f.key === key)
 
-	function mountWidget(workspace = {}) {
-		axiosMock.get.mockResolvedValue(programmes)
-		axiosMock.post.mockReset()
-		axiosMock.post.mockResolvedValue({ data: {} })
-		return mount(LoyaltyEnrollmentWidget, {
-			props: { content: { termsVersion: '2026-1' } },
-			global: { provide: { cnWorkspaceContext: ref(workspace) } },
-		})
-	}
-
-	it('follows the page programme and links its terms', async () => {
-		const wrapper = mountWidget({ programme: 'p-1' })
-		await flushPromises()
-		expect(wrapper.vm.form.programmeId).toBe('p-1')
-		expect(wrapper.vm.form.optInTermsVersion).toBe('2026-1')
-		expect(wrapper.find('[data-testid="loyalty-enrollment-terms"]').attributes('href')).toBe('https://example.org/voorwaarden')
+	it('creates a loyalty account from the board fields', () => {
+		expect(widget('loyalty-enrollment').type).toBe('create-form')
+		expect(content.schema).toBe('customerLoyaltyAccount')
+		expect(content.fields.map((f) => f.key)).toEqual(['customerId', 'programmeId', 'optInTermsVersion', 'optInAccepted'])
 	})
 
-	it('creates nothing without the opt-in', async () => {
-		const wrapper = mountWidget({ programme: 'p-1' })
-		await flushPromises()
-		wrapper.vm.onFieldUpdate({ key: 'customerId', value: 'c-1' })
-		await wrapper.vm.enroll()
-		expect(axiosMock.post).not.toHaveBeenCalled()
+	it('starts on the page programme and links its terms', () => {
+		expect(field('programmeId').default).toBe('@workspace.programme')
+		expect(field('programmeId').optionsFrom.keepFields).toEqual(['termsUrl'])
+		expect(field('optInAccepted').link.from).toEqual({ field: 'programmeId', path: 'termsUrl' })
 	})
 
-	it('creates the account with the opt-in, its time and the terms version', async () => {
-		const wrapper = mountWidget({ programme: 'p-2' })
-		await flushPromises()
-		wrapper.vm.onFieldUpdate({ key: 'customerId', value: 'c-1' })
-		wrapper.vm.onFieldUpdate({ key: 'optInAccepted', value: true })
-		await wrapper.vm.enroll()
-		expect(axiosMock.post).toHaveBeenCalledTimes(1)
-		const [url, body] = axiosMock.post.mock.calls[0]
-		expect(url).toBe('/index.php/apps/openregister/api/objects/pipelinq/customerLoyaltyAccount')
-		expect(body).toMatchObject({ customerId: 'c-1', programmeId: 'p-2', optInAccepted: true, optInTermsVersion: '2026-1', status: 'active' })
-		expect(typeof body.optInTimestamp).toBe('string')
-		expect(wrapper.vm.form.optInAccepted).toBe(false)
+	it('creates nothing without the customer, the programme and the opt-in the AVG requires', () => {
+		expect(content.fields.filter((f) => f.required).map((f) => f.key)).toEqual(['customerId', 'programmeId', 'optInAccepted'])
+		expect(field('optInAccepted').type).toBe('checkbox')
+		expect(content.values).toMatchObject({ status: 'active', optInTimestamp: '@now' })
 	})
 })

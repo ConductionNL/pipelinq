@@ -8506,7 +8506,6 @@ OC.L10N.register(
         "Redemption rate": "Inwisselpercentage",
         "Distribution over tiers": "Verdeling over niveaus",
         "Export as CSV": "Exporteren als CSV",
-        "Loyalty account created": "Loyaliteitsaccount aangemaakt",
         "Download started": "Download gestart",
         "Points, tiers and what the outstanding points are worth": "Punten, niveaus en wat de openstaande punten waard zijn",
         "Loyalty sign-up": "Aanmelding loyaliteit",

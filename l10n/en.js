@@ -8535,7 +8535,6 @@ OC.L10N.register(
         "Redemption rate": "Redemption rate",
         "Distribution over tiers": "Distribution over tiers",
         "Export as CSV": "Export as CSV",
-        "Loyalty account created": "Loyalty account created",
         "Download started": "Download started",
         "Points, tiers and what the outstanding points are worth": "Points, tiers and what the outstanding points are worth",
         "Loyalty sign-up": "Loyalty sign-up",
