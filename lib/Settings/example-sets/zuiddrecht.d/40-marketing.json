@@ -522,6 +522,8 @@
 					"label": "Nieuwsbrief Welkom in Zuiddrecht versturen"
 				},
 				"flowStatus": "compiled",
+				"compiledAt": "{{datetime:-5 10:05}}",
+				"activatedAt": "{{datetime:-5 10:07}}",
 				"createdBy": "{{cast:pieter.uid}}",
 				"audienceSegment": "{{object:segment-nieuwe-inwoners.id}}",
 				"condition": {
