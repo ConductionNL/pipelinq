@@ -734,6 +734,7 @@ OC.L10N.register(
         "Close date": "Close date",
         "Close my account": "Close my account",
         "Close time": "Close time",
+        "Converted": "Converted",
         "Closed": "Closed",
         "Closed Lost": "Closed Lost",
         "Closed Won": "Closed Won",
