@@ -25,6 +25,7 @@ import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
 import WerkplekAgentStatus from '../../../components/werkplek/WerkplekAgentStatus.vue'
 import { screenPop } from '../../../services/ctiApi.js'
+import { useObjectStore } from '../../../store/modules/object.js'
 
 /**
  * WerkplekHeaderActions — the workspace dashboard's `actionsComponent`,
@@ -121,6 +122,7 @@ export default {
 		async startCallFromAddress() {
 			const params = new URLSearchParams(window.location.search)
 			let clientId = ''
+			let clientName = ''
 			if (params.get('call') === 'active') {
 				clientId = (params.get('client') || '').trim()
 			} else if ((params.get('inCallPreview') || '').trim() !== '') {
@@ -129,9 +131,27 @@ export default {
 					? result.matches.find((m) => m && m._matchType === 'client')
 					: null
 				clientId = match ? String(match.id || match.uuid || '') : ''
+				clientName = match ? String(match.name || '') : ''
 			}
 			if (clientId !== '') {
 				this.writeWorkspace({ selectedClient: clientId, callActive: true, callStartedAt: new Date().toISOString() })
+				this.writeWorkspace({ selectedClientName: clientName || await this.clientNameOf(clientId) })
+			}
+		},
+
+		/**
+		 * The client's name, for the page title "Gesprek met {name}"; '' when it cannot be read.
+		 *
+		 * @param {string} clientId The client's id.
+		 * @return {Promise<string>}
+		 * @spec openspec/changes/werkplek-call-names-the-caller/specs/kcc-werkplek/spec.md#requirement-the-werkplek-in-a-call-names-the-caller
+		 */
+		async clientNameOf(clientId) {
+			try {
+				const client = await useObjectStore().fetchObject('client', clientId)
+				return client && client.name ? String(client.name) : ''
+			} catch {
+				return ''
 			}
 		},
 

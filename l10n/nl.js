@@ -1,6 +1,11 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Call with {workspace.selectedClientName}": "Gesprek met {workspace.selectedClientName}",
+        "Who is it": "Wie is het",
+        "Preference": "Voorkeur",
+        "Customer page": "Klantpagina",
+        "No customer in this call yet.": "Nog geen klant in dit gesprek.",
         "Cash register audit": "Kassa-audit",
         "Cash register audit entry": "Kassa-auditregel",
         "Verification done. The status shows the result.": "Controle gedaan. De status toont de uitkomst.",
