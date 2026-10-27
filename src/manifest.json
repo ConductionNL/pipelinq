@@ -1459,6 +1459,8 @@
 								"dir": "desc"
 							},
 							"limit": 6,
+							"sortable": true,
+							"filterable": true,
 							"columns": [
 								{
 									"key": "title",
@@ -1529,6 +1531,7 @@
 								"name": "Clients"
 							},
 							"viewAllLabel": "View all clients",
+							"viewAllPlacement": "footer",
 							"emptyText": "No clients yet",
 							"columns": [
 								{
