@@ -8491,7 +8491,12 @@ OC.L10N.register(
         "Desk": "Balie",
         "Left at": "Vertrokken om",
         "The desk the customer is called to, such as Desk 2.": "De balie waar de klant naartoe wordt geroepen, zoals Balie 2.",
-        "When the customer left before being helped.": "Wanneer de klant vertrok voordat die werd geholpen."
+        "When the customer left before being helped.": "Wanneer de klant vertrok voordat die werd geholpen.",
+        "Converted into a flow on {compiledAt:date}. The flow runs in the automation engine.": "Op {compiledAt:date} omgezet naar een flow. De flow draait in de automatiseringsengine.",
+        "Converted into a flow": "Omgezet naar een flow",
+        "Activated": "Geactiveerd",
+        "When the journey was first converted into a flow.": "Wanneer de journey voor het eerst is omgezet naar een flow.",
+        "When the journey last went live.": "Wanneer de journey voor het laatst live ging."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -8520,7 +8520,12 @@ OC.L10N.register(
         "Desk": "Desk",
         "Left at": "Left at",
         "The desk the customer is called to, such as Desk 2.": "The desk the customer is called to, such as Desk 2.",
-        "When the customer left before being helped.": "When the customer left before being helped."
+        "When the customer left before being helped.": "When the customer left before being helped.",
+        "Converted into a flow on {compiledAt:date}. The flow runs in the automation engine.": "Converted into a flow on {compiledAt:date}. The flow runs in the automation engine.",
+        "Converted into a flow": "Converted into a flow",
+        "Activated": "Activated",
+        "When the journey was first converted into a flow.": "When the journey was first converted into a flow.",
+        "When the journey last went live.": "When the journey last went live."
     },
     "nplurals=2; plural=(n != 1);"
 )
