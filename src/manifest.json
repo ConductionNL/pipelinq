@@ -6999,6 +6999,21 @@
 				"showRefresh": true,
 				"showWidgetActions": false,
 				"gridFloat": false,
+				"greeting": "date",
+				"descriptionSource": {
+					"url": "/apps/pipelinq/api/worklist/summary"
+				},
+				"headerActions": [
+					{
+						"id": "my-work-download",
+						"label": "Download",
+						"icon": "Download",
+						"href": "/apps/pipelinq/api/worklist/items?format=csv&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone"
+					}
+				],
+				"gridSideColumn": {
+					"width": 300
+				},
 				"description": "Tickets, leads and follow-ups that are yours, the most urgent first",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"kpiRow": [
@@ -7140,7 +7155,67 @@
 						}
 					},
 					{
+						"id": "my-items-phone",
+						"type": "record-list",
+						"title": "My work",
+						"showTitle": false,
+						"viewport": "narrow",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/worklist/items?lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"responsePath": "items"
+							},
+							"presentation": "rows",
+							"title": "{title}",
+							"pill": {
+								"field": "kind",
+								"labels": {
+									"request": "Request",
+									"complaint": "Complaint",
+									"melding": "Report",
+									"interaction": "Contact moment",
+									"lead": "Lead",
+									"task": "Follow-up"
+								},
+								"colorMap": {
+									"request": "info",
+									"complaint": "error",
+									"melding": "warning",
+									"interaction": "default",
+									"lead": "success",
+									"task": "default"
+								}
+							},
+							"due": {
+								"field": "dueAt",
+								"emptyText": "No due date"
+							},
+							"groupBy": "dueGroup",
+							"groupOrder": [
+								"late",
+								"today",
+								"week",
+								"later",
+								"none"
+							],
+							"valueLabels": {
+								"dueGroup": {
+									"late": "Overdue",
+									"today": "Today",
+									"week": "This week",
+									"later": "Later",
+									"none": "No due date"
+								}
+							},
+							"rowRouteField": "routeName",
+							"rowIdField": "id",
+							"emptyText": "Nothing of yours is open"
+						}
+					},
+					{
 						"id": "my-week",
+						"viewport": "wide",
+						"titleTone": "side",
 						"type": "stats-block",
 						"title": "Your week so far",
 						"showTitle": true,
@@ -7229,6 +7304,7 @@
 					},
 					{
 						"id": "my-start-here",
+						"viewport": "wide",
 						"type": "banner",
 						"title": "Start here",
 						"showTitle": false,
@@ -7273,131 +7349,65 @@
 						"id": "my-answer-today",
 						"type": "record-list",
 						"title": "Answer today",
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
-						},
+						"viewport": "wide",
 						"content": {
-							"register": "pipelinq",
-							"schema": "ticket",
-							"filter": {
-								"assignee": "@me",
-								"status": {
-									"in": [
-										"new",
-										"in_progress"
-									]
-								},
-								"slaDeadline[lt]": "@today+1d"
-							},
-							"sort": {
-								"field": "slaDeadline",
-								"dir": "asc"
-							},
-							"pageControls": {
-								"sort": {
-									"key": "sort",
-									"map": {
-										"deadline": {
-											"field": "slaDeadline",
-											"dir": "asc"
-										},
-										"waiting": {
-											"field": "occurredAt",
-											"dir": "asc"
-										},
-										"newest": {
-											"field": "occurredAt",
-											"dir": "desc"
-										},
-										"priority": {
-											"field": "priority",
-											"rank": [
-												"urgent",
-												"high",
-												"normal",
-												"low"
-											],
-											"then": {
-												"field": "slaDeadline",
-												"dir": "asc"
-											}
-										}
-									}
-								},
-								"toggle": {
-									"key": "showDone",
-									"removes": [
-										"status"
-									]
-								}
+							"headerNote": "deadline is today or has passed",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"responsePath": "items"
 							},
 							"limit": 5,
 							"presentation": "rows",
-							"extend": [
-								"client"
-							],
-							"avatar": "{client.name}",
+							"avatar": "{clientName}",
 							"title": "{title}",
 							"meta": {
 								"parts": [
-									"{client.name}",
+									"{clientName}",
 									"{channel}"
 								]
 							},
 							"pill": {
-								"field": "status",
+								"field": "kind",
 								"labels": {
-									"new": "New",
-									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer",
-									"resolved": "Resolved",
-									"completed": "Completed"
+									"request": "Request",
+									"complaint": "Complaint",
+									"melding": "Report",
+									"interaction": "Contact moment",
+									"lead": "Lead",
+									"task": "Follow-up"
 								},
 								"colorMap": {
-									"new": "info",
-									"in_progress": "purple",
-									"awaiting_customer": "default",
-									"resolved": "success",
-									"completed": "success"
+									"request": "info",
+									"complaint": "error",
+									"melding": "warning",
+									"interaction": "default",
+									"lead": "success",
+									"task": "default"
 								}
 							},
-							"rowRoute": "TicketDetail",
-							"emptyText": "No ticket of yours is due today",
 							"badges": [
 								{
 									"field": "priority",
 									"labels": {
-										"urgent": "Urgent",
-										"high": "High",
-										"low": "Low"
+										"urgent": "Urgent priority",
+										"high": "High priority",
+										"normal": "Normal priority",
+										"low": "Low priority"
 									},
 									"colorMap": {
 										"urgent": "error",
-										"high": "warning",
+										"high": "error",
+										"normal": "default",
 										"low": "default"
-									},
-									"hideValues": [
-										"normal",
-										"low"
-									]
+									}
 								}
 							],
 							"due": {
-								"field": "slaDeadline",
+								"field": "dueAt",
 								"emptyText": "No due date"
 							},
+							"rowRouteField": "routeName",
+							"rowIdField": "id",
 							"valueLabels": {
 								"channel": {
 									"phone": "Phone",
@@ -7414,137 +7424,73 @@
 									"brief": "Letter",
 									"social": "Social media"
 								}
-							}
+							},
+							"emptyText": "Nothing of yours is due today"
 						}
 					},
 					{
 						"id": "my-waiting-on-me",
 						"type": "record-list",
 						"title": "Waiting on me",
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
-						},
+						"viewport": "wide",
 						"content": {
-							"register": "pipelinq",
-							"schema": "ticket",
-							"filter": {
-								"assignee": "@me",
-								"status": {
-									"in": [
-										"new",
-										"in_progress"
-									]
-								}
-							},
-							"sort": {
-								"field": "slaDeadline",
-								"dir": "asc"
-							},
-							"pageControls": {
-								"sort": {
-									"key": "sort",
-									"map": {
-										"deadline": {
-											"field": "slaDeadline",
-											"dir": "asc"
-										},
-										"waiting": {
-											"field": "occurredAt",
-											"dir": "asc"
-										},
-										"newest": {
-											"field": "occurredAt",
-											"dir": "desc"
-										},
-										"priority": {
-											"field": "priority",
-											"rank": [
-												"urgent",
-												"high",
-												"normal",
-												"low"
-											],
-											"then": {
-												"field": "slaDeadline",
-												"dir": "asc"
-											}
-										}
-									}
-								},
-								"toggle": {
-									"key": "showDone",
-									"removes": [
-										"status"
-									]
-								}
+							"headerNote": "the customer has replied",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"responsePath": "items"
 							},
 							"limit": 5,
 							"presentation": "rows",
-							"extend": [
-								"client"
-							],
-							"avatar": "{client.name}",
+							"avatar": "{clientName}",
 							"title": "{title}",
 							"meta": {
 								"parts": [
-									"{client.name}",
+									"{clientName}",
 									"{channel}"
 								]
 							},
 							"pill": {
-								"field": "status",
+								"field": "kind",
 								"labels": {
-									"new": "New",
-									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer",
-									"resolved": "Resolved",
-									"completed": "Completed"
+									"request": "Request",
+									"complaint": "Complaint",
+									"melding": "Report",
+									"interaction": "Contact moment",
+									"lead": "Lead",
+									"task": "Follow-up"
 								},
 								"colorMap": {
-									"new": "info",
-									"in_progress": "purple",
-									"awaiting_customer": "default",
-									"resolved": "success",
-									"completed": "success"
+									"request": "info",
+									"complaint": "error",
+									"melding": "warning",
+									"interaction": "default",
+									"lead": "success",
+									"task": "default"
 								}
 							},
-							"rowRoute": "TicketDetail",
-							"emptyText": "No tickets assigned to you",
 							"badges": [
 								{
 									"field": "priority",
 									"labels": {
-										"urgent": "Urgent",
-										"high": "High",
-										"low": "Low"
+										"urgent": "Urgent priority",
+										"high": "High priority",
+										"normal": "Normal priority",
+										"low": "Low priority"
 									},
 									"colorMap": {
 										"urgent": "error",
-										"high": "warning",
+										"high": "error",
+										"normal": "default",
 										"low": "default"
-									},
-									"hideValues": [
-										"normal",
-										"low"
-									]
+									}
 								}
 							],
 							"due": {
-								"field": "slaDeadline",
+								"field": "dueAt",
 								"emptyText": "No due date"
 							},
+							"rowRouteField": "routeName",
+							"rowIdField": "id",
 							"valueLabels": {
 								"channel": {
 									"phone": "Phone",
@@ -7561,126 +7507,73 @@
 									"brief": "Letter",
 									"social": "Social media"
 								}
-							}
+							},
+							"emptyText": "Nothing waits on you"
 						}
 					},
 					{
 						"id": "my-waiting-on-customer",
 						"type": "record-list",
 						"title": "Waiting on the customer",
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
-						},
+						"viewport": "wide",
 						"content": {
-							"register": "pipelinq",
-							"schema": "ticket",
-							"filter": {
-								"assignee": "@me",
-								"status": "awaiting_customer"
-							},
-							"sort": {
-								"field": "slaDeadline",
-								"dir": "asc"
-							},
-							"pageControls": {
-								"sort": {
-									"key": "sort",
-									"map": {
-										"deadline": {
-											"field": "slaDeadline",
-											"dir": "asc"
-										},
-										"waiting": {
-											"field": "occurredAt",
-											"dir": "asc"
-										},
-										"newest": {
-											"field": "occurredAt",
-											"dir": "desc"
-										},
-										"priority": {
-											"field": "priority",
-											"rank": [
-												"urgent",
-												"high",
-												"normal",
-												"low"
-											],
-											"then": {
-												"field": "slaDeadline",
-												"dir": "asc"
-											}
-										}
-									}
-								}
+							"headerNote": "nothing to do until they reply",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"responsePath": "items"
 							},
 							"limit": 5,
 							"presentation": "rows",
-							"extend": [
-								"client"
-							],
-							"avatar": "{client.name}",
+							"avatar": "{clientName}",
 							"title": "{title}",
 							"meta": {
 								"parts": [
-									"{client.name}",
+									"{clientName}",
 									"{channel}"
 								]
 							},
 							"pill": {
-								"field": "status",
+								"field": "kind",
 								"labels": {
-									"new": "New",
-									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer",
-									"resolved": "Resolved",
-									"completed": "Completed"
+									"request": "Request",
+									"complaint": "Complaint",
+									"melding": "Report",
+									"interaction": "Contact moment",
+									"lead": "Lead",
+									"task": "Follow-up"
 								},
 								"colorMap": {
-									"new": "info",
-									"in_progress": "purple",
-									"awaiting_customer": "default",
-									"resolved": "success",
-									"completed": "success"
+									"request": "info",
+									"complaint": "error",
+									"melding": "warning",
+									"interaction": "default",
+									"lead": "success",
+									"task": "default"
 								}
 							},
-							"rowRoute": "TicketDetail",
-							"emptyText": "No ticket of yours waits for the customer",
 							"badges": [
 								{
 									"field": "priority",
 									"labels": {
-										"urgent": "Urgent",
-										"high": "High",
-										"low": "Low"
+										"urgent": "Urgent priority",
+										"high": "High priority",
+										"normal": "Normal priority",
+										"low": "Low priority"
 									},
 									"colorMap": {
 										"urgent": "error",
-										"high": "warning",
+										"high": "error",
+										"normal": "default",
 										"low": "default"
-									},
-									"hideValues": [
-										"normal",
-										"low"
-									]
+									}
 								}
 							],
 							"due": {
-								"field": "slaDeadline",
+								"field": "dueAt",
 								"emptyText": "No due date"
 							},
+							"rowRouteField": "routeName",
+							"rowIdField": "id",
 							"valueLabels": {
 								"channel": {
 									"phone": "Phone",
@@ -7697,11 +7590,14 @@
 									"brief": "Letter",
 									"social": "Social media"
 								}
-							}
+							},
+							"emptyText": "Nothing waits on a customer"
 						}
 					},
 					{
 						"id": "my-saved-views",
+						"viewport": "wide",
+						"titleTone": "side",
 						"type": "saved-views",
 						"title": "Saved views",
 						"content": {
@@ -7717,13 +7613,11 @@
 						"id": "my-leads",
 						"type": "record-list",
 						"title": "My leads",
+						"viewport": "wide",
 						"visibleWhen": {
 							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"leads"
-							]
+							"op": "eq",
+							"value": "leads"
 						},
 						"headerLink": {
 							"label": "View all my leads",
@@ -7831,13 +7725,11 @@
 						"id": "my-follow-ups",
 						"type": "record-list",
 						"title": "My follow-ups",
+						"viewport": "wide",
 						"visibleWhen": {
 							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tasks"
-							]
+							"op": "eq",
+							"value": "tasks"
 						},
 						"headerLink": {
 							"label": "View all my tasks",
@@ -7893,12 +7785,22 @@
 				],
 				"layout": [
 					{
+						"id": "8",
+						"widgetId": "my-items-phone",
+						"gridX": 0,
+						"gridY": 16,
+						"gridWidth": 12,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
 						"id": "0",
 						"widgetId": "my-answer-today",
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
 						"gridHeight": 4,
+						"track": "main",
 						"sizeToContent": true
 					},
 					{
@@ -7908,6 +7810,7 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					},
 					{
@@ -7917,6 +7820,7 @@
 						"gridY": 4,
 						"gridWidth": 8,
 						"gridHeight": 4,
+						"track": "main",
 						"sizeToContent": true
 					},
 					{
@@ -7926,6 +7830,7 @@
 						"gridY": 3,
 						"gridWidth": 4,
 						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					},
 					{
@@ -7935,6 +7840,7 @@
 						"gridY": 6,
 						"gridWidth": 4,
 						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					},
 					{
@@ -7944,6 +7850,7 @@
 						"gridY": 8,
 						"gridWidth": 8,
 						"gridHeight": 4,
+						"track": "main",
 						"sizeToContent": true
 					},
 					{

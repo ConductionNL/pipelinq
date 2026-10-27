@@ -8606,6 +8606,41 @@
         "{shown} of {total} posts · newest first": "{shown} van {total} berichten · nieuwste eerst",
         "A post can go to several networks at once, each with its own text.": "Een bericht kan tegelijk naar meerdere netwerken, elk met een eigen tekst.",
         "Scheduled to go out": "Ingepland",
-        "Being sent": "Bezig met verzenden"
+        "Being sent": "Bezig met verzenden",
+        "Nothing is with you right now": "Er ligt nu niets bij jou",
+        "%1$s and %2$s": "%1$s en %2$s",
+        "_%n ticket_::_%n tickets_": [
+            "%n ticket",
+            "%n tickets"
+        ],
+        "_%n lead_::_%n leads_": [
+            "%n lead",
+            "%n leads"
+        ],
+        "_%n follow-up_::_%n follow-ups_": [
+            "%n opvolging",
+            "%n opvolgingen"
+        ],
+        "_%n item is with you_::_%n items are with you_": [
+            "%n item ligt bij jou",
+            "%n items liggen bij jou"
+        ],
+        "_%n must be answered today_::_%n must be answered today_": [
+            "%n moet vandaag beantwoord worden",
+            "%n moeten vandaag beantwoord worden"
+        ],
+        "Nothing of yours is due today": "Niets van jou heeft vandaag een termijn",
+        "Nothing waits on you": "Niets wacht op jou",
+        "Nothing waits on a customer": "Niets wacht op een klant",
+        "Nothing of yours is open": "Je hebt niets openstaan",
+        "Urgent priority": "Spoed priority",
+        "High priority": "Hoog priority",
+        "Normal priority": "Normaal priority",
+        "Low priority": "Laag priority",
+        "Report": "Melding",
+        "Later": "Later",
+        "deadline is today or has passed": "termijn is vandaag of verstreken",
+        "the customer has replied": "de klant heeft gereageerd",
+        "nothing to do until they reply": "niets te doen tot ze reageren"
     }
 }
