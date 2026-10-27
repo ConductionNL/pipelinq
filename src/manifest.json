@@ -6799,6 +6799,9 @@
 				"showRefresh": true,
 				"showWidgetActions": false,
 				"gridFloat": false,
+				"gridSideColumn": {
+					"width": 300
+				},
 				"description": "Tickets, leads and follow-ups that are yours, the most urgent first",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"kpiRow": [
@@ -6941,6 +6944,7 @@
 					},
 					{
 						"id": "my-week",
+						"titleTone": "side",
 						"type": "stats-block",
 						"title": "Your week so far",
 						"showTitle": true,
@@ -7081,14 +7085,8 @@
 								"tickets"
 							]
 						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
-						},
 						"content": {
+							"headerNote": "deadline is today or has passed",
 							"register": "pipelinq",
 							"schema": "ticket",
 							"filter": {
@@ -7229,14 +7227,8 @@
 								"tickets"
 							]
 						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
-						},
 						"content": {
+							"headerNote": "the customer has replied",
 							"register": "pipelinq",
 							"schema": "ticket",
 							"filter": {
@@ -7376,14 +7368,8 @@
 								"tickets"
 							]
 						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
-						},
 						"content": {
+							"headerNote": "nothing to do until they reply",
 							"register": "pipelinq",
 							"schema": "ticket",
 							"filter": {
@@ -7502,6 +7488,7 @@
 					},
 					{
 						"id": "my-saved-views",
+						"titleTone": "side",
 						"type": "saved-views",
 						"title": "Saved views",
 						"content": {
@@ -7699,6 +7686,7 @@
 						"gridY": 0,
 						"gridWidth": 8,
 						"gridHeight": 4,
+						"track": "main",
 						"sizeToContent": true
 					},
 					{
@@ -7708,6 +7696,7 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					},
 					{
@@ -7717,6 +7706,7 @@
 						"gridY": 4,
 						"gridWidth": 8,
 						"gridHeight": 4,
+						"track": "main",
 						"sizeToContent": true
 					},
 					{
@@ -7726,6 +7716,7 @@
 						"gridY": 3,
 						"gridWidth": 4,
 						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					},
 					{
@@ -7735,6 +7726,7 @@
 						"gridY": 6,
 						"gridWidth": 4,
 						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					},
 					{
@@ -7744,6 +7736,7 @@
 						"gridY": 8,
 						"gridWidth": 8,
 						"gridHeight": 4,
+						"track": "main",
 						"sizeToContent": true
 					},
 					{

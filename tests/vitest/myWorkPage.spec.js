@@ -185,6 +185,24 @@ describe('the My work page', () => {
 		expect(widget('my-saved-views').type).toBe('saved-views')
 	})
 
+	// Board PqMijnWerk: a 300px side column titled as side cards, and the
+	// three ticket lists headed by what they hold instead of a link.
+	it('draws the side column at the board width, with side-card titles', () => {
+		expect(page.config.gridSideColumn).toEqual({ width: 300 })
+		const track = (id) => page.config.layout.find((l) => l.widgetId === id).track
+		expect(['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer'].map(track)).toEqual(['main', 'main', 'main'])
+		expect(['my-week', 'my-start-here', 'my-saved-views'].map(track)).toEqual(['side', 'side', 'side'])
+		expect(widget('my-week').titleTone).toBe('side')
+		expect(widget('my-saved-views').titleTone).toBe('side')
+	})
+
+	it('heads each ticket list with what it holds', () => {
+		expect(widget('my-answer-today').content.headerNote).toBe('deadline is today or has passed')
+		expect(widget('my-waiting-on-me').content.headerNote).toBe('the customer has replied')
+		expect(widget('my-waiting-on-customer').content.headerNote).toBe('nothing to do until they reply')
+		expect(widget('my-answer-today').headerLink).toBeUndefined()
+	})
+
 	it('keeps the grid cells apart', () => {
 		const layout = page.config.layout
 		for (const a of layout) {
