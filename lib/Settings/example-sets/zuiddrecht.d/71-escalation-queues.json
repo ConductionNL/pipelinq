@@ -1,20 +1,27 @@
 {
-	"$comment": "pipelinq's escalation queues in the Zuiddrecht set (cti-escalation-queues): board PqGesprekAfronden closes a call as Escalated and hands it to \"Vergunningen, tweede lijn\". A queue is app config `cti_escalation_queues` ({ id, label, groupId }); the follow-up task is assigned to the queue's group. The groups are the second-line teams; their members are set by the people who staff them.",
+	"$comment": "pipelinq's escalation queues in the Zuiddrecht set (cti-escalation-queues): board PqGesprekAfronden closes a call as Escalated and hands it to \"Vergunningen, tweede lijn\". A queue is app config `cti_escalation_queues` ({ id, label, groupId }); the follow-up task is assigned to the queue's group. The groups are the second-line teams, staffed from the cast: Esra Demir and Sanne Bakker (Vergunningverleners) for Vergunningen, Petra van Dijk (Financien) for Belastingen, Fatma Kaya (Regisseur jeugdteam) for Sociaal domein.",
 	"groups": [
 		{
 			"group": "zuiddrecht-tweede-lijn-vergunningen",
 			"displayName": "Vergunningen, tweede lijn",
-			"members": []
+			"members": [
+				"esra",
+				"sannebakker"
+			]
 		},
 		{
 			"group": "zuiddrecht-tweede-lijn-belastingen",
 			"displayName": "Belastingen, tweede lijn",
-			"members": []
+			"members": [
+				"petra"
+			]
 		},
 		{
 			"group": "zuiddrecht-tweede-lijn-sociaal-domein",
 			"displayName": "Sociaal domein, tweede lijn",
-			"members": []
+			"members": [
+				"fatma"
+			]
 		}
 	],
 	"appConfig": [
