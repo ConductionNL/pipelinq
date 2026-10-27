@@ -26,7 +26,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import MapMarkerCheckOutline from 'vue-material-design-icons/MapMarkerCheckOutline.vue'
 import LogVisitDialog from '../dialogs/LogVisitDialog.vue'
-import { buildVisitPayloads } from '../services/visitLog.js'
+import { buildVisitPayloads, linkTaskToContactMoment } from '../services/visitLog.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 /**
@@ -158,7 +158,7 @@ export default {
 				this.$emit('saved', saved)
 				// The visit is stored now; a failed task must not invite a
 				// second save that would log the visit twice.
-				if (task && !(await this.saveTask(store, task))) {
+				if (task && !(await this.saveTask(store, linkTaskToContactMoment(task, saved)))) {
 					showError(
 						t(
 							'pipelinq',

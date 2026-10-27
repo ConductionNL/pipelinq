@@ -2237,7 +2237,7 @@
 			"config": {
 				"addLabel": "New transaction",
 				"countText": "{shown} of {total} transactions · newest first",
-				"sortKey": "@self.created",
+				"sortKey": "momentAt",
 				"sortOrder": "desc",
 				"footerNote": "Open a transaction to print or mail the receipt, or to register a refund.",
 				"quickFilters": [
@@ -2250,7 +2250,7 @@
 					{
 						"label": "Today",
 						"filter": {
-							"@self[created][gte]": "@today"
+							"momentAt[gte]": "@today"
 						},
 						"showCount": true
 					},
@@ -2302,9 +2302,9 @@
 						}
 					},
 					{
-						"key": "@self.created",
+						"key": "momentAt",
 						"label": "Created",
-						"formatter": "datetime"
+						"formatter": "transactionMoment"
 					}
 				]
 			}
@@ -2315,7 +2315,8 @@
 				"columns": [
 					{
 						"key": "reference",
-						"label": "Shift"
+						"label": "Shift",
+						"template": "Shift {floatAt|date}, {drawer}"
 					},
 					{
 						"key": "operator",
@@ -2575,7 +2576,7 @@
 		},
 		{
 			"id": "Clients",
-			"_note": "The Organisations entry opens this list with ?type=organization; the preset gives that view the columns, lenses and copy of board PqOrganisaties. Open cases counts the client's requests that became a case (status converted). The board's With open case chip is not drawn: a lens filters clients by their own fields and cannot ask about their tickets.",
+			"_note": "The Organisations entry opens this list with ?type=organization; the preset gives that view the columns, lenses and copy of board PqOrganisaties. Open cases counts the client's requests that became a case (status converted); open tickets counts its requests and complaints that are new, in progress or waiting on the customer; last contact is its newest contact moment. The board's With open case chip is not drawn: a lens filters clients by their own fields and cannot ask about their tickets.",
 			"config": {
 				"queryPresets": [
 					{
@@ -2676,9 +2677,15 @@
 									"op": "count",
 									"where": {
 										"client": "@self.id",
-										"status": {
-											"ne": "closed"
-										}
+										"ticketType": [
+											"request",
+											"complaint"
+										],
+										"status": [
+											"new",
+											"in_progress",
+											"awaiting_customer"
+										]
 									}
 								},
 								"widget": "badge"
@@ -2686,6 +2693,23 @@
 							{
 								"key": "phone",
 								"label": "Phone"
+							},
+							{
+								"key": "lastContact",
+								"label": "Last contact",
+								"sortable": false,
+								"aggregate": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"op": "max",
+									"field": "occurredAt",
+									"where": {
+										"client": "@self.id",
+										"ticketType": "interaction"
+									},
+									"zeroLabel": "No contact yet"
+								},
+								"formatter": "date"
 							}
 						]
 					}

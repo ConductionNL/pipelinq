@@ -447,6 +447,48 @@ describe('a call from an unknown number', () => {
 	})
 })
 
+describe('a previewed call (callPreview in the address)', () => {
+	afterEach(() => {
+		window.history.replaceState({}, '', '/')
+	})
+
+	it('shows the card for the number without asking for a live call, and writes nothing', async () => {
+		window.history.replaceState({}, '', '/?callPreview=0786123341')
+		api.screenPop.mockResolvedValue({ action: 'intake', matches: [] })
+
+		const wrapper = await card()
+
+		expect(api.incomingCall).not.toHaveBeenCalled()
+		expect(api.screenPop).toHaveBeenCalledWith('0786123341')
+		expect(part(wrapper, 'incoming-call-card').exists()).toBe(true)
+		expect(part(wrapper, 'incoming-call-none').exists()).toBe(true)
+		expect(store.saveObject).not.toHaveBeenCalled()
+	})
+
+	it('opens the chooser or the new-contact form when the address asks for it', async () => {
+		window.history.replaceState(
+			{},
+			'',
+			'/?callPreview=0786123341&callPreviewOpen=chooser',
+		)
+		api.screenPop.mockResolvedValue({
+			action: 'chooser',
+			matches: [SANNE, HENK],
+		})
+		const chooser = await card()
+		expect(chooser.findComponent(ScreenPopModal).exists()).toBe(true)
+
+		window.history.replaceState(
+			{},
+			'',
+			'/?callPreview=0786123341&callPreviewOpen=intake',
+		)
+		api.screenPop.mockResolvedValue({ action: 'intake', matches: [] })
+		const intake = await card()
+		expect(intake.findComponent(NewContactIntakeModal).exists()).toBe(true)
+	})
+})
+
 describe('the app shell', () => {
 	const shell = readFileSync(resolve(__dirname, '../../src/App.vue'), 'utf8')
 

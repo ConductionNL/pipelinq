@@ -33,6 +33,7 @@ use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IAppConfig;
+use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -81,6 +82,13 @@ class ScheduledTaskServiceTest extends TestCase {
 	private RecordingLanguageService $languageService;
 
 	/**
+	 * Extra app config values a test sets, by key.
+	 *
+	 * @var array<string,string>
+	 */
+	private array $config = [];
+
+	/**
 	 * Build a fresh recording ObjectService double for each test.
 	 *
 	 * The double extends OpenRegister's ObjectService (ADR-084) so it satisfies
@@ -108,8 +116,13 @@ class ScheduledTaskServiceTest extends TestCase {
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->languageService = new RecordingLanguageService();
 
+		$this->config = [];
 		$this->appConfig->method('getValueString')->willReturnCallback(
-			static function (string $app, string $key, string $default = ''): string {
+			function (string $app, string $key, string $default = ''): string {
+				if (isset($this->config[$key]) === true) {
+					return $this->config[$key];
+				}
+
 				if ($key === 'register') {
 					return '1';
 				}
@@ -383,6 +396,153 @@ class ScheduledTaskServiceTest extends TestCase {
 
 		$this->assertSame('expired', $stub2->lastSaveArgs['object']['status']);
 	}//end testExpiredTaskEscalatesToAssignee()
+
+	/**
+	 * Build an object service double whose overdue query returns one task.
+	 *
+	 * @param array<string,mixed> $task The overdue task.
+	 *
+	 * @return RecordingObjectService
+	 */
+	private function overdueStub(array $task): RecordingObjectService {
+		$stub = $this->makeObjectServiceStub();
+		$stub->findAllCallback = static function (array $config) use ($task): array {
+			if (isset($config['filters']['deadline']['<']) === true) {
+				return [$task];
+			}
+
+			return [];
+		};
+
+		return $stub;
+	}//end overdueStub()
+
+	/**
+	 * The overdue query asks for open AND in-progress tasks, so a task the
+	 * first sweep moved to in progress still expires later.
+	 *
+	 * @return void
+	 */
+	public function testOverdueQueryIncludesInProgressTasks(): void {
+		$stub = $this->overdueStub(task: []);
+		$seen = [];
+		$stub->findAllCallback = static function (array $config) use (&$seen): array {
+			if (isset($config['filters']['deadline']['<']) === true) {
+				$seen = $config['filters']['status'];
+			}
+
+			return [];
+		};
+
+		$this->makeService(objectService: $stub)->processScheduledTasks();
+
+		$this->assertSame(expected: ['open', 'in_progress'], actual: $seen);
+	}//end testOverdueQueryIncludesInProgressTasks()
+
+	/**
+	 * An in-progress task past the expiry cut expires.
+	 *
+	 * @return void
+	 */
+	public function testInProgressTaskPastTheCutExpires(): void {
+		$stub = $this->overdueStub(
+			task: [
+				'id' => 'task-ip-1',
+				'status' => 'in_progress',
+				'subject' => 'Called once',
+				'deadline' => (new \DateTimeImmutable('-24 hours'))->format(\DateTimeInterface::ATOM),
+				'attempts' => [['result' => 'notified']],
+			]
+		);
+
+		$this->makeService(objectService: $stub)->processScheduledTasks();
+
+		$this->assertSame(expected: 'expired', actual: $stub->lastSaveArgs['object']['status']);
+		$this->assertSame(expected: 'expired', actual: $stub->lastSaveArgs['object']['attempts'][1]['result']);
+	}//end testInProgressTaskPastTheCutExpires()
+
+	/**
+	 * An in-progress task still within the cut is left alone: no second
+	 * notification, no save.
+	 *
+	 * @return void
+	 */
+	public function testInProgressTaskWithinTheCutIsLeftAlone(): void {
+		$stub = $this->overdueStub(
+			task: [
+				'id' => 'task-ip-2',
+				'status' => 'in_progress',
+				'subject' => 'Just due',
+				'deadline' => (new \DateTimeImmutable('-1 hour'))->format(\DateTimeInterface::ATOM),
+				'assigneeUserId' => 'alice',
+			]
+		);
+		$this->notificationService->expects($this->never())->method('notifyAssignment');
+
+		$this->makeService(objectService: $stub)->processScheduledTasks();
+
+		$this->assertSame(expected: [], actual: $stub->lastSaveArgs);
+	}//end testInProgressTaskWithinTheCutIsLeftAlone()
+
+	/**
+	 * The expiry cut follows the admin setting
+	 * task_expiry.escalation_threshold_seconds.
+	 *
+	 * @return void
+	 */
+	public function testExpiryCutFollowsTheSetting(): void {
+		$this->config['task_expiry.escalation_threshold_seconds'] = '3600';
+		$stub = $this->overdueStub(
+			task: [
+				'id' => 'task-cut',
+				'status' => 'open',
+				'subject' => 'Two hours late',
+				'deadline' => (new \DateTimeImmutable('-2 hours'))->format(\DateTimeInterface::ATOM),
+			]
+		);
+
+		$this->makeService(objectService: $stub)->processScheduledTasks();
+
+		$this->assertSame(expected: 'expired', actual: $stub->lastSaveArgs['object']['status']);
+	}//end testExpiryCutFollowsTheSetting()
+
+	/**
+	 * An expired task is also escalated to every member of the configured
+	 * escalation group, the assignee once.
+	 *
+	 * @return void
+	 */
+	public function testExpiredTaskAlsoEscalatesToTheEscalationGroup(): void {
+		$this->config['task_expiry.escalation_group'] = 'teamleads';
+		$lead = $this->createMock(originalClassName: IUser::class);
+		$lead->method('getUID')->willReturn('marleen');
+		$alice = $this->createMock(originalClassName: IUser::class);
+		$alice->method('getUID')->willReturn('alice');
+		$group = $this->createMock(originalClassName: IGroup::class);
+		$group->method('getUsers')->willReturn([$lead, $alice]);
+		$this->groupManager->method('get')->with('teamleads')->willReturn($group);
+
+		$stub = $this->overdueStub(
+			task: [
+				'id' => 'task-esc',
+				'status' => 'open',
+				'subject' => 'Missed callback',
+				'deadline' => (new \DateTimeImmutable('-24 hours'))->format(\DateTimeInterface::ATOM),
+				'assigneeUserId' => 'alice',
+			]
+		);
+
+		$told = [];
+		$this->notificationService->method('notifyTaskExpired')->willReturnCallback(
+			static function (string $title, string $userId) use (&$told): void {
+				$told[] = $userId;
+			}
+		);
+
+		$this->makeService(objectService: $stub)->processScheduledTasks();
+
+		$this->assertSame(expected: ['alice', 'marleen'], actual: $told);
+	}//end testExpiredTaskAlsoEscalatesToTheEscalationGroup()
 
 	/**
 	 * applyAcceptLanguage no-ops on an empty header (LanguageService is never touched).

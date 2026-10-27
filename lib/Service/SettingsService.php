@@ -218,7 +218,7 @@ class SettingsService {
 		'task_expiry.poll_interval_seconds' => '900',
 		'task_expiry.escalation_threshold_seconds' => '14400',
 		'task_expiry.in_progress_grace_seconds' => '86400',
-		'task_escalation.threshold_hours' => '4',
+		'task_expiry.escalation_group' => '',
 		'task.business_hour_start' => '8',
 		'task.business_hour_end' => '17',
 		'prospect_discovery.cache_ttl_seconds' => '3600',

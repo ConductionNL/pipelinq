@@ -497,7 +497,7 @@
 		},
 		{
 			"id": "KassakoppelingAuditList",
-			"label": "Kassakoppeling audit",
+			"label": "Cash register audit",
 			"icon": "Check",
 			"route": "KassakoppelingAuditList",
 			"order": 99
@@ -1842,7 +1842,17 @@
 					"showMetadata": true
 				},
 				"rowIcon": "OfficeBuildingOutline",
-				"countText": "{shown} of {total} clients"
+				"countText": "{shown} of {total} clients",
+				"_bulkActionsNote": "Board PqOrganisatiesVerrijken: selected organisations are looked up in the KvK and their empty registry fields filled (OrganisationEnrichDialog). People are never looked up; the server skips them.",
+				"bulkActions": [
+					{
+						"id": "enrich",
+						"label": "Fill in missing details",
+						"icon": "DatabaseSearchOutline",
+						"handler": "open-modal",
+						"target": "OrganisationEnrichDialog"
+					}
+				]
 			}
 		},
 		{
@@ -3820,38 +3830,12 @@
 					},
 					{
 						"id": "lead-contacts",
-						"type": "object-list",
+						"type": "LeadContactRolesWidget",
 						"title": "Contacts and their role",
 						"icon": "AccountGroup",
-						"_note": "The people this deal is worked with, read from contact.leads (97-lead-activity). allowCreate is OFF and that is not an oversight: the widget pre-fills a created object by merging its resolved filter into the payload as a SCALAR, and `leads` is an array. OpenRegister answers a scalar written into an array property with 400, so an Add button here would offer a create that always fails. A person is linked to the deal from the contact form instead.",
+						"_note": "The contacts on this deal with the role each plays (PqLead): role relationships from the lead to a contact, added here. The Contacts tab lists everyone linked through contact.leads.",
 						"content": {
-							"register": "pipelinq",
-							"schema": "contact",
-							"filter": {
-								"leads": "@objectId"
-							},
-							"columns": [
-								{
-									"key": "name",
-									"label": "Name"
-								},
-								{
-									"key": "role",
-									"label": "Role"
-								},
-								{
-									"key": "email",
-									"label": "Email"
-								},
-								{
-									"key": "phone",
-									"label": "Phone"
-								}
-							],
-							"limit": 25,
-							"rowRoute": "ContactDetail",
-							"allowCreate": false,
-							"emptyText": "Nobody is linked to this deal yet. Open a contact and add this deal to their leads."
+							"title": "Contacts and their role"
 						}
 					},
 					{
@@ -4592,6 +4576,7 @@
 					{ "key": "priority", "label": "Priority", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "high": "error", "normal": "default", "low": "default" } } },
 					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "open": "primary", "in_progress": "warning", "completed": "success", "expired": "error" } } }
 				],
+				"footerNote": "A task that passes its deadline expires, and its handler and team lead are told.",
 				"filterMenu": true,
 				"sidebar": {
 					"enabled": true,
@@ -4730,6 +4715,8 @@
 						"widgetProps": {
 							"colorMap": {
 								"active": "success",
+								"draft": "warning",
+								"discontinued": "default",
 								"inactive": "default"
 							}
 						},
@@ -4801,9 +4788,19 @@
 						"showCount": true
 					},
 					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						},
+						"showCount": true
+					},
+					{
 						"label": "Discontinued",
 						"filter": {
-							"status": "inactive"
+							"status": [
+								"discontinued",
+								"inactive"
+							]
 						},
 						"showCount": true
 					}
@@ -4842,7 +4839,9 @@
 									"widgetIds": [
 										"product-data",
 										"product-tiers",
+										"product-tariffs",
 										"product-variants",
+										"product-publication",
 										"product-lines",
 										"product-files"
 									]
@@ -4908,6 +4907,42 @@
 							"include": [
 								"variants"
 							],
+							"hideEmpty": false
+						}
+					},
+					{
+						"id": "product-tariffs",
+						"type": "ProductTariffsWidget",
+						"title": "Tariff table (fees)",
+						"icon": "CashMultiple",
+						"content": {
+							"title": "Tariff table (fees)"
+						}
+					},
+					{
+						"id": "product-publication",
+						"type": "data",
+						"title": "Publication",
+						"icon": "Earth",
+						"content": {
+							"columns": 2,
+							"include": [
+								"status",
+								"publishedAt",
+								"languages",
+								"audience"
+							],
+							"overrides": {
+								"publishedAt": {
+									"formatter": "longDate"
+								},
+								"languages": {
+									"formatter": "languageCodes"
+								},
+								"audience": {
+									"formatter": "labelList"
+								}
+							},
 							"hideEmpty": false
 						}
 					},
@@ -5146,10 +5181,14 @@
 					"field": "status",
 					"colorMap": {
 						"active": "success",
+						"draft": "warning",
+						"discontinued": "default",
 						"inactive": "default"
 					},
 					"labels": {
 						"active": "Active",
+						"draft": "Draft",
+						"discontinued": "Discontinued",
 						"inactive": "Discontinued"
 					}
 				},
@@ -5321,12 +5360,37 @@
 		},
 		{
 			"id": "PosRefundDetail",
-			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields auto-render via CnObjectDataWidget. The manager-gated Confirm / Reject actions are the header's actionsComponent (PosRefundHeaderActions). The refund totals (PosRefundTotalsWidget) and the 'Returned items' table (PosRefundItemsWidget) are grid widgets. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) 'Returned items' is a custom widget because it is a CROSS-SCHEMA JOIN: each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer), and an object-list renders ONE schema and cannot resolve a column off a second schema. Missing primitive: an object-list column resolved off a SECOND schema (cross-schema join lookup).",
+			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields auto-render via CnObjectDataWidget. Confirm (the pending refund's primary button) and Reject (with a reason) are declared header actions for admins; they POST to /api/pos-refunds/{id}/{action}. The refund totals are a facts card over the amounts the server stored on the refund; the 'Returned items' table (PosRefundItemsWidget) is a grid widget. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) 'Returned items' is a custom widget because it is a CROSS-SCHEMA JOIN: each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer), and an object-list renders ONE schema and cannot resolve a column off a second schema. Missing primitive: an object-list column resolved off a SECOND schema (cross-schema join lookup).",
 			"route": "/pos/refunds/:id",
 			"type": "detail",
 			"title": "Retour",
-			"actionsComponent": "PosRefundHeaderActions",
 			"config": {
+				"stageField": "status",
+				"primaryActionByStage": { "pending": "refund-confirm" },
+				"headerActions": [
+					{
+						"id": "refund-confirm",
+						"label": "Confirm",
+						"type": "api-call",
+						"icon": "Check",
+						"adminOnly": true,
+						"url": "/apps/pipelinq/api/pos-refunds/@objectId/confirm",
+						"successMessage": "Refund completed.",
+						"visibleWhen": { "field": "status", "value": "pending" }
+					},
+					{
+						"id": "refund-reject",
+						"label": "Reject",
+						"type": "open-form",
+						"adminOnly": true,
+						"endpoint": { "url": "/apps/pipelinq/api/pos-refunds/@objectId/reject", "method": "POST" },
+						"formProperties": {
+							"reason": { "type": "string", "title": "Reason for rejection", "description": "The cashier sees this reason on the refund.", "required": true }
+						},
+						"successMessage": "Refund rejected.",
+						"visibleWhen": { "field": "status", "value": "pending" }
+					}
+				],
 				"register": "pipelinq",
 				"schema": "posRefund",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -5384,9 +5448,17 @@
 					},
 					{
 						"id": "pos-refund-totals",
-						"type": "PosRefundTotalsWidget",
+						"type": "facts",
 						"title": "Refund totals",
-						"icon": "Cash"
+						"icon": "Cash",
+						"content": {
+							"fields": [
+								{ "path": "refundAmount", "label": "Excl. VAT", "format": "currency" },
+								{ "path": "totalTax", "label": "VAT", "format": "currency" },
+								{ "path": "paymentMethod", "label": "Refunded to", "map": { "cash": "Cash", "card_visa": "Visa", "card_mastercard": "Mastercard", "digital_wallet": "Digital wallet" } }
+							],
+							"emptyText": "No refund lines yet."
+						}
 					},
 					{
 						"id": "pos-refund-items",
@@ -5496,24 +5568,69 @@
 		},
 		{
 			"id": "CashShifts",
-			"_note": "CashShiftList.vue is a CnIndexPage specialised for the cash-drawer shift register (shift-specific columns/state on the cashShift schema); kept as a host-app component while those presets live outside the library.",
+			"_note": "The cash-drawer shift register as a declarative type:index page. Open shift is a header form that posts to the server-authoritative /api/pos-shifts endpoint (operator and float time are set from the session) and opens the new shift.",
 			"route": "/pos/shifts",
-			"type": "custom",
-			"title": "Kassalade",
-			"component": "CashShiftListView",
+			"type": "index",
+			"title": "Cash drawer",
 			"config": {
 				"register": "pipelinq",
-				"schema": "cashShift"
+				"schema": "cashShift",
+				"description": "Manage cash shifts: opening float, drops, blind counting and reconciliation",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"selectable": true,
+				"rowRoute": "CashShiftDetail",
+				"emptyText": "No shifts found",
+				"columns": [{ "key": "reference", "label": "Shift", "template": "Shift {floatAt|date}, {drawer}" }, "drawer", { "key": "operator", "formatter": "userDisplayName" }, { "key": "floatAmount", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }, { "key": "status", "widget": "badge", "widgetProps": { "colorMap": { "open": "success", "closed": "warning", "reconciled": "default" } } }, "floatAt", "closedAt"],
+				"headerActions": [
+					{
+						"id": "open-shift",
+						"label": "Open shift",
+						"type": "open-form",
+						"icon": "Plus",
+						"variant": "primary",
+						"endpoint": { "url": "/apps/pipelinq/api/pos-shifts", "method": "POST" },
+						"formProperties": {
+							"drawer": { "type": "string", "title": "Drawer", "required": true },
+							"floatAmount": { "type": "number", "minimum": 0, "title": "Opening amount", "required": true },
+							"reference": { "type": "string", "title": "Reference" },
+							"notes": { "type": "string", "title": "Notes" }
+						},
+						"successMessage": "Shift opened."
+					}
+				]
 			}
 		},
 		{
 			"id": "CashShiftDetail",
-			"_note": "Cash-shift record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The shift's flat fields auto-render via CnObjectDataWidget; the drops are an object-list (cashDrop, FK 'shift') inside CashShiftDropsWidget, whose Add drop posts to /api/pos-shifts/{id}/drop rather than creating the object directly. Close and count shift is the header's actionsComponent (CashShiftHeaderActions); the cash-reconciliation VARIANCE with its manager-gated approve/reject is a grid widget (CashShiftVarianceWidget). KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: drop / count / reconcile POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints that recompute variance server-side (NOT OR /transition); cashShift/cashDiff have no x-openregister-lifecycle; (2) the variance is a custom widget because it is a LATEST/PENDING-child projection: an object-list lists ALL children and cannot pick and lay out the single most-relevant cashDiff with its tolerance verdict and inline approve/reject. Missing primitive: a 'latest/pending child object' projection primitive.",
+			"_note": "Cash-shift record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The shift's flat fields auto-render via CnObjectDataWidget; the drops are an object-list (cashDrop, FK 'shift') inside CashShiftDropsWidget, whose Add drop posts to /api/pos-shifts/{id}/drop rather than creating the object directly. Close and count shift is the open shift's primary header action, a POST form to /api/pos-shifts/{id}/count; the cash difference is a facts card over the shift's latest cashDiff with admin approve/reject actions. lifecycleActions is NOT wired: drop / count / reconcile POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints that recompute variance server-side (NOT OR /transition); cashShift/cashDiff have no x-openregister-lifecycle.",
 			"route": "/pos/shifts/:id",
 			"type": "detail",
 			"title": "Shift",
-			"actionsComponent": "CashShiftHeaderActions",
 			"config": {
+				"titleTemplate": "Shift {floatAt|date}, {drawer}",
+				"titleField": "reference",
+				"stageField": "status",
+				"primaryActionByStage": { "open": "shift-count" },
+				"headerActions": [
+					{
+						"id": "shift-count",
+						"label": "Close and count shift",
+						"type": "open-form",
+						"icon": "CashRegister",
+						"endpoint": { "url": "/apps/pipelinq/api/pos-shifts/@objectId/count", "method": "POST" },
+						"formProperties": {
+							"amount": { "type": "number", "minimum": 0, "title": "Counted amount", "description": "Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).", "required": true },
+							"notes": { "type": "string", "title": "Notes" }
+						},
+						"successMessage": "Count recorded.",
+						"visibleWhen": { "field": "status", "value": "open" }
+					}
+				],
 				"register": "pipelinq",
 				"schema": "cashShift",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -5571,9 +5688,64 @@
 					},
 					{
 						"id": "shift-variance",
-						"type": "CashShiftVarianceWidget",
+						"type": "facts",
 						"title": "Cash difference",
-						"icon": "ScaleBalance"
+						"icon": "ScaleBalance",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "cashDiff",
+								"filter": { "shift": "@objectId" },
+								"sort": { "field": "@self.created", "dir": "desc" }
+							},
+							"headerPill": {
+								"path": "status",
+								"map": { "pending": "Pending", "approved": "Approved", "rejected": "Rejected" },
+								"variantMap": { "pending": "warning", "approved": "success", "rejected": "error" }
+							},
+							"fields": [
+								{ "path": "expectedAmount", "label": "Expected amount", "format": "currency" },
+								{ "path": "actualAmount", "label": "Counted amount", "format": "currency" },
+								{ "path": "diffAmount", "label": "Difference", "format": "currency" },
+								{ "path": "diffPercentage", "label": "Percentage", "format": "number", "suffix": "%" },
+								{
+									"as": "pill",
+									"key": "tolerance",
+									"path": "withinTolerance",
+									"map": { "true": "Within tolerance", "false": "Outside tolerance" },
+									"variantMap": { "true": "success", "false": "warning" }
+								},
+								{ "path": "approvedBy", "label": "Reviewed by", "format": "user" },
+								{ "path": "rejectionReason", "label": "Rejection reason" }
+							],
+							"actions": [
+								{
+									"id": "diff-approve",
+									"label": "Approve",
+									"type": "api-call",
+									"variant": "primary",
+									"adminOnly": true,
+									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
+									"payload": { "diffId": "@source.id" },
+									"successMessage": "Cash difference approved.",
+									"visibleWhen": { "field": "status", "value": "pending" }
+								},
+								{
+									"id": "diff-reject",
+									"label": "Reject",
+									"type": "open-form",
+									"variant": "error",
+									"adminOnly": true,
+									"endpoint": { "url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/reject?diffId=@source.id", "method": "POST" },
+									"formProperties": {
+										"reason": { "type": "string", "title": "Rejection reason", "description": "This rejects the cash difference and reopens the shift for a recount." }
+									},
+									"successMessage": "Cash difference rejected. The shift is open for a recount.",
+									"visibleWhen": { "field": "status", "value": "pending" }
+								}
+							],
+							"emptyText": "Not counted yet. The difference appears once the shift is closed and counted."
+						}
 					},
 					{
 						"id": "shift-drops",
@@ -5594,6 +5766,26 @@
 							"limit": 25,
 							"allowCreate": false,
 							"emptyText": "No cash drops recorded on this shift yet."
+						}
+					},
+					{
+						"id": "shift-kpis-sales",
+						"type": "stats-block",
+						"title": "Sales in this shift",
+						"icon": "CashRegister",
+						"content": {
+							"entries": [
+								{
+									"title": "Sales in this shift",
+									"register": "pipelinq",
+									"schema": "posTransaction",
+									"metric": "count",
+									"countLabel": "sales",
+									"filter": {
+										"shift": "@objectId"
+									}
+								}
+							]
 						}
 					},
 					{
@@ -5651,6 +5843,14 @@
 						"gridY": 6,
 						"gridWidth": 4,
 						"gridHeight": 5
+					},
+					{
+						"id": "5",
+						"widgetId": "shift-kpis-sales",
+						"gridX": 8,
+						"gridY": 11,
+						"gridWidth": 4,
+						"gridHeight": 2
 					}
 				],
 				"sidebar": {
@@ -5888,11 +6088,11 @@
 		},
 		{
 			"id": "KassakoppelingAuditList",
-			"_note": "KassakoppelingAuditList.vue is a bespoke audit-trail viewer for the kassakoppeling (cash-register fiscalisation link) with append-only entries and verification actions rendered in a custom layout; the generic 'index' type cannot express the immutable-audit presentation and per-row verify controls.",
-			"route": "/kassakoppeling/audit",
+			"_note": "The cash register audit log: a bespoke viewer over /api/kassakoppeling/audit with a date range, register, operator and action filter and the admin export for the tax authority. The detail is declarative (KassakoppelingAuditDetail).",
+			"route": "/cash-register-audit",
 			"type": "custom",
-			"title": "Kassakoppeling audit",
-			"component": "KassakoppelingAuditListView",
+			"title": "Cash register audit",
+			"component": "CashRegisterAuditListView",
 			"config": {
 				"register": "pipelinq",
 				"schema": "kassakoppelingAuditLog"
@@ -5900,24 +6100,299 @@
 		},
 		{
 			"id": "KassakoppelingAuditDetail",
-			"_note": "KassakoppelingAuditDetail.vue is a CnDetailPage with audit-specific CnDetailCard panels showing the signed payload, hash chain and verification result of one fiscalisation entry; the standard 'detail' type cannot render this signed/verifiable audit layout.",
-			"route": "/kassakoppeling/audit/:id",
-			"type": "custom",
-			"title": "Audit entry",
-			"component": "KassakoppelingAuditDetailView",
+			"_note": "One cash register audit entry as a declarative type:detail page over the app's own endpoint (entitySource \"endpoint\", GET /api/kassakoppeling/audit/{id}); the entry is append-only, so the only action is Verify signature, which recomputes the HMAC and the chain hash on the server. Amounts are stored in cents.",
+			"route": "/cash-register-audit/:id",
+			"type": "detail",
+			"title": "Cash register audit entry",
 			"config": {
-				"register": "pipelinq",
-				"schema": "kassakoppelingAuditLog"
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/pipelinq/api/kassakoppeling/audit/{id}",
+					"recordPath": "entry"
+				},
+				"showEditAction": false,
+				"stageField": "verified",
+				"headerActions": [
+					{
+						"id": "audit-verify",
+						"label": "Verify signature",
+						"type": "api-call",
+						"variant": "primary",
+						"icon": "ShieldCheckOutline",
+						"url": "/apps/pipelinq/api/kassakoppeling/audit/@objectId/verify",
+						"successMessage": "Verification done. The status shows the result.",
+						"visibleWhen": {
+							"field": "verified",
+							"op": "neq",
+							"value": true
+						}
+					}
+				],
+				"widgets": [
+					{
+						"id": "audit-verification",
+						"type": "facts",
+						"title": "Verification status",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"fields": [
+								{
+									"as": "pill",
+									"key": "verified",
+									"path": "verified",
+									"map": {
+										"true": "Cryptographically verified",
+										"false": "Signature invalid: possible tampering"
+									},
+									"variantMap": {
+										"true": "success",
+										"false": "error"
+									}
+								},
+								{
+									"as": "text",
+									"key": "verified-text",
+									"path": "verified",
+									"map": {
+										"true": "The HMAC-SHA256 signature and the SHA-256 chain hash match the stored values. The entry has not been modified since creation.",
+										"false": "The signature or the chain hash does not match. This may indicate manual modification of the entry or a rotation of the secret key without re-signing."
+									}
+								}
+							],
+							"emptyText": "Not verified yet. Verify signature recomputes the signature and the chain hash."
+						}
+					},
+					{
+						"id": "audit-summary",
+						"type": "facts",
+						"title": "Summary",
+						"icon": "FileDocument",
+						"content": {
+							"fields": [
+								{
+									"as": "pill",
+									"key": "action",
+									"path": "action",
+									"map": {
+										"sale": "Sale",
+										"void": "Void",
+										"refund": "Refund",
+										"no-sale": "No sale"
+									},
+									"variantMap": {
+										"sale": "success",
+										"void": "warning",
+										"refund": "primary",
+										"no-sale": "default"
+									}
+								},
+								{
+									"path": "operatorId",
+									"label": "Operator",
+									"format": "user"
+								},
+								{
+									"path": "amount",
+									"label": "Amount",
+									"format": "currency",
+									"minorUnits": true
+								},
+								{
+									"path": "timestamp",
+									"label": "Time",
+									"format": "date-long"
+								},
+								{
+									"path": "registerNumber",
+									"label": "Register number"
+								},
+								{
+									"path": "exportedAt",
+									"label": "Exported on",
+									"format": "date-long"
+								},
+								{
+									"path": "itemCount",
+									"label": "Number of items"
+								},
+								{
+									"path": "taxAmount",
+									"label": "VAT amount",
+									"format": "currency",
+									"minorUnits": true
+								},
+								{
+									"path": "description",
+									"label": "Description"
+								}
+							]
+						}
+					},
+					{
+						"id": "audit-crypto",
+						"type": "facts",
+						"title": "Cryptographic data",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"fields": [
+								{
+									"as": "text",
+									"key": "algorithm",
+									"text": "HMAC-SHA256, key on the server"
+								},
+								{
+									"path": "signature",
+									"label": "Signature",
+									"copy": true
+								},
+								{
+									"path": "currentHash",
+									"label": "Current hash",
+									"copy": true
+								},
+								{
+									"path": "previousHash",
+									"label": "Previous hash",
+									"copy": true
+								}
+							],
+							"link": {
+								"label": "Open the linked transaction",
+								"route": {
+									"name": "PosTransactionDetail",
+									"params": {
+										"id": "@source.transactionUuid"
+									}
+								}
+							}
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "audit-verification",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 2
+					},
+					{
+						"id": "2",
+						"widgetId": "audit-summary",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 6,
+						"gridHeight": 6
+					},
+					{
+						"id": "3",
+						"widgetId": "audit-crypto",
+						"gridX": 6,
+						"gridY": 2,
+						"gridWidth": 6,
+						"gridHeight": 6
+					}
+				]
 			}
 		},
 		{
 			"id": "PosTransactionDetail",
-			"_note": "POS transaction record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). Two columns: all of the transaction's fields (data widget) beside the line count and the stored totals (PosTransactionTotalsWidget: tax return per rate, subtotal/discount/VAT/total, invoice split, REQ-BTW-005, which also carries the old Total and VAT tiles); the line items (object-list on posTransactionLine, FK 'transaction') beside Related; then the tenders and provider status full width (PosTransactionPaymentWidget). The status-gated actions and 'Edit line items' (the cart editor) are the header's actionsComponent (PosTransactionHeaderActions), beside the page's own Edit. They POST to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects, NOT OR's /transition, and posTransaction has no x-openregister-lifecycle, so lifecycleActions is not wired.",
+			"_note": "POS transaction record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). Two columns: all of the transaction's fields (data widget) beside the line count and the stored totals (PosTransactionTotalsWidget: tax return per rate, subtotal/discount/VAT/total, invoice split, REQ-BTW-005, which also carries the old Total and VAT tiles); the line items (object-list on posTransactionLine, FK 'transaction') beside Related; then the payment provider as a facts card with its capture, retry and reverse actions, and the tenders full width (PosTransactionPaymentWidget). The header follows the stage (Q9): one primary button (Confirm for a draft with lines, Resume when parked, Check out when confirmed), the receipts and Register refund as quick actions, and Edit line items, Park and the admin Reverse in the Actions menu. They POST to /api/pos-transactions/{id}/{action} endpoints with side-effects, NOT OR's /transition, and posTransaction has no x-openregister-lifecycle, so lifecycleActions is not wired.",
 			"route": "/pos/:id",
 			"type": "detail",
 			"title": "Transactie",
-			"actionsComponent": "PosTransactionHeaderActions",
 			"config": {
+				"stageField": "status",
+				"primaryActionByStage": { "draft": "tx-confirm", "parked": "tx-resume", "confirmed": "tx-settle" },
+				"quickActions": ["tx-print-receipt", "tx-email-receipt", "tx-register-refund"],
+				"headerActions": [
+					{
+						"id": "tx-confirm",
+						"label": "Confirm",
+						"type": "api-call",
+						"icon": "Check",
+						"url": "/apps/pipelinq/api/pos-transactions/@objectId/confirm",
+						"successMessage": "Transaction confirmed.",
+						"visibleWhen": {
+							"all": [
+								{ "field": "status", "op": "in", "value": ["draft", "parked"] },
+								{ "source": { "register": "pipelinq", "schema": "posTransactionLine", "filter": { "transaction": "@objectId" } }, "field": "@total", "op": "gt", "value": 0 }
+							]
+						}
+					},
+					{
+						"id": "tx-resume",
+						"label": "Resume",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/pos-transactions/@objectId/resume",
+						"successMessage": "Transaction resumed.",
+						"visibleWhen": { "field": "status", "value": "parked" }
+					},
+					{
+						"id": "tx-settle",
+						"label": "Check out",
+						"type": "api-call",
+						"icon": "CashRegister",
+						"url": "/apps/pipelinq/api/pos-transactions/@objectId/settle",
+						"successMessage": "Transaction settled.",
+						"visibleWhen": { "field": "status", "value": "confirmed" }
+					},
+					{
+						"id": "tx-print-receipt",
+						"label": "Print receipt",
+						"type": "open-modal",
+						"icon": "Printer",
+						"target": "PrintReceiptModal",
+						"props": { "transactionId": "@objectId" },
+						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled", "refunded"] }
+					},
+					{
+						"id": "tx-email-receipt",
+						"label": "Email receipt",
+						"type": "open-modal",
+						"icon": "EmailOutline",
+						"target": "EmailReceiptModal",
+						"props": { "transactionId": "@objectId" },
+						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled", "refunded"] }
+					},
+					{
+						"id": "tx-register-refund",
+						"label": "Register refund",
+						"type": "navigate",
+						"icon": "CashRefund",
+						"target": "/pos/refunds/new/@objectId",
+						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled"] }
+					},
+					{
+						"id": "tx-edit-lines",
+						"label": "Edit line items",
+						"type": "navigate",
+						"icon": "PencilOutline",
+						"target": "/pos/@objectId/edit",
+						"visibleWhen": { "field": "status", "op": "in", "value": ["draft", "parked"] }
+					},
+					{
+						"id": "tx-park",
+						"label": "Park",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/pos-transactions/@objectId/park",
+						"successMessage": "Transaction parked.",
+						"visibleWhen": { "field": "status", "value": "draft" }
+					},
+					{
+						"id": "tx-reverse",
+						"label": "Reverse",
+						"type": "open-form",
+						"adminOnly": true,
+						"endpoint": { "url": "/apps/pipelinq/api/pos-transactions/@objectId/refund", "method": "POST" },
+						"formProperties": {
+							"reason": { "type": "string", "title": "Reason", "description": "This will reverse the transaction. Enter a reason for the refund.", "required": true }
+						},
+						"successMessage": "Transaction refunded.",
+						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled"] }
+					}
+				],
 				"register": "pipelinq",
 				"schema": "posTransaction",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -5990,6 +6465,76 @@
 						"icon": "LinkVariant"
 					},
 					{
+						"id": "pos-tx-provider",
+						"type": "facts",
+						"title": "Payment provider",
+						"icon": "CreditCardOutline",
+						"visibleWhen": {
+							"any": [
+								{ "field": "paymentProvider", "op": "notEmpty" },
+								{ "field": "paymentStatus", "op": "notEmpty" }
+							]
+						},
+						"content": {
+							"headerPill": {
+								"path": "paymentStatus",
+								"map": { "pending": "In progress", "captured": "Authorized", "settled": "Settled", "failed": "Failed", "refunded": "Reversed" },
+								"variantMap": { "pending": "warning", "captured": "primary", "settled": "success", "failed": "error", "refunded": "default" }
+							},
+							"fields": [
+								{
+									"path": "paymentProvider",
+									"label": "Provider",
+									"map": { "mollie": "Mollie", "ccv": "CCV", "adyen": "Adyen", "stripe": "Stripe", "cash": "Cash", "voucher": "Gift voucher", "account": "Account" }
+								},
+								{
+									"path": "paymentMethod",
+									"label": "Method",
+									"map": { "ideal": "iDEAL", "bancontact": "Bancontact", "card": "Card", "creditcard": "Credit card", "cash": "Cash" }
+								},
+								{ "path": "paymentSessionId", "label": "Session", "copy": true }
+							],
+							"actions": [
+								{
+									"id": "payment-complete",
+									"label": "Complete",
+									"type": "api-call",
+									"variant": "primary",
+									"url": "/apps/pipelinq/api/pos-payments/@source.id/capture",
+									"successMessage": "Payment completed.",
+									"visibleWhen": { "field": "paymentStatus", "value": "pending" }
+								},
+								{
+									"id": "payment-retry",
+									"label": "Try again",
+									"type": "api-call",
+									"url": "/apps/pipelinq/api/pos-payments/@source.id/initiate",
+									"payload": { "providerName": "@source.paymentProvider", "paymentMethod": "@source.paymentMethod" },
+									"successMessage": "Payment started again.",
+									"visibleWhen": { "field": "paymentStatus", "value": "failed" }
+								},
+								{
+									"id": "payment-reverse",
+									"label": "Reverse",
+									"type": "open-form",
+									"adminOnly": true,
+									"variant": "error",
+									"endpoint": { "url": "/apps/pipelinq/api/pos-payments/@source.id/refund", "method": "POST" },
+									"formProperties": {
+										"reason": { "type": "string", "title": "Reason for reversal", "description": "Why is this payment being reversed?" }
+									},
+									"successMessage": "Payment reversed.",
+									"visibleWhen": {
+										"all": [
+											{ "field": "paymentStatus", "op": "in", "value": ["settled", "captured"] },
+											{ "field": "status", "op": "in", "value": ["confirmed", "settled"] }
+										]
+									}
+								}
+							]
+						}
+					},
+					{
 						"id": "pos-tx-payment",
 						"type": "PosTransactionPaymentWidget",
 						"title": "Payment",
@@ -6039,6 +6584,14 @@
 					},
 					{
 						"id": "6",
+						"widgetId": "pos-tx-provider",
+						"gridX": 0,
+						"gridY": 12,
+						"gridWidth": 8,
+						"gridHeight": 3
+					},
+					{
+						"id": "7",
 						"widgetId": "pos-tx-payment",
 						"gridX": 0,
 						"gridY": 15,
@@ -7568,6 +8121,27 @@
 					{ "key": "isDefault", "label": "Default" },
 					{ "key": "_dateCreated", "label": "Created" }
 				],
+				"_cardsNote": "Board PqPipelines: each pipeline is a card with its description, how many stages it has and when it was made, and its stages as chips in order. The cards view opens first; the table stays one switch away. Editing the stages is the pipeline's own form (Edit).",
+				"showTitle": true,
+				"countText": "{total} pipelines · the stages a lead or request goes through, in order",
+				"addLabel": "New pipeline",
+				"headerButtons": [
+					{ "action": "export", "label": "Download" },
+					{ "action": "add", "variant": "primary", "icon": "Plus", "label": "New pipeline" }
+				],
+				"viewModes": ["cards", "table"],
+				"viewMode": "cards",
+				"cardLayout": {
+					"title": "title",
+					"meta": [
+						{ "template": "{stages|count} stages" },
+						{ "template": "created {@self.created|date}" }
+					],
+					"description": "description",
+					"chips": [
+						{ "field": "stages", "each": "name" }
+					]
+				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
