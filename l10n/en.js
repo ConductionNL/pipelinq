@@ -8423,7 +8423,8 @@ OC.L10N.register(
         "Could not load the contacts settings.": "Could not load the contacts settings.",
         "Could not save the contacts settings.": "Could not save the contacts settings.",
         "Could not sync your contacts.": "Could not sync your contacts.",
-        "writeBack must be true or false": "writeBack must be true or false"
+        "writeBack must be true or false": "writeBack must be true or false",
+        "Discriminator: request (demand/case), complaint (klacht), melding (a report about the public space, such as loose paving or a broken street light) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice.": "Discriminator: request (demand/case), complaint (klacht), melding (a report about the public space, such as loose paving or a broken street light) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice."
     },
     "nplurals=2; plural=(n != 1);"
 )
