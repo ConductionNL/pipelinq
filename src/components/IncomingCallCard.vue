@@ -12,7 +12,8 @@
   - `?callPreview=<number>` in the address shows the card for that number
   - without a call on the line, so the card, the chooser
   - (`&callPreviewOpen=chooser`) and the new-contact form
-  - (`&callPreviewOpen=intake`) can be seen and checked against their boards.
+  - (`&callPreviewOpen=intake`) and the wrap-up after the call
+  - (`&callPreviewOpen=disposition`) can be seen and checked against their boards.
   - The preview only looks the number up; it writes nothing until the agent
   - saves a new contact or opens a record, as with a real call.
   -
@@ -149,8 +150,20 @@
 			v-if="intakeOpen"
 			:e164="pop && pop.e164 ? pop.e164 : ''"
 			:prefillPhone="call ? call.fromNumber : ''"
+			:queueName="call && call.queueName ? call.queueName : ''"
 			@close="intakeOpen = false"
 			@submit="createContact" />
+		<CtiDispositionModal
+			v-if="wrapUp"
+			:number="wrapUp.number"
+			:clientName="wrapUp.clientName"
+			:durationSeconds="wrapUp.durationSeconds"
+			:recordedAs="wrapUp.recordedAs"
+			:recordedHref="wrapUp.recordedHref"
+			:saving="savingWrapUp"
+			:queueOptions="queueOptions"
+			@close="wrapUp = null"
+			@submit="saveWrapUp" />
 	</div>
 </template>
 
@@ -160,9 +173,10 @@ import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import AccountOutline from 'vue-material-design-icons/AccountOutline.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import PhoneIncoming from 'vue-material-design-icons/PhoneIncoming.vue'
+import CtiDispositionModal from '../modals/CtiDispositionModal.vue'
 import NewContactIntakeModal from '../modals/NewContactIntakeModal.vue'
 import ScreenPopModal from '../modals/ScreenPopModal.vue'
-import { incomingCall, screenPop } from '../services/ctiApi.js'
+import { escalationQueues, incomingCall, screenPop, submitDisposition } from '../services/ctiApi.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 /** How often the card asks again when no live event arrives. */
@@ -173,6 +187,7 @@ export default {
 
 	components: {
 		AccountOutline,
+		CtiDispositionModal,
 		Close,
 		NcButton,
 		NcLoadingIcon,
@@ -198,6 +213,12 @@ export default {
 			revealedCallId: '',
 			chooserOpen: false,
 			intakeOpen: false,
+			/** The call the agent wraps up after it ended, or null. */
+			wrapUp: null,
+			savingWrapUp: false,
+			/** The escalation queues the wrap-up offers; loaded when a wrap-up opens. */
+			queues: [],
+			queuesLoaded: false,
 			now: Date.now(),
 			pollTimer: null,
 			tickTimer: null,
@@ -208,6 +229,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The escalation queues as the wrap-up's select options.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+		 */
+		queueOptions() {
+			return this.queues.map((queue) => ({ value: queue.id, label: queue.label }))
+		},
+
 		/**
 		 * @return {object} The shared object store, used for live hints and for
 		 *   linking the call to the record the agent opens.
@@ -307,6 +338,25 @@ export default {
 				this.refresh()
 			}
 		},
+
+		/**
+		 * A wrap-up opened: load the escalation queues it offers, once.
+		 *
+		 * @param {object|null} wrapUp The call being wrapped up.
+		 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+		 */
+		async wrapUp(wrapUp) {
+			if (!wrapUp || this.queuesLoaded) {
+				return
+			}
+			this.queuesLoaded = true
+			try {
+				this.queues = await escalationQueues()
+			} catch {
+				// Without the list the dialog leaves the choice out; the server falls back to the first queue.
+				this.queuesLoaded = false
+			}
+		},
 	},
 
 	/**
@@ -370,6 +420,9 @@ export default {
 		 */
 		receive(call, delayMs) {
 			if (call === null) {
+				if (this.call !== null && this.call.id === this.handledCallId) {
+					this.wrapUp = this.wrapUpFor(this.call)
+				}
 				this.clearCall()
 				return
 			}
@@ -417,6 +470,9 @@ export default {
 			}
 			if (call.previewOpen === 'intake') {
 				this.intakeOpen = true
+			}
+			if (call.previewOpen === 'disposition') {
+				this.wrapUp = this.wrapUpFor(call)
 			}
 		},
 
@@ -500,6 +556,56 @@ export default {
 			this.rejected = false
 			this.chooserOpen = false
 			this.intakeOpen = false
+		},
+
+		/**
+		 * What the wrap-up shows for a call: its number, who called (when the
+		 * screen pop found one), how long it took and the contact moment.
+		 *
+		 * @param {object} call The call that ended.
+		 * @return {object} The wrap-up.
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		wrapUpFor(call) {
+			const started = Date.parse(call.startedAt)
+			const match = this.pop && this.pop.matches.length === 1 ? this.pop.matches[0] : null
+			const reference = call.reference || ''
+			return {
+				callId: call.id,
+				preview: call.id === 'preview',
+				number: (this.pop && this.pop.rawNumber) || call.fromNumber || '',
+				clientName: match ? this.displayName(match) : '',
+				durationSeconds: Number.isNaN(started) ? -1 : Math.max(0, Math.round((Date.now() - started) / 1000)),
+				recordedAs: reference
+					? this.t('pipelinq', 'Contact moment at {reference}', { reference })
+					: this.t('pipelinq', 'Contact moment'),
+
+				recordedHref: call.id === 'preview' ? '' : this.$router.resolve({ name: 'TicketDetail', params: { id: call.id } }).href,
+			}
+		},
+
+		/**
+		 * Record the wrap-up on the call's contact moment. A previewed call
+		 * has none, so its wrap-up only closes.
+		 *
+		 * @param {object} form Subject, outcome and notes.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		async saveWrapUp(form) {
+			if (!this.wrapUp || this.wrapUp.preview) {
+				this.wrapUp = null
+				return
+			}
+			this.savingWrapUp = true
+			try {
+				await submitDisposition(this.wrapUp.callId, form)
+				this.wrapUp = null
+			} catch {
+				showError(this.t('pipelinq', 'The call outcome is not saved. Try again.'))
+			} finally {
+				this.savingWrapUp = false
+			}
 		},
 
 		/**

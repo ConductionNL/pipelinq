@@ -124,7 +124,7 @@ describe('CTI event log', () => {
 })
 
 describe('POS tender types', () => {
-	it('lists a tender type with code, GL account, flags, sort and actions', async () => {
+	it('lists a tender type as a table row: name, code, GL account, flags, state and actions', async () => {
 		axiosMock.get.mockResolvedValue({
 			data: {
 				results: [
@@ -144,16 +144,10 @@ describe('POS tender types', () => {
 		const wrapper = mount(PosTenderTypeList, mountOptions)
 		await flushPromises()
 
-		expect(wrapper.find('table').exists()).toBe(false)
+		// One table row per tender type, as the board draws it (pl2 PqBeheerKassa).
 		const type = wrapper.get('[data-testid="pos-tender-type"]')
-		expect(type.get('h3').text()).toBe('Pin')
-		expect(type.text()).toContain('Active')
-		expect(factsOf(type)).toEqual({
-			Code: 'PIN',
-			'GL account': '1100',
-			Flags: 'PIN',
-			Sort: '2',
-		})
+		expect(type.element.tagName).toBe('TR')
+		expect(type.findAll('td').map((c) => c.text()).slice(0, 5)).toEqual(['Pin', 'PIN', '1100', 'PIN', 'Active'])
 		const actions = type
 			.findAll('.pos-tender-type-list__row-actions button')
 			.map((b) => b.text())
@@ -162,12 +156,22 @@ describe('POS tender types', () => {
 })
 
 describe('POS roles and staff', () => {
-	it('opens the POS roles as cards', () => {
+	it('lists the POS roles as a table of their rights, as the board draws it', () => {
 		const source = readFileSync(
 			resolve(__dirname, '../../src/views/pos/PosRoleList.vue'),
 			'utf8',
 		)
-		expect(source).toMatch(/viewMode="cards"/)
+		expect(source).toContain('<table v-else-if="objects.length" class="pos-role-list__table">')
+		expect(source).toContain("t('pipelinq', 'May open the drawer')")
+		expect(source).not.toContain('CnIndexPage')
+	})
+
+	it('adds a tender type, role or staff member from the section title row', () => {
+		for (const file of ['PosTenderTypeManager', 'PosRoleManager', 'PosStaffManager']) {
+			const source = readFileSync(resolve(__dirname, `../../src/views/settings/${file}.vue`), 'utf8')
+			expect(source).toContain('<template #actions>')
+			expect(source).toContain('<CnSettingsSection')
+		}
 	})
 
 	it('lets the POS staff headers wrap and drops the doubled padding', () => {

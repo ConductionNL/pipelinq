@@ -1,0 +1,26 @@
+{
+	"$comment": "pipelinq's escalation queues in the Zuiddrecht set (cti-escalation-queues): board PqGesprekAfronden closes a call as Escalated and hands it to \"Vergunningen, tweede lijn\". A queue is app config `cti_escalation_queues` ({ id, label, groupId }); the follow-up task is assigned to the queue's group. The groups are the second-line teams; their members are set by the people who staff them.",
+	"groups": [
+		{
+			"group": "zuiddrecht-tweede-lijn-vergunningen",
+			"displayName": "Vergunningen, tweede lijn",
+			"members": []
+		},
+		{
+			"group": "zuiddrecht-tweede-lijn-belastingen",
+			"displayName": "Belastingen, tweede lijn",
+			"members": []
+		},
+		{
+			"group": "zuiddrecht-tweede-lijn-sociaal-domein",
+			"displayName": "Sociaal domein, tweede lijn",
+			"members": []
+		}
+	],
+	"appConfig": [
+		{
+			"key": "cti_escalation_queues",
+			"value": "[{\"id\":\"vergunningen-tweede-lijn\",\"label\":\"Vergunningen, tweede lijn\",\"groupId\":\"zuiddrecht-tweede-lijn-vergunningen\"},{\"id\":\"belastingen-tweede-lijn\",\"label\":\"Belastingen, tweede lijn\",\"groupId\":\"zuiddrecht-tweede-lijn-belastingen\"},{\"id\":\"sociaal-domein-tweede-lijn\",\"label\":\"Sociaal domein, tweede lijn\",\"groupId\":\"zuiddrecht-tweede-lijn-sociaal-domein\"}]"
+		}
+	]
+}

@@ -109,12 +109,58 @@
         "documentationUrl": "https://pipelinq.conduction.nl",
         "widgets": [
           {
+            "id": "social-post-variants",
+            "type": "SocialPostVariantsWidget",
+            "title": "What it says per network",
+            "icon": "TextBoxOutline",
+            "content": {
+              "title": "What it says per network"
+            }
+          },
+          {
+            "id": "social-post-publications",
+            "type": "SocialPublicationsWidget",
+            "title": "Where it went",
+            "icon": "SendOutline",
+            "content": {
+              "title": "Where it went"
+            }
+          },
+          {
+            "id": "social-post-history",
+            "type": "audit-trail",
+            "title": "History",
+            "icon": "History"
+          },
+          {
+            "id": "social-post-panels",
+            "type": "tabs",
+            "title": "Social post",
+            "content": {
+              "ariaLabel": "Social post",
+              "tabs": [
+                {
+                  "widgetIds": [
+                    "social-post-variants",
+                    "social-post-publications"
+                  ],
+                  "label": "Overview"
+                },
+                {
+                  "widgetId": "social-post-history",
+                  "label": "History",
+                  "countFrom": "widget"
+                }
+              ]
+            }
+          },
+          {
             "id": "social-post-data",
             "type": "data",
             "title": "Post details",
             "icon": "InformationOutline",
             "content": {
-              "columns": 2,
+              "columns": 1,
               "include": [
                 "status",
                 "scheduledFor",
@@ -124,56 +170,52 @@
                 "createdBy",
                 "agentAuthored"
               ],
-              "overrides": { "createdBy": { "formatter": "userDisplayName" } }
+              "overrides": {
+                "createdBy": {
+                  "formatter": "userDisplayName"
+                }
+              },
+              "editable": false,
+              "title": "Post details"
             }
           }
         ],
         "layout": [
           {
             "id": "1",
-            "widgetId": "social-post-data",
+            "widgetId": "social-post-panels",
             "gridX": 0,
             "gridY": 0,
             "gridWidth": 12,
-            "gridHeight": 5
+            "gridHeight": 8
           }
         ],
-        "bodyWidgets": [
-          {
-            "id": "social-post-variants",
-            "component": "SocialPostVariantsSection",
-            "title": "What this says per network",
-            "placement": "before-body",
-            "props": {
-              "postId": "@objectId"
-            }
+        "sideColumn": [
+          "social-post-data"
+        ],
+        "headerCard": true,
+        "breadcrumb": {
+          "label": "Social posts",
+          "route": "SocialPosts"
+        },
+        "statusPill": {
+          "field": "status",
+          "labels": {
+            "draft": "Draft",
+            "approval": "Waiting for approval",
+            "scheduled": "Scheduled",
+            "published": "Published",
+            "failed": "Failed"
           },
-          {
-            "id": "social-post-publications",
-            "component": "SocialPublicationsSection",
-            "title": "Where it went",
-            "placement": "end",
-            "props": {
-              "postId": "@objectId"
-            }
+          "colorMap": {
+            "draft": "default",
+            "approval": "purple",
+            "scheduled": "info",
+            "published": "success",
+            "failed": "error"
           }
-        ],
-        "sidebar": {
-          "enabled": true,
-          "showMetadata": true,
-          "tabs": [
-            {
-              "id": "audit",
-              "label": "History",
-              "icon": "History",
-              "widgets": [
-                {
-                  "type": "audit"
-                }
-              ]
-            }
-          ]
-        }
+        },
+        "_boardNote": "Board PqSocialBericht: the text per network and where it went in an Overview tab beside History, the post details in the side column, the status as a coloured pill."
       }
     },
     {

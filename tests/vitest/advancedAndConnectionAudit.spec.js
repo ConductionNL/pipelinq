@@ -37,6 +37,11 @@ describe('the Advanced page', () => {
 		])
 	})
 
+	it('tones the Flows status as the board does: green', () => {
+		const flows = advanced.config.cards.find((card) => card.id === 'Flows')
+		expect(flows.status).toEqual({ text: '{on} active, {off} paused', tone: 'success' })
+	})
+
 	it('puts every card in a declared group, with a target', () => {
 		for (const card of advanced.config.cards) {
 			expect(advanced.config.categories[card.category], card.id).toBeTruthy()

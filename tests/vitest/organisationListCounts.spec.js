@@ -30,4 +30,10 @@ describe('the organisations list', () => {
 		expect(column('lastContact').formatter).toBe('date')
 		expect(preset.columns.map((c) => c.key).at(-1)).toBe('lastContact')
 	})
+
+	it('names its add button for an organisation, as PqOrganisaties draws it', () => {
+		expect(preset.addLabel).toBe('Add organisation')
+		const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+		expect(nl[preset.addLabel]).toBe('Organisatie toevoegen')
+	})
 })
