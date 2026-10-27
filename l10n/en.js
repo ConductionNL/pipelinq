@@ -8353,7 +8353,24 @@ OC.L10N.register(
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.",
         "Public-space report": "Public-space report",
-        "melding": "melding"
+        "melding": "melding",
+        "Tariff table (fees)": "Tariff table (fees)",
+        "Publication": "Publication",
+        "No tariffs set for this product.": "No tariffs set for this product.",
+        "Tariff": "Tariff",
+        "Tariffs": "Tariffs",
+        "Scheduled publication: the tariffs of {year} go live on {date}. Until then residents see the tariffs of {current}.": "Scheduled publication: the tariffs of {year} go live on {date}. Until then residents see the tariffs of {current}.",
+        "Tariff source": "Tariff source",
+        "Publication date": "Publication date",
+        "Languages": "Languages",
+        "Business": "Business",
+        "Weight (g)": "Weight (g)",
+        "The fees set for this product, such as the rates of a fee regulation. A tariff with a later valid-from date replaces the one with the same label from that day.": "The fees set for this product, such as the rates of a fee regulation. A tariff with a later valid-from date replaces the one with the same label from that day.",
+        "Where the tariffs come from, such as the fee regulation and its chapter.": "Where the tariffs come from, such as the fee regulation and its chapter.",
+        "The day the product was first published to residents and businesses.": "The day the product was first published to residents and businesses.",
+        "The languages the product is published in, as two-letter codes (nl, en).": "The languages the product is published in, as two-letter codes (nl, en).",
+        "Who the product is for.": "Who the product is for.",
+        "The weight in grams, for an item too light to state in kilograms with two decimals. When set, it is shown instead of the weight in kilograms.": "The weight in grams, for an item too light to state in kilograms with two decimals. When set, it is shown instead of the weight in kilograms."
     },
     "nplurals=2; plural=(n != 1);"
 )

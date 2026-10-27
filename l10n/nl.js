@@ -8324,7 +8324,24 @@ OC.L10N.register(
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "Een fasewissel, een contract dat verlengd kan worden, een bevestigde inschrijving, een boekhoudsignaal, een nieuw adres of een afgesloten ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem.",
         "Public-space report": "Melding",
-        "melding": "Melding"
+        "melding": "Melding",
+        "Tariff table (fees)": "Tarieventabel (leges)",
+        "Publication": "Publicatie",
+        "No tariffs set for this product.": "Voor dit product zijn geen tarieven ingesteld.",
+        "Tariff": "Tarief",
+        "Tariffs": "Tarieven",
+        "Scheduled publication: the tariffs of {year} go live on {date}. Until then residents see the tariffs of {current}.": "Ingeplande publicatie: de tarieven van {year} gaan live op {date}. Tot dan zien inwoners de tarieven van {current}.",
+        "Tariff source": "Bron van de tarieven",
+        "Publication date": "Publicatiedatum",
+        "Languages": "Talen",
+        "Business": "Bedrijf",
+        "Weight (g)": "Gewicht (g)",
+        "The fees set for this product, such as the rates of a fee regulation. A tariff with a later valid-from date replaces the one with the same label from that day.": "De tarieven van dit product, zoals die uit een legesverordening. Een tarief met een latere ingangsdatum vervangt vanaf die dag het tarief met dezelfde naam.",
+        "Where the tariffs come from, such as the fee regulation and its chapter.": "Waar de tarieven vandaan komen, zoals de legesverordening en het hoofdstuk.",
+        "The day the product was first published to residents and businesses.": "De dag waarop het product voor het eerst is gepubliceerd voor inwoners en bedrijven.",
+        "The languages the product is published in, as two-letter codes (nl, en).": "De talen waarin het product is gepubliceerd, als tweeletterige codes (nl, en).",
+        "Who the product is for.": "Voor wie het product is.",
+        "The weight in grams, for an item too light to state in kilograms with two decimals. When set, it is shown instead of the weight in kilograms.": "Het gewicht in grammen, voor een artikel dat te licht is om in kilogrammen met twee decimalen te noteren. Als het is ingevuld, wordt het getoond in plaats van het gewicht in kilogrammen."
     },
     "nplurals=2; plural=(n != 1);"
 )

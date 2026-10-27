@@ -4840,7 +4840,9 @@
 									"widgetIds": [
 										"product-data",
 										"product-tiers",
+										"product-tariffs",
 										"product-variants",
+										"product-publication",
 										"product-lines",
 										"product-files"
 									]
@@ -4906,6 +4908,42 @@
 							"include": [
 								"variants"
 							],
+							"hideEmpty": false
+						}
+					},
+					{
+						"id": "product-tariffs",
+						"type": "ProductTariffsWidget",
+						"title": "Tariff table (fees)",
+						"icon": "CashMultiple",
+						"content": {
+							"title": "Tariff table (fees)"
+						}
+					},
+					{
+						"id": "product-publication",
+						"type": "data",
+						"title": "Publication",
+						"icon": "Earth",
+						"content": {
+							"columns": 2,
+							"include": [
+								"status",
+								"publishedAt",
+								"languages",
+								"audience"
+							],
+							"overrides": {
+								"publishedAt": {
+									"formatter": "longDate"
+								},
+								"languages": {
+									"formatter": "languageCodes"
+								},
+								"audience": {
+									"formatter": "labelList"
+								}
+							},
 							"hideEmpty": false
 						}
 					},
