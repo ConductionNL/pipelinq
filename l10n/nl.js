@@ -8324,7 +8324,10 @@ OC.L10N.register(
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "Een fasewissel, een contract dat verlengd kan worden, een bevestigde inschrijving, een boekhoudsignaal, een nieuw adres of een afgesloten ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem.",
         "Public-space report": "Melding",
-        "melding": "Melding"
+        "melding": "Melding",
+        "Customer number": "Klantnummer",
+        "The number the organisation knows this customer by, such as K-2019-01184.": "Het nummer waaronder de organisatie deze klant kent, zoals K-2019-01184.",
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -8379,6 +8379,9 @@
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.",
         "Public-space report": "Public-space report",
-        "melding": "melding"
+        "melding": "melding",
+        "Customer number": "Customer number",
+        "The number the organisation knows this customer by, such as K-2019-01184.": "The number the organisation knows this customer by, such as K-2019-01184.",
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register."
     }
 }
