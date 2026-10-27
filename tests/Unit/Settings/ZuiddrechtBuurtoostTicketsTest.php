@@ -92,7 +92,8 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 
 	/**
 	 * The ticket counter starts above the highest reference the set names, so no new ticket repeats one; both keys are
-	 * integers, as TicketReferenceSequence reads them.
+	 * integers, as TicketReferenceSequence reads them. The counter is a floor (`atLeast`): the set never lowers it, and
+	 * the app moves it on with every new ticket.
 	 *
 	 * @return void
 	 */
@@ -101,6 +102,7 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 		$config = array_column($set['appConfig'], null, 'key');
 
 		$this->assertSame(expected: ['value' => '423', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter'] ?? [], ['value' => 1, 'type' => 1]));
+		$this->assertTrue(condition: ($config['ticket_reference_counter']['atLeast'] ?? false) === true, message: 'the counter is a floor, so the app may move it on');
 		$this->assertSame(expected: ['value' => '2026', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter_year'] ?? [], ['value' => 1, 'type' => 1]));
 	}//end testTheTicketCounterStartsAboveTheSetsReferences()
 }//end class
