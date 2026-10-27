@@ -1,0 +1,28 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "The desk a walk-in customer is called to and the time a customer left before being helped (PqInloop). Named 99-zz so it merges after 45-appointment-booking, which declares the schema."
+	},
+	"components": {
+		"schemas": {
+			"walkInTicket": {
+				"slug": "walkInTicket",
+				"version": "1.1.0",
+				"properties": {
+					"counter": {
+						"type": "string",
+						"title": "Desk",
+						"description": "The desk the customer is called to, such as Desk 2."
+					},
+					"leftAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Left at",
+						"description": "When the customer left before being helped."
+					}
+				}
+			}
+		}
+	}
+}
