@@ -147,7 +147,14 @@ class WorkBuckets {
 
 		if ($sort === 'priority') {
 			$rank = static fn (array $row): int => (self::PRIORITY_RANK[$row['priority']] ?? 2);
-			return static fn (array $a, array $b): int => (($rank($a) <=> $rank($b)) ?: $byDue($a, $b));
+			return static function (array $a, array $b) use ($rank, $byDue): int {
+				$order = ($rank($a) <=> $rank($b));
+				if ($order !== 0) {
+					return $order;
+				}
+
+				return $byDue($a, $b);
+			};
 		}
 
 		return $byDue;
