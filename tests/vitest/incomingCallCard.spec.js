@@ -22,7 +22,7 @@ import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
-const api = vi.hoisted(() => ({ incomingCall: vi.fn(), screenPop: vi.fn() }))
+const api = vi.hoisted(() => ({ incomingCall: vi.fn(), screenPop: vi.fn(), submitDisposition: vi.fn() }))
 const store = vi.hoisted(() => ({
 	liveLastEventAt: 0,
 	subscribe: vi.fn(),
@@ -49,12 +49,31 @@ vi.mock('@nextcloud/vue', () => {
 	})
 	return {
 		NcButton: shell('NcButton', 'button'),
+		NcCheckboxRadioSwitch: shell('NcCheckboxRadioSwitch', 'label'),
 		NcDialog: shell('NcDialog', 'div'),
+		NcSelect: shell('NcSelect', 'div'),
 		NcLoadingIcon: shell('NcLoadingIcon', 'span'),
 		NcTextArea: shell('NcTextArea', 'textarea'),
 		NcTextField: shell('NcTextField', 'input'),
 	}
 })
+
+vi.mock('@conduction/nextcloud-vue', () => {
+	const shell = (name, tag) => ({
+		name,
+		inheritAttrs: true,
+		props: ['name', 'eyebrow', 'subtitle', 'width', 'text', 'type'],
+		render() {
+			return h(tag, { 'data-name': this.name, 'data-eyebrow': this.eyebrow, 'data-subtitle': this.subtitle, 'data-text': this.text }, [
+				this.$slots.default?.(),
+				this.$slots.actions?.(),
+			])
+		},
+	})
+	return { CnDialog: shell('CnDialog', 'div'), CnNoteCard: shell('CnNoteCard', 'div') }
+})
+
+globalThis.n = (_app, one, many, count) => (count === 1 ? one : many).replace('%n', String(count))
 
 globalThis.t = (_app, text, vars = {}) =>
 	text.replace(/\{(\w+)\}/g, (_all, key) => vars[key] ?? `{${key}}`)
@@ -65,6 +84,8 @@ const { default: ScreenPopModal } =
 	await import('../../src/modals/ScreenPopModal.vue')
 const { default: NewContactIntakeModal } =
 	await import('../../src/modals/NewContactIntakeModal.vue')
+const { default: CtiDispositionModal } =
+	await import('../../src/modals/CtiDispositionModal.vue')
 
 const CALL = {
 	id: 'call-1',
@@ -87,7 +108,7 @@ let push
 async function card() {
 	push = vi.fn()
 	const wrapper = mount(IncomingCallCard, {
-		global: { mocks: { t: globalThis.t, $router: { push } } },
+		global: { mocks: { t: globalThis.t, $router: { push, resolve: ({ params }) => ({ href: `/apps/pipelinq/tickets/${params.id}` }) } } },
 	})
 	await flushPromises()
 	await vi.advanceTimersByTimeAsync(0)
@@ -510,3 +531,78 @@ describe('the app shell', () => {
 		expect(source).toMatch(/await screenPop\(call\.fromNumber\)/)
 	})
 })
+
+describe('the wrap-up after the call (board PqGesprekAfronden)', () => {
+	afterEach(() => {
+		window.history.replaceState({}, '', '/')
+	})
+
+	it('opens when a call the agent handled ends, and records the outcome on its contact moment', async () => {
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: CALL })
+		api.screenPop.mockResolvedValue({ action: 'navigate', matches: [SANNE] })
+		api.submitDisposition.mockReset().mockResolvedValue({})
+		const wrapper = await card()
+		await part(wrapper, 'incoming-call-open').trigger('click')
+		await flushPromises()
+
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: null })
+		await wrapper.vm.refresh()
+		await flushPromises()
+
+		const wrapUp = wrapper.findComponent(CtiDispositionModal)
+		expect(wrapUp.exists()).toBe(true)
+		expect(wrapUp.props('clientName')).toBe('Sanne de Vries')
+		expect(wrapUp.props('number')).toBe('+31612345678')
+		expect(wrapUp.props('recordedHref')).toBe('/apps/pipelinq/tickets/call-1')
+
+		wrapUp.vm.$emit('submit', { subject: 'Podium', outcome: 'resolved', notes: '', queue: '' })
+		await flushPromises()
+		expect(api.submitDisposition).toHaveBeenCalledWith('call-1', { subject: 'Podium', outcome: 'resolved', notes: '', queue: '' })
+		expect(wrapper.findComponent(CtiDispositionModal).exists()).toBe(false)
+	})
+
+	it('does not open for a call the agent never took up', async () => {
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: CALL })
+		api.screenPop.mockResolvedValue({ action: 'navigate', matches: [SANNE] })
+		const wrapper = await card()
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: null })
+		await wrapper.vm.refresh()
+		await flushPromises()
+		expect(wrapper.findComponent(CtiDispositionModal).exists()).toBe(false)
+	})
+
+	it('can be previewed from the address, and a previewed wrap-up writes nothing', async () => {
+		window.history.replaceState({}, '', '/?callPreview=0641228790&callPreviewOpen=disposition')
+		api.screenPop.mockResolvedValue({ action: 'navigate', matches: [SANNE], rawNumber: '06 41 22 87 90' })
+		api.submitDisposition.mockReset()
+		const wrapper = await card()
+		const wrapUp = wrapper.findComponent(CtiDispositionModal)
+		expect(wrapUp.exists()).toBe(true)
+		wrapUp.vm.$emit('submit', { subject: 'x', outcome: 'resolved', notes: '', queue: '' })
+		await flushPromises()
+		expect(api.submitDisposition).not.toHaveBeenCalled()
+		expect(wrapper.findComponent(CtiDispositionModal).exists()).toBe(false)
+	})
+})
+
+describe('the new-contact form and the wrap-up as drawn', () => {
+	it('names the call, its number as read and its queue over the new-contact form', async () => {
+		const { readablePhone } = await import('../../src/utils/readablePhone.js')
+		expect(readablePhone('0641228790')).toBe('06 41 22 87 90')
+		expect(readablePhone('+31641228790')).toBe('06 41 22 87 90')
+		expect(readablePhone('0786123341')).toBe('078 612 33 41')
+		expect(readablePhone('12345')).toBe('12345')
+		const form = mount(NewContactIntakeModal, { props: { prefillPhone: '0641228790', queueName: 'Vergunningen' }, global: { mocks: { t: globalThis.t } } })
+		expect(form.find('[data-name]').attributes('data-eyebrow')).toBe('Incoming call · queue Vergunningen')
+		expect(form.find('[data-name]').attributes('data-subtitle')).toBe('Incoming call · 06 41 22 87 90 · queue Vergunningen')
+		expect(form.vm.form.phone).toBe('06 41 22 87 90')
+	})
+
+	it('says how long the call took in words', async () => {
+		const { callLength } = await import('../../src/modals/CtiDispositionModal.vue')
+		expect(callLength(252)).toBe('4 minutes 12 seconds')
+		expect(callLength(9)).toBe('9 seconds')
+		expect(callLength(-1)).toBe('')
+	})
+})
+

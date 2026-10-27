@@ -24,6 +24,17 @@ vi.mock('../../src/services/contactSyncApi.js', () => ({
 	writeBack: vi.fn(),
 }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn() }))
+const store = vi.hoisted(() => ({ fetchCollection: vi.fn(async () => []) }))
+vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => store }))
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		props: ['name', 'eyebrow', 'width'],
+		render() {
+			return h('div', { 'data-name': 'CnDialog', 'data-eyebrow': this.eyebrow }, [this.$slots.default?.(), this.$slots.actions?.()])
+		},
+	},
+}))
 vi.mock('@nextcloud/axios', () => ({
 	default: { get: vi.fn(async () => ({ data: { languages: [] } })) },
 }))
@@ -48,6 +59,8 @@ vi.mock('@nextcloud/vue', () => {
 	})
 	return {
 		NcDialog: passthrough('NcDialog'),
+		NcCheckboxRadioSwitch: passthrough('NcCheckboxRadioSwitch'),
+		NcTextArea: passthrough('NcTextArea'),
 		NcButton: {
 			name: 'NcButton',
 			emits: ['click'],
@@ -88,7 +101,7 @@ function mountDialog(props) {
 	const wrapper = mount(ClientCreateDialog, {
 		props,
 		global: {
-			mocks: { t: (_app, text) => text, $router: { push } },
+			mocks: { t: (_app, text, vars = {}) => text.replace(/\{(\w+)\}/g, (_all, key) => vars[key] ?? `{${key}}`), $router: { push, resolve: ({ params }) => ({ href: `/apps/pipelinq/clients/${params.id}` }) } },
 		},
 	})
 	return { wrapper, push }
@@ -224,3 +237,31 @@ describe('identity edits reach the Nextcloud Contact', () => {
 		expect(write).toHaveBeenCalledWith('client', 'c-9')
 	})
 })
+
+describe('New client dialog as board PqKlantNieuw draws it', () => {
+	it('is the board dialog with the type as two choices and the rest in their board places', async () => {
+		const { wrapper } = mountDialog({})
+		await flushPromises()
+		expect(wrapper.find('[data-name="CnDialog"]').attributes('data-eyebrow')).toBe('Residents and businesses')
+		expect(wrapper.findComponent({ name: 'ClientForm' }).props('boardLayout')).toBe(true)
+		expect(wrapper.findAll('[data-name="NcCheckboxRadioSwitch"]')).toHaveLength(2)
+	})
+
+	it('warns about a client with the same e-mail address and offers to open it or save anyway', async () => {
+		vi.useFakeTimers()
+		store.fetchCollection.mockImplementation(async (_type, filter) => (filter.email ? [{ id: 'c-9', name: 'Bakkerij De Graaf', email: 'info@bakkerijdegraaf.nl' }] : []))
+		const { wrapper } = mountDialog({})
+		await flushPromises()
+		const form = wrapper.findComponent({ name: 'ClientForm' })
+		form.vm.form.email = 'INFO@bakkerijdegraaf.nl'
+		await flushPromises()
+		await vi.advanceTimersByTimeAsync(450)
+		await flushPromises()
+		vi.useRealTimers()
+		const notice = wrapper.find('[data-testid="client-duplicate"]')
+		expect(notice.exists()).toBe(true)
+		expect(notice.text()).toContain('Possible duplicate: Bakkerij De Graaf has the same email address')
+		expect(wrapper.find('[data-testid="client-duplicate-open"]').attributes('href')).toBe('/apps/pipelinq/clients/c-9')
+	})
+})
+
