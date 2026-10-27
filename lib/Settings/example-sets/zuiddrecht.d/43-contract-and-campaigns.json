@@ -139,12 +139,28 @@
 			}
 		},
 		{
+			"key": "artikel-afval-scheiden",
+			"register": "pipelinq",
+			"schema": "article",
+			"data": {
+				"title": "Zo scheidt u uw afval",
+				"slug": "zo-scheidt-u-uw-afval",
+				"summary": "Groente-, fruit- en tuinafval, papier, plastic en restafval: zo houdt u het thuis apart. Tijdens de Afvalvrije week bestelt u een gratis compostbak.",
+				"body": "## Zo scheidt u uw afval\n\nGroente-, fruit- en tuinafval gaat in de groene container of in uw compostbak. Papier en karton gaan in de blauwe container. Plastic, blik en drinkpakken gaan in de oranje zak. Wat overblijft is restafval.\n\nTijdens de Afvalvrije week bestelt u tot 11 oktober een gratis compostbak via Mijn Zuiddrecht.",
+				"language": "nl",
+				"status": "published",
+				"author": "{{cast:pieter.uid}}",
+				"publishedAt": "{{datetime:-12 09:00}}"
+			}
+		},
+		{
 			"key": "sociaal-afvalvrije-week",
 			"register": "pipelinq",
 			"schema": "socialPost",
 			"data": {
 				"title": "Afvalvrije week: bestel uw compostbak",
 				"campaignId": "{{object:campagne-afvalvrije-week.id}}",
+				"articleId": "{{object:artikel-afval-scheiden.id}}",
 				"body": "Afvalvrije week! Bestel tot 11 oktober een gratis compostbak voor uw tuin. #Zuiddrecht #afval https://mijn.zuiddrecht.example/afvalvrij",
 				"link": "https://mijn.zuiddrecht.example/afvalvrij",
 				"accountIds": [
