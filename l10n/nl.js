@@ -3,6 +3,8 @@ OC.L10N.register(
     {
         "Cash register audit": "Kassa-audit",
         "Cash register audit entry": "Kassa-auditregel",
+        "Term at risk": "Termijn in gevaar",
+        "Term passed": "Termijn verstreken",
         "Verification done. The status shows the result.": "Controle gedaan. De status toont de uitkomst.",
         "Signature invalid: possible tampering": "Handtekening ongeldig: mogelijk gemanipuleerd",
         "Not verified yet. Verify signature recomputes the signature and the chain hash.": "Nog niet gecontroleerd. Handtekening controleren berekent de handtekening en de ketenhash opnieuw.",

@@ -2026,7 +2026,6 @@
 						"title": "Open matters",
 						"content": {
 							"label": "Open matters",
-							"caption": "requests + complaints + contactmomenten",
 							"icon": "ClipboardCheckOutline",
 							"format": {
 								"style": "number",
@@ -2048,7 +2047,6 @@
 						"title": "New requests",
 						"content": {
 							"label": "New requests",
-							"caption": "requests with status new",
 							"icon": "ClipboardCheckOutline",
 							"format": {
 								"style": "number",
@@ -2069,10 +2067,9 @@
 					{
 						"id": "client-summary-sla-breached",
 						"type": "stat",
-						"title": "SLA breached",
+						"title": "Term passed",
 						"content": {
-							"label": "SLA breached",
-							"caption": "open tickets past their deadline",
+							"label": "Term passed",
 							"icon": "AlertCircleOutline",
 							"variant": "error",
 							"format": {
@@ -2092,10 +2089,9 @@
 					{
 						"id": "client-summary-sla-at-risk",
 						"type": "stat",
-						"title": "SLA at risk",
+						"title": "Term at risk",
 						"content": {
-							"label": "SLA at risk",
-							"caption": "deadline within 24h",
+							"label": "Term at risk",
 							"icon": "History",
 							"variant": "warning",
 							"format": {
@@ -2113,13 +2109,39 @@
 						}
 					},
 					{
+						"id": "client-summary-open-leads",
+						"type": "stat",
+						"title": "Open leads",
+						"content": {
+							"label": "Open leads",
+							"icon": "TrendingUp",
+							"format": {
+								"style": "currency",
+								"currency": "EUR",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "lead",
+								"metric": "sum",
+								"field": "value",
+								"filter": {
+									"client": "@objectId",
+									"status": "open"
+								}
+							}
+						}
+					},
+					{
 						"id": "client-summary-last-activity",
 						"type": "stat",
 						"title": "Last activity",
 						"content": {
 							"label": "Last activity",
-							"caption": "most recent interaction",
 							"icon": "History",
+							"format": {
+								"style": "date"
+							},
 							"source": {
 								"kind": "endpoint",
 								"url": "/apps/pipelinq/api/customer-360/summary",
@@ -2504,7 +2526,7 @@
 						"type": "tabs",
 						"title": "Client",
 						"icon": "OfficeBuilding",
-						"_note": "One strip, at most seven tabs (shared relation frame, PqKlant and PqOrganisatie). Overview stacks the data cards and the open requests; Requests holds requests and complaints; Contracts holds contracts and projects. Mail, notes and files moved to the side column. Children stay out of layout, or the tabs widget and the grid would each render them once.",
+						"_note": "The tab strip as PqKlant and PqOrganisatie draw it: Overview, Tickets (requests and complaints), Contact persons (an organisation only), Contact moments, Sales (a resident only: leads, contracts, projects), Documents and History. Children stay out of layout, or the tabs widget and the grid would each render them once.",
 						"content": {
 							"ariaLabel": "Client",
 							"tabs": [
@@ -2517,17 +2539,22 @@
 									"label": "Overview"
 								},
 								{
-									"widgetId": "client-quick-contacts",
-									"label": "Contacts",
-									"countFrom": "widget"
-								},
-								{
 									"widgetIds": [
 										"client-quick-requests",
 										"client-complaints"
 									],
-									"label": "Requests",
+									"label": "Tickets",
 									"countFrom": "widget"
+								},
+								{
+									"widgetId": "client-quick-contacts",
+									"label": "Contact persons",
+									"countFrom": "widget",
+									"visibleWhen": {
+										"field": "type",
+										"op": "eq",
+										"value": "organization"
+									}
 								},
 								{
 									"widgetId": "client-contactmoments",
@@ -2535,16 +2562,22 @@
 									"countFrom": "widget"
 								},
 								{
-									"widgetId": "client-leads",
-									"label": "Leads",
-									"countFrom": "widget"
-								},
-								{
 									"widgetIds": [
+										"client-leads",
 										"client-contracts",
 										"client-projects"
 									],
-									"label": "Contracts"
+									"label": "Sales",
+									"countFrom": "widget",
+									"visibleWhen": {
+										"field": "type",
+										"op": "eq",
+										"value": "person"
+									}
+								},
+								{
+									"widgetId": "client-files",
+									"label": "Documents"
 								},
 								{
 									"widgetId": "client-history",
@@ -2554,57 +2587,67 @@
 						}
 					}
 				],
+				"_layoutNote": "PqKlant and PqOrganisatie: one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity), the tab strip under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab.",
 				"layout": [
 					{
 						"id": "1",
 						"widgetId": "client-summary-open-tickets",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 6,
-						"gridHeight": 2,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "2",
-						"widgetId": "client-summary-sla-breached",
-						"gridX": 6,
+						"widgetId": "client-summary-new-requests",
+						"gridX": 2,
 						"gridY": 0,
-						"gridWidth": 6,
-						"gridHeight": 2,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "3",
-						"widgetId": "client-summary-new-requests",
-						"gridX": 0,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2,
+						"widgetId": "client-summary-sla-breached",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "4",
 						"widgetId": "client-summary-sla-at-risk",
-						"gridX": 4,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2,
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "5",
-						"widgetId": "client-summary-last-activity",
+						"widgetId": "client-summary-open-leads",
 						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
+						"showTitle": false
+					},
+					{
+						"id": "6",
+						"widgetId": "client-summary-last-activity",
+						"gridX": 10,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "9",
 						"widgetId": "client-panels",
 						"gridX": 0,
-						"gridY": 4,
+						"gridY": 1,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
@@ -2733,13 +2776,11 @@
 					]
 				},
 				"sideColumn": [
-					"client-kpis-sales",
 					"client-related",
 					"client-channels",
 					"client-relationships",
 					"client-email",
-					"client-notes",
-					"client-files"
+					"client-notes"
 				],
 				"breadcrumb": {
 					"label": "Residents and businesses",

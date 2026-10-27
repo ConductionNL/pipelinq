@@ -2,6 +2,8 @@
     "translations": {
         "Cash register audit": "Cash register audit",
         "Cash register audit entry": "Cash register audit entry",
+        "Term at risk": "Term at risk",
+        "Term passed": "Term passed",
         "Verification done. The status shows the result.": "Verification done. The status shows the result.",
         "Signature invalid: possible tampering": "Signature invalid: possible tampering",
         "Not verified yet. Verify signature recomputes the signature and the chain hash.": "Not verified yet. Verify signature recomputes the signature and the chain hash.",
