@@ -8530,7 +8530,10 @@ OC.L10N.register(
         "The contact moment this task was created from.": "The contact moment this task was created from.",
         "Customer number": "Customer number",
         "The number the organisation knows this customer by, such as K-2019-01184.": "The number the organisation knows this customer by, such as K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
+        "{shown} of {total} posts · newest first": "{shown} of {total} posts · newest first",
+        "A post can go to several networks at once, each with its own text.": "A post can go to several networks at once, each with its own text.",
+        "Scheduled to go out": "Scheduled to go out"
     },
     "nplurals=2; plural=(n != 1);"
 )
