@@ -1842,7 +1842,17 @@
 					"showMetadata": true
 				},
 				"rowIcon": "OfficeBuildingOutline",
-				"countText": "{shown} of {total} clients"
+				"countText": "{shown} of {total} clients",
+				"_bulkActionsNote": "Board PqOrganisatiesVerrijken: selected organisations are looked up in the KvK and their empty registry fields filled (OrganisationEnrichDialog). People are never looked up; the server skips them.",
+				"bulkActions": [
+					{
+						"id": "enrich",
+						"label": "Fill in missing details",
+						"icon": "DatabaseSearchOutline",
+						"handler": "open-modal",
+						"target": "OrganisationEnrichDialog"
+					}
+				]
 			}
 		},
 		{
@@ -5561,7 +5571,7 @@
 				"selectable": true,
 				"rowRoute": "CashShiftDetail",
 				"emptyText": "No shifts found",
-				"columns": ["reference", "drawer", { "key": "operator", "formatter": "userDisplayName" }, { "key": "floatAmount", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }, { "key": "status", "widget": "badge", "widgetProps": { "colorMap": { "open": "success", "closed": "warning", "reconciled": "default" } } }, "floatAt", "closedAt"],
+				"columns": [{ "key": "reference", "label": "Shift", "template": "Shift {floatAt|date}, {drawer}" }, "drawer", { "key": "operator", "formatter": "userDisplayName" }, { "key": "floatAmount", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }, { "key": "status", "widget": "badge", "widgetProps": { "colorMap": { "open": "success", "closed": "warning", "reconciled": "default" } } }, "floatAt", "closedAt"],
 				"headerActions": [
 					{
 						"id": "open-shift",
@@ -5588,6 +5598,8 @@
 			"type": "detail",
 			"title": "Shift",
 			"config": {
+				"titleTemplate": "Shift {floatAt|date}, {drawer}",
+				"titleField": "reference",
 				"stageField": "status",
 				"primaryActionByStage": { "open": "shift-count" },
 				"headerActions": [
@@ -5743,6 +5755,26 @@
 						}
 					},
 					{
+						"id": "shift-kpis-sales",
+						"type": "stats-block",
+						"title": "Sales in this shift",
+						"icon": "CashRegister",
+						"content": {
+							"entries": [
+								{
+									"title": "Sales in this shift",
+									"register": "pipelinq",
+									"schema": "posTransaction",
+									"metric": "count",
+									"countLabel": "sales",
+									"filter": {
+										"shift": "@objectId"
+									}
+								}
+							]
+						}
+					},
+					{
 						"id": "shift-related",
 						"type": "related",
 						"title": "Related",
@@ -5797,6 +5829,14 @@
 						"gridY": 6,
 						"gridWidth": 4,
 						"gridHeight": 5
+					},
+					{
+						"id": "5",
+						"widgetId": "shift-kpis-sales",
+						"gridX": 8,
+						"gridY": 11,
+						"gridWidth": 4,
+						"gridHeight": 2
 					}
 				],
 				"sidebar": {
@@ -8067,6 +8107,27 @@
 					{ "key": "isDefault", "label": "Default" },
 					{ "key": "_dateCreated", "label": "Created" }
 				],
+				"_cardsNote": "Board PqPipelines: each pipeline is a card with its description, how many stages it has and when it was made, and its stages as chips in order. The cards view opens first; the table stays one switch away. Editing the stages is the pipeline's own form (Edit).",
+				"showTitle": true,
+				"countText": "{total} pipelines · the stages a lead or request goes through, in order",
+				"addLabel": "New pipeline",
+				"headerButtons": [
+					{ "action": "export", "label": "Download" },
+					{ "action": "add", "variant": "primary", "icon": "Plus", "label": "New pipeline" }
+				],
+				"viewModes": ["cards", "table"],
+				"viewMode": "cards",
+				"cardLayout": {
+					"title": "title",
+					"meta": [
+						{ "template": "{stages|count} stages" },
+						{ "template": "created {@self.created|date}" }
+					],
+					"description": "description",
+					"chips": [
+						{ "field": "stages", "each": "name" }
+					]
+				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true

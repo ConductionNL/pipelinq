@@ -2237,7 +2237,7 @@
 			"config": {
 				"addLabel": "New transaction",
 				"countText": "{shown} of {total} transactions · newest first",
-				"sortKey": "@self.created",
+				"sortKey": "momentAt",
 				"sortOrder": "desc",
 				"footerNote": "Open a transaction to print or mail the receipt, or to register a refund.",
 				"quickFilters": [
@@ -2250,7 +2250,7 @@
 					{
 						"label": "Today",
 						"filter": {
-							"@self[created][gte]": "@today"
+							"momentAt[gte]": "@today"
 						},
 						"showCount": true
 					},
@@ -2302,9 +2302,9 @@
 						}
 					},
 					{
-						"key": "@self.created",
+						"key": "momentAt",
 						"label": "Created",
-						"formatter": "datetime"
+						"formatter": "transactionMoment"
 					}
 				]
 			}
@@ -2315,7 +2315,8 @@
 				"columns": [
 					{
 						"key": "reference",
-						"label": "Shift"
+						"label": "Shift",
+						"template": "Shift {floatAt|date}, {drawer}"
 					},
 					{
 						"key": "operator",

@@ -47,3 +47,21 @@ describe('the replaced code', () => {
 		expect(existsSync(resolve(root, file))).toBe(false)
 	})
 })
+
+describe('a shift by name, with its sales', () => {
+	// @spec openspec/changes/pos-sale-in-shift/specs/pos-transaction-core/spec.md
+	const simple = JSON.parse(readFileSync(resolve(root, 'src/menu-layout.simple.json'), 'utf8'))
+	const template = 'Shift {floatAt|date}, {drawer}'
+
+	it('names a shift by when it opened and its drawer, on the list and the page', () => {
+		expect(page('CashShifts').config.columns[0]).toMatchObject({ key: 'reference', template })
+		expect(simple.pages.find((p) => p.id === 'CashShifts').config.columns[0]).toMatchObject({ key: 'reference', template })
+		expect(page('CashShiftDetail').config).toMatchObject({ titleTemplate: template, titleField: 'reference' })
+	})
+
+	it('counts the sales linked to the shift', () => {
+		const sales = page('CashShiftDetail').config.widgets.find((w) => w.id === 'shift-kpis-sales')
+		expect(sales.content.entries[0]).toMatchObject({ schema: 'posTransaction', metric: 'count', filter: { shift: '@objectId' } })
+		expect(page('CashShiftDetail').config.layout.map((l) => l.widgetId)).toContain('shift-kpis-sales')
+	})
+})

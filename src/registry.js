@@ -167,6 +167,7 @@ import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
 import ContactImportDialog from './dialogs/ContactImportDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
+import OrganisationEnrichDialog from './dialogs/OrganisationEnrichDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
@@ -1252,6 +1253,12 @@ const registry = {
 		component: ContactImportDialog,
 		propsSchema: null,
 		_note: 'Import from Nextcloud Contacts (PqContactenImporteren). Target of the import header button on the Contacts index; imports the marked addressbook cards as contacts.',
+	},
+	OrganisationEnrichDialog: {
+		kind: 'modal',
+		component: OrganisationEnrichDialog,
+		propsSchema: null,
+		_note: 'Fill in missing details from the KvK (PqOrganisatiesVerrijken). Target of the bulk action on the Clients list; receives the selection as selectedIds.',
 	},
 
 	// Pages' form-dialog slot (page.slots), not header-action modals: the
