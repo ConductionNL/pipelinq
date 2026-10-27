@@ -28,9 +28,16 @@
 			v-if="showConvertButton"
 			variant="primary"
 			:disabled="busy"
-			@click="convertToCase">
+			@click="openDialog">
 			{{ t('pipelinq', 'Convert to case') }}
 		</NcButton>
+		<ConvertToCaseDialog
+			v-if="dialogOpen"
+			:ticket="ticket"
+			:requester="requester"
+			:busy="busy"
+			@close="dialogOpen = false"
+			@confirm="convertToCase" />
 
 		<template v-if="isConverted">
 			<NcNoteCard type="success" class="request-conversion-section__notice">
@@ -56,6 +63,8 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import ConvertToCaseDialog from '../../dialogs/ConvertToCaseDialog.vue'
+import { useObjectStore } from '../../store/modules/object.js'
 
 const DEFAULT_AVAILABILITY = {
 	available: false,
@@ -67,6 +76,7 @@ const DEFAULT_AVAILABILITY = {
 export default {
 	name: 'RequestConversionSection',
 	components: {
+		ConvertToCaseDialog,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -91,6 +101,9 @@ export default {
 			loading: false,
 			busy: false,
 			availability: { ...DEFAULT_AVAILABILITY },
+			dialogOpen: false,
+			ticket: {},
+			requester: '',
 		}
 	},
 
@@ -146,6 +159,26 @@ export default {
 
 	methods: {
 		/**
+		 * Open the confirmation, with the ticket and its customer read for it.
+		 *
+		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+		 */
+		async openDialog() {
+			this.dialogOpen = true
+			const store = useObjectStore()
+			try {
+				this.ticket = (await store.fetchObject('ticket', this.resolvedId)) || {}
+				const clientId = this.ticket.client
+				if (typeof clientId === 'string' && clientId !== '') {
+					const client = await store.fetchObject('client', clientId)
+					this.requester = client?.name || ''
+				}
+			} catch {
+				this.ticket = {}
+			}
+		},
+
+		/**
 		 * Fetch the current conversion availability for this request.
 		 *
 		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
@@ -200,6 +233,7 @@ export default {
 					canConvert: false,
 					caseReference: data.caseReference || '',
 				}
+				this.dialogOpen = false
 				showSuccess(t('pipelinq', 'Request converted to case.'))
 				this.$emit('converted', { caseReference: data.caseReference || '' })
 			} catch (err) {

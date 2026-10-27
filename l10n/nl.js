@@ -8504,7 +8504,14 @@ OC.L10N.register(
         "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP.",
         "Marketing · segments": "Marketing · segmenten",
         "Edit ticket": "Ticket bewerken",
-        "Answer · {reference}": "Antwoord · {reference}"
+        "Answer · {reference}": "Antwoord · {reference}",
+        "Convert to a case": "Omzetten naar een zaak",
+        "{app} is available and can take over this request as a case.": "{app} is beschikbaar en kan dit verzoek als zaak overnemen.",
+        "Goes with the case": "Gaat mee naar de zaak",
+        "Requester": "Aanvrager",
+        "Create case in {app}": "Zaak aanmaken in {app}",
+        "Convert · {reference}": "Omzetten · {reference}",
+        "Convert": "Omzetten"
     },
     "nplurals=2; plural=(n != 1);"
 )

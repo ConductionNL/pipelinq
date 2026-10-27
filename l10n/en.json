@@ -8574,6 +8574,13 @@
         "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
         "Marketing · segments": "Marketing · segments",
         "Edit ticket": "Edit ticket",
-        "Answer · {reference}": "Answer · {reference}"
+        "Answer · {reference}": "Answer · {reference}",
+        "Convert to a case": "Convert to a case",
+        "{app} is available and can take over this request as a case.": "{app} is available and can take over this request as a case.",
+        "Goes with the case": "Goes with the case",
+        "Requester": "Requester",
+        "Create case in {app}": "Create case in {app}",
+        "Convert · {reference}": "Convert · {reference}",
+        "Convert": "Convert"
     }
 }
