@@ -11,7 +11,8 @@
 				"arrivedAt": "{{datetime:0 09:41}}",
 				"estimatedReadyAt": "{{datetime:0 09:55}}",
 				"status": "called",
-				"assignedResourceId": "{{object:resource-pieter-jansen.id}}"
+				"assignedResourceId": "{{object:resource-pieter-jansen.id}}",
+				"counter": "Balie 2"
 			}
 		},
 		{
@@ -24,7 +25,8 @@
 				"arrivedAt": "{{datetime:0 09:43}}",
 				"estimatedReadyAt": "{{datetime:0 09:58}}",
 				"status": "called",
-				"assignedResourceId": "{{object:resource-joris-bakker.id}}"
+				"assignedResourceId": "{{object:resource-joris-bakker.id}}",
+				"counter": "Balie 3"
 			}
 		},
 		{
@@ -72,7 +74,8 @@
 			"data": {
 				"displayName": "Anonieme klant",
 				"arrivedAt": "{{datetime:0 09:12}}",
-				"status": "abandoned"
+				"status": "abandoned",
+				"leftAt": "{{datetime:0 09:30}}"
 			}
 		},
 		{
