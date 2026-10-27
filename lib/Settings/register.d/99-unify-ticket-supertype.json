@@ -5,7 +5,7 @@
         "slug": "ticket",
         "title": "Ticket",
         "icon": "TicketOutline",
-        "version": "1.6.0",
+        "version": "1.7.0",
         "summary": "Unified inbound customer matter — request, complaint or contactmoment",
         "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
         "x-schema-org": "schema:Thing",
@@ -248,6 +248,16 @@
             "title": "Status",
             "description": "Unified lifecycle status across all ticket types.",
             "enum": ["new", "in_progress", "awaiting_customer", "resolved", "completed", "rejected", "converted", "closed"],
+            "x-enum-labels": {
+              "new": "New",
+              "in_progress": "In progress",
+              "awaiting_customer": "Waiting for customer",
+              "resolved": "Resolved",
+              "completed": "Completed",
+              "rejected": "Rejected",
+              "converted": "Converted",
+              "closed": "Closed"
+            },
             "default": "new",
             "facetable": true
           },
@@ -256,6 +266,12 @@
             "title": "Priority",
             "description": "Ticket priority (request/complaint).",
             "enum": ["low", "normal", "high", "urgent"],
+            "x-enum-labels": {
+              "low": "Low",
+              "normal": "Normal",
+              "high": "High",
+              "urgent": "Urgent"
+            },
             "default": "normal",
             "facetable": true
           },
