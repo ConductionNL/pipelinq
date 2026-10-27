@@ -3,7 +3,7 @@
 
 /**
  * A Dutch phone number as people read it: "0641228790" or "+31641228790"
- * becomes "06 41 22 87 90", a landline "0201234567" becomes "020 123 4567".
+ * becomes "06 41 22 87 90", a landline "0786123341" becomes "078 612 33 41".
  * Anything else is returned as given, trimmed.
  *
  * @param {string} number The number as stored or dialled.
@@ -20,5 +20,5 @@ export function readablePhone(number) {
 	if (national.startsWith('06')) {
 		return [national.slice(0, 2), national.slice(2, 4), national.slice(4, 6), national.slice(6, 8), national.slice(8)].join(' ')
 	}
-	return [national.slice(0, 3), national.slice(3, 6), national.slice(6)].join(' ')
+	return [national.slice(0, 3), national.slice(3, 6), national.slice(6, 8), national.slice(8)].join(' ')
 }

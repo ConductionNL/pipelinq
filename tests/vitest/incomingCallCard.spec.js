@@ -590,7 +590,7 @@ describe('the new-contact form and the wrap-up as drawn', () => {
 		const { readablePhone } = await import('../../src/utils/readablePhone.js')
 		expect(readablePhone('0641228790')).toBe('06 41 22 87 90')
 		expect(readablePhone('+31641228790')).toBe('06 41 22 87 90')
-		expect(readablePhone('0201234567')).toBe('020 123 4567')
+		expect(readablePhone('0786123341')).toBe('078 612 33 41')
 		expect(readablePhone('12345')).toBe('12345')
 		const form = mount(NewContactIntakeModal, { props: { prefillPhone: '0641228790', queueName: 'Vergunningen' }, global: { mocks: { t: globalThis.t } } })
 		expect(form.find('[data-name]').attributes('data-eyebrow')).toBe('Incoming call · queue Vergunningen')
