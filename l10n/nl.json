@@ -1,5 +1,11 @@
 {
     "translations": {
+        "Good fit": "Past goed",
+        "New this week": "Nieuw deze week",
+        "{shown} of {total} companies from the KVK register that fit your profile": "{shown} van {total} bedrijven uit het KVK-handelsregister die bij je profiel passen",
+        "best first": "beste eerst",
+        "refreshed today at {time}": "vandaag om {time} vernieuwd",
+        "refreshed on {date}": "vernieuwd op {date}",
         "New newsletter, step {step} of {total}": "Nieuwe nieuwsbrief, stap {step} van {total}",
         "Step {step} of {total}: check everything before the blast is created": "Stap {step} van {total}: controleer alles voordat de blast wordt aangemaakt",
         "Step {step} of {total}: {label}": "Stap {step} van {total}: {label}",
