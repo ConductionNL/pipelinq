@@ -8379,7 +8379,22 @@ OC.L10N.register(
         "melding": "Melding",
         "Whether the product is for sale: a draft is not yet, an active product is, a discontinued one no longer is but stays readable on old deals and receipts. Inactive is the older word for discontinued.": "Of het product te koop is: een concept nog niet, een actief product wel, een uitgefaseerd product niet meer, maar het blijft leesbaar op oude deals en bonnen. Inactief is het oudere woord voor uitgefaseerd.",
         "Last contact": "Laatste contact",
-        "No contact yet": "Nog geen contact"
+        "No contact yet": "Nog geen contact",
+        "Your records in Pipelinq and your Nextcloud addressbook.": "Je records in Pipelinq en je Nextcloud-adresboek.",
+        "Synced": "Gesynchroniseerd",
+        "Not synced yet": "Nog niet gesynchroniseerd",
+        "{count} residents, businesses and contacts": "{count} inwoners, bedrijven en contacten",
+        "Addressbook": "Adresboek",
+        "No addressbook to write to": "Geen adresboek om in te schrijven",
+        "New cards go here. Other addressbooks are only read.": "Nieuwe kaarten komen hier. Andere adresboeken worden alleen gelezen.",
+        "Write changes back to Nextcloud Contacts": "Wijzigingen terugschrijven naar Nextcloud Contacten",
+        "When you save a resident, business or contact, the card gets the change too.": "Sla je een inwoner, bedrijf of contact op, dan krijgt de kaart de wijziging ook.",
+        "Could not be written: {names}": "Kon niet worden geschreven: {names}",
+        "{when}, {count} cards updated": "{when}, {count} kaarten bijgewerkt",
+        "Could not load the contacts settings.": "De instellingen voor contacten konden niet worden geladen.",
+        "Could not save the contacts settings.": "De instellingen voor contacten konden niet worden opgeslagen.",
+        "Could not sync your contacts.": "Je contacten konden niet worden gesynchroniseerd.",
+        "writeBack must be true or false": "writeBack moet true of false zijn"
     },
     "nplurals=2; plural=(n != 1);"
 )
