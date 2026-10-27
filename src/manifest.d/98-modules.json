@@ -209,7 +209,7 @@
 					},
 					{
 						"id": "KassakoppelingAuditList",
-						"label": "Kassakoppeling audit",
+						"label": "Cash register audit",
 						"description": "Every message between the till and the bookkeeping.",
 						"icon": "Check",
 						"category": "pos",

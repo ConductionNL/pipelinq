@@ -161,6 +161,40 @@ export function bookingWhen(value, row) {
 }
 
 /**
+ * When a POS transaction happened, as the PqKassabonnen board writes it
+ * ("7 okt, 11:42"): its confirmation, else its parking, else its creation.
+ * The year is added outside the current one.
+ *
+ * @param {unknown} _value The cell value (unused; the row holds the times).
+ * @param {object} [row] The transaction.
+ * @param {object} [_property] The schema property (unused).
+ * @param {{now?: Date, locale?: string}} [options] Reference date and locale (tests).
+ * @return {string} The moment, or '' when the row has no time at all.
+ * @spec openspec/changes/pos-transaction-moment/specs/pos-transaction-core/spec.md
+ */
+export function transactionMoment(_value, row, _property, options) {
+	const raw = row?.confirmedAt || row?.parkedAt || row?.['@self']?.created
+	const date = raw ? new Date(raw) : null
+	if (!date || Number.isNaN(date.getTime())) {
+		return ''
+	}
+	const opts = options || {}
+	const now = opts.now instanceof Date ? opts.now : new Date()
+	const locale =
+		opts.locale
+		|| (typeof OC !== 'undefined' && OC.getLocale
+			? OC.getLocale().replace('_', '-')
+			: undefined)
+	const day = { day: 'numeric', month: 'short' }
+	if (date.getFullYear() !== now.getFullYear()) {
+		day.year = 'numeric'
+	}
+	const dayText = new Intl.DateTimeFormat(locale, day).format(date).replace('.', '')
+	const timeText = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(date)
+	return dayText + ', ' + timeText
+}
+
+/**
  * Language codes as the product page writes them: "nl, en" reads "NL, EN".
  *
  * @param {unknown} value The list of two-letter codes.
@@ -220,6 +254,7 @@ export function longDate(value) {
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
+	transactionMoment,
 	enumText,
 	enumLabel,
 	yesNo,

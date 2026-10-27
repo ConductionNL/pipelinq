@@ -1,0 +1,24 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "A booking can name the request it belongs to (board PqAfspraak, Gekoppeld verzoek): a generic relation from appointmentBooking to the ticket supertype, optional, so every existing booking stays valid. Named 99-zz so it merges after 45-appointment-booking and 99-unify-ticket-supertype."
+	},
+	"components": {
+		"schemas": {
+			"appointmentBooking": {
+				"slug": "appointmentBooking",
+				"version": "1.2.0",
+				"properties": {
+					"ticket": {
+						"type": "string",
+						"format": "uuid",
+						"$ref": "ticket",
+						"title": "Linked request",
+						"description": "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for."
+					}
+				}
+			}
+		}
+	}
+}

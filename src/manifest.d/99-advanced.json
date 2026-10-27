@@ -26,7 +26,8 @@
 						"description": "Contact, channels, staff, forecast, loyalty and SLA on one page.",
 						"icon": "ChartBar",
 						"category": "reports",
-						"route": "Reports"
+						"route": "Reports",
+						"status": "{runtime.menu.reports} reports"
 					},
 					{
 						"id": "Flows",
@@ -34,7 +35,30 @@
 						"description": "Automation that runs on its own once it is set up.",
 						"icon": "Sitemap",
 						"category": "reports",
-						"route": "Flows"
+						"route": "Flows",
+						"status": "{on} active, {off} paused",
+						"statusValues": {
+							"on": {
+								"url": "/apps/openregister/api/flows",
+								"params": {
+									"app": "pipelinq"
+								},
+								"path": "results",
+								"where": {
+									"enabled": true
+								}
+							},
+							"off": {
+								"url": "/apps/openregister/api/flows",
+								"params": {
+									"app": "pipelinq"
+								},
+								"path": "results",
+								"where": {
+									"enabled": false
+								}
+							}
+						}
 					},
 					{
 						"id": "Pipelines",
@@ -42,7 +66,22 @@
 						"description": "The stages a lead or request goes through.",
 						"icon": "ViewColumnOutline",
 						"category": "setup",
-						"route": "Pipelines"
+						"route": "Pipelines",
+						"status": "{count} pipelines, {stages} stages",
+						"statusValues": {
+							"count": {
+								"register": "pipelinq",
+								"schema": "pipeline"
+							},
+							"stages": {
+								"url": "/apps/openregister/api/objects/pipelinq/pipeline",
+								"params": {
+									"_limit": 100
+								},
+								"path": "results",
+								"sumOf": "stages"
+							}
+						}
 					},
 					{
 						"id": "Services",
@@ -50,7 +89,18 @@
 						"description": "What residents can book, and who or what it is booked on.",
 						"icon": "ViewGridOutline",
 						"category": "setup",
-						"route": "Services"
+						"route": "Services",
+						"status": "{services} services, {resources} resources",
+						"statusValues": {
+							"services": {
+								"register": "pipelinq",
+								"schema": "appointmentService"
+							},
+							"resources": {
+								"register": "pipelinq",
+								"schema": "appointmentResource"
+							}
+						}
 					},
 					{
 						"id": "Integrations",
@@ -65,6 +115,21 @@
 						"permission": "admin",
 						"visibleIf": {
 							"appInstalled": "integriq"
+						},
+						"status": {
+							"text": "{count} connection has an error",
+							"plural": "{count} connections have an error",
+							"tone": "error",
+							"zero": "All connections work"
+						},
+						"statusValues": {
+							"count": {
+								"register": "integriq",
+								"schema": "app_connection",
+								"filter": {
+									"status": "error"
+								}
+							}
 						}
 					},
 					{
@@ -73,7 +138,25 @@
 						"description": "Scheduled exports to a data warehouse or BI tool.",
 						"icon": "DatabaseExportOutline",
 						"category": "setup",
-						"route": "ExportJobs"
+						"route": "ExportJobs",
+						"status": {
+							"text": "Last night {count} job failed",
+							"plural": "Last night {count} jobs failed",
+							"tone": "warning",
+							"zero": "No failed jobs last night"
+						},
+						"statusValues": {
+							"count": {
+								"register": "pipelinq",
+								"schema": "exportRun",
+								"filter": {
+									"status": "failed",
+									"startedAt": {
+										"gte": "@today"
+									}
+								}
+							}
+						}
 					},
 					{
 						"id": "Modules",
@@ -81,7 +164,8 @@
 						"description": "Sales, marketing, point of sale and more. An administrator switches them on for everyone on the admin page.",
 						"icon": "PackageVariant",
 						"category": "setup",
-						"route": "Modules"
+						"route": "Modules",
+						"status": "{runtime.menu.modulesOnCount} of {runtime.menu.modulesCount} modules on"
 					},
 					{
 						"id": "Store",
@@ -89,7 +173,8 @@
 						"description": "Apps and extensions that work with pipelinq.",
 						"icon": "StoreOutline",
 						"category": "about",
-						"route": "Store"
+						"route": "Store",
+						"status": "See what you can add"
 					},
 					{
 						"id": "FeaturesRoadmap",
@@ -97,7 +182,8 @@
 						"description": "What pipelinq does now and what is coming.",
 						"icon": "MapMarkerPath",
 						"category": "about",
-						"route": "FeaturesRoadmap"
+						"route": "FeaturesRoadmap",
+						"status": "See what is planned"
 					},
 					{
 						"id": "Documentation",
@@ -105,7 +191,8 @@
 						"description": "How pipelinq works, step by step, for employees and administrators.",
 						"icon": "BookOpenVariantOutline",
 						"category": "about",
-						"href": "https://pipelinq.conduction.nl/docs/intro"
+						"href": "https://pipelinq.conduction.nl/docs/intro",
+						"status": "Opens in a new tab"
 					},
 					{
 						"id": "AdminSettings",
@@ -114,9 +201,50 @@
 						"icon": "ShieldAccountOutline",
 						"category": "admin",
 						"href": "/index.php/settings/admin/pipelinq",
-						"permission": "admin"
+						"permission": "admin",
+						"status": "Opens in a new tab"
 					}
-				]
+				],
+				"panel": {
+					"label": "For administrators",
+					"badge": {
+						"label": "Administrators only",
+						"icon": "ShieldAccountOutline"
+					},
+					"text": "Pipelinq opens with the simple menu. Extended brings every item back. Both menus open the same pages, so links and bookmarks keep working. The choice applies to everyone and therefore lives on the Nextcloud admin page, not in the app.",
+					"link": {
+						"label": "Change the menu structure in the admin settings",
+						"href": "/index.php/settings/admin/pipelinq"
+					},
+					"title": "Menu structure",
+					"subtitle": "This is how it is set now. Only an administrator can change it, in the admin settings.",
+					"facts": [
+						{
+							"label": "Menu",
+							"value": "Simple",
+							"note": "Nine menu items for customer contact. Everything else is one step away, on the Modules page or in the settings.",
+							"visibleIf": {
+								"menu.profile": "simple"
+							}
+						},
+						{
+							"label": "Menu",
+							"value": "Extended",
+							"note": "Every page in the menu.",
+							"visibleIf": {
+								"menu.profile": "full"
+							}
+						},
+						{
+							"label": "Modules in the menu",
+							"value": "{runtime.menu.modulesOn}",
+							"note": "Off: {runtime.menu.modulesOff}. A module that is off stays reachable through the Modules page.",
+							"visibleIf": {
+								"menu.profile": "simple"
+							}
+						}
+					]
+				}
 			}
 		}
 	]

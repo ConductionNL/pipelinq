@@ -49,6 +49,10 @@
 			</table>
 		</div>
 
+		<p class="lead-contact-roles__note">
+			{{ t('pipelinq', 'Roles: decision maker, influencer, gatekeeper, champion, evaluator, end user.') }}
+		</p>
+
 		<div class="lead-contact-roles__footer">
 			<NcButton variant="secondary" @click="showAddDialog = true">
 				{{ t('pipelinq', 'Add contact role') }}
@@ -70,16 +74,9 @@
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import AddContactRoleDialog from '../dialogs/AddContactRoleDialog.vue'
+import { crmRoleLabel, crmRoleOptions, sortByCrmRole } from '../services/crmRoles.js'
 import { useObjectStore } from '../store/modules/object.js'
 
-const CRM_ROLES = [
-	{ value: 'beslisser', label: 'Beslisser (Decision Maker)', order: 1 },
-	{ value: 'beinvloeder', label: 'Beinvloeder (Influencer)', order: 2 },
-	{ value: 'gatekeeper', label: 'Gatekeeper', order: 3 },
-	{ value: 'kampioen', label: 'Kampioen (Champion)', order: 4 },
-	{ value: 'evaluator', label: 'Evaluator', order: 5 },
-	{ value: 'gebruiker', label: 'Gebruiker (End User)', order: 6 },
-]
 
 export default {
 	name: 'LeadContactRoles',
@@ -119,18 +116,14 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-7
 		 */
 		roleOptions() {
-			return CRM_ROLES
+			return crmRoleOptions()
 		},
 
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-9
 		 */
 		sortedContactRoles() {
-			return [...this.contactRoles].sort((a, b) => {
-				const aOrder = CRM_ROLES.find((r) => r.value === a.type)?.order || 99
-				const bOrder = CRM_ROLES.find((r) => r.value === b.type)?.order || 99
-				return aOrder - bOrder
-			})
+			return sortByCrmRole(this.contactRoles)
 		},
 	},
 
@@ -195,8 +188,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
 		 */
 		getRoleLabel(roleType) {
-			const role = CRM_ROLES.find((r) => r.value === roleType)
-			return role ? role.label : roleType
+			return crmRoleLabel(roleType)
 		},
 
 		/**
@@ -285,6 +277,11 @@ export default {
 	color: var(--color-text-maxcontrast);
 	padding: 12px 0;
 	text-align: center;
+}
+
+.lead-contact-roles__note {
+	color: var(--color-text-maxcontrast);
+	margin-top: 8px;
 }
 
 .lead-contact-roles__footer {
