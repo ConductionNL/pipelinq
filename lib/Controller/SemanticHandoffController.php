@@ -38,6 +38,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -102,6 +103,7 @@ class SemanticHandoffController extends Controller {
 	 * @param IUserSession $userSession User session.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner authorization.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IL10N $l10n Writes the answer that tells the customer the case number.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -112,6 +114,7 @@ class SemanticHandoffController extends Controller {
 		private IUserSession $userSession,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private LoggerInterface $logger,
+		private IL10N $l10n,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -166,6 +169,7 @@ class SemanticHandoffController extends Controller {
 						default: 'caseType'
 					),
 				],
+				'portalName' => $this->appConfig->getValueString(app: Application::APP_ID, key: 'portal_name', default: ''),
 			]
 		);
 	}//end requestAvailability()
@@ -174,8 +178,10 @@ class SemanticHandoffController extends Controller {
 	 * Convert an in-progress request ticket into a case via OR's handoff engine.
 	 *
 	 * Body params: `caseType` (optional case-type UUID, carried to the case
-	 * through the handoff mapping) and `keepOpen` (true keeps the request's
-	 * status; by default it becomes `converted`).
+	 * through the handoff mapping), `keepOpen` (true keeps the request's
+	 * status; by default it becomes `converted`) and `informCustomer` (true
+	 * answers the customer on the portal with the case number and, once
+	 * known, who handles it).
 	 *
 	 * @param string $id Request-ticket UUID.
 	 *
@@ -183,6 +189,7 @@ class SemanticHandoffController extends Controller {
 	 *
 	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/changes/convert-informs-the-customer/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
 	 */
 	#[NoAdminRequired]
 	public function convertRequestToCase(string $id = ''): JSONResponse {
@@ -255,6 +262,10 @@ class SemanticHandoffController extends Controller {
 		}
 
 		$request['caseReference'] = (string)$result['targetUuid'];
+		if (filter_var($this->request->getParam('informCustomer', false), FILTER_VALIDATE_BOOLEAN) === true) {
+			$request = $this->withCaseAnswer(request: $request, caseUuid: (string)$result['targetUuid']);
+		}
+
 		$saved = $this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request);
 		if ($saved === false) {
 			// The case was created + linked by the engine; only the local
@@ -466,6 +477,71 @@ class SemanticHandoffController extends Controller {
 
 		return $this->toArray(value: $entity);
 	}//end loadObject()
+
+	/**
+	 * The request with an answer to the customer that names the new case:
+	 * its number and, when the case has one, its handler. The answer goes
+	 * where every answer goes (`customerMessage`, appended to
+	 * `portalAnswers`), so the portal shows it as it shows an answer.
+	 *
+	 * @param array<string, mixed> $request  The request ticket.
+	 * @param string               $caseUuid The case the handoff created.
+	 *
+	 * @return array<string, mixed> The request with the answer.
+	 *
+	 * @spec openspec/changes/convert-informs-the-customer/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
+	 */
+	private function withCaseAnswer(array $request, string $caseUuid): array {
+		$case    = ($this->loadAnyObject(id: $caseUuid) ?? []);
+		$number  = (string)($case['identifier'] ?? ($case['caseNumber'] ?? ($case['reference'] ?? '')));
+		$handler = (string)($case['assigneeName'] ?? ($case['handlerName'] ?? ''));
+
+		$message = $this->l10n->t('Your request is now a case. You can follow it on your personal page.');
+		if ($number !== '') {
+			$message = $this->l10n->t('Your request is now case %1$s. You can follow it on your personal page.', [$number]);
+		}
+
+		if ($handler !== '') {
+			$message .= ' ' . $this->l10n->t('%1$s handles the case.', [$handler]);
+		}
+
+		$answers = $request['portalAnswers'] ?? [];
+		if (is_array($answers) === false) {
+			$answers = [];
+		}
+
+		$answers[] = ['message' => $message, 'createdAt' => gmdate('Y-m-d\TH:i:s\Z')];
+		$request['customerMessage'] = $message;
+		$request['portalAnswers']   = array_values($answers);
+		return $request;
+	}//end withCaseAnswer()
+
+	/**
+	 * An object by its UUID in whatever register holds it (the case the
+	 * handoff made lives in the case app's register), or null.
+	 *
+	 * @param string $id The UUID.
+	 *
+	 * @return array<string, mixed>|null The object.
+	 */
+	private function loadAnyObject(string $id): ?array {
+		$objectService = $this->objectService();
+		if ($objectService === null || $id === '') {
+			return null;
+		}
+
+		try {
+			$entity = $objectService->find(id: $id);
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $entity);
+	}//end loadAnyObject()
 
 	/**
 	 * Save an object payload back to the pipelinq register.

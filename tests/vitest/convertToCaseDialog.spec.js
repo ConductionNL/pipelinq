@@ -90,7 +90,18 @@ describe('ConvertToCaseDialog', () => {
 		await w.find('select').trigger('change')
 		await w.find('input[type="checkbox"]').trigger('change')
 		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
-		expect(w.emitted('confirm')[0][0]).toEqual({ caseType: 'b6c1f5a2-0d3e-4a7b-9c8d-2e1f0a9b8c7d', keepOpen: true })
+		expect(w.emitted('confirm')[0][0]).toEqual({ caseType: 'b6c1f5a2-0d3e-4a7b-9c8d-2e1f0a9b8c7d', keepOpen: true, informCustomer: false })
+	})
+
+	// Board PqTicketOmzetten: "Klant informeren in Mijn Zuiddrecht / Sanne ziet het
+	// zaaknummer en wie de zaak behandelt."
+	it('offers to inform the customer in the named portal', async () => {
+		const w = mount(Dialog, { props: { ticket, requester: 'Sanne de Vries', portalName: 'Mijn Zuiddrecht' }, global })
+		expect(w.vm.informLabel).toBe('Inform the customer in Mijn Zuiddrecht')
+		expect(w.text()).toContain('Sanne sees the case number and who handles the case.')
+		await w.findAll('input[type="checkbox"]').at(-1).trigger('change')
+		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
+		expect(w.emitted('confirm')[0][0].informCustomer).toBe(true)
 	})
 
 	it('emits confirm only from its confirm button', async () => {
@@ -115,6 +126,6 @@ describe('RequestConversionSection', () => {
 		expect(w.find('[data-testid="convert-to-case-dialog"]').exists() || w.find('.cn-dialog').exists()).toBe(true)
 		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
 		await flushPromises()
-		expect(http.post).toHaveBeenCalledWith('/apps/pipelinq/api/handoff/request/t1/convert-to-case', { keepOpen: false })
+		expect(http.post).toHaveBeenCalledWith('/apps/pipelinq/api/handoff/request/t1/convert-to-case', { keepOpen: false, informCustomer: false })
 	})
 })
