@@ -1,5 +1,11 @@
 {
     "translations": {
+        "{names} and %n other": ["{names} en %n andere", "{names} en %n anderen"],
+        "{names} and %n others": "{names} en %n anderen",
+        "%n contact in this segment has no consent for {channel}. Choose how to continue.": ["%n contact in dit segment heeft geen toestemming voor {channel}. Kies hoe je verdergaat.", "%n contacten in dit segment hebben geen toestemming voor {channel}. Kies hoe je verdergaat."],
+        "%n contacts in this segment have no consent for {channel}. Choose how to continue.": "%n contacten in dit segment hebben geen toestemming voor {channel}. Kies hoe je verdergaat.",
+        "Consent missing": "Toestemming ontbreekt",
+        "Unsubscribe link found in the template": "Afmeldlink gevonden in het sjabloon",
         "Telephony": "Telefonie",
         "New newsletter, step {step} of {total}": "Nieuwe nieuwsbrief, stap {step} van {total}",
         "Step {step} of {total}: check everything before the blast is created": "Stap {step} van {total}: controleer alles voordat de blast wordt aangemaakt",

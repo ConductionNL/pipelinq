@@ -1,6 +1,12 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "{names} and %n other": ["{names} and %n other","{names} and %n others"],
+        "{names} and %n others": "{names} and %n others",
+        "%n contact in this segment has no consent for {channel}. Choose how to continue.": ["%n contact in this segment has no consent for {channel}. Choose how to continue.","%n contacts in this segment have no consent for {channel}. Choose how to continue."],
+        "%n contacts in this segment have no consent for {channel}. Choose how to continue.": "%n contacts in this segment have no consent for {channel}. Choose how to continue.",
+        "Consent missing": "Consent missing",
+        "Unsubscribe link found in the template": "Unsubscribe link found in the template",
         "Telephony": "Telephony",
         "New newsletter, step {step} of {total}": "New newsletter, step {step} of {total}",
         "Step {step} of {total}: check everything before the blast is created": "Step {step} of {total}: check everything before the blast is created",
