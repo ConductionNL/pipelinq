@@ -187,6 +187,64 @@ class JourneyFlowCompilerTest extends TestCase {
 	}//end testOnlyAnActiveJourneyCompilesToAnEnabledFlow()
 
 	/**
+	 * A new-address journey watches clients and only passes an update that
+	 * changed the address.
+	 *
+	 * @return void
+	 */
+	public function testANewAddressJourneyStartsOnlyWhenTheAddressChanged(): void {
+		$journey = array_merge($this->journey(), ['trigger' => ['kind' => 'addressChanged']]);
+		unset($journey['condition']);
+		$document = $this->compiler->documentFor(journey: $journey, journeyId: 'journey-2');
+
+		$nodes = array_column($document['nodes'], null, 'id');
+		$this->assertSame('client', $nodes['start']['config']['schema']);
+		$exits = array_column($nodes['gate']['exits'], null, 'id');
+		$this->assertSame(['in' => ['address', ['var' => 'context.changed']]], $exits['match']['condition']);
+	}//end testANewAddressJourneyStartsOnlyWhenTheAddressChanged()
+
+	/**
+	 * A closed-ticket journey passes a ticket whose status just became closed,
+	 * and keeps the journey's own condition (complaints only) beside it.
+	 *
+	 * @return void
+	 */
+	public function testAClosedTicketJourneyKeepsItsOwnConditionBesideTheGuard(): void {
+		$journey = array_merge(
+			$this->journey(),
+			[
+				'trigger' => ['kind' => 'ticketClosed'],
+				'condition' => ['field' => 'ticketType', 'operator' => 'equals', 'value' => 'complaint'],
+			]
+		);
+		$document = $this->compiler->documentFor(journey: $journey, journeyId: 'journey-3');
+
+		$nodes = array_column($document['nodes'], null, 'id');
+		$this->assertSame('ticket', $nodes['start']['config']['schema']);
+		$condition = array_column($nodes['gate']['exits'], null, 'id')['match']['condition'];
+		$this->assertSame(JourneyFlowCompiler::TRIGGER_GUARDS['ticketClosed'], $condition['and'][0]);
+		$this->assertSame(['==' => [['var' => 'json.ticketType'], 'complaint']], $condition['and'][1]);
+	}//end testAClosedTicketJourneyKeepsItsOwnConditionBesideTheGuard()
+
+	/**
+	 * Every trigger kind the schema offers compiles: to an object trigger with
+	 * a schema, or to a schedule (the bookkeeping signal).
+	 *
+	 * @return void
+	 */
+	public function testEveryTriggerKindTheSchemaOffersCompiles(): void {
+		$fragment = json_decode(
+			(string)file_get_contents(__DIR__ . '/../../../../lib/Settings/register.d/99-marketing-integrated-campaigns.json'),
+			true
+		);
+		$kinds = $fragment['components']['schemas']['journey']['properties']['trigger']['properties']['kind']['enum'];
+		foreach ($kinds as $kind) {
+			$scheduled = ($kind === 'shillinqSignal');
+			$this->assertSame($scheduled, isset(JourneyFlowCompiler::TRIGGER_SCHEMAS[$kind]) === false, $kind);
+		}
+	}//end testEveryTriggerKindTheSchemaOffersCompiles()
+
+	/**
 	 * A journey that waits five days after a lead moved stage and acts when
 	 * the lead is still open.
 	 *
