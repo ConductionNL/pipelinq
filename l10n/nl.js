@@ -8597,7 +8597,18 @@ OC.L10N.register(
         "PDF to print and post": "Pdf om te printen en te posten",
         "Download PDF": "Pdf downloaden",
         "The %n field is filled in, nothing missing": ["%n veld ingevuld, niets ontbreekt","Alle %n velden ingevuld, niets ontbreekt"],
-        "All %n fields filled in, nothing missing": "Alle %n velden ingevuld, niets ontbreekt"
+        "All %n fields filled in, nothing missing": "Alle %n velden ingevuld, niets ontbreekt",
+        "An administrator turns a module on in the admin settings, and then it is in the menu for everyone. A module that is off still opens from this page.": "Een beheerder zet een module aan in de beheerinstellingen, en dan staat hij voor iedereen in het menu. Een module die uit staat, open je nog steeds via deze pagina.",
+        "Leads, prospects and deals, from first contact to won or lost.": "Leads, prospects en deals, van eerste contact tot gewonnen of verloren.",
+        "Put it in the menu:": "In het menu zetten:",
+        "Admin settings": "Beheerinstellingen",
+        "Segments, mailings, campaigns and social posts, with how they did.": "Segmenten, mailings, campagnes en sociale berichten, met hoe ze het deden.",
+        "Sales at the counter: receipts, returns and the cash drawer.": "Verkoop aan de balie: bonnen, retouren en de kassalade.",
+        "Add apps and connections that work with Pipelinq.": "Voeg apps en koppelingen toe die met Pipelinq werken.",
+        "Steps that run on their own when something happens.": "Stappen die vanzelf draaien als er iets gebeurt.",
+        "What Pipelinq can do, and what is coming.": "Wat Pipelinq kan, en wat eraan komt.",
+        "Waiting times, deadlines met and contact per channel.": "Wachttijden, gehaalde termijnen en contact per kanaal.",
+        "How Pipelinq works, step by step. Opens in a new tab.": "Hoe Pipelinq werkt, stap voor stap. Opent in een nieuw tabblad."
     },
     "nplurals=2; plural=(n != 1);"
 )

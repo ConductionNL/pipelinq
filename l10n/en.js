@@ -8606,7 +8606,19 @@ OC.L10N.register(
         "PDF to print and post": "PDF to print and post",
         "Download PDF": "Download PDF",
         "The %n field is filled in, nothing missing": ["The %n field is filled in, nothing missing","All %n fields filled in, nothing missing"],
-        "All %n fields filled in, nothing missing": "All %n fields filled in, nothing missing"
+        "All %n fields filled in, nothing missing": "All %n fields filled in, nothing missing",
+        "An administrator turns a module on in the admin settings, and then it is in the menu for everyone. A module that is off still opens from this page.": "An administrator turns a module on in the admin settings, and then it is in the menu for everyone. A module that is off still opens from this page.",
+        "Leads, prospects and deals, from first contact to won or lost.": "Leads, prospects and deals, from first contact to won or lost.",
+        "Put it in the menu:": "Put it in the menu:",
+        "Admin settings": "Admin settings",
+        "Segments, mailings, campaigns and social posts, with how they did.": "Segments, mailings, campaigns and social posts, with how they did.",
+        "Sales at the counter: receipts, returns and the cash drawer.": "Sales at the counter: receipts, returns and the cash drawer.",
+        "Add apps and connections that work with Pipelinq.": "Add apps and connections that work with Pipelinq.",
+        "Flows": "Flows",
+        "Steps that run on their own when something happens.": "Steps that run on their own when something happens.",
+        "What Pipelinq can do, and what is coming.": "What Pipelinq can do, and what is coming.",
+        "Waiting times, deadlines met and contact per channel.": "Waiting times, deadlines met and contact per channel.",
+        "How Pipelinq works, step by step. Opens in a new tab.": "How Pipelinq works, step by step. Opens in a new tab."
     },
     "nplurals=2; plural=(n != 1);"
 )
