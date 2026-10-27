@@ -11,19 +11,19 @@
   - a modal must never be written inline inside its parent (ADR-004).
   -->
 <template>
-	<NcDialog :name="dialogTitle" size="normal" @closing="$emit('done')">
+	<CnDialog width="form" :name="dialogTitle" size="normal" @closing="$emit('done')">
 		<PosStaffForm :id="staffId" @done="$emit('done')" />
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
 import PosStaffForm from '../views/pos/PosStaffForm.vue'
 
 export default {
 	name: 'PosStaffFormDialog',
 	components: {
-		NcDialog,
+		CnDialog,
 		PosStaffForm,
 	},
 

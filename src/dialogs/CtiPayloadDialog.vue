@@ -10,21 +10,22 @@
   - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.6
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="wizard"
 		:name="t('pipelinq', 'Webhook payload')"
-		:open="true"
 		size="large"
 		@closing="$emit('close')">
 		<pre class="cti-payload-dialog__pre">{{ pretty }}</pre>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+
 
 export default {
 	name: 'CtiPayloadDialog',
-	components: { NcDialog },
+	components: { CnDialog },
 	props: {
 		/**
 		 * The `payload_json` of the event-log row being inspected.
