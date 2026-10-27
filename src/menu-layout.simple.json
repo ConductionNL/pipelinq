@@ -543,6 +543,15 @@
 						}
 					},
 					{
+						"id": "link-to-client",
+						"label": "Link to a client",
+						"type": "open-modal",
+						"target": "LinkSubmissionToClientModal",
+						"icon": "AccountArrowRightOutline",
+						"props": { "ticketId": "@objectId" },
+						"visibleWhen": { "field": "client", "op": "empty" }
+					},
+					{
 						"id": "ticket-answer",
 						"type": "open-modal",
 						"target": "TicketAnswerDialog",
@@ -807,6 +816,7 @@
 					}
 				},
 				"quickActions": [
+					"link-to-client",
 					"ticket-answer",
 					"ticket-log-contact"
 				],
