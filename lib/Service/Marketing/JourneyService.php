@@ -130,10 +130,17 @@ class JourneyService {
 	public function save(array $payload, string $createdByUid, ?string $journeyId = null): ?array {
 		$now = date('c', $this->time->getTime());
 		$payload['updatedAt'] = $now;
+		$before = null;
+		if ($journeyId !== null) {
+			$before = $this->find(journeyId: $journeyId);
+		}
+
 		if ($journeyId === null) {
 			$payload['createdAt'] = $now;
 			$payload['createdBy'] = $createdByUid;
 		}
+
+		$payload = $this->stampActivation(journey: $payload, before: $before, now: $now);
 
 		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $payload, id: $journeyId);
 		if ($stored === null) {
@@ -161,8 +168,11 @@ class JourneyService {
 			return null;
 		}
 
-		$journey['status'] = $status;
-		$journey['updatedAt'] = date('c', $this->time->getTime());
+		$now = date('c', $this->time->getTime());
+		$before  = $journey;
+		$journey['status']    = $status;
+		$journey['updatedAt'] = $now;
+		$journey = $this->stampActivation(journey: $journey, before: $before, now: $now);
 		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $journey, id: $journeyId);
 		if ($stored === null) {
 			return null;
@@ -211,6 +221,9 @@ class JourneyService {
 
 		$flowUuid = $this->uuidOf(flow: $flow);
 		$this->publish(flow: $flow, journeyId: $journeyId);
+		if (trim((string)($journey['compiledAt'] ?? '')) === '') {
+			$journey['compiledAt'] = date('c', $this->time->getTime());
+		}
 
 		return $this->record(journey: $journey, journeyId: $journeyId, status: 'compiled', error: '', flowUuid: $flowUuid);
 	}//end compile()
@@ -252,6 +265,26 @@ class JourneyService {
 
 		return $runs;
 	}//end runsFor()
+
+	/**
+	 * Record when a journey went live: the moment its status becomes active.
+	 *
+	 * @param array<string, mixed>      $journey The journey as it will be stored.
+	 * @param array<string, mixed>|null $before  The journey as stored before, or null for a new one.
+	 * @param string                    $now     The current moment, ISO 8601.
+	 *
+	 * @return array<string, mixed> The journey, with `activatedAt` set when it went live now.
+	 *
+	 * @spec openspec/changes/journey-flow-dates/specs/marketing-integrated-campaigns/spec.md
+	 */
+	private function stampActivation(array $journey, ?array $before, string $now): array {
+		$wasActive = (($before['status'] ?? '') === 'active');
+		if (($journey['status'] ?? '') === 'active' && $wasActive === false) {
+			$journey['activatedAt'] = $now;
+		}
+
+		return $journey;
+	}//end stampActivation()
 
 	/**
 	 * Store the compilation outcome on the journey.

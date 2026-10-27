@@ -85,6 +85,7 @@ import DatabaseClock from 'vue-material-design-icons/DatabaseClock.vue'
 import DatabaseExport from 'vue-material-design-icons/DatabaseExport.vue'
 import DatabaseExportOutline from 'vue-material-design-icons/DatabaseExportOutline.vue'
 import DatabaseImportOutline from 'vue-material-design-icons/DatabaseImportOutline.vue'
+import DatabaseSearchOutline from 'vue-material-design-icons/DatabaseSearchOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Email from 'vue-material-design-icons/Email.vue'
@@ -148,6 +149,7 @@ import Pipe from 'vue-material-design-icons/Pipe.vue'
 import Play from 'vue-material-design-icons/Play.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
+import Printer from 'vue-material-design-icons/Printer.vue'
 import Receipt from 'vue-material-design-icons/Receipt.vue'
 import ReceiptOutline from 'vue-material-design-icons/ReceiptOutline.vue'
 import ReceiptText from 'vue-material-design-icons/ReceiptText.vue'
@@ -258,6 +260,7 @@ export default {
 	DatabaseExport,
 	DatabaseExportOutline,
 	DatabaseImportOutline,
+	DatabaseSearchOutline,
 	Domain,
 	Download,
 	Email,
@@ -322,6 +325,7 @@ export default {
 	Pipe,
 	Play,
 	Plus,
+	Printer,
 	PowerPlugOutline,
 	Receipt,
 	ReceiptOutline,

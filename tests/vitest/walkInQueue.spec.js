@@ -5,6 +5,8 @@
  * The walk-in queue actions (openspec/changes/screens-inloop-resource-board).
  */
 
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { createWalkInHandlers, ticketBody, walkInPath } from '../../src/services/walkInQueue.js'
 
@@ -45,6 +47,25 @@ describe('the row actions', () => {
 			status: 'served',
 			actualServedAt: '2026-10-07T09:55:00.000Z',
 		})
+	})
+
+	it('Left marks the ticket abandoned and stamps when the customer left', async () => {
+		const { deps, handlers } = setup()
+		expect(await handlers.walkInAbandon({ item: { id: 't1', status: 'waiting' } })).toBe(true)
+		expect(deps.http.put).toHaveBeenCalledWith(walkInPath('t1'), {
+			id: 't1',
+			status: 'abandoned',
+			leftAt: '2026-10-07T09:55:00.000Z',
+		})
+	})
+
+	it('a ticket can name its desk and when the customer left', () => {
+		const dir = resolve(__dirname, '../../lib/Settings/register.d')
+		const fragment = JSON.parse(readFileSync(resolve(dir, '99-zz-walk-in-counter.json'), 'utf8'))
+		const schema = fragment.components.schemas.walkInTicket
+		expect(schema.version).toBe('1.1.0')
+		expect(schema.properties.counter.type).toBe('string')
+		expect(schema.properties.leftAt.format).toBe('date-time')
 	})
 
 	it('reports a failed write and returns false', async () => {

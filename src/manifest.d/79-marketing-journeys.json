@@ -257,7 +257,23 @@
 							"fields": [
 								{
 									"as": "text",
+									"template": "Converted into a flow on {compiledAt:date}. The flow runs in the automation engine.",
+									"when": {
+										"all": [
+											{ "field": "flowStatus", "op": "eq", "value": "compiled" },
+											{ "field": "compiledAt", "op": "notEmpty" }
+										]
+									}
+								},
+								{
+									"as": "text",
 									"path": "flowStatus",
+									"when": {
+										"any": [
+											{ "field": "flowStatus", "op": "neq", "value": "compiled" },
+											{ "field": "compiledAt", "op": "empty" }
+										]
+									},
 									"map": {
 										"compiled": "Converted into a flow. The flow runs in the automation engine.",
 										"not_compiled": "Not converted into a flow yet.",

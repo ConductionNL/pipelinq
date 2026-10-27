@@ -51,16 +51,19 @@ export async function createWithContact(objectType, form) {
  */
 export async function writeBack(objectType, objectId, notify = showError) {
 	let uid
+	let skipped = false
 	try {
 		const { data } = await axios.post(base('/api/contacts-sync/write-back'), {
 			objectType,
 			objectId,
 		})
 		uid = data?.contactsUid || null
+		skipped = data?.skipped === true
 	} catch {
 		uid = null
 	}
-	if (uid === null) {
+	// The user turned write-back off: nothing was meant to reach Contacts.
+	if (uid === null && !skipped) {
 		notify(
 			t(
 				'pipelinq',
