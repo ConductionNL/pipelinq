@@ -8530,7 +8530,22 @@ OC.L10N.register(
         "The contact moment this task was created from.": "The contact moment this task was created from.",
         "Customer number": "Customer number",
         "The number the organisation knows this customer by, such as K-2019-01184.": "The number the organisation knows this customer by, such as K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
+        "%n second": ["%n second","%n seconds"],
+        "%n seconds": "%n seconds",
+        "Call outcome": "Call outcome",
+        "Contact moment at {reference}": "Contact moment at {reference}",
+        "E-mail (optional)": "E-mail (optional)",
+        "Escalation queue (optional)": "Escalation queue (optional)",
+        "No contact found for {number}. Fill in what the caller tells you; the number is already there.": "No contact found for {number}. Fill in what the caller tells you; the number is already there.",
+        "Only shown when the outcome is Escalated. The ticket goes to this queue.": "Only shown when the outcome is Escalated. The ticket goes to this queue.",
+        "Organisation (optional)": "Organisation (optional)",
+        "Phone (optional)": "Phone (optional)",
+        "Recorded as": "Recorded as",
+        "Save and close": "Save and close",
+        "The call has ended. Record what came of it for the next conversation.": "The call has ended. Record what came of it for the next conversation.",
+        "The call outcome is not saved. Try again.": "The call outcome is not saved. Try again.",
+        "The new contact opens straight away, with this call as its first contact moment.": "The new contact opens straight away, with this call as its first contact moment."
     },
     "nplurals=2; plural=(n != 1);"
 )
