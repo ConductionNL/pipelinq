@@ -1,5 +1,5 @@
 {
-	"$comment": "pipelinq's contacts and residents in the Zuiddrecht set besides the main file, as PqContacten, PqContactpersoon, PqBerichtSturen, PqBriefOpstellen and PqContactmoment draw them: Joke Smit of Sportclub Zuiddrecht 1958 with her channels, marketing consent, relations, deals and request PQ-2026-0405; the contacts Kees Bakker, Ellen Visser and Tom de Kroon; Anna de Vries as a resident with her contact moment and messaging consent; Sanne's relations, her outbound e-mail on PQ-2026-0417 and Fatma Yildiz's note; and M. de Graaf's four earlier contacts. Anna's phone differs from Sanne's, which the incoming call board matches on.",
+	"$comment": "pipelinq's contacts and residents in the Zuiddrecht set besides the main file, as PqContacten, PqContactpersoon, PqBerichtSturen, PqBriefOpstellen and PqContactmoment draw them: Joke Smit of Sportclub Zuiddrecht 1958 with her channels, marketing consent, relations, deals and request PQ-2026-0405; the contacts Kees Bakker, Ellen Visser and Tom de Kroon; Anna de Vries as a resident with her contact moment and messaging consent; Sanne's relations and her outbound e-mail on PQ-2026-0417 (Fatma Yildiz's note on her is in 62-sanne-extras.json); and M. de Graaf's four earlier contacts. Anna's phone differs from Sanne's, which the incoming call board matches on.",
 	"objects": [
 		{
 			"key": "client-anna-devries",
@@ -160,20 +160,11 @@
 			"key": "lead-sportclub-kunstgrasveld",
 			"register": "pipelinq",
 			"schema": "lead",
-			"lookups": {
-				"pipeline": {
-					"schema": "pipeline",
-					"where": {
-						"title": "Sales",
-						"isDefault": true
-					}
-				}
-			},
 			"data": {
 				"title": "Nieuw kunstgrasveld 2027",
 				"client": "{{object:client-sportclub.id}}",
 				"source": "Doorverwijzing",
-				"pipeline": "{{lookup:pipeline}}",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
 				"stage": "Voorstel",
 				"stageOrder": 3,
 				"status": "open",
@@ -416,17 +407,6 @@
 				"occurredAt": "{{datetime:-15 14:20}}",
 				"description": "Bevestigd dat de tweede afvalpas per post onderweg is.",
 				"category": "afval"
-			}
-		}
-	],
-	"notes": [
-		{
-			"key": "fatmayildiz-noteert-straatplan-sanne",
-			"data": {
-				"user": "{{cast:fatmayildiz.uid}}",
-				"objectUuid": "{{object:client-sanne.uuid}}",
-				"message": "@Pieter het straatplan voor de Parkstraat staat bij Documenten.",
-				"createdAt": "{{datetime:-4 10:40}}"
 			}
 		}
 	]
