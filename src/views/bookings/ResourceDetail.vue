@@ -34,6 +34,7 @@
 		:breadcrumb="{ label: t('pipelinq', 'Resources'), route: 'Resources' }"
 		:typePill="typePill"
 		:statusPill="statusPill"
+		:headerMeta="headerMeta"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
 		objectType="appointmentResource"
@@ -215,8 +216,10 @@ import {
 	CnTabs,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
@@ -281,6 +284,7 @@ export default {
 			showEditDialog: false,
 			showDelete: false,
 			weekBookings: [],
+			staffLine: { function: '', department: '' },
 		}
 	},
 
@@ -324,6 +328,20 @@ export default {
 				this.objectStore.getObject('appointmentResource', this.resourceId)
 				|| {}
 			)
+		},
+
+		/**
+		 * The line under the name: the linked colleague's function and
+		 * department from their Nextcloud profile ("Woo-adviseur · Woo en
+		 * informatie"); empty for a resource without a user.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		headerMeta() {
+			return [this.staffLine.function, this.staffLine.department]
+				.filter((part) => typeof part === 'string' && part.trim() !== '')
+				.join(' · ')
 		},
 
 		/**
@@ -516,11 +534,31 @@ export default {
 				'appointmentResource',
 				this.resourceId,
 			)
-			await this.fetchWeekBookings()
+			await Promise.all([this.fetchWeekBookings(), this.fetchStaffLine()])
 		}
 	},
 
 	methods: {
+		/**
+		 * Read the linked colleague's function and department. A resource
+		 * without a user, or a failed read, leaves the line empty.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		async fetchStaffLine() {
+			const userId = this.resourceData.userId
+			if (typeof userId !== 'string' || userId === '') {
+				return
+			}
+			try {
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/staff/{userId}/profile', { userId }))
+				this.staffLine = { function: data?.function || '', department: data?.department || '' }
+			} catch {
+				this.staffLine = { function: '', department: '' }
+			}
+		},
+
 		/**
 		 * Load this week's bookings for the "This week" card. A failed load
 		 * leaves the card at zero rather than blanking the page.
