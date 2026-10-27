@@ -1,5 +1,10 @@
 {
     "translations": {
+        "letter": "letter",
+        "Make a letter from a template": "Make a letter from a template",
+        "Templates come from filinq; %n is shared with pipelinq.": ["Templates come from filinq; %n is shared with pipelinq.", "Templates come from filinq; %n are shared with pipelinq."],
+        "Templates come from filinq; %n are shared with pipelinq.": "Templates come from filinq; %n are shared with pipelinq.",
+        "The letter is saved with {client} and appears on their timeline as an outgoing contact moment.": "The letter is saved with {client} and appears on their timeline as an outgoing contact moment.",
         "Cash register audit": "Cash register audit",
         "Cash register audit entry": "Cash register audit entry",
         "Verification done. The status shows the result.": "Verification done. The status shows the result.",

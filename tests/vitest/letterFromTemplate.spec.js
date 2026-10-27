@@ -31,6 +31,18 @@ vi.mock('../../src/store/modules/object.js', () => ({
 	useObjectStore: () => storeMock,
 }))
 vi.mock('../../src/services/letters.js', () => api)
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		props: ['name', 'eyebrow', 'width'],
+		render() {
+			return h('div', { class: 'nc-dialog', 'data-eyebrow': this.eyebrow, 'data-width': this.width, 'data-name': this.name }, [
+				this.$slots.default?.(),
+				this.$slots.actions?.(),
+			])
+		},
+	},
+}))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: {
 		name: 'NcButton',
@@ -73,9 +85,10 @@ beforeAll(async () => {
 beforeEach(() => {
 	Object.values(storeMock).forEach((fn) => fn.mockReset())
 	Object.values(api).forEach((fn) => fn.mockReset())
-	storeMock.fetchCollection.mockResolvedValue([
-		{ id: 'contact-1', name: 'Anna de Jong' },
-	])
+	storeMock.fetchCollection.mockImplementation(async (type) => (type === 'contact'
+		? [{ id: 'contact-1', name: 'Anna de Jong' }]
+		: []))
+	storeMock.fetchObject.mockResolvedValue(null)
 })
 
 const CLIENT = '6f1c1d2e-3b4a-4c5d-8e9f-0a1b2c3d4e5f'
@@ -84,7 +97,7 @@ const TICKET = '7a2b3c4d-5e6f-4a1b-9c2d-3e4f5a6b7c8d'
 function mountOn(path, id) {
 	return mount(Modal, {
 		global: {
-			mixins: [{ methods: { t: (app, text) => text } }],
+			mixins: [{ methods: { t: (app, text) => text, n: (app, one, many, count) => (count === 1 ? one : many).replace('%n', String(count)) } }],
 			mocks: { $route: { path, params: { id } } },
 		},
 	})
@@ -214,6 +227,29 @@ describe('LetterFromTemplateModal', () => {
 		expect(w.text()).toContain('filinq could not make the letter.')
 		expect(api.downloadLetter).not.toHaveBeenCalled()
 		expect(w.find('[data-testid="letter-result"]').exists()).toBe(false)
+	})
+})
+
+describe('LetterFromTemplateModal as board PqBriefOpstellen draws it', () => {
+	it('names the client over the title and offers the client\'s tickets the letter is about', async () => {
+		api.fetchLetterTemplates.mockResolvedValue({ available: true, templates: [{ id: 'tpl-1', name: 'Uitnodiging gesprek vergunning' }] })
+		api.makeLetter.mockResolvedValue({ content: 'JVBERg==', filename: 'x.pdf', warnings: [], contactMomentId: 'cm-1' })
+		storeMock.fetchObject.mockImplementation(async (type) => (type === 'client' ? { id: CLIENT, name: 'Sanne de Vries' } : null))
+		storeMock.fetchCollection.mockImplementation(async (type) => (type === 'ticket'
+			? [{ id: TICKET, reference: 'PQ-2026-0417', title: 'Evenementenvergunning straatfeest Parkstraat' }]
+			: []))
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+
+		expect(w.find('.nc-dialog').attributes('data-eyebrow')).toBe('Sanne de Vries · letter')
+		expect(w.find('.nc-dialog').attributes('data-width')).toBe('wizard')
+		expect(w.find('[data-testid="letter-about"]').exists()).toBe(true)
+		expect(w.find('[data-testid="letter-contact"]').exists()).toBe(false)
+		expect(w.text()).toContain('Templates come from filinq; 1 is shared with pipelinq.')
+		await w.find('[data-testid="letter-make"]').trigger('click')
+		await flushPromises()
+		expect(api.makeLetter).toHaveBeenCalledWith(CLIENT, { templateId: 'tpl-1', contactId: undefined, ticketId: TICKET })
 	})
 })
 

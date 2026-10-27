@@ -1,6 +1,11 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "letter": "brief",
+        "Make a letter from a template": "Brief maken uit een sjabloon",
+        "Templates come from filinq; %n is shared with pipelinq.": ["Sjablonen komen uit filinq; %n wordt gedeeld met pipelinq.","Sjablonen komen uit filinq; %n worden gedeeld met pipelinq."],
+        "Templates come from filinq; %n are shared with pipelinq.": "Sjablonen komen uit filinq; %n worden gedeeld met pipelinq.",
+        "The letter is saved with {client} and appears on their timeline as an outgoing contact moment.": "De brief wordt bij {client} opgeslagen en staat op haar tijdlijn als uitgaand contactmoment.",
         "Call outcome": "Gespreksuitkomst",
         "Contact moment at {reference}": "Contactmoment bij {reference}",
         "E-mail (optional)": "E-mail (optioneel)",
