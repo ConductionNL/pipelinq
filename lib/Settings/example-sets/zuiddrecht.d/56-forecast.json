@@ -1,0 +1,130 @@
+{
+	"$comment": "pipelinq's forecast in the Zuiddrecht set, beside the weekly Q4-2026 snapshots in the main file: the team lead's override of Fatma Yildiz's commit from € 22.000 to € 30.000, and Q3-2026's first-week and closing snapshots for the accuracy table, as PqForecast draws them.",
+	"objects": [
+		{
+			"key": "forecast-override-fatmayildiz-commit",
+			"register": "pipelinq",
+			"schema": "forecastOverride",
+			"data": {
+				"period_id": "Q4-2026",
+				"owner_id": "{{cast:marleen.uid}}",
+				"override_owner_id": "{{cast:fatmayildiz.uid}}",
+				"level": "rep",
+				"category": "commit",
+				"override_amount": 30000,
+				"original_amount": 22000,
+				"reason": "Verkoper gaf € 22.000 op, verhoogd door de teamleider omdat de deal met het Dagblad naar toezegging ging.",
+				"created_by": "{{cast:marleen.uid}}",
+				"created_at": "{{datetime:-1 16:10}}"
+			}
+		},
+		{
+			"key": "forecast-q3-pieter-week-1",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q3-2026",
+				"as_of_date": "{{date:-98}}",
+				"owner_id": "{{cast:pieter.uid}}",
+				"level": "rep",
+				"commit_amount": 52000,
+				"best_case_amount": 96000,
+				"pipeline_amount": 150000,
+				"closed_won_amount": 0,
+				"quota_amount": 150000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-q3-pieter-closed",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q3-2026",
+				"as_of_date": "{{date:-7}}",
+				"owner_id": "{{cast:pieter.uid}}",
+				"level": "rep",
+				"commit_amount": 49500,
+				"best_case_amount": 49500,
+				"pipeline_amount": 49500,
+				"closed_won_amount": 49500,
+				"quota_amount": 150000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-q3-fatmayildiz-week-1",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q3-2026",
+				"as_of_date": "{{date:-98}}",
+				"owner_id": "{{cast:fatmayildiz.uid}}",
+				"level": "rep",
+				"commit_amount": 21000,
+				"best_case_amount": 48000,
+				"pipeline_amount": 85000,
+				"closed_won_amount": 0,
+				"quota_amount": 110000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-q3-fatmayildiz-closed",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q3-2026",
+				"as_of_date": "{{date:-7}}",
+				"owner_id": "{{cast:fatmayildiz.uid}}",
+				"level": "rep",
+				"commit_amount": 14700,
+				"best_case_amount": 14700,
+				"pipeline_amount": 14700,
+				"closed_won_amount": 14700,
+				"quota_amount": 110000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-q3-joris-week-1",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q3-2026",
+				"as_of_date": "{{date:-98}}",
+				"owner_id": "{{cast:joris.uid}}",
+				"level": "rep",
+				"commit_amount": 25000,
+				"best_case_amount": 52000,
+				"pipeline_amount": 98000,
+				"closed_won_amount": 0,
+				"quota_amount": 110000,
+				"currency": "EUR",
+				"partial": false
+			}
+		},
+		{
+			"key": "forecast-q3-joris-closed",
+			"register": "pipelinq",
+			"schema": "forecastSnapshot",
+			"data": {
+				"period_id": "Q3-2026",
+				"as_of_date": "{{date:-7}}",
+				"owner_id": "{{cast:joris.uid}}",
+				"level": "rep",
+				"commit_amount": 26200,
+				"best_case_amount": 26200,
+				"pipeline_amount": 26200,
+				"closed_won_amount": 26200,
+				"quota_amount": 110000,
+				"currency": "EUR",
+				"partial": false
+			}
+		}
+	]
+}
