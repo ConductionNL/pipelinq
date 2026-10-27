@@ -1,210 +1,330 @@
 <!--
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
+  -
+  - A sale at the cash register (PqKassa): the lines, scanned or typed, the
+  - register, price display and payment method, the customer's purchase
+  - history, and beside them the totals with how the payment splits, the
+  - customer with the marketing consent and a preview of the receipt.
+  - Checking out opens PosPaymentDialog (PqKassaAfrekenen), which splits
+  - the payment over loyalty points, gift cards and the rest.
   -->
 <template>
-	<div class="pos-form">
-		<div class="pos-form__header">
-			<NcButton :to="{ name: 'PosTransactions' }">
-				{{ t('pipelinq', 'Back to list') }}
-			</NcButton>
-			<h2>
-				{{
-					isNew
-						? t('pipelinq', 'New transaction')
-						: transaction.reference || t('pipelinq', 'Transaction')
-				}}
-			</h2>
-		</div>
-
-		<NcLoadingIcon v-if="loading" :size="32" />
-
-		<template v-else>
-			<div class="pos-form__fields">
-				<NcTextField
-					v-model="transaction.terminalId"
-					:label="t('pipelinq', 'Terminal')" />
-				<CnResourceSelect
-					register="pipelinq"
-					schema="client"
-					labelField="name"
-					:modelValue="transaction.client || ''"
-					:inputLabel="t('pipelinq', 'Client (optional)')"
-					:placeholder="t('pipelinq', 'Search clients')"
-					:preload="true"
-					data-testid="pos-form-client"
-					@update:modelValue="onClientSelect" />
-				<NcSelect
-					:modelValue="selectedPriceMode"
-					:options="priceModeOptions"
-					:inputLabel="t('pipelinq', 'Price mode')"
-					label="label"
-					:clearable="false"
-					@update:modelValue="onPriceModeSelect" />
-				<NcSelect
-					:modelValue="selectedTender"
-					:options="tenderOptions"
-					:inputLabel="t('pipelinq', 'Tender type')"
-					label="label"
-					:clearable="false"
-					data-testid="tender-type"
-					@update:modelValue="onTenderSelect" />
-				<NcTextField
-					v-model="transaction.notes"
-					:label="t('pipelinq', 'Notes')" />
-			</div>
-
-			<div class="pos-form__customer">
-				<div v-if="!selectedCustomer" class="pos-form__customer-empty">
-					<NcButton
-						variant="secondary"
-						data-testid="add-customer"
-						:disabled="saving"
-						@click="openCustomerLookup">
-						{{ t('pipelinq', 'Add customer') }}
-					</NcButton>
-					<span
-						v-if="onAccountError"
-						class="pos-form__customer-error"
-						role="alert">
-						{{ onAccountError }}
-					</span>
-				</div>
-				<div
-					v-else
-					class="pos-form__customer-selected"
-					data-testid="selected-customer">
-					<span class="pos-form__customer-label">
-						{{ t('pipelinq', 'Customer:') }}
-						<strong>{{ selectedCustomer.name }}</strong>
-						<span
-							v-if="selectedCustomer.doNotContact"
-							class="pos-form__customer-flag"
-							:title="
-								t(
-									'pipelinq',
-									'This customer does not wish to be contacted.',
-								)
-							">
-							🔒
-						</span>
-					</span>
-					<NcButton
-						variant="tertiary"
-						:aria-label="t('pipelinq', 'Remove customer')"
-						data-testid="clear-customer"
-						:disabled="saving"
-						@click="clearCustomer">
-						✕
-					</NcButton>
-				</div>
-				<PurchaseHistory v-if="selectedCustomer" :rows="history" />
-				<label
-					class="pos-form__consent"
-					:title="
-						!selectedCustomer
-							? t('pipelinq', 'Select a customer first.')
-							: ''
-					">
-					<input
-						type="checkbox"
-						:checked="transaction.marketingConsent"
-						:disabled="
-							!selectedCustomer
-							|| (selectedCustomer && selectedCustomer.doNotContact)
-						"
-						data-testid="marketing-consent"
-						@change="onConsentChange" />
-					{{ t('pipelinq', 'I want to receive offers and updates.') }}
-				</label>
-			</div>
-
-			<table class="pos-form__lines">
-				<thead>
-					<tr>
-						<th scope="col">{{ t('pipelinq', 'Product') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Qty') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Discount %') }}</th>
-						<th scope="col">{{ t('pipelinq', 'VAT') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Line total') }}</th>
-						<th scope="col" />
-					</tr>
-				</thead>
-				<tbody>
-					<PosLineItemRow
-						v-for="(line, index) in lines"
-						:key="line._key"
-						:line="line"
-						:products="products"
-						:priceMode="priceMode"
-						@update:line="updateLine(index, $event)"
-						@remove="removeLine(index)" />
-				</tbody>
-			</table>
-
-			<NcButton class="pos-form__add" @click="addLine">
+	<CnDetailPage
+		:title="isNew ? t('pipelinq', 'New transaction') : transaction.reference || t('pipelinq', 'Transaction')"
+		:object="headerRecord"
+		:typePill="statusPill"
+		:breadcrumb="breadcrumb"
+		:headerMeta="headerMeta"
+		:loading="loading"
+		class="pos-form">
+		<template #actions>
+			<NcButton
+				variant="primary"
+				class="pos-form__header-button"
+				data-testid="checkout"
+				:disabled="saving || !checkoutAllowed"
+				@click="openPayment">
 				<template #icon>
-					<Plus :size="20" />
+					<CashRegister :size="16" />
 				</template>
-				{{ t('pipelinq', 'Add line') }}
+				{{ t('pipelinq', 'Check out') }}
 			</NcButton>
-
-			<PosTotalsPanel :lines="lines" :priceMode="priceMode" />
-
-			<PaymentMethodSelector
-				v-model="paymentSelection"
-				:clientSelected="!!transaction.client"
-				@change="onPaymentSelectionChange" />
-
-			<div class="pos-form__actions">
-				<NcButton
-					variant="primary"
-					:disabled="saving || !checkoutAllowed"
-					data-testid="checkout"
-					@click="save">
-					{{ t('pipelinq', 'Checkout') }}
-				</NcButton>
-			</div>
 		</template>
+
+		<div class="pos-form__layout">
+			<div class="pos-form__main">
+				<CnDetailCard :title="t('pipelinq', 'Lines')">
+					<form class="pos-form__scan" @submit.prevent="addFromBarcode">
+						<NcTextField
+							v-model="barcode"
+							class="pos-form__barcode"
+							:label="t('pipelinq', 'Scan or type a barcode')"
+							labelOutside
+							data-testid="pos-barcode">
+							<template #icon>
+								<Barcode :size="18" />
+							</template>
+						</NcTextField>
+						<NcButton type="submit" class="pos-form__add">
+							<template #icon>
+								<Plus :size="16" />
+							</template>
+							{{ t('pipelinq', 'Add line') }}
+						</NcButton>
+					</form>
+					<table v-if="lines.length" class="pos-form__lines">
+						<thead>
+							<tr>
+								<th scope="col">{{ t('pipelinq', 'Product') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Description') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Qty') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Discount %') }}</th>
+								<th scope="col">{{ t('pipelinq', 'VAT') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Line total') }}</th>
+								<th scope="col" />
+							</tr>
+						</thead>
+						<tbody>
+							<PosLineItemRow
+								v-for="(line, index) in lines"
+								:key="line._key"
+								:line="line"
+								:products="products"
+								:priceMode="priceMode"
+								@update:line="updateLine(index, $event)"
+								@remove="removeLine(index)" />
+						</tbody>
+					</table>
+					<p class="pos-form__hint">
+						{{ linesHint }}
+					</p>
+				</CnDetailCard>
+
+				<CnDetailCard :title="t('pipelinq', 'Transaction')">
+					<div class="pos-form__fields">
+						<NcTextField
+							v-model="transaction.terminalId"
+							:label="t('pipelinq', 'Register')"
+							labelOutside />
+						<NcSelect
+							:modelValue="selectedPriceMode"
+							:options="priceModeOptions"
+							:inputLabel="t('pipelinq', 'Price display')"
+							labelOutside
+							label="label"
+							:clearable="false"
+							@update:modelValue="onPriceModeSelect" />
+						<NcSelect
+							:modelValue="selectedTender"
+							:options="tenderOptions"
+							:inputLabel="t('pipelinq', 'Tender')"
+							labelOutside
+							label="label"
+							:clearable="false"
+							data-testid="tender-type"
+							@update:modelValue="onTenderSelect" />
+					</div>
+					<CnResourceSelect
+						v-if="transaction.tenderType === 'onAccount'"
+						register="pipelinq"
+						schema="client"
+						labelField="name"
+						:modelValue="transaction.client || ''"
+						:inputLabel="t('pipelinq', 'Client (optional)')"
+						:placeholder="t('pipelinq', 'Search clients')"
+						:preload="true"
+						data-testid="pos-form-client"
+						@update:modelValue="onClientSelect" />
+					<NcTextField
+						v-model="transaction.notes"
+						class="pos-form__notes"
+						:label="t('pipelinq', 'Receipt notes')"
+						:placeholder="t('pipelinq', 'Optional note on the receipt')"
+						labelOutside />
+					<PaymentMethodSelector
+						v-if="transaction.tenderType === 'card'"
+						v-model="paymentSelection"
+						:clientSelected="!!transaction.client"
+						@change="onPaymentSelectionChange" />
+				</CnDetailCard>
+
+				<CnDetailCard
+					v-if="selectedCustomer"
+					:title="t('pipelinq', 'Purchase history')"
+					:subtitle="t('pipelinq', '{name}, latest {count} transactions', { name: selectedCustomer.name, count: recentHistory.length })">
+					<CnDataTable
+						v-if="recentHistory.length"
+						:columns="historyColumns"
+						:rows="recentHistory"
+						rowKey="id">
+						<template #column-createdAt="{ row }">
+							{{ formatDay(row.createdAt) }}
+						</template>
+						<template #column-total="{ row }">
+							{{ formatEur(row.total) }}
+						</template>
+						<template #column-tenderType="{ row }">
+							{{ tenderLabel(row.tenderType) }}
+						</template>
+					</CnDataTable>
+					<p v-else class="pos-form__hint">
+						{{ t('pipelinq', 'No previous purchases.') }}
+					</p>
+				</CnDetailCard>
+			</div>
+
+			<div class="pos-form__side">
+				<CnDetailCard :title="t('pipelinq', 'Totals')">
+					<dl class="pos-totals">
+						<div class="pos-totals__row">
+							<dt>{{ t('pipelinq', 'Excl. VAT') }}</dt>
+							<dd>{{ formatEur(totals.subtotal) }}</dd>
+						</div>
+						<div v-if="totals.discountTotal > 0" class="pos-totals__row">
+							<dt>{{ t('pipelinq', 'Discount') }}</dt>
+							<dd>− {{ formatEur(totals.discountTotal) }}</dd>
+						</div>
+						<div v-for="rate in vatRows" :key="rate.key" class="pos-totals__row">
+							<dt>{{ rate.label }}</dt>
+							<dd>{{ formatEur(rate.tax) }}</dd>
+						</div>
+						<div class="pos-totals__row pos-totals__row--total">
+							<dt>{{ t('pipelinq', 'Incl. VAT') }}</dt>
+							<dd>{{ formatEur(totals.total) }}</dd>
+						</div>
+					</dl>
+					<CnDataTable
+						class="pos-form__payments"
+						:columns="paymentColumns"
+						:rows="paymentRows"
+						rowKey="key">
+						<template #column-amount="{ row }">
+							{{ formatEur(row.amount) }}
+						</template>
+					</CnDataTable>
+					<NcNoteCard
+						v-if="totals.total > 0"
+						type="success"
+						class="pos-form__closes">
+						{{ t('pipelinq', 'Payment closes, ready to check out.') }}
+					</NcNoteCard>
+					<NcButton
+						variant="primary"
+						wide
+						class="pos-form__checkout"
+						:disabled="saving || !checkoutAllowed || lines.length === 0"
+						@click="openPayment">
+						<template #icon>
+							<CashRegister :size="18" />
+						</template>
+						{{ t('pipelinq', 'Check out {amount}', { amount: formatEur(totals.total) }) }}
+					</NcButton>
+					<div class="pos-form__secondary">
+						<NcButton :disabled="saving || lines.length === 0" @click="park">
+							<template #icon>
+								<PauseCircleOutline :size="16" />
+							</template>
+							{{ t('pipelinq', 'Park') }}
+						</NcButton>
+						<NcButton
+							:disabled="saving || !checkoutAllowed || lines.length === 0"
+							data-testid="confirm-sale"
+							@click="save">
+							<template #icon>
+								<Check :size="16" />
+							</template>
+							{{ t('pipelinq', 'Confirm') }}
+						</NcButton>
+					</div>
+				</CnDetailCard>
+
+				<CnDetailCard :title="t('pipelinq', 'Customer')">
+					<div v-if="selectedCustomer" class="pos-form__customer" data-testid="selected-customer">
+						<span class="pos-form__avatar" aria-hidden="true">{{ initials(selectedCustomer.name) }}</span>
+						<div class="pos-form__customer-text">
+							<strong>{{ selectedCustomer.name }}</strong>
+							<span v-if="customerMeta" class="pos-form__customer-meta">{{ customerMeta }}</span>
+						</div>
+						<NcButton
+							variant="tertiary"
+							:aria-label="t('pipelinq', 'Remove customer')"
+							data-testid="clear-customer"
+							:disabled="saving"
+							@click="clearCustomer">
+							<template #icon>
+								<Close :size="18" />
+							</template>
+						</NcButton>
+					</div>
+					<div v-else class="pos-form__customer-empty">
+						<NcButton data-testid="add-customer" :disabled="saving" @click="openCustomerLookup">
+							<template #icon>
+								<AccountPlus :size="16" />
+							</template>
+							{{ t('pipelinq', 'Add customer') }}
+						</NcButton>
+						<span v-if="onAccountError" class="pos-form__error" role="alert">
+							{{ onAccountError }}
+						</span>
+					</div>
+					<NcCheckboxRadioSwitch
+						:modelValue="!!transaction.marketingConsent"
+						:disabled="!selectedCustomer || selectedCustomer.doNotContact"
+						class="pos-form__consent"
+						data-testid="marketing-consent"
+						@update:modelValue="transaction.marketingConsent = $event">
+						{{ t('pipelinq', 'I want to receive offers and news.') }}
+					</NcCheckboxRadioSwitch>
+					<p class="pos-form__consent-hint">
+						{{ t('pipelinq', 'Asked at the register. Ticked, it goes along to the contact.') }}
+					</p>
+				</CnDetailCard>
+
+				<CnDetailCard :title="t('pipelinq', 'Preview of the receipt')">
+					<pre class="pos-form__receipt" data-testid="pos-receipt-preview">{{ receiptText }}</pre>
+				</CnDetailCard>
+			</div>
+		</div>
 
 		<CustomerLookupModal
 			v-if="showCustomerModal"
 			@select="onCustomerSelected"
 			@cancel="closeCustomerLookup" />
-	</div>
+		<PosPaymentDialog
+			v-if="showPayment"
+			:total="totals.total"
+			:eyebrow="paymentEyebrow"
+			:customerName="selectedCustomer ? selectedCustomer.name : ''"
+			:loyalty="loyalty"
+			:restLabel="selectedTender.label"
+			:restHint="restHint"
+			:submitting="saving"
+			@sellGiftCard="addGiftCardLine"
+			@confirm="checkout"
+			@close="showPayment = false" />
+	</CnDetailPage>
 </template>
 
 <script>
-import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { CnDataTable, CnDetailCard, CnDetailPage, CnResourceSelect } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess, showWarning } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
+import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
+import Barcode from 'vue-material-design-icons/Barcode.vue'
+import CashRegister from 'vue-material-design-icons/CashRegister.vue'
+import Check from 'vue-material-design-icons/Check.vue'
+import Close from 'vue-material-design-icons/Close.vue'
+import PauseCircleOutline from 'vue-material-design-icons/PauseCircleOutline.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vue'
 import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
-import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
-import PurchaseHistory from '../../components/pos/PurchaseHistory.vue'
+import PosPaymentDialog from '../../dialogs/PosPaymentDialog.vue'
 import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
+import { formatDate } from '../../services/localeUtils.js'
 import {
 	attachCustomer as apiAttachCustomer,
 	detachCustomer as apiDetachCustomer,
 	getCustomerHistory,
 } from '../../services/posCustomerApi.js'
-import { recalculateLine } from '../../services/posTotals.js'
+import { tenderTypeFor } from '../../services/posSplitPayment.js'
+import { computeTotals, formatEur, recalculateLine } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
+
+const TENDER_LABELS = {
+	cash: 'Cash',
+	card: 'Card',
+	onAccount: 'On account',
+}
 
 /**
  * Normalise an object-store collection into a plain rows array.
  *
- * useObjectStore().getCollection(type) returns the results ARRAY directly, but
- * older shapes wrapped them in a { results } envelope. Accept either so a lib
- * bump cannot silently empty the POS product / client / line lists again.
- *
- * @param {Array|object|null|undefined} collection The getCollection() value.
- * @return {Array} The rows array (never null/undefined).
+ * @param {Array|object} collection The collection.
+ * @return {Array<object>} The rows.
  */
 function collectionRows(collection) {
 	if (Array.isArray(collection)) {
@@ -213,20 +333,39 @@ function collectionRows(collection) {
 	return (collection && collection.results) || []
 }
 
+/**
+ * The uuid of an OpenRegister object.
+ *
+ * @param {object} object The object.
+ * @return {string} The uuid, or ''.
+ */
+function uuidOf(object) {
+	return String(object?.['@self']?.id || object?.id || object?.uuid || '')
+}
+
 export default {
 	name: 'PosTransactionForm',
 	components: {
+		AccountPlus,
+		Barcode,
+		CashRegister,
+		Check,
+		Close,
+		CnDataTable,
+		CnDetailCard,
+		CnDetailPage,
 		CnResourceSelect,
+		CustomerLookupModal,
 		NcButton,
-		NcTextField,
+		NcCheckboxRadioSwitch,
+		NcNoteCard,
 		NcSelect,
-		NcLoadingIcon,
+		NcTextField,
+		PauseCircleOutline,
+		PaymentMethodSelector,
 		Plus,
 		PosLineItemRow,
-		PosTotalsPanel,
-		PurchaseHistory,
-		CustomerLookupModal,
-		PaymentMethodSelector,
+		PosPaymentDialog,
 	},
 
 	props: {
@@ -246,10 +385,9 @@ export default {
 				priceMode: 'excl',
 				customer: null,
 				marketingConsent: false,
-				// Schema-typed string (default ''); send an explicit empty string
-				// so the value is never persisted as null — a null trips the
-				// posTransaction schema's string-type validation when the confirm
-				// transition re-saves the header, blocking checkout completion.
+				// Schema-typed string (default ''); a null trips the posTransaction
+				// schema's string validation when the confirm transition re-saves
+				// the header.
 				consentSyncStatus: '',
 				tenderType: 'cash',
 			},
@@ -262,7 +400,11 @@ export default {
 			keyCounter: 0,
 			selectedCustomer: null,
 			history: [],
+			loyalty: null,
 			showCustomerModal: false,
+			showPayment: false,
+			barcode: '',
+			scanMessage: '',
 			paymentSelection: 'cash',
 			paymentProvider: 'cash',
 			paymentMethod: 'cash',
@@ -274,39 +416,18 @@ export default {
 			return useObjectStore()
 		},
 
-		/**
-		 * The transaction id from the prop or route.
-		 *
-		 * @return {string|null} The id.
-		 */
 		transactionId() {
 			return this.posTransactionId || this.$route.params.id || null
 		},
 
-		/**
-		 * Whether this is a new (unsaved) transaction.
-		 *
-		 * @return {boolean} True when creating.
-		 */
 		isNew() {
 			return !this.transactionId || this.transactionId === 'new'
 		},
 
-		/**
-		 * The current price mode ('excl' default).
-		 *
-		 * @return {string} The price mode.
-		 */
 		priceMode() {
 			return this.transaction.priceMode === 'incl' ? 'incl' : 'excl'
 		},
 
-		/**
-		 * Available price mode options.
-		 *
-		 * @return {Array<object>} The options.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
-		 */
 		priceModeOptions() {
 			return [
 				{ id: 'excl', label: t('pipelinq', 'Excl. VAT') },
@@ -314,80 +435,155 @@ export default {
 			]
 		},
 
-		/**
-		 * The selected price mode option.
-		 *
-		 * @return {object} The option.
-		 */
 		selectedPriceMode() {
-			return (
-				this.priceModeOptions.find((o) => o.id === this.priceMode)
-				|| this.priceModeOptions[0]
-			)
+			return this.priceModeOptions.find((o) => o.id === this.priceMode) || this.priceModeOptions[0]
+		},
+
+		tenderOptions() {
+			return Object.entries(TENDER_LABELS).map(([id, label]) => ({ id, label: t('pipelinq', label) }))
+		},
+
+		selectedTender() {
+			const id = this.transaction.tenderType || 'cash'
+			return this.tenderOptions.find((o) => o.id === id) || this.tenderOptions[0]
+		},
+
+		checkoutAllowed() {
+			return this.transaction.tenderType !== 'onAccount' || !!this.selectedCustomer
+		},
+
+		onAccountError() {
+			return this.checkoutAllowed ? '' : t('pipelinq', 'Customer is required for on-account transactions.')
+		},
+
+		cashierName() {
+			const user = window.OC?.getCurrentUser?.()
+			return user?.displayName || user?.uid || ''
 		},
 
 		/**
-		 * Tender type picker options.
+		 * The record the header reads.
 		 *
-		 * @return {Array<object>} The options.
+		 * @return {object} The transaction with the cashier's name.
 		 */
-		tenderOptions() {
+		headerRecord() {
+			return { ...this.transaction, cashierName: this.transaction.cashier || this.cashierName }
+		},
+
+		statusPill() {
+			if (this.isNew || this.transaction.status === 'draft') {
+				return { text: t('pipelinq', 'Draft') }
+			}
+			return {
+				field: 'status',
+				labels: {
+					parked: t('pipelinq', 'Parked'),
+					confirmed: t('pipelinq', 'Confirmed'),
+					settled: t('pipelinq', 'Settled'),
+					refunded: t('pipelinq', 'Refunded'),
+				},
+			}
+		},
+
+		breadcrumb() {
+			return { label: 'Transactions', route: 'PosTransactions', separator: '/' }
+		},
+
+		headerMeta() {
+			return t('pipelinq', '{terminalId} · cashier {cashierName}')
+		},
+
+		totals() {
+			return computeTotals(this.lines, this.priceMode)
+		},
+
+		/**
+		 * One VAT row, or one per rate with its base when the sale has several.
+		 *
+		 * @return {Array<object>} The rows.
+		 */
+		vatRows() {
+			const breakdown = this.totals.taxBreakdown
+			if (breakdown.length <= 1) {
+				const rate = breakdown[0]?.rate
+				return [{ key: 'vat', label: rate !== undefined ? t('pipelinq', 'VAT {rate}%', { rate }) : t('pipelinq', 'VAT'), tax: this.totals.totalTax }]
+			}
+			return breakdown.map((entry) => ({ key: String(entry.rate), label: t('pipelinq', 'VAT {rate}% (base {base})', { rate: entry.rate, base: formatEur(entry.base) }), tax: entry.tax }))
+		},
+
+		paymentColumns() {
 			return [
-				{ id: 'cash', label: t('pipelinq', 'Cash') },
-				{ id: 'card', label: t('pipelinq', 'Card') },
-				{ id: 'onAccount', label: t('pipelinq', 'On account') },
+				{ key: 'label', label: t('pipelinq', 'Tender') },
+				{ key: 'amount', label: t('pipelinq', 'Amount'), class: 'num', cellClass: 'num' },
 			]
 		},
 
-		/**
-		 * The selected tender option.
-		 *
-		 * @return {object} The option.
-		 */
-		selectedTender() {
-			const id = this.transaction.tenderType || 'cash'
-			return (
-				this.tenderOptions.find((o) => o.id === id) || this.tenderOptions[0]
-			)
+		paymentRows() {
+			return [{ key: 'rest', label: this.selectedTender.label, amount: this.totals.total }]
 		},
 
-		/**
-		 * Whether on-account + customer invariant holds (REQ-PCL-005).
-		 *
-		 * @return {boolean} True when the checkout button is allowed.
-		 */
-		isOnAccountValid() {
-			if (this.transaction.tenderType !== 'onAccount') {
-				return true
+		linesHint() {
+			const mode = this.priceMode === 'incl'
+				? t('pipelinq', 'Price display incl. VAT: unit prices include VAT.')
+				: t('pipelinq', 'Price display excl. VAT: VAT is added to the unit prices.')
+			return [mode, this.scanMessage].filter(Boolean).join(' ')
+		},
+
+		recentHistory() {
+			return this.history.slice(0, 5)
+		},
+
+		historyColumns() {
+			return [
+				{ key: 'createdAt', label: t('pipelinq', 'Date') },
+				{ key: 'reference', label: t('pipelinq', 'Reference number') },
+				{ key: 'itemCount', label: t('pipelinq', 'Items'), class: 'num', cellClass: 'num' },
+				{ key: 'total', label: t('pipelinq', 'Total'), class: 'num', cellClass: 'num' },
+				{ key: 'tenderType', label: t('pipelinq', 'Tender') },
+			]
+		},
+
+		customerMeta() {
+			const parts = []
+			if (this.selectedCustomer?.email) {
+				parts.push(this.selectedCustomer.email)
 			}
-			return !!this.selectedCustomer
-		},
-
-		/**
-		 * Aggregate gate for the Checkout button.
-		 *
-		 * @return {boolean} True when checkout is permitted.
-		 */
-		checkoutAllowed() {
-			return this.isOnAccountValid
-		},
-
-		/**
-		 * Error message surfaced near the customer picker for on-account misuse.
-		 *
-		 * @return {string} The error or empty string.
-		 */
-		onAccountError() {
-			if (
-				this.transaction.tenderType === 'onAccount'
-				&& !this.selectedCustomer
-			) {
-				return t(
-					'pipelinq',
-					'Customer is required for on-account transactions.',
-				)
+			if (this.loyalty) {
+				parts.push(t('pipelinq', 'loyalty {points} points', { points: this.loyalty.balance }))
 			}
-			return ''
+			return parts.join(' · ')
+		},
+
+		paymentEyebrow() {
+			return [t('pipelinq', 'Check out'), this.transaction.terminalId, this.selectedCustomer?.name].filter(Boolean).join(' · ')
+		},
+
+		restHint() {
+			return this.transaction.terminalId
+				? t('pipelinq', 'The rest, at {register}', { register: this.transaction.terminalId })
+				: t('pipelinq', 'The rest')
+		},
+
+		/**
+		 * The receipt as it will print: the lines, the total, how it is paid and
+		 * who served.
+		 *
+		 * @return {string} The receipt text.
+		 */
+		receiptText() {
+			const rule = '-'.repeat(32)
+			const lines = this.lines.map((raw) => {
+				const line = recalculateLine(raw, this.priceMode)
+				const qty = line.quantity !== 1 ? `${line.quantity} x ` : ''
+				return `${qty}${line.description || t('pipelinq', 'Item')} ${formatEur(line.lineTotal)}`
+			})
+			return [
+				...lines,
+				rule,
+				`${t('pipelinq', 'Total incl. VAT')} ${formatEur(this.totals.total)}`,
+				`${this.selectedTender.label} ${formatEur(this.totals.total)}`,
+				[this.transaction.terminalId, this.cashierName].filter(Boolean).join(' · '),
+			].join('\n')
 		},
 	},
 
@@ -404,122 +600,119 @@ export default {
 	},
 
 	methods: {
-		/**
-		 * Load the product catalog for the picker.
-		 */
+		formatEur,
+
+		formatDay(value) {
+			return formatDate(value, { day: 'numeric', month: 'short', year: 'numeric' }).replace('.', '')
+		},
+
+		tenderLabel(id) {
+			return TENDER_LABELS[id] ? t('pipelinq', TENDER_LABELS[id]) : (id || '—')
+		},
+
+		initials(name) {
+			const words = String(name || '').trim().split(/\s+/).filter(Boolean)
+			return ((words[0]?.[0] || '') + (words.length > 1 ? words[words.length - 1][0] : '')).toUpperCase()
+		},
+
 		async loadProducts() {
 			try {
 				await this.objectStore.fetchCollection('product', { _limit: 500 })
-				// getCollection() returns the results ARRAY directly (not a
-				// { results } envelope); reading `.results` off it yielded
-				// undefined → [] and left the product picker permanently empty.
-				this.products = collectionRows(
-					this.objectStore.getCollection('product'),
-				)
+				this.products = collectionRows(this.objectStore.getCollection('product'))
 			} catch {
 				this.products = []
 			}
 		},
 
-		/**
-		 * Load an existing transaction and its lines.
-		 */
 		async loadTransaction() {
-			const tx = await this.objectStore.fetchObject(
-				'posTransaction',
-				this.transactionId,
-			)
-			this.transaction = {
-				tenderType: 'cash',
-				marketingConsent: false,
-				customer: null,
-				...tx,
-			}
-			await this.objectStore.fetchCollection('posTransactionLine', {
-				transaction: this.transactionId,
-				_limit: 500,
-			})
-			const rows = collectionRows(
-				this.objectStore.getCollection('posTransactionLine'),
-			)
-			this.lines = rows
+			const tx = await this.objectStore.fetchObject('posTransaction', this.transactionId)
+			this.transaction = { tenderType: 'cash', marketingConsent: false, customer: null, ...tx }
+			await this.objectStore.fetchCollection('posTransactionLine', { transaction: this.transactionId, _limit: 500 })
+			this.lines = collectionRows(this.objectStore.getCollection('posTransactionLine'))
 				.filter((l) => l.transaction === this.transactionId)
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 				.map((l) => ({ ...l, _key: this.nextKey() }))
 			if (this.transaction.customer) {
-				try {
-					this.history = await getCustomerHistory(
-						this.transaction.customer,
-						0,
-					)
-					// Surface the linked customer in the picker — we do not call
-					// getCustomer (no need for the full row), just enough to
-					// reflect the selection so detach works.
-					this.selectedCustomer = {
-						id: this.transaction.customer,
-						name: tx.customerName || this.transaction.customer,
-						doNotContact: false,
-					}
-				} catch {
-					this.history = []
-				}
+				this.selectedCustomer = { id: this.transaction.customer, name: tx.customerName || this.transaction.customer, doNotContact: false }
+				await this.loadCustomerFacts(this.transaction.customer)
 			}
-			// Restore the payment-method selector from the persisted transaction.
-			const provider = (tx && tx.paymentProvider) || 'cash'
-			const method = (tx && tx.paymentMethod) || 'cash'
+			const provider = tx?.paymentProvider || 'cash'
+			const method = tx?.paymentMethod || 'cash'
 			this.paymentProvider = provider
 			this.paymentMethod = method
-			this.paymentSelection =
-				provider === 'cash'
-				|| provider === 'voucher'
-				|| provider === 'account'
-					? provider
-					: provider + ':' + method
+			this.paymentSelection = ['cash', 'voucher', 'account'].includes(provider) ? provider : provider + ':' + method
 		},
 
-		/**
-		 * Next stable v-for key for a line row.
-		 *
-		 * @return {number} The key.
-		 */
 		nextKey() {
 			this.keyCounter += 1
 			return this.keyCounter
 		},
 
 		/**
-		 * Append a blank line.
+		 * Add a line: from the scanned or typed barcode when there is one,
+		 * else an empty line to fill in.
+		 *
+		 * @return {Promise<void>}
 		 */
+		async addFromBarcode() {
+			const code = this.barcode.trim()
+			if (code === '') {
+				this.addLine()
+				return
+			}
+			try {
+				const { data } = await axios.post(generateUrl('/apps/pipelinq/api/products/barcode-lookup'), { barcode: code })
+				this.addProductLine(data?.product || {})
+				this.scanMessage = t('pipelinq', 'The barcode found {name} in Products.', { name: data?.product?.name || code })
+				this.barcode = ''
+			} catch {
+				this.scanMessage = ''
+				showError(t('pipelinq', 'No product found for barcode {barcode}', { barcode: code }))
+			}
+		},
+
+		/**
+		 * Put a product on the sale, or one more of it when it is already there.
+		 *
+		 * @param {object} product The product.
+		 */
+		addProductLine(product) {
+			const id = uuidOf(product)
+			const index = this.lines.findIndex((line) => id !== '' && line.product === id)
+			if (index !== -1) {
+				const line = this.lines[index]
+				this.updateLine(index, recalculateLine({ ...line, quantity: (Number(line.quantity) || 0) + 1 }, this.priceMode))
+				return
+			}
+			this.lines.push(recalculateLine({
+				_key: this.nextKey(),
+				product: id || null,
+				description: product.name || '',
+				quantity: 1,
+				unitPrice: Number(product.unitPrice ?? product.price) || 0,
+				discount: 0,
+				taxRate: product.taxRate ?? 21,
+			}, this.priceMode))
+		},
+
 		addLine() {
-			this.lines.push(
-				recalculateLine({
-					_key: this.nextKey(),
-					description: '',
-					quantity: 1,
-					unitPrice: 0,
-					discount: 0,
-					taxRate: 21,
-					product: null,
-				}),
-			)
+			this.lines.push(recalculateLine({ _key: this.nextKey(), description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 21, product: null }))
 		},
 
 		/**
-		 * Replace a line after an edit.
+		 * Put a gift card sold in the payment dialog on the sale; it is issued
+		 * once the sale is checked out.
 		 *
-		 * @param {number} index The line index.
-		 * @param {object} line The updated line.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 * @param {{amount: number}} giftCard The amount loaded on the card.
 		 */
+		addGiftCardLine({ amount }) {
+			this.lines.push(recalculateLine({ _key: this.nextKey(), _giftCard: true, description: t('pipelinq', 'Gift card'), quantity: 1, unitPrice: Number(amount) || 0, discount: 0, taxRate: 0, product: null }, this.priceMode))
+		},
+
 		updateLine(index, line) {
-			this.lines[index] = { ...line, _key: this.lines[index]._key }
+			this.lines.splice(index, 1, { ...line, _key: this.lines[index]._key, _giftCard: this.lines[index]._giftCard })
 		},
 
-		/**
-		 * Remove a line, queueing a delete if it was persisted.
-		 *
-		 * @param {number} index The line index.
-		 */
 		removeLine(index) {
 			const line = this.lines[index]
 			if (line.id) {
@@ -528,149 +721,98 @@ export default {
 			this.lines.splice(index, 1)
 		},
 
-		/**
-		 * Update local payment provider/method state when the selector changes.
-		 *
-		 * @param {object} payload The selector payload.
-		 *
-		 * @param {string} payload.providerName Name of the chosen payment provider.
-		 * @param {string} payload.paymentMethod The chosen payment method.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
-		 */
 		onPaymentSelectionChange({ providerName, paymentMethod }) {
 			this.paymentProvider = providerName || 'cash'
 			this.paymentMethod = paymentMethod || providerName || 'cash'
-			// Cash / voucher / account settle immediately on confirm — mirror
-			// the selection onto the draft transaction so saveObject persists it.
-			if (
-				this.paymentProvider === 'cash'
-				|| this.paymentProvider === 'voucher'
-				|| this.paymentProvider === 'account'
-			) {
-				this.transaction.paymentProvider = this.paymentProvider
-				this.transaction.paymentMethod = this.paymentMethod
-				this.transaction.paymentStatus =
-					this.paymentProvider === 'cash' ? 'settled' : 'pending'
-			} else {
-				// Card / online providers — actual session is initiated server-side
-				// by PosPaymentService.initiatePayment AFTER the transaction is
-				// confirmed; clear the stale draft fields so saveObject does not
-				// persist a stale value.
-				this.transaction.paymentProvider = this.paymentProvider
-				this.transaction.paymentMethod = this.paymentMethod
-				this.transaction.paymentStatus = 'pending'
+			this.transaction.paymentProvider = this.paymentProvider
+			this.transaction.paymentMethod = this.paymentMethod
+			this.transaction.paymentStatus = this.paymentProvider === 'cash' ? 'settled' : 'pending'
+		},
+
+		openPayment() {
+			if (!this.checkoutAllowed) {
+				showError(this.onAccountError)
+				return
 			}
+			this.showPayment = true
 		},
 
 		/**
-		 * Persist the transaction header and its lines.
+		 * Store the sale: the header, the customer link and the lines, and
+		 * confirm it unless it is parked.
 		 *
-		 * Totals are intentionally NOT sent: the backend recomputes them
-		 * server-side on confirm. The client only persists the editable header
-		 * + line inputs.
+		 * @param {boolean} confirm Whether to confirm the sale.
+		 * @return {Promise<string|null>} The transaction id, or null when it was not stored.
+		 */
+		async persistSale(confirm) {
+			const header = {
+				...this.transaction,
+				status: this.transaction.status || 'draft',
+				// `cashier` is schema-required; default it to the signed-in user.
+				cashier: this.transaction.cashier || (window.OC?.getCurrentUser?.()?.uid ?? ''),
+			}
+			const savedTx = await this.objectStore.saveObject('posTransaction', header)
+			if (!savedTx) {
+				showError(t('pipelinq', 'Failed to save transaction.'))
+				return null
+			}
+			const txId = savedTx.id || this.transactionId
+			await this.syncCustomerAttachment(txId)
+			for (const id of this.deletedLineIds) {
+				await this.objectStore.deleteObject('posTransactionLine', id)
+			}
+			this.deletedLineIds = []
+			let sortOrder = 1
+			for (const line of this.lines) {
+				const computed = recalculateLine(line, this.priceMode)
+				const payload = {
+					transaction: txId,
+					product: line.product || null,
+					description: line.description,
+					quantity: computed.quantity,
+					unitPrice: computed.unitPrice,
+					discount: computed.discount,
+					taxRate: computed.taxRate,
+					taxAmount: computed.taxAmount,
+					lineTotal: computed.lineTotal,
+					sortOrder: sortOrder++,
+					notes: line.notes || '',
+				}
+				if (line.id) {
+					payload.id = line.id
+				}
+				await this.objectStore.saveObject('posTransactionLine', payload)
+			}
+			if (confirm) {
+				// The confirm transition computes the server-authoritative totals
+				// from the stored lines and moves the sale out of draft.
+				try {
+					await axios.post(generateUrl('/apps/pipelinq/api/pos-transactions/' + encodeURIComponent(txId) + '/confirm'))
+				} catch {
+					showError(t('pipelinq', 'Transaction saved but could not be completed.'))
+				}
+			}
+			return txId
+		},
+
+		/**
+		 * Confirm the sale without splitting the payment.
 		 *
-		 * @spec openspec/specs/pos-transaction-core/spec.md#REQ-POS-004
+		 * @return {Promise<void>}
 		 */
 		async save() {
 			if (!this.checkoutAllowed) {
-				showError(
-					t(
-						'pipelinq',
-						'Customer is required for on-account transactions.',
-					),
-				)
+				showError(this.onAccountError)
 				return
 			}
 			this.saving = true
 			try {
-				const header = {
-					...this.transaction,
-					status: this.transaction.status || 'draft',
-					// `cashier` is a schema-required field on posTransaction; default
-					// it to the logged-in user (same pattern as PosRefundForm) so the
-					// OpenRegister POST validates and the sale persists. Preserve any
-					// value already on the (edited) transaction.
-					cashier:
-						this.transaction.cashier
-						|| (window.OC?.getCurrentUser?.()?.uid ?? ''),
+				const txId = await this.persistSale(true)
+				if (txId) {
+					await this.issueSoldGiftCards(txId)
+					showSuccess(t('pipelinq', 'Transaction saved.'))
+					this.$router.push({ name: 'PosTransactionDetail', params: { id: txId } })
 				}
-				const savedTx = await this.objectStore.saveObject(
-					'posTransaction',
-					header,
-				)
-				if (!savedTx) {
-					showError(t('pipelinq', 'Failed to save transaction.'))
-					return
-				}
-				const txId = savedTx.id || this.transactionId
-
-				// Attach the customer + consent server-authoritatively (also
-				// triggers the marketingConsent sync to the contact).
-				await this.syncCustomerAttachment(txId)
-
-				for (const id of this.deletedLineIds) {
-					await this.objectStore.deleteObject('posTransactionLine', id)
-				}
-				this.deletedLineIds = []
-
-				let sortOrder = 1
-				for (const line of this.lines) {
-					const computed = recalculateLine(line, this.priceMode)
-					const payload = {
-						transaction: txId,
-						product: line.product || null,
-						description: line.description,
-						quantity: computed.quantity,
-						unitPrice: computed.unitPrice,
-						discount: computed.discount,
-						taxRate: computed.taxRate,
-						taxAmount: computed.taxAmount,
-						lineTotal: computed.lineTotal,
-						sortOrder: sortOrder++,
-						notes: line.notes || '',
-					}
-					if (line.id) {
-						payload.id = line.id
-					}
-					await this.objectStore.saveObject('posTransactionLine', payload)
-				}
-
-				// Complete the sale: confirm the transaction so the backend
-				// recomputes the server-authoritative totals from the persisted
-				// lines and moves it out of `draft` (the draft header is stored
-				// with total=0 — totals are only computed on the confirm
-				// transition). Without this a "Checkout" only ever left an
-				// unpriced draft. The endpoint is idempotent-safe for our flow:
-				// it is only called once per checkout, immediately after the
-				// lines persist. On failure we still navigate to the detail view
-				// (the draft + lines are saved) but surface the error.
-				try {
-					await axios.post(
-						generateUrl(
-							'/apps/pipelinq/api/pos-transactions/'
-								+ encodeURIComponent(txId)
-								+ '/confirm',
-						),
-					)
-				} catch {
-					showError(
-						t(
-							'pipelinq',
-							'Transaction saved but could not be completed.',
-						),
-					)
-					this.$router.push({
-						name: 'PosTransactionDetail',
-						params: { id: txId },
-					})
-					return
-				}
-
-				showSuccess(t('pipelinq', 'Transaction saved.'))
-				this.$router.push({
-					name: 'PosTransactionDetail',
-					params: { id: txId },
-				})
 			} catch {
 				showError(t('pipelinq', 'Failed to save transaction.'))
 			} finally {
@@ -679,132 +821,224 @@ export default {
 		},
 
 		/**
-		 * Apply a client selection.
+		 * Check out with the split from the payment dialog: confirm the sale,
+		 * spend the points, redeem the gift cards and book every part as a
+		 * tender.
 		 *
-		 * @param {string} value The chosen client uuid, or '' when cleared.
-		 * @return {void}
-		 * @spec exclude the optional account-sale client is not governed by a
-		 *   requirement — pos-transaction-core/spec.md does not mention `client`
-		 *   anywhere, so linking one of its REQs would be a fabricated citation.
+		 * @param {{points: number, pointsValue: number, giftCards: Array<object>, rest: number}} split The split.
+		 * @return {Promise<void>}
 		 */
-		onClientSelect(value) {
-			this.transaction.client = value || null
-		},
-
-		/**
-		 * Apply a price mode selection.
-		 *
-		 * @param {object|null} option The chosen price mode.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
-		 */
-		onPriceModeSelect(option) {
-			this.transaction.priceMode = option ? option.id : 'excl'
-		},
-
-		/**
-		 * Apply a tender type selection.
-		 *
-		 * @param {object|null} option The chosen tender.
-		 */
-		onTenderSelect(option) {
-			this.transaction.tenderType = option ? option.id : 'cash'
-		},
-
-		/**
-		 * Apply a marketing-consent toggle.
-		 *
-		 * @param {Event} event The change event.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
-		 */
-		onConsentChange(event) {
-			this.transaction.marketingConsent = !!event.target.checked
-		},
-
-		/**
-		 * Open the customer lookup modal.
-		 */
-		openCustomerLookup() {
-			this.showCustomerModal = true
-		},
-
-		/**
-		 * Close the customer lookup modal.
-		 */
-		closeCustomerLookup() {
-			this.showCustomerModal = false
-		},
-
-		/**
-		 * Apply a customer chosen from the lookup modal.
-		 *
-		 * @param {object} row The selected contact.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
-		 */
-		async onCustomerSelected(row) {
-			this.selectedCustomer = row
-			this.transaction.customer = row.id
-			if (row.doNotContact) {
-				this.transaction.marketingConsent = false
-				showWarning(
-					t('pipelinq', 'This customer does not wish to be contacted.'),
-				)
+		async checkout(split) {
+			this.saving = true
+			try {
+				const txId = await this.persistSale(true)
+				if (!txId) {
+					return
+				}
+				await this.payParts(txId, split)
+				await this.issueSoldGiftCards(txId)
+				this.showPayment = false
+				showSuccess(t('pipelinq', 'Transaction saved.'))
+				this.$router.push({ name: 'PosTransactionDetail', params: { id: txId } })
+			} catch {
+				showError(t('pipelinq', 'Failed to save transaction.'))
+			} finally {
+				this.saving = false
 			}
-			this.showCustomerModal = false
-			await this.loadHistory(row.id)
 		},
 
 		/**
-		 * Clear the selected customer (REQ-PCL-002 Scenario 3).
+		 * Spend the points and gift cards of a split and book each part.
 		 *
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 * @param {string} txId The sale.
+		 * @param {object} split The split.
+		 * @return {Promise<void>}
 		 */
-		async clearCustomer() {
-			this.selectedCustomer = null
-			this.transaction.customer = null
-			this.transaction.marketingConsent = false
-			this.history = []
-			if (!this.isNew) {
+		async payParts(txId, split) {
+			const parts = []
+			if (split.points > 0 && this.loyalty) {
 				try {
-					await apiDetachCustomer(this.transactionId)
+					await axios.post(generateUrl(`/apps/pipelinq/api/loyalty/accounts/${encodeURIComponent(this.loyalty.accountId)}/pay`), { points: split.points, posTransactionId: txId })
+					parts.push({ kind: 'points', amount: split.pointsValue, reference: t('pipelinq', '{points} points', { points: split.points }) })
 				} catch {
-					// Detach is best-effort on the persistent record; UI state
-					// already reflects the cleared selection.
+					showError(t('pipelinq', 'The loyalty points could not be spent.'))
+				}
+			}
+			for (const card of split.giftCards) {
+				try {
+					await axios.post(generateUrl('/apps/pipelinq/api/loyalty/gift-card/redeem'), { giftCardId: card.giftCardId, pin: card.pin, amount: card.amount, posTransactionId: txId })
+					parts.push({ kind: 'giftCard', amount: card.amount, reference: card.serial })
+				} catch {
+					showError(t('pipelinq', 'Gift card {serial} could not be redeemed.', { serial: card.serial }))
+				}
+			}
+			if (split.rest > 0) {
+				parts.push({ kind: this.transaction.tenderType || 'cash', amount: split.rest, reference: this.transaction.reference || txId })
+			}
+			await this.bookTenders(txId, parts)
+		},
+
+		/**
+		 * Book the parts as tenders under the tender types set up for them.
+		 * A part without a tender type is left to the single payment method.
+		 *
+		 * @param {string} txId The sale.
+		 * @param {Array<object>} parts The parts.
+		 * @return {Promise<void>}
+		 */
+		async bookTenders(txId, parts) {
+			let types
+			try {
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/pos/tender-types'), { params: { activeOnly: '1' } })
+				types = data?.results || []
+			} catch {
+				return
+			}
+			for (const part of parts) {
+				const type = tenderTypeFor(part.kind, types)
+				if (!type) {
+					continue
+				}
+				try {
+					await axios.post(generateUrl(`/apps/pipelinq/api/pos-transactions/${encodeURIComponent(txId)}/tenders`), { tenderType: uuidOf(type), amount: part.amount, reference: part.reference })
+				} catch {
+					showError(t('pipelinq', 'A payment part could not be booked.'))
 				}
 			}
 		},
 
 		/**
-		 * Load purchase history for the selected customer.
+		 * Issue and activate the gift cards sold on this sale.
 		 *
-		 * @param {string} customerId The contact UUID.
+		 * @param {string} txId The sale.
+		 * @return {Promise<void>}
 		 */
-		async loadHistory(customerId) {
+		async issueSoldGiftCards(txId) {
+			for (const line of this.lines.filter((l) => l._giftCard)) {
+				try {
+					const { data } = await axios.post(generateUrl('/apps/pipelinq/api/loyalty/gift-card/issue'), { initialBalance: recalculateLine(line, this.priceMode).lineTotal, channel: 'purchased', issuedIn: txId })
+					const id = uuidOf(data?.card)
+					if (id) {
+						await axios.post(generateUrl(`/apps/pipelinq/api/loyalty/gift-card/activate/${encodeURIComponent(id)}`), { posTransactionId: txId })
+					}
+					showSuccess(t('pipelinq', 'Gift card {serial} sold.', { serial: data?.card?.serial || '' }))
+				} catch {
+					showError(t('pipelinq', 'The gift card could not be issued.'))
+				}
+			}
+		},
+
+		/**
+		 * Park the sale: store it unconfirmed and hand the register back.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async park() {
+			this.saving = true
+			try {
+				const txId = await this.persistSale(false)
+				if (txId) {
+					await axios.post(generateUrl('/apps/pipelinq/api/pos-transactions/' + encodeURIComponent(txId) + '/park'))
+					showSuccess(t('pipelinq', 'Transaction parked.'))
+					this.$router.push({ name: 'PosTransactions' })
+				}
+			} catch {
+				showError(t('pipelinq', 'The transaction could not be parked.'))
+			} finally {
+				this.saving = false
+			}
+		},
+
+		onClientSelect(value) {
+			this.transaction.client = value || null
+		},
+
+		onPriceModeSelect(option) {
+			this.transaction.priceMode = option ? option.id : 'excl'
+		},
+
+		onTenderSelect(option) {
+			this.transaction.tenderType = option ? option.id : 'cash'
+		},
+
+		openCustomerLookup() {
+			this.showCustomerModal = true
+		},
+
+		closeCustomerLookup() {
+			this.showCustomerModal = false
+		},
+
+		async onCustomerSelected(row) {
+			this.selectedCustomer = row
+			this.transaction.customer = row.id
+			if (row.doNotContact) {
+				this.transaction.marketingConsent = false
+				showWarning(t('pipelinq', 'This customer does not wish to be contacted.'))
+			}
+			this.showCustomerModal = false
+			await this.loadCustomerFacts(row.id)
+		},
+
+		async clearCustomer() {
+			this.selectedCustomer = null
+			this.transaction.customer = null
+			this.transaction.marketingConsent = false
+			this.history = []
+			this.loyalty = null
+			if (!this.isNew) {
+				try {
+					await apiDetachCustomer(this.transactionId)
+				} catch {
+					// Best-effort on the stored record; the form already shows no customer.
+				}
+			}
+		},
+
+		/**
+		 * The customer's purchase history and loyalty account.
+		 *
+		 * @param {string} customerId The contact.
+		 * @return {Promise<void>}
+		 */
+		async loadCustomerFacts(customerId) {
 			try {
 				this.history = await getCustomerHistory(customerId, 0)
 			} catch {
 				this.history = []
 			}
+			this.loyalty = await this.loadLoyalty(customerId)
 		},
 
 		/**
-		 * Attach the customer + consent on the server (called from save).
+		 * The customer's loyalty account with what a point is worth.
 		 *
-		 * @param {string} txId The transaction UUID.
+		 * @param {string} customerId The contact.
+		 * @return {Promise<object|null>} `{ accountId, balance, pointValue }`, or null.
 		 */
+		async loadLoyalty(customerId) {
+			try {
+				const { data } = await axios.get(generateUrl('/apps/openregister/api/objects/pipelinq/customerLoyaltyAccount'), { params: { customerId, _limit: 1 } })
+				const account = (data?.results || [])[0]
+				if (!account || account.status === 'disabled') {
+					return null
+				}
+				const { data: programme } = await axios.get(generateUrl(`/apps/openregister/api/objects/pipelinq/loyaltyProgramme/${encodeURIComponent(account.programmeId)}`))
+				const pointValue = Number(programme?.pointValue) || 0
+				return pointValue > 0 ? { accountId: uuidOf(account), balance: Number(account.currentBalance) || 0, pointValue } : null
+			} catch {
+				return null
+			}
+		},
+
 		async syncCustomerAttachment(txId) {
 			if (!txId || !this.selectedCustomer) {
 				return
 			}
 			try {
-				await apiAttachCustomer(
-					txId,
-					this.selectedCustomer.id,
-					!!this.transaction.marketingConsent,
-				)
+				await apiAttachCustomer(txId, this.selectedCustomer.id, !!this.transaction.marketingConsent)
 			} catch {
-				showError(
-					t('pipelinq', 'Could not link customer to the transaction.'),
-				)
+				showError(t('pipelinq', 'Could not link customer to the transaction.'))
 			}
 		},
 	},
@@ -812,57 +1046,138 @@ export default {
 </script>
 
 <style scoped>
-.pos-form {
-	padding: 20px;
-	max-width: 1000px;
-}
-
-.pos-form__header {
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	margin-bottom: 20px;
-}
-
-.pos-form__fields {
+.pos-form__layout {
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 16px;
-	margin-bottom: 24px;
+	grid-template-columns: minmax(0, 1fr) 336px;
+	gap: 20px;
+	align-items: start;
+}
+
+.pos-form__main,
+.pos-form__side {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	min-width: 0;
+}
+
+.pos-form__scan {
+	display: flex;
+	align-items: flex-end;
+	gap: 10px;
+	margin-bottom: 14px;
+}
+
+.pos-form__barcode {
+	flex: 1;
 }
 
 .pos-form__lines {
 	width: 100%;
 	border-collapse: collapse;
-	margin-bottom: 12px;
 }
 
 .pos-form__lines th {
 	text-align: start;
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	padding: 4px 8px;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 8px;
 	border-bottom: 1px solid var(--color-border);
 }
 
-.pos-form__add {
-	margin-bottom: 24px;
+.pos-form__hint,
+.pos-form__consent-hint {
+	margin: 12px 0 0;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
 }
 
-.pos-form__actions {
+.pos-form__fields {
+	display: grid;
+	grid-template-columns: 1.3fr 1fr 1fr;
+	gap: 16px;
+	margin-bottom: 12px;
+}
+
+.pos-form__notes {
+	margin-top: 12px;
+}
+
+.pos-form__header-button.pos-form__header-button {
+	min-height: 34px;
+	height: 34px;
+	padding-inline: 12px;
+}
+
+.pos-totals {
+	margin: 0 0 12px;
+}
+
+.pos-totals__row {
+	display: grid;
+	grid-template-columns: 72px 1fr;
+	gap: 12px;
+	align-items: baseline;
+	padding: 2px 0;
+}
+
+.pos-totals__row dt {
+	color: var(--color-text-maxcontrast);
+	font-size: 14px;
+}
+
+.pos-totals__row dd {
+	margin: 0;
+}
+
+.pos-totals__row--total dd {
+	font-size: 20px;
+	font-weight: 700;
+}
+
+.pos-form__closes {
+	margin: 12px 0;
+}
+
+.pos-form__checkout {
+	margin-top: 12px;
+}
+
+.pos-form__secondary {
 	display: flex;
-	justify-content: flex-end;
-	margin-top: 24px;
+	gap: 8px;
+	margin-top: 10px;
 }
 
 .pos-form__customer {
 	display: flex;
-	flex-direction: column;
+	align-items: flex-start;
 	gap: 12px;
-	margin: 16px 0;
-	padding: 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
+}
+
+.pos-form__avatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: var(--color-background-dark);
+	font-weight: 700;
+	font-size: 13px;
+	flex-shrink: 0;
+}
+
+.pos-form__customer-text {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+}
+
+.pos-form__customer-meta {
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
 }
 
 .pos-form__customer-empty {
@@ -871,32 +1186,30 @@ export default {
 	gap: 12px;
 }
 
-.pos-form__customer-error {
+.pos-form__error {
 	color: var(--color-error);
 	font-size: 12px;
 }
 
-.pos-form__customer-selected {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-}
-
-.pos-form__customer-label {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.pos-form__customer-flag {
-	font-size: 13px;
-}
-
 .pos-form__consent {
-	display: flex;
-	align-items: center;
-	gap: 8px;
+	margin-top: 12px;
+}
+
+.pos-form__receipt {
+	margin: 0;
+	padding: 14px;
+	border: 1px dashed var(--color-border-dark);
+	border-radius: 6px;
+	font-family: var(--font-face-monospace, monospace);
 	font-size: 13px;
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+@media (max-width: 1024px) {
+	.pos-form__layout,
+	.pos-form__fields {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 </style>
