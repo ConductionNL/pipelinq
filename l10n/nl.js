@@ -8502,7 +8502,8 @@ OC.L10N.register(
         "Customer number": "Klantnummer",
         "The number the organisation knows this customer by, such as K-2019-01184.": "Het nummer waaronder de organisatie deze klant kent, zoals K-2019-01184.",
         "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP.",
-        "Marketing · segments": "Marketing · segmenten"
+        "Marketing · segments": "Marketing · segmenten",
+        "Edit ticket": "Ticket bewerken"
     },
     "nplurals=2; plural=(n != 1);"
 )
