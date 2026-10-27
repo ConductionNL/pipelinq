@@ -161,6 +161,7 @@
 			:recordedAs="wrapUp.recordedAs"
 			:recordedHref="wrapUp.recordedHref"
 			:saving="savingWrapUp"
+			:queueOptions="queueOptions"
 			@close="wrapUp = null"
 			@submit="saveWrapUp" />
 	</div>
@@ -175,7 +176,7 @@ import PhoneIncoming from 'vue-material-design-icons/PhoneIncoming.vue'
 import CtiDispositionModal from '../modals/CtiDispositionModal.vue'
 import NewContactIntakeModal from '../modals/NewContactIntakeModal.vue'
 import ScreenPopModal from '../modals/ScreenPopModal.vue'
-import { incomingCall, screenPop, submitDisposition } from '../services/ctiApi.js'
+import { escalationQueues, incomingCall, screenPop, submitDisposition } from '../services/ctiApi.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 /** How often the card asks again when no live event arrives. */
@@ -215,6 +216,9 @@ export default {
 			/** The call the agent wraps up after it ended, or null. */
 			wrapUp: null,
 			savingWrapUp: false,
+			/** The escalation queues the wrap-up offers; loaded when a wrap-up opens. */
+			queues: [],
+			queuesLoaded: false,
 			now: Date.now(),
 			pollTimer: null,
 			tickTimer: null,
@@ -225,6 +229,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The escalation queues as the wrap-up's select options.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+		 */
+		queueOptions() {
+			return this.queues.map((queue) => ({ value: queue.id, label: queue.label }))
+		},
+
 		/**
 		 * @return {object} The shared object store, used for live hints and for
 		 *   linking the call to the record the agent opens.
@@ -322,6 +336,25 @@ export default {
 		liveLastEventAt() {
 			if (this.active) {
 				this.refresh()
+			}
+		},
+
+		/**
+		 * A wrap-up opened: load the escalation queues it offers, once.
+		 *
+		 * @param {object|null} wrapUp The call being wrapped up.
+		 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+		 */
+		async wrapUp(wrapUp) {
+			if (!wrapUp || this.queuesLoaded) {
+				return
+			}
+			this.queuesLoaded = true
+			try {
+				this.queues = await escalationQueues()
+			} catch {
+				// Without the list the dialog leaves the choice out; the server falls back to the first queue.
+				this.queuesLoaded = false
 			}
 		},
 	},

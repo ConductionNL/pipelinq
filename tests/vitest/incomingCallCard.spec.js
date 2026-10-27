@@ -22,7 +22,7 @@ import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
-const api = vi.hoisted(() => ({ incomingCall: vi.fn(), screenPop: vi.fn(), submitDisposition: vi.fn() }))
+const api = vi.hoisted(() => ({ incomingCall: vi.fn(), screenPop: vi.fn(), submitDisposition: vi.fn(), escalationQueues: vi.fn() }))
 const store = vi.hoisted(() => ({
 	liveLastEventAt: 0,
 	subscribe: vi.fn(),
@@ -507,6 +507,21 @@ describe('a previewed call (callPreview in the address)', () => {
 		api.screenPop.mockResolvedValue({ action: 'intake', matches: [] })
 		const intake = await card()
 		expect(intake.findComponent(NewContactIntakeModal).exists()).toBe(true)
+	})
+
+	// Board PqGesprekAfronden: "Escalatiewachtrij (optioneel)" lists the queues.
+	// @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+	it('hands the wrap-up the escalation queues to choose from', async () => {
+		window.history.replaceState({}, '', '/?callPreview=0786123341&callPreviewOpen=disposition')
+		api.screenPop.mockResolvedValue({ action: 'open', matches: [SANNE] })
+		api.escalationQueues.mockReset().mockResolvedValue([{ id: 'vergunningen', label: 'Vergunningen, tweede lijn' }])
+
+		const wrapper = await card()
+		await flushPromises()
+
+		expect(wrapper.findComponent(CtiDispositionModal).props('queueOptions')).toEqual([
+			{ value: 'vergunningen', label: 'Vergunningen, tweede lijn' },
+		])
 	})
 })
 
