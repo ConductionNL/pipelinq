@@ -14,13 +14,14 @@
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"showViewAction": false,
+				"showAdd": false,
 				"countText": "{shown} of {total} submissions · newest first",
 				"footerNote": "Linking connects a submission to a client, a contact person and, if you like, a lead.",
 				"quickFilters": [
-					{ "label": "Not linked yet", "filter": { "client": "IS NULL" }, "default": true },
-					{ "label": "Linked", "filter": { "client": "IS NOT NULL" } },
-					{ "label": "Closed", "filter": { "status": ["completed", "rejected", "closed"] } },
-					{ "label": "All", "filter": {} }
+					{ "label": "Not linked yet", "filter": { "client": "IS NULL" }, "default": true, "showCount": true },
+					{ "label": "Linked", "filter": { "client": "IS NOT NULL" }, "showCount": true },
+					{ "label": "Closed", "filter": { "status": ["completed", "rejected", "closed"] }, "showCount": true },
+					{ "label": "All", "filter": {}, "showCount": true }
 				],
 				"columns": [
 					{ "key": "occurredAt", "label": "Received" },
@@ -29,7 +30,7 @@
 					{ "key": "reporterOrganisation", "label": "Organisation" },
 					{ "key": "source", "label": "Form" },
 					{ "key": "sourceUrl", "label": "Page" },
-					{ "key": "status", "label": "Status" },
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "new": "primary", "in_progress": "warning", "awaiting_customer": "warning", "resolved": "success", "completed": "success", "rejected": "default", "closed": "default" } } },
 					{ "key": "assignee", "label": "Handled by", "formatter": "userDisplayName" }
 				],
 				"actions": [
