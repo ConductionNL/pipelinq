@@ -8426,7 +8426,10 @@ OC.L10N.register(
         "{count} newsletters": "{count} nieuwsbrieven",
         "{count} social post": "{count} sociaal bericht",
         "{count} social posts": "{count} sociale berichten",
-        "{count} lead": "{count} lead"
+        "{count} lead": "{count} lead",
+        "Linked request": "Gekoppeld verzoek",
+        "Not linked to a request": "Niet aan een verzoek gekoppeld",
+        "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for.": "UUID van het verzoek of ander ticket waar deze afspraak bij hoort, zoals de vergunningaanvraag waarvoor een locatiebezoek is."
     },
     "nplurals=2; plural=(n != 1);"
 )

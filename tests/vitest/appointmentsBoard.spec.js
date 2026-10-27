@@ -44,9 +44,9 @@ describe('the booking register overlay', () => {
 describe('the appointment page', () => {
 	const config = page('BookingDetail').config
 
-	it('sits on the relation frame with the customer and when-and-where beside it', () => {
+	it('sits on the relation frame with the customer, when-and-where and the linked request beside it', () => {
 		expect(config.breadcrumb.route).toBe('Bookings')
-		expect(config.sideColumn).toEqual(['booking-context', 'booking-when'])
+		expect(config.sideColumn).toEqual(['booking-context', 'booking-when', 'booking-request'])
 		expect(config.layout.map((l) => l.widgetId)).toEqual(['booking-panels'])
 	})
 })

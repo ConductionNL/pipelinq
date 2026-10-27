@@ -8455,7 +8455,10 @@ OC.L10N.register(
         "{count} newsletters": "{count} newsletters",
         "{count} social post": "{count} social post",
         "{count} social posts": "{count} social posts",
-        "{count} lead": "{count} lead"
+        "{count} lead": "{count} lead",
+        "Linked request": "Linked request",
+        "Not linked to a request": "Not linked to a request",
+        "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for.": "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for."
     },
     "nplurals=2; plural=(n != 1);"
 )
