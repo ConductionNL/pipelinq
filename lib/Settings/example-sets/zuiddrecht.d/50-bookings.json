@@ -232,7 +232,8 @@
 						"startAt": "{{datetime:1 13:40}}",
 						"endAt": "{{datetime:1 15:20}}"
 					}
-				]
+				],
+				"ticket": "{{object:ticket-sanne-straatfeest.id}}"
 			}
 		},
 		{
