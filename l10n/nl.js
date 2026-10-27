@@ -8462,7 +8462,15 @@ OC.L10N.register(
         "Fill in %n field": ["%n veld invullen","%n velden invullen"],
         "Fill in %n fields": "%n velden invullen",
         "%n field filled in.": ["%n veld ingevuld.","%n velden ingevuld."],
-        "%n fields filled in.": "%n velden ingevuld."
+        "%n fields filled in.": "%n velden ingevuld.",
+        "Decision maker": "Beslisser",
+        "Champion": "Pleitbezorger",
+        "Gatekeeper": "Poortwachter",
+        "Influencer": "Beïnvloeder",
+        "Evaluator": "Beoordelaar",
+        "End user": "Eindgebruiker",
+        "Roles: decision maker, influencer, gatekeeper, champion, evaluator, end user.": "Rollen: beslisser, beïnvloeder, poortwachter, pleitbezorger, beoordelaar, eindgebruiker.",
+        "Entity type of source: contact, client, or lead for the role a contact plays in a deal": "Soort bronobject: contactpersoon, klant, of lead voor de rol van een contactpersoon in een deal"
     },
     "nplurals=2; plural=(n != 1);"
 )

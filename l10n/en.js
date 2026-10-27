@@ -8491,7 +8491,15 @@ OC.L10N.register(
         "Fill in %n field": ["Fill in %n field","Fill in %n fields"],
         "Fill in %n fields": "Fill in %n fields",
         "%n field filled in.": ["%n field filled in.","%n fields filled in."],
-        "%n fields filled in.": "%n fields filled in."
+        "%n fields filled in.": "%n fields filled in.",
+        "Decision maker": "Decision maker",
+        "Champion": "Champion",
+        "Gatekeeper": "Gatekeeper",
+        "Influencer": "Influencer",
+        "Evaluator": "Evaluator",
+        "End user": "End user",
+        "Roles: decision maker, influencer, gatekeeper, champion, evaluator, end user.": "Roles: decision maker, influencer, gatekeeper, champion, evaluator, end user.",
+        "Entity type of source: contact, client, or lead for the role a contact plays in a deal": "Entity type of source: contact, client, or lead for the role a contact plays in a deal"
     },
     "nplurals=2; plural=(n != 1);"
 )
