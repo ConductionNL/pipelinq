@@ -8324,7 +8324,12 @@ OC.L10N.register(
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "Een fasewissel, een contract dat verlengd kan worden, een bevestigde inschrijving, een boekhoudsignaal, een nieuw adres of een afgesloten ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem.",
         "Public-space report": "Melding",
-        "melding": "Melding"
+        "melding": "Melding",
+        "Converted into a flow on {compiledAt:date}. The flow runs in the automation engine.": "Op {compiledAt:date} omgezet naar een flow. De flow draait in de automatiseringsengine.",
+        "Converted into a flow": "Omgezet naar een flow",
+        "Activated": "Geactiveerd",
+        "When the journey was first converted into a flow.": "Wanneer de journey voor het eerst is omgezet naar een flow.",
+        "When the journey last went live.": "Wanneer de journey voor het laatst live ging."
     },
     "nplurals=2; plural=(n != 1);"
 )

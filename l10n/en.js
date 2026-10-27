@@ -8353,7 +8353,12 @@ OC.L10N.register(
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.",
         "Public-space report": "Public-space report",
-        "melding": "melding"
+        "melding": "melding",
+        "Converted into a flow on {compiledAt:date}. The flow runs in the automation engine.": "Converted into a flow on {compiledAt:date}. The flow runs in the automation engine.",
+        "Converted into a flow": "Converted into a flow",
+        "Activated": "Activated",
+        "When the journey was first converted into a flow.": "When the journey was first converted into a flow.",
+        "When the journey last went live.": "When the journey last went live."
     },
     "nplurals=2; plural=(n != 1);"
 )
