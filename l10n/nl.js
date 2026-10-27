@@ -612,7 +612,7 @@ OC.L10N.register(
         "Cash difference rejected.": "Kasverschil afgewezen.",
         "Cash drawer": "Kassalade",
         "Cash drop to manager": "Afstorting bij manager",
-        "Cash register audit log": "Kassakoppeling audit log",
+        "Cash register audit log": "Auditlog van de kassa",
         "Cashier": "Kassamedewerker",
         "Cashiers who can sign in at the register, and the POS role each one holds.": "Kassières die kunnen inloggen bij de kassa, en de POS-rol die elk van hen heeft.",
         "Catalog": "Catalogus",
@@ -8501,7 +8501,15 @@ OC.L10N.register(
         "The contact moment this task was created from.": "Het contactmoment waaruit deze taak is ontstaan.",
         "Customer number": "Klantnummer",
         "The number the organisation knows this customer by, such as K-2019-01184.": "Het nummer waaronder de organisatie deze klant kent, zoals K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP.",
+        "Immutable, cryptographically signed record of every register action for tax authority audits · only administrators can export": "Onveranderbaar, cryptografisch ondertekend logboek van elke kassahandeling voor controles door de Belastingdienst · alleen beheerders kunnen exporteren",
+        "Search by register, operator or transaction": "Zoek op kassa, bediener of transactie",
+        "{shown} of {total} · newest first": "{shown} van {total} · nieuwste eerst",
+        "Invalid signature": "Ongeldige handtekening",
+        "Not exported": "Niet geëxporteerd",
+        "Operated by": "Bediener",
+        "Check": "Controle",
+        "To be checked": "Nog te controleren"
     },
     "nplurals=2; plural=(n != 1);"
 )

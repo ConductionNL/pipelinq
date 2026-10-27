@@ -8571,6 +8571,14 @@
         "The contact moment this task was created from.": "The contact moment this task was created from.",
         "Customer number": "Customer number",
         "The number the organisation knows this customer by, such as K-2019-01184.": "The number the organisation knows this customer by, such as K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
+        "Immutable, cryptographically signed record of every register action for tax authority audits · only administrators can export": "Immutable, cryptographically signed record of every register action for tax authority audits · only administrators can export",
+        "Search by register, operator or transaction": "Search by register, operator or transaction",
+        "{shown} of {total} · newest first": "{shown} of {total} · newest first",
+        "Invalid signature": "Invalid signature",
+        "Not exported": "Not exported",
+        "Operated by": "Operated by",
+        "Check": "Check",
+        "To be checked": "To be checked"
     }
 }

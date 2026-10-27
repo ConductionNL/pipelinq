@@ -180,24 +180,6 @@ test('PosRefundForm: /pos/refunds/new mounts src/views/pos/PosRefundForm.vue', a
 	await expect(form.getByRole('heading', { name: 'New refund' })).toBeVisible()
 })
 
-// ── src/views/pos/CashRegisterAuditList.vue — `/cash-register-audit`
-test('CashRegisterAuditList: /cash-register-audit mounts src/views/pos/CashRegisterAuditList.vue', async ({
-	page,
-}) => {
-	await openSpaRoute(page, '/cash-register-audit')
-
-	const list = content(page).locator('.cash-register-audit-list')
-	await expect(list).toBeVisible({ timeout: 15000 })
-	await expect(
-		list.getByRole('heading', { name: 'Cash register audit log' }),
-	).toBeVisible()
-	// The filter strip carries the page's own testid and renders regardless of
-	// whether the append-only register holds any entries.
-	await expect(
-		list.locator('[data-testid="cash-register-audit-filters"]'),
-	).toBeVisible()
-})
-
 // ── page `KassakoppelingAuditDetail` (declarative, endpoint record) — `/cash-register-audit/:id`
 test('KassakoppelingAuditDetail: the old /kassakoppeling/audit/:id address opens the declarative entry page', async ({
 	page,

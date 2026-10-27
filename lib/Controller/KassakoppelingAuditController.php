@@ -153,6 +153,10 @@ class KassakoppelingAuditController extends Controller {
 			'action' => (string)$this->request->getParam('action', ''),
 			'from' => (string)$this->request->getParam('from', ''),
 			'to' => (string)$this->request->getParam('to', ''),
+			'verified' => (string)$this->request->getParam('verified', ''),
+			'exported' => (string)$this->request->getParam('exported', ''),
+			'search' => (string)$this->request->getParam('search', ''),
+			'order' => (string)$this->request->getParam('order', ''),
 		];
 
 		return $this->run(

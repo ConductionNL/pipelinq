@@ -172,6 +172,7 @@ import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import OrganisationEnrichDialog from './dialogs/OrganisationEnrichDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
+import TaxAuthorityExportDialog from './dialogs/TaxAuthorityExportDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
@@ -263,7 +264,6 @@ import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 //     signed register actions chained per register, with an admin-only tax
 //     authority export. The list keeps its date range and export dialog; the
 //     entry is a declarative detail page over the endpoint. ---
-import CashRegisterAuditListView from './views/pos/CashRegisterAuditList.vue'
 // --- POS cash drawer. The detail page is now a declarative type:"detail" page
 //     (pipelinq-pos-mdm-detail-declarative): the shift's float fields auto-render,
 //     the drops are a relatedCollections table, and the variance/diff projection
@@ -545,11 +545,14 @@ const registry = {
 		_note: 'Admin settings panel for the POS customer-link lookup: search fields, purchase-history depth, marketing-consent sync toggle and the on-account-requires-customer invariant (pos-customer-link, REQ-PCL-006).',
 	},
 
-	// --- Cash register audit log (pos-kassakoppeling-audit). ---
-	CashRegisterAuditListView: {
-		kind: 'page',
-		component: CashRegisterAuditListView,
-		_note: 'Append-only cash register audit log list: streams from the /api/kassakoppeling/audit endpoint (the OR object store only stores entries), drives the date / register / operator / action filter bar and the admin-only tax authority export modal (pos-kassakoppeling-audit REQ-AUDIT-003 / REQ-AUDIT-005).',
+	// --- Cash register audit log (pos-kassakoppeling-audit). The list is a
+	//     declared index (KassakoppelingAuditList); its export header action
+	//     opens this dialog. ---
+	TaxAuthorityExportModal: {
+		kind: 'modal',
+		component: TaxAuthorityExportDialog,
+		propsSchema: null,
+		_note: 'Admin-only tax authority export: date range and format, then downloads the signed export package (pos-kassakoppeling-audit REQ-AUDIT-005).',
 	},
 
 	// --- Billing categories (billable-categories-and-tags). The Billing categories

@@ -104,21 +104,6 @@ describe('social performance', () => {
 	})
 })
 
-describe('kassakoppeling audit log', () => {
-	it('shows the register under the operator', () => {
-		const source = readFileSync(
-			resolve(
-				__dirname,
-				'../../src/views/pos/CashRegisterAuditList.vue',
-			),
-			'utf8',
-		)
-		expect(source).toContain("label: t('pipelinq', 'Operator and register')")
-		expect(source).toContain("secondary: (row) => row.registerNumber || '—'")
-		expect(source).not.toContain("key: 'registerNumber'")
-	})
-})
-
 describe('competitor watches', () => {
 	it('lets the table cells wrap', () => {
 		const source = readFileSync(
