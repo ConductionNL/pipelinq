@@ -615,4 +615,33 @@ class WorklistServiceTest extends TestCase {
 		$this->expectExceptionMessage('Worklist query failed');
 		$service->getMine(userId: 'alice');
 	}
+
+	/**
+	 * My work's lists hold every kind of work: a ticket, a lead and a
+	 * follow-up task, each sorted into its list and filtered by the lens.
+	 *
+	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testItemsMixTicketsLeadsAndTasksPerList(): void {
+		$service = $this->buildService([
+			'lead_schema' => [['id' => 'l1', 'title' => 'Catering', 'expectedCloseDate' => self::iso('-1 day'), 'stage' => 'Offerte']],
+			'ticket_schema:request' => [
+				['id' => 't1', 'title' => 'Afvalpas', 'ticketType' => 'request', 'status' => 'in_progress', 'slaDeadline' => self::iso('-1 day')],
+				['id' => 't2', 'title' => 'Klaar', 'ticketType' => 'request', 'status' => 'resolved'],
+				['id' => 't3', 'title' => 'Geluidsoverlast', 'ticketType' => 'request', 'status' => 'awaiting_customer'],
+			],
+			'task_schema' => [['id' => 'k1', 'subject' => 'Terugbellen', 'deadline' => self::iso('+3 days'), 'status' => 'open']],
+		]);
+
+		$today = $service->items(userId: 'pieter', bucket: 'answer-today');
+		self::assertSame(['l1', 't1'], array_column($today['items'], 'id'));
+		self::assertSame(['lead', 'request'], array_column($today['items'], 'kind'));
+
+		self::assertSame(['k1'], array_column($service->items(userId: 'pieter', bucket: 'waiting-on-me')['items'], 'id'));
+		self::assertSame('Terugbellen', $service->items(userId: 'pieter', bucket: 'waiting-on-me')['items'][0]['title']);
+		self::assertSame(['t3'], array_column($service->items(userId: 'pieter', bucket: 'waiting-on-customer')['items'], 'id'));
+		self::assertSame(['t1', 't3'], array_column($service->items(userId: 'pieter', lens: 'tickets')['items'], 'id'));
+	}//end testItemsMixTicketsLeadsAndTasksPerList()
 }

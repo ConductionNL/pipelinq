@@ -34,6 +34,7 @@ use OCA\Pipelinq\Service\WorklistService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -105,4 +106,78 @@ class WorklistController extends Controller {
 			return new JSONResponse(['message' => 'Worklist unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}//end try
 	}//end mine()
+
+	/**
+	 * GET /api/worklist/items: every open item of the session user's work
+	 * (tickets, leads, follow-up tasks) for one of My work's lists
+	 * (`?bucket=answer-today|waiting-on-me|waiting-on-customer`) and lens
+	 * (`?lens=tickets|leads|tasks`), in `?sort=deadline|waiting|newest|priority`
+	 * order, finished work too with `?done=1`. With `?format=csv` the items download as
+	 * a file (the page's Downloaden).
+	 *
+	 * @return JSONResponse|DataDownloadResponse The items, the file, or an error envelope.
+	 *
+	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	#[NoAdminRequired]
+	public function items(): JSONResponse|DataDownloadResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$bucket = (string)$this->request->getParam('bucket', '');
+		if (in_array($bucket, ['', 'answer-today', 'waiting-on-me', 'waiting-on-customer'], true) === false) {
+			return new JSONResponse(['message' => 'Invalid bucket'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$lens = (string)$this->request->getParam('lens', '');
+		$sort = (string)$this->request->getParam('sort', 'deadline');
+		$scope = 'open';
+		if (in_array((string)$this->request->getParam('done', ''), ['1', 'true'], true) === true) {
+			$scope = 'all';
+		}
+
+		try {
+			$result = $this->worklistService->items(userId: $user->getUID(), bucket: $bucket, lens: $lens, sort: $sort, scope: $scope);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				message: '[WorklistController] items failed',
+				context: ['error' => $e->getMessage()]
+			);
+			return new JSONResponse(['message' => 'Worklist unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		if ((string)$this->request->getParam('format', '') === 'csv') {
+			return new DataDownloadResponse($this->asCsv(items: $result['items']), 'my-work.csv', 'text/csv');
+		}
+
+		return new JSONResponse($result);
+	}//end items()
+
+	/**
+	 * The items as CSV: kind, title, priority, due date, list.
+	 *
+	 * @param array<int, array<string, mixed>> $items The items.
+	 *
+	 * @return string The CSV text.
+	 */
+	private function asCsv(array $items): string {
+		$handle = fopen('php://temp', 'r+');
+		fputcsv($handle, ['kind', 'title', 'priority', 'due', 'list'], ',', '"', '');
+		foreach ($items as $item) {
+			fputcsv(
+				$handle,
+				[$item['kind'], $item['title'], $item['priority'], (string)($item['dueAt'] ?? ''), $item['bucket']],
+				',',
+				'"',
+				''
+			);
+		}
+
+		rewind($handle);
+		$csv = (string)stream_get_contents($handle);
+		fclose($handle);
+		return $csv;
+	}//end asCsv()
 }//end class

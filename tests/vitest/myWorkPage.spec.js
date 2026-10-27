@@ -31,21 +31,11 @@ describe('the My work page', () => {
 			.slice()
 			.sort((a, b) => a.gridY - b.gridY)
 			.map((l) => l.widgetId)
-			.filter((id) =>
-				[
-					'my-answer-today',
-					'my-waiting-on-me',
-					'my-waiting-on-customer',
-				].includes(id),
-			)
-		expect(order).toEqual([
-			'my-answer-today',
-			'my-waiting-on-me',
-			'my-waiting-on-customer',
-		])
-		expect(widget('my-answer-today').content.filter['slaDeadline[lt]']).toBe(
-			'@today+1d',
-		)
+			.filter((id) => ['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer'].includes(id))
+		expect(order).toEqual(['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer'])
+		expect(widget('my-answer-today').content.endpointSource.url).toContain('bucket=answer-today')
+		expect(widget('my-waiting-on-me').content.endpointSource.url).toContain('bucket=waiting-on-me')
+		expect(widget('my-waiting-on-customer').content.endpointSource.url).toContain('bucket=waiting-on-customer')
 	})
 
 	it('scopes every list and count to the signed-in user', () => {
@@ -69,20 +59,18 @@ describe('the My work page', () => {
 		expect(chips).toEqual(['all', 'tickets', 'leads', 'tasks'])
 	})
 
+	// Board PqMijnWerk: the three lists hold tickets, leads and follow-ups
+	// together; the lens, the sort and the completed switch go to the server.
 	it('follows the chips, and lets the controls sort and show completed work', () => {
-		for (const id of [
-			'my-answer-today',
-			'my-waiting-on-me',
-			'my-waiting-on-customer',
-			'my-leads',
-			'my-follow-ups',
-		]) {
-			const w = widget(id)
-			expect(w.visibleWhen.workspace, id).toBe('lens')
-			expect(w.content.pageControls.sort.key, id).toBe('sort')
+		for (const id of ['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer']) {
+			const url = widget(id).content.endpointSource.url
+			expect(url, id).toContain('/apps/pipelinq/api/worklist/items?')
+			expect(url, id).toContain('lens=@workspace.lens')
+			expect(url, id).toContain('sort=@workspace.sort')
+			expect(url, id).toContain('done=@workspace.showDone')
 		}
-		expect(widget('my-leads').visibleWhen.value).toEqual(['all', 'leads'])
-		expect(widget('my-follow-ups').visibleWhen.value).toEqual(['all', 'tasks'])
+		expect(widget('my-leads').visibleWhen.value).toBe('leads')
+		expect(widget('my-follow-ups').visibleWhen.value).toBe('tasks')
 	})
 
 	it('lists the follow-up tasks assigned to the user', () => {
@@ -91,28 +79,22 @@ describe('the My work page', () => {
 		expect(tasks.filter.assigneeUserId).toBe('@me')
 	})
 
-	it('names the customer on each ticket row', () => {
-		const tickets = widget('my-answer-today').content
-		expect(tickets.extend).toContain('client')
-		expect(tickets.avatar).toBe('{client.name}')
+	it('names the customer on each row', () => {
+		const list = widget('my-answer-today').content
+		expect(list.avatar).toBe('{clientName}')
+		expect(list.rowRouteField).toBe('routeName')
 	})
 
-	it('badges urgent and high work, and draws the due date as text', () => {
-		const lists = {
-			'my-answer-today': 'slaDeadline',
-			'my-waiting-on-me': 'slaDeadline',
-			'my-waiting-on-customer': 'slaDeadline',
-			'my-leads': 'expectedCloseDate',
-			'my-follow-ups': 'deadline',
-		}
-		for (const [id, field] of Object.entries(lists)) {
+	it('names the kind and the priority, and draws the due date as text', () => {
+		for (const id of ['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer']) {
 			const c = widget(id).content
-			expect(c.due.field, id).toBe(field)
-			// The due text replaces the old "Deadline {date}" trailing.
-			expect(JSON.stringify(c.trailing ?? ''), id).not.toContain('Deadline')
-			if (id === 'my-follow-ups') continue
-			const priority = c.badges.find((b) => b.field === 'priority')
-			expect(priority.hideValues, id).toEqual(['normal', 'low'])
+			expect(c.due.field, id).toBe('dueAt')
+			expect(c.pill.field, id).toBe('kind')
+			expect(c.pill.labels.task, id).toBe('Follow-up')
+			expect(c.badges[0].field, id).toBe('priority')
+		}
+		for (const [id, field] of [['my-leads', 'expectedCloseDate'], ['my-follow-ups', 'deadline']]) {
+			expect(widget(id).content.due.field, id).toBe(field)
 		}
 	})
 
@@ -126,26 +108,17 @@ describe('the My work page', () => {
 		expect(widget('my-leads').content.trailing).toBe('{value|currency:currency}')
 	})
 
-	it('sorts priority first by the rank, not by the stored string', () => {
+	it('offers sorting by priority', () => {
 		const select = widget('my-lens').content.controls.find(
 			(c) => c.style === 'select',
 		)
 		expect(select.options.map((o) => o.value)).toContain('priority')
-		for (const id of [
-			'my-answer-today',
-			'my-waiting-on-me',
-			'my-waiting-on-customer',
-			'my-leads',
-		]) {
-			const entry = widget(id).content.pageControls.sort.map.priority
-			expect(entry.rank, id).toEqual(['urgent', 'high', 'normal', 'low'])
-			expect(entry.then.dir, id).toBe('asc')
-		}
+		expect(widget('my-leads').content.pageControls.sort.map.priority.rank).toEqual(['urgent', 'high', 'normal', 'low'])
 	})
 
 	it('keeps the meta line when a row has no customer', () => {
 		expect(widget('my-answer-today').content.meta.parts).toEqual([
-			'{client.name}',
+			'{clientName}',
 			'{channel}',
 		])
 	})
@@ -166,18 +139,29 @@ describe('the My work page', () => {
 
 	it('says what each list shows when it is empty, and labels the channel', () => {
 		expect(widget('my-answer-today').content.emptyText).toBe(
-			'No ticket of yours is due today',
+			'Nothing of yours is due today',
 		)
-		for (const id of [
-			'my-answer-today',
-			'my-waiting-on-me',
-			'my-waiting-on-customer',
-		]) {
+		for (const id of ['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer']) {
 			const labels = widget(id).content.valueLabels.channel
 			// The data holds both spellings of the phone channel.
 			expect(labels.phone, id).toBe('Phone')
 			expect(labels.telefoon, id).toBe('Phone')
 		}
+	})
+
+	// Board PqMobiel: on a phone one list, grouped by when it is due.
+	it('draws one list grouped by due on a phone, the rest on a wider window', () => {
+		const phone = widget('my-items-phone')
+		expect(phone.viewport).toBe('narrow')
+		expect(phone.content.groupBy).toBe('dueGroup')
+		expect(phone.content.groupOrder).toEqual(['late', 'today', 'week', 'later', 'none'])
+		for (const id of [...['my-answer-today', 'my-waiting-on-me', 'my-waiting-on-customer'], 'my-week', 'my-start-here', 'my-saved-views', 'my-leads', 'my-follow-ups']) {
+			expect(widget(id).viewport, id).toBe('wide')
+		}
+	})
+
+	it('downloads what the page shows', () => {
+		expect(page.config.headerActions[0]).toMatchObject({ label: 'Download', href: expect.stringContaining('/api/worklist/items?format=csv') })
 	})
 
 	it('carries the start-here banner and the saved views', () => {
