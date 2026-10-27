@@ -28,6 +28,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Finds the known mock pipelines and removes each one no lead or ticket is on.
@@ -96,7 +97,9 @@ class MockPipelineCleanupService {
 	 * @return array<string, list<array<string, mixed>>> `removed`, `kept` (with `usedBy`), `failed` and `defaults`,
 	 *                                                  each a list of pipelines by `id` and `title`.
 	 *
-	 * @throws \RuntimeException When the register, the pipeline schema or a schema objects sit on is not configured.
+	 * @throws RuntimeException When the register, the pipeline schema or a schema objects sit on is not configured.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $dryRun is the command's --dry-run option.
 	 *
 	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
 	 */
@@ -132,7 +135,9 @@ class MockPipelineCleanupService {
 	 * @return array<string, list<array<string, mixed>>> `removed`, `kept` (with `usedBy`), `failed` and `defaults`,
 	 *                                                  each a list of pipelines by `id` and `title`.
 	 *
-	 * @throws \RuntimeException When the register or a schema is not configured.
+	 * @throws RuntimeException When the register or a schema is not configured.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $dryRun is the command's --dry-run option.
 	 */
 	private function runAsCaller(bool $dryRun): array {
 		$registerId = $this->config(key: 'register');
@@ -144,42 +149,58 @@ class MockPipelineCleanupService {
 			['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 1000]
 		);
 
+		$where = ['register' => $registerId, 'schema' => $schemaId, 'objectSchemas' => $userSchemas];
 		foreach ($found as $result) {
-			$pipeline = $this->rowOf(result: $result);
-			$entry    = ['id' => (string) ($pipeline['id'] ?? $pipeline['@self']['id'] ?? ''), 'title' => (string) ($pipeline['title'] ?? '')];
-
-			if ($this->isMock(pipeline: $pipeline) === false || $entry['id'] === '') {
-				if (($pipeline['isDefault'] ?? false) === true) {
-					$report['defaults'][] = $entry;
-				}
-
-				continue;
+			$outcome = $this->handle(pipeline: $this->rowOf(result: $result), where: $where, dryRun: $dryRun);
+			if ($outcome['bucket'] !== null) {
+				$report[$outcome['bucket']][] = $outcome['entry'];
 			}
 
-			$usedBy = $this->usedBy(registerId: $registerId, schemaIds: $userSchemas, pipelineId: $entry['id']);
-			if ($usedBy !== []) {
-				$report['kept'][] = $entry + ['usedBy' => $usedBy];
-				if (($pipeline['isDefault'] ?? false) === true) {
-					$report['defaults'][] = $entry;
-				}
-
-				continue;
+			if ($outcome['default'] === true) {
+				$report['defaults'][] = ['id' => $outcome['entry']['id'], 'title' => $outcome['entry']['title']];
 			}
-
-			if ($dryRun === false && $this->objectService->deleteObject($entry['id'], $registerId, $schemaId) === false) {
-				$report['failed'][] = $entry;
-				continue;
-			}
-
-			if ($dryRun === false) {
-				$this->logger->info('Pipelinq: removed mock pipeline '.$entry['title'], ['id' => $entry['id']]);
-			}
-
-			$report['removed'][] = $entry;
-		}//end foreach
+		}
 
 		return $report;
 	}//end runAsCaller()
+
+	/**
+	 * What happens to one pipeline: left alone, kept because objects are on it, removed, or refused.
+	 *
+	 * @param array<string, mixed>                                                            $pipeline The pipeline object.
+	 * @param array{register: string, schema: string, objectSchemas: array<string, string>} $where    Register, pipeline schema and object schemas.
+	 * @param bool                                                                            $dryRun   Report without removing.
+	 *
+	 * @return array{bucket: ?string, entry: array<string, mixed>, default: bool} The report bucket (null: not a mock),
+	 *                                                                          the pipeline's entry and whether it stays a default.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $dryRun is the command's --dry-run option.
+	 */
+	private function handle(array $pipeline, array $where, bool $dryRun): array {
+		$entry     = ['id' => (string) ($pipeline['id'] ?? $pipeline['@self']['id'] ?? ''), 'title' => (string) ($pipeline['title'] ?? '')];
+		$isDefault = (($pipeline['isDefault'] ?? false) === true);
+
+		if ($this->isMock(pipeline: $pipeline) === false || $entry['id'] === '') {
+			return ['bucket' => null, 'entry' => $entry, 'default' => $isDefault];
+		}
+
+		$usedBy = $this->usedBy(registerId: $where['register'], schemaIds: $where['objectSchemas'], pipelineId: $entry['id']);
+		if ($usedBy !== []) {
+			return ['bucket' => 'kept', 'entry' => $entry + ['usedBy' => $usedBy], 'default' => $isDefault];
+		}
+
+		if ($dryRun === true) {
+			return ['bucket' => 'removed', 'entry' => $entry, 'default' => false];
+		}
+
+		if ($this->objectService->deleteObject($entry['id'], $where['register'], $where['schema']) === false) {
+			return ['bucket' => 'failed', 'entry' => $entry, 'default' => $isDefault];
+		}
+
+		$this->logger->info('Pipelinq: removed mock pipeline '.$entry['title'], ['id' => $entry['id']]);
+
+		return ['bucket' => 'removed', 'entry' => $entry, 'default' => false];
+	}//end handle()
 
 	/**
 	 * Which kinds of object (lead, ticket) sit on a pipeline.
@@ -193,12 +214,12 @@ class MockPipelineCleanupService {
 	private function usedBy(string $registerId, array $schemaIds, string $pipelineId): array {
 		$kinds = [];
 		foreach ($schemaIds as $kind => $schemaId) {
-			$on = $this->objectService->findAll(
+			$objects = $this->objectService->findAll(
 				['filters' => ['register' => $registerId, 'schema' => $schemaId, 'pipeline' => $pipelineId], 'limit' => 1],
 				_rbac: false,
 				_multitenancy: false
 			);
-			if (count($on) > 0) {
+			if (count($objects) > 0) {
 				$kinds[] = $kind;
 			}
 		}
@@ -227,12 +248,12 @@ class MockPipelineCleanupService {
 	 *
 	 * @return string The configured value.
 	 *
-	 * @throws \RuntimeException When the key is not set.
+	 * @throws RuntimeException When the key is not set.
 	 */
 	private function config(string $key): string {
 		$value = $this->appConfig->getValueString(Application::APP_ID, $key, '');
 		if ($value === '') {
-			throw new \RuntimeException('Pipelinq is not configured: '.$key.' is empty');
+			throw new RuntimeException('Pipelinq is not configured: '.$key.' is empty');
 		}
 
 		return $value;
