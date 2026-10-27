@@ -1937,7 +1937,9 @@
 								"email",
 								"phone",
 								"address",
-								"website"
+								"website",
+								"customerNumber",
+								"source"
 							],
 							"overrides": {
 								"preferredName": {

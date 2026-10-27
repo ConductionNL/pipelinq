@@ -8568,6 +8568,9 @@
         "When the journey was first converted into a flow.": "When the journey was first converted into a flow.",
         "When the journey last went live.": "When the journey last went live.",
         "Original contact moment": "Original contact moment",
-        "The contact moment this task was created from.": "The contact moment this task was created from."
+        "The contact moment this task was created from.": "The contact moment this task was created from.",
+        "Customer number": "Customer number",
+        "The number the organisation knows this customer by, such as K-2019-01184.": "The number the organisation knows this customer by, such as K-2019-01184.",
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register."
     }
 }
