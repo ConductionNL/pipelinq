@@ -1864,7 +1864,11 @@
 						"label": "Download"
 					},
 					{
-						"action": "actions-menu"
+						"action": "actions-menu",
+						"items": [
+							"header-actions",
+							"import"
+						]
 					},
 					{
 						"action": "add",
