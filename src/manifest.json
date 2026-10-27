@@ -5960,99 +5960,125 @@
 					{
 						"id": "z-data",
 						"type": "data",
-						"title": "Z-report",
-						"content": { "columns": 2 }
+						"title": "Z report",
+						"content": {
+							"title": "Z report",
+							"columns": 2,
+							"hideEmpty": true,
+							"include": [
+								"reference",
+								"reportDate",
+								"terminalId",
+								"status",
+								"subtotal",
+								"discountTotal",
+								"total",
+								"bookkeepingStatus"
+							],
+							"overrides": {
+							"reference": {
+								"label": "Identifier"
+							},
+							"reportDate": {
+								"label": "Date",
+								"formatter": "date"
+							},
+							"terminalId": {
+								"label": "Till"
+							},
+								"status": {
+									"formatter": "enumLabel"
+								},
+								"bookkeepingStatus": {
+									"formatter": "enumLabel"
+								},
+								"subtotal": {
+									"formatter": "objectCurrency",
+									"formatterOptions": {
+										"decimals": 2
+									}
+								},
+								"discountTotal": {
+									"formatter": "objectCurrency",
+									"formatterOptions": {
+										"decimals": 2
+									}
+								},
+								"total": {
+									"formatter": "objectCurrency",
+									"formatterOptions": {
+										"decimals": 2
+									}
+								}
+							}
+						}
 					},
 					{
-						"id": "z-kpis-day-total",
-						"type": "stats-block",
+						"id": "z-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "z-panels",
+						"type": "tabs",
+						"title": "Z report",
+						"content": {
+							"ariaLabel": "Z report",
+							"tabs": [
+								{
+									"widgetId": "z-data",
+									"label": "Overview"
+								},
+								{
+									"widgetId": "z-history",
+									"label": "History"
+								}
+							]
+						}
+					},
+					{
+						"id": "z-day-total",
+						"type": "data",
 						"title": "Day total",
-						"icon": "Cash",
 						"content": {
-							"entries": [
-								{
-									"title": "Day total",
-									"register": "pipelinq",
-									"schema": "posZReport",
-									"metric": "sum",
-									"field": "total",
-									"currency": "EUR",
-									"filter": { "id": "@objectId" }
+							"title": "Day total",
+							"columns": 1,
+							"include": [
+								"total",
+								"totalTax",
+								"transactionCount"
+							],
+							"overrides": {
+							"transactionCount": {
+								"label": "Transactions"
+							},
+								"total": {
+									"formatter": "objectCurrency",
+									"formatterOptions": {
+										"decimals": 2
+									}
+								},
+								"totalTax": {
+								"label": "VAT",
+									"formatter": "objectCurrency",
+									"formatterOptions": {
+										"decimals": 2
+									}
 								}
-							]
-						}
-					},
-					{
-						"id": "z-kpis-vat",
-						"type": "stats-block",
-						"title": "VAT",
-						"icon": "Cash",
-						"content": {
-							"entries": [
-								{
-									"title": "VAT",
-									"register": "pipelinq",
-									"schema": "posZReport",
-									"metric": "sum",
-									"field": "totalTax",
-									"currency": "EUR",
-									"filter": { "id": "@objectId" }
-								}
-							]
-						}
-					},
-					{
-						"id": "z-kpis-transactions",
-						"type": "stats-block",
-						"title": "Transactions",
-						"icon": "Cash",
-						"content": {
-							"entries": [
-								{
-									"title": "Transactions",
-									"register": "pipelinq",
-									"schema": "posZReport",
-									"metric": "sum",
-									"field": "transactionCount",
-									"countLabel": "transactions",
-									"filter": { "id": "@objectId" }
-								}
-							]
+							},
+							"editable": false
 						}
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "z-data",
+						"widgetId": "z-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 4
-					},
-					{
-						"id": "2-1",
-						"widgetId": "z-kpis-day-total",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-2",
-						"widgetId": "z-kpis-vat",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-3",
-						"widgetId": "z-kpis-transactions",
-						"gridX": 8,
-						"gridY": 4,
-						"gridWidth": 4,
-						"gridHeight": 2
+						"gridWidth": 12,
+						"gridHeight": 8
 					}
 				],
 				"bodyWidgets": [
@@ -6061,21 +6087,41 @@
 						"component": "ZReportBookkeepingSection",
 						"title": "Boekhoudkundige afhandeling",
 						"placement": "after-data",
-						"props": { "zReportId": "@objectId" }
+						"props": {
+							"zReportId": "@objectId"
+						}
 					}
 				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "audit",
-							"label": "History",
-							"icon": "History",
-							"widgets": [{ "type": "audit" }]
-						}
-					]
-				}
+				"titleField": "reference",
+				"headerCard": true,
+				"breadcrumb": {
+					"label": "Z reports",
+					"route": "ZReports"
+				},
+				"headerMeta": "{terminalId} · {reportDate|date} · {transactionCount} transactions",
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"draft": "Draft",
+						"ready": "Ready",
+						"submitted": "Submitted",
+						"posted": "Posted",
+						"failed": "Failed",
+						"reconciled": "Reconciled"
+					},
+					"colorMap": {
+						"draft": "default",
+						"ready": "info",
+						"submitted": "info",
+						"posted": "success",
+						"failed": "error",
+						"reconciled": "success"
+					}
+				},
+				"_boardNote": "Board PqZRapport: the reference as the title, the till, day and transactions on the meta line, the status pill, the report and its bookkeeping in an Overview tab with History beside it, and the day total in the side column.",
+				"sideColumn": [
+					"z-day-total"
+				]
 			}
 		},
 		{
