@@ -20,14 +20,14 @@ const workingHours = [
 	{ day: 'friday', openTime: '08:30', closeTime: '12:30' },
 ]
 
-function booking (startAt, endAt, extra = {}) {
-  return {
-	startAt,
-	endAt,
-	status: 'confirmed',
-	resourceAssignments: [{ resourceId: 'fatma' }],
-	...extra,
-}
+function booking(startAt, endAt, extra = {}) {
+	return {
+		startAt,
+		endAt,
+		status: 'confirmed',
+		resourceAssignments: [{ resourceId: 'fatma' }],
+		...extra,
+	}
 }
 
 describe('a resource\'s load this week', () => {
