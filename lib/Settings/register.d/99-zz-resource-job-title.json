@@ -1,0 +1,25 @@
+{
+  "_note": "pl2 PqResource. The header line under a staff resource reads its job title and department (\"baliemedewerker · burgerzaken\"). Both are plain words the resource carries; a room or a piece of equipment leaves them empty.",
+  "components": {
+    "schemas": {
+      "appointmentResource": {
+        "slug": "appointmentResource",
+        "version": "1.1.0",
+        "properties": {
+          "jobTitle": {
+            "type": "string",
+            "title": "Job title",
+            "description": "What this person does, such as counter clerk. Staff resources only.",
+            "maxLength": 255
+          },
+          "department": {
+            "type": "string",
+            "title": "Department",
+            "description": "The department or team this person works in, such as civil affairs. Staff resources only.",
+            "maxLength": 255
+          }
+        }
+      }
+    }
+  }
+}

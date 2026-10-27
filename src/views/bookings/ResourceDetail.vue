@@ -34,6 +34,7 @@
 		:breadcrumb="{ label: t('pipelinq', 'Resources'), route: 'Resources' }"
 		:typePill="typePill"
 		:statusPill="statusPill"
+		:headerMeta="headerMeta"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
 		objectType="appointmentResource"
@@ -324,6 +325,19 @@ export default {
 				this.objectStore.getObject('appointmentResource', this.resourceId)
 				|| {}
 			)
+		},
+
+		/**
+		 * The line under the name: job title and department
+		 * ("baliemedewerker · burgerzaken"), empty for a room or equipment.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		headerMeta() {
+			return [this.resourceData.jobTitle, this.resourceData.department]
+				.filter((part) => typeof part === 'string' && part.trim() !== '')
+				.join(' · ')
 		},
 
 		/**
