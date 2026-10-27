@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+	isoWeekOf,
 	latestPerOwner,
 	sumSnapshotsByDate,
 } from '../../src/services/forecastMath.js'
@@ -32,13 +33,22 @@ describe('sumSnapshotsByDate', () => {
 			{ as_of_date: '2026-10-12', commit: '5', best_case: null, pipeline: 5 },
 		])
 		expect(points).toEqual([
-			{ date: '2026-10-05', commit: 1, best_case: 2, pipeline: 3 },
-			{ date: '2026-10-12', commit: 15, best_case: 20, pipeline: 35 },
+			{ date: '2026-10-05', commit: 1, best_case: 2, pipeline: 3, closed_won: 0 },
+			{ date: '2026-10-12', commit: 15, best_case: 20, pipeline: 35, closed_won: 0 },
 		])
 	})
 
 	it('answers an empty list with no points', () => {
 		expect(sumSnapshotsByDate([])).toEqual([])
+	})
+})
+
+describe('isoWeekOf', () => {
+	it('numbers the weeks as the board labels its bars', () => {
+		expect(isoWeekOf('2026-10-05')).toBe(41)
+		expect(isoWeekOf('2026-08-31')).toBe(36)
+		expect(isoWeekOf('2027-01-01')).toBe(53)
+		expect(isoWeekOf('nonsense')).toBe('')
 	})
 })
 
@@ -82,6 +92,13 @@ describe('forecast page', () => {
 
 	it('says on the header line when the snapshot was taken', () => {
 		expect(dashboard).toMatch(/'snapshot of \{date\}'/)
+	})
+
+	it('draws the trend as one bar per week, won plus committed, as PqForecast', () => {
+		const trend = view('ForecastTrend')
+		expect(trend).toMatch(/data-testid="forecast-trend-bars"/)
+		expect(trend).toMatch(/Number\(point\.closed_won \|\| 0\) \+ Number\(point\.commit \|\| 0\)/)
+		expect(trend).not.toMatch(/<polyline/)
 	})
 
 	it('says what the chart and the accuracy cover', () => {

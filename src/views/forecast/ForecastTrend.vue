@@ -19,33 +19,25 @@
 				:subtitle="t('pipelinq', 'Weekly snapshots, taken every Monday')"
 				class="forecast-trend__chart">
 				<template v-if="series.length >= 1">
-					<svg
-						class="forecast-trend__svg"
-						viewBox="0 0 600 200"
-						preserveAspectRatio="none"
-						role="img"
-						:aria-label="t('pipelinq', 'Forecast trend chart')">
-						<polyline
-							class="line line--commit"
-							:points="line('commit')" />
-						<polyline
-							class="line line--bestcase"
-							:points="line('best_case')" />
-						<polyline
-							class="line line--pipeline"
-							:points="line('pipeline')" />
-					</svg>
-					<div class="forecast-trend__legend">
-						<span class="legend legend--commit">{{
-							t('pipelinq', 'Commit')
-						}}</span>
-						<span class="legend legend--bestcase">{{
-							t('pipelinq', 'Best Case')
-						}}</span>
-						<span class="legend legend--pipeline">{{
-							t('pipelinq', 'Pipeline')
-						}}</span>
-					</div>
+					<!-- One bar per weekly snapshot: what is on track that week (won
+					     plus committed), the week under it and the amount above, as
+					     PqForecast draws it. -->
+					<ol
+						class="forecast-trend__bars"
+						:aria-label="t('pipelinq', 'Forecast trend chart')"
+						data-testid="forecast-trend-bars">
+						<li
+							v-for="bar in bars"
+							:key="bar.date"
+							class="forecast-trend__bar">
+							<span class="forecast-trend__bar-value">{{ bar.short }}</span>
+							<span
+								class="forecast-trend__bar-fill"
+								:style="{ height: bar.percent + '%' }"
+								:title="bar.full" />
+							<span class="forecast-trend__bar-week">{{ bar.week }}</span>
+						</li>
+					</ol>
 				</template>
 				<NcEmptyContent
 					v-else
@@ -118,7 +110,7 @@ import { CnDetailCard } from '@conduction/nextcloud-vue'
 import { NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { formatEur } from '../../services/commercialFormat.js'
 import { fetchSnapshots } from '../../services/forecastApi.js'
-import { accuracyBand, accuracyRows, previousPeriodId, sumSnapshotsByDate } from '../../services/forecastMath.js'
+import { accuracyBand, accuracyRows, isoWeekOf, previousPeriodId, sumSnapshotsByDate } from '../../services/forecastMath.js'
 import { fetchUserDisplayName } from '../../services/userDisplayName.js'
 
 export default {
@@ -150,6 +142,25 @@ export default {
 		 * @return {string} The line, or '' when the period is unknown.
 		 * @spec openspec/changes/forecast-accuracy-rows/specs/forecasting/spec.md#requirement-the-forecast-shows-last-quarters-accuracy-per-seller
 		 */
+		/**
+		 * The weekly bars: on track (won plus committed) per snapshot, its
+		 * share of the highest week, the ISO week and the amount in thousands.
+		 *
+		 * @return {Array<{date: string, percent: number, week: string, short: string, full: string}>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		bars() {
+			const totals = this.series.map((point) => Number(point.closed_won || 0) + Number(point.commit || 0))
+			const top = Math.max(1, ...totals)
+			return this.series.map((point, index) => ({
+				date: point.date,
+				percent: Math.round((totals[index] / top) * 100),
+				week: 'w' + isoWeekOf(point.date),
+				short: Math.round(totals[index] / 1000) + 'k',
+				full: this.formatMoney(totals[index]),
+			}))
+		},
+
 		accuracySubtitle() {
 			const match = /^Q([1-4])-\d{4}$/.exec(previousPeriodId(this.periodId))
 			return match ? this.t('pipelinq', 'Quarter {quarter}, closed', { quarter: match[1] }) : ''
@@ -161,13 +172,6 @@ export default {
 			return 'Q' + quarter + '-' + now.getFullYear()
 		},
 
-		maxValue() {
-			let max = 1
-			for (const point of this.series) {
-				max = Math.max(max, point.commit, point.best_case, point.pipeline)
-			}
-			return max
-		},
 	},
 
 	watch: {
@@ -273,19 +277,6 @@ export default {
 			}
 		},
 
-		line(key) {
-			if (!this.series.length) {
-				return ''
-			}
-			const step = this.series.length > 1 ? 600 / (this.series.length - 1) : 0
-			return this.series
-				.map((point, index) => {
-					const x = this.series.length > 1 ? index * step : 300
-					const y = 200 - (point[key] / this.maxValue) * 190 - 5
-					return x.toFixed(1) + ',' + y.toFixed(1)
-				})
-				.join(' ')
-		},
 
 		bandFor(score) {
 			return accuracyBand(score)
@@ -332,49 +323,38 @@ export default {
 	flex-wrap: wrap;
 }
 
-.forecast-trend__svg {
-	width: 100%;
-	height: 200px;
-	background: var(--color-background-hover);
-	border-radius: 8px;
-}
-
-.line {
-	fill: none;
-	stroke-width: 2;
-}
-
-.line--commit {
-	stroke: var(--color-primary-element);
-}
-
-.line--bestcase {
-	stroke: #f59e0b;
-}
-
-.line--pipeline {
-	stroke: var(--color-text-maxcontrast);
-}
-
-.forecast-trend__legend {
+.forecast-trend__bars {
 	display: flex;
+	align-items: flex-end;
+	justify-content: space-around;
 	gap: 16px;
-	margin-top: 8px;
+	height: 200px;
+	margin: 16px 0 0;
+	padding: 0;
+	list-style: none;
 }
 
-.legend::before {
-	content: '■ ';
+.forecast-trend__bar {
+	display: flex;
+	flex: 1 1 0;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 6px;
+	height: 100%;
+	max-width: 96px;
 }
 
-.legend--commit::before {
-	color: var(--color-primary-element);
+.forecast-trend__bar-fill {
+	width: 44px;
+	min-height: 2px;
+	border-radius: 4px 4px 0 0;
+	background: var(--color-primary-element);
 }
 
-.legend--bestcase::before {
-	color: #f59e0b;
-}
-
-.legend--pipeline::before {
+.forecast-trend__bar-value,
+.forecast-trend__bar-week {
+	font-size: 12px;
 	color: var(--color-text-maxcontrast);
 }
 
