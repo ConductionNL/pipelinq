@@ -210,7 +210,8 @@
 				"displayName": "{{cast:pieter.displayName}}",
 				"userId": "{{cast:pieter.uid}}",
 				"posRole": "{{object:kassarol-leidinggevende.id}}",
-				"isActive": true
+				"isActive": true,
+				"lastLoginAt": "{{datetime:0 08:30}}"
 			}
 		},
 		{
@@ -221,7 +222,8 @@
 				"displayName": "{{cast:fatmayildiz.displayName}}",
 				"userId": "{{cast:fatmayildiz.uid}}",
 				"posRole": "{{object:kassarol-kassamedewerker.id}}",
-				"isActive": true
+				"isActive": true,
+				"lastLoginAt": "{{datetime:0 08:25}}"
 			}
 		},
 		{
@@ -232,7 +234,8 @@
 				"displayName": "{{cast:joris.displayName}}",
 				"userId": "{{cast:joris.uid}}",
 				"posRole": "{{object:kassarol-kassamedewerker.id}}",
-				"isActive": true
+				"isActive": true,
+				"lastLoginAt": "{{datetime:-1 09:00}}"
 			}
 		}
 	]
