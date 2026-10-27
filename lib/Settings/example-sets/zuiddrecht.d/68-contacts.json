@@ -1,0 +1,433 @@
+{
+	"$comment": "pipelinq's contacts and residents in the Zuiddrecht set besides the main file, as PqContacten, PqContactpersoon, PqBerichtSturen, PqBriefOpstellen and PqContactmoment draw them: Joke Smit of Sportclub Zuiddrecht 1958 with her channels, marketing consent, relations, deals and request PQ-2026-0405; the contacts Kees Bakker, Ellen Visser and Tom de Kroon; Anna de Vries as a resident with her contact moment and messaging consent; Sanne's relations, her outbound e-mail on PQ-2026-0417 and Fatma Yildiz's note; and M. de Graaf's four earlier contacts. Anna's phone differs from Sanne's, which the incoming call board matches on.",
+	"objects": [
+		{
+			"key": "client-anna-devries",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Anna de Vries",
+				"type": "person",
+				"address": "Kerkstraat 31, 2999BK Zuiddrecht",
+				"contactsUid": "example-anna-devries",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"email": "anna.devries@zuiddrecht.example",
+				"phone": "06 12 34 56 79",
+				"preferredChannel": "whatsapp",
+				"phones": [
+					{
+						"kind": "mobile",
+						"value": "06 12 34 56 79",
+						"primary": true
+					}
+				],
+				"emails": [
+					{
+						"kind": "private",
+						"value": "anna.devries@zuiddrecht.example",
+						"primary": true
+					}
+				]
+			}
+		},
+		{
+			"key": "interaction-anna-marktkraam",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Vraag over de marktkraamvergunning",
+				"reference": "PQ-2026-0395",
+				"direction": "inbound",
+				"channel": "telefoon",
+				"outcome": "handled",
+				"status": "closed",
+				"client": "{{object:client-anna-devries.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-5 10:12}}",
+				"description": "Vroeg wanneer de marktkraamvergunning ingaat.",
+				"category": "vergunningen",
+				"duration": "PT4M"
+			}
+		},
+		{
+			"key": "toestemming-anna-whatsapp",
+			"register": "pipelinq",
+			"schema": "messagingConsentRecord",
+			"data": {
+				"contactId": "{{object:client-anna-devries.id}}",
+				"channel": "whatsapp",
+				"state": "opted-in",
+				"source": "webform",
+				"recordedAt": "{{datetime:-30 20:14}}",
+				"legalBasis": "consent"
+			}
+		},
+		{
+			"key": "toestemming-anna-sms",
+			"register": "pipelinq",
+			"schema": "messagingConsentRecord",
+			"data": {
+				"contactId": "{{object:client-anna-devries.id}}",
+				"channel": "sms",
+				"state": "unknown"
+			}
+		},
+		{
+			"key": "client-jdevries",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "J. de Vries",
+				"type": "person",
+				"address": "{{cast:sanne.address.street}} {{cast:sanne.address.number}}, {{cast:sanne.address.postcode}} {{cast:sanne.address.city}}",
+				"contactsUid": "example-jdevries",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "relatie-sanne-secretaris-buurtoost",
+			"register": "pipelinq",
+			"schema": "relationship",
+			"data": {
+				"fromContact": "{{object:client-sanne.id}}",
+				"fromType": "client",
+				"toContact": "{{object:client-buurtoost.id}}",
+				"toType": "client",
+				"type": "Secretaris van",
+				"inverseType": "Secretaris",
+				"category": "organisation",
+				"provenance": "declared"
+			}
+		},
+		{
+			"key": "relatie-sanne-partner-jdevries",
+			"register": "pipelinq",
+			"schema": "relationship",
+			"data": {
+				"fromContact": "{{object:client-sanne.id}}",
+				"fromType": "client",
+				"toContact": "{{object:client-jdevries.id}}",
+				"toType": "client",
+				"type": "Partner van",
+				"inverseType": "Partner van",
+				"category": "family",
+				"provenance": "declared"
+			}
+		},
+		{
+			"key": "interaction-sanne-straatfeest-mail",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "E-mail: welke vergunning heeft u nodig voor het straatfeest",
+				"reference": "PQ-2026-0396",
+				"direction": "outbound",
+				"channel": "email",
+				"outcome": "resolved",
+				"status": "closed",
+				"client": "{{object:client-sanne.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-4 11:02}}",
+				"description": "Per e-mail uitgelegd dat een straatfeest in de Parkstraat een evenementenvergunning nodig heeft, met het formulier als bijlage.",
+				"parentTicket": "{{object:ticket-sanne-straatfeest.id}}",
+				"category": "vergunningen"
+			}
+		},
+		{
+			"key": "client-henksmit",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Henk Smit",
+				"type": "person",
+				"address": "Sportlaan 12, 2999BM Zuiddrecht",
+				"contactsUid": "example-henksmit",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "lead-sportclub-kunstgrasveld",
+			"register": "pipelinq",
+			"schema": "lead",
+			"lookups": {
+				"pipeline": {
+					"schema": "pipeline",
+					"where": {
+						"title": "Sales",
+						"isDefault": true
+					}
+				}
+			},
+			"data": {
+				"title": "Nieuw kunstgrasveld 2027",
+				"client": "{{object:client-sportclub.id}}",
+				"source": "Doorverwijzing",
+				"pipeline": "{{lookup:pipeline}}",
+				"stage": "Voorstel",
+				"stageOrder": 3,
+				"status": "open",
+				"priority": "normal",
+				"probability": 55,
+				"value": 64000,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-8 10:00}}",
+				"expectedCloseDate": "{{date:60}}",
+				"category": "Onderhoud"
+			}
+		},
+		{
+			"key": "contact-joke-smit",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "Joke Smit",
+				"role": "Facilitair manager",
+				"client": "{{object:client-sportclub.id}}",
+				"email": "j.smit@sportcentrum-zd.example",
+				"phone": "078 612 55 20",
+				"contactsUid": "example-sportclub-jokesmit",
+				"marketingConsent": true,
+				"doNotContact": false,
+				"preferredChannel": "email",
+				"timezone": "Europe/Amsterdam",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"emails": [
+					{
+						"kind": "work",
+						"value": "j.smit@sportcentrum-zd.example",
+						"primary": true
+					}
+				],
+				"phones": [
+					{
+						"kind": "work",
+						"value": "078 612 55 20",
+						"primary": true
+					},
+					{
+						"kind": "mobile",
+						"value": "06 18 22 40 91",
+						"primary": false
+					}
+				],
+				"socialProfiles": [
+					{
+						"network": "mastodon",
+						"handle": "@jokesmit@mastodon.example",
+						"url": "https://mastodon.example/@jokesmit"
+					}
+				],
+				"leads": [
+					"{{object:lead-sportclub-kunstgrasveld.id}}",
+					"{{object:lead-sportvelden-verlenging.id}}"
+				]
+			}
+		},
+		{
+			"key": "toestemming-joke-marketing",
+			"register": "pipelinq",
+			"schema": "consentRecord",
+			"data": {
+				"contactId": "{{object:contact-joke-smit.id}}",
+				"channel": "email",
+				"lawfulBasis": "consent",
+				"consentSource": "Aanmeldformulier op zuiddrecht.example",
+				"consentedAt": "{{datetime:-218 14:05}}"
+			}
+		},
+		{
+			"key": "relatie-joke-echtgenote-henksmit",
+			"register": "pipelinq",
+			"schema": "relationship",
+			"data": {
+				"fromContact": "{{object:contact-joke-smit.id}}",
+				"fromType": "contact",
+				"toContact": "{{object:client-henksmit.id}}",
+				"toType": "client",
+				"type": "Echtgenote van",
+				"inverseType": "Echtgenoot van",
+				"category": "family",
+				"provenance": "declared"
+			}
+		},
+		{
+			"key": "relatie-joke-werkt-samen-hendriks",
+			"register": "pipelinq",
+			"schema": "relationship",
+			"data": {
+				"fromContact": "{{object:contact-joke-smit.id}}",
+				"fromType": "contact",
+				"toContact": "{{object:contact-hendriks.id}}",
+				"toType": "contact",
+				"type": "Werkt samen met",
+				"inverseType": "Werkt samen met",
+				"category": "professional",
+				"provenance": "declared"
+			}
+		},
+		{
+			"key": "ticket-sportclub-kunstgrasveld",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over onderhoud van het kunstgrasveld",
+				"reference": "PQ-2026-0405",
+				"client": "{{object:client-sportclub.id}}",
+				"contact": "{{object:contact-joke-smit.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "email",
+				"occurredAt": "{{datetime:-6 09:40}}",
+				"category": "sport",
+				"description": "Joke Smit vraagt wat er nodig is om het nieuwe kunstgrasveld vanaf 2027 in het onderhoudscontract op te nemen, en wat dat per jaar kost."
+			}
+		},
+		{
+			"key": "contact-kees-bakker",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "Kees Bakker",
+				"client": "{{object:client-bakkerijdegraaf.id}}",
+				"email": "kees@bakkerijdegraaf.example",
+				"phone": "078 613 22 10",
+				"contactsUid": "example-bakkerijdegraaf-keesbakker",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "contact-ellen-visser",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "Ellen Visser",
+				"role": "Secretaris",
+				"client": "{{object:client-buurtoost.id}}",
+				"email": "secretaris@buurtoost.example",
+				"phone": "06 22 41 90 33",
+				"contactsUid": "example-buurtoost-ellenvisser",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "contact-tom-dekroon",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "Tom de Kroon",
+				"client": "{{object:client-cafe-dekroon.id}}",
+				"email": "tom@cafedekroon.example",
+				"phone": "06 31 77 20 18",
+				"contactsUid": "example-cafe-dekroon-tomdekroon",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "interaction-degraaf-afvalkalender",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Vraag over de afvalkalender",
+				"reference": "PQ-2026-0352",
+				"direction": "inbound",
+				"channel": "telefoon",
+				"outcome": "handled",
+				"status": "closed",
+				"client": "{{object:client-degraaf.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-62 09:30}}",
+				"description": "Vroeg welke week het oud papier wordt opgehaald in de Dorpsstraat.",
+				"category": "afval",
+				"duration": "PT3M"
+			}
+		},
+		{
+			"key": "interaction-degraaf-grofvuil",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Grofvuil laten ophalen",
+				"reference": "PQ-2026-0371",
+				"direction": "inbound",
+				"channel": "telefoon",
+				"outcome": "handled",
+				"status": "closed",
+				"client": "{{object:client-degraaf.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-41 10:05}}",
+				"description": "Wilde een oude bank laten ophalen. Afspraak gemaakt voor de grofvuilronde.",
+				"category": "afval",
+				"duration": "PT5M"
+			}
+		},
+		{
+			"key": "interaction-degraaf-afvalpas-aanvraag",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Afvalpas aangevraagd",
+				"reference": "PQ-2026-0384",
+				"direction": "inbound",
+				"channel": "portal",
+				"outcome": "handled",
+				"status": "closed",
+				"client": "{{object:client-degraaf.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-22 11:40}}",
+				"description": "Vroeg via Mijn Zuiddrecht een tweede afvalpas aan voor zijn dochter, die bij hem woont.",
+				"category": "afval"
+			}
+		},
+		{
+			"key": "interaction-degraaf-afvalpas-verzonden",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Afvalpas verstuurd",
+				"reference": "PQ-2026-0391",
+				"direction": "outbound",
+				"channel": "email",
+				"outcome": "resolved",
+				"status": "closed",
+				"client": "{{object:client-degraaf.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-15 14:20}}",
+				"description": "Bevestigd dat de tweede afvalpas per post onderweg is.",
+				"category": "afval"
+			}
+		}
+	],
+	"notes": [
+		{
+			"key": "fatmayildiz-noteert-straatplan-sanne",
+			"data": {
+				"user": "{{cast:fatmayildiz.uid}}",
+				"objectUuid": "{{object:client-sanne.uuid}}",
+				"message": "@Pieter het straatplan voor de Parkstraat staat bij Documenten.",
+				"createdAt": "{{datetime:-4 10:40}}"
+			}
+		}
+	]
+}
