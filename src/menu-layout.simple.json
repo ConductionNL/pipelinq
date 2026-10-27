@@ -565,7 +565,6 @@
 						"props": {
 							"ticketType": "interaction",
 							"parentTicket": "@objectId",
-							"client": "@object.client",
 							"occurredAt": "@now",
 							"direction": "inbound"
 						},
