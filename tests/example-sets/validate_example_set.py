@@ -14,6 +14,7 @@ What it does, per object:
     {{datetime:n HH:MM}}, {{object:key.path}} within this fragment only,
     {{lookup:name}}) and fails on any other placeholder or on one that resolves
     to nothing; an object reference gets a UUID stand-in, as the loader's check does;
+    the fields an object names in `verbatimFields` are left as declared, as the loader does;
   * merges the base register file and register.d overlays the way the app's
     SettingsService imports them (objects merge by key, lists concatenate);
   * validates the filled data with jsonschema against the merged schema
@@ -285,7 +286,8 @@ def main():
                 problems.append('%s: lookup %s needs a schema and a where' % (where, name))
             fill(lookup.get('where', {}), ctx, gaps)
             ctx['lookups'][name] = stand_in('lookup', key + '/' + name)
-        data = fill(obj['data'], ctx, gaps)
+        verbatim = {f for f in (obj.get('verbatimFields') or []) if isinstance(f, str)}
+        data = dict(obj['data'], **fill({k: v for k, v in obj['data'].items() if k not in verbatim}, ctx, gaps))
         for g in gaps:
             problems.append('%s: placeholder %s does not resolve' % (where, g))
         ctx['objects'][key] = dict(data, id=stand_in(app, key), uuid=stand_in(app, key))

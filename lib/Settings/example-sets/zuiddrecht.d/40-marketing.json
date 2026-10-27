@@ -271,6 +271,9 @@
 			"key": "sjabloon-straatfeest",
 			"register": "pipelinq",
 			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
 			"data": {
 				"name": "Straatfeestseizoen",
 				"channel": "email",
@@ -312,6 +315,9 @@
 			"key": "sjabloon-afvalkalender",
 			"register": "pipelinq",
 			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
 			"data": {
 				"name": "Afvalkalender 2027",
 				"channel": "email",
@@ -342,6 +348,9 @@
 			"key": "sjabloon-ontbijt-november",
 			"register": "pipelinq",
 			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
 			"data": {
 				"name": "Ondernemersontbijt november",
 				"channel": "email",
@@ -370,6 +379,9 @@
 			"key": "sjabloon-subsidieronde",
 			"register": "pipelinq",
 			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
 			"data": {
 				"name": "Subsidieronde buurtinitiatieven",
 				"channel": "email",
@@ -410,6 +422,9 @@
 			"key": "sjabloon-enquete-balie",
 			"register": "pipelinq",
 			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
 			"data": {
 				"name": "Enquête openingstijden",
 				"channel": "email",
@@ -450,6 +465,9 @@
 			"key": "sjabloon-ontbijt-oktober",
 			"register": "pipelinq",
 			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
 			"data": {
 				"name": "Ondernemersontbijt oktober",
 				"channel": "email",
@@ -500,7 +518,7 @@
 				},
 				"waitFor": "P3D",
 				"action": {
-					"kind": "sendTemplate",
+					"kind": "sendMailing",
 					"label": "Nieuwsbrief Welkom in Zuiddrecht versturen"
 				},
 				"flowStatus": "compiled",
@@ -509,7 +527,7 @@
 				"condition": {
 					"field": "marketingConsentEmail",
 					"operator": "equals",
-					"value": true
+					"value": "true"
 				}
 			}
 		},
@@ -527,7 +545,7 @@
 				},
 				"waitFor": "P30D",
 				"action": {
-					"kind": "sendTemplate",
+					"kind": "sendMailing",
 					"label": "Herinnering verlenging versturen"
 				},
 				"flowStatus": "compiled",
@@ -548,11 +566,16 @@
 				},
 				"waitFor": "P1D",
 				"action": {
-					"kind": "sendTemplate",
+					"kind": "sendMailing",
 					"label": "Bedankmail versturen"
 				},
 				"flowStatus": "compiled",
-				"createdBy": "{{cast:pieter.uid}}"
+				"createdBy": "{{cast:pieter.uid}}",
+				"condition": {
+					"field": "ticketType",
+					"operator": "equals",
+					"value": "complaint"
+				}
 			}
 		},
 		{
@@ -569,7 +592,7 @@
 				},
 				"waitFor": "P7D",
 				"action": {
-					"kind": "sendTemplate",
+					"kind": "sendMailing",
 					"label": "Uitnodiging versturen"
 				},
 				"flowStatus": "not_compiled",
