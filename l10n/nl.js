@@ -8324,7 +8324,9 @@ OC.L10N.register(
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "Een fasewissel, een contract dat verlengd kan worden, een bevestigde inschrijving, een boekhoudsignaal, een nieuw adres of een afgesloten ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem.",
         "Public-space report": "Melding",
-        "melding": "Melding"
+        "melding": "Melding",
+        "Original contact moment": "Oorspronkelijk contactmoment",
+        "The contact moment this task was created from.": "Het contactmoment waaruit deze taak is ontstaan."
     },
     "nplurals=2; plural=(n != 1);"
 )
