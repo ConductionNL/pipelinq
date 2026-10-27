@@ -37,6 +37,8 @@ use Throwable;
 
 /**
  * Loyalty points as a payment part.
+ *
+ * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
  */
 class LoyaltyPaymentController extends Controller {
 	/**
