@@ -30,7 +30,7 @@
 							}}
 						</span>
 					</div>
-					<div class="agent-item__actions">
+					<div class="agent-item__actions cn-settings-row-actions">
 						<NcButton @click="startEdit(profile)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>

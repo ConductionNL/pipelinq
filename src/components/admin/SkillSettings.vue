@@ -22,7 +22,7 @@
 							}}
 						</span>
 					</div>
-					<div class="skill-item__actions">
+					<div class="skill-item__actions cn-settings-row-actions">
 						<NcButton @click="startEdit(skill)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
