@@ -51,6 +51,8 @@
 			"schema": "client",
 			"data": {
 				"name": "{{cast:sanne.displayName}}",
+				"customerNumber": "K-2019-01184",
+				"source": "Mijn Zuiddrecht en BRP",
 				"type": "person",
 				"email": "{{cast:sanne.email}}",
 				"address": "{{cast:sanne.address.street}} {{cast:sanne.address.number}}, {{cast:sanne.address.postcode}} {{cast:sanne.address.city}}",
