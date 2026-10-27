@@ -126,11 +126,14 @@ describe('the dashboard', () => {
 	)
 
 	it('keeps every widget it had, unchanged', () => {
+		// The in-call state (board PqWerkplekKlant) hides a widget by a
+		// workspace flag; nothing else about a kept widget may change.
+		const withoutInCall = ({ visibleWhen, ...rest }) => rest
 		for (const widget of before.widgets) {
-			expect(byId[widget.id], widget.id).toEqual(widget)
+			expect(withoutInCall(byId[widget.id]), widget.id).toEqual(withoutInCall(widget))
 		}
 		expect(simple.widgets).toHaveLength(before.widgets.length + added.length)
-		expect(added).toHaveLength(10)
+		expect(added).toHaveLength(11)
 	})
 
 	it('moves the old cards down by one fixed number of rows and changes nothing else', () => {
@@ -289,8 +292,8 @@ describe('the dashboard', () => {
 				}
 			}
 		}
-		// The banner, four stats, three lists and the bar.
-		expect(sources).toBe(9)
+		// The banner, four stats, three lists, the bar and the in-call task list.
+		expect(sources).toBe(10)
 	})
 
 	it('links every number to the list with the same filter', () => {

@@ -3,7 +3,17 @@
 <!-- @spec openspec/changes/pipelinq-werkplek-declarative/tasks.md#task-3 -->
 <template>
 	<div class="werkplek-header-actions">
+		<template v-if="callActive">
+			<span class="werkplek-header-actions__call" data-testid="werkplek-call-state">
+				{{ t('pipelinq', 'In call') }}
+				<span class="werkplek-header-actions__timer">{{ elapsed }}</span>
+			</span>
+			<NcButton variant="primary" data-testid="werkplek-call-end" @click="endCall">
+				{{ t('pipelinq', 'End and finish') }}
+			</NcButton>
+		</template>
 		<WerkplekAgentStatus
+			v-else
 			:isAvailable="isAvailable"
 			@update:isAvailable="isAvailable = $event" />
 	</div>
@@ -12,7 +22,9 @@
 <script>
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton } from '@nextcloud/vue'
 import WerkplekAgentStatus from '../../../components/werkplek/WerkplekAgentStatus.vue'
+import { screenPop } from '../../../services/ctiApi.js'
 
 /**
  * WerkplekHeaderActions — the workspace dashboard's `actionsComponent`,
@@ -25,19 +37,126 @@ import WerkplekAgentStatus from '../../../components/werkplek/WerkplekAgentStatu
 export default {
 	name: 'WerkplekHeaderActions',
 
-	components: { WerkplekAgentStatus },
+	components: { NcButton, WerkplekAgentStatus },
+
+	inject: {
+		cnWorkspaceContext: { default: null },
+	},
 
 	data() {
 		return {
 			isAvailable: false,
+			now: Date.now(),
+			ticker: null,
 		}
+	},
+
+	computed: {
+		/**
+		 * The page's workspace bag; the provided ref may arrive unwrapped or as `{ value }`.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/specs/kcc-werkplek/spec.md
+		 */
+		workspace() {
+			const c = this.cnWorkspaceContext
+			if (!c || typeof c !== 'object') {
+				return null
+			}
+			return 'value' in c ? c.value : c
+		},
+
+		/**
+		 * Whether a call is on the line: the page shows the in-call cards and this header.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/specs/kcc-werkplek/spec.md
+		 */
+		callActive() {
+			return Boolean(this.workspace && this.workspace.callActive === true)
+		},
+
+		/**
+		 * How long the call has run, as m:ss.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/kcc-werkplek/spec.md
+		 */
+		elapsed() {
+			const started = Date.parse((this.workspace && this.workspace.callStartedAt) || '')
+			const seconds = Number.isNaN(started) ? 0 : Math.max(0, Math.floor((this.now - started) / 1000))
+			const minutes = Math.floor(seconds / 60)
+			return String(minutes).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0')
+		},
 	},
 
 	created() {
 		this.fetchAvailability()
+		this.startCallFromAddress()
+		this.ticker = setInterval(() => {
+			this.now = Date.now()
+		}, 1000)
+	},
+
+	beforeUnmount() {
+		clearInterval(this.ticker)
 	},
 
 	methods: {
+		/**
+		 * Put the page in the in-call state the address names: `client=<id>&call=active`
+		 * for a call the agent picked up, or `inCallPreview=<number>`, which looks the
+		 * number up as a real call would, so the in-call page can be seen without a
+		 * line. The preview only reads. (It is not `callPreview`, which shows the
+		 * incoming-call card.)
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/kcc-werkplek/spec.md
+		 */
+		async startCallFromAddress() {
+			const params = new URLSearchParams(window.location.search)
+			let clientId = ''
+			if (params.get('call') === 'active') {
+				clientId = (params.get('client') || '').trim()
+			} else if ((params.get('inCallPreview') || '').trim() !== '') {
+				const result = await screenPop(params.get('inCallPreview').trim()).catch(() => null)
+				const match = (result && Array.isArray(result.matches))
+					? result.matches.find((m) => m && m._matchType === 'client')
+					: null
+				clientId = match ? String(match.id || match.uuid || '') : ''
+			}
+			if (clientId !== '') {
+				this.writeWorkspace({ selectedClient: clientId, callActive: true, callStartedAt: new Date().toISOString() })
+			}
+		},
+
+		/**
+		 * End the call: the page goes back to the dashboard, keeping the client in focus.
+		 *
+		 * @spec openspec/specs/kcc-werkplek/spec.md
+		 */
+		endCall() {
+			this.writeWorkspace({ callActive: false, callStartedAt: '' })
+		},
+
+		/**
+		 * Merge keys into the page's workspace bag.
+		 *
+		 * @param {object} values The keys to write.
+		 * @spec openspec/specs/kcc-werkplek/spec.md
+		 */
+		writeWorkspace(values) {
+			const holder = this.cnWorkspaceContext
+			if (!holder || typeof holder !== 'object') {
+				return
+			}
+			if ('value' in holder) {
+				holder.value = { ...(holder.value || {}), ...values }
+			} else {
+				Object.assign(holder, values)
+			}
+		},
+
 		/**
 		 * Load the agent's current availability so the toggle reflects state on
 		 * first paint. Failures leave it at the default (unavailable).
@@ -64,5 +183,20 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+}
+
+.werkplek-header-actions__call {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 12px;
+	border-radius: var(--border-radius-pill, 18px);
+	background: var(--color-success-hover, #e7f3ea);
+	color: var(--color-success-text, #1e6b2a);
+	font-weight: 600;
+}
+
+.werkplek-header-actions__timer {
+	font-variant-numeric: tabular-nums;
 }
 </style>

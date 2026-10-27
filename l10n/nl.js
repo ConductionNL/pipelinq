@@ -8501,7 +8501,10 @@ OC.L10N.register(
         "The contact moment this task was created from.": "Het contactmoment waaruit deze taak is ontstaan.",
         "Customer number": "Klantnummer",
         "The number the organisation knows this customer by, such as K-2019-01184.": "Het nummer waaronder de organisatie deze klant kent, zoals K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP.",
+        "In call": "In gesprek",
+        "End and finish": "Beëindigen en afronden",
+        "No open tasks for this client.": "Geen open taken voor deze klant."
     },
     "nplurals=2; plural=(n != 1);"
 )

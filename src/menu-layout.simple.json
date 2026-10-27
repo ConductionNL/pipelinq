@@ -1406,6 +1406,14 @@
 						"gridY": 24,
 						"gridWidth": 4,
 						"gridHeight": 5
+					},
+					{
+						"id": "sct",
+						"widgetId": "simple-call-tasks",
+						"gridX": 0,
+						"gridY": 29,
+						"gridWidth": 4,
+						"gridHeight": 4
 					}
 				],
 				"description": "your queue, callbacks and contact today",
@@ -1428,7 +1436,8 @@
 						}
 					}
 				],
-				"showActionsMenu": false
+				"showActionsMenu": false,
+				"_inCallNote": "In a call (the header sets @workspace.callActive from client=<id>&call=active or inCallPreview=<number>), the dashboard cards step aside and the client-bound cards float up: the contact form, the open requests, the knowledge base, the tasks and callbacks for the client and the earlier contact (board PqWerkplekKlant)."
 			},
 			"configAppend": {
 				"widgets": [
@@ -1470,6 +1479,11 @@
 									"primary": true
 								}
 							]
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1508,6 +1522,11 @@
 								},
 								"zeroText": "none came in today"
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1550,6 +1569,11 @@
 								},
 								"zeroText": "none longer than 2 days"
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1594,6 +1618,11 @@
 								},
 								"zeroText": "none due today"
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1624,6 +1653,11 @@
 								}
 							},
 							"layout": "stacked"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1683,6 +1717,11 @@
 									"portal": "Mijn Zuiddrecht"
 								}
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1709,6 +1748,11 @@
 								"brief": "Letter"
 							},
 							"emptyText": "No contact yet today"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1738,6 +1782,11 @@
 						"headerLink": {
 							"label": "All tasks",
 							"route": "Tasks"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1767,6 +1816,11 @@
 									"ticketType": "interaction"
 								}
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1785,6 +1839,50 @@
 								"labelField": "name",
 								"placeholder": "Name, phone, email, postcode or client number"
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
+						}
+					},
+					{
+						"id": "simple-call-tasks",
+						"type": "object-list",
+						"title": "Tasks and callback requests",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"clientId": "@workspace.selectedClient",
+								"status": [
+									"open",
+									"in_progress"
+								]
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"limit": 6,
+							"rowRoute": "TaskDetail",
+							"columns": [
+								{
+									"key": "subject",
+									"label": "Task"
+								},
+								{
+									"key": "deadline",
+									"label": "Time limit",
+									"formatter": "relativeDate"
+								}
+							],
+							"emptyText": "No open tasks for this client."
 						}
 					}
 				]
