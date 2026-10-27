@@ -9,6 +9,13 @@
   - With no telephony platform configured the first answer says so, and the
   - card stops: nothing is shown, nothing is polled and nothing errors.
   -
+  - `?callPreview=<number>` in the address shows the card for that number
+  - without a call on the line, so the card, the chooser
+  - (`&callPreviewOpen=chooser`) and the new-contact form
+  - (`&callPreviewOpen=intake`) can be seen and checked against their boards.
+  - The preview only looks the number up; it writes nothing until the agent
+  - saves a new contact or opens a record, as with a real call.
+  -
   - @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
   -->
 <template>
@@ -327,6 +334,14 @@ export default {
 		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		async refresh() {
+			const preview = this.previewCall()
+			if (preview !== null) {
+				if (this.call === null) {
+					this.active = true
+					this.receive(preview, 0)
+				}
+				return
+			}
 			let answer
 			try {
 				answer = await incomingCall()
@@ -397,6 +412,33 @@ export default {
 				rawNumber: (result && result.rawNumber) || '',
 			}
 			this.looking = false
+			if (call.previewOpen === 'chooser' && this.pop.matches.length > 1) {
+				this.chooserOpen = true
+			}
+			if (call.previewOpen === 'intake') {
+				this.intakeOpen = true
+			}
+		},
+
+		/**
+		 * The previewed call named in the address (`callPreview`,
+		 * `callPreviewOpen`), or null when there is none.
+		 *
+		 * @return {object|null} A call without a line behind it.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+		 */
+		previewCall() {
+			const params = new URLSearchParams(window.location.search)
+			const number = (params.get('callPreview') || '').trim()
+			if (number === '') {
+				return null
+			}
+			return {
+				id: 'preview',
+				fromNumber: number,
+				startedAt: new Date().toISOString(),
+				previewOpen: params.get('callPreviewOpen') || '',
+			}
 		},
 
 		/**

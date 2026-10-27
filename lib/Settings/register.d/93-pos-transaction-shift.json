@@ -1,0 +1,19 @@
+{
+  "components": {
+    "schemas": {
+      "posTransaction": {
+        "slug": "posTransaction",
+        "properties": {
+          "shift": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "cashShift",
+            "title": "Shift",
+            "description": "The cash shift that was open at this till when the sale was confirmed. Set by the server, empty when no shift was open.",
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}

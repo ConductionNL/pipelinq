@@ -1,0 +1,725 @@
+{
+	"$comment": "pipelinq's flows in the Zuiddrecht set besides the acknowledgement flow of 44-flows.json, as PqFlows lists them: reminders before a deadline, the Woo hand-over to dossiq, routing reports to the right team, linking a contact moment to its resident, escalating complaints after five working days (its last run stopped early), asking for feedback after closing, and the team lead's weekly overview. The appointment reminder is the paused one: a set stores every flow switched off, and this one stays unpublished.",
+	"flows": [
+		{
+			"key": "flow-termijn-herinneren",
+			"data": {
+				"name": "Behandelaar een dag voor de termijn herinneren",
+				"description": "Kijkt elke ochtend om 07:00 welke open tickets morgen hun termijn halen, en stuurt de behandelaar een herinnering.",
+				"trigger": "schedule",
+				"cron": "0 7 * * *",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-schedule",
+						"name": "Elke dag om 07:00",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"cron": "0 7 * * *"
+						}
+					},
+					{
+						"id": "zoeken",
+						"type": "openregister.object-read",
+						"name": "Open tickets met de termijn morgen",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"config": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": "slaDeadline == tomorrow and status != 'resolved'"
+						}
+					},
+					{
+						"id": "elk",
+						"type": "openregister.iterate",
+						"name": "Voor elk ticket",
+						"position": {
+							"x": 40,
+							"y": 280
+						}
+					},
+					{
+						"id": "herinneren",
+						"type": "openregister.send-notification",
+						"name": "Behandelaar herinneren",
+						"position": {
+							"x": 40,
+							"y": 400
+						},
+						"config": {
+							"to": "assignee"
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 520
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "zoeken"
+					},
+					{
+						"from": "zoeken",
+						"to": "elk"
+					},
+					{
+						"from": "elk",
+						"to": "herinneren"
+					},
+					{
+						"from": "herinneren",
+						"to": "end"
+					}
+				]
+			}
+		},
+		{
+			"key": "flow-woo-naar-dossiq",
+			"data": {
+				"name": "Woo-vraag overdragen aan dossiq",
+				"description": "Als een ticket de soort Woo-vraag krijgt, maakt de flow er een Woo-verzoek van in dossiq en koppelt het zaaknummer terug aan het ticket.",
+				"trigger": "object.updated",
+				"triggerRegister": "pipelinq",
+				"triggerSchema": "ticket",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-object",
+						"name": "Gestart door een gewijzigd ticket",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"event": "object.updated",
+							"register": "pipelinq",
+							"schema": "ticket"
+						}
+					},
+					{
+						"id": "soort",
+						"type": "openregister.switch",
+						"name": "Is het een Woo-vraag?",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"config": {
+							"field": "soort"
+						},
+						"exits": [
+							{
+								"id": "woo",
+								"condition": "soort == 'Woo-vraag'"
+							},
+							{
+								"id": "anders"
+							}
+						]
+					},
+					{
+						"id": "zaak",
+						"type": "openregister.object-write",
+						"name": "Woo-verzoek aanmaken in dossiq",
+						"position": {
+							"x": 40,
+							"y": 280
+						},
+						"config": {
+							"target": "dossiq"
+						}
+					},
+					{
+						"id": "koppelen",
+						"type": "openregister.link-object",
+						"name": "Zaak aan het ticket koppelen",
+						"position": {
+							"x": 40,
+							"y": 400
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 520
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "soort"
+					},
+					{
+						"from": "soort",
+						"to": "zaak",
+						"fromExit": "woo"
+					},
+					{
+						"from": "soort",
+						"to": "end",
+						"fromExit": "anders"
+					},
+					{
+						"from": "zaak",
+						"to": "koppelen"
+					},
+					{
+						"from": "koppelen",
+						"to": "end"
+					}
+				]
+			}
+		},
+		{
+			"key": "flow-melding-naar-team",
+			"data": {
+				"name": "Melding naar het juiste team sturen",
+				"description": "Zet een nieuwe melding in de wachtrij van het team dat erover gaat, op basis van de categorie.",
+				"trigger": "object.created",
+				"triggerRegister": "pipelinq",
+				"triggerSchema": "ticket",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-object",
+						"name": "Gestart door een nieuw ticket",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"event": "object.created",
+							"register": "pipelinq",
+							"schema": "ticket"
+						}
+					},
+					{
+						"id": "soort",
+						"type": "openregister.switch",
+						"name": "Is het een melding?",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"config": {
+							"field": "soort"
+						},
+						"exits": [
+							{
+								"id": "melding",
+								"condition": "soort == 'Melding'"
+							},
+							{
+								"id": "anders"
+							}
+						]
+					},
+					{
+						"id": "route",
+						"type": "openregister.route",
+						"name": "Team kiezen op categorie",
+						"position": {
+							"x": 40,
+							"y": 280
+						},
+						"config": {
+							"field": "category"
+						}
+					},
+					{
+						"id": "toewijzen",
+						"type": "openregister.set-fields",
+						"name": "In de wachtrij van het team zetten",
+						"position": {
+							"x": 40,
+							"y": 400
+						},
+						"config": {
+							"fields": {
+								"queue": "team"
+							}
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 520
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "soort"
+					},
+					{
+						"from": "soort",
+						"to": "route",
+						"fromExit": "melding"
+					},
+					{
+						"from": "soort",
+						"to": "end",
+						"fromExit": "anders"
+					},
+					{
+						"from": "route",
+						"to": "toewijzen"
+					},
+					{
+						"from": "toewijzen",
+						"to": "end"
+					}
+				]
+			}
+		},
+		{
+			"key": "flow-contactmoment-koppelen",
+			"data": {
+				"name": "Contactmoment koppelen aan de inwoner",
+				"description": "Zoekt bij een opgeslagen contactmoment de inwoner op telefoonnummer of e-mailadres en koppelt het contactmoment aan die klant.",
+				"trigger": "object.created",
+				"triggerRegister": "pipelinq",
+				"triggerSchema": "ticket",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-object",
+						"name": "Gestart door een opgeslagen contactmoment",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"event": "object.created",
+							"register": "pipelinq",
+							"schema": "ticket"
+						}
+					},
+					{
+						"id": "zoeken",
+						"type": "openregister.object-read",
+						"name": "Inwoner zoeken op nummer of adres",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"config": {
+							"register": "pipelinq",
+							"schema": "client"
+						}
+					},
+					{
+						"id": "koppelen",
+						"type": "openregister.link-object",
+						"name": "Contactmoment aan de klant koppelen",
+						"position": {
+							"x": 40,
+							"y": 280
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 400
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "zoeken"
+					},
+					{
+						"from": "zoeken",
+						"to": "koppelen"
+					},
+					{
+						"from": "koppelen",
+						"to": "end"
+					}
+				]
+			}
+		},
+		{
+			"key": "flow-klacht-escaleren",
+			"data": {
+				"name": "Klacht na vijf werkdagen escaleren",
+				"description": "Kijkt elke werkdag om 08:00 welke klachten na vijf werkdagen nog open staan, en legt ze bij de teamleider.",
+				"trigger": "schedule",
+				"cron": "0 8 * * 1-5",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-schedule",
+						"name": "Elke werkdag om 08:00",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"cron": "0 8 * * 1-5"
+						}
+					},
+					{
+						"id": "zoeken",
+						"type": "openregister.object-read",
+						"name": "Klachten ouder dan vijf werkdagen",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"config": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": "ticketType == 'complaint' and status != 'resolved'"
+						}
+					},
+					{
+						"id": "elk",
+						"type": "openregister.iterate",
+						"name": "Voor elke klacht",
+						"position": {
+							"x": 40,
+							"y": 280
+						}
+					},
+					{
+						"id": "teamleider",
+						"type": "openregister.send-notification",
+						"name": "Teamleider op de hoogte brengen",
+						"position": {
+							"x": 40,
+							"y": 400
+						},
+						"config": {
+							"to": "zuiddrecht-teamleiders"
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 520
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "zoeken"
+					},
+					{
+						"from": "zoeken",
+						"to": "elk"
+					},
+					{
+						"from": "elk",
+						"to": "teamleider"
+					},
+					{
+						"from": "teamleider",
+						"to": "end"
+					}
+				],
+				"runs": [
+					{
+						"subject": "{{object:ticket-fatima-klacht.id}}",
+						"subjectRegister": "pipelinq",
+						"subjectSchema": "ticket",
+						"trigger": "schedule",
+						"status": "stopped",
+						"error": "Vroegtijdig gestopt",
+						"created": "{{datetime:0 08:00}}"
+					}
+				]
+			}
+		},
+		{
+			"key": "flow-feedback-vragen",
+			"data": {
+				"name": "Om feedback vragen na afsluiten",
+				"description": "Wacht twee dagen nadat een ticket is opgelost en vraagt de inwoner dan hoe het ging.",
+				"trigger": "object.updated",
+				"triggerRegister": "pipelinq",
+				"triggerSchema": "ticket",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-object",
+						"name": "Gestart door een opgelost ticket",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"event": "object.updated",
+							"register": "pipelinq",
+							"schema": "ticket"
+						}
+					},
+					{
+						"id": "opgelost",
+						"type": "openregister.switch",
+						"name": "Is het ticket opgelost?",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"config": {
+							"field": "status"
+						},
+						"exits": [
+							{
+								"id": "ja",
+								"condition": "status == 'resolved'"
+							},
+							{
+								"id": "nee"
+							}
+						]
+					},
+					{
+						"id": "wachten",
+						"type": "openregister.wait",
+						"name": "2 dagen wachten",
+						"position": {
+							"x": 40,
+							"y": 280
+						},
+						"config": {
+							"for": "P2D"
+						}
+					},
+					{
+						"id": "vragen",
+						"type": "openregister.send-email",
+						"name": "Tevredenheidsvraag sturen",
+						"position": {
+							"x": 40,
+							"y": 400
+						},
+						"config": {
+							"template": "Hoe hebben we u geholpen?"
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 520
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "opgelost"
+					},
+					{
+						"from": "opgelost",
+						"to": "wachten",
+						"fromExit": "ja"
+					},
+					{
+						"from": "opgelost",
+						"to": "end",
+						"fromExit": "nee"
+					},
+					{
+						"from": "wachten",
+						"to": "vragen"
+					},
+					{
+						"from": "vragen",
+						"to": "end"
+					}
+				]
+			}
+		},
+		{
+			"key": "flow-weekoverzicht-teamleider",
+			"data": {
+				"name": "Weekoverzicht naar de teamleider",
+				"description": "Stuurt de teamleider elke maandag om 07:30 een overzicht van de tickets van vorige week. Ook met de hand te starten.",
+				"trigger": "schedule",
+				"cron": "30 7 * * 1",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-schedule",
+						"name": "Elke maandag om 07:30",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"cron": "30 7 * * 1"
+						}
+					},
+					{
+						"id": "tellen",
+						"type": "openregister.object-read",
+						"name": "Tickets van vorige week tellen",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"config": {
+							"register": "pipelinq",
+							"schema": "ticket"
+						}
+					},
+					{
+						"id": "mail",
+						"type": "openregister.send-email",
+						"name": "Overzicht mailen aan de teamleider",
+						"position": {
+							"x": 40,
+							"y": 280
+						},
+						"config": {
+							"template": "Weekoverzicht",
+							"to": "zuiddrecht-teamleiders"
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 400
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "tellen"
+					},
+					{
+						"from": "tellen",
+						"to": "mail"
+					},
+					{
+						"from": "mail",
+						"to": "end"
+					}
+				]
+			}
+		},
+		{
+			"key": "flow-afspraak-herinneren",
+			"data": {
+				"name": "Herinnering sturen voor een afspraak",
+				"description": "Stuurt de inwoner een dag voor een afspraak aan de balie een herinnering. Staat stil tot de nieuwe tekst is goedgekeurd.",
+				"trigger": "schedule",
+				"cron": "0 9 * * *",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-schedule",
+						"name": "Elke dag om 09:00",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"cron": "0 9 * * *"
+						}
+					},
+					{
+						"id": "zoeken",
+						"type": "openregister.object-read",
+						"name": "Afspraken van morgen",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"config": {
+							"register": "pipelinq",
+							"schema": "appointmentBooking"
+						}
+					},
+					{
+						"id": "elk",
+						"type": "openregister.iterate",
+						"name": "Voor elke afspraak",
+						"position": {
+							"x": 40,
+							"y": 280
+						}
+					},
+					{
+						"id": "mail",
+						"type": "openregister.send-email",
+						"name": "Herinnering sturen",
+						"position": {
+							"x": 40,
+							"y": 400
+						},
+						"config": {
+							"template": "Afspraakherinnering"
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 520
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "zoeken"
+					},
+					{
+						"from": "zoeken",
+						"to": "elk"
+					},
+					{
+						"from": "elk",
+						"to": "mail"
+					},
+					{
+						"from": "mail",
+						"to": "end"
+					}
+				],
+				"publish": false
+			}
+		}
+	]
+}

@@ -160,14 +160,109 @@ export function bookingWhen(value, row) {
 	return timeRange(value, row?.endAt)
 }
 
+/**
+ * When a POS transaction happened, as the PqKassabonnen board writes it
+ * ("7 okt, 11:42"): its confirmation, else its parking, else its creation.
+ * The year is added outside the current one.
+ *
+ * @param {unknown} _value The cell value (unused; the row holds the times).
+ * @param {object} [row] The transaction.
+ * @param {object} [_property] The schema property (unused).
+ * @param {{now?: Date, locale?: string}} [options] Reference date and locale (tests).
+ * @return {string} The moment, or '' when the row has no time at all.
+ * @spec openspec/changes/pos-transaction-moment/specs/pos-transaction-core/spec.md
+ */
+export function transactionMoment(_value, row, _property, options) {
+	const raw = row?.confirmedAt || row?.parkedAt || row?.['@self']?.created
+	const date = raw ? new Date(raw) : null
+	if (!date || Number.isNaN(date.getTime())) {
+		return ''
+	}
+	const opts = options || {}
+	const now = opts.now instanceof Date ? opts.now : new Date()
+	const locale =
+		opts.locale
+		|| (typeof OC !== 'undefined' && OC.getLocale
+			? OC.getLocale().replace('_', '-')
+			: undefined)
+	const day = { day: 'numeric', month: 'short' }
+	if (date.getFullYear() !== now.getFullYear()) {
+		day.year = 'numeric'
+	}
+	const dayText = new Intl.DateTimeFormat(locale, day).format(date).replace('.', '')
+	const timeText = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(date)
+	return dayText + ', ' + timeText
+}
+
+/**
+ * Language codes as the product page writes them: "nl, en" reads "NL, EN".
+ *
+ * @param {unknown} value The list of two-letter codes.
+ * @return {string} The codes in capitals, or '' for none.
+ * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ */
+export function languageCodes(value) {
+	const list = Array.isArray(value) ? value : (value ? [value] : [])
+	return list.map((code) => String(code).toUpperCase()).join(', ')
+}
+
+/**
+ * A list of enum values as one phrase of labels, the first capitalised and
+ * the rest in lower case ("Inwoner, bedrijf"). The labels come from the
+ * property's `x-enum-labels`, through pipelinq's translate; a value with no
+ * label shows as stored.
+ *
+ * @param {unknown} value The stored values.
+ * @param {object} [_row] The row (unused).
+ * @param {object} [property] The schema property.
+ * @return {string} The phrase, or '' for none.
+ * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ */
+export function labelList(value, _row, property) {
+	const list = Array.isArray(value) ? value : (value ? [value] : [])
+	return list
+		.map((item, index) => {
+			const label = enumLabel(item, null, property)
+			return index === 0 || label === String(item) ? label : label.toLowerCase()
+		})
+		.join(', ')
+}
+
+/**
+ * A date with the month written out and the year ("1 januari 2026").
+ *
+ * @param {unknown} value The date, `YYYY-MM-DD` or ISO.
+ * @return {string} The date, or the value as stored when it is not one.
+ * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ */
+export function longDate(value) {
+	if (value === null || value === undefined || value === '') {
+		return ''
+	}
+	const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value))
+	if (!match) {
+		return String(value)
+	}
+	const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+	const locale =
+		typeof OC !== 'undefined' && OC.getLocale
+			? OC.getLocale().replace('_', '-')
+			: undefined
+	return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(date)
+}
+
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
+	transactionMoment,
 	enumText,
 	enumLabel,
 	yesNo,
 	callDuration: isoDuration,
 	bookingWhen,
+	languageCodes,
+	labelList,
+	longDate,
 }
 
 /**

@@ -131,11 +131,13 @@ class JourneyService {
 		$now = date('c', $this->time->getTime());
 		$payload['updatedAt'] = $now;
 		$before = null;
+		if ($journeyId !== null) {
+			$before = $this->find(journeyId: $journeyId);
+		}
+
 		if ($journeyId === null) {
 			$payload['createdAt'] = $now;
 			$payload['createdBy'] = $createdByUid;
-		} else {
-			$before = $this->find(journeyId: $journeyId);
 		}
 
 		$payload = $this->stampActivation(journey: $payload, before: $before, now: $now);

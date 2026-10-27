@@ -1,0 +1,80 @@
+{
+  "components": {
+    "schemas": {
+      "product": {
+        "slug": "product",
+        "version": "1.1.0",
+        "properties": {
+          "tariffs": {
+            "type": "array",
+            "title": "Tariffs",
+            "description": "The fees set for this product, such as the rates of a fee regulation. A tariff with a later valid-from date replaces the one with the same label from that day.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Tariff"
+                },
+                "price": {
+                  "type": "number",
+                  "title": "Amount"
+                },
+                "validFrom": {
+                  "type": "string",
+                  "format": "date",
+                  "title": "Valid from"
+                },
+                "note": {
+                  "type": "string",
+                  "title": "Note"
+                }
+              }
+            }
+          },
+          "tariffSource": {
+            "type": "string",
+            "title": "Tariff source",
+            "description": "Where the tariffs come from, such as the fee regulation and its chapter."
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date",
+            "title": "Publication date",
+            "description": "The day the product was first published to residents and businesses."
+          },
+          "languages": {
+            "type": "array",
+            "title": "Languages",
+            "description": "The languages the product is published in, as two-letter codes (nl, en).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audience": {
+            "type": "array",
+            "title": "Audience",
+            "description": "Who the product is for.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "resident",
+                "business"
+              ]
+            },
+            "x-enum-labels": {
+              "resident": "Resident",
+              "business": "Business"
+            }
+          },
+          "weightGrams": {
+            "type": "integer",
+            "title": "Weight (g)",
+            "description": "The weight in grams, for an item too light to state in kilograms with two decimals. When set, it is shown instead of the weight in kilograms.",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

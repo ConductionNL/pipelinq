@@ -108,6 +108,32 @@ class KvkApiClient {
 	}//end search()
 
 	/**
+	 * The KvK rows for one KvK number, through OpenRegister's KvK source.
+	 *
+	 * @param string $kvkNumber The KvK number.
+	 *
+	 * @return array<int, array<string, mixed>> The rows; empty when the source answers nothing.
+	 *
+	 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+	 */
+	public function companyByNumber(string $kvkNumber): array {
+		return ($this->getViaOpenRegister(path: 'company', query: ['kvkNumber' => $kvkNumber]) ?? []);
+	}//end companyByNumber()
+
+	/**
+	 * The KvK rows for a company name, through OpenRegister's KvK source.
+	 *
+	 * @param string $name The company name.
+	 *
+	 * @return array<int, array<string, mixed>> The rows; empty when the source answers nothing.
+	 *
+	 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+	 */
+	public function searchByName(string $name): array {
+		return ($this->getViaOpenRegister(path: 'search', query: ['q' => $name, 'limit' => 10, 'page' => 1]) ?? []);
+	}//end searchByName()
+
+	/**
 	 * Search for a single SBI code and merge results.
 	 *
 	 * @param string $apiKey The KVK API key.
@@ -206,15 +232,28 @@ class KvkApiClient {
 	 * @spec openspec/changes/archive/2026-06-21-pipelinq-lookups-via-or-leaf/specs/company-lookup/spec.md
 	 */
 	private function fetchViaOpenRegister(string $sbiCode): ?array {
-		$params = http_build_query(
-			[
+		return $this->getViaOpenRegister(
+			path: 'search',
+			query: [
 				'sbiHoofdActiviteit' => $sbiCode,
 				'type' => 'hoofdvestiging',
 				'limit' => 50,
 				'page' => 1,
 			]
 		);
-		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/kvk/search?' . $params);
+	}//end fetchViaOpenRegister()
+
+	/**
+	 * GET one of OpenRegister's KvK endpoints and return its result rows.
+	 *
+	 * @param string               $path  `search` or `company`.
+	 * @param array<string, mixed> $query The query parameters.
+	 *
+	 * @return array<int, array<string, mixed>>|null The rows, or null when the source is not usable.
+	 */
+	private function getViaOpenRegister(string $path, array $query): ?array {
+		$params = http_build_query($query);
+		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/kvk/' . $path . '?' . $params);
 
 		try {
 			$client = $this->clientService->newClient();
@@ -251,5 +290,5 @@ class KvkApiClient {
 		}
 
 		return $rows;
-	}//end fetchViaOpenRegister()
+	}//end getViaOpenRegister()
 }//end class
