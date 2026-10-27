@@ -1,0 +1,28 @@
+{
+	"$comment": "pipelinq's messaging consent for Anna de Vries in the Zuiddrecht set: WhatsApp opted in, SMS unknown, recorded on her contact (70-anna-devries-contact.json), because the composer's preflight reads consent per contact, so PqBerichtSturen can send her a WhatsApp message. The two records moved here from 68-contacts.json, where they named her client.",
+	"objects": [
+		{
+			"key": "toestemming-anna-whatsapp",
+			"register": "pipelinq",
+			"schema": "messagingConsentRecord",
+			"data": {
+				"contactId": "{{object:contact-anna-devries.id}}",
+				"channel": "whatsapp",
+				"state": "opted-in",
+				"source": "webform",
+				"recordedAt": "{{datetime:-30 20:14}}",
+				"legalBasis": "consent"
+			}
+		},
+		{
+			"key": "toestemming-anna-sms",
+			"register": "pipelinq",
+			"schema": "messagingConsentRecord",
+			"data": {
+				"contactId": "{{object:contact-anna-devries.id}}",
+				"channel": "sms",
+				"state": "unknown"
+			}
+		}
+	]
+}
