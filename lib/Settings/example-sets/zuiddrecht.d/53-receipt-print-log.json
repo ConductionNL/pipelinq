@@ -1,0 +1,18 @@
+{
+	"$comment": "pipelinq's receipt print log in the Zuiddrecht set: receipt POS-2026-1043 was printed once at Balie 2 and not e-mailed, as PqKassabon draws it.",
+	"objects": [
+		{
+			"key": "bonlog-1043-print",
+			"register": "pipelinq",
+			"schema": "receiptPrintLog",
+			"data": {
+				"transaction": "{{object:kassabon-1043.id}}",
+				"action": "print",
+				"printerDevice": "Bonprinter balie 2",
+				"actor": "{{cast:pieter.uid}}",
+				"status": "success",
+				"printedAt": "{{datetime:0 11:43}}"
+			}
+		}
+	]
+}
