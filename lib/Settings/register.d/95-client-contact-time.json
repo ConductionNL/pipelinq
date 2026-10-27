@@ -1,0 +1,23 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "When a client likes to be contacted, beside the channel (PqContactmoment Klant: Voorkeur \"telefoon, 's ochtends\")."
+	},
+	"components": {
+		"schemas": {
+			"client": {
+				"slug": "client",
+				"version": "1.4.0",
+				"properties": {
+					"preferredContactTime": {
+						"type": "string",
+						"title": "Preferred contact time",
+						"description": "When this client likes to be contacted, in the client's words, such as 's ochtends or after 17:00.",
+						"maxLength": 100
+					}
+				}
+			}
+		}
+	}
+}

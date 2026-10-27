@@ -8554,7 +8554,17 @@ OC.L10N.register(
         "internal": "internal",
         "Text message": "Text message",
         "public-space report": "public-space report",
-        "{subject}": "{subject}"
+        "{subject}": "{subject}",
+        "Called from": "Called from",
+        "Preference": "Preference",
+        "Client page, {count} earlier contacts": "Client page, {count} earlier contacts",
+        "Save with a case": "Save with a case",
+        "Pick a case": "Pick a case",
+        "The contact moment is saved with the case.": "The contact moment is saved with the case.",
+        "Preferred contact time": "Preferred contact time",
+        "When this client likes to be contacted, in the client's words, such as 's ochtends or after 17:00.": "When this client likes to be contacted, in the client's words, such as 's ochtends or after 17:00.",
+        "phone": "phone",
+        "other": "other"
     },
     "nplurals=2; plural=(n != 1);"
 )

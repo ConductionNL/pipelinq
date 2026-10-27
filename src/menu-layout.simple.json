@@ -920,17 +920,51 @@
 									]
 								},
 								{
-									"label": "Phone",
-									"path": "phone",
+									"from": "object",
+									"label": "Called from",
+									"path": "from_number",
 									"format": "phone"
+								},
+								{
+									"key": "preference",
+									"label": "Preference",
+									"parts": [
+										{
+											"path": "preferredChannel",
+											"map": {
+												"phone": "phone",
+												"email": "email",
+												"whatsapp": "WhatsApp",
+												"linkedin": "LinkedIn",
+												"x": "X",
+												"mastodon": "Mastodon",
+												"bluesky": "Bluesky",
+												"other": "other"
+											}
+										},
+										{
+											"path": "preferredContactTime"
+										}
+									],
+									"separator": ", "
 								}
 							],
 							"link": {
-								"label": "Client page",
+								"label": "Client page, {count} earlier contacts",
+								"fallbackLabel": "Client page",
 								"route": {
 									"name": "ClientDetail",
 									"params": {
 										"id": "@object.client"
+									}
+								},
+								"countFrom": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"filter": {
+										"client": "@object.client",
+										"ticketType": "interaction",
+										"occurredAt[lt]": "@object.occurredAt"
 									}
 								}
 							},
@@ -1009,10 +1043,50 @@
 								{
 									"from": "object",
 									"label": "Case",
-									"path": "caseReference"
+									"path": "caseReference",
+									"resolve": {
+										"register": "dossiq",
+										"schema": "case",
+										"labelField": "title"
+									}
 								}
 							],
-							"emptyText": "Not saved with a case."
+							"emptyText": "Not saved with a case.",
+							"actions": [
+								{
+									"id": "file-on-case",
+									"type": "open-form",
+									"label": "Save with a case",
+									"formTitle": "Save with a case",
+									"visibleWhen": {
+										"field": "caseReference",
+										"op": "empty"
+									},
+									"endpoint": {
+										"url": "/apps/pipelinq/api/contact-moments/@objectId/cases",
+										"method": "POST"
+									},
+									"formProperties": {
+										"caseId": {
+											"type": "string",
+											"title": "Case"
+										}
+									},
+									"fieldOverrides": {
+										"caseId": {
+											"widget": "resource",
+											"label": "Case",
+											"placeholder": "Pick a case",
+											"resource": {
+												"register": "dossiq",
+												"schema": "case",
+												"labelField": "title"
+											}
+										}
+									},
+									"successMessage": "The contact moment is saved with the case."
+								}
+							]
 						}
 					},
 					{
@@ -1623,7 +1697,7 @@
 									"key": "when",
 									"label": "When",
 									"path": "occurredAt",
-									"format": "date-long"
+									"format": "longdatetime"
 								},
 								{
 									"key": "duration",

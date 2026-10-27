@@ -8566,6 +8566,16 @@
         "internal": "intern",
         "Text message": "Sms",
         "public-space report": "melding openbare ruimte",
-        "{subject}": "{subject}"
+        "{subject}": "{subject}",
+        "Called from": "Gebeld vanaf",
+        "Preference": "Voorkeur",
+        "Client page, {count} earlier contacts": "Klantpagina, {count} eerdere contacten",
+        "Save with a case": "Bij een zaak opslaan",
+        "Pick a case": "Kies een zaak",
+        "The contact moment is saved with the case.": "Het contactmoment staat nu bij de zaak.",
+        "Preferred contact time": "Voorkeurstijd voor contact",
+        "When this client likes to be contacted, in the client's words, such as 's ochtends or after 17:00.": "Wanneer deze klant graag benaderd wordt, in de woorden van de klant, zoals 's ochtends of na 17.00 uur.",
+        "phone": "telefoon",
+        "other": "anders"
     }
 }

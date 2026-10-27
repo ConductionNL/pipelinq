@@ -667,6 +667,40 @@ describe('the contact moment (board PqContactmoment)', () => {
 		}
 	})
 
+	it('names the caller\'s number, the client\'s preference and the earlier contacts on the client card', () => {
+		const card = simple.sideColumn.find((entry) => entry.id === 'side-cm-client').content
+		const client = schemaProperties('client')
+		const ticket = schemaProperties('ticket')
+		const calledFrom = card.fields.find((field) => field.label === 'Called from')
+		expect(calledFrom.from).toBe('object')
+		expect(ticket[calledFrom.path], calledFrom.path).toBeTruthy()
+		const preference = card.fields.find((field) => field.key === 'preference')
+		for (const part of preference.parts) {
+			expect(client[part.path], part.path).toBeTruthy()
+		}
+		expect(card.link.label).toBe('Client page, {count} earlier contacts')
+		expect(card.link.fallbackLabel).toBe('Client page')
+		for (const key of Object.keys(card.link.countFrom.filter)) {
+			expect(ticket[key.replace(/\[.*\]$/, '')], key).toBeTruthy()
+		}
+	})
+
+	it('saves the contact moment with a case through the filing endpoint, until it has one', () => {
+		const action = simple.sideColumn.find((entry) => entry.id === 'side-cm-case').content.actions[0]
+		const routes = read('appinfo', 'routes.php')
+		expect(action.endpoint).toEqual({ url: '/apps/pipelinq/api/contact-moments/@objectId/cases', method: 'POST' })
+		expect(routes).toContain("'url' => '/api/contact-moments/{momentId}/cases', 'verb' => 'POST'")
+		expect(Object.keys(action.formProperties)).toEqual(['caseId'])
+		expect(action.fieldOverrides.caseId.resource).toMatchObject({ register: 'dossiq', schema: 'case' })
+		expect(evaluateVisibleWhenLocal(action.visibleWhen, { caseReference: '' })).toBe(true)
+		expect(evaluateVisibleWhenLocal(action.visibleWhen, { caseReference: 'c-1' })).toBe(false)
+	})
+
+	it('writes when it happened with the time', () => {
+		const when = widgetById['contact-details'].content.fields.find((field) => field.key === 'when')
+		expect(when.format).toBe('longdatetime')
+	})
+
 	it('has its own what-now steps on fields the ticket has, and no primary button', () => {
 		const variant = simple.nextStep.variants.find((entry) => evaluateVisibleWhenLocal(entry.when, MOMENT))
 		const card = resolveNextStep({ ...simple.nextStep, ...variant }, MOMENT, simple.stageField)
