@@ -639,11 +639,11 @@ const registry = {
 		component: sectionWidget(
 			'SocialPostVariantsWidget',
 			SocialPostVariantsSection,
-			({ objectId }) => ({ postId: String(objectId || '') }),
+			({ objectId }) => ({ postId: String(objectId || ''), hideApprovals: true }),
 			{ card: true },
 		),
 		...PANEL_WIDGET_META,
-		_note: 'SocialPostVariantsSection as a tab widget (board PqSocialBericht: "Wat dit per netwerk zegt" in the Overview tab).',
+		_note: 'SocialPostVariantsSection as a tab widget (board PqSocialBericht: "Wat dit per netwerk zegt" in the Overview tab). The approvals stand in the side column\'s Approvals card there, so the section leaves them out.',
 	},
 	SocialPublicationsWidget: {
 		kind: 'widget',

@@ -8504,7 +8504,15 @@ OC.L10N.register(
         "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP.",
         "Z report": "Z-rapport",
         "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transacties",
-        "What it says per network": "Wat dit per netwerk zegt"
+        "What it says per network": "Wat dit per netwerk zegt",
+        "Raise the journal entry again": "Journaalpost opnieuw doorgeven",
+        "campaign {campaignId.name}": "campagne {campaignId.name}",
+        "{count:networks} network · campaign {campaignId.name}": "{count:networks} netwerk · campagne {campaignId.name}",
+        "{count:networks} networks · campaign {campaignId.name}": "{count:networks} netwerken · campagne {campaignId.name}",
+        "{decision} by {userId|user}": "{decision} door {userId|user}",
+        "{decision} by {by|user}": "{decision} door {by|user}",
+        "A post waits for approval before it can be scheduled.": "Een bericht wacht op goedkeuring voordat het kan worden ingepland.",
+        "No decision yet. A post waits for approval before it can be scheduled.": "Nog geen besluit. Een bericht wacht op goedkeuring voordat het kan worden ingepland."
     },
     "nplurals=2; plural=(n != 1);"
 )

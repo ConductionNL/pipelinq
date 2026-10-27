@@ -6032,7 +6032,8 @@
 								},
 								{
 									"widgetId": "z-history",
-									"label": "History"
+									"label": "History",
+									"countFrom": "widget"
 								}
 							]
 						}
@@ -6093,6 +6094,29 @@
 					}
 				],
 				"titleField": "reference",
+				"_headerActionsNote": "Board PqZRapport: \"Journaalpost opnieuw doorgeven\" in the header beside Meer, on a day whose journal entry is pending or failed and that has takings. It posts to the same manager-gated endpoint as the bookkeeping section's button; the server refuses anyone else.",
+				"headerActions": [
+					{
+						"id": "raise-journal-entry",
+						"type": "api-call",
+						"label": "Raise the journal entry again",
+						"icon": "Refresh",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/pos-bookkeeping/post",
+						"payload": {
+							"zReportId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Journal entry raised at shillinq.",
+						"errorMessage": "Raise failed.",
+						"visibleWhen": {
+							"all": [
+								{ "field": "bookkeepingStatus", "op": "in", "value": ["pending", "failed"] },
+								{ "field": "transactionCount", "op": "gt", "value": 0 }
+							]
+						}
+					}
+				],
 				"headerCard": true,
 				"breadcrumb": {
 					"label": "Z reports",

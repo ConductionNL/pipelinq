@@ -155,6 +155,35 @@
             }
           },
           {
+            "id": "social-post-approvals",
+            "type": "record-list",
+            "title": "Approvals",
+            "icon": "CheckDecagramOutline",
+            "_note": "Board PqSocialBericht: Goedkeuringen in the side column, one line per decision (when, what and who), with the rule under it. The rows are the post's own approvals list.",
+            "content": {
+              "objectRows": {
+                "path": "approvals"
+              },
+              "presentation": "rows",
+              "leading": [
+                "{decidedAt|date}",
+                "{at|date}"
+              ],
+              "title": [
+                "{decision} by {userId|user}",
+                "{decision} by {by|user}"
+              ],
+              "valueLabels": {
+                "decision": {
+                  "approved": "Approved",
+                  "rejected": "Rejected"
+                }
+              },
+              "footnote": "A post waits for approval before it can be scheduled.",
+              "emptyText": "No decision yet. A post waits for approval before it can be scheduled."
+            }
+          },
+          {
             "id": "social-post-data",
             "type": "data",
             "title": "Post details",
@@ -191,8 +220,29 @@
           }
         ],
         "sideColumn": [
-          "social-post-data"
+          "social-post-data",
+          "social-post-approvals"
         ],
+        "titleField": "title",
+        "extend": [
+          "campaignId"
+        ],
+        "_headerMetaNote": "Board PqSocialBericht: \"3 netwerken · campagne Afvalvrije week 2026\". The networks are the post's publications (one per account it went to); the campaign is read through _extend, so its name shows rather than its id.",
+        "headerMeta": {
+          "count": "networks",
+          "zero": "campaign {campaignId.name}",
+          "one": "{count:networks} network · campaign {campaignId.name}",
+          "other": "{count:networks} networks · campaign {campaignId.name}"
+        },
+        "headerMetaCounts": {
+          "networks": {
+            "register": "pipelinq",
+            "schema": "socialPublication",
+            "filter": {
+              "postId": "@objectId"
+            }
+          }
+        },
         "headerCard": true,
         "breadcrumb": {
           "label": "Social posts",

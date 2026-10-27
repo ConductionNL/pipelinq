@@ -8574,6 +8574,14 @@
         "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
         "Z report": "Z report",
         "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transactions",
-        "What it says per network": "What it says per network"
+        "What it says per network": "What it says per network",
+        "Raise the journal entry again": "Raise the journal entry again",
+        "campaign {campaignId.name}": "campaign {campaignId.name}",
+        "{count:networks} network · campaign {campaignId.name}": "{count:networks} network · campaign {campaignId.name}",
+        "{count:networks} networks · campaign {campaignId.name}": "{count:networks} networks · campaign {campaignId.name}",
+        "{decision} by {userId|user}": "{decision} by {userId|user}",
+        "{decision} by {by|user}": "{decision} by {by|user}",
+        "A post waits for approval before it can be scheduled.": "A post waits for approval before it can be scheduled.",
+        "No decision yet. A post waits for approval before it can be scheduled.": "No decision yet. A post waits for approval before it can be scheduled."
     }
 }
