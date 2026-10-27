@@ -8545,6 +8545,7 @@
         "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP.",
         "{shown} of {total} posts · newest first": "{shown} van {total} berichten · nieuwste eerst",
         "A post can go to several networks at once, each with its own text.": "Een bericht kan tegelijk naar meerdere netwerken, elk met een eigen tekst.",
-        "Scheduled to go out": "Ingepland"
+        "Scheduled to go out": "Ingepland",
+        "Being sent": "Bezig met verzenden"
     }
 }
