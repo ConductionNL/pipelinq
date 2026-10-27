@@ -1600,13 +1600,80 @@
 				],
 				"manufacturer": "Kaartdrukkerij Nederland BV",
 				"weight": 0.005,
+				"tariffs": [
+					{
+						"label": "Eerste pas voor een nieuw adres",
+						"price": 0,
+						"validFrom": "2026-01-01"
+					},
+					{
+						"label": "Vervangende pas, kwijt of kapot",
+						"price": 15,
+						"validFrom": "2026-01-01"
+					},
+					{
+						"label": "Extra pas voor hetzelfde huishouden",
+						"price": 15,
+						"validFrom": "2026-01-01"
+					},
+					{
+						"label": "Bedrijfspas, per jaar",
+						"price": 48,
+						"validFrom": "2026-01-01"
+					},
+					{
+						"label": "Eerste pas voor een nieuw adres",
+						"price": 0,
+						"validFrom": "2027-01-01"
+					},
+					{
+						"label": "Vervangende pas, kwijt of kapot",
+						"price": 15.5,
+						"validFrom": "2027-01-01"
+					},
+					{
+						"label": "Extra pas voor hetzelfde huishouden",
+						"price": 15.5,
+						"validFrom": "2027-01-01"
+					},
+					{
+						"label": "Bedrijfspas, per jaar",
+						"price": 49.5,
+						"validFrom": "2027-01-01"
+					}
+				],
+				"tariffSource": "Uit de Legesverordening Zuiddrecht 2026, hoofdstuk 1.4. Over leges gaat geen btw.",
+				"publishedAt": "2026-01-01",
+				"languages": [
+					"nl",
+					"en"
+				],
+				"audience": [
+					"resident",
+					"business"
+				],
+				"weightGrams": 5,
 				"dimensions": {
 					"length": 85.6,
 					"width": 54,
 					"height": 0.8
 				},
 				"stockTracked": true
-			}
+			},
+			"files": [
+				{
+					"path": "zuiddrecht/afvalpas-voorkant.png",
+					"name": "Voorkant van de pas.png"
+				},
+				{
+					"path": "zuiddrecht/afvalpas-achterkant.png",
+					"name": "Achterkant, met de barcode.png"
+				},
+				{
+					"path": "zuiddrecht/specificatie-afvalpas-mifare.pdf",
+					"name": "Specificatie afvalpas, MIFARE-kaart.pdf"
+				}
+			]
 		},
 		{
 			"key": "product-evenementenpakket",
