@@ -17,7 +17,8 @@
 		{
 			"key": "ticket_reference_counter",
 			"value": "423",
-			"type": "int"
+			"type": "int",
+			"atLeast": true
 		},
 		{
 			"key": "ticket_reference_counter_year",
