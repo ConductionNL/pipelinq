@@ -8540,7 +8540,12 @@ OC.L10N.register(
         "Requester": "Requester",
         "Create case in {app}": "Create case in {app}",
         "Convert · {reference}": "Convert · {reference}",
-        "Convert": "Convert"
+        "Convert": "Convert",
+        "Case type": "Case type",
+        "Choose a case type": "Choose a case type",
+        "The case types come from {app}.": "The case types come from {app}.",
+        "Keep this ticket open until the case is made": "Keep this ticket open until the case is made",
+        "Otherwise it reads Converted to a case, with a link to the case.": "Otherwise it reads Converted to a case, with a link to the case."
     },
     "nplurals=2; plural=(n != 1);"
 )

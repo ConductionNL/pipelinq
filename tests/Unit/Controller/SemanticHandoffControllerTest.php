@@ -46,6 +46,13 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class SemanticHandoffControllerTest extends TestCase {
+	/**
+	 * The request a test hands the controller; a fresh mock when null.
+	 *
+	 * @var IRequest|null
+	 */
+	private ?IRequest $requestMock = null;
+
 	private SemanticHandoffService $handoffService;
 	private IUserSession $userSession;
 	private object $objectService;
@@ -175,7 +182,7 @@ class SemanticHandoffControllerTest extends TestCase {
 	}//end withPrivilegedCaller()
 
 	private function rebuildControllerWithGroupManager(IGroupManager $groupManager): void {
-		$this->controller = new SemanticHandoffController($this->createMock(IRequest::class),
+		$this->controller = new SemanticHandoffController(($this->requestMock ?? $this->createMock(originalClassName: IRequest::class)),
 			$this->handoffService,
 			$this->container,
 			$this->appConfig,
@@ -307,6 +314,65 @@ class SemanticHandoffControllerTest extends TestCase {
 		$this->assertSame('case-42', $this->objectService->store['req-1']['caseReference']);
 		$this->assertSame('request', $this->objectService->store['req-1']['ticketType']);
 	}//end testConvertSuccess()
+
+	/**
+	 * A chosen case type is written on the request before the handoff, so the
+	 * mapping carries it; keepOpen leaves the request's status as it was.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+	 */
+	public function testConvertCarriesTheCaseTypeAndCanKeepTheRequestOpen(): void {
+		$caseType = '0f9c2a1e-5b7d-4c3e-9a8b-1d2e3f4a5b6c';
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => (['caseType' => $caseType, 'keepOpen' => 'true'][$key] ?? $default)
+		);
+		$this->requestMock = $request;
+		$this->signIn();
+		$this->withPrivilegedCaller();
+		$this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'in_progress'];
+		$this->handoffService->method('hasImplementer')->willReturn(true);
+		$this->handoffService->method('handoff')->willReturnCallback(
+			function () use ($caseType): array {
+				// The case type is on the stored request when the engine reads it.
+				$this->assertSame(expected: $caseType, actual: $this->objectService->store['req-1']['requestedCaseType']);
+				return ['ok' => true, 'targetUuid' => 'case-7', 'correlationId' => 'c', 'reason' => ''];
+			}
+		);
+
+		$response = $this->controller->convertRequestToCase(id: 'req-1');
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: 'in_progress', actual: $this->objectService->store['req-1']['status']);
+		$this->assertSame(expected: 'case-7', actual: $this->objectService->store['req-1']['caseReference']);
+	}//end testConvertCarriesTheCaseTypeAndCanKeepTheRequestOpen()
+
+	/**
+	 * A case type that is not a UUID is refused before anything is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+	 */
+	public function testConvertRefusesAMalformedCaseType(): void {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => (['caseType' => 'not-a-uuid'][$key] ?? $default)
+		);
+		$this->requestMock = $request;
+		$this->signIn();
+		$this->withPrivilegedCaller();
+		$this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'in_progress'];
+		$this->handoffService->method('hasImplementer')->willReturn(true);
+		$this->handoffService->expects($this->never())->method('handoff');
+
+		$response = $this->controller->convertRequestToCase(id: 'req-1');
+
+		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
+		$this->assertCount(expectedCount: 0, haystack: $this->objectService->saves);
+	}//end testConvertRefusesAMalformedCaseType()
 
 	/**
 	 * A ticket of another subtype is not reachable through the request

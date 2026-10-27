@@ -154,12 +154,28 @@ class SemanticHandoffController extends Controller {
 				'status' => $status,
 				'canConvert' => ($available === true && $status === 'in_progress'),
 				'caseReference' => (string)($request['caseReference'] ?? ''),
+				'caseTypeSource' => [
+					'register' => $this->appConfig->getValueString(
+						app: Application::APP_ID,
+						key: 'handoff_case_type_register',
+						default: 'dossiq'
+					),
+					'schema' => $this->appConfig->getValueString(
+						app: Application::APP_ID,
+						key: 'handoff_case_type_schema',
+						default: 'caseType'
+					),
+				],
 			]
 		);
 	}//end requestAvailability()
 
 	/**
 	 * Convert an in-progress request ticket into a case via OR's handoff engine.
+	 *
+	 * Body params: `caseType` (optional case-type UUID, carried to the case
+	 * through the handoff mapping) and `keepOpen` (true keeps the request's
+	 * status; by default it becomes `converted`).
 	 *
 	 * @param string $id Request-ticket UUID.
 	 *
@@ -199,6 +215,24 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'not-available'], Http::STATUS_CONFLICT);
 		}
 
+		// The case type the person chose travels on the request: the handoff
+		// mapping reads it (`caseType` <- `requestedCaseType`) and an
+		// implementer that binds ns#Case caseType opens the case on it.
+		$caseType = trim((string)$this->request->getParam('caseType', ''));
+		if ($caseType !== '' && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $caseType) !== 1) {
+			return new JSONResponse(['status' => 'invalid-case-type'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$keepOpen = filter_var($this->request->getParam('keepOpen', false), FILTER_VALIDATE_BOOLEAN);
+
+		if ($caseType !== '') {
+			$request['ticketType'] = TicketService::TYPE_REQUEST;
+			$request['requestedCaseType'] = $caseType;
+			if ($this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request) === false) {
+				return new JSONResponse(['status' => 'handoff-failed', 'reason' => 'case-type-not-saved'], Http::STATUS_BAD_GATEWAY);
+			}
+		}
+
 		$result = $this->handoffService->handoff(
 			register: $this->registerSlug(),
 			schema: $this->ticketSchema(),
@@ -216,7 +250,10 @@ class SemanticHandoffController extends Controller {
 		// Keep the discriminator pinned on the round-tripped payload so the
 		// write can never silently untype the ticket.
 		$request['ticketType'] = TicketService::TYPE_REQUEST;
-		$request['status'] = 'converted';
+		if ($keepOpen === false) {
+			$request['status'] = 'converted';
+		}
+
 		$request['caseReference'] = (string)$result['targetUuid'];
 		$saved = $this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request);
 		if ($saved === false) {

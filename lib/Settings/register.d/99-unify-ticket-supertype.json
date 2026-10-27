@@ -5,7 +5,7 @@
         "slug": "ticket",
         "title": "Ticket",
         "icon": "TicketOutline",
-        "version": "1.6.0",
+        "version": "1.7.0",
         "summary": "Unified inbound customer matter — request, complaint or contactmoment",
         "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
         "x-schema-org": "schema:Thing",
@@ -158,6 +158,9 @@
               },
               "requester": {
                 "semanticRef": "client"
+              },
+              "caseType": {
+                "from": "requestedCaseType"
               }
             }
           }
@@ -321,6 +324,11 @@
             "title": "Stage Order",
             "description": "Ordinal of the current pipeline stage (request only).",
             "visible": false
+          },
+          "requestedCaseType": {
+            "type": "string",
+            "title": "Requested case type",
+            "description": "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType."
           },
           "caseReference": {
             "type": "string",

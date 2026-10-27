@@ -21,6 +21,23 @@
 			<CnNoteCard
 				type="info"
 				:text="t('pipelinq', '{app} is available and can take over this request as a case.', { app: targetApp })" />
+			<div v-if="caseTypeSource" class="convert-to-case__field">
+				<CnResourceSelect
+					:register="caseTypeSource.register"
+					:schema="caseTypeSource.schema"
+					labelField="title"
+					:modelValue="caseType"
+					:inputLabel="t('pipelinq', 'Case type')"
+					:placeholder="t('pipelinq', 'Choose a case type')"
+					:preload="true"
+					:clearable="true"
+					:allowCreate="false"
+					data-testid="convert-to-case-type"
+					@update:modelValue="caseType = $event || ''" />
+				<p class="convert-to-case__hint">
+					{{ t('pipelinq', 'The case types come from {app}.', { app: targetApp }) }}
+				</p>
+			</div>
 			<section class="convert-to-case__carried">
 				<h3 class="convert-to-case__heading">
 					{{ t('pipelinq', 'Goes with the case') }}
@@ -38,6 +55,15 @@
 					</template>
 				</dl>
 			</section>
+			<NcCheckboxRadioSwitch
+				:modelValue="keepOpen"
+				data-testid="convert-to-case-keep-open"
+				@update:modelValue="keepOpen = $event">
+				{{ t('pipelinq', 'Keep this ticket open until the case is made') }}
+			</NcCheckboxRadioSwitch>
+			<p class="convert-to-case__hint">
+				{{ t('pipelinq', 'Otherwise it reads Converted to a case, with a link to the case.') }}
+			</p>
 		</div>
 		<template #actions>
 			<NcButton data-testid="convert-to-case-cancel" @click="$emit('close')">
@@ -47,7 +73,7 @@
 				variant="primary"
 				:disabled="busy"
 				data-testid="convert-to-case-confirm"
-				@click="$emit('confirm')">
+				@click="$emit('confirm', { caseType, keepOpen })">
 				<template #icon>
 					<NcLoadingIcon v-if="busy" :size="20" />
 					<FolderPlusOutline v-else :size="20" />
@@ -59,14 +85,14 @@
 </template>
 
 <script>
-import { CnDialog, CnNoteCard } from '@conduction/nextcloud-vue'
+import { CnDialog, CnNoteCard, CnResourceSelect } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon } from '@nextcloud/vue'
 import FolderPlusOutline from 'vue-material-design-icons/FolderPlusOutline.vue'
 
 export default {
 	name: 'ConvertToCaseDialog',
-	components: { CnDialog, CnNoteCard, FolderPlusOutline, NcButton, NcLoadingIcon },
+	components: { CnDialog, CnNoteCard, CnResourceSelect, FolderPlusOutline, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon },
 
 	props: {
 		/** The request ticket being converted. */
@@ -92,9 +118,22 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
+		/** Where the case types are listed (`{ register, schema }`), or null to ask for none. */
+		caseTypeSource: {
+			type: Object,
+			default: null,
+		},
 	},
 
 	emits: ['close', 'confirm'],
+
+	data() {
+		return {
+			caseType: '',
+			keepOpen: false,
+		}
+	},
 
 	computed: {
 		/**
@@ -134,6 +173,12 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
+}
+
+.convert-to-case__hint {
+	margin: 4px 0 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
 }
 
 .convert-to-case__heading {

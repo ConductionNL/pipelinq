@@ -36,6 +36,7 @@
 			:ticket="ticket"
 			:requester="requester"
 			:busy="busy"
+			:caseTypeSource="availability.caseTypeSource || null"
 			@close="dialogOpen = false"
 			@confirm="convertToCase" />
 
@@ -71,6 +72,7 @@ const DEFAULT_AVAILABILITY = {
 	status: '',
 	canConvert: false,
 	caseReference: '',
+	caseTypeSource: null,
 }
 
 export default {
@@ -201,6 +203,7 @@ export default {
 					status: data.status || '',
 					canConvert: !!data.canConvert,
 					caseReference: data.caseReference || '',
+					caseTypeSource: data.caseTypeSource || null,
 				}
 			} catch {
 				this.availability = { ...DEFAULT_AVAILABILITY }
@@ -212,9 +215,11 @@ export default {
 		/**
 		 * Convert the request into a case via the semantic handoff endpoint.
 		 *
+		 * @param {{caseType?: string, keepOpen?: boolean}} [choice] What the dialog asked: the case type and whether the request stays open.
+		 *
 		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 		 */
-		async convertToCase() {
+		async convertToCase(choice = {}) {
 			if (!this.resolvedId || this.busy) {
 				return
 			}
@@ -225,7 +230,10 @@ export default {
 						'/apps/pipelinq/api/handoff/request/{id}/convert-to-case',
 						{ id: this.resolvedId },
 					),
-					{},
+					{
+						...(choice && choice.caseType ? { caseType: choice.caseType } : {}),
+						keepOpen: Boolean(choice && choice.keepOpen),
+					},
 				)
 				this.availability = {
 					...this.availability,

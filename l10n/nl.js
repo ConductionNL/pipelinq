@@ -8511,7 +8511,12 @@ OC.L10N.register(
         "Requester": "Aanvrager",
         "Create case in {app}": "Zaak aanmaken in {app}",
         "Convert · {reference}": "Omzetten · {reference}",
-        "Convert": "Omzetten"
+        "Convert": "Omzetten",
+        "Case type": "Zaaktype",
+        "Choose a case type": "Kies een zaaktype",
+        "The case types come from {app}.": "De zaaktypen komen uit {app}.",
+        "Keep this ticket open until the case is made": "Dit ticket open houden tot de zaak is aangemaakt",
+        "Otherwise it reads Converted to a case, with a link to the case.": "Anders staat er Omgezet naar een zaak, met een link naar de zaak."
     },
     "nplurals=2; plural=(n != 1);"
 )

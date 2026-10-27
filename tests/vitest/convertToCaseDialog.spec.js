@@ -30,6 +30,13 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 		},
 	},
 	CnNoteCard: { props: ['text'], render() { return h('p', this.text) } },
+	CnResourceSelect: {
+		props: ['modelValue', 'register', 'schema'],
+		emits: ['update:modelValue'],
+		render() {
+			return h('select', { 'data-register': this.register, onChange: () => this.$emit('update:modelValue', 'b6c1f5a2-0d3e-4a7b-9c8d-2e1f0a9b8c7d') })
+		},
+	},
 }))
 vi.mock('@nextcloud/vue', () => {
 	const button = {
@@ -38,7 +45,14 @@ vi.mock('@nextcloud/vue', () => {
 			return h('button', { onClick: () => this.$emit('click') }, [this.$slots.default?.()])
 		},
 	}
-	return { NcButton: button, NcLoadingIcon: { render: () => h('span') }, NcNoteCard: { render() { return h('div', this.$slots.default?.()) } } }
+	const checkbox = {
+		props: ['modelValue'],
+		emits: ['update:modelValue'],
+		render() {
+			return h('input', { type: 'checkbox', onChange: () => this.$emit('update:modelValue', !this.modelValue) })
+		},
+	}
+	return { NcButton: button, NcCheckboxRadioSwitch: checkbox, NcLoadingIcon: { render: () => h('span') }, NcNoteCard: { render() { return h('div', this.$slots.default?.()) } } }
 })
 
 let Dialog
@@ -70,6 +84,15 @@ describe('ConvertToCaseDialog', () => {
 		expect(w.text()).toContain('Create case in dossiq')
 	})
 
+	it('asks for the case type from the source it is given, and passes the choice on', async () => {
+		const w = mount(Dialog, { props: { ticket, caseTypeSource: { register: 'dossiq', schema: 'caseType' } }, global })
+		expect(w.find('select').attributes('data-register')).toBe('dossiq')
+		await w.find('select').trigger('change')
+		await w.find('input[type="checkbox"]').trigger('change')
+		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
+		expect(w.emitted('confirm')[0][0]).toEqual({ caseType: 'b6c1f5a2-0d3e-4a7b-9c8d-2e1f0a9b8c7d', keepOpen: true })
+	})
+
 	it('emits confirm only from its confirm button', async () => {
 		const w = mount(Dialog, { props: { ticket }, global })
 		await w.find('[data-testid="convert-to-case-cancel"]').trigger('click')
@@ -92,6 +115,6 @@ describe('RequestConversionSection', () => {
 		expect(w.find('[data-testid="convert-to-case-dialog"]').exists() || w.find('.cn-dialog').exists()).toBe(true)
 		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
 		await flushPromises()
-		expect(http.post).toHaveBeenCalledWith('/apps/pipelinq/api/handoff/request/t1/convert-to-case', {})
+		expect(http.post).toHaveBeenCalledWith('/apps/pipelinq/api/handoff/request/t1/convert-to-case', { keepOpen: false })
 	})
 })
