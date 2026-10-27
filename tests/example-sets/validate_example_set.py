@@ -26,6 +26,8 @@ What it does, per object:
     proof exits 2 on a key the schema does not keep;
   * refuses an e-mail outside the reserved .example top-level domain (RFC 2606)
     and a BSN-like or KVK-like literal that does not come from the cast;
+  * warns about a number with more than 2 decimals, which an OpenRegister that
+    stores numbers as DECIMAL(10,2) rounds;
   * checks that every lookup finds exactly one object the set declared before it,
     for a lookup in this app's own registers;
   * checks that every fragment group member is a cast person with an account.
@@ -262,6 +264,23 @@ def literal_identifiers(raw_value, path, problems, where):
                 problems.append('%s: %s holds e-mail %s outside the reserved .example domain' % (where, path, mail))
 
 
+def finer_than_storage(data, properties, path=''):
+    """The number fields whose value has more than 2 decimals.
+
+    OpenRegister gives a schema `number` a DECIMAL(10,2) column (MagicMapper), so such a
+    value comes back rounded and the loader reports it as written but not kept.
+    """
+    found = []
+    for key, value in (data.items() if isinstance(data, dict) else []):
+        prop = properties.get(key) or {}
+        here = (path + '.' + key).lstrip('.')
+        if prop.get('type') == 'number' and isinstance(value, float) and round(value, 2) != value:
+            found.append(here)
+        elif prop.get('type') == 'object' and isinstance(value, dict):
+            found += finer_than_storage(value, prop.get('properties', {}), here)
+    return found
+
+
 def lookup_problem(where, name, lookup, looked_for, register, own_registers, declared, problems, warnings):
     """A lookup that finds no row, or more than one, among the objects the set declared before it.
 
@@ -351,6 +370,8 @@ def main():
         js.setdefault('type', 'object')
         for err in sorted(jsonschema.Draft202012Validator(js, format_checker=checker).iter_errors(data), key=str):
             problems.append('%s: %s at %s' % (where, err.message, '/'.join(map(str, err.absolute_path)) or '(root)'))
+        for field in finer_than_storage(data, schema.get('properties', {})):
+            warnings.append('%s: %s has more than 2 decimals; an OpenRegister that stores a number as DECIMAL(10,2) rounds it' % (where, field))
         undeclared = sorted(set(data) - set(schema.get('properties', {})))
         if undeclared:
             problems.append('%s: keys the schema does not declare (the read-back proof would exit 2): %s' % (where, ', '.join(undeclared)))
