@@ -8580,7 +8580,10 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Then: write down the result and finish the task",
         "What now? Try again before the deadline": "What now? Try again before the deadline",
         "An attempt is logged": "An attempt is logged",
-        "Call the customer": "Call the customer"
+        "Call the customer": "Call the customer",
+        "No price tiers yet. The unit price applies to every quantity.": "No price tiers yet. The unit price applies to every quantity.",
+        "Quantity from": "Quantity from",
+        "No variants. The product is sold as one item.": "No variants. The product is sold as one item."
     },
     "nplurals=2; plural=(n != 1);"
 )

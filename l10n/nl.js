@@ -8551,7 +8551,10 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Daarna: schrijf het resultaat op en rond de taak af",
         "What now? Try again before the deadline": "Wat nu? Opnieuw proberen voor de termijn",
         "An attempt is logged": "Er is een poging vastgelegd",
-        "Call the customer": "Bellen"
+        "Call the customer": "Bellen",
+        "No price tiers yet. The unit price applies to every quantity.": "Nog geen prijsstaffels. De stukprijs geldt voor elk aantal.",
+        "Quantity from": "Vanaf aantal",
+        "No variants. The product is sold as one item.": "Geen varianten. Het product wordt als één artikel verkocht."
     },
     "nplurals=2; plural=(n != 1);"
 )
