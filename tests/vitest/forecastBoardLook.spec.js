@@ -66,6 +66,31 @@ describe('forecast page', () => {
 		expect(dashboard).toMatch(/<ForecastTrend embedded :level="childLevel"/)
 	})
 
+	it('puts Export CSV in the quarter card\'s header, in the slot CnDetailCard draws', () => {
+		expect(dashboard).toMatch(/<template #actions>\s*<NcButton variant="secondary" data-testid="forecast-export-csv"/)
+		expect(dashboard).not.toMatch(/#header-actions/)
+	})
+
+	it('names each owner, and marks an overridden commit with a pill, the seller\'s figure and a note', () => {
+		expect(dashboard).toMatch(/data-testid="forecast-owner">\{\{ ownerName\(row\) \}\}/)
+		expect(dashboard).toMatch(/fetchUserDisplayName/)
+		expect(dashboard).toMatch(/v-if="hasOverride\(row\)"[\s\S]*?data-testid="forecast-overridden"/)
+		expect(dashboard).toMatch(/v-else[\s\S]*?@click="openOverride\(row\)"/)
+		expect(dashboard).toMatch(/'was \{amount\}'/)
+		expect(dashboard).toMatch(/data-testid="forecast-override-note"/)
+	})
+
+	it('says on the header line when the snapshot was taken', () => {
+		expect(dashboard).toMatch(/'snapshot of \{date\}'/)
+	})
+
+	it('says what the chart and the accuracy cover', () => {
+		const trend = view('ForecastTrend')
+		expect(trend).toMatch(/:subtitle="t\('pipelinq', 'Weekly snapshots, taken every Monday'\)"/)
+		expect(trend).toMatch(/:subtitle="accuracySubtitle"/)
+		expect(trend).toMatch(/'Quarter \{quarter\}, closed'/)
+	})
+
 	it('keeps the standalone trend page with its owner field', () => {
 		expect(view('ForecastTrend')).toMatch(/v-if="!embedded"/)
 	})

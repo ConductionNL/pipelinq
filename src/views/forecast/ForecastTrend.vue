@@ -16,6 +16,7 @@
 		<template v-else>
 			<CnDetailCard
 				:title="t('pipelinq', 'Commit / best-case / pipeline over time')"
+				:subtitle="t('pipelinq', 'Weekly snapshots, taken every Monday')"
 				class="forecast-trend__chart">
 				<template v-if="series.length >= 1">
 					<svg
@@ -71,6 +72,7 @@
 				</CnDetailCard>
 				<CnDetailCard
 					:title="t('pipelinq', 'Forecast accuracy')"
+					:subtitle="accuracySubtitle"
 					class="forecast-trend__accuracy">
 					<table v-if="accuracyRows.length" class="accuracy-table">
 						<thead>
@@ -142,6 +144,17 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The closed quarter the accuracy covers: "Quarter 3, closed".
+		 *
+		 * @return {string} The line, or '' when the period is unknown.
+		 * @spec openspec/changes/forecast-accuracy-rows/specs/forecasting/spec.md#requirement-the-forecast-shows-last-quarters-accuracy-per-seller
+		 */
+		accuracySubtitle() {
+			const match = /^Q([1-4])-\d{4}$/.exec(previousPeriodId(this.periodId))
+			return match ? this.t('pipelinq', 'Quarter {quarter}, closed', { quarter: match[1] }) : ''
+		},
+
 		periodId() {
 			const now = new Date()
 			const quarter = Math.floor(now.getMonth() / 3) + 1

@@ -8580,7 +8580,14 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Then: write down the result and finish the task",
         "What now? Try again before the deadline": "What now? Try again before the deadline",
         "An attempt is logged": "An attempt is logged",
-        "Call the customer": "Call the customer"
+        "Call the customer": "Call the customer",
+        "was {amount}": "was {amount}",
+        "Overridden": "Overridden",
+        "{name}: the seller gave {original}, {reason}": "{name}: the seller gave {original}, {reason}",
+        "level {level}": "level {level}",
+        "snapshot of {date}": "snapshot of {date}",
+        "Weekly snapshots, taken every Monday": "Weekly snapshots, taken every Monday",
+        "Quarter {quarter}, closed": "Quarter {quarter}, closed"
     },
     "nplurals=2; plural=(n != 1);"
 )
