@@ -8394,7 +8394,8 @@ OC.L10N.register(
         "Could not load the contacts settings.": "De instellingen voor contacten konden niet worden geladen.",
         "Could not save the contacts settings.": "De instellingen voor contacten konden niet worden opgeslagen.",
         "Could not sync your contacts.": "Je contacten konden niet worden gesynchroniseerd.",
-        "writeBack must be true or false": "writeBack moet true of false zijn"
+        "writeBack must be true or false": "writeBack moet true of false zijn",
+        "Discriminator: request (demand/case), complaint (klacht), melding (a report about the public space, such as loose paving or a broken street light) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice.": "Soort: verzoek (vraag of zaak), klacht, melding (over de openbare ruimte, zoals losse stoeptegels of een kapotte lantaarnpaal) of contactmoment (vastgelegd contact). Heeft bewust geen standaardwaarde: het veld is verplicht, zodat een aanmaakpad dat het vergeet luid faalt in plaats van stil een klacht of contactmoment als verzoek op te slaan. TicketService::save() vult het altijd; formulieren tonen het als verplichte keuze."
     },
     "nplurals=2; plural=(n != 1);"
 )
