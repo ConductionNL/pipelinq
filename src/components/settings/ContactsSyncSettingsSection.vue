@@ -61,7 +61,7 @@
 					{{ t('pipelinq', 'Sync now') }}
 				</NcButton>
 				<NcButton
-					variant="tertiary"
+					variant="secondary"
 					data-testid="contacts-sync-import"
 					@click="importing = true">
 					{{ t('pipelinq', 'Import from Nextcloud Contacts') }}
