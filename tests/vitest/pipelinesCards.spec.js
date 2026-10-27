@@ -15,9 +15,16 @@ const manifest = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.
 const page = manifest.pages.find((p) => p.id === 'Pipelines')
 
 describe('the pipelines list', () => {
-	it('opens as cards, with the table one switch away', () => {
-		expect(page.config.viewMode).toBe('cards')
-		expect(page.config.viewModes).toEqual(['cards', 'table'])
+	it('opens as rows that open to their stages, without a view switch or search', () => {
+		expect(page.config.viewMode).toBe('list')
+		expect(page.config.showViewToggle).toBe(false)
+		expect(page.config.search).toBe(false)
+		const rows = page.config.expandableRows
+		expect(rows.open).toBe('first')
+		expect(rows.badge.label).toBe('Default')
+		expect(rows.table.columns.map((c) => c.as || 'text')).toEqual(['order', 'text', 'bar', 'check', 'yesNo', 'pill'])
+		expect(rows.chips.tones.map((t) => t.variant)).toEqual(['success', 'error', 'primary'])
+		expect(rows.buttons).toEqual([{ action: 'edit', label: 'Edit' }])
 	})
 
 	it('draws each pipeline with its stage count and its stages as chips', () => {

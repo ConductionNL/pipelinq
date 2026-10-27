@@ -8129,8 +8129,48 @@
 					{ "action": "export", "label": "Download" },
 					{ "action": "add", "variant": "primary", "icon": "Plus", "label": "New pipeline" }
 				],
-				"viewModes": ["cards", "table"],
-				"viewMode": "cards",
+				"viewModes": ["list", "cards", "table"],
+				"viewMode": "list",
+				"showViewToggle": false,
+				"search": false,
+				"_expandableNote": "Board PqPipelines: each pipeline is a row that opens to its stages (nextcloud-vue expandableRows, index-expandable-rows). The first row is open. Closed, the stages are chips coloured by stage kind; open, a table with the order, chance, start stage, closed and result. Edit and Add stage open the pipeline's own form, where the stages are edited. The board's drag handle is not drawn: the order is edited in the form.",
+				"expandableRows": {
+					"title": "title",
+					"badge": { "when": { "field": "isDefault", "op": "eq", "value": true }, "label": "Default" },
+					"description": "description",
+					"chips": {
+						"field": "stages",
+						"each": "name",
+						"tones": [
+							{ "when": { "field": "isWon", "op": "eq", "value": true }, "variant": "success" },
+							{ "when": { "field": "isClosed", "op": "eq", "value": true }, "variant": "error" },
+							{ "when": { "field": "isDefault", "op": "eq", "value": true }, "variant": "primary" }
+						]
+					},
+					"meta": ["{stages|count} stages", "created {@self.created|date}"],
+					"table": {
+						"field": "stages",
+						"columns": [
+							{ "label": "Order", "as": "order" },
+							{ "key": "name", "label": "Stage", "strong": true },
+							{ "key": "probability", "label": "Chance", "as": "bar" },
+							{ "key": "isDefault", "label": "Start stage", "as": "check", "text": "New items start here" },
+							{ "key": "isClosed", "label": "Closed", "as": "yesNo" },
+							{
+								"label": "Result",
+								"as": "pill",
+								"tones": [
+									{ "when": { "field": "isWon", "op": "eq", "value": true }, "variant": "success", "text": "Won" },
+									{ "when": { "field": "isClosed", "op": "eq", "value": true }, "variant": "error", "text": "Lost" }
+								]
+							}
+						],
+						"note": "A closed stage ends the item: won or lost.",
+						"action": { "id": "edit", "label": "Add stage" }
+					},
+					"buttons": [{ "action": "edit", "label": "Edit" }],
+					"open": "first"
+				},
 				"cardLayout": {
 					"title": "title",
 					"meta": [
