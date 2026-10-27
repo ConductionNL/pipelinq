@@ -634,6 +634,28 @@ const registry = {
 		...HEADER_ACTIONS_META,
 		_note: 'SocialPostDetail actionsComponent: the approval step beside Edit, Submit for approval on a draft and Approve / Reject while it waits. POSTs to /api/social-posts/{id}/{submit|approve|reject}, not lifecycleActions (ADR-062 rule 10): an approval has to record WHO decided and when, stamped from the session, which the transition grammar has no field for.',
 	},
+	SocialPostVariantsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'SocialPostVariantsWidget',
+			SocialPostVariantsSection,
+			({ objectId }) => ({ postId: String(objectId || '') }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'SocialPostVariantsSection as a tab widget (board PqSocialBericht: "Wat dit per netwerk zegt" in the Overview tab).',
+	},
+	SocialPublicationsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'SocialPublicationsWidget',
+			SocialPublicationsSection,
+			({ objectId }) => ({ postId: String(objectId || '') }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'SocialPublicationsSection as a tab widget (board PqSocialBericht: "Waar het heen ging" in the Overview tab).',
+	},
 	SocialPublicationsSection: {
 		kind: 'section',
 		component: SocialPublicationsSection,

@@ -8532,7 +8532,8 @@ OC.L10N.register(
         "The number the organisation knows this customer by, such as K-2019-01184.": "The number the organisation knows this customer by, such as K-2019-01184.",
         "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
         "Z report": "Z report",
-        "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transactions"
+        "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transactions",
+        "What it says per network": "What it says per network"
     },
     "nplurals=2; plural=(n != 1);"
 )
