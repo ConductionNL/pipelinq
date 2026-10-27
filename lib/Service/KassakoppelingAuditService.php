@@ -585,7 +585,18 @@ class KassakoppelingAuditService {
 			return false;
 		}
 
-		$search = (string)($filters['search'] ?? '');
+		return $this->matchesSearch(entry: $entry, search: (string)($filters['search'] ?? ''));
+	}//end matchesState()
+
+	/**
+	 * Whether an entry's register, operator or transaction holds the search.
+	 *
+	 * @param array<string, mixed> $entry  The entry.
+	 * @param string               $search The search, empty for every entry.
+	 *
+	 * @return bool True when the entry is kept.
+	 */
+	private function matchesSearch(array $entry, string $search): bool {
 		if ($search === '') {
 			return true;
 		}
@@ -597,7 +608,7 @@ class KassakoppelingAuditService {
 		}
 
 		return false;
-	}//end matchesState()
+	}//end matchesSearch()
 
 	/**
 	 * Parse an ISO 8601 date or date-time into a UTC DateTimeImmutable.
