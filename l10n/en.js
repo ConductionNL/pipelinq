@@ -8460,7 +8460,11 @@ OC.L10N.register(
         "Not linked to a request": "Not linked to a request",
         "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for.": "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for.",
         "When the sale happened: its confirmation, else its parking. Set on save, empty for a draft; lists sort and filter on it.": "When the sale happened: its confirmation, else its parking. Set on save, empty for a draft; lists sort and filter on it.",
-        "Moment": "Moment"
+        "Moment": "Moment",
+        "Shift {floatAt|date}, {drawer}": "Shift {floatAt|date}, {drawer}",
+        "Sales in this shift": "Sales in this shift",
+        "sales": "sales",
+        "The cash shift that was open at this till when the sale was confirmed. Set by the server, empty when no shift was open.": "The cash shift that was open at this till when the sale was confirmed. Set by the server, empty when no shift was open."
     },
     "nplurals=2; plural=(n != 1);"
 )

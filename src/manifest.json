@@ -5561,7 +5561,7 @@
 				"selectable": true,
 				"rowRoute": "CashShiftDetail",
 				"emptyText": "No shifts found",
-				"columns": ["reference", "drawer", { "key": "operator", "formatter": "userDisplayName" }, { "key": "floatAmount", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }, { "key": "status", "widget": "badge", "widgetProps": { "colorMap": { "open": "success", "closed": "warning", "reconciled": "default" } } }, "floatAt", "closedAt"],
+				"columns": [{ "key": "reference", "label": "Shift", "template": "Shift {floatAt|date}, {drawer}" }, "drawer", { "key": "operator", "formatter": "userDisplayName" }, { "key": "floatAmount", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }, { "key": "status", "widget": "badge", "widgetProps": { "colorMap": { "open": "success", "closed": "warning", "reconciled": "default" } } }, "floatAt", "closedAt"],
 				"headerActions": [
 					{
 						"id": "open-shift",
@@ -5588,6 +5588,8 @@
 			"type": "detail",
 			"title": "Shift",
 			"config": {
+				"titleTemplate": "Shift {floatAt|date}, {drawer}",
+				"titleField": "reference",
 				"stageField": "status",
 				"primaryActionByStage": { "open": "shift-count" },
 				"headerActions": [
@@ -5743,6 +5745,26 @@
 						}
 					},
 					{
+						"id": "shift-kpis-sales",
+						"type": "stats-block",
+						"title": "Sales in this shift",
+						"icon": "CashRegister",
+						"content": {
+							"entries": [
+								{
+									"title": "Sales in this shift",
+									"register": "pipelinq",
+									"schema": "posTransaction",
+									"metric": "count",
+									"countLabel": "sales",
+									"filter": {
+										"shift": "@objectId"
+									}
+								}
+							]
+						}
+					},
+					{
 						"id": "shift-related",
 						"type": "related",
 						"title": "Related",
@@ -5797,6 +5819,14 @@
 						"gridY": 6,
 						"gridWidth": 4,
 						"gridHeight": 5
+					},
+					{
+						"id": "5",
+						"widgetId": "shift-kpis-sales",
+						"gridX": 8,
+						"gridY": 11,
+						"gridWidth": 4,
+						"gridHeight": 2
 					}
 				],
 				"sidebar": {
