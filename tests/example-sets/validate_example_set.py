@@ -21,8 +21,8 @@ What it does, per object:
     (OpenRegister's `$ref` to a schema slug becomes a plain uuid string);
   * refuses a key the schema does not declare, because the loader's read-back
     proof exits 2 on a key the schema does not keep;
-  * refuses an e-mail outside @zuiddrecht.example and a BSN-like or KVK-like
-    literal that does not come from the cast;
+  * refuses an e-mail outside the reserved .example top-level domain (RFC 2606)
+    and a BSN-like or KVK-like literal that does not come from the cast;
   * checks that every fragment group member is a cast person with an account.
 Exit 0 when clean, 1 otherwise. Stand-ins are not real values: a check here does
 not replace `occ openregister:example-set:install <set> --check` on an instance.
@@ -227,7 +227,7 @@ def cast_entries(cast_file):
 
 
 def literal_identifiers(raw_value, path, problems, where):
-    """A BSN-like or KVK-like literal, or an e-mail outside the set's domain, in the declared data."""
+    """A BSN-like or KVK-like literal, or an e-mail outside the reserved .example domain, in the declared data."""
     if isinstance(raw_value, dict):
         for k, v in raw_value.items():
             literal_identifiers(v, path + '.' + k, problems, where)
@@ -239,8 +239,9 @@ def literal_identifiers(raw_value, path, problems, where):
         if re.search(r'(?<![\d-])\d{8,9}(?![\d-])', bare) and re.search(r'bsn|burgerservice|kvk|identif', path, re.I):
             problems.append('%s: %s holds a literal identifier; use {{cast:...}}' % (where, path))
         for mail in re.findall(r'[\w.+-]+@[\w.-]+', bare):
-            if not mail.lower().endswith('@zuiddrecht.example'):
-                problems.append('%s: %s holds e-mail %s outside @zuiddrecht.example' % (where, path, mail))
+            mail = mail.rstrip('.')
+            if not mail.lower().endswith('.example'):
+                problems.append('%s: %s holds e-mail %s outside the reserved .example domain' % (where, path, mail))
 
 
 def main():
