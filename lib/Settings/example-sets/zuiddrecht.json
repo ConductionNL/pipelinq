@@ -367,7 +367,8 @@
 				"lifecycleStage": "lead",
 				"accountStatus": "active",
 				"language": "nl",
-				"correspondenceLanguage": "nl"
+				"correspondenceLanguage": "nl",
+				"address": "Markt 2, 2999BA Zuiddrecht"
 			}
 		},
 		{
@@ -381,7 +382,8 @@
 				"lifecycleStage": "lead",
 				"accountStatus": "active",
 				"language": "nl",
-				"correspondenceLanguage": "nl"
+				"correspondenceLanguage": "nl",
+				"address": "Markt 17, 2999BA Zuiddrecht"
 			}
 		},
 		{
@@ -423,7 +425,8 @@
 				"lifecycleStage": "lead",
 				"accountStatus": "active",
 				"language": "nl",
-				"correspondenceLanguage": "nl"
+				"correspondenceLanguage": "nl",
+				"address": "Marktstraat 31, 2999BA Zuiddrecht"
 			}
 		},
 		{

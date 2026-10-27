@@ -12,7 +12,8 @@
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
 				"language": "nl",
-				"correspondenceLanguage": "nl"
+				"correspondenceLanguage": "nl",
+				"address": "Marktstraat 14, 2999BA Zuiddrecht"
 			}
 		},
 		{
