@@ -1,6 +1,6 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint. Sanne also has a confirmed site visit on the Parkstraat a week after the install, so a booking that can still be moved exists. The BI export part (board PqBiExport): two destinations, a data warehouse and a regional data lake, and four export jobs on them; three run on a schedule and the leads job is switched off.The appointment samples (PqAfspraak, PqAfspraken, PqInloop) give the Locatiebezoek service its deposit, give Sanne's site visit its subject, place and handler (daan), and add four walk-in customers today.",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the set's Verkoop pipeline. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint. Sanne also has a confirmed site visit on the Parkstraat a week after the install, so a booking that can still be moved exists. The BI export part (board PqBiExport): two destinations, a data warehouse and a regional data lake, and four export jobs on them; three run on a schedule and the leads job is switched off.The appointment samples (PqAfspraak, PqAfspraken, PqInloop) give the Locatiebezoek service its deposit, give Sanne's site visit its subject, place and handler (daan); the walk-in customers are in zuiddrecht.d/52-walk-in-queue.json.",
 	"appConfig": [
 		{
 			"key": "crm_group",
@@ -2985,9 +2985,9 @@
 				"assignee": "{{cast:pieter.uid}}",
 				"status": "in_progress",
 				"priority": "normal",
-				"channel": "email",
+				"channel": "phone",
 				"category": "vergunningen",
-				"occurredAt": "{{datetime:-4 11:20}}",
+				"occurredAt": "{{datetime:-4 10:24}}",
 				"slaDeadline": "{{datetime:3 17:00}}"
 			}
 		},
@@ -3519,8 +3519,8 @@
 				"requestId": "{{object:ticket-degraaf-afvalpas.id}}",
 				"callbackPhoneNumber": "06 18 44 27 30",
 				"preferredTimeSlot": "Tussen 12:00 en 14:00",
-				"description": "Meneer De Graaf mist een identiteitsbewijs voor zijn aanvraag parkeervergunning. Leg uit welk document hij kan uploaden in Mijn Zuiddrecht.",
-				"contactMomentSummary": "Belde op 6 okt over de parkeervergunning, vroeg om tussen de middag teruggebeld te worden.",
+				"description": "Meneer De Graaf vraagt of hij zijn afval buiten mag zetten tot zijn nieuwe afvalpas er is. Bel hem terug met het antwoord en de datum waarop de pas komt.",
+				"contactMomentSummary": "Belde vandaag over zijn afvalpas, die de container weigert. Vroeg om tussen de middag teruggebeld te worden.",
 				"createdBy": "{{cast:pieter.uid}}",
 				"attempts": [
 					{
@@ -3534,24 +3534,15 @@
 			"key": "lead-cloudgemeente",
 			"register": "pipelinq",
 			"schema": "lead",
-			"lookups": {
-				"pipeline": {
-					"schema": "pipeline",
-					"where": {
-						"title": "Sales",
-						"isDefault": true
-					}
-				}
-			},
 			"data": {
 				"title": "Kantoorruimte voor CloudGemeente B.V.",
 				"description": "CloudGemeente B.V. groeit en zoekt in Zuiddrecht kantoorruimte voor vijftien extra werkplekken. Mark Visser vraagt welke panden en regelingen er zijn.",
 				"client": "{{object:client-cloudgemeente.id}}",
 				"contact": "{{object:contact-mark.id}}",
 				"source": "email",
-				"pipeline": "{{lookup:pipeline}}",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
 				"stage": "Gekwalificeerd",
-				"stageOrder": 2,
+				"stageOrder": 3,
 				"status": "open",
 				"priority": "normal",
 				"probability": 30,
@@ -3576,35 +3567,6 @@
 				"depositAmount": 25,
 				"cancellationPolicy": "free",
 				"status": "active"
-			}
-		},
-		{
-			"key": "booking-locatiebezoek-parkstraat",
-			"register": "pipelinq",
-			"schema": "appointmentBooking",
-			"data": {
-				"customerId": "{{object:client-sanne.id}}",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"startAt": "{{datetime:7 14:00}}",
-				"endAt": "{{datetime:7 15:00}}",
-				"status": "confirmed",
-				"statusHistory": [
-					{
-						"status": "confirmed",
-						"reason": "Telefonisch geboekt",
-						"changedAt": "{{datetime:-3 09:18}}",
-						"changedBy": "{{cast:pieter.uid}}"
-					}
-				],
-				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest. Neem een schets van de kramen en het podium mee.",
-				"internalNotes": "Controleer de calamiteitenroute en waar de brandweer langs kan.",
-				"source": "phone",
-				"confirmationSentAt": "{{datetime:-3 09:20}}",
-				"subject": "Locatiebezoek Parkstraat",
-				"location": "Parkstraat 24",
-				"assignee": "{{cast:daan.uid}}",
-				"depositAmount": 25,
-				"resourceAssignments": []
 			}
 		},
 		{
@@ -3714,54 +3676,6 @@
 				"enabled": false,
 				"createdBy": "{{cast:daan.uid}}",
 				"createdAt": "{{datetime:-30 09:00}}"
-			}
-		},
-		{
-			"key": "walkin-anna",
-			"register": "pipelinq",
-			"schema": "walkInTicket",
-			"data": {
-				"displayName": "Anna de Vries",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"arrivedAt": "{{datetime:0 09:41}}",
-				"estimatedReadyAt": "{{datetime:0 09:55}}",
-				"status": "called"
-			}
-		},
-		{
-			"key": "walkin-rachid",
-			"register": "pipelinq",
-			"schema": "walkInTicket",
-			"data": {
-				"displayName": "Rachid Yilmaz",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"arrivedAt": "{{datetime:0 09:43}}",
-				"estimatedReadyAt": "{{datetime:0 09:58}}",
-				"status": "called"
-			}
-		},
-		{
-			"key": "walkin-mohammed",
-			"register": "pipelinq",
-			"schema": "walkInTicket",
-			"data": {
-				"displayName": "Mohammed El Amrani",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"arrivedAt": "{{datetime:0 09:50}}",
-				"estimatedReadyAt": "{{datetime:0 10:08}}",
-				"status": "waiting"
-			}
-		},
-		{
-			"key": "walkin-joke",
-			"register": "pipelinq",
-			"schema": "walkInTicket",
-			"data": {
-				"displayName": "Joke Smit",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"arrivedAt": "{{datetime:0 09:52}}",
-				"estimatedReadyAt": "{{datetime:0 10:14}}",
-				"status": "waiting"
 			}
 		},
 		{
