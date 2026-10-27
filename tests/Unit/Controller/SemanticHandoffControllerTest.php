@@ -182,17 +182,18 @@ class SemanticHandoffControllerTest extends TestCase {
 	}//end withPrivilegedCaller()
 
 	private function rebuildControllerWithGroupManager(IGroupManager $groupManager): void {
-		$this->controller = new SemanticHandoffController(($this->requestMock ?? $this->createMock(originalClassName: IRequest::class)),
-			$this->handoffService,
-			$this->container,
-			$this->appConfig,
-			$this->ticketService,
-			$this->userSession,
-			new ObjectOwnerAccessPolicy(
+		$this->controller = new SemanticHandoffController(
+			request: ($this->requestMock ?? $this->createMock(originalClassName: IRequest::class)),
+			handoffService: $this->handoffService,
+			container: $this->container,
+			appConfig: $this->appConfig,
+			ticketService: $this->ticketService,
+			userSession: $this->userSession,
+			accessPolicy: new ObjectOwnerAccessPolicy(
 				groupManager: $groupManager,
-				appConfig: $this->createMock(IAppConfig::class)
+				appConfig: $this->createMock(originalClassName: IAppConfig::class)
 			),
-			$this->createMock(LoggerInterface::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
 		);
 	}//end rebuildControllerWithGroupManager()
 
