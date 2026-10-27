@@ -3,3 +3,4 @@
 - [x] nextStep variant and crumb per kind
 - [x] l10n en/nl
 - [x] Vitest
+- [x] The Overview is one panel, as the board draws it: Contact details, Conversation notes and About this request as headed sections with a rule between them (a `sections` widget in its own Overview tab for contact moments; requests keep their stack).

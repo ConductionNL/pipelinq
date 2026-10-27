@@ -1407,10 +1407,21 @@
 							"moreLabel": "More",
 							"tabs": [
 								{
+									"widgetId": "contact-overview",
+									"label": "Overview",
+									"visibleWhen": {
+										"field": "ticketType",
+										"op": "eq",
+										"value": "interaction"
+									}
+								},
+								{
+									"visibleWhen": {
+										"field": "ticketType",
+										"op": "neq",
+										"value": "interaction"
+									},
 									"widgetIds": [
-										"contact-details",
-										"contact-notes",
-										"contact-request",
 										"ticket-data",
 										"ticket-conversation",
 										"ticket-dossier",
@@ -1641,6 +1652,32 @@
 						}
 					},
 					{
+						"id": "contact-overview",
+						"type": "sections",
+						"_note": "Board PqContactmoment draws the Overview as one panel: three headed sections with a rule between them, not three cards. A single widget in a tab renders bare in the panel, and with no title of its own it draws no heading row. About this request follows its own visibleWhen (nc-vue feat/sections-child-visible-when).",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "interaction"
+						},
+						"content": {
+							"sections": [
+								{
+									"title": "Contact details",
+									"widgetId": "contact-details"
+								},
+								{
+									"title": "Conversation notes",
+									"widgetId": "contact-notes"
+								},
+								{
+									"title": "About this request",
+									"widgetId": "contact-request"
+								}
+							]
+						}
+					},
+					{
 						"id": "contact-details",
 						"type": "facts",
 						"title": "Contact details",
@@ -1730,6 +1767,7 @@
 						},
 						"content": {
 							"field": "notes",
+							"hideLabel": true,
 							"label": "Conversation notes",
 							"rows": 5,
 							"savedText": "Saved automatically as you type. Last saved {time}.",

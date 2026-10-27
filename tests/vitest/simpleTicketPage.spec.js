@@ -497,15 +497,13 @@ describe('the body', () => {
 		const panels = simple.widgets.find((widget) => widget.id === 'ticket-panels')
 		expect(panels.content.tabs.map((tab) => tab.label)).toEqual([
 			'Overview',
+			'Overview',
 			'Contact moments',
 			'Related',
 			'Decisions',
 			'History',
 		])
-		expect(panels.content.tabs[0].widgetIds).toEqual([
-			'contact-details',
-			'contact-notes',
-			'contact-request',
+		expect(panels.content.tabs[1].widgetIds).toEqual([
 			'ticket-data',
 			'ticket-conversation',
 			'ticket-dossier',
@@ -602,9 +600,10 @@ describe('the contact moment (board PqContactmoment)', () => {
 	const MOMENT = { ticketType: 'interaction', status: 'in_progress', client: 'c-1', parentTicket: 't-0' }
 	const REQUEST = { ticketType: 'request', status: 'in_progress' }
 	const widgetById = Object.fromEntries(simple.widgets.map((widget) => [widget.id, widget]))
-	const overview = simple.widgets.find((widget) => widget.id === 'ticket-panels').content.tabs[0].widgetIds
+	const tabs = simple.widgets.find((widget) => widget.id === 'ticket-panels').content.tabs
 	const cardOf = (entry) => (typeof entry === 'string' ? widgetById[entry] : entry)
 	const shows = (item, ticket) => !item.visibleWhen || evaluateVisibleWhenLocal(item.visibleWhen, ticket)
+	const overviewOf = (ticket) => tabs.filter((tab) => tab.label === 'Overview' && shows(tab, ticket))
 	const registerFile = readJson('lib', 'Settings', 'pipelinq_register.json')
 	const schemaProperties = (slug) => Object.assign(
 		{},
@@ -614,8 +613,28 @@ describe('the contact moment (board PqContactmoment)', () => {
 	)
 
 	it('shows the contact details, the notes and the request it was about in the Overview, and none of the request\'s cards', () => {
-		expect(overview.filter((id) => shows(widgetById[id], MOMENT))).toEqual(['contact-details', 'contact-notes', 'contact-request'])
-		expect(overview.filter((id) => shows(widgetById[id], REQUEST))).toEqual(['ticket-data', 'ticket-conversation', 'ticket-dossier', 'ticket-woo', 'ticket-case'])
+		expect(overviewOf(MOMENT)).toHaveLength(1)
+		expect(overviewOf(MOMENT)[0].widgetId).toBe('contact-overview')
+		expect(overviewOf(REQUEST)).toHaveLength(1)
+		expect(overviewOf(REQUEST)[0].widgetIds.filter((id) => shows(widgetById[id], REQUEST))).toEqual(['ticket-data', 'ticket-conversation', 'ticket-dossier', 'ticket-woo', 'ticket-case'])
+	})
+
+	it('draws the Overview as the board\'s one panel: three headed sections with a rule between them', () => {
+		const panel = widgetById['contact-overview']
+		expect(panel.type).toBe('sections')
+		// No title of its own: the open tab names the panel, so it draws no heading row.
+		expect(panel.title).toBeUndefined()
+		expect(panel.content.cards).not.toBe(true)
+		expect(panel.content.dividers).not.toBe(false)
+		expect(panel.content.sections.map((section) => [section.title, section.widgetId])).toEqual([
+			['Contact details', 'contact-details'],
+			['Conversation notes', 'contact-notes'],
+			['About this request', 'contact-request'],
+		])
+		// The section heading names the notes; their label stays for screen readers only.
+		expect(widgetById['contact-notes'].content.hideLabel).toBe(true)
+		// A contact moment that belongs to no request leaves that section out.
+		expect(shows(widgetById['contact-request'], { ...MOMENT, parentTicket: null })).toBe(false)
 	})
 
 	it('draws the side cards of the board, and a request keeps its own', () => {
