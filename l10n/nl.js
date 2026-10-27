@@ -8540,7 +8540,18 @@ OC.L10N.register(
         "Customer number": "Klantnummer",
         "The number the organisation knows this customer by, such as K-2019-01184.": "Het nummer waaronder de organisatie deze klant kent, zoals K-2019-01184.",
         "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP.",
-        "Add organisation": "Organisatie toevoegen"
+        "Add organisation": "Organisatie toevoegen",
+        "Z report": "Z-rapport",
+        "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transacties",
+        "What it says per network": "Wat dit per netwerk zegt",
+        "due {deadline|datetime}": "uiterlijk {deadline|datetime}",
+        "What now? Call the customer back": "Wat nu? De klant terugbellen",
+        "A callback number is known": "Er is een terugbelnummer",
+        "Someone is on it": "Er is een behandelaar",
+        "Then: write down the result and finish the task": "Daarna: schrijf het resultaat op en rond de taak af",
+        "What now? Try again before the deadline": "Wat nu? Opnieuw proberen voor de termijn",
+        "An attempt is logged": "Er is een poging vastgelegd",
+        "Call the customer": "Bellen"
     },
     "nplurals=2; plural=(n != 1);"
 )
