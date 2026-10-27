@@ -336,6 +336,6 @@ export default {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: var(--default-grid-baseline);
+	gap: 10px;
 }
 </style>
