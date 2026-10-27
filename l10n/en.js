@@ -1,6 +1,16 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Pipeline:": "Pipeline:",
+        "Search the pipeline": "Search the pipeline",
+        "Columns:": "Columns:",
+        "stage": "stage",
+        "One column per stage. Drag a lead to change its stage.": "One column per stage. Drag a lead to change its stage.",
+        "Filter": "Filter",
+        "Pipeline: {name}": "Pipeline: {name}",
+        "Type: {name}": "Type: {name}",
+        "Search: {text}": "Search: {text}",
+        "Filter, %n active": ["Filter, %n active","Filter, %n active"],
         "Cash register audit": "Cash register audit",
         "Cash register audit entry": "Cash register audit entry",
         "Verification done. The status shows the result.": "Verification done. The status shows the result.",
