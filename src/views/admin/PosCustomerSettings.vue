@@ -127,6 +127,7 @@ export default {
 		 * Available search-field options with labels.
 		 *
 		 * @return {Array<object>} The options.
+		 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
 		 */
 		availableFields() {
 			return [
