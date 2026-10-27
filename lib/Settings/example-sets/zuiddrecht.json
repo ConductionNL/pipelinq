@@ -992,7 +992,8 @@
 				"preferredChannel": "other",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "Schrijft liever een brief."
+				"notes": "Schrijft liever een brief.",
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000014"
 			}
 		},
 		{
