@@ -2,6 +2,9 @@
 	<CnSettingsSection :name="title">
 		<template #actions>
 			<NcButton variant="secondary" @click="startAdding">
+				<template #icon>
+					<Plus :size="20" />
+				</template>
 				{{ addLabel }}
 			</NcButton>
 		</template>
@@ -93,11 +96,13 @@
 <script>
 import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 
 export default {
 	name: 'TagManager',
 	components: {
 		CnSettingsSection,
+		Plus,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,

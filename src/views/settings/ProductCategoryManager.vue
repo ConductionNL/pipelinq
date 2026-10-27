@@ -2,7 +2,10 @@
 	<CnSettingsSection :name="t('pipelinq', 'Product Categories')">
 		<template #actions>
 			<NcButton variant="secondary" @click="startAdding">
-				{{ t('pipelinq', '+ Add Category') }}
+				<template #icon>
+					<Plus :size="20" />
+				</template>
+				{{ t('pipelinq', 'Add category') }}
 			</NcButton>
 		</template>
 
@@ -106,11 +109,13 @@
 <script>
 import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ProductCategoryManager',
 	components: {
+		Plus,
 		CnSettingsSection,
 		NcButton,
 		NcLoadingIcon,
