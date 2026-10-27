@@ -8530,7 +8530,24 @@ OC.L10N.register(
         "The contact moment this task was created from.": "The contact moment this task was created from.",
         "Customer number": "Customer number",
         "The number the organisation knows this customer by, such as K-2019-01184.": "The number the organisation knows this customer by, such as K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
+        "Reason for the refund": "Reason for the refund",
+        "Items to take back": "Items to take back",
+        "Take back all items": "Take back all items",
+        "Take back {item}": "Take back {item}",
+        "Take back": "Take back",
+        "Original quantity": "Original quantity",
+        "Back in stock": "Back in stock",
+        "The returned quantity may not exceed the original quantity. Choose at least one item to take back.": "The returned quantity may not exceed the original quantity. Choose at least one item to take back.",
+        "After saving": "After saving",
+        "The refund waits for confirmation. A manager confirms or rejects it.": "The refund waits for confirmation. A manager confirms or rejects it.",
+        "Confirming pays the refund back, puts the restocked items back in stock and writes a signed audit entry.": "Confirming pays the refund back, puts the restocked items back in stock and writes a signed audit entry.",
+        "Original receipt": "Original receipt",
+        "{method}, the original payment method": "{method}, the original payment method",
+        "Awaiting confirmation": "Awaiting confirmation",
+        "Refunds": "Refunds",
+        "from {fromReference} · {clientName}": "from {fromReference} · {clientName}",
+        "Quantity returned": "Quantity returned"
     },
     "nplurals=2; plural=(n != 1);"
 )
