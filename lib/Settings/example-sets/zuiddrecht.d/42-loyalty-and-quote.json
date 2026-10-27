@@ -47,7 +47,8 @@
 				"pointValue": 0.05,
 				"expiryPolicy": {
 					"months": 24
-				}
+				},
+				"termsUrl": "https://www.zuiddrecht.example/spaarpas/voorwaarden"
 			}
 		},
 		{
