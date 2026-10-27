@@ -1,0 +1,416 @@
+{
+	"$comment": "pipelinq's tabs of the lead Woonportaal voor huurders in the Zuiddrecht set: its 4 contact moments, 2 tasks, 3 notes, the draft quote OFF-2026-0043 and 2 flow runs, as PqLead counts them.",
+	"objects": [
+		{
+			"key": "interaction-woonportaal-vos-terugbellen",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Karin Vos teruggebeld na het webformulier",
+				"direction": "outbound",
+				"channel": "phone",
+				"outcome": "followUpAction",
+				"status": "closed",
+				"client": "{{object:client-drechtwonen.id}}",
+				"contact": "{{object:contact-vos.id}}",
+				"lead": "{{object:lead-woonportaal.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-12 10:30}}",
+				"description": "Karin Vos wil dat huurders reparaties online melden en hun huurcontract inzien. Ze stuurt de wensen van het bestuur door.",
+				"duration": "PT14M",
+				"category": "Software"
+			}
+		},
+		{
+			"key": "interaction-woonportaal-hendriks-kwalificatie",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Kwalificatiegesprek met M. Hendriks",
+				"direction": "outbound",
+				"channel": "phone",
+				"outcome": "handled",
+				"status": "closed",
+				"client": "{{object:client-drechtwonen.id}}",
+				"contact": "{{object:contact-hendriks.id}}",
+				"lead": "{{object:lead-woonportaal.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-8 13:30}}",
+				"description": "Budget en planning besproken. Het bestuur beslist in oktober, M. Hendriks tekent namens het bestuur. Lead naar Gekwalificeerd.",
+				"duration": "PT25M",
+				"category": "Software"
+			}
+		},
+		{
+			"key": "interaction-woonportaal-vos-demo",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Karin Vos vraagt om een demo voor het bestuur",
+				"direction": "inbound",
+				"channel": "email",
+				"outcome": "followUpAction",
+				"status": "closed",
+				"client": "{{object:client-drechtwonen.id}}",
+				"contact": "{{object:contact-vos.id}}",
+				"lead": "{{object:lead-woonportaal.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-5 09:12}}",
+				"description": "Karin Vos vroeg om een demo voor het bestuur. Voorstel: 12 oktober, met M. Hendriks.",
+				"duration": "PT5M",
+				"category": "Software"
+			}
+		},
+		{
+			"key": "interaction-woonportaal-lam-offerte",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "interaction",
+				"title": "Peter Lam vraagt naar de offerte",
+				"direction": "inbound",
+				"channel": "phone",
+				"outcome": "followUpAction",
+				"status": "closed",
+				"client": "{{object:client-drechtwonen.id}}",
+				"contact": "{{object:contact-lam.id}}",
+				"lead": "{{object:lead-woonportaal.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"occurredAt": "{{datetime:-2 15:05}}",
+				"description": "Peter Lam van inkoop wil de offerte voor 20 oktober hebben, met de implementatiedagen apart.",
+				"duration": "PT8M",
+				"category": "Software"
+			}
+		},
+		{
+			"key": "taak-woonportaal-demo-voorbereiden",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "followUpTask",
+				"subject": "Demo voor het bestuur voorbereiden",
+				"description": "Reparatie melden, huurcontract inzien en berichten van de corporatie laten zien.",
+				"status": "open",
+				"priority": "high",
+				"deadline": "{{datetime:2 16:00}}",
+				"assigneeUserId": "{{cast:pieter.uid}}",
+				"clientId": "{{object:client-drechtwonen.id}}",
+				"lead": "{{object:lead-woonportaal.id}}",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "taak-woonportaal-offerte-sturen",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "followUpTask",
+				"subject": "Offerte sturen aan Peter Lam",
+				"description": "Peter Lam wil de offerte voor 20 oktober, met de implementatiedagen apart.",
+				"status": "open",
+				"priority": "normal",
+				"deadline": "{{datetime:13 12:00}}",
+				"assigneeUserId": "{{cast:pieter.uid}}",
+				"clientId": "{{object:client-drechtwonen.id}}",
+				"lead": "{{object:lead-woonportaal.id}}",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "offerte-woonportaal",
+			"register": "pipelinq",
+			"schema": "salesQuote",
+			"data": {
+				"number": "OFF-2026-0043",
+				"title": "Woonportaal voor huurders",
+				"lead": "{{object:lead-woonportaal.id}}",
+				"client": "{{object:client-drechtwonen.id}}",
+				"contact": "{{object:contact-lam.id}}",
+				"status": "draft",
+				"version": 1,
+				"assignee": "{{cast:pieter.uid}}",
+				"paymentTerm": "30 dagen",
+				"currency": "EUR",
+				"subtotal": 120000,
+				"vatAmount": 25200,
+				"total": 145200,
+				"notes": "Peter Lam van inkoop wil de offerte voor 20 oktober. Eerst de demo voor het bestuur op 12 oktober."
+			}
+		},
+		{
+			"key": "offerte-woonportaal-regel-1",
+			"register": "pipelinq",
+			"schema": "salesQuoteLine",
+			"data": {
+				"quote": "{{object:offerte-woonportaal.id}}",
+				"kind": "catalogue",
+				"description": "Licentie huurdersportaal",
+				"note": "Per jaar.",
+				"quantity": 1,
+				"unitPrice": 72000,
+				"discount": 0,
+				"total": 72000,
+				"sortOrder": 1,
+				"product": "{{object:product-licentie.id}}"
+			}
+		},
+		{
+			"key": "offerte-woonportaal-regel-2",
+			"register": "pipelinq",
+			"schema": "salesQuoteLine",
+			"data": {
+				"quote": "{{object:offerte-woonportaal.id}}",
+				"kind": "catalogue",
+				"description": "Implementatie, dagen",
+				"note": "Per dag.",
+				"quantity": 40,
+				"unitPrice": 1100,
+				"discount": 10,
+				"total": 39600,
+				"sortOrder": 2,
+				"product": "{{object:product-implementatie.id}}"
+			}
+		},
+		{
+			"key": "offerte-woonportaal-regel-3",
+			"register": "pipelinq",
+			"schema": "salesQuoteLine",
+			"data": {
+				"quote": "{{object:offerte-woonportaal.id}}",
+				"kind": "catalogue",
+				"description": "Training voor medewerkers",
+				"note": "Per sessie, maximaal 12 personen.",
+				"quantity": 6,
+				"unitPrice": 1400,
+				"discount": 0,
+				"total": 8400,
+				"sortOrder": 3,
+				"product": "{{object:product-training.id}}"
+			}
+		}
+	],
+	"notes": [
+		{
+			"key": "woonportaal-pieter-gekwalificeerd",
+			"data": {
+				"user": "{{cast:pieter.uid}}",
+				"objectUuid": "{{object:lead-woonportaal.id}}",
+				"message": "Gekwalificeerd na het gesprek met M. Hendriks. Budget is er, het bestuur beslist in oktober.",
+				"createdAt": "{{datetime:-8 14:10}}"
+			}
+		},
+		{
+			"key": "woonportaal-joris-koppeling",
+			"data": {
+				"user": "{{cast:joris.uid}}",
+				"objectUuid": "{{object:lead-woonportaal.id}}",
+				"message": "@Pieter bij de demo kan ik de koppeling met hun huurdersadministratie laten zien.",
+				"createdAt": "{{datetime:-5 11:30}}"
+			}
+		},
+		{
+			"key": "woonportaal-pieter-offerte",
+			"data": {
+				"user": "{{cast:pieter.uid}}",
+				"objectUuid": "{{object:lead-woonportaal.id}}",
+				"message": "Peter Lam wil de offerte voor 20 oktober. Eerst de demo op 12 oktober, dan de offerte.",
+				"createdAt": "{{datetime:-2 15:20}}"
+			}
+		}
+	],
+	"flows": [
+		{
+			"key": "flow-lead-gekwalificeerd",
+			"data": {
+				"name": "Lead gekwalificeerd: eigenaar informeren",
+				"description": "Stuurt de eigenaar van een lead een melding zodra de lead naar de fase Gekwalificeerd gaat.",
+				"trigger": "object.updated",
+				"triggerRegister": "pipelinq",
+				"triggerSchema": "lead",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-object",
+						"name": "Gestart door een gewijzigde lead",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"event": "object.updated",
+							"register": "pipelinq",
+							"schema": "lead"
+						}
+					},
+					{
+						"id": "fase",
+						"type": "openregister.switch",
+						"name": "Is de lead gekwalificeerd?",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"config": {
+							"field": "stage"
+						},
+						"exits": [
+							{
+								"id": "ja",
+								"condition": "stage == 'Gekwalificeerd'"
+							},
+							{
+								"id": "nee"
+							}
+						]
+					},
+					{
+						"id": "informeren",
+						"type": "openregister.send-notification",
+						"name": "Eigenaar informeren",
+						"position": {
+							"x": 40,
+							"y": 280
+						},
+						"config": {
+							"to": "assignee"
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 400
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "fase"
+					},
+					{
+						"from": "fase",
+						"to": "informeren",
+						"fromExit": "ja"
+					},
+					{
+						"from": "fase",
+						"to": "end",
+						"fromExit": "nee"
+					},
+					{
+						"from": "informeren",
+						"to": "end"
+					}
+				],
+				"runs": [
+					{
+						"subject": "{{object:lead-woonportaal.id}}",
+						"subjectRegister": "pipelinq",
+						"subjectSchema": "lead",
+						"trigger": "object.updated",
+						"status": "completed",
+						"created": "{{datetime:-8 14:02}}"
+					}
+				]
+			}
+		},
+		{
+			"key": "flow-herinnering-verouderde-lead",
+			"data": {
+				"name": "Herinnering verouderde lead",
+				"description": "Herinnert de eigenaar elke ochtend aan een open lead zonder activiteit in de afgelopen 14 dagen.",
+				"trigger": "schedule",
+				"cron": "0 8 * * *",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-schedule",
+						"name": "Elke ochtend om 08:00",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"cron": "0 8 * * *"
+						}
+					},
+					{
+						"id": "activiteit",
+						"type": "openregister.switch",
+						"name": "Activiteit in de afgelopen 14 dagen?",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"exits": [
+							{
+								"id": "ja",
+								"condition": "daysSinceActivity < 14"
+							},
+							{
+								"id": "nee"
+							}
+						]
+					},
+					{
+						"id": "herinneren",
+						"type": "openregister.send-notification",
+						"name": "Eigenaar herinneren",
+						"position": {
+							"x": 280,
+							"y": 280
+						},
+						"config": {
+							"to": "assignee"
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 400
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "activiteit"
+					},
+					{
+						"from": "activiteit",
+						"to": "end",
+						"fromExit": "ja"
+					},
+					{
+						"from": "activiteit",
+						"to": "herinneren",
+						"fromExit": "nee"
+					},
+					{
+						"from": "herinneren",
+						"to": "end"
+					}
+				],
+				"runs": [
+					{
+						"subject": "{{object:lead-woonportaal.id}}",
+						"subjectRegister": "pipelinq",
+						"subjectSchema": "lead",
+						"trigger": "schedule",
+						"status": "stopped",
+						"created": "{{datetime:-1 08:00}}"
+					}
+				]
+			}
+		}
+	]
+}
