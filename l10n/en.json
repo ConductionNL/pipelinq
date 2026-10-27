@@ -8668,6 +8668,13 @@
         "Steps that run on their own when something happens.": "Steps that run on their own when something happens.",
         "What Pipelinq can do, and what is coming.": "What Pipelinq can do, and what is coming.",
         "Waiting times, deadlines met and contact per channel.": "Waiting times, deadlines met and contact per channel.",
-        "How Pipelinq works, step by step. Opens in a new tab.": "How Pipelinq works, step by step. Opens in a new tab."
+        "How Pipelinq works, step by step. Opens in a new tab.": "How Pipelinq works, step by step. Opens in a new tab.",
+        "New analysis report": "New analysis report",
+        "Staff performance": "Staff performance",
+        "Missing a report?": "Missing a report?",
+        "Build one yourself in Nextcloud Analytics with New analysis report, or ask an administrator to add a report to the app.": "Build one yourself in Nextcloud Analytics with New analysis report, or ask an administrator to add a report to the app.",
+        "Revenue and forecast": "Revenue and forecast",
+        "Customer loyalty": "Customer loyalty",
+        "Marketing and campaigns": "Marketing and campaigns"
     }
 }

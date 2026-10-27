@@ -8608,7 +8608,13 @@ OC.L10N.register(
         "Steps that run on their own when something happens.": "Stappen die vanzelf draaien als er iets gebeurt.",
         "What Pipelinq can do, and what is coming.": "Wat Pipelinq kan, en wat eraan komt.",
         "Waiting times, deadlines met and contact per channel.": "Wachttijden, gehaalde termijnen en contact per kanaal.",
-        "How Pipelinq works, step by step. Opens in a new tab.": "Hoe Pipelinq werkt, stap voor stap. Opent in een nieuw tabblad."
+        "How Pipelinq works, step by step. Opens in a new tab.": "Hoe Pipelinq werkt, stap voor stap. Opent in een nieuw tabblad.",
+        "New analysis report": "Nieuw analyserapport",
+        "Staff performance": "Prestaties medewerkers",
+        "Missing a report?": "Mis je een rapportage?",
+        "Build one yourself in Nextcloud Analytics with New analysis report, or ask an administrator to add a report to the app.": "Bouw er zelf een in Nextcloud Analytics met Nieuw analyserapport, of vraag een beheerder een rapportage aan de app toe te voegen.",
+        "Revenue and forecast": "Omzet en prognose",
+        "Customer loyalty": "Klantloyaliteit"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -7904,6 +7904,27 @@
 			"type": "reports",
 			"title": "Reports",
 			"config": {
+				"_catalogueNote": "Board PqReports: the board look draws the page as a catalogue (nextcloud-vue reports-page-catalogue): the categories as chips with counts, the cards with their category, a footer and Open, and an aside with the category index and asideNote. New analysis report opens Nextcloud Analytics, where a report is built; the buildiq square sits before it.",
+				"catalogue": true,
+				"headerButtons": [
+					{
+						"label": "New analysis report",
+						"action": "new-analysis-report",
+						"variant": "primary",
+						"icon": "Plus"
+					}
+				],
+				"headerActions": [
+					{
+						"id": "new-analysis-report",
+						"label": "New analysis report",
+						"href": "/apps/analytics/"
+					}
+				],
+				"asideNote": {
+					"title": "Missing a report?",
+					"text": "Build one yourself in Nextcloud Analytics with New analysis report, or ask an administrator to add a report to the app."
+				},
 				"description": "Every report Pipelinq offers, in one place. Pick a report to open it.",
 				"categories": {
 					"volume": "Volume and channels",
@@ -7939,7 +7960,7 @@
 					},
 					{
 						"id": "AgentPerformanceView",
-						"label": "Agent performance",
+						"label": "Staff performance",
 						"description": "Handling times and workload per agent.",
 						"icon": "AccountGroup",
 						"category": "people",
