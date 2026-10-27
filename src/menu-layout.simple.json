@@ -2599,6 +2599,7 @@
 							"type": "organization"
 						},
 						"title": "Organisations",
+						"addLabel": "Add organisation",
 						"countText": "{shown} of {total} organisations · sorted by name",
 						"searchPlaceholder": "Search by name, KvK number or place",
 						"footerNote": "click a column heading to sort",
