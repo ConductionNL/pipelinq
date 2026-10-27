@@ -928,7 +928,8 @@
 				"preferredChannel": "phone",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "Belt het liefst 's ochtends."
+				"notes": "Belt het liefst 's ochtends.",
+				"phone": "078 612 40 18"
 			}
 		},
 		{
@@ -1505,7 +1506,8 @@
 				"unitPrice": 75,
 				"taxRate": 0,
 				"unit": "Stuk",
-				"vatClass": "zero"
+				"vatClass": "zero",
+				"barcode": "8712345000134"
 			}
 		},
 		{
@@ -1519,7 +1521,8 @@
 				"unitPrice": 12.5,
 				"taxRate": 21,
 				"unit": "Stuk",
-				"vatClass": "high"
+				"vatClass": "high",
+				"barcode": "8712345000141"
 			}
 		},
 		{
@@ -1533,7 +1536,8 @@
 				"unitPrice": 4.95,
 				"taxRate": 9,
 				"unit": "Stuk",
-				"vatClass": "low"
+				"vatClass": "low",
+				"barcode": "8712345000124"
 			}
 		},
 		{
@@ -3304,7 +3308,9 @@
 				"duration": "PT6M",
 				"parentTicket": "{{object:ticket-degraaf-afvalpas.id}}",
 				"category": "afval",
-				"disposition_subject": "Afvalpas"
+				"disposition_subject": "Afvalpas",
+				"notes": "Meneer De Graaf belde over zijn afvalpas: de container bij Dorpsstraat 8 weigert die sinds maandag. Hij probeerde al een andere container, met hetzelfde resultaat. Ik heb gezegd dat we de pas gratis vervangen en dat het 3 werkdagen duurt. Hij vroeg of hij zijn afval intussen buiten mag zetten.",
+				"from_number": "078 612 40 18"
 			}
 		},
 		{
