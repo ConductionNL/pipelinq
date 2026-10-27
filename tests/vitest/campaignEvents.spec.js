@@ -56,9 +56,10 @@ describe('the event page', () => {
 		expect(detail.config.schema).toBe('campaignEvent')
 	})
 
-	it('counts its registrations, never a number kept on the event', () => {
+	it('counts its registrations in a row across the page, never a number kept on the event', () => {
 		const kpis = ['event-kpi-registered', 'event-kpi-waitlist', 'event-kpi-newsletter', 'event-kpi-new']
-		expect(detail.config.layout.slice(0, 4).map((item) => item.widgetId)).toEqual(kpis)
+		expect(detail.config.band.map((item) => item.widgetId)).toEqual(kpis)
+		expect(detail.config.band.map((item) => item.span)).toEqual([3, 3, 3, 3])
 		for (const id of kpis) {
 			const source = widget(detail, id).content.source
 			expect(source.schema).toBe('eventRegistration')
@@ -68,9 +69,18 @@ describe('the event page', () => {
 		expect(widget(detail, 'event-kpi-registered').content.caption).toBe('of {capacity} places')
 	})
 
-	it('has the Overview, Registrations and History tabs, with form, location and history beside them', () => {
-		expect(widget(detail, 'event-panels').content.tabs.map((tab) => tab.label)).toEqual(['Overview', 'Registrations', 'History'])
+	it('has the Overview, Registrations, Registration form and History tabs, with form, location and history beside them', () => {
+		const tabs = widget(detail, 'event-panels').content.tabs
+		expect(tabs.map((tab) => tab.label)).toEqual(['Overview', 'Registrations', 'Registration form', 'History'])
+		expect(tabs[1].countFrom).toEqual({ register: 'pipelinq', schema: 'eventRegistration', filter: { event: '@objectId' } })
 		expect(detail.config.sideColumn).toEqual(['event-form', 'event-location', 'event-side-history'])
+	})
+
+	it('writes the day in full on the header line, and the status as a coloured pill', () => {
+		expect(detail.config.headerMeta).toBe('{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}')
+		const status = widget(detail, 'event-registrations').content.columns.find((column) => column.key === 'status')
+		expect(status.widget).toBe('badge')
+		expect(status.widgetProps.colorMap).toEqual({ confirmed: 'success', waitlist: 'warning', cancelled: 'default' })
 	})
 })
 
