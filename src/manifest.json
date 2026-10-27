@@ -1862,6 +1862,7 @@
 			"type": "detail",
 			"title": "Client",
 			"config": {
+				"recordLastChange": true,
 				"register": "pipelinq",
 				"schema": "client",
 				"fieldOverrides": {
@@ -3014,10 +3015,238 @@
 						}
 					]
 				},
+				"_sideColumnNote": "The side column in the boards' order with the cards dossiq's DqContact and DqOrganisatie draw: a resident reads Reachable via, Identity and Home address, an organisation KvK and address and Open tickets; both then Contact channels, Relations and Record history. Related, Emails and Notes stay under them until the Activity card carries mail and notes.",
 				"sideColumn": [
-					"client-related",
+					{
+						"id": "side-reach",
+						"type": "facts",
+						"title": "Reachable via",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Bereikbaar via, as dossiq's DqContact card: the preferred channel first, then the e-mail and phone on file, and Log contact.",
+						"content": {
+							"fields": [
+								{
+									"key": "preferred",
+									"path": "preferredChannel",
+									"icon": "EmailOutline",
+									"map": {
+										"email": "E-mail",
+										"phone": "Phone",
+										"portal": "Mijn Zuiddrecht, message box",
+										"post": "Post",
+										"balie": "Desk"
+									}
+								},
+								{
+									"as": "line",
+									"separator": ", ",
+									"parts": [
+										{
+											"path": "email",
+											"label": "E-mail"
+										},
+										{
+											"path": "phone",
+											"label": "phone"
+										}
+									]
+								}
+							],
+							"action": {
+								"label": "Log contact",
+								"icon": "PhoneLogOutline",
+								"type": "open-form",
+								"register": "pipelinq",
+								"schema": "ticket",
+								"formTitle": "Log contact",
+								"includeFields": [
+									"title",
+									"channel",
+									"direction",
+									"description"
+								],
+								"props": {
+									"client": "@objectId",
+									"ticketType": "interaction"
+								}
+							}
+						}
+					},
+					{
+						"id": "side-identity",
+						"type": "facts",
+						"title": "Identity",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Identiteit: the client number and where the data comes from, as dossiq's DqContact Identity card.",
+						"content": {
+							"fields": [
+								{
+									"label": "Client number",
+									"path": "customerNumber",
+									"inline": true
+								},
+								{
+									"label": "Source",
+									"path": "source"
+								}
+							]
+						}
+					},
+					{
+						"id": "side-address",
+						"type": "facts",
+						"title": "Home address",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"content": {
+							"fields": [
+								{
+									"as": "text",
+									"path": "address"
+								}
+							],
+							"emptyText": "No address on file"
+						}
+					},
+					{
+						"id": "side-kvk",
+						"type": "facts",
+						"title": "KvK and address",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie KVK en adres, as dossiq's DqOrganisatie card.",
+						"content": {
+							"fields": [
+								{
+									"as": "lead",
+									"icon": "OfficeBuildingOutline",
+									"title": [
+										{
+											"path": "kvkNumber",
+											"label": "KvK"
+										}
+									],
+									"subtitle": [
+										"legalForm",
+										{
+											"text": "Trade register"
+										}
+									]
+								},
+								{
+									"as": "text",
+									"path": "address"
+								}
+							]
+						}
+					},
+					{
+						"id": "side-open-ticket",
+						"type": "record-list",
+						"title": "Open tickets",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Open tickets: the open ticket due first, as dossiq's DqOrganisatie card.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"ticketType": {
+									"in": [
+										"request",
+										"complaint"
+									]
+								},
+								"status": {
+									"in": [
+										"new",
+										"in_progress",
+										"awaiting_customer"
+									]
+								}
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"limit": 1,
+							"presentation": "rows",
+							"density": "stacked",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{reference}",
+									"assigned to {assignee|user}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"variant": "purple",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Awaiting customer"
+								}
+							},
+							"trailing": [
+								"By {slaDeadline|date}"
+							],
+							"rowRoute": "TicketDetail",
+							"emptyText": "No open tickets"
+						}
+					},
 					"client-channels",
 					"client-relationships",
+					{
+						"id": "side-history",
+						"type": "facts",
+						"title": "Record history",
+						"content": {
+							"fields": [
+								{
+									"as": "text",
+									"parts": [
+										{
+											"text": "Last changed on"
+										},
+										{
+											"path": "@self.updated",
+											"format": "longdate"
+										},
+										{
+											"path": "_lastChange.userName",
+											"label": "last changed by"
+										}
+									],
+									"separator": " "
+								}
+							],
+							"link": {
+								"label": "View history",
+								"icon": "History",
+								"sidebarTab": "audit"
+							}
+						}
+					},
+					"client-related",
 					"client-email",
 					"client-notes"
 				],

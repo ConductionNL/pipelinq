@@ -4,7 +4,7 @@
 - [x] The boards' tab strip; sales and files out of the side column
 - [x] Resident and organisation cards, tickets as rows, latest contact moments
 - [x] Header: Log contact, New request for this client (RequestCreateDialog clientId)
-- [ ] Side column in the boards' order with dossiq's widgets
+- [x] Side column in the boards' order with dossiq's widgets (reachable via, identity, home address, KvK and address, open tickets, channels, relations, record history); main contact, open cases, appointments, projects and invoicing, knowledge base still to come
 - [ ] Warnings strip with the contact buttons in one card
 - [ ] Activity with chips and the note composer
 - [ ] Cases by the client's master key (endpoint)

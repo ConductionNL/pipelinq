@@ -83,3 +83,27 @@ describe('ClientDetail overview as the boards draw it', () => {
 		expect(config.headerActions[1].props).toEqual({ clientId: '@objectId' })
 	})
 })
+
+describe('ClientDetail side column as the boards draw it', () => {
+	const ids = config.sideColumn.map((card) => (typeof card === 'string' ? card : card.id))
+	const card = (id) => config.sideColumn.find((entry) => typeof entry === 'object' && entry.id === id)
+
+	it('keeps the boards\' order: resident cards, organisation cards, then the shared ones', () => {
+		expect(ids.slice(0, 8)).toEqual(['side-reach', 'side-identity', 'side-address', 'side-kvk', 'side-open-ticket', 'client-channels', 'client-relationships', 'side-history'])
+	})
+
+	it('shows the resident cards for a resident and the organisation cards for an organisation', () => {
+		for (const id of ['side-reach', 'side-identity', 'side-address']) {
+			expect(card(id).visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
+		}
+		for (const id of ['side-kvk', 'side-open-ticket']) {
+			expect(card(id).visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
+		}
+	})
+
+	it('titles the cards in the boards\' words', () => {
+		expect(['side-reach', 'side-identity', 'side-address', 'side-kvk', 'side-open-ticket', 'side-history'].map((id) => nl[card(id).title]))
+			.toEqual(['Bereikbaar via', 'Identiteit', 'Woonadres', 'KVK en adres', 'Open tickets', 'Geschiedenis'])
+		expect(config.recordLastChange).toBe(true)
+	})
+})
