@@ -8525,7 +8525,9 @@ OC.L10N.register(
         "Converted into a flow": "Converted into a flow",
         "Activated": "Activated",
         "When the journey was first converted into a flow.": "When the journey was first converted into a flow.",
-        "When the journey last went live.": "When the journey last went live."
+        "When the journey last went live.": "When the journey last went live.",
+        "Original contact moment": "Original contact moment",
+        "The contact moment this task was created from.": "The contact moment this task was created from."
     },
     "nplurals=2; plural=(n != 1);"
 )
