@@ -8405,7 +8405,8 @@ OC.L10N.register(
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.",
         "Public-space report": "Public-space report",
-        "melding": "melding"
+        "melding": "melding",
+        "Whether the product is for sale: a draft is not yet, an active product is, a discontinued one no longer is but stays readable on old deals and receipts. Inactive is the older word for discontinued.": "Whether the product is for sale: a draft is not yet, an active product is, a discontinued one no longer is but stays readable on old deals and receipts. Inactive is the older word for discontinued."
     },
     "nplurals=2; plural=(n != 1);"
 )

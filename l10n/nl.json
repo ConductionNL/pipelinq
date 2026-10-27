@@ -8402,6 +8402,7 @@
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "Een fasewissel, een contract dat verlengd kan worden, een bevestigde inschrijving, een boekhoudsignaal, een nieuw adres of een afgesloten ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem.",
         "Public-space report": "Melding",
-        "melding": "Melding"
+        "melding": "Melding",
+        "Whether the product is for sale: a draft is not yet, an active product is, a discontinued one no longer is but stays readable on old deals and receipts. Inactive is the older word for discontinued.": "Of het product te koop is: een concept nog niet, een actief product wel, een uitgefaseerd product niet meer, maar het blijft leesbaar op oude deals en bonnen. Inactief is het oudere woord voor uitgefaseerd."
     }
 }

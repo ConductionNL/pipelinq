@@ -4729,6 +4729,8 @@
 						"widgetProps": {
 							"colorMap": {
 								"active": "success",
+								"draft": "warning",
+								"discontinued": "default",
 								"inactive": "default"
 							}
 						},
@@ -4800,9 +4802,19 @@
 						"showCount": true
 					},
 					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						},
+						"showCount": true
+					},
+					{
 						"label": "Discontinued",
 						"filter": {
-							"status": "inactive"
+							"status": [
+								"discontinued",
+								"inactive"
+							]
 						},
 						"showCount": true
 					}
@@ -5145,10 +5157,14 @@
 					"field": "status",
 					"colorMap": {
 						"active": "success",
+						"draft": "warning",
+						"discontinued": "default",
 						"inactive": "default"
 					},
 					"labels": {
 						"active": "Active",
+						"draft": "Draft",
+						"discontinued": "Discontinued",
 						"inactive": "Discontinued"
 					}
 				},
