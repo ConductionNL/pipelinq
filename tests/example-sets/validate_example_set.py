@@ -19,6 +19,9 @@ What it does, per object:
     SettingsService imports them (objects merge by key, lists concatenate);
   * validates the filled data with jsonschema against the merged schema
     (OpenRegister's `$ref` to a schema slug becomes a plain uuid string);
+  * checks a `user` format value against the cast's accounts: the loader also
+    accepts an account the instance happens to have, but a set can only rely
+    on the accounts it writes itself;
   * refuses a key the schema does not declare, because the loader's read-back
     proof exits 2 on a key the schema does not keep;
   * refuses an e-mail outside the reserved .example top-level domain (RFC 2606)
@@ -117,6 +120,19 @@ def _uuid(v):
 def _email(v):
     if isinstance(v, str) and not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', v):
         raise ValueError('not an e-mail address')
+    return True
+
+
+# The accounts the set itself has: the cast people with a uid. OpenRegister's
+# `user` format accepts an existing account or one the set is about to write;
+# a set may only name its own.
+CAST_UIDS = set()
+
+
+@checker.checks('user', raises=ValueError)
+def _user(v):
+    if isinstance(v, str) and v.strip() not in CAST_UIDS:
+        raise ValueError('not the uid of a cast account')
     return True
 
 
@@ -261,6 +277,7 @@ def main():
     for slug, reg in cfg.get('components', {}).get('registers', {}).items():
         reg_schemas[reg.get('slug', slug)] = set(reg.get('schemas', []))
     cast, entries, organisations = cast_entries(args.cast)
+    CAST_UIDS.update(e['uid'] for e in entries.values() if isinstance(e.get('uid'), str))
     fragment = json.load(open(args.fragment, encoding='utf-8'))
     app = args.app or os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(args.fragment))))))
     problems = []

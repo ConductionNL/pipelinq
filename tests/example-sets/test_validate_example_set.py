@@ -65,5 +65,27 @@ class LiteralIdentifierTest(unittest.TestCase):
         self.assertEqual([], problems_for({'kvkNumber': '{{cast:slagerij.kvk}}'}))
 
 
+class UserFormatTest(unittest.TestCase):
+
+    SCHEMA = {'type': 'array', 'items': {'type': 'string', 'format': 'user'}}
+
+    def setUp(self):
+        validator.CAST_UIDS.clear()
+        validator.CAST_UIDS.update({'pieter', 'lotte.mulder'})
+
+    def errors(self, value):
+        check = validator.jsonschema.Draft202012Validator(self.SCHEMA, format_checker=validator.checker)
+        return [e.message for e in check.iter_errors(value)]
+
+    def test_a_cast_uid_is_accepted(self):
+        self.assertEqual([], self.errors(['pieter', 'lotte.mulder']))
+
+    def test_a_display_name_is_refused(self):
+        self.assertEqual(["'Pieter Jansen' is not a 'user'"], self.errors(['Pieter Jansen']))
+
+    def test_an_account_outside_the_cast_is_refused(self):
+        self.assertEqual(1, len(self.errors(['admin'])))
+
+
 if __name__ == '__main__':
     unittest.main()
