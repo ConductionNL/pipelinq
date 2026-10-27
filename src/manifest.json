@@ -8139,7 +8139,15 @@
 					],
 					"description": "description",
 					"chips": [
-						{ "field": "stages", "each": "name" }
+						{
+							"field": "stages",
+							"each": "name",
+							"tones": [
+								{ "when": { "field": "isWon", "op": "eq", "value": true }, "variant": "success" },
+								{ "when": { "field": "isClosed", "op": "eq", "value": true }, "variant": "error" },
+								{ "when": { "field": "isDefault", "op": "eq", "value": true }, "variant": "primary" }
+							]
+						}
 					]
 				},
 				"sidebar": {

@@ -28,4 +28,13 @@ describe('the pipelines list', () => {
 			chips: [{ field: 'stages', each: 'name' }],
 		})
 	})
+
+	it('colours a stage chip as the board does: won green, closed red, the first stage blue', () => {
+		const tones = page.config.cardLayout.chips[0].tones
+		expect(tones.map((t) => [t.when.field, t.variant])).toEqual([
+			['isWon', 'success'],
+			['isClosed', 'error'],
+			['isDefault', 'primary'],
+		])
+	})
 })
