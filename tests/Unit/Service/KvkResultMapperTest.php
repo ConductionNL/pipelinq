@@ -118,6 +118,36 @@ class KvkResultMapperTest extends TestCase {
 	}//end testMapResultUsesNaamFallback()
 
 	/**
+	 * A row of the KvK Zoeken API (as OpenRegister's KvK source relays it)
+	 * names the company `naam` and nests its address in `binnenlandsAdres`.
+	 *
+	 * @return void
+	 */
+	public function testMapResultReadsTheZoekenApiNameAndAddress(): void {
+		$item = [
+			'kvkNummer' => '69599084',
+			'naam' => 'Conduction B.V.',
+			'adres' => [
+				'binnenlandsAdres' => [
+					'type' => 'bezoekadres',
+					'straatnaam' => 'Kerkewijk',
+					'huisnummer' => 119,
+					'postcode' => '3904JB',
+					'plaats' => 'Veenendaal',
+				],
+			],
+			'type' => 'hoofdvestiging',
+		];
+
+		$result = $this->mapper->mapResult($item, '56');
+
+		$this->assertSame('Conduction B.V.', $result['tradeName']);
+		$this->assertSame('Veenendaal', $result['address']['city']);
+		$this->assertSame('Kerkewijk 119', $result['address']['street']);
+		$this->assertSame('3904JB', $result['address']['postalCode']);
+	}//end testMapResultReadsTheZoekenApiNameAndAddress()
+
+	/**
 	 * Test mapResult finds SBI description.
 	 *
 	 * @return void
