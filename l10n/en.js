@@ -8530,7 +8530,14 @@ OC.L10N.register(
         "The contact moment this task was created from.": "The contact moment this task was created from.",
         "Customer number": "Customer number",
         "The number the organisation knows this customer by, such as K-2019-01184.": "The number the organisation knows this customer by, such as K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
+        "New analysis report": "New analysis report",
+        "Staff performance": "Staff performance",
+        "Missing a report?": "Missing a report?",
+        "Build one yourself in Nextcloud Analytics with New analysis report, or ask an administrator to add a report to the app.": "Build one yourself in Nextcloud Analytics with New analysis report, or ask an administrator to add a report to the app.",
+        "Revenue and forecast": "Revenue and forecast",
+        "Customer loyalty": "Customer loyalty",
+        "Marketing and campaigns": "Marketing and campaigns"
     },
     "nplurals=2; plural=(n != 1);"
 )
