@@ -90,6 +90,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Read the availability and any call the address names, and tick the call timer.
+	 *
+	 * @spec openspec/specs/kcc-werkplek/spec.md
+	 */
 	created() {
 		this.fetchAvailability()
 		this.startCallFromAddress()
