@@ -1266,7 +1266,7 @@ OC.L10N.register(
         "Dutch Standard Industrial Classification codes. Separate multiple codes with commas.": "Nederlandse Standaard Bedrijfsindeling codes. Scheid meerdere codes met komma's.",
         "Duur": "Duur",
         "Duur (minuten)": "Duur (minuten)",
-        "E-mail": "E-mailadres",
+        "E-mail": "E-mail",
         "E.g. 123456782": "Bijv. 123456782",
         "ETA: ~{seconds}s remaining": "ETA: nog ~{seconds}s",
         "EUR": "EUR",

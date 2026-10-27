@@ -131,7 +131,7 @@ export default {
 		availableFields() {
 			return [
 				{ id: 'name', label: t('pipelinq', 'Name') },
-				{ id: 'email', label: t('pipelinq', 'E-mail') },
+				{ id: 'email', label: t('pipelinq', 'Email address') },
 				{ id: 'phone', label: t('pipelinq', 'Phone') },
 			]
 		},
