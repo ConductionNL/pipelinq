@@ -103,7 +103,10 @@
 
 			<div class="agent-add">
 				<NcButton @click="addProfile">
-					{{ t('pipelinq', '+ Add Agent Profile') }}
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'Add agent profile') }}
 				</NcButton>
 			</div>
 		</div>
@@ -121,12 +124,14 @@
 <script>
 import { CnDeleteDialog } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import { useAgentProfilesStore } from '../../store/modules/agentProfiles.js'
 import { useSkillsStore } from '../../store/modules/skills.js'
 
 export default {
 	name: 'AgentProfileSettings',
 	components: {
+		Plus,
 		CnDeleteDialog,
 		NcButton,
 		NcLoadingIcon,

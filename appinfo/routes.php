@@ -192,6 +192,7 @@ return [
         ['name' => 'incomingCall#show',    'url' => '/api/cti/incoming-call',              'verb' => 'GET'],
         ['name' => 'cti#clickToDial',      'url' => '/api/cti/click-to-dial',              'verb' => 'POST'],
         ['name' => 'cti#disposition',      'url' => '/api/cti/contactmoment/{id}/disposition', 'verb' => 'POST'],
+        ['name' => 'ctiEscalationQueue#index', 'url' => '/api/cti/escalation-queues',      'verb' => 'GET'],
         ['name' => 'cti#attachRecording',  'url' => '/api/cti/contactmoment/{id}/recording',   'verb' => 'POST'],
         ['name' => 'cti#getConfig',        'url' => '/api/cti/config',                     'verb' => 'GET'],
         ['name' => 'cti#updateConfig',     'url' => '/api/cti/config',                     'verb' => 'PUT'],

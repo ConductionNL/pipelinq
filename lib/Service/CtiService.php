@@ -1021,18 +1021,31 @@ class CtiService {
 	 * @param string $subject Disposition subject.
 	 * @param string $outcome Outcome enum.
 	 * @param string $notes Notes.
+	 * @param string $queue The escalation queue id, or ''.
 	 *
 	 * @return array{outcome: string, interactionId: string, taskId: string|null}
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
 	 */
-	public function processDisposition(string $interactionId, string $subject, string $outcome, string $notes): array {
+	public function processDisposition(string $interactionId, string $subject, string $outcome, string $notes, string $queue=''): array {
 		return $this->dispositionService->processDisposition(
 			interactionId: $interactionId,
 			subject: $subject,
 			outcome: $outcome,
 			notes: $notes,
+			queue: $queue,
 		);
 	}//end processDisposition()
+
+	/**
+	 * The escalation queues an agent can choose at wrap-up, by id and label.
+	 *
+	 * @return array<int, array{id: string, label: string}> The queues.
+	 *
+	 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+	 */
+	public function escalationQueues(): array {
+		return $this->dispositionService->queueChoices();
+	}//end escalationQueues()
 
 	/**
 	 * Extract a UUID/id from an OR object or array.

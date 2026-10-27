@@ -12,10 +12,11 @@
   - @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
   -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Make a letter')"
-		:open="true"
-		size="normal"
+	<CnDialog
+		:name="t('pipelinq', 'Make a letter from a template')"
+		:eyebrow="eyebrow"
+		width="wizard"
+		data-testid="letter-dialog"
 		@closing="$emit('close')">
 		<div class="letter-modal" data-testid="letter-modal">
 			<p v-if="loading">
@@ -38,22 +39,42 @@
 						)
 					}}
 				</p>
-				<template v-else>
+				<div v-else class="letter-modal__fields">
+					<div class="letter-modal__field">
+						<NcSelect
+							v-model="templateId"
+							:options="templateOptions"
+							:inputLabel="t('pipelinq', 'Template')"
+							labelOutside
+							:reduce="(o) => o.value"
+							label="label"
+							data-testid="letter-template" />
+						<p class="letter-modal__hint">
+							{{ n('pipelinq', 'Templates come from filinq; %n is shared with pipelinq.', 'Templates come from filinq; %n are shared with pipelinq.', templates.length) }}
+						</p>
+					</div>
 					<NcSelect
-						v-model="templateId"
-						:options="templateOptions"
-						:inputLabel="t('pipelinq', 'Template')"
+						v-if="ticketOptions.length > 0"
+						v-model="aboutTicketId"
+						:options="ticketOptions"
+						:inputLabel="t('pipelinq', 'About')"
+						labelOutside
 						:reduce="(o) => o.value"
 						label="label"
-						data-testid="letter-template" />
+						data-testid="letter-about" />
 					<NcSelect
+						v-if="contactOptions.length > 0"
 						v-model="contactId"
 						:options="contactOptions"
 						:inputLabel="t('pipelinq', 'Contact person (optional)')"
+						labelOutside
 						:reduce="(o) => o.value"
 						label="label"
 						data-testid="letter-contact" />
-				</template>
+					<p v-if="clientName" class="letter-modal__hint letter-modal__wide">
+						{{ t('pipelinq', 'The letter is saved with {client} and appears on their timeline as an outgoing contact moment.', { client: clientName }) }}
+					</p>
+				</div>
 			</template>
 			<div v-else class="letter-modal__result" data-testid="letter-result">
 				<p>
@@ -96,7 +117,7 @@
 			</p>
 		</div>
 		<template #actions>
-			<NcButton variant="tertiary" @click="$emit('close')">
+			<NcButton @click="$emit('close')">
 				{{ result ? t('pipelinq', 'Close') : t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
@@ -105,14 +126,19 @@
 				:disabled="!canMake"
 				data-testid="letter-make"
 				@click="make">
+				<template #icon>
+					<FileDocumentOutline :size="20" />
+				</template>
 				{{ t('pipelinq', 'Make letter') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcSelect } from '@nextcloud/vue'
+import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import {
 	downloadLetter,
 	fetchLetterTemplates,
@@ -123,8 +149,9 @@ import { useObjectStore } from '../store/modules/object.js'
 export default {
 	name: 'LetterFromTemplateModal',
 	components: {
+		CnDialog,
+		FileDocumentOutline,
 		NcButton,
-		NcDialog,
 		NcSelect,
 	},
 
@@ -152,6 +179,9 @@ export default {
 			contacts: [],
 			templateId: null,
 			contactId: null,
+			clientName: '',
+			tickets: [],
+			aboutTicketId: null,
 			resolvedClientId: '',
 			resolvedTicketId: '',
 			making: false,
@@ -171,6 +201,19 @@ export default {
 		/**
 		 * @spec openspec/specs/client-letters/spec.md
 		 */
+		/** @return {string} "Sanne de Vries · letter". */
+		eyebrow() {
+			return [this.clientName, t('pipelinq', 'letter')].filter(Boolean).join(' · ')
+		},
+
+		/** @return {Array<{value: string, label: string}>} The client's tickets the letter can be about. */
+		ticketOptions() {
+			return this.tickets.map((ticket) => ({
+				value: ticket.id,
+				label: [ticket.reference, ticket.title].filter(Boolean).join(' '),
+			}))
+		},
+
 		contactOptions() {
 			return this.contacts.map((c) => ({ value: c.id, label: c.name || c.id }))
 		},
@@ -225,6 +268,19 @@ export default {
 				this.templates = answer.templates
 				if (this.templates.length === 1)
 					this.templateId = this.templates[0].id
+				if (this.resolvedClientId) {
+					const client = await store.fetchObject('client', this.resolvedClientId).catch(() => null)
+					this.clientName = client?.name || ''
+				}
+				if (this.available && this.resolvedClientId && !ticketId) {
+					this.tickets = (await store.fetchCollection('ticket', {
+						client: this.resolvedClientId,
+						_limit: 50,
+					}).catch(() => [])) || []
+					if (this.tickets.length > 0) {
+						this.aboutTicketId = this.tickets[0].id
+					}
+				}
 				if (this.available && this.resolvedClientId) {
 					this.contacts =
 						(await store.fetchCollection('contact', {
@@ -261,7 +317,7 @@ export default {
 				const letter = await makeLetter(this.resolvedClientId, {
 					templateId: this.templateId,
 					contactId: this.contactId || undefined,
-					ticketId: this.resolvedTicketId || undefined,
+					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
 				})
 				downloadLetter(letter)
 				this.result = letter
@@ -287,5 +343,28 @@ export default {
 
 .letter-modal__error {
 	color: var(--color-error-text, var(--color-error));
+}
+
+.letter-modal__fields {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+}
+
+.letter-modal__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.letter-modal__wide {
+	grid-column: 1 / -1;
+}
+
+.letter-modal__hint {
+	margin: 0;
+	font-size: 13px;
+	line-height: normal;
+	color: var(--color-text-maxcontrast);
 }
 </style>

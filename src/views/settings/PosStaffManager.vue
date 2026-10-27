@@ -14,7 +14,7 @@
   - instead of routing to a detail page and the form opens in a dialog.
   -->
 <template>
-	<NcSettingsSection
+	<CnSettingsSection
 		:name="t('pipelinq', 'Till staff')"
 		:description="
 			t(
@@ -22,24 +22,37 @@
 				'Till staff who can sign in at the till, and the till role of each.',
 			)
 		">
+		<!-- Adding one is the section's title-row button, as the board draws it. -->
+		<template #actions>
+			<NcButton variant="secondary" @click="openNew">
+				<template #icon>
+					<Plus :size="20" />
+				</template>
+				{{ t('pipelinq', 'New staff member') }}
+			</NcButton>
+		</template>
 		<PosStaffList :key="reloadKey" @edit="openStaff" @create="openNew" />
 
 		<PosStaffFormDialog
 			v-if="dialogOpen"
 			:staffId="editingId"
 			@done="closeDialog" />
-	</NcSettingsSection>
+	</CnSettingsSection>
 </template>
 
 <script>
-import { NcSettingsSection } from '@nextcloud/vue'
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import PosStaffFormDialog from '../../dialogs/PosStaffFormDialog.vue'
 import PosStaffList from '../pos/PosStaffList.vue'
 
 export default {
 	name: 'PosStaffManager',
 	components: {
-		NcSettingsSection,
+		CnSettingsSection,
+		NcButton,
+		Plus,
 		PosStaffList,
 		PosStaffFormDialog,
 	},
