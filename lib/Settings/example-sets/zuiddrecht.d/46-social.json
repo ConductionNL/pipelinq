@@ -145,6 +145,7 @@
 			"schema": "socialPost",
 			"data": {
 				"title": "De afvalkalender 2027 komt eraan",
+				"campaignId": "{{object:campagne-afvalvrije-week.id}}",
 				"body": "Half oktober staat de afvalkalender voor 2027 in Mijn Zuiddrecht.",
 				"accountIds": [
 					"{{object:sociaal-account-mastodon.id}}",
@@ -327,6 +328,7 @@
 			"schema": "socialPost",
 			"data": {
 				"title": "Afval scheiden: de nieuwe containers",
+				"campaignId": "{{object:campagne-afvalvrije-week.id}}",
 				"body": "Afval scheiden: de nieuwe containers. Lees meer op zuiddrecht.example.",
 				"accountIds": [
 					"{{object:sociaal-account-mastodon.id}}",
