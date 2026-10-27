@@ -2222,7 +2222,7 @@
 				"signature": "9f2c415ec19a930cbc7b4c6b46644edcd8e83a809afdb207915fe51470d7e07a",
 				"previousHash": "77aa93f7c91aa68eb1d5c7d09c3cfb0d5531872eceda9689338713b626fbc2d8",
 				"currentHash": "b81d0c54aad1da199694b6d742904decc5dcc78f3e289cd592956edf63e344f1",
-				"verified": false
+				"verified": null
 			}
 		},
 		{
@@ -2241,7 +2241,7 @@
 				"signature": "4d745387a90852cb1db1142babe6404e27e7d052290201b2226395193cb11bea",
 				"previousHash": "de82bafac095cfdf5fca1c81cc91da11e4e0b45eabd8c8210741c6547912fbe5",
 				"currentHash": "9ca1ff92340d7dec259102d3007fc7bbe01e6a29aa0dd7d3365ee2c7855ed7ba",
-				"verified": true
+				"verified": null
 			}
 		},
 		{
@@ -2260,7 +2260,7 @@
 				"signature": "5e91445bf3aded5eddaeac2b81f472e21734c52de8052e15fe6df8b82609097e",
 				"previousHash": "6a0b6ad2f665d0e3993c5daa1bff786356b8e8b8fb18a569bb1c47ebbc277431",
 				"currentHash": "552a973e4a118cdfce993a9bb51a89948e4c092e011b22c9f835f1df3d9fce43",
-				"verified": true
+				"verified": null
 			}
 		},
 		{
@@ -2268,6 +2268,7 @@
 			"register": "pipelinq",
 			"schema": "kassakoppelingAuditLog",
 			"data": {
+				"verified": null,
 				"operatorId": "{{cast:pieter.uid}}",
 				"registerNumber": "REG-002",
 				"action": "refund",
