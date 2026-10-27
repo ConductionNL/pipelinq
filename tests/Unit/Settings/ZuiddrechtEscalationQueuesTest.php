@@ -40,7 +40,7 @@ class ZuiddrechtEscalationQueuesTest extends TestCase {
 	 */
 	public function testTheBoardsQueuesAreSeededWithTheirGroups(): void {
 		$fragment = json_decode(
-			(string)file_get_contents(__DIR__ . '/../../../lib/Settings/example-sets/zuiddrecht.d/70-escalation-queues.json'),
+			(string)file_get_contents(__DIR__ . '/../../../lib/Settings/example-sets/zuiddrecht.d/71-escalation-queues.json'),
 			true
 		);
 		$value = '';
