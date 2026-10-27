@@ -8353,7 +8353,11 @@ OC.L10N.register(
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.",
         "Public-space report": "Public-space report",
-        "melding": "melding"
+        "melding": "melding",
+        "Desk": "Desk",
+        "Left at": "Left at",
+        "The desk the customer is called to, such as Desk 2.": "The desk the customer is called to, such as Desk 2.",
+        "When the customer left before being helped.": "When the customer left before being helped."
     },
     "nplurals=2; plural=(n != 1);"
 )

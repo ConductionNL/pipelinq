@@ -8324,7 +8324,11 @@ OC.L10N.register(
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "Een fasewissel, een contract dat verlengd kan worden, een bevestigde inschrijving, een boekhoudsignaal, een nieuw adres of een afgesloten ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem.",
         "Public-space report": "Melding",
-        "melding": "Melding"
+        "melding": "Melding",
+        "Desk": "Balie",
+        "Left at": "Vertrokken om",
+        "The desk the customer is called to, such as Desk 2.": "De balie waar de klant naartoe wordt geroepen, zoals Balie 2.",
+        "When the customer left before being helped.": "Wanneer de klant vertrok voordat die werd geholpen."
     },
     "nplurals=2; plural=(n != 1);"
 )
