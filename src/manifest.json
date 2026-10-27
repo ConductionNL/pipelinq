@@ -6799,6 +6799,10 @@
 				"showRefresh": true,
 				"showWidgetActions": false,
 				"gridFloat": false,
+				"greeting": "date",
+				"descriptionSource": {
+					"url": "/apps/pipelinq/api/worklist/summary"
+				},
 				"headerActions": [
 					{
 						"id": "my-work-download",

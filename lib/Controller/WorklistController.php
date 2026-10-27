@@ -156,6 +156,32 @@ class WorklistController extends Controller {
 	}//end items()
 
 	/**
+	 * GET /api/worklist/summary: one sentence on the session user's open work,
+	 * for My work's header (`{ text }`).
+	 *
+	 * @return JSONResponse The sentence, or an error envelope.
+	 *
+	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	#[NoAdminRequired]
+	public function summary(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		try {
+			return new JSONResponse(['text' => $this->worklistService->summary(userId: $user->getUID())]);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				message: '[WorklistController] summary failed',
+				context: ['error' => $e->getMessage()]
+			);
+			return new JSONResponse(['message' => 'Worklist unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+	}//end summary()
+
+	/**
 	 * The items as CSV: kind, title, priority, due date, list.
 	 *
 	 * @param array<int, array<string, mixed>> $items The items.

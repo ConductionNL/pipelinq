@@ -160,6 +160,11 @@ describe('the My work page', () => {
 		}
 	})
 
+	it('heads the page with the date and a summary of the work', () => {
+		expect(page.config.greeting).toBe('date')
+		expect(page.config.descriptionSource.url).toBe('/apps/pipelinq/api/worklist/summary')
+	})
+
 	it('downloads what the page shows', () => {
 		expect(page.config.headerActions[0]).toMatchObject({ label: 'Download', href: expect.stringContaining('/api/worklist/items?format=csv') })
 	})

@@ -140,7 +140,12 @@ class WorklistServiceTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(
 			static function (string $text, array $parameters = []): string {
-				return $text;
+				return vsprintf($text, $parameters);
+			}
+		);
+		$l10n->method('n')->willReturnCallback(
+			static function (string $singular, string $plural, int $count): string {
+				return str_replace('%n', (string)$count, ($count === 1 ? $singular : $plural));
 			}
 		);
 
@@ -644,4 +649,24 @@ class WorklistServiceTest extends TestCase {
 		self::assertSame(['t3'], array_column($service->items(userId: 'pieter', bucket: 'waiting-on-customer')['items'], 'id'));
 		self::assertSame(['t1', 't3'], array_column($service->items(userId: 'pieter', lens: 'tickets')['items'], 'id'));
 	}//end testItemsMixTicketsLeadsAndTasksPerList()
+
+	/**
+	 * The header sentence counts the work by kind and what is due today.
+	 *
+	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testSummaryCountsTheWorkByKind(): void {
+		$service = $this->buildService([
+			'lead_schema' => [['id' => 'l1', 'title' => 'Catering', 'expectedCloseDate' => self::iso('+9 days')]],
+			'ticket_schema:request' => [
+				['id' => 't1', 'title' => 'Afvalpas', 'ticketType' => 'request', 'status' => 'in_progress', 'slaDeadline' => self::iso('-1 day')],
+				['id' => 't2', 'title' => 'Straatfeest', 'ticketType' => 'request', 'status' => 'new', 'slaDeadline' => self::iso('+2 days')],
+			],
+		]);
+
+		self::assertSame('3 items are with you: 2 tickets and 1 lead; 1 must be answered today', $service->summary(userId: 'pieter'));
+		self::assertSame('Nothing is with you right now', $this->buildService([])->summary(userId: 'pieter'));
+	}//end testSummaryCountsTheWorkByKind()
 }

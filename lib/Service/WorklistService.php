@@ -489,6 +489,65 @@ class WorklistService {
 	}//end taskRows()
 
 	/**
+	 * One sentence on the user's open work, for My work's header: how many
+	 * items, by kind, and how many are due today ("9 items are with you: 7
+	 * tickets, 1 lead and 1 follow-up; 2 must be answered today").
+	 *
+	 * @param string $userId The Nextcloud UID.
+	 *
+	 * @return string The sentence.
+	 *
+	 * @throws RuntimeException When OpenRegister is unreachable.
+	 *
+	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	public function summary(string $userId): string {
+		$items   = $this->items(userId: $userId)['items'];
+		$counts  = ['tickets' => 0, 'leads' => 0, 'tasks' => 0];
+		$dueNow  = 0;
+		$buckets = new WorkBuckets();
+		foreach ($items as $item) {
+			foreach (array_keys($counts) as $lens) {
+				if ($buckets->inLens(kind: $item['kind'], lens: $lens) === true) {
+					$counts[$lens]++;
+				}
+			}
+
+			if ($item['bucket'] === 'answer-today') {
+				$dueNow++;
+			}
+		}
+
+		if ($items === []) {
+			return $this->l10n->t('Nothing is with you right now');
+		}
+
+		$parts = array_values(
+			array_filter(
+				[
+					$this->l10n->n('%n ticket', '%n tickets', $counts['tickets']),
+					$this->l10n->n('%n lead', '%n leads', $counts['leads']),
+					$this->l10n->n('%n follow-up', '%n follow-ups', $counts['tasks']),
+				],
+				static fn (string $part, int $index): bool => (array_values($counts)[$index] > 0),
+				ARRAY_FILTER_USE_BOTH
+			)
+		);
+		$last = array_pop($parts);
+		$kinds = $last;
+		if ($parts !== []) {
+			$kinds = $this->l10n->t('%1$s and %2$s', [implode(', ', $parts), $last]);
+		}
+
+		$sentence = $this->l10n->n('%n item is with you', '%n items are with you', count($items)) . ': ' . $kinds;
+		if ($dueNow > 0) {
+			$sentence .= '; ' . $this->l10n->n('%n must be answered today', '%n must be answered today', $dueNow);
+		}
+
+		return $sentence;
+	}//end summary()
+
+	/**
 	 * Each item with the name of its client (`clientName`), read once per
 	 * client; '' when the item has none or the client cannot be read.
 	 *
