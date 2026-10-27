@@ -103,7 +103,10 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:slagerij.kvk}}.",
-				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000001"
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000001",
+				"kvkNumber": "{{cast:slagerij.kvk}}",
+				"legalForm": "eenmanszaak",
+				"place": "{{cast:slagerij.address.city}}"
 			}
 		},
 		{
@@ -142,7 +145,10 @@
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:cloudgemeente.kvk}}.",
 				"website": "https://cloudgemeente.zuiddrecht.example",
-				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000002"
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000002",
+				"kvkNumber": "{{cast:cloudgemeente.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:cloudgemeente.address.city}}"
 			}
 		},
 		{
@@ -180,7 +186,10 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:vandam.kvk}}.",
-				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000003"
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000003",
+				"kvkNumber": "{{cast:vandam.kvk}}",
+				"legalForm": "eenmanszaak",
+				"place": "{{cast:vandam.address.city}}"
 			}
 		},
 		{
@@ -203,7 +212,10 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:buurtoost.kvk}}. Voorzitter Marja Verbeek, secretaris Kees de Wit.",
-				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000007"
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000007",
+				"kvkNumber": "{{cast:buurtoost.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:buurtoost.address.city}}"
 			}
 		},
 		{
@@ -435,7 +447,14 @@
 				"accountStatus": "active",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:dagblad.kvk}}."
+				"notes": "KVK-nummer {{cast:dagblad.kvk}}.",
+				"kvkNumber": "{{cast:dagblad.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:dagblad.address.city}}",
+				"industry": [
+					"{{cast:dagblad.sbi.description}}"
+				],
+				"address": "{{cast:dagblad.address.street}} {{cast:dagblad.address.number}}, {{cast:dagblad.address.postcode}} {{cast:dagblad.address.city}}"
 			}
 		},
 		{
@@ -451,7 +470,14 @@
 				"accountStatus": "active",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:kindzorg.kvk}}."
+				"notes": "KVK-nummer {{cast:kindzorg.kvk}}.",
+				"kvkNumber": "{{cast:kindzorg.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:kindzorg.address.city}}",
+				"industry": [
+					"{{cast:kindzorg.sbi.description}}"
+				],
+				"address": "{{cast:kindzorg.address.street}} {{cast:kindzorg.address.number}}, {{cast:kindzorg.address.postcode}} {{cast:kindzorg.address.city}}"
 			}
 		},
 		{
@@ -473,7 +499,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:visserbouw.kvk}}."
+				"notes": "KVK-nummer {{cast:visserbouw.kvk}}.",
+				"kvkNumber": "{{cast:visserbouw.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:visserbouw.address.city}}"
 			}
 		},
 		{
@@ -495,7 +524,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:vanwijk.kvk}}."
+				"notes": "KVK-nummer {{cast:vanwijk.kvk}}.",
+				"kvkNumber": "{{cast:vanwijk.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:vanwijk.address.city}}"
 			}
 		},
 		{
@@ -517,7 +549,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:bewonerslindelaan.kvk}}."
+				"notes": "KVK-nummer {{cast:bewonerslindelaan.kvk}}.",
+				"kvkNumber": "{{cast:bewonerslindelaan.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:bewonerslindelaan.address.city}}"
 			}
 		},
 		{
@@ -539,7 +574,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:bakkerijdemolen.kvk}}."
+				"notes": "KVK-nummer {{cast:bakkerijdemolen.kvk}}.",
+				"kvkNumber": "{{cast:bakkerijdemolen.kvk}}",
+				"legalForm": "eenmanszaak",
+				"place": "{{cast:bakkerijdemolen.address.city}}"
 			}
 		},
 		{
@@ -561,7 +599,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:lumeninfra.kvk}}."
+				"notes": "KVK-nummer {{cast:lumeninfra.kvk}}.",
+				"kvkNumber": "{{cast:lumeninfra.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:lumeninfra.address.city}}"
 			}
 		},
 		{
@@ -583,7 +624,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:groenenco.kvk}}."
+				"notes": "KVK-nummer {{cast:groenenco.kvk}}.",
+				"kvkNumber": "{{cast:groenenco.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:groenenco.address.city}}"
 			}
 		},
 		{
@@ -605,7 +649,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:sportclub.kvk}}."
+				"notes": "KVK-nummer {{cast:sportclub.kvk}}.",
+				"kvkNumber": "{{cast:sportclub.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:sportclub.address.city}}"
 			}
 		},
 		{
@@ -627,7 +674,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:vvekerkplein.kvk}}."
+				"notes": "KVK-nummer {{cast:vvekerkplein.kvk}}.",
+				"kvkNumber": "{{cast:vvekerkplein.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:vvekerkplein.address.city}}"
 			}
 		},
 		{
@@ -649,7 +699,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:harmonie.kvk}}."
+				"notes": "KVK-nummer {{cast:harmonie.kvk}}.",
+				"kvkNumber": "{{cast:harmonie.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:harmonie.address.city}}"
 			}
 		},
 		{
@@ -671,7 +724,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:tennisdekade.kvk}}."
+				"notes": "KVK-nummer {{cast:tennisdekade.kvk}}.",
+				"kvkNumber": "{{cast:tennisdekade.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:tennisdekade.address.city}}"
 			}
 		},
 		{
@@ -693,7 +749,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:ondernemers.kvk}}."
+				"notes": "KVK-nummer {{cast:ondernemers.kvk}}.",
+				"kvkNumber": "{{cast:ondernemers.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:ondernemers.address.city}}"
 			}
 		},
 		{
@@ -715,7 +774,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:scouting.kvk}}."
+				"notes": "KVK-nummer {{cast:scouting.kvk}}.",
+				"kvkNumber": "{{cast:scouting.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:scouting.address.city}}"
 			}
 		},
 		{
@@ -737,7 +799,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:drechthof.kvk}}."
+				"notes": "KVK-nummer {{cast:drechthof.kvk}}.",
+				"kvkNumber": "{{cast:drechthof.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:drechthof.address.city}}"
 			}
 		},
 		{
@@ -759,7 +824,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:voedselbank.kvk}}."
+				"notes": "KVK-nummer {{cast:voedselbank.kvk}}.",
+				"kvkNumber": "{{cast:voedselbank.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:voedselbank.address.city}}"
 			}
 		},
 		{
@@ -781,7 +849,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:dorpshuis.kvk}}."
+				"notes": "KVK-nummer {{cast:dorpshuis.kvk}}.",
+				"kvkNumber": "{{cast:dorpshuis.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:dorpshuis.address.city}}"
 			}
 		},
 		{
@@ -803,7 +874,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:jeugdtheater.kvk}}."
+				"notes": "KVK-nummer {{cast:jeugdtheater.kvk}}.",
+				"kvkNumber": "{{cast:jeugdtheater.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:jeugdtheater.address.city}}"
 			}
 		},
 		{
@@ -825,7 +899,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:erfgoed.kvk}}."
+				"notes": "KVK-nummer {{cast:erfgoed.kvk}}.",
+				"kvkNumber": "{{cast:erfgoed.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:erfgoed.address.city}}"
 			}
 		},
 		{
@@ -856,7 +933,7 @@
 				"contactsUid": "example-dewit",
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
-				"preferredChannel": "counter",
+				"preferredChannel": "other",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "Komt meestal langs aan de balie."
@@ -906,7 +983,7 @@
 				"contactsUid": "{{cast:henkvisser.contactsUid}}",
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
-				"preferredChannel": "post",
+				"preferredChannel": "other",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "Schrijft liever een brief."
