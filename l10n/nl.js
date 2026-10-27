@@ -8551,7 +8551,13 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Daarna: schrijf het resultaat op en rond de taak af",
         "What now? Try again before the deadline": "Wat nu? Opnieuw proberen voor de termijn",
         "An attempt is logged": "Er is een poging vastgelegd",
-        "Call the customer": "Bellen"
+        "Call the customer": "Bellen",
+        "Results of your sends": "Prestaties van verzendingen",
+        "Variant A {a}%, variant B {b}% · {count} recipients": "Variant A {a}%, variant B {b}% · {count} ontvangers",
+        "Higher click rate": "Hogere klikratio",
+        "Subject: {subject}": "Onderwerp: {subject}",
+        "Variant A {a} click rate, variant B {b} click rate": "Variant A {a} klikratio, variant B {b} klikratio",
+        "Portal sessions that came in through a link in the mail": "Sessies op het portaal die via een link in de mail kwamen"
     },
     "nplurals=2; plural=(n != 1);"
 )

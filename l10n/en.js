@@ -8580,7 +8580,13 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Then: write down the result and finish the task",
         "What now? Try again before the deadline": "What now? Try again before the deadline",
         "An attempt is logged": "An attempt is logged",
-        "Call the customer": "Call the customer"
+        "Call the customer": "Call the customer",
+        "Results of your sends": "Results of your sends",
+        "Variant A {a}%, variant B {b}% · {count} recipients": "Variant A {a}%, variant B {b}% · {count} recipients",
+        "Higher click rate": "Higher click rate",
+        "Subject: {subject}": "Subject: {subject}",
+        "Variant A {a} click rate, variant B {b} click rate": "Variant A {a} click rate, variant B {b} click rate",
+        "Portal sessions that came in through a link in the mail": "Portal sessions that came in through a link in the mail"
     },
     "nplurals=2; plural=(n != 1);"
 )
