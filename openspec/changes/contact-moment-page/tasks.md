@@ -1,0 +1,5 @@
+- [x] Contact-moment overview widgets and side cards, gated by ticketType
+- [x] Request widgets and side cards hide on a contact moment
+- [x] nextStep variant and crumb per kind
+- [x] l10n en/nl
+- [x] Vitest

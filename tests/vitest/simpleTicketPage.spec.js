@@ -135,10 +135,22 @@ describe('the full structure', () => {
 
 describe('the header, as DqZaak draws it', () => {
 	it('reads the list as a text breadcrumb, has no type eyebrow, sits in a card and shows the tabs as the folder tabs of the board', () => {
-		expect(simple.breadcrumb).toEqual({
-			label: 'Questions and reports',
-			route: 'Tickets',
-		})
+		const interaction = { field: 'ticketType', op: 'eq', value: 'interaction' }
+		expect(simple.breadcrumb).toEqual([
+			{
+				label: 'Questions and reports',
+				route: 'Tickets',
+				visibleWhen: { ...interaction, op: 'neq' },
+			},
+			{
+				label: 'Contact moments',
+				route: 'Tickets',
+				query: { ticketType: 'interaction' },
+				currentField: 'reference',
+				separator: '/',
+				visibleWhen: interaction,
+			},
+		])
 		expect(simple.showTypeEyebrow).toBe(false)
 		expect(simple.headerCard).toBe(true)
 		const tabs = simple.widgets.find((widget) => widget.id === 'ticket-panels')
@@ -382,14 +394,19 @@ describe('the pills and the side column', () => {
 				typeof card === 'string' ? card : card.id,
 			),
 		).toEqual([
+			'side-cm-client',
+			'side-cm-handling',
+			'side-cm-case',
+			'side-cm-colleagues',
+			'side-cm-follow-up',
 			'side-customer',
 			'side-deadline',
 			'side-case',
-			'ticket-related',
+			'side-related',
 			'ticket-resident-view',
 		])
 		for (const card of simple.sideColumn.filter(
-			(item) => typeof item !== 'string',
+			(item) => typeof item !== 'string' && item.type === 'data',
 		)) {
 			expect(card.type).toBe('data')
 			expect(card.content.editable).toBe(false)
@@ -486,6 +503,9 @@ describe('the body', () => {
 			'History',
 		])
 		expect(panels.content.tabs[0].widgetIds).toEqual([
+			'contact-details',
+			'contact-notes',
+			'contact-request',
 			'ticket-data',
 			'ticket-conversation',
 			'ticket-dossier',
@@ -569,6 +589,97 @@ describe('the body', () => {
 		expect(read('appinfo', 'routes.php')).toContain(
 			"'/api/handoff/request/{id}/convert-to-case'",
 		)
+	})
+})
+
+/**
+ * Board PqContactmoment: a contact moment (ticketType interaction) is read on
+ * the same page with its own cards, and a request keeps its own.
+ *
+ * @spec openspec/changes/contact-moment-page/specs/ticket-detail-page/spec.md#requirement-a-contact-moment-has-its-own-overview-on-the-ticket-page
+ */
+describe('the contact moment (board PqContactmoment)', () => {
+	const MOMENT = { ticketType: 'interaction', status: 'in_progress', client: 'c-1', parentTicket: 't-0' }
+	const REQUEST = { ticketType: 'request', status: 'in_progress' }
+	const widgetById = Object.fromEntries(simple.widgets.map((widget) => [widget.id, widget]))
+	const overview = simple.widgets.find((widget) => widget.id === 'ticket-panels').content.tabs[0].widgetIds
+	const cardOf = (entry) => (typeof entry === 'string' ? widgetById[entry] : entry)
+	const shows = (item, ticket) => !item.visibleWhen || evaluateVisibleWhenLocal(item.visibleWhen, ticket)
+	const registerFile = readJson('lib', 'Settings', 'pipelinq_register.json')
+	const schemaProperties = (slug) => Object.assign(
+		{},
+		registerFile.components.schemas[slug]?.properties || {},
+		...fs.readdirSync(registerDir).filter((name) => name.endsWith('.json'))
+			.map((name) => readJson('lib', 'Settings', 'register.d', name).components?.schemas?.[slug]?.properties || {}),
+	)
+
+	it('shows the contact details, the notes and the request it was about in the Overview, and none of the request\'s cards', () => {
+		expect(overview.filter((id) => shows(widgetById[id], MOMENT))).toEqual(['contact-details', 'contact-notes', 'contact-request'])
+		expect(overview.filter((id) => shows(widgetById[id], REQUEST))).toEqual(['ticket-data', 'ticket-conversation', 'ticket-dossier', 'ticket-woo', 'ticket-case'])
+	})
+
+	it('draws the side cards of the board, and a request keeps its own', () => {
+		const ids = (ticket) => simple.sideColumn.map(cardOf).filter((card) => shows(card, ticket)).map((card) => card.id)
+		expect(ids(MOMENT)).toEqual(['side-cm-client', 'side-cm-handling', 'side-cm-case', 'side-cm-colleagues', 'side-cm-follow-up'])
+		expect(ids(REQUEST)).toEqual(['side-customer', 'side-deadline', 'side-case', 'side-related', 'ticket-resident-view'])
+	})
+
+	it('reads fields the ticket has', () => {
+		const ticket = schemaProperties('ticket')
+		const paths = []
+		const collect = (value) => {
+			if (Array.isArray(value)) {
+				value.forEach(collect)
+			} else if (value && typeof value === 'object') {
+				if (typeof value.path === 'string' && !value.source) {
+					paths.push(value.path)
+				}
+				Object.values(value).forEach(collect)
+			}
+		}
+		for (const id of ['contact-details', 'side-cm-handling', 'side-cm-case']) {
+			collect((cardOf(id) || simple.sideColumn.find((card) => card.id === id)).content.fields)
+		}
+		for (const path of paths) {
+			expect(ticket[path], path).toBeTruthy()
+		}
+		expect(ticket[widgetById['contact-notes'].content.field]).toBeTruthy()
+	})
+
+	it('offers outcomes the ticket schema knows, saved with their own button', () => {
+		const outcome = widgetById['contact-notes'].content.outcome
+		expect(widgetById['contact-notes'].type).toBe('record-notes')
+		expect(outcome.saveLabel).toBe('Note the outcome')
+		const allowed = schemaProperties('ticket')[outcome.field].enum
+		for (const option of outcome.options) {
+			expect(allowed, option.value).toContain(option.value)
+		}
+	})
+
+	it('plans a callback as a callback task on this contact moment', () => {
+		const followUp = simple.sideColumn.find((card) => card.id === 'side-cm-follow-up')
+		const task = schemaProperties('crmTask')
+		expect(followUp.content.schema).toBe('crmTask')
+		expect(followUp.content.filter).toEqual({ contactMoment: '@objectId', type: 'callbackRequest', status: 'open' })
+		expect(followUp.content.footerAction.props.contactMoment).toBe('@objectId')
+		for (const field of [...Object.keys(followUp.content.filter), ...followUp.content.footerAction.includeFields]) {
+			expect(task[field], field).toBeTruthy()
+		}
+	})
+
+	it('has its own what-now steps on fields the ticket has, and no primary button', () => {
+		const variant = simple.nextStep.variants.find((entry) => evaluateVisibleWhenLocal(entry.when, MOMENT))
+		const card = resolveNextStep({ ...simple.nextStep, ...variant }, MOMENT, simple.stageField)
+		expect(card.items.map((item) => [item.label, item.done])).toEqual([
+			['The customer is known', true],
+			['Linked to the request it was about', true],
+			['The outcome is noted', false],
+		])
+		for (const item of variant.stages.in_progress.checklist) {
+			expect(ticketProperties[item.doneField], item.doneField).toBeTruthy()
+		}
+		expect(simple.nextStep.variants.some((entry) => evaluateVisibleWhenLocal(entry.when, REQUEST))).toBe(false)
+		expect(primaryFor(MOMENT)).toBeNull()
 	})
 })
 
