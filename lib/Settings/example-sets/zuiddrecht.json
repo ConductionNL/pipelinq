@@ -3574,35 +3574,6 @@
 			}
 		},
 		{
-			"key": "booking-locatiebezoek-parkstraat",
-			"register": "pipelinq",
-			"schema": "appointmentBooking",
-			"data": {
-				"customerId": "{{object:client-sanne.id}}",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"startAt": "{{datetime:7 14:00}}",
-				"endAt": "{{datetime:7 15:00}}",
-				"status": "confirmed",
-				"statusHistory": [
-					{
-						"status": "confirmed",
-						"reason": "Telefonisch geboekt",
-						"changedAt": "{{datetime:-3 09:18}}",
-						"changedBy": "{{cast:pieter.uid}}"
-					}
-				],
-				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest. Neem een schets van de kramen en het podium mee.",
-				"internalNotes": "Controleer de calamiteitenroute en waar de brandweer langs kan.",
-				"source": "phone",
-				"confirmationSentAt": "{{datetime:-3 09:20}}",
-				"subject": "Locatiebezoek Parkstraat",
-				"location": "Parkstraat 24",
-				"assignee": "{{cast:daan.uid}}",
-				"depositAmount": 25,
-				"resourceAssignments": []
-			}
-		},
-		{
 			"key": "export-destination-warehouse",
 			"register": "pipelinq",
 			"schema": "exportDestination",
