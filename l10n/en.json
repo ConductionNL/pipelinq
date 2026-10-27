@@ -8475,6 +8475,12 @@
         "Nine menu items for customer contact. Everything else is one step away, on the Modules page or in the settings.": "Nine menu items for customer contact. Everything else is one step away, on the Modules page or in the settings.",
         "Every page in the menu.": "Every page in the menu.",
         "Modules in the menu": "Modules in the menu",
-        "Off: {runtime.menu.modulesOff}. A module that is off stays reachable through the Modules page.": "Off: {runtime.menu.modulesOff}. A module that is off stays reachable through the Modules page."
+        "Off: {runtime.menu.modulesOff}. A module that is off stays reachable through the Modules page.": "Off: {runtime.menu.modulesOff}. A module that is off stays reachable through the Modules page.",
+        "1 article, the content of the page": "1 article, the content of the page",
+        "{count} newsletter": "{count} newsletter",
+        "{count} newsletters": "{count} newsletters",
+        "{count} social post": "{count} social post",
+        "{count} social posts": "{count} social posts",
+        "{count} lead": "{count} lead"
     }
 }

@@ -8446,6 +8446,12 @@
         "Nine menu items for customer contact. Everything else is one step away, on the Modules page or in the settings.": "Negen menu-items voor klantcontact. Al het andere staat een stap verder, op de pagina Modules of in de instellingen.",
         "Every page in the menu.": "Elke pagina in het menu.",
         "Modules in the menu": "Modules in het menu",
-        "Off: {runtime.menu.modulesOff}. A module that is off stays reachable through the Modules page.": "Uit: {runtime.menu.modulesOff}. Een module die uit staat blijft bereikbaar via de pagina Modules."
+        "Off: {runtime.menu.modulesOff}. A module that is off stays reachable through the Modules page.": "Uit: {runtime.menu.modulesOff}. Een module die uit staat blijft bereikbaar via de pagina Modules.",
+        "1 article, the content of the page": "1 artikel, de inhoud van de pagina",
+        "{count} newsletter": "{count} nieuwsbrief",
+        "{count} newsletters": "{count} nieuwsbrieven",
+        "{count} social post": "{count} sociaal bericht",
+        "{count} social posts": "{count} sociale berichten",
+        "{count} lead": "{count} lead"
     }
 }

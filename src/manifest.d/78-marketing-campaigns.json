@@ -233,11 +233,71 @@
 					},
 					{
 						"id": "campaign-contents",
-						"type": "markdown",
+						"type": "menu",
 						"title": "In this campaign",
 						"content": {
-							"markdown": "[Nieuwsbrieven](/index.php/apps/pipelinq/blasts)\n\n[Sociale berichten](/index.php/apps/pipelinq/social-posts)\n\n[Artikelen, de inhoud van de pagina](/index.php/apps/pipelinq/articles)\n\n[Leads](/index.php/apps/pipelinq/leads)"
-						}
+							"style": "tree",
+							"showIcons": false,
+							"activeItemHighlight": "none",
+							"expandedByDefault": true,
+							"items": [
+								{
+									"label": "Newsletters",
+									"url": "/index.php/apps/pipelinq/blasts",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "blast",
+										"filter": {
+											"campaignId": "@objectId"
+										}
+									},
+									"countLabel": {
+										"one": "{count} newsletter",
+										"other": "{count} newsletters"
+									}
+								},
+								{
+									"label": "Social posts",
+									"url": "/index.php/apps/pipelinq/social-posts",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "socialPost",
+										"filter": {
+											"campaignId": "@objectId"
+										}
+									},
+									"countLabel": {
+										"one": "{count} social post",
+										"other": "{count} social posts"
+									}
+								},
+								{
+									"label": "1 article, the content of the page",
+									"url": "/index.php/apps/pipelinq/articles",
+									"visibleIf": {
+										"object.articleBody": {
+											"truthy": true
+										}
+									}
+								},
+								{
+									"label": "Leads",
+									"url": "/index.php/apps/pipelinq/leads",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "lead",
+										"filter": {
+											"campaignId": "@objectId"
+										}
+									},
+									"countLabel": {
+										"one": "{count} lead",
+										"other": "{count} leads"
+									}
+								}
+							]
+						},
+						"_note": "PqCampagne \"In deze campagne\": each line names how many the campaign holds, counted per campaign (countFrom with @objectId, countLabel)."
 					},
 					{
 						"id": "campaign-side-history",
