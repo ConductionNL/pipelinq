@@ -2787,6 +2787,7 @@
 									"countFrom": "widget"
 								},
 								{
+									"id": "client-contact-persons",
 									"widgetId": "client-quick-contacts",
 									"label": "Contact persons",
 									"countFrom": "widget",
@@ -3137,6 +3138,48 @@
 									"path": "address"
 								}
 							]
+						}
+					},
+					{
+						"id": "side-main-contact",
+						"type": "record-list",
+						"title": "Main contact",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Hoofdcontact: the contact person flagged mainContact (else the first), with initials, role and e-mail, and the link to the Contact persons tab. Card layout as dossiq's DqOrganisatie Main contact.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "contact",
+							"filter": {
+								"client": "@objectId"
+							},
+							"sort": {
+								"field": "mainContact",
+								"dir": "desc"
+							},
+							"limit": 1,
+							"presentation": "rows",
+							"density": "stacked",
+							"chevron": false,
+							"avatar": {
+								"text": "{name}",
+								"size": 32
+							},
+							"title": "{name}",
+							"meta": {
+								"parts": [
+									"{role}"
+								]
+							},
+							"text": "{email}",
+							"emptyText": "No contact persons yet",
+							"footerLink": {
+								"label": "All {total} contact persons",
+								"href": "#client-contact-persons"
+							}
 						}
 					},
 					{

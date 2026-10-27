@@ -89,14 +89,14 @@ describe('ClientDetail side column as the boards draw it', () => {
 	const card = (id) => config.sideColumn.find((entry) => typeof entry === 'object' && entry.id === id)
 
 	it('keeps the boards\' order: resident cards, organisation cards, then the shared ones', () => {
-		expect(ids.slice(0, 8)).toEqual(['side-reach', 'side-identity', 'side-address', 'side-kvk', 'side-open-ticket', 'client-channels', 'client-relationships', 'side-history'])
+		expect(ids.slice(0, 9)).toEqual(['side-reach', 'side-identity', 'side-address', 'side-kvk', 'side-main-contact', 'side-open-ticket', 'client-channels', 'client-relationships', 'side-history'])
 	})
 
 	it('shows the resident cards for a resident and the organisation cards for an organisation', () => {
 		for (const id of ['side-reach', 'side-identity', 'side-address']) {
 			expect(card(id).visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
 		}
-		for (const id of ['side-kvk', 'side-open-ticket']) {
+		for (const id of ['side-kvk', 'side-main-contact', 'side-open-ticket']) {
 			expect(card(id).visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
 		}
 	})

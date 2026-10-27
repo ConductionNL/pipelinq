@@ -31,3 +31,14 @@ The overview SHALL show the resident's card (name, given names, surname, date of
 ### Requirement: New request starts from the client
 
 The header SHALL offer Log contact and New request; New request SHALL open the request dialog with the client already chosen.
+
+### Requirement: An organisation shows its main contact
+
+The side column of an organisation SHALL show, under KvK and address, the contact person flagged as main contact (else the first contact person) with initials, name, role and e-mail, and a link to the Contact persons tab with the number of contact persons.
+
+#### Scenario: Buurtvereniging Oost
+
+- **GIVEN** Buurtvereniging Oost with Sanne de Vries (Secretaris, main contact) and Marja Verbeek (Voorzitter)
+- **THEN** the Hoofdcontact card shows SV, Sanne de Vries, Secretaris, bestuur@buurtoost.nl and "Alle 2 contactpersonen"
+- **WHEN** the user follows that link
+- **THEN** the Contact persons tab opens
