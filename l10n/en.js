@@ -8464,7 +8464,10 @@ OC.L10N.register(
         "Shift {floatAt|date}, {drawer}": "Shift {floatAt|date}, {drawer}",
         "Sales in this shift": "Sales in this shift",
         "sales": "sales",
-        "The cash shift that was open at this till when the sale was confirmed. Set by the server, empty when no shift was open.": "The cash shift that was open at this till when the sale was confirmed. Set by the server, empty when no shift was open."
+        "The cash shift that was open at this till when the sale was confirmed. Set by the server, empty when no shift was open.": "The cash shift that was open at this till when the sale was confirmed. Set by the server, empty when no shift was open.",
+        "{total} pipelines · the stages a lead or request goes through, in order": "{total} pipelines · the stages a lead or request goes through, in order",
+        "{stages|count} stages": "{stages|count} stages",
+        "created {@self.created|date}": "created {@self.created|date}"
     },
     "nplurals=2; plural=(n != 1);"
 )

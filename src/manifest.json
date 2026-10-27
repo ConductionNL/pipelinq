@@ -8097,6 +8097,27 @@
 					{ "key": "isDefault", "label": "Default" },
 					{ "key": "_dateCreated", "label": "Created" }
 				],
+				"_cardsNote": "Board PqPipelines: each pipeline is a card with its description, how many stages it has and when it was made, and its stages as chips in order. The cards view opens first; the table stays one switch away. Editing the stages is the pipeline's own form (Edit).",
+				"showTitle": true,
+				"countText": "{total} pipelines · the stages a lead or request goes through, in order",
+				"addLabel": "New pipeline",
+				"headerButtons": [
+					{ "action": "export", "label": "Download" },
+					{ "action": "add", "variant": "primary", "icon": "Plus", "label": "New pipeline" }
+				],
+				"viewModes": ["cards", "table"],
+				"viewMode": "cards",
+				"cardLayout": {
+					"title": "title",
+					"meta": [
+						{ "template": "{stages|count} stages" },
+						{ "template": "created {@self.created|date}" }
+					],
+					"description": "description",
+					"chips": [
+						{ "field": "stages", "each": "name" }
+					]
+				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true

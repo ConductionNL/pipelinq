@@ -8435,7 +8435,10 @@ OC.L10N.register(
         "Shift {floatAt|date}, {drawer}": "Dienst {floatAt|date}, {drawer}",
         "Sales in this shift": "Verkopen in deze dienst",
         "sales": "verkopen",
-        "The cash shift that was open at this till when the sale was confirmed. Set by the server, empty when no shift was open.": "De kassadienst die op deze kassa open stond toen de verkoop werd bevestigd. De server vult hem; leeg als er geen dienst open stond."
+        "The cash shift that was open at this till when the sale was confirmed. Set by the server, empty when no shift was open.": "De kassadienst die op deze kassa open stond toen de verkoop werd bevestigd. De server vult hem; leeg als er geen dienst open stond.",
+        "{total} pipelines · the stages a lead or request goes through, in order": "{total} pipelines · de fases waar een lead of verzoek doorheen gaat, op volgorde",
+        "{stages|count} stages": "{stages|count} fases",
+        "created {@self.created|date}": "aangemaakt {@self.created|date}"
     },
     "nplurals=2; plural=(n != 1);"
 )
