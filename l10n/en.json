@@ -8571,6 +8571,15 @@
         "The contact moment this task was created from.": "The contact moment this task was created from.",
         "Customer number": "Customer number",
         "The number the organisation knows this customer by, such as K-2019-01184.": "The number the organisation knows this customer by, such as K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
+        "Not redeemed": "Not redeemed",
+        "Redemption rate": "Redemption rate",
+        "Distribution over tiers": "Distribution over tiers",
+        "Export as CSV": "Export as CSV",
+        "Loyalty account created": "Loyalty account created",
+        "Download started": "Download started",
+        "Points, tiers and what the outstanding points are worth": "Points, tiers and what the outstanding points are worth",
+        "Loyalty sign-up": "Loyalty sign-up",
+        "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent.": "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent."
     }
 }

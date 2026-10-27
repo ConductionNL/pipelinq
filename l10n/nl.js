@@ -1869,7 +1869,7 @@ OC.L10N.register(
         "How this campaign's report divides value. The models are computed at report time from the touchpoint log; nothing here is a stored answer.": "Hoe het rapport van deze campagne waarde verdeelt. De modellen worden bij het lezen berekend uit het logboek met contactmomenten. Er staat hier geen opgeslagen uitkomst.",
         "How your mailings are sent, and whether your sending domain will pass Gmail and Yahoo bulk sender checks.": "Hoe uw mailings worden verzonden, en of uw verzenddomein voldoet aan de bulkverzendercontroles van Gmail en Yahoo.",
         "Huidige hash": "Huidige hash",
-        "I agree to store my loyalty data and contact me with offers": "Ik ga akkoord met het opslaan van mijn loyaliteitsgegevens en het ontvangen van aanbiedingen",
+        "I agree to store my loyalty data and contact me with offers": "Ik ga akkoord met het opslaan van mijn loyaliteitsgegevens en met aanbiedingen",
         "I posted this": "Ik heb dit geplaatst",
         "I want to receive offers and updates.": "Ik wil graag aanbiedingen en updates ontvangen.",
         "IANA timezone name for this client (e.g. \"Europe/Amsterdam\"), used to schedule sends at a sensible local time.": "IANA-tijdzonenaam voor deze klant (bijv. \"Europe/Amsterdam\"), gebruikt om verzendingen op een geschikt lokaal tijdstip in te plannen.",
@@ -8501,7 +8501,16 @@ OC.L10N.register(
         "The contact moment this task was created from.": "Het contactmoment waaruit deze taak is ontstaan.",
         "Customer number": "Klantnummer",
         "The number the organisation knows this customer by, such as K-2019-01184.": "Het nummer waaronder de organisatie deze klant kent, zoals K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP.",
+        "Not redeemed": "Niet ingewisseld",
+        "Redemption rate": "Inwisselpercentage",
+        "Distribution over tiers": "Verdeling over niveaus",
+        "Export as CSV": "Exporteren als CSV",
+        "Loyalty account created": "Loyaliteitsaccount aangemaakt",
+        "Download started": "Download gestart",
+        "Points, tiers and what the outstanding points are worth": "Punten, niveaus en wat de openstaande punten waard zijn",
+        "Loyalty sign-up": "Aanmelding loyaliteit",
+        "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent.": "Meld een klant aan voor een loyaliteitsprogramma. De AVG vraagt toestemming van de klant."
     },
     "nplurals=2; plural=(n != 1);"
 )

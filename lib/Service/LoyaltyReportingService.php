@@ -62,6 +62,8 @@ class LoyaltyReportingService {
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-084).
 	 * @param AggregationRunner $aggregationRunner Runs the reporting aggregations.
+	 * @param TierService $tierService Reads the programme's tier rules, which name the tiers.
+	 * @param ReportingService $reportingService Writes the CSV downloads.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -71,8 +73,69 @@ class LoyaltyReportingService {
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly AggregationRunner $aggregationRunner,
+		private readonly TierService $tierService,
+		private readonly ReportingService $reportingService,
 	) {
 	}//end __construct()
+
+	/**
+	 * The window of the last `$days` days, ending today (UTC), as ISO dates.
+	 *
+	 * @param int $days The number of days, at least one.
+	 *
+	 * @return array{from: string, to: string}
+	 *
+	 * @spec exclude This app has no canonical loyalty spec; see
+	 *  LoyaltyReportingController::tierDistribution().
+	 */
+	public function lastDaysWindow(int $days): array {
+		$today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+
+		return [
+			'from' => $today->modify(sprintf('-%d days', max(1, $days)))->format('Y-m-d'),
+			'to' => $today->format('Y-m-d'),
+		];
+	}//end lastDaysWindow()
+
+	/**
+	 * The KPIs as CSV: one metric and value line per scalar KPI.
+	 *
+	 * @param array<string, mixed> $kpis The KPIs from {@see getKpis()}.
+	 *
+	 * @return string The CSV text.
+	 *
+	 * @spec exclude This app has no canonical loyalty spec; see
+	 *  LoyaltyReportingController::tierDistribution().
+	 */
+	public function kpisToCsv(array $kpis): string {
+		$rows = [];
+		foreach ($kpis as $metric => $value) {
+			if (is_scalar($value) === true) {
+				$rows[] = [(string)$metric, (string)$value];
+			}
+		}
+
+		return $this->reportingService->generateCsv(headers: ['metric', 'value'], rows: $rows);
+	}//end kpisToCsv()
+
+	/**
+	 * The tier report as CSV: one tier and account count line per tier.
+	 *
+	 * @param array<int, array<string, mixed>> $tiers The rows from {@see getTierReport()}.
+	 *
+	 * @return string The CSV text.
+	 *
+	 * @spec exclude This app has no canonical loyalty spec; see
+	 *  LoyaltyReportingController::tierDistribution().
+	 */
+	public function tiersToCsv(array $tiers): string {
+		$rows = [];
+		foreach ($tiers as $tier) {
+			$rows[] = [(string)($tier['name'] ?? $tier['tierId'] ?? ''), (string)($tier['accountCount'] ?? 0)];
+		}
+
+		return $this->reportingService->generateCsv(headers: ['tier', 'accounts'], rows: $rows);
+	}//end tiersToCsv()
 
 	/**
 	 * Compute the headline KPIs for a programme over a date window.
@@ -238,13 +301,41 @@ class LoyaltyReportingService {
 			$byTier[$tierId] = ($byTier[$tierId] ?? 0) + (int)($group['value'] ?? 0);
 		}
 
+		return $this->nameTiers(programmeId: $programmeId, byTier: $byTier);
+	}//end getTierReport()
+
+	/**
+	 * The report rows for per-tier counts: every tier rule of the programme in
+	 * rule order with its name, also a tier no account holds, then any other
+	 * tier id the accounts carry (such as `unassigned`) as it came.
+	 *
+	 * @param string $programmeId The programme UUID.
+	 * @param array<string, int> $byTier Account count by tier id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function nameTiers(string $programmeId, array $byTier): array {
 		$report = [];
+		foreach ($this->tierService->getTierRules(programmeId: $programmeId) as $rule) {
+			$tierId = (string)($rule['@self']['id'] ?? $rule['id'] ?? '');
+			if ($tierId === '') {
+				continue;
+			}
+
+			$report[] = [
+				'tierId' => $tierId,
+				'accountCount' => (int)($byTier[$tierId] ?? 0),
+				'name' => (string)($rule['name'] ?? $tierId),
+			];
+			unset($byTier[$tierId]);
+		}
+
 		foreach ($byTier as $tierId => $count) {
-			$report[] = ['tierId' => $tierId, 'accountCount' => $count];
+			$report[] = ['tierId' => (string)$tierId, 'accountCount' => $count];
 		}
 
 		return $report;
-	}//end getTierReport()
+	}//end nameTiers()
 
 	/**
 	 * PHP fallback for {@see getTierReport()} — the original hydrate-and-bucket
@@ -264,12 +355,7 @@ class LoyaltyReportingService {
 			$byTier[$tierId] = ($byTier[$tierId] ?? 0) + 1;
 		}
 
-		$result = [];
-		foreach ($byTier as $tierId => $count) {
-			$result[] = ['tierId' => $tierId, 'accountCount' => $count];
-		}
-
-		return $result;
+		return $this->nameTiers(programmeId: $programmeId, byTier: $byTier);
 	}//end getTierReportPhp()
 
 	/**
