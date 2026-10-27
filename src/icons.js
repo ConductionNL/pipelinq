@@ -148,6 +148,7 @@ import Pipe from 'vue-material-design-icons/Pipe.vue'
 import Play from 'vue-material-design-icons/Play.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
+import Printer from 'vue-material-design-icons/Printer.vue'
 import Receipt from 'vue-material-design-icons/Receipt.vue'
 import ReceiptOutline from 'vue-material-design-icons/ReceiptOutline.vue'
 import ReceiptText from 'vue-material-design-icons/ReceiptText.vue'
@@ -322,6 +323,7 @@ export default {
 	Pipe,
 	Play,
 	Plus,
+	Printer,
 	PowerPlugOutline,
 	Receipt,
 	ReceiptOutline,
