@@ -323,7 +323,7 @@
 				"layout": [
 					{ "id": "1", "widgetId": "booking-panels", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 18, "showTitle": false }
 				],
-				"sideColumn": ["booking-context", "booking-when"],
+				"sideColumn": ["booking-context", "booking-when", "booking-request"],
 				"widgets": [
 					{
 						"id": "booking-panels",
@@ -351,7 +351,24 @@
 					{ "id": "booking-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
 					{ "id": "booking-history", "type": "audit-trail", "title": "History", "icon": "History" },
 					{ "id": "booking-context", "type": "BookingCustomerWidget", "title": "Customer", "icon": "AccountBoxOutline", "content": {} },
-					{ "id": "booking-when", "type": "BookingWhenWidget", "title": "When and where", "icon": "MapMarkerCheck", "content": {} }
+					{ "id": "booking-when", "type": "BookingWhenWidget", "title": "When and where", "icon": "MapMarkerCheck", "content": {} },
+					{
+						"id": "booking-request",
+						"type": "record-list",
+						"title": "Linked request",
+						"icon": "LinkVariant",
+						"_note": "PqAfspraak's Gekoppeld verzoek: the ticket the booking names in `ticket`, read by its id (`_ids`), opening its own page. A booking without one says so.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": { "_ids": ["@object.ticket"] },
+							"limit": 1,
+							"title": "{title}",
+							"meta": "{reference} · {status} · {assignee|user}",
+							"rowRoute": "TicketDetail",
+							"emptyText": "Not linked to a request"
+						}
+					}
 				],
 				"sidebar": {
 					"enabled": true,

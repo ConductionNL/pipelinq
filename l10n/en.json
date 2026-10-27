@@ -8377,6 +8377,9 @@
         "A resident or business got a new address": "A resident or business got a new address",
         "A ticket was closed": "A ticket was closed",
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.",
-        "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds."
+        "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.",
+        "Linked request": "Linked request",
+        "Not linked to a request": "Not linked to a request",
+        "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for.": "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for."
     }
 }
