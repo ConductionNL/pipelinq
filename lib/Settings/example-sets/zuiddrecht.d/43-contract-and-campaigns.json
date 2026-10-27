@@ -14,7 +14,7 @@
 				"stageOrder": 4,
 				"status": "open",
 				"priority": "normal",
-				"probability": 60,
+				"probability": 70,
 				"value": 42000,
 				"currency": "EUR",
 				"assignee": "{{cast:pieter.uid}}",

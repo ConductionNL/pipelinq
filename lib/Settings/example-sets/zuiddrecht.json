@@ -61,7 +61,9 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan.",
-				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000012"
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000012",
+				"phone": "06 12 34 56 78",
+				"description": "Aanvrager van de vergunning voor het straatfeest, Parkstraat"
 			}
 		},
 		{
@@ -1327,7 +1329,9 @@
 				],
 				"contactsUid": "example-drechtwonen-hendriks",
 				"language": "nl",
-				"correspondenceLanguage": "nl"
+				"correspondenceLanguage": "nl",
+				"email": "m.hendriks@drechtwonen.example",
+				"phone": "078 612 40 00"
 			}
 		},
 		{
@@ -3216,7 +3220,6 @@
 				"reference": "PQ-2026-0423",
 				"direction": "inbound",
 				"channel": "telefoon",
-				"outcome": "transferred",
 				"status": "in_progress",
 				"client": "{{object:client-degraaf.id}}",
 				"assignee": "{{cast:pieter.uid}}",
@@ -3224,7 +3227,8 @@
 				"description": "Meneer De Graaf belde over zijn afvalpas: de container bij Dorpsstraat 8 weigert die sinds maandag. Hij probeerde al een andere container, met hetzelfde resultaat. Ik heb gezegd dat we de pas gratis vervangen en dat het 3 werkdagen duurt. Hij vroeg of hij zijn afval intussen buiten mag zetten.",
 				"duration": "PT6M",
 				"parentTicket": "{{object:ticket-degraaf-afvalpas.id}}",
-				"category": "afval"
+				"category": "afval",
+				"disposition_subject": "Afvalpas"
 			}
 		},
 		{
