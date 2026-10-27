@@ -39,7 +39,98 @@
       "component": "SocialAccountsView",
       "config": {
         "register": "pipelinq",
-        "schema": "socialAccount"
+        "schema": "socialAccount",
+        "showTitle": true,
+        "showTitleIcon": false,
+        "rowTitle": "plain",
+        "rowRoute": "SocialPostDetail",
+        "showViewAction": false,
+        "countText": "{shown} of {total} posts · newest first",
+        "searchPlaceholder": "Search this list",
+        "sortKey": "publishedAt",
+        "sortOrder": "desc",
+        "headerButtons": [
+          {
+            "action": "export",
+            "label": "Download",
+            "icon": "Download"
+          },
+          {
+            "action": "create",
+            "variant": "primary",
+            "icon": "Plus",
+            "label": "New post"
+          }
+        ],
+        "quickFilters": [
+          {
+            "label": "All",
+            "filter": {},
+            "default": true,
+            "showCount": true
+          },
+          {
+            "label": "Waiting for approval",
+            "filter": {
+              "status": "approval"
+            },
+            "showCount": true
+          },
+          {
+            "label": "Scheduled to go out",
+            "filter": {
+              "status": "scheduled"
+            },
+            "showCount": true
+          },
+          {
+            "label": "Failed",
+            "filter": {
+              "status": "failed"
+            },
+            "showCount": true
+          }
+        ],
+        "columns": [
+          {
+            "key": "title",
+            "label": "Title"
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "formatter": "enumLabel",
+            "widget": "badge",
+            "widgetProps": {
+              "colorMap": {
+                "draft": "default",
+                "approval": "purple",
+                "scheduled": "info",
+                "published": "success",
+                "failed": "error"
+              }
+            }
+          },
+          {
+            "key": "scheduledFor",
+            "label": "Scheduled for",
+            "formatter": "relativeDate",
+            "formatterOptions": {
+              "time": true
+            }
+          },
+          {
+            "key": "publishedAt",
+            "label": "Published on",
+            "formatter": "relativeDate",
+            "formatterOptions": {
+              "time": true
+            }
+          }
+        ],
+        "footerNote": "A post can go to several networks at once, each with its own text.",
+        "filterMenu": true,
+        "_boardNote": "Board PqSocial: the count line, the four lenses with counts, Download and New post in the header, the status as a coloured badge."
       }
     },
     {

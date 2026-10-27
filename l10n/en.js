@@ -8584,7 +8584,11 @@ OC.L10N.register(
         "Call the customer": "Call the customer",
         "In call": "In call",
         "End and finish": "End and finish",
-        "No open tasks for this client.": "No open tasks for this client."
+        "No open tasks for this client.": "No open tasks for this client.",
+        "{shown} of {total} posts · newest first": "{shown} of {total} posts · newest first",
+        "A post can go to several networks at once, each with its own text.": "A post can go to several networks at once, each with its own text.",
+        "Scheduled to go out": "Scheduled to go out",
+        "Being sent": "Being sent"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -8555,7 +8555,11 @@ OC.L10N.register(
         "Call the customer": "Bellen",
         "In call": "In gesprek",
         "End and finish": "Beëindigen en afronden",
-        "No open tasks for this client.": "Geen open taken voor deze klant."
+        "No open tasks for this client.": "Geen open taken voor deze klant.",
+        "{shown} of {total} posts · newest first": "{shown} van {total} berichten · nieuwste eerst",
+        "A post can go to several networks at once, each with its own text.": "Een bericht kan tegelijk naar meerdere netwerken, elk met een eigen tekst.",
+        "Scheduled to go out": "Ingepland",
+        "Being sent": "Bezig met verzenden"
     },
     "nplurals=2; plural=(n != 1);"
 )
