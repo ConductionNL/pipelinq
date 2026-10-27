@@ -2814,6 +2814,10 @@
 						"filter": { "ticketType": "complaint" }
 					},
 					{
+						"label": "Public-space reports",
+						"filter": { "ticketType": "melding" }
+					},
+					{
 						"label": "Contactmomenten",
 						"filter": { "ticketType": "interaction" }
 					}
@@ -6101,6 +6105,13 @@
 						"label": "Complaints",
 						"filter": {
 							"ticketType": "complaint"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Public-space reports",
+						"filter": {
+							"ticketType": "melding"
 						},
 						"showCount": true
 					},

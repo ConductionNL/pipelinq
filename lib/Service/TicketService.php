@@ -75,6 +75,14 @@ class TicketService {
 	public const TYPE_COMPLAINT = 'complaint';
 
 	/**
+	 * Ticket subtype: a report about the public space (melding), such as loose
+	 * paving or a broken street light.
+	 *
+	 * @var string
+	 */
+	public const TYPE_MELDING = 'melding';
+
+	/**
 	 * Ticket subtype: a logged interaction (formerly the `contactmoment` schema).
 	 *
 	 * @var string
@@ -89,6 +97,7 @@ class TicketService {
 	public const TYPES = [
 		self::TYPE_REQUEST,
 		self::TYPE_COMPLAINT,
+		self::TYPE_MELDING,
 		self::TYPE_CONTACTMOMENT,
 	];
 
@@ -146,6 +155,7 @@ class TicketService {
 	 */
 	private const TYPE_VOCABULARY = [
 		self::TYPE_REQUEST => '/\b(request|requests|verzoek|verzoeken|aanvraag|aanvragen)\b/u',
+		self::TYPE_MELDING => '/\b(melding|meldingen)\b/u',
 		self::TYPE_CONTACTMOMENT => '/\b(contactmoment|contactmomenten|contact)\b/u',
 	];
 
