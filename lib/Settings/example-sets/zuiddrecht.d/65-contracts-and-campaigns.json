@@ -1,0 +1,328 @@
+{
+	"$comment": "pipelinq's contracts and campaigns in the Zuiddrecht set besides 43-contract-and-campaigns.json, as PqContracten, PqContract, PqCampagnes and PqCampagne draw them: seven more contracts with the board's status, billing period, value and end date, and the client Installatiebedrijf Verhoef BV for one of them; four more campaigns; and the Afvalvrije week's two newsletters and a third social post that carry its campaignId. The newsletters are new rather than the Afvalkalender one, because 40-marketing.json loads before the campaign and an object can only point back. KPI tiles and list totals are measurements and are recounted from the set.",
+	"objects": [
+		{
+			"key": "client-verhoef",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Installatiebedrijf Verhoef BV",
+				"contactsUid": "example-verhoef",
+				"type": "organization",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "contract-schoonmaak-gemeentehuis",
+			"register": "pipelinq",
+			"schema": "salesContract",
+			"data": {
+				"contractNumber": "CON-2025-0118",
+				"title": "Schoonmaak gemeentehuis",
+				"clientRef": "{{object:client-schoonmaak-zuid.id}}",
+				"billingInterval": "monthly",
+				"valuePerInterval": 2350,
+				"value": 28200,
+				"currency": "EUR",
+				"startDate": "{{date:-310}}",
+				"autoRenew": false,
+				"noticePeriodDays": 60,
+				"status": "expiring",
+				"ownerId": "{{cast:pieter.uid}}",
+				"endDate": "{{date:54}}",
+				"lineItems": [
+					{
+						"product": "Dagelijkse schoonmaak",
+						"description": "Kantoren, spreekkamers en sanitair, werkdagen na 17:00",
+						"quantity": 1,
+						"unitPrice": 2350
+					}
+				]
+			}
+		},
+		{
+			"key": "contract-hosting-bewonersportaal",
+			"register": "pipelinq",
+			"schema": "salesContract",
+			"data": {
+				"contractNumber": "CON-2026-0007",
+				"title": "Hosting bewonersportaal",
+				"clientRef": "{{object:client-drechtwonen.id}}",
+				"billingInterval": "monthly",
+				"valuePerInterval": 1850,
+				"value": 22200,
+				"currency": "EUR",
+				"startDate": "{{date:-189}}",
+				"autoRenew": true,
+				"noticePeriodDays": 90,
+				"status": "active",
+				"ownerId": "{{cast:pieter.uid}}",
+				"endDate": "{{date:175}}"
+			}
+		},
+		{
+			"key": "contract-zaalhuur-verenigingsavonden",
+			"register": "pipelinq",
+			"schema": "salesContract",
+			"data": {
+				"contractNumber": "CON-2026-0019",
+				"title": "Zaalhuur verenigingsavonden",
+				"clientRef": "{{object:client-buurtoost.id}}",
+				"billingInterval": "quarterly",
+				"valuePerInterval": 960,
+				"value": 3840,
+				"currency": "EUR",
+				"startDate": "{{date:-279}}",
+				"autoRenew": true,
+				"noticePeriodDays": 30,
+				"status": "active",
+				"ownerId": "{{cast:pieter.uid}}",
+				"endDate": "{{date:450}}"
+			}
+		},
+		{
+			"key": "contract-onderhoud-verwarming",
+			"register": "pipelinq",
+			"schema": "salesContract",
+			"data": {
+				"contractNumber": "CON-2026-0024",
+				"title": "Onderhoud verwarming stadskantoor",
+				"clientRef": "{{object:client-verhoef.id}}",
+				"billingInterval": "annual",
+				"valuePerInterval": 18400,
+				"value": 18400,
+				"currency": "EUR",
+				"startDate": "{{date:-371}}",
+				"autoRenew": true,
+				"noticePeriodDays": 60,
+				"status": "renewed",
+				"ownerId": "{{cast:pieter.uid}}",
+				"endDate": "{{date:-7}}"
+			}
+		},
+		{
+			"key": "contract-terrasvergunning-beheer",
+			"register": "pipelinq",
+			"schema": "salesContract",
+			"data": {
+				"contractNumber": "CON-2026-0036",
+				"title": "Terrasvergunning beheer",
+				"clientRef": "{{object:client-cafe-dekroon.id}}",
+				"billingInterval": "annual",
+				"valuePerInterval": 1200,
+				"value": 1200,
+				"currency": "EUR",
+				"startDate": "{{date:25}}",
+				"autoRenew": false,
+				"noticePeriodDays": 30,
+				"status": "draft",
+				"ownerId": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "contract-brood-kantine",
+			"register": "pipelinq",
+			"schema": "salesContract",
+			"data": {
+				"contractNumber": "CON-2025-0092",
+				"title": "Brood voor de kantine",
+				"clientRef": "{{object:client-bakkerijdegraaf.id}}",
+				"billingInterval": "monthly",
+				"valuePerInterval": 410,
+				"value": 4920,
+				"currency": "EUR",
+				"startDate": "{{date:-401}}",
+				"autoRenew": false,
+				"noticePeriodDays": 30,
+				"status": "cancelled",
+				"ownerId": "{{cast:pieter.uid}}",
+				"endDate": "{{date:-37}}",
+				"notes": "Opgezegd per 31 augustus: de kantine gaat over op een cateraar.",
+				"cancellationReason": "De kantine gaat over op een cateraar."
+			}
+		},
+		{
+			"key": "contract-evenementenpakket-straatfeest",
+			"register": "pipelinq",
+			"schema": "salesContract",
+			"data": {
+				"contractNumber": "CON-2026-0040",
+				"title": "Evenementenpakket straatfeest",
+				"clientRef": "{{object:client-buurtoost.id}}",
+				"billingInterval": "one-off",
+				"valuePerInterval": 245,
+				"value": 245,
+				"currency": "EUR",
+				"startDate": "{{date:-2}}",
+				"autoRenew": false,
+				"noticePeriodDays": 0,
+				"status": "active",
+				"ownerId": "{{cast:pieter.uid}}",
+				"endDate": "{{date:256}}",
+				"lineItems": [
+					{
+						"product": "Evenementenpakket, straatfeest",
+						"description": "Dranghekken, afzetlint en borden voor één straat",
+						"quantity": 1,
+						"unitPrice": 245
+					}
+				]
+			}
+		},
+		{
+			"key": "campagne-koningsdag-2027",
+			"register": "pipelinq",
+			"schema": "campaign",
+			"data": {
+				"name": "Koningsdag vrijmarkt aanmelden",
+				"goal": "Inwoners melden hun plek op de vrijmarkt op tijd aan via Mijn Zuiddrecht",
+				"status": "planned",
+				"utmCampaign": "koningsdag-2027",
+				"utmSource": "nieuwsbrief",
+				"utmMedium": "e-mail",
+				"startsAt": "{{date:145}}",
+				"endsAt": "{{date:195}}",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "campagne-parkeren-digitaal",
+			"register": "pipelinq",
+			"schema": "campaign",
+			"data": {
+				"name": "Parkeervergunning digitaal",
+				"goal": "Bewoners vragen hun parkeervergunning online aan in plaats van aan de balie",
+				"status": "running",
+				"utmCampaign": "parkeren-digitaal",
+				"utmSource": "mastodon",
+				"utmMedium": "sociaal",
+				"startsAt": "{{date:-36}}",
+				"endsAt": "{{date:85}}",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "campagne-ondernemersavond-2026",
+			"register": "pipelinq",
+			"schema": "campaign",
+			"data": {
+				"name": "Ondernemersavond najaar",
+				"goal": "Ondernemers uit het centrum komen naar de ondernemersavond van 24 september",
+				"status": "finished",
+				"utmCampaign": "ondernemersavond-2026",
+				"utmSource": "nieuwsbrief",
+				"utmMedium": "e-mail",
+				"startsAt": "{{date:-67}}",
+				"endsAt": "{{date:-13}}",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "campagne-zomerschool-2026",
+			"register": "pipelinq",
+			"schema": "campaign",
+			"data": {
+				"name": "Zomerschool jongeren",
+				"goal": "Jongeren van 12 tot 16 schrijven zich in voor de zomerschool",
+				"status": "cancelled",
+				"utmCampaign": "zomerschool-2026",
+				"utmSource": "nieuwsbrief",
+				"utmMedium": "e-mail",
+				"startsAt": "{{date:-128}}",
+				"endsAt": "{{date:-84}}",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "sjabloon-afvalvrije-week-start",
+			"register": "pipelinq",
+			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
+			"data": {
+				"name": "Afvalvrije week, start",
+				"channel": "email",
+				"subject": "De Afvalvrije week begint: bestel uw gratis compostbak",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "nieuws@zuiddrecht.example",
+				"language": "nl",
+				"bodyText": "Van 28 september tot 11 oktober is het Afvalvrije week. Bestel een gratis compostbak voor uw tuin op https://mijn.zuiddrecht.example/afvalvrij.\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "nieuwsbrief-afvalvrije-week-start",
+			"register": "pipelinq",
+			"schema": "blast",
+			"data": {
+				"name": "Afvalvrije week: bestel uw gratis compostbak",
+				"segmentId": "",
+				"templateId": "{{object:sjabloon-afvalvrije-week-start.id}}",
+				"channel": "email",
+				"status": "sent",
+				"createdBy": "{{cast:pieter.uid}}",
+				"listId": "{{object:verzendlijst-afvalnieuws.id}}",
+				"campaignId": "{{object:campagne-afvalvrije-week.id}}",
+				"scheduledFor": "{{datetime:-9 09:00}}",
+				"sentAt": "{{datetime:-9 09:00}}"
+			}
+		},
+		{
+			"key": "sjabloon-afvalvrije-week-herinnering",
+			"register": "pipelinq",
+			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
+			"data": {
+				"name": "Afvalvrije week, herinnering",
+				"channel": "email",
+				"subject": "Nog vier dagen: uw gratis compostbak",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "nieuws@zuiddrecht.example",
+				"language": "nl",
+				"bodyText": "De Afvalvrije week loopt tot 11 oktober. Wie nog een gratis compostbak wil, bestelt hem op https://mijn.zuiddrecht.example/afvalvrij.\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "nieuwsbrief-afvalvrije-week-herinnering",
+			"register": "pipelinq",
+			"schema": "blast",
+			"data": {
+				"name": "Afvalvrije week: nog vier dagen",
+				"segmentId": "",
+				"templateId": "{{object:sjabloon-afvalvrije-week-herinnering.id}}",
+				"channel": "email",
+				"status": "sent",
+				"createdBy": "{{cast:pieter.uid}}",
+				"listId": "{{object:verzendlijst-afvalnieuws.id}}",
+				"campaignId": "{{object:campagne-afvalvrije-week.id}}",
+				"scheduledFor": "{{datetime:0 09:00}}",
+				"sentAt": "{{datetime:0 09:00}}"
+			}
+		},
+		{
+			"key": "sociaal-afvalvrije-week-laatste-dag",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Afvalvrije week: laatste dag voor uw compostbak",
+				"campaignId": "{{object:campagne-afvalvrije-week.id}}",
+				"body": "Vandaag is de laatste dag van de Afvalvrije week. Bestel uw gratis compostbak op https://mijn.zuiddrecht.example/afvalvrij #Zuiddrecht",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}"
+				],
+				"status": "scheduled",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:4 09:00}}"
+			}
+		}
+	]
+}
