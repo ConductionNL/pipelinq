@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -51,12 +52,14 @@ class SegmentController extends Controller {
 	 * @param SegmentService $segmentService Segment service (member 02).
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param ComplianceService $complianceService Consent per member, for a send.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly SegmentService $segmentService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly ComplianceService $complianceService,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -193,6 +196,54 @@ class SegmentController extends Controller {
 		$rows = $this->segmentService->previewSegmentMembers(segmentId: $id, limit: $limit);
 		return new JSONResponse(['members' => $rows]);
 	}//end members()
+
+	/**
+	 * GET /api/segments/:id/compliance — which members a send on a channel
+	 * would skip for lack of consent, named, before the blast is created.
+	 *
+	 * @param string $id Segment UUID or slug.
+	 * @param string $channel The channel ("email" or "sms").
+	 *
+	 * @return JSONResponse `{missingConsent: [{id, name, email}], missingCount, suppressedCount}`.
+	 *
+	 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
+	 */
+	#[NoAdminRequired]
+	public function compliance(string $id, string $channel = 'email'): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
+
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
+
+		$result = $this->complianceService->checkSegmentCompliance(segmentId: $id, channel: $channel);
+		$byId   = [];
+		foreach ($this->segmentService->getMembersForBlast(segmentId: $id) as $member) {
+			$byId[(string)($member['contactId'] ?? '')] = $member;
+		}
+
+		$missing = [];
+		foreach ((array)($result['missingConsent'] ?? []) as $contactId) {
+			$member    = ($byId[(string)$contactId] ?? []);
+			$name      = trim(((string)($member['firstName'] ?? '')).' '.((string)($member['lastName'] ?? '')));
+			$missing[] = [
+				'id' => (string)$contactId,
+				'name' => $name,
+				'email' => (string)($member['email'] ?? ''),
+			];
+		}
+
+		return new JSONResponse(
+			[
+				'missingConsent' => $missing,
+				'missingCount' => count($missing),
+				'suppressedCount' => count((array)($result['suppressed'] ?? [])),
+			]
+		);
+	}//end compliance()
 
 	/**
 	 * POST /api/segments/preview — validate + estimate an unsaved rule tree.

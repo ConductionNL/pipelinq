@@ -610,6 +610,7 @@ return [
         ['name' => 'segment#preview',       'url' => '/api/segments/preview',          'verb' => 'POST'],
         ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
         ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
+        ['name' => 'segment#compliance',    'url' => '/api/segments/{id}/compliance',  'verb' => 'GET'],
         ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
         ['name' => 'segment#update',        'url' => '/api/segments/{id}',             'verb' => 'PATCH'],
 
