@@ -52,3 +52,34 @@ describe('ClientDetail as the boards draw it', () => {
 		expect(config.sideColumn).not.toContain('client-files')
 	})
 })
+
+describe('ClientDetail overview as the boards draw it', () => {
+	it('opens on the resident or organisation card, the tickets and the latest contact moments', () => {
+		const overview = widget('client-panels').content.tabs[0]
+		expect(overview.widgetIds).toEqual(['client-person-card', 'client-organisation-card', 'client-tickets', 'client-latest-moments'])
+		expect(widget('client-person-card').visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
+		expect(widget('client-organisation-card').visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
+		expect(widget('client-person-card').content.fields.map((field) => nl[field.label])).toEqual(['Naam', 'Voornamen', 'Achternaam', 'Geboortedatum', 'Woonadres', 'Omschrijving'])
+		expect(widget('client-organisation-card').content.fields.map((field) => nl[field.label])).toEqual(['Handelsnaam', 'KVK-nummer', 'Rechtsvorm', 'Adres'])
+	})
+
+	it('draws the tickets as ruled rows with a pill and the date at the end', () => {
+		const content = widget('client-tickets').content
+		expect(content.presentation).toBe('rows')
+		expect(content.trailing).toEqual(['Done {resolvedAt|date}', 'By {slaDeadline|date}'])
+		expect(nl[content.headerLink.label]).toBe('Alle {total} tickets bekijken')
+	})
+
+	it('draws the latest contact moments as a feed', () => {
+		const content = widget('client-latest-moments').content
+		expect(content.presentation).toBe('feed')
+		expect(content.limit).toBe(3)
+		expect(nl[content.headerNote]).toBe('{total} in totaal')
+	})
+
+	it('offers Log contact and New request for this client in the header', () => {
+		const actions = config.headerActions.map((action) => action.id)
+		expect(actions.slice(0, 2)).toEqual(['log-contact', 'new-request'])
+		expect(config.headerActions[1].props).toEqual({ clientId: '@objectId' })
+	})
+})

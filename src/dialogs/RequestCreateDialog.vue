@@ -24,6 +24,7 @@ pipeline and stage stay one click away under More details.
 		<RequestForm
 			ref="form"
 			:showActions="false"
+			:preLinkedClient="clientId || null"
 			boardLayout
 			@save="onSave"
 			@update:valid="(v) => (valid = v)" />
@@ -73,7 +74,19 @@ export default {
 		RequestForm,
 	},
 
+	props: {
+		/**
+		 * The client the request is for, picked already (the client page's
+		 * New request header action); none leaves the client to choose.
+		 */
+		clientId: {
+			type: String,
+			default: '',
+		},
+	},
+
 	emits: ['created', 'close'],
+
 	data() {
 		return {
 			valid: false,

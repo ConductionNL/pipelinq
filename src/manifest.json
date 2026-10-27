@@ -1907,6 +1907,36 @@
 				},
 				"headerActions": [
 					{
+						"id": "log-contact",
+						"label": "Log contact",
+						"icon": "PhoneLogOutline",
+						"type": "open-form",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"formTitle": "Log contact",
+						"includeFields": [
+							"title",
+							"channel",
+							"direction",
+							"description"
+						],
+						"props": {
+							"client": "@objectId",
+							"ticketType": "interaction"
+						},
+						"successMessage": "Contact moment logged."
+					},
+					{
+						"id": "new-request",
+						"label": "New request",
+						"icon": "TicketOutline",
+						"type": "open-modal",
+						"target": "RequestCreateDialog",
+						"props": {
+							"clientId": "@objectId"
+						}
+					},
+					{
 						"id": "make-letter",
 						"label": "Make a letter",
 						"type": "open-modal",
@@ -2460,6 +2490,214 @@
 						"icon": "FolderOutline"
 					},
 					{
+						"id": "client-person-card",
+						"type": "facts",
+						"title": "Resident",
+						"icon": "CardAccountDetailsOutline",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Inwoner: two columns, label above value, as dossiq's DqContact Contact card. Fields the client does not carry are left out.",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"path": "name",
+									"label": "Name"
+								},
+								{
+									"path": "givenNames",
+									"label": "Given names"
+								},
+								{
+									"path": "surname",
+									"label": "Surname"
+								},
+								{
+									"path": "birthDate",
+									"label": "Date of birth",
+									"format": "longdate"
+								},
+								{
+									"path": "address",
+									"label": "Home address"
+								},
+								{
+									"path": "description",
+									"label": "Description"
+								}
+							]
+						}
+					},
+					{
+						"id": "client-organisation-card",
+						"type": "facts",
+						"title": "Organisation",
+						"icon": "OfficeBuildingOutline",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Organisatie: as dossiq's DqOrganisatie card.",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"path": "name",
+									"label": "Trade name"
+								},
+								{
+									"path": "kvkNumber",
+									"label": "KvK number"
+								},
+								{
+									"path": "legalForm",
+									"label": "Legal form"
+								},
+								{
+									"path": "address",
+									"label": "Address"
+								}
+							]
+						}
+					},
+					{
+						"id": "client-tickets",
+						"type": "record-list",
+						"title": "Tickets",
+						"icon": "TicketOutline",
+						"_note": "PqKlant/PqOrganisatie Tickets: every ticket of the client as a ruled row, as dossiq's DqContact draws the client's tickets: reference, kind and handler, the status pill, and done or due at the end.",
+						"content": {
+							"ruleAbove": true,
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"ticketType": {
+									"in": [
+										"request",
+										"complaint"
+									]
+								}
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 4,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{reference}",
+									"{ticketType}",
+									"assigned to {assignee|user}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"variant": "purple",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Awaiting customer",
+									"resolved": "Handled",
+									"closed": "Handled",
+									"completed": "Handled"
+								},
+								"colorMap": {
+									"resolved": "success",
+									"closed": "success",
+									"completed": "success",
+									"new": "info"
+								}
+							},
+							"trailing": [
+								"Done {resolvedAt|date}",
+								"By {slaDeadline|date}"
+							],
+							"valueLabels": {
+								"ticketType": {
+									"request": "Request",
+									"complaint": "Complaint"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"headerLink": {
+								"label": "View all {total} tickets",
+								"route": "Tickets",
+								"query": {
+									"client": "@objectId"
+								}
+							},
+							"emptyText": "No tickets for this client yet"
+						}
+					},
+					{
+						"id": "client-latest-moments",
+						"type": "record-list",
+						"title": "Latest contact moments",
+						"icon": "PhoneLogOutline",
+						"_note": "PqKlant/PqOrganisatie Laatste contactmomenten: the three newest interactions as a feed, as dossiq's DqContact draws them.",
+						"content": {
+							"ruleAbove": true,
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 3,
+							"presentation": "feed",
+							"icon": {
+								"field": "channel",
+								"map": {
+									"phone": "PhoneInTalk",
+									"email": "EmailOutline",
+									"balie": "AccountOutline",
+									"brief": "EmailOpenOutline",
+									"chat": "MessageTextOutline",
+									"webformulier": "Earth",
+									"portal": "EmailOutline"
+								},
+								"default": "EmailOutline"
+							},
+							"meta": {
+								"parts": [
+									"{occurredAt|datetime}",
+									"{channel}",
+									"{direction}",
+									"ticket {reference}"
+								]
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "phone",
+									"email": "email",
+									"webformulier": "web form",
+									"chat": "chat",
+									"social_media": "social media",
+									"balie": "desk",
+									"portal": "Mijn Zuiddrecht"
+								},
+								"direction": {
+									"inbound": "inbound",
+									"outbound": "outbound"
+								}
+							},
+							"text": "{title}",
+							"headerNote": "{total} in total",
+							"emptyText": "No contact moments yet"
+						}
+					},
+					{
 						"id": "client-open-requests",
 						"type": "record-list",
 						"title": "Open requests",
@@ -2532,9 +2770,10 @@
 							"tabs": [
 								{
 									"widgetIds": [
-										"client-identity",
-										"client-commercial",
-										"client-open-requests"
+										"client-person-card",
+										"client-organisation-card",
+										"client-tickets",
+										"client-latest-moments"
 									],
 									"label": "Overview"
 								},
