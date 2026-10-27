@@ -82,6 +82,7 @@ import SocialPublicationsSection from './components/marketing/SocialPublications
 //     vocabulary, and because the list view leads with per-state counts that
 //     summaryAggregates cannot express. ---
 import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
+import PartyContactStrip from './components/PartyContactStrip.vue'
 import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 // --- Cash-shift detail — declarative type:"detail": the closing count is its
 //     actionsComponent; the drops (with Add drop) and the latest/pending
@@ -680,6 +681,11 @@ const registry = {
 		kind: 'section',
 		component: LogVisitAction,
 		_note: 'Log a visit on a client or lead (REQ-MOB-003): one note and an optional follow-up day; writes an outbound visit contact moment (ticket) and a follow-up crmTask through the object store. Also the LeadDetail actionsComponent, where it binds to the lead and its client from the slot.',
+	},
+	PartyContactStrip: {
+		kind: 'section',
+		component: PartyContactStrip,
+		_note: 'The client page contact strip (PqKlant, PqOrganisatie): the warnings line and the call, mail, directions and log-a-visit buttons in one card, before the body.',
 	},
 	PartyIndicatorPanel: {
 		kind: 'section',

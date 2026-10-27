@@ -2895,31 +2895,16 @@
 				],
 				"bodyWidgets": [
 					{
-						"id": "party-indicators",
-						"component": "PartyIndicatorPanel",
+						"id": "contact-strip",
+						"component": "PartyContactStrip",
 						"placement": "before-body",
-						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
+						"_note": "PqKlant / PqOrganisatie: the warnings line (an aggression registration or a death is read before contact is made, pipelinq#2036) and the call, mail, directions and log-a-visit buttons in one card before the body (platform-phone-on-the-road).",
 						"props": {
-							"partyId": "@objectId"
-						}
-					},
-					{
-						"id": "contact-links",
-						"component": "ContactLinks",
-						"placement": "before-body",
-						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
-						"props": {
+							"partyId": "@objectId",
+							"partyKind": "@object.type",
 							"phone": "@object.phone",
 							"email": "@object.email",
 							"address": "@object.address"
-						}
-					},
-					{
-						"id": "log-visit",
-						"component": "LogVisitAction",
-						"placement": "before-body",
-						"props": {
-							"clientId": "@objectId"
 						}
 					},
 					{
