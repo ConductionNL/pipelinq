@@ -109,6 +109,7 @@ import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWid
 //     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
 import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
 import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
+import ProductTariffsWidget from './components/products/ProductTariffsWidget.vue'
 import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
 import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
 // --- Reporting dashboards (lib gap: no chart-widget page type). ---
@@ -653,6 +654,12 @@ const registry = {
 		component: ProductSupplyWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Supply card on ProductDetail (board PqProduct): manufacturer, unit, weight, dimensions and the Stock tracked line read live from shillinq via GET /api/products/{id}/stock (products-stock-on-hand).',
+	},
+	ProductTariffsWidget: {
+		kind: 'widget',
+		component: ProductTariffsWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Fee table on ProductDetail (board PqProduct): the tariffs in force today from product.tariffs, the tariff source, and the day the next tariffs go live.',
 	},
 	BookingsCard: {
 		kind: 'section',
