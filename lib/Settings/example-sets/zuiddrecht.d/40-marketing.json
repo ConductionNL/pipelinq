@@ -1,0 +1,677 @@
+{
+	"$comment": "pipelinq's marketing in the Zuiddrecht set: segments, mailing lists and their subscribers, newsletters with their templates, and journeys, as PqMailinglijst, PqNieuwsbrieven, PqNieuwsbriefPrestaties, PqJourneys and PqJourney draw them.",
+	"objects": [
+		{
+			"key": "segment-verenigingen",
+			"register": "pipelinq",
+			"schema": "segment",
+			"data": {
+				"name": "Verenigingen in Zuiddrecht",
+				"description": "Verenigingen met een adres in Zuiddrecht.",
+				"entityType": "customer",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "type",
+							"operator": "equals",
+							"value": "organization"
+						},
+						{
+							"field": "industry",
+							"operator": "contains",
+							"value": "vereniging"
+						}
+					]
+				},
+				"estimatedSize": 412,
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "segment-ondernemers-aangemeld",
+			"register": "pipelinq",
+			"schema": "segment",
+			"data": {
+				"name": "Ondernemers, aangemeld",
+				"description": "Ondernemers die zich aanmeldden voor de ondernemersnieuwsbrief.",
+				"entityType": "contact",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "lifecycleStage",
+							"operator": "equals",
+							"value": "customer"
+						},
+						{
+							"field": "type",
+							"operator": "equals",
+							"value": "organization"
+						}
+					]
+				},
+				"estimatedSize": 386,
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "segment-balie-september",
+			"register": "pipelinq",
+			"schema": "segment",
+			"data": {
+				"name": "Bezocht de balie in september",
+				"description": "Inwoners met een contactmoment aan de balie in september.",
+				"entityType": "contact",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "preferredChannel",
+							"operator": "equals",
+							"value": "counter"
+						}
+					]
+				},
+				"estimatedSize": 520,
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "segment-ondernemers-centrum",
+			"register": "pipelinq",
+			"schema": "segment",
+			"data": {
+				"name": "Ondernemers centrum",
+				"description": "Ondernemers met een adres in het centrum.",
+				"entityType": "customer",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "type",
+							"operator": "equals",
+							"value": "organization"
+						},
+						{
+							"field": "address",
+							"operator": "contains",
+							"value": "Markt"
+						}
+					]
+				},
+				"estimatedSize": 398,
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "segment-nieuwe-inwoners",
+			"register": "pipelinq",
+			"schema": "segment",
+			"data": {
+				"name": "Nieuwe inwoners, afgelopen 90 dagen",
+				"description": "Inwoners die in de afgelopen 90 dagen een nieuw adres in Zuiddrecht doorgaven.",
+				"entityType": "contact",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "type",
+							"operator": "equals",
+							"value": "person"
+						},
+						{
+							"field": "lifecycleStage",
+							"operator": "equals",
+							"value": "lead"
+						}
+					]
+				},
+				"estimatedSize": 156,
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "verzendlijst-ondernemers",
+			"register": "pipelinq",
+			"schema": "mailingList",
+			"data": {
+				"name": "Nieuwsbrief ondernemers Zuiddrecht",
+				"description": "Maandelijks nieuws voor ondernemers in Zuiddrecht: subsidies, werkzaamheden bij winkelstraten, vergunningen en het ondernemersontbijt.",
+				"optInMode": "double",
+				"senderName": "Gemeente Zuiddrecht, Economische zaken",
+				"senderEmail": "ondernemers@zuiddrecht.example",
+				"replyTo": "ez@zuiddrecht.example",
+				"publicSignup": true,
+				"footerAddress": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"status": "active",
+				"createdBy": "{{cast:pieter.uid}}",
+				"createdAt": "{{datetime:-218 10:00}}"
+			}
+		},
+		{
+			"key": "verzendlijst-afvalnieuws",
+			"register": "pipelinq",
+			"schema": "mailingList",
+			"data": {
+				"name": "Afvalnieuws",
+				"description": "De afvalkalender, wijzigingen in de ophaaldagen en nieuws over afval scheiden.",
+				"optInMode": "double",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "afval@zuiddrecht.example",
+				"replyTo": "info@zuiddrecht.example",
+				"publicSignup": true,
+				"footerAddress": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"status": "active",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "verzendlijst-buurtnieuws",
+			"register": "pipelinq",
+			"schema": "mailingList",
+			"data": {
+				"name": "Buurtnieuws",
+				"description": "Nieuws uit de wijken: buurtinitiatieven, subsidierondes en werkzaamheden.",
+				"optInMode": "double",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "buurten@zuiddrecht.example",
+				"replyTo": "info@zuiddrecht.example",
+				"publicSignup": true,
+				"footerAddress": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"status": "active",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-bakkerijdegraaf",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"data": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "info@bakkerijdegraaf.example",
+				"state": "confirmed",
+				"source": "Aanmeldformulier",
+				"lawfulBasis": "consent",
+				"createdAt": "{{datetime:-5 14:40}}",
+				"confirmedAt": "{{datetime:-5 14:40}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-verhoef",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"data": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "kantoor@verhoef-bv.example",
+				"state": "confirmed",
+				"source": "Geïmporteerd",
+				"lawfulBasis": "soft-opt-in",
+				"createdAt": "{{datetime:-23 11:00}}",
+				"confirmedAt": "{{datetime:-23 11:00}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-sportcentrum",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"data": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "balie@sportcentrum.example",
+				"state": "pending",
+				"source": "Aanmeldformulier",
+				"lawfulBasis": "consent",
+				"createdAt": "{{datetime:0 09:12}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-elamrani",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"data": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "m.elamrani@ziggo.example",
+				"state": "unsubscribed",
+				"source": "Aanmeldformulier",
+				"lawfulBasis": "consent",
+				"createdAt": "{{datetime:-126 16:20}}",
+				"confirmedAt": "{{datetime:-126 16:20}}",
+				"unsubscribedAt": "{{datetime:-96 16:20}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-jokesmit",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"data": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "joke@smitbloemen.example",
+				"state": "bounced",
+				"source": "Toegevoegd door Pieter Jansen",
+				"lawfulBasis": "legitimate-interest",
+				"createdAt": "{{datetime:-148 10:05}}",
+				"confirmedAt": "{{datetime:-148 10:05}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-annadevries",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"data": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "anna@devriesadvies.example",
+				"state": "confirmed",
+				"source": "Aanmeldformulier",
+				"lawfulBasis": "consent",
+				"createdAt": "{{datetime:-162 09:30}}",
+				"confirmedAt": "{{datetime:-162 09:30}}"
+			}
+		},
+		{
+			"key": "sjabloon-straatfeest",
+			"register": "pipelinq",
+			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
+			"data": {
+				"name": "Straatfeestseizoen",
+				"channel": "email",
+				"subject": "Je straatfeest, geregeld in 4 stappen",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "nieuws@zuiddrecht.example",
+				"language": "nl",
+				"bodyText": "Je straatfeest, geregeld in 4 stappen\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "nieuwsbrief-straatfeest",
+			"register": "pipelinq",
+			"schema": "blast",
+			"data": {
+				"name": "Straatfeestseizoen: wat regel je",
+				"templateId": "{{object:sjabloon-straatfeest.id}}",
+				"channel": "email",
+				"status": "sent",
+				"createdBy": "{{cast:pieter.uid}}",
+				"segmentId": "{{object:segment-verenigingen.id}}",
+				"scheduledFor": "{{datetime:-6 09:00}}",
+				"sentAt": "{{datetime:-6 09:00}}",
+				"totals": {
+					"queued": 0,
+					"sent": 412,
+					"delivered": 412,
+					"bounced": 0,
+					"opened": 239,
+					"clicked": 87,
+					"unsubscribed": 3,
+					"complained": 0
+				},
+				"abSplitPercent": 50
+			}
+		},
+		{
+			"key": "sjabloon-afvalkalender",
+			"register": "pipelinq",
+			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
+			"data": {
+				"name": "Afvalkalender 2027",
+				"channel": "email",
+				"subject": "De afvalkalender voor 2027 staat klaar",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "nieuws@zuiddrecht.example",
+				"language": "nl",
+				"bodyText": "De afvalkalender voor 2027 staat klaar\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "nieuwsbrief-afvalkalender",
+			"register": "pipelinq",
+			"schema": "blast",
+			"data": {
+				"name": "Afvalkalender 2027",
+				"segmentId": "",
+				"templateId": "{{object:sjabloon-afvalkalender.id}}",
+				"channel": "email",
+				"status": "scheduled",
+				"createdBy": "{{cast:pieter.uid}}",
+				"listId": "{{object:verzendlijst-afvalnieuws.id}}",
+				"scheduledFor": "{{datetime:7 08:00}}"
+			}
+		},
+		{
+			"key": "sjabloon-ontbijt-november",
+			"register": "pipelinq",
+			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
+			"data": {
+				"name": "Ondernemersontbijt november",
+				"channel": "email",
+				"subject": "Ondernemersontbijt in november",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "nieuws@zuiddrecht.example",
+				"language": "nl",
+				"bodyText": "Ondernemersontbijt in november\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "nieuwsbrief-ontbijt-november",
+			"register": "pipelinq",
+			"schema": "blast",
+			"data": {
+				"name": "Ondernemersontbijt in november",
+				"templateId": "{{object:sjabloon-ontbijt-november.id}}",
+				"channel": "email",
+				"status": "draft",
+				"createdBy": "{{cast:pieter.uid}}",
+				"segmentId": "{{object:segment-ondernemers-aangemeld.id}}"
+			}
+		},
+		{
+			"key": "sjabloon-subsidieronde",
+			"register": "pipelinq",
+			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
+			"data": {
+				"name": "Subsidieronde buurtinitiatieven",
+				"channel": "email",
+				"subject": "Subsidieronde voor buurtinitiatieven",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "nieuws@zuiddrecht.example",
+				"language": "nl",
+				"bodyText": "Subsidieronde voor buurtinitiatieven\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "nieuwsbrief-subsidieronde",
+			"register": "pipelinq",
+			"schema": "blast",
+			"data": {
+				"name": "Subsidieronde voor buurtinitiatieven",
+				"segmentId": "",
+				"templateId": "{{object:sjabloon-subsidieronde.id}}",
+				"channel": "email",
+				"status": "sending",
+				"createdBy": "{{cast:pieter.uid}}",
+				"listId": "{{object:verzendlijst-buurtnieuws.id}}",
+				"scheduledFor": "{{datetime:0 10:00}}",
+				"totals": {
+					"queued": 400,
+					"sent": 640,
+					"delivered": 628,
+					"bounced": 9,
+					"opened": 201,
+					"clicked": 58,
+					"unsubscribed": 1,
+					"complained": 0
+				}
+			}
+		},
+		{
+			"key": "sjabloon-enquete-balie",
+			"register": "pipelinq",
+			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
+			"data": {
+				"name": "Enquête openingstijden",
+				"channel": "email",
+				"subject": "Wat vindt u van de openingstijden van de balie?",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "nieuws@zuiddrecht.example",
+				"language": "nl",
+				"bodyText": "Wat vindt u van de openingstijden van de balie?\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "nieuwsbrief-enquete-balie",
+			"register": "pipelinq",
+			"schema": "blast",
+			"data": {
+				"name": "Enquête over de openingstijden van de balie",
+				"templateId": "{{object:sjabloon-enquete-balie.id}}",
+				"channel": "email",
+				"status": "sent",
+				"createdBy": "{{cast:pieter.uid}}",
+				"segmentId": "{{object:segment-balie-september.id}}",
+				"scheduledFor": "{{datetime:-15 09:00}}",
+				"sentAt": "{{datetime:-15 09:00}}",
+				"totals": {
+					"queued": 0,
+					"sent": 520,
+					"delivered": 520,
+					"bounced": 0,
+					"opened": 244,
+					"clicked": 94,
+					"unsubscribed": 6,
+					"complained": 0
+				}
+			}
+		},
+		{
+			"key": "sjabloon-ontbijt-oktober",
+			"register": "pipelinq",
+			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
+			"data": {
+				"name": "Ondernemersontbijt oktober",
+				"channel": "email",
+				"subject": "Ondernemersontbijt in oktober",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "nieuws@zuiddrecht.example",
+				"language": "nl",
+				"bodyText": "Ondernemersontbijt in oktober\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "nieuwsbrief-ontbijt-oktober",
+			"register": "pipelinq",
+			"schema": "blast",
+			"data": {
+				"name": "Ondernemersontbijt in oktober",
+				"templateId": "{{object:sjabloon-ontbijt-oktober.id}}",
+				"channel": "email",
+				"status": "sent",
+				"createdBy": "{{cast:pieter.uid}}",
+				"segmentId": "{{object:segment-ondernemers-centrum.id}}",
+				"scheduledFor": "{{datetime:-20 08:30}}",
+				"sentAt": "{{datetime:-20 08:30}}",
+				"totals": {
+					"queued": 0,
+					"sent": 398,
+					"delivered": 398,
+					"bounced": 0,
+					"opened": 243,
+					"clicked": 96,
+					"unsubscribed": 0,
+					"complained": 0
+				}
+			}
+		},
+		{
+			"key": "journey-welkom",
+			"register": "pipelinq",
+			"schema": "journey",
+			"data": {
+				"name": "Welkom nieuwe inwoners",
+				"description": "Verwelkomt nieuwe inwoners met de afvalkalender en het overzicht van vergunningen",
+				"status": "active",
+				"trigger": {
+					"kind": "addressChanged",
+					"label": "Een inwoner geeft een nieuw adres in Zuiddrecht door"
+				},
+				"waitFor": "P3D",
+				"action": {
+					"kind": "sendMailing",
+					"label": "Nieuwsbrief Welkom in Zuiddrecht versturen"
+				},
+				"flowStatus": "compiled",
+				"createdBy": "{{cast:pieter.uid}}",
+				"audienceSegment": "{{object:segment-nieuwe-inwoners.id}}",
+				"condition": {
+					"field": "marketingConsentEmail",
+					"operator": "equals",
+					"value": "true"
+				}
+			}
+		},
+		{
+			"key": "journey-verlenging-parkeervergunning",
+			"register": "pipelinq",
+			"schema": "journey",
+			"data": {
+				"name": "Herinneren aan verlenging parkeervergunning",
+				"description": "Herinnert inwoners 30 dagen voor de einddatum aan het verlengen van hun parkeervergunning.",
+				"status": "active",
+				"trigger": {
+					"kind": "contractRenewalWindow",
+					"label": "30 dagen voor de einddatum van de parkeervergunning"
+				},
+				"waitFor": "P30D",
+				"action": {
+					"kind": "sendMailing",
+					"label": "Herinnering verlenging versturen"
+				},
+				"flowStatus": "compiled",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "journey-bedanken-klacht",
+			"register": "pipelinq",
+			"schema": "journey",
+			"data": {
+				"name": "Bedanken na een afgesloten klacht",
+				"description": "Bedankt een inwoner een dag nadat de klacht is afgesloten.",
+				"status": "paused",
+				"trigger": {
+					"kind": "ticketClosed",
+					"label": "Een klacht wordt afgesloten"
+				},
+				"waitFor": "P1D",
+				"action": {
+					"kind": "sendMailing",
+					"label": "Bedankmail versturen"
+				},
+				"flowStatus": "compiled",
+				"createdBy": "{{cast:pieter.uid}}",
+				"condition": {
+					"field": "ticketType",
+					"operator": "equals",
+					"value": "complaint"
+				}
+			}
+		},
+		{
+			"key": "journey-ondernemersavond",
+			"register": "pipelinq",
+			"schema": "journey",
+			"data": {
+				"name": "Uitnodigen voor de ondernemersavond",
+				"description": "Nodigt ondernemers uit voor de ondernemersavond.",
+				"status": "draft",
+				"trigger": {
+					"kind": "listConfirmed",
+					"label": "Een ondernemer bevestigt de aanmelding"
+				},
+				"waitFor": "P7D",
+				"action": {
+					"kind": "sendMailing",
+					"label": "Uitnodiging versturen"
+				},
+				"flowStatus": "not_compiled",
+				"createdBy": "{{cast:pieter.uid}}",
+				"audienceSegment": "{{object:segment-ondernemers-aangemeld.id}}"
+			}
+		},
+		{
+			"key": "journey-websiteaanvraag",
+			"register": "pipelinq",
+			"schema": "journey",
+			"data": {
+				"name": "Websiteaanvraag opvolgen",
+				"description": "Maakt twee uur na een websiteaanvraag een terugbeltaak.",
+				"status": "active",
+				"trigger": {
+					"kind": "leadStageChanged",
+					"label": "Een websiteaanvraag komt binnen"
+				},
+				"waitFor": "PT2H",
+				"action": {
+					"kind": "createTask",
+					"taskSubject": "Websiteaanvraag opvolgen",
+					"taskType": "callback"
+				},
+				"flowStatus": "engine_missing",
+				"createdBy": "{{cast:pieter.uid}}",
+				"flowError": "De automatiseringsengine is niet beschikbaar."
+			}
+		},
+		{
+			"key": "journey-welkom-run-1",
+			"register": "pipelinq",
+			"schema": "journeyRun",
+			"data": {
+				"journeyId": "{{object:journey-welkom.id}}",
+				"contactId": "Anna de Vries",
+				"state": "sent",
+				"actionKind": "sendTemplate",
+				"occurredAt": "{{datetime:-1 09:00}}"
+			}
+		},
+		{
+			"key": "journey-welkom-run-2",
+			"register": "pipelinq",
+			"schema": "journeyRun",
+			"data": {
+				"journeyId": "{{object:journey-welkom.id}}",
+				"contactId": "Kees Bakker",
+				"state": "refused",
+				"actionKind": "sendTemplate",
+				"occurredAt": "{{datetime:-1 09:00}}",
+				"reason": "Geen toestemming voor e-mail"
+			}
+		},
+		{
+			"key": "journey-welkom-run-3",
+			"register": "pipelinq",
+			"schema": "journeyRun",
+			"data": {
+				"journeyId": "{{object:journey-welkom.id}}",
+				"contactId": "Lotte Visser",
+				"state": "failed",
+				"actionKind": "sendTemplate",
+				"occurredAt": "{{datetime:-2 09:00}}",
+				"reason": "Mailbox bestaat niet"
+			}
+		},
+		{
+			"key": "journey-welkom-run-4",
+			"register": "pipelinq",
+			"schema": "journeyRun",
+			"data": {
+				"journeyId": "{{object:journey-welkom.id}}",
+				"contactId": "Ruud Hoekstra",
+				"state": "sent",
+				"actionKind": "sendTemplate",
+				"occurredAt": "{{datetime:-2 09:00}}"
+			}
+		}
+	]
+}

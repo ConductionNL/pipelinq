@@ -1,0 +1,289 @@
+{
+	"$comment": "pipelinq's loyalty programme and quote in the Zuiddrecht set: Zuiddrecht Spaarpas with its tiers and Sanne's account, and quote OFF-2026-0042 for Bakkerij De Graaf, as PqLoyaliteit and PqOfferte draw them.",
+	"appConfig": [
+		{
+			"key": "icp_sbi_codes",
+			"value": "[\"56\",\"47\"]"
+		},
+		{
+			"key": "icp_employee_count_min",
+			"value": "5"
+		},
+		{
+			"key": "icp_employee_count_max",
+			"value": "50"
+		},
+		{
+			"key": "icp_provinces",
+			"value": "[\"Zuid-Holland\"]"
+		},
+		{
+			"key": "icp_legal_forms",
+			"value": "[\"BV\",\"Eenmanszaak\"]"
+		},
+		{
+			"key": "icp_exclude_inactive",
+			"value": "true"
+		},
+		{
+			"key": "icp_keywords",
+			"value": "[\"horeca\",\"retail\"]"
+		}
+	],
+	"objects": [
+		{
+			"key": "spaarpas",
+			"register": "pipelinq",
+			"schema": "loyaltyProgramme",
+			"data": {
+				"programmeId": "zuiddrecht-spaarpas",
+				"name": "Zuiddrecht Spaarpas",
+				"brand": "Gemeente Zuiddrecht",
+				"description": "Inwoners sparen punten bij de balie en in Mijn Zuiddrecht. 20 punten zijn € 1,00 waard.",
+				"startDate": "{{date:-280}}",
+				"status": "active",
+				"currency": "EUR",
+				"language": "nl",
+				"pointValue": 0.05,
+				"expiryPolicy": {
+					"months": 24
+				}
+			}
+		},
+		{
+			"key": "spaarpas-niveau-brons",
+			"register": "pipelinq",
+			"schema": "tierRule",
+			"data": {
+				"tierId": "brons",
+				"programmeId": "{{object:spaarpas.id}}",
+				"name": "Brons",
+				"sequence": 1,
+				"thresholdType": "lifetimePoints",
+				"thresholdValue": 0,
+				"upgradePolicy": "immediate",
+				"downgradePolicy": "end_of_year"
+			}
+		},
+		{
+			"key": "spaarpas-niveau-zilver",
+			"register": "pipelinq",
+			"schema": "tierRule",
+			"data": {
+				"tierId": "zilver",
+				"programmeId": "{{object:spaarpas.id}}",
+				"name": "Zilver",
+				"sequence": 2,
+				"thresholdType": "lifetimePoints",
+				"thresholdValue": 1000,
+				"upgradePolicy": "immediate",
+				"downgradePolicy": "end_of_year"
+			}
+		},
+		{
+			"key": "spaarpas-niveau-goud",
+			"register": "pipelinq",
+			"schema": "tierRule",
+			"data": {
+				"tierId": "goud",
+				"programmeId": "{{object:spaarpas.id}}",
+				"name": "Goud",
+				"sequence": 3,
+				"thresholdType": "lifetimePoints",
+				"thresholdValue": 2500,
+				"upgradePolicy": "immediate",
+				"downgradePolicy": "end_of_year"
+			}
+		},
+		{
+			"key": "spaarpas-account-sanne",
+			"register": "pipelinq",
+			"schema": "customerLoyaltyAccount",
+			"data": {
+				"accountId": "SP-0001-0340",
+				"customerId": "{{object:client-sanne.id}}",
+				"programmeId": "{{object:spaarpas.id}}",
+				"currentBalance": 340,
+				"lifetimePoints": 520,
+				"currentTierId": "{{object:spaarpas-niveau-brons.id}}",
+				"status": "active",
+				"createdOn": "{{datetime:-120 10:05}}",
+				"lastActivityDate": "{{datetime:0 11:43}}",
+				"optInAccepted": true,
+				"optInTimestamp": "{{datetime:-120 10:05}}",
+				"optInTermsVersion": "2026-1"
+			}
+		},
+		{
+			"key": "client-bakkerijdegraaf",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Bakkerij De Graaf",
+				"type": "organization",
+				"email": "info@bakkerijdegraaf.example",
+				"address": "Marktstraat 8, 2999BA Zuiddrecht",
+				"contactsUid": "example-bakkerijdegraaf",
+				"lifecycleStage": "lead",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Eenmanszaak. Anna de Vries regelt de website."
+			}
+		},
+		{
+			"key": "lead-bakkerijdegraaf-website",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Website en hosting Bakkerij De Graaf",
+				"client": "{{object:client-bakkerijdegraaf.id}}",
+				"source": "telefoon",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Voorstel",
+				"stageOrder": 4,
+				"status": "open",
+				"priority": "normal",
+				"probability": 60,
+				"value": 4428,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-2 16:31}}",
+				"expectedCloseDate": "{{date:30}}",
+				"category": "Software"
+			}
+		},
+		{
+			"key": "product-website-basispakket",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Website, basispakket",
+				"description": "Ontwerp en bouw, tot 8 pagina's.",
+				"type": "service",
+				"status": "active",
+				"unitPrice": 2400,
+				"taxRate": 21,
+				"vatClass": "high",
+				"unit": "Stuk"
+			}
+		},
+		{
+			"key": "product-hosting-maand",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Hosting, per maand",
+				"description": "Hosting met dagelijkse back-ups en SSL.",
+				"type": "service",
+				"status": "active",
+				"unitPrice": 35,
+				"taxRate": 21,
+				"vatClass": "high",
+				"unit": "Maand"
+			}
+		},
+		{
+			"key": "product-workshop-teksten",
+			"register": "pipelinq",
+			"schema": "product",
+			"data": {
+				"name": "Workshop teksten",
+				"description": "Halve dag, samen de teksten schrijven.",
+				"type": "service",
+				"status": "active",
+				"unitPrice": 450,
+				"taxRate": 21,
+				"vatClass": "high",
+				"unit": "Sessie"
+			}
+		},
+		{
+			"key": "offerte-0042",
+			"register": "pipelinq",
+			"schema": "salesQuote",
+			"data": {
+				"number": "OFF-2026-0042",
+				"title": "Website en hosting Bakkerij De Graaf",
+				"lead": "{{object:lead-bakkerijdegraaf-website.id}}",
+				"client": "{{object:client-bakkerijdegraaf.id}}",
+				"status": "draft",
+				"version": 1,
+				"assignee": "{{cast:pieter.uid}}",
+				"paymentTerm": "30 dagen",
+				"currency": "EUR",
+				"subtotal": 4428,
+				"vatAmount": 929.88,
+				"total": 5357.88,
+				"notes": "Anna de Vries wil de nieuwe website live hebben voordat de kerstbestellingen beginnen. 10% op hosting telefonisch afgesproken op 5 oktober."
+			}
+		},
+		{
+			"key": "offerte-0042-regel-1",
+			"register": "pipelinq",
+			"schema": "salesQuoteLine",
+			"data": {
+				"quote": "{{object:offerte-0042.id}}",
+				"kind": "catalogue",
+				"description": "Ontwerp en bouw, tot 8 pagina's",
+				"note": "Inclusief de fotogalerij voor de winkel.",
+				"quantity": 1,
+				"unitPrice": 2400,
+				"discount": 0,
+				"total": 2400,
+				"sortOrder": 1,
+				"product": "{{object:product-website-basispakket.id}}"
+			}
+		},
+		{
+			"key": "offerte-0042-regel-2",
+			"register": "pipelinq",
+			"schema": "salesQuoteLine",
+			"data": {
+				"quote": "{{object:offerte-0042.id}}",
+				"kind": "catalogue",
+				"description": "Hosting met dagelijkse back-ups en SSL",
+				"note": "Eerste jaar. Maandelijks gefactureerd na de bestelling.",
+				"quantity": 12,
+				"unitPrice": 35,
+				"discount": 10,
+				"total": 378,
+				"sortOrder": 2,
+				"product": "{{object:product-hosting-maand.id}}"
+			}
+		},
+		{
+			"key": "offerte-0042-regel-3",
+			"register": "pipelinq",
+			"schema": "salesQuoteLine",
+			"data": {
+				"quote": "{{object:offerte-0042.id}}",
+				"kind": "catalogue",
+				"description": "Halve dag, samen de teksten schrijven",
+				"note": "In de bakkerij, op een maandag als de winkel dicht is.",
+				"quantity": 2,
+				"unitPrice": 450,
+				"discount": 0,
+				"total": 900,
+				"sortOrder": 3,
+				"product": "{{object:product-workshop-teksten.id}}"
+			}
+		},
+		{
+			"key": "offerte-0042-regel-4",
+			"register": "pipelinq",
+			"schema": "salesQuoteLine",
+			"data": {
+				"quote": "{{object:offerte-0042.id}}",
+				"kind": "own",
+				"description": "Koppeling met het kassasysteem: dagvoorraad tonen op de website",
+				"note": "Schatting. Hangt af van de leverancier van de kassa.",
+				"quantity": 1,
+				"unitPrice": 750,
+				"discount": 0,
+				"total": 750,
+				"sortOrder": 4
+			}
+		}
+	]
+}

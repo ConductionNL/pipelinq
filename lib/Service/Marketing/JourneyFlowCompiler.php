@@ -71,6 +71,28 @@ class JourneyFlowCompiler {
 		'leadStageChanged' => 'lead',
 		'contractRenewalWindow' => 'salesContract',
 		'listConfirmed' => 'subscription',
+		'addressChanged' => 'client',
+		'ticketClosed' => 'ticket',
+	];
+
+	/**
+	 * Trigger kind to the check every run of that kind must pass first.
+	 *
+	 * An object trigger fires on every save of the object. These kinds start
+	 * on one change only, read from the fields the update changed
+	 * (`context.changed`, from OpenRegister's update trigger). A journey that
+	 * only wants complaints adds its own condition on the ticket type.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	public const TRIGGER_GUARDS = [
+		'addressChanged' => ['in' => ['address', ['var' => 'context.changed']]],
+		'ticketClosed' => [
+			'and' => [
+				['in' => [['var' => 'json.status'], ['resolved', 'completed', 'closed']]],
+				['in' => ['status', ['var' => 'context.changed']]],
+			],
+		],
 	];
 
 	/**
@@ -106,6 +128,15 @@ class JourneyFlowCompiler {
 		}
 
 		$condition = $this->conditionFor(condition: (array)($journey['condition'] ?? []));
+		$guard = (self::TRIGGER_GUARDS[$kind] ?? null);
+		if ($guard !== null && $condition !== null) {
+			$condition = ['and' => [$guard, $condition]];
+		}
+
+		if ($guard !== null && $condition === null) {
+			$condition = $guard;
+		}
+
 		if ($condition !== null) {
 			$nodes[] = [
 				'id' => 'gate',

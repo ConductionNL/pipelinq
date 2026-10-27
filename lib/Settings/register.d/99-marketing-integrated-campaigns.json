@@ -77,21 +77,25 @@
 									"leadStageChanged",
 									"contractRenewalWindow",
 									"listConfirmed",
-									"shillinqSignal"
+									"shillinqSignal",
+									"addressChanged",
+									"ticketClosed"
 								],
 								"title": "Trigger kind",
-								"description": "A stage change, a contract renewal window, a list confirmation or a bookkeeping signal.",
+								"description": "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.",
 								"x-enum-labels": {
 									"leadStageChanged": "A lead moved stage",
 									"contractRenewalWindow": "A contract is up for renewal",
 									"listConfirmed": "Someone confirmed a subscription",
-									"shillinqSignal": "A bookkeeping signal changed"
+									"shillinqSignal": "A bookkeeping signal changed",
+									"addressChanged": "A resident or business got a new address",
+									"ticketClosed": "A ticket was closed"
 								}
 							},
 							"cron": {
 								"type": "string",
 								"title": "Schedule",
-								"description": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other three kinds.",
+								"description": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.",
 								"example": "0 7 * * *"
 							}
 						}

@@ -122,8 +122,8 @@ import {
 import SavedReplyPicker from './SavedReplyPicker.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
-/** The ticket kinds a customer can be answered on. */
-const ANSWERABLE = ['request', 'complaint']
+/** A contact moment is a logged interaction; every other ticket kind can be answered. */
+const NOT_ANSWERABLE = ['interaction']
 
 export default {
 	name: 'CustomerReplySection',
@@ -172,7 +172,7 @@ export default {
 		 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-answers-from-the-ticket-req-qcd-007
 		 */
 		applies() {
-			return !!this.ticket && ANSWERABLE.includes(this.ticket.ticketType)
+			return !!this.ticket && !NOT_ANSWERABLE.includes(this.ticket.ticketType)
 		},
 
 		/**

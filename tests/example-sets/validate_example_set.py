@@ -14,14 +14,22 @@ What it does, per object:
     {{datetime:n HH:MM}}, {{object:key.path}} within this fragment only,
     {{lookup:name}}) and fails on any other placeholder or on one that resolves
     to nothing; an object reference gets a UUID stand-in, as the loader's check does;
+    the fields an object names in `verbatimFields` are left as declared, as the loader does;
   * merges the base register file and register.d overlays the way the app's
     SettingsService imports them (objects merge by key, lists concatenate);
   * validates the filled data with jsonschema against the merged schema
     (OpenRegister's `$ref` to a schema slug becomes a plain uuid string);
+  * checks a `user` format value against the cast's accounts: the loader also
+    accepts an account the instance happens to have, but a set can only rely
+    on the accounts it writes itself;
   * refuses a key the schema does not declare, because the loader's read-back
     proof exits 2 on a key the schema does not keep;
-  * refuses an e-mail outside @zuiddrecht.example and a BSN-like or KVK-like
-    literal that does not come from the cast;
+  * refuses an e-mail outside the reserved .example top-level domain (RFC 2606)
+    and a BSN-like or KVK-like literal that does not come from the cast;
+  * warns about a number with more than 2 decimals, which an OpenRegister that
+    stores numbers as DECIMAL(10,2) rounds;
+  * checks that every lookup finds exactly one object the set declared before it,
+    for a lookup in this app's own registers;
   * checks that every fragment group member is a cast person with an account.
 Exit 0 when clean, 1 otherwise. Stand-ins are not real values: a check here does
 not replace `occ openregister:example-set:install <set> --check` on an instance.
@@ -116,6 +124,19 @@ def _uuid(v):
 def _email(v):
     if isinstance(v, str) and not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', v):
         raise ValueError('not an e-mail address')
+    return True
+
+
+# The accounts the set itself has: the cast people with a uid. OpenRegister's
+# `user` format accepts an existing account or one the set is about to write;
+# a set may only name its own.
+CAST_UIDS = set()
+
+
+@checker.checks('user', raises=ValueError)
+def _user(v):
+    if isinstance(v, str) and v.strip() not in CAST_UIDS:
+        raise ValueError('not the uid of a cast account')
     return True
 
 
@@ -226,7 +247,7 @@ def cast_entries(cast_file):
 
 
 def literal_identifiers(raw_value, path, problems, where):
-    """A BSN-like or KVK-like literal, or an e-mail outside the set's domain, in the declared data."""
+    """A BSN-like or KVK-like literal, or an e-mail outside the reserved .example domain, in the declared data."""
     if isinstance(raw_value, dict):
         for k, v in raw_value.items():
             literal_identifiers(v, path + '.' + k, problems, where)
@@ -238,8 +259,49 @@ def literal_identifiers(raw_value, path, problems, where):
         if re.search(r'(?<![\d-])\d{8,9}(?![\d-])', bare) and re.search(r'bsn|burgerservice|kvk|identif', path, re.I):
             problems.append('%s: %s holds a literal identifier; use {{cast:...}}' % (where, path))
         for mail in re.findall(r'[\w.+-]+@[\w.-]+', bare):
-            if not mail.lower().endswith('@zuiddrecht.example'):
-                problems.append('%s: %s holds e-mail %s outside @zuiddrecht.example' % (where, path, mail))
+            mail = mail.rstrip('.')
+            if not mail.lower().endswith('.example'):
+                problems.append('%s: %s holds e-mail %s outside the reserved .example domain' % (where, path, mail))
+
+
+def finer_than_storage(data, properties, path=''):
+    """The number fields whose value has more than 2 decimals.
+
+    OpenRegister gives a schema `number` a DECIMAL(10,2) column (MagicMapper), so such a
+    value comes back rounded and the loader reports it as written but not kept.
+    """
+    found = []
+    for key, value in (data.items() if isinstance(data, dict) else []):
+        prop = properties.get(key) or {}
+        here = (path + '.' + key).lstrip('.')
+        if prop.get('type') == 'number' and isinstance(value, float) and round(value, 2) != value:
+            found.append(here)
+        elif prop.get('type') == 'object' and isinstance(value, dict):
+            found += finer_than_storage(value, prop.get('properties', {}), here)
+    return found
+
+
+def lookup_problem(where, name, lookup, looked_for, register, own_registers, declared, problems, warnings):
+    """A lookup that finds no row, or more than one, among the objects the set declared before it.
+
+    The loader looks in the instance first and then among the objects declared earlier
+    (ExampleSetInstaller::lookedUp). A set cannot rely on rows of its own app's register that it
+    does not write itself, so a miss there is a problem; a miss in another register is a warning,
+    since that row may come from the other app.
+    """
+    if not isinstance(looked_for, dict) or not looked_for or not lookup.get('schema'):
+        return
+    source = lookup.get('register', register)
+    found = [row for reg, schema, row in declared
+             if reg == source and schema == lookup['schema']
+             and all(row.get(field) == value for field, value in looked_for.items())]
+    words = ', '.join('%s %r' % (field, value) for field, value in sorted(looked_for.items()))
+    if len(found) > 1:
+        problems.append('%s: lookup %s finds %d %s rows with %s; a lookup needs exactly one' % (where, name, len(found), lookup['schema'], words))
+    elif not found and source in own_registers:
+        problems.append('%s: lookup %s finds no %s declared before it with %s' % (where, name, lookup['schema'], words))
+    elif not found:
+        warnings.append('%s: lookup %s finds no %s %s in this set with %s; it must exist on the instance' % (where, name, source, lookup['schema'], words))
 
 
 def main():
@@ -259,6 +321,7 @@ def main():
     for slug, reg in cfg.get('components', {}).get('registers', {}).items():
         reg_schemas[reg.get('slug', slug)] = set(reg.get('schemas', []))
     cast, entries, organisations = cast_entries(args.cast)
+    CAST_UIDS.update(e['uid'] for e in entries.values() if isinstance(e.get('uid'), str))
     fragment = json.load(open(args.fragment, encoding='utf-8'))
     app = args.app or os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(args.fragment))))))
     problems = []
@@ -268,6 +331,7 @@ def main():
     keys = set()
     ctx = {'cast': entries, 'objects': {}, 'lookups': {}, 'organisations': organisations}
     counts = {}
+    declared = []
     for i, obj in enumerate(fragment.get('objects', [])):
         key = obj.get('key', '')
         where = '%s: object "%s"' % (os.path.basename(args.fragment), key)
@@ -283,12 +347,15 @@ def main():
         for name, lookup in (obj.get('lookups') or {}).items():
             if not lookup.get('schema') or not lookup.get('where'):
                 problems.append('%s: lookup %s needs a schema and a where' % (where, name))
-            fill(lookup.get('where', {}), ctx, gaps)
+            looked_for = fill(lookup.get('where', {}), ctx, gaps)
             ctx['lookups'][name] = stand_in('lookup', key + '/' + name)
-        data = fill(obj['data'], ctx, gaps)
+            lookup_problem(where, name, lookup, looked_for, obj['register'], registers, declared, problems, warnings)
+        verbatim = {f for f in (obj.get('verbatimFields') or []) if isinstance(f, str)}
+        data = dict(obj['data'], **fill({k: v for k, v in obj['data'].items() if k not in verbatim}, ctx, gaps))
         for g in gaps:
             problems.append('%s: placeholder %s does not resolve' % (where, g))
         ctx['objects'][key] = dict(data, id=stand_in(app, key), uuid=stand_in(app, key))
+        declared.append((obj['register'], obj['schema'], ctx['objects'][key]))
         schema = schemas.get(obj['schema'])
         if obj['register'] in registers and schema is None:
             problems.append('%s: schema %s is not declared in %s' % (where, obj['schema'], args.base))
@@ -303,6 +370,8 @@ def main():
         js.setdefault('type', 'object')
         for err in sorted(jsonschema.Draft202012Validator(js, format_checker=checker).iter_errors(data), key=str):
             problems.append('%s: %s at %s' % (where, err.message, '/'.join(map(str, err.absolute_path)) or '(root)'))
+        for field in finer_than_storage(data, schema.get('properties', {})):
+            warnings.append('%s: %s has more than 2 decimals; an OpenRegister that stores a number as DECIMAL(10,2) rounds it' % (where, field))
         undeclared = sorted(set(data) - set(schema.get('properties', {})))
         if undeclared:
             problems.append('%s: keys the schema does not declare (the read-back proof would exit 2): %s' % (where, ', '.join(undeclared)))

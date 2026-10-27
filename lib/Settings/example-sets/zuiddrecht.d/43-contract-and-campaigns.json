@@ -1,0 +1,282 @@
+{
+	"$comment": "pipelinq's contract, campaigns, social post and event in the Zuiddrecht set, as PqContract, PqCampagne, PqSocialBericht and PqEvenement draw them.",
+	"objects": [
+		{
+			"key": "lead-sportvelden-verlenging",
+			"register": "pipelinq",
+			"schema": "lead",
+			"data": {
+				"title": "Verlenging sportvelden 2027",
+				"client": "{{object:client-sportclub.id}}",
+				"source": "contract",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
+				"stage": "Voorstel",
+				"stageOrder": 4,
+				"status": "open",
+				"priority": "normal",
+				"probability": 70,
+				"value": 42000,
+				"currency": "EUR",
+				"assignee": "{{cast:pieter.uid}}",
+				"stageEnteredAt": "{{datetime:-6 06:00}}",
+				"expectedCloseDate": "{{date:25}}",
+				"category": "Onderhoud"
+			}
+		},
+		{
+			"key": "contract-sportvelden-2025",
+			"register": "pipelinq",
+			"schema": "salesContract",
+			"data": {
+				"contractNumber": "CON-2025-0044",
+				"title": "Onderhoud sportvelden 2025",
+				"clientRef": "{{object:client-sportclub.id}}",
+				"lineItems": [
+					{
+						"product": "Veldonderhoud, per veld",
+						"description": "Maaien, lijnen trekken, drainage controleren",
+						"quantity": 4,
+						"unitPrice": 8750
+					}
+				],
+				"billingInterval": "annual",
+				"valuePerInterval": 37800,
+				"value": 37800,
+				"currency": "EUR",
+				"startDate": "{{date:-645}}",
+				"endDate": "{{date:-281}}",
+				"autoRenew": false,
+				"noticePeriodDays": 60,
+				"status": "renewed",
+				"ownerId": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "contract-sportvelden-2026",
+			"register": "pipelinq",
+			"schema": "salesContract",
+			"data": {
+				"contractNumber": "CON-2026-0031",
+				"title": "Onderhoud sportvelden 2026",
+				"clientRef": "{{object:client-sportclub.id}}",
+				"lineItems": [
+					{
+						"product": "Veldonderhoud, per veld",
+						"description": "Maaien, lijnen trekken, drainage controleren",
+						"quantity": 4,
+						"unitPrice": 8750
+					},
+					{
+						"product": "Winterdienst",
+						"description": "Vorstafdekking en strooien van paden",
+						"quantity": 1,
+						"unitPrice": 4200
+					},
+					{
+						"product": "Inspectierapport",
+						"description": "Jaarlijks veiligheidsrapport voor het bestuur",
+						"quantity": 1,
+						"unitPrice": 2800
+					}
+				],
+				"billingInterval": "annual",
+				"valuePerInterval": 42000,
+				"value": 42000,
+				"currency": "EUR",
+				"startDate": "{{date:-279}}",
+				"endDate": "{{date:85}}",
+				"autoRenew": false,
+				"noticePeriodDays": 60,
+				"status": "expiring",
+				"ownerId": "{{cast:pieter.uid}}",
+				"renewalLeadRef": "{{object:lead-sportvelden-verlenging.id}}",
+				"predecessorContractRef": "{{object:contract-sportvelden-2025.id}}",
+				"invoiceReference": "INV-2026-0187",
+				"renewalLeadOutcome": "",
+				"noticeReminderSent": false,
+				"notes": "Omvat maaien, lijnen trekken en drainagecontroles voor de vier velden aan de Sportlaan. Winterwerk valt onder hetzelfde jaarbedrag. De club vroeg om het nieuwe kunstgrasveld vanaf 2027 toe te voegen."
+			}
+		},
+		{
+			"key": "campagne-afvalvrije-week",
+			"register": "pipelinq",
+			"schema": "campaign",
+			"data": {
+				"name": "Afvalvrije week 2026",
+				"goal": "Meer inwoners scheiden hun afval en bestellen de gratis compostbak",
+				"status": "running",
+				"utmCampaign": "afvalvrije-week-2026",
+				"utmSource": "nieuwsbrief",
+				"utmMedium": "e-mail",
+				"startsAt": "{{date:-9}}",
+				"endsAt": "{{date:4}}",
+				"budgetEur": 2500,
+				"landingPage": {
+					"portal": "Mijn Zuiddrecht",
+					"url": "https://mijn.zuiddrecht.example/afvalvrij",
+					"form": "Aanvraag compostbak"
+				},
+				"articleSummary": "Zo scheidt u uw afval",
+				"createdBy": "{{cast:pieter.uid}}",
+				"createdAt": "{{datetime:-23 14:00}}"
+			}
+		},
+		{
+			"key": "campagne-warmtenet-oost",
+			"register": "pipelinq",
+			"schema": "campaign",
+			"data": {
+				"name": "Warmtenet Oost 2026",
+				"goal": "Bewoners van Oost horen hoe het warmtenet werkt en melden zich aan voor een aansluiting",
+				"status": "running",
+				"utmCampaign": "warmtenet-oost-2026",
+				"utmSource": "nieuwsbrief",
+				"utmMedium": "e-mail",
+				"startsAt": "{{date:-13}}",
+				"endsAt": "{{date:36}}",
+				"createdBy": "{{cast:pieter.uid}}",
+				"createdAt": "{{datetime:-13 09:30}}"
+			}
+		},
+		{
+			"key": "sociaal-afvalvrije-week",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Afvalvrije week: bestel uw compostbak",
+				"campaignId": "{{object:campagne-afvalvrije-week.id}}",
+				"body": "Afvalvrije week! Bestel tot 11 oktober een gratis compostbak voor uw tuin. #Zuiddrecht #afval https://mijn.zuiddrecht.example/afvalvrij",
+				"link": "https://mijn.zuiddrecht.example/afvalvrij",
+				"accountIds": [
+					"mastodon",
+					"bluesky",
+					"linkedin"
+				],
+				"variants": {
+					"mastodon": "Afvalvrije week! Bestel tot 11 oktober een gratis compostbak voor uw tuin. #Zuiddrecht #afval https://mijn.zuiddrecht.example/afvalvrij",
+					"bluesky": "Gratis compostbak tijdens de Afvalvrije week, bestel hem tot 11 oktober. https://mijn.zuiddrecht.example/afvalvrij",
+					"linkedin": "De gemeente Zuiddrecht geeft tijdens de Afvalvrije week gratis compostbakken weg. Zo werken we samen aan minder restafval."
+				},
+				"scheduledFor": "{{datetime:-9 10:00}}",
+				"status": "published",
+				"publishedAt": "{{datetime:-9 10:00}}",
+				"failureReason": "LinkedIn: token verlopen, koppel het account opnieuw",
+				"approvals": [
+					{
+						"by": "{{cast:fatmayildiz.uid}}",
+						"at": "{{datetime:-12 11:00}}",
+						"decision": "approved"
+					}
+				],
+				"agentAuthored": false,
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "evenement-warmtenet-oost",
+			"register": "pipelinq",
+			"schema": "campaignEvent",
+			"data": {
+				"title": "Informatieavond warmtenet Oost",
+				"reference": "EVT-2026-0012",
+				"campaign": "{{object:campagne-warmtenet-oost.id}}",
+				"signupStatus": "open",
+				"startAt": "{{datetime:36 19:30}}",
+				"endAt": "{{datetime:36 21:30}}",
+				"venue": "Wijkcentrum De Linde, Lindelaan 2",
+				"room": "Grote zaal",
+				"capacity": 80,
+				"hosts": [
+					"{{cast:pieter.uid}}",
+					"{{cast:lotte.uid}}"
+				],
+				"reminderAt": "{{datetime:34 18:00}}",
+				"formTitle": "Aanmelden informatieavond",
+				"pageUrl": "https://zuiddrecht.example/warmtenet-oost",
+				"signupClosesAt": "{{datetime:35 12:00}}",
+				"description": "Bewoners van Oost horen hoe het warmtenet werkt, wat het kost en wanneer hun straat aan de beurt is."
+			}
+		},
+		{
+			"key": "aanmelding-warmtenet-sanne",
+			"register": "pipelinq",
+			"schema": "eventRegistration",
+			"data": {
+				"event": "{{object:evenement-warmtenet-oost.id}}",
+				"name": "Sanne de Vries",
+				"address": "Lindelaan 14",
+				"street": "Lindelaan",
+				"partySize": 1,
+				"source": "newsletter",
+				"registeredAt": "{{datetime:-5 08:51}}",
+				"status": "confirmed",
+				"newContact": false
+			}
+		},
+		{
+			"key": "aanmelding-warmtenet-kuiper",
+			"register": "pipelinq",
+			"schema": "eventRegistration",
+			"data": {
+				"event": "{{object:evenement-warmtenet-oost.id}}",
+				"name": "Fam. Kuiper",
+				"address": "Lindelaan 31",
+				"street": "Lindelaan",
+				"partySize": 2,
+				"source": "web-form",
+				"registeredAt": "{{datetime:-4 08:51}}",
+				"status": "confirmed",
+				"newContact": false
+			}
+		},
+		{
+			"key": "aanmelding-warmtenet-elidrissi",
+			"register": "pipelinq",
+			"schema": "eventRegistration",
+			"data": {
+				"event": "{{object:evenement-warmtenet-oost.id}}",
+				"name": "Ahmed El Idrissi",
+				"address": "Lindelaan 8",
+				"street": "Lindelaan",
+				"partySize": 1,
+				"source": "social",
+				"registeredAt": "{{datetime:-2 08:51}}",
+				"status": "confirmed",
+				"newContact": true
+			}
+		},
+		{
+			"key": "aanmelding-warmtenet-vve-lindehof",
+			"register": "pipelinq",
+			"schema": "eventRegistration",
+			"data": {
+				"event": "{{object:evenement-warmtenet-oost.id}}",
+				"name": "VvE Lindehof",
+				"address": "Lindelaan 40 tot 58",
+				"street": "Lindelaan",
+				"partySize": 4,
+				"source": "web-form",
+				"registeredAt": "{{datetime:-1 08:51}}",
+				"status": "confirmed",
+				"newContact": true
+			}
+		},
+		{
+			"key": "aanmelding-warmtenet-vandam",
+			"register": "pipelinq",
+			"schema": "eventRegistration",
+			"data": {
+				"event": "{{object:evenement-warmtenet-oost.id}}",
+				"name": "Joke van Dam",
+				"address": "Lindelaan 22",
+				"street": "Lindelaan",
+				"partySize": 1,
+				"source": "web-form",
+				"registeredAt": "{{datetime:0 08:51}}",
+				"status": "waitlist",
+				"newContact": true,
+				"waitlistPosition": 2
+			}
+		}
+	]
+}

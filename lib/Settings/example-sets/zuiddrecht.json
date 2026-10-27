@@ -1,6 +1,6 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the default pipeline 'Sales' that pipelinq ships. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for daan, marleen and esra. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint. Sanne also has a confirmed site visit on the Parkstraat a week after the install, so a booking that can still be moved exists. The BI export part (board PqBiExport): two destinations, a data warehouse and a regional data lake, and four export jobs on them; three run on a schedule and the leads job is switched off.The appointment samples (PqAfspraak, PqAfspraken, PqInloop) give the Locatiebezoek service its deposit, give Sanne's site visit its subject, place and handler (daan), and add four walk-in customers today.",
+	"$comment": "pipelinq's part of the Zuiddrecht example set: the cast's residents and businesses as clients, the businesses' contact people, and the work of KCC employee daan: a phone question from Henk with the call itself, a question from Sanne about her Woo request, a complaint from Fatima, and a lead for CloudGemeente B.V. with Mark as contact. The lead goes into the set's Verkoop pipeline. contactsUid is each cast member's own contactsUid; it names no Contacts card until a later pipelinq:contacts:sync writes one with that uid. appConfig makes the cast's KCC group the CRM group and the BRP group, so daan works as an agent; crm_read_group lets dossiq's case handlers (dossiq-medewerkers) read the parties, contact moments and indicators their cases show, with no CRM write right; remove puts the old values back. Sales samples (round 12, kept on :8080 by Ruben's decision of 17 October): Woningcorporatie Drechtwonen with the lead Woonportaal voor huurders, its three product lines and three contacts; the delivery programme Vervanging straatverlichting Oost with three cycles, five tasks and a team of three; and weekly Q4-2026 forecast snapshots for the sellers pieter, fatmayildiz and joris. Install with `occ openregister:example-set:install zuiddrecht` (openregister PR #4603); pipelinq's own `pipelinq:demo:seed` is separate and unchanged. Each resident and business client carries the masterEntityRef dossiq's matching brpPerson or kvkCompany carries, so a host app can read a party's open tickets by master entity; Slagerij Van der Berg has one open request and CloudGemeente B.V. an open request and an open complaint. Sanne's confirmed site visit on the Parkstraat, the day after the install, is in zuiddrecht.d/50-bookings.json with this week's other bookings, so a booking that can still be moved exists. The BI export part (board PqBiExport): two destinations, a data warehouse and a regional data lake, and four export jobs on them; three run on a schedule and the leads job is switched off.The appointment samples (PqAfspraak, PqAfspraken, PqInloop) give the Locatiebezoek service its deposit, give Sanne's site visit its subject, place and handler (pieter); the walk-in customers are in zuiddrecht.d/52-walk-in-queue.json.",
 	"appConfig": [
 		{
 			"key": "crm_group",
@@ -61,7 +61,9 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan.",
-				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000012"
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000012",
+				"phone": "06 12 34 56 78",
+				"description": "Aanvrager van de vergunning voor het straatfeest, Parkstraat"
 			}
 		},
 		{
@@ -103,7 +105,10 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:slagerij.kvk}}.",
-				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000001"
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000001",
+				"kvkNumber": "{{cast:slagerij.kvk}}",
+				"legalForm": "eenmanszaak",
+				"place": "{{cast:slagerij.address.city}}"
 			}
 		},
 		{
@@ -142,7 +147,10 @@
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:cloudgemeente.kvk}}.",
 				"website": "https://cloudgemeente.zuiddrecht.example",
-				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000002"
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000002",
+				"kvkNumber": "{{cast:cloudgemeente.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:cloudgemeente.address.city}}"
 			}
 		},
 		{
@@ -180,7 +188,10 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:vandam.kvk}}.",
-				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000003"
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000003",
+				"kvkNumber": "{{cast:vandam.kvk}}",
+				"legalForm": "eenmanszaak",
+				"place": "{{cast:vandam.address.city}}"
 			}
 		},
 		{
@@ -203,7 +214,10 @@
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "KVK-nummer {{cast:buurtoost.kvk}}. Voorzitter Marja Verbeek, secretaris Kees de Wit.",
-				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000007"
+				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000007",
+				"kvkNumber": "{{cast:buurtoost.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:buurtoost.address.city}}"
 			}
 		},
 		{
@@ -435,7 +449,14 @@
 				"accountStatus": "active",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:dagblad.kvk}}."
+				"notes": "KVK-nummer {{cast:dagblad.kvk}}.",
+				"kvkNumber": "{{cast:dagblad.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:dagblad.address.city}}",
+				"industry": [
+					"{{cast:dagblad.sbi.description}}"
+				],
+				"address": "{{cast:dagblad.address.street}} {{cast:dagblad.address.number}}, {{cast:dagblad.address.postcode}} {{cast:dagblad.address.city}}"
 			}
 		},
 		{
@@ -451,7 +472,14 @@
 				"accountStatus": "active",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:kindzorg.kvk}}."
+				"notes": "KVK-nummer {{cast:kindzorg.kvk}}.",
+				"kvkNumber": "{{cast:kindzorg.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:kindzorg.address.city}}",
+				"industry": [
+					"{{cast:kindzorg.sbi.description}}"
+				],
+				"address": "{{cast:kindzorg.address.street}} {{cast:kindzorg.address.number}}, {{cast:kindzorg.address.postcode}} {{cast:kindzorg.address.city}}"
 			}
 		},
 		{
@@ -473,7 +501,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:visserbouw.kvk}}."
+				"notes": "KVK-nummer {{cast:visserbouw.kvk}}.",
+				"kvkNumber": "{{cast:visserbouw.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:visserbouw.address.city}}"
 			}
 		},
 		{
@@ -495,7 +526,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:vanwijk.kvk}}."
+				"notes": "KVK-nummer {{cast:vanwijk.kvk}}.",
+				"kvkNumber": "{{cast:vanwijk.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:vanwijk.address.city}}"
 			}
 		},
 		{
@@ -517,7 +551,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:bewonerslindelaan.kvk}}."
+				"notes": "KVK-nummer {{cast:bewonerslindelaan.kvk}}.",
+				"kvkNumber": "{{cast:bewonerslindelaan.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:bewonerslindelaan.address.city}}"
 			}
 		},
 		{
@@ -539,7 +576,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:bakkerijdemolen.kvk}}."
+				"notes": "KVK-nummer {{cast:bakkerijdemolen.kvk}}.",
+				"kvkNumber": "{{cast:bakkerijdemolen.kvk}}",
+				"legalForm": "eenmanszaak",
+				"place": "{{cast:bakkerijdemolen.address.city}}"
 			}
 		},
 		{
@@ -561,7 +601,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:lumeninfra.kvk}}."
+				"notes": "KVK-nummer {{cast:lumeninfra.kvk}}.",
+				"kvkNumber": "{{cast:lumeninfra.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:lumeninfra.address.city}}"
 			}
 		},
 		{
@@ -583,7 +626,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:groenenco.kvk}}."
+				"notes": "KVK-nummer {{cast:groenenco.kvk}}.",
+				"kvkNumber": "{{cast:groenenco.kvk}}",
+				"legalForm": "bv",
+				"place": "{{cast:groenenco.address.city}}"
 			}
 		},
 		{
@@ -605,7 +651,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:sportclub.kvk}}."
+				"notes": "KVK-nummer {{cast:sportclub.kvk}}.",
+				"kvkNumber": "{{cast:sportclub.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:sportclub.address.city}}"
 			}
 		},
 		{
@@ -627,7 +676,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:vvekerkplein.kvk}}."
+				"notes": "KVK-nummer {{cast:vvekerkplein.kvk}}.",
+				"kvkNumber": "{{cast:vvekerkplein.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:vvekerkplein.address.city}}"
 			}
 		},
 		{
@@ -649,7 +701,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:harmonie.kvk}}."
+				"notes": "KVK-nummer {{cast:harmonie.kvk}}.",
+				"kvkNumber": "{{cast:harmonie.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:harmonie.address.city}}"
 			}
 		},
 		{
@@ -671,7 +726,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:tennisdekade.kvk}}."
+				"notes": "KVK-nummer {{cast:tennisdekade.kvk}}.",
+				"kvkNumber": "{{cast:tennisdekade.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:tennisdekade.address.city}}"
 			}
 		},
 		{
@@ -693,7 +751,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:ondernemers.kvk}}."
+				"notes": "KVK-nummer {{cast:ondernemers.kvk}}.",
+				"kvkNumber": "{{cast:ondernemers.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:ondernemers.address.city}}"
 			}
 		},
 		{
@@ -715,7 +776,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:scouting.kvk}}."
+				"notes": "KVK-nummer {{cast:scouting.kvk}}.",
+				"kvkNumber": "{{cast:scouting.kvk}}",
+				"legalForm": "vereniging",
+				"place": "{{cast:scouting.address.city}}"
 			}
 		},
 		{
@@ -737,7 +801,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:drechthof.kvk}}."
+				"notes": "KVK-nummer {{cast:drechthof.kvk}}.",
+				"kvkNumber": "{{cast:drechthof.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:drechthof.address.city}}"
 			}
 		},
 		{
@@ -759,7 +826,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:voedselbank.kvk}}."
+				"notes": "KVK-nummer {{cast:voedselbank.kvk}}.",
+				"kvkNumber": "{{cast:voedselbank.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:voedselbank.address.city}}"
 			}
 		},
 		{
@@ -781,7 +851,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:dorpshuis.kvk}}."
+				"notes": "KVK-nummer {{cast:dorpshuis.kvk}}.",
+				"kvkNumber": "{{cast:dorpshuis.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:dorpshuis.address.city}}"
 			}
 		},
 		{
@@ -803,7 +876,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:jeugdtheater.kvk}}."
+				"notes": "KVK-nummer {{cast:jeugdtheater.kvk}}.",
+				"kvkNumber": "{{cast:jeugdtheater.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:jeugdtheater.address.city}}"
 			}
 		},
 		{
@@ -825,7 +901,10 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:erfgoed.kvk}}."
+				"notes": "KVK-nummer {{cast:erfgoed.kvk}}.",
+				"kvkNumber": "{{cast:erfgoed.kvk}}",
+				"legalForm": "stichting",
+				"place": "{{cast:erfgoed.address.city}}"
 			}
 		},
 		{
@@ -856,7 +935,7 @@
 				"contactsUid": "example-dewit",
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
-				"preferredChannel": "counter",
+				"preferredChannel": "other",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "Komt meestal langs aan de balie."
@@ -906,7 +985,7 @@
 				"contactsUid": "{{cast:henkvisser.contactsUid}}",
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
-				"preferredChannel": "post",
+				"preferredChannel": "other",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "Schrijft liever een brief."
@@ -1250,7 +1329,9 @@
 				],
 				"contactsUid": "example-drechtwonen-hendriks",
 				"language": "nl",
-				"correspondenceLanguage": "nl"
+				"correspondenceLanguage": "nl",
+				"email": "m.hendriks@drechtwonen.example",
+				"phone": "078 612 40 00"
 			}
 		},
 		{
@@ -2269,6 +2350,7 @@
 				"actualAmount": 486.4,
 				"diffAmount": 0.0,
 				"diffPercentage": 0.0,
+				"tolerancePercentage": 2,
 				"withinTolerance": true,
 				"status": "approved",
 				"approvedBy": "{{cast:pieter.uid}}",
@@ -2288,8 +2370,7 @@
 				"floatAt": "{{datetime:-1 09:00}}",
 				"status": "closed",
 				"closedAt": "{{datetime:-1 16:45}}",
-				"reconciliationStatus": "pending",
-				"notes": "Marge € 5,00. 38 transacties in deze dienst."
+				"reconciliationStatus": "pending"
 			}
 		},
 		{
@@ -2339,6 +2420,7 @@
 				"actualAmount": 399.9,
 				"diffAmount": -12.4,
 				"diffPercentage": 3.0,
+				"tolerancePercentage": 2,
 				"withinTolerance": false,
 				"status": "pending"
 			}
@@ -2407,6 +2489,7 @@
 				"actualAmount": 288.4,
 				"diffAmount": 0.8,
 				"diffPercentage": 0.3,
+				"tolerancePercentage": 2,
 				"withinTolerance": true,
 				"status": "approved",
 				"approvedBy": "{{cast:pieter.uid}}",
@@ -2569,103 +2652,103 @@
 			}
 		},
 		{
-			"key": "forecast-daan-1",
+			"key": "forecast-pieter-1",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-35}}",
-				"owner_id": "{{cast:daan.uid}}",
+				"owner_id": "{{cast:pieter.uid}}",
 				"level": "rep",
-				"commit_amount": 48000,
-				"best_case_amount": 120000,
-				"pipeline_amount": 168000,
-				"closed_won_amount": 90000,
+				"commit_amount": 34000,
+				"best_case_amount": 84000,
+				"pipeline_amount": 118000,
+				"closed_won_amount": 63000,
 				"quota_amount": 160000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-daan-2",
+			"key": "forecast-pieter-2",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-28}}",
-				"owner_id": "{{cast:daan.uid}}",
+				"owner_id": "{{cast:pieter.uid}}",
 				"level": "rep",
-				"commit_amount": 48000,
-				"best_case_amount": 120000,
-				"pipeline_amount": 168000,
-				"closed_won_amount": 90000,
+				"commit_amount": 36000,
+				"best_case_amount": 91000,
+				"pipeline_amount": 128000,
+				"closed_won_amount": 68400,
 				"quota_amount": 160000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-daan-3",
+			"key": "forecast-pieter-3",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-21}}",
-				"owner_id": "{{cast:daan.uid}}",
+				"owner_id": "{{cast:pieter.uid}}",
 				"level": "rep",
-				"commit_amount": 48000,
-				"best_case_amount": 120000,
-				"pipeline_amount": 168000,
-				"closed_won_amount": 90000,
+				"commit_amount": 38000,
+				"best_case_amount": 96000,
+				"pipeline_amount": 134000,
+				"closed_won_amount": 72000,
 				"quota_amount": 160000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-daan-4",
+			"key": "forecast-pieter-4",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-14}}",
-				"owner_id": "{{cast:daan.uid}}",
+				"owner_id": "{{cast:pieter.uid}}",
 				"level": "rep",
-				"commit_amount": 48000,
-				"best_case_amount": 120000,
-				"pipeline_amount": 168000,
-				"closed_won_amount": 90000,
+				"commit_amount": 41000,
+				"best_case_amount": 102000,
+				"pipeline_amount": 143000,
+				"closed_won_amount": 76500,
 				"quota_amount": 160000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-daan-5",
+			"key": "forecast-pieter-5",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-7}}",
-				"owner_id": "{{cast:daan.uid}}",
+				"owner_id": "{{cast:pieter.uid}}",
 				"level": "rep",
-				"commit_amount": 48000,
-				"best_case_amount": 120000,
-				"pipeline_amount": 168000,
-				"closed_won_amount": 90000,
+				"commit_amount": 43000,
+				"best_case_amount": 108000,
+				"pipeline_amount": 151000,
+				"closed_won_amount": 81000,
 				"quota_amount": 160000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-daan-6",
+			"key": "forecast-pieter-6",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:0}}",
-				"owner_id": "{{cast:daan.uid}}",
+				"owner_id": "{{cast:pieter.uid}}",
 				"level": "rep",
 				"commit_amount": 48000,
 				"best_case_amount": 120000,
@@ -2677,105 +2760,105 @@
 			}
 		},
 		{
-			"key": "forecast-marleen-1",
+			"key": "forecast-fatmayildiz-1",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-35}}",
-				"owner_id": "{{cast:marleen.uid}}",
+				"owner_id": "{{cast:fatmayildiz.uid}}",
 				"level": "rep",
-				"commit_amount": 30000,
-				"best_case_amount": 55000,
-				"pipeline_amount": 92000,
-				"closed_won_amount": 70000,
+				"commit_amount": 15000,
+				"best_case_amount": 38000,
+				"pipeline_amount": 64000,
+				"closed_won_amount": 49000,
 				"quota_amount": 120000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-marleen-2",
+			"key": "forecast-fatmayildiz-2",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-28}}",
-				"owner_id": "{{cast:marleen.uid}}",
+				"owner_id": "{{cast:fatmayildiz.uid}}",
 				"level": "rep",
-				"commit_amount": 30000,
-				"best_case_amount": 55000,
-				"pipeline_amount": 92000,
-				"closed_won_amount": 70000,
+				"commit_amount": 17000,
+				"best_case_amount": 42000,
+				"pipeline_amount": 70000,
+				"closed_won_amount": 53200,
 				"quota_amount": 120000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-marleen-3",
+			"key": "forecast-fatmayildiz-3",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-21}}",
-				"owner_id": "{{cast:marleen.uid}}",
+				"owner_id": "{{cast:fatmayildiz.uid}}",
 				"level": "rep",
-				"commit_amount": 30000,
-				"best_case_amount": 55000,
-				"pipeline_amount": 92000,
-				"closed_won_amount": 70000,
+				"commit_amount": 18000,
+				"best_case_amount": 44000,
+				"pipeline_amount": 74000,
+				"closed_won_amount": 56000,
 				"quota_amount": 120000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-marleen-4",
+			"key": "forecast-fatmayildiz-4",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-14}}",
-				"owner_id": "{{cast:marleen.uid}}",
+				"owner_id": "{{cast:fatmayildiz.uid}}",
 				"level": "rep",
-				"commit_amount": 30000,
-				"best_case_amount": 55000,
-				"pipeline_amount": 92000,
-				"closed_won_amount": 70000,
+				"commit_amount": 19000,
+				"best_case_amount": 47000,
+				"pipeline_amount": 78000,
+				"closed_won_amount": 59500,
 				"quota_amount": 120000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-marleen-5",
+			"key": "forecast-fatmayildiz-5",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-7}}",
-				"owner_id": "{{cast:marleen.uid}}",
+				"owner_id": "{{cast:fatmayildiz.uid}}",
 				"level": "rep",
-				"commit_amount": 30000,
-				"best_case_amount": 55000,
-				"pipeline_amount": 92000,
-				"closed_won_amount": 70000,
+				"commit_amount": 20000,
+				"best_case_amount": 50000,
+				"pipeline_amount": 83000,
+				"closed_won_amount": 63000,
 				"quota_amount": 120000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-marleen-6",
+			"key": "forecast-fatmayildiz-6",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:0}}",
-				"owner_id": "{{cast:marleen.uid}}",
+				"owner_id": "{{cast:fatmayildiz.uid}}",
 				"level": "rep",
-				"commit_amount": 30000,
+				"commit_amount": 22000,
 				"best_case_amount": 55000,
 				"pipeline_amount": 92000,
 				"closed_won_amount": 70000,
@@ -2785,103 +2868,103 @@
 			}
 		},
 		{
-			"key": "forecast-esra-1",
+			"key": "forecast-joris-1",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-35}}",
-				"owner_id": "{{cast:esra.uid}}",
+				"owner_id": "{{cast:joris.uid}}",
 				"level": "rep",
-				"commit_amount": 18000,
-				"best_case_amount": 48000,
-				"pipeline_amount": 110000,
-				"closed_won_amount": 52400,
+				"commit_amount": 13000,
+				"best_case_amount": 34000,
+				"pipeline_amount": 77000,
+				"closed_won_amount": 36700,
 				"quota_amount": 120000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-esra-2",
+			"key": "forecast-joris-2",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-28}}",
-				"owner_id": "{{cast:esra.uid}}",
+				"owner_id": "{{cast:joris.uid}}",
 				"level": "rep",
-				"commit_amount": 18000,
-				"best_case_amount": 48000,
-				"pipeline_amount": 110000,
-				"closed_won_amount": 52400,
+				"commit_amount": 14000,
+				"best_case_amount": 36000,
+				"pipeline_amount": 84000,
+				"closed_won_amount": 39800,
 				"quota_amount": 120000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-esra-3",
+			"key": "forecast-joris-3",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-21}}",
-				"owner_id": "{{cast:esra.uid}}",
+				"owner_id": "{{cast:joris.uid}}",
 				"level": "rep",
-				"commit_amount": 18000,
-				"best_case_amount": 48000,
-				"pipeline_amount": 110000,
-				"closed_won_amount": 52400,
+				"commit_amount": 14000,
+				"best_case_amount": 38000,
+				"pipeline_amount": 88000,
+				"closed_won_amount": 41900,
 				"quota_amount": 120000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-esra-4",
+			"key": "forecast-joris-4",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-14}}",
-				"owner_id": "{{cast:esra.uid}}",
+				"owner_id": "{{cast:joris.uid}}",
 				"level": "rep",
-				"commit_amount": 18000,
-				"best_case_amount": 48000,
-				"pipeline_amount": 110000,
-				"closed_won_amount": 52400,
+				"commit_amount": 15000,
+				"best_case_amount": 41000,
+				"pipeline_amount": 94000,
+				"closed_won_amount": 44500,
 				"quota_amount": 120000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-esra-5",
+			"key": "forecast-joris-5",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:-7}}",
-				"owner_id": "{{cast:esra.uid}}",
+				"owner_id": "{{cast:joris.uid}}",
 				"level": "rep",
-				"commit_amount": 18000,
-				"best_case_amount": 48000,
-				"pipeline_amount": 110000,
-				"closed_won_amount": 52400,
+				"commit_amount": 16000,
+				"best_case_amount": 43000,
+				"pipeline_amount": 99000,
+				"closed_won_amount": 47200,
 				"quota_amount": 120000,
 				"currency": "EUR",
 				"partial": false
 			}
 		},
 		{
-			"key": "forecast-esra-6",
+			"key": "forecast-joris-6",
 			"register": "pipelinq",
 			"schema": "forecastSnapshot",
 			"data": {
 				"period_id": "Q4-2026",
 				"as_of_date": "{{date:0}}",
-				"owner_id": "{{cast:esra.uid}}",
+				"owner_id": "{{cast:joris.uid}}",
 				"level": "rep",
 				"commit_amount": 18000,
 				"best_case_amount": 48000,
@@ -2906,9 +2989,9 @@
 				"assignee": "{{cast:pieter.uid}}",
 				"status": "in_progress",
 				"priority": "normal",
-				"channel": "email",
+				"channel": "phone",
 				"category": "vergunningen",
-				"occurredAt": "{{datetime:-4 11:20}}",
+				"occurredAt": "{{datetime:-4 10:24}}",
 				"slaDeadline": "{{datetime:3 17:00}}"
 			}
 		},
@@ -3137,7 +3220,6 @@
 				"reference": "PQ-2026-0423",
 				"direction": "inbound",
 				"channel": "telefoon",
-				"outcome": "transferred",
 				"status": "in_progress",
 				"client": "{{object:client-degraaf.id}}",
 				"assignee": "{{cast:pieter.uid}}",
@@ -3145,7 +3227,8 @@
 				"description": "Meneer De Graaf belde over zijn afvalpas: de container bij Dorpsstraat 8 weigert die sinds maandag. Hij probeerde al een andere container, met hetzelfde resultaat. Ik heb gezegd dat we de pas gratis vervangen en dat het 3 werkdagen duurt. Hij vroeg of hij zijn afval intussen buiten mag zetten.",
 				"duration": "PT6M",
 				"parentTicket": "{{object:ticket-degraaf-afvalpas.id}}",
-				"category": "afval"
+				"category": "afval",
+				"disposition_subject": "Afvalpas"
 			}
 		},
 		{
@@ -3440,8 +3523,8 @@
 				"requestId": "{{object:ticket-degraaf-afvalpas.id}}",
 				"callbackPhoneNumber": "06 18 44 27 30",
 				"preferredTimeSlot": "Tussen 12:00 en 14:00",
-				"description": "Meneer De Graaf mist een identiteitsbewijs voor zijn aanvraag parkeervergunning. Leg uit welk document hij kan uploaden in Mijn Zuiddrecht.",
-				"contactMomentSummary": "Belde op 6 okt over de parkeervergunning, vroeg om tussen de middag teruggebeld te worden.",
+				"description": "Meneer De Graaf vraagt of hij zijn afval buiten mag zetten tot zijn nieuwe afvalpas er is. Bel hem terug met het antwoord en de datum waarop de pas komt.",
+				"contactMomentSummary": "Belde vandaag over zijn afvalpas, die de container weigert. Vroeg om tussen de middag teruggebeld te worden.",
 				"createdBy": "{{cast:pieter.uid}}",
 				"attempts": [
 					{
@@ -3455,24 +3538,15 @@
 			"key": "lead-cloudgemeente",
 			"register": "pipelinq",
 			"schema": "lead",
-			"lookups": {
-				"pipeline": {
-					"schema": "pipeline",
-					"where": {
-						"title": "Sales",
-						"isDefault": true
-					}
-				}
-			},
 			"data": {
 				"title": "Kantoorruimte voor CloudGemeente B.V.",
 				"description": "CloudGemeente B.V. groeit en zoekt in Zuiddrecht kantoorruimte voor vijftien extra werkplekken. Mark Visser vraagt welke panden en regelingen er zijn.",
 				"client": "{{object:client-cloudgemeente.id}}",
 				"contact": "{{object:contact-mark.id}}",
 				"source": "email",
-				"pipeline": "{{lookup:pipeline}}",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
 				"stage": "Gekwalificeerd",
-				"stageOrder": 2,
+				"stageOrder": 3,
 				"status": "open",
 				"priority": "normal",
 				"probability": 30,
@@ -3497,35 +3571,6 @@
 				"depositAmount": 25,
 				"cancellationPolicy": "free",
 				"status": "active"
-			}
-		},
-		{
-			"key": "booking-locatiebezoek-parkstraat",
-			"register": "pipelinq",
-			"schema": "appointmentBooking",
-			"data": {
-				"customerId": "{{object:client-sanne.id}}",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"startAt": "{{datetime:7 14:00}}",
-				"endAt": "{{datetime:7 15:00}}",
-				"status": "confirmed",
-				"statusHistory": [
-					{
-						"status": "confirmed",
-						"reason": "Telefonisch geboekt",
-						"changedAt": "{{datetime:-3 09:18}}",
-						"changedBy": "{{cast:pieter.uid}}"
-					}
-				],
-				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest. Neem een schets van de kramen en het podium mee.",
-				"internalNotes": "Controleer de calamiteitenroute en waar de brandweer langs kan.",
-				"source": "phone",
-				"confirmationSentAt": "{{datetime:-3 09:20}}",
-				"subject": "Locatiebezoek Parkstraat",
-				"location": "Parkstraat 24",
-				"assignee": "{{cast:daan.uid}}",
-				"depositAmount": 25,
-				"resourceAssignments": []
 			}
 		},
 		{
@@ -3635,54 +3680,6 @@
 				"enabled": false,
 				"createdBy": "{{cast:daan.uid}}",
 				"createdAt": "{{datetime:-30 09:00}}"
-			}
-		},
-		{
-			"key": "walkin-anna",
-			"register": "pipelinq",
-			"schema": "walkInTicket",
-			"data": {
-				"displayName": "Anna de Vries",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"arrivedAt": "{{datetime:0 09:41}}",
-				"estimatedReadyAt": "{{datetime:0 09:55}}",
-				"status": "called"
-			}
-		},
-		{
-			"key": "walkin-rachid",
-			"register": "pipelinq",
-			"schema": "walkInTicket",
-			"data": {
-				"displayName": "Rachid Yilmaz",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"arrivedAt": "{{datetime:0 09:43}}",
-				"estimatedReadyAt": "{{datetime:0 09:58}}",
-				"status": "called"
-			}
-		},
-		{
-			"key": "walkin-mohammed",
-			"register": "pipelinq",
-			"schema": "walkInTicket",
-			"data": {
-				"displayName": "Mohammed El Amrani",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"arrivedAt": "{{datetime:0 09:50}}",
-				"estimatedReadyAt": "{{datetime:0 10:08}}",
-				"status": "waiting"
-			}
-		},
-		{
-			"key": "walkin-joke",
-			"register": "pipelinq",
-			"schema": "walkInTicket",
-			"data": {
-				"displayName": "Joke Smit",
-				"serviceId": "{{object:service-locatiebezoek.id}}",
-				"arrivedAt": "{{datetime:0 09:52}}",
-				"estimatedReadyAt": "{{datetime:0 10:14}}",
-				"status": "waiting"
 			}
 		},
 		{

@@ -313,7 +313,7 @@ export default {
 		},
 
 		/**
-		 * @return {Array<object>} The four trigger kinds the schema declares.
+		 * @return {Array<object>} The trigger kinds the schema declares.
 		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		triggerOptions() {
@@ -333,6 +333,14 @@ export default {
 				{
 					value: 'shillinqSignal',
 					label: this.t('pipelinq', 'A bookkeeping signal changed'),
+				},
+				{
+					value: 'addressChanged',
+					label: this.t('pipelinq', 'A resident or business got a new address'),
+				},
+				{
+					value: 'ticketClosed',
+					label: this.t('pipelinq', 'A ticket was closed'),
 				},
 			]
 		},

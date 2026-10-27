@@ -5,13 +5,14 @@
         "slug": "ticket",
         "title": "Ticket",
         "icon": "TicketOutline",
-        "version": "1.5.0",
+        "version": "1.6.0",
         "summary": "Unified inbound customer matter — request, complaint or contactmoment",
         "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
         "x-schema-org": "schema:Thing",
         "x-schema-org-by-type": {
           "request": "schema:Demand",
           "complaint": "schema:Message",
+          "melding": "schema:Message",
           "contactmoment": "schema:CommunicateAction"
         },
         "linkedTypes": [
@@ -38,6 +39,11 @@
                   "condition": "ticketType == 'complaint'",
                   "retention": "P100Y",
                   "reason": "Complaint-type tickets carried no retention policy before the ticket merge; exempted here so the merge does not start auto-disposing them. Klacht retention is a separate DPO decision."
+                },
+                {
+                  "condition": "ticketType == 'melding'",
+                  "retention": "P100Y",
+                  "reason": "Meldingen follow requests and complaints: no retention term until the DPO sets one, so the contactmoment default below never disposes them."
                 },
                 {
                   "condition": "outcome == 'handled'",
@@ -187,8 +193,14 @@
           "ticketType": {
             "type": "string",
             "title": "Ticket Type",
-            "description": "Discriminator: request (demand/case), complaint (klacht) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice.",
-            "enum": ["request", "complaint", "interaction"],
+            "description": "Discriminator: request (demand/case), complaint (klacht), melding (a report about the public space, such as loose paving or a broken street light) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice.",
+            "enum": ["request", "complaint", "melding", "interaction"],
+            "x-enum-labels": {
+              "request": "Request",
+              "complaint": "Complaint",
+              "melding": "Public-space report",
+              "interaction": "Contact moment"
+            },
             "facetable": true
           },
           "title": {

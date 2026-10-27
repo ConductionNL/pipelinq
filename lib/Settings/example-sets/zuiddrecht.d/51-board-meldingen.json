@@ -1,0 +1,108 @@
+{
+	"$comment": "pipelinq's meldingen that PqTickets, PqWachtrij, PqMijnWerk, PqInkomendGesprek, PqOperationeel and their copies draw: PQ-2026-0412, 0421 and 0399, and the unnumbered tak Beukenlaan and afval Dorpsstraat, as ticketType melding with the topic as category. P. van Dijk gets a client; R. Yilmaz's client is in 49-board-tickets.json. The board's -5 h is a fixed morning time on the install day, as the loader only shifts days.",
+	"objects": [
+		{
+			"key": "client-pvandijk",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "P. van Dijk",
+				"type": "person",
+				"address": "Dorpsstraat 22, 2999BA Zuiddrecht",
+				"contactsUid": "example-pvandijk",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Meldt dat de afvalbakken in de Dorpsstraat zijn blijven staan."
+			}
+		},
+		{
+			"key": "ticket-kerkplein-stoeptegels",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "melding",
+				"title": "Losse stoeptegels op het Kerkplein",
+				"reference": "PQ-2026-0412",
+				"description": "Voor Kerkplein 6 liggen drie stoeptegels los. Er is al iemand over gestruikeld.",
+				"client": "{{object:client-ryilmaz.id}}",
+				"status": "new",
+				"priority": "normal",
+				"channel": "phone",
+				"category": "openbare ruimte",
+				"occurredAt": "{{datetime:-1 15:40}}"
+			}
+		},
+		{
+			"key": "ticket-dekroon-geluidsoverlast",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "melding",
+				"title": "Geluidsoverlast van café De Kroon na 23:00",
+				"reference": "PQ-2026-0421",
+				"description": "Het terras van café De Kroon blijft na 23:00 open en de muziek staat hard. We hebben gevraagd op welke avonden het speelt.",
+				"client": "{{object:client-abakker.id}}",
+				"assignee": "{{cast:joris.uid}}",
+				"status": "awaiting_customer",
+				"priority": "normal",
+				"channel": "portal",
+				"category": "overlast",
+				"occurredAt": "{{datetime:-2 09:30}}"
+			}
+		},
+		{
+			"key": "ticket-lindelaan-lantaarnpaal",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "melding",
+				"title": "Lantaarnpaal kapot bij Lindelaan 40",
+				"reference": "PQ-2026-0399",
+				"description": "De lantaarnpaal bij Lindelaan 40 brandt al een week niet. Omgezet naar een zaak voor de openbare verlichting.",
+				"client": "{{object:client-sanne.id}}",
+				"contactsUid": "{{cast:sanne.contactsUid}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"status": "converted",
+				"priority": "normal",
+				"channel": "phone",
+				"category": "openbare verlichting",
+				"occurredAt": "{{datetime:-10 16:20}}"
+			}
+		},
+		{
+			"key": "ticket-beukenlaan-tak",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "melding",
+				"title": "Tak over de stoep, Beukenlaan",
+				"description": "Na de storm hangt een grote tak van een gemeenteboom laag over de stoep bij Beukenlaan 3.",
+				"client": "{{object:client-henkvisser.id}}",
+				"status": "new",
+				"priority": "high",
+				"channel": "portal",
+				"category": "groen",
+				"occurredAt": "{{datetime:-2 07:55}}"
+			}
+		},
+		{
+			"key": "ticket-dorpsstraat-afval",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "melding",
+				"title": "Afval niet opgehaald in de Dorpsstraat",
+				"description": "De groene containers in de Dorpsstraat zijn vanochtend niet geleegd.",
+				"client": "{{object:client-pvandijk.id}}",
+				"status": "new",
+				"priority": "normal",
+				"channel": "phone",
+				"category": "afval",
+				"occurredAt": "{{datetime:0 08:10}}"
+			}
+		}
+	]
+}

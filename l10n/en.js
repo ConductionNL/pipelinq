@@ -8362,7 +8362,13 @@ OC.L10N.register(
         "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.": "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.",
         "Ready": "Ready",
         "Posted": "Posted",
-        "A task that passes its deadline expires, and its handler and team lead are told.": "A task that passes its deadline expires, and its handler and team lead are told."
+        "A task that passes its deadline expires, and its handler and team lead are told.": "A task that passes its deadline expires, and its handler and team lead are told.",
+        "A resident or business got a new address": "A resident or business got a new address",
+        "A ticket was closed": "A ticket was closed",
+        "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.",
+        "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.",
+        "Public-space report": "Public-space report",
+        "melding": "melding"
     },
     "nplurals=2; plural=(n != 1);"
 )

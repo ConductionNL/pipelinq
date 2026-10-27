@@ -1,0 +1,102 @@
+{
+	"$comment": "pipelinq's deliveries of the Subsidieronde voor buurtinitiatieven mailing to Buurtnieuws, the recent events PqVerzendmonitor draws. The blast's totals (1.040 recipients) are on the blast in 40-marketing.json; these are the eight newest delivery rows. The loader sets minutes, not seconds, so all eight are at 10:02.",
+	"objects": [
+		{
+			"key": "bezorging-subsidieronde-1",
+			"register": "pipelinq",
+			"schema": "blastDelivery",
+			"data": {
+				"blastId": "{{object:nieuwsbrief-subsidieronde.id}}",
+				"email": "a.vermeulen@ziggo.example",
+				"status": "delivered",
+				"sentAt": "{{datetime:0 10:02}}"
+			}
+		},
+		{
+			"key": "bezorging-subsidieronde-2",
+			"register": "pipelinq",
+			"schema": "blastDelivery",
+			"data": {
+				"blastId": "{{object:nieuwsbrief-subsidieronde.id}}",
+				"email": "m.jansen@gmail.example",
+				"status": "opened",
+				"sentAt": "{{datetime:0 10:02}}",
+				"openedAt": "{{datetime:0 10:02}}"
+			}
+		},
+		{
+			"key": "bezorging-subsidieronde-3",
+			"register": "pipelinq",
+			"schema": "blastDelivery",
+			"data": {
+				"blastId": "{{object:nieuwsbrief-subsidieronde.id}}",
+				"email": "j.smit@hotmail.example",
+				"status": "clicked",
+				"sentAt": "{{datetime:0 10:02}}",
+				"openedAt": "{{datetime:0 10:02}}",
+				"firstClickAt": "{{datetime:0 10:02}}",
+				"clickedUrls": [
+					"https://www.zuiddrecht.example/subsidie-buurtinitiatieven"
+				]
+			}
+		},
+		{
+			"key": "bezorging-subsidieronde-4",
+			"register": "pipelinq",
+			"schema": "blastDelivery",
+			"data": {
+				"blastId": "{{object:nieuwsbrief-subsidieronde.id}}",
+				"email": "info@verhoef-bv.example",
+				"status": "delivered",
+				"sentAt": "{{datetime:0 10:02}}"
+			}
+		},
+		{
+			"key": "bezorging-subsidieronde-5",
+			"register": "pipelinq",
+			"schema": "blastDelivery",
+			"data": {
+				"blastId": "{{object:nieuwsbrief-subsidieronde.id}}",
+				"email": "bestelling@degraaf.example",
+				"status": "bounced",
+				"sentAt": "{{datetime:0 10:02}}",
+				"bouncedAt": "{{datetime:0 10:02}}",
+				"bounceType": "hard"
+			}
+		},
+		{
+			"key": "bezorging-subsidieronde-6",
+			"register": "pipelinq",
+			"schema": "blastDelivery",
+			"data": {
+				"blastId": "{{object:nieuwsbrief-subsidieronde.id}}",
+				"email": "s.bakker@outlook.example",
+				"status": "sent",
+				"sentAt": "{{datetime:0 10:02}}"
+			}
+		},
+		{
+			"key": "bezorging-subsidieronde-7",
+			"register": "pipelinq",
+			"schema": "blastDelivery",
+			"data": {
+				"blastId": "{{object:nieuwsbrief-subsidieronde.id}}",
+				"email": "k.visser@kpnmail.example",
+				"status": "unsubscribed",
+				"sentAt": "{{datetime:0 10:02}}",
+				"unsubscribedAt": "{{datetime:0 10:02}}"
+			}
+		},
+		{
+			"key": "bezorging-subsidieronde-8",
+			"register": "pipelinq",
+			"schema": "blastDelivery",
+			"data": {
+				"blastId": "{{object:nieuwsbrief-subsidieronde.id}}",
+				"email": "receptie@sportcentrum.example",
+				"status": "delivered",
+				"sentAt": "{{datetime:0 10:02}}"
+			}
+		}
+	]
+}
