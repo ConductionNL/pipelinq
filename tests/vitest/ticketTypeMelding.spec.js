@@ -5,8 +5,9 @@
  * The ticket type "melding" (a report about the public space), next to
  * request, complaint and contact moment. The boards draw it (decision of
  * 27 October 2026), so the type is in the schema with a label, in the en
- * and nl catalogues, and in every ticket-type lens, pill and badge the
- * manifests declare, all as configuration.
+ * and nl catalogues, and in every ticket-type pill and badge the manifests
+ * declare, all as configuration. The lists get no melding lens: the boards
+ * draw none.
  *
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
  */
@@ -90,16 +91,6 @@ describe('ticket type melding', () => {
 		}
 		expect(nl[labels.melding]).toBe('Melding')
 		expect(nl.melding).toBe('Melding')
-	})
-
-	it('has a lens wherever the other ticket types have one', () => {
-		const isComplaintLens = (lens) => !!lens && typeof lens === 'object' && !!lens.filter && lens.filter.ticketType === 'complaint'
-		const lists = collect([manifest, simple], (node) => Array.isArray(node.quickFilters) && node.quickFilters.some(isComplaintLens))
-		// The control: the lenses this test guards really exist.
-		expect(lists.length).toBeGreaterThan(0)
-		for (const list of lists) {
-			expect(list.quickFilters.some((lens) => !!lens && typeof lens === 'object' && !!lens.filter && lens.filter.ticketType === 'melding')).toBe(true)
-		}
 	})
 
 	it('has a label and a colour wherever a ticket-type pill or badge maps the others', () => {
