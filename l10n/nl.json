@@ -8350,6 +8350,14 @@
         "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.": "Een fasewissel, een contract dat verlengd kan worden, een bevestigde inschrijving, een boekhoudsignaal, een nieuw adres of een afgesloten ticket.",
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem.",
         "Public-space report": "Melding",
-        "melding": "Melding"
+        "melding": "Melding",
+        "Decision maker": "Beslisser",
+        "Champion": "Pleitbezorger",
+        "Gatekeeper": "Poortwachter",
+        "Influencer": "Beïnvloeder",
+        "Evaluator": "Beoordelaar",
+        "End user": "Eindgebruiker",
+        "Roles: decision maker, influencer, gatekeeper, champion, evaluator, end user.": "Rollen: beslisser, beïnvloeder, poortwachter, pleitbezorger, beoordelaar, eindgebruiker.",
+        "Entity type of source: contact, client, or lead for the role a contact plays in a deal": "Soort bronobject: contactpersoon, klant, of lead voor de rol van een contactpersoon in een deal"
     }
 }

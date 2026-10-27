@@ -3818,38 +3818,12 @@
 					},
 					{
 						"id": "lead-contacts",
-						"type": "object-list",
+						"type": "LeadContactRolesWidget",
 						"title": "Contacts and their role",
 						"icon": "AccountGroup",
-						"_note": "The people this deal is worked with, read from contact.leads (97-lead-activity). allowCreate is OFF and that is not an oversight: the widget pre-fills a created object by merging its resolved filter into the payload as a SCALAR, and `leads` is an array. OpenRegister answers a scalar written into an array property with 400, so an Add button here would offer a create that always fails. A person is linked to the deal from the contact form instead.",
+						"_note": "The contacts on this deal with the role each plays (PqLead): role relationships from the lead to a contact, added here. The Contacts tab lists everyone linked through contact.leads.",
 						"content": {
-							"register": "pipelinq",
-							"schema": "contact",
-							"filter": {
-								"leads": "@objectId"
-							},
-							"columns": [
-								{
-									"key": "name",
-									"label": "Name"
-								},
-								{
-									"key": "role",
-									"label": "Role"
-								},
-								{
-									"key": "email",
-									"label": "Email"
-								},
-								{
-									"key": "phone",
-									"label": "Phone"
-								}
-							],
-							"limit": 25,
-							"rowRoute": "ContactDetail",
-							"allowCreate": false,
-							"emptyText": "Nobody is linked to this deal yet. Open a contact and add this deal to their leads."
+							"title": "Contacts and their role"
 						}
 					},
 					{
