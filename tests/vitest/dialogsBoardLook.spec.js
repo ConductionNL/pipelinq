@@ -30,9 +30,9 @@ function vueFiles(dir) {
 }
 
 describe('pipelinq dialogs', () => {
-	it('draw on CnDialog, not on NcDialog', () => {
+	it('draw on CnDialog, not on NcDialog or NcModal', () => {
 		const direct = vueFiles(SRC)
-			.filter((path) => readFileSync(path, 'utf8').includes('<NcDialog'))
+			.filter((path) => /<Nc(Dialog|Modal)\b/.test(readFileSync(path, 'utf8')))
 			.map((path) => relative(SRC, path))
 			.filter((path) => !IN_FLIGHT.includes(path))
 		expect(direct).toEqual([])

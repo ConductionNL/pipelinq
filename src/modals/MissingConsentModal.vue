@@ -1,11 +1,8 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<NcModal :name="t('pipelinq', 'Missing consent')" @close="$emit('cancel')">
+	<CnDialog width="form" :name="t('pipelinq', 'Missing consent')" @closing="$emit('cancel')">
 		<div class="missing-consent">
-			<h2 class="missing-consent__title">
-				{{ t('pipelinq', 'Missing consent') }}
-			</h2>
 			<p class="missing-consent__intro">
 				{{ summary }}
 			</p>
@@ -36,8 +33,8 @@
 					)
 				}}
 			</p>
-
-			<div class="missing-consent__actions">
+		</div>
+		<template #actions>
 				<NcButton variant="tertiary" @click="$emit('cancel')">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
@@ -47,20 +44,20 @@
 				<NcButton variant="primary" @click="$emit('skipAndSend')">
 					{{ t('pipelinq', 'Skip and send') }}
 				</NcButton>
-			</div>
-		</div>
-	</NcModal>
+		</template>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcModal } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, } from '@nextcloud/vue'
 
 const MAX_VISIBLE = 25
 
 export default {
 	name: 'MissingConsentModal',
 	components: {
-		NcModal,
+		CnDialog,
 		NcButton,
 	},
 

@@ -55,6 +55,14 @@ function stub(name, tag = 'div') {
 	}
 }
 
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		render() {
+			return h('div', { class: 'cn-dialog' }, [this.$slots.default?.(), this.$slots.actions?.()])
+		},
+	},
+}))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: stub('NcButton', 'button'),
 	NcModal: stub('NcModal'),
