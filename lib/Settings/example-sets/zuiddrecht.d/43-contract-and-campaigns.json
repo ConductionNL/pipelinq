@@ -196,8 +196,8 @@
 				"room": "Grote zaal",
 				"capacity": 80,
 				"hosts": [
-					"Pieter Jansen",
-					"Lotte Mulder"
+					"{{cast:pieter.uid}}",
+					"{{cast:lotte.uid}}"
 				],
 				"reminderAt": "{{datetime:34 18:00}}",
 				"formTitle": "Aanmelden informatieavond",
