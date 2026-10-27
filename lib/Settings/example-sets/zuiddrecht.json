@@ -2985,9 +2985,9 @@
 				"assignee": "{{cast:pieter.uid}}",
 				"status": "in_progress",
 				"priority": "normal",
-				"channel": "email",
+				"channel": "phone",
 				"category": "vergunningen",
-				"occurredAt": "{{datetime:-4 11:20}}",
+				"occurredAt": "{{datetime:-4 10:24}}",
 				"slaDeadline": "{{datetime:3 17:00}}"
 			}
 		},
@@ -3519,8 +3519,8 @@
 				"requestId": "{{object:ticket-degraaf-afvalpas.id}}",
 				"callbackPhoneNumber": "06 18 44 27 30",
 				"preferredTimeSlot": "Tussen 12:00 en 14:00",
-				"description": "Meneer De Graaf mist een identiteitsbewijs voor zijn aanvraag parkeervergunning. Leg uit welk document hij kan uploaden in Mijn Zuiddrecht.",
-				"contactMomentSummary": "Belde op 6 okt over de parkeervergunning, vroeg om tussen de middag teruggebeld te worden.",
+				"description": "Meneer De Graaf vraagt of hij zijn afval buiten mag zetten tot zijn nieuwe afvalpas er is. Bel hem terug met het antwoord en de datum waarop de pas komt.",
+				"contactMomentSummary": "Belde vandaag over zijn afvalpas, die de container weigert. Vroeg om tussen de middag teruggebeld te worden.",
 				"createdBy": "{{cast:pieter.uid}}",
 				"attempts": [
 					{
