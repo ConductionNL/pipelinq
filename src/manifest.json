@@ -4574,7 +4574,7 @@
 					{ "key": "assigneeUserId", "label": "For", "formatter": "userDisplayName" },
 					{ "key": "deadline", "label": "Time limit", "formatter": "relativeDate", "formatterOptions": { "time": true } },
 					{ "key": "priority", "label": "Priority", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "high": "error", "normal": "default", "low": "default" } } },
-					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "open": "primary", "in_progress": "warning", "completed": "success", "expired": "error" } } }
+					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "open": "primary", "in_progress": "purple", "completed": "success", "expired": "error" } } }
 				],
 				"footerNote": "A task that passes its deadline expires, and its handler and team lead are told.",
 				"filterMenu": true,
@@ -7167,7 +7167,7 @@
 								},
 								"colorMap": {
 									"new": "info",
-									"in_progress": "warning",
+									"in_progress": "purple",
 									"awaiting_customer": "default",
 									"resolved": "success",
 									"completed": "success"
@@ -7314,7 +7314,7 @@
 								},
 								"colorMap": {
 									"new": "info",
-									"in_progress": "warning",
+									"in_progress": "purple",
 									"awaiting_customer": "default",
 									"resolved": "success",
 									"completed": "success"
@@ -7450,7 +7450,7 @@
 								},
 								"colorMap": {
 									"new": "info",
-									"in_progress": "warning",
+									"in_progress": "purple",
 									"awaiting_customer": "default",
 									"resolved": "success",
 									"completed": "success"
