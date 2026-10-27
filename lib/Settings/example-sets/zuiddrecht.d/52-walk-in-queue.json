@@ -1,0 +1,99 @@
+{
+	"$comment": "pipelinq's walk-in queue in the Zuiddrecht set, as PqInloop draws it. It follows 41-appointments.json because each visitor names a service and a resource from there; the four visitors that were in the main file moved here for that reason. Joke Smit's parking permit, and 'Verhuizing doorgeven' and 'Afvalpas', are not services in the set, so those visitors keep Locatiebezoek or carry no serviceId.",
+	"objects": [
+		{
+			"key": "walkin-anna",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Anna de Vries",
+				"serviceId": "{{object:dienst-aanvraag-paspoort.id}}",
+				"arrivedAt": "{{datetime:0 09:41}}",
+				"estimatedReadyAt": "{{datetime:0 09:55}}",
+				"status": "called",
+				"assignedResourceId": "{{object:resource-pieter-jansen.id}}"
+			}
+		},
+		{
+			"key": "walkin-rachid",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Rachid Yilmaz",
+				"serviceId": "{{object:dienst-rijbewijs-verlengen.id}}",
+				"arrivedAt": "{{datetime:0 09:43}}",
+				"estimatedReadyAt": "{{datetime:0 09:58}}",
+				"status": "called",
+				"assignedResourceId": "{{object:resource-joris-bakker.id}}"
+			}
+		},
+		{
+			"key": "walkin-mohammed",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Mohammed El Amrani",
+				"serviceId": "{{object:dienst-aanvraag-paspoort.id}}",
+				"arrivedAt": "{{datetime:0 09:50}}",
+				"estimatedReadyAt": "{{datetime:0 10:08}}",
+				"status": "waiting"
+			}
+		},
+		{
+			"key": "walkin-joke",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Joke Smit",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"arrivedAt": "{{datetime:0 09:52}}",
+				"estimatedReadyAt": "{{datetime:0 10:14}}",
+				"status": "waiting"
+			}
+		},
+		{
+			"key": "walkin-sanne-paspoort-ophalen",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "{{cast:sanne.displayName}}",
+				"customerId": "{{object:client-sanne.id}}",
+				"serviceId": "{{object:dienst-document-ophalen.id}}",
+				"arrivedAt": "{{datetime:0 09:20}}",
+				"status": "served",
+				"assignedResourceId": "{{object:resource-fatma-yildiz.id}}",
+				"actualServedAt": "{{datetime:0 09:31}}"
+			}
+		},
+		{
+			"key": "walkin-anoniem-verhuizing-weg",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Anonieme klant",
+				"arrivedAt": "{{datetime:0 09:12}}",
+				"status": "abandoned"
+			}
+		},
+		{
+			"key": "walkin-anoniem-verhuizing",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Anonieme klant",
+				"arrivedAt": "{{datetime:0 09:44}}",
+				"status": "waiting"
+			}
+		},
+		{
+			"key": "walkin-anoniem-afvalpas",
+			"register": "pipelinq",
+			"schema": "walkInTicket",
+			"data": {
+				"displayName": "Anonieme klant",
+				"arrivedAt": "{{datetime:0 09:58}}",
+				"status": "waiting"
+			}
+		}
+	]
+}
