@@ -47,6 +47,7 @@
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { productWeight } from '../../services/productTariffs.js'
 
 export default {
 	name: 'ProductSupplyWidget',
@@ -95,10 +96,7 @@ export default {
 				{
 					key: 'weight',
 					label: t('pipelinq', 'Weight'),
-					value:
-						typeof product.weight === 'number'
-							? `${this.number(product.weight)} kg`
-							: '',
+					value: productWeight(product),
 				},
 				{
 					key: 'dimensions',

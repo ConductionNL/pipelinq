@@ -51,7 +51,7 @@ import {
  * labelled AS RENDERED, not as declared.
  *
  * `src/manifest.json` declares these menu entries with Dutch labels
- * (`Kassabon`, `Retouren`, `Kassalade`, `Kassakoppeling audit`) and CnAppNav
+ * (`Kassabon`, `Retouren`, `Kassalade`, `Cash register audit`) and CnAppNav
  * puts every one of them through `t('pipelinq', …)`. `l10n/en.json` translates
  * two of the four — `Retouren` → `Returns` and `Kassalade` → `Cash drawer` —
  * and passes the other two through unchanged. The CI instance runs in English,
@@ -67,7 +67,7 @@ const POS_CHILDREN: Array<{ label: string; url: RegExp }> = [
 	{ label: 'Receipts', url: /\/pos$/ },
 	{ label: 'Returns', url: /\/pos\/refunds/ },
 	{ label: 'Cash drawer', url: /\/pos\/shifts/ },
-	{ label: 'Cash register audit', url: /\/kassakoppeling\/audit/ },
+	{ label: 'Cash register audit', url: /\/cash-register-audit/ },
 ]
 
 /** Is `label` painted as a TOP-LEVEL nav entry (not nested in a group)? */
@@ -168,7 +168,7 @@ test('every regrouped POS and product route still resolves by deep link', async 
 		'/pos/shifts',
 		'/pos/z-reports',
 		'/products',
-		'/kassakoppeling/audit',
+		'/cash-register-audit',
 	]
 
 	for (const route of routes) {

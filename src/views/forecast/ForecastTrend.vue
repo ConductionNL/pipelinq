@@ -87,7 +87,7 @@
 						</thead>
 						<tbody>
 							<tr v-for="row in accuracyRows" :key="row.owner_id">
-								<td>{{ row.owner_id }}</td>
+								<td>{{ row.name || row.owner_id }}</td>
 								<td>{{ formatMoney(row.weekOneCommit) }}</td>
 								<td>{{ formatMoney(row.actual) }}</td>
 								<td :class="'accuracy--' + bandFor(row.score)">
@@ -116,7 +116,8 @@ import { CnDetailCard } from '@conduction/nextcloud-vue'
 import { NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { formatEur } from '../../services/commercialFormat.js'
 import { fetchSnapshots } from '../../services/forecastApi.js'
-import { accuracyBand, sumSnapshotsByDate } from '../../services/forecastMath.js'
+import { accuracyBand, accuracyRows, previousPeriodId, sumSnapshotsByDate } from '../../services/forecastMath.js'
+import { fetchUserDisplayName } from '../../services/userDisplayName.js'
 
 export default {
 	name: 'ForecastTrend',
@@ -202,10 +203,40 @@ export default {
 				})
 				this.series = sumSnapshotsByDate(data.snapshots || [])
 				this.buildDelta()
+				await this.loadAccuracy()
 			} catch {
 				this.series = []
 			} finally {
 				this.loading = false
+			}
+		},
+
+		/**
+		 * The accuracy table: the quarter before the current one is closed, so
+		 * each seller's first commit there is set against what it closed won.
+		 * A failed read leaves the table empty.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/forecast-accuracy-rows/specs/forecasting/spec.md#requirement-the-forecast-shows-last-quarters-accuracy-per-seller
+		 */
+		async loadAccuracy() {
+			const periodId = previousPeriodId(this.periodId)
+			if (periodId === '') {
+				this.accuracyRows = []
+				return
+			}
+			try {
+				const data = await fetchSnapshots({
+					periodId,
+					level: 'rep',
+					ownerId: this.embedded ? null : this.ownerId,
+					limit: 200,
+				})
+				const rows = accuracyRows(data.snapshots || [])
+				const names = await Promise.all(rows.map((row) => fetchUserDisplayName(row.owner_id).catch(() => row.owner_id)))
+				this.accuracyRows = rows.map((row, index) => ({ ...row, name: names[index] }))
+			} catch {
+				this.accuracyRows = []
 			}
 		},
 
