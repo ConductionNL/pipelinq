@@ -8530,7 +8530,19 @@ OC.L10N.register(
         "The contact moment this task was created from.": "The contact moment this task was created from.",
         "Customer number": "Customer number",
         "The number the organisation knows this customer by, such as K-2019-01184.": "The number the organisation knows this customer by, such as K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
+        "An administrator turns a module on in the admin settings, and then it is in the menu for everyone. A module that is off still opens from this page.": "An administrator turns a module on in the admin settings, and then it is in the menu for everyone. A module that is off still opens from this page.",
+        "Leads, prospects and deals, from first contact to won or lost.": "Leads, prospects and deals, from first contact to won or lost.",
+        "Put it in the menu:": "Put it in the menu:",
+        "Admin settings": "Admin settings",
+        "Segments, mailings, campaigns and social posts, with how they did.": "Segments, mailings, campaigns and social posts, with how they did.",
+        "Sales at the counter: receipts, returns and the cash drawer.": "Sales at the counter: receipts, returns and the cash drawer.",
+        "Add apps and connections that work with Pipelinq.": "Add apps and connections that work with Pipelinq.",
+        "Flows": "Flows",
+        "Steps that run on their own when something happens.": "Steps that run on their own when something happens.",
+        "What Pipelinq can do, and what is coming.": "What Pipelinq can do, and what is coming.",
+        "Waiting times, deadlines met and contact per channel.": "Waiting times, deadlines met and contact per channel.",
+        "How Pipelinq works, step by step. Opens in a new tab.": "How Pipelinq works, step by step. Opens in a new tab."
     },
     "nplurals=2; plural=(n != 1);"
 )

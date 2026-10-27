@@ -396,6 +396,12 @@ describe('the simple profile', () => {
 			for (const card of page.config?.cards ?? []) {
 				carded.add(card.route)
 			}
+			// A module card links each of its pages.
+			for (const module of page.config?.modules ?? []) {
+				for (const target of module.pages ?? []) {
+					carded.add(target.route)
+				}
+			}
 		}
 		const lost = flat(build(fullFile).menu)
 			.filter((entry) => entry.route || entry.href)
@@ -662,19 +668,23 @@ describe('the modules', () => {
 		const cards = page.config.cards
 		const pageIds = new Set(buildSimple().pages.map((item) => item.id))
 		const entries = flat(buildManifest(manifest(), fragments, {}).menu)
+		// Each module is a module card (board PqModules) that links every page of it.
 		for (const key of MODULE_KEYS) {
-			expect(page.config.categories[key], key).toBe(
-				simpleFile.modules[key].label,
-			)
+			const module = page.config.modules.find((item) => item.id === key)
+			expect(module, key).toBeTruthy()
+			expect(module.label, key).toBe(simpleFile.modules[key].label)
 			for (const id of simpleFile.modules[key].ids) {
 				const route = entries.find((entry) => entry.id === id).route
-				const card = cards.find((item) => item.route === route)
-				expect(card, `${key}: no card opens ${route}`).toBeTruthy()
-				expect(card.category, id).toBe(key)
+				expect(module.pages.some((item) => item.route === route), `${key}: no page opens ${route}`).toBe(true)
+			}
+			expect(iconsSource, key).toContain(`\n\t${module.icon},\n`)
+			for (const text of [module.label, module.description, ...module.pages.map((item) => item.label)]) {
+				expect(en[text], `en "${text}"`).toBeTruthy()
+				expect(nl[text], `nl "${text}"`).toBeTruthy()
 			}
 		}
 		for (const card of cards) {
-			expect(pageIds.has(card.route), card.id).toBe(true)
+			expect(card.href || pageIds.has(card.route), card.id).toBeTruthy()
 			expect(iconsSource, card.id).toContain(`\n\t${card.icon},\n`)
 			for (const text of [card.label, card.description]) {
 				expect(en[text], `en "${text}"`).toBeTruthy()
@@ -684,6 +694,10 @@ describe('the modules', () => {
 		for (const text of [
 			page.title,
 			page.config.description,
+			page.config.modulesTitle,
+			page.config.footnote,
+			page.config.modules[0].settings.prefix,
+			page.config.modules[0].settings.label,
 			...Object.values(page.config.categories),
 		]) {
 			expect(en[text], `en "${text}"`).toBeTruthy()
