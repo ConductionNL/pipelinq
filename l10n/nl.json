@@ -8553,6 +8553,14 @@
         "{decision} by {userId|user}": "{decision} door {userId|user}",
         "{decision} by {by|user}": "{decision} door {by|user}",
         "A post waits for approval before it can be scheduled.": "Een bericht wacht op goedkeuring voordat het kan worden ingepland.",
-        "No decision yet. A post waits for approval before it can be scheduled.": "Nog geen besluit. Een bericht wacht op goedkeuring voordat het kan worden ingepland."
+        "No decision yet. A post waits for approval before it can be scheduled.": "Nog geen besluit. Een bericht wacht op goedkeuring voordat het kan worden ingepland.",
+        "due {deadline|datetime}": "uiterlijk {deadline|datetime}",
+        "What now? Call the customer back": "Wat nu? De klant terugbellen",
+        "A callback number is known": "Er is een terugbelnummer",
+        "Someone is on it": "Er is een behandelaar",
+        "Then: write down the result and finish the task": "Daarna: schrijf het resultaat op en rond de taak af",
+        "What now? Try again before the deadline": "Wat nu? Opnieuw proberen voor de termijn",
+        "An attempt is logged": "Er is een poging vastgelegd",
+        "Call the customer": "Bellen"
     }
 }

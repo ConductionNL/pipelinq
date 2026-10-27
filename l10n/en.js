@@ -8541,7 +8541,15 @@ OC.L10N.register(
         "{decision} by {userId|user}": "{decision} by {userId|user}",
         "{decision} by {by|user}": "{decision} by {by|user}",
         "A post waits for approval before it can be scheduled.": "A post waits for approval before it can be scheduled.",
-        "No decision yet. A post waits for approval before it can be scheduled.": "No decision yet. A post waits for approval before it can be scheduled."
+        "No decision yet. A post waits for approval before it can be scheduled.": "No decision yet. A post waits for approval before it can be scheduled.",
+        "due {deadline|datetime}": "due {deadline|datetime}",
+        "What now? Call the customer back": "What now? Call the customer back",
+        "A callback number is known": "A callback number is known",
+        "Someone is on it": "Someone is on it",
+        "Then: write down the result and finish the task": "Then: write down the result and finish the task",
+        "What now? Try again before the deadline": "What now? Try again before the deadline",
+        "An attempt is logged": "An attempt is logged",
+        "Call the customer": "Call the customer"
     },
     "nplurals=2; plural=(n != 1);"
 )
