@@ -1,6 +1,7 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Open (lead status)": "Open",
         "Cash register audit": "Cash register audit",
         "Cash register audit entry": "Cash register audit entry",
         "Verification done. The status shows the result.": "Verification done. The status shows the result.",
