@@ -11,6 +11,7 @@
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import DOMPurify from 'dompurify'
 
 /**
  * Whether filinq can make a letter, and pipelinq's templates.
@@ -33,7 +34,7 @@ export async function fetchLetterTemplates() {
  * Make a letter for a client.
  *
  * @param {string} clientId The client.
- * @param {{templateId: string, contactId?: string, ticketId?: string}} input The choice.
+ * @param {{templateId: string, contactId?: string, ticketId?: string, downloadOnly?: boolean}} input The choice; downloadOnly returns the PDF without filing or logging it.
  * @return {Promise<{filename: string, mimeType: string, content: string, fileId: ?number, path: ?string, warnings: string[], contactMomentId: ?string}>}
  * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
@@ -41,6 +42,7 @@ export async function makeLetter(clientId, input) {
 	const body = { templateId: input.templateId }
 	if (input.contactId) body.contactId = input.contactId
 	if (input.ticketId) body.ticketId = input.ticketId
+	if (input.downloadOnly) body.downloadOnly = true
 	const { data } = await axios.post(
 		generateUrl(
 			`/apps/pipelinq/api/clients/${encodeURIComponent(clientId)}/letters`,
@@ -80,4 +82,44 @@ export function downloadLetter(letter) {
 	link.click()
 	link.remove()
 	setTimeout(() => URL.revokeObjectURL(url), 0)
+}
+
+/**
+ * Preview a letter for a client: filinq's rendering and the fields it filled.
+ *
+ * @param {string} clientId The client.
+ * @param {{templateId: string, contactId?: string, ticketId?: string}} input What the letter is made from.
+ * @return {Promise<{html: string, fields: Array<{label: string, value: string, source: string, filled: boolean}>, complete: boolean, warnings: string[]}>}
+ * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+ */
+export async function previewLetter(clientId, input) {
+	const body = { templateId: input.templateId }
+	if (input.contactId) body.contactId = input.contactId
+	if (input.ticketId) body.ticketId = input.ticketId
+	const { data } = await axios.post(
+		generateUrl(
+			`/apps/pipelinq/api/clients/${encodeURIComponent(clientId)}/letters/preview`,
+		),
+		body,
+	)
+	return {
+		html: String(data?.html || ''),
+		fields: Array.isArray(data?.fields) ? data.fields : [],
+		complete: data?.complete === true,
+		warnings: Array.isArray(data?.warnings) ? data.warnings : [],
+	}
+}
+
+/**
+ * The body of a previewed letter as safe HTML: filinq returns a whole
+ * document with its house-style sheet; only the body is shown, without
+ * scripts or style elements.
+ *
+ * @param {string} html The previewed document.
+ * @return {string} The sanitised body.
+ * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+ */
+export function letterPreviewBody(html) {
+	const doc = new DOMParser().parseFromString(String(html || ''), 'text/html')
+	return DOMPurify.sanitize(doc.body ? doc.body.innerHTML : '', { FORBID_TAGS: ['style', 'script', 'link', 'meta'] })
 }

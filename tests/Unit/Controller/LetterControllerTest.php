@@ -397,6 +397,79 @@ class LetterControllerTest extends TestCase
 
 
     /**
+     * A download-only letter is rendered without a copy in Files and logs nothing.
+     *
+     * @return void
+     */
+    public function testADownloadOnlyLetterIsNotFiledOrLogged(): void
+    {
+        $this->filinqPresent();
+        $this->letters->expects($this->once())->method('render')
+            ->with('tpl-1', $this->anything(), $this->anything(), false)
+            ->willReturn(['content' => '%PDF-1.7 letter', 'fileId' => null, 'path' => null, 'warnings' => []]);
+        $this->tickets->expects($this->never())->method('save');
+
+        $response = $this->controller(params: ['templateId' => 'tpl-1', 'downloadOnly' => 'true'])->create(id: self::CLIENT);
+
+        $this->assertSame(expected: 200, actual: $response->getStatus());
+        $this->assertSame(expected: '%PDF-1.7 letter', actual: base64_decode(string: $response->getData()['content']));
+        $this->assertNull(actual: $response->getData()['contactMomentId']);
+
+    }//end testADownloadOnlyLetterIsNotFiledOrLogged()
+
+
+    /**
+     * The preview reads the same records as a letter and returns filinq's fields; nothing is made.
+     *
+     * @return void
+     */
+    public function testThePreviewReturnsTheFilledFields(): void
+    {
+        $this->filinqPresent();
+        $preview = [
+            'html'     => '<p>Geachte heer De Jong,</p>',
+            'fields'   => [
+                ['label' => 'Aanhef', 'value' => 'Geachte heer De Jong,', 'source' => 'op basis van het opgegeven geslacht', 'filled' => true],
+            ],
+            'complete' => true,
+            'warnings' => [],
+        ];
+        $this->letters->expects($this->once())->method('preview')
+            ->with('tpl-1', [
+                ['register' => '7', 'schema' => 'client', 'id' => self::CLIENT],
+                ['register' => '7', 'schema' => 'ticket', 'id' => self::TICKET],
+            ])
+            ->willReturn($preview);
+        $this->letters->expects($this->never())->method('render');
+        $this->tickets->expects($this->never())->method('save');
+
+        $response = $this->controller(params: ['templateId' => 'tpl-1', 'ticketId' => self::TICKET])->preview(id: self::CLIENT);
+
+        $this->assertSame(expected: 200, actual: $response->getStatus());
+        $this->assertSame(expected: $preview, actual: $response->getData());
+
+    }//end testThePreviewReturnsTheFilledFields()
+
+
+    /**
+     * A client the caller may not read gets no preview.
+     *
+     * @return void
+     */
+    public function testThePreviewOfAnUnreadableClientIs404(): void
+    {
+        $this->filinqPresent();
+        $this->letters->expects($this->never())->method('preview');
+
+        $this->assertSame(
+            expected: 404,
+            actual: $this->controller(params: ['templateId' => 'tpl-1'])->preview(id: 'client-nobody-reads')->getStatus()
+        );
+
+    }//end testThePreviewOfAnUnreadableClientIs404()
+
+
+    /**
      * A failed render answers 502 and logs nothing.
      *
      * @return void

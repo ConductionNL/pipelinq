@@ -8521,7 +8521,17 @@ OC.L10N.register(
         "The contact moment this task was created from.": "Het contactmoment waaruit deze taak is ontstaan.",
         "Customer number": "Klantnummer",
         "The number the organisation knows this customer by, such as K-2019-01184.": "Het nummer waaronder de organisatie deze klant kent, zoals K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP.",
+        "Loading preview": "Voorbeeld laden",
+        "The preview could not be made. You can still make the letter.": "Het voorbeeld lukte niet. Je kunt de brief wel maken.",
+        "Filled in for you": "Voor je ingevuld",
+        "Still empty: {fields}": "Nog leeg: {fields}",
+        "Not filled in": "Niet ingevuld",
+        "Send as": "Versturen als",
+        "PDF to print and post": "Pdf om te printen en te posten",
+        "Download PDF": "Pdf downloaden",
+        "The %n field is filled in, nothing missing": ["%n veld ingevuld, niets ontbreekt","Alle %n velden ingevuld, niets ontbreekt"],
+        "All %n fields filled in, nothing missing": "Alle %n velden ingevuld, niets ontbreekt"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -8591,6 +8591,16 @@
         "Save and close": "Save and close",
         "The call has ended. Record what came of it for the next conversation.": "The call has ended. Record what came of it for the next conversation.",
         "The call outcome is not saved. Try again.": "The call outcome is not saved. Try again.",
-        "The new contact opens straight away, with this call as its first contact moment.": "The new contact opens straight away, with this call as its first contact moment."
+        "The new contact opens straight away, with this call as its first contact moment.": "The new contact opens straight away, with this call as its first contact moment.",
+        "Loading preview": "Loading preview",
+        "The preview could not be made. You can still make the letter.": "The preview could not be made. You can still make the letter.",
+        "Filled in for you": "Filled in for you",
+        "Still empty: {fields}": "Still empty: {fields}",
+        "Not filled in": "Not filled in",
+        "Send as": "Send as",
+        "PDF to print and post": "PDF to print and post",
+        "Download PDF": "Download PDF",
+        "The %n field is filled in, nothing missing": ["The %n field is filled in, nothing missing", "All %n fields filled in, nothing missing"],
+        "All %n fields filled in, nothing missing": "All %n fields filled in, nothing missing"
     }
 }

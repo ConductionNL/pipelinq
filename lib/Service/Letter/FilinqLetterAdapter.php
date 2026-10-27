@@ -178,11 +178,12 @@ class FilinqLetterAdapter
 
 
     /**
-     * Have filinq fill a template, keep a copy in the user's Files and return the PDF.
+     * Have filinq fill a template and return the PDF; filed keeps a copy in the user's Files.
      *
      * @param string                                                  $templateId The filinq template id.
      * @param list<array{register: string, schema: string, id: string}> $dataRefs   The records the letter reads.
      * @param string                                                  $filename   The file name, without extension.
+     * @param bool                                                    $filed      Whether a copy goes into the user's Files.
      *
      * @return array{content: string, fileId: int|null, path: string|null, warnings: list<string>} The letter.
      *
@@ -190,13 +191,18 @@ class FilinqLetterAdapter
      *
      * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
      */
-    public function render(string $templateId, array $dataRefs, string $filename): array
+    public function render(string $templateId, array $dataRefs, string $filename, bool $filed=true): array
     {
         $service = $this->requireService(service: $this->documentService());
 
         $user = $this->userSession->getUser();
         if ($user === null) {
             throw new RuntimeException('user_required: a letter is filed in the acting user\'s Files');
+        }
+
+        $outputMode = 'return';
+        if ($filed === true) {
+            $outputMode = 'both';
         }
 
         try {
@@ -207,7 +213,7 @@ class FilinqLetterAdapter
                     'format'   => 'pdf',
                     'userId'   => $user->getUID(),
                     'filename' => $filename,
-                    'output'   => ['mode' => 'both'],
+                    'output'   => ['mode' => $outputMode],
                 ]
             );
         } catch (Throwable $e) {
@@ -242,6 +248,56 @@ class FilinqLetterAdapter
         ];
 
     }//end render()
+
+
+    /**
+     * Have filinq preview a template for these records and name the fields it fills.
+     *
+     * @param string                                                  $templateId The filinq template id.
+     * @param list<array{register: string, schema: string, id: string}> $dataRefs   The records the letter reads.
+     *
+     * @return array{html: string, fields: list<array<string, string|bool>>, complete: bool, warnings: list<string>}
+     *
+     * @throws RuntimeException When filinq is absent, cannot preview, or the preview fails.
+     *
+     * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+     */
+    public function preview(string $templateId, array $dataRefs): array
+    {
+        $service = $this->requireService(service: $this->documentService());
+        if (method_exists($service, 'generateMergePreview') === false) {
+            throw new RuntimeException('filinq_preview_unsupported: this filinq has no merge preview');
+        }
+
+        try {
+            $result = (array) $service->generateMergePreview($templateId, $dataRefs, []);
+        } catch (Throwable $e) {
+            $this->logger->error(
+                'Pipelinq: filinq refused a letter preview',
+                ['app' => Application::APP_ID, 'templateId' => $templateId, 'exception' => $e->getMessage()]
+            );
+            throw new RuntimeException('filinq_preview_failed: '.$e->getMessage(), 0, $e);
+        }
+
+        $fields = [];
+        foreach ((array) ($result['fields'] ?? []) as $field) {
+            $field    = (array) $field;
+            $fields[] = [
+                'label'  => (string) ($field['label'] ?? ($field['path'] ?? '')),
+                'value'  => (string) ($field['value'] ?? ''),
+                'source' => (string) ($field['source'] ?? ''),
+                'filled' => (bool) ($field['filled'] ?? false),
+            ];
+        }
+
+        return [
+            'html'     => (string) ($result['html'] ?? ''),
+            'fields'   => $fields,
+            'complete' => (bool) ($result['complete'] ?? false),
+            'warnings' => array_values(array_map('strval', (array) ($result['warnings'] ?? []))),
+        ];
+
+    }//end preview()
 
 
     /**
