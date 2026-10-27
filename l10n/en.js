@@ -8533,7 +8533,15 @@ OC.L10N.register(
         "Where the customer's data comes from, such as the resident portal and the population register.": "Where the customer's data comes from, such as the resident portal and the population register.",
         "Z report": "Z report",
         "{terminalId} · {reportDate|date} · {transactionCount} transactions": "{terminalId} · {reportDate|date} · {transactionCount} transactions",
-        "What it says per network": "What it says per network"
+        "What it says per network": "What it says per network",
+        "due {deadline|datetime}": "due {deadline|datetime}",
+        "What now? Call the customer back": "What now? Call the customer back",
+        "A callback number is known": "A callback number is known",
+        "Someone is on it": "Someone is on it",
+        "Then: write down the result and finish the task": "Then: write down the result and finish the task",
+        "What now? Try again before the deadline": "What now? Try again before the deadline",
+        "An attempt is logged": "An attempt is logged",
+        "Call the customer": "Call the customer"
     },
     "nplurals=2; plural=(n != 1);"
 )
