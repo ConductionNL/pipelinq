@@ -1,5 +1,11 @@
 {
     "translations": {
+        "name": "naam",
+        "Client notes": "Notities",
+        "Open that client": "Die klant openen",
+        "Possible duplicate: {name} has the same {field}": "Mogelijk dubbel: {name} heeft hetzelfde {field}",
+        "Save anyway": "Toch opslaan",
+        "email address": "e-mailadres",
         "letter": "brief",
         "Make a letter from a template": "Brief maken uit een sjabloon",
         "Templates come from filinq; %n is shared with pipelinq.": ["Sjablonen komen uit filinq; %n wordt gedeeld met pipelinq.", "Sjablonen komen uit filinq; %n worden gedeeld met pipelinq."],

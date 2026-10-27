@@ -1,6 +1,12 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "name": "name",
+        "Client notes": "Client notes",
+        "Open that client": "Open that client",
+        "Possible duplicate: {name} has the same {field}": "Possible duplicate: {name} has the same {field}",
+        "Save anyway": "Save anyway",
+        "email address": "email address",
         "letter": "letter",
         "Make a letter from a template": "Make a letter from a template",
         "Templates come from filinq; %n is shared with pipelinq.": ["Templates come from filinq; %n is shared with pipelinq.","Templates come from filinq; %n are shared with pipelinq."],
