@@ -25,6 +25,8 @@
 				"sortKey": "arrivedAt",
 				"sortOrder": "asc",
 				"countText": "Desks · today",
+				"tableTitle": "In the queue",
+				"search": false,
 				"footerNote": "Call next calls the customer who has waited longest. A customer without a name shows as Anonymous customer.",
 				"emptyText": "Nobody has walked in yet today.",
 				"inlineActionCount": 2,
