@@ -1,0 +1,21 @@
+{
+  "components": {
+    "schemas": {
+      "posTransaction": {
+        "slug": "posTransaction",
+        "properties": {
+          "momentAt": {
+            "type": "string",
+            "title": "Moment",
+            "description": "When the sale happened: its confirmation, else its parking. Set on save, empty for a draft; lists sort and filter on it.",
+            "computed": {
+              "expression": "{{ confirmedAt ?: parkedAt }}",
+              "evaluateOn": "save"
+            },
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}

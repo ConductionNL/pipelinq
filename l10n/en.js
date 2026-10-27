@@ -8458,7 +8458,9 @@ OC.L10N.register(
         "{count} lead": "{count} lead",
         "Linked request": "Linked request",
         "Not linked to a request": "Not linked to a request",
-        "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for.": "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for."
+        "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for.": "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for.",
+        "When the sale happened: its confirmation, else its parking. Set on save, empty for a draft; lists sort and filter on it.": "When the sale happened: its confirmation, else its parking. Set on save, empty for a draft; lists sort and filter on it.",
+        "Moment": "Moment"
     },
     "nplurals=2; plural=(n != 1);"
 )

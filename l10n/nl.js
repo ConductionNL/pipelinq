@@ -8429,7 +8429,9 @@ OC.L10N.register(
         "{count} lead": "{count} lead",
         "Linked request": "Gekoppeld verzoek",
         "Not linked to a request": "Niet aan een verzoek gekoppeld",
-        "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for.": "UUID van het verzoek of ander ticket waar deze afspraak bij hoort, zoals de vergunningaanvraag waarvoor een locatiebezoek is."
+        "UUID of the request or other ticket this appointment belongs to, such as the permit request a site visit is for.": "UUID van het verzoek of ander ticket waar deze afspraak bij hoort, zoals de vergunningaanvraag waarvoor een locatiebezoek is.",
+        "When the sale happened: its confirmation, else its parking. Set on save, empty for a draft; lists sort and filter on it.": "Wanneer de verkoop plaatsvond: de bevestiging, anders het parkeren. Gezet bij opslaan, leeg bij een concept; lijsten sorteren en filteren erop.",
+        "Moment": "Moment"
     },
     "nplurals=2; plural=(n != 1);"
 )
