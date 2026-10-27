@@ -1016,7 +1016,8 @@
 						"section": "Visible to the customer"
 					}
 				},
-				"editTitle": "Edit ticket"
+				"editTitle": "Edit ticket",
+				"editConfirmLabel": "Save changes"
 			},
 			"configPatch": {
 				"bodyWidgets": {
