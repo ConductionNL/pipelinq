@@ -1419,7 +1419,9 @@
 								"groupBy": {
 									"field": "category",
 									"metric": "count",
-									"sort": "desc"
+									"sort": "desc",
+									"limit": 3,
+									"otherBucket": true
 								}
 							}
 						}
@@ -1429,7 +1431,7 @@
 						"type": "chart",
 						"title": "Requests by status",
 						"content": {
-							"chartKind": "bar",
+							"chartKind": "bar-list",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "ticket",
@@ -1439,7 +1441,17 @@
 								"groupBy": {
 									"field": "status",
 									"metric": "count",
-									"sort": "desc"
+									"sort": "desc",
+									"labels": {
+										"new": "New",
+										"in_progress": "In progress",
+										"awaiting_customer": "Waiting for customer",
+										"resolved": "Resolved",
+										"completed": "Completed",
+										"rejected": "Rejected",
+										"converted": "Converted",
+										"closed": "Closed"
+									}
 								}
 							}
 						}

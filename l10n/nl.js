@@ -721,6 +721,7 @@ OC.L10N.register(
         "Close date": "Sluitingsdatum",
         "Close my account": "Mijn account sluiten",
         "Close time": "Sluitingstijd",
+        "Converted": "Omgezet",
         "Closed": "Gesloten",
         "Closed Lost": "Afgesloten - Lost",
         "Closed Won": "Afgesloten - Won",
