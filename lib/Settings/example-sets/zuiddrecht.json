@@ -3588,6 +3588,7 @@
 				"assigneeGroupId": "{{cast:kcc.gid}}",
 				"clientId": "{{object:client-degraaf.id}}",
 				"requestId": "{{object:ticket-degraaf-afvalpas.id}}",
+				"contactMoment": "{{object:interaction-degraaf-afvalpas.id}}",
 				"callbackPhoneNumber": "06 18 44 27 30",
 				"preferredTimeSlot": "Tussen 12:00 en 14:00",
 				"description": "Meneer De Graaf vraagt of hij zijn afval buiten mag zetten tot zijn nieuwe afvalpas er is. Bel hem terug met het antwoord en de datum waarop de pas komt.",
