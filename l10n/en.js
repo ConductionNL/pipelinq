@@ -8588,7 +8588,17 @@ OC.L10N.register(
         "{shown} of {total} posts · newest first": "{shown} of {total} posts · newest first",
         "A post can go to several networks at once, each with its own text.": "A post can go to several networks at once, each with its own text.",
         "Scheduled to go out": "Scheduled to go out",
-        "Being sent": "Being sent"
+        "Being sent": "Being sent",
+        "Loading preview": "Loading preview",
+        "The preview could not be made. You can still make the letter.": "The preview could not be made. You can still make the letter.",
+        "Filled in for you": "Filled in for you",
+        "Still empty: {fields}": "Still empty: {fields}",
+        "Not filled in": "Not filled in",
+        "Send as": "Send as",
+        "PDF to print and post": "PDF to print and post",
+        "Download PDF": "Download PDF",
+        "The %n field is filled in, nothing missing": ["The %n field is filled in, nothing missing","All %n fields filled in, nothing missing"],
+        "All %n fields filled in, nothing missing": "All %n fields filled in, nothing missing"
     },
     "nplurals=2; plural=(n != 1);"
 )

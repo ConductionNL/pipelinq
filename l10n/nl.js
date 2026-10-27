@@ -8579,7 +8579,17 @@ OC.L10N.register(
         "Later": "Later",
         "deadline is today or has passed": "termijn is vandaag of verstreken",
         "the customer has replied": "de klant heeft gereageerd",
-        "nothing to do until they reply": "niets te doen tot ze reageren"
+        "nothing to do until they reply": "niets te doen tot ze reageren",
+        "Loading preview": "Voorbeeld laden",
+        "The preview could not be made. You can still make the letter.": "Het voorbeeld lukte niet. Je kunt de brief wel maken.",
+        "Filled in for you": "Voor je ingevuld",
+        "Still empty: {fields}": "Nog leeg: {fields}",
+        "Not filled in": "Niet ingevuld",
+        "Send as": "Versturen als",
+        "PDF to print and post": "Pdf om te printen en te posten",
+        "Download PDF": "Pdf downloaden",
+        "The %n field is filled in, nothing missing": ["%n veld ingevuld, niets ontbreekt","Alle %n velden ingevuld, niets ontbreekt"],
+        "All %n fields filled in, nothing missing": "Alle %n velden ingevuld, niets ontbreekt"
     },
     "nplurals=2; plural=(n != 1);"
 )
