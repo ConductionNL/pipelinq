@@ -8377,7 +8377,9 @@ OC.L10N.register(
         "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.": "Cron-expressie voor een boekhoudsignaal, dat geen objectgebeurtenis aankondigt. De andere soorten negeren hem.",
         "Public-space report": "Melding",
         "melding": "Melding",
-        "Whether the product is for sale: a draft is not yet, an active product is, a discontinued one no longer is but stays readable on old deals and receipts. Inactive is the older word for discontinued.": "Of het product te koop is: een concept nog niet, een actief product wel, een uitgefaseerd product niet meer, maar het blijft leesbaar op oude deals en bonnen. Inactief is het oudere woord voor uitgefaseerd."
+        "Whether the product is for sale: a draft is not yet, an active product is, a discontinued one no longer is but stays readable on old deals and receipts. Inactive is the older word for discontinued.": "Of het product te koop is: een concept nog niet, een actief product wel, een uitgefaseerd product niet meer, maar het blijft leesbaar op oude deals en bonnen. Inactief is het oudere woord voor uitgefaseerd.",
+        "Last contact": "Laatste contact",
+        "No contact yet": "Nog geen contact"
     },
     "nplurals=2; plural=(n != 1);"
 )
