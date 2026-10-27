@@ -8552,7 +8552,10 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Daarna: schrijf het resultaat op en rond de taak af",
         "What now? Try again before the deadline": "Wat nu? Opnieuw proberen voor de termijn",
         "An attempt is logged": "Er is een poging vastgelegd",
-        "Call the customer": "Bellen"
+        "Call the customer": "Bellen",
+        "In call": "In gesprek",
+        "End and finish": "Beëindigen en afronden",
+        "No open tasks for this client.": "Geen open taken voor deze klant."
     },
     "nplurals=2; plural=(n != 1);"
 )
