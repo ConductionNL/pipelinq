@@ -1,6 +1,9 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "New newsletter, step {step} of {total}": "Nieuwe nieuwsbrief, stap {step} van {total}",
+        "Step {step} of {total}: check everything before the blast is created": "Stap {step} van {total}: controleer alles voordat de blast wordt aangemaakt",
+        "Step {step} of {total}: {label}": "Stap {step} van {total}: {label}",
         "name": "naam",
         "Client notes": "Notities",
         "Open that client": "Die klant openen",
