@@ -121,5 +121,23 @@ class LookupTest(unittest.TestCase):
         self.assertEqual(1, len(warnings))
 
 
+class NumberScaleTest(unittest.TestCase):
+
+    PROPS = {'weight': {'type': 'number'}, 'price': {'type': 'number'}, 'code': {'type': 'string'},
+             'size': {'type': 'object', 'properties': {'depth': {'type': 'number'}}}}
+
+    def test_two_decimals_fit(self):
+        self.assertEqual([], validator.finer_than_storage({'price': 15.25, 'weight': 3.2}, self.PROPS))
+
+    def test_three_decimals_are_named(self):
+        self.assertEqual(['weight'], validator.finer_than_storage({'weight': 0.005, 'price': 15.0}, self.PROPS))
+
+    def test_nested_numbers_are_checked(self):
+        self.assertEqual(['size.depth'], validator.finer_than_storage({'size': {'depth': 0.008}}, self.PROPS))
+
+    def test_strings_and_integers_are_left_alone(self):
+        self.assertEqual([], validator.finer_than_storage({'code': '0.005', 'price': 3}, self.PROPS))
+
+
 if __name__ == '__main__':
     unittest.main()
