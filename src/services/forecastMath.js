@@ -137,3 +137,55 @@ export function latestPerOwner(snapshots) {
 	}
 	return [...latest.values()]
 }
+
+/**
+ * The quarter before a `Q<n>-<year>` period id ("Q1-2027" gives "Q4-2026").
+ *
+ * @param {string} periodId The period id.
+ * @return {string} The previous period id, or '' for an id it cannot read.
+ * @spec openspec/changes/forecast-accuracy-rows/specs/forecasting/spec.md#requirement-the-forecast-shows-last-quarters-accuracy-per-seller
+ */
+export function previousPeriodId(periodId) {
+	const match = /^Q([1-4])-(\d{4})$/.exec(String(periodId || ''))
+	if (!match) {
+		return ''
+	}
+	const quarter = Number(match[1])
+	const year = Number(match[2])
+	return quarter === 1 ? 'Q4-' + (year - 1) : 'Q' + (quarter - 1) + '-' + year
+}
+
+/**
+ * Forecast accuracy per seller for a closed period: the commit of the
+ * seller's first snapshot against the closed-won amount of the last one. A
+ * seller with a single snapshot, or no commit in the first one, has no score.
+ *
+ * @param {Array<object>} snapshots The period's rows (owner_id, as_of_date, commit, closed_won).
+ * @return {Array<{owner_id: string, weekOneCommit: number, actual: number, score: number}>} One row per seller, in the order sellers first appear.
+ * @spec openspec/changes/forecast-accuracy-rows/specs/forecasting/spec.md#requirement-the-forecast-shows-last-quarters-accuracy-per-seller
+ */
+export function accuracyRows(snapshots) {
+	const byOwner = new Map()
+	for (const row of snapshots || []) {
+		if (!row || !row.owner_id) {
+			continue
+		}
+		const rows = byOwner.get(row.owner_id) || []
+		rows.push(row)
+		byOwner.set(row.owner_id, rows)
+	}
+	const out = []
+	for (const [owner, rows] of byOwner) {
+		if (rows.length < 2) {
+			continue
+		}
+		const sorted = [...rows].sort((a, b) => String(a.as_of_date).localeCompare(String(b.as_of_date)))
+		const weekOneCommit = Number(sorted[0].commit || 0)
+		if (!(weekOneCommit > 0)) {
+			continue
+		}
+		const actual = Number(sorted[sorted.length - 1].closed_won || 0)
+		out.push({ owner_id: owner, weekOneCommit, actual, score: actual / weekOneCommit })
+	}
+	return out
+}

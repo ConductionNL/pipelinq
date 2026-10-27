@@ -54,6 +54,7 @@ import CustomerReplySection from './components/CustomerReplySection.vue'
 //     dashboard (hours per billing category) registered as a slot. ---
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
 import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
+import LeadContactRoles from './components/LeadContactRoles.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
 // --- Articles — the content hub for a mailing and a post (marketing-article-hub).
 //     ArticleDetail is a declarative type:"detail" page; the rendered body, the
@@ -108,6 +109,7 @@ import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWid
 //     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
 import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
 import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
+import ProductTariffsWidget from './components/products/ProductTariffsWidget.vue'
 import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
 import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
 // --- Reporting dashboards (lib gap: no chart-widget page type). ---
@@ -653,6 +655,12 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'Supply card on ProductDetail (board PqProduct): manufacturer, unit, weight, dimensions and the Stock tracked line read live from shillinq via GET /api/products/{id}/stock (products-stock-on-hand).',
 	},
+	ProductTariffsWidget: {
+		kind: 'widget',
+		component: ProductTariffsWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Fee table on ProductDetail (board PqProduct): the tariffs in force today from product.tariffs, the tariff source, and the day the next tariffs go live.',
+	},
 	BookingsCard: {
 		kind: 'section',
 		component: BookingsCard,
@@ -701,6 +709,17 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: 'ContactRelationships as a grid widget: entityId from the page object, entityType from content (default contact).',
+	},
+	LeadContactRolesWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'LeadContactRolesWidget',
+			LeadContactRoles,
+			({ objectId }) => ({ leadId: objectId }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The contacts on a lead with the role each plays in the deal (PqLead): role relationships, category CRM Rol, from the lead to the contact.',
 	},
 	TicketDecisionRoutesWidget: {
 		kind: 'widget',
