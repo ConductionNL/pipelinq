@@ -36,7 +36,10 @@
 						"icon": "Sitemap",
 						"category": "reports",
 						"route": "Flows",
-						"status": "{on} active, {off} paused",
+						"status": {
+							"text": "{on} active, {off} paused",
+							"tone": "success"
+						},
 						"statusValues": {
 							"on": {
 								"url": "/apps/openregister/api/flows",
