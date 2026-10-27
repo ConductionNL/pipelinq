@@ -5,29 +5,20 @@
 			"key": "lead-sportvelden-verlenging",
 			"register": "pipelinq",
 			"schema": "lead",
-			"lookups": {
-				"pipeline": {
-					"schema": "pipeline",
-					"where": {
-						"title": "Sales",
-						"isDefault": true
-					}
-				}
-			},
 			"data": {
 				"title": "Verlenging sportvelden 2027",
 				"client": "{{object:client-sportclub.id}}",
 				"source": "contract",
-				"pipeline": "{{lookup:pipeline}}",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
 				"stage": "Voorstel",
-				"stageOrder": 3,
+				"stageOrder": 4,
 				"status": "open",
 				"priority": "normal",
 				"probability": 60,
 				"value": 42000,
 				"currency": "EUR",
 				"assignee": "{{cast:pieter.uid}}",
-				"stageEnteredAt": "{{datetime:-5 06:00}}",
+				"stageEnteredAt": "{{datetime:-6 06:00}}",
 				"expectedCloseDate": "{{date:25}}",
 				"category": "Onderhoud"
 			}

@@ -319,6 +319,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
     <commands>
         <command>OCA\Pipelinq\Command\ConsentMigrateCommand</command>
+        <command>OCA\Pipelinq\Command\RemoveMockPipelinesCommand</command>
     </commands>
 
     <settings>

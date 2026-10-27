@@ -26,6 +26,8 @@ What it does, per object:
     proof exits 2 on a key the schema does not keep;
   * refuses an e-mail outside the reserved .example top-level domain (RFC 2606)
     and a BSN-like or KVK-like literal that does not come from the cast;
+  * checks that every lookup finds exactly one object the set declared before it,
+    for a lookup in this app's own registers;
   * checks that every fragment group member is a cast person with an account.
 Exit 0 when clean, 1 otherwise. Stand-ins are not real values: a check here does
 not replace `occ openregister:example-set:install <set> --check` on an instance.
@@ -260,6 +262,29 @@ def literal_identifiers(raw_value, path, problems, where):
                 problems.append('%s: %s holds e-mail %s outside the reserved .example domain' % (where, path, mail))
 
 
+def lookup_problem(where, name, lookup, looked_for, register, own_registers, declared, problems, warnings):
+    """A lookup that finds no row, or more than one, among the objects the set declared before it.
+
+    The loader looks in the instance first and then among the objects declared earlier
+    (ExampleSetInstaller::lookedUp). A set cannot rely on rows of its own app's register that it
+    does not write itself, so a miss there is a problem; a miss in another register is a warning,
+    since that row may come from the other app.
+    """
+    if not isinstance(looked_for, dict) or not looked_for or not lookup.get('schema'):
+        return
+    source = lookup.get('register', register)
+    found = [row for reg, schema, row in declared
+             if reg == source and schema == lookup['schema']
+             and all(row.get(field) == value for field, value in looked_for.items())]
+    words = ', '.join('%s %r' % (field, value) for field, value in sorted(looked_for.items()))
+    if len(found) > 1:
+        problems.append('%s: lookup %s finds %d %s rows with %s; a lookup needs exactly one' % (where, name, len(found), lookup['schema'], words))
+    elif not found and source in own_registers:
+        problems.append('%s: lookup %s finds no %s declared before it with %s' % (where, name, lookup['schema'], words))
+    elif not found:
+        warnings.append('%s: lookup %s finds no %s %s in this set with %s; it must exist on the instance' % (where, name, source, lookup['schema'], words))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--fragment', required=True)
@@ -287,6 +312,7 @@ def main():
     keys = set()
     ctx = {'cast': entries, 'objects': {}, 'lookups': {}, 'organisations': organisations}
     counts = {}
+    declared = []
     for i, obj in enumerate(fragment.get('objects', [])):
         key = obj.get('key', '')
         where = '%s: object "%s"' % (os.path.basename(args.fragment), key)
@@ -302,13 +328,15 @@ def main():
         for name, lookup in (obj.get('lookups') or {}).items():
             if not lookup.get('schema') or not lookup.get('where'):
                 problems.append('%s: lookup %s needs a schema and a where' % (where, name))
-            fill(lookup.get('where', {}), ctx, gaps)
+            looked_for = fill(lookup.get('where', {}), ctx, gaps)
             ctx['lookups'][name] = stand_in('lookup', key + '/' + name)
+            lookup_problem(where, name, lookup, looked_for, obj['register'], registers, declared, problems, warnings)
         verbatim = {f for f in (obj.get('verbatimFields') or []) if isinstance(f, str)}
         data = dict(obj['data'], **fill({k: v for k, v in obj['data'].items() if k not in verbatim}, ctx, gaps))
         for g in gaps:
             problems.append('%s: placeholder %s does not resolve' % (where, g))
         ctx['objects'][key] = dict(data, id=stand_in(app, key), uuid=stand_in(app, key))
+        declared.append((obj['register'], obj['schema'], ctx['objects'][key]))
         schema = schemas.get(obj['schema'])
         if obj['register'] in registers and schema is None:
             problems.append('%s: schema %s is not declared in %s' % (where, obj['schema'], args.base))

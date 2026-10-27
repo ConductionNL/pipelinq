@@ -334,6 +334,20 @@ class TicketServiceTest extends TestCase {
 		$this->assertNull(actual: $service->detectTypeInText(text: 'How many leads are open?'));
 		$this->assertNull(actual: $service->detectTypeInText(text: ''));
 	}//end testDetectTypeInTextRecognisesSubtypeVocabulary()
+
+	/**
+	 * A melding is a ticket subtype like the others: it is in TYPES, so the
+	 * per-type summaries count it, and its words name it.
+	 *
+	 * @return void
+	 */
+	public function testMeldingIsATicketSubtype(): void {
+		$this->assertContains(needle: TicketService::TYPE_MELDING, haystack: TicketService::TYPES);
+		$this->assertSame(
+			expected: TicketService::TYPE_MELDING,
+			actual: $this->buildService()->detectTypeInText(text: 'Hoeveel meldingen staan er open?')
+		);
+	}//end testMeldingIsATicketSubtype()
 	/**
 	 * A contactmoment written without a direction is refused, naming the field.
 	 *

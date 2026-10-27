@@ -135,29 +135,20 @@
 			"key": "lead-bakkerijdegraaf-website",
 			"register": "pipelinq",
 			"schema": "lead",
-			"lookups": {
-				"pipeline": {
-					"schema": "pipeline",
-					"where": {
-						"title": "Sales",
-						"isDefault": true
-					}
-				}
-			},
 			"data": {
 				"title": "Website en hosting Bakkerij De Graaf",
 				"client": "{{object:client-bakkerijdegraaf.id}}",
 				"source": "telefoon",
-				"pipeline": "{{lookup:pipeline}}",
+				"pipeline": "{{object:pipeline-verkoop.id}}",
 				"stage": "Voorstel",
-				"stageOrder": 3,
+				"stageOrder": 4,
 				"status": "open",
 				"priority": "normal",
 				"probability": 60,
 				"value": 4428,
 				"currency": "EUR",
 				"assignee": "{{cast:pieter.uid}}",
-				"stageEnteredAt": "{{datetime:-1 16:31}}",
+				"stageEnteredAt": "{{datetime:-2 16:31}}",
 				"expectedCloseDate": "{{date:30}}",
 				"category": "Software"
 			}
