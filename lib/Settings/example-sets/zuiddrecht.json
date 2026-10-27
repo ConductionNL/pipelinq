@@ -2346,6 +2346,7 @@
 				"actualAmount": 486.4,
 				"diffAmount": 0.0,
 				"diffPercentage": 0.0,
+				"tolerancePercentage": 2,
 				"withinTolerance": true,
 				"status": "approved",
 				"approvedBy": "{{cast:pieter.uid}}",
@@ -2365,8 +2366,7 @@
 				"floatAt": "{{datetime:-1 09:00}}",
 				"status": "closed",
 				"closedAt": "{{datetime:-1 16:45}}",
-				"reconciliationStatus": "pending",
-				"notes": "Marge € 5,00. 38 transacties in deze dienst."
+				"reconciliationStatus": "pending"
 			}
 		},
 		{
@@ -2416,6 +2416,7 @@
 				"actualAmount": 399.9,
 				"diffAmount": -12.4,
 				"diffPercentage": 3.0,
+				"tolerancePercentage": 2,
 				"withinTolerance": false,
 				"status": "pending"
 			}
@@ -2484,6 +2485,7 @@
 				"actualAmount": 288.4,
 				"diffAmount": 0.8,
 				"diffPercentage": 0.3,
+				"tolerancePercentage": 2,
 				"withinTolerance": true,
 				"status": "approved",
 				"approvedBy": "{{cast:pieter.uid}}",
