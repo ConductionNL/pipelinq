@@ -1,0 +1,239 @@
+{
+	"$comment": "pipelinq's admin settings in the Zuiddrecht set, general and POS tabs, as PqBeheer and PqBeheerKassa draw them: the simple menu with Verkoop, Kassa and Producten switched on; agent profiles for pieter, Fatma Yildiz and joris on the skills of 41-appointments.json; the payment providers (CCV live, Mollie in test, Adyen and Stripe off); the tender types with their ledger accounts; the POS roles and who holds them. The CCV key itself is not in the set: config names the credential it comes from. Lead sources and request channels are Nextcloud system tags, which a set cannot write, and VAT 21/9/0/0 is pipelinq's default, so neither is here.",
+	"appConfig": [
+		{
+			"key": "menu_modules",
+			"value": "sales,pos,products"
+		}
+	],
+	"objects": [
+		{
+			"key": "agentprofiel-pieter",
+			"register": "pipelinq",
+			"schema": "agentProfile",
+			"data": {
+				"userId": "{{cast:pieter.uid}}",
+				"skills": [
+					"{{object:vaardigheid-bouwvergunningen.id}}",
+					"{{object:vaardigheid-burgerzaken.id}}"
+				],
+				"maxConcurrent": 8,
+				"isAvailable": true
+			}
+		},
+		{
+			"key": "agentprofiel-fatmayildiz",
+			"register": "pipelinq",
+			"schema": "agentProfile",
+			"data": {
+				"userId": "{{cast:fatmayildiz.uid}}",
+				"skills": [
+					"{{object:vaardigheid-schuldhulp.id}}",
+					"{{object:vaardigheid-identiteitscontrole.id}}"
+				],
+				"maxConcurrent": 10,
+				"isAvailable": true
+			}
+		},
+		{
+			"key": "agentprofiel-joris",
+			"register": "pipelinq",
+			"schema": "agentProfile",
+			"data": {
+				"userId": "{{cast:joris.uid}}",
+				"skills": [
+					"{{object:vaardigheid-burgerzaken.id}}",
+					"{{object:vaardigheid-biometrie.id}}"
+				],
+				"maxConcurrent": 6,
+				"isAvailable": false
+			}
+		},
+		{
+			"key": "betaalprovider-ccv",
+			"register": "pipelinq",
+			"schema": "paymentProvider",
+			"data": {
+				"name": "ccv",
+				"displayName": "CCV",
+				"type": "terminal",
+				"isActive": true,
+				"environment": "live",
+				"testMode": false,
+				"config": {
+					"terminalId": "register-01",
+					"credential": "CCV balie, stadskantoor"
+				}
+			}
+		},
+		{
+			"key": "betaalprovider-mollie",
+			"register": "pipelinq",
+			"schema": "paymentProvider",
+			"data": {
+				"name": "mollie",
+				"displayName": "Mollie",
+				"type": "online",
+				"isActive": true,
+				"environment": "sandbox",
+				"testMode": true
+			}
+		},
+		{
+			"key": "betaalprovider-adyen",
+			"register": "pipelinq",
+			"schema": "paymentProvider",
+			"data": {
+				"name": "adyen",
+				"displayName": "Adyen",
+				"type": "terminal",
+				"isActive": false,
+				"environment": "sandbox",
+				"testMode": true
+			}
+		},
+		{
+			"key": "betaalprovider-stripe",
+			"register": "pipelinq",
+			"schema": "paymentProvider",
+			"data": {
+				"name": "stripe",
+				"displayName": "Stripe",
+				"type": "online",
+				"isActive": false,
+				"environment": "sandbox",
+				"testMode": true
+			}
+		},
+		{
+			"key": "betaalwijze-contant",
+			"register": "pipelinq",
+			"schema": "posTenderType",
+			"data": {
+				"name": "Contant",
+				"code": "CONTANT",
+				"glAccount": "1000",
+				"allowsChange": true,
+				"requiresReference": false,
+				"requiresPin": false,
+				"isActive": true,
+				"sortOrder": 1
+			}
+		},
+		{
+			"key": "betaalwijze-pin",
+			"register": "pipelinq",
+			"schema": "posTenderType",
+			"data": {
+				"name": "Pin",
+				"code": "PIN",
+				"glAccount": "1100",
+				"allowsChange": false,
+				"requiresReference": true,
+				"requiresPin": false,
+				"isActive": true,
+				"sortOrder": 2
+			}
+		},
+		{
+			"key": "betaalwijze-cadeaubon",
+			"register": "pipelinq",
+			"schema": "posTenderType",
+			"data": {
+				"name": "Cadeaubon",
+				"code": "BON",
+				"glAccount": "1300",
+				"allowsChange": false,
+				"requiresReference": true,
+				"requiresPin": true,
+				"isActive": true,
+				"sortOrder": 3
+			}
+		},
+		{
+			"key": "betaalwijze-op-rekening",
+			"register": "pipelinq",
+			"schema": "posTenderType",
+			"data": {
+				"name": "Op rekening",
+				"code": "REKENING",
+				"glAccount": "1400",
+				"description": "Op rekening van de klant.",
+				"allowsChange": false,
+				"requiresReference": false,
+				"requiresPin": false,
+				"isActive": false,
+				"sortOrder": 4
+			}
+		},
+		{
+			"key": "kassarol-kassamedewerker",
+			"register": "pipelinq",
+			"schema": "posRole",
+			"data": {
+				"name": "Kassamedewerker",
+				"canVoid": false,
+				"canRefund": false,
+				"canNoSale": false,
+				"maxDiscountPercent": 5
+			}
+		},
+		{
+			"key": "kassarol-leidinggevende",
+			"register": "pipelinq",
+			"schema": "posRole",
+			"data": {
+				"name": "Leidinggevende",
+				"canVoid": true,
+				"canRefund": true,
+				"canNoSale": true,
+				"maxDiscountPercent": 25
+			}
+		},
+		{
+			"key": "kassarol-manager",
+			"register": "pipelinq",
+			"schema": "posRole",
+			"data": {
+				"name": "Manager",
+				"canVoid": true,
+				"canRefund": true,
+				"canNoSale": true,
+				"maxDiscountPercent": 100
+			}
+		},
+		{
+			"key": "kassamedewerker-pieter",
+			"register": "pipelinq",
+			"schema": "posStaff",
+			"data": {
+				"displayName": "{{cast:pieter.displayName}}",
+				"userId": "{{cast:pieter.uid}}",
+				"posRole": "{{object:kassarol-leidinggevende.id}}",
+				"isActive": true
+			}
+		},
+		{
+			"key": "kassamedewerker-fatmayildiz",
+			"register": "pipelinq",
+			"schema": "posStaff",
+			"data": {
+				"displayName": "{{cast:fatmayildiz.displayName}}",
+				"userId": "{{cast:fatmayildiz.uid}}",
+				"posRole": "{{object:kassarol-kassamedewerker.id}}",
+				"isActive": true
+			}
+		},
+		{
+			"key": "kassamedewerker-joris",
+			"register": "pipelinq",
+			"schema": "posStaff",
+			"data": {
+				"displayName": "{{cast:joris.displayName}}",
+				"userId": "{{cast:joris.uid}}",
+				"posRole": "{{object:kassarol-kassamedewerker.id}}",
+				"isActive": true
+			}
+		}
+	]
+}
