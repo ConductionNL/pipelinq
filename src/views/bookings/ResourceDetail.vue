@@ -40,16 +40,14 @@
 		:objectStore="objectStore"
 		:objectId="resourceId"
 		:follow="false"
-		:sidebarProps="sidebarProps">
+		:sidebarProps="sidebarProps"
+		:headerActions="headerActions">
 		<template #actions>
 			<NcButton variant="secondary" @click="openEditDialog">
 				<template #icon>
 					<Pencil :size="20" />
 				</template>
 				{{ t('pipelinq', 'Edit') }}
-			</NcButton>
-			<NcButton variant="tertiary" @click="showDelete = true">
-				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>
 
@@ -275,6 +273,23 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Delete sits in the header's More menu, as the board draws it (Edit,
+		 * the buildiq square, More); it opens the same confirm dialog.
+		 *
+		 * @return {Array<object>} The menu entries.
+		 * @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+		 */
+		headerActions() {
+			return [{
+				id: 'delete',
+				label: t('pipelinq', 'Delete'),
+				onSelect: () => {
+					this.showDelete = true
+				},
+			}]
+		},
+
 		objectStore() {
 			return useObjectStore()
 		},
