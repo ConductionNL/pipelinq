@@ -87,5 +87,39 @@ class UserFormatTest(unittest.TestCase):
         self.assertEqual(1, len(self.errors(['admin'])))
 
 
+class LookupTest(unittest.TestCase):
+
+    DECLARED = [
+        ('pipelinq', 'pipeline', {'title': 'Verkoop', 'isDefault': False}),
+        ('pipelinq', 'pipeline', {'title': 'Vragen en meldingen', 'isDefault': True}),
+    ]
+
+    def check(self, where, lookup=None, register='pipelinq'):
+        problems, warnings = [], []
+        lookup = lookup or {'schema': 'pipeline', 'where': where}
+        validator.lookup_problem('object "x"', 'pipeline', lookup, where, register, ['pipelinq'], self.DECLARED, problems, warnings)
+        return problems, warnings
+
+    def test_a_lookup_that_finds_one_declared_row_passes(self):
+        self.assertEqual(([], []), self.check({'title': 'Verkoop'}))
+
+    def test_a_lookup_that_finds_nothing_in_the_own_register_is_a_problem(self):
+        problems, _ = self.check({'title': 'Sales', 'isDefault': True})
+        self.assertEqual(1, len(problems))
+        self.assertIn('finds no pipeline', problems[0])
+
+    def test_a_lookup_that_finds_two_rows_is_a_problem(self):
+        declared =self.DECLARED + [('pipelinq', 'pipeline', {'title': 'Verkoop', 'isDefault': True})]
+        problems, warnings = [], []
+        validator.lookup_problem('x', 'p', {'schema': 'pipeline', 'where': {'title': 'Verkoop'}}, {'title': 'Verkoop'},
+                                 'pipelinq', ['pipelinq'], declared, problems, warnings)
+        self.assertIn('finds 2 pipeline rows', problems[0])
+
+    def test_a_miss_in_another_register_is_only_a_warning(self):
+        problems, warnings = self.check({'title': 'Zaak 1'}, lookup={'schema': 'case', 'register': 'procest', 'where': {'title': 'Zaak 1'}})
+        self.assertEqual([], problems)
+        self.assertEqual(1, len(warnings))
+
+
 if __name__ == '__main__':
     unittest.main()
