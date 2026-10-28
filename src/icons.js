@@ -81,6 +81,7 @@ import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Counter from 'vue-material-design-icons/Counter.vue'
 import CreditCardOutline from 'vue-material-design-icons/CreditCardOutline.vue'
+import CubeOutline from 'vue-material-design-icons/CubeOutline.vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
 import DatabaseClock from 'vue-material-design-icons/DatabaseClock.vue'
 import DatabaseExport from 'vue-material-design-icons/DatabaseExport.vue'
@@ -119,6 +120,7 @@ import ForumOutline from 'vue-material-design-icons/ForumOutline.vue'
 import Gauge from 'vue-material-design-icons/Gauge.vue'
 import Gavel from 'vue-material-design-icons/Gavel.vue'
 import HandshakeOutline from 'vue-material-design-icons/HandshakeOutline.vue'
+import Headset from 'vue-material-design-icons/Headset.vue'
 import Heart from 'vue-material-design-icons/Heart.vue'
 import History from 'vue-material-design-icons/History.vue'
 import HomeOutline from 'vue-material-design-icons/HomeOutline.vue'
@@ -170,6 +172,7 @@ import SortDescending from 'vue-material-design-icons/SortDescending.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import SourceMerge from 'vue-material-design-icons/SourceMerge.vue'
 import Star from 'vue-material-design-icons/Star.vue'
+import StarCircleOutline from 'vue-material-design-icons/StarCircleOutline.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import TableColumn from 'vue-material-design-icons/TableColumn.vue'
 import Tag from 'vue-material-design-icons/Tag.vue'
@@ -369,5 +372,8 @@ export default {
 	ViewGridOutline,
 	WalletOutline,
 	AccountPlusOutline,
+	CubeOutline,
+	Headset,
+	StarCircleOutline,
 	WebBox,
 }
