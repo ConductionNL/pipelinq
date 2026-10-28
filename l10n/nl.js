@@ -9168,7 +9168,9 @@ OC.L10N.register(
         "you are not taking calls or the queue": "je neemt geen gesprekken of wachtrij aan",
         "See an example": "Bekijk een voorbeeld",
         "Question from {subject.clientName} about {subject.title}": "Vraag van {subject.clientName} over {subject.title}",
-        "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.": "Via {subject.channel|enumWord} · wacht {subject.waitingDays} dagen op antwoord."
+        "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.": "Via {subject.channel|enumWord} · wacht {subject.waitingDays} dagen op antwoord.",
+        "{count} bookings, no bookable time this week": "{count} boekingen, deze week geen boekbare tijd",
+        "{count} bookings, {percent}% of the bookable time": "{count} boekingen, {percent}% van de boekbare tijd"
     },
     "nplurals=2; plural=(n != 1);"
 )

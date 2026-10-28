@@ -9156,7 +9156,9 @@ OC.L10N.register(
         "you are not taking calls or the queue": "you are not taking calls or the queue",
         "See an example": "See an example",
         "Question from {subject.clientName} about {subject.title}": "Question from {subject.clientName} about {subject.title}",
-        "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.": "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer."
+        "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.": "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.",
+        "{count} bookings, no bookable time this week": "{count} bookings, no bookable time this week",
+        "{count} bookings, {percent}% of the bookable time": "{count} bookings, {percent}% of the bookable time"
     },
     "nplurals=2; plural=(n != 1);"
 )

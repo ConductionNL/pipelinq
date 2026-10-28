@@ -32,6 +32,9 @@ final class StoreDescriptor {
 	 * @param string $schema Remote schema slug exposed by the registry.
 	 * @param string $defaultRegister Remote register segment used when unset.
 	 * @param array<string, string> $cardFields Card field name => remote object property.
+	 * @param array<int, string> $types Shareable configuration type ids.
+	 * @param array<int, string> $publishFields Properties a publish may send next to the slug.
+	 * @param array<int, string> $publishGroups Groups whose members may publish.
 	 *
 	 * @return void
 	 */
@@ -46,6 +49,18 @@ final class StoreDescriptor {
 			'category' => 'category',
 			'version' => 'version',
 		],
+		public readonly array $types = [],
+		public readonly array $publishFields = [],
+		public readonly array $publishGroups = [],
 	) {
 	}//end __construct()
+
+	/**
+	 * Whether this descriptor opted in to publishing.
+	 *
+	 * @return bool
+	 */
+	public function isPublishable(): bool {
+		return $this->publishFields !== [] && $this->publishGroups !== [];
+	}//end isPublishable()
 }//end class
