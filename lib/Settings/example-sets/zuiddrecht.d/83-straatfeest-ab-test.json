@@ -1,0 +1,54 @@
+{
+	"$comment": "The Straatfeestseizoen newsletter as an A/B test, as PqNieuwsbriefABTest draws it (coordinator 28 Oct, board canon): the sent newsletter is variant A, and a variant B blast (abVariantOf) went out at the same moment. Each arm has more than 500 delivered and was sent more than 24 hours ago, so the page computes a verdict: A clicks about 15%, B about 26%, B significantly higher (p < 0.05). The segment's 412 contacts and the board's 203/201 figures follow in a board amend.",
+	"changes": [
+		{
+			"key": "nieuwsbrief-straatfeest-variant-a",
+			"register": "pipelinq",
+			"schema": "blast",
+			"where": {
+				"name": "Straatfeestseizoen: wat regel je"
+			},
+			"set": {
+				"totals": {
+					"queued": 0,
+					"sent": 520,
+					"delivered": 516,
+					"bounced": 4,
+					"opened": 301,
+					"clicked": 78,
+					"unsubscribed": 3,
+					"complained": 0
+				}
+			}
+		}
+	],
+	"objects": [
+		{
+			"key": "nieuwsbrief-straatfeest-variant-b",
+			"register": "pipelinq",
+			"schema": "blast",
+			"data": {
+				"name": "Straatfeestseizoen: wat regel je (Variant B)",
+				"templateId": "{{object:sjabloon-straatfeest.id}}",
+				"channel": "email",
+				"status": "sent",
+				"createdBy": "{{cast:pieter.uid}}",
+				"segmentId": "{{object:segment-verenigingen.id}}",
+				"scheduledFor": "{{datetime:-6 09:00}}",
+				"sentAt": "{{datetime:-6 09:00}}",
+				"abSplitPercent": 50,
+				"abVariantOf": "{{object:nieuwsbrief-straatfeest.id}}",
+				"totals": {
+					"queued": 0,
+					"sent": 520,
+					"delivered": 514,
+					"bounced": 6,
+					"opened": 322,
+					"clicked": 134,
+					"unsubscribed": 2,
+					"complained": 0
+				}
+			}
+		}
+	]
+}
