@@ -71,6 +71,20 @@ class ProgrammeControllerTest extends TestCase {
 	private array $effortSeen = [];
 
 	/**
+	 * The rows the portfolio's read() answers, per schema key.
+	 *
+	 * @var array<string, array<int, array<string, mixed>>>
+	 */
+	private array $rowsFor = [];
+
+	/**
+	 * The filters each read() was called with, per schema key.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private array $readFilters = [];
+
+	/**
 	 * Build the controller over doubles.
 	 *
 	 * @return ProgrammeController The controller under test.
@@ -88,7 +102,13 @@ class ProgrammeControllerTest extends TestCase {
 			}
 		);
 		$this->portfolio->method('tasksOf')->willReturn([]);
-		$this->portfolio->method('read')->willReturn([]);
+		$this->portfolio->method('read')->willReturnCallback(
+			function (string $schemaKey, array $filters): array {
+				$this->readFilters[$schemaKey] = $filters;
+
+				return ($this->rowsFor[$schemaKey] ?? []);
+			}
+		);
 
 		$this->estimation = $this->getMockBuilder(ProgrammeEstimationService::class)
 			->disableOriginalConstructor()
@@ -243,4 +263,69 @@ class ProgrammeControllerTest extends TestCase {
 		$this->assertSame(200, $response->getStatus());
 		$this->assertSame(8, $response->getData()['points'][0]['remaining']);
 	}//end testTheCycleChartAnswersTheChart()
+	/**
+	 * Closing the current cycle of a programme the caller may not read is a
+	 * 403, and nothing is closed.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/project-close-current-cycle/specs/project-portfolio/spec.md#requirement-a-project-page-can-close-its-current-cycle
+	 */
+	public function testClosingTheCurrentCycleRefusesAnUnreadableProgramme(): void {
+		$controller = $this->controller();
+		$this->stored = null;
+		$this->estimation->expects($this->never())->method('closeCycle');
+
+		$response = $controller->closeCurrentCycle(programmeId: 'prog-1');
+
+		$this->assertSame(403, $response->getStatus());
+	}//end testClosingTheCurrentCycleRefusesAnUnreadableProgramme()
+
+	/**
+	 * A programme without an open cycle answers 409 and closes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/project-close-current-cycle/specs/project-portfolio/spec.md#requirement-a-project-page-can-close-its-current-cycle
+	 */
+	public function testClosingTheCurrentCycleWithoutAnOpenCycleIsAConflict(): void {
+		$controller = $this->controller();
+		$this->stored = ['id' => 'prog-1'];
+		$this->rowsFor['programmeCycle_schema'] = [];
+		$this->estimation->expects($this->never())->method('closeCycle');
+
+		$response = $controller->closeCurrentCycle(programmeId: 'prog-1');
+
+		$this->assertSame(409, $response->getStatus());
+		$this->assertSame(['programme' => 'prog-1', 'status' => 'open'], $this->readFilters['programmeCycle_schema']);
+	}//end testClosingTheCurrentCycleWithoutAnOpenCycleIsAConflict()
+
+	/**
+	 * The open cycle that started last is closed, over its own tasks.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/project-close-current-cycle/specs/project-portfolio/spec.md#requirement-a-project-page-can-close-its-current-cycle
+	 */
+	public function testClosingTheCurrentCycleClosesTheLatestOpenCycle(): void {
+		$controller = $this->controller();
+		$this->stored = ['id' => 'prog-1'];
+		$this->rowsFor['programmeCycle_schema'] = [
+			['id' => 'cycle-2', 'startDate' => '2026-07-13', 'status' => 'open'],
+			['id' => 'cycle-3', 'startDate' => '2026-09-07', 'status' => 'open'],
+		];
+		$this->rowsFor['programmeTask_schema'] = [['id' => 'task-1', 'status' => 'closed']];
+		$this->estimation->expects($this->once())->method('closeCycle')
+			->with(
+				$this->callback(static fn (array $cycle): bool => $cycle['id'] === 'cycle-3'),
+				[['id' => 'task-1', 'status' => 'closed']]
+			)
+			->willReturn(['status' => 200, 'cycle' => ['id' => 'cycle-3', 'status' => 'closed']]);
+
+		$response = $controller->closeCurrentCycle(programmeId: 'prog-1');
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame('closed', $response->getData()['cycle']['status']);
+		$this->assertSame(['cycle' => 'cycle-3'], $this->readFilters['programmeTask_schema']);
+	}//end testClosingTheCurrentCycleClosesTheLatestOpenCycle()
 }//end class

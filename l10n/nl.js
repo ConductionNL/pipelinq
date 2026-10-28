@@ -9184,7 +9184,11 @@ OC.L10N.register(
         "VAT {vatRate}%": "Btw {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "Het btw-percentage waarmee de btw van de offerte wordt berekend.",
         "The event this newsletter invites to.": "Het evenement waarvoor deze nieuwsbrief uitnodigt.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel.",
+        "Close cycle": "Cyclus sluiten",
+        "The cycle is closed and its snapshot is saved.": "De cyclus is gesloten en de momentopname is bewaard.",
+        "The cycle could not be closed.": "De cyclus kon niet worden gesloten.",
+        "{total} tasks · unfinished tasks move to the next cycle when you close this one.": "{total} taken · onafgemaakte taken gaan naar de volgende cyclus als je deze sluit."
     },
     "nplurals=2; plural=(n != 1);"
 )

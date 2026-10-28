@@ -29,13 +29,13 @@ describe('project page', () => {
 	})
 
 	it('puts four KPI tiles above one tab strip', () => {
-		expect(detail.config.layout.map((item) => item.widgetId)).toEqual([
+		expect(detail.config.band.map((item) => item.widgetId)).toEqual([
 			'prog-kpi-progress',
 			'prog-kpi-tasks',
 			'prog-kpi-team',
 			'prog-kpi-term',
-			'prog-panels',
 		])
+		expect(detail.config.layout.map((item) => item.widgetId)).toEqual(['prog-panels'])
 		expect(widget('prog-panels').content.tabs.map((t) => t.label)).toEqual([
 			'Overview',
 			'Tasks',

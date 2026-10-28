@@ -183,6 +183,48 @@ class ProgrammeController extends Controller {
 	}//end closeCycle()
 
 	/**
+	 * Close a programme's current cycle: the open one that started last.
+	 *
+	 * @param string $programmeId The programme's uuid.
+	 *
+	 * @return JSONResponse The closed cycle, or the refusal.
+	 *
+	 * @spec openspec/changes/project-close-current-cycle/specs/project-portfolio/spec.md#requirement-a-project-page-can-close-its-current-cycle
+	 */
+	#[NoAdminRequired]
+	public function closeCurrentCycle(string $programmeId): JSONResponse {
+		$programme = $this->readObject(id: $programmeId);
+		if ($programme === null) {
+			return new JSONResponse(['error' => 'You may not read this programme.'], 403);
+		}
+
+		$current = null;
+		$open = $this->portfolio->read(
+			schemaKey: 'programmeCycle_schema',
+			filters: ['programme' => trim($programmeId), 'status' => 'open'],
+		);
+		foreach ($open as $cycle) {
+			if ($current === null || (string)($cycle['startDate'] ?? '') > (string)($current['startDate'] ?? '')) {
+				$current = $cycle;
+			}
+		}
+
+		if ($current === null) {
+			return new JSONResponse(['error' => 'This programme has no open cycle.'], 409);
+		}
+
+		return $this->respond(
+			result: $this->estimation->closeCycle(
+				cycle: $current,
+				tasks: $this->portfolio->read(
+					schemaKey: 'programmeTask_schema',
+					filters: ['cycle' => (string)($current['id'] ?? $current['uuid'] ?? '')],
+				),
+			)
+		);
+	}//end closeCurrentCycle()
+
+	/**
 	 * What a cycle's chart reads, and the live figures beside it.
 	 *
 	 * @param string $cycleId The cycle's uuid.

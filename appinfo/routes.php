@@ -198,6 +198,7 @@ return [
         ['name' => 'programme#progress',   'url' => '/api/programmes/{programmeId}/progress',   'verb' => 'GET'],
         ['name' => 'programme#cycleChart', 'url' => '/api/programme-cycles/{cycleId}/chart',    'verb' => 'GET'],
         ['name' => 'programme#closeCycle', 'url' => '/api/programme-cycles/{cycleId}/close',    'verb' => 'POST'],
+        ['name' => 'programme#closeCurrentCycle', 'url' => '/api/programmes/{programmeId}/close-cycle', 'verb' => 'POST'],
 
         // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).

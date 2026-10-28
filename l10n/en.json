@@ -9258,6 +9258,10 @@
         "VAT {vatRate}%": "VAT {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "The VAT percentage the quote's VAT is worked out at.",
         "The event this newsletter invites to.": "The event this newsletter invites to.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own.",
+        "Close cycle": "Close cycle",
+        "The cycle is closed and its snapshot is saved.": "The cycle is closed and its snapshot is saved.",
+        "The cycle could not be closed.": "The cycle could not be closed.",
+        "{total} tasks · unfinished tasks move to the next cycle when you close this one.": "{total} tasks · unfinished tasks move to the next cycle when you close this one."
     }
 }

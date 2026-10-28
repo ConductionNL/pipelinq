@@ -118,6 +118,25 @@
 					}
 				},
 				"headerMeta": "{orgUnit} · {startDate|date} to {endDate|date}",
+				"_headerActionsNote": "PqProject: Cyclus sluiten closes the project's open cycle (POST /api/programmes/{id}/close-cycle), which writes the cycle's snapshot; unfinished tasks stay for the next cycle.",
+				"headerActions": [
+					{
+						"id": "close-cycle",
+						"type": "api-call",
+						"label": "Close cycle",
+						"icon": "Check",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/programmes/@objectId/close-cycle",
+						"confirm": true,
+						"successMessage": "The cycle is closed and its snapshot is saved.",
+						"errorMessage": "The cycle could not be closed.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "active"
+						}
+					}
+				],
 				"actionsMenu": {
 					"label": "More"
 				},
@@ -262,7 +281,8 @@
 									"as": "text",
 									"path": "description"
 								}
-							]
+							],
+							"columns": 3
 						}
 					},
 					{
@@ -318,7 +338,9 @@
 							"addLabel": "Add task",
 							"limit": 25,
 							"emptyText": "No tasks on this project yet.",
-							"footerNote": "Unfinished tasks move to the next cycle when you close this one."
+							"summary": {
+								"text": "{total} tasks · unfinished tasks move to the next cycle when you close this one."
+							}
 						}
 					},
 					{
@@ -362,7 +384,7 @@
 									"formatter": "enumLabel"
 								}
 							],
-							"allowCreate": true,
+							"allowCreate": false,
 							"limit": 25,
 							"emptyText": "No cycles yet."
 						}
@@ -425,9 +447,16 @@
 					},
 					{
 						"id": "prog-history",
-						"type": "audit-trail",
+						"type": "timeline",
 						"title": "History",
-						"icon": "History"
+						"icon": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc",
+							"excludeActions": [
+								"read"
+							]
+						}
 					},
 					{
 						"id": "prog-panels",
@@ -628,7 +657,9 @@
 							"addLabel": "Add task",
 							"limit": 25,
 							"emptyText": "No tasks on this project yet.",
-							"footerNote": "Unfinished tasks move to the next cycle when you close this one."
+							"summary": {
+								"text": "{total} tasks · unfinished tasks move to the next cycle when you close this one."
+							}
 						}
 					},
 					{
@@ -708,55 +739,44 @@
 					},
 					{
 						"id": "side-history",
-						"type": "audit-trail",
+						"type": "timeline",
 						"title": "History",
 						"icon": "History",
 						"content": {
-							"limit": 4
+							"auditTrail": true,
+							"order": "desc",
+							"limit": 4,
+							"excludeActions": [
+								"read"
+							]
 						}
+					}
+				],
+				"_bandNote": "PqProject: the four figures stand in a row across the page, above the tabs and the side column.",
+				"band": [
+					{
+						"widgetId": "prog-kpi-progress",
+						"span": 3
+					},
+					{
+						"widgetId": "prog-kpi-tasks",
+						"span": 3
+					},
+					{
+						"widgetId": "prog-kpi-team",
+						"span": 3
+					},
+					{
+						"widgetId": "prog-kpi-term",
+						"span": 3
 					}
 				],
 				"layout": [
 					{
-						"id": "k1",
-						"widgetId": "prog-kpi-progress",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false
-					},
-					{
-						"id": "k2",
-						"widgetId": "prog-kpi-tasks",
-						"gridX": 3,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false
-					},
-					{
-						"id": "k3",
-						"widgetId": "prog-kpi-team",
-						"gridX": 6,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false
-					},
-					{
-						"id": "k4",
-						"widgetId": "prog-kpi-term",
-						"gridX": 9,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2
-					},
-					{
 						"id": "1",
 						"widgetId": "prog-panels",
 						"gridX": 0,
-						"gridY": 2,
+						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
