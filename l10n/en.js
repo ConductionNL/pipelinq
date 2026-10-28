@@ -1,6 +1,8 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "{name} sent with the invitation": "{name} sent with the invitation",
+        "Event created in campaign {object.campaign}": "Event created in campaign {object.campaign}",
         "Event created": "Event created",
         "Places raised from {changed.capacity.old} to {changed.capacity.new}": "Places raised from {changed.capacity.old} to {changed.capacity.new}",
         "{name} is on the waiting list": "{name} is on the waiting list",

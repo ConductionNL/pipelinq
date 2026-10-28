@@ -23,7 +23,6 @@ describe('event history in words', () => {
 		it(`${id} leaves reads out and words what changed`, () => {
 			const { content } = widget(id)
 			expect(content.excludeActions).toEqual(['read'])
-			expect(content.actionLabels).toMatchObject({ create: 'Event created' })
 			expect(content.changeLabels).toContainEqual(expect.objectContaining({ field: 'capacity', label: 'Places raised from {changed.capacity.old} to {changed.capacity.new}' }))
 			expect(content.related).toContainEqual(expect.objectContaining({
 				schema: 'eventRegistration',
@@ -42,6 +41,34 @@ describe('event history in words', () => {
 	it('says it in Dutch as the board does', () => {
 		expect(nl['Places raised from {changed.capacity.old} to {changed.capacity.new}']).toBe('Plaatsen verhoogd van {changed.capacity.old} naar {changed.capacity.new}')
 		expect(nl['{name} is on the waiting list']).toBe('{name} staat op de wachtlijst')
-		expect(nl['Event created']).toBe('Evenement aangemaakt')
+	})
+})
+
+describe('the invitation newsletter and the campaign in the history', () => {
+	const blastEvent = read('lib/Settings/register.d/99-zzzzz-blast-event.json').components.schemas.blast
+
+	it('lets a newsletter name the event it invites to', () => {
+		expect(blastEvent.version).toBe('1.4.0')
+		expect(blastEvent.properties.event).toMatchObject({ type: 'string', format: 'uuid', $ref: 'campaignEvent' })
+	})
+
+	for (const id of ['event-history', 'event-side-history']) {
+		it(`${id} lists the newsletter sent with the invitation and names the campaign`, () => {
+			const { content } = widget(id)
+			expect(content.related).toContainEqual(expect.objectContaining({
+				schema: 'blast',
+				field: 'event',
+				dateField: 'sentAt',
+				label: '{name} sent with the invitation',
+				when: { field: 'status', value: 'sent' },
+			}))
+			expect(content.actionLabels.create).toBe('Event created in campaign {object.campaign}')
+			expect(content.resolve).toEqual({ campaign: { schema: 'campaign' } })
+		})
+	}
+
+	it('says it in Dutch as the board does', () => {
+		expect(nl['{name} sent with the invitation']).toBe('{name} verstuurd met de uitnodiging')
+		expect(nl['Event created in campaign {object.campaign}']).toBe('Evenement aangemaakt in campagne {object.campaign}')
 	})
 })
