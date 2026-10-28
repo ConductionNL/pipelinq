@@ -5540,6 +5540,10 @@
 										"product-publication",
 										"product-lines",
 										"product-files"
+									],
+									"layout": [
+										{ "widgetId": "product-tiers", "gridWidth": 6 },
+										{ "widgetId": "product-tariffs", "gridWidth": 6 }
 									]
 								},
 								{
@@ -5582,28 +5586,37 @@
 					},
 					{
 						"id": "product-tiers",
-						"type": "data",
+						"type": "record-list",
 						"title": "Price tiers",
 						"icon": "Stairs",
 						"content": {
-							"columns": 1,
-							"include": [
-								"priceTiers"
+							"presentation": "table",
+							"objectRows": { "path": "priceTiers" },
+							"columns": [
+								{ "label": "Quantity from", "value": "{minQuantity}" },
+								{ "label": "Unit Price", "value": "{unitPrice|currency}", "align": "end" },
+								{ "label": "Label", "value": "{label}" }
 							],
-							"hideEmpty": false
+							"emptyText": "No price tiers yet. The unit price applies to every quantity."
 						}
 					},
 					{
 						"id": "product-variants",
-						"type": "data",
+						"type": "record-list",
 						"title": "Variants",
 						"icon": "ShapeOutline",
 						"content": {
-							"columns": 1,
-							"include": [
-								"variants"
+							"presentation": "table",
+							"objectRows": { "path": "variants" },
+							"valueLabels": { "status": { "active": "Active", "inactive": "Inactive" } },
+							"columns": [
+								{ "label": "SKU", "value": "{sku}" },
+								{ "label": "Name", "value": "{name}" },
+								{ "label": "Price", "value": "{unitPrice|currency}", "align": "end" },
+								{ "label": "Barcode", "value": "{barcode}" },
+								{ "label": "Status", "value": "{status}", "tone": { "field": "status", "map": { "active": "success" }, "default": "default" } }
 							],
-							"hideEmpty": false
+							"emptyText": "No variants. The product is sold as one item."
 						}
 					},
 					{
@@ -5891,6 +5904,10 @@
 				"typePill": {
 					"field": "type",
 					"variant": "info",
+					"colorMap": {
+						"product": "info",
+						"service": "teal"
+					},
 					"labels": {
 						"product": "Product",
 						"service": "Service"

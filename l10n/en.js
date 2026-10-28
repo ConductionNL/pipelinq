@@ -8698,7 +8698,10 @@ OC.L10N.register(
         "The code a ticket stores in its category field, such as afval.": "The code a ticket stores in its category field, such as afval.",
         "The name people read, such as Waste and containers.": "The name people read, such as Waste and containers.",
         "When to use this category.": "When to use this category.",
-        "Whether new tickets can still get this category.": "Whether new tickets can still get this category."
+        "Whether new tickets can still get this category.": "Whether new tickets can still get this category.",
+        "No price tiers yet. The unit price applies to every quantity.": "No price tiers yet. The unit price applies to every quantity.",
+        "Quantity from": "Quantity from",
+        "No variants. The product is sold as one item.": "No variants. The product is sold as one item."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -129,4 +129,35 @@ describe('product pages', () => {
 			'side-history',
 		])
 	})
+
+	it('puts the price tiers and the fee table side by side, as PqProduct draws them', () => {
+		const detail = page(base.pages, 'ProductDetail')
+		const overview = widget(detail, 'product-panels').content.tabs[0]
+		expect(overview.layout).toEqual([
+			{ widgetId: 'product-tiers', gridWidth: 6 },
+			{ widgetId: 'product-tariffs', gridWidth: 6 },
+		])
+		const ids = overview.widgetIds
+		expect(ids.indexOf('product-tariffs')).toBe(ids.indexOf('product-tiers') + 1)
+	})
+
+	it('draws the price tiers as a small table of quantity, unit price and label', () => {
+		const tiers = widget(page(base.pages, 'ProductDetail'), 'product-tiers')
+		expect(tiers.type).toBe('record-list')
+		expect(tiers.content.presentation).toBe('table')
+		expect(tiers.content.objectRows).toEqual({ path: 'priceTiers' })
+		expect(tiers.content.columns.map((c) => c.value)).toEqual(['{minQuantity}', '{unitPrice|currency}', '{label}'])
+	})
+
+	it('draws the variants as a table with a status pill', () => {
+		const variants = widget(page(base.pages, 'ProductDetail'), 'product-variants')
+		expect(variants.content.objectRows).toEqual({ path: 'variants' })
+		expect(variants.content.columns.map((c) => c.label)).toEqual(['SKU', 'Name', 'Price', 'Barcode', 'Status'])
+		expect(variants.content.columns[4].tone.map).toEqual({ active: 'success' })
+	})
+
+	it('draws a service in the teal pill, a product in the blue one', () => {
+		const detail = page(base.pages, 'ProductDetail')
+		expect(detail.config.typePill.colorMap).toEqual({ product: 'info', service: 'teal' })
+	})
 })

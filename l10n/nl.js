@@ -8687,7 +8687,10 @@ OC.L10N.register(
         "The code a ticket stores in its category field, such as afval.": "De code die een ticket in het veld categorie bewaart, zoals afval.",
         "The name people read, such as Waste and containers.": "De naam die mensen lezen, zoals Afval en containers.",
         "When to use this category.": "Wanneer je deze categorie gebruikt.",
-        "Whether new tickets can still get this category.": "Of nieuwe tickets deze categorie nog kunnen krijgen."
+        "Whether new tickets can still get this category.": "Of nieuwe tickets deze categorie nog kunnen krijgen.",
+        "No price tiers yet. The unit price applies to every quantity.": "Nog geen prijsstaffels. De stukprijs geldt voor elk aantal.",
+        "Quantity from": "Vanaf aantal",
+        "No variants. The product is sold as one item.": "Geen varianten. Het product wordt als één artikel verkocht."
     },
     "nplurals=2; plural=(n != 1);"
 )
