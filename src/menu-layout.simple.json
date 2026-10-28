@@ -2439,9 +2439,16 @@
 						"widgetProps": {
 							"colorMap": {
 								"open": "info",
-								"closed": "warning",
-								"reconciled": "success"
+								"counted": "warning",
+								"approved": "success",
+								"within the margin": "success",
+								"outside the margin": "error",
+								"rejected": "error"
 							}
+						},
+						"aggregate": {
+							"endpoint": "/apps/pipelinq/api/pos-shifts/summary/outcome",
+							"key": "id"
 						}
 					},
 					{
@@ -2460,6 +2467,28 @@
 						"formatter": "objectCurrency",
 						"formatterOptions": {
 							"decimals": 2
+						}
+					},
+					{
+						"key": "dropCount",
+						"label": "Drops",
+						"align": "right",
+						"aggregate": {
+							"endpoint": "/apps/pipelinq/api/pos-shifts/summary/dropCount",
+							"key": "id"
+						}
+					},
+					{
+						"key": "difference",
+						"label": "Difference",
+						"align": "right",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 2
+						},
+						"aggregate": {
+							"endpoint": "/apps/pipelinq/api/pos-shifts/summary/difference",
+							"key": "id"
 						}
 					}
 				]

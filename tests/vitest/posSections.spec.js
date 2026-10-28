@@ -65,6 +65,6 @@ describe('a shift by name, with its sales', () => {
 		const config = page('CashShiftDetail').config
 		const related = config.widgets.find((w) => w.id === 'shift-related')
 		expect(config.sideColumn).toContain('shift-related')
-		expect(related.content.fields[0].countFrom).toEqual({ register: 'pipelinq', schema: 'posTransaction', filter: { shift: '@objectId' } })
+		expect(related.content.extraSources[0]).toMatchObject({ path: 'sales', endpoint: '/apps/pipelinq/api/pos-shifts/@objectId/summary' })
 	})
 })

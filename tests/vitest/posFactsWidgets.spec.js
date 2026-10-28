@@ -88,10 +88,10 @@ describe('the cash difference on a shift', () => {
 		expect(variance.content.emptyText).toMatch(/^Not counted yet/)
 	})
 
-	it('shows the amounts as money and the tolerance as a pill', () => {
+	it('shows the amounts as money and the tolerance under the difference', () => {
 		const byPath = Object.fromEntries(variance.content.fields.map((f) => [f.path, f]))
 		expect(['expectedAmount', 'actualAmount', 'diffAmount'].map((p) => byPath[p].format)).toEqual(['currency', 'currency', 'currency'])
-		expect(byPath.withinTolerance.variantMap).toEqual({ true: 'success', false: 'warning' })
+		expect(byPath.diffAmount.note.parts[1]).toEqual({ path: 'withinTolerance', map: { true: 'within the margin', false: 'outside the margin' } })
 		expect(byPath.approvedBy.format).toBe('user')
 	})
 
@@ -99,7 +99,8 @@ describe('the cash difference on a shift', () => {
 		const approve = action(variance, 'diff-approve')
 		expect(approve.payload).toEqual({ diffId: '@source.id' })
 		const reject = action(variance, 'diff-reject')
-		expect(reject.endpoint.url).toBe('/apps/pipelinq/api/pos-shifts/@objectId/diff/reject?diffId=@source.id')
+		expect(reject.url).toBe('/apps/pipelinq/api/pos-shifts/@objectId/diff/reject')
+		expect(reject.payload).toEqual({ diffId: '@source.id', reason: '@input.reason' })
 		for (const declared of [approve, reject]) {
 			expect(declared.adminOnly).toBe(true)
 			expect(declared.visibleWhen).toEqual({ field: 'status', value: 'pending' })

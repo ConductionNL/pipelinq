@@ -282,4 +282,62 @@ class CashShiftControllerTest extends TestCase {
 
 		$this->controller->approve('shift-1');
 	}//end testApproveWithDiffIdUsesIt()
+
+	/**
+	 * summary() answers one measure per shift key, in the shape a list's
+	 * endpoint aggregate reads.
+	 *
+	 * @return void
+	 */
+	public function testSummaryAnswersOneMeasurePerShift(): void {
+		$this->loginAs(uid: 'clerk');
+		$this->request->method('getParam')->willReturnMap([
+			['keys', [], ['s-1', 's-2']],
+		]);
+		$this->service->expects($this->once())
+			->method('summarise')
+			->with(['s-1', 's-2'])
+			->willReturn([
+				's-1' => ['dropCount' => 2, 'difference' => -12.4, 'outcome' => 'outside the margin'],
+				's-2' => ['dropCount' => 0, 'difference' => null, 'outcome' => 'open'],
+			]);
+
+		$response = $this->controller->summary(measure: 'outcome');
+
+		$this->assertSame(
+			expected: ['available' => true, 'values' => ['s-1' => 'outside the margin', 's-2' => 'open']],
+			actual: $response->getData()
+		);
+	}//end testSummaryAnswersOneMeasurePerShift()
+
+	/**
+	 * summary() refuses a measure it does not know.
+	 *
+	 * @return void
+	 */
+	public function testSummaryRefusesAnUnknownMeasure(): void {
+		$this->loginAs(uid: 'clerk');
+		$this->service->expects($this->never())->method('summarise');
+
+		$response = $this->controller->summary(measure: 'floatAmount; drop');
+
+		$this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
+	}//end testSummaryRefusesAnUnknownMeasure()
+
+	/**
+	 * shiftSummary() answers the page summary of one shift.
+	 *
+	 * @return void
+	 */
+	public function testShiftSummaryDelegates(): void {
+		$this->loginAs(uid: 'clerk');
+		$this->service->expects($this->once())
+			->method('shiftSummary')
+			->with('shift-1')
+			->willReturn(['id' => 'shift-1', 'dropCount' => 2]);
+
+		$response = $this->controller->shiftSummary(id: 'shift-1');
+
+		$this->assertSame(expected: 2, actual: $response->getData()['dropCount']);
+	}//end testShiftSummaryDelegates()
 }//end class
