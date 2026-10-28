@@ -8712,7 +8712,10 @@ OC.L10N.register(
         "Sent to invoicing": "Naar facturering gestuurd",
         "When the contract was last sent to invoicing.": "Wanneer het contract het laatst naar facturering is gestuurd.",
         "Sent to invoicing by": "Naar facturering gestuurd door",
-        "The user who last sent the contract to invoicing.": "De gebruiker die het contract het laatst naar facturering stuurde."
+        "The user who last sent the contract to invoicing.": "De gebruiker die het contract het laatst naar facturering stuurde.",
+        "%n days in stage": "%n dagen in fase",
+        "{percent}% chance": "{percent}% kans",
+        "%n day in stage": ["%n dag in fase","%n dagen in fase"]
     },
     "nplurals=2; plural=(n != 1);"
 )
