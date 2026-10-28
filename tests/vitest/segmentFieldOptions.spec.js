@@ -64,6 +64,11 @@ describe('fieldOptionsFor', () => {
 		)
 	})
 
+	it('offers the client place on the customer audience, so a rule can read "Plaats is gelijk aan Zuiddrecht"', () => {
+		const place = fieldOptionsFor('customer').find((o) => o.value === 'place')
+		expect(place).toEqual({ value: 'place', label: 'Place', type: 'string' })
+	})
+
 	it('returns the contact list for an unrecognised entityType, matching SegmentForm.entityType.set()\'s "contact" fallback', () => {
 		expect(fieldOptionsFor('nonsense')).toBe(CONTACT_FIELD_OPTIONS)
 	})

@@ -56,6 +56,7 @@ export const CUSTOMER_FIELD_OPTIONS = [
 	{ value: 'email', label: 'Email', type: 'string' },
 	{ value: 'phone', label: 'Phone', type: 'string' },
 	{ value: 'address', label: 'Address', type: 'string' },
+	{ value: 'place', label: 'Place', type: 'string' },
 	{ value: 'website', label: 'Website', type: 'string' },
 	{ value: 'industry', label: 'Industry', type: 'array' },
 	...CHANNEL_FIELD_OPTIONS,
