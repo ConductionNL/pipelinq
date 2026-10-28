@@ -9229,7 +9229,11 @@ OC.L10N.register(
         "Higher than the week before": "Hoger dan de week ervoor",
         "Lower than the week before": "Lager dan de week ervoor",
         "Highlight directions": "Richting van de hoogtepunten",
-        "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order.": "Of het cijfer van elk hoogtepunt steeg, daalde of gelijk bleef tegenover de week ervoor, één waarde per hoogtepunt in dezelfde volgorde."
+        "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order.": "Of het cijfer van elk hoogtepunt steeg, daalde of gelijk bleef tegenover de week ervoor, één waarde per hoogtepunt in dezelfde volgorde.",
+        "Filter by title": "Filter op titel",
+        "Shared": "Gedeeld",
+        "Not set up": "Niet ingesteld",
+        "Nothing published in the last 30 days.": "Niets gepubliceerd in de afgelopen 30 dagen."
     },
     "nplurals=2; plural=(n != 1);"
 )

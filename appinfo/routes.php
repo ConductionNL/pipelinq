@@ -682,6 +682,7 @@ return [
         ['name' => 'socialAccount#sync',    'url' => '/api/social-accounts/{id}/sync',    'verb' => 'POST'],
         ['name' => 'socialAccount#show',    'url' => '/api/social-accounts/{id}',         'verb' => 'GET'],
 
+        ['name' => 'socialPost#networkPerformance', 'url' => '/api/social-performance/networks', 'verb' => 'GET'],
         ['name' => 'socialPost#performance',  'url' => '/api/social-performance',              'verb' => 'GET'],
         ['name' => 'socialPost#index',        'url' => '/api/social-posts',                    'verb' => 'GET'],
         ['name' => 'socialPost#create',       'url' => '/api/social-posts',                    'verb' => 'POST'],

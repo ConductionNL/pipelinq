@@ -9303,6 +9303,10 @@
         "Higher than the week before": "Higher than the week before",
         "Lower than the week before": "Lower than the week before",
         "Highlight directions": "Highlight directions",
-        "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order.": "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order."
+        "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order.": "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order.",
+        "Filter by title": "Filter by title",
+        "Shared": "Shared",
+        "Not set up": "Not set up",
+        "Nothing published in the last 30 days.": "Nothing published in the last 30 days."
     }
 }
