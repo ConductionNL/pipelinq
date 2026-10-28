@@ -9,6 +9,7 @@
 		<li v-for="link in links" :key="link.kind">
 			<a
 				class="contact-links__link"
+				:class="{ button: variant === 'buttons' }"
 				:href="link.href"
 				:title="variant === 'buttons' ? link.value : null"
 				:data-testid="'contact-link-' + link.kind">
@@ -125,11 +126,16 @@ export default {
 	padding: 0;
 }
 
+/* `button` is the class the theme's link rules leave out, so a link drawn
+   as a button keeps this ink and no underline. */
 .contact-links--buttons .contact-links__link {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
-	height: 40px;
+	box-sizing: border-box;
+	height: 38px;
+	min-height: 0;
+	margin: 0;
 	padding: 0 14px;
 	border: 1px solid var(--color-border-maxcontrast);
 	border-radius: var(--border-radius-element, 8px);

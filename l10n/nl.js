@@ -875,6 +875,7 @@ OC.L10N.register(
         "Consent recorded.": "Toestemming geregistreerd.",
         "Consumed percentage": "Verbruikt percentage",
         "Contact": "Contactpersoon",
+        "Contact strip": "Contactstrook",
         "Contact Information": "Contactgegevens",
         "Contact Moment Volume": "Aantal contactmomenten",
         "Contact channels": "Contactkanalen",

@@ -695,6 +695,22 @@ const registry = {
 		component: PartyContactStrip,
 		_note: 'The client page contact strip (PqKlant, PqOrganisatie): the warnings line and the call, mail, directions and log-a-visit buttons in one card, before the body.',
 	},
+	PartyContactStripWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'PartyContactStripWidget',
+			PartyContactStrip,
+			({ objectId, objectData }) => ({
+				partyId: objectId,
+				partyKind: objectData.type || '',
+				phone: objectData.phone || '',
+				email: objectData.email || '',
+				address: objectData.address || '',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The contact strip as a widget, so ClientDetail places it in the band across the page, above the tabs and the side column (PqKlant, PqOrganisatie). It draws its own card.',
+	},
 	PartyIndicatorPanel: {
 		kind: 'section',
 		component: PartyIndicatorPanel,

@@ -19,7 +19,7 @@ const widget = (id) => config.widgets.find((entry) => entry.id === id)
 
 describe('ClientDetail as the boards draw it', () => {
 	it('lays the six figures out in one row above the tabs', () => {
-		const row = config.layout.filter((item) => item.gridY === 0).map((item) => item.widgetId)
+		const row = config.band.filter((entry) => entry.span === 2).map((entry) => entry.widgetId)
 		expect(row).toEqual([
 			'client-summary-open-tickets',
 			'client-summary-new-requests',
@@ -28,8 +28,7 @@ describe('ClientDetail as the boards draw it', () => {
 			'client-summary-open-leads',
 			'client-summary-last-activity',
 		])
-		expect(config.layout.every((item) => item.gridY > 0 || item.gridWidth === 2)).toBe(true)
-		expect(config.layout.find((item) => item.widgetId === 'client-panels').gridY).toBe(1)
+		expect(config.layout.find((item) => item.widgetId === 'client-panels').gridY).toBe(0)
 	})
 
 	it('draws each figure as its label and value, in the boards\' words', () => {

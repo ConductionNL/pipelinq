@@ -902,6 +902,7 @@ OC.L10N.register(
         "Consent recorded.": "Consent recorded.",
         "Consumed percentage": "Consumed percentage",
         "Contact": "Contact",
+        "Contact strip": "Contact strip",
         "Contact Information": "Contact Information",
         "Contact Moment Volume": "Contact Moment Volume",
         "Contact channels": "Contact channels",

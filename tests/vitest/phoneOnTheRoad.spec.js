@@ -182,10 +182,10 @@ describe('callers', () => {
 
 	it('client, contact and lead pages declare them', () => {
 		const pages = JSON.parse(read('src/manifest.json')).pages
-		const widgets = (id) =>
-			pages.find((p) => p.id === id).config.bodyWidgets.map((w) => w.component)
-		// The client page draws them in its contact strip (PqKlant).
-		expect(widgets('ClientDetail')).toContain('PartyContactStrip')
+		// The client page draws them in its contact strip (PqKlant), in the band.
+		const client = pages.find((p) => p.id === 'ClientDetail').config
+		const stripId = client.widgets.find((w) => w.type === 'PartyContactStripWidget').id
+		expect(client.band.map((entry) => entry.widgetId)).toContain(stripId)
 		const strip = read('src/components/PartyContactStrip.vue')
 		expect(strip).toContain('<ContactLinks')
 		expect(strip).toContain('<LogVisitAction')

@@ -2018,6 +2018,7 @@
 						}
 					}
 				],
+				"quickActions": ["log-contact", "new-request"],
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects) with the Related card beside it, as on the contact page (round5-client-related-and-service-list), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
 				"widgets": [
@@ -2121,7 +2122,6 @@
 					{
 						"id": "client-summary-open-tickets",
 						"type": "stat",
-						"title": "Open matters",
 						"content": {
 							"label": "Open matters",
 							"icon": "ClipboardCheckOutline",
@@ -2142,7 +2142,6 @@
 					{
 						"id": "client-summary-new-requests",
 						"type": "stat",
-						"title": "New requests",
 						"content": {
 							"label": "New requests",
 							"icon": "ClipboardCheckOutline",
@@ -2165,7 +2164,6 @@
 					{
 						"id": "client-summary-sla-breached",
 						"type": "stat",
-						"title": "Term passed",
 						"content": {
 							"label": "Term passed",
 							"icon": "AlertCircleOutline",
@@ -2187,7 +2185,6 @@
 					{
 						"id": "client-summary-sla-at-risk",
 						"type": "stat",
-						"title": "Term at risk",
 						"content": {
 							"label": "Term at risk",
 							"icon": "History",
@@ -2209,7 +2206,6 @@
 					{
 						"id": "client-summary-open-leads",
 						"type": "stat",
-						"title": "Open leads",
 						"content": {
 							"label": "Open leads",
 							"icon": "TrendingUp",
@@ -2233,7 +2229,6 @@
 					{
 						"id": "client-summary-last-activity",
 						"type": "stat",
-						"title": "Last activity",
 						"content": {
 							"label": "Last activity",
 							"icon": "History",
@@ -2973,13 +2968,20 @@
 						"icon": "History"
 					},
 					{
+						"id": "client-contact-strip",
+						"type": "PartyContactStripWidget",
+						"title": "Contact strip",
+						"_note": "PqKlant / PqOrganisatie: the warnings line (an aggression registration or a death is read before contact is made, pipelinq#2036) and the call, mail, directions, log-a-visit and message buttons in one card, in the band across the page (platform-phone-on-the-road)."
+					},
+					{
 						"id": "client-channels",
 						"type": "ContactChannelsWidget",
 						"title": "Contact channels",
 						"icon": "CardAccountPhoneOutline",
 						"content": {
 							"entityType": "client",
-							"title": "Contact channels"
+							"title": "Contact channels",
+							"compact": true
 						}
 					},
 					{
@@ -2989,7 +2991,8 @@
 						"icon": "AccountMultipleOutline",
 						"content": {
 							"entityType": "client",
-							"title": "Relationships"
+							"title": "Relationships",
+							"compact": true
 						}
 					},
 					{
@@ -3068,86 +3071,28 @@
 						}
 					}
 				],
-				"_layoutNote": "PqKlant and PqOrganisatie: one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity), the tab strip under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab.",
+				"_layoutNote": "PqKlant and PqOrganisatie: the contact strip and one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity) stand in the band across the page; the tab strip and the side column start under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab.",
+				"band": [
+					{ "widgetId": "client-contact-strip", "span": 12, "chrome": "bare" },
+					{ "widgetId": "client-summary-open-tickets", "span": 2 },
+					{ "widgetId": "client-summary-new-requests", "span": 2 },
+					{ "widgetId": "client-summary-sla-breached", "span": 2 },
+					{ "widgetId": "client-summary-sla-at-risk", "span": 2 },
+					{ "widgetId": "client-summary-open-leads", "span": 2 },
+					{ "widgetId": "client-summary-last-activity", "span": 2 }
+				],
 				"layout": [
-					{
-						"id": "1",
-						"widgetId": "client-summary-open-tickets",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
-					{
-						"id": "2",
-						"widgetId": "client-summary-new-requests",
-						"gridX": 2,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
-					{
-						"id": "3",
-						"widgetId": "client-summary-sla-breached",
-						"gridX": 4,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
-					{
-						"id": "4",
-						"widgetId": "client-summary-sla-at-risk",
-						"gridX": 6,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
-					{
-						"id": "5",
-						"widgetId": "client-summary-open-leads",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
-					{
-						"id": "6",
-						"widgetId": "client-summary-last-activity",
-						"gridX": 10,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
 					{
 						"id": "9",
 						"widgetId": "client-panels",
 						"gridX": 0,
-						"gridY": 1,
+						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
 					}
 				],
 				"bodyWidgets": [
-					{
-						"id": "contact-strip",
-						"component": "PartyContactStrip",
-						"placement": "before-body",
-						"_note": "PqKlant / PqOrganisatie: the warnings line (an aggression registration or a death is read before contact is made, pipelinq#2036) and the call, mail, directions and log-a-visit buttons in one card before the body (platform-phone-on-the-road).",
-						"props": {
-							"partyId": "@objectId",
-							"partyKind": "@object.type",
-							"phone": "@object.phone",
-							"email": "@object.email",
-							"address": "@object.address"
-						}
-					},
 					{
 						"id": "messaging-conversation",
 						"component": "MessagingConversationSection",
@@ -3710,7 +3655,7 @@
 						"organization": "Organisation"
 					},
 					"colorMap": {
-						"person": "info",
+						"person": "teal",
 						"organization": "teal"
 					}
 				},
