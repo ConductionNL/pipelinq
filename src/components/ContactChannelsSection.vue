@@ -352,6 +352,7 @@ export default {
 			required: true,
 			validator: (v) => ['client', 'contact'].includes(v),
 		},
+
 		/**
 		 * One list of label and line per channel, and one "Add channel" menu,
 		 * for the Overview of a contact page. The full lists with edit and
