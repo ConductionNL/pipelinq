@@ -299,7 +299,12 @@
 					"route": "MailingLists",
 					"separator": "/"
 				},
-				"headerMeta": "created on {@self.created|date}",
+				"headerMeta": {
+					"count": "confirmed",
+					"zero": "No confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}",
+					"one": "1 confirmed subscriber · created by {createdBy|user} on {createdAt|longdate}",
+					"other": "{count:confirmed} confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}"
+				},
 				"actionsMenu": {
 					"label": "More"
 				},
@@ -308,7 +313,17 @@
 					"list-signup-form",
 					"list-subscriber-view"
 				],
-				"sideColumnOrder": "declared"
+				"sideColumnOrder": "declared",
+				"headerMetaCounts": {
+					"confirmed": {
+						"register": "pipelinq",
+						"schema": "subscription",
+						"filter": {
+							"listId": "@objectId",
+							"state": "confirmed"
+						}
+					}
+				}
 			}
 		}
 	]

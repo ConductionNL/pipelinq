@@ -9090,7 +9090,20 @@ OC.L10N.register(
         "Store item": "Store-item",
         "The configuration objects installing the item writes: each a schema slug and an object.": "De configuratieobjecten die installeren schrijft: elk een schema-slug en een object.",
         "The item's current version; a newer one than the installed version is an update.": "De huidige versie van het item; een nieuwere dan de geïnstalleerde versie is een update.",
-        "One installable item of a pipelinq store: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector, with the configuration objects installing it writes. Read by the store plane (ADR-080), here or on a remote registry.": "Eén installeerbaar item van een pipelinq-store: een pipeline, routering via wachtrijen, catalogus, kassa-inrichting, loyaliteitsprogramma of connector, met de configuratieobjecten die installeren schrijft. Gelezen door de store (ADR-080), hier of in een externe registry."
+        "One installable item of a pipelinq store: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector, with the configuration objects installing it writes. Read by the store plane (ADR-080), here or on a remote registry.": "Eén installeerbaar item van een pipelinq-store: een pipeline, routering via wachtrijen, catalogus, kassa-inrichting, loyaliteitsprogramma of connector, met de configuratieobjecten die installeren schrijft. Gelezen door de store (ADR-080), hier of in een externe registry.",
+        "No confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}": "Geen bevestigde abonnees · aangemaakt door {createdBy|user} op {createdAt|longdate}",
+        "1 confirmed subscriber · created by {createdBy|user} on {createdAt|longdate}": "1 bevestigde abonnee · aangemaakt door {createdBy|user} op {createdAt|longdate}",
+        "{count:confirmed} confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}": "{count:confirmed} bevestigde abonnees · aangemaakt door {createdBy|user} op {createdAt|longdate}",
+        "Manage sign-ups": "Aanmeldingen beheren",
+        "Send confirmation link": "Bevestigingslink sturen",
+        "The person is added once they open the link.": "De persoon wordt toegevoegd zodra die de link opent.",
+        "Take {who} off this list": "{who} van deze lijst halen",
+        "A confirmation link went to {email}.": "Er is een bevestigingslink naar {email} gestuurd.",
+        "No link was sent. Check the address, and that the list takes sign-ups.": "Er is geen link gestuurd. Controleer het adres, en of de lijst aanmeldingen aanneemt.",
+        "{who} is off this list.": "{who} staat niet meer op deze lijst.",
+        "The member could not be taken off the list.": "De abonnee kon niet van de lijst worden gehaald.",
+        "Filter on {column}": "Filteren op {column}",
+        "Send the list's confirmation link, or take a member off the list.": "Stuur de bevestigingslink van de lijst, of haal een abonnee van de lijst."
     },
     "nplurals=2; plural=(n != 1);"
 )

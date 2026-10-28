@@ -9078,7 +9078,20 @@ OC.L10N.register(
         "Customer contact and government": "Customer contact and government",
         "Analysis and insight": "Analysis and insight",
         "Automation and organisation": "Automation and organisation",
-        "Infrastructure": "Infrastructure"
+        "Infrastructure": "Infrastructure",
+        "No confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}": "No confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}",
+        "1 confirmed subscriber · created by {createdBy|user} on {createdAt|longdate}": "1 confirmed subscriber · created by {createdBy|user} on {createdAt|longdate}",
+        "{count:confirmed} confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}": "{count:confirmed} confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}",
+        "Manage sign-ups": "Manage sign-ups",
+        "Send confirmation link": "Send confirmation link",
+        "The person is added once they open the link.": "The person is added once they open the link.",
+        "Take {who} off this list": "Take {who} off this list",
+        "A confirmation link went to {email}.": "A confirmation link went to {email}.",
+        "No link was sent. Check the address, and that the list takes sign-ups.": "No link was sent. Check the address, and that the list takes sign-ups.",
+        "{who} is off this list.": "{who} is off this list.",
+        "The member could not be taken off the list.": "The member could not be taken off the list.",
+        "Filter on {column}": "Filter on {column}",
+        "Send the list's confirmation link, or take a member off the list.": "Send the list's confirmation link, or take a member off the list."
     },
     "nplurals=2; plural=(n != 1);"
 )
