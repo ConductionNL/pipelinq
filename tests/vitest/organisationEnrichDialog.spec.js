@@ -74,6 +74,16 @@ describe('OrganisationEnrichDialog', () => {
 		expect(wrapper.emitted('close')).toBeTruthy()
 	})
 
+	it('draws the table in a card, the note as plain text and Download at the start of the footer', async () => {
+		const wrapper = mount(Dialog, { props: { selectedIds: ['c1', 'c2'] }, global })
+		await flushPromises()
+		expect(wrapper.find('.enrich__table-card [data-testid="enrich-proposals"]').exists()).toBe(true)
+		expect(wrapper.find('p[data-testid="enrich-note"]').exists()).toBe(true)
+		expect(wrapper.find('[data-testid="enrich-download"]').classes()).toContain('enrich__download')
+		const source = readFileSync(resolve(__dirname, '../../src/dialogs/OrganisationEnrichDialog.vue'), 'utf8')
+		expect(source).toMatch(/data-testid="enrich-apply"[\s\S]*?<Check :size="18" \/>/)
+	})
+
 	it('is a bulk action on the Clients list', () => {
 		const manifest = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'))
 		const clients = manifest.pages.find((p) => p.id === 'Clients')
