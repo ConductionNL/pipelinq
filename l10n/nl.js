@@ -2915,7 +2915,7 @@ OC.L10N.register(
         "Pipeline funnel": "Pijplijntrechter",
         "Pipeline is required": "Pipeline is verplicht",
         "Pipeline must have at least one non-closed stage": "Pipeline moet ten minste één niet-gesloten fase hebben",
-        "Pipeline settings": "Pipeline instellingen",
+        "Pipeline settings": "Pijplijninstellingen",
         "Pipeline stage & status changes": "Pipeline fase- & statuswijzigingen",
         "Pipeline stages": "Pipeline fasen",
         "Pipeline title is required": "Pipeline titel is verplicht",
