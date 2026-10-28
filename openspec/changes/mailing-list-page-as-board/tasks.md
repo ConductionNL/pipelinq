@@ -14,6 +14,6 @@
 
 ### Task 3: Manage sign-ups, sort and filter, the header line
 - **spec_ref**: `openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-list-s-sign-ups-are-managed-from-the-list`
-- **files**: `src/modals/ListSignupsManageModal.vue`, `src/components/marketing/SubscriptionsSection.vue`, `src/services/mailingListApi.js`, `src/manifest.d/76-marketing-lists.json`
+- **files**: `src/dialogs/ListSignupsManageDialog.vue`, `src/components/marketing/SubscriptionsSection.vue`, `src/services/mailingListApi.js`, `src/manifest.d/76-marketing-lists.json`
 - [x] Test first: `tests/vitest/listSignupsManage.spec.js`, `tests/vitest/mailingListPage.spec.js` (red)
 - [x] Implement

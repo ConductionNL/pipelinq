@@ -12,8 +12,10 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: { name: 'CnDialog', props: ['name', 'subtitle', 'width'], emits: ['closing'], template: '<div class="cn-dialog" :data-width="width"><slot /><slot name="actions" /></div>' },
+}))
 vi.mock('@nextcloud/vue', () => ({
-	NcModal: { name: 'NcModal', template: '<div><slot /></div>' },
 	NcNoteCard: { name: 'NcNoteCard', props: ['type'], template: '<div class="note" :data-type="type"><slot /></div>' },
 	NcButton: { name: 'NcButton', template: '<button v-bind="$attrs"><slot /></button>' },
 	NcTextField: { name: 'NcTextField', props: ['modelValue'], emits: ['update:modelValue'], template: '<input class="email" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)">' },
@@ -21,7 +23,7 @@ vi.mock('@nextcloud/vue', () => ({
 const api = vi.hoisted(() => ({ inviteToList: vi.fn(async () => ({})), unsubscribeContact: vi.fn(async () => ({})) }))
 vi.mock('../../src/services/mailingListApi.js', () => api)
 
-const { default: ListSignupsManageModal } = await import('../../src/modals/ListSignupsManageModal.vue')
+const { default: ListSignupsManageDialog } = await import('../../src/dialogs/ListSignupsManageDialog.vue')
 const fill = (s, v = {}) => s.replace(/\{(\w+)\}/g, (_, k) => v[k])
 
 const ROWS = [
@@ -29,9 +31,16 @@ const ROWS = [
 	{ id: 's2', email: 'balie@sportcentrum.example', state: 'pending' },
 ]
 
-const mountModal = () => mount(ListSignupsManageModal, { props: { listId: 'l-1', subscriptions: ROWS }, global: { mocks: { t: (_a, s, v) => fill(s, v) } } })
+const mountModal = () => mount(ListSignupsManageDialog, { props: { listId: 'l-1', subscriptions: ROWS }, global: { mocks: { t: (_a, s, v) => fill(s, v) } } })
 
 describe('managing a list\'s sign-ups', () => {
+	it('is a board-look form dialog with Close in its actions', () => {
+		const wrapper = mountModal()
+		expect(wrapper.find('.cn-dialog').attributes('data-width')).toBe('form')
+		expect(wrapper.find('[data-testid="list-signups-close"]').exists()).toBe(true)
+	})
+
+
 	it('sends the list\'s confirmation link to an address', async () => {
 		const wrapper = mountModal()
 		await wrapper.find('.email').setValue('nieuw@ondernemer.example')

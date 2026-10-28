@@ -8592,7 +8592,8 @@ OC.L10N.register(
         "No link was sent. Check the address, and that the list takes sign-ups.": "No link was sent. Check the address, and that the list takes sign-ups.",
         "{who} is off this list.": "{who} is off this list.",
         "The member could not be taken off the list.": "The member could not be taken off the list.",
-        "Filter on {column}": "Filter on {column}"
+        "Filter on {column}": "Filter on {column}",
+        "Send the list's confirmation link, or take a member off the list.": "Send the list's confirmation link, or take a member off the list."
     },
     "nplurals=2; plural=(n != 1);"
 )

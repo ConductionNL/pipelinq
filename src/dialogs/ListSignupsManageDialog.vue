@@ -10,13 +10,13 @@
   - @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-list-s-sign-ups-are-managed-from-the-list
   -->
 <template>
-	<NcModal
+	<CnDialog
 		:name="t('pipelinq', 'Manage sign-ups')"
-		size="normal"
-		@close="$emit('close')">
+		:subtitle="t('pipelinq', 'Send the list\'s confirmation link, or take a member off the list.')"
+		width="form"
+		data-testid="list-signups-dialog"
+		@closing="$emit('close')">
 		<div class="list-signups">
-			<h2>{{ t('pipelinq', 'Manage sign-ups') }}</h2>
-
 			<NcNoteCard v-if="message" :type="messageType">
 				{{ message }}
 			</NcNoteCard>
@@ -53,17 +53,23 @@
 				</li>
 			</ul>
 		</div>
-	</NcModal>
+		<template #actions>
+			<NcButton data-testid="list-signups-close" @click="$emit('close')">
+				{{ t('pipelinq', 'Close') }}
+			</NcButton>
+		</template>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcModal, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcNoteCard, NcTextField } from '@nextcloud/vue'
 import { inviteToList, unsubscribeContact } from '../services/mailingListApi.js'
 
 export default {
-	name: 'ListSignupsManageModal',
+	name: 'ListSignupsManageDialog',
 
-	components: { NcButton, NcModal, NcNoteCard, NcTextField },
+	components: { CnDialog, NcButton, NcNoteCard, NcTextField },
 
 	props: {
 		/** The mailing list. */
@@ -156,7 +162,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	padding: 20px;
 }
 
 .list-signups__add {

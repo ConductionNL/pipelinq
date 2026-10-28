@@ -34,7 +34,7 @@ vi.mock('@nextcloud/vue', () => ({
 	NcLoadingIcon: { name: 'NcLoadingIcon', template: '<span />' },
 	NcNoteCard: { name: 'NcNoteCard', template: '<div><slot /></div>' },
 }))
-vi.mock('../../src/modals/ListSignupsManageModal.vue', () => ({ default: { name: 'ListSignupsManageModal', template: '<div class="signups-modal" />' } }))
+vi.mock('../../src/dialogs/ListSignupsManageDialog.vue', () => ({ default: { name: 'ListSignupsManageDialog', template: '<div class="signups-modal" />' } }))
 vi.mock('../../src/modals/SubscriptionManageModal.vue', () => ({ default: { name: 'SubscriptionManageModal', template: '<div />' } }))
 vi.mock('../../src/services/mailingListApi.js', () => ({
 	fetchListSubscriptions: vi.fn(async () => ({

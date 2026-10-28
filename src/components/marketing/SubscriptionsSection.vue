@@ -144,7 +144,7 @@
 			</div>
 		</template>
 
-		<ListSignupsManageModal
+		<ListSignupsManageDialog
 			v-if="showSignups"
 			:listId="listId"
 			:subscriptions="rows"
@@ -169,7 +169,7 @@ import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import MenuDown from 'vue-material-design-icons/MenuDown.vue'
 import MenuUp from 'vue-material-design-icons/MenuUp.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
-import ListSignupsManageModal from '../../modals/ListSignupsManageModal.vue'
+import ListSignupsManageDialog from '../../dialogs/ListSignupsManageDialog.vue'
 import SubscriptionManageModal from '../../modals/SubscriptionManageModal.vue'
 import {
 	fetchContactSubscriptions,
@@ -187,7 +187,7 @@ export default {
 		AccountGroup,
 		CnDetailCard,
 		FilterOutline,
-		ListSignupsManageModal,
+		ListSignupsManageDialog,
 		MenuDown,
 		MenuUp,
 		NcActionCheckbox,

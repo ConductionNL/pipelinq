@@ -8610,6 +8610,7 @@
         "No link was sent. Check the address, and that the list takes sign-ups.": "Er is geen link gestuurd. Controleer het adres, en of de lijst aanmeldingen aanneemt.",
         "{who} is off this list.": "{who} staat niet meer op deze lijst.",
         "The member could not be taken off the list.": "De abonnee kon niet van de lijst worden gehaald.",
-        "Filter on {column}": "Filteren op {column}"
+        "Filter on {column}": "Filteren op {column}",
+        "Send the list's confirmation link, or take a member off the list.": "Stuur de bevestigingslink van de lijst, of haal een abonnee van de lijst."
     }
 }
