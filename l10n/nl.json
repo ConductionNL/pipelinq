@@ -8621,6 +8621,8 @@
         "When the person was checked in at the door; empty while they have not come in.": "Wanneer de persoon bij de deur is ingecheckt; leeg zolang die niet binnen is.",
         "Reminder: %s": "Herinnering: %s",
         "You are registered for %1$s on %2$s at %3$s. We look forward to seeing you.": "U bent aangemeld voor %1$s op %2$s in %3$s. We zien u graag.",
-        "You may not send this event's reminder.": "U mag de herinnering van dit evenement niet versturen."
+        "You may not send this event's reminder.": "U mag de herinnering van dit evenement niet versturen.",
+        "Built with portaliq; every sign-up arrives here as a registration.": "Gebouwd met portaliq; elke aanmelding komt hier binnen als registratie.",
+        "No registration form yet.": "Nog geen aanmeldformulier."
     }
 }
