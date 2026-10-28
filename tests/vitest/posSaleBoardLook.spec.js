@@ -185,6 +185,7 @@ describe('the new sale (PqKassa)', () => {
 			{ id: 'tx-other', client: 'client-other', status: 'settled', reference: 'POS-2026-0001', total: 5 },
 		]
 		collections.cashShift = [{ status: 'open', drawer: 'Balie 2, stadskantoor', floatAt: '2026-10-07T08:30:00' }]
+		collections.posTransactionLine = [{ id: 'l1', transaction: 'tx-0871' }, { id: 'l2', transaction: 'tx-other' }]
 		const wrapper = mount(PosTransactionForm, {
 			global: { mocks: { t: globalThis.t, $route: { params: { id: 'tx-parked' } }, $router: { push: vi.fn() } } },
 		})
@@ -194,7 +195,7 @@ describe('the new sale (PqKassa)', () => {
 		expect(page.props('typePill')).toEqual({ text: 'Draft' })
 		expect(page.props('object')).toMatchObject({ cashierName: 'Pieter Jansen', shiftSince: '08:30' })
 		expect(wrapper.vm.selectedCustomer).toMatchObject({ id: 'client-sanne', name: 'Sanne de Vries', isClient: true })
-		expect(wrapper.vm.history.map((row) => row.reference)).toEqual(['POS-2026-0871'])
+		expect(wrapper.vm.history.map((row) => [row.reference, row.itemCount])).toEqual([['POS-2026-0871', 1]])
 		expect(wrapper.vm.loyalty).toEqual({ accountId: 'acc-1', balance: 340, pointValue: 0.05 })
 	})
 

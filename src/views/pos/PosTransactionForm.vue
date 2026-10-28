@@ -1046,12 +1046,31 @@ export default {
 				await this.objectStore.fetchCollection('posTransaction', { client: clientId, _limit: 50 })
 				this.history = collectionRows(this.objectStore.getCollection('posTransaction'))
 					.filter((tx) => tx.client === clientId && uuidOf(tx) !== this.transactionId && ['confirmed', 'settled', 'refunded'].includes(tx.status))
-					.map((tx) => ({ id: uuidOf(tx), createdAt: tx.confirmedAt || tx.settledAt, reference: tx.reference, itemCount: tx.itemCount, total: tx.total, tenderType: tx.tenderType }))
+					.map((tx) => ({ id: uuidOf(tx), createdAt: tx.confirmedAt || tx.settledAt, reference: tx.reference, total: tx.total, tenderType: tx.tenderType }))
 					.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+				await this.countHistoryLines()
 			} catch {
 				this.history = []
 			}
 			this.loyalty = await this.loadLoyalty(clientId)
+		},
+
+		/**
+		 * Count the lines of the sales the history shows: their Items column.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async countHistoryLines() {
+			const shown = this.history.slice(0, 5)
+			for (const row of shown) {
+				try {
+					await this.objectStore.fetchCollection('posTransactionLine', { transaction: row.id, _limit: 500 })
+					row.itemCount = collectionRows(this.objectStore.getCollection('posTransactionLine')).filter((line) => line.transaction === row.id).length
+				} catch {
+					row.itemCount = 0
+				}
+			}
+			this.history = [...this.history]
 		},
 
 		/**
