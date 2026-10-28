@@ -595,13 +595,13 @@ const registry = {
 	},
 	ListSignupFormWidget: {
 		kind: 'widget',
-		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId })),
+		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId }), { card: true }),
 		...PANEL_WIDGET_META,
 		_note: 'The embed code of a mailing list sign-up form, posting to the public subscribe endpoint, with a copy button. Side card on MailingListDetail (PqMailinglijst).',
 	},
 	ListSubscriberViewWidget: {
 		kind: 'widget',
-		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId })),
+		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId }), { card: true }),
 		...PANEL_WIDGET_META,
 		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
