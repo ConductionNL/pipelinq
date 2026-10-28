@@ -96,7 +96,7 @@
 			"register": "pipelinq",
 			"schema": "lead",
 			"where": {
-				"title": "Verlenging sportvelden 2027"
+				"id": "{{object:lead-sportvelden-verlenging.id}}"
 			},
 			"set": {
 				"contact": "{{object:contact-joke-smit.id}}"
@@ -107,7 +107,7 @@
 			"register": "pipelinq",
 			"schema": "lead",
 			"where": {
-				"title": "Nieuw kunstgrasveld 2027"
+				"id": "{{object:lead-sportclub-kunstgrasveld.id}}"
 			},
 			"set": {
 				"contact": "{{object:contact-joke-smit.id}}"
