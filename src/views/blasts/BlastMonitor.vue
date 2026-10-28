@@ -695,6 +695,10 @@ export default {
 	gap: 4px;
 }
 
+.blast-monitor__card.blast-monitor__total {
+	padding: 16px 18px;
+}
+
 .blast-monitor__total-label,
 .blast-monitor__total-caption {
 	color: var(--color-text-maxcontrast);
