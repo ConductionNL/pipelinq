@@ -64,6 +64,14 @@ describe('ClientDetail side cards after Relations', () => {
 		expect(knowledge.visibleWhen).toBeUndefined()
 		expect(knowledge.content).toMatchObject({ endpoint: '/apps/openregister/api/integrations/xwiki/search', queryParam: 'q', placeholder: 'Search the knowledge base' })
 		expect(nl['Knowledge base']).toBe('Kennisbank')
+		expect(knowledge.content.suggestFrom).toEqual({
+			register: 'pipelinq',
+			schema: 'ticket',
+			filter: { client: '@objectId', status: { in: ['new', 'in_progress', 'awaiting_customer'] } },
+			sort: { field: 'occurredAt', dir: 'desc' },
+			path: 'title',
+		})
+		expect(knowledge.content.suggestLimit).toBe(2)
 	})
 
 	it('has the client\'s business endpoint', () => {

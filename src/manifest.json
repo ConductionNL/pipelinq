@@ -3525,13 +3525,33 @@
 						"id": "side-knowledge",
 						"type": "kb-search",
 						"title": "Knowledge base",
-						"_note": "PqKlant/PqOrganisatie Kennisbank: the knowledge base search as a side card (board look: placeholder and search icon).",
+						"_note": "PqKlant/PqOrganisatie Kennisbank: the knowledge base search as a side card (board look: placeholder and search icon), with the two best articles for the subject of the client's most recent open ticket or contact moment (nc-vue suggestFrom); nothing shows without a match.",
 						"content": {
 							"endpoint": "/apps/openregister/api/integrations/xwiki/search",
 							"queryParam": "q",
 							"minChars": 3,
 							"limit": 5,
-							"placeholder": "Search the knowledge base"
+							"placeholder": "Search the knowledge base",
+							"suggestFrom": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"filter": {
+									"client": "@objectId",
+									"status": {
+										"in": [
+											"new",
+											"in_progress",
+											"awaiting_customer"
+										]
+									}
+								},
+								"sort": {
+									"field": "occurredAt",
+									"dir": "desc"
+								},
+								"path": "title"
+							},
+							"suggestLimit": 2
 						}
 					},
 					"client-related",

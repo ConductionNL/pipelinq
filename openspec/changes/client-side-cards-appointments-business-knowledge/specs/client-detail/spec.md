@@ -17,3 +17,11 @@ GET /api/clients/{id}/business SHALL read the client with the caller's rights an
 - GIVEN a resident with one planned project and no invoices in shillinq
 - WHEN the business card loads
 - THEN it reads "1 project: <title>, planned. No invoices for this resident." with a link Further in Shillinq
+
+### Requirement: The knowledge base card suggests articles for the client's latest subject
+The Knowledge base card SHALL show, under the empty search, the two best knowledge base articles for the subject of the client's most recent open ticket or contact moment, and nothing when there is no such subject or no match.
+
+#### Scenario: Sanne's open question
+- GIVEN Sanne de Vries's most recent open ticket is "Vraag over vergunning straatfeest Parkstraat"
+- WHEN her client page opens
+- THEN the Knowledge base card lists the two best matching articles under the search
