@@ -644,7 +644,8 @@ export default {
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 				.map((l) => ({ ...l, _key: this.nextKey() }))
 			if (this.transaction.customer) {
-				this.selectedCustomer = { id: this.transaction.customer, name: tx.customerName || this.transaction.customer, doNotContact: false }
+				const name = tx.customerName || await this.contactName(this.transaction.customer)
+				this.selectedCustomer = { id: this.transaction.customer, name: name || this.transaction.customer, doNotContact: false }
 				await this.loadCustomerFacts(this.transaction.customer)
 			} else if (this.transaction.client) {
 				await this.loadClientAsCustomer(this.transaction.client)
@@ -1028,6 +1029,21 @@ export default {
 		},
 
 		/**
+		 * The name of the contact a sale's customer points at.
+		 *
+		 * @param {string} contactId The contact.
+		 * @return {Promise<string>} The name, '' when it cannot be read.
+		 */
+		async contactName(contactId) {
+			try {
+				const contact = await this.objectStore.fetchObject('contact', contactId)
+				return contact?.name || ''
+			} catch {
+				return ''
+			}
+		},
+
+		/**
 		 * A sale for a client (an account customer) shows that client as the
 		 * customer, with the client's loyalty account and earlier sales.
 		 *
@@ -1194,15 +1210,16 @@ export default {
 }
 
 .pos-totals {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	column-gap: 16px;
+	row-gap: 4px;
+	align-items: baseline;
 	margin: 0 0 12px;
 }
 
 .pos-totals__row {
-	display: grid;
-	grid-template-columns: 72px 1fr;
-	gap: 12px;
-	align-items: baseline;
-	padding: 2px 0;
+	display: contents;
 }
 
 .pos-totals__row dt {

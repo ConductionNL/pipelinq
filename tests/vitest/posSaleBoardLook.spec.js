@@ -16,6 +16,8 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
 
 /**
  * A stub that renders its slots and keeps its props readable.
@@ -197,6 +199,23 @@ describe('the new sale (PqKassa)', () => {
 		expect(wrapper.vm.selectedCustomer).toMatchObject({ id: 'client-sanne', name: 'Sanne de Vries', isClient: true })
 		expect(wrapper.vm.history.map((row) => [row.reference, row.itemCount])).toEqual([['POS-2026-0871', 1]])
 		expect(wrapper.vm.loyalty).toEqual({ accountId: 'acc-1', balance: 340, pointValue: 0.05 })
+	})
+
+	it('names the customer contact of a parked sale, not its id', async () => {
+		records['posTransaction/tx-contact'] = { id: 'tx-contact', status: 'parked', terminalId: 'Balie 2, stadskantoor', cashier: 'pieter', customer: 'contact-sanne' }
+		records['contact/contact-sanne'] = { name: 'Sanne de Vries' }
+		const wrapper = mount(PosTransactionForm, {
+			global: { mocks: { t: globalThis.t, $route: { params: { id: 'tx-contact' } }, $router: { push: vi.fn() } } },
+		})
+		await flushPromises()
+		expect(wrapper.vm.selectedCustomer).toMatchObject({ id: 'contact-sanne', name: 'Sanne de Vries' })
+	})
+
+	it('lines the totals up in a label column as wide as the longest label', () => {
+		const source = readFileSync(resolve(__dirname, '../../src/views/pos/PosTransactionForm.vue'), 'utf8')
+		const rule = (selector) => (source.match(new RegExp(selector.replace(/[.]/g, '\\.') + ' \\{([^}]*)\\}')) || [])[1] || ''
+		expect(rule('.pos-totals')).toMatch(/grid-template-columns: max-content 1fr/)
+		expect(rule('.pos-totals__row')).toMatch(/display: contents/)
 	})
 
 	it('puts a gift card sold in the dialog on the sale without VAT', async () => {
