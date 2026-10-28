@@ -88,7 +88,15 @@
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
 				"language": "nl",
-				"correspondenceLanguage": "nl"
+				"correspondenceLanguage": "nl",
+				"phone": "078 612 33 41",
+				"phones": [
+					{
+						"kind": "private",
+						"value": "078 612 33 41",
+						"primary": true
+					}
+				]
 			}
 		},
 		{

@@ -4574,7 +4574,7 @@
 					{ "key": "assigneeUserId", "label": "For", "formatter": "userDisplayName" },
 					{ "key": "deadline", "label": "Time limit", "formatter": "relativeDate", "formatterOptions": { "time": true } },
 					{ "key": "priority", "label": "Priority", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "high": "error", "normal": "default", "low": "default" } } },
-					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "open": "primary", "in_progress": "warning", "completed": "success", "expired": "error" } } }
+					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "open": "primary", "in_progress": "purple", "completed": "success", "expired": "error" } } }
 				],
 				"footerNote": "A task that passes its deadline expires, and its handler and team lead are told.",
 				"filterMenu": true,
@@ -4603,16 +4603,51 @@
 						"content": {
 							"columns": 2,
 							"overrides": {
-								"assigneeUserId": { "formatter": "userDisplayName" },
-								"createdBy": { "formatter": "userDisplayName" }
-							}
+								"assigneeUserId": {
+									"formatter": "userDisplayName"
+								},
+								"createdBy": {
+									"formatter": "userDisplayName"
+								},
+								"type": {
+									"formatter": "enumLabel"
+								},
+								"status": {
+									"formatter": "enumLabel"
+								},
+								"priority": {
+									"formatter": "enumText"
+								},
+								"deadline": {
+									"formatter": "relativeDate",
+									"formatterOptions": {
+										"time": true
+									}
+								},
+								"description": {
+									"gridColumn": 2
+								},
+								"contactMomentSummary": {
+									"gridColumn": 2
+								}
+							},
+							"title": "Task",
+							"hideEmpty": true,
+							"include": [
+								"type",
+								"status",
+								"priority",
+								"deadline",
+								"assigneeUserId",
+								"assigneeGroupId",
+								"callbackPhoneNumber",
+								"preferredTimeSlot",
+								"attempts",
+								"resultText",
+								"description",
+								"contactMomentSummary"
+							]
 						}
-					},
-					{
-						"id": "task-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
 					},
 					{
 						"id": "task-files",
@@ -4620,47 +4655,151 @@
 						"integrationId": "files",
 						"title": "Documents",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "task-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "task-panels",
+						"type": "tabs",
+						"title": "Task",
+						"content": {
+							"ariaLabel": "Task",
+							"tabs": [
+								{
+									"widgetIds": [
+										"task-data",
+										"task-files"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "task-history",
+									"label": "History",
+									"countFrom": "widget"
+								}
+							]
+						}
+					},
+					{
+						"id": "task-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "task-data",
+						"widgetId": "task-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 4
-					},
-					{
-						"id": "2",
-						"widgetId": "task-related",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "3",
-						"widgetId": "task-files",
-						"gridX": 0,
-						"gridY": 4,
 						"gridWidth": 12,
-						"gridHeight": 3
+						"gridHeight": 8
 					}
 				],
-				"lifecycleActions": { "field": "status" },
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "audit",
-							"label": "History",
-							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+				"lifecycleActions": {
+					"field": "status"
+				},
+				"sideColumn": [
+					"task-related"
+				],
+				"headerCard": true,
+				"breadcrumb": {
+					"label": "Tasks",
+					"route": "Tasks"
+				},
+				"titleField": "subject",
+				"headerMeta": "due {deadline|datetime}",
+				"typePill": {
+					"field": "type",
+					"labels": {
+						"callbackRequest": "Callback request",
+						"followUpTask": "Follow-up task",
+						"informationRequest": "Information request"
+					},
+					"colorMap": {
+						"callbackRequest": "purple",
+						"followUpTask": "info",
+						"informationRequest": "teal"
+					}
+				},
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"open": "Open",
+						"in_progress": "In progress",
+						"completed": "Completed",
+						"expired": "Expired"
+					},
+					"colorMap": {
+						"open": "info",
+						"in_progress": "purple",
+						"completed": "success",
+						"expired": "error"
+					}
+				},
+				"headerActions": [
+					{
+						"id": "task-call",
+						"type": "navigate",
+						"label": "Call the customer",
+						"icon": "Phone",
+						"target": "tel:@object.callbackPhoneNumber",
+						"visibleWhen": {
+							"field": "callbackPhoneNumber",
+							"op": "notEmpty"
 						}
-					]
-				}
+					}
+				],
+				"quickActions": [
+					"task-call"
+				],
+				"nextStep": {
+					"title": "What now?",
+					"stages": {
+						"open": {
+							"title": "What now? Call the customer back",
+							"checklist": [
+								{
+									"label": "A callback number is known",
+									"doneField": "callbackPhoneNumber"
+								},
+								{
+									"label": "The customer is known",
+									"doneField": "clientId"
+								},
+								{
+									"label": "Someone is on it",
+									"doneField": "assigneeUserId"
+								}
+							],
+							"after": "Then: write down the result and finish the task"
+						},
+						"in_progress": {
+							"title": "What now? Try again before the deadline",
+							"checklist": [
+								{
+									"label": "A callback number is known",
+									"doneField": "callbackPhoneNumber"
+								},
+								{
+									"label": "An attempt is logged",
+									"doneField": "attempts"
+								}
+							],
+							"after": "Then: write down the result and finish the task"
+						}
+					}
+				},
+				"primaryActionByStage": {
+					"open": "task-call",
+					"in_progress": "task-call"
+				},
+				"_boardNote": "Board PqTaak: the subject as the title, kind and status pills, the deadline on the meta line, Call as the primary action, the next step per stage, the task and its documents in an Overview tab beside History, and the related records in the side column."
 			}
 		},
 		{
@@ -5960,99 +6099,125 @@
 					{
 						"id": "z-data",
 						"type": "data",
-						"title": "Z-report",
-						"content": { "columns": 2 }
+						"title": "Z report",
+						"content": {
+							"title": "Z report",
+							"columns": 2,
+							"hideEmpty": true,
+							"include": [
+								"reference",
+								"reportDate",
+								"terminalId",
+								"status",
+								"subtotal",
+								"discountTotal",
+								"total",
+								"bookkeepingStatus"
+							],
+							"overrides": {
+							"reference": {
+								"label": "Identifier"
+							},
+							"reportDate": {
+								"label": "Date",
+								"formatter": "date"
+							},
+							"terminalId": {
+								"label": "Till"
+							},
+								"status": {
+									"formatter": "enumLabel"
+								},
+								"bookkeepingStatus": {
+									"formatter": "enumLabel"
+								},
+								"subtotal": {
+									"formatter": "objectCurrency",
+									"formatterOptions": {
+										"decimals": 2
+									}
+								},
+								"discountTotal": {
+									"formatter": "objectCurrency",
+									"formatterOptions": {
+										"decimals": 2
+									}
+								},
+								"total": {
+									"formatter": "objectCurrency",
+									"formatterOptions": {
+										"decimals": 2
+									}
+								}
+							}
+						}
 					},
 					{
-						"id": "z-kpis-day-total",
-						"type": "stats-block",
+						"id": "z-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "z-panels",
+						"type": "tabs",
+						"title": "Z report",
+						"content": {
+							"ariaLabel": "Z report",
+							"tabs": [
+								{
+									"widgetId": "z-data",
+									"label": "Overview"
+								},
+								{
+									"widgetId": "z-history",
+									"label": "History"
+								}
+							]
+						}
+					},
+					{
+						"id": "z-day-total",
+						"type": "data",
 						"title": "Day total",
-						"icon": "Cash",
 						"content": {
-							"entries": [
-								{
-									"title": "Day total",
-									"register": "pipelinq",
-									"schema": "posZReport",
-									"metric": "sum",
-									"field": "total",
-									"currency": "EUR",
-									"filter": { "id": "@objectId" }
+							"title": "Day total",
+							"columns": 1,
+							"include": [
+								"total",
+								"totalTax",
+								"transactionCount"
+							],
+							"overrides": {
+							"transactionCount": {
+								"label": "Transactions"
+							},
+								"total": {
+									"formatter": "objectCurrency",
+									"formatterOptions": {
+										"decimals": 2
+									}
+								},
+								"totalTax": {
+								"label": "VAT",
+									"formatter": "objectCurrency",
+									"formatterOptions": {
+										"decimals": 2
+									}
 								}
-							]
-						}
-					},
-					{
-						"id": "z-kpis-vat",
-						"type": "stats-block",
-						"title": "VAT",
-						"icon": "Cash",
-						"content": {
-							"entries": [
-								{
-									"title": "VAT",
-									"register": "pipelinq",
-									"schema": "posZReport",
-									"metric": "sum",
-									"field": "totalTax",
-									"currency": "EUR",
-									"filter": { "id": "@objectId" }
-								}
-							]
-						}
-					},
-					{
-						"id": "z-kpis-transactions",
-						"type": "stats-block",
-						"title": "Transactions",
-						"icon": "Cash",
-						"content": {
-							"entries": [
-								{
-									"title": "Transactions",
-									"register": "pipelinq",
-									"schema": "posZReport",
-									"metric": "sum",
-									"field": "transactionCount",
-									"countLabel": "transactions",
-									"filter": { "id": "@objectId" }
-								}
-							]
+							},
+							"editable": false
 						}
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "z-data",
+						"widgetId": "z-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 4
-					},
-					{
-						"id": "2-1",
-						"widgetId": "z-kpis-day-total",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-2",
-						"widgetId": "z-kpis-vat",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-3",
-						"widgetId": "z-kpis-transactions",
-						"gridX": 8,
-						"gridY": 4,
-						"gridWidth": 4,
-						"gridHeight": 2
+						"gridWidth": 12,
+						"gridHeight": 8
 					}
 				],
 				"bodyWidgets": [
@@ -6061,21 +6226,41 @@
 						"component": "ZReportBookkeepingSection",
 						"title": "Boekhoudkundige afhandeling",
 						"placement": "after-data",
-						"props": { "zReportId": "@objectId" }
+						"props": {
+							"zReportId": "@objectId"
+						}
 					}
 				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "audit",
-							"label": "History",
-							"icon": "History",
-							"widgets": [{ "type": "audit" }]
-						}
-					]
-				}
+				"titleField": "reference",
+				"headerCard": true,
+				"breadcrumb": {
+					"label": "Z reports",
+					"route": "ZReports"
+				},
+				"headerMeta": "{terminalId} · {reportDate|date} · {transactionCount} transactions",
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"draft": "Draft",
+						"ready": "Ready",
+						"submitted": "Submitted",
+						"posted": "Posted",
+						"failed": "Failed",
+						"reconciled": "Reconciled"
+					},
+					"colorMap": {
+						"draft": "default",
+						"ready": "info",
+						"submitted": "info",
+						"posted": "success",
+						"failed": "error",
+						"reconciled": "success"
+					}
+				},
+				"_boardNote": "Board PqZRapport: the reference as the title, the till, day and transactions on the meta line, the status pill, the report and its bookkeeping in an Overview tab with History beside it, and the day total in the side column.",
+				"sideColumn": [
+					"z-day-total"
+				]
 			}
 		},
 		{
@@ -7359,7 +7544,7 @@
 								},
 								"colorMap": {
 									"new": "info",
-									"in_progress": "warning",
+									"in_progress": "purple",
 									"awaiting_customer": "default",
 									"resolved": "success",
 									"completed": "success"
@@ -7506,7 +7691,7 @@
 								},
 								"colorMap": {
 									"new": "info",
-									"in_progress": "warning",
+									"in_progress": "purple",
 									"awaiting_customer": "default",
 									"resolved": "success",
 									"completed": "success"
@@ -7642,7 +7827,7 @@
 								},
 								"colorMap": {
 									"new": "info",
-									"in_progress": "warning",
+									"in_progress": "purple",
 									"awaiting_customer": "default",
 									"resolved": "success",
 									"completed": "success"
@@ -8472,9 +8657,9 @@
 			"route": "/flows/:id",
 			"type": "flow",
 			"title": "Flow",
-			"config": { "app": "pipelinq" },
+			"config": { "app": "pipelinq", "saveAsVersion": true },
 			"sidebarComponent": "FlowDetailSidebar",
-			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors procest/src/manifest.json:FlowDetail."
+			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors procest/src/manifest.json:FlowDetail. PqFlow edits the flow in place: a published flow is not locked behind a read-only notice; Save publishes the edits as the next version and runs already started keep theirs (CnFlowBoard saveAsVersion)."
 		}
 	]
 }

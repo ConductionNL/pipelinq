@@ -78,7 +78,10 @@
 
 			<div class="skill-add">
 				<NcButton @click="addSkill">
-					{{ t('pipelinq', '+ Add Skill') }}
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'Add skill') }}
 				</NcButton>
 			</div>
 		</div>
@@ -96,11 +99,13 @@
 <script>
 import { CnDeleteDialog } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import { useSkillsStore } from '../../store/modules/skills.js'
 
 export default {
 	name: 'SkillSettings',
 	components: {
+		Plus,
 		CnDeleteDialog,
 		NcButton,
 		NcLoadingIcon,
