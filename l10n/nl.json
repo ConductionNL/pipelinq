@@ -8599,6 +8599,15 @@
         "What now? Try again before the deadline": "Wat nu? Opnieuw proberen voor de termijn",
         "An attempt is logged": "Er is een poging vastgelegd",
         "Call the customer": "Bellen",
-        "Mailbox": "Mail"
+        "Mailbox": "Mail",
+        "Nextcloud Contacts": "Nextcloud Contacten",
+        "Not in Contacts": "Niet in Contacten",
+        "Update in Contacts": "Bijwerken in Contacten",
+        "This record has no card in an address book yet.": "Dit record heeft nog geen kaart in een adresboek.",
+        "Card in the address book {book}.": "Kaart in het adresboek {book}.",
+        "Card in the address book {book}, updated {when}.": "Kaart in het adresboek {book}, {when} bijgewerkt.",
+        "today {time}": "vandaag {time}",
+        "Social profile": "Sociaal profiel",
+        "preferred": "voorkeur"
     }
 }

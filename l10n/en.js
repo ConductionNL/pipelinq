@@ -8581,7 +8581,16 @@ OC.L10N.register(
         "What now? Try again before the deadline": "What now? Try again before the deadline",
         "An attempt is logged": "An attempt is logged",
         "Call the customer": "Call the customer",
-        "Mailbox": "Mail"
+        "Mailbox": "Mail",
+        "Nextcloud Contacts": "Nextcloud Contacts",
+        "Not in Contacts": "Not in Contacts",
+        "Update in Contacts": "Update in Contacts",
+        "This record has no card in an address book yet.": "This record has no card in an address book yet.",
+        "Card in the address book {book}.": "Card in the address book {book}.",
+        "Card in the address book {book}, updated {when}.": "Card in the address book {book}, updated {when}.",
+        "today {time}": "today {time}",
+        "Social profile": "Social profile",
+        "preferred": "preferred"
     },
     "nplurals=2; plural=(n != 1);"
 )

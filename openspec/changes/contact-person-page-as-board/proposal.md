@@ -17,6 +17,8 @@ items). The board is the UI canon (decision 130), so it replaces the seven-tab l
 - The side column: open deals, related, and a History card with the three newest changes (nextcloud-vue
   detail-side-column-order gives the timeline its `limit` and leaves reads out).
 
-Not in this change: the "Nextcloud Contacten" sync card (no such status exists yet: a feature), the compact look of
-Relaties and Kanalen in Overview, the Gerelateerd card's link list, and the Waarschuwingen card, which the board does not
-draw but which holds the add-a-warning action (board call).
+- A Nextcloud Contacten side card: synced or not, the address book, the last change, and "Bijwerken in Contacten"
+  (write-back), from a new `GET /api/contacts-sync/status`.
+- Relationships and Channels in Overview in a compact look (`content.compact`), the tabs keep the full lists.
+
+Not in this change: the Gerelateerd card's link list, and the Waarschuwingen card stays (users keep features; the board is amended to draw it).

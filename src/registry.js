@@ -47,6 +47,7 @@ import ContactChannelsSection from './components/ContactChannelsSection.vue'
 import ContactLinks from './components/ContactLinks.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
+import ContactsSyncSection from './components/ContactsSyncSection.vue'
 import CustomerReplySection from './components/CustomerReplySection.vue'
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
@@ -725,6 +726,7 @@ const registry = {
 				entityId: objectId,
 				entityType: content.entityType || 'contact',
 				entityName: objectData.name || '',
+				compact: content.compact === true,
 			}),
 			{ card: true },
 		),
@@ -816,6 +818,21 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'ResidentViewSection as a tab widget.',
 	},
+	ContactsSyncWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactsSyncWidget',
+			ContactsSyncSection,
+			({ objectId, objectData, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+				contactsUid: objectData.contactsUid || '',
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The record\'s card in Nextcloud Contacts: synced or not, its address book, its last change, and Update in Contacts (write-back). Side card on ContactDetail (PqContactpersoon).',
+	},
 	ContactChannelsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -824,6 +841,7 @@ const registry = {
 			({ objectId, content }) => ({
 				entityId: objectId,
 				entityType: content.entityType || 'contact',
+				compact: content.compact === true,
 			}),
 			{ card: true },
 		),

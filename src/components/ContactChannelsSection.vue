@@ -25,6 +25,32 @@
 	<div class="contact-channels-section">
 		<NcLoadingIcon v-if="loading" :size="24" />
 
+		<div v-else-if="compact" class="contact-channels-section__compact" data-testid="channels-compact">
+			<dl class="contact-channels-section__compact-list">
+				<div v-for="row in compactRows" :key="row.key" class="contact-channels-section__compact-row">
+					<dt>{{ row.label }}</dt>
+					<dd>{{ row.text }}</dd>
+				</div>
+			</dl>
+			<NcActions
+				:menuName="t('pipelinq', 'Add channel')"
+				class="contact-channels-section__add--pill"
+				data-testid="channels-add">
+				<template #icon>
+					<Plus :size="16" />
+				</template>
+				<NcActionButton :closeAfterClick="true" @click="openEmailPhoneModal('email', null)">
+					{{ t('pipelinq', 'Email address') }}
+				</NcActionButton>
+				<NcActionButton :closeAfterClick="true" @click="openEmailPhoneModal('phone', null)">
+					{{ t('pipelinq', 'Phone number') }}
+				</NcActionButton>
+				<NcActionButton :closeAfterClick="true" @click="openSocialModal(null)">
+					{{ t('pipelinq', 'Social profile') }}
+				</NcActionButton>
+			</NcActions>
+		</div>
+
 		<template v-else>
 			<p
 				v-if="preferencesLine"
@@ -257,7 +283,7 @@
 
 <script>
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { NcActionButton, NcActions, NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import EmailEditOutline from 'vue-material-design-icons/EmailEditOutline.vue'
@@ -294,6 +320,8 @@ const NETWORK_LABELS = {
 export default {
 	name: 'ContactChannelsSection',
 	components: {
+		NcActionButton,
+		NcActions,
 		NcButton,
 		NcLoadingIcon,
 		ContactEmailPhoneModal,
@@ -323,6 +351,15 @@ export default {
 			type: String,
 			required: true,
 			validator: (v) => ['client', 'contact'].includes(v),
+		},
+		/**
+		 * One list of label and line per channel, and one "Add channel" menu,
+		 * for the Overview of a contact page. The full lists with edit and
+		 * remove are the Channels tab.
+		 */
+		compact: {
+			type: Boolean,
+			default: false,
 		},
 	},
 
@@ -384,6 +421,27 @@ export default {
 		 */
 		emails() {
 			return (this.entity && this.entity.emails) || []
+		},
+
+		/**
+		 * The channels as one list for the compact look: e-mail addresses,
+		 * phone numbers, then social profiles, each a label and a line
+		 * ("j.smit@…, work, preferred").
+		 *
+		 * @return {Array<{key: string, label: string, text: string}>} The rows.
+		 * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-is-the-board
+		 */
+		compactRows() {
+			const line = (value, kind, primary) => [value, kind ? this.kindLabel(kind).toLowerCase() : '', primary ? this.t('pipelinq', 'preferred') : ''].filter(Boolean).join(', ')
+			return [
+				...this.emails.map((entry, index) => ({ key: `email-${index}`, label: this.t('pipelinq', 'Email'), text: line(entry.value, entry.kind, entry.primary) })),
+				...this.phones.map((entry, index) => ({
+					key: `phone-${index}`,
+					label: entry.kind === 'mobile' ? this.t('pipelinq', 'Mobile') : this.t('pipelinq', 'Phone'),
+					text: line(entry.value, entry.kind === 'mobile' ? '' : entry.kind, entry.primary),
+				})),
+				...this.socialProfiles.map((profile, index) => ({ key: `social-${index}`, label: this.networkLabel(profile.network), text: profile.handle || profile.url || '' })),
+			]
 		},
 
 		/**
@@ -655,6 +713,42 @@ export default {
 </script>
 
 <style scoped>
+.contact-channels-section__compact {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 12px;
+}
+
+.contact-channels-section__compact-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0;
+	font-size: 14px;
+}
+
+.contact-channels-section__compact-row {
+	display: grid;
+	grid-template-columns: 80px minmax(0, 1fr);
+	gap: 12px;
+}
+
+.contact-channels-section__compact-row dt {
+	color: var(--color-text-maxcontrast);
+}
+
+.contact-channels-section__compact-row dd {
+	margin: 0;
+}
+
+.contact-channels-section__add--pill :deep(.button-vue) {
+	border-radius: var(--border-radius-pill, 17px);
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	font-weight: 600;
+}
+
 .contact-channels-section {
 	display: flex;
 	flex-direction: column;

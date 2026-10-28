@@ -3225,7 +3225,8 @@
 										"type": "ContactRelationshipsWidget",
 										"content": {
 											"entityType": "contact",
-											"card": false
+											"card": false,
+											"compact": true
 										}
 									}
 								},
@@ -3235,7 +3236,8 @@
 										"type": "ContactChannelsWidget",
 										"content": {
 											"entityType": "contact",
-											"card": false
+											"card": false,
+											"compact": true
 										}
 									}
 								}
@@ -3532,6 +3534,15 @@
 							"order": "desc",
 							"limit": 3
 						}
+					},
+					{
+						"id": "contact-sync",
+						"type": "ContactsSyncWidget",
+						"title": "Nextcloud Contacts",
+						"content": {
+							"entityType": "contact",
+							"title": "Nextcloud Contacts"
+						}
 					}
 				],
 				"layout": [
@@ -3611,6 +3622,7 @@
 				"sideColumn": [
 					"contact-kpis-deals",
 					"contact-related",
+					"contact-sync",
 					"contact-side-history"
 				]
 			}

@@ -49,7 +49,7 @@ describe('the contact page as the board', () => {
 	})
 
 	it('keeps the side column short: open deals, related, three changes', () => {
-		expect(page.config.sideColumn).toEqual(['contact-kpis-deals', 'contact-related', 'contact-side-history'])
+		expect(page.config.sideColumn).toEqual(['contact-kpis-deals', 'contact-related', 'contact-sync', 'contact-side-history'])
 		expect(widget('contact-side-history').content).toMatchObject({ auditTrail: true, order: 'desc', limit: 3 })
 	})
 

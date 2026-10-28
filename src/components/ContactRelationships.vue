@@ -6,6 +6,19 @@
 			v-else-if="relationships.length === 0"
 			:description="t('pipelinq', 'No relationships yet.')" />
 
+		<dl
+			v-else-if="compact"
+			class="contact-relationships__compact"
+			data-testid="relationships-compact">
+			<div
+				v-for="rel in relationships"
+				:key="rel.id"
+				class="contact-relationships__compact-row">
+				<dt>{{ rel.type }}</dt>
+				<dd>{{ getEntityName(rel.toContact) }}</dd>
+			</div>
+		</dl>
+
 		<div v-else>
 			<div
 				v-for="group in groupedRelationships"
@@ -71,7 +84,14 @@
 		</div>
 
 		<div class="contact-relationships__footer">
-			<NcButton variant="secondary" @click="showAddDialog = true">
+			<NcButton
+				:variant="compact ? 'tertiary' : 'secondary'"
+				:class="{ 'contact-relationships__add--pill': compact }"
+				data-testid="relationships-add"
+				@click="showAddDialog = true">
+				<template v-if="compact" #icon>
+					<Plus :size="16" />
+				</template>
 				{{ t('pipelinq', 'Add relationship') }}
 			</NcButton>
 		</div>
@@ -201,6 +221,7 @@
 import { openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import RemoveRelationshipDialog from '../dialogs/RemoveRelationshipDialog.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -305,6 +326,7 @@ export default {
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcSelect,
+		Plus,
 		RemoveRelationshipDialog,
 	},
 
@@ -318,6 +340,16 @@ export default {
 			type: String,
 			required: true,
 			validator: (value) => ['contact', 'client'].includes(value),
+		},
+
+		/**
+		 * One line per relationship (its type, then the other party) and a
+		 * pill to add one, for the Overview of a contact page. The full table
+		 * with edit and remove is the Relationships tab.
+		 */
+		compact: {
+			type: Boolean,
+			default: false,
 		},
 
 		entityName: {
@@ -735,6 +767,35 @@ export default {
 </script>
 
 <style scoped>
+.contact-relationships__compact {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0;
+	font-size: 14px;
+}
+
+.contact-relationships__compact-row {
+	display: grid;
+	grid-template-columns: 120px minmax(0, 1fr);
+	gap: 12px;
+}
+
+.contact-relationships__compact dt {
+	color: var(--color-text-maxcontrast);
+}
+
+.contact-relationships__compact dd {
+	margin: 0;
+}
+
+.contact-relationships__add--pill {
+	border-radius: var(--border-radius-pill, 17px) !important;
+	background: var(--color-primary-element-light) !important;
+	color: var(--color-primary-element-light-text) !important;
+	font-weight: 600;
+}
+
 .contact-relationships__empty {
 	color: var(--color-text-maxcontrast);
 	padding: 12px 0;
