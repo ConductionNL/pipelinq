@@ -327,6 +327,17 @@ describe('the dashboard', () => {
 		})
 	})
 
+	it('words the first ticket as the board does: who asks about what, and through which channel', async () => {
+		const card = byId['simple-first-today'].content
+		expect(card.title).toBe('Question from {subject.clientName} about {subject.title}')
+		expect(card.fallbackTitle).toBe('{subject.title}')
+		expect(card.reason).toBe('Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.')
+		expect(nl[card.title]).toBe('Vraag van {subject.clientName} over {subject.title}')
+		const { CELL_FORMATTERS } = await import('../../src/services/cellFormatters.js')
+		expect(CELL_FORMATTERS.enumWord('phone').toLowerCase()).toBe(CELL_FORMATTERS.enumWord('phone'))
+		expect(CELL_FORMATTERS.enumWord('')).toBe('')
+	})
+
 	it('marks each latest contact with the small board dot and offers the example client', () => {
 		expect(byId['simple-latest-contact'].content.dot).toEqual({ color: 'var(--color-primary-element)', size: 10 })
 		expect(byId['simple-client-in-focus'].content.link).toEqual({ label: 'See an example', value: '@config.example_client?' })
@@ -396,7 +407,8 @@ describe('the attention card asks a question OpenRegister can answer', () => {
 		// nextcloud-vue 2.60.0 collapses a banner whose `text` is empty,
 		// whatever its condition says. The title is what the card shows.
 		expect(card().text).toBeTruthy()
-		expect(card().text).toBe(card().title)
+		// The text is the ticket's own title, which the title falls back to.
+		expect(card().text).toBe(card().fallbackTitle)
 		expect(card().layout).toBe('attention')
 	})
 

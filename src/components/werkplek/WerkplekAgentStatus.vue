@@ -55,7 +55,7 @@ export default {
 		},
 	},
 
-	emits: ['update:isAvailable'],
+	emits: ['update:isAvailable', 'saved'],
 
 	data() {
 		return {
@@ -116,6 +116,7 @@ export default {
 					'/apps/pipelinq/api/kcc-werkplek/availability',
 				)
 				await axios.put(url, { isAvailable: next })
+				this.$emit('saved', next)
 			} catch (e) {
 				// Revert + surface the error.
 				this.$emit('update:isAvailable', !next)

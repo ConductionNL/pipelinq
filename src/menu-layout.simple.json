@@ -1499,9 +1499,10 @@
 							"layout": "attention",
 							"variant": "error",
 							"kicker": "First, today",
-							"title": "{subject.title}",
+							"title": "Question from {subject.clientName} about {subject.title}",
+							"fallbackTitle": "{subject.title}",
 							"text": "{subject.title}",
-							"reason": "{subject.clientName} · waiting {subject.waitingDays} days for an answer.",
+							"reason": "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.",
 							"fallbackReason": "Waiting {subject.waitingDays} days for an answer.",
 							"visibleWhen": {
 								"endpoint": "/apps/pipelinq/api/worklist/first",
