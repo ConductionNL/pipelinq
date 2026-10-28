@@ -45,6 +45,7 @@ class ContactSyncService {
 	 * @param ContactLinkedUidsService $linkedUidsService The linked UIDs service.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param VcardRevision $revisions Reads a card's REV.
 	 */
 	public function __construct(
 		private IContactsManager $contactsManager,
@@ -53,6 +54,7 @@ class ContactSyncService {
 		private ContactLinkedUidsService $linkedUidsService,
 		private IAppConfig $appConfig,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly VcardRevision $revisions,
 	) {
 	}//end __construct()
 
@@ -297,6 +299,40 @@ class ContactSyncService {
 
 		return null;
 	}//end findContactByUid()
+
+	/**
+	 * Whether a record's address book card exists, which address book holds
+	 * it and when the card last changed (its vCard REV).
+	 *
+	 * @param string $uid The record's `contactsUid`.
+	 *
+	 * @return array{linked: bool, addressBook: string, updatedAt: string|null} The card's status.
+	 *
+	 * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
+	 */
+	public function cardStatus(string $uid): array {
+		$status = ['linked' => false, 'addressBook' => '', 'updatedAt' => null];
+		if ($uid === '' || $this->contactsManager->isEnabled() === false) {
+			return $status;
+		}
+
+		$card = $this->findContactByUid(uid: $uid);
+		if ($card === null) {
+			return $status;
+		}
+
+		$status['linked'] = true;
+		$key = (string)($card['addressbook-key'] ?? '');
+		foreach ($this->contactsManager->getUserAddressBooks() as $book) {
+			if ((string)$book->getKey() === $key) {
+				$status['addressBook'] = $book->getDisplayName();
+				break;
+			}
+		}
+
+		$status['updatedAt'] = $this->revisions->toIso(rev: $this->extractFirstValue(value: ($card['REV'] ?? '')));
+		return $status;
+	}//end cardStatus()
 
 	/**
 	 * Extract first value from a vCard property that may be an array or string.

@@ -9007,7 +9007,17 @@ OC.L10N.register(
         "%s, renews %s": "%s, renews %s",
         "_%n open lead: %s, %s_::_%n open leads, the largest: %s, %s_": ["%n open lead: %s, %s","%n open leads, the largest: %s, %s"],
         "_%n project: %s, %s._::_%n projects, the first: %s, %s._": ["%n project: %s, %s.","%n projects, the first: %s, %s."],
-        "_%n invoice, %s open._::_%n invoices, %s open._": ["%n invoice, %s open.","%n invoices, %s open."]
+        "_%n invoice, %s open._::_%n invoices, %s open._": ["%n invoice, %s open.","%n invoices, %s open."],
+        "Mailbox": "Mail",
+        "Nextcloud Contacts": "Nextcloud Contacts",
+        "Not in Contacts": "Not in Contacts",
+        "Update in Contacts": "Update in Contacts",
+        "This record has no card in an address book yet.": "This record has no card in an address book yet.",
+        "Card in the address book {book}.": "Card in the address book {book}.",
+        "Card in the address book {book}, updated {when}.": "Card in the address book {book}, updated {when}.",
+        "today {time}": "today {time}",
+        "Social profile": "Social profile",
+        "preferred": "preferred"
     },
     "nplurals=2; plural=(n != 1);"
 )

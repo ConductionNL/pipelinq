@@ -9108,6 +9108,16 @@
         "message": "bericht",
         "Add an internal note. Type @ to mention a colleague.": "Voeg een interne notitie toe. Typ @ om een collega te noemen.",
         "Contact moments, notes, tasks, mail and messages about this client appear here.": "Contactmomenten, notities, taken, mail en berichten over deze klant verschijnen hier.",
-        "Send a message": "Bericht sturen"
+        "Send a message": "Bericht sturen",
+        "Mailbox": "Mail",
+        "Nextcloud Contacts": "Nextcloud Contacten",
+        "Not in Contacts": "Niet in Contacten",
+        "Update in Contacts": "Bijwerken in Contacten",
+        "This record has no card in an address book yet.": "Dit record heeft nog geen kaart in een adresboek.",
+        "Card in the address book {book}.": "Kaart in het adresboek {book}.",
+        "Card in the address book {book}, updated {when}.": "Kaart in het adresboek {book}, {when} bijgewerkt.",
+        "today {time}": "vandaag {time}",
+        "Social profile": "Sociaal profiel",
+        "preferred": "voorkeur"
     }
 }
