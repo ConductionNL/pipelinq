@@ -1,5 +1,17 @@
 {
     "translations": {
+        "Checked": "Gecontroleerd",
+        "Look up in the BRP": "Opzoeken in de BRP",
+        "Verify the customer's identity in the population register": "De identiteit van de klant nagaan in de BRP",
+        "Checked with the customer": "Gecontroleerd bij de klant",
+        "Date of birth and address asked": "Geboortedatum en adres gevraagd",
+        "Found in the BRP: {name}. The identity is recorded as verified.": "Gevonden in de BRP: {name}. De identiteit is als gecontroleerd vastgelegd.",
+        "the person": "de persoon",
+        "The BRP could not be asked. Try again.": "De BRP kon niet worden geraadpleegd. Probeer het opnieuw.",
+        "{identityVerifiedVia}, looked up {identityVerifiedAt:date}": "{identityVerifiedVia}, opgezocht {identityVerifiedAt:date}",
+        "Identity verified at": "Identiteit gecontroleerd op",
+        "Identity verified via": "Identiteit gecontroleerd via",
+        "Identity check": "Identiteitscontrole",
         "Call with {workspace.selectedClientName}": "Gesprek met {workspace.selectedClientName}",
         "Who is it": "Wie is het",
         "Preference": "Voorkeur",

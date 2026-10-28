@@ -615,11 +615,13 @@ describe('the werkplek in a call (board PqWerkplekKlant)', () => {
 		expect(page().config.titleWhen).toEqual([{ when: { workspace: 'callActive', op: 'eq', value: true }, title: 'Call with {workspace.selectedClientName}' }])
 	})
 
-	it('says who is calling: the customer in the call, their source, preference and language', () => {
+	it('says who is calling: the customer in the call, what was checked, the source, preference and language', () => {
 		expect(who().type).toBe('facts')
 		expect(who().visibleWhen).toEqual({ workspace: 'callActive', op: 'eq', value: true })
 		expect(who().content.source).toEqual({ register: 'pipelinq', schema: 'client', id: '@workspace.selectedClient' })
-		expect(who().content.fields.map((field) => field.path || field.as)).toEqual(['name', 'line', 'source', 'preferredChannel', 'language'])
+		expect(who().content.fields.map((field) => field.path || field.as || field.label)).toEqual(['name', 'line', 'identityCheck', 'Source', 'preferredChannel', 'language'])
+		// "Opzoeken in de BRP" verifies the identity of the customer in the call.
+		expect(who().content.actions).toEqual([{ type: 'open-modal', target: 'BrpClientCheckDialog', label: 'Look up in the BRP', props: { clientId: '@source.id' } }])
 	})
 })
 
