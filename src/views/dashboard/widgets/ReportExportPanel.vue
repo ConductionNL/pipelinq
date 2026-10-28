@@ -124,7 +124,7 @@ export default {
 				const rows = overviewRows(data, (key) => names[key] || key)
 					.map((row) => Object.fromEntries(columns.map((column, i) => [column, row[i]])))
 				saveCsv(`pipelinq-report-${this.period}.csv`, rows, columns)
-			} catch (e) {
+			} catch {
 				this.error = this.t('pipelinq', 'The report could not be exported.')
 			} finally {
 				this.busy = false
