@@ -8693,7 +8693,12 @@ OC.L10N.register(
         "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}": "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}",
         "Requested case type": "Requested case type",
         "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType.": "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType.",
-        "This person is the organisation's main contact.": "This person is the organisation's main contact."
+        "This person is the organisation's main contact.": "This person is the organisation's main contact.",
+        "Ticket category": "Ticket category",
+        "The code a ticket stores in its category field, such as afval.": "The code a ticket stores in its category field, such as afval.",
+        "The name people read, such as Waste and containers.": "The name people read, such as Waste and containers.",
+        "When to use this category.": "When to use this category.",
+        "Whether new tickets can still get this category.": "Whether new tickets can still get this category."
     },
     "nplurals=2; plural=(n != 1);"
 )
