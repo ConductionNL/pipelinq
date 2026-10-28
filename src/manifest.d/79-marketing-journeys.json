@@ -237,6 +237,7 @@
 						"title": "Steps",
 						"content": {
 							"layout": "tiles",
+							"columns": 3,
 							"fields": [
 								{
 									"label": "Trigger",
@@ -269,6 +270,7 @@
 								},
 								{
 									"label": "Action",
+									"wide": true,
 									"firstOf": [
 										"action.label",
 										{
