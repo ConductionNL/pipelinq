@@ -90,7 +90,7 @@ describe('ConvertToCaseDialog', () => {
 		await w.find('select').trigger('change')
 		await w.find('input[type="checkbox"]').trigger('change')
 		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
-		expect(w.emitted('confirm')[0][0]).toEqual({ caseType: 'b6c1f5a2-0d3e-4a7b-9c8d-2e1f0a9b8c7d', keepOpen: true, informCustomer: false })
+		expect(w.emitted('confirm')[0][0]).toEqual({ caseType: 'b6c1f5a2-0d3e-4a7b-9c8d-2e1f0a9b8c7d', keepOpen: false, informCustomer: true })
 	})
 
 	// Board PqTicketOmzetten: "Klant informeren in Mijn Zuiddrecht / Sanne ziet het
@@ -101,7 +101,15 @@ describe('ConvertToCaseDialog', () => {
 		expect(w.text()).toContain('Sanne sees the case number and who handles the case.')
 		await w.findAll('input[type="checkbox"]').at(-1).trigger('change')
 		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
-		expect(w.emitted('confirm')[0][0].informCustomer).toBe(true)
+		expect(w.emitted('confirm')[0][0].informCustomer).toBe(false)
+	})
+
+	// Board PqTicketOmzetten (Ruben, 28 Oct): both options start ticked; the
+	// handler unticks what does not apply.
+	it('ticks keeping the ticket open and informing the customer by default', async () => {
+		const w = mount(Dialog, { props: { ticket }, global })
+		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
+		expect(w.emitted('confirm')[0][0]).toMatchObject({ keepOpen: true, informCustomer: true })
 	})
 
 	it('says dossiq is available in a success note, as the board', () => {
@@ -145,7 +153,7 @@ describe('RequestConversionSection', () => {
 		expect(w.find('[data-testid="convert-to-case-dialog"]').exists() || w.find('.cn-dialog').exists()).toBe(true)
 		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
 		await flushPromises()
-		expect(http.post).toHaveBeenCalledWith('/apps/pipelinq/api/handoff/request/t1/convert-to-case', { keepOpen: false, informCustomer: false })
+		expect(http.post).toHaveBeenCalledWith('/apps/pipelinq/api/handoff/request/t1/convert-to-case', { keepOpen: true, informCustomer: true })
 	})
 
 	it('hands the dialog the street line of the customer address', async () => {

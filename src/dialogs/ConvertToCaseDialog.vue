@@ -160,8 +160,9 @@ export default {
 	data() {
 		return {
 			caseType: '',
-			keepOpen: false,
-			informCustomer: false,
+			// Both options start ticked, as board PqTicketOmzetten draws them.
+			keepOpen: true,
+			informCustomer: true,
 		}
 	},
 
