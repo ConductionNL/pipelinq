@@ -319,6 +319,7 @@ import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vu
 import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
 import PosPaymentDialog from '../../dialogs/PosPaymentDialog.vue'
 import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
+import { collectionRows } from '../../services/collectionRows.js'
 import { formatDate, getUserLocale } from '../../services/localeUtils.js'
 import {
 	attachCustomer as apiAttachCustomer,
@@ -333,19 +334,6 @@ const TENDER_LABELS = {
 	cash: 'Cash',
 	card: 'Card',
 	onAccount: 'On account',
-}
-
-/**
- * Normalise an object-store collection into a plain rows array.
- *
- * @param {Array|object} collection The collection.
- * @return {Array<object>} The rows.
- */
-function collectionRows(collection) {
-	if (Array.isArray(collection)) {
-		return collection
-	}
-	return (collection && collection.results) || []
 }
 
 /**
