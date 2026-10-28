@@ -9185,7 +9185,15 @@ OC.L10N.register(
         "The VAT percentage the quote's VAT is worked out at.": "Het btw-percentage waarmee de btw van de offerte wordt berekend.",
         "The event this newsletter invites to.": "Het evenement waarvoor deze nieuwsbrief uitnodigt.",
         "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel.",
-        "Direct": "Direct"
+        "Direct": "Direct",
+        "Message · {name}": "Bericht · {name}",
+        "To {recipient}": "Aan {recipient}",
+        "No SMS or WhatsApp provider is active. An administrator sets one up under Connections.": "Er is geen sms- of WhatsApp-aanbieder actief. Een beheerder stelt er een in onder Koppelingen.",
+        "Legal basis (optional)": "Rechtsgrond (optioneel)",
+        "Record consent": "Toestemming vastleggen",
+        "Template (optional)": "Sjabloon (optioneel)",
+        "Message (optional)": "Bericht (optioneel)",
+        "The message is saved as a contact moment.": "Het bericht wordt opgeslagen als contactmoment."
     },
     "nplurals=2; plural=(n != 1);"
 )
