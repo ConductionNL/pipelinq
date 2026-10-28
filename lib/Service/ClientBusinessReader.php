@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\AppInfo\Application;
+use DateTime;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -149,7 +150,7 @@ class ClientBusinessReader {
 				continue;
 			}
 
-			$date = (string)$this->l10n->l('date', new \DateTime($end), ['width' => 'medium']);
+			$date = (string)$this->l10n->l('date', new DateTime($end), ['width' => 'medium']);
 			$text = $this->l10n->t('%s, ends %s', [(string)($contract['title'] ?? ''), $date]);
 			if (($contract['autoRenew'] ?? false) === true) {
 				$text = $this->l10n->t('%s, renews %s', [(string)($contract['title'] ?? ''), $date]);
