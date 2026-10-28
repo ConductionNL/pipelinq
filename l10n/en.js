@@ -8581,8 +8581,14 @@ OC.L10N.register(
         "What now? Try again before the deadline": "What now? Try again before the deadline",
         "An attempt is logged": "An attempt is logged",
         "Call the customer": "Call the customer",
-        "Value per unit": "Value per unit",
-        "No lines on this contract.": "No lines on this contract."
+        "On {invoicedAt:date-long} sent to invoicing by {invoicedBy:user}": "On {invoicedAt:date-long} sent to invoicing by {invoicedBy:user}",
+        "Not sent to invoicing yet.": "Not sent to invoicing yet.",
+        "Unit value": "Unit value",
+        "No lines on this contract.": "No lines on this contract.",
+        "Sent to invoicing": "Sent to invoicing",
+        "When the contract was last sent to invoicing.": "When the contract was last sent to invoicing.",
+        "Sent to invoicing by": "Sent to invoicing by",
+        "The user who last sent the contract to invoicing.": "The user who last sent the contract to invoicing."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1988,7 +1988,7 @@ OC.L10N.register(
         "Invalid phone format": "Ongeldig telefoonnummerformaat",
         "Invalid rules.": "Ongeldige regels.",
         "Invoice": "Factuur",
-        "Invoice reference": "Factuurreferentie",
+        "Invoice reference": "Factuurkenmerk",
         "Invoice reference copied.": "Factuurreferentie gekopieerd.",
         "Invoice split": "Factuurverdeling",
         "Invoices": "Facturen",
@@ -8552,8 +8552,14 @@ OC.L10N.register(
         "What now? Try again before the deadline": "Wat nu? Opnieuw proberen voor de termijn",
         "An attempt is logged": "Er is een poging vastgelegd",
         "Call the customer": "Bellen",
-        "Value per unit": "Waarde per eenheid",
-        "No lines on this contract.": "Dit contract heeft nog geen regels."
+        "On {invoicedAt:date-long} sent to invoicing by {invoicedBy:user}": "Op {invoicedAt:date-long} naar facturering gestuurd door {invoicedBy:user}",
+        "Not sent to invoicing yet.": "Nog niet naar facturering gestuurd.",
+        "Unit value": "Waarde per eenheid",
+        "No lines on this contract.": "Geen regels op dit contract.",
+        "Sent to invoicing": "Naar facturering gestuurd",
+        "When the contract was last sent to invoicing.": "Wanneer het contract het laatst naar facturering is gestuurd.",
+        "Sent to invoicing by": "Naar facturering gestuurd door",
+        "The user who last sent the contract to invoicing.": "De gebruiker die het contract het laatst naar facturering stuurde."
     },
     "nplurals=2; plural=(n != 1);"
 )

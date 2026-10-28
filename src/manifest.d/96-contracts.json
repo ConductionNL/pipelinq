@@ -266,6 +266,7 @@
 						"content": {
 							"sections": [
 								{ "widgetId": "contract-billing-fields" },
+								{ "widgetId": "contract-invoice" },
 								{ "title": "Lines", "widgetId": "contract-lines" }
 							]
 						}
@@ -280,9 +281,21 @@
 								"billingInterval",
 								"valuePerInterval",
 								"value",
-								"currency",
-								"invoiceReference"
+								"currency"
 							]
+						}
+					},
+					{
+						"id": "contract-invoice",
+						"type": "facts",
+						"title": "Invoice reference",
+						"_note": "PqContract Facturering: the invoice reference with a copy button, and when and by whom the contract went to invoicing (invoicedAt / invoicedBy, written by Send to invoicing).",
+						"content": {
+							"fields": [
+								{ "label": "Invoice reference", "path": "invoiceReference", "copy": true },
+								{ "as": "line", "template": "On {invoicedAt:date-long} sent to invoicing by {invoicedBy:user}" }
+							],
+							"emptyText": "Not sent to invoicing yet."
 						}
 					},
 					{
@@ -302,7 +315,7 @@
 								{ "label": "Product", "value": ["{productRecord.name}", "{product}"] },
 								{ "label": "Description", "value": "{description}" },
 								{ "label": "Quantity", "value": "{quantity}", "align": "end" },
-								{ "label": "Value per unit", "value": ["{unitValue|currency}", "{unitPrice|currency}"], "align": "end" }
+								{ "label": "Unit value", "value": ["{unitValue|currency}", "{unitPrice|currency}"], "align": "end" }
 							],
 							"emptyText": "No lines on this contract."
 						}

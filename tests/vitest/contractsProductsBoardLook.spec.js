@@ -74,7 +74,7 @@ describe('contract page', () => {
 	it('draws the billing card as the fields and a table of the lines, with the product names', () => {
 		const billing = widget(detail, 'contract-billing')
 		expect(billing.type).toBe('sections')
-		expect(billing.content.sections.map((s) => s.widgetId)).toEqual(['contract-billing-fields', 'contract-lines'])
+		expect(billing.content.sections.map((s) => s.widgetId)).toEqual(['contract-billing-fields', 'contract-invoice', 'contract-lines'])
 		expect(widget(detail, 'contract-billing-fields').content.include).not.toContain('lineItems')
 		const lines = widget(detail, 'contract-lines').content
 		expect(lines.presentation).toBe('table')
