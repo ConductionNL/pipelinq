@@ -155,7 +155,13 @@
 								},
 								{
 									"widgetId": "journey-history",
-									"label": "History"
+									"label": "History",
+									"countFrom": {
+										"auditTrail": true,
+										"excludeActions": [
+											"read"
+										]
+									}
 								}
 							]
 						}
@@ -214,6 +220,7 @@
 						"title": "Journey details",
 						"content": {
 							"dividers": false,
+							"gap": 14,
 							"sections": [
 								{
 									"widgetId": "journey-data"
@@ -351,6 +358,7 @@
 						"title": "History",
 						"content": {
 							"maxDisplay": 3,
+							"layout": "dated",
 							"excludeActions": [
 								"read"
 							],

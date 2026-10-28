@@ -102,3 +102,18 @@ describe('journey steps', () => {
 		expect(field('Wait').format).toBe('duration')
 	})
 })
+
+describe('journey page parts', () => {
+	it('lists the side history as dates beside what happened', () => {
+		expect(widget('journey-side-history').content.layout).toBe('dated')
+	})
+
+	it('counts the changes on the History tab', () => {
+		const history = widget('journey-panels').content.tabs[1]
+		expect(history.countFrom).toEqual({ auditTrail: true, excludeActions: ['read'] })
+	})
+
+	it('puts the steps 14px under the facts', () => {
+		expect(widget('journey-details').content.gap).toBe(14)
+	})
+})
