@@ -3061,7 +3061,7 @@ OC.L10N.register(
         "Published": "Gepubliceerd",
         "Published At": "Gepubliceerd op",
         "Purchase history": "Aankoopgeschiedenis",
-        "Purchase history depth": "Diepte aankoopgeschiedenis",
+        "Purchase history depth": "Diepte van de aankoopgeschiedenis",
         "Purpose binding": "Doelbinding",
         "Purpose limitation / legal basis": "Doelbinding / wettelijke grondslag",
         "Q4 Gemeente Outreach": "Q4 Gemeente Outreach",
