@@ -141,7 +141,12 @@ class AnalyticsController extends Controller {
 		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
 
 		try {
-			return new JSONResponse($this->analyticsService->getCommercialOverview(period: $period));
+			$filter = $this->request->getParam('filter', []);
+			if (is_array($filter) === false) {
+				$filter = [];
+			}
+
+			return new JSONResponse($this->analyticsService->getCommercialOverview(period: $period, leadFilter: $filter));
 		} catch (InvalidArgumentException) {
 			return new JSONResponse(['message' => 'Invalid period'], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
