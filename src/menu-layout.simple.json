@@ -3224,6 +3224,19 @@
 			}
 		},
 		{
+			"id": "KassakoppelingAuditList",
+			"_note": "The cash register audit log as its board draws it (PqKassaAudit): the tax authority export is the only header button. The log is append-only, so the index defaults (Download, Actions, Add) do not apply.",
+			"config": {
+				"headerButtons": [
+					{
+						"action": "audit-export",
+						"icon": "Download",
+						"label": "Export for the tax authority"
+					}
+				]
+			}
+		},
+		{
 			"id": "CashShifts",
 			"_note": "The cash shifts as their board draws them (PqKassadiensten): Download and Open shift as the header buttons, the All / Open / To check lenses (To check: counted, the difference not yet approved or rejected), the board's columns and the blind-count note.",
 			"config": {

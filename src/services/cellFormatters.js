@@ -188,8 +188,22 @@ export function bookingWhen(value, row) {
  * @spec openspec/changes/pos-transaction-moment/specs/pos-transaction-core/spec.md
  */
 export function transactionMoment(_value, row, _property, options) {
-	const raw = row?.confirmedAt || row?.parkedAt || row?.['@self']?.created
-	const date = raw ? new Date(raw) : null
+	return momentInYear(row?.confirmedAt || row?.parkedAt || row?.['@self']?.created, row, _property, options)
+}
+
+/**
+ * A moment as a list writes it ("7 okt, 11:42"), the year added outside
+ * the current one.
+ *
+ * @param {unknown} value The moment, ISO.
+ * @param {object} [_row] The record (unused).
+ * @param {object} [_property] The schema property (unused).
+ * @param {{now?: Date, locale?: string}} [options] Reference date and locale (tests).
+ * @return {string} The moment, or '' when it is empty or not a date.
+ * @spec openspec/specs/declarative-view-system/spec.md
+ */
+export function momentInYear(value, _row, _property, options) {
+	const date = value ? new Date(String(value)) : null
 	if (!date || Number.isNaN(date.getTime())) {
 		return ''
 	}
@@ -326,6 +340,7 @@ export function timeOfDay(value, _row, _property, options) {
 export const CELL_FORMATTERS = {
 	objectCurrency,
 	transactionMoment,
+	momentInYear,
 	enumText,
 	enumWord,
 	enumLabel,
