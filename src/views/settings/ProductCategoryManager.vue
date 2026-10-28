@@ -58,7 +58,7 @@
 							cat.description
 						}}</span>
 					</div>
-					<div class="category-item__buttons">
+					<div class="category-item__buttons cn-settings-row-actions">
 						<NcButton variant="tertiary" @click="startEditing(cat)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>

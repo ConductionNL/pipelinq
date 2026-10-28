@@ -198,6 +198,20 @@ class FilinqLetterAdapterTest extends TestCase
             }
 
 
+            /**
+             * @param string                        $templateId Template.
+             * @param array<int, array<string, mixed>> $dataRefs   Refs.
+             * @param array<string, mixed>          $options    Options.
+             *
+             * @return array<string, mixed>
+             */
+            public function generateMergePreview(string $templateId, array $dataRefs, array $options=[]): array
+            {
+                $this->calls[] = ['generateMergePreview', $templateId, $dataRefs, $options];
+                return $this->result;
+            }
+
+
         };
 
     }//end documents()
@@ -347,6 +361,97 @@ class FilinqLetterAdapterTest extends TestCase
         );
 
     }//end testRenderPassesReferencesAndAsksForBoth()
+
+
+    /**
+     * A download-only render asks filinq for the PDF back and no copy in Files.
+     *
+     * @return void
+     */
+    public function testADownloadOnlyRenderAsksForReturnOnly(): void
+    {
+        $adapter = $this->adapter(
+            templates: $this->templates(rows: []),
+            documents: $this->documents(result: ['content' => '%PDF-1.7 letter', 'output' => ['mode' => 'return']])
+        );
+
+        $adapter->render(templateId: 'tpl-1', dataRefs: [], filename: 'Letter', outputMode: 'return');
+
+        $this->assertSame(expected: ['mode' => 'return'], actual: $this->calls[0][3]['output']);
+
+    }//end testADownloadOnlyRenderAsksForReturnOnly()
+
+
+    /**
+     * A preview hands filinq the references and passes its fields on.
+     *
+     * @return void
+     */
+    public function testPreviewPassesTheFieldsOn(): void
+    {
+        $adapter = $this->adapter(
+            templates: $this->templates(rows: []),
+            documents: $this->documents(
+                result: [
+                    'html'     => '<p>Geachte heer De Jong,</p>',
+                    'warnings' => [],
+                    'fields'   => [
+                        [
+                            'path'   => 'aanhef',
+                            'label'  => 'Aanhef',
+                            'source' => 'op basis van het opgegeven geslacht',
+                            'value'  => 'Geachte heer De Jong,',
+                            'filled' => true,
+                        ],
+                    ],
+                    'complete' => true,
+                ]
+            )
+        );
+
+        $refs    = [['register' => '7', 'schema' => 'client', 'id' => 'c-1']];
+        $preview = $adapter->preview(templateId: 'tpl-1', dataRefs: $refs);
+
+        $this->assertSame(expected: ['generateMergePreview', 'tpl-1', $refs, []], actual: $this->calls[0]);
+        $this->assertSame(expected: '<p>Geachte heer De Jong,</p>', actual: $preview['html']);
+        $this->assertSame(
+            expected: [
+                ['label' => 'Aanhef', 'value' => 'Geachte heer De Jong,', 'source' => 'op basis van het opgegeven geslacht', 'filled' => true],
+            ],
+            actual: $preview['fields']
+        );
+        $this->assertTrue(condition: $preview['complete']);
+
+    }//end testPreviewPassesTheFieldsOn()
+
+
+    /**
+     * A filinq without the merge preview is named, not faked.
+     *
+     * @return void
+     */
+    public function testPreviewWithoutTheMergePreviewIsNamed(): void
+    {
+        $documents = new class {
+
+
+            /**
+             * @return array<string, mixed>
+             */
+            public function generateDocument(): array
+            {
+                return [];
+            }
+
+
+        };
+        $adapter   = $this->adapter(templates: $this->templates(rows: []), documents: $documents);
+
+        $this->expectException(exception: \RuntimeException::class);
+        $this->expectExceptionMessage(message: 'filinq_preview_unsupported');
+        $adapter->preview(templateId: 'tpl-1', dataRefs: []);
+
+    }//end testPreviewWithoutTheMergePreviewIsNamed()
 
 
     /**
