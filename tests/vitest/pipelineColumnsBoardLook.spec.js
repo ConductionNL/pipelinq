@@ -12,7 +12,7 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const source = readFileSync(resolve(__dirname, '../../src/views/pipeline/PipelineBoard.vue'), 'utf8')
-const rule = (selector) => {
+function rule (selector) {
 	const start = source.indexOf(`${selector} {`)
 	return start < 0 ? '' : source.slice(start, source.indexOf('}', start))
 }

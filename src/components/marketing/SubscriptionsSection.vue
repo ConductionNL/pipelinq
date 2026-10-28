@@ -161,6 +161,7 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Draw the section as its own titled card, with the subtitle and
 		 * Refresh in the card's header (the list page's Subscribers card).

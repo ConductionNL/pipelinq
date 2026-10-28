@@ -31,7 +31,6 @@ vi.mock('@nextcloud/vue', () => ({
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnActionsBar: {},
-	CnBuildiqEditButton: {},
 	CnPageHeader: {},
 	CnBuildiqEditButton: {},
 	CnQuickFilterBar: {},

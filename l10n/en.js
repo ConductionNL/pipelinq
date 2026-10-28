@@ -8800,7 +8800,22 @@ OC.L10N.register(
         "Subject: {subject}": "Subject: {subject}",
         "Variant A {a} click rate, variant B {b} click rate": "Variant A {a} click rate, variant B {b} click rate",
         "Portal sessions that came in through a link in the mail": "Portal sessions that came in through a link in the mail",
-        "Search a client or username": "Search a client or username"
+        "Search a client or username": "Search a client or username",
+        "{name} sees the case number and who handles the case.": "{name} sees the case number and who handles the case.",
+        "Belongs to ticket": "Belongs to ticket",
+        "Contact moment · {reference}": "Contact moment · {reference}",
+        "e.g. 4 minutes": "e.g. 4 minutes",
+        "Filled in with now": "Filled in with now",
+        "Inbound": "Inbound",
+        "Inform the customer in {portal}": "Inform the customer in {portal}",
+        "Inform the customer in the customer portal": "Inform the customer in the customer portal",
+        "Outbound": "Outbound",
+        "Text message": "Text message",
+        "The contact moment is not saved. Try again.": "The contact moment is not saved. Try again.",
+        "The customer sees the case number and who handles the case.": "The customer sees the case number and who handles the case.",
+        "The source the identity was verified against, such as BRP.": "The source the identity was verified against, such as BRP.",
+        "What the employee checked with the customer, such as their date of birth and address.": "What the employee checked with the customer, such as their date of birth and address.",
+        "When the customer's identity was last verified, for example by a lookup in the population register.": "When the customer's identity was last verified, for example by a lookup in the population register."
     },
     "nplurals=2; plural=(n != 1);"
 )

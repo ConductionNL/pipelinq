@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SemanticHandoffService;
@@ -412,7 +414,7 @@ class SemanticHandoffController extends Controller {
 		}
 
 		$contract['invoiceReference'] = (string)$result['targetUuid'];
-		$contract['invoicedAt'] = (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM);
+		$contract['invoicedAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 		$contract['invoicedBy'] = $user->getUID();
 		$this->saveObject(
 			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),

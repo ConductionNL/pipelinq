@@ -8895,6 +8895,9 @@
         "Subject: {subject}": "Onderwerp: {subject}",
         "Variant A {a} click rate, variant B {b} click rate": "Variant A {a} klikratio, variant B {b} klikratio",
         "Portal sessions that came in through a link in the mail": "Sessies op het portaal die via een link in de mail kwamen",
-        "Search a client or username": "Zoek een klant of gebruikersnaam"
+        "Search a client or username": "Zoek een klant of gebruikersnaam",
+        "The source the identity was verified against, such as BRP.": "De bron waartegen de identiteit is gecontroleerd, zoals de BRP.",
+        "What the employee checked with the customer, such as their date of birth and address.": "Wat de medewerker met de klant heeft gecontroleerd, zoals geboortedatum en adres.",
+        "When the customer's identity was last verified, for example by a lookup in the population register.": "Wanneer de identiteit van de klant voor het laatst is gecontroleerd, bijvoorbeeld door opzoeken in de BRP."
     }
 }

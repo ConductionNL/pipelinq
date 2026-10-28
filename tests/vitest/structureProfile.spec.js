@@ -448,11 +448,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 104 pages as the full profile, so every route stays', () => {
+	it('builds the same 105 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(104)
+		expect(built.pages).toHaveLength(105)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)
