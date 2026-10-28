@@ -211,7 +211,7 @@
 									)
 								}}
 							</p>
-							<div class="keyword-intel__scroll">
+							<div v-if="!embedded" class="keyword-intel__scroll">
 								<table class="keyword-intel__table">
 									<thead>
 										<tr>
@@ -722,5 +722,20 @@ export default {
 .keyword-intel__error {
 	color: var(--color-error);
 	margin-top: 12px;
+}
+/* On the search insight page the sections read as board PqZoekinzicht's
+   sub-headings, flush with the card. */
+.keyword-intel--embedded {
+	padding: 0;
+
+	.keyword-intel__section {
+		margin-bottom: 20px;
+	}
+
+	h3 {
+		margin: 0 0 10px;
+		font-size: 15px;
+		font-weight: 700;
+	}
 }
 </style>

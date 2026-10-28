@@ -128,6 +128,7 @@
 					</span>
 				</div>
 				<NcButton
+					class="cn-button--tonal"
 					variant="tertiary"
 					:disabled="auditRunning"
 					data-testid="search-insight-audit-rerun"
@@ -423,6 +424,8 @@ export default {
 
 <style scoped lang="scss">
 .search-queries {
+	/* The board draws every table head on white. */
+	--cn-board-table-head-bg: var(--color-main-background);
 	box-sizing: border-box;
 	width: 100%;
 	max-width: 1240px;
@@ -499,6 +502,12 @@ export default {
 	margin: 0;
 	color: var(--color-error);
 	font-weight: 600;
+}
+
+/* A sorted column keeps its label in the head's muted ink; the chevron marks
+   the sort. */
+:deep(.cn-data-table th[aria-sort] .cn-table-header__sort) {
+	color: inherit;
 }
 
 :deep(.search-queries__num) {

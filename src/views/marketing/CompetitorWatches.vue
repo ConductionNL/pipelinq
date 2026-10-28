@@ -58,7 +58,7 @@
 				v-else
 				class="competitors__section"
 				data-testid="competitors-watches">
-				<h3>{{ t('pipelinq', 'Watches') }}</h3>
+				<h3 v-if="!embedded">{{ t('pipelinq', 'Watches') }}</h3>
 				<div class="competitors__scroll">
 					<table class="competitors__table">
 						<thead>
@@ -80,7 +80,7 @@
 									<span class="competitors__kind">{{
 										kindLabel(watch.kind)
 									}}</span>
-									<span class="competitors__target">{{
+									<span v-if="!embedded" class="competitors__target">{{
 										watch.target
 									}}</span>
 								</td>
@@ -93,9 +93,9 @@
 									}}
 								</td>
 								<td>
-									<span :class="outcomeClass(watch)">
-										{{ outcomeLabel(watch) }}
-									</span>
+									<CnStatusBadge
+										:variant="outcomeVariant(watch)"
+										:label="outcomeLabel(watch)" />
 									<span
 										v-if="watch.lastReason"
 										class="competitors__reason">
@@ -104,7 +104,7 @@
 								</td>
 								<td>
 									<NcButton
-										variant="tertiary"
+										variant="secondary"
 										:disabled="running === idOf(watch)"
 										@click="run(watch)">
 										{{ t('pipelinq', 'Run now') }}
@@ -116,7 +116,18 @@
 				</div>
 			</section>
 
-			<section class="competitors__section" data-testid="competitors-events">
+			<p
+				v-if="embedded"
+				class="competitors__changed"
+				data-testid="competitors-changed">
+				<span class="competitors__changed-label">{{ t('pipelinq', 'What changed') }}</span>
+				<span>{{ latestChange }}</span>
+			</p>
+
+			<section
+				v-else
+				class="competitors__section"
+				data-testid="competitors-events">
 				<h3>{{ t('pipelinq', 'What changed') }}</h3>
 				<p v-if="!events.length" class="competitors__none">
 					{{
@@ -160,6 +171,7 @@
 </template>
 
 <script>
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
@@ -175,6 +187,7 @@ export default {
 	name: 'CompetitorWatches',
 	components: {
 		AccountGroupOutline,
+		CnStatusBadge,
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
@@ -200,6 +213,31 @@ export default {
 			events: [],
 			running: '',
 		}
+	},
+
+	computed: {
+		/**
+		 * The newest event in one sentence, as the search insight page sums
+		 * up what changed.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/search-insight-hub/specs/marketing/spec.md
+		 */
+		latestChange() {
+			const event = this.events[0]
+			if (!event) {
+				return this.t('pipelinq', 'Nothing has been seen yet.')
+			}
+			const params = {
+				competitor: this.competitorNameById(event.competitorId),
+				title: event.title || event.url,
+				score: event.relevanceScore,
+			}
+			if (event.relevanceScore === undefined || event.relevanceScore === null || event.relevanceScore === '') {
+				return this.t('pipelinq', '{competitor} published "{title}"', params)
+			}
+			return this.t('pipelinq', '{competitor} published "{title}", relevance {score}', params)
+		},
 	},
 
 	mounted() {
@@ -350,14 +388,14 @@ export default {
 
 		/**
 		 * @param {object} watch A watch.
-		 * @return {string} The class marking a failed outcome.
+		 * @return {string} The status pill variant: success when read, error when it failed.
 		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
-		outcomeClass(watch) {
-			if (!watch?.lastOutcome || watch.lastOutcome === 'ok') {
-				return 'competitors__outcome'
+		outcomeVariant(watch) {
+			if (!watch?.lastOutcome) {
+				return 'default'
 			}
-			return 'competitors__outcome competitors__outcome--failed'
+			return watch.lastOutcome === 'ok' ? 'success' : 'error'
 		},
 
 		/**
@@ -433,9 +471,6 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.competitors__outcome--failed {
-	color: var(--color-error);
-}
 
 .competitors__none {
 	color: var(--color-text-maxcontrast);
@@ -484,5 +519,53 @@ export default {
 .competitors__error {
 	color: var(--color-error);
 	margin-top: 12px;
+}
+
+.competitors__changed {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	margin: 14px 0 0;
+	font-size: 14px;
+}
+
+.competitors__changed-label {
+	color: var(--color-text-maxcontrast);
+}
+
+/* On the search insight page the watches are one bordered card table, as
+   board PqZoekinzicht draws it. */
+.competitors--embedded {
+	padding: 0;
+
+	.competitors__section {
+		margin-bottom: 0;
+	}
+
+	.competitors__scroll {
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+	}
+
+	.competitors__table {
+		font-size: 14px;
+		line-height: 1.2;
+
+		th,
+		td {
+			padding: 12px 18px;
+			vertical-align: middle;
+		}
+
+		th {
+			padding-block: 10px;
+			font-weight: 600;
+			color: var(--color-text-maxcontrast);
+		}
+
+		tbody tr:last-child td {
+			border-bottom: 0;
+		}
+	}
 }
 </style>

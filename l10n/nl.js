@@ -9261,7 +9261,10 @@ OC.L10N.register(
         "Could not copy the signup form.": "Het aanmeldformulier kon niet worden gekopieerd.",
         "An agent wrote this summary: {agent}, on {when}": "Een agent schreef deze samenvatting: {agent}, op {when}",
         "An agent wrote this summary: {agent}": "Een agent schreef deze samenvatting: {agent}",
-        "These sources hold nothing yet, so their absence here is missing data and not a zero: {sources}": "Deze bronnen bevatten nog niets, dus wat hier ontbreekt is ontbrekende data en geen nul: {sources}"
+        "These sources hold nothing yet, so their absence here is missing data and not a zero: {sources}": "Deze bronnen bevatten nog niets, dus wat hier ontbreekt is ontbrekende data en geen nul: {sources}",
+        "Nothing has been seen yet.": "Er is nog niets gezien.",
+        "{competitor} published \"{title}\"": "{competitor} publiceerde \"{title}\"",
+        "{competitor} published \"{title}\", relevance {score}": "{competitor} publiceerde \"{title}\", relevantie {score}"
     },
     "nplurals=2; plural=(n != 1);"
 )

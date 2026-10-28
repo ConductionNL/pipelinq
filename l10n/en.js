@@ -9247,7 +9247,10 @@ OC.L10N.register(
         "Save market insight settings": "Save market insight settings",
         "Signup form copied to the clipboard.": "Signup form copied to the clipboard.",
         "Could not copy the signup form.": "Could not copy the signup form.",
-        "An agent wrote this summary: {agent}, on {when}": "An agent wrote this summary: {agent}, on {when}"
+        "An agent wrote this summary: {agent}, on {when}": "An agent wrote this summary: {agent}, on {when}",
+        "Nothing has been seen yet.": "Nothing has been seen yet.",
+        "{competitor} published \"{title}\"": "{competitor} published \"{title}\"",
+        "{competitor} published \"{title}\", relevance {score}": "{competitor} published \"{title}\", relevance {score}"
     },
     "nplurals=2; plural=(n != 1);"
 )
