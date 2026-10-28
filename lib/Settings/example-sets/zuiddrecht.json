@@ -3458,7 +3458,7 @@
 				"client": "{{object:client-henkvisser.id}}",
 				"assignee": "{{cast:lotte.uid}}",
 				"occurredAt": "{{datetime:-5 11:15}}",
-				"category": "openbare ruimte"
+				"category": "openbare-ruimte"
 			}
 		},
 		{
