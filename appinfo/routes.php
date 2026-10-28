@@ -138,6 +138,7 @@ return [
         // host's uuid and stays opaque to pipelinq.
         // A host app's link to one party's tickets, by master entity (tickets-list-by-party).
         ['name' => 'ticketParty#tickets', 'url' => '/tickets/party/{ref}', 'verb' => 'GET'],
+        ['name' => 'staffProfile#show', 'url' => '/api/staff/{userId}/profile', 'verb' => 'GET'],
         ['name' => 'contactMomentLeaf#index',  'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'GET'],
         ['name' => 'contactMomentLeaf#create', 'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'POST'],
         // Filing an EXISTING contact moment onto a further case, and taking it

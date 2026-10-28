@@ -506,6 +506,8 @@
         "Back to journeys": "Back to journeys",
         "Back to kennisbank": "Back to kennisbank",
         "Back to knowledge base": "Back to knowledge base",
+        "{count} bookings, no bookable time this week": "{count} bookings, no bookable time this week",
+        "{count} bookings, {percent}% of the bookable time": "{count} bookings, {percent}% of the bookable time",
         "Back to list": "Back to list",
         "Back to project": "Back to project",
         "Back to queues": "Back to queues",
