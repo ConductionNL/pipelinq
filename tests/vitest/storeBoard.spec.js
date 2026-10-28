@@ -35,6 +35,12 @@ describe('the store page (board PqStore)', () => {
 		expect(store.config.kinds).toContain('connector')
 	})
 
+	it('lets an administrator publish a template from the page', () => {
+		expect(store.config.publishable).toBe(true)
+		expect(read('appinfo/routes.php')).toMatch(/'store#publish',\s*'url' => '\/api\/store\/publish'/)
+		expect(read('appinfo/routes.php')).toMatch(/'store#publishable',\s*'url' => '\/api\/store\/publishable'/)
+	})
+
 	it('names the three templates that ship with pipelinq', () => {
 		expect(store.config.builtIn.map((item) => item.slug)).toEqual(['b2b-sales-pipeline', 'service-desk-routing', 'retail-pos-setup'])
 	})

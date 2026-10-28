@@ -9033,6 +9033,7 @@
 			"config": {
 				"app": "pipelinq",
 				"storeRegistry": true,
+				"publishable": true,
 				"description": "Templates and connectors for Pipelinq, {count} in the registry",
 				"kinds": [
 					"pipeline",
