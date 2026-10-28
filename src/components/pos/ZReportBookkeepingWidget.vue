@@ -162,7 +162,11 @@ export default {
 	inheritAttrs: false,
 
 	props: {
-		/** The Z-report, from the detail page. */
+		/**
+		 * The Z-report, from the detail page.
+		 *
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 */
 		objectData: {
 			type: Object,
 			default: null,
@@ -191,18 +195,42 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The Z-report: the record the raise returned, else the page's.
+		 *
+		 * @return {object} The Z-report.
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 */
 		zReport() {
 			return this.raised || this.objectData || {}
 		},
 
+		/**
+		 * The VAT rows: rate, base and VAT.
+		 *
+		 * @return {Array<object>} The rows.
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 */
 		taxBreakdown() {
 			return Array.isArray(this.zReport.taxBreakdown) ? this.zReport.taxBreakdown : []
 		},
 
+		/**
+		 * The payment rows: method and amount.
+		 *
+		 * @return {Array<object>} The rows.
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 */
 		paymentBreakdown() {
 			return Array.isArray(this.zReport.paymentMethodBreakdown) ? this.zReport.paymentMethodBreakdown : []
 		},
 
+		/**
+		 * The bookkeeping status in words.
+		 *
+		 * @return {string} The label.
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 */
 		bookkeepingStatusLabel() {
 			const key = this.zReport.bookkeepingStatus || 'pending'
 			return t('pipelinq', BOOKKEEPING_STATUS_LABELS[key] || key)
@@ -214,6 +242,7 @@ export default {
 		 * days already passed on.
 		 *
 		 * @return {boolean} Whether passing on again is offered.
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		canRetry() {
 			const status = this.zReport.bookkeepingStatus || 'pending'

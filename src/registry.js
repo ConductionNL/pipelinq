@@ -523,6 +523,7 @@ const registry = {
 	//     type:"detail" page (pipelinq-detail-pages-declarative-r3); only this
 	//     grid widget (breakdown tables + bookkeeping projection + re-raise)
 	//     stays as host-app code. ---
+	// @custom-widget-ratchet exclude replaces the ZReportBookkeepingSection body section (same host code, now a card in the Overview tab); no built-in widget draws an array field as a table
 	ZReportBookkeepingWidget: {
 		kind: 'widget',
 		component: ZReportBookkeepingWidget,
