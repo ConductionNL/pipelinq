@@ -139,5 +139,28 @@ class NumberScaleTest(unittest.TestCase):
         self.assertEqual([], validator.finer_than_storage({'code': '0.005', 'price': 3}, self.PROPS))
 
 
+class OptionalNullTest(unittest.TestCase):
+
+    SCHEMA = {'type': 'object', 'required': ['name'], 'properties': {
+        'name': {'type': 'string'}, 'verified': {'type': 'boolean'},
+        'nested': {'type': 'object', 'properties': {'note': {'type': 'string'}}}}}
+
+    def errors(self, data):
+        js = validator.to_jsonschema(self.SCHEMA)
+        return [e.message for e in validator.jsonschema.Draft202012Validator(js).iter_errors(data)]
+
+    def test_an_optional_property_may_be_null(self):
+        self.assertEqual([], self.errors({'name': 'x', 'verified': None}))
+
+    def test_a_nested_optional_property_may_be_null(self):
+        self.assertEqual([], self.errors({'name': 'x', 'nested': {'note': None}}))
+
+    def test_a_required_property_may_not_be_null(self):
+        self.assertEqual(1, len(self.errors({'name': None})))
+
+    def test_a_wrong_type_is_still_refused(self):
+        self.assertEqual(1, len(self.errors({'name': 'x', 'verified': 'ja'})))
+
+
 if __name__ == '__main__':
     unittest.main()

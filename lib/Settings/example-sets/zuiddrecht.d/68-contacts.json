@@ -54,29 +54,6 @@
 			}
 		},
 		{
-			"key": "toestemming-anna-whatsapp",
-			"register": "pipelinq",
-			"schema": "messagingConsentRecord",
-			"data": {
-				"contactId": "{{object:client-anna-devries.id}}",
-				"channel": "whatsapp",
-				"state": "opted-in",
-				"source": "webform",
-				"recordedAt": "{{datetime:-30 20:14}}",
-				"legalBasis": "consent"
-			}
-		},
-		{
-			"key": "toestemming-anna-sms",
-			"register": "pipelinq",
-			"schema": "messagingConsentRecord",
-			"data": {
-				"contactId": "{{object:client-anna-devries.id}}",
-				"channel": "sms",
-				"state": "unknown"
-			}
-		},
-		{
 			"key": "client-jdevries",
 			"register": "pipelinq",
 			"schema": "client",
@@ -88,7 +65,15 @@
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
 				"language": "nl",
-				"correspondenceLanguage": "nl"
+				"correspondenceLanguage": "nl",
+				"phone": "078 612 33 41",
+				"phones": [
+					{
+						"kind": "private",
+						"value": "078 612 33 41",
+						"primary": true
+					}
+				]
 			}
 		},
 		{

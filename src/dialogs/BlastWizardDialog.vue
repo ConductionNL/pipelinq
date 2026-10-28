@@ -11,12 +11,13 @@
   - send, request consent, or cancel).
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
 		:name="t('pipelinq', 'New newsletter')"
-		:open="true"
-		size="large"
-		:closeOnClickOutside="false"
+		:eyebrow="t('pipelinq', 'New newsletter, step {step} of {total}', { step: currentStep + 1, total: steps.length })"
+		:subtitle="stepSubtitle"
+		width="wizard"
+		data-testid="blast-wizard-dialog"
 		@closing="close()">
 		<div class="blast-wizard">
 			<ol class="blast-wizard__steps">
@@ -339,14 +340,13 @@
 
 		<template #actions>
 			<NcButton
-				variant="tertiary"
 				class="blast-wizard__cancel"
 				@click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton v-if="currentStep > 0" variant="secondary" @click="prev">
+			<NcButton v-if="currentStep > 0" @click="prev">
 				<template #icon>
-					<ChevronLeft :size="20" />
+					<ArrowLeft :size="20" />
 				</template>
 				{{ t('pipelinq', 'Back') }}
 			</NcButton>
@@ -367,7 +367,7 @@
 				@click="submit">
 				<template #icon>
 					<NcLoadingIcon v-if="submitting" :size="20" />
-					<Send v-else :size="20" />
+					<Check v-else :size="20" />
 				</template>
 				{{ t('pipelinq', 'Create blast') }}
 			</NcButton>
@@ -380,10 +380,11 @@
 			@cancel="onConsentCancel"
 			@requestConsent="onConsentRequest"
 			@skipAndSend="onConsentSkip" />
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showInfo } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -391,16 +392,14 @@ import {
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDateTimePickerNative,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import Check from 'vue-material-design-icons/Check.vue'
-import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue'
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
-import Send from 'vue-material-design-icons/Send.vue'
 import MissingConsentModal from '../modals/MissingConsentModal.vue'
 import { previewTemplate } from '../services/articlesApi.js'
 
@@ -443,18 +442,17 @@ export default {
 	name: 'BlastWizardDialog',
 	components: {
 		Check,
-		ChevronLeft,
+		ArrowLeft,
 		ChevronRight,
 		MissingConsentModal,
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcDateTimePickerNative,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
 		NcTextField,
-		Send,
 	},
 
 	inheritAttrs: false,
@@ -532,6 +530,19 @@ export default {
 		 */
 		step() {
 			return STEPS[this.currentStep].key
+		},
+
+		/**
+		 * The line under the title: which step this is and what it asks.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
+		stepSubtitle() {
+			const position = { step: this.currentStep + 1, total: this.steps.length }
+			return this.isLastStep
+				? this.t('pipelinq', 'Step {step} of {total}: check everything before the blast is created', position)
+				: this.t('pipelinq', 'Step {step} of {total}: {label}', { ...position, label: this.steps[this.currentStep].label })
 		},
 
 		isLastStep() {

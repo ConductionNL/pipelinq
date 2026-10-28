@@ -2,6 +2,9 @@
 	<CnSettingsSection :name="title">
 		<template #actions>
 			<NcButton variant="secondary" @click="startAdding">
+				<template #icon>
+					<Plus :size="20" />
+				</template>
 				{{ addLabel }}
 			</NcButton>
 		</template>
@@ -51,10 +54,12 @@
 						{{ labelOf(tag) }}
 					</span>
 					<button
+						type="button"
 						class="tag-chip__remove"
 						:title="t('pipelinq', 'Remove')"
+						:aria-label="t('pipelinq', 'Remove')"
 						@click="confirmRemove(tag)">
-						&times;
+						<Close :size="18" />
 					</button>
 				</template>
 			</div>
@@ -93,11 +98,15 @@
 <script>
 import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import Close from 'vue-material-design-icons/Close.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 
 export default {
 	name: 'TagManager',
 	components: {
+		Close,
 		CnSettingsSection,
+		Plus,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -333,16 +342,21 @@ export default {
 	align-items: center;
 }
 
+/* A tag is a 34px pill, 12px in, its name 14/600 in the light primary ink,
+   the remove button a 26px round target at its end (PqBeheer). */
 .tag-chip {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
-	padding: 4px 8px;
-	border-radius: var(--border-radius-pill, 16px);
+	box-sizing: border-box;
+	height: 34px;
+	padding: 0 4px 0 12px;
+	border-radius: 17px;
 	background-color: var(--color-primary-element-light);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
-	font-size: 13px;
-	line-height: 1.4;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: normal;
 }
 
 .tag-chip--editing,
@@ -366,20 +380,29 @@ export default {
 	color: inherit;
 }
 
+/* Nextcloud gives every button a 34-40px clickable area and a ground; the
+   remove target is the board's 26px circle on the chip. */
 .tag-chip__remove {
-	background: none;
-	border: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	min-width: 26px;
+	height: 26px;
+	min-height: 26px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 13px;
+	background: transparent;
+	color: inherit;
 	cursor: pointer;
-	font-size: 16px;
-	line-height: 1;
-	padding: 0 2px;
-	color: var(--color-text-maxcontrast);
-	opacity: 0.7;
 }
 
-.tag-chip__remove:hover {
-	opacity: 1;
-	color: var(--color-error);
+.tag-chip__remove:hover,
+.tag-chip__remove:focus-visible {
+	background: color-mix(in srgb, currentColor 12%, transparent);
+	color: var(--color-error-text, var(--color-error));
 }
 
 .tag-chip__action {

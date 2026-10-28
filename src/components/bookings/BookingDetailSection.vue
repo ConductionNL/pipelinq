@@ -34,11 +34,14 @@
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
 			<section v-if="part === 'customer'" class="booking-section__block booking-person">
+				<h2 class="booking-section__title">
+					{{ customerKindLabel }}
+				</h2>
 				<div class="booking-person__head">
 					<span class="booking-person__initials" aria-hidden="true">{{ customerInitials }}</span>
 					<div>
 						<strong>{{ customerLabel }}</strong>
-						<span v-if="customer && customer.address" class="booking-person__sub">{{ customer.address }}</span>
+						<span v-if="customer && customer.address" class="booking-person__sub">{{ customerKindLabel }} · {{ customer.address }}</span>
 					</div>
 				</div>
 				<dl class="booking-facts">
@@ -57,6 +60,9 @@
 			</section>
 
 			<section v-if="part === 'when'" class="booking-section__block booking-when">
+				<h2 class="booking-section__title">
+					{{ t('pipelinq', 'When and where') }}
+				</h2>
 				<p class="booking-when__slot">
 					<span>{{ whenDay }}</span>
 					<span>{{ whenTime }}</span>
@@ -361,6 +367,19 @@ export default {
 			return this.booking.status === 'confirmed'
 				&& Number.isFinite(start)
 				&& start - Date.now() > 60 * 60 * 1000
+		},
+
+		/**
+		 * What the customer is, as the side card names it: a resident or an
+		 * organisation (PqAfspraak "Inwoner").
+		 *
+		 * @return {string} The label.
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		customerKindLabel() {
+			return this.customer?.type === 'organization'
+				? t('pipelinq', 'Organisation')
+				: t('pipelinq', 'Resident')
 		},
 
 		customerLabel() {
@@ -798,6 +817,13 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+}
+
+.booking-section__title {
+	margin: 0 0 10px;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
 }
 
 .booking-section__block h4 {

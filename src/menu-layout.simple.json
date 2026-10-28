@@ -543,6 +543,15 @@
 						}
 					},
 					{
+						"id": "link-to-client",
+						"label": "Link to a client",
+						"type": "open-modal",
+						"target": "LinkSubmissionToClientModal",
+						"icon": "AccountArrowRightOutline",
+						"props": { "ticketId": "@objectId" },
+						"visibleWhen": { "field": "client", "op": "empty" }
+					},
+					{
 						"id": "ticket-answer",
 						"type": "open-modal",
 						"target": "TicketAnswerDialog",
@@ -807,6 +816,7 @@
 					}
 				},
 				"quickActions": [
+					"link-to-client",
 					"ticket-answer",
 					"ticket-log-contact"
 				],
@@ -820,6 +830,12 @@
 						"complaint": "Complaint",
 						"melding": "Public-space report",
 						"interaction": "Contact moment"
+					},
+					"colorMap": {
+						"request": "info",
+						"complaint": "error",
+						"melding": "warning",
+						"interaction": "default"
 					}
 				},
 				"statusPill": {
@@ -833,6 +849,16 @@
 						"rejected": "Rejected",
 						"converted": "Converted to a case",
 						"closed": "Closed"
+					},
+					"colorMap": {
+						"new": "info",
+						"in_progress": "purple",
+						"awaiting_customer": "warning",
+						"resolved": "success",
+						"completed": "success",
+						"rejected": "default",
+						"converted": "default",
+						"closed": "default"
 					}
 				},
 				"sideColumn": [
@@ -849,7 +875,12 @@
 								"channel"
 							],
 							"hideEmpty": true,
-							"editable": false
+							"editable": false,
+							"overrides": {
+								"channel": {
+									"formatter": "enumText"
+								}
+							}
 						}
 					},
 					{
@@ -865,7 +896,15 @@
 								"assignee"
 							],
 							"hideEmpty": true,
-							"editable": false
+							"editable": false,
+							"overrides": {
+								"priority": {
+									"formatter": "enumText"
+								},
+								"assignee": {
+									"formatter": "userDisplayName"
+								}
+							}
 						}
 					},
 					{
@@ -1102,8 +1141,18 @@
 								},
 								"description": {
 									"gridColumn": 2
+								},
+								"category": {
+									"formatter": "enumText"
+								},
+								"channel": {
+									"formatter": "enumText"
+								},
+								"priority": {
+									"formatter": "enumText"
 								}
-							}
+							},
+							"_overridesNote": "Category, channel and priority are stored as codes (phone, vergunningen, normal); enumText prints them as translated words, as board PqTicket draws them."
 						},
 						"_note": "Board PqTicket: the overview card names the ticket in two columns, the description across both. What the type does not use stays hidden (hideEmpty).",
 						"icon": ""
@@ -1864,7 +1913,11 @@
 						"label": "Download"
 					},
 					{
-						"action": "actions-menu"
+						"action": "actions-menu",
+						"items": [
+							"header-actions",
+							"import"
+						]
 					},
 					{
 						"action": "add",
@@ -2585,6 +2638,7 @@
 							"type": "organization"
 						},
 						"title": "Organisations",
+						"addLabel": "Add organisation",
 						"countText": "{shown} of {total} organisations · sorted by name",
 						"searchPlaceholder": "Search by name, KvK number or place",
 						"footerNote": "click a column heading to sort",

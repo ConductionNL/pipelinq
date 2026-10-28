@@ -292,6 +292,7 @@ class CtiController extends Controller {
 		$subject = (string)$this->request->getParam('subject', '');
 		$outcome = (string)$this->request->getParam('outcome', '');
 		$notes = (string)$this->request->getParam('notes', '');
+		$queue = (string)$this->request->getParam('queue', '');
 
 		if ($subject === '' || $outcome === '') {
 			return new JSONResponse(
@@ -306,6 +307,7 @@ class CtiController extends Controller {
 				subject: $subject,
 				outcome: $outcome,
 				notes: $notes,
+				queue: $queue,
 			);
 		} catch (\InvalidArgumentException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);

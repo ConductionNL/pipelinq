@@ -29,7 +29,17 @@ vi.mock('@nextcloud/vue', () => {
 	}
 })
 
-globalThis.t = (_app, text) => text
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		props: ['name', 'subtitle', 'width'],
+		render() {
+			return h('div', { 'data-subtitle': this.subtitle }, [this.$slots.default?.(), this.$slots.actions?.()])
+		},
+	},
+}))
+
+globalThis.t = (_app, text, vars = {}) => text.replace(/\{(\w+)\}/g, (_all, key) => vars[key] ?? `{${key}}`)
 
 /**
  * Mount the screen pop over a list of matches.
@@ -53,6 +63,26 @@ function screenPop(matches) {
 function page(id) {
 	return manifest.pages.find((p) => p.id === id)
 }
+
+describe('the screen pop as board PqInkomendGesprek draws it', () => {
+	it('names the number as read, each match\'s client line and kind, and offers a new contact', () => {
+		const wrapper = mount(ScreenPopModal, {
+			props: {
+				matches: [
+					{ id: 'c-1', name: 'Sanne de Vries', type: 'person', address: 'Inwoner, Parkstraat 24', _matchType: 'client' },
+					{ id: 'c-2', name: 'Buurtvereniging Oost', type: 'organization', clientName: 'Ellen Visser, secretaris', _matchType: 'client' },
+					{ id: 'k-1', name: 'Henk de Vries', _matchType: 'contact', clientName: 'Inwoner, Parkstraat 24' },
+				],
+				rawNumber: '0786123341',
+			},
+			global: { mocks: { t: globalThis.t } },
+		})
+		expect(wrapper.find('[data-subtitle]').attributes('data-subtitle')).toBe('Multiple contacts match 078 612 33 41. Select one to open, or create a new contact.')
+		const rows = wrapper.findAll('tbody tr').map((row) => row.findAll('td').slice(1, 3).map((cell) => cell.text()))
+		expect(rows).toEqual([['Inwoner, Parkstraat 24', 'Person'], ['Ellen Visser, secretaris', 'Organisation'], ['Inwoner, Parkstraat 24', 'Contact person']])
+		expect(wrapper.find('[data-testid="screen-pop-new"]').exists()).toBe(true)
+	})
+})
 
 describe('the screen pop names a matched caller', () => {
 	it('shows the preferred name first and the full name below it', () => {

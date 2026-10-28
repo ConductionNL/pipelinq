@@ -179,9 +179,9 @@
 				"failureReason": "LinkedIn: token verlopen, koppel het account opnieuw",
 				"approvals": [
 					{
-						"by": "{{cast:fatmayildiz.uid}}",
-						"at": "{{datetime:-12 11:00}}",
-						"decision": "approved"
+						"userId": "{{cast:fatmayildiz.uid}}",
+						"decision": "approved",
+						"decidedAt": "{{datetime:-12 11:00}}"
 					}
 				],
 				"agentAuthored": false,

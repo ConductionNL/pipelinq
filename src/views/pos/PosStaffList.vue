@@ -8,14 +8,9 @@
   -->
 <template>
 	<div class="pos-staff-list">
-		<!-- No heading of its own: the host NcSettingsSection (PosStaffManager, on
-		     the admin page) already names this surface, and a second "POS staff"
-		     title would just repeat it. -->
-		<div class="pos-staff-list__header">
-			<NcButton variant="primary" @click="createNew">
-				{{ t('pipelinq', 'New staff member') }}
-			</NcButton>
-		</div>
+		<!-- No heading or add button of its own: the host section
+		     (PosStaffManager) names this surface and adds a member from its title
+		     row, as the board draws it. -->
 
 		<NcLoadingIcon v-if="loading" :size="32" />
 
@@ -150,12 +145,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-}
-
-.pos-staff-list__header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
 }
 
 .pos-staff-list__table {
