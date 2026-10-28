@@ -79,6 +79,7 @@
 
 			<NcNoteCard
 				v-if="degraded.length > 0"
+				class="weekly-review__notice"
 				type="warning"
 				data-testid="weekly-review-degraded">
 				{{
@@ -320,6 +321,15 @@ export default {
 	margin: 0 0 12px;
 	font-size: 1.1rem;
 	font-weight: 700;
+	line-height: normal;
+}
+
+.weekly-review__notice.notecard {
+	margin: 0;
+	border-inline-start: 0;
+	border-radius: 8px;
+	background: var(--cn-board-notice-bg, var(--color-warning-light, #fff4e5));
+	color: var(--cn-board-notice-ink, var(--color-warning-text));
 }
 
 .weekly-review__pair {
