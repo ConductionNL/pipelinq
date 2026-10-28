@@ -10,9 +10,9 @@
  * @spec openspec/changes/client-activity-card/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
  */
 
+import { emit, subscribe } from '@nextcloud/event-bus'
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { emit, subscribe } from '@nextcloud/event-bus'
 import { h } from 'vue'
 
 const axiosMock = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }))

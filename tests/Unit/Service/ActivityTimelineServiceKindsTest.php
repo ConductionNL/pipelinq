@@ -63,7 +63,7 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 	 * @return ActivityTimelineService
 	 */
 	private function makeService(array $notes=[]): ActivityTimelineService {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default='') => match ($key) {
 				'register' => 'reg-1',
@@ -74,10 +74,10 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 			}
 		);
 
-		$tickets = $this->createMock(TicketService::class);
+		$tickets = $this->createMock(originalClassName: TicketService::class);
 		$tickets->method('getSchemaId')->willReturn('ticket-s');
 
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('findAll')->willReturnCallback(
 			function (array $params): array {
 				$filters = $params['filters'];
@@ -104,20 +104,26 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 			}
 		);
 
-		$notesService = $this->createMock(NotesService::class);
+		$notesService = $this->createMock(originalClassName: NotesService::class);
 		$notesService->method('getNotes')->willReturnCallback(
-			static fn (string $type, string $id) => ($type === 'openregister' && $id === 'client-1') ? $notes : []
+			static function (string $type, string $id) use ($notes): array {
+				if ($type === 'openregister' && $id === 'client-1') {
+					return $notes;
+				}
+
+				return [];
+			}
 		);
 
-		$fatma = $this->createMock(IUser::class);
+		$fatma = $this->createMock(originalClassName: IUser::class);
 		$fatma->method('getDisplayName')->willReturn('Fatma Yildiz');
-		$users = $this->createMock(IUserManager::class);
-		$users->method('get')->willReturnCallback(static fn (string $uid) => $uid === 'fatma' ? $fatma : null);
+		$users = $this->createMock(originalClassName: IUserManager::class);
+		$users->method('get')->willReturnMap([['fatma', $fatma], ['gone', null]]);
 
 		return new ActivityTimelineService(
 			appConfig: $config,
-			userSession: $this->createMock(IUserSession::class),
-			logger: $this->createMock(LoggerInterface::class),
+			userSession: $this->createMock(originalClassName: IUserSession::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
 			ticketService: $tickets,
 			objectService: $objects,
 			notesService: $notesService,
@@ -132,23 +138,36 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 	 */
 	public function testClientNotesAreNoteActivities(): void {
 		$this->rows['ticket-s'] = [
-			['id' => 't-1', 'ticketType' => 'interaction', 'client' => 'client-1', 'title' => 'Called', 'occurredAt' => '2026-10-02T09:30:00+00:00', 'assignee' => 'fatma'],
+			[
+				'id' => 't-1',
+				'ticketType' => 'interaction',
+				'client' => 'client-1',
+				'title' => 'Called',
+				'occurredAt' => '2026-10-02T09:30:00+00:00',
+				'assignee' => 'fatma',
+			],
 		];
 		$service = $this->makeService(
 			notes: [
-				['id' => 7, 'message' => '@pieter the street plan is under Documents.', 'authorId' => 'fatma', 'authorName' => 'Fatma Yildiz', 'timestamp' => '2026-10-04T10:40:00+00:00'],
+				[
+					'id' => 7,
+					'message' => '@pieter the street plan is under Documents.',
+					'authorId' => 'fatma',
+					'authorName' => 'Fatma Yildiz',
+					'timestamp' => '2026-10-04T10:40:00+00:00',
+				],
 			]
 		);
 
 		$result = $service->getTimeline(entityType: 'client', entityId: 'client-1', params: []);
 
-		$this->assertSame(['note', 'interaction'], array_column($result['items'], 'type'));
+		$this->assertSame(expected: ['note', 'interaction'], actual: array_column($result['items'], 'type'));
 		$note = $result['items'][0];
-		$this->assertSame('7', $note['id']);
-		$this->assertSame('@pieter the street plan is under Documents.', $note['title']);
-		$this->assertSame('2026-10-04T10:40:00+00:00', $note['date']);
-		$this->assertSame('fatma', $note['user']);
-		$this->assertSame('Fatma Yildiz', $note['userName']);
+		$this->assertSame(expected: '7', actual: $note['id']);
+		$this->assertSame(expected: '@pieter the street plan is under Documents.', actual: $note['title']);
+		$this->assertSame(expected: '2026-10-04T10:40:00+00:00', actual: $note['date']);
+		$this->assertSame(expected: 'fatma', actual: $note['user']);
+		$this->assertSame(expected: 'Fatma Yildiz', actual: $note['userName']);
 	}//end testClientNotesAreNoteActivities()
 
 	/**
@@ -158,13 +177,27 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 	 */
 	public function testAuthorsAreNamedByDisplayName(): void {
 		$this->rows['ticket-s'] = [
-			['id' => 't-1', 'ticketType' => 'interaction', 'client' => 'client-1', 'title' => 'Called', 'occurredAt' => '2026-10-02T09:30:00+00:00', 'assignee' => 'fatma'],
-			['id' => 't-2', 'ticketType' => 'interaction', 'client' => 'client-1', 'title' => 'Mailed', 'occurredAt' => '2026-10-01T09:30:00+00:00', 'assignee' => 'gone'],
+			[
+				'id' => 't-1',
+				'ticketType' => 'interaction',
+				'client' => 'client-1',
+				'title' => 'Called',
+				'occurredAt' => '2026-10-02T09:30:00+00:00',
+				'assignee' => 'fatma',
+			],
+			[
+				'id' => 't-2',
+				'ticketType' => 'interaction',
+				'client' => 'client-1',
+				'title' => 'Mailed',
+				'occurredAt' => '2026-10-01T09:30:00+00:00',
+				'assignee' => 'gone',
+			],
 		];
 
 		$result = $this->makeService()->getTimeline(entityType: 'client', entityId: 'client-1', params: []);
 
-		$this->assertSame(['Fatma Yildiz', 'gone'], array_column($result['items'], 'userName'));
+		$this->assertSame(expected: ['Fatma Yildiz', 'gone'], actual: array_column($result['items'], 'userName'));
 	}//end testAuthorsAreNamedByDisplayName()
 
 	/**
@@ -178,20 +211,28 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 			['id' => 'p-9', 'client' => 'client-9'],
 		];
 		$this->rows['message-s'] = [
-			['id' => 'm-1', 'contactId' => 'p-1', 'channel' => 'whatsapp', 'direction' => 'outbound', 'body' => 'Your appointment is on 8 October, 14:00.', 'deliveryStatus' => 'delivered', 'sentAt' => '2026-10-05T08:00:00+00:00'],
+			[
+				'id' => 'm-1',
+				'contactId' => 'p-1',
+				'channel' => 'whatsapp',
+				'direction' => 'outbound',
+				'body' => 'Your appointment is on 8 October, 14:00.',
+				'deliveryStatus' => 'delivered',
+				'sentAt' => '2026-10-05T08:00:00+00:00',
+			],
 			['id' => 'm-2', 'contactId' => 'p-9', 'channel' => 'sms', 'body' => 'Not this client', 'sentAt' => '2026-10-06T08:00:00+00:00'],
 		];
 
 		$result = $this->makeService()->getTimeline(entityType: 'client', entityId: 'client-1', params: ['types' => ['message']]);
 
-		$this->assertSame(1, $result['total']);
+		$this->assertSame(expected: 1, actual: $result['total']);
 		$message = $result['items'][0];
-		$this->assertSame('message', $message['type']);
-		$this->assertSame('m-1', $message['id']);
-		$this->assertSame('Your appointment is on 8 October, 14:00.', $message['title']);
-		$this->assertSame('2026-10-05T08:00:00+00:00', $message['date']);
-		$this->assertSame('whatsapp', $message['metadata']['channel']);
-		$this->assertSame('outbound', $message['metadata']['direction']);
+		$this->assertSame(expected: 'message', actual: $message['type']);
+		$this->assertSame(expected: 'm-1', actual: $message['id']);
+		$this->assertSame(expected: 'Your appointment is on 8 October, 14:00.', actual: $message['title']);
+		$this->assertSame(expected: '2026-10-05T08:00:00+00:00', actual: $message['date']);
+		$this->assertSame(expected: 'whatsapp', actual: $message['metadata']['channel']);
+		$this->assertSame(expected: 'outbound', actual: $message['metadata']['direction']);
 	}//end testClientMessagesComeFromItsContacts()
 
 	/**
@@ -206,7 +247,7 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 
 		$result = $this->makeService()->getTimeline(entityType: 'contact', entityId: 'p-1', params: ['types' => ['message']]);
 
-		$this->assertSame(['m-1'], array_column($result['items'], 'id'));
+		$this->assertSame(expected: ['m-1'], actual: array_column($result['items'], 'id'));
 	}//end testContactMessagesAreItsOwn()
 
 	/**
@@ -219,12 +260,14 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 			['id' => 't-1', 'ticketType' => 'interaction', 'client' => 'client-1', 'title' => 'Called', 'occurredAt' => '2026-10-02T09:30:00+00:00'],
 		];
 		$service = $this->makeService(
-			notes: [['id' => 7, 'message' => 'Note', 'authorId' => 'fatma', 'authorName' => 'Fatma Yildiz', 'timestamp' => '2026-10-04T10:40:00+00:00']]
+			notes: [
+				['id' => 7, 'message' => 'Note', 'authorId' => 'fatma', 'authorName' => 'Fatma Yildiz', 'timestamp' => '2026-10-04T10:40:00+00:00'],
+			]
 		);
 
 		$result = $service->getTimeline(entityType: 'client', entityId: 'client-1', params: ['types' => ['note']]);
 
-		$this->assertSame(['note'], array_column($result['items'], 'type'));
-		$this->assertSame([], $this->queries);
+		$this->assertSame(expected: ['note'], actual: array_column($result['items'], 'type'));
+		$this->assertSame(expected: [], actual: $this->queries);
 	}//end testNotesChipReadsNotesAlone()
 }//end class
