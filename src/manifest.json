@@ -7851,7 +7851,7 @@
 					{
 						"key": "timestamp",
 						"label": "Time",
-						"format": "date-time",
+						"formatter": "momentInYear",
 						"link": true
 					},
 					{
