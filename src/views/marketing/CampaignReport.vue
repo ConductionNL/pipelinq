@@ -113,23 +113,29 @@
 							<th scope="col" class="campaign-report__num">
 								{{ t('pipelinq', 'Visits') }}
 							</th>
-							<th scope="col" class="campaign-report__num">
+							<th v-if="!embedded" scope="col" class="campaign-report__num">
 								{{ t('pipelinq', 'Submissions') }}
+							</th>
+							<th scope="col" class="campaign-report__num">
+								{{ t('pipelinq', 'Leads') }}
 							</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr v-for="row in channels" :key="row.channel">
-							<td>{{ row.channel }}</td>
+							<td>{{ channelLabel(row.channel) }}</td>
 							<td class="campaign-report__num">
 								{{ countOrAbsent(row.reach) }}
 							</td>
-							<td class="campaign-report__num">{{ row.opened }}</td>
+							<td class="campaign-report__num">
+								{{ countOrAbsent(row.opened) }}
+							</td>
 							<td class="campaign-report__num">{{ row.clicks }}</td>
 							<td class="campaign-report__num">{{ row.visits }}</td>
-							<td class="campaign-report__num">
+							<td v-if="!embedded" class="campaign-report__num">
 								{{ row.submissions }}
 							</td>
+							<td class="campaign-report__num">{{ row.leads }}</td>
 						</tr>
 					</tbody>
 				</table>
@@ -154,7 +160,7 @@
 					</thead>
 					<tbody>
 						<tr v-for="row in modelSplit" :key="row.channel">
-							<td>{{ row.channel }}</td>
+							<td>{{ channelLabel(row.channel) }}</td>
 							<td class="campaign-report__num">
 								{{ money(row.value) }}
 							</td>
@@ -219,6 +225,7 @@ import {
 	summaryTiles,
 } from '../../services/campaignReport.js'
 import { fetchCampaignReport, fetchCampaigns } from '../../services/campaignsApi.js'
+import { CAMPAIGN_CHANNEL_LABELS, enumLabel } from '../../utils/enumLabels.js'
 
 export default {
 	name: 'CampaignReport',
@@ -460,6 +467,15 @@ export default {
 		},
 
 		/**
+		 * @param {string} channel A stored channel key.
+		 * @return {string} Its label, or the key as stored when it has none.
+		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 */
+		channelLabel(channel) {
+			return enumLabel(CAMPAIGN_CHANNEL_LABELS, channel, (text) => this.t('pipelinq', text))
+		},
+
+		/**
 		 * @param {number} ratio A ratio between 0 and 1.
 		 * @return {string} A percentage with one decimal.
 		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
@@ -567,6 +583,11 @@ export default {
 		padding: 8px 12px;
 		border-bottom: 1px solid var(--color-border);
 		text-align: start;
+
+		&.campaign-report__num {
+			text-align: end;
+			font-variant-numeric: tabular-nums;
+		}
 	}
 
 	th {
@@ -574,8 +595,60 @@ export default {
 	}
 }
 
-.campaign-report__num {
-	text-align: end;
+.campaign-report--embedded {
+	.campaign-report__tiles {
+		gap: 16px;
+
+		li {
+			padding: 16px 18px;
+			gap: 4px;
+			background: var(--color-main-background);
+			border-radius: 12px;
+			font-size: 14px;
+		}
+	}
+
+	.campaign-report__tile-value {
+		font-size: 28px;
+		font-weight: 700;
+		line-height: 1.2;
+	}
+
+	.campaign-report__scroll {
+		border: 1px solid var(--color-border);
+		border-radius: var(--border-radius-large, 8px);
+	}
+
+	.campaign-report__table {
+		margin-bottom: 0;
+		font-size: 14px;
+		line-height: 1.2;
+
+		th {
+			padding: 10px 12px;
+			font-weight: 600;
+			color: var(--color-text-maxcontrast);
+			background: var(--color-main-background);
+		}
+
+		td {
+			padding: 12px;
+		}
+
+		th:first-child,
+		td:first-child {
+			padding-inline-start: 18px;
+		}
+
+		th:last-child,
+		td:last-child {
+			padding-inline-end: 18px;
+		}
+
+		tbody tr:last-child td {
+			border-bottom: 0;
+		}
+	}
 }
 
 .campaign-report__basis {
