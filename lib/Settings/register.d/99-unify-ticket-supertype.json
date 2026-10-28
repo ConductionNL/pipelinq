@@ -158,6 +158,9 @@
               },
               "requester": {
                 "semanticRef": "client"
+              },
+              "caseType": {
+                "from": "requestedCaseType"
               }
             }
           }
@@ -337,6 +340,11 @@
             "title": "Stage Order",
             "description": "Ordinal of the current pipeline stage (request only).",
             "visible": false
+          },
+          "requestedCaseType": {
+            "type": "string",
+            "title": "Requested case type",
+            "description": "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType."
           },
           "caseReference": {
             "type": "string",

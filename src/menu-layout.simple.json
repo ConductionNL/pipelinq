@@ -573,7 +573,9 @@
 						"schema": "ticket",
 						"props": {
 							"ticketType": "interaction",
-							"parentTicket": "@objectId"
+							"parentTicket": "@objectId",
+							"occurredAt": "@now",
+							"direction": "inbound"
 						},
 						"formEyebrow": "Contact moment",
 						"formSubtitle": "A contact moment with the customer, saved with this ticket",
@@ -623,7 +625,8 @@
 								"label": "Client",
 								"description": ""
 							}
-						}
+						},
+						"formConfirmLabel": "Save contact moment"
 					},
 					{
 						"id": "ticket-resume",
@@ -1051,7 +1054,9 @@
 						"description": "",
 						"section": "Visible to the customer"
 					}
-				}
+				},
+				"editTitle": "Edit ticket",
+				"editConfirmLabel": "Save changes"
 			},
 			"configPatch": {
 				"bodyWidgets": {

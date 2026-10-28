@@ -8672,7 +8672,22 @@ OC.L10N.register(
         "Chance": "Chance",
         "Start stage": "Start stage",
         "New items start here": "New items start here",
-        "A closed stage ends the item: won or lost.": "A closed stage ends the item: won or lost."
+        "A closed stage ends the item: won or lost.": "A closed stage ends the item: won or lost.",
+        "Marketing · segments": "Marketing · segments",
+        "Edit ticket": "Edit ticket",
+        "Answer · {reference}": "Answer · {reference}",
+        "Convert to a case": "Convert to a case",
+        "{app} is available and can take over this request as a case.": "{app} is available and can take over this request as a case.",
+        "Goes with the case": "Goes with the case",
+        "Requester": "Requester",
+        "Create case in {app}": "Create case in {app}",
+        "Convert · {reference}": "Convert · {reference}",
+        "Convert": "Convert",
+        "Case type": "Case type",
+        "Choose a case type": "Choose a case type",
+        "The case types come from {app}.": "The case types come from {app}.",
+        "Keep this ticket open until the case is made": "Keep this ticket open until the case is made",
+        "Otherwise it reads Converted to a case, with a link to the case.": "Otherwise it reads Converted to a case, with a link to the case."
     },
     "nplurals=2; plural=(n != 1);"
 )

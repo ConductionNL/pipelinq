@@ -3511,7 +3511,7 @@
         "Not scored": "Geen score",
         "Relevance {score}": "Relevantie {score}",
         "Segment": "Segment",
-        "Segment name": "Segmentnaam",
+        "Segment name": "Naam segment",
         "Segment rules": "Segmentregels",
         "Segments": "Segmenten",
         "Select": "Selecteren",
@@ -8726,6 +8726,21 @@
         "View all {total} tickets": "Alle {total} tickets bekijken",
         "View history": "Geschiedenis bekijken",
         "web form": "webformulier",
-        "{total} in total": "{total} in totaal"
+        "{total} in total": "{total} in totaal",
+        "Marketing · segments": "Marketing · segmenten",
+        "Edit ticket": "Ticket bewerken",
+        "Answer · {reference}": "Antwoord · {reference}",
+        "Convert to a case": "Omzetten naar een zaak",
+        "{app} is available and can take over this request as a case.": "{app} is beschikbaar en kan dit verzoek als zaak overnemen.",
+        "Goes with the case": "Gaat mee naar de zaak",
+        "Requester": "Aanvrager",
+        "Create case in {app}": "Zaak aanmaken in {app}",
+        "Convert · {reference}": "Omzetten · {reference}",
+        "Convert": "Omzetten",
+        "Case type": "Zaaktype",
+        "Choose a case type": "Kies een zaaktype",
+        "The case types come from {app}.": "De zaaktypen komen uit {app}.",
+        "Keep this ticket open until the case is made": "Dit ticket open houden tot de zaak is aangemaakt",
+        "Otherwise it reads Converted to a case, with a link to the case.": "Anders staat er Omgezet naar een zaak, met een link naar de zaak."
     }
 }
