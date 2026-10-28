@@ -27,10 +27,6 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
-use DateTimeImmutable;
-use DateTimeInterface;
-use DateTimeZone;
-use Exception;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
@@ -49,6 +45,7 @@ class ContactSyncService {
 	 * @param ContactLinkedUidsService $linkedUidsService The linked UIDs service.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param VcardRevision $revisions Reads a card's REV.
 	 */
 	public function __construct(
 		private IContactsManager $contactsManager,
@@ -57,6 +54,7 @@ class ContactSyncService {
 		private ContactLinkedUidsService $linkedUidsService,
 		private IAppConfig $appConfig,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly VcardRevision $revisions,
 	) {
 	}//end __construct()
 
@@ -332,35 +330,9 @@ class ContactSyncService {
 			}
 		}
 
-		$status['updatedAt'] = $this->revToIso(rev: $this->extractFirstValue(value: ($card['REV'] ?? '')));
+		$status['updatedAt'] = $this->revisions->toIso(rev: $this->extractFirstValue(value: ($card['REV'] ?? '')));
 		return $status;
 	}//end cardStatus()
-
-	/**
-	 * A vCard REV (`20261027T091200Z`, or any ISO 8601 moment) as an ISO 8601 string.
-	 *
-	 * @param string $rev The REV value.
-	 *
-	 * @return string|null The moment, or null when there is none.
-	 */
-	private function revToIso(string $rev): ?string {
-		$rev = trim($rev);
-		if ($rev === '') {
-			return null;
-		}
-
-		$utc = new DateTimeZone('UTC');
-		$moment = DateTimeImmutable::createFromFormat(format: 'Ymd\THis\Z', datetime: $rev, timezone: $utc);
-		if ($moment === false) {
-			try {
-				$moment = new DateTimeImmutable(datetime: $rev, timezone: $utc);
-			} catch (Exception) {
-				return null;
-			}
-		}
-
-		return $moment->format(format: DateTimeInterface::ATOM);
-	}//end revToIso()
 
 	/**
 	 * Extract first value from a vCard property that may be an array or string.

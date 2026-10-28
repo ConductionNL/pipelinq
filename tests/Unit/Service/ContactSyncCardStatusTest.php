@@ -24,6 +24,7 @@ use OCA\Pipelinq\Service\ContactImportService;
 use OCA\Pipelinq\Service\ContactLinkedUidsService;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCA\Pipelinq\Service\ContactVcardService;
+use OCA\Pipelinq\Service\VcardRevision;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAddressBook;
 use OCP\IAppConfig;
@@ -58,6 +59,7 @@ class ContactSyncCardStatusTest extends TestCase {
 			linkedUidsService: $this->createMock(originalClassName: ContactLinkedUidsService::class),
 			appConfig: $this->createMock(originalClassName: IAppConfig::class),
 			objectService: $this->createMock(originalClassName: ObjectServiceInterface::class),
+			revisions: new VcardRevision(),
 		);
 	}//end service()
 
