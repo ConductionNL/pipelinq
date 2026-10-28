@@ -64,4 +64,10 @@ describe('task page', () => {
 		expect(nl[history.title]).toBe('Geschiedenis')
 		expect(history.content.excludeActions).toEqual(['read'])
 	})
+
+	it('offers "Bestand toevoegen" in the Documenten card header (pl3 item 4)', () => {
+		const files = config.widgets.find((w) => w.id === 'task-files')
+		expect(files.integrationId).toBe('files')
+		expect(files.props).toEqual({ addable: true })
+	})
 })

@@ -5887,7 +5887,10 @@
 						"type": "integration",
 						"integrationId": "files",
 						"title": "Documents",
-						"icon": "FolderOutline"
+						"icon": "FolderOutline",
+						"props": {
+							"addable": true
+						}
 					},
 					{
 						"id": "task-history",
