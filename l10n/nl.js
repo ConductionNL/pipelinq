@@ -8576,7 +8576,9 @@ OC.L10N.register(
         "You are registered for %1$s on %2$s at %3$s. We look forward to seeing you.": "U bent aangemeld voor %1$s op %2$s in %3$s. We zien u graag.",
         "You may not send this event's reminder.": "U mag de herinnering van dit evenement niet versturen.",
         "Built with portaliq; every sign-up arrives here as a registration.": "Gebouwd met portaliq; elke aanmelding komt hier binnen als registratie.",
-        "No registration form yet.": "Nog geen aanmeldformulier."
+        "No registration form yet.": "Nog geen aanmeldformulier.",
+        "Form binding": "Formulierkoppeling",
+        "The portaliq form binding (portalFormBinding) the sign-up form is published with; empty when the form is not in portaliq. The event page links to it to edit the form.": "De portaliq-formulierkoppeling (portalFormBinding) waarmee het aanmeldformulier is gepubliceerd; leeg als het formulier niet in portaliq staat. De evenementpagina linkt ernaar om het formulier te bewerken."
     },
     "nplurals=2; plural=(n != 1);"
 )

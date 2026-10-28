@@ -227,6 +227,15 @@
 								{ "label": "On page", "path": "pageUrl", "format": "url" },
 								{ "label": "Closes", "template": "{signupClosesAt:date-long}" }
 							],
+							"actions": [
+								{
+									"id": "edit-form",
+									"label": "Edit form",
+									"icon": "PencilOutline",
+									"type": "navigate",
+									"target": "/index.php/apps/portaliq/form-bindings/@source.formBinding"
+								}
+							],
 							"footnote": "Built with portaliq; every sign-up arrives here as a registration.",
 							"emptyText": "No registration form yet."
 						}

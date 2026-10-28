@@ -8605,7 +8605,9 @@ OC.L10N.register(
         "You are registered for %1$s on %2$s at %3$s. We look forward to seeing you.": "You are registered for %1$s on %2$s at %3$s. We look forward to seeing you.",
         "You may not send this event's reminder.": "You may not send this event's reminder.",
         "Built with portaliq; every sign-up arrives here as a registration.": "Built with portaliq; every sign-up arrives here as a registration.",
-        "No registration form yet.": "No registration form yet."
+        "No registration form yet.": "No registration form yet.",
+        "Form binding": "Form binding",
+        "The portaliq form binding (portalFormBinding) the sign-up form is published with; empty when the form is not in portaliq. The event page links to it to edit the form.": "The portaliq form binding (portalFormBinding) the sign-up form is published with; empty when the form is not in portaliq. The event page links to it to edit the form."
     },
     "nplurals=2; plural=(n != 1);"
 )

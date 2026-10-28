@@ -111,6 +111,15 @@ describe('the event page', () => {
 		expect(form.content.fields[1]).toEqual({ label: 'On page', path: 'pageUrl', format: 'url' })
 		expect(form.content.footnote).toBe('Built with portaliq; every sign-up arrives here as a registration.')
 	})
+
+	it('edits the form in portaliq, a button drawn only when the event names its form binding', () => {
+		const [edit] = widget(detail, 'event-form').content.actions
+		expect(edit).toMatchObject({ label: 'Edit form', type: 'navigate', target: '/index.php/apps/portaliq/form-bindings/@source.formBinding' })
+		const schema = read('lib', 'Settings', 'register.d', '99-zz-event-reminder-and-check-in.json').components.schemas.campaignEvent
+		expect(schema.version).toBe('1.2.0')
+		expect(schema.properties.formBinding).toMatchObject({ type: 'string', format: 'uuid' })
+		expect(register.components.schemas.campaignEvent.required).not.toContain('formBinding')
+	})
 })
 
 describe('the lists', () => {
