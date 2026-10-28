@@ -5,7 +5,7 @@
   - Picks a service account: the Nextcloud account a public endpoint (the
   - customer portal, the SMS and WhatsApp webhooks) writes as. It shows the
   - account in use, warns when it is unset, unknown, disabled or outside its
-  - group, and lets an admin choose one. The endpoint answers GET and PUT with
+  - group, and lets an admin choose one from the accounts in a select. The endpoint answers GET and PUT with
   - {userId, usable, reason, group}; both are admin only. The parent passes the
   - translated texts, so each screen keeps its own words.
   -
@@ -13,56 +13,45 @@
   -   no requirement owns the acting identity
 -->
 <template>
-	<fieldset class="service-account">
-		<legend>{{ legend }}</legend>
-		<p class="service-account__help">
-			{{ help(account.group) }}
-		</p>
-		<NcNoteCard v-if="!account.usable" type="warning">
-			{{ problem }}
-		</NcNoteCard>
-		<div class="service-account__row">
-			<div class="service-account__field">
-				<label :for="inputId">{{
-					t('pipelinq', 'Nextcloud user name')
-				}}</label>
-				<input
-					:id="inputId"
-					v-model.trim="input"
-					type="text"
-					autocomplete="off"
-					@keyup.enter="save" />
-			</div>
-			<div class="service-account__field service-account__field--action">
-				<NcButton :disabled="saving || !input" @click="save">
-					{{ t('pipelinq', 'Use this account') }}
-				</NcButton>
-			</div>
+	<div class="service-account">
+		<div class="service-account__field">
+			<NcSelect
+				:modelValue="selected"
+				:inputId="inputId"
+				:inputLabel="legend"
+				:options="options"
+				:clearable="false"
+				:disabled="saving"
+				@update:modelValue="save" />
+			<p class="service-account__help">
+				{{ help(account.group) }}
+			</p>
 		</div>
-		<NcNoteCard v-if="message" :type="messageType">
-			{{ message }}
+		<NcNoteCard v-if="status" :type="status.type">
+			{{ status.text }}
 		</NcNoteCard>
-	</fieldset>
+	</div>
 </template>
 
 <script>
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcNoteCard } from '@nextcloud/vue'
+import { NcNoteCard, NcSelect } from '@nextcloud/vue'
+import { listAssignableUserIds } from '../../services/userDisplayName.js'
 
 export default {
 	name: 'ServiceAccountPicker',
 	components: {
-		NcButton,
 		NcNoteCard,
+		NcSelect,
 	},
 
 	props: {
 		/** The admin endpoint that answers GET and PUT. */
 		url: { type: String, required: true },
-		/** The id of the user name input. */
+		/** The id of the account select's input. */
 		inputId: { type: String, required: true },
-		/** The fieldset legend. */
+		/** The select's label. */
 		legend: { type: String, required: true },
 		/** What the account does, given its group. */
 		help: { type: Function, required: true },
@@ -87,7 +76,8 @@ export default {
 				group: this.defaultGroup,
 			},
 
-			input: '',
+			selected: '',
+			userIds: [],
 			saving: false,
 			message: '',
 			messageType: 'success',
@@ -95,6 +85,44 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The accounts to choose from, the one in use first when the list lacks it.
+		 *
+		 * @return {Array<string>} The user ids.
+		 *
+		 * @spec exclude shared admin control for the portal and messaging service accounts;
+		 *   no requirement owns the acting identity
+		 */
+		options() {
+			const current = this.account.userId
+			if (current && !this.userIds.includes(current)) {
+				return [current, ...this.userIds]
+			}
+			return this.userIds
+		},
+
+		/**
+		 * The note under the select: a failure, the problem with the account,
+		 * or which account is in use.
+		 *
+		 * @return {{type: string, text: string}|null} The note, or null.
+		 *
+		 * @spec exclude shared admin control for the portal and messaging service accounts;
+		 *   no requirement owns the acting identity
+		 */
+		status() {
+			if (this.message && this.messageType === 'error') {
+				return { type: 'error', text: this.message }
+			}
+			if (!this.account.usable) {
+				return { type: 'warning', text: this.problem }
+			}
+			if (this.account.userId) {
+				return { type: 'success', text: this.savedMessage(this.account.userId) }
+			}
+			return null
+		},
+
 		/**
 		 * Why the account cannot be used, in words.
 		 *
@@ -122,6 +150,7 @@ export default {
 
 	mounted() {
 		this.load()
+		this.loadUserIds()
 	},
 
 	methods: {
@@ -137,7 +166,7 @@ export default {
 			try {
 				const response = await axios.get(this.url)
 				this.account = { ...this.account, ...(response.data || {}) }
-				this.input = this.account.userId || ''
+				this.selected = this.account.userId || ''
 			} catch {
 				this.message = this.loadError
 				this.messageType = 'error'
@@ -145,16 +174,31 @@ export default {
 		},
 
 		/**
-		 * Use the typed account.
+		 * Load the accounts an admin can choose from.
 		 *
 		 * @spec exclude shared admin control for the portal and messaging service accounts;
 		 *   no requirement owns the acting identity
 		 */
-		async save() {
+		async loadUserIds() {
+			this.userIds = await listAssignableUserIds()
+		},
+
+		/**
+		 * Use the chosen account.
+		 *
+		 * @param {string} userId The account.
+		 * @spec exclude shared admin control for the portal and messaging service accounts;
+		 *   no requirement owns the acting identity
+		 */
+		async save(userId) {
+			if (!userId) {
+				return
+			}
+			this.selected = userId
 			this.saving = true
 			this.message = ''
 			try {
-				const response = await axios.put(this.url, { userId: this.input })
+				const response = await axios.put(this.url, { userId })
 				this.account = { ...this.account, ...(response.data || {}) }
 				this.message = this.savedMessage(this.account.userId)
 				this.messageType = 'success'
@@ -173,38 +217,19 @@ export default {
 .service-account {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	margin: 0 0 16px;
-	padding: 12px 16px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-}
-
-.service-account legend {
-	padding: 0 4px;
-	font-weight: bold;
-}
-
-.service-account__help {
-	margin: 0;
-	color: var(--color-text-maxcontrast);
-}
-
-.service-account__row {
-	display: flex;
-	flex-wrap: wrap;
 	gap: 12px;
-	align-items: flex-end;
+	max-width: 560px;
 }
 
 .service-account__field {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
-	min-width: 240px;
 }
 
-.service-account__field--action {
-	min-width: auto;
+.service-account__help {
+	margin: 0;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
 }
 </style>

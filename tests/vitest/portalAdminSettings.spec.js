@@ -52,6 +52,7 @@ vi.mock('@nextcloud/vue', () => ({
 	NcCheckboxRadioSwitch: { name: 'NcCheckboxRadioSwitch', ...slot('label') },
 	NcLoadingIcon: { name: 'NcLoadingIcon', render: () => h('span') },
 	NcNoteCard: { name: 'NcNoteCard', ...slot('div') },
+	NcSelect: { name: 'NcSelect', render: () => h('div') },
 	NcSettingsSection: { name: 'NcSettingsSection', ...slot('section') },
 }))
 

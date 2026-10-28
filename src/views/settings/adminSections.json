@@ -91,12 +91,8 @@
 		"name": "Marketing intelligence",
 		"description": "Where the keyword, Matomo and competitor reads leave the instance, and how relevance is scored. Every outbound read goes through an OpenConnector source, so this section holds source ids and never a key.",
 		"valuesPath": "config",
+		"saveLabel": "Save market insight settings",
 		"fields": [
-			{
-				"key": "keywordsHeading",
-				"label": "Keywords",
-				"type": "heading"
-			},
 			{
 				"key": "search.crawl_source",
 				"label": "Crawl source for our own pages",

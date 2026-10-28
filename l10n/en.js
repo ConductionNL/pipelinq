@@ -9172,7 +9172,10 @@ OC.L10N.register(
         "VAT {vatRate}%": "VAT {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "The VAT percentage the quote's VAT is worked out at.",
         "The event this newsletter invites to.": "The event this newsletter invites to.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own.",
+        "Save market insight settings": "Save market insight settings",
+        "Signup form copied to the clipboard.": "Signup form copied to the clipboard.",
+        "Could not copy the signup form.": "Could not copy the signup form."
     },
     "nplurals=2; plural=(n != 1);"
 )
