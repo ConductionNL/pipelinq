@@ -12,6 +12,8 @@
 			:columns="columns"
 			:quickFilters="quickFilters"
 			:showTitle="true"
+			:pageTabs="pageTabs"
+			:filterMenu="true"
 			:showTitleIcon="false"
 			:headerFilters="false"
 			rowTitle="plain"
@@ -66,6 +68,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 import { exportApi } from '../../services/exportApi.js'
+import { exportJobSecondaryLabels, exportPageTabs } from './exportPageTabs.js'
 
 export default {
 	name: 'ExportJobs',
@@ -86,6 +89,7 @@ export default {
 					key: 'name',
 					label: t('pipelinq', 'Job'),
 					secondary: '{format} · {mode}',
+					secondaryLabels: exportJobSecondaryLabels(t),
 					cellClass: 'cn-cell--strong',
 				},
 				{ key: 'sourceSchemas', label: t('pipelinq', 'Dataset') },
@@ -111,6 +115,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The tab strip over the BI export lists (board PqBiExport).
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-the-bi-export-lists-share-one-tab-strip
+		 */
+		pageTabs() {
+			return exportPageTabs(t)
+		},
+
 		/**
 		 * The header buttons in the board's order: Download, Actions, New export job.
 		 *
