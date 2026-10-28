@@ -251,12 +251,12 @@ class RecordDocumentController extends Controller
         foreach ($lists as $list) {
             $schema = trim((string) ($list['schema'] ?? ''));
             $field  = trim((string) ($list['field'] ?? ''));
-            $as     = trim((string) ($list['as'] ?? ''));
-            if ($schema === '' || $field === '' || $as === '') {
+            $asKey  = trim((string) ($list['as'] ?? ''));
+            if ($schema === '' || $field === '' || $asKey === '') {
                 continue;
             }
 
-            $ref = ['register' => $register, 'schema' => $schema, 'filter' => [$field => $id], 'as' => $as];
+            $ref = ['register' => $register, 'schema' => $schema, 'filter' => [$field => $id], 'as' => $asKey];
             if (is_array($list['order'] ?? null) === true) {
                 $ref['order'] = $list['order'];
             }
