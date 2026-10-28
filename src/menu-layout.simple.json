@@ -1105,6 +1105,7 @@
 							"emptyText": "No callback planned.",
 							"footerAction": {
 								"type": "open-form",
+								"variant": "tonal",
 								"label": "Plan a callback",
 								"icon": "Phone",
 								"formTitle": "Plan a callback",

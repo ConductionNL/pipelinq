@@ -100,7 +100,7 @@ describe('forecast page', () => {
 	})
 
 	it('puts Export CSV in the quarter card\'s header, in the slot CnDetailCard draws', () => {
-		expect(dashboard).toMatch(/<template #actions>\s*<NcButton variant="secondary" data-testid="forecast-export-csv"/)
+		expect(dashboard).toMatch(/<template #actions>\s*<NcButton[^>]*data-testid="forecast-export-csv"/)
 		expect(dashboard).not.toMatch(/#header-actions/)
 	})
 

@@ -19,6 +19,7 @@
 				{{ line }}
 			</p>
 			<NcButton
+				class="cn-button--tonal"
 				variant="secondary"
 				:disabled="writing"
 				data-testid="contacts-sync-update"

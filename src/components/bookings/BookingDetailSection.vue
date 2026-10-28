@@ -34,7 +34,7 @@
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
 			<section v-if="part === 'customer'" class="booking-section__block booking-person">
-				<h2 class="booking-section__title">
+				<h2 class="booking-section__title cn-side-heading">
 					{{ customerKindLabel }}
 				</h2>
 				<div class="booking-person__head">
@@ -60,7 +60,7 @@
 			</section>
 
 			<section v-if="part === 'when'" class="booking-section__block booking-when">
-				<h2 class="booking-section__title">
+				<h2 class="booking-section__title cn-side-heading">
 					{{ t('pipelinq', 'When and where') }}
 				</h2>
 				<p class="booking-when__slot">
@@ -81,6 +81,7 @@
 				</dl>
 				<NcButton
 					v-if="canSendReminder"
+					class="cn-button--tonal"
 					variant="secondary"
 					:disabled="sending"
 					data-testid="booking-action-send-reminder"
