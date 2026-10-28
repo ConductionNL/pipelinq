@@ -37,6 +37,7 @@
 			:requester="requester"
 			:busy="busy"
 			:caseTypeSource="availability.caseTypeSource || null"
+			:portalName="availability.portalName || ''"
 			@close="dialogOpen = false"
 			@confirm="convertToCase" />
 
@@ -215,7 +216,7 @@ export default {
 		/**
 		 * Convert the request into a case via the semantic handoff endpoint.
 		 *
-		 * @param {{caseType?: string, keepOpen?: boolean}} [choice] What the dialog asked: the case type and whether the request stays open.
+		 * @param {{caseType?: string, keepOpen?: boolean, informCustomer?: boolean}} [choice] What the dialog asked: the case type, whether the request stays open and whether the customer is told.
 		 *
 		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 		 */
@@ -233,6 +234,7 @@ export default {
 					{
 						...(choice && choice.caseType ? { caseType: choice.caseType } : {}),
 						keepOpen: Boolean(choice && choice.keepOpen),
+						informCustomer: Boolean(choice && choice.informCustomer),
 					},
 				)
 				this.availability = {
