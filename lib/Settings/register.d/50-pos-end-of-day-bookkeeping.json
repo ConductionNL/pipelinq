@@ -40,7 +40,7 @@
         "slug": "posZReport",
         "title": "POS Z-Report",
         "icon": "FileChart",
-        "version": "1.0.1",
+        "version": "1.1.0",
         "summary": "Daily POS end-of-day settlement, aggregating confirmed transactions per terminal",
         "description": "Represents a daily Z-report (end-of-day settlement) for a POS terminal. Aggregates all confirmed/settled posTransaction objects for a given reportDate (and optional terminalId), computing per-rate tax breakdown, payment-method breakdown and gross/net totals server-authoritative: client-supplied figures are never trusted. Lifecycle: draft -> ready -> submitted -> posted -> reconciled, with a failed branch for retried submissions. Mapped to Schema.org Invoice.",
         "x-schema-org": "schema:Invoice",
@@ -194,6 +194,25 @@
             "default": 0,
             "minimum": 0,
             "title": "Bookkeeping Attempts"
+          },
+          "bookkeepingFailureReason": {
+            "type": "string",
+            "description": "Why the last raise did not reach shillinq: unreachable when the registry dispatch failed, not_configured when no shillinq journal connection is set up. Cleared when a raise succeeds.",
+            "enum": [
+              "unreachable",
+              "not_configured"
+            ],
+            "x-enum-labels": {
+              "unreachable": "shillinq did not respond",
+              "not_configured": "no shillinq connection is set up"
+            },
+            "title": "Bookkeeping failure reason"
+          },
+          "bookkeepingFailedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the last raise did not reach shillinq. Cleared when a raise succeeds.",
+            "title": "Bookkeeping failed at"
           },
           "notes": {
             "type": "string",

@@ -9285,6 +9285,20 @@
         "The report could not be exported.": "The report could not be exported.",
         "was {previousPeriod.leadConversionRate|tile} in the period before": "was {previousPeriod.leadConversionRate|tile} in the period before",
         "was {previousPeriod.avgRequestResolutionTime|tile}": "was {previousPeriod.avgRequestResolutionTime|tile}",
-        "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contact moments, was {previousPeriod.contactMomentVolume|tile}"
+        "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contact moments, was {previousPeriod.contactMomentVolume|tile}",
+        "Bookkeeping": "Bookkeeping",
+        "The general ledger, the VAT posting and the journal entry are managed in shillinq. Pipelinq only passes on the facts of this POS day through the integration registry.": "The general ledger, the VAT posting and the journal entry are managed in shillinq. Pipelinq only passes on the facts of this POS day through the integration registry.",
+        "Journal entry id in shillinq": "Journal entry id in shillinq",
+        "none yet": "none yet",
+        "Pass on to shillinq again": "Pass on to shillinq again",
+        "Waiting for shillinq": "Waiting for shillinq",
+        "Passed on to shillinq": "Passed on to shillinq",
+        "{status}: {reason} at {time}": "{status}: {reason} at {time}",
+        "shillinq did not respond": "shillinq did not respond",
+        "no shillinq connection is set up": "no shillinq connection is set up",
+        "Bookkeeping failure reason": "Bookkeeping failure reason",
+        "Bookkeeping failed at": "Bookkeeping failed at",
+        "Why the last raise did not reach shillinq: unreachable when the registry dispatch failed, not_configured when no shillinq journal connection is set up. Cleared when a raise succeeds.": "Why the last raise did not reach shillinq: unreachable when the registry dispatch failed, not_configured when no shillinq journal connection is set up. Cleared when a raise succeeds.",
+        "When the last raise did not reach shillinq. Cleared when a raise succeeds.": "When the last raise did not reach shillinq. Cleared when a raise succeeds."
     }
 }
