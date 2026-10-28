@@ -284,6 +284,40 @@ class SocialPostControllerTest extends TestCase {
 	}
 
 	/**
+	 * GET /api/social-performance/networks answers the per-network totals for
+	 * the period asked, clamped to at least one day.
+	 *
+	 * @return void
+	 */
+	public function testNetworkPerformanceAnswersThePerNetworkTotals(): void {
+		$this->signIn(uid: 'marieke');
+		$this->policy->method('isPrivileged')->willReturn(true);
+		$this->metrics->expects($this->once())->method('networkTotals')
+			->with(30)
+			->willReturn([['network' => 'mastodon', 'published' => 12]]);
+
+		$response = $this->controller->networkPerformance(days: 30);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('mastodon', $response->getData()['data'][0]['network']);
+	}
+
+	/**
+	 * A user without marketing access gets a 403 and no publication is read.
+	 *
+	 * @return void
+	 */
+	public function testNetworkPerformanceRefusesWithoutMarketingAccess(): void {
+		$this->signIn(uid: 'buurman');
+		$this->policy->method('isPrivileged')->willReturn(false);
+		$this->metrics->expects($this->never())->method('networkTotals');
+
+		$response = $this->controller->networkPerformance();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}
+
+	/**
 	 * GET /api/social-publications/{id}/share answers the prepared text for
 	 * the account's owner, WITHOUT requiring a marketing group: the colleague
 	 * being asked to post may be in none.

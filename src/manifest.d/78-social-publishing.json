@@ -175,7 +175,154 @@
         ],
         "footerNote": "A post can go to several networks at once, each with its own text.",
         "filterMenu": true,
-        "_boardNote": "Board PqSocial: the count line, the four lenses with counts, Download and New post in the header, the status as a coloured badge."
+        "_boardNote": "Board PqSocial: the count line, the four lenses with counts, Download and New post in the header, the status as a coloured badge. Under the list: Sociale prestaties (per-network totals, 30 days) and Social accounts (status pill, the account's next step opens the account).",
+        "afterList": [
+          {
+            "id": "social-network-performance",
+            "type": "object-table",
+            "title": "Social performance",
+            "content": {
+              "endpointSource": {
+                "url": "/apps/pipelinq/api/social-performance/networks",
+                "params": {
+                  "days": 30
+                },
+                "responsePath": "data"
+              },
+              "headerSubtitle": "Last 30 days",
+              "columns": [
+                {
+                  "key": "label",
+                  "label": "Network"
+                },
+                {
+                  "key": "published",
+                  "label": "Published",
+                  "align": "end",
+                  "format": {
+                    "style": "decimal",
+                    "decimals": 0
+                  }
+                },
+                {
+                  "key": "views",
+                  "label": "Views",
+                  "align": "end",
+                  "format": {
+                    "style": "decimal",
+                    "decimals": 0
+                  }
+                },
+                {
+                  "key": "likes",
+                  "label": "Likes",
+                  "align": "end",
+                  "format": {
+                    "style": "decimal",
+                    "decimals": 0
+                  }
+                },
+                {
+                  "key": "comments",
+                  "label": "Comments",
+                  "align": "end",
+                  "format": {
+                    "style": "decimal",
+                    "decimals": 0
+                  }
+                },
+                {
+                  "key": "shares",
+                  "label": "Shared",
+                  "align": "end",
+                  "format": {
+                    "style": "decimal",
+                    "decimals": 0
+                  }
+                },
+                {
+                  "key": "followers",
+                  "label": "Followers",
+                  "align": "end",
+                  "format": {
+                    "style": "decimal",
+                    "decimals": 0
+                  }
+                },
+                {
+                  "key": "engagementPercent",
+                  "label": "Engagement rate",
+                  "align": "end",
+                  "format": {
+                    "style": "percent",
+                    "decimals": 1
+                  }
+                }
+              ],
+              "emptyText": "Nothing published in the last 30 days."
+            }
+          },
+          {
+            "id": "social-accounts",
+            "type": "record-list",
+            "title": "Social accounts",
+            "content": {
+              "register": "pipelinq",
+              "schema": "socialAccount",
+              "limit": 20,
+              "title": "{network}",
+              "meta": "{handle}",
+              "valueLabels": {
+                "network": {
+                  "mastodon": "Mastodon",
+                  "bluesky": "Bluesky",
+                  "linkedin": "LinkedIn",
+                  "instagram": "Instagram",
+                  "facebook": "Facebook",
+                  "threads": "Threads",
+                  "x": "X"
+                }
+              },
+              "pill": {
+                "field": "status",
+                "labels": {
+                  "pending": "Connecting",
+                  "active": "Active",
+                  "expired": "Expired",
+                  "relink_needed": "Reconnect needed",
+                  "disabled": "Disabled",
+                  "not_configured": "Not set up"
+                },
+                "colorMap": {
+                  "active": "success",
+                  "relink_needed": "warning",
+                  "expired": "warning",
+                  "pending": "info",
+                  "disabled": "default",
+                  "not_configured": "default"
+                }
+              },
+              "rowAction": {
+                "type": "open-page",
+                "target": "SocialAccountDetail",
+                "variant": "outlined",
+                "label": "Open",
+                "labels": {
+                  "field": "status",
+                  "map": {
+                    "active": "Revoke",
+                    "relink_needed": "Reconnect",
+                    "expired": "Reconnect",
+                    "not_configured": "Connect",
+                    "pending": "Connect",
+                    "disabled": "Connect"
+                  }
+                }
+              },
+              "emptyText": "No social accounts yet."
+            }
+          }
+        ]
       }
     },
     {
