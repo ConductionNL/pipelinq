@@ -260,19 +260,51 @@
 					},
 					{
 						"id": "contract-billing",
-						"type": "data",
+						"type": "sections",
 						"title": "Billing",
 						"icon": "CurrencyEur",
 						"content": {
-							"columns": 3,
+							"sections": [
+								{ "widgetId": "contract-billing-fields" },
+								{ "title": "Lines", "widgetId": "contract-lines" }
+							]
+						}
+					},
+					{
+						"id": "contract-billing-fields",
+						"type": "data",
+						"title": "Billing",
+						"content": {
+							"columns": 2,
 							"include": [
 								"billingInterval",
 								"valuePerInterval",
 								"value",
 								"currency",
-								"invoiceReference",
-								"lineItems"
+								"invoiceReference"
 							]
+						}
+					},
+					{
+						"id": "contract-lines",
+						"type": "record-list",
+						"title": "Lines",
+						"content": {
+							"presentation": "table",
+							"limit": 50,
+							"objectRows": {
+								"path": "lineItems",
+								"refs": [
+									{ "field": "productRef", "register": "pipelinq", "schema": "product", "as": "product" }
+								]
+							},
+							"columns": [
+								{ "label": "Product", "value": "{product.name}" },
+								{ "label": "Description", "value": "{description}" },
+								{ "label": "Quantity", "value": "{quantity}", "align": "end" },
+								{ "label": "Value per unit", "value": "{unitValue|currency}", "align": "end" }
+							],
+							"emptyText": "No lines on this contract."
 						}
 					},
 					{

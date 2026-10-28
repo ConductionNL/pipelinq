@@ -71,6 +71,17 @@ describe('contract page', () => {
 		])
 	})
 
+	it('draws the billing card as the fields and a table of the lines, with the product names', () => {
+		const billing = widget(detail, 'contract-billing')
+		expect(billing.type).toBe('sections')
+		expect(billing.content.sections.map((s) => s.widgetId)).toEqual(['contract-billing-fields', 'contract-lines'])
+		expect(widget(detail, 'contract-billing-fields').content.include).not.toContain('lineItems')
+		const lines = widget(detail, 'contract-lines').content
+		expect(lines.presentation).toBe('table')
+		expect(lines.objectRows.refs).toEqual([{ field: 'productRef', register: 'pipelinq', schema: 'product', as: 'product' }])
+		expect(lines.columns.map((c) => c.value)).toEqual(['{product.name}', '{description}', '{quantity}', '{unitValue|currency}'])
+	})
+
 	it('keeps sending to invoicing and the status transitions', () => {
 		expect(detail.config.bodyWidgets[0].component).toBe(
 			'ContractInvoicingSection',

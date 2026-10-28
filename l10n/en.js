@@ -8580,7 +8580,9 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Then: write down the result and finish the task",
         "What now? Try again before the deadline": "What now? Try again before the deadline",
         "An attempt is logged": "An attempt is logged",
-        "Call the customer": "Call the customer"
+        "Call the customer": "Call the customer",
+        "Value per unit": "Value per unit",
+        "No lines on this contract.": "No lines on this contract."
     },
     "nplurals=2; plural=(n != 1);"
 )
