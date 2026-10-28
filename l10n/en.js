@@ -9092,7 +9092,13 @@ OC.L10N.register(
         "The member could not be taken off the list.": "The member could not be taken off the list.",
         "Filter on {column}": "Filter on {column}",
         "Send the list's confirmation link, or take a member off the list.": "Send the list's confirmation link, or take a member off the list.",
-        "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first": "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first"
+        "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first": "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first",
+        "{name}, client": "{name}, client",
+        "Request {reference}": "Request {reference}",
+        "Contact Ref": "Contact Ref",
+        "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it.": "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it.",
+        "Contract {contractNumber}": "Contract {contractNumber}",
+        "Reconciliation marker for the renewal lead: 'won' or 'lost'. Empty (stored as null) until the renewal lead closes.": "Reconciliation marker for the renewal lead: 'won' or 'lost'. Empty (stored as null) until the renewal lead closes."
     },
     "nplurals=2; plural=(n != 1);"
 )

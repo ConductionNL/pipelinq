@@ -4422,7 +4422,52 @@
 						"id": "contact-related",
 						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
+						"icon": "LinkVariant",
+						"content": {
+							"layout": "links",
+							"referenceSections": [
+								{
+									"key": "client",
+									"label": "Client",
+									"field": "client",
+									"register": "pipelinq",
+									"schema": "client",
+									"labelTemplate": "{name}, client",
+									"route": {
+										"name": "ClientDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								}
+							],
+							"extraSources": [
+								{
+									"key": "contracts",
+									"endpoint": "/apps/openregister/api/objects/pipelinq/salesContract?contactRef=@objectId",
+									"path": "results",
+									"itemLabel": "Contract {contractNumber}",
+									"rowRoute": {
+										"name": "ContractDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								},
+								{
+									"key": "requests",
+									"endpoint": "/apps/openregister/api/objects/pipelinq/ticket?contact=@objectId&ticketType=request",
+									"path": "results",
+									"itemLabel": "Request {reference}",
+									"rowRoute": {
+										"name": "TicketDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								}
+							]
+						}
 					},
 					{
 						"id": "contact-channels",

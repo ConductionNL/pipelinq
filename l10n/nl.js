@@ -9104,7 +9104,13 @@ OC.L10N.register(
         "The member could not be taken off the list.": "De abonnee kon niet van de lijst worden gehaald.",
         "Filter on {column}": "Filteren op {column}",
         "Send the list's confirmation link, or take a member off the list.": "Stuur de bevestigingslink van de lijst, of haal een abonnee van de lijst.",
-        "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first": "{shown} van {total} open leads · {pipeline|currency:EUR} in de pijplijn, {weighted|currency:EUR} gewogen · winkans eerst"
+        "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first": "{shown} van {total} open leads · {pipeline|currency:EUR} in de pijplijn, {weighted|currency:EUR} gewogen · winkans eerst",
+        "{name}, client": "{name}, klant",
+        "Request {reference}": "Verzoek {reference}",
+        "Contact Ref": "Contactpersoon",
+        "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it.": "De contactpersoon bij de klant met wie het contract is gesloten. Optioneel; de pagina van de contactpersoon toont de contracten die hem noemen.",
+        "Contract {contractNumber}": "Contract {contractNumber}",
+        "Reconciliation marker for the renewal lead: 'won' or 'lost'. Empty (stored as null) until the renewal lead closes.": "Markering voor de verlengingslead: 'won' of 'lost'. Leeg (opgeslagen als null) totdat de verlengingslead is afgesloten."
     },
     "nplurals=2; plural=(n != 1);"
 )

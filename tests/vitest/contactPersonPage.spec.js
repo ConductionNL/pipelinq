@@ -60,3 +60,25 @@ describe('the contact page as the board', () => {
 		expect(mount(Widget, { props: { objectId: 'c-1', content: { card: false } } }).find('.card').exists()).toBe(false)
 	})
 })
+
+describe('the Gerelateerd card as the board\'s links', () => {
+	it('lists the client and the person\'s requests as plain links (nextcloud-vue related-links-layout)', () => {
+		const related = widget('contact-related').content
+		expect(related.layout).toBe('links')
+		expect(related.referenceSections[0]).toMatchObject({ field: 'client', schema: 'client', labelTemplate: '{name}, client' })
+		expect(related.extraSources.find((source) => source.key === 'requests')).toMatchObject({
+			endpoint: '/apps/openregister/api/objects/pipelinq/ticket?contact=@objectId&ticketType=request',
+			itemLabel: 'Request {reference}',
+		})
+	})
+
+	it('lists the contracts made with the person before the requests, as the board does (Contract CON-2026-0031)', () => {
+		const sources = widget('contact-related').content.extraSources
+		expect(sources.map((source) => source.key)).toEqual(['contracts', 'requests'])
+		expect(sources[0]).toMatchObject({
+			endpoint: '/apps/openregister/api/objects/pipelinq/salesContract?contactRef=@objectId',
+			itemLabel: 'Contract {contractNumber}',
+			rowRoute: { name: 'ContractDetail', params: { id: '{id}' } },
+		})
+	})
+})
