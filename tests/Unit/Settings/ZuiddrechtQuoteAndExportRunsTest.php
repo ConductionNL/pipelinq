@@ -159,4 +159,17 @@ class ZuiddrechtQuoteAndExportRunsTest extends TestCase {
 			haystack: $objects['sjabloon-nieuwsbrief-oktober-warmtenet']['data']['bodyText']
 		);
 	}//end testTheOctoberNewsletterInvitedToTheEvent()
+
+	/**
+	 * Contract CON-2026-0031 names Joke Smit, Sportclub Zuiddrecht 1958's contact, through a change after her part.
+	 *
+	 * @return void
+	 */
+	public function testTheSportsFieldContractNamesJokeSmit(): void {
+		$changes = array_column($this->fragment()['changes'], null, 'key');
+		$change  = $changes['contract-sportvelden-contact'];
+
+		$this->assertSame(expected: ['contractNumber' => 'CON-2026-0031'], actual: $change['where']);
+		$this->assertSame(expected: ['contactRef' => '{{object:contact-joke-smit.id}}'], actual: $change['set']);
+	}//end testTheSportsFieldContractNamesJokeSmit()
 }//end class
