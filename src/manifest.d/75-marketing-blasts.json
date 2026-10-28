@@ -327,7 +327,19 @@
 									}
 								}
 							},
-							"caption": "messages handed to the provider"
+							"caption": "{count} messages",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"metric": "sum",
+								"field": "totals.sent",
+								"filter": {
+									"status": "sent",
+									"sentAt": {
+										"gte": "@monthStart"
+									}
+								}
+							}
 						}
 					},
 					{
