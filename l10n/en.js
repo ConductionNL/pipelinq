@@ -8701,7 +8701,11 @@ OC.L10N.register(
         "Whether new tickets can still get this category.": "Whether new tickets can still get this category.",
         "No price tiers yet. The unit price applies to every quantity.": "No price tiers yet. The unit price applies to every quantity.",
         "Quantity from": "Quantity from",
-        "No variants. The product is sold as one item.": "No variants. The product is sold as one item."
+        "No variants. The product is sold as one item.": "No variants. The product is sold as one item.",
+        "Where cashiers see this": "Where cashiers see this",
+        "Open the till": "Open the till",
+        "Set how cashiers search for customers, how much purchase history they see at checkout and how marketing consent goes to the linked contact.": "Set how cashiers search for customers, how much purchase history they see at checkout and how marketing consent goes to the linked contact.",
+        "The customer card at the till: the search, the purchase history and the consent question.": "The customer card at the till: the search, the purchase history and the consent question."
     },
     "nplurals=2; plural=(n != 1);"
 )

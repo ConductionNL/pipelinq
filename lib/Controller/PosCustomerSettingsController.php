@@ -74,7 +74,7 @@ class PosCustomerSettingsController extends Controller {
 	 *
 	 * @var array<int, int>
 	 */
-	private const ALLOWED_DEPTHS = [10, 20, 50];
+	private const ALLOWED_DEPTHS = [5, 10, 20, 50];
 
 	/**
 	 * Constructor.
@@ -234,7 +234,7 @@ class PosCustomerSettingsController extends Controller {
 
 		$depth = (int)$raw;
 		if (in_array($depth, self::ALLOWED_DEPTHS, true) === false) {
-			throw new InvalidArgumentException('Geschiedenisdiepte moet 10, 20 of 50 zijn.');
+			throw new InvalidArgumentException('Geschiedenisdiepte moet 5, 10, 20 of 50 zijn.');
 		}
 
 		$this->appConfig->setValueString(Application::APP_ID, 'customerHistoryDepth', (string)$depth);

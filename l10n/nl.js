@@ -8690,7 +8690,11 @@ OC.L10N.register(
         "Whether new tickets can still get this category.": "Of nieuwe tickets deze categorie nog kunnen krijgen.",
         "No price tiers yet. The unit price applies to every quantity.": "Nog geen prijsstaffels. De stukprijs geldt voor elk aantal.",
         "Quantity from": "Vanaf aantal",
-        "No variants. The product is sold as one item.": "Geen varianten. Het product wordt als één artikel verkocht."
+        "No variants. The product is sold as one item.": "Geen varianten. Het product wordt als één artikel verkocht.",
+        "Where cashiers see this": "Waar kassamedewerkers dit zien",
+        "Open the till": "Kassa openen",
+        "Set how cashiers search for customers, how much purchase history they see at checkout and how marketing consent goes to the linked contact.": "Stel in hoe kassamedewerkers klanten zoeken, hoeveel geschiedenis ze bij het afrekenen zien en hoe toestemming voor marketing naar het gekoppelde contact gaat.",
+        "The customer card at the till: the search, the purchase history and the consent question.": "De klantkaart op de kassa: zoeken, de aankoopgeschiedenis en de toestemmingsvraag."
     },
     "nplurals=2; plural=(n != 1);"
 )
