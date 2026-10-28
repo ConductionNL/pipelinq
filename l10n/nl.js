@@ -8551,7 +8551,24 @@ OC.L10N.register(
         "The contact moment this task was created from.": "Het contactmoment waaruit deze taak is ontstaan.",
         "Customer number": "Klantnummer",
         "The number the organisation knows this customer by, such as K-2019-01184.": "Het nummer waaronder de organisatie deze klant kent, zoals K-2019-01184.",
-        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP."
+        "Where the customer's data comes from, such as the resident portal and the population register.": "Waar de gegevens van de klant vandaan komen, zoals het inwonerportaal en de BRP.",
+        "Projects and invoicing": "Projecten en facturering",
+        "Sales, contracts and invoicing": "Verkoop, contracten en facturering",
+        "Further in Shillinq": "Verder in Shillinq",
+        "Search the knowledge base": "Zoek in de kennisbank",
+        "No appointments": "Geen afspraken",
+        "with {assignee|user}": "met {assignee|user}",
+        "No projects.": "Geen projecten.",
+        "No invoices for this resident.": "Geen facturen voor deze inwoner.",
+        "No invoices for this organisation.": "Geen facturen voor deze organisatie.",
+        "active": "actief",
+        "on hold": "gepauzeerd",
+        "cancelled": "geannuleerd",
+        "%s, ends %s": "%s, loopt af %s",
+        "%s, renews %s": "%s, verlengt %s",
+        "_%n open lead: %s, %s_::_%n open leads, the largest: %s, %s_": ["%n open lead: %s, %s","%n open leads, de grootste: %s, %s"],
+        "_%n project: %s, %s._::_%n projects, the first: %s, %s._": ["%n project: %s, %s.","%n projecten, het eerste: %s, %s."],
+        "_%n invoice, %s open._::_%n invoices, %s open._": ["%n factuur, %s open.","%n facturen, %s open."]
     },
     "nplurals=2; plural=(n != 1);"
 )

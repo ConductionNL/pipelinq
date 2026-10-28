@@ -123,6 +123,7 @@ return [
         ['name' => 'customer360#summary', 'url' => '/api/customer-360/summary', 'verb' => 'GET'],
         // The client's cases from dossiq's case leaf, by the client's master entity (PqKlant / PqOrganisatie Zaken).
         ['name' => 'clientCase#index', 'url' => '/api/clients/{id}/cases', 'verb' => 'GET'],
+        ['name' => 'clientBusiness#index', 'url' => '/api/clients/{id}/business', 'verb' => 'GET'],
         // Letters from a filinq template (work-letter-from-filinq-template).
         ['name' => 'letter#templates', 'url' => '/api/letters/templates', 'verb' => 'GET'],
         ['name' => 'letter#create', 'url' => '/api/clients/{id}/letters', 'verb' => 'POST'],

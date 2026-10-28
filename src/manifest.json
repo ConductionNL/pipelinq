@@ -3370,6 +3370,127 @@
 					"client-channels",
 					"client-relationships",
 					{
+						"id": "side-appointments",
+						"type": "record-list",
+						"title": "Appointments",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Afspraken: the resident's coming appointment as a linked line, its status and handler under it.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "appointmentBooking",
+							"filter": {
+								"customerId": "@objectId",
+								"status": {
+									"in": [
+										"pending-deposit",
+										"confirmed",
+										"rescheduled"
+									]
+								}
+							},
+							"sort": {
+								"field": "startAt",
+								"dir": "asc"
+							},
+							"limit": 2,
+							"presentation": "rows",
+							"density": "stacked",
+							"title": "{subject}, {startAt|datetime}",
+							"meta": {
+								"parts": [
+									"{status}",
+									"with {assignee|user}"
+								]
+							},
+							"valueLabels": {
+								"status": {
+									"pending-deposit": "Awaiting deposit",
+									"confirmed": "Confirmed",
+									"rescheduled": "Rescheduled"
+								}
+							},
+							"rowRoute": "BookingDetail",
+							"emptyText": "No appointments"
+						}
+					},
+					{
+						"id": "side-business-person",
+						"type": "facts",
+						"title": "Projects and invoicing",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Projecten en facturering: the resident's projects in planninq and invoices in shillinq, as the sentences GET /api/clients/{id}/business builds; a sentence whose app is missing is left out.",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/clients/@objectId/business"
+							},
+							"fields": [
+								{
+									"as": "text",
+									"path": "projectsLine"
+								},
+								{
+									"as": "text",
+									"path": "invoicesLine",
+									"joinPrevious": true
+								}
+							],
+							"link": {
+								"label": "Further in Shillinq",
+								"icon": "OpenInNew",
+								"href": "{shillinqUrl}",
+								"target": "_blank"
+							}
+						}
+					},
+					{
+						"id": "side-business-organisation",
+						"type": "facts",
+						"title": "Sales, contracts and invoicing",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Verkoop, contracten en facturering: the open leads, running contracts, projects and invoices of the organisation, as the sentences GET /api/clients/{id}/business builds.",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/clients/@objectId/business"
+							},
+							"fields": [
+								{
+									"as": "text",
+									"path": "leadsLine"
+								},
+								{
+									"as": "text",
+									"path": "contractsLine"
+								},
+								{
+									"as": "text",
+									"path": "projectsLine"
+								},
+								{
+									"as": "text",
+									"path": "invoicesLine"
+								}
+							],
+							"link": {
+								"label": "Further in Shillinq",
+								"icon": "OpenInNew",
+								"href": "{shillinqUrl}",
+								"target": "_blank"
+							}
+						}
+					},
+					{
 						"id": "side-history",
 						"type": "facts",
 						"title": "Record history",
@@ -3398,6 +3519,19 @@
 								"icon": "History",
 								"sidebarTab": "audit"
 							}
+						}
+					},
+					{
+						"id": "side-knowledge",
+						"type": "kb-search",
+						"title": "Knowledge base",
+						"_note": "PqKlant/PqOrganisatie Kennisbank: the knowledge base search as a side card (board look: placeholder and search icon).",
+						"content": {
+							"endpoint": "/apps/openregister/api/integrations/xwiki/search",
+							"queryParam": "q",
+							"minChars": 3,
+							"limit": 5,
+							"placeholder": "Search the knowledge base"
 						}
 					},
 					"client-related",
