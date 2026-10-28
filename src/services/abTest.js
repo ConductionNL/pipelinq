@@ -10,12 +10,15 @@
  */
 
 /**
- * Delivered, clicked and click rate of one variant blast.
+ * Delivered, clicked and click rate of one variant blast, with the subject of
+ * the template it sent. A variant differs from its parent by its template, so
+ * the subject is the template's.
  *
- * @param {object} blast The variant blast.
+ * @param {object} blast            The variant blast.
+ * @param {object} templateSubjects Subject per template id.
  * @return {{delivered: number, clicked: number, clickRate: number, subject: string}}
  */
-export function variantStats(blast) {
+export function variantStats(blast, templateSubjects = {}) {
 	const totals = blast?.totals || {}
 	const delivered = totals.delivered || 0
 	const clicked = totals.clicked || 0
@@ -23,8 +26,27 @@ export function variantStats(blast) {
 		delivered,
 		clicked,
 		clickRate: delivered > 0 ? clicked / delivered : 0,
-		subject: blast?.subject || '',
+		subject: templateSubjects[blast?.templateId] || '',
 	}
+}
+
+/**
+ * The template ids of every blast that takes part in an A/B test: each
+ * variant and the parent it names.
+ *
+ * @param {Array<object>} blasts The loaded blasts.
+ * @return {Array<string>} Distinct template ids.
+ */
+export function abTemplateIds(blasts) {
+	const parents = new Set(blasts.map((b) => b.abVariantOf).filter(Boolean))
+	const ids = new Set()
+	for (const blast of blasts) {
+		const id = blast.id || blast.uuid || blast.slug
+		if ((blast.abVariantOf || parents.has(id)) && blast.templateId) {
+			ids.add(blast.templateId)
+		}
+	}
+	return [...ids]
 }
 
 /**
