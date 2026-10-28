@@ -36,10 +36,10 @@
 				"endDate": "{{date:54}}",
 				"lineItems": [
 					{
-						"product": "Dagelijkse schoonmaak",
+						"productRef": "Dagelijkse schoonmaak",
 						"description": "Kantoren, spreekkamers en sanitair, werkdagen na 17:00",
 						"quantity": 1,
-						"unitPrice": 2350
+						"unitValue": 2350
 					}
 				]
 			}
@@ -165,10 +165,10 @@
 				"endDate": "{{date:256}}",
 				"lineItems": [
 					{
-						"product": "Evenementenpakket, straatfeest",
+						"productRef": "Evenementenpakket, straatfeest",
 						"description": "Dranghekken, afzetlint en borden voor één straat",
 						"quantity": 1,
-						"unitPrice": 245
+						"unitValue": 245
 					}
 				]
 			}
