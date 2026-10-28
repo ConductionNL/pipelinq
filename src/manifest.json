@@ -6490,38 +6490,366 @@
 				"titleTemplate": "Shift {floatAt|date}, {drawer}",
 				"titleField": "reference",
 				"stageField": "status",
-				"primaryActionByStage": { "open": "shift-count" },
+				"primaryActionByStage": {
+					"open": "shift-count",
+					"closed": "shift-approve-diff"
+				},
 				"headerActions": [
 					{
 						"id": "shift-count",
 						"label": "Close and count shift",
 						"type": "open-form",
 						"icon": "CashRegister",
-						"endpoint": { "url": "/apps/pipelinq/api/pos-shifts/@objectId/count", "method": "POST" },
+						"endpoint": {
+							"url": "/apps/pipelinq/api/pos-shifts/@objectId/count",
+							"method": "POST"
+						},
 						"formProperties": {
-							"amount": { "type": "number", "minimum": 0, "title": "Counted amount", "description": "Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).", "required": true },
-							"notes": { "type": "string", "title": "Notes" }
+							"amount": {
+								"type": "number",
+								"minimum": 0,
+								"title": "Counted amount",
+								"description": "Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).",
+								"required": true
+							},
+							"notes": {
+								"type": "string",
+								"title": "Notes"
+							}
 						},
 						"successMessage": "Count recorded.",
-						"visibleWhen": { "field": "status", "value": "open" }
+						"visibleWhen": {
+							"field": "status",
+							"value": "open"
+						}
+					},
+					{
+						"id": "shift-approve-diff",
+						"label": "Approve difference",
+						"type": "api-call",
+						"icon": "Check",
+						"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
+						"successMessage": "Cash difference approved.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "status",
+									"value": "closed"
+								},
+								{
+									"field": "reconciliationStatus",
+									"value": "pending"
+								}
+							]
+						}
 					}
 				],
 				"register": "pipelinq",
 				"schema": "cashShift",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "FINANCIAL archetype (bespoke-detail-pages). A cash-drawer shift is a cash-management ledger record, so NO comms leaves (cashShift declares no email/calendar linkedType). Two columns: the shift fields 8-wide beside the Opening float and Drops tiles and the cash-reconciliation variance; the cash drops (CashShiftDropsWidget: an object-list on cashDrop, FK 'shift', with Add drop) beside Related. Audit-trail is a sidebar tab.",
+				"_note": "FINANCIAL archetype (bespoke-detail-pages). A cash-drawer shift is a cash-management ledger record, so NO comms leaves. Board look: one tab strip as the body (the shift, the cash difference with its approve and reject actions, the drops), and the opening float, the sales in this shift and recent history in the side column. The three KPI tiles stay declared for the dashboard catalogue but are not placed.",
 				"widgets": [
+					{
+						"id": "shift-panels",
+						"type": "tabs",
+						"title": "Shift",
+						"_note": "The board tab strip: the children stay out of `layout` because the tabs widget renders them.",
+						"content": {
+							"ariaLabel": "Shift",
+							"tabs": [
+								{
+									"label": "Overview",
+									"widgetIds": [
+										"shift-data",
+										"shift-variance",
+										"shift-drops"
+									]
+								},
+								{
+									"label": "History",
+									"widgetId": "shift-history",
+									"countFrom": "widget"
+								}
+							]
+						}
+					},
 					{
 						"id": "shift-data",
 						"type": "data",
 						"title": "Shift",
 						"icon": "FileDocument",
 						"content": {
-							"columns": 2,
+							"title": "Shift",
+							"columns": 3,
+							"hideEmpty": true,
+							"include": [
+								"drawer",
+								"operator",
+								"floatAt",
+								"closedAt",
+								"status"
+							],
 							"overrides": {
-								"operator": { "formatter": "userDisplayName" },
-								"managedBy": { "formatter": "userDisplayName" }
+								"drawer": {
+									"label": "Till"
+								},
+								"operator": {
+									"label": "Cashier",
+									"formatter": "userDisplayName"
+								},
+								"floatAt": {
+									"label": "Opened",
+									"formatter": "shortDateTime"
+								},
+								"closedAt": {
+									"label": "Closed",
+									"formatter": "shortDateTime"
+								},
+								"status": {
+									"editable": false,
+									"enumLabels": {
+										"open": "Open",
+										"closed": "Counted",
+										"reconciled": "Reconciled"
+									}
+								}
 							}
+						}
+					},
+					{
+						"id": "shift-variance",
+						"type": "facts",
+						"title": "Cash difference",
+						"icon": "ScaleBalance",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "cashDiff",
+								"filter": {
+									"shift": "@objectId"
+								},
+								"sort": {
+									"field": "_created",
+									"dir": "desc"
+								}
+							},
+							"headerPill": {
+								"path": "status",
+								"map": {
+									"pending": "Pending",
+									"approved": "Approved",
+									"rejected": "Rejected"
+								},
+								"variantMap": {
+									"pending": "warning",
+									"approved": "success",
+									"rejected": "error"
+								}
+							},
+							"fields": [
+								{
+									"path": "expectedAmount",
+									"label": "Expected amount",
+									"format": "currency"
+								},
+								{
+									"path": "actualAmount",
+									"label": "Counted amount",
+									"format": "currency"
+								},
+								{
+									"path": "diffAmount",
+									"label": "Difference",
+									"format": "currency"
+								},
+								{
+									"path": "diffPercentage",
+									"label": "Percentage",
+									"format": "number",
+									"suffix": "%"
+								},
+								{
+									"as": "pill",
+									"key": "tolerance",
+									"path": "withinTolerance",
+									"map": {
+										"true": "Within tolerance",
+										"false": "Outside tolerance"
+									},
+									"variantMap": {
+										"true": "success",
+										"false": "warning"
+									}
+								},
+								{
+									"path": "approvedBy",
+									"label": "Reviewed by",
+									"format": "user"
+								},
+								{
+									"path": "rejectionReason",
+									"label": "Rejection reason"
+								}
+							],
+							"actions": [
+								{
+									"id": "diff-approve",
+									"label": "Approve",
+									"type": "api-call",
+									"variant": "primary",
+									"adminOnly": true,
+									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
+									"payload": {
+										"diffId": "@source.id"
+									},
+									"successMessage": "Cash difference approved.",
+									"visibleWhen": {
+										"field": "status",
+										"value": "pending"
+									}
+								},
+								{
+									"id": "diff-reject",
+									"label": "Reject",
+									"type": "open-form",
+									"variant": "error",
+									"adminOnly": true,
+									"endpoint": {
+										"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/reject?diffId=@source.id",
+										"method": "POST"
+									},
+									"formProperties": {
+										"reason": {
+											"type": "string",
+											"title": "Rejection reason",
+											"description": "This rejects the cash difference and reopens the shift for a recount."
+										}
+									},
+									"successMessage": "Cash difference rejected. The shift is open for a recount.",
+									"visibleWhen": {
+										"field": "status",
+										"value": "pending"
+									}
+								}
+							],
+							"emptyText": "Not counted yet. The difference appears once the shift is closed and counted."
+						}
+					},
+					{
+						"id": "shift-drops",
+						"type": "CashShiftDropsWidget",
+						"title": "Drops",
+						"icon": "CashMinus",
+						"content": {
+							"register": "pipelinq",
+							"schema": "cashDrop",
+							"filter": {
+								"shift": "@objectId"
+							},
+							"sort": {
+								"field": "droppedAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "reason",
+									"label": "Reason"
+								},
+								{
+									"key": "amount",
+									"label": "Amount",
+									"align": "right",
+									"format": {
+										"style": "currency",
+										"currency": "EUR"
+									}
+								},
+								{
+									"key": "droppedAt",
+									"label": "At time",
+									"formatter": "timeOfDay"
+								},
+								{
+									"key": "droppedBy",
+									"label": "By",
+									"formatter": "userDisplayName"
+								}
+							],
+							"limit": 25,
+							"allowCreate": false,
+							"emptyText": "No cash drops recorded on this shift yet.",
+							"footnote": "Drops can only be added to an open shift. An open shift has Close and count shift at the top."
+						}
+					},
+					{
+						"id": "shift-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "shift-opening",
+						"type": "facts",
+						"title": "Opening float",
+						"_note": "The opening float with the drops taken out of the drawer during the shift.",
+						"content": {
+							"fields": [
+								{
+									"as": "title",
+									"path": "floatAmount",
+									"format": "currency"
+								},
+								{
+									"as": "line",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "cashDrop",
+										"filter": {
+											"shift": "@objectId"
+										}
+									},
+									"suffix": " drops"
+								}
+							]
+						}
+					},
+					{
+						"id": "shift-related",
+						"type": "facts",
+						"title": "Related",
+						"_note": "The sales booked in this shift (posTransaction.shift), with the transactions list as the way in.",
+						"content": {
+							"fields": [
+								{
+									"as": "line",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "posTransaction",
+										"filter": {
+											"shift": "@objectId"
+										}
+									},
+									"suffix": " transactions in this shift"
+								}
+							],
+							"link": {
+								"label": "Transactions",
+								"route": {
+									"name": "PosTransactions"
+								}
+							}
+						}
+					},
+					{
+						"id": "shift-side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"content": {
+							"maxDisplay": 4,
+							"excludeActions": [
+								"read"
+							]
 						}
 					},
 					{
@@ -6538,7 +6866,9 @@
 									"metric": "sum",
 									"field": "floatAmount",
 									"currency": "EUR",
-									"filter": { "id": "@objectId" }
+									"filter": {
+										"id": "@objectId"
+									}
 								}
 							]
 						}
@@ -6556,91 +6886,11 @@
 									"schema": "cashDrop",
 									"metric": "count",
 									"countLabel": "drops",
-									"filter": { "shift": "@objectId" }
+									"filter": {
+										"shift": "@objectId"
+									}
 								}
 							]
-						}
-					},
-					{
-						"id": "shift-variance",
-						"type": "facts",
-						"title": "Cash difference",
-						"icon": "ScaleBalance",
-						"content": {
-							"source": {
-								"register": "pipelinq",
-								"schema": "cashDiff",
-								"filter": { "shift": "@objectId" },
-								"sort": { "field": "@self.created", "dir": "desc" }
-							},
-							"headerPill": {
-								"path": "status",
-								"map": { "pending": "Pending", "approved": "Approved", "rejected": "Rejected" },
-								"variantMap": { "pending": "warning", "approved": "success", "rejected": "error" }
-							},
-							"fields": [
-								{ "path": "expectedAmount", "label": "Expected amount", "format": "currency" },
-								{ "path": "actualAmount", "label": "Counted amount", "format": "currency" },
-								{ "path": "diffAmount", "label": "Difference", "format": "currency" },
-								{ "path": "diffPercentage", "label": "Percentage", "format": "number", "suffix": "%" },
-								{
-									"as": "pill",
-									"key": "tolerance",
-									"path": "withinTolerance",
-									"map": { "true": "Within tolerance", "false": "Outside tolerance" },
-									"variantMap": { "true": "success", "false": "warning" }
-								},
-								{ "path": "approvedBy", "label": "Reviewed by", "format": "user" },
-								{ "path": "rejectionReason", "label": "Rejection reason" }
-							],
-							"actions": [
-								{
-									"id": "diff-approve",
-									"label": "Approve",
-									"type": "api-call",
-									"variant": "primary",
-									"adminOnly": true,
-									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
-									"payload": { "diffId": "@source.id" },
-									"successMessage": "Cash difference approved.",
-									"visibleWhen": { "field": "status", "value": "pending" }
-								},
-								{
-									"id": "diff-reject",
-									"label": "Reject",
-									"type": "open-form",
-									"variant": "error",
-									"adminOnly": true,
-									"endpoint": { "url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/reject?diffId=@source.id", "method": "POST" },
-									"formProperties": {
-										"reason": { "type": "string", "title": "Rejection reason", "description": "This rejects the cash difference and reopens the shift for a recount." }
-									},
-									"successMessage": "Cash difference rejected. The shift is open for a recount.",
-									"visibleWhen": { "field": "status", "value": "pending" }
-								}
-							],
-							"emptyText": "Not counted yet. The difference appears once the shift is closed and counted."
-						}
-					},
-					{
-						"id": "shift-drops",
-						"type": "CashShiftDropsWidget",
-						"title": "Drops",
-						"icon": "CashMinus",
-						"content": {
-							"register": "pipelinq",
-							"schema": "cashDrop",
-							"filter": { "shift": "@objectId" },
-							"sort": { "field": "droppedAt", "dir": "desc" },
-							"columns": [
-								{ "key": "reason", "label": "Reden" },
-								{ "key": "amount", "label": "Bedrag" },
-								{ "key": "droppedAt", "label": "Op" },
-								{ "key": "droppedBy", "label": "Door" }
-							],
-							"limit": 25,
-							"allowCreate": false,
-							"emptyText": "No cash drops recorded on this shift yet."
 						}
 					},
 					{
@@ -6662,70 +6912,16 @@
 								}
 							]
 						}
-					},
-					{
-						"id": "shift-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "shift-data",
+						"widgetId": "shift-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 6
-					},
-					{
-						"id": "2-1",
-						"widgetId": "shift-kpis-opening-float",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-2",
-						"widgetId": "shift-kpis-drops",
-						"gridX": 10,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-3",
-						"widgetId": "shift-variance",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "3",
-						"widgetId": "shift-drops",
-						"gridX": 0,
-						"gridY": 6,
-						"gridWidth": 8,
-						"gridHeight": 5
-					},
-					{
-						"id": "4",
-						"widgetId": "shift-related",
-						"gridX": 8,
-						"gridY": 6,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "5",
-						"widgetId": "shift-kpis-sales",
-						"gridX": 8,
-						"gridY": 11,
-						"gridWidth": 4,
-						"gridHeight": 2
+						"gridWidth": 12,
+						"gridHeight": 12
 					}
 				],
 				"sidebar": {
@@ -6736,10 +6932,40 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
-				}
+				},
+				"_boardNote": "Board PqKassadienst: the shift name, the status pill, the Kassalade breadcrumb and a meta line with the cashier and the hours; Approve difference as the primary button of a counted shift; the shift, its cash difference and its drops in an Overview tab beside History; the opening float, related records and a short history in the side column.",
+				"follow": false,
+				"showEditAction": false,
+				"breadcrumb": {
+					"label": "Cash drawer",
+					"route": "CashShifts"
+				},
+				"headerMeta": "{operator|user} · {floatAt|time} to {closedAt|time}",
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"open": "Open",
+						"closed": "Counted",
+						"reconciled": "Reconciled"
+					},
+					"colorMap": {
+						"open": "info",
+						"closed": "warning",
+						"reconciled": "success"
+					}
+				},
+				"sideColumn": [
+					"shift-opening",
+					"shift-related",
+					"shift-side-history"
+				]
 			}
 		},
 		{
@@ -7441,8 +7667,16 @@
 			"title": "Transactie",
 			"config": {
 				"stageField": "status",
-				"primaryActionByStage": { "draft": "tx-confirm", "parked": "tx-resume", "confirmed": "tx-settle" },
-				"quickActions": ["tx-print-receipt", "tx-email-receipt", "tx-register-refund"],
+				"primaryActionByStage": {
+					"draft": "tx-confirm",
+					"parked": "tx-resume",
+					"confirmed": "tx-settle"
+				},
+				"quickActions": [
+					"tx-print-receipt",
+					"tx-email-receipt",
+					"tx-register-refund"
+				],
 				"headerActions": [
 					{
 						"id": "tx-confirm",
@@ -7453,8 +7687,26 @@
 						"successMessage": "Transaction confirmed.",
 						"visibleWhen": {
 							"all": [
-								{ "field": "status", "op": "in", "value": ["draft", "parked"] },
-								{ "source": { "register": "pipelinq", "schema": "posTransactionLine", "filter": { "transaction": "@objectId" } }, "field": "@total", "op": "gt", "value": 0 }
+								{
+									"field": "status",
+									"op": "in",
+									"value": [
+										"draft",
+										"parked"
+									]
+								},
+								{
+									"source": {
+										"register": "pipelinq",
+										"schema": "posTransactionLine",
+										"filter": {
+											"transaction": "@objectId"
+										}
+									},
+									"field": "@total",
+									"op": "gt",
+									"value": 0
+								}
 							]
 						}
 					},
@@ -7464,7 +7716,10 @@
 						"type": "api-call",
 						"url": "/apps/pipelinq/api/pos-transactions/@objectId/resume",
 						"successMessage": "Transaction resumed.",
-						"visibleWhen": { "field": "status", "value": "parked" }
+						"visibleWhen": {
+							"field": "status",
+							"value": "parked"
+						}
 					},
 					{
 						"id": "tx-settle",
@@ -7473,7 +7728,10 @@
 						"icon": "CashRegister",
 						"url": "/apps/pipelinq/api/pos-transactions/@objectId/settle",
 						"successMessage": "Transaction settled.",
-						"visibleWhen": { "field": "status", "value": "confirmed" }
+						"visibleWhen": {
+							"field": "status",
+							"value": "confirmed"
+						}
 					},
 					{
 						"id": "tx-print-receipt",
@@ -7481,8 +7739,18 @@
 						"type": "open-modal",
 						"icon": "Printer",
 						"target": "PrintReceiptModal",
-						"props": { "transactionId": "@objectId" },
-						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled", "refunded"] }
+						"props": {
+							"transactionId": "@objectId"
+						},
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"confirmed",
+								"settled",
+								"refunded"
+							]
+						}
 					},
 					{
 						"id": "tx-email-receipt",
@@ -7490,8 +7758,18 @@
 						"type": "open-modal",
 						"icon": "EmailOutline",
 						"target": "EmailReceiptModal",
-						"props": { "transactionId": "@objectId" },
-						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled", "refunded"] }
+						"props": {
+							"transactionId": "@objectId"
+						},
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"confirmed",
+								"settled",
+								"refunded"
+							]
+						}
 					},
 					{
 						"id": "tx-register-refund",
@@ -7499,7 +7777,14 @@
 						"type": "navigate",
 						"icon": "CashRefund",
 						"target": "/pos/refunds/new/@objectId",
-						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled"] }
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"confirmed",
+								"settled"
+							]
+						}
 					},
 					{
 						"id": "tx-edit-lines",
@@ -7507,7 +7792,14 @@
 						"type": "navigate",
 						"icon": "PencilOutline",
 						"target": "/pos/@objectId/edit",
-						"visibleWhen": { "field": "status", "op": "in", "value": ["draft", "parked"] }
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"draft",
+								"parked"
+							]
+						}
 					},
 					{
 						"id": "tx-park",
@@ -7515,37 +7807,458 @@
 						"type": "api-call",
 						"url": "/apps/pipelinq/api/pos-transactions/@objectId/park",
 						"successMessage": "Transaction parked.",
-						"visibleWhen": { "field": "status", "value": "draft" }
+						"visibleWhen": {
+							"field": "status",
+							"value": "draft"
+						}
 					},
 					{
 						"id": "tx-reverse",
 						"label": "Reverse",
 						"type": "open-form",
 						"adminOnly": true,
-						"endpoint": { "url": "/apps/pipelinq/api/pos-transactions/@objectId/refund", "method": "POST" },
+						"endpoint": {
+							"url": "/apps/pipelinq/api/pos-transactions/@objectId/refund",
+							"method": "POST"
+						},
 						"formProperties": {
-							"reason": { "type": "string", "title": "Reason", "description": "This will reverse the transaction. Enter a reason for the refund.", "required": true }
+							"reason": {
+								"type": "string",
+								"title": "Reason",
+								"description": "This will reverse the transaction. Enter a reason for the refund.",
+								"required": true
+							}
 						},
 						"successMessage": "Transaction refunded.",
-						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled"] }
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"confirmed",
+								"settled"
+							]
+						}
 					}
 				],
 				"register": "pipelinq",
 				"schema": "posTransaction",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS transaction is a receipt/ledger record, so deliberately NO comms leaves (posTransaction declares no email/calendar linkedType). The money sits top-right beside the fields so a cashier or auditor reads it first, and the audit trail is a sidebar tab, the home for the immutable change log of a financial record.",
-				"excludeFields": ["taxBreakdown", "invoiceBreakdown"],
+				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS transaction is a receipt/ledger record, so deliberately NO comms leaves. Board look: one tab strip as the body and the money, the receipt, related records and recent history in the side column. The line-count KPI stays declared for the dashboard catalogue but is not placed; the totals card counts the lines itself.",
+				"excludeFields": [
+					"taxBreakdown",
+					"invoiceBreakdown"
+				],
 				"widgets": [
+					{
+						"id": "pos-tx-panels",
+						"type": "tabs",
+						"title": "Transaction",
+						"_note": "The board tab strip: the children stay out of `layout` because the tabs widget renders them.",
+						"content": {
+							"ariaLabel": "Transaction",
+							"tabs": [
+								{
+									"label": "Overview",
+									"widgetIds": [
+										"pos-tx-data",
+										"pos-tx-lines",
+										"pos-tx-provider",
+										"pos-tx-payment"
+									]
+								},
+								{
+									"label": "History",
+									"widgetId": "pos-tx-history",
+									"countFrom": "widget"
+								}
+							]
+						}
+					},
 					{
 						"id": "pos-tx-data",
 						"type": "data",
 						"title": "Transaction",
 						"icon": "FileDocument",
 						"content": {
-							"columns": 2,
+							"title": "Transaction",
+							"columns": 3,
+							"hideEmpty": true,
+							"include": [
+								"reference",
+								"status",
+								"cashier",
+								"terminalId",
+								"priceMode",
+								"client",
+								"confirmedAt",
+								"settledAt"
+							],
 							"overrides": {
-								"cashier": { "formatter": "userDisplayName" }
+								"reference": {
+									"label": "Identifier"
+								},
+								"status": {
+									"editable": false,
+									"enumLabels": {
+										"draft": "Draft",
+										"parked": "Parked",
+										"confirmed": "Confirmed",
+										"settled": "Settled",
+										"refunded": "Refunded"
+									}
+								},
+								"cashier": {
+									"label": "Cashier",
+									"formatter": "userDisplayName"
+								},
+								"terminalId": {
+									"label": "Till"
+								},
+								"priceMode": {
+									"label": "Price display",
+									"enumLabels": {
+										"incl": "Incl. VAT",
+										"excl": "Excl. VAT"
+									}
+								},
+								"client": {
+									"label": "Client"
+								},
+								"confirmedAt": {
+									"label": "Created",
+									"formatter": "shortDateTime"
+								},
+								"settledAt": {
+									"label": "Settled",
+									"formatter": "shortDateTime"
+								}
 							}
+						}
+					},
+					{
+						"id": "pos-tx-lines",
+						"type": "object-list",
+						"title": "Lines",
+						"icon": "FormatListBulleted",
+						"content": {
+							"register": "pipelinq",
+							"schema": "posTransactionLine",
+							"filter": {
+								"transaction": "@objectId"
+							},
+							"sort": {
+								"field": "sortOrder",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "description",
+									"label": "Description"
+								},
+								{
+									"key": "quantity",
+									"label": "Qty",
+									"align": "right"
+								},
+								{
+									"key": "unitPrice",
+									"label": "Price per unit",
+									"align": "right",
+									"format": {
+										"style": "currency",
+										"currency": "EUR"
+									}
+								},
+								{
+									"key": "discount",
+									"label": "Discount %",
+									"align": "right",
+									"format": {
+										"style": "percent"
+									}
+								},
+								{
+									"key": "taxRate",
+									"label": "VAT (%)",
+									"align": "right",
+									"format": {
+										"style": "percent"
+									}
+								},
+								{
+									"key": "lineTotal",
+									"label": "Line total",
+									"align": "right",
+									"format": {
+										"style": "currency",
+										"currency": "EUR"
+									}
+								}
+							],
+							"limit": 25,
+							"allowCreate": false,
+							"emptyText": "This transaction has no line items."
+						}
+					},
+					{
+						"id": "pos-tx-provider",
+						"type": "facts",
+						"title": "Payment",
+						"icon": "CreditCardOutline",
+						"visibleWhen": {
+							"any": [
+								{
+									"field": "paymentProvider",
+									"op": "notEmpty"
+								},
+								{
+									"field": "paymentStatus",
+									"op": "notEmpty"
+								}
+							]
+						},
+						"content": {
+							"fields": [
+								{
+									"as": "pill",
+									"key": "payment-status",
+									"path": "paymentStatus",
+									"map": {
+										"pending": "In progress",
+										"captured": "Authorized",
+										"settled": "Settled",
+										"failed": "Failed",
+										"refunded": "Reversed"
+									},
+									"variantMap": {
+										"pending": "warning",
+										"captured": "primary",
+										"settled": "success",
+										"failed": "error",
+										"refunded": "default"
+									}
+								},
+								{
+									"path": "paymentProvider",
+									"label": "Provider",
+									"map": {
+										"mollie": "Mollie",
+										"ccv": "CCV",
+										"adyen": "Adyen",
+										"stripe": "Stripe",
+										"cash": "Cash",
+										"voucher": "Gift voucher",
+										"account": "Account"
+									}
+								},
+								{
+									"path": "paymentMethod",
+									"label": "Method",
+									"map": {
+										"ideal": "iDEAL",
+										"bancontact": "Bancontact",
+										"card": "Card",
+										"creditcard": "Credit card",
+										"cash": "Cash"
+									}
+								},
+								{
+									"path": "total",
+									"label": "Amount",
+									"format": "currency"
+								},
+								{
+									"path": "paymentSessionId",
+									"label": "Session",
+									"copy": true
+								}
+							],
+							"actions": [
+								{
+									"id": "payment-complete",
+									"label": "Complete",
+									"type": "api-call",
+									"variant": "primary",
+									"url": "/apps/pipelinq/api/pos-payments/@source.id/capture",
+									"successMessage": "Payment completed.",
+									"visibleWhen": {
+										"field": "paymentStatus",
+										"value": "pending"
+									}
+								},
+								{
+									"id": "payment-retry",
+									"label": "Try again",
+									"type": "api-call",
+									"url": "/apps/pipelinq/api/pos-payments/@source.id/initiate",
+									"payload": {
+										"providerName": "@source.paymentProvider",
+										"paymentMethod": "@source.paymentMethod"
+									},
+									"successMessage": "Payment started again.",
+									"visibleWhen": {
+										"field": "paymentStatus",
+										"value": "failed"
+									}
+								},
+								{
+									"id": "payment-reverse",
+									"label": "Reverse",
+									"type": "open-form",
+									"adminOnly": true,
+									"variant": "error",
+									"endpoint": {
+										"url": "/apps/pipelinq/api/pos-payments/@source.id/refund",
+										"method": "POST"
+									},
+									"formProperties": {
+										"reason": {
+											"type": "string",
+											"title": "Reason for reversal",
+											"description": "Why is this payment being reversed?"
+										}
+									},
+									"successMessage": "Payment reversed.",
+									"visibleWhen": {
+										"all": [
+											{
+												"field": "paymentStatus",
+												"op": "in",
+												"value": [
+													"settled",
+													"captured"
+												]
+											},
+											{
+												"field": "status",
+												"op": "in",
+												"value": [
+													"confirmed",
+													"settled"
+												]
+											}
+										]
+									},
+									"icon": "Undo"
+								}
+							]
+						}
+					},
+					{
+						"id": "pos-tx-payment",
+						"type": "PosTransactionPaymentWidget",
+						"title": "Payment",
+						"icon": "CreditCardOutline",
+						"visibleWhen": {
+							"any": [
+								{
+									"field": "status",
+									"op": "in",
+									"value": [
+										"draft",
+										"parked",
+										"confirmed"
+									]
+								},
+								{
+									"field": "paymentProvider",
+									"op": "empty"
+								}
+							]
+						}
+					},
+					{
+						"id": "pos-tx-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "pos-tx-totals",
+						"type": "PosTransactionTotalsWidget",
+						"title": "Totals",
+						"icon": "Cash",
+						"content": {
+							"layout": "summary"
+						}
+					},
+					{
+						"id": "pos-tx-receipt",
+						"type": "facts",
+						"title": "Receipt",
+						"icon": "ReceiptText",
+						"_note": "The latest print of this receipt from the print log, and the receipt buttons.",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "receiptPrintLog",
+								"filter": {
+									"transaction": "@objectId",
+									"action": "print"
+								},
+								"sort": {
+									"field": "_created",
+									"dir": "desc"
+								}
+							},
+							"fields": [
+								{
+									"label": "Printed",
+									"template": "{@self.created:date} on {printerDevice}"
+								}
+							],
+							"actions": [
+								{
+									"id": "receipt-print",
+									"label": "Print receipt",
+									"icon": "Printer",
+									"type": "open-modal",
+									"target": "PrintReceiptModal",
+									"props": {
+										"transactionId": "@objectId"
+									}
+								},
+								{
+									"id": "receipt-email",
+									"label": "Email receipt",
+									"icon": "EmailOutline",
+									"type": "open-modal",
+									"target": "EmailReceiptModal",
+									"props": {
+										"transactionId": "@objectId"
+									}
+								}
+							],
+							"emptyText": "Not printed yet",
+							"link": {
+								"label": "Print log",
+								"icon": "History",
+								"sidebarTab": "audit"
+							}
+						}
+					},
+					{
+						"id": "pos-tx-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"showFiles": false,
+							"showIntegrations": false,
+							"showAddFooter": false,
+							"showTotalCount": false
+						}
+					},
+					{
+						"id": "pos-tx-side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"content": {
+							"maxDisplay": 3,
+							"excludeActions": [
+								"read"
+							]
 						}
 					},
 					{
@@ -7561,179 +8274,22 @@
 									"schema": "posTransactionLine",
 									"metric": "count",
 									"countLabel": "lines",
-									"filter": { "transaction": "@objectId" }
-								}
-							]
-						}
-					},
-					{
-						"id": "pos-tx-totals",
-						"type": "PosTransactionTotalsWidget",
-						"title": "Totals",
-						"icon": "Cash"
-					},
-					{
-						"id": "pos-tx-lines",
-						"type": "object-list",
-						"title": "Line items",
-						"icon": "FormatListBulleted",
-						"content": {
-							"register": "pipelinq",
-							"schema": "posTransactionLine",
-							"filter": { "transaction": "@objectId" },
-							"sort": { "field": "sortOrder", "dir": "asc" },
-							"columns": [
-								{ "key": "description", "label": "Description" },
-								{ "key": "quantity", "label": "Qty" },
-								{ "key": "unitPrice", "label": "Unit price" },
-								{ "key": "discount", "label": "Discount %" },
-								{ "key": "taxRate", "label": "VAT %" },
-								{ "key": "lineTotal", "label": "Line total" }
-							],
-							"limit": 25,
-							"allowCreate": false,
-							"emptyText": "This transaction has no line items."
-						}
-					},
-					{
-						"id": "pos-tx-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
-					},
-					{
-						"id": "pos-tx-provider",
-						"type": "facts",
-						"title": "Payment provider",
-						"icon": "CreditCardOutline",
-						"visibleWhen": {
-							"any": [
-								{ "field": "paymentProvider", "op": "notEmpty" },
-								{ "field": "paymentStatus", "op": "notEmpty" }
-							]
-						},
-						"content": {
-							"headerPill": {
-								"path": "paymentStatus",
-								"map": { "pending": "In progress", "captured": "Authorized", "settled": "Settled", "failed": "Failed", "refunded": "Reversed" },
-								"variantMap": { "pending": "warning", "captured": "primary", "settled": "success", "failed": "error", "refunded": "default" }
-							},
-							"fields": [
-								{
-									"path": "paymentProvider",
-									"label": "Provider",
-									"map": { "mollie": "Mollie", "ccv": "CCV", "adyen": "Adyen", "stripe": "Stripe", "cash": "Cash", "voucher": "Gift voucher", "account": "Account" }
-								},
-								{
-									"path": "paymentMethod",
-									"label": "Method",
-									"map": { "ideal": "iDEAL", "bancontact": "Bancontact", "card": "Card", "creditcard": "Credit card", "cash": "Cash" }
-								},
-								{ "path": "paymentSessionId", "label": "Session", "copy": true }
-							],
-							"actions": [
-								{
-									"id": "payment-complete",
-									"label": "Complete",
-									"type": "api-call",
-									"variant": "primary",
-									"url": "/apps/pipelinq/api/pos-payments/@source.id/capture",
-									"successMessage": "Payment completed.",
-									"visibleWhen": { "field": "paymentStatus", "value": "pending" }
-								},
-								{
-									"id": "payment-retry",
-									"label": "Try again",
-									"type": "api-call",
-									"url": "/apps/pipelinq/api/pos-payments/@source.id/initiate",
-									"payload": { "providerName": "@source.paymentProvider", "paymentMethod": "@source.paymentMethod" },
-									"successMessage": "Payment started again.",
-									"visibleWhen": { "field": "paymentStatus", "value": "failed" }
-								},
-								{
-									"id": "payment-reverse",
-									"label": "Reverse",
-									"type": "open-form",
-									"adminOnly": true,
-									"variant": "error",
-									"endpoint": { "url": "/apps/pipelinq/api/pos-payments/@source.id/refund", "method": "POST" },
-									"formProperties": {
-										"reason": { "type": "string", "title": "Reason for reversal", "description": "Why is this payment being reversed?" }
-									},
-									"successMessage": "Payment reversed.",
-									"visibleWhen": {
-										"all": [
-											{ "field": "paymentStatus", "op": "in", "value": ["settled", "captured"] },
-											{ "field": "status", "op": "in", "value": ["confirmed", "settled"] }
-										]
+									"filter": {
+										"transaction": "@objectId"
 									}
 								}
 							]
 						}
-					},
-					{
-						"id": "pos-tx-payment",
-						"type": "PosTransactionPaymentWidget",
-						"title": "Payment",
-						"icon": "CreditCardOutline"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "pos-tx-data",
+						"widgetId": "pos-tx-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 7
-					},
-					{
-						"id": "2",
-						"widgetId": "pos-tx-kpis-line-items",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "3",
-						"widgetId": "pos-tx-totals",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 8
-					},
-					{
-						"id": "4",
-						"widgetId": "pos-tx-lines",
-						"gridX": 0,
-						"gridY": 7,
-						"gridWidth": 8,
-						"gridHeight": 5
-					},
-					{
-						"id": "5",
-						"widgetId": "pos-tx-related",
-						"gridX": 8,
-						"gridY": 10,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "6",
-						"widgetId": "pos-tx-provider",
-						"gridX": 0,
-						"gridY": 12,
-						"gridWidth": 8,
-						"gridHeight": 3
-					},
-					{
-						"id": "7",
-						"widgetId": "pos-tx-payment",
-						"gridX": 0,
-						"gridY": 15,
 						"gridWidth": 12,
-						"gridHeight": 5
+						"gridHeight": 12
 					}
 				],
 				"sidebar": {
@@ -7744,10 +8300,49 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
-				}
+				},
+				"_boardNote": "Board PqKassabon: the reference as the title, the status pill, the Transactions breadcrumb and a meta line with the amount, the client and the moment; the transaction, its lines and the payment in an Overview tab with History beside it; totals, the receipt, related records and a short history in the side column.",
+				"titleField": "reference",
+				"follow": false,
+				"showEditAction": false,
+				"extend": [
+					"client"
+				],
+				"breadcrumb": {
+					"label": "Transactions",
+					"route": "PosTransactions"
+				},
+				"headerMeta": "{total|currency} · {client.name} · {settledAt|longdate} {settledAt|time}",
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"draft": "Draft",
+						"parked": "Parked",
+						"confirmed": "Confirmed",
+						"settled": "Settled",
+						"refunded": "Refunded"
+					},
+					"colorMap": {
+						"draft": "default",
+						"parked": "warning",
+						"confirmed": "info",
+						"settled": "success",
+						"refunded": "default"
+					}
+				},
+				"sideColumn": [
+					"pos-tx-totals",
+					"pos-tx-receipt",
+					"pos-tx-related",
+					"pos-tx-side-history"
+				]
 			}
 		},
 		{

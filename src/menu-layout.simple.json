@@ -3129,6 +3129,19 @@
 			"title": "Transactions",
 			"config": {
 				"addLabel": "New transaction",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "create",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New transaction"
+					}
+				],
+				"filterMenu": true,
 				"countText": "{shown} of {total} transactions · newest first",
 				"sortKey": "momentAt",
 				"sortOrder": "desc",
@@ -3204,7 +3217,49 @@
 		},
 		{
 			"id": "CashShifts",
+			"_note": "The cash shifts as their board draws them (PqKassadiensten): Download and Open shift as the header buttons, the All / Open / To check lenses (To check: counted, the difference not yet approved or rejected), the board's columns and the blind-count note.",
 			"config": {
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "open-shift",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "Open shift"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Open",
+						"filter": {
+							"status": "open"
+						},
+						"showCount": true
+					},
+					{
+						"label": "To check",
+						"filter": {
+							"status": "closed",
+							"reconciliationStatus": "pending"
+						},
+						"showCount": true
+					}
+				],
+				"filterMenu": true,
+				"searchPlaceholder": "Filter by cashier or till",
+				"countText": "{shown} of {total}",
+				"footerNote": "A shift is closed with a blind count. The difference is checked against the margin.",
+				"sortKey": "floatAt",
+				"sortOrder": "desc",
 				"columns": [
 					{
 						"key": "reference",
@@ -3219,19 +3274,29 @@
 					{
 						"key": "status",
 						"label": "Status",
-						"formatter": "enumText"
+						"formatter": "enumText",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"open": "info",
+								"closed": "warning",
+								"reconciled": "success"
+							}
+						}
 					},
 					{
 						"key": "floatAt",
-						"label": "Opened"
+						"label": "Opened",
+						"formatter": "timeOfDay"
 					},
 					{
 						"key": "closedAt",
-						"label": "Closed"
+						"label": "Closed",
+						"formatter": "timeOfDay"
 					},
 					{
 						"key": "floatAmount",
-						"label": "Opening balance",
+						"label": "Opening float",
 						"formatter": "objectCurrency",
 						"formatterOptions": {
 							"decimals": 2

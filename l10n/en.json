@@ -9019,6 +9019,30 @@
         "Awaiting confirmation": "Awaiting confirmation",
         "Refunds": "Refunds",
         "from {fromReference} · {clientName}": "from {fromReference} · {clientName}",
-        "Quantity returned": "Quantity returned"
+        "Quantity returned": "Quantity returned",
+        "Price per unit": "Price per unit",
+        "VAT (%)": "VAT (%)",
+        "Receipt": "Receipt",
+        "Printed": "Printed",
+        "{@self.created:date} on {printerDevice}": "{@self.created:date} on {printerDevice}",
+        "Not printed yet": "Not printed yet",
+        "Print log": "Print log",
+        "Tax return and invoice split": "Tax return and invoice split",
+        "%n line": [
+            "%n line",
+            "%n lines"
+        ],
+        "%n lines": "%n lines",
+        "Approve difference": "Approve difference",
+        "Counted": "Counted",
+        "{operator|user} · {floatAt|time} to {closedAt|time}": "{operator|user} · {floatAt|time} to {closedAt|time}",
+        "At time": "At time",
+        "drops": "drops",
+        "transactions in this shift": "transactions in this shift",
+        "Drops can only be added to an open shift. An open shift has Close and count shift at the top.": "Drops can only be added to an open shift. An open shift has Close and count shift at the top.",
+        "To check": "To check",
+        "Filter by cashier or till": "Filter by cashier or till",
+        "{shown} of {total}": "{shown} of {total}",
+        "A shift is closed with a blind count. The difference is checked against the margin.": "A shift is closed with a blind count. The difference is checked against the margin."
     }
 }
