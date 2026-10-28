@@ -122,4 +122,53 @@ class CronExpressionHelperTest extends TestCase {
 		$this->assertNotSame('', $this->cron->describe(expression: '0 2 * * *', locale: 'en'));
 		$this->assertNotSame('', $this->cron->describe(expression: '0 2 * * *', locale: 'nl'));
 	}//end testDescribeProducesText()
+
+	/**
+	 * The next run of a nightly job is tonight at 02:00, or tomorrow once it is past.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 */
+	public function testNextRunAfterNightly(): void {
+		$before = $this->cron->nextRunAfter(expression: '0 2 * * *', from: new DateTimeImmutable('2026-10-07 01:30:00'));
+		$this->assertSame(expected: '2026-10-07 02:00', actual: $before?->format('Y-m-d H:i'));
+
+		$after = $this->cron->nextRunAfter(expression: '0 2 * * *', from: new DateTimeImmutable('2026-10-07 02:00:00'));
+		$this->assertSame(expected: '2026-10-08 02:00', actual: $after?->format('Y-m-d H:i'));
+	}//end testNextRunAfterNightly()
+
+	/**
+	 * Hourly, a weekday and a shortcut each land on their next minute.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 */
+	public function testNextRunAfterHourlyWeeklyAndShortcut(): void {
+		// Wednesday 7 October 2026, 10:01.
+		$from = new DateTimeImmutable('2026-10-07 10:01:00');
+		$hourly = $this->cron->nextRunAfter(expression: '@hourly', from: $from);
+		$this->assertSame(expected: '2026-10-07 11:00', actual: $hourly?->format('Y-m-d H:i'));
+
+		// Monday 03:00.
+		$weekly = $this->cron->nextRunAfter(expression: '0 3 * * 1', from: $from);
+		$this->assertSame(expected: '2026-10-12 03:00', actual: $weekly?->format('Y-m-d H:i'));
+
+		$monthly = $this->cron->nextRunAfter(expression: '@monthly', from: $from);
+		$this->assertSame(expected: '2026-11-01 00:00', actual: $monthly?->format('Y-m-d H:i'));
+	}//end testNextRunAfterHourlyWeeklyAndShortcut()
+
+	/**
+	 * An invalid expression, or one that never fires within the horizon, has no next run.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 */
+	public function testNextRunAfterNone(): void {
+		$from = new DateTimeImmutable('2026-10-07 10:00:00');
+		$this->assertNull(actual: $this->cron->nextRunAfter(expression: 'not a cron', from: $from));
+		$this->assertNull(actual: $this->cron->nextRunAfter(expression: '0 0 31 2 *', from: $from));
+	}//end testNextRunAfterNone()
 }//end class

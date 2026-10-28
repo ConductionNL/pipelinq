@@ -1,0 +1,52 @@
+{
+  "_note": "bi-export-board. Board PqBiExport shows each job's last run (status, when, rows) and its next run, and filters on a failed last run. A job keeps those as fields of its own: ExportJobService::recordRun writes the last run's summary when a run finishes (ExportExecutionService), and nextRunAt is set when a job is enabled or after each run, null while it is disabled. The list reads and filters them like any field. Version 1.1.0 adds optional fields only.",
+  "components": {
+    "schemas": {
+      "exportJob": {
+        "slug": "exportJob",
+        "version": "1.1.0",
+        "properties": {
+          "lastRunStatus": {
+            "type": "string",
+            "title": "Last run status",
+            "description": "Status of the job's last finished run.",
+            "enum": ["succeeded", "partial", "failed"],
+            "x-enum-labels": {
+              "succeeded": "Succeeded",
+              "partial": "Partial",
+              "failed": "Failed"
+            },
+            "facetable": true
+          },
+          "lastRunAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last run at",
+            "description": "When the job's last run ended, else when it began."
+          },
+          "lastRunRows": {
+            "type": "integer",
+            "title": "Last run rows",
+            "description": "Rows the last run wrote."
+          },
+          "lastRunFiles": {
+            "type": "integer",
+            "title": "Last run files",
+            "description": "Files the last run uploaded."
+          },
+          "lastRunError": {
+            "type": "string",
+            "title": "Last run error",
+            "description": "Why the last run failed or stopped short, if it did."
+          },
+          "nextRunAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Next run at",
+            "description": "When the job runs next on its schedule; empty while it is disabled."
+          }
+        }
+      }
+    }
+  }
+}

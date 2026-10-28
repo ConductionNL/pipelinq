@@ -39,19 +39,8 @@
 			<template #row-actions="{ row }">
 				<NcButton
 					variant="tertiary"
-					:disabled="busyId === row.id"
 					@click.stop="testRun(row)">
 					{{ t('pipelinq', 'Test run') }}
-				</NcButton>
-				<NcButton
-					variant="tertiary"
-					:disabled="busyId === row.id"
-					@click.stop="toggleEnabled(row)">
-					{{
-						row.enabled
-							? t('pipelinq', 'Disable')
-							: t('pipelinq', 'Enable')
-					}}
 				</NcButton>
 			</template>
 		</CnIndexPage>
@@ -69,6 +58,7 @@ import { NcButton } from '@nextcloud/vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 import { exportApi } from '../../services/exportApi.js'
 import { exportJobSecondaryLabels, exportPageTabs } from './exportPageTabs.js'
+import { lastRunLine } from './exportRunText.js'
 
 export default {
 	name: 'ExportJobs',
@@ -82,7 +72,6 @@ export default {
 		return {
 			register: 'pipelinq',
 			schema: 'exportJob',
-			busyId: null,
 			testRunJobId: null,
 			columns: [
 				{
@@ -104,12 +93,35 @@ export default {
 					},
 				},
 				{ key: 'scheduleCron', label: t('pipelinq', 'Schedule') },
-				{ key: 'enabled', label: t('pipelinq', 'Enabled') },
+				{
+					key: 'lastRunStatus',
+					label: t('pipelinq', 'Last run'),
+					widget: 'badge',
+					widgetProps: { colorMap: { succeeded: 'success', partial: 'warning', failed: 'error' } },
+					secondary: (row) => lastRunLine(row),
+				},
+				{
+					key: 'nextRunAt',
+					label: t('pipelinq', 'Next run'),
+					formatter: 'exportMoment',
+					emptyValue: t('pipelinq', 'Not scheduled'),
+				},
+				{
+					key: 'enabled',
+					label: t('pipelinq', 'Enabled'),
+					widget: 'switch',
+					widgetProps: {
+						checked: (row) => row.enabled === true,
+						onToggle: (row, on) => this.setEnabled(row, on),
+						ariaLabel: (row) => t('pipelinq', 'Run {name} on its schedule', { name: row.name }),
+					},
+				},
 			],
 
 			quickFilters: [
 				{ label: t('pipelinq', 'All'), filter: {}, default: true, showCount: true },
 				{ label: t('pipelinq', 'Enabled'), filter: { enabled: true }, showCount: true },
+				{ label: t('pipelinq', 'Last run failed'), filter: { lastRunStatus: 'failed' }, showCount: true },
 			],
 		}
 	},
@@ -178,26 +190,27 @@ export default {
 		},
 
 		/**
-		 * Enable or disable a job.
+		 * Switch a job on or off from its row. Rejects when the server refuses,
+		 * so the switch returns to where it was.
 		 *
 		 * @param {object} row The job row.
+		 * @param {boolean} on Whether to enable it.
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
 		 */
-		async toggleEnabled(row) {
-			this.busyId = row.id
+		async setEnabled(row, on) {
 			try {
-				if (row.enabled) {
-					await exportApi.disableJob(row.id)
-					showSuccess(this.t('pipelinq', 'Job disabled'))
-				} else {
+				if (on) {
 					await exportApi.enableJob(row.id)
 					showSuccess(this.t('pipelinq', 'Job enabled'))
+				} else {
+					await exportApi.disableJob(row.id)
+					showSuccess(this.t('pipelinq', 'Job disabled'))
 				}
 				await this.$refs.index?.onRefreshEvent()
-			} catch {
+			} catch (error) {
 				showError(this.t('pipelinq', 'Could not change job status'))
-			} finally {
-				this.busyId = null
+				throw error
 			}
 		},
 	},

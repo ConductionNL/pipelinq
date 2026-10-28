@@ -54,6 +54,29 @@ describe('the BI export pages (pl2 PqBiExport)', () => {
 		expect(view('ExportJobs.vue')).toContain('secondaryLabels: exportJobSecondaryLabels(t)')
 	})
 
+	it('shows each job\'s last run and next run from fields the job keeps, and filters on a failed last run', () => {
+		const job = view('ExportJobs.vue')
+		const fields = schemas.exportJob.properties
+		const fragment = JSON.parse(readFileSync(resolve(__dirname, '../../lib/Settings/register.d/42-bi-export-job-runs.json'), 'utf8')).components.schemas.exportJob
+		expect(fragment.version).toBe('1.1.0')
+		for (const key of ['lastRunStatus', 'lastRunAt', 'lastRunRows', 'lastRunFiles', 'lastRunError', 'nextRunAt']) {
+			expect(fragment.properties[key], key).toBeDefined()
+			expect(fields[key], key).toBeUndefined()
+		}
+		expect(job).toContain("key: 'lastRunStatus'")
+		expect(job).toContain('secondary: (row) => lastRunLine(row)')
+		expect(job).toContain("key: 'nextRunAt'")
+		expect(job).toContain("formatter: 'exportMoment'")
+		expect(job).toContain("filter: { lastRunStatus: 'failed' }")
+	})
+
+	it('draws Enabled as a switch named per job, and drops the Enable/Disable button', () => {
+		const job = view('ExportJobs.vue')
+		expect(job).toContain("widget: 'switch'")
+		expect(job).toContain("ariaLabel: (row) => t('pipelinq', 'Run {name} on its schedule', { name: row.name })")
+		expect(job).not.toContain("t('pipelinq', 'Disable')")
+	})
+
 	it('has its words in English and Dutch', () => {
 		const words = ['Jobs', 'Destinations', 'Runs', 'incremental', 'full']
 		for (const word of words) {

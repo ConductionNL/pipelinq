@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use DateTimeImmutable;
+
 /**
  * Validates and describes 5-field UNIX cron expressions and @-shortcuts.
  *
@@ -198,37 +200,109 @@ class CronExpressionHelper {
 	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
 	 */
 	public function isDue(string $expression, \DateTimeInterface $when): bool {
-		if ($this->isValid(expression: $expression) === false) {
+		$fields = $this->fieldsOf(expression: $expression);
+		if ($fields === null) {
 			return false;
+		}
+
+		return ($this->dayMatches(fields: $fields, when: $when) === true
+			&& $this->fieldMatches(field: $fields[1], value: (int)$when->format('G'), bounds: self::BOUNDS[1]) === true
+			&& $this->fieldMatches(field: $fields[0], value: (int)$when->format('i'), bounds: self::BOUNDS[0]) === true);
+	}//end isDue()
+
+	/**
+	 * The first minute after a moment at which a cron expression fires.
+	 *
+	 * Parses the expression once and steps a day at a time while the day does
+	 * not match, an hour at a time while the hour does not, then by the minute.
+	 *
+	 * @param string $expression The cron expression.
+	 * @param \DateTimeInterface $from The moment after which to look.
+	 * @param int $horizonDays How far ahead to look.
+	 *
+	 * @return DateTimeImmutable|null The next firing minute, or null when the
+	 *                                  expression is invalid or never fires in the horizon.
+	 *
+	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 */
+	public function nextRunAfter(string $expression, \DateTimeInterface $from, int $horizonDays=400): ?DateTimeImmutable {
+		$fields = $this->fieldsOf(expression: $expression);
+		if ($fields === null) {
+			return null;
+		}
+
+		$start = (new DateTimeImmutable('now', $from->getTimezone()))->setTimestamp($from->getTimestamp());
+		$when  = $start->setTime((int)$start->format('G'), (int)$start->format('i'))->modify('+1 minute');
+		$limit = $start->modify('+'.$horizonDays.' days');
+
+		while ($when <= $limit) {
+			if ($this->dayMatches(fields: $fields, when: $when) === false) {
+				$when = $when->modify('+1 day')->setTime(0, 0);
+				continue;
+			}
+
+			if ($this->fieldMatches(field: $fields[1], value: (int)$when->format('G'), bounds: self::BOUNDS[1]) === false) {
+				$when = $when->setTime((int)$when->format('G'), 0)->modify('+1 hour');
+				continue;
+			}
+
+			if ($this->fieldMatches(field: $fields[0], value: (int)$when->format('i'), bounds: self::BOUNDS[0]) === true) {
+				return $when;
+			}
+
+			$when = $when->modify('+1 minute');
+		}
+
+		return null;
+	}//end nextRunAfter()
+
+	/**
+	 * The five fields of a valid expression, or null.
+	 *
+	 * @param string $expression The cron expression.
+	 *
+	 * @return array<int, string>|null Minute, hour, day of month, month, day of week.
+	 */
+	private function fieldsOf(string $expression): ?array {
+		if ($this->isValid(expression: $expression) === false) {
+			return null;
 		}
 
 		$fields = preg_split('/\s+/', $this->normalize(expression: $expression));
 		if ($fields === false || count($fields) !== 5) {
+			return null;
+		}
+
+		return $fields;
+	}//end fieldsOf()
+
+	/**
+	 * Whether the month and the day fields match a date.
+	 *
+	 * Day of month and day of week use cron's OR semantics only when both are
+	 * restricted; otherwise the restricted field applies.
+	 *
+	 * @param array<int, string> $fields The five fields.
+	 * @param \DateTimeInterface $when The date.
+	 *
+	 * @return bool True when the date matches.
+	 */
+	private function dayMatches(array $fields, \DateTimeInterface $when): bool {
+		[, , $dom, $month, $dow] = $fields;
+
+		if ($this->fieldMatches(field: $month, value: (int)$when->format('n'), bounds: self::BOUNDS[3]) === false) {
 			return false;
 		}
 
-		[$minute, $hour, $dom, $month, $dow] = $fields;
+		$domOk = $this->fieldMatches(field: $dom, value: (int)$when->format('j'), bounds: self::BOUNDS[2]);
+		$dowOk = $this->dowMatches(field: $dow, value: (int)$when->format('w'));
 
-		$minuteOk = $this->fieldMatches(field: $minute, value: (int)$when->format('i'), bounds: self::BOUNDS[0]);
-		$hourOk = $this->fieldMatches(field: $hour, value: (int)$when->format('G'), bounds: self::BOUNDS[1]);
-		$monthOk = $this->fieldMatches(field: $month, value: (int)$when->format('n'), bounds: self::BOUNDS[3]);
-		if ($minuteOk === false || $hourOk === false || $monthOk === false) {
-			return false;
-		}
-
-		$domValue = (int)$when->format('j');
-		$dowValue = (int)$when->format('w');
-		$domR = ($dom !== '*');
-		$dowR = ($dow !== '*');
-		$domOk = $this->fieldMatches(field: $dom, value: $domValue, bounds: self::BOUNDS[2]);
-		$dowOk = $this->dowMatches(field: $dow, value: $dowValue);
-
-		if ($domR === true && $dowR === true) {
+		if ($dom !== '*' && $dow !== '*') {
 			return ($domOk === true || $dowOk === true);
 		}
 
 		return ($domOk === true && $dowOk === true);
-	}//end isDue()
+	}//end dayMatches()
 
 	/**
 	 * Whether a single value matches a cron field.
