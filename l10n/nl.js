@@ -7921,6 +7921,7 @@ OC.L10N.register(
         "Newsletters": "Nieuwsbrieven",
         "{shown} of {total} newsletters · open and click rate from our own measurements · newest first": "{shown} van {total} nieuwsbrieven · open- en klikratio uit eigen metingen · nieuwste eerst",
         "Search this list": "Zoek in deze lijst",
+        "Filter by title": "Filter op titel",
         "A newsletter only goes to people with consent for e-mail. Every template has an unsubscribe link and the sender's address.": "Een nieuwsbrief gaat alleen naar mensen met toestemming voor e-mail. Elk sjabloon heeft een afmeldlink en het adres van de afzender.",
         "Sent this month": "Deze maand verstuurd",
         "{count} messages": "{count} berichten",

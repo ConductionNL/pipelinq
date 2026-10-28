@@ -39,14 +39,59 @@
       "component": "SocialAccountsView",
       "config": {
         "register": "pipelinq",
-        "schema": "socialAccount",
+        "schema": "socialAccount"
+      }
+    },
+    {
+      "id": "SocialAccountDetail",
+      "_note": "The same view, addressed per account. It exists because OpenRegister's safeReturnUrl() keeps only the PATH of a proposed return URL: a query string is dropped, so the account being connected has to be IN the path for the browser to be identifiable on the way back from the consent screen.",
+      "route": "/social-accounts/:id",
+      "type": "custom",
+      "title": "Social account",
+      "component": "SocialAccountsView",
+      "config": {
+        "register": "pipelinq",
+        "schema": "socialAccount"
+      }
+    },
+    {
+      "id": "SocialPosts",
+      "_note": "Social posts as a declarative type:index page. Add navigates to SocialPostNew, which mounts the one composing surface the change owns (SocialPostComposeModal): the per-network variants, the live character count against each network's own limit and the submit-for-approval step have no declarative equivalent, so showAdd and showFormDialog stay off. Row view opens SocialPostDetail.",
+      "route": "/social-posts",
+      "type": "index",
+      "title": "Social posts",
+      "config": {
+        "register": "pipelinq",
+        "schema": "socialPost",
+        "columnOverrides": {
+          "createdBy": {
+            "formatter": "userDisplayName"
+          }
+        },
+        "documentationUrl": "https://pipelinq.conduction.nl",
+        "showAdd": false,
+        "showFormDialog": false,
+        "showEditAction": false,
+        "showCopyAction": false,
+        "showMassImport": false,
+        "showMassExport": false,
+        "showMassCopy": false,
+        "headerActions": [
+          {
+            "id": "create",
+            "label": "New post",
+            "icon": "Plus",
+            "handler": "navigate",
+            "route": "SocialPostNew"
+          }
+        ],
         "showTitle": true,
         "showTitleIcon": false,
         "rowTitle": "plain",
         "rowRoute": "SocialPostDetail",
         "showViewAction": false,
         "countText": "{shown} of {total} posts · newest first",
-        "searchPlaceholder": "Search this list",
+        "searchPlaceholder": "Filter by title",
         "sortKey": "publishedAt",
         "sortOrder": "desc",
         "headerButtons": [
@@ -131,48 +176,6 @@
         "footerNote": "A post can go to several networks at once, each with its own text.",
         "filterMenu": true,
         "_boardNote": "Board PqSocial: the count line, the four lenses with counts, Download and New post in the header, the status as a coloured badge."
-      }
-    },
-    {
-      "id": "SocialAccountDetail",
-      "_note": "The same view, addressed per account. It exists because OpenRegister's safeReturnUrl() keeps only the PATH of a proposed return URL: a query string is dropped, so the account being connected has to be IN the path for the browser to be identifiable on the way back from the consent screen.",
-      "route": "/social-accounts/:id",
-      "type": "custom",
-      "title": "Social account",
-      "component": "SocialAccountsView",
-      "config": {
-        "register": "pipelinq",
-        "schema": "socialAccount"
-      }
-    },
-    {
-      "id": "SocialPosts",
-      "_note": "Social posts as a declarative type:index page. Add navigates to SocialPostNew, which mounts the one composing surface the change owns (SocialPostComposeModal): the per-network variants, the live character count against each network's own limit and the submit-for-approval step have no declarative equivalent, so showAdd and showFormDialog stay off. Row view opens SocialPostDetail.",
-      "route": "/social-posts",
-      "type": "index",
-      "title": "Social posts",
-      "config": {
-        "register": "pipelinq",
-        "schema": "socialPost",
-        "columnOverrides": { "createdBy": { "formatter": "userDisplayName" } },
-        "documentationUrl": "https://pipelinq.conduction.nl",
-        "showAdd": false,
-        "showFormDialog": false,
-        "showEditAction": false,
-        "showCopyAction": false,
-        "showMassImport": false,
-        "showMassExport": false,
-        "showMassCopy": false,
-        "includeColumns": ["title", "status", "scheduledFor", "publishedAt"],
-        "headerActions": [
-          {
-            "id": "create",
-            "label": "New post",
-            "icon": "Plus",
-            "handler": "navigate",
-            "route": "SocialPostNew"
-          }
-        ]
       }
     },
     {
