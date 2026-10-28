@@ -916,17 +916,17 @@ class PosTenderServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testListTenderTypesReadsOnlyTheTenderTypeSchema(): void {
-		$this->seedTenderType(['id' => 't1', 'code' => 'CASH']);
+		$this->seedTenderType(overrides: ['id' => 't1', 'code' => 'CASH']);
 		$this->objects->store['application'] = ['a1' => ['id' => 'a1', 'name' => 'Hello World']];
 		$this->objects->currentRegister = 'reg';
 		$this->objects->currentSchema = 'application';
 
 		$types = $this->service->listTenderTypes(activeOnly: false);
 
-		$this->assertSame(['CASH'], array_column($types, 'code'));
+		$this->assertSame(expected: ['CASH'], actual: array_column(array: $types, column_key: 'code'));
 		$config = $this->objects->queries[0];
-		$this->assertSame('posTenderType', $config['filters']['schema']);
-		$this->assertArrayNotHasKey('schema', $config);
+		$this->assertSame(expected: 'posTenderType', actual: $config['filters']['schema']);
+		$this->assertArrayNotHasKey(key: 'schema', array: $config);
 	}//end testListTenderTypesReadsOnlyTheTenderTypeSchema()
 
 	/**
