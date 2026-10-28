@@ -4255,6 +4255,17 @@
 									"countFrom": "widget"
 								},
 								{
+									"label": "Quotes",
+									"widgetId": "lead-quotes",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "salesQuote",
+										"filter": {
+											"lead": "@objectId"
+										}
+									}
+								},
+								{
 									"label": "History",
 									"widgetId": "lead-history"
 								}
@@ -4393,7 +4404,51 @@
 							"limit": 25,
 							"emptyText": "No products quoted on this deal yet. Add a line to build the quote.",
 							"addLabel": "Add product",
-							"footerNote": "The value of the lead follows the line totals. Change a line and the value changes with it."
+							"footerNote": "The value of the lead follows the line totals. Change a line and the value changes with it.",
+							"rowTitle": "plain",
+							"filterable": true
+						}
+					},
+					{
+						"id": "lead-quotes",
+						"type": "object-list",
+						"title": "Quotes",
+						"icon": "FileDocumentEditOutline",
+						"content": {
+							"register": "pipelinq",
+							"schema": "salesQuote",
+							"filter": {
+								"lead": "@objectId"
+							},
+							"columns": [
+								{
+									"key": "number",
+									"label": "Number"
+								},
+								{
+									"key": "title",
+									"label": "Title"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "total",
+									"label": "Total",
+									"format": {
+										"style": "currency",
+										"currency": "@config.currency"
+									}
+								},
+								{
+									"key": "expiresAt",
+									"label": "Valid until",
+									"format": "date"
+								}
+							],
+							"rowRoute": "QuoteDetail",
+							"emptyText": "No quote for this lead yet."
 						}
 					},
 					{
@@ -4605,6 +4660,16 @@
 									]
 								},
 								{
+									"label": "Contact",
+									"path": "contact",
+									"from": "object",
+									"resolve": {
+										"register": "pipelinq",
+										"schema": "contact",
+										"labelField": "name"
+									}
+								},
+								{
 									"label": "Email",
 									"path": "email",
 									"format": "email"
@@ -4657,12 +4722,7 @@
 								},
 								{
 									"as": "line",
-									"path": "stage",
-									"label": "Stage"
-								},
-								{
-									"as": "line",
-									"text": "The chance of the stage, raised by recent contact and lowered when the lead stands still for 14 days."
+									"template": "Stage {stage} sets the starting chance. Recent contact raises it; without a step in 14 days it drops."
 								}
 							]
 						}
@@ -5054,6 +5114,7 @@
 					"Gekwalificeerd": "make-quote",
 					"Voorstel": "make-quote"
 				},
+				"headerActionsBelow": true,
 				"identifierField": "id",
 				"follow": false
 			}

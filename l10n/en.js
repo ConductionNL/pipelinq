@@ -1,6 +1,8 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Stage {stage} sets the starting chance. Recent contact raises it; without a step in 14 days it drops.": "Stage {stage} sets the starting chance. Recent contact raises it; without a step in 14 days it drops.",
+        "No quote for this lead yet.": "No quote for this lead yet.",
         "Expected closing": "Expected closing",
         "Make quote": "Make quote",
         "Quote made.": "Quote made.",

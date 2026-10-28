@@ -41,4 +41,23 @@ describe('the lead page (board PqLead)', () => {
 	it('reads the win chance as a percentage', () => {
 		expect(widget('side-win-chance').content.fields[0]).toMatchObject({ as: 'title', path: 'qualificationScore', suffix: '%' })
 	})
+
+	it('puts the header buttons under the title', () => {
+		expect(config.headerActionsBelow).toBe(true)
+	})
+
+	it('has the board tabs, Quotes before History', () => {
+		const tabs = widget('lead-panels').content.tabs.map((tab) => tab.label)
+		expect(tabs).toEqual(['Overview', 'Contacts', 'Contact moments', 'Tasks', 'Appointments', 'Mail', 'Notes', 'Files', 'Decisions', 'Quotes', 'History'])
+		expect(widget('lead-quotes').content).toMatchObject({ schema: 'salesQuote', filter: { lead: '@objectId' } })
+	})
+
+	it('names the lead\'s contact person on the client card', () => {
+		expect(widget('side-client').content.fields[1]).toMatchObject({ label: 'Contact', path: 'contact', from: 'object', resolve: { schema: 'contact', labelField: 'name' } })
+	})
+
+	it('explains the win chance in one line and draws the products as a plain table', () => {
+		expect(widget('side-win-chance').content.fields[1].template).toContain('{stage}')
+		expect(widget('lead-lines').content).toMatchObject({ rowTitle: 'plain', filterable: true })
+	})
 })

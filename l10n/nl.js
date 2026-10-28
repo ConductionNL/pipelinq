@@ -1,6 +1,8 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Stage {stage} sets the starting chance. Recent contact raises it; without a step in 14 days it drops.": "Fase {stage} geeft de startkans. Recent contact verhoogt die; zonder stap in 14 dagen daalt hij.",
+        "No quote for this lead yet.": "Nog geen offerte voor deze lead.",
         "Expected closing": "Verwachte afsluiting",
         "Make quote": "Offerte maken",
         "Quote made.": "Offerte gemaakt.",
@@ -2213,7 +2215,7 @@ OC.L10N.register(
         "MCP configuration saved.": "MCP-configuratie opgeslagen.",
         "MET": "MET",
         "Machine-readable identifier (uppercase letters)": "Machineleesbare identifier (hoofdletters)",
-        "Mail": "E-mail",
+        "Mail": "Mail",
         "Mail Account Owner": "Eigenaar mailaccount",
         "Mail Account Reference": "Referentie mailaccount",
         "Mail Transport": "Mailtransport",
@@ -2650,7 +2652,7 @@ OC.L10N.register(
         "Not yet exported": "Nog niet geëxporteerd",
         "Note": "Toelichting",
         "Note content": "Notitie-inhoud",
-        "Notes": "Opmerkingen",
+        "Notes": "Notities",
         "Notes & comments": "Notities & opmerkingen",
         "Notes (optional)": "Notities (optioneel)",
         "Notes / summary": "Notities / samenvatting",
