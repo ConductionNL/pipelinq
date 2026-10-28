@@ -148,15 +148,20 @@
 							"tabs": [
 								{
 									"widgetIds": [
-										"journey-data",
-										"journey-steps",
+										"journey-details",
 										"journey-runs"
 									],
 									"label": "Overview"
 								},
 								{
 									"widgetId": "journey-history",
-									"label": "History"
+									"label": "History",
+									"countFrom": {
+										"auditTrail": true,
+										"excludeActions": [
+											"read"
+										]
+									}
 								}
 							]
 						}
@@ -178,10 +183,12 @@
 							],
 							"overrides": {
 								"description": {
-									"order": 0
+									"order": 0,
+									"editable": false
 								},
 								"status": {
 									"order": 1,
+									"editable": false,
 									"enumLabels": {
 										"draft": "Draft",
 										"active": "Active",
@@ -189,18 +196,39 @@
 									}
 								},
 								"audienceSegment": {
-									"order": 2
+									"order": 2,
+									"editable": false
 								},
 								"waitFor": {
-									"order": 3
+									"order": 3,
+									"editable": false
 								},
 								"flowStatus": {
-									"order": 4
+									"order": 4,
+									"editable": false
 								},
 								"flowError": {
-									"order": 5
+									"order": 5,
+									"editable": false
 								}
 							}
+						}
+					},
+					{
+						"id": "journey-details",
+						"type": "sections",
+						"title": "Journey details",
+						"content": {
+							"dividers": false,
+							"gap": 14,
+							"sections": [
+								{
+									"widgetId": "journey-data"
+								},
+								{
+									"widgetId": "journey-steps"
+								}
+							]
 						}
 					},
 					{
@@ -208,45 +236,76 @@
 						"type": "facts",
 						"title": "Steps",
 						"content": {
+							"layout": "tiles",
 							"fields": [
 								{
-									"path": "trigger.kind",
 									"label": "Trigger",
-									"map": {
-										"leadStageChanged": "A lead moved stage",
-										"contractRenewalWindow": "A contract is up for renewal",
-										"listConfirmed": "Someone confirmed a subscription",
-										"shillinqSignal": "A bookkeeping signal changed",
-										"addressChanged": "A resident or business got a new address",
-										"ticketClosed": "A ticket was closed"
-									}
+									"firstOf": [
+										"trigger.label",
+										{
+											"path": "trigger.kind",
+											"map": {
+												"leadStageChanged": "A lead moved stage",
+												"contractRenewalWindow": "A contract is up for renewal",
+												"listConfirmed": "Someone confirmed a subscription",
+												"shillinqSignal": "A bookkeeping signal changed",
+												"addressChanged": "A resident or business got a new address",
+												"ticketClosed": "A ticket was closed"
+											}
+										}
+									]
 								},
 								{
 									"path": "waitFor",
-									"label": "Wait"
+									"label": "Wait",
+									"format": "duration"
 								},
 								{
 									"path": "condition.field",
-									"label": "Condition"
+									"label": "Condition",
+									"map": {
+										"marketingConsentEmail": "Has consent for e-mail marketing"
+									}
 								},
 								{
-									"path": "action.kind",
 									"label": "Action",
-									"map": {
-										"sendMailing": "Send a mailing",
-										"createTask": "Create a task"
-									}
+									"firstOf": [
+										"action.label",
+										{
+											"path": "action.kind",
+											"map": {
+												"sendMailing": "Send a mailing",
+												"createTask": "Create a task"
+											}
+										}
+									]
 								}
 							]
 						}
 					},
 					{
 						"id": "journey-history",
-						"type": "timeline",
+						"type": "audit-trail",
 						"title": "History",
 						"content": {
-							"auditTrail": true,
-							"order": "desc"
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "active",
+									"label": "Activated by {actor}"
+								},
+								{
+									"field": "flowStatus",
+									"to": "compiled",
+									"label": "Flow compiled"
+								}
+							]
 						}
 					},
 					{
@@ -295,12 +354,29 @@
 					},
 					{
 						"id": "journey-side-history",
-						"type": "timeline",
+						"type": "audit-trail",
 						"title": "History",
 						"content": {
-							"auditTrail": true,
-							"order": "desc",
-							"limit": 3
+							"maxDisplay": 3,
+							"layout": "dated",
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "active",
+									"label": "Activated by {actor}"
+								},
+								{
+									"field": "flowStatus",
+									"to": "compiled",
+									"label": "Flow compiled"
+								}
+							]
 						}
 					},
 					{
