@@ -8727,7 +8727,13 @@ OC.L10N.register(
         "%n days in stage": "%n days in stage",
         "{percent}% chance": "{percent}% chance",
         "%n day in stage": ["%n day in stage","%n days in stage"],
-        "Open (lead status)": "Open"
+        "Open (lead status)": "Open",
+        "Good fit": "Good fit",
+        "New this week": "New this week",
+        "{shown} of {total} companies from the KVK register that fit your profile": "{shown} of {total} companies from the KVK register that fit your profile",
+        "best first": "best first",
+        "refreshed today at {time}": "refreshed today at {time}",
+        "refreshed on {date}": "refreshed on {date}"
     },
     "nplurals=2; plural=(n != 1);"
 )

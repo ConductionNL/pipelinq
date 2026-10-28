@@ -4,7 +4,7 @@
  *
  * The ideal customer profile as the facts the prospects page shows above
  * its list (PqProspects): SBI codes, the employee range, provinces, legal
- * forms and whether inactive companies are left out.
+ * forms, whether inactive companies are left out, and the keywords.
  *
  * @spec openspec/specs/prospect-discovery/spec.md
  */
@@ -46,6 +46,9 @@ export function icpFacts(icp, translate) {
 			label: 'Exclude inactive companies',
 			value: icp.excludeInactive ? 'Yes' : 'No',
 		})
+	}
+	if (facts.length > 0 && list(icp.keywords) !== '') {
+		facts.push({ key: 'keywords', label: 'Keywords', value: list(icp.keywords) })
 	}
 	return facts.map((fact) => ({
 		...fact,

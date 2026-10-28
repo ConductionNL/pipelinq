@@ -8716,7 +8716,13 @@ OC.L10N.register(
         "The user who last sent the contract to invoicing.": "De gebruiker die het contract het laatst naar facturering stuurde.",
         "%n days in stage": "%n dagen in fase",
         "{percent}% chance": "{percent}% kans",
-        "%n day in stage": ["%n dag in fase","%n dagen in fase"]
+        "%n day in stage": ["%n dag in fase","%n dagen in fase"],
+        "Good fit": "Past goed",
+        "New this week": "Nieuw deze week",
+        "{shown} of {total} companies from the KVK register that fit your profile": "{shown} van {total} bedrijven uit het KVK-handelsregister die bij je profiel passen",
+        "best first": "beste eerst",
+        "refreshed today at {time}": "vandaag om {time} vernieuwd",
+        "refreshed on {date}": "vernieuwd op {date}"
     },
     "nplurals=2; plural=(n != 1);"
 )
