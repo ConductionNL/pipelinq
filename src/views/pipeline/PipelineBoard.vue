@@ -2205,8 +2205,12 @@ export default {
 	min-height: 80px;
 }
 
-/* Board look (PqPipeline): 240px columns on the grey ground, no border, the
-   stage's dot before its name, the cards 12px apart. */
+/* Board look (PqPipeline): 240px columns on the grey ground, 16px apart, no
+   border, the stage's dot before its name, the cards 12px apart. */
+.cn-look-board .pipeline-board__columns {
+	gap: 16px;
+}
+
 .cn-look-board .kanban-column {
 	width: 240px;
 	min-width: 240px;
@@ -2512,33 +2516,5 @@ export default {
 	.list-row {
 		transition: none;
 	}
-}
-
-/* Board look (PqPipeline): the stage columns are grey panels without a
-   frame, 240px at the least, their title in sentence case. */
-.cn-look-board .pipeline-board__columns {
-	gap: 16px;
-}
-
-.cn-look-board .kanban-column {
-	min-width: 240px;
-	max-width: none;
-	flex: 1 0 240px;
-	padding: 12px;
-	border: 0;
-	border-radius: 12px;
-	background: var(--color-background-dark, #eceef1);
-}
-
-.cn-look-board .kanban-column__header {
-	padding: 0 0 12px;
-	border: 0;
-	border-radius: 0;
-}
-
-.cn-look-board .column-title {
-	font-size: 15px;
-	text-transform: none;
-	letter-spacing: 0;
 }
 </style>
