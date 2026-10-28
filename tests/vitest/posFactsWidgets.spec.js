@@ -83,7 +83,7 @@ describe('the cash difference on a shift', () => {
 			register: 'pipelinq',
 			schema: 'cashDiff',
 			filter: { shift: '@objectId' },
-			sort: { field: '@self.created', dir: 'desc' },
+			sort: { field: '_created', dir: 'desc' },
 		})
 		expect(variance.content.emptyText).toMatch(/^Not counted yet/)
 	})
