@@ -8793,7 +8793,13 @@ OC.L10N.register(
         "Who is it": "Who is it",
         "Preference": "Preference",
         "Customer page": "Customer page",
-        "No customer in this call yet.": "No customer in this call yet."
+        "No customer in this call yet.": "No customer in this call yet.",
+        "Results of your sends": "Results of your sends",
+        "Variant A {a}%, variant B {b}% · {count} recipients": "Variant A {a}%, variant B {b}% · {count} recipients",
+        "Higher click rate": "Higher click rate",
+        "Subject: {subject}": "Subject: {subject}",
+        "Variant A {a} click rate, variant B {b} click rate": "Variant A {a} click rate, variant B {b} click rate",
+        "Portal sessions that came in through a link in the mail": "Portal sessions that came in through a link in the mail"
     },
     "nplurals=2; plural=(n != 1);"
 )

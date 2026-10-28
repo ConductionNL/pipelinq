@@ -4537,7 +4537,6 @@
         "What we decided to do about this term.": "What we decided to do about this term.",
         "What we watch this organisation for.": "What we watch this organisation for.",
         "WhatsApp": "WhatsApp",
-        "Mijn Zuiddrecht": "Mijn Zuiddrecht",
         "WhatsApp (BSP)": "WhatsApp (BSP)",
         "WhatsApp Cloud API": "WhatsApp Cloud API",
         "WhatsApp and SMS senders. Credentials live on the OpenConnector source (sourceId) — never here.": "WhatsApp and SMS senders. Credentials live on the OpenConnector source (sourceId) — never here.",
@@ -8850,6 +8849,12 @@
         "Who is it": "Who is it",
         "Preference": "Preference",
         "Customer page": "Customer page",
-        "No customer in this call yet.": "No customer in this call yet."
+        "No customer in this call yet.": "No customer in this call yet.",
+        "Results of your sends": "Results of your sends",
+        "Variant A {a}%, variant B {b}% · {count} recipients": "Variant A {a}%, variant B {b}% · {count} recipients",
+        "Higher click rate": "Higher click rate",
+        "Subject: {subject}": "Subject: {subject}",
+        "Variant A {a} click rate, variant B {b} click rate": "Variant A {a} click rate, variant B {b} click rate",
+        "Portal sessions that came in through a link in the mail": "Portal sessions that came in through a link in the mail"
     }
 }

@@ -174,7 +174,7 @@ test.describe('Blast performance dashboard', () => {
 
 		const dash = page.locator('.performance-dashboard')
 		await expect(
-			dash.getByRole('heading', { name: 'Blast performance' }),
+			dash.getByRole('heading', { name: 'Results of your sends' }),
 		).toBeVisible({ timeout: 20000 })
 
 		// Three tabs, Overview selected by default.
@@ -304,7 +304,7 @@ test.describe('Blast performance dashboard', () => {
 
 			const dash = page.locator('.performance-dashboard')
 			await expect(
-				dash.getByRole('heading', { name: 'Blast performance' }),
+				dash.getByRole('heading', { name: 'Results of your sends' }),
 			).toBeVisible({ timeout: 20000 })
 			await dash.getByRole('tab', { name: /A\/B/i }).click()
 
@@ -411,7 +411,7 @@ test.describe('Blast performance dashboard', () => {
 
 			const dash = page.locator('.performance-dashboard')
 			await expect(
-				dash.getByRole('heading', { name: 'Blast performance' }),
+				dash.getByRole('heading', { name: 'Results of your sends' }),
 			).toBeVisible({ timeout: 20000 })
 			await dash.getByRole('tab', { name: /A\/B/i }).click()
 
@@ -598,7 +598,7 @@ test.describe('Blast performance dashboard', () => {
 
 			const dash = page.locator('.performance-dashboard')
 			await expect(
-				dash.getByRole('heading', { name: 'Blast performance' }),
+				dash.getByRole('heading', { name: 'Results of your sends' }),
 			).toBeVisible({ timeout: 20000 })
 			await dash.getByRole('tab', { name: /Attribution/i }).click()
 

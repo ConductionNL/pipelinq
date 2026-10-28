@@ -18,7 +18,7 @@
   @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
 -->
 <template>
-	<div class="performance-dashboard">
+	<div class="performance-dashboard" :class="lookClass">
 		<NcButton
 			class="performance-dashboard__back"
 			variant="tertiary"
@@ -28,40 +28,46 @@
 			</template>
 			{{ t('pipelinq', 'Back to blasts') }}
 		</NcButton>
-		<header class="performance-dashboard__header">
-			<div>
-				<h2>{{ t('pipelinq', 'Blast performance') }}</h2>
-				<p class="performance-dashboard__subtitle">
-					{{
-						t('pipelinq', '{shown} of {total} newsletters · opened and clicked from our own measurements · newest first', {
-							shown: overviewRows.length,
-							total: blasts.length,
-						})
-					}}
-				</p>
-			</div>
-<div class="cn-header-actions">
-			<NcButton variant="secondary" :disabled="overviewRows.length === 0" @click="downloadOverview">
-				<template #icon>
-					<Download :size="18" />
-				</template>
-				{{ t('pipelinq', 'Download') }}
-			</NcButton>
-			<CnBuildiqEditButton />
-			</div>
-		</header>
+		<CnPageHeader
+			:title="t('pipelinq', 'Results of your sends')"
+			:description="t('pipelinq', '{shown} of {total} newsletters · opened and clicked from our own measurements · newest first', {
+				shown: overviewRows.length,
+				total: blasts.length,
+			})">
+			<template #extra>
+				<div class="performance-dashboard__header-actions">
+					<NcButton variant="secondary" :disabled="overviewRows.length === 0" @click="downloadOverview">
+						<template #icon>
+							<Download :size="18" />
+						</template>
+						{{ t('pipelinq', 'Download') }}
+					</NcButton>
+					<CnBuildiqEditButton />
+				</div>
+			</template>
+		</CnPageHeader>
 
 		<CnTabs
-			:ariaLabel="t('pipelinq', 'Blast performance')"
+			:ariaLabel="t('pipelinq', 'Results of your sends')"
 			contentClass="performance-dashboard__body"
 			@update:activeIndex="onTabChange">
+			<template #nav-end>
+				<CnActionsMenu
+					:showRefresh="true"
+					:refreshing="loading"
+					variant="secondary"
+					:title="t('pipelinq', 'Results of your sends')"
+					surface="page:blast-performance"
+					testidBase="performance-dashboard"
+					@refresh="refresh" />
+			</template>
 			<NcLoadingIcon v-if="loading" :size="32" />
 
 			<!-- Tab 1: Overview -->
 			<CnTab :title="tabs[0].label" :active="activeTab === 'overview'">
 				<section
 					v-if="!loading && activeTab === 'overview'"
-					class="performance-dashboard__pane">
+					class="performance-dashboard__pane performance-dashboard__pane--flush">
 					<p
 						v-if="blasts.length === 0"
 						class="performance-dashboard__empty">
@@ -87,32 +93,31 @@
 						</thead>
 						<tbody>
 							<tr v-for="row in sortedOverviewRows" :key="row.id">
-								<td>{{ row.name }}</td>
+								<td class="performance-dashboard__name">
+									{{ row.name }}
+								</td>
 								<td>{{ row.segmentName }}</td>
 								<td>
 									<CnStatusBadge
-										:status="row.status"
-										:label="statusLabel(row.status)" />
+										:label="statusLabel(row.status)"
+										:colorKey="row.status"
+										:colorMap="statusColors" />
 								</td>
-								<td class="performance-dashboard__num">
-									{{ row.sent }}
-								</td>
-								<td class="performance-dashboard__num performance-dashboard__strong">
+								<td>{{ row.sent }}</td>
+								<td class="performance-dashboard__strong">
 									{{ formatPercent(row.openRate) }}
 								</td>
-								<td class="performance-dashboard__num performance-dashboard__strong">
+								<td class="performance-dashboard__strong">
 									{{ formatPercent(row.clickRate) }}
 								</td>
-								<td class="performance-dashboard__num">
-									{{ row.unsubscribed }}
-								</td>
+								<td>{{ row.unsubscribed }}</td>
 							</tr>
 						</tbody>
 					</table>
 				</section>
 			</CnTab>
 
-			<!-- Tab 2: A/B Testing -->
+			<!-- Tab 2: A/B testing -->
 			<CnTab :title="tabs[1].label" :active="activeTab === 'ab'">
 				<section
 					v-if="!loading && activeTab === 'ab'"
@@ -122,88 +127,87 @@
 						class="performance-dashboard__empty">
 						{{ t('pipelinq', 'No A/B variant blasts found.') }}
 					</p>
-					<article
-						v-for="pair in abPairs"
-						:key="pair.id"
-						class="performance-dashboard__ab-card">
-						<h3 class="performance-dashboard__ab-title">
-							{{ pair.parentName }}
-						</h3>
-						<div class="performance-dashboard__ab-grid">
-							<div class="performance-dashboard__ab-variant">
-								<h4>{{ t('pipelinq', 'Variant A') }}</h4>
-								<dl>
-									<div>
-										<dt>{{ t('pipelinq', 'Delivered') }}</dt>
-										<dd>{{ pair.a.delivered }}</dd>
-									</div>
-									<div>
-										<dt>{{ t('pipelinq', 'Clicked') }}</dt>
-										<dd>{{ pair.a.clicked }}</dd>
-									</div>
-									<div>
-										<dt>{{ t('pipelinq', 'Click rate') }}</dt>
-										<dd>
-											{{ formatPercent(pair.a.clickRate) }}
-										</dd>
-									</div>
-								</dl>
+					<template v-for="(pair, index) in abPairs" :key="pair.id">
+						<article
+							v-if="index === 0"
+							class="performance-dashboard__ab-card">
+							<div class="performance-dashboard__ab-head">
+								<h2 class="performance-dashboard__section-title">
+									{{ pair.parentName }}
+								</h2>
+								<span class="performance-dashboard__muted">
+									{{ t('pipelinq', 'Variant A {a}%, variant B {b}% · {count} recipients', { a: pair.split.a, b: pair.split.b, count: pair.recipients }) }}
+								</span>
 							</div>
-							<div class="performance-dashboard__ab-variant">
-								<h4>{{ t('pipelinq', 'Variant B') }}</h4>
-								<dl>
-									<div>
-										<dt>{{ t('pipelinq', 'Delivered') }}</dt>
-										<dd>{{ pair.b.delivered }}</dd>
+							<div class="performance-dashboard__ab-grid">
+								<div
+									v-for="variant in pair.variants"
+									:key="variant.key"
+									class="performance-dashboard__ab-variant"
+									:class="{ 'performance-dashboard__ab-variant--winner': variant.winner }">
+									<div class="performance-dashboard__ab-variant-head">
+										<h3 class="performance-dashboard__ab-variant-title">
+											{{ variant.label }}
+										</h3>
+										<CnStatusBadge
+											v-if="variant.winner"
+											variant="success"
+											:label="t('pipelinq', 'Higher click rate')" />
 									</div>
-									<div>
-										<dt>{{ t('pipelinq', 'Clicked') }}</dt>
-										<dd>{{ pair.b.clicked }}</dd>
-									</div>
-									<div>
-										<dt>{{ t('pipelinq', 'Click rate') }}</dt>
-										<dd>
-											{{ formatPercent(pair.b.clickRate) }}
-										</dd>
-									</div>
-								</dl>
+									<span v-if="variant.stats.subject" class="performance-dashboard__ab-subject">
+										{{ t('pipelinq', 'Subject: {subject}', { subject: variant.stats.subject }) }}
+									</span>
+									<dl>
+										<div>
+											<dt>{{ t('pipelinq', 'Delivered') }}</dt>
+											<dd>{{ variant.stats.delivered }}</dd>
+										</div>
+										<div>
+											<dt>{{ t('pipelinq', 'Clicked') }}</dt>
+											<dd>{{ variant.stats.clicked }}</dd>
+										</div>
+										<div>
+											<dt>{{ t('pipelinq', 'Click rate') }}</dt>
+											<dd class="performance-dashboard__ab-rate">
+												{{ formatPercent(variant.stats.clickRate) }}
+											</dd>
+										</div>
+									</dl>
+								</div>
 							</div>
-						</div>
-						<p
-							v-if="!pair.eligible"
-							class="performance-dashboard__ab-pending"
-							role="status">
-							{{
-								t(
-									'pipelinq',
-									'Results not yet available (need >=500 delivered per variant and 24h since send).',
-								)
-							}}
-							<br />
-							{{
-								t(
-									'pipelinq',
-									'Currently A: {a} delivered, B: {b} delivered.',
-									{ a: pair.a.delivered, b: pair.b.delivered },
-								)
-							}}
-						</p>
-						<p
+							<p
+								v-if="!pair.eligible"
+								class="performance-dashboard__ab-pending"
+								role="status">
+								{{ t('pipelinq', 'Results not yet available (need >=500 delivered per variant and 24h since send).') }}
+								<br>
+								{{ t('pipelinq', 'Currently A: {a} delivered, B: {b} delivered.', { a: pair.a.delivered, b: pair.b.delivered }) }}
+							</p>
+							<p
+								v-else
+								class="performance-dashboard__ab-verdict"
+								:class="{ 'performance-dashboard__ab-verdict--significant': pair.significant }"
+								role="status">
+								<strong class="performance-dashboard__ab-pvalue">
+									{{ t('pipelinq', 'p = {p}', { p: pair.pValueLabel }) }}
+								</strong>
+								<span>{{ pair.verdictLabel }}</span>
+							</p>
+						</article>
+						<div
 							v-else
-							class="performance-dashboard__ab-verdict"
-							:class="{
-								'performance-dashboard__ab-verdict--significant':
-									pair.significant,
-							}"
-							role="status">
-							<strong>{{ pair.verdictLabel }}</strong>
-							<span class="performance-dashboard__ab-pvalue">
-								{{
-									t('pipelinq', 'p = {p}', { p: pair.pValueLabel })
-								}}
+							class="performance-dashboard__ab-summary performance-dashboard__ab-card">
+							<span class="performance-dashboard__strong">{{ pair.parentName }}</span>
+							<span class="performance-dashboard__muted">
+								{{ t('pipelinq', 'Variant A {a} click rate, variant B {b} click rate', { a: formatPercent(pair.a.clickRate), b: formatPercent(pair.b.clickRate) }) }}
 							</span>
-						</p>
-					</article>
+							<span
+								class="performance-dashboard__muted performance-dashboard__small"
+								:class="pair.eligible ? 'performance-dashboard__ab-verdict' : 'performance-dashboard__ab-pending'">
+								{{ pair.eligible ? pair.verdictLabel : t('pipelinq', 'Results not yet available.') }}
+							</span>
+						</div>
+					</template>
 				</section>
 			</CnTab>
 
@@ -212,46 +216,52 @@
 				<section
 					v-if="!loading && activeTab === 'attribution'"
 					class="performance-dashboard__pane">
+					<h2 class="performance-dashboard__section-title">
+						{{ t('pipelinq', 'Attribution to deals') }}
+					</h2>
 					<p
 						v-if="attributionRows.length === 0"
 						class="performance-dashboard__empty">
 						{{ t('pipelinq', 'No attribution data yet.') }}
 					</p>
-					<table v-else class="performance-dashboard__table">
-						<thead>
-							<tr>
-								<th scope="col">
-									{{ t('pipelinq', 'Blast') }}
-								</th>
-								<th scope="col" class="performance-dashboard__num">
-									{{ t('pipelinq', 'Attributed deals') }}
-								</th>
-								<th scope="col" class="performance-dashboard__num">
-									{{ t('pipelinq', 'Attributed value') }}
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="row in attributionRows" :key="row.id">
-								<td>{{ row.name }}</td>
-								<td class="performance-dashboard__num">
-									{{ row.dealCount }}
-								</td>
-								<td class="performance-dashboard__num">
-									{{ formatEur(row.attributedValue) }}
-								</td>
-							</tr>
-						</tbody>
-					</table>
+					<div v-else class="performance-dashboard__table-card">
+						<table class="performance-dashboard__table">
+							<thead>
+								<tr>
+									<th scope="col">
+										{{ t('pipelinq', 'Blast') }}
+									</th>
+									<th scope="col">
+										{{ t('pipelinq', 'Attributed deals') }}
+									</th>
+									<th scope="col">
+										{{ t('pipelinq', 'Attributed value') }}
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="row in attributionRows" :key="row.id">
+									<td>{{ row.name }}</td>
+									<td>{{ row.dealCount }}</td>
+									<td>{{ formatEur(row.attributedValue) }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 
 					<!-- Site traffic per campaign (marketing-campaign-attribution):
-				     the sessions Portaliq attributed to each blast's campaign. -->
+					     the sessions Portaliq attributed to each blast's campaign. -->
 					<div
 						class="performance-dashboard__traffic"
 						data-testid="campaign-traffic">
-						<h3>
-							{{ t('pipelinq', 'Site traffic from this campaign') }}
-						</h3>
+						<div class="performance-dashboard__ab-head">
+							<h3 class="performance-dashboard__subsection-title">
+								{{ t('pipelinq', 'Site traffic from this campaign') }}
+							</h3>
+							<span class="performance-dashboard__muted performance-dashboard__small">
+								{{ t('pipelinq', 'Portal sessions that came in through a link in the mail') }}
+							</span>
+						</div>
 						<p
 							v-if="trafficState === 'loading'"
 							class="performance-dashboard__empty"
@@ -263,100 +273,61 @@
 							class="performance-dashboard__empty"
 							data-testid="campaign-traffic-no-blasts">
 							{{ t('pipelinq', 'No blasts yet.') }}
-							{{
-								t(
-									'pipelinq',
-									'Send a blast, and the sessions its campaign brought in appear here.',
-								)
-							}}
+							{{ t('pipelinq', 'Send a blast, and the sessions its campaign brought in appear here.') }}
 						</p>
 						<p
 							v-else-if="trafficState === 'unreadable'"
 							class="performance-dashboard__empty"
 							data-testid="campaign-traffic-unreadable">
 							{{ t('pipelinq', 'Site traffic could not be read.') }}
-							{{
-								t(
-									'pipelinq',
-									'Every performance request failed. Reload the page, and check the server log if it keeps happening.',
-								)
-							}}
+							{{ t('pipelinq', 'Every performance request failed. Reload the page, and check the server log if it keeps happening.') }}
 						</p>
 						<p
 							v-else-if="trafficConnected === false"
 							class="performance-dashboard__empty"
 							data-testid="campaign-traffic-unconnected">
 							{{ t('pipelinq', 'Not connected to a portal.') }}
-							{{
-								t(
-									'pipelinq',
-									'Set the Portaliq portal under Settings, Marketing traffic, to see the site sessions each campaign brought in.',
-								)
-							}}
+							{{ t('pipelinq', 'Set the Portaliq portal under Settings, Marketing traffic, to see the site sessions each campaign brought in.') }}
 						</p>
 						<p
-							v-else-if="
-								trafficConnected === true && trafficRows.length === 0
-							"
+							v-else-if="trafficConnected === true && trafficRows.length === 0"
 							class="performance-dashboard__empty">
-							{{
-								t(
-									'pipelinq',
-									'No site sessions attributed to a blast yet.',
-								)
-							}}
+							{{ t('pipelinq', 'No site sessions attributed to a blast yet.') }}
 						</p>
-						<table
+						<div
 							v-else-if="trafficConnected === true"
-							class="performance-dashboard__table"
-							data-testid="campaign-traffic-table">
-							<thead>
-								<tr>
-									<th scope="col">{{ t('pipelinq', 'Blast') }}</th>
-									<th scope="col">
-										{{ t('pipelinq', 'Campaign') }}
-									</th>
-									<th
-										scope="col"
-										class="performance-dashboard__num">
-										{{ t('pipelinq', 'Opens') }}
-									</th>
-									<th
-										scope="col"
-										class="performance-dashboard__num">
-										{{ t('pipelinq', 'Clicks') }}
-									</th>
-									<th
-										scope="col"
-										class="performance-dashboard__num">
-										{{ t('pipelinq', 'Site sessions') }}
-									</th>
-									<th
-										scope="col"
-										class="performance-dashboard__num">
-										{{ t('pipelinq', 'Attributed deals') }}
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="row in trafficRows" :key="row.id">
-									<td>{{ row.name }}</td>
-									<td>{{ row.campaign }}</td>
-									<td class="performance-dashboard__num">
-										{{ row.opened }}
-									</td>
-									<td class="performance-dashboard__num">
-										{{ row.clicked }}
-									</td>
-									<td class="performance-dashboard__num">
-										{{ row.sessions }}
-									</td>
-									<td class="performance-dashboard__num">
-										{{ row.dealCount }}
-									</td>
-								</tr>
-							</tbody>
-						</table>
+							class="performance-dashboard__table-card">
+							<table
+								class="performance-dashboard__table"
+								data-testid="campaign-traffic-table">
+								<thead>
+									<tr>
+										<th scope="col">
+											{{ t('pipelinq', 'Campaign') }}
+										</th>
+										<th scope="col">
+											{{ t('pipelinq', 'Opens') }}
+										</th>
+										<th scope="col">
+											{{ t('pipelinq', 'Clicks') }}
+										</th>
+										<th scope="col">
+											{{ t('pipelinq', 'Site sessions') }}
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr v-for="row in trafficRows" :key="row.id">
+										<td :title="row.campaign">
+											{{ row.name }}
+										</td>
+										<td>{{ row.opened }}</td>
+										<td>{{ row.clicked }}</td>
+										<td>{{ row.sessions }}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
 					</div>
 				</section>
 			</CnTab>
@@ -369,12 +340,19 @@
 </template>
 
 <script>
-import { CnBuildiqEditButton, CnStatusBadge, CnTab, CnTabs } from '@conduction/nextcloud-vue'
+import { CnActionsMenu, CnBuildiqEditButton, CnPageHeader, CnStatusBadge, CnTab, CnTabs, useLook } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import Download from 'vue-material-design-icons/Download.vue'
+import {
+	chiSquarePValue,
+	higherVariant,
+	variantSplit,
+	variantStats,
+	wholePercent,
+} from '../../services/abTest.js'
 import { trafficOutcome } from '../../services/campaignTraffic.js'
 
 const OVERVIEW_LIMIT = 50
@@ -387,7 +365,9 @@ const P_VALUE_ALPHA = 0.05
 export default {
 	name: 'PerformanceDashboard',
 	components: {
+		CnActionsMenu,
 		CnBuildiqEditButton,
+		CnPageHeader,
 		ArrowLeft,
 		Download,
 		NcButton,
@@ -395,6 +375,11 @@ export default {
 		CnStatusBadge,
 		CnTab,
 		CnTabs,
+	},
+
+	setup() {
+		const { lookClass } = useLook()
+		return { lookClass }
 	},
 
 	data() {
@@ -439,6 +424,23 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Status pill colour per blast status (CnStatusBadge colorMap).
+		 *
+		 * @return {object}
+		 */
+		statusColors() {
+			return {
+				draft: 'default',
+				scheduled: 'primary',
+				sending: 'purple',
+				sent: 'success',
+				paused: 'warning',
+				failed: 'error',
+				cancelled: 'default',
+			}
+		},
+
 		/**
 		 * Tab definitions, in the order the CnTab panels are declared.
 		 *
@@ -550,9 +552,10 @@ export default {
 					continue
 				}
 				const variantB = variants[0]
-				pairs.push(this.buildAbPair(parent, variantB))
+				pairs.push({ ...this.buildAbPair(parent, variantB), sortKey: this.sendStamp(parent) })
 			}
-			return pairs
+			// Newest test first: it is the one drawn in full.
+			return pairs.sort((x, y) => y.sortKey - x.sortKey)
 		},
 	},
 
@@ -894,52 +897,51 @@ export default {
 		 * @return {object}
 		 */
 		buildAbPair(parent, variant) {
-			const a = this.variantStats(parent)
-			const b = this.variantStats(variant)
-			const elapsedMsA = this.elapsedSinceSend(parent)
-			const elapsedMsB = this.elapsedSinceSend(variant)
-			const elapsedOk =
-				elapsedMsA >= AB_MIN_ELAPSED_MS && elapsedMsB >= AB_MIN_ELAPSED_MS
-			const nOk =
-				a.delivered >= AB_MIN_DELIVERED && b.delivered >= AB_MIN_DELIVERED
+			const a = variantStats(parent)
+			const b = variantStats(variant)
+			const elapsedOk = this.elapsedSinceSend(parent) >= AB_MIN_ELAPSED_MS
+				&& this.elapsedSinceSend(variant) >= AB_MIN_ELAPSED_MS
+			const nOk = a.delivered >= AB_MIN_DELIVERED && b.delivered >= AB_MIN_DELIVERED
 			const eligible = elapsedOk && nOk
 			let pValue = null
 			let significant = false
 			if (eligible) {
-				pValue = this.chiSquarePValue(
-					a.clicked,
-					a.delivered,
-					b.clicked,
-					b.delivered,
-				)
+				pValue = chiSquarePValue(a.clicked, a.delivered, b.clicked, b.delivered)
 				significant = pValue !== null && pValue < P_VALUE_ALPHA
 			}
+			const winner = eligible ? higherVariant(a, b) : null
+			const sent = (parent.totals?.sent || 0) + (variant.totals?.sent || 0)
 			return {
 				id: parent.id || parent.uuid || parent.slug,
 				parentName: parent.name || '—',
 				a,
 				b,
+				variants: [
+					{ key: 'a', label: this.t('pipelinq', 'Variant A'), stats: a, winner: winner === 'a' },
+					{ key: 'b', label: this.t('pipelinq', 'Variant B'), stats: b, winner: winner === 'b' },
+				],
+
+				split: variantSplit(a, b),
+				recipients: sent || a.delivered + b.delivered,
 				eligible,
 				significant,
-				pValueLabel: pValue === null ? '—' : pValue.toFixed(3),
+				pValueLabel: pValue === null ? '—' : pValue.toFixed(2),
 				verdictLabel: this.abVerdictLabel(a, b, pValue, significant),
 			}
 		},
 
 		/**
-		 * Extract delivered / clicked / clickRate for one variant.
+		 * Reload the page's data, and the Attribution tab's when it was opened.
 		 *
-		 * @param {object} blast The variant blast.
-		 * @return {{delivered: number, clicked: number, clickRate: number}}
+		 * @return {Promise<void>}
 		 */
-		variantStats(blast) {
-			const totals = blast?.totals || {}
-			const delivered = totals.delivered || 0
-			const clicked = totals.clicked || 0
-			return {
-				delivered,
-				clicked,
-				clickRate: delivered > 0 ? clicked / delivered : 0,
+		async refresh() {
+			const reloadAttribution = this.attributionRequested
+			this.attributionRequested = false
+			this.pageLoad = this.fetchAll()
+			await this.pageLoad
+			if (reloadAttribution) {
+				await this.loadAttribution()
 			}
 		},
 
@@ -963,71 +965,15 @@ export default {
 		},
 
 		/**
-		 * Pearson chi-square p-value on a 2x2 contingency table of clicks
-		 * vs non-clicks for the two variants. Uses an analytical 1-degree
-		 * survival function — sf(x, 1) = erfc(sqrt(x/2)).
+		 * When a blast was sent (or created), as epoch milliseconds; 0 when unknown.
 		 *
-		 * @param {number} aClicks    Variant A clicks.
-		 * @param {number} aDelivered Variant A delivered.
-		 * @param {number} bClicks    Variant B clicks.
-		 * @param {number} bDelivered Variant B delivered.
-		 * @return {number|null} p-value or null when the table is degenerate.
+		 * @param {object} blast The blast.
+		 * @return {number}
 		 */
-		chiSquarePValue(aClicks, aDelivered, bClicks, bDelivered) {
-			const aNon = aDelivered - aClicks
-			const bNon = bDelivered - bClicks
-			if (aDelivered <= 0 || bDelivered <= 0 || aNon < 0 || bNon < 0) {
-				return null
-			}
-			const rowA = aDelivered
-			const rowB = bDelivered
-			const colClicks = aClicks + bClicks
-			const colNon = aNon + bNon
-			const total = rowA + rowB
-			if (total <= 0 || colClicks <= 0 || colNon <= 0) {
-				return null
-			}
-			const expectedAClicks = (rowA * colClicks) / total
-			const expectedANon = (rowA * colNon) / total
-			const expectedBClicks = (rowB * colClicks) / total
-			const expectedBNon = (rowB * colNon) / total
-			if (
-				expectedAClicks <= 0
-				|| expectedANon <= 0
-				|| expectedBClicks <= 0
-				|| expectedBNon <= 0
-			) {
-				return null
-			}
-			const chi =
-				(aClicks - expectedAClicks) ** 2 / expectedAClicks
-				+ (aNon - expectedANon) ** 2 / expectedANon
-				+ (bClicks - expectedBClicks) ** 2 / expectedBClicks
-				+ (bNon - expectedBNon) ** 2 / expectedBNon
-			return this.erfc(Math.sqrt(chi / 2))
-		},
-
-		/**
-		 * Abramowitz-Stegun 7.1.26 approximation of erfc(x). Good to
-		 * about 1.5e-7 over x >= 0, more than enough for an A/B verdict.
-		 *
-		 * @param {number} x Non-negative input.
-		 * @return {number} erfc(x).
-		 */
-		erfc(x) {
-			if (x < 0) {
-				return 2 - this.erfc(-x)
-			}
-			const t = 1 / (1 + 0.3275911 * x)
-			const y =
-				1
-				- ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t
-					- 0.284496736)
-					* t
-					+ 0.254829592)
-					* t
-					* Math.exp(-x * x)
-			return 1 - y
+		sendStamp(blast) {
+			const ts = blast?.sentAt || blast?.completedAt || blast?.scheduledFor || blast?.['@self']?.created || blast?.created
+			const time = ts ? new Date(ts).getTime() : 0
+			return isNaN(time) ? 0 : time
 		},
 
 		/**
@@ -1068,16 +1014,13 @@ export default {
 		},
 
 		/**
-		 * Format a 0..1 fraction as a percentage with one decimal place.
+		 * Format a 0..1 fraction as a whole percentage, as the boards print rates.
 		 *
 		 * @param {number} fraction Open / click rate as 0..1.
 		 * @return {string}
 		 */
 		formatPercent(fraction) {
-			if (typeof fraction !== 'number' || isNaN(fraction)) {
-				return '—'
-			}
-			return `${(fraction * 100).toFixed(1)}%`
+			return wholePercent(fraction)
 		},
 
 		/**
@@ -1116,35 +1059,14 @@ export default {
 </script>
 
 <style scoped>
-.cn-header-actions {
-	display: flex;
-	align-items: flex-start;
-	gap: 8px;
-}
-
 .performance-dashboard {
 	box-sizing: border-box;
 	width: 100%;
+	max-width: 1240px;
 	padding: 24px 28px;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
-}
-
-.performance-dashboard__header {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-}
-
-.performance-dashboard__header h2 {
-	margin: 0 0 6px;
-	font-size: 28px;
-}
-
-.performance-dashboard__subtitle {
-	margin: 0;
-	color: var(--color-text-maxcontrast);
+	gap: 20px;
 }
 
 .performance-dashboard__back {
@@ -1152,64 +1074,101 @@ export default {
 	margin-inline-start: -12px;
 }
 
-.performance-dashboard :deep(.performance-dashboard__body) {
-	padding-top: 16px;
+.performance-dashboard__header-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 10px;
 }
 
 .performance-dashboard__pane {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 14px;
+	padding: 20px 22px;
 }
 
-.performance-dashboard__traffic {
-	margin-top: 32px;
-
-	h3 {
-		font-size: 1rem;
-		font-weight: bold;
-		margin-bottom: 8px;
-	}
+.performance-dashboard__pane--flush {
+	padding: 8px 0 4px;
+	overflow-x: auto;
 }
 
-.performance-dashboard__empty {
-	color: var(--color-text-lighter);
+.performance-dashboard__section-title {
 	margin: 0;
+	font-size: 17px;
+	font-weight: 700;
+	color: var(--color-main-text);
 }
 
-.performance-dashboard__table {
-	width: 100%;
-	border-collapse: collapse;
-	table-layout: auto;
-	background: var(--color-main-background);
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
+.performance-dashboard__subsection-title {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--color-main-text);
+}
+
+.performance-dashboard__muted {
+	font-size: 14px;
+	color: var(--color-text-maxcontrast);
+}
+
+.performance-dashboard__small {
+	font-size: 13px;
 }
 
 .performance-dashboard__strong {
 	font-weight: 600;
 }
 
+.performance-dashboard__empty {
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+}
+
+.performance-dashboard__table-card {
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	overflow-x: auto;
+}
+
+.performance-dashboard__table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
+}
+
 .performance-dashboard__table th,
 .performance-dashboard__table td {
-	padding: 8px 12px;
+	padding: 12px;
 	text-align: start;
+	vertical-align: middle;
 	border-bottom: 1px solid var(--color-border);
 }
 
 .performance-dashboard__table th {
-	color: var(--color-text-lighter);
-	font-weight: 500;
+	padding-block: 10px;
+	color: var(--color-text-maxcontrast);
+	font-weight: 600;
+}
+
+.performance-dashboard__table th:first-child,
+.performance-dashboard__table td:first-child {
+	padding-inline-start: 18px;
+}
+
+.performance-dashboard__table tbody tr:last-child td {
+	border-bottom: 0;
+}
+
+.performance-dashboard__name {
+	font-size: 15px;
+	font-weight: 600;
 }
 
 /* Only the Overview headers sort; they carry aria-sort. */
 .performance-dashboard__table th[aria-sort] {
 	cursor: pointer;
 	user-select: none;
-}
-
-.performance-dashboard__num {
-	text-align: end;
 }
 
 .performance-dashboard__sort-indicator {
@@ -1220,69 +1179,121 @@ export default {
 .performance-dashboard__ab-card {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	padding: 16px;
-	background: var(--color-background-hover);
-	border-radius: var(--border-radius);
+	gap: 14px;
 }
 
-.performance-dashboard__ab-title {
-	margin: 0;
+.performance-dashboard__ab-head {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 6px 16px;
 }
 
 .performance-dashboard__ab-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-	gap: 12px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
 }
 
 .performance-dashboard__ab-variant {
-	background: var(--color-background-darker);
-	padding: 12px;
-	border-radius: var(--border-radius);
+	flex: 1 1 260px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 16px;
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
 }
 
-.performance-dashboard__ab-variant h4 {
-	margin: 0 0 8px 0;
+.performance-dashboard__ab-variant--winner {
+	border-color: var(--color-success-text, var(--color-success));
+}
+
+.performance-dashboard__ab-variant-head {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+}
+
+.performance-dashboard__ab-variant-title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.performance-dashboard__ab-subject {
+	font-size: 14px;
+	color: var(--color-main-text);
 }
 
 .performance-dashboard__ab-variant dl {
 	display: grid;
-	grid-template-columns: 1fr auto;
-	row-gap: 4px;
-	column-gap: 12px;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
 	margin: 0;
 }
 
+.performance-dashboard__ab-variant dl > div {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
 .performance-dashboard__ab-variant dt {
-	color: var(--color-text-lighter);
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
 }
 
 .performance-dashboard__ab-variant dd {
 	margin: 0;
-	font-weight: 600;
+	font-size: 18px;
+	font-weight: 700;
+}
+
+.performance-dashboard__ab-variant dd.performance-dashboard__ab-rate {
+	font-size: 24px;
 }
 
 .performance-dashboard__ab-pending {
-	color: var(--color-text-lighter);
+	color: var(--color-text-maxcontrast);
 	margin: 0;
 }
 
 .performance-dashboard__ab-verdict {
 	margin: 0;
-	color: var(--color-main-text);
 	display: flex;
-	gap: 12px;
-	align-items: baseline;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 12px;
+	font-size: 14px;
 }
 
-.performance-dashboard__ab-verdict--significant {
-	color: var(--color-success);
+.performance-dashboard__ab-verdict--significant span {
+	color: var(--color-success-text, var(--color-success));
+	font-weight: 600;
 }
 
 .performance-dashboard__ab-pvalue {
-	color: var(--color-text-lighter);
-	font-size: 0.9em;
+	font-size: 15px;
+}
+
+.performance-dashboard__ab-summary {
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 6px 16px;
+	padding-top: 12px;
+	border-top: 1px solid var(--color-border);
+}
+
+.performance-dashboard__traffic {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	margin-top: 6px;
 }
 
 .performance-dashboard__error {
