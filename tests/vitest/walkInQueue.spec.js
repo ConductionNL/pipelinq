@@ -89,3 +89,13 @@ describe('Call next', () => {
 		expect(deps.showError).toHaveBeenCalledWith('Nobody is waiting.')
 	})
 })
+
+describe('the walk-in queue page', () => {
+	it('titles its table card and draws no search field, as PqInloop does', () => {
+		const page = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.d/81-walk-in-queue.json'), 'utf8')).pages[0]
+		expect(page.config.tableTitle).toBe('In the queue')
+		expect(page.config.search).toBe(false)
+		const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+		expect(nl[page.config.tableTitle]).toBe('In de wachtrij')
+	})
+})

@@ -14,7 +14,7 @@
 
 		<header class="blast-monitor__header">
 			<div class="blast-monitor__heading">
-				<h2>{{ blast?.name || t('pipelinq', 'Blast') }}</h2>
+				<h1>{{ blast?.name || t('pipelinq', 'Blast') }}</h1>
 				<div class="blast-monitor__meta">
 					<CnStatusBadge
 						v-if="blast?.status"
@@ -436,7 +436,7 @@ export default {
 			const map = {
 				draft: this.t('pipelinq', 'Draft'),
 				scheduled: this.t('pipelinq', 'Scheduled'),
-				sending: this.t('pipelinq', 'Sending'),
+				sending: this.t('pipelinq', 'Being sent'),
 				cancelling: this.t('pipelinq', 'Cancelling'),
 				sent: this.t('pipelinq', 'Sent'),
 				paused: this.t('pipelinq', 'Paused'),
@@ -600,7 +600,7 @@ export default {
 	gap: 16px;
 }
 
-.blast-monitor__header h2 {
+.blast-monitor__header h1 {
 	margin: 0 0 8px;
 	font-size: 28px;
 }

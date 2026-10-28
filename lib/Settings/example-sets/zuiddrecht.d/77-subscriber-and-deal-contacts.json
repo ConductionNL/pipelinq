@@ -1,0 +1,117 @@
+{
+	"$comment": "pipelinq's links between the Nieuwsbrief ondernemers and the people and businesses on it, in the Zuiddrecht set. Each of the six subscriptions names its client or contact, so PqMailinglijst's subscriber rows read by name, and Joke Smit is one contact person (Sportclub Zuiddrecht 1958) for her newsletter subscription and her two Sportclub deals. These are changes, because the subscriptions and one deal are declared before the records they name. Mohammed El Amrani, who unsubscribed in June, gets a contact person here.",
+	"objects": [
+		{
+			"key": "contact-mohammed-elamrani",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "Mohammed El Amrani",
+				"role": "Beheerder sporthal",
+				"client": "{{object:client-sportclub.id}}",
+				"email": "m.elamrani@sportcentrum.example",
+				"contactsUid": "example-sportclub-elamrani",
+				"marketingConsent": false,
+				"preferredChannel": "email",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		}
+	],
+	"changes": [
+		{
+			"key": "abonnement-ondernemers-bakkerijdegraaf-contact",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"where": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "info@bakkerijdegraaf.example"
+			},
+			"set": {
+				"contactId": "{{object:client-bakkerijdegraaf.id}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-verhoef-contact",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"where": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "kantoor@verhoef-bv.example"
+			},
+			"set": {
+				"contactId": "{{object:client-verhoef.id}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-sportclub-contact",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"where": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "balie@sportcentrum.example"
+			},
+			"set": {
+				"contactId": "{{object:client-sportclub.id}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-mohammed-elamrani-contact",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"where": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "m.elamrani@ziggo.example"
+			},
+			"set": {
+				"contactId": "{{object:contact-mohammed-elamrani.id}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-joke-smit-contact",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"where": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "joke@smitbloemen.example"
+			},
+			"set": {
+				"contactId": "{{object:contact-joke-smit.id}}"
+			}
+		},
+		{
+			"key": "abonnement-ondernemers-anna-devries-contact",
+			"register": "pipelinq",
+			"schema": "subscription",
+			"where": {
+				"listId": "{{object:verzendlijst-ondernemers.id}}",
+				"email": "anna@devriesadvies.example"
+			},
+			"set": {
+				"contactId": "{{object:contact-anna-devries.id}}"
+			}
+		},
+		{
+			"key": "lead-sportvelden-verlenging-contactpersoon",
+			"register": "pipelinq",
+			"schema": "lead",
+			"where": {
+				"id": "{{object:lead-sportvelden-verlenging.id}}"
+			},
+			"set": {
+				"contact": "{{object:contact-joke-smit.id}}"
+			}
+		},
+		{
+			"key": "lead-sportclub-kunstgrasveld-contactpersoon",
+			"register": "pipelinq",
+			"schema": "lead",
+			"where": {
+				"id": "{{object:lead-sportclub-kunstgrasveld.id}}"
+			},
+			"set": {
+				"contact": "{{object:contact-joke-smit.id}}"
+			}
+		}
+	]
+}

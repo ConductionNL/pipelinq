@@ -37,7 +37,8 @@
 						variant="default" />
 				</div>
 
-				<table v-if="proposals.length" class="enrich__table" data-testid="enrich-proposals">
+				<div v-if="proposals.length" class="enrich__table-card">
+				<table class="enrich__table" data-testid="enrich-proposals">
 					<thead>
 						<tr>
 							<th>{{ t('pipelinq', 'Use') }}</th>
@@ -75,15 +76,17 @@
 						</tr>
 					</tbody>
 				</table>
+				</div>
 
-				<NcNoteCard type="info">
+				<p class="enrich__note" data-testid="enrich-note">
 					{{ t('pipelinq', 'Every field filled in keeps its source and date in the organisation\'s history. Personal data from the BRP is never filled in bulk.') }}
-				</NcNoteCard>
+				</p>
 			</template>
 		</div>
 
 		<template #actions>
 			<NcButton
+				class="enrich__download"
 				:disabled="loading || !proposals.length"
 				data-testid="enrich-download"
 				@click="download">
@@ -97,6 +100,9 @@
 				:disabled="saving || acceptedCount === 0"
 				data-testid="enrich-apply"
 				@click="apply">
+				<template #icon>
+					<Check :size="18" />
+				</template>
 				{{ n('pipelinq', 'Fill in %n field', 'Fill in %n fields', acceptedCount) }}
 			</NcButton>
 		</template>
@@ -109,7 +115,8 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
 
 const BASE = '/apps/pipelinq/api/organisations/enrich'
 
@@ -122,7 +129,7 @@ const FIELD_LABELS = {
 
 export default {
 	name: 'OrganisationEnrichDialog',
-	components: { CnDialog, CnStatusBadge, NcButton, NcLoadingIcon, NcNoteCard },
+	components: { Check, CnDialog, CnStatusBadge, NcButton, NcLoadingIcon },
 
 	props: {
 		/** The selected organisations, from the list's bulk action. */
@@ -254,9 +261,30 @@ export default {
 	gap: 8px;
 }
 
+.enrich__table-card {
+	overflow-x: auto;
+	border: 1px solid var(--color-border);
+	border-radius: 8px;
+}
+
 .enrich__table {
 	width: 100%;
 	border-collapse: collapse;
+}
+
+.enrich__table tbody tr:last-child td {
+	border-bottom: 0;
+}
+
+.enrich__note {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+/* Download proposals at the start of the footer, Cancel and the fill-in button at the end. */
+.enrich__download {
+	margin-inline-end: auto;
 }
 
 .enrich__table th,

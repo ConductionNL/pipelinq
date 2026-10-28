@@ -234,6 +234,9 @@ class SettingsLoadService {
 		'forecastOverride',
 		'forecastSnapshot',
 		'salesQuota',
+		// Campaign events: the reminder and check-in read these two keys.
+		'campaignEvent',
+		'eventRegistration',
 	];
 
 	/**

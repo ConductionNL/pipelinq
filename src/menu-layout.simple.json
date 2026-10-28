@@ -565,65 +565,10 @@
 					},
 					{
 						"id": "ticket-log-contact",
-						"type": "open-form",
+						"type": "open-modal",
+						"target": "ContactLogDialog",
 						"label": "Log contact",
-						"formTitle": "Log contact",
-						"icon": "Phone",
-						"register": "pipelinq",
-						"schema": "ticket",
-						"props": {
-							"ticketType": "interaction",
-							"parentTicket": "@objectId"
-						},
-						"formEyebrow": "Contact moment",
-						"formSubtitle": "A contact moment with the customer, saved with this ticket",
-						"includeFields": [
-							"channel",
-							"direction",
-							"occurredAt",
-							"duration",
-							"title",
-							"notes",
-							"client"
-						],
-						"columns": 2,
-						"fieldOverrides": {
-							"channel": {
-								"order": 1,
-								"label": "Channel",
-								"description": ""
-							},
-							"direction": {
-								"order": 2,
-								"label": "Direction",
-								"description": ""
-							},
-							"occurredAt": {
-								"order": 3,
-								"label": "When",
-								"description": ""
-							},
-							"duration": {
-								"order": 4,
-								"label": "Duration",
-								"description": ""
-							},
-							"title": {
-								"order": 5,
-								"label": "Subject",
-								"description": ""
-							},
-							"notes": {
-								"order": 6,
-								"label": "Notes",
-								"description": ""
-							},
-							"client": {
-								"order": 7,
-								"label": "Client",
-								"description": ""
-							}
-						}
+						"icon": "Phone"
 					},
 					{
 						"id": "ticket-resume",
@@ -1051,7 +996,9 @@
 						"description": "",
 						"section": "Visible to the customer"
 					}
-				}
+				},
+				"editTitle": "Edit ticket",
+				"editConfirmLabel": "Save changes"
 			},
 			"configPatch": {
 				"bodyWidgets": {
@@ -1455,6 +1402,33 @@
 						"gridY": 24,
 						"gridWidth": 4,
 						"gridHeight": 5
+					},
+					{
+						"id": "sct",
+						"widgetId": "simple-call-tasks",
+						"gridX": 0,
+						"gridY": 29,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
+						"id": "who",
+						"widgetId": "simple-call-who",
+						"gridX": 8,
+						"gridY": 29,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"sizeToContent": true
+					}
+				],
+				"titleWhen": [
+					{
+						"when": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"title": "Call with {workspace.selectedClientName}"
 					}
 				],
 				"description": "your queue, callbacks and contact today",
@@ -1462,6 +1436,9 @@
 				"showWidgetActions": false,
 				"greeting": "first",
 				"gridFloat": false,
+				"gridSideColumn": {
+					"width": 320
+				},
 				"headerActions": [
 					{
 						"id": "log-contact",
@@ -1477,7 +1454,8 @@
 						}
 					}
 				],
-				"showActionsMenu": false
+				"showActionsMenu": false,
+				"_inCallNote": "In a call (the header sets @workspace.callActive from client=<id>&call=active or inCallPreview=<number>), the dashboard cards step aside and the client-bound cards float up: the contact form, the open requests, the knowledge base, the tasks and callbacks for the client and the earlier contact (board PqWerkplekKlant)."
 			},
 			"configAppend": {
 				"widgets": [
@@ -1519,6 +1497,11 @@
 									"primary": true
 								}
 							]
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1557,6 +1540,11 @@
 								},
 								"zeroText": "none came in today"
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1599,6 +1587,11 @@
 								},
 								"zeroText": "none longer than 2 days"
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1643,6 +1636,11 @@
 								},
 								"zeroText": "none due today"
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1673,6 +1671,11 @@
 								}
 							},
 							"layout": "stacked"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1692,6 +1695,7 @@
 							},
 							"limit": 5,
 							"presentation": "rows",
+							"ruleAbove": true,
 							"extend": [
 								"client"
 							],
@@ -1732,6 +1736,11 @@
 									"portal": "Mijn Zuiddrecht"
 								}
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1755,9 +1764,19 @@
 								"balie": "Counter",
 								"chat": "Chat",
 								"social": "Social media",
-								"brief": "Letter"
+								"brief": "Letter",
+								"phone": "By phone",
+								"portal": "Mijn Zuiddrecht",
+								"web": "Web form",
+								"sms": "SMS",
+								"whatsapp": "WhatsApp"
 							},
 							"emptyText": "No contact yet today"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1778,15 +1797,27 @@
 							},
 							"limit": 5,
 							"presentation": "rows",
-							"title": "{subject}",
-							"meta": "{description}",
-							"trailing": "{deadline|relativetime}",
+							"ruleAbove": true,
+							"extend": [
+								"clientId"
+							],
+							"title": [
+								"{clientId.name}",
+								"{subject}"
+							],
+							"meta": "{subject}",
+							"trailing": "{deadline|soon}",
 							"rowRoute": "TaskDetail",
 							"emptyText": "You have no callbacks to make."
 						},
 						"headerLink": {
 							"label": "All tasks",
 							"route": "Tasks"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1805,8 +1836,9 @@
 							},
 							"limit": 3,
 							"presentation": "rows",
+							"ruleAbove": true,
 							"title": "{title}",
-							"meta": "{occurredAt|relative}",
+							"meta": "{occurredAt|ago}",
 							"rowRoute": "TicketDetail",
 							"emptyText": "No contact moments yet.",
 							"headerLink": {
@@ -1816,6 +1848,11 @@
 									"ticketType": "interaction"
 								}
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1832,8 +1869,130 @@
 								"register": "pipelinq",
 								"schema": "client",
 								"labelField": "name",
-								"placeholder": "Name, phone, email, postcode or client number"
+								"placeholder": "Name, phone, email, postcode or client number",
+								"ariaLabel": "Client search"
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
+						}
+					},
+					{
+						"id": "simple-call-tasks",
+						"type": "object-list",
+						"title": "Tasks and callback requests",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"clientId": "@workspace.selectedClient",
+								"status": [
+									"open",
+									"in_progress"
+								]
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"limit": 6,
+							"rowRoute": "TaskDetail",
+							"columns": [
+								{
+									"key": "subject",
+									"label": "Task"
+								},
+								{
+									"key": "deadline",
+									"label": "Time limit",
+									"formatter": "relativeDate"
+								}
+							],
+							"emptyText": "No open tasks for this client."
+						}
+					},
+					{
+						"id": "simple-call-who",
+						"type": "facts",
+						"title": "Who is it",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "client",
+								"id": "@workspace.selectedClient"
+							},
+							"fields": [
+								{
+									"as": "title",
+									"path": "name",
+									"route": {
+										"name": "ClientDetail",
+										"params": {
+											"id": "@source.id"
+										}
+									}
+								},
+								{
+									"as": "line",
+									"parts": [
+										"type",
+										"address"
+									]
+								},
+								{
+									"path": "identityCheck",
+									"label": "Checked"
+								},
+								{
+									"label": "Source",
+									"template": "{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded"
+								},
+								{
+									"path": "source",
+									"label": "Signed up via"
+								},
+								{
+									"path": "preferredChannel",
+									"label": "Preference"
+								},
+								{
+									"path": "language",
+									"label": "Language"
+								}
+							],
+							"hideEmpty": true,
+							"actions": [
+								{
+									"type": "open-modal",
+									"target": "BrpClientCheckDialog",
+									"label": "Look up in the BRP",
+									"props": {
+										"clientId": "@source.id"
+									}
+								}
+							],
+							"link": {
+								"label": "Customer page",
+								"route": {
+									"name": "ClientDetail",
+									"params": {
+										"id": "@source.id"
+									}
+								}
+							},
+							"emptyText": "No customer in this call yet."
 						}
 					}
 				]
@@ -1915,7 +2074,6 @@
 					{
 						"action": "actions-menu",
 						"items": [
-							"header-actions",
 							"import"
 						]
 					},
@@ -1924,6 +2082,21 @@
 						"variant": "primary",
 						"icon": "Plus",
 						"label": "New request"
+					}
+				],
+				"_headerActionsNote": "Log contact is the contact moments view's primary button (its preset names it in headerButtons). The requests list's Actions menu names only Import, so it does not list it.",
+				"headerActions": [
+					{
+						"id": "log-contact",
+						"label": "Log contact",
+						"type": "open-form",
+						"formTitle": "Log contact",
+						"icon": "Plus",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"props": {
+							"ticketType": "interaction"
+						}
 					}
 				],
 				"countText": "{shown} of {total} tickets · customer contact · newest first",
@@ -2013,25 +2186,63 @@
 								"showCount": true
 							}
 						],
+						"headerButtons": [
+							{
+								"action": "export",
+								"label": "Download"
+							},
+							{
+								"action": "log-contact",
+								"variant": "primary",
+								"icon": "Plus",
+								"label": "Log contact"
+							}
+						],
 						"columns": [
 							{
 								"key": "title",
-								"label": "Subject"
+								"label": "Subject",
+								"secondary": "{reference}",
+								"cellClass": "cn-cell--strong cn-cell--wrap"
 							},
 							{
 								"key": "client",
 								"label": "Client",
-								"labelField": "name"
+								"labelField": "name",
+								"cellClass": "cn-cell--wrap"
 							},
 							{
 								"key": "channel",
 								"label": "Channel",
-								"formatter": "enumText"
+								"template": "{channel} · {direction}",
+								"secondaryLabels": {
+									"channel": {
+										"telefoon": "Phone",
+										"phone": "Phone",
+										"balie": "Counter",
+										"counter": "Counter",
+										"email": "Email",
+										"portal": "Online",
+										"web": "Web form",
+										"chat": "Chat",
+										"brief": "Letter",
+										"letter": "Letter",
+										"sms": "SMS",
+										"whatsapp": "WhatsApp",
+										"social": "Social media"
+									},
+									"direction": {
+										"inbound": "incoming",
+										"outbound": "outgoing",
+										"internal": "internal"
+									}
+								}
 							},
 							{
 								"key": "outcome",
 								"label": "Outcome",
-								"formatter": "enumLabel"
+								"formatter": "enumLabel",
+								"cellClass": "cn-cell--wrap"
 							},
 							{
 								"key": "duration",
@@ -2054,7 +2265,7 @@
 							{
 								"key": "occurredAt",
 								"label": "When",
-								"formatter": "datetime"
+								"template": "{occurredAt|relativetime}"
 							},
 							{
 								"key": "assignee",

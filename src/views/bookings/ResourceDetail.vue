@@ -34,13 +34,16 @@
 		:breadcrumb="{ label: t('pipelinq', 'Resources'), route: 'Resources' }"
 		:typePill="typePill"
 		:statusPill="statusPill"
+		:headerMeta="headerMeta"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
 		objectType="appointmentResource"
 		:objectStore="objectStore"
 		:objectId="resourceId"
 		:follow="false"
-		:sidebarProps="sidebarProps">
+		:sidebarProps="sidebarProps"
+		:sideColumn="sideColumn"
+		:headerActions="headerActions">
 		<template #actions>
 			<NcButton variant="secondary" @click="openEditDialog">
 				<template #icon>
@@ -48,9 +51,14 @@
 				</template>
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
-			<NcButton variant="tertiary" @click="showDelete = true">
-				{{ t('pipelinq', 'Delete') }}
-			</NcButton>
+		</template>
+
+		<template #widget-resource-week>
+			<CnDetailCard :title="t('pipelinq', 'This week')">
+				<p class="resource-week">
+					{{ weekSummary }}
+				</p>
+			</CnDetailCard>
 		</template>
 
 		<CnTabs card :ariaLabel="t('pipelinq', 'Resource')">
@@ -208,7 +216,10 @@ import {
 	CnTabs,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
@@ -218,6 +229,7 @@ import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
 import ResourceForm from './ResourceForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { vacationsError, workingHoursError } from '../../utils/resourceValidation.js'
+import { resourceWeekLoad, weekBounds } from '../../utils/resourceWeek.js'
 
 export default {
 	name: 'ResourceDetail',
@@ -271,10 +283,29 @@ export default {
 		return {
 			showEditDialog: false,
 			showDelete: false,
+			weekBookings: [],
+			staffLine: { function: '', department: '' },
 		}
 	},
 
 	computed: {
+		/**
+		 * Delete sits in the header's More menu, as the board draws it (Edit,
+		 * the buildiq square, More); it opens the same confirm dialog.
+		 *
+		 * @return {Array<object>} The menu entries.
+		 * @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+		 */
+		headerActions() {
+			return [{
+				id: 'delete',
+				label: t('pipelinq', 'Delete'),
+				onSelect: () => {
+					this.showDelete = true
+				},
+			}]
+		},
+
 		objectStore() {
 			return useObjectStore()
 		},
@@ -297,6 +328,51 @@ export default {
 				this.objectStore.getObject('appointmentResource', this.resourceId)
 				|| {}
 			)
+		},
+
+		/**
+		 * The line under the name: the linked colleague's function and
+		 * department from their Nextcloud profile ("Woo-adviseur · Woo en
+		 * informatie"); empty for a resource without a user.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		headerMeta() {
+			return [this.staffLine.function, this.staffLine.department]
+				.filter((part) => typeof part === 'string' && part.trim() !== '')
+				.join(' · ')
+		},
+
+		/**
+		 * The side card the PqResource board draws beside the tabs.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		sideColumn() {
+			return [{ id: 'resource-week', type: 'custom', title: t('pipelinq', 'This week') }]
+		},
+
+		/**
+		 * "22 bookings, 74% of the bookable time" for the current week.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		weekSummary() {
+			const load = resourceWeekLoad({
+				bookings: this.weekBookings,
+				resourceId: this.resourceId,
+				workingHours: this.workingHours,
+				vacations: this.vacations,
+				now: new Date(),
+			})
+			const count = load.count
+			if (load.percent === null) {
+				return t('pipelinq', '{count} bookings, no bookable time this week', { count })
+			}
+			return t('pipelinq', '{count} bookings, {percent}% of the bookable time', { count, percent: load.percent })
 		},
 
 		workingHours() {
@@ -458,10 +534,52 @@ export default {
 				'appointmentResource',
 				this.resourceId,
 			)
+			await Promise.all([this.fetchWeekBookings(), this.fetchStaffLine()])
 		}
 	},
 
 	methods: {
+		/**
+		 * Read the linked colleague's function and department. A resource
+		 * without a user, or a failed read, leaves the line empty.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		async fetchStaffLine() {
+			const userId = this.resourceData.userId
+			if (typeof userId !== 'string' || userId === '') {
+				return
+			}
+			try {
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/staff/{userId}/profile', { userId }))
+				this.staffLine = { function: data?.function || '', department: data?.department || '' }
+			} catch {
+				this.staffLine = { function: '', department: '' }
+			}
+		},
+
+		/**
+		 * Load this week's bookings for the "This week" card. A failed load
+		 * leaves the card at zero rather than blanking the page.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		async fetchWeekBookings() {
+			const { start, end } = weekBounds(new Date())
+			try {
+				const rows = await this.objectStore.fetchCollection('appointmentBooking', {
+					'startAt[gte]': start.toISOString(),
+					'startAt[lt]': end.toISOString(),
+					_limit: 500,
+				})
+				this.weekBookings = Array.isArray(rows) ? rows : []
+			} catch {
+				this.weekBookings = []
+			}
+		},
+
 		/**
 		 * A stored weekday ("tuesday") as its label ("Dinsdag").
 		 *
@@ -639,6 +757,11 @@ export default {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 	gap: 20px;
+}
+
+.resource-week {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
 }
 
 .resource-schedule__note {

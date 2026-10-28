@@ -7,19 +7,16 @@
   - and then calls the slot's `refresh` so the list shows the result.
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
 		:name="
 			isEditing ? t('pipelinq', 'Edit segment') : t('pipelinq', 'New segment')
 		"
-		:open="true"
-		size="large"
-		:closeOnClickOutside="false"
+		:eyebrow="t('pipelinq', 'Marketing · segments')"
+		:subtitle="t('pipelinq', 'Who belongs to it follows from the rules, every time the segment is used')"
+		width="wizard"
 		@closing="close()">
 		<div class="segment-form">
-			<p class="segment-form__subtitle">
-				{{ t('pipelinq', 'Who belongs to it follows from the rules, every time the segment is used') }}
-			</p>
 			<NcLoadingIcon v-if="loading" :size="32" class="segment-form__loading" />
 			<NcNoteCard v-else-if="loadError" type="error">
 				{{ loadError }}
@@ -30,6 +27,7 @@
 					<NcTextField
 						v-model="model.name"
 						:label="t('pipelinq', 'Segment name')"
+						labelOutside
 						:placeholder="t('pipelinq', 'Inactive Leads')"
 						required
 						class="segment-form__name" />
@@ -61,6 +59,7 @@
 					<NcTextArea
 						v-model="model.description"
 						:label="t('pipelinq', 'Description')"
+						labelOutside
 						resize="vertical"
 						rows="2"
 						class="segment-form__description" />
@@ -103,16 +102,16 @@
 				}}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
@@ -139,8 +138,8 @@ export default {
 	name: 'SegmentFormDialog',
 	components: {
 		Check,
+		CnDialog,
 		NcButton,
-		NcDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
@@ -420,11 +419,6 @@ export default {
 </script>
 
 <style scoped>
-.segment-form__subtitle {
-	margin: -8px 0 12px;
-	color: var(--color-text-maxcontrast);
-}
-
 .segment-form {
 	display: flex;
 	flex-direction: column;

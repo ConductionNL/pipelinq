@@ -25,6 +25,8 @@ const api = vi.hoisted(() => ({
 	fetchLetterTemplates: vi.fn(),
 	makeLetter: vi.fn(),
 	downloadLetter: vi.fn(),
+	previewLetter: vi.fn(),
+	letterPreviewBody: vi.fn((html) => html),
 }))
 
 vi.mock('../../src/store/modules/object.js', () => ({
@@ -46,6 +48,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: {
 		name: 'NcButton',
+		inheritAttrs: true,
 		props: { disabled: Boolean },
 		emits: ['click'],
 		render() {
@@ -85,6 +88,8 @@ beforeAll(async () => {
 beforeEach(() => {
 	Object.values(storeMock).forEach((fn) => fn.mockReset())
 	Object.values(api).forEach((fn) => fn.mockReset())
+	api.letterPreviewBody.mockImplementation((html) => html)
+	api.previewLetter.mockResolvedValue({ html: '', fields: [], complete: true, warnings: [] })
 	storeMock.fetchCollection.mockImplementation(async (type) => (type === 'contact'
 		? [{ id: 'contact-1', name: 'Anna de Jong' }]
 		: []))
@@ -292,3 +297,68 @@ describe('the Make a letter action (caller)', () => {
 		)
 	})
 })
+
+describe('LetterFromTemplateModal preview', () => {
+	const ONE_TEMPLATE = {
+		available: true,
+		templates: [{ id: 'tpl-1', name: 'Uitnodiging gesprek vergunning', description: '' }],
+	}
+
+	it('previews the chosen template and lists what filinq filled in', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
+		api.previewLetter.mockResolvedValue({
+			html: '<p>Geachte mevrouw De Vries,</p>',
+			fields: [
+				{ label: 'Aanhef', value: 'Geachte mevrouw De Vries,', source: 'op basis van het opgegeven geslacht', filled: true },
+				{ label: 'Adres', value: 'Lindelaan 14', source: 'uit de klantgegevens', filled: true },
+			],
+			complete: true,
+			warnings: [],
+		})
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+
+		expect(api.previewLetter).toHaveBeenCalledWith(CLIENT, { templateId: 'tpl-1', contactId: undefined, ticketId: undefined })
+		expect(w.find('[data-testid="letter-preview"]').html()).toContain('Geachte mevrouw De Vries,')
+		const fields = w.find('[data-testid="letter-fields"]').text()
+		expect(fields).toContain('Aanhef')
+		expect(fields).toContain('Lindelaan 14, uit de klantgegevens')
+		expect(w.find('[data-testid="letter-check"]').text()).toContain('All 2 fields filled in, nothing missing')
+		expect(w.find('[data-testid="letter-channel"]').exists()).toBe(true)
+	})
+
+	it('names the fields that are still empty', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
+		api.previewLetter.mockResolvedValue({
+			html: '<p>x</p>',
+			fields: [
+				{ label: 'Aanhef', value: 'Geachte heer,', source: '', filled: true },
+				{ label: 'Afspraak', value: '', source: 'uit Afspraken', filled: false },
+			],
+			complete: false,
+			warnings: [],
+		})
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+
+		expect(w.find('[data-testid="letter-check"]').text()).toContain('Still empty: {fields}')
+		expect(w.find('[data-testid="letter-fields"]').text()).toContain('Not filled in, uit Afspraken')
+	})
+
+	it('downloads the PDF without filing or logging it', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
+		api.makeLetter.mockResolvedValue({ content: 'JVBERg==', filename: 'x.pdf', warnings: [], contactMomentId: null })
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+		await w.find('[data-testid="letter-download"]').trigger('click')
+		await flushPromises()
+
+		expect(api.makeLetter).toHaveBeenCalledWith(CLIENT, { templateId: 'tpl-1', contactId: undefined, ticketId: undefined, downloadOnly: true })
+		expect(api.downloadLetter).toHaveBeenCalledTimes(1)
+		expect(w.find('[data-testid="letter-result"]').exists()).toBe(false)
+	})
+})
+

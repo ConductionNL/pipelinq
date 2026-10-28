@@ -30,6 +30,7 @@ describe('menuRuntime', () => {
 			modulesOff: 'Marketing, Kassa',
 			modulesOnCount: 2,
 			modulesCount: 4,
+			enabled: { sales: true, marketing: false, pos: false, products: true },
 			reports: 3,
 		})
 	})

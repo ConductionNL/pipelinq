@@ -11,6 +11,10 @@
 			"value": "dossiq-medewerkers"
 		},
 		{
+			"key": "portal_name",
+			"value": "Mijn Zuiddrecht"
+		},
+		{
 			"key": "brp.allowed_groups",
 			"value": "{{cast:kcc.gid}}"
 		},
@@ -66,7 +70,10 @@
 				"notes": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan.",
 				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000012",
 				"phone": "06 12 34 56 78",
-				"description": "Aanvrager van de vergunning voor het straatfeest, Parkstraat"
+				"description": "Aanvrager van de vergunning voor het straatfeest, Parkstraat",
+				"identityCheck": "Geboortedatum en adres gevraagd",
+				"identityVerifiedVia": "BRP",
+				"identityVerifiedAt": "{{datetime:0 10:24}}"
 			}
 		},
 		{
@@ -216,12 +223,40 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:buurtoost.kvk}}. Voorzitter Marja Verbeek, secretaris Kees de Wit.",
+				"notes": "KVK-nummer {{cast:buurtoost.kvk}}. Voorzitter Marja Verbeek, secretaris Sanne de Vries.",
 				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000007",
 				"kvkNumber": "{{cast:buurtoost.kvk}}",
 				"legalForm": "vereniging",
 				"place": "{{cast:buurtoost.address.city}}",
 				"phone": "078 612 33 41"
+			}
+		},
+		{
+			"key": "contact-buurtoost-sanne",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "{{cast:sanne.displayName}}",
+				"role": "Secretaris",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "example-buurtoost-sanne",
+				"email": "{{cast:buurtoost.email}}",
+				"mainContact": true,
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "contact-buurtoost-verbeek",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "Marja Verbeek",
+				"role": "Voorzitter",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "example-buurtoost-verbeek",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
 			}
 		},
 		{
@@ -3469,7 +3504,7 @@
 				"client": "{{object:client-henkvisser.id}}",
 				"assignee": "{{cast:lotte.uid}}",
 				"occurredAt": "{{datetime:-5 11:15}}",
-				"category": "openbare ruimte"
+				"category": "openbare-ruimte"
 			}
 		},
 		{
