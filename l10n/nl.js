@@ -8823,7 +8823,8 @@ OC.L10N.register(
         "Higher click rate": "Hogere klikratio",
         "Subject: {subject}": "Onderwerp: {subject}",
         "Variant A {a} click rate, variant B {b} click rate": "Variant A {a} klikratio, variant B {b} klikratio",
-        "Portal sessions that came in through a link in the mail": "Sessies op het portaal die via een link in de mail kwamen"
+        "Portal sessions that came in through a link in the mail": "Sessies op het portaal die via een link in de mail kwamen",
+        "Search a client or username": "Zoek een klant of gebruikersnaam"
     },
     "nplurals=2; plural=(n != 1);"
 )

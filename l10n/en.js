@@ -8799,7 +8799,8 @@ OC.L10N.register(
         "Higher click rate": "Higher click rate",
         "Subject: {subject}": "Subject: {subject}",
         "Variant A {a} click rate, variant B {b} click rate": "Variant A {a} click rate, variant B {b} click rate",
-        "Portal sessions that came in through a link in the mail": "Portal sessions that came in through a link in the mail"
+        "Portal sessions that came in through a link in the mail": "Portal sessions that came in through a link in the mail",
+        "Search a client or username": "Search a client or username"
     },
     "nplurals=2; plural=(n != 1);"
 )

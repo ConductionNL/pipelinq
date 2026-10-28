@@ -95,6 +95,12 @@ describe('the connection audit', () => {
 		)
 	})
 
+	it('draws no row checkboxes and the board search placeholder (board PqVerbindingscontrole)', () => {
+		expect(audit.config.selectable).toBe(false)
+		expect(audit.config.searchPlaceholder).toBe('Search a client or username')
+		expect(nl['Search a client or username']).toBe('Zoek een klant of gebruikersnaam')
+	})
+
 	it('re-runs the audit through the endpoint', async () => {
 		const http = { get: vi.fn().mockResolvedValue({ data: { rows: [] } }) }
 		const showSuccess = vi.fn()
