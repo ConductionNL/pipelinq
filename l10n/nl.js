@@ -475,6 +475,7 @@ OC.L10N.register(
         "Ask a question about these figures": "Stel een vraag over deze cijfers",
         "Which category took longest to resolve this month?": "Welke categorie duurde deze maand het langst om op te lossen?",
         "Ask": "Vragen",
+        "Search the knowledge base": "Zoek in de kennisbank",
         "Back to list": "Terug naar lijst",
         "Back to project": "Terug naar project",
         "Back to queues": "Terug naar wachtrijen",
