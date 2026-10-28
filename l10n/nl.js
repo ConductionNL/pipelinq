@@ -6983,6 +6983,8 @@ OC.L10N.register(
         "As soon as the blast is created": "Zodra de blast is aangemaakt",
         "Basics": "Basis",
         "Delivery": "Verzending",
+        "Mailing list: {list.name} · {list.subscribers|number} subscribers": "Mailinglijst: {list.name} · {list.subscribers|number} abonnees",
+        "Segment: {segment.name|lowerfirst} · {segment.estimatedSize|number} contacts": "Segment: {segment.name|lowerfirst} · {segment.estimatedSize|number} contacten",
         "Mailing list: {name}": "Mailinglijst: {name}",
         "Message preview": "Voorbeeld van het bericht",
         "Off": "Uit",
