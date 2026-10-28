@@ -469,6 +469,48 @@ describe('the attention card asks a question OpenRegister can answer', () => {
 	})
 })
 
+describe('the board PqDashboard', () => {
+	const simple = page(builtSimple, 'KccWerkplek').config
+	const byId = Object.fromEntries(simple.widgets.map((widget) => [widget.id, widget]))
+
+	it('draws the side column at the board\'s 320 pixels beside the main column', () => {
+		expect(simple.gridSideColumn).toEqual({ width: 320 })
+		for (const id of ['simple-callback-list', 'simple-latest-contact']) {
+			expect(simple.layout.find((entry) => entry.widgetId === id).gridX, id).toBe(8)
+		}
+	})
+
+	it('rules above the first row of every list, as under the card title', () => {
+		for (const id of ['simple-waiting-list', 'simple-callback-list', 'simple-latest-contact']) {
+			expect(byId[id].content.ruleAbove, id).toBe(true)
+		}
+	})
+
+	it('lists a callback by the client, with what to call about and when it is due', () => {
+		const list = byId['simple-callback-list'].content
+		expect(list.extend).toEqual(['clientId'])
+		expect(SCHEMAS.crmTask.clientId.$ref).toBe('client')
+		expect(list.title).toEqual(['{clientId.name}', '{subject}'])
+		expect(list.meta).toBe('{subject}')
+		expect(list.trailing).toBe('{deadline|soon}')
+	})
+
+	it('says how long ago the latest contact was', () => {
+		expect(byId['simple-latest-contact'].content.meta).toBe('{occurredAt|ago}')
+	})
+
+	it('names every channel the seeded contact moments use', () => {
+		const labels = byId['simple-per-channel'].content.labels
+		for (const channel of ['telefoon', 'phone', 'email', 'balie', 'web', 'portal', 'chat', 'brief', 'sms', 'whatsapp']) {
+			expect(labels[channel], channel).toBeTruthy()
+		}
+	})
+
+	it('names the client search for what it does', () => {
+		expect(byId['simple-client-in-focus'].content.objectSource.ariaLabel).toBe('Client search')
+	})
+})
+
 describe('the tickets list', () => {
 	const simple = page(builtSimple, 'Tickets').config
 	const before = page(builtFull, 'Tickets').config

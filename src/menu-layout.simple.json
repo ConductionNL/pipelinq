@@ -1436,6 +1436,9 @@
 				"showWidgetActions": false,
 				"greeting": "first",
 				"gridFloat": false,
+				"gridSideColumn": {
+					"width": 320
+				},
 				"headerActions": [
 					{
 						"id": "log-contact",
@@ -1692,6 +1695,7 @@
 							},
 							"limit": 5,
 							"presentation": "rows",
+							"ruleAbove": true,
 							"extend": [
 								"client"
 							],
@@ -1760,7 +1764,12 @@
 								"balie": "Counter",
 								"chat": "Chat",
 								"social": "Social media",
-								"brief": "Letter"
+								"brief": "Letter",
+								"phone": "By phone",
+								"portal": "Mijn Zuiddrecht",
+								"web": "Web form",
+								"sms": "SMS",
+								"whatsapp": "WhatsApp"
 							},
 							"emptyText": "No contact yet today"
 						},
@@ -1788,9 +1797,16 @@
 							},
 							"limit": 5,
 							"presentation": "rows",
-							"title": "{subject}",
-							"meta": "{description}",
-							"trailing": "{deadline|relativetime}",
+							"ruleAbove": true,
+							"extend": [
+								"clientId"
+							],
+							"title": [
+								"{clientId.name}",
+								"{subject}"
+							],
+							"meta": "{subject}",
+							"trailing": "{deadline|soon}",
 							"rowRoute": "TaskDetail",
 							"emptyText": "You have no callbacks to make."
 						},
@@ -1820,8 +1836,9 @@
 							},
 							"limit": 3,
 							"presentation": "rows",
+							"ruleAbove": true,
 							"title": "{title}",
-							"meta": "{occurredAt|relative}",
+							"meta": "{occurredAt|ago}",
 							"rowRoute": "TicketDetail",
 							"emptyText": "No contact moments yet.",
 							"headerLink": {
@@ -1852,7 +1869,8 @@
 								"register": "pipelinq",
 								"schema": "client",
 								"labelField": "name",
-								"placeholder": "Name, phone, email, postcode or client number"
+								"placeholder": "Name, phone, email, postcode or client number",
+								"ariaLabel": "Client search"
 							}
 						},
 						"visibleWhen": {
