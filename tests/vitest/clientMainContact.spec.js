@@ -33,7 +33,8 @@ describe('ClientDetail main contact', () => {
 		const content = card.content
 		expect(content).toMatchObject({ register: 'pipelinq', schema: 'contact', filter: { client: '@objectId' }, limit: 1 })
 		expect(content.sort).toEqual({ field: 'mainContact', dir: 'desc' })
-		expect(content.avatar).toEqual({ text: '{name}', size: 32 })
+		// The record card's person chip: 40px, 16px initials on grey (nc-vue avatar.size 40).
+		expect(content.avatar).toEqual({ text: '{name}', size: 40 })
 		expect(content.title).toBe('{name}')
 		expect(content.meta.parts).toEqual(['{role}'])
 		expect(content.text).toBe('{email}')

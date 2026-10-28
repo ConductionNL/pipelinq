@@ -3273,7 +3273,7 @@
 							"chevron": false,
 							"avatar": {
 								"text": "{name}",
-								"size": 32
+								"size": 40
 							},
 							"title": "{name}",
 							"meta": {
