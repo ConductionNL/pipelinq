@@ -45,11 +45,11 @@ const manifest = JSON.parse(readFileSync(resolve(root, 'src/manifest.json'), 'ut
 const registry = readFileSync(resolve(root, 'src/registry.js'), 'utf8')
 
 describe('party warnings are mounted', () => {
-	it('ClientDetail renders them in the contact strip before the body', () => {
+	it('ClientDetail renders them in the contact strip, first in the band across the page', () => {
 		const page = manifest.pages.find((p) => p.id === 'ClientDetail')
-		const widget = page.config.bodyWidgets.find((w) => w.component === 'PartyContactStrip')
-		expect(widget.placement).toBe('before-body')
-		expect(widget.props.partyId).toBe('@objectId')
+		const widget = page.config.widgets.find((w) => w.type === 'PartyContactStripWidget')
+		expect(page.config.band[0].widgetId).toBe(widget.id)
+		expect(registry).toContain("'PartyContactStripWidget',\n\t\t\tPartyContactStrip,")
 		expect(readFileSync(resolve(root, 'src/components/PartyContactStrip.vue'), 'utf8')).toContain('<PartyIndicatorPanel')
 	})
 

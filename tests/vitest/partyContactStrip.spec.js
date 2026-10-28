@@ -57,6 +57,22 @@ describe('PartyContactStrip', () => {
 		expect(wrapper.find('.stub-visit').exists()).toBe(true)
 	})
 
+	it('keeps the add-warning form closed until Add a warning is pressed', async () => {
+		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'person' }, global })
+		await flushPromises()
+		expect(wrapper.find('.party-indicators__form').exists()).toBe(false)
+		await wrapper.find('[data-testid="party-indicators-add"]').trigger('click')
+		expect(wrapper.find('.party-indicators__form').exists()).toBe(true)
+	})
+
+	it('draws the contact links as buttons the theme does not underline or colour as links', async () => {
+		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'person', phone: '06 12 34 56 78', email: 's@example.nl', address: 'Parkstraat 24, Zuiddrecht' }, global })
+		await flushPromises()
+		const links = wrapper.findAll('.contact-links__link')
+		expect(links).toHaveLength(3)
+		links.forEach((link) => expect(link.classes()).toContain('button'))
+	})
+
 	it('ends with Send a message, which asks the page to open the message composer for this client', async () => {
 		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'person' }, global })
 		await flushPromises()

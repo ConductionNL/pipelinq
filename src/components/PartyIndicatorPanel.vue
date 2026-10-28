@@ -89,7 +89,7 @@
 		<NcButton v-if="!adding && !(compact && !indicators.length)" @click="openForm">
 			{{ t('pipelinq', 'Add a warning') }}
 		</NcButton>
-		<form v-else class="party-indicators__form" @submit.prevent="save">
+		<form v-else-if="adding" class="party-indicators__form" @submit.prevent="save">
 			<NcSelect
 				v-model="form.indicator"
 				:options="vocabulary"

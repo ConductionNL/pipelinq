@@ -79,7 +79,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	margin: 0 0 20px;
+	margin: 0;
 	padding: 16px 20px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--cn-board-card-radius, 12px);
@@ -99,7 +99,7 @@ export default {
 
 .party-contact-strip__actions > :deep(.button-vue),
 .party-contact-strip__actions :deep(.log-visit-action button) {
-	min-height: 40px;
-	height: 40px;
+	min-height: 38px;
+	height: 38px;
 }
 </style>
