@@ -7074,6 +7074,8 @@ OC.L10N.register(
         "As soon as the blast is created": "As soon as the blast is created",
         "Basics": "Basics",
         "Delivery": "Delivery",
+        "Mailing list: {list.name} · {list.subscribers|number} subscribers": "Mailing list: {list.name} · {list.subscribers|number} subscribers",
+        "Segment: {segment.name|lowerfirst} · {segment.estimatedSize|number} contacts": "Segment: {segment.name|lowerfirst} · {segment.estimatedSize|number} contacts",
         "Mailing list: {name}": "Mailing list: {name}",
         "Message preview": "Message preview",
         "Off": "Off",

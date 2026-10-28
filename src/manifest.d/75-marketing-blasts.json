@@ -433,7 +433,32 @@
 					{
 						"key": "name",
 						"label": "Newsletter",
-						"secondary": "{channel}"
+						"secondary": [
+							"Segment: {segment.name|lowerfirst} · {segment.estimatedSize|number} contacts",
+							"Mailing list: {list.name} · {list.subscribers|number} subscribers"
+						],
+						"secondaryRefs": {
+							"segment": {
+								"field": "segmentId",
+								"register": "pipelinq",
+								"schema": "segment"
+							},
+							"list": {
+								"field": "listId",
+								"register": "pipelinq",
+								"schema": "mailingList",
+								"counts": {
+									"subscribers": {
+										"register": "pipelinq",
+										"schema": "subscription",
+										"where": {
+											"listId": "@self.id",
+											"state": "confirmed"
+										}
+									}
+								}
+							}
+						}
 					},
 					{
 						"key": "status",
