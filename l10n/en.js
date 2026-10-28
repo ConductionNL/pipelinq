@@ -8850,7 +8850,15 @@ OC.L10N.register(
         "The contact moment is saved with the case.": "The contact moment is saved with the case.",
         "Preferred contact time": "Preferred contact time",
         "When this client likes to be contacted, in the client's words, such as 's ochtends or after 17:00.": "When this client likes to be contacted, in the client's words, such as 's ochtends or after 17:00.",
-        "other": "other"
+        "other": "other",
+        "Not redeemed": "Not redeemed",
+        "Redemption rate": "Redemption rate",
+        "Distribution over tiers": "Distribution over tiers",
+        "Export as CSV": "Export as CSV",
+        "Download started": "Download started",
+        "Points, tiers and what the outstanding points are worth": "Points, tiers and what the outstanding points are worth",
+        "Loyalty sign-up": "Loyalty sign-up",
+        "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent.": "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent."
     },
     "nplurals=2; plural=(n != 1);"
 )
