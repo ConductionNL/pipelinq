@@ -9184,7 +9184,11 @@ OC.L10N.register(
         "VAT {vatRate}%": "Btw {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "Het btw-percentage waarmee de btw van de offerte wordt berekend.",
         "The event this newsletter invites to.": "Het evenement waarvoor deze nieuwsbrief uitnodigt.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel.",
+        "Higher than the week before": "Hoger dan de week ervoor",
+        "Lower than the week before": "Lager dan de week ervoor",
+        "Highlight directions": "Richting van de hoogtepunten",
+        "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order.": "Of het cijfer van elk hoogtepunt steeg, daalde of gelijk bleef tegenover de week ervoor, één waarde per hoogtepunt in dezelfde volgorde."
     },
     "nplurals=2; plural=(n != 1);"
 )

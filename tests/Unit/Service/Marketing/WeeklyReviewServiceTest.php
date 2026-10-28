@@ -115,6 +115,26 @@ class WeeklyReviewServiceTest extends TestCase {
 	}//end testComposesFromOneReadOfEachCollection()
 
 	/**
+	 * Each highlight line carries whether its figure rose, fell or held
+	 * against the week before: mail by clicks, social by views, search by
+	 * clicks and the watches by items seen.
+	 *
+	 * @return void
+	 */
+	public function testEachHighlightCarriesItsDirectionAgainstTheWeekBefore(): void {
+		$this->store->rows['touchpoint'][] = ['uuid' => 't-9', 'kind' => 'click', 'occurredAt' => '2026-08-18T10:00:00+02:00'];
+		$this->store->rows['touchpoint'][] = ['uuid' => 't-8', 'kind' => 'click', 'occurredAt' => '2026-08-19T10:00:00+02:00'];
+		$this->store->rows['touchpoint'][] = ['uuid' => 't-7', 'kind' => 'click', 'occurredAt' => '2026-08-20T10:00:00+02:00'];
+		$this->store->rows['socialPublication'][] = ['uuid' => 's-9', 'publishedAt' => '2026-08-18T12:00:00+02:00', 'metrics' => ['views' => 120]];
+		$this->store->rows['searchQueryDaily'][] = ['uuid' => 'q-9', 'date' => '2026-08-18', 'query' => 'x', 'clicks' => 2, 'impressions' => 40];
+
+		$review = $this->service()->compose();
+
+		$this->assertCount(count($review['highlights']), $review['highlightDirections']);
+		$this->assertSame(['down', 'flat', 'up', 'up'], $review['highlightDirections']);
+	}//end testEachHighlightCarriesItsDirectionAgainstTheWeekBefore()
+
+	/**
 	 * 🔴 A source this tenant holds nothing for is NAMED, never passed off as
 	 * a zero. A quiet week and a Search Console nobody connected both render
 	 * as no line, and only one of them is a result.

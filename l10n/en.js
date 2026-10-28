@@ -9172,7 +9172,11 @@ OC.L10N.register(
         "VAT {vatRate}%": "VAT {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "The VAT percentage the quote's VAT is worked out at.",
         "The event this newsletter invites to.": "The event this newsletter invites to.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own.",
+        "Higher than the week before": "Higher than the week before",
+        "Lower than the week before": "Lower than the week before",
+        "Highlight directions": "Highlight directions",
+        "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order.": "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order."
     },
     "nplurals=2; plural=(n != 1);"
 )
