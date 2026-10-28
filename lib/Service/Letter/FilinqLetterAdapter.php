@@ -70,6 +70,13 @@ class FilinqLetterAdapter
      */
     private const DOCUMENT_SERVICE = 'Service\DocumentService';
 
+    /**
+     * filinq's template slug resolver, below its app namespace root.
+     *
+     * @var string
+     */
+    private const SLUG_RESOLVER = 'Service\TemplateSlugResolver';
+
 
     /**
      * Constructor.
@@ -165,7 +172,9 @@ class FilinqLetterAdapter
         try {
             $row = (array) $service->getTemplate($templateId);
         } catch (Throwable $e) {
-            return null;
+            // A configured template may name its stable slug ("offerte") rather
+            // than this install's id; filinq resolves it in pipelinq's namespace.
+            return $this->findTemplateBySlug(slug: $templateId);
         }
 
         if (($row['namespace'] ?? '') !== self::TEMPLATE_NAMESPACE) {
@@ -184,6 +193,8 @@ class FilinqLetterAdapter
      * @param list<array{register: string, schema: string, id: string}> $dataRefs   The records the letter reads.
      * @param string                                                  $filename   The file name, without extension.
      * @param string                                                  $outputMode 'both' keeps a copy in the user's Files, 'return' only returns it.
+     * @param list<array<string, mixed>>                              $listRefs   Lists the template reads beside the records
+     *                                                                            (filinq listRefs: register, schema, filter, as, order).
      *
      * @return array{content: string, fileId: int|null, path: string|null, warnings: list<string>} The letter.
      *
@@ -191,7 +202,7 @@ class FilinqLetterAdapter
      *
      * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
      */
-    public function render(string $templateId, array $dataRefs, string $filename, string $outputMode='both'): array
+    public function render(string $templateId, array $dataRefs, string $filename, string $outputMode='both', array $listRefs=[]): array
     {
         $service = $this->requireService(service: $this->documentService());
 
@@ -209,7 +220,7 @@ class FilinqLetterAdapter
                     'userId'   => $user->getUID(),
                     'filename' => $filename,
                     'output'   => ['mode' => $outputMode],
-                ]
+                ] + $this->listOptions(listRefs: $listRefs)
             );
         } catch (Throwable $e) {
             $this->logger->error(
@@ -322,6 +333,55 @@ class FilinqLetterAdapter
         ];
 
     }//end summarise()
+
+
+    /**
+     * The `listRefs` render option, or none when there are no lists.
+     *
+     * @param list<array<string, mixed>> $listRefs The lists.
+     *
+     * @return array<string, list<array<string, mixed>>> The option.
+     */
+    private function listOptions(array $listRefs): array
+    {
+        if ($listRefs === []) {
+            return [];
+        }
+
+        return ['listRefs' => $listRefs];
+
+    }//end listOptions()
+
+
+    /**
+     * One of pipelinq's templates by its slug, or null when filinq has none.
+     *
+     * @param string $slug The template's slug.
+     *
+     * @return array{id: string, name: string, description: string}|null The template.
+     *
+     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     */
+    private function findTemplateBySlug(string $slug): ?array
+    {
+        $resolver = FleetAppId::getService(container: $this->container, canonical: 'filinq', relative: self::SLUG_RESOLVER);
+        if ($resolver === null) {
+            return null;
+        }
+
+        try {
+            $row = (array) $resolver->resolve(self::TEMPLATE_NAMESPACE, $slug);
+        } catch (Throwable $e) {
+            return null;
+        }
+
+        if (($row['namespace'] ?? self::TEMPLATE_NAMESPACE) !== self::TEMPLATE_NAMESPACE) {
+            return null;
+        }
+
+        return $this->summarise(row: $row);
+
+    }//end findTemplateBySlug()
 
 
     /**
