@@ -9258,6 +9258,8 @@
         "VAT {vatRate}%": "VAT {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "The VAT percentage the quote's VAT is worked out at.",
         "The event this newsletter invites to.": "The event this newsletter invites to.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own.",
+        "Enable {provider}": "Enable {provider}",
+        "Every staff member signs in at the till with a PIN of 4 to 6 digits.": "Every staff member signs in at the till with a PIN of 4 to 6 digits."
     }
 }
