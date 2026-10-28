@@ -148,6 +148,12 @@ export default {
 		},
 	},
 
+	/**
+	 * Loads the accounts to choose from.
+	 *
+	 * @spec exclude shared admin control for the portal and messaging service accounts;
+	 *   no requirement owns the acting identity
+	 */
 	mounted() {
 		this.load()
 		this.loadUserIds()

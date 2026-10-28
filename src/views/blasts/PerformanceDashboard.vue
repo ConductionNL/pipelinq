@@ -887,6 +887,8 @@ export default {
 		 * @param {object} parent  Variant-A blast (parent).
 		 * @param {object} variant Variant-B blast.
 		 * @return {object}
+		 *
+		 * @spec openspec/changes/newsletter-results-board/specs/marketing/spec.md#requirement-the-a-b-tab-names-the-variant-that-clicked-better
 		 */
 		buildAbPair(parent, variant) {
 			const a = variantStats(parent, this.templateSubjects)

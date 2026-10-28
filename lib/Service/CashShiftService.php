@@ -677,6 +677,8 @@ class CashShiftService {
 	 * @return array<string, mixed> The shift.
 	 *
 	 * @throws OCSNotFoundException If the shift is not found.
+	 *
+	 * @spec openspec/changes/pos-cash-management/tasks.md#3.1
 	 */
 	public function fetchShift(string $id): array {
 		return $this->fetchOne(schemaKey: 'cashShift_schema', id: $id, label: 'Shift niet gevonden.');
@@ -729,6 +731,8 @@ class CashShiftService {
 	 * @param string $shiftId The parent shift UUID.
 	 *
 	 * @return array<int, array<string, mixed>> The linked objects.
+	 *
+	 * @spec openspec/changes/pos-cash-management/tasks.md#3.1
 	 */
 	public function fetchByShift(string $schemaKey, string $shiftId): array {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
@@ -771,6 +775,8 @@ class CashShiftService {
 	 * @param array<string, mixed> $filters The filters.
 	 *
 	 * @return array<int, array<string, mixed>> The objects; none when they cannot be read.
+	 *
+	 * @spec openspec/changes/pos-cash-management/tasks.md#3.1
 	 */
 	public function fetchWhere(string $schemaKey, array $filters): array {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
