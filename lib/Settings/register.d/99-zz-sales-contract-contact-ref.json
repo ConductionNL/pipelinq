@@ -1,0 +1,19 @@
+{
+  "components": {
+    "schemas": {
+      "salesContract": {
+        "slug": "salesContract",
+        "version": "1.1.0",
+        "properties": {
+          "contactRef": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "contact",
+            "title": "Contact Ref",
+            "description": "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it."
+          }
+        }
+      }
+    }
+  }
+}

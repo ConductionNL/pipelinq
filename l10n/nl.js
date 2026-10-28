@@ -8563,7 +8563,10 @@ OC.L10N.register(
         "Social profile": "Sociaal profiel",
         "preferred": "voorkeur",
         "{name}, client": "{name}, klant",
-        "Request {reference}": "Verzoek {reference}"
+        "Request {reference}": "Verzoek {reference}",
+        "Contact Ref": "Contactpersoon",
+        "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it.": "De contactpersoon bij de klant met wie het contract is gesloten. Optioneel; de pagina van de contactpersoon toont de contracten die hem noemen.",
+        "Contract {contractNumber}": "Contract {contractNumber}"
     },
     "nplurals=2; plural=(n != 1);"
 )

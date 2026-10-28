@@ -8592,7 +8592,10 @@ OC.L10N.register(
         "Social profile": "Social profile",
         "preferred": "preferred",
         "{name}, client": "{name}, client",
-        "Request {reference}": "Request {reference}"
+        "Request {reference}": "Request {reference}",
+        "Contact Ref": "Contact Ref",
+        "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it.": "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it.",
+        "Contract {contractNumber}": "Contract {contractNumber}"
     },
     "nplurals=2; plural=(n != 1);"
 )

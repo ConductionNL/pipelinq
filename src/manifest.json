@@ -3485,6 +3485,18 @@
 							],
 							"extraSources": [
 								{
+									"key": "contracts",
+									"endpoint": "/apps/openregister/api/objects/pipelinq/salesContract?contactRef=@objectId",
+									"path": "results",
+									"itemLabel": "Contract {contractNumber}",
+									"rowRoute": {
+										"name": "ContractDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								},
+								{
 									"key": "requests",
 									"endpoint": "/apps/openregister/api/objects/pipelinq/ticket?contact=@objectId&ticketType=request",
 									"path": "results",
