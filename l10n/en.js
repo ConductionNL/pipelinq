@@ -9243,7 +9243,10 @@ OC.L10N.register(
         "Signing": "Signing",
         "Live": "Live",
         "Give the portal a name first.": "Give the portal a name first.",
-        "Whether residents can use the portal (live) or it is still being prepared (draft).": "Whether residents can use the portal (live) or it is still being prepared (draft)."
+        "Whether residents can use the portal (live) or it is still being prepared (draft).": "Whether residents can use the portal (live) or it is still being prepared (draft).",
+        "Save market insight settings": "Save market insight settings",
+        "Signup form copied to the clipboard.": "Signup form copied to the clipboard.",
+        "Could not copy the signup form.": "Could not copy the signup form."
     },
     "nplurals=2; plural=(n != 1);"
 )

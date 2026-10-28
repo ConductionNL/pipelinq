@@ -1251,7 +1251,7 @@
         "Delete this webhook subscription?": "Dit webhook-abonnement verwijderen?",
         "Delete webhook": "Webhook verwijderen",
         "Deleting...": "Verwijderen...",
-        "Deliverability": "Leverbaarheid",
+        "Deliverability": "Afleverbaarheid",
         "Deliverability Checked At": "Leverbaarheid gecontroleerd op",
         "Delivered": "Bezorgd",
         "Demand": "Vraag",
@@ -2265,7 +2265,7 @@
         "Mailing list signup form": "Aanmeldformulier mailinglijst",
         "Mailing lists this person is on": "Mailinglijsten waarop deze persoon staat",
         "Mailings": "Mailings",
-        "Make default": "Maak standaard",
+        "Make default": "Standaard maken",
         "Manage API tokens and OAuth 2.0 configuration for external integrations": "Beheer API-tokens en OAuth 2.0-configuratie voor externe integraties",
         "Manage callback requests and follow-up tasks": "Terugbelverzoeken en opvolgtaken beheren",
         "Manage cash shifts: opening float, drops, blind counting and reconciliation": "Beheer kassadiensten: beginsaldo, afstortingen, blind tellen en afstemmen",
@@ -7919,7 +7919,7 @@
         "Other legal form": "Andere rechtsvorm",
         "Contacts · import": "Contacten · importeren",
         "Enter an email address, such as alerts@example.com.": "Vul een e-mailadres in, zoals alerts@example.com.",
-        "Marketing intelligence": "Marketinginzicht",
+        "Marketing intelligence": "Marktinzicht",
         "Where the keyword, Matomo and competitor reads leave the instance, and how relevance is scored. Every outbound read goes through an OpenConnector source, so this section holds source ids and never a key.": "Waarlangs het lezen van zoekwoorden, Matomo en concurrenten de instantie verlaat, en hoe relevantie wordt gescoord. Elke uitgaande lezing loopt via een OpenConnector-bron, dus deze sectie bevat bron-id's en nooit een sleutel.",
         "Crawl source for our own pages": "Crawlbron voor onze eigen pagina's",
         "The OpenConnector source that reaches your own website. The content gap check reads the title and headings of the pages that already appear in search. Leave it empty and that check does not run, which the Keywords page says rather than reporting no gaps.": "De OpenConnector-bron die uw eigen website bereikt. De controle op ontbrekende inhoud leest de titel en koppen van de pagina's die al in de zoekresultaten staan. Laat u dit leeg, dan draait die controle niet, en dat zegt de pagina Zoekwoorden in plaats van te melden dat er geen gaten zijn.",
@@ -9356,6 +9356,9 @@
         "Signing": "Ondertekenen",
         "Live": "Live",
         "Give the portal a name first.": "Geef het portaal eerst een naam.",
-        "Whether residents can use the portal (live) or it is still being prepared (draft).": "Of inwoners het portaal kunnen gebruiken (live) of dat het nog wordt voorbereid (concept)."
+        "Whether residents can use the portal (live) or it is still being prepared (draft).": "Of inwoners het portaal kunnen gebruiken (live) of dat het nog wordt voorbereid (concept).",
+        "Save market insight settings": "Instellingen voor marktinzicht opslaan",
+        "Signup form copied to the clipboard.": "Aanmeldformulier gekopieerd.",
+        "Could not copy the signup form.": "Het aanmeldformulier kon niet worden gekopieerd."
     }
 }

@@ -3,10 +3,10 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * The messaging and mail transport sections of the admin page list their
- * records as rows of facts that wrap inside the card, not as wide tables that
- * scroll sideways. Every value a table column showed is still on the row,
- * under its own label.
+ * The messaging section of the admin page lists providers, budgets and
+ * templates as tables that fit the card, as the PqBeheerKoppelingen board
+ * draws them; the mail transports list their records as rows of facts.
+ * Neither scrolls sideways.
  *
  * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
  * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
@@ -56,6 +56,19 @@ function stub(name, tag = 'div') {
 		},
 	}
 }
+
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnSettingsSection: {
+		name: 'CnSettingsSection',
+		props: ['name', 'description'],
+		render() {
+			return h('section', { 'data-stub': 'CnSettingsSection' }, [
+				this.$slots.actions?.(),
+				this.$slots.default?.(),
+			])
+		},
+	},
+}))
 
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: stub('NcButton', 'button'),
@@ -143,90 +156,169 @@ function factsOf(record) {
 	return facts
 }
 
+/**
+ * The cell texts of one table row.
+ *
+ * @param {object} row The row wrapper.
+ * @return {Array<string>} One text per cell.
+ */
+function cellsOf(row) {
+	return row.findAll('td').map((cell) => cell.text().replace(/\s+/g, ' ').trim())
+}
+
+/**
+ * The column heads of a table.
+ *
+ * @param {object} table The table wrapper.
+ * @return {Array<string>} One text per head.
+ */
+function headsOf(table) {
+	return table.findAll('thead th').map((cell) => cell.text().trim())
+}
+
 describe('messaging settings', () => {
-	it('lists a provider with every value its table row showed', async () => {
+	it('is one card: the service account, then providers, budgets and templates under hairlines', async () => {
 		const wrapper = mount(MessagingSettings, mountOptions)
 		await flushPromises()
 
-		expect(wrapper.find('table').exists()).toBe(false)
-		const provider = wrapper.get('[data-testid="messaging-provider"]')
-		expect(provider.get('h3').text()).toBe('Twilio SMS (NL)')
-		expect(provider.text()).toContain('Active')
-		expect(provider.text()).toContain('Sandbox')
-		expect(factsOf(provider)).toMatchObject({
-			Kind: 'SMS',
-			Vendor: 'Twilio',
-			Source: 'twilio-sms',
-			'Phone / account': '+31600000000',
-			Priority: '5',
-		})
-		expect(factsOf(provider)['Webhook URL']).toContain(
-			'/index.php/apps/pipelinq/api/messaging-webhooks/sms/p1',
-		)
-		const actions = provider
-			.findAll('.messaging-settings__record-actions button')
-			.map((b) => b.text())
-		expect(actions).toEqual(['Test connection', 'Edit', 'Delete'])
+		const sections = wrapper.findAll('section[data-stub="NcSettingsSection"]')
+		expect(sections).toHaveLength(1)
+		const heads = sections[0].findAll('h3').map((h3) => h3.text())
+		expect(heads).toEqual(['Providers', 'Send budgets', 'Templates'])
+		expect(sections[0].findAll('hr')).toHaveLength(3)
 	})
 
-	it('lists a send budget with its fields, usage and actions', async () => {
+	it('lists a provider as a table row with every value it showed', async () => {
 		const wrapper = mount(MessagingSettings, mountOptions)
 		await flushPromises()
 
-		const budget = wrapper.get('[data-testid="messaging-budget"]')
-		expect(budget.get('h3').text()).toBe('Twilio SMS (NL)')
-		expect(factsOf(budget)['Used this period']).toMatch(/12\s+msgs \/ €3\.50/)
-		const fields = budget
-			.findAll('.messaging-settings__fields > [data-stub]')
-			.map((f) => f.attributes('data-label') || f.text())
-		expect(fields).toEqual([
+		const table = wrapper.get('[data-testid="messaging-providers"]')
+		expect(headsOf(table)).toEqual([
+			'Name',
+			'Kind',
+			'Vendor',
+			'Source',
+			'Phone / account',
+			'Priority',
+			'Status',
+			'Webhook URL',
+			'Actions',
+		])
+		const row = wrapper.get('[data-testid="messaging-provider"]')
+		const cells = cellsOf(row)
+		expect(cells.slice(0, 6)).toEqual([
+			'Twilio SMS (NL)',
+			'SMS',
+			'Twilio',
+			'twilio-sms',
+			'+31600000000',
+			'5',
+		])
+		expect(cells[6]).toContain('Active')
+		expect(cells[6]).toContain('Sandbox')
+		expect(row.get('.messaging-settings__webhook-url').attributes('title')).toContain(
+			'/index.php/apps/pipelinq/api/messaging-webhooks/sms/p1',
+		)
+		expect(row.findAll('td:last-child button').map((b) => b.text())).toEqual([
+			'',
+			'Test connection',
+			'Edit',
+			'Delete',
+		])
+		expect(row.findAllComponents({ name: 'NcButton' })[0].vm.$attrs['aria-label']).toBe(
+			'Copy webhook URL',
+		)
+	})
+
+	it('lists a send budget as a table row with its inputs, usage and actions', async () => {
+		const wrapper = mount(MessagingSettings, mountOptions)
+		await flushPromises()
+
+		const table = wrapper.get('[data-testid="messaging-budgets"]')
+		expect(headsOf(table)).toEqual([
+			'Provider',
 			'Period',
 			'Max messages',
 			'Max cost (EUR)',
 			'Alert threshold (0-1)',
 			'Hard stop',
+			'Used this period',
+			'Actions',
 		])
-		const actions = budget
-			.findAll('.messaging-settings__record-actions button')
-			.map((b) => b.text())
-		expect(actions).toEqual(['Save', 'Delete'])
+		const row = wrapper.get('[data-testid="messaging-budget"]')
+		expect(cellsOf(row)[0]).toBe('Twilio SMS (NL)')
+		expect(row.findAll('input[type="number"]').map((i) => i.attributes('aria-label'))).toEqual([
+			'Max messages',
+			'Max cost (EUR)',
+			'Alert threshold (0-1)',
+		])
+		expect(cellsOf(row)[6]).toMatch(/12\s+msgs \/ €3\.50/)
+		expect(row.findAll('td:last-child button').map((b) => b.text())).toEqual(['Save', 'Delete'])
 	})
 
-	it('lists a synced template with provider, language, status and sync time', async () => {
+	it('lists a synced template as a table row with provider, id, language, status and sync time', async () => {
 		const wrapper = mount(MessagingSettings, mountOptions)
 		await flushPromises()
 
-		const template = wrapper.get('[data-testid="messaging-template"]')
-		expect(template.get('h3').text()).toBe('welcome_v2')
-		expect(template.text()).toContain('Approved')
-		expect(factsOf(template)).toEqual({
-			Provider: 'Twilio SMS (NL)',
-			Language: 'nl',
-			'Last synced': '—',
-		})
+		const row = wrapper.get('[data-testid="messaging-template"]')
+		expect(cellsOf(row)).toEqual(['Twilio SMS (NL)', 'welcome_v2', 'nl', 'Approved', '—'])
+	})
+
+	it('puts icons on Refresh and the add buttons', () => {
+		const source = readFileSync(
+			resolve(__dirname, '../../src/views/settings/MessagingSettings.vue'),
+			'utf8',
+		)
+		expect(source.match(/<Refresh :size/g) || []).toHaveLength(3)
+		expect(source.match(/<Plus :size/g) || []).toHaveLength(2)
 	})
 })
 
 describe('deliverability settings', () => {
-	it('lists a mail transport with kind, domain, verdict and its controls', async () => {
+	it('lists a mail transport as a table row with domain, verdict, default and controls', async () => {
 		const wrapper = mount(DeliverabilitySettings, mountOptions)
 		await flushPromises()
 
-		expect(wrapper.find('table').exists()).toBe(false)
-		const transport = wrapper.get('[data-testid="mail-transport"]')
-		expect(transport.get('h3').text()).toBe('Instance mail server')
-		const facts = factsOf(transport)
-		expect(facts['Sender domain']).toBe('gemeente.example.nl')
-		expect(facts.Deliverability).toContain('DKIM found')
-		expect(Object.keys(facts)).toEqual([
+		const table = wrapper.get('[data-testid="mail-transports"]')
+		expect(headsOf(table)).toEqual([
+			'Name',
 			'Kind',
 			'Sender domain',
 			'Deliverability',
+			'Default',
+			'Active',
+			'Actions',
 		])
-		const controls = transport
-			.findAll('.deliverability-settings__record-actions > *')
-			.map((c) => c.text())
-		expect(controls).toEqual(['Active', 'Default', 'Check now'])
+		const row = wrapper.get('[data-testid="mail-transport"]')
+		const cells = cellsOf(row)
+		expect(cells[0]).toBe('Instance mail server')
+		expect(cells[2]).toBe('gemeente.example.nl')
+		expect(cells[3]).toContain('DKIM found')
+		expect(row.get('.cn-status-badge--success').text()).toBe('DKIM found')
+		expect(cells[4]).toBe('Default')
+		expect(row.findAll('td:last-child button').map((b) => b.text())).toEqual(['Check now'])
+	})
+
+	it('offers Make default as a button on a transport that is not the default', async () => {
+		storeMock.fetchCollection.mockImplementation(async (type) =>
+			type === 'mailTransport'
+				? [{ ...collections.mailTransport[0], id: 't2', default: false, dkimVerified: false }]
+				: collections[type],
+		)
+		const wrapper = mount(DeliverabilitySettings, mountOptions)
+		await flushPromises()
+
+		const row = wrapper.get('[data-testid="mail-transport"]')
+		expect(cellsOf(row)[4]).toBe('Make default')
+		expect(row.get('.cn-status-badge--error').text()).toBe('DKIM missing')
+	})
+
+	it('puts Refresh in the title row as the tonal button with its icon', () => {
+		const source = readFileSync(
+			resolve(__dirname, '../../src/views/settings/DeliverabilitySettings.vue'),
+			'utf8',
+		)
+		expect(source).toMatch(/<template #actions>[\s\S]*?class="cn-button--tonal"[\s\S]*?<Refresh :size/)
 	})
 })
 
@@ -237,6 +329,5 @@ describe('no sideways scrolling', () => {
 	])('%s draws no horizontal scroller', (file) => {
 		const source = readFileSync(resolve(__dirname, '../..', file), 'utf8')
 		expect(source).not.toMatch(/overflow-x:\s*auto/)
-		expect(source).not.toContain('<table')
 	})
 })
