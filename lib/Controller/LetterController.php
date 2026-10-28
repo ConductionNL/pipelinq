@@ -157,13 +157,18 @@ class LetterController extends Controller
         }
 
         $downloadOnly = filter_var($this->request->getParam('downloadOnly', false), FILTER_VALIDATE_BOOLEAN);
+        $outputMode   = match ($downloadOnly) {
+            true    => 'return',
+            default => 'both',
+        };
+
         $filename     = $this->filename(templateName: $template['name'], clientName: (string) ($records['client']['name'] ?? ''));
         try {
             $letter = $this->letters->render(
                 templateId: $templateId,
                 dataRefs: $records['refs'],
                 filename: $filename,
-                filed: $downloadOnly === false
+                outputMode: $outputMode
             );
         } catch (RuntimeException $e) {
             return new JSONResponse(['message' => 'filinq could not make the letter.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);

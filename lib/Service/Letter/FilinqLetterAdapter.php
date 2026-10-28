@@ -178,12 +178,12 @@ class FilinqLetterAdapter
 
 
     /**
-     * Have filinq fill a template and return the PDF; filed keeps a copy in the user's Files.
+     * Have filinq fill a template and return the PDF; outputMode 'both' keeps a copy in the user's Files.
      *
      * @param string                                                  $templateId The filinq template id.
      * @param list<array{register: string, schema: string, id: string}> $dataRefs   The records the letter reads.
      * @param string                                                  $filename   The file name, without extension.
-     * @param bool                                                    $filed      Whether a copy goes into the user's Files.
+     * @param string                                                  $outputMode 'both' keeps a copy in the user's Files, 'return' only returns it.
      *
      * @return array{content: string, fileId: int|null, path: string|null, warnings: list<string>} The letter.
      *
@@ -191,18 +191,13 @@ class FilinqLetterAdapter
      *
      * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
      */
-    public function render(string $templateId, array $dataRefs, string $filename, bool $filed=true): array
+    public function render(string $templateId, array $dataRefs, string $filename, string $outputMode='both'): array
     {
         $service = $this->requireService(service: $this->documentService());
 
         $user = $this->userSession->getUser();
         if ($user === null) {
             throw new RuntimeException('user_required: a letter is filed in the acting user\'s Files');
-        }
-
-        $outputMode = 'return';
-        if ($filed === true) {
-            $outputMode = 'both';
         }
 
         try {

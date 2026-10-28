@@ -522,16 +522,13 @@ class WorklistService {
 			return $this->l10n->t('Nothing is with you right now');
 		}
 
+		$phrases = [
+			'tickets' => $this->l10n->n('%n ticket', '%n tickets', $counts['tickets']),
+			'leads' => $this->l10n->n('%n lead', '%n leads', $counts['leads']),
+			'tasks' => $this->l10n->n('%n follow-up', '%n follow-ups', $counts['tasks']),
+		];
 		$parts = array_values(
-			array_filter(
-				[
-					$this->l10n->n('%n ticket', '%n tickets', $counts['tickets']),
-					$this->l10n->n('%n lead', '%n leads', $counts['leads']),
-					$this->l10n->n('%n follow-up', '%n follow-ups', $counts['tasks']),
-				],
-				static fn (string $part, int $index): bool => (array_values($counts)[$index] > 0),
-				ARRAY_FILTER_USE_BOTH
-			)
+			array_filter($phrases, static fn (string $key): bool => ($counts[$key] > 0), ARRAY_FILTER_USE_KEY)
 		);
 		$last = array_pop($parts);
 		$kinds = $last;

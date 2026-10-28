@@ -405,7 +405,7 @@ class LetterControllerTest extends TestCase
     {
         $this->filinqPresent();
         $this->letters->expects($this->once())->method('render')
-            ->with('tpl-1', $this->anything(), $this->anything(), false)
+            ->with('tpl-1', $this->anything(), $this->anything(), 'return')
             ->willReturn(['content' => '%PDF-1.7 letter', 'fileId' => null, 'path' => null, 'warnings' => []]);
         $this->tickets->expects($this->never())->method('save');
 

@@ -375,7 +375,7 @@ class FilinqLetterAdapterTest extends TestCase
             documents: $this->documents(result: ['content' => '%PDF-1.7 letter', 'output' => ['mode' => 'return']])
         );
 
-        $adapter->render(templateId: 'tpl-1', dataRefs: [], filename: 'Letter', filed: false);
+        $adapter->render(templateId: 'tpl-1', dataRefs: [], filename: 'Letter', outputMode: 'return');
 
         $this->assertSame(expected: ['mode' => 'return'], actual: $this->calls[0][3]['output']);
 

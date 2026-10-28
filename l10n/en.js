@@ -8688,7 +8688,10 @@ OC.L10N.register(
         "The case types come from {app}.": "The case types come from {app}.",
         "Keep this ticket open until the case is made": "Keep this ticket open until the case is made",
         "Otherwise it reads Converted to a case, with a link to the case.": "Otherwise it reads Converted to a case, with a link to the case.",
-        "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}": "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}"
+        "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}": "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}",
+        "Requested case type": "Requested case type",
+        "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType.": "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType.",
+        "This person is the organisation's main contact.": "This person is the organisation's main contact."
     },
     "nplurals=2; plural=(n != 1);"
 )

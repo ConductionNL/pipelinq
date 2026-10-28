@@ -8677,7 +8677,10 @@ OC.L10N.register(
         "The case types come from {app}.": "De zaaktypen komen uit {app}.",
         "Keep this ticket open until the case is made": "Dit ticket open houden tot de zaak is aangemaakt",
         "Otherwise it reads Converted to a case, with a link to the case.": "Anders staat er Omgezet naar een zaak, met een link naar de zaak.",
-        "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}": "{startAt|fulldate}, {startAt|time} tot {endAt|time} · {venue}"
+        "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}": "{startAt|fulldate}, {startAt|time} tot {endAt|time} · {venue}",
+        "Requested case type": "Gevraagd zaaktype",
+        "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType.": "Het zaaktype dat gekozen is toen het verzoek werd omgezet naar een zaak (alleen bij een verzoek). De overdracht naar een zaak geeft het als ns#Case caseType mee aan de zaak.",
+        "This person is the organisation's main contact.": "Deze persoon is het hoofdcontact van de organisatie."
     },
     "nplurals=2; plural=(n != 1);"
 )
