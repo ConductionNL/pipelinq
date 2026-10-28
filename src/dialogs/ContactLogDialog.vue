@@ -207,6 +207,7 @@ export default {
 		 * The customer's initials.
 		 *
 		 * @return {string}
+		 * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
 		 */
 		initials() {
 			return initialsOf(this.clientName)
