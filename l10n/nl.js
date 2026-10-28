@@ -8566,7 +8566,11 @@ OC.L10N.register(
         "per month, from {annualValue|currency} a year": "per maand, uit {annualValue|currency} per jaar",
         "notice date {noticeDate|date}": "opzegdatum {noticeDate|date}",
         "Invoiced this year": "Dit jaar gefactureerd",
-        "{invoicesSent} of {invoicesDue} invoices sent": "{invoicesSent} van {invoicesDue} facturen verstuurd"
+        "{invoicesSent} of {invoicesDue} invoices sent": "{invoicesSent} van {invoicesDue} facturen verstuurd",
+        "The reference the invoicing app returned for this send.": "Het kenmerk dat de factuurapp voor deze verzending teruggaf.",
+        "When the contract was sent.": "Wanneer het contract is verstuurd.",
+        "The user who sent it.": "De gebruiker die het verstuurde.",
+        "The amount sent, the value per period.": "Het verstuurde bedrag, de waarde per periode."
     },
     "nplurals=2; plural=(n != 1);"
 )

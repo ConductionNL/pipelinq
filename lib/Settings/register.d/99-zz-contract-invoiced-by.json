@@ -31,22 +31,26 @@
 							"properties": {
 								"reference": {
 									"type": "string",
-									"title": "Invoice reference"
+									"title": "Invoice reference",
+									"description": "The reference the invoicing app returned for this send."
 								},
 								"sentAt": {
 									"type": "string",
 									"format": "date-time",
-									"title": "Sent at"
+									"title": "Sent at",
+									"description": "When the contract was sent."
 								},
 								"sentBy": {
 									"type": "string",
 									"format": "user",
-									"title": "Sent by"
+									"title": "Sent by",
+									"description": "The user who sent it."
 								},
 								"amount": {
 									"type": "number",
 									"minimum": 0,
-									"title": "Amount"
+									"title": "Amount",
+									"description": "The amount sent, the value per period."
 								}
 							}
 						}
