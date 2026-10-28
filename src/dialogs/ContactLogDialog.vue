@@ -22,7 +22,8 @@ ticket. When the dialog closes after a save the page is asked to reload.
 		data-testid="contact-log-dialog"
 		@closing="close">
 		<form class="contact-log" @submit.prevent="save">
-			<p v-if="ticket" class="contact-log__parent" data-testid="contact-log-parent">
+			<p v-if="ticket" class="contact-log__parent contact-log__parent--block" data-testid="contact-log-parent">
+				<LinkVariant class="contact-log__parent-icon" :size="16" />
 				{{ t('pipelinq', 'Belongs to ticket') }}
 				<strong>{{ ticket.reference || '' }}</strong><template v-if="ticket.title">, {{ ticket.title }}</template>
 			</p>
@@ -54,7 +55,7 @@ ticket. When the dialog closes after a save the page is asked to reload.
 				<div class="contact-log__field">
 					<span class="contact-log__label">{{ t('pipelinq', 'When') }}</span>
 					<span class="contact-log__when">
-						<input v-model="form.date" type="date" :aria-label="t('pipelinq', 'Date')" data-testid="contact-log-date">
+						<input v-model="form.date" type="date" :aria-label="t('pipelinq', 'When')" data-testid="contact-log-date">
 						<input v-model="form.time" type="time" :aria-label="t('pipelinq', 'Time')" data-testid="contact-log-time">
 					</span>
 					<span v-if="filledWithNow" class="contact-log__hint">{{ t('pipelinq', 'Filled in with now') }}</span>
@@ -74,7 +75,7 @@ ticket. When the dialog closes after a save the page is asked to reload.
 			</label>
 			<div v-if="clientName" class="contact-log__field">
 				<span class="contact-log__label">{{ t('pipelinq', 'Customer') }}</span>
-				<span class="contact-log__client" data-testid="contact-log-client">
+				<span class="contact-log__client contact-log__control" data-testid="contact-log-client">
 					<span class="contact-log__initials" aria-hidden="true">{{ initials }}</span>{{ clientName }}
 				</span>
 			</div>
@@ -91,6 +92,9 @@ ticket. When the dialog closes after a save the page is asked to reload.
 				:disabled="busy || form.title.trim() === ''"
 				data-testid="contact-log-save"
 				@click="save">
+				<template #icon>
+					<ContentSave class="contact-log__save-icon" :size="18" />
+				</template>
 				{{ t('pipelinq', 'Save contact moment') }}
 			</NcButton>
 		</template>
@@ -102,6 +106,9 @@ import { CnDialog } from '@conduction/nextcloud-vue'
 import { emit } from '@nextcloud/event-bus'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton } from '@nextcloud/vue'
+import ContentSave from 'vue-material-design-icons/ContentSave.vue'
+import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
+import { initialsOf } from '../services/userDisplayName.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 /**
@@ -119,7 +126,7 @@ const pad = (n) => String(n).padStart(2, '0')
  */
 export default {
 	name: 'ContactLogDialog',
-	components: { CnDialog, NcButton },
+	components: { CnDialog, ContentSave, LinkVariant, NcButton },
 	emits: ['close'],
 
 	data() {
@@ -202,7 +209,7 @@ export default {
 		 * @return {string}
 		 */
 		initials() {
-			return this.clientName.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(0, 2).join('').toUpperCase()
+			return initialsOf(this.clientName)
 		},
 	},
 
@@ -334,15 +341,55 @@ export default {
 	margin-inline-end: 16px;
 }
 
-.contact-log__hint,
-.contact-log__parent {
+.contact-log__hint {
 	font-size: 13px;
 	color: var(--color-text-maxcontrast);
 	margin: 0;
 }
 
-.contact-log__client {
+.contact-log__parent {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0;
+	padding: 10px 14px;
+	border-radius: var(--border-radius-large, 8px);
+	background: var(--color-background-hover);
+	font-size: 14px;
+}
+
+.contact-log__parent-icon {
 	display: inline-flex;
+	color: var(--color-text-maxcontrast);
+}
+
+.contact-log__field input:not([type="radio"]),
+.contact-log__field select,
+.contact-log__field textarea,
+.contact-log__control {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 40px;
+	margin: 0;
+	border: 1px solid var(--color-border-maxcontrast);
+	border-radius: var(--border-radius-element, 8px);
+}
+
+.contact-log__field textarea {
+	min-height: 118px;
+}
+
+.contact-log__when input[type="time"] {
+	width: 84px;
+	flex: none;
+}
+
+.contact-log__control {
+	padding: 0 12px;
+}
+
+.contact-log__client {
+	display: flex;
 	align-items: center;
 	gap: 8px;
 }
