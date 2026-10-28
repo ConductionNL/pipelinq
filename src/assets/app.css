@@ -172,3 +172,59 @@
 	.cn-widget-wrapper__content:not(#cn-ground-a):not(#cn-ground-b) {
 	background: transparent;
 }
+
+/* A table as the Pq boards draw one inside a card: bordered, the head
+ * 14px/600 in the muted ink on the card's white, 18px at the row ends,
+ * 14px cells, figures right-aligned. `table.` lifts it above a theme's
+ * plain `th` rule (nldesign paints the head grey). */
+.pq-board-table-card {
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 8px);
+	background: var(--color-main-background);
+	overflow-x: auto;
+}
+
+table.pq-board-table {
+	width: 100%;
+	margin: 0;
+	border-collapse: collapse;
+	font-size: 14px;
+	line-height: 1.2;
+}
+
+table.pq-board-table th {
+	padding: 10px 12px;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.2;
+	color: var(--color-text-maxcontrast);
+	background-color: var(--color-main-background);
+	text-align: start;
+	border-bottom: 1px solid var(--color-border);
+}
+
+table.pq-board-table td {
+	padding: 12px;
+	font-size: 14px;
+	line-height: 1.2;
+	text-align: start;
+	vertical-align: middle;
+	border-bottom: 1px solid var(--color-border);
+}
+
+table.pq-board-table :is(th, td):first-child {
+	padding-inline-start: 18px;
+}
+
+table.pq-board-table :is(th, td):last-child {
+	padding-inline-end: 18px;
+}
+
+table.pq-board-table tbody tr:last-child td {
+	border-bottom: 0;
+}
+
+table.pq-board-table .pq-board-table__num {
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+}
