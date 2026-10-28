@@ -40,6 +40,7 @@
 				"startedAt": "{{datetime:-2 03:00}}",
 				"endedAt": "{{datetime:-2 03:12}}",
 				"fileCount": 2,
+				"fileCountExpected": 3,
 				"errorMessage": "2 van de 3 bestanden geschreven; het derde bestand kwam niet aan bij het datawarehouse."
 			}
 		},

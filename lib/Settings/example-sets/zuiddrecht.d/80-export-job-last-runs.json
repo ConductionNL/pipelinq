@@ -43,7 +43,8 @@
 				"lastRunAt": "{{datetime:-2 03:12}}",
 				"lastRunFiles": 2,
 				"lastRunError": "2 van de 3 bestanden geschreven",
-				"nextRunAt": "{{datetime:5 03:00}}"
+				"nextRunAt": "{{datetime:5 03:00}}",
+				"lastRunFilesExpected": 3
 			}
 		},
 		{

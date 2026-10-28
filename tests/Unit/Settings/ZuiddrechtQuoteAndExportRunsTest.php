@@ -120,5 +120,7 @@ class ZuiddrechtQuoteAndExportRunsTest extends TestCase {
 		}
 
 		$this->assertNull(actual: $jobs['Leads en waarde in de pijplijn']['nextRunAt']);
+		$this->assertSame(expected: 3, actual: $jobs['Afspraken en niet verschenen']['lastRunFilesExpected']);
+		$this->assertSame(expected: 3, actual: $objects['export-run-appointments']['data']['fileCountExpected']);
 	}//end testTheExportJobsCarryTheirLastRun()
 }//end class
