@@ -28,6 +28,8 @@ vi.mock('@nextcloud/vue', () => ({
 		},
 	},
 }))
+const store = vi.hoisted(() => ({ fetchObject: vi.fn(() => Promise.resolve({ id: 'c-1', name: 'Sanne de Vries' })) }))
+vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => store }))
 vi.mock('../../src/components/werkplek/WerkplekAgentStatus.vue', () => ({ default: { render: () => h('span', { class: 'agent-status' }) } }))
 
 let Header
@@ -64,14 +66,17 @@ describe('werkplek in-call state', () => {
 		const { w, workspace } = await mountOn('?client=c-1&call=active')
 		expect(workspace.value.selectedClient).toBe('c-1')
 		expect(workspace.value.callActive).toBe(true)
+		// The page title reads "Gesprek met Sanne de Vries" (PqWerkplekKlant).
+		expect(workspace.value.selectedClientName).toBe('Sanne de Vries')
 		expect(w.find('[data-testid="werkplek-call-state"]').exists()).toBe(true)
 	})
 
 	it('looks a previewed number up as a real call would, and only reads', async () => {
-		cti.screenPop.mockResolvedValue({ matches: [{ _matchType: 'contact', id: 'p-1' }, { _matchType: 'client', id: 'c-9' }] })
+		cti.screenPop.mockResolvedValue({ matches: [{ _matchType: 'contact', id: 'p-1' }, { _matchType: 'client', id: 'c-9', name: 'Henk Bakker' }] })
 		const { workspace } = await mountOn('?inCallPreview=0612345678')
 		expect(cti.screenPop).toHaveBeenCalledWith('0612345678')
 		expect(workspace.value.selectedClient).toBe('c-9')
+		expect(workspace.value.selectedClientName).toBe('Henk Bakker')
 		expect(workspace.value.callActive).toBe(true)
 	})
 

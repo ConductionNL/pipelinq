@@ -75,7 +75,7 @@ function propertiesOf(schema) {
 	}
 	return merged
 }
-const SCHEMAS = { ticket: propertiesOf('ticket'), crmTask: propertiesOf('crmTask') }
+const SCHEMAS = { ticket: propertiesOf('ticket'), crmTask: propertiesOf('crmTask'), client: propertiesOf('client') }
 
 /**
  * A source filter as the query a list reads: `{ a: { lt: x } }` is `a[lt]=x`.
@@ -133,7 +133,7 @@ describe('the dashboard', () => {
 			expect(withoutInCall(byId[widget.id]), widget.id).toEqual(withoutInCall(widget))
 		}
 		expect(simple.widgets).toHaveLength(before.widgets.length + added.length)
-		expect(added).toHaveLength(11)
+		expect(added).toHaveLength(12)
 	})
 
 	it('moves the old cards down by one fixed number of rows and changes nothing else', () => {
@@ -292,8 +292,9 @@ describe('the dashboard', () => {
 				}
 			}
 		}
-		// The banner, four stats, three lists, the bar and the in-call task list.
-		expect(sources).toBe(10)
+		// The banner, four stats, three lists, the bar, the in-call task list and
+		// the in-call "Who is it" card.
+		expect(sources).toBe(11)
 	})
 
 	it('links every number to the list with the same filter', () => {
@@ -603,6 +604,26 @@ describe('the words', () => {
 		}
 		expect(nl['Waiting for me']).toBe('Wacht op mij')
 		expect(nl['By phone']).toBe('Telefoon')
+	})
+})
+
+describe('the werkplek in a call (board PqWerkplekKlant)', () => {
+	const page = () => simpleFile.pages.find((item) => item.id === 'KccWerkplek')
+	const who = () => page().configAppend.widgets.find((widget) => widget.id === 'simple-call-who')
+
+	it('names the caller in the title while the call is on', () => {
+		expect(page().config.titleWhen).toEqual([{ when: { workspace: 'callActive', op: 'eq', value: true }, title: 'Call with {workspace.selectedClientName}' }])
+	})
+
+	it('says who is calling: the customer in the call, what was checked, the source, preference and language', () => {
+		expect(who().type).toBe('facts')
+		expect(who().visibleWhen).toEqual({ workspace: 'callActive', op: 'eq', value: true })
+		expect(who().content.source).toEqual({ register: 'pipelinq', schema: 'client', id: '@workspace.selectedClient' })
+		expect(who().content.fields.map((field) => field.path || field.as || field.label)).toEqual(['name', 'line', 'identityCheck', 'Source', 'source', 'preferredChannel', 'language'])
+		// "Bron: BRP, opgezocht 10:24, vastgelegd"; the client's own source stays as "Aangemeld via".
+		expect(who().content.fields.find((field) => field.label === 'Source').template).toBe('{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded')
+		// "Opzoeken in de BRP" verifies the identity of the customer in the call.
+		expect(who().content.actions).toEqual([{ type: 'open-modal', target: 'BrpClientCheckDialog', label: 'Look up in the BRP', props: { clientId: '@source.id' } }])
 	})
 })
 

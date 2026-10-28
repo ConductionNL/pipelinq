@@ -1468,6 +1468,25 @@
 						"gridY": 29,
 						"gridWidth": 4,
 						"gridHeight": 4
+					},
+					{
+						"id": "who",
+						"widgetId": "simple-call-who",
+						"gridX": 8,
+						"gridY": 29,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"sizeToContent": true
+					}
+				],
+				"titleWhen": [
+					{
+						"when": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"title": "Call with {workspace.selectedClientName}"
 					}
 				],
 				"description": "your queue, callbacks and contact today",
@@ -1937,6 +1956,83 @@
 								}
 							],
 							"emptyText": "No open tasks for this client."
+						}
+					},
+					{
+						"id": "simple-call-who",
+						"type": "facts",
+						"title": "Who is it",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "client",
+								"id": "@workspace.selectedClient"
+							},
+							"fields": [
+								{
+									"as": "title",
+									"path": "name",
+									"route": {
+										"name": "ClientDetail",
+										"params": {
+											"id": "@source.id"
+										}
+									}
+								},
+								{
+									"as": "line",
+									"parts": [
+										"type",
+										"address"
+									]
+								},
+								{
+									"path": "identityCheck",
+									"label": "Checked"
+								},
+								{
+									"label": "Source",
+									"template": "{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded"
+								},
+								{
+									"path": "source",
+									"label": "Signed up via"
+								},
+								{
+									"path": "preferredChannel",
+									"label": "Preference"
+								},
+								{
+									"path": "language",
+									"label": "Language"
+								}
+							],
+							"hideEmpty": true,
+							"actions": [
+								{
+									"type": "open-modal",
+									"target": "BrpClientCheckDialog",
+									"label": "Look up in the BRP",
+									"props": {
+										"clientId": "@source.id"
+									}
+								}
+							],
+							"link": {
+								"label": "Customer page",
+								"route": {
+									"name": "ClientDetail",
+									"params": {
+										"id": "@source.id"
+									}
+								}
+							},
+							"emptyText": "No customer in this call yet."
 						}
 					}
 				]

@@ -8827,6 +8827,25 @@
         "When the person was checked in at the door; empty while they have not come in.": "When the person was checked in at the door; empty while they have not come in.",
         "Reminder: %s": "Reminder: %s",
         "You are registered for %1$s on %2$s at %3$s. We look forward to seeing you.": "You are registered for %1$s on %2$s at %3$s. We look forward to seeing you.",
-        "You may not send this event's reminder.": "You may not send this event's reminder."
+        "You may not send this event's reminder.": "You may not send this event's reminder.",
+        "{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded": "{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded",
+        "Signed up via": "Signed up via",
+        "Checked": "Checked",
+        "Look up in the BRP": "Look up in the BRP",
+        "Verify the customer's identity in the population register": "Verify the customer's identity in the population register",
+        "Checked with the customer": "Checked with the customer",
+        "Date of birth and address asked": "Date of birth and address asked",
+        "Found in the BRP: {name}. The identity is recorded as verified.": "Found in the BRP: {name}. The identity is recorded as verified.",
+        "the person": "the person",
+        "The BRP could not be asked. Try again.": "The BRP could not be asked. Try again.",
+        "{identityVerifiedVia}, looked up {identityVerifiedAt:date}": "{identityVerifiedVia}, looked up {identityVerifiedAt:date}",
+        "Identity verified at": "Identity verified at",
+        "Identity verified via": "Identity verified via",
+        "Identity check": "Identity check",
+        "Call with {workspace.selectedClientName}": "Call with {workspace.selectedClientName}",
+        "Who is it": "Who is it",
+        "Preference": "Preference",
+        "Customer page": "Customer page",
+        "No customer in this call yet.": "No customer in this call yet."
     }
 }

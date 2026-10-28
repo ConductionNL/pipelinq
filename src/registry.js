@@ -163,6 +163,7 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 //     (marketing-segments-ui-repair) on their index pages. ---
 import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
+import BrpClientCheckDialog from './dialogs/BrpClientCheckDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
 import ContactImportDialog from './dialogs/ContactImportDialog.vue'
@@ -1271,6 +1272,13 @@ const registry = {
 		component: LeadCreateDialog,
 		propsSchema: null,
 		_note: "New Lead. Target of the Sales/Operational dashboards' new-lead header action and the Leads index Add button.",
+	},
+
+	BrpClientCheckDialog: {
+		kind: 'modal',
+		component: BrpClientCheckDialog,
+		propsSchema: null,
+		_note: 'brp-verifies-the-client. Target of "Look up in the BRP" on the werkplek\'s "Who is it" card (board PqWerkplekKlant): BSN, what was checked and the purpose binding, POST /api/brp/lookup with verifiedClient so the client records its verified identity.',
 	},
 
 	TicketAnswerDialog: {
