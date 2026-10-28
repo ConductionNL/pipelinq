@@ -75,6 +75,8 @@
 				"showMassImport": false,
 				"showMassCopy": false,
 				"countText": "Which social accounts of our clients we follow and which follow us back",
+				"selectable": false,
+				"searchPlaceholder": "Search a client or username",
 				"headerButtons": [
 					{
 						"action": "export",

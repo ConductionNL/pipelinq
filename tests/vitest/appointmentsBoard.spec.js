@@ -30,6 +30,21 @@ describe('the appointments list', () => {
 	})
 })
 
+describe('the appointments list (pl2 PqAfspraken)', () => {
+	const config = page('Bookings').config
+
+	it('offers the board\'s Filter button, a menu of the status values', () => {
+		expect(config.filterMenu).toBe(true)
+		expect(config.columns.find((c) => c.key === 'status').widget).toBe('badge')
+	})
+
+	it('draws the handler as the board\'s small grey initials chip', () => {
+		const handler = config.columns.find((c) => c.key === 'assignee')
+		expect(handler.widget).toBe('avatar')
+		expect(handler.widgetProps).toEqual({ user: true, size: 28, tone: 'neutral' })
+	})
+})
+
 describe('the booking register overlay', () => {
 	it('labels every status and source value', () => {
 		expect(Object.keys(booking.properties.status['x-enum-labels'])).toHaveLength(7)

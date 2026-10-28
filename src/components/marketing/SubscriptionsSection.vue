@@ -19,8 +19,20 @@
   - @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
   -->
 <template>
-	<div class="subscriptions-section">
-		<header v-if="listId" class="subscriptions-section__head">
+	<component
+		:is="card ? 'CnDetailCard' : 'div'"
+		v-bind="cardProps"
+		class="subscriptions-section"
+		:class="{ 'subscriptions-section--card': card }">
+		<template v-if="card" #actions>
+			<NcButton variant="secondary" data-testid="subscriptions-refresh" @click="load">
+				<template #icon>
+					<Refresh :size="18" />
+				</template>
+				{{ t('pipelinq', 'Refresh') }}
+			</NcButton>
+		</template>
+		<header v-if="listId && !card" class="subscriptions-section__head">
 			<p class="subscriptions-section__subtitle">
 				{{ t('pipelinq', 'Subscribers on this list') }}
 			</p>
@@ -102,11 +114,12 @@
 			:subscriptions="rows"
 			@close="showManage = false"
 			@changed="onChanged" />
-	</div>
+	</component>
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { getLanguage } from '@nextcloud/l10n'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import SubscriptionManageModal from '../../modals/SubscriptionManageModal.vue'
@@ -123,6 +136,7 @@ export default {
 	name: 'SubscriptionsSection',
 
 	components: {
+		CnDetailCard,
 		CnStatusBadge,
 		NcButton,
 		NcLoadingIcon,
@@ -147,6 +161,15 @@ export default {
 			type: String,
 			default: '',
 		},
+
+		/**
+		 * Draw the section as its own titled card, with the subtitle and
+		 * Refresh in the card's header (the list page's Subscribers card).
+		 */
+		card: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	data() {
@@ -160,6 +183,22 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The card's title and subtitle, when the section is its own card.
+		 *
+		 * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
+		 * @return {object} Props for CnDetailCard, or none.
+		 */
+		cardProps() {
+			if (!this.card) {
+				return {}
+			}
+			return {
+				title: this.t('pipelinq', 'Subscribers'),
+				subtitle: this.listId ? this.t('pipelinq', 'Subscribers on this list') : '',
+			}
+		},
+
 		/**
 		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
 		 * @return {string} What an empty result means here.
@@ -344,7 +383,7 @@ export default {
 			if (Number.isNaN(date.getTime())) {
 				return String(value).slice(0, 10)
 			}
-			return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+			return date.toLocaleDateString(getLanguage(), { day: 'numeric', month: 'short', year: 'numeric' })
 		},
 	},
 }
@@ -411,6 +450,21 @@ export default {
 	text-align: start;
 	padding: 0.4rem 0.6rem;
 	border-block-end: 1px solid var(--color-border);
+}
+
+.subscriptions-section--card .subscriptions-section__table th {
+	padding: 10px 12px;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+}
+
+.subscriptions-section--card .subscriptions-section__table td {
+	padding: 12px;
+	vertical-align: middle;
+}
+
+.subscriptions-section--card .subscriptions-section__who {
+	font-size: 15px;
 }
 
 .subscriptions-section__chip {

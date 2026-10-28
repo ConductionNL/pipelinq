@@ -75,7 +75,7 @@ function propertiesOf(schema) {
 	}
 	return merged
 }
-const SCHEMAS = { ticket: propertiesOf('ticket'), crmTask: propertiesOf('crmTask') }
+const SCHEMAS = { ticket: propertiesOf('ticket'), crmTask: propertiesOf('crmTask'), client: propertiesOf('client') }
 
 /**
  * A source filter as the query a list reads: `{ a: { lt: x } }` is `a[lt]=x`.
@@ -126,11 +126,14 @@ describe('the dashboard', () => {
 	)
 
 	it('keeps every widget it had, unchanged', () => {
+		// The in-call state (board PqWerkplekKlant) hides a widget by a
+		// workspace flag; nothing else about a kept widget may change.
+		const withoutInCall = ({ visibleWhen, ...rest }) => rest
 		for (const widget of before.widgets) {
-			expect(byId[widget.id], widget.id).toEqual(widget)
+			expect(withoutInCall(byId[widget.id]), widget.id).toEqual(withoutInCall(widget))
 		}
 		expect(simple.widgets).toHaveLength(before.widgets.length + added.length)
-		expect(added).toHaveLength(10)
+		expect(added).toHaveLength(12)
 	})
 
 	it('moves the old cards down by one fixed number of rows and changes nothing else', () => {
@@ -289,8 +292,9 @@ describe('the dashboard', () => {
 				}
 			}
 		}
-		// The banner, four stats, three lists and the bar.
-		expect(sources).toBe(9)
+		// The banner, four stats, three lists, the bar, the in-call task list and
+		// the in-call "Who is it" card.
+		expect(sources).toBe(11)
 	})
 
 	it('links every number to the list with the same filter', () => {
@@ -465,6 +469,48 @@ describe('the attention card asks a question OpenRegister can answer', () => {
 	})
 })
 
+describe('the board PqDashboard', () => {
+	const simple = page(builtSimple, 'KccWerkplek').config
+	const byId = Object.fromEntries(simple.widgets.map((widget) => [widget.id, widget]))
+
+	it('draws the side column at the board\'s 320 pixels beside the main column', () => {
+		expect(simple.gridSideColumn).toEqual({ width: 320 })
+		for (const id of ['simple-callback-list', 'simple-latest-contact']) {
+			expect(simple.layout.find((entry) => entry.widgetId === id).gridX, id).toBe(8)
+		}
+	})
+
+	it('rules above the first row of every list, as under the card title', () => {
+		for (const id of ['simple-waiting-list', 'simple-callback-list', 'simple-latest-contact']) {
+			expect(byId[id].content.ruleAbove, id).toBe(true)
+		}
+	})
+
+	it('lists a callback by the client, with what to call about and when it is due', () => {
+		const list = byId['simple-callback-list'].content
+		expect(list.extend).toEqual(['clientId'])
+		expect(SCHEMAS.crmTask.clientId.$ref).toBe('client')
+		expect(list.title).toEqual(['{clientId.name}', '{subject}'])
+		expect(list.meta).toBe('{subject}')
+		expect(list.trailing).toBe('{deadline|soon}')
+	})
+
+	it('says how long ago the latest contact was', () => {
+		expect(byId['simple-latest-contact'].content.meta).toBe('{occurredAt|ago}')
+	})
+
+	it('names every channel the seeded contact moments use', () => {
+		const labels = byId['simple-per-channel'].content.labels
+		for (const channel of ['telefoon', 'phone', 'email', 'balie', 'web', 'portal', 'chat', 'brief', 'sms', 'whatsapp']) {
+			expect(labels[channel], channel).toBeTruthy()
+		}
+	})
+
+	it('names the client search for what it does', () => {
+		expect(byId['simple-client-in-focus'].content.objectSource.ariaLabel).toBe('Client search')
+	})
+})
+
 describe('the tickets list', () => {
 	const simple = page(builtSimple, 'Tickets').config
 	const before = page(builtFull, 'Tickets').config
@@ -600,6 +646,26 @@ describe('the words', () => {
 		}
 		expect(nl['Waiting for me']).toBe('Wacht op mij')
 		expect(nl['By phone']).toBe('Telefoon')
+	})
+})
+
+describe('the werkplek in a call (board PqWerkplekKlant)', () => {
+	const page = () => simpleFile.pages.find((item) => item.id === 'KccWerkplek')
+	const who = () => page().configAppend.widgets.find((widget) => widget.id === 'simple-call-who')
+
+	it('names the caller in the title while the call is on', () => {
+		expect(page().config.titleWhen).toEqual([{ when: { workspace: 'callActive', op: 'eq', value: true }, title: 'Call with {workspace.selectedClientName}' }])
+	})
+
+	it('says who is calling: the customer in the call, what was checked, the source, preference and language', () => {
+		expect(who().type).toBe('facts')
+		expect(who().visibleWhen).toEqual({ workspace: 'callActive', op: 'eq', value: true })
+		expect(who().content.source).toEqual({ register: 'pipelinq', schema: 'client', id: '@workspace.selectedClient' })
+		expect(who().content.fields.map((field) => field.path || field.as || field.label)).toEqual(['name', 'line', 'identityCheck', 'Source', 'source', 'preferredChannel', 'language'])
+		// "Bron: BRP, opgezocht 10:24, vastgelegd"; the client's own source stays as "Aangemeld via".
+		expect(who().content.fields.find((field) => field.label === 'Source').template).toBe('{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded')
+		// "Opzoeken in de BRP" verifies the identity of the customer in the call.
+		expect(who().content.actions).toEqual([{ type: 'open-modal', target: 'BrpClientCheckDialog', label: 'Look up in the BRP', props: { clientId: '@source.id' } }])
 	})
 })
 

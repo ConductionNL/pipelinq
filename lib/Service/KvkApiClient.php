@@ -83,7 +83,8 @@ class KvkApiClient {
 	}//end getApiBase()
 
 	/**
-	 * Search the KVK API for companies matching the given criteria.
+	 * Search the KVK API for companies matching the given criteria. Without an
+	 * API key only OpenRegister's KvK source is asked.
 	 *
 	 * @param string $apiKey The KVK API key.
 	 * @param array $criteria The search criteria.
@@ -93,10 +94,6 @@ class KvkApiClient {
 	 * @spec openspec/specs/prospect-discovery/spec.md#requirement-kvk-api-integration
 	 */
 	public function search(string $apiKey, array $criteria): array {
-		if ($apiKey === '') {
-			return [];
-		}
-
 		$results = [];
 		$sbiCodes = $criteria['sbiCodes'] ?? [];
 
@@ -181,6 +178,11 @@ class KvkApiClient {
 		$viaOr = $this->fetchViaOpenRegister(sbiCode: $sbiCode);
 		if ($viaOr !== null) {
 			return ['resultaten' => $viaOr];
+		}
+
+		// The direct KvK path needs a key; OpenRegister's source holds its own.
+		if ($apiKey === '') {
+			return [];
 		}
 
 		$queryParams = [

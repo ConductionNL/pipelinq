@@ -1,0 +1,4 @@
+- [x] SemanticHandoffController: running statuses (active, expiring); invoicedAt/invoicedBy on send
+- [x] register.d: salesContract invoicedAt, invoicedBy (1.1.0)
+- [x] Manifest: contract-billing fields, contract-invoice facts, contract-lines table
+- [x] Tests: SemanticHandoffControllerTest (2 new), contractBilling.spec.js

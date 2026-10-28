@@ -91,6 +91,11 @@ def to_jsonschema(node):
         out[k] = to_jsonschema(v)
     if out.get('nullable') is True and isinstance(out.get('type'), str):
         out['type'] = [out['type'], 'null']
+    # OpenRegister stores null for a property the schema does not require, as for an absent one.
+    required = set(out.get('required') or [])
+    for name, prop in (out.get('properties') or {}).items():
+        if name not in required and isinstance(prop, dict) and isinstance(prop.get('type'), str):
+            prop['type'] = [prop['type'], 'null']
     return out
 
 

@@ -1,0 +1,23 @@
+{
+	"$comment": "pipelinq's start page (board PqDashboard) for Pieter. The card \"Eerst, vandaag\" shows the handler's open assigned ticket that is most overdue, and the board draws M. de Graaf's phone request, waiting 3 days. So his afvalpas request (PQ-2026-0409, in the main file) goes to Pieter and its deadline lies a day behind; it came in 3 days ago. The setting example_client names Bakkerij De Graaf as the client the link \"Bekijk een voorbeeld\" on the card \"Contact starten\" opens.",
+	"changes": [
+		{
+			"key": "ticket-degraaf-afvalpas-eerst-vandaag",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"where": {
+				"id": "{{object:ticket-degraaf-afvalpas.id}}"
+			},
+			"set": {
+				"assignee": "{{cast:pieter.uid}}",
+				"slaDeadline": "{{datetime:-1 17:00}}"
+			}
+		}
+	],
+	"appConfig": [
+		{
+			"key": "example_client",
+			"value": "{{object:client-bakkerijdegraaf.id}}"
+		}
+	]
+}

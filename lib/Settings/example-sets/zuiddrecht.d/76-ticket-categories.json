@@ -1,0 +1,192 @@
+{
+	"$comment": "pipelinq's ticket categories in the Zuiddrecht set: one per code the set's tickets store in category, with the Dutch name the boards read (PqOperationeel's slices).",
+	"objects": [
+		{
+			"key": "categorie-afval",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "afval",
+				"name": "Afval",
+				"description": "Afvalinzameling, containers en de afvalpas.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-burgerzaken",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "burgerzaken",
+				"name": "Burgerzaken",
+				"description": "Paspoort, rijbewijs, verhuizen en andere zaken aan de balie.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-financien",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "financien",
+				"name": "Financiën",
+				"description": "Facturen, betalingen en belastingen.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-groen",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "groen",
+				"name": "Groen",
+				"description": "Bomen, plantsoenen en ander openbaar groen.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-klacht",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "klacht",
+				"name": "Klacht",
+				"description": "Een klacht over de dienstverlening van de gemeente.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-openbare-ruimte",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "openbare-ruimte",
+				"name": "Openbare ruimte",
+				"description": "Straten, stoepen en pleinen.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-openbare-verlichting",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "openbare-verlichting",
+				"name": "Openbare verlichting",
+				"description": "Lantaarnpalen en andere straatverlichting.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-overig",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "overig",
+				"name": "Overig",
+				"description": "Vragen die nergens anders onder vallen.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-overlast",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "overlast",
+				"name": "Overlast",
+				"description": "Geluidsoverlast en andere hinder.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-parkeren",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "parkeren",
+				"name": "Parkeren",
+				"description": "Parkeervergunningen en parkeren in Zuiddrecht.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-software",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "software",
+				"name": "Software",
+				"description": "Software en digitale diensten voor zakelijke klanten.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-sport",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "sport",
+				"name": "Sport",
+				"description": "Sportvelden, sportverenigingen en sportsubsidies.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-subsidie",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "subsidie",
+				"name": "Subsidie",
+				"description": "Subsidies voor inwoners, verenigingen en initiatieven.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-vergunningen",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "vergunningen",
+				"name": "Vergunningen",
+				"description": "Vergunningen voor evenementen, bouwen en andere activiteiten.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-verkeer",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "verkeer",
+				"name": "Verkeer",
+				"description": "Verkeersveiligheid, wegen en fietspaden.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-websiteaanvraag",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "websiteaanvraag",
+				"name": "Websiteaanvraag",
+				"description": "Een aanvraag via het formulier op zuiddrecht.nl.",
+				"active": true
+			}
+		},
+		{
+			"key": "categorie-woo",
+			"register": "pipelinq",
+			"schema": "ticketCategory",
+			"data": {
+				"key": "woo",
+				"name": "Woo-verzoek",
+				"description": "Een verzoek om informatie onder de Wet open overheid.",
+				"active": true
+			}
+		}
+	]
+}

@@ -111,10 +111,12 @@ class LetterController extends Controller
     /**
      * POST /api/clients/{id}/letters: make a letter for this client.
      *
-     * Body: `templateId`, and optionally `contactId` and `ticketId`. Every
-     * record is read as the caller, so one the caller may not read answers
-     * 404. The answer carries the PDF (base64), the id of the copy in the
-     * caller's Files, filinq's warnings and the logged contact moment.
+     * Body: `templateId`, and optionally `contactId`, `ticketId` and
+     * `downloadOnly`. Every record is read as the caller, so one the caller
+     * may not read answers 404. The answer carries the PDF (base64), the id
+     * of the copy in the caller's Files, filinq's warnings and the logged
+     * contact moment. With `downloadOnly` the PDF is only returned: no copy in
+     * Files and no contact moment.
      *
      * @param string $id The client id.
      *
@@ -154,24 +156,34 @@ class LetterController extends Controller
             return new JSONResponse(['message' => 'Template not found'], Http::STATUS_NOT_FOUND);
         }
 
-        $filename = $this->filename(templateName: $template['name'], clientName: (string) ($records['client']['name'] ?? ''));
+        $downloadOnly = filter_var($this->request->getParam('downloadOnly', false), FILTER_VALIDATE_BOOLEAN);
+        $outputMode   = match ($downloadOnly) {
+            true    => 'return',
+            default => 'both',
+        };
+
+        $filename     = $this->filename(templateName: $template['name'], clientName: (string) ($records['client']['name'] ?? ''));
         try {
             $letter = $this->letters->render(
                 templateId: $templateId,
                 dataRefs: $records['refs'],
-                filename: $filename
+                filename: $filename,
+                outputMode: $outputMode
             );
         } catch (RuntimeException $e) {
             return new JSONResponse(['message' => 'filinq could not make the letter.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
         }
 
-        $contactMomentId = $this->log->log(
-            clientId: $id,
-            contactId: $records['contactId'],
-            ticketId: $records['ticketId'],
-            templateName: $template['name'],
-            path: $letter['path']
-        );
+        $contactMomentId = null;
+        if ($downloadOnly === false) {
+            $contactMomentId = $this->log->log(
+                clientId: $id,
+                contactId: $records['contactId'],
+                ticketId: $records['ticketId'],
+                templateName: $template['name'],
+                path: $letter['path']
+            );
+        }
 
         return new JSONResponse(
             [
@@ -186,6 +198,57 @@ class LetterController extends Controller
         );
 
     }//end create()
+
+
+    /**
+     * POST /api/clients/{id}/letters/preview: the letter as it would be made, and what was filled in.
+     *
+     * Body as for create(). Nothing is made, filed or logged. The answer
+     * carries filinq's preview HTML, the fields it filled (label, value,
+     * source, filled), whether all are filled, and filinq's warnings.
+     *
+     * @param string $id The client id.
+     *
+     * @return JSONResponse The preview, or an error.
+     *
+     * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+     */
+    #[NoAdminRequired]
+    public function preview(string $id): JSONResponse
+    {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $templateId = trim((string) $this->request->getParam('templateId', ''));
+        if ($templateId === '') {
+            return new JSONResponse(['message' => 'Missing required parameter: templateId'], Http::STATUS_BAD_REQUEST);
+        }
+
+        $reason = $this->letters->unavailableReason();
+        if ($reason !== null) {
+            return new JSONResponse(
+                ['message' => 'filinq is not available, so no letter can be previewed.', 'reason' => $reason],
+                Http::STATUS_SERVICE_UNAVAILABLE
+            );
+        }
+
+        $records = $this->readRecords(clientId: $id);
+        if (is_string($records) === true) {
+            return new JSONResponse(['message' => $records], Http::STATUS_NOT_FOUND);
+        }
+
+        if ($this->letters->findTemplate(templateId: $templateId) === null) {
+            return new JSONResponse(['message' => 'Template not found'], Http::STATUS_NOT_FOUND);
+        }
+
+        try {
+            return new JSONResponse($this->letters->preview(templateId: $templateId, dataRefs: $records['refs']));
+        } catch (RuntimeException $e) {
+            return new JSONResponse(['message' => 'filinq could not preview the letter.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
+        }
+
+    }//end preview()
 
 
     /**

@@ -31,7 +31,7 @@
 				"status": "new",
 				"priority": "normal",
 				"channel": "phone",
-				"category": "openbare ruimte",
+				"category": "openbare-ruimte",
 				"occurredAt": "{{datetime:-1 15:40}}"
 			}
 		},
@@ -68,7 +68,7 @@
 				"status": "converted",
 				"priority": "normal",
 				"channel": "phone",
-				"category": "openbare verlichting",
+				"category": "openbare-verlichting",
 				"occurredAt": "{{datetime:-10 16:20}}"
 			}
 		},

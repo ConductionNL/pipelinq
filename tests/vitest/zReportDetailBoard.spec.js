@@ -41,4 +41,21 @@ describe('Z report page', () => {
 		expect(nl[overrides.reference.label]).toBe('Kenmerk')
 		expect(nl[overrides.terminalId.label]).toBe('Kassa')
 	})
+
+	it('offers "Journaalpost opnieuw doorgeven" in the header on a day still to raise', () => {
+		const action = config.headerActions.find((a) => a.id === 'raise-journal-entry')
+		expect(nl[action.label]).toBe('Journaalpost opnieuw doorgeven')
+		expect(action.type).toBe('api-call')
+		expect(action.url).toBe('/apps/pipelinq/api/pos-bookkeeping/post')
+		expect(action.payload).toEqual({ zReportId: '@objectId' })
+		expect(action.visibleWhen.all).toEqual([
+			{ field: 'bookkeepingStatus', op: 'in', value: ['pending', 'failed'] },
+			{ field: 'transactionCount', op: 'gt', value: 0 },
+		])
+	})
+
+	it('counts the History tab', () => {
+		const history = widget('z-panels').content.tabs.find((tab) => tab.widgetId === 'z-history')
+		expect(history.countFrom).toBe('widget')
+	})
 })

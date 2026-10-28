@@ -11,6 +11,10 @@
 			"value": "dossiq-medewerkers"
 		},
 		{
+			"key": "portal_name",
+			"value": "Mijn Zuiddrecht"
+		},
+		{
 			"key": "brp.allowed_groups",
 			"value": "{{cast:kcc.gid}}"
 		},
@@ -66,7 +70,10 @@
 				"notes": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan.",
 				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000012",
 				"phone": "06 12 34 56 78",
-				"description": "Aanvrager van de vergunning voor het straatfeest, Parkstraat"
+				"description": "Aanvrager van de vergunning voor het straatfeest, Parkstraat",
+				"identityCheck": "Geboortedatum en adres gevraagd",
+				"identityVerifiedVia": "BRP",
+				"identityVerifiedAt": "{{datetime:0 10:24}}"
 			}
 		},
 		{
@@ -216,12 +223,40 @@
 				"preferredChannel": "email",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "KVK-nummer {{cast:buurtoost.kvk}}. Voorzitter Marja Verbeek, secretaris Kees de Wit.",
+				"notes": "KVK-nummer {{cast:buurtoost.kvk}}. Voorzitter Marja Verbeek, secretaris Sanne de Vries.",
 				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000007",
 				"kvkNumber": "{{cast:buurtoost.kvk}}",
 				"legalForm": "vereniging",
 				"place": "{{cast:buurtoost.address.city}}",
 				"phone": "078 612 33 41"
+			}
+		},
+		{
+			"key": "contact-buurtoost-sanne",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "{{cast:sanne.displayName}}",
+				"role": "Secretaris",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "example-buurtoost-sanne",
+				"email": "{{cast:buurtoost.email}}",
+				"mainContact": true,
+				"language": "nl",
+				"correspondenceLanguage": "nl"
+			}
+		},
+		{
+			"key": "contact-buurtoost-verbeek",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "Marja Verbeek",
+				"role": "Voorzitter",
+				"client": "{{object:client-buurtoost.id}}",
+				"contactsUid": "example-buurtoost-verbeek",
+				"language": "nl",
+				"correspondenceLanguage": "nl"
 			}
 		},
 		{
@@ -367,7 +402,8 @@
 				"lifecycleStage": "lead",
 				"accountStatus": "active",
 				"language": "nl",
-				"correspondenceLanguage": "nl"
+				"correspondenceLanguage": "nl",
+				"address": "Markt 2, 2999BA Zuiddrecht"
 			}
 		},
 		{
@@ -381,7 +417,8 @@
 				"lifecycleStage": "lead",
 				"accountStatus": "active",
 				"language": "nl",
-				"correspondenceLanguage": "nl"
+				"correspondenceLanguage": "nl",
+				"address": "Markt 17, 2999BA Zuiddrecht"
 			}
 		},
 		{
@@ -925,7 +962,8 @@
 				"preferredChannel": "phone",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "Belt het liefst 's ochtends."
+				"notes": "Belt het liefst 's ochtends.",
+				"phone": "078 612 40 18"
 			}
 		},
 		{
@@ -1502,7 +1540,8 @@
 				"unitPrice": 75,
 				"taxRate": 0,
 				"unit": "Stuk",
-				"vatClass": "zero"
+				"vatClass": "zero",
+				"barcode": "8712345000134"
 			}
 		},
 		{
@@ -1516,7 +1555,8 @@
 				"unitPrice": 12.5,
 				"taxRate": 21,
 				"unit": "Stuk",
-				"vatClass": "high"
+				"vatClass": "high",
+				"barcode": "8712345000141"
 			}
 		},
 		{
@@ -1530,7 +1570,8 @@
 				"unitPrice": 4.95,
 				"taxRate": 9,
 				"unit": "Stuk",
-				"vatClass": "low"
+				"vatClass": "low",
+				"barcode": "8712345000124"
 			}
 		},
 		{
@@ -2222,7 +2263,7 @@
 				"signature": "9f2c415ec19a930cbc7b4c6b46644edcd8e83a809afdb207915fe51470d7e07a",
 				"previousHash": "77aa93f7c91aa68eb1d5c7d09c3cfb0d5531872eceda9689338713b626fbc2d8",
 				"currentHash": "b81d0c54aad1da199694b6d742904decc5dcc78f3e289cd592956edf63e344f1",
-				"verified": false
+				"verified": null
 			}
 		},
 		{
@@ -2241,7 +2282,7 @@
 				"signature": "4d745387a90852cb1db1142babe6404e27e7d052290201b2226395193cb11bea",
 				"previousHash": "de82bafac095cfdf5fca1c81cc91da11e4e0b45eabd8c8210741c6547912fbe5",
 				"currentHash": "9ca1ff92340d7dec259102d3007fc7bbe01e6a29aa0dd7d3365ee2c7855ed7ba",
-				"verified": true
+				"verified": null
 			}
 		},
 		{
@@ -2260,7 +2301,7 @@
 				"signature": "5e91445bf3aded5eddaeac2b81f472e21734c52de8052e15fe6df8b82609097e",
 				"previousHash": "6a0b6ad2f665d0e3993c5daa1bff786356b8e8b8fb18a569bb1c47ebbc277431",
 				"currentHash": "552a973e4a118cdfce993a9bb51a89948e4c092e011b22c9f835f1df3d9fce43",
-				"verified": true
+				"verified": null
 			}
 		},
 		{
@@ -2268,6 +2309,7 @@
 			"register": "pipelinq",
 			"schema": "kassakoppelingAuditLog",
 			"data": {
+				"verified": null,
 				"operatorId": "{{cast:pieter.uid}}",
 				"registerNumber": "REG-002",
 				"action": "refund",
@@ -3300,7 +3342,9 @@
 				"duration": "PT6M",
 				"parentTicket": "{{object:ticket-degraaf-afvalpas.id}}",
 				"category": "afval",
-				"disposition_subject": "Afvalpas"
+				"disposition_subject": "Afvalpas",
+				"notes": "Meneer De Graaf belde over zijn afvalpas: de container bij Dorpsstraat 8 weigert die sinds maandag. Hij probeerde al een andere container, met hetzelfde resultaat. Ik heb gezegd dat we de pas gratis vervangen en dat het 3 werkdagen duurt. Hij vroeg of hij zijn afval intussen buiten mag zetten.",
+				"from_number": "078 612 40 18"
 			}
 		},
 		{
@@ -3460,7 +3504,7 @@
 				"client": "{{object:client-henkvisser.id}}",
 				"assignee": "{{cast:lotte.uid}}",
 				"occurredAt": "{{datetime:-5 11:15}}",
-				"category": "openbare ruimte"
+				"category": "openbare-ruimte"
 			}
 		},
 		{

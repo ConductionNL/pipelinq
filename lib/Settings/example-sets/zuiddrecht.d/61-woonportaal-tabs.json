@@ -19,7 +19,7 @@
 				"occurredAt": "{{datetime:-12 10:30}}",
 				"description": "Karin Vos wil dat huurders reparaties online melden en hun huurcontract inzien. Ze stuurt de wensen van het bestuur door.",
 				"duration": "PT14M",
-				"category": "Software"
+				"category": "software"
 			}
 		},
 		{
@@ -40,7 +40,7 @@
 				"occurredAt": "{{datetime:-8 13:30}}",
 				"description": "Budget en planning besproken. Het bestuur beslist in oktober, M. Hendriks tekent namens het bestuur. Lead naar Gekwalificeerd.",
 				"duration": "PT25M",
-				"category": "Software"
+				"category": "software"
 			}
 		},
 		{
@@ -61,7 +61,7 @@
 				"occurredAt": "{{datetime:-5 09:12}}",
 				"description": "Karin Vos vroeg om een demo voor het bestuur. Voorstel: 12 oktober, met M. Hendriks.",
 				"duration": "PT5M",
-				"category": "Software"
+				"category": "software"
 			}
 		},
 		{
@@ -82,7 +82,7 @@
 				"occurredAt": "{{datetime:-2 15:05}}",
 				"description": "Peter Lam van inkoop wil de offerte voor 20 oktober hebben, met de implementatiedagen apart.",
 				"duration": "PT8M",
-				"category": "Software"
+				"category": "software"
 			}
 		},
 		{

@@ -47,6 +47,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Worklist\WorkBuckets;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
@@ -87,6 +88,18 @@ class WorklistService {
 	 * @var int
 	 */
 	private const DEFAULT_PRIORITY_RANK = 2;
+
+	/**
+	 * Counts one to twenty as words, through the translations.
+	 *
+	 * @var array<int, string>
+	 */
+	private const NUMBER_WORDS = [
+		1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six', 7 => 'seven',
+		8 => 'eight', 9 => 'nine', 10 => 'ten', 11 => 'eleven', 12 => 'twelve', 13 => 'thirteen',
+		14 => 'fourteen', 15 => 'fifteen', 16 => 'sixteen', 17 => 'seventeen', 18 => 'eighteen',
+		19 => 'nineteen', 20 => 'twenty',
+	];
 
 	/**
 	 * Request statuses that mean "done" — excluded from the worklist
@@ -386,6 +399,256 @@ class WorklistService {
 
 		return $rows;
 	}//end buildRequestRows()
+
+	/**
+	 * Every open item of the user's work, tickets, leads and follow-up tasks,
+	 * in one shape, sorted into My work's lists (`bucket`) and the phone's
+	 * due groups (`dueGroup`), the most urgent first.
+	 *
+	 * Each item: `{ kind, id, title, priority, routeName, record, dueAt,
+	 * bucket, dueGroup }`; `kind` is the ticket type, `lead` or `task`, and
+	 * `record` the object as stored, for the list's templates.
+	 *
+	 * @param string $userId The Nextcloud UID whose work to list.
+	 * @param string $bucket Keep one list (`answer-today`, `waiting-on-me`, `waiting-on-customer`); '' for all.
+	 * @param string $lens   Keep one kind of work (`tickets`, `leads`, `tasks`); '' or `all` for all.
+	 * @param string $sort   `deadline` (default), `waiting` (oldest first), `newest` or `priority`.
+	 * @param string $scope  `open` (default), or `all` to list finished work too (the page's "Toon afgerond").
+	 *
+	 * @return array{items: array<int, array<string, mixed>>, total: int}
+	 *
+	 * @throws RuntimeException When OpenRegister is unreachable.
+	 *
+	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	public function items(string $userId, string $bucket='', string $lens='', string $sort='deadline', string $scope='open'): array {
+		$buckets = new WorkBuckets();
+		$now     = new DateTimeImmutable();
+		$items   = [];
+		foreach ($this->openWorkRows(userId: $userId, done: $scope === 'all') as $row) {
+			$row = $buckets->decorate(row: $row, now: $now);
+			if (($bucket === '' || $row['bucket'] === $bucket) && $buckets->inLens(kind: $row['kind'], lens: $lens) === true) {
+				$items[] = $row;
+			}
+		}
+
+		usort($items, $buckets->comparator(sort: $sort));
+
+		return ['items' => $this->withClientNames(items: $items), 'total' => count($items)];
+	}//end items()
+
+	/**
+	 * The user's open leads (not in a closed stage), tickets (not closed) and
+	 * follow-up tasks, as work items before they are sorted into a list.
+	 *
+	 * @param string $userId The Nextcloud UID.
+	 * @param bool   $done   Keep finished work too.
+	 *
+	 * @return array<int, array<string, mixed>> The items.
+	 *
+	 * @throws RuntimeException When OpenRegister is unreachable.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The flag is the page's "Toon afgerond" switch.
+	 */
+	private function openWorkRows(string $userId, bool $done): array {
+		$closedStages = $this->getClosedStageNames(
+			pipelines: $this->findObjects(schemaKey: 'pipeline_schema', filters: [], limit: self::PIPELINE_FETCH_LIMIT)
+		);
+
+		$rows = [];
+		foreach ($this->findObjects(schemaKey: 'lead_schema', filters: ['assignee' => $userId], limit: self::LEAD_FETCH_LIMIT) as $lead) {
+			if ($done === true || in_array((string)($lead['stage'] ?? ''), $closedStages, true) === false) {
+				$rows[] = $this->itemRow(kind: 'lead', record: $lead, routeName: 'LeadDetail');
+			}
+		}
+
+		foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
+			$tickets = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId], limit: self::REQUEST_FETCH_LIMIT);
+			foreach ($tickets as $ticket) {
+				if ($done === true || in_array((string)($ticket['status'] ?? ''), self::TERMINAL_TICKET_STATUSES, true) === false) {
+					$rows[] = $this->itemRow(kind: (string)($ticket['ticketType'] ?? $ticketType), record: $ticket, routeName: 'TicketDetail');
+				}
+			}
+		}
+
+		return array_merge($rows, $this->taskRows(userId: $userId, done: $done));
+	}//end openWorkRows()
+
+	/**
+	 * The user's follow-up tasks as work items: the open ones, or all with $done.
+	 *
+	 * @param string $userId The Nextcloud UID.
+	 * @param bool   $done   Keep finished tasks too.
+	 *
+	 * @return array<int, array<string, mixed>> The items.
+	 *
+	 * @throws RuntimeException When OpenRegister is unreachable.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The flag is the page's "Toon afgerond" switch.
+	 */
+	private function taskRows(string $userId, bool $done): array {
+		$filters = ['assigneeUserId' => $userId, 'status' => 'open'];
+		if ($done === true) {
+			unset($filters['status']);
+		}
+
+		$rows = [];
+		foreach ($this->findObjects(schemaKey: 'task_schema', filters: $filters, limit: self::REQUEST_FETCH_LIMIT) as $task) {
+			$rows[] = $this->itemRow(kind: 'task', record: $task, routeName: 'TaskDetail');
+		}
+
+		return $rows;
+	}//end taskRows()
+
+	/**
+	 * One sentence on the user's open work, for My work's header: how many
+	 * items, by kind, and how many are due today ("9 items are with you: 7
+	 * tickets, 1 lead and 1 follow-up; 2 must be answered today").
+	 *
+	 * @param string $userId The Nextcloud UID.
+	 *
+	 * @return string The sentence.
+	 *
+	 * @throws RuntimeException When OpenRegister is unreachable.
+	 *
+	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	public function summary(string $userId): string {
+		$items   = $this->items(userId: $userId)['items'];
+		$counts  = ['tickets' => 0, 'leads' => 0, 'tasks' => 0];
+		$dueNow  = 0;
+		$buckets = new WorkBuckets();
+		foreach ($items as $item) {
+			foreach (array_keys($counts) as $lens) {
+				if ($buckets->inLens(kind: $item['kind'], lens: $lens) === true) {
+					$counts[$lens]++;
+				}
+			}
+
+			if ($item['bucket'] === 'answer-today') {
+				$dueNow++;
+			}
+		}
+
+		if ($items === []) {
+			return $this->l10n->t('Nothing is with you right now');
+		}
+
+		$phrases = [
+			'tickets' => $this->counted(singular: '%n ticket', plural: '%n tickets', count: $counts['tickets']),
+			'leads' => $this->counted(singular: '%n lead', plural: '%n leads', count: $counts['leads']),
+			'tasks' => $this->counted(singular: '%n follow-up', plural: '%n follow-ups', count: $counts['tasks']),
+		];
+		$parts = array_values(
+			array_filter($phrases, static fn (string $key): bool => ($counts[$key] > 0), ARRAY_FILTER_USE_KEY)
+		);
+		$last = array_pop($parts);
+		$kinds = $last;
+		if ($parts !== []) {
+			$kinds = $this->l10n->t('%1$s and %2$s', [implode(', ', $parts), $last]);
+		}
+
+		$sentence = $this->counted(singular: '%n item is with you', plural: '%n items are with you', count: count($items)) . ': ' . $kinds;
+		if ($dueNow > 0) {
+			$sentence .= '; ' . $this->counted(singular: '%n must be answered today', plural: '%n must be answered today', count: $dueNow);
+		}
+
+		return $sentence;
+	}//end summary()
+
+	/**
+	 * A counted phrase with the count written as a word from one to twenty
+	 * ("negen items", board PqMijnWerk), as digits above.
+	 *
+	 * @param string $singular The phrase for one, with `%n`.
+	 * @param string $plural   The phrase for more, with `%n`.
+	 * @param int    $count    The count.
+	 *
+	 * @return string The phrase.
+	 *
+	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	private function counted(string $singular, string $plural, int $count): string {
+		$phrase = $this->l10n->n($singular, $plural, $count);
+		$word   = (self::NUMBER_WORDS[$count] ?? '');
+		if ($word === '') {
+			return $phrase;
+		}
+
+		$digits = (string)$count;
+		$offset = strpos($phrase, $digits);
+		if ($offset === false) {
+			return $phrase;
+		}
+
+		return substr($phrase, 0, $offset) . $this->l10n->t($word) . substr($phrase, ($offset + strlen($digits)));
+	}//end counted()
+
+	/**
+	 * Each item with the name of its client (`clientName`), read once per
+	 * client; '' when the item has none or the client cannot be read.
+	 *
+	 * @param array<int, array<string, mixed>> $items The items.
+	 *
+	 * @return array<int, array<string, mixed>> The items with names.
+	 */
+	private function withClientNames(array $items): array {
+		$names = [];
+		foreach ($items as $index => $item) {
+			$record   = $item['record'];
+			$clientId = (string)($record['client'] ?? ($record['clientId'] ?? ''));
+			if ($clientId !== '' && array_key_exists($clientId, $names) === false) {
+				$names[$clientId] = $this->clientName(clientId: $clientId);
+			}
+
+			$items[$index]['clientName'] = ($names[$clientId] ?? '');
+		}
+
+		return $items;
+	}//end withClientNames()
+
+	/**
+	 * A client's name, or '' when it cannot be read.
+	 *
+	 * @param string $clientId The client's id.
+	 *
+	 * @return string The name.
+	 */
+	private function clientName(string $clientId): string {
+		try {
+			$client = $this->toArray(object: $this->getObjectService()->find($clientId));
+		} catch (\Throwable $e) {
+			return '';
+		}
+
+		return (string)($client['name'] ?? ($client['title'] ?? ''));
+	}//end clientName()
+
+	/**
+	 * One work item before it is sorted into a list.
+	 *
+	 * @param string               $kind      The ticket type, `lead` or `task`.
+	 * @param array<string, mixed> $record    The object as stored.
+	 * @param string               $routeName The detail page.
+	 *
+	 * @return array<string, mixed> The item.
+	 */
+	private function itemRow(string $kind, array $record, string $routeName): array {
+		$priority = (string)($record['priority'] ?? '');
+		if ($priority === '') {
+			$priority = 'normal';
+		}
+
+		return [
+			'kind'      => $kind,
+			'id'        => (string)($record['id'] ?? ''),
+			'title'     => (string)($record['title'] ?? ($record['subject'] ?? '')),
+			'priority'  => $priority,
+			'channel'   => (string)($record['channel'] ?? ''),
+			'routeName' => $routeName,
+			'record'    => $record,
+		];
+	}//end itemRow()
 
 	/**
 	 * Worklist row comparator — exact port of MyWorkWidget.vue:103-112.

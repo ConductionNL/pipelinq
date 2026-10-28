@@ -1,0 +1,35 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "When an event's reminder went out, and when each registration was checked in at the door (PqEvenement: Herinnering versturen, Inchecken bij de deur, Resultaten). Named 99-zz so it merges after 98-campaign-events, which declares both schemas."
+	},
+	"components": {
+		"schemas": {
+			"campaignEvent": {
+				"slug": "campaignEvent",
+				"version": "1.1.0",
+				"properties": {
+					"reminderSentAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Reminder sent",
+						"description": "When the reminder last went out to the confirmed registrations."
+					}
+				}
+			},
+			"eventRegistration": {
+				"slug": "eventRegistration",
+				"version": "1.1.0",
+				"properties": {
+					"checkedInAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Checked in",
+						"description": "When the person was checked in at the door; empty while they have not come in."
+					}
+				}
+			}
+		}
+	}
+}

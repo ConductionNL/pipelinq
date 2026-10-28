@@ -107,10 +107,12 @@ export function sumSnapshotsByDate(snapshots) {
 			commit: 0,
 			best_case: 0,
 			pipeline: 0,
+			closed_won: 0,
 		}
 		point.commit += Number(row.commit || 0)
 		point.best_case += Number(row.best_case || 0)
 		point.pipeline += Number(row.pipeline || 0)
+		point.closed_won += Number(row.closed_won || 0)
 		byDate.set(date, point)
 	}
 	return [...byDate.values()].sort((a, b) =>
@@ -189,3 +191,60 @@ export function accuracyRows(snapshots) {
 	}
 	return out
 }
+
+/**
+ * The ISO week number of a date ("2026-10-05" is week 41).
+ *
+ * @param {string} date An ISO date (YYYY-MM-DD).
+ * @return {number|string} The week, or '' when the date does not parse.
+ * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ */
+export function isoWeekOf(date) {
+	const day = new Date(String(date) + 'T12:00:00Z')
+	if (Number.isNaN(day.getTime())) {
+		return ''
+	}
+	const thursday = new Date(day)
+	thursday.setUTCDate(day.getUTCDate() + 3 - ((day.getUTCDay() + 6) % 7))
+	const firstThursday = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 4))
+	firstThursday.setUTCDate(firstThursday.getUTCDate() + 3 - ((firstThursday.getUTCDay() + 6) % 7))
+	return 1 + Math.round((thursday - firstThursday) / (7 * 24 * 3600 * 1000))
+}
+
+/**
+ * How each seller's commit moved between the two newest snapshot dates:
+ * into commit when it rose, out of it when it fell, with the amount. Sellers
+ * whose commit did not move are left out; the largest move comes first.
+ *
+ * @param {Array<object>} snapshots Rows with owner_id, as_of_date and commit.
+ * @return {Array<{owner_id: string, direction: 'into'|'out', amount: number}>} The moves.
+ * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ */
+export function commitMovements(snapshots) {
+	const dates = [...new Set(snapshots.map((row) => String(row.as_of_date || '')).filter(Boolean))].sort()
+	if (dates.length < 2) {
+		return []
+	}
+	const [previous, current] = dates.slice(-2)
+	const commitOn = (date) => {
+		const byOwner = new Map()
+		for (const row of snapshots) {
+			if (String(row.as_of_date) === date) {
+				byOwner.set(row.owner_id, (byOwner.get(row.owner_id) || 0) + Number(row.commit || 0))
+			}
+		}
+		return byOwner
+	}
+	const before = commitOn(previous)
+	const after = commitOn(current)
+	const owners = new Set([...before.keys(), ...after.keys()])
+	const moves = []
+	for (const owner of owners) {
+		const change = (after.get(owner) || 0) - (before.get(owner) || 0)
+		if (change !== 0) {
+			moves.push({ owner_id: owner, direction: change > 0 ? 'into' : 'out', amount: Math.abs(change) })
+		}
+	}
+	return moves.sort((a, b) => b.amount - a.amount)
+}
+

@@ -104,6 +104,8 @@ return [
         // My-work worklist — canonical server-side union of the current user's
         // leads + requests (replaces the MyWorkWidget/MyWork client-side union).
         ['name' => 'worklist#mine', 'url' => '/api/worklist/mine', 'verb' => 'GET'],
+        ['name' => 'worklist#items', 'url' => '/api/worklist/items', 'verb' => 'GET'],
+        ['name' => 'worklist#summary', 'url' => '/api/worklist/summary', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
         ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
@@ -121,9 +123,14 @@ return [
         // Customer 360 consolidated summary (klantbeeld-360-activation) — cross-ticketType/status
         // aggregation the declarative layer can't express; per-object read guard on the client in the body.
         ['name' => 'customer360#summary', 'url' => '/api/customer-360/summary', 'verb' => 'GET'],
+        // The client's cases from dossiq's case leaf, by the client's master entity (PqKlant / PqOrganisatie Zaken).
+        ['name' => 'clientCase#index', 'url' => '/api/clients/{id}/cases', 'verb' => 'GET'],
         // Letters from a filinq template (work-letter-from-filinq-template).
+        // An event's reminder to everyone with a confirmed place (event-reminder-and-check-in).
+        ['name' => 'eventReminder#send', 'url' => '/api/campaign-events/{id}/reminder', 'verb' => 'POST'],
         ['name' => 'letter#templates', 'url' => '/api/letters/templates', 'verb' => 'GET'],
         ['name' => 'letter#create', 'url' => '/api/clients/{id}/letters', 'verb' => 'POST'],
+        ['name' => 'letter#preview', 'url' => '/api/clients/{id}/letters/preview', 'verb' => 'POST'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
         // see openspec/changes/migrate-forms-to-forms-leaf.
 
@@ -135,6 +142,7 @@ return [
         // host's uuid and stays opaque to pipelinq.
         // A host app's link to one party's tickets, by master entity (tickets-list-by-party).
         ['name' => 'ticketParty#tickets', 'url' => '/tickets/party/{ref}', 'verb' => 'GET'],
+        ['name' => 'staffProfile#show', 'url' => '/api/staff/{userId}/profile', 'verb' => 'GET'],
         ['name' => 'contactMomentLeaf#index',  'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'GET'],
         ['name' => 'contactMomentLeaf#create', 'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'POST'],
         // Filing an EXISTING contact moment onto a further case, and taking it

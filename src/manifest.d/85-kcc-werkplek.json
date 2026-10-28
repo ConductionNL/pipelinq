@@ -66,6 +66,11 @@
 									"label": "Priority"
 								}
 							]
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -99,6 +104,11 @@
 									"label": "Deadline"
 								}
 							]
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{

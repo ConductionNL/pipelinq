@@ -41,6 +41,10 @@
 			"type": "index",
 			"title": "Services and resources",
 			"config": {
+				"pageTabs": [
+					{ "label": "Services", "route": "Services", "countFrom": { "register": "pipelinq", "schema": "appointmentService", "filter": {} } },
+					{ "label": "Resources", "route": "Resources", "countFrom": { "register": "pipelinq", "schema": "appointmentResource", "filter": {} } }
+				],
 				"register": "pipelinq",
 				"schema": "appointmentService",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -145,6 +149,11 @@
 						"icon": "Download"
 					},
 					{
+						"action": "actions-menu",
+						"label": "Actions",
+						"items": ["refresh", "documentation"]
+					},
+					{
 						"action": "create",
 						"variant": "primary",
 						"icon": "Plus",
@@ -211,6 +220,10 @@
 			"type": "index",
 			"title": "Resources",
 			"config": {
+				"pageTabs": [
+					{ "label": "Services", "route": "Services", "countFrom": { "register": "pipelinq", "schema": "appointmentService", "filter": {} } },
+					{ "label": "Resources", "route": "Resources", "countFrom": { "register": "pipelinq", "schema": "appointmentResource", "filter": {} } }
+				],
 				"register": "pipelinq",
 				"schema": "appointmentResource",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -274,6 +287,7 @@
 				"showMassCopy": false,
 				"showMassDelete": false,
 				"selectable": true,
+				"filterMenu": true,
 				"sortKey": "startAt",
 				"sortOrder": "asc",
 				"countText": "{shown} of {total} appointments · sorted by time",
@@ -292,7 +306,7 @@
 					{ "key": "customerId", "label": "With whom", "formatter": "bookingCustomerName" },
 					{ "key": "subject", "label": "About", "secondary": "{source}", "cellClass": "cn-cell--strong" },
 					{ "key": "location", "label": "Location or desk" },
-					{ "key": "assignee", "label": "Handler", "formatter": "userDisplayName", "widget": "avatar", "widgetProps": { "user": true } },
+					{ "key": "assignee", "label": "Handler", "formatter": "userDisplayName", "widget": "avatar", "widgetProps": { "user": true, "size": 28, "tone": "neutral" } },
 					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "completed": "primary", "no-show": "error", "pending-deposit": "warning", "cancelled-by-customer": "default", "cancelled-by-business": "default", "rescheduled": "default" } } }
 				],
 				"actions": [
