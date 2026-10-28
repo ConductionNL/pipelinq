@@ -32,6 +32,8 @@ export function menuRuntime({ profile, profileFile, enabled, manifest, translate
 		modulesOff: list(modules.filter(([key]) => !on.has(key))),
 		modulesOnCount: modules.filter(([key]) => on.has(key)).length,
 		modulesCount: modules.length,
+		// Per module key whether it is in the menu: the full profile shows every module.
+		enabled: Object.fromEntries(modules.map(([key]) => [key, profile !== 'simple' || on.has(key)])),
 		reports: Array.isArray(reportsPage?.config?.cards) ? reportsPage.config.cards.length : 0,
 	}
 }

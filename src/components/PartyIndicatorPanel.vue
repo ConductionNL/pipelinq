@@ -15,7 +15,10 @@
   @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 -->
 <template>
-	<CnDetailCard :title="t('pipelinq', 'Warnings')">
+	<component
+		:is="compact ? 'div' : 'CnDetailCard'"
+		:title="compact ? undefined : t('pipelinq', 'Warnings')"
+		:class="{ 'party-indicators--compact': compact }">
 		<div v-if="loading" class="party-indicators__state">
 			<NcLoadingIcon :size="24" />
 		</div>
@@ -23,6 +26,18 @@
 			v-else-if="error"
 			class="party-indicators__state party-indicators__state--error">
 			{{ error }}
+		</p>
+		<p v-else-if="!indicators.length && compact" class="party-indicators__state party-indicators__none">
+			<ShieldCheckOutline :size="18" class="party-indicators__none-icon" />
+			<span>{{ noneText }}</span>
+			<button
+				v-if="!adding"
+				type="button"
+				class="party-indicators__add-link"
+				data-testid="party-indicators-add"
+				@click="openForm">
+				{{ t('pipelinq', 'Add a warning') }}
+			</button>
 		</p>
 		<p v-else-if="!indicators.length" class="party-indicators__state">
 			{{ t('pipelinq', 'No warnings on this record.') }}
@@ -71,7 +86,7 @@
 			</li>
 		</ul>
 
-		<NcButton v-if="!adding" @click="openForm">
+		<NcButton v-if="!adding && !(compact && !indicators.length)" @click="openForm">
 			{{ t('pipelinq', 'Add a warning') }}
 		</NcButton>
 		<form v-else class="party-indicators__form" @submit.prevent="save">
@@ -116,13 +131,14 @@
 				</NcButton>
 			</div>
 		</form>
-	</CnDetailCard>
+	</component>
 </template>
 
 <script>
 import { CnDetailCard } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import {
 	acknowledgeIndicator,
 	addIndicatorValue,
@@ -133,9 +149,17 @@ import {
 
 export default {
 	name: 'PartyIndicatorPanel',
-	components: { CnDetailCard, NcButton, NcLoadingIcon, NcSelect, NcTextField },
+	components: { CnDetailCard, NcButton, NcLoadingIcon, NcSelect, NcTextField, ShieldCheckOutline },
 	props: {
 		partyId: { type: String, required: true },
+		/**
+		 * Draw the panel as a line inside another card (the client page's
+		 * contact strip, PqKlant): no card of its own, and "No warnings on
+		 * this resident." with an Add a warning link when there are none.
+		 */
+		compact: { type: Boolean, default: false },
+		/** The party's kind, for the none line: `person` or `organization`. */
+		partyKind: { type: String, default: '' },
 	},
 
 	data() {
@@ -149,6 +173,19 @@ export default {
 			vocabulary: [],
 			form: this.emptyForm(),
 		}
+	},
+
+	computed: {
+		/** @return {string} The line that says there are no warnings, by the party's kind. */
+		noneText() {
+			if (this.partyKind === 'person') {
+				return t('pipelinq', 'No warnings on this resident.')
+			}
+			if (this.partyKind === 'organization') {
+				return t('pipelinq', 'No warnings on this organisation.')
+			}
+			return t('pipelinq', 'No warnings on this record.')
+		},
 	},
 
 	watch: {
@@ -298,6 +335,33 @@ export default {
 </script>
 
 <style scoped>
+.party-indicators__none {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	font-size: 14px;
+	color: var(--color-main-text);
+}
+
+.party-indicators__none-icon {
+	color: var(--color-success-text, var(--color-success));
+}
+
+.party-indicators__add-link {
+	margin: 0 0 0 8px;
+	padding: 0;
+	min-height: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-primary-element);
+	font: inherit;
+	font-weight: 600;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
 .party-indicators__state {
 	padding: 8px 0;
 	color: var(--color-text-maxcontrast);

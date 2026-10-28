@@ -1419,7 +1419,9 @@
 								"groupBy": {
 									"field": "category",
 									"metric": "count",
-									"sort": "desc"
+									"sort": "desc",
+									"limit": 3,
+									"otherBucket": true
 								}
 							}
 						}
@@ -1429,7 +1431,7 @@
 						"type": "chart",
 						"title": "Requests by status",
 						"content": {
-							"chartKind": "bar",
+							"chartKind": "bar-list",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "ticket",
@@ -1439,7 +1441,17 @@
 								"groupBy": {
 									"field": "status",
 									"metric": "count",
-									"sort": "desc"
+									"sort": "desc",
+									"labels": {
+										"new": "New",
+										"in_progress": "In progress",
+										"awaiting_customer": "Waiting for customer",
+										"resolved": "Resolved",
+										"completed": "Completed",
+										"rejected": "Rejected",
+										"converted": "Converted",
+										"closed": "Closed"
+									}
 								}
 							}
 						}
@@ -1459,6 +1471,8 @@
 								"dir": "desc"
 							},
 							"limit": 6,
+							"sortable": true,
+							"filterable": true,
 							"columns": [
 								{
 									"key": "title",
@@ -1529,6 +1543,7 @@
 								"name": "Clients"
 							},
 							"viewAllLabel": "View all clients",
+							"viewAllPlacement": "footer",
 							"emptyText": "No clients yet",
 							"columns": [
 								{
@@ -1862,6 +1877,7 @@
 			"type": "detail",
 			"title": "Client",
 			"config": {
+				"recordLastChange": true,
 				"register": "pipelinq",
 				"schema": "client",
 				"fieldOverrides": {
@@ -1906,6 +1922,36 @@
 					}
 				},
 				"headerActions": [
+					{
+						"id": "log-contact",
+						"label": "Log contact",
+						"icon": "PhoneLogOutline",
+						"type": "open-form",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"formTitle": "Log contact",
+						"includeFields": [
+							"title",
+							"channel",
+							"direction",
+							"description"
+						],
+						"props": {
+							"client": "@objectId",
+							"ticketType": "interaction"
+						},
+						"successMessage": "Contact moment logged."
+					},
+					{
+						"id": "new-request",
+						"label": "New request",
+						"icon": "TicketOutline",
+						"type": "open-modal",
+						"target": "RequestCreateDialog",
+						"props": {
+							"clientId": "@objectId"
+						}
+					},
 					{
 						"id": "make-letter",
 						"label": "Make a letter",
@@ -2026,7 +2072,6 @@
 						"title": "Open matters",
 						"content": {
 							"label": "Open matters",
-							"caption": "requests + complaints + contactmomenten",
 							"icon": "ClipboardCheckOutline",
 							"format": {
 								"style": "number",
@@ -2048,7 +2093,6 @@
 						"title": "New requests",
 						"content": {
 							"label": "New requests",
-							"caption": "requests with status new",
 							"icon": "ClipboardCheckOutline",
 							"format": {
 								"style": "number",
@@ -2069,10 +2113,9 @@
 					{
 						"id": "client-summary-sla-breached",
 						"type": "stat",
-						"title": "SLA breached",
+						"title": "Term passed",
 						"content": {
-							"label": "SLA breached",
-							"caption": "open tickets past their deadline",
+							"label": "Term passed",
 							"icon": "AlertCircleOutline",
 							"variant": "error",
 							"format": {
@@ -2092,10 +2135,9 @@
 					{
 						"id": "client-summary-sla-at-risk",
 						"type": "stat",
-						"title": "SLA at risk",
+						"title": "Term at risk",
 						"content": {
-							"label": "SLA at risk",
-							"caption": "deadline within 24h",
+							"label": "Term at risk",
 							"icon": "History",
 							"variant": "warning",
 							"format": {
@@ -2113,13 +2155,39 @@
 						}
 					},
 					{
+						"id": "client-summary-open-leads",
+						"type": "stat",
+						"title": "Open leads",
+						"content": {
+							"label": "Open leads",
+							"icon": "TrendingUp",
+							"format": {
+								"style": "currency",
+								"currency": "EUR",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "lead",
+								"metric": "sum",
+								"field": "value",
+								"filter": {
+									"client": "@objectId",
+									"status": "open"
+								}
+							}
+						}
+					},
+					{
 						"id": "client-summary-last-activity",
 						"type": "stat",
 						"title": "Last activity",
 						"content": {
 							"label": "Last activity",
-							"caption": "most recent interaction",
 							"icon": "History",
+							"format": {
+								"style": "date"
+							},
 							"source": {
 								"kind": "endpoint",
 								"url": "/apps/pipelinq/api/customer-360/summary",
@@ -2438,6 +2506,214 @@
 						"icon": "FolderOutline"
 					},
 					{
+						"id": "client-person-card",
+						"type": "facts",
+						"title": "Resident",
+						"icon": "CardAccountDetailsOutline",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Inwoner: two columns, label above value, as dossiq's DqContact Contact card. Fields the client does not carry are left out.",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"path": "name",
+									"label": "Name"
+								},
+								{
+									"path": "givenNames",
+									"label": "Given names"
+								},
+								{
+									"path": "surname",
+									"label": "Surname"
+								},
+								{
+									"path": "birthDate",
+									"label": "Date of birth",
+									"format": "longdate"
+								},
+								{
+									"path": "address",
+									"label": "Home address"
+								},
+								{
+									"path": "description",
+									"label": "Description"
+								}
+							]
+						}
+					},
+					{
+						"id": "client-organisation-card",
+						"type": "facts",
+						"title": "Organisation",
+						"icon": "OfficeBuildingOutline",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Organisatie: as dossiq's DqOrganisatie card.",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"path": "name",
+									"label": "Trade name"
+								},
+								{
+									"path": "kvkNumber",
+									"label": "KvK number"
+								},
+								{
+									"path": "legalForm",
+									"label": "Legal form"
+								},
+								{
+									"path": "address",
+									"label": "Address"
+								}
+							]
+						}
+					},
+					{
+						"id": "client-tickets",
+						"type": "record-list",
+						"title": "Tickets",
+						"icon": "TicketOutline",
+						"_note": "PqKlant/PqOrganisatie Tickets: every ticket of the client as a ruled row, as dossiq's DqContact draws the client's tickets: reference, kind and handler, the status pill, and done or due at the end.",
+						"content": {
+							"ruleAbove": true,
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"ticketType": {
+									"in": [
+										"request",
+										"complaint"
+									]
+								}
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 4,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{reference}",
+									"{ticketType}",
+									"assigned to {assignee|user}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"variant": "purple",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Awaiting customer",
+									"resolved": "Handled",
+									"closed": "Handled",
+									"completed": "Handled"
+								},
+								"colorMap": {
+									"resolved": "success",
+									"closed": "success",
+									"completed": "success",
+									"new": "info"
+								}
+							},
+							"trailing": [
+								"Done {resolvedAt|date}",
+								"By {slaDeadline|date}"
+							],
+							"valueLabels": {
+								"ticketType": {
+									"request": "Request",
+									"complaint": "Complaint"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"headerLink": {
+								"label": "View all {total} tickets",
+								"route": "Tickets",
+								"query": {
+									"client": "@objectId"
+								}
+							},
+							"emptyText": "No tickets for this client yet"
+						}
+					},
+					{
+						"id": "client-latest-moments",
+						"type": "record-list",
+						"title": "Latest contact moments",
+						"icon": "PhoneLogOutline",
+						"_note": "PqKlant/PqOrganisatie Laatste contactmomenten: the three newest interactions as a feed, as dossiq's DqContact draws them.",
+						"content": {
+							"ruleAbove": true,
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 3,
+							"presentation": "feed",
+							"icon": {
+								"field": "channel",
+								"map": {
+									"phone": "PhoneInTalk",
+									"email": "EmailOutline",
+									"balie": "AccountOutline",
+									"brief": "EmailOpenOutline",
+									"chat": "MessageTextOutline",
+									"webformulier": "Earth",
+									"portal": "EmailOutline"
+								},
+								"default": "EmailOutline"
+							},
+							"meta": {
+								"parts": [
+									"{occurredAt|datetime}",
+									"{channel}",
+									"{direction}",
+									"ticket {reference}"
+								]
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "phone",
+									"email": "email",
+									"webformulier": "web form",
+									"chat": "chat",
+									"social_media": "social media",
+									"balie": "desk",
+									"portal": "Mijn Zuiddrecht"
+								},
+								"direction": {
+									"inbound": "inbound",
+									"outbound": "outbound"
+								}
+							},
+							"text": "{title}",
+							"headerNote": "{total} in total",
+							"emptyText": "No contact moments yet"
+						}
+					},
+					{
 						"id": "client-open-requests",
 						"type": "record-list",
 						"title": "Open requests",
@@ -2504,30 +2780,37 @@
 						"type": "tabs",
 						"title": "Client",
 						"icon": "OfficeBuilding",
-						"_note": "One strip, at most seven tabs (shared relation frame, PqKlant and PqOrganisatie). Overview stacks the data cards and the open requests; Requests holds requests and complaints; Contracts holds contracts and projects. Mail, notes and files moved to the side column. Children stay out of layout, or the tabs widget and the grid would each render them once.",
+						"_note": "The tab strip as PqKlant and PqOrganisatie draw it: Overview, Tickets (requests and complaints), Contact persons (an organisation only), Contact moments, Sales (a resident only: leads, contracts, projects), Documents and History. Children stay out of layout, or the tabs widget and the grid would each render them once.",
 						"content": {
 							"ariaLabel": "Client",
 							"tabs": [
 								{
 									"widgetIds": [
-										"client-identity",
-										"client-commercial",
-										"client-open-requests"
+										"client-person-card",
+										"client-organisation-card",
+										"client-tickets",
+										"client-latest-moments"
 									],
 									"label": "Overview"
-								},
-								{
-									"widgetId": "client-quick-contacts",
-									"label": "Contacts",
-									"countFrom": "widget"
 								},
 								{
 									"widgetIds": [
 										"client-quick-requests",
 										"client-complaints"
 									],
-									"label": "Requests",
+									"label": "Tickets",
 									"countFrom": "widget"
+								},
+								{
+									"id": "client-contact-persons",
+									"widgetId": "client-quick-contacts",
+									"label": "Contact persons",
+									"countFrom": "widget",
+									"visibleWhen": {
+										"field": "type",
+										"op": "eq",
+										"value": "organization"
+									}
 								},
 								{
 									"widgetId": "client-contactmoments",
@@ -2535,16 +2818,22 @@
 									"countFrom": "widget"
 								},
 								{
-									"widgetId": "client-leads",
-									"label": "Leads",
-									"countFrom": "widget"
-								},
-								{
 									"widgetIds": [
+										"client-leads",
 										"client-contracts",
 										"client-projects"
 									],
-									"label": "Contracts"
+									"label": "Sales",
+									"countFrom": "widget",
+									"visibleWhen": {
+										"field": "type",
+										"op": "eq",
+										"value": "person"
+									}
+								},
+								{
+									"widgetId": "client-files",
+									"label": "Documents"
 								},
 								{
 									"widgetId": "client-history",
@@ -2554,57 +2843,67 @@
 						}
 					}
 				],
+				"_layoutNote": "PqKlant and PqOrganisatie: one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity), the tab strip under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab.",
 				"layout": [
 					{
 						"id": "1",
 						"widgetId": "client-summary-open-tickets",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 6,
-						"gridHeight": 2,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "2",
-						"widgetId": "client-summary-sla-breached",
-						"gridX": 6,
+						"widgetId": "client-summary-new-requests",
+						"gridX": 2,
 						"gridY": 0,
-						"gridWidth": 6,
-						"gridHeight": 2,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "3",
-						"widgetId": "client-summary-new-requests",
-						"gridX": 0,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2,
+						"widgetId": "client-summary-sla-breached",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "4",
 						"widgetId": "client-summary-sla-at-risk",
-						"gridX": 4,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2,
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "5",
-						"widgetId": "client-summary-last-activity",
+						"widgetId": "client-summary-open-leads",
 						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
+						"showTitle": false
+					},
+					{
+						"id": "6",
+						"widgetId": "client-summary-last-activity",
+						"gridX": 10,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "9",
 						"widgetId": "client-panels",
 						"gridX": 0,
-						"gridY": 4,
+						"gridY": 1,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
@@ -2612,31 +2911,16 @@
 				],
 				"bodyWidgets": [
 					{
-						"id": "party-indicators",
-						"component": "PartyIndicatorPanel",
+						"id": "contact-strip",
+						"component": "PartyContactStrip",
 						"placement": "before-body",
-						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
+						"_note": "PqKlant / PqOrganisatie: the warnings line (an aggression registration or a death is read before contact is made, pipelinq#2036) and the call, mail, directions and log-a-visit buttons in one card before the body (platform-phone-on-the-road).",
 						"props": {
-							"partyId": "@objectId"
-						}
-					},
-					{
-						"id": "contact-links",
-						"component": "ContactLinks",
-						"placement": "before-body",
-						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
-						"props": {
+							"partyId": "@objectId",
+							"partyKind": "@object.type",
 							"phone": "@object.phone",
 							"email": "@object.email",
 							"address": "@object.address"
-						}
-					},
-					{
-						"id": "log-visit",
-						"component": "LogVisitAction",
-						"placement": "before-body",
-						"props": {
-							"clientId": "@objectId"
 						}
 					},
 					{
@@ -2732,14 +3016,282 @@
 						}
 					]
 				},
+				"_sideColumnNote": "The side column in the boards' order with the cards dossiq's DqContact and DqOrganisatie draw: a resident reads Reachable via, Identity and Home address, an organisation KvK and address and Open tickets; both then Contact channels, Relations and Record history. Related, Emails and Notes stay under them until the Activity card carries mail and notes.",
 				"sideColumn": [
-					"client-kpis-sales",
-					"client-related",
+					{
+						"id": "side-reach",
+						"type": "facts",
+						"title": "Reachable via",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Bereikbaar via, as dossiq's DqContact card: the preferred channel first, then the e-mail and phone on file, and Log contact.",
+						"content": {
+							"fields": [
+								{
+									"key": "preferred",
+									"path": "preferredChannel",
+									"icon": "EmailOutline",
+									"map": {
+										"email": "E-mail",
+										"phone": "Phone",
+										"portal": "Mijn Zuiddrecht, message box",
+										"post": "Post",
+										"balie": "Desk"
+									}
+								},
+								{
+									"as": "line",
+									"separator": ", ",
+									"parts": [
+										{
+											"path": "email",
+											"label": "E-mail"
+										},
+										{
+											"path": "phone",
+											"label": "phone"
+										}
+									]
+								}
+							],
+							"action": {
+								"label": "Log contact",
+								"icon": "PhoneLogOutline",
+								"type": "open-form",
+								"register": "pipelinq",
+								"schema": "ticket",
+								"formTitle": "Log contact",
+								"includeFields": [
+									"title",
+									"channel",
+									"direction",
+									"description"
+								],
+								"props": {
+									"client": "@objectId",
+									"ticketType": "interaction"
+								}
+							}
+						}
+					},
+					{
+						"id": "side-identity",
+						"type": "facts",
+						"title": "Identity",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Identiteit: the client number and where the data comes from, as dossiq's DqContact Identity card.",
+						"content": {
+							"fields": [
+								{
+									"label": "Client number",
+									"path": "customerNumber",
+									"inline": true
+								},
+								{
+									"label": "Source",
+									"path": "source"
+								}
+							]
+						}
+					},
+					{
+						"id": "side-address",
+						"type": "facts",
+						"title": "Home address",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"content": {
+							"fields": [
+								{
+									"as": "text",
+									"path": "address"
+								}
+							],
+							"emptyText": "No address on file"
+						}
+					},
+					{
+						"id": "side-kvk",
+						"type": "facts",
+						"title": "KvK and address",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie KVK en adres, as dossiq's DqOrganisatie card.",
+						"content": {
+							"fields": [
+								{
+									"as": "lead",
+									"icon": "OfficeBuildingOutline",
+									"title": [
+										{
+											"path": "kvkNumber",
+											"label": "KvK"
+										}
+									],
+									"subtitle": [
+										"legalForm",
+										{
+											"text": "Trade register"
+										}
+									]
+								},
+								{
+									"as": "text",
+									"path": "address"
+								}
+							]
+						}
+					},
+					{
+						"id": "side-main-contact",
+						"type": "record-list",
+						"title": "Main contact",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Hoofdcontact: the contact person flagged mainContact (else the first), with initials, role and e-mail, and the link to the Contact persons tab. Card layout as dossiq's DqOrganisatie Main contact.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "contact",
+							"filter": {
+								"client": "@objectId"
+							},
+							"sort": {
+								"field": "mainContact",
+								"dir": "desc"
+							},
+							"limit": 1,
+							"presentation": "rows",
+							"density": "stacked",
+							"chevron": false,
+							"avatar": {
+								"text": "{name}",
+								"size": 32
+							},
+							"title": "{name}",
+							"meta": {
+								"parts": [
+									"{role}"
+								]
+							},
+							"text": "{email}",
+							"emptyText": "No contact persons yet",
+							"footerLink": {
+								"label": "All {total} contact persons",
+								"href": "#client-contact-persons"
+							}
+						}
+					},
+					{
+						"id": "side-open-ticket",
+						"type": "record-list",
+						"title": "Open tickets",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Open tickets: the open ticket due first, as dossiq's DqOrganisatie card.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"ticketType": {
+									"in": [
+										"request",
+										"complaint"
+									]
+								},
+								"status": {
+									"in": [
+										"new",
+										"in_progress",
+										"awaiting_customer"
+									]
+								}
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"limit": 1,
+							"presentation": "rows",
+							"density": "stacked",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{reference}",
+									"assigned to {assignee|user}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"variant": "purple",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Awaiting customer"
+								}
+							},
+							"trailing": [
+								"By {slaDeadline|date}"
+							],
+							"rowRoute": "TicketDetail",
+							"emptyText": "No open tickets"
+						}
+					},
 					"client-channels",
 					"client-relationships",
+					{
+						"id": "side-history",
+						"type": "facts",
+						"title": "Record history",
+						"content": {
+							"fields": [
+								{
+									"as": "text",
+									"parts": [
+										{
+											"text": "Last changed on"
+										},
+										{
+											"path": "@self.updated",
+											"format": "longdate"
+										},
+										{
+											"path": "_lastChange.userName",
+											"label": "last changed by"
+										}
+									],
+									"separator": " "
+								}
+							],
+							"link": {
+								"label": "View history",
+								"icon": "History",
+								"sidebarTab": "audit"
+							}
+						}
+					},
+					"client-related",
 					"client-email",
-					"client-notes",
-					"client-files"
+					"client-notes"
 				],
 				"breadcrumb": {
 					"label": "Residents and businesses",
@@ -6171,7 +6723,8 @@
 								},
 								{
 									"widgetId": "z-history",
-									"label": "History"
+									"label": "History",
+									"countFrom": "widget"
 								}
 							]
 						}
@@ -6232,6 +6785,29 @@
 					}
 				],
 				"titleField": "reference",
+				"_headerActionsNote": "Board PqZRapport: \"Journaalpost opnieuw doorgeven\" in the header beside Meer, on a day whose journal entry is pending or failed and that has takings. It posts to the same manager-gated endpoint as the bookkeeping section's button; the server refuses anyone else.",
+				"headerActions": [
+					{
+						"id": "raise-journal-entry",
+						"type": "api-call",
+						"label": "Raise the journal entry again",
+						"icon": "Refresh",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/pos-bookkeeping/post",
+						"payload": {
+							"zReportId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Journal entry raised at shillinq.",
+						"errorMessage": "Raise failed.",
+						"visibleWhen": {
+							"all": [
+								{ "field": "bookkeepingStatus", "op": "in", "value": ["pending", "failed"] },
+								{ "field": "transactionCount", "op": "gt", "value": 0 }
+							]
+						}
+					}
+				],
 				"headerCard": true,
 				"breadcrumb": {
 					"label": "Z reports",
@@ -6984,6 +7560,21 @@
 				"showRefresh": true,
 				"showWidgetActions": false,
 				"gridFloat": false,
+				"greeting": "date",
+				"descriptionSource": {
+					"url": "/apps/pipelinq/api/worklist/summary"
+				},
+				"headerActions": [
+					{
+						"id": "my-work-download",
+						"label": "Download",
+						"icon": "Download",
+						"href": "/apps/pipelinq/api/worklist/items?format=csv&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone"
+					}
+				],
+				"gridSideColumn": {
+					"width": 300
+				},
 				"description": "Tickets, leads and follow-ups that are yours, the most urgent first",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"kpiRow": [
@@ -7125,7 +7716,67 @@
 						}
 					},
 					{
+						"id": "my-items-phone",
+						"type": "record-list",
+						"title": "My work",
+						"showTitle": false,
+						"viewport": "narrow",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/worklist/items?lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"responsePath": "items"
+							},
+							"presentation": "rows",
+							"title": "{title}",
+							"pill": {
+								"field": "kind",
+								"labels": {
+									"request": "Request",
+									"complaint": "Complaint",
+									"melding": "Report",
+									"interaction": "Contact moment",
+									"lead": "Lead",
+									"task": "Follow-up"
+								},
+								"colorMap": {
+									"request": "info",
+									"complaint": "error",
+									"melding": "warning",
+									"interaction": "default",
+									"lead": "success",
+									"task": "default"
+								}
+							},
+							"due": {
+								"field": "dueAt",
+								"emptyText": "No due date"
+							},
+							"groupBy": "dueGroup",
+							"groupOrder": [
+								"late",
+								"today",
+								"week",
+								"later",
+								"none"
+							],
+							"valueLabels": {
+								"dueGroup": {
+									"late": "Overdue",
+									"today": "Today",
+									"week": "This week",
+									"later": "Later",
+									"none": "No due date"
+								}
+							},
+							"rowRouteField": "routeName",
+							"rowIdField": "id",
+							"emptyText": "Nothing of yours is open"
+						}
+					},
+					{
 						"id": "my-week",
+						"viewport": "wide",
+						"titleTone": "side",
 						"type": "stats-block",
 						"title": "Your week so far",
 						"showTitle": true,
@@ -7214,6 +7865,7 @@
 					},
 					{
 						"id": "my-start-here",
+						"viewport": "wide",
 						"type": "banner",
 						"title": "Start here",
 						"showTitle": false,
@@ -7258,131 +7910,65 @@
 						"id": "my-answer-today",
 						"type": "record-list",
 						"title": "Answer today",
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
-						},
+						"viewport": "wide",
 						"content": {
-							"register": "pipelinq",
-							"schema": "ticket",
-							"filter": {
-								"assignee": "@me",
-								"status": {
-									"in": [
-										"new",
-										"in_progress"
-									]
-								},
-								"slaDeadline[lt]": "@today+1d"
-							},
-							"sort": {
-								"field": "slaDeadline",
-								"dir": "asc"
-							},
-							"pageControls": {
-								"sort": {
-									"key": "sort",
-									"map": {
-										"deadline": {
-											"field": "slaDeadline",
-											"dir": "asc"
-										},
-										"waiting": {
-											"field": "occurredAt",
-											"dir": "asc"
-										},
-										"newest": {
-											"field": "occurredAt",
-											"dir": "desc"
-										},
-										"priority": {
-											"field": "priority",
-											"rank": [
-												"urgent",
-												"high",
-												"normal",
-												"low"
-											],
-											"then": {
-												"field": "slaDeadline",
-												"dir": "asc"
-											}
-										}
-									}
-								},
-								"toggle": {
-									"key": "showDone",
-									"removes": [
-										"status"
-									]
-								}
+							"headerNote": "deadline is today or has passed",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"responsePath": "items"
 							},
 							"limit": 5,
 							"presentation": "rows",
-							"extend": [
-								"client"
-							],
-							"avatar": "{client.name}",
+							"avatar": "{clientName}",
 							"title": "{title}",
 							"meta": {
 								"parts": [
-									"{client.name}",
+									"{clientName}",
 									"{channel}"
 								]
 							},
 							"pill": {
-								"field": "status",
+								"field": "kind",
 								"labels": {
-									"new": "New",
-									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer",
-									"resolved": "Resolved",
-									"completed": "Completed"
+									"request": "Request",
+									"complaint": "Complaint",
+									"melding": "Report",
+									"interaction": "Contact moment",
+									"lead": "Lead",
+									"task": "Follow-up"
 								},
 								"colorMap": {
-									"new": "info",
-									"in_progress": "purple",
-									"awaiting_customer": "default",
-									"resolved": "success",
-									"completed": "success"
+									"request": "info",
+									"complaint": "error",
+									"melding": "warning",
+									"interaction": "default",
+									"lead": "success",
+									"task": "default"
 								}
 							},
-							"rowRoute": "TicketDetail",
-							"emptyText": "No ticket of yours is due today",
 							"badges": [
 								{
 									"field": "priority",
 									"labels": {
-										"urgent": "Urgent",
-										"high": "High",
-										"low": "Low"
+										"urgent": "Urgent priority",
+										"high": "High priority",
+										"normal": "Normal priority",
+										"low": "Low priority"
 									},
 									"colorMap": {
 										"urgent": "error",
-										"high": "warning",
+										"high": "error",
+										"normal": "default",
 										"low": "default"
-									},
-									"hideValues": [
-										"normal",
-										"low"
-									]
+									}
 								}
 							],
 							"due": {
-								"field": "slaDeadline",
+								"field": "dueAt",
 								"emptyText": "No due date"
 							},
+							"rowRouteField": "routeName",
+							"rowIdField": "id",
 							"valueLabels": {
 								"channel": {
 									"phone": "Phone",
@@ -7399,137 +7985,73 @@
 									"brief": "Letter",
 									"social": "Social media"
 								}
-							}
+							},
+							"emptyText": "Nothing of yours is due today"
 						}
 					},
 					{
 						"id": "my-waiting-on-me",
 						"type": "record-list",
 						"title": "Waiting on me",
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
-						},
+						"viewport": "wide",
 						"content": {
-							"register": "pipelinq",
-							"schema": "ticket",
-							"filter": {
-								"assignee": "@me",
-								"status": {
-									"in": [
-										"new",
-										"in_progress"
-									]
-								}
-							},
-							"sort": {
-								"field": "slaDeadline",
-								"dir": "asc"
-							},
-							"pageControls": {
-								"sort": {
-									"key": "sort",
-									"map": {
-										"deadline": {
-											"field": "slaDeadline",
-											"dir": "asc"
-										},
-										"waiting": {
-											"field": "occurredAt",
-											"dir": "asc"
-										},
-										"newest": {
-											"field": "occurredAt",
-											"dir": "desc"
-										},
-										"priority": {
-											"field": "priority",
-											"rank": [
-												"urgent",
-												"high",
-												"normal",
-												"low"
-											],
-											"then": {
-												"field": "slaDeadline",
-												"dir": "asc"
-											}
-										}
-									}
-								},
-								"toggle": {
-									"key": "showDone",
-									"removes": [
-										"status"
-									]
-								}
+							"headerNote": "the customer has replied",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"responsePath": "items"
 							},
 							"limit": 5,
 							"presentation": "rows",
-							"extend": [
-								"client"
-							],
-							"avatar": "{client.name}",
+							"avatar": "{clientName}",
 							"title": "{title}",
 							"meta": {
 								"parts": [
-									"{client.name}",
+									"{clientName}",
 									"{channel}"
 								]
 							},
 							"pill": {
-								"field": "status",
+								"field": "kind",
 								"labels": {
-									"new": "New",
-									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer",
-									"resolved": "Resolved",
-									"completed": "Completed"
+									"request": "Request",
+									"complaint": "Complaint",
+									"melding": "Report",
+									"interaction": "Contact moment",
+									"lead": "Lead",
+									"task": "Follow-up"
 								},
 								"colorMap": {
-									"new": "info",
-									"in_progress": "purple",
-									"awaiting_customer": "default",
-									"resolved": "success",
-									"completed": "success"
+									"request": "info",
+									"complaint": "error",
+									"melding": "warning",
+									"interaction": "default",
+									"lead": "success",
+									"task": "default"
 								}
 							},
-							"rowRoute": "TicketDetail",
-							"emptyText": "No tickets assigned to you",
 							"badges": [
 								{
 									"field": "priority",
 									"labels": {
-										"urgent": "Urgent",
-										"high": "High",
-										"low": "Low"
+										"urgent": "Urgent priority",
+										"high": "High priority",
+										"normal": "Normal priority",
+										"low": "Low priority"
 									},
 									"colorMap": {
 										"urgent": "error",
-										"high": "warning",
+										"high": "error",
+										"normal": "default",
 										"low": "default"
-									},
-									"hideValues": [
-										"normal",
-										"low"
-									]
+									}
 								}
 							],
 							"due": {
-								"field": "slaDeadline",
+								"field": "dueAt",
 								"emptyText": "No due date"
 							},
+							"rowRouteField": "routeName",
+							"rowIdField": "id",
 							"valueLabels": {
 								"channel": {
 									"phone": "Phone",
@@ -7546,126 +8068,73 @@
 									"brief": "Letter",
 									"social": "Social media"
 								}
-							}
+							},
+							"emptyText": "Nothing waits on you"
 						}
 					},
 					{
 						"id": "my-waiting-on-customer",
 						"type": "record-list",
 						"title": "Waiting on the customer",
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
-						"headerLink": {
-							"label": "View all my tickets",
-							"route": "Tickets",
-							"query": {
-								"assignee": "@me"
-							}
-						},
+						"viewport": "wide",
 						"content": {
-							"register": "pipelinq",
-							"schema": "ticket",
-							"filter": {
-								"assignee": "@me",
-								"status": "awaiting_customer"
-							},
-							"sort": {
-								"field": "slaDeadline",
-								"dir": "asc"
-							},
-							"pageControls": {
-								"sort": {
-									"key": "sort",
-									"map": {
-										"deadline": {
-											"field": "slaDeadline",
-											"dir": "asc"
-										},
-										"waiting": {
-											"field": "occurredAt",
-											"dir": "asc"
-										},
-										"newest": {
-											"field": "occurredAt",
-											"dir": "desc"
-										},
-										"priority": {
-											"field": "priority",
-											"rank": [
-												"urgent",
-												"high",
-												"normal",
-												"low"
-											],
-											"then": {
-												"field": "slaDeadline",
-												"dir": "asc"
-											}
-										}
-									}
-								}
+							"headerNote": "nothing to do until they reply",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"responsePath": "items"
 							},
 							"limit": 5,
 							"presentation": "rows",
-							"extend": [
-								"client"
-							],
-							"avatar": "{client.name}",
+							"avatar": "{clientName}",
 							"title": "{title}",
 							"meta": {
 								"parts": [
-									"{client.name}",
+									"{clientName}",
 									"{channel}"
 								]
 							},
 							"pill": {
-								"field": "status",
+								"field": "kind",
 								"labels": {
-									"new": "New",
-									"in_progress": "In progress",
-									"awaiting_customer": "Waiting for customer",
-									"resolved": "Resolved",
-									"completed": "Completed"
+									"request": "Request",
+									"complaint": "Complaint",
+									"melding": "Report",
+									"interaction": "Contact moment",
+									"lead": "Lead",
+									"task": "Follow-up"
 								},
 								"colorMap": {
-									"new": "info",
-									"in_progress": "purple",
-									"awaiting_customer": "default",
-									"resolved": "success",
-									"completed": "success"
+									"request": "info",
+									"complaint": "error",
+									"melding": "warning",
+									"interaction": "default",
+									"lead": "success",
+									"task": "default"
 								}
 							},
-							"rowRoute": "TicketDetail",
-							"emptyText": "No ticket of yours waits for the customer",
 							"badges": [
 								{
 									"field": "priority",
 									"labels": {
-										"urgent": "Urgent",
-										"high": "High",
-										"low": "Low"
+										"urgent": "Urgent priority",
+										"high": "High priority",
+										"normal": "Normal priority",
+										"low": "Low priority"
 									},
 									"colorMap": {
 										"urgent": "error",
-										"high": "warning",
+										"high": "error",
+										"normal": "default",
 										"low": "default"
-									},
-									"hideValues": [
-										"normal",
-										"low"
-									]
+									}
 								}
 							],
 							"due": {
-								"field": "slaDeadline",
+								"field": "dueAt",
 								"emptyText": "No due date"
 							},
+							"rowRouteField": "routeName",
+							"rowIdField": "id",
 							"valueLabels": {
 								"channel": {
 									"phone": "Phone",
@@ -7682,11 +8151,14 @@
 									"brief": "Letter",
 									"social": "Social media"
 								}
-							}
+							},
+							"emptyText": "Nothing waits on a customer"
 						}
 					},
 					{
 						"id": "my-saved-views",
+						"viewport": "wide",
+						"titleTone": "side",
 						"type": "saved-views",
 						"title": "Saved views",
 						"content": {
@@ -7702,13 +8174,11 @@
 						"id": "my-leads",
 						"type": "record-list",
 						"title": "My leads",
+						"viewport": "wide",
 						"visibleWhen": {
 							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"leads"
-							]
+							"op": "eq",
+							"value": "leads"
 						},
 						"headerLink": {
 							"label": "View all my leads",
@@ -7816,13 +8286,11 @@
 						"id": "my-follow-ups",
 						"type": "record-list",
 						"title": "My follow-ups",
+						"viewport": "wide",
 						"visibleWhen": {
 							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tasks"
-							]
+							"op": "eq",
+							"value": "tasks"
 						},
 						"headerLink": {
 							"label": "View all my tasks",
@@ -7878,12 +8346,22 @@
 				],
 				"layout": [
 					{
+						"id": "8",
+						"widgetId": "my-items-phone",
+						"gridX": 0,
+						"gridY": 16,
+						"gridWidth": 12,
+						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
 						"id": "0",
 						"widgetId": "my-answer-today",
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
 						"gridHeight": 4,
+						"track": "main",
 						"sizeToContent": true
 					},
 					{
@@ -7893,6 +8371,7 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					},
 					{
@@ -7902,6 +8381,7 @@
 						"gridY": 4,
 						"gridWidth": 8,
 						"gridHeight": 4,
+						"track": "main",
 						"sizeToContent": true
 					},
 					{
@@ -7911,6 +8391,7 @@
 						"gridY": 3,
 						"gridWidth": 4,
 						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					},
 					{
@@ -7920,6 +8401,7 @@
 						"gridY": 6,
 						"gridWidth": 4,
 						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					},
 					{
@@ -7929,6 +8411,7 @@
 						"gridY": 8,
 						"gridWidth": 8,
 						"gridHeight": 4,
+						"track": "main",
 						"sizeToContent": true
 					},
 					{
@@ -7958,6 +8441,27 @@
 			"type": "reports",
 			"title": "Reports",
 			"config": {
+				"_catalogueNote": "Board PqReports: the board look draws the page as a catalogue (nextcloud-vue reports-page-catalogue): the categories as chips with counts, the cards with their category, a footer and Open, and an aside with the category index and asideNote. New analysis report opens Nextcloud Analytics, where a report is built; the buildiq square sits before it.",
+				"catalogue": true,
+				"headerButtons": [
+					{
+						"label": "New analysis report",
+						"action": "new-analysis-report",
+						"variant": "primary",
+						"icon": "Plus"
+					}
+				],
+				"headerActions": [
+					{
+						"id": "new-analysis-report",
+						"label": "New analysis report",
+						"href": "/apps/analytics/"
+					}
+				],
+				"asideNote": {
+					"title": "Missing a report?",
+					"text": "Build one yourself in Nextcloud Analytics with New analysis report, or ask an administrator to add a report to the app."
+				},
 				"description": "Every report Pipelinq offers, in one place. Pick a report to open it.",
 				"categories": {
 					"volume": "Volume and channels",
@@ -7993,7 +8497,7 @@
 					},
 					{
 						"id": "AgentPerformanceView",
-						"label": "Agent performance",
+						"label": "Staff performance",
 						"description": "Handling times and workload per agent.",
 						"icon": "AccountGroup",
 						"category": "people",
@@ -8314,8 +8818,48 @@
 					{ "action": "export", "label": "Download" },
 					{ "action": "add", "variant": "primary", "icon": "Plus", "label": "New pipeline" }
 				],
-				"viewModes": ["cards", "table"],
-				"viewMode": "cards",
+				"viewModes": ["list", "cards", "table"],
+				"viewMode": "list",
+				"showViewToggle": false,
+				"search": false,
+				"_expandableNote": "Board PqPipelines: each pipeline is a row that opens to its stages (nextcloud-vue expandableRows, index-expandable-rows). The first row is open. Closed, the stages are chips coloured by stage kind; open, a table with the order, chance, start stage, closed and result. Edit and Add stage open the pipeline's own form, where the stages are edited. The board's drag handle is not drawn: the order is edited in the form.",
+				"expandableRows": {
+					"title": "title",
+					"badge": { "when": { "field": "isDefault", "op": "eq", "value": true }, "label": "Default" },
+					"description": "description",
+					"chips": {
+						"field": "stages",
+						"each": "name",
+						"tones": [
+							{ "when": { "field": "isWon", "op": "eq", "value": true }, "variant": "success" },
+							{ "when": { "field": "isClosed", "op": "eq", "value": true }, "variant": "error" },
+							{ "when": { "field": "isDefault", "op": "eq", "value": true }, "variant": "primary" }
+						]
+					},
+					"meta": ["{stages|count} stages", "created {@self.created|date}"],
+					"table": {
+						"field": "stages",
+						"columns": [
+							{ "label": "Order", "as": "order" },
+							{ "key": "name", "label": "Stage", "strong": true },
+							{ "key": "probability", "label": "Chance", "as": "bar" },
+							{ "key": "isDefault", "label": "Start stage", "as": "check", "text": "New items start here" },
+							{ "key": "isClosed", "label": "Closed", "as": "yesNo" },
+							{
+								"label": "Result",
+								"as": "pill",
+								"tones": [
+									{ "when": { "field": "isWon", "op": "eq", "value": true }, "variant": "success", "text": "Won" },
+									{ "when": { "field": "isClosed", "op": "eq", "value": true }, "variant": "error", "text": "Lost" }
+								]
+							}
+						],
+						"note": "A closed stage ends the item: won or lost.",
+						"action": { "id": "edit", "label": "Add stage" }
+					},
+					"buttons": [{ "action": "edit", "label": "Edit" }],
+					"open": "first"
+				},
 				"cardLayout": {
 					"title": "title",
 					"meta": [

@@ -154,12 +154,28 @@ class SemanticHandoffController extends Controller {
 				'status' => $status,
 				'canConvert' => ($available === true && $status === 'in_progress'),
 				'caseReference' => (string)($request['caseReference'] ?? ''),
+				'caseTypeSource' => [
+					'register' => $this->appConfig->getValueString(
+						app: Application::APP_ID,
+						key: 'handoff_case_type_register',
+						default: 'dossiq'
+					),
+					'schema' => $this->appConfig->getValueString(
+						app: Application::APP_ID,
+						key: 'handoff_case_type_schema',
+						default: 'caseType'
+					),
+				],
 			]
 		);
 	}//end requestAvailability()
 
 	/**
 	 * Convert an in-progress request ticket into a case via OR's handoff engine.
+	 *
+	 * Body params: `caseType` (optional case-type UUID, carried to the case
+	 * through the handoff mapping) and `keepOpen` (true keeps the request's
+	 * status; by default it becomes `converted`).
 	 *
 	 * @param string $id Request-ticket UUID.
 	 *
@@ -199,6 +215,13 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'not-available'], Http::STATUS_CONFLICT);
 		}
 
+		$caseTypeError = $this->recordRequestedCaseType(id: $id, request: $request);
+		if ($caseTypeError !== null) {
+			return $caseTypeError;
+		}
+
+		$keepOpen = filter_var($this->request->getParam('keepOpen', false), FILTER_VALIDATE_BOOLEAN);
+
 		$result = $this->handoffService->handoff(
 			register: $this->registerSlug(),
 			schema: $this->ticketSchema(),
@@ -213,10 +236,55 @@ class SemanticHandoffController extends Controller {
 			);
 		}
 
+		return $this->closeConvertedRequest(id: $id, request: $request, result: $result, keepOpen: $keepOpen);
+	}//end convertRequestToCase()
+
+	/**
+	 * Store the case type the person chose on the request, where the handoff
+	 * mapping reads it (`caseType` <- `requestedCaseType`).
+	 *
+	 * @param string               $id      Request-ticket UUID.
+	 * @param array<string, mixed> $request The request, updated in place.
+	 *
+	 * @return JSONResponse|null An error response, or null when there is none.
+	 */
+	private function recordRequestedCaseType(string $id, array &$request): ?JSONResponse {
+		$caseType = trim((string)$this->request->getParam('caseType', ''));
+		if ($caseType === '') {
+			return null;
+		}
+
+		if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $caseType) !== 1) {
+			return new JSONResponse(['status' => 'invalid-case-type'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$request['ticketType'] = TicketService::TYPE_REQUEST;
+		$request['requestedCaseType'] = $caseType;
+		if ($this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request) === false) {
+			return new JSONResponse(['status' => 'handoff-failed', 'reason' => 'case-type-not-saved'], Http::STATUS_BAD_GATEWAY);
+		}
+
+		return null;
+	}//end recordRequestedCaseType()
+
+	/**
+	 * Write the case reference back on a converted request and answer.
+	 *
+	 * @param string               $id       Request-ticket UUID.
+	 * @param array<string, mixed> $request  The request.
+	 * @param array<string, mixed> $result   The handoff result.
+	 * @param bool                 $keepOpen Whether the request stays open.
+	 *
+	 * @return JSONResponse The conversion outcome.
+	 */
+	private function closeConvertedRequest(string $id, array $request, array $result, bool $keepOpen): JSONResponse {
 		// Keep the discriminator pinned on the round-tripped payload so the
 		// write can never silently untype the ticket.
 		$request['ticketType'] = TicketService::TYPE_REQUEST;
-		$request['status'] = 'converted';
+		if ($keepOpen === false) {
+			$request['status'] = 'converted';
+		}
+
 		$request['caseReference'] = (string)$result['targetUuid'];
 		$saved = $this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request);
 		if ($saved === false) {
@@ -235,7 +303,7 @@ class SemanticHandoffController extends Controller {
 				'correlationId' => (string)$result['correlationId'],
 			]
 		);
-	}//end convertRequestToCase()
+	}//end closeConvertedRequest()
 
 	/**
 	 * Whether the "Send to invoicing" action is available for a contract.

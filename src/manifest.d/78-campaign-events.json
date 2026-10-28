@@ -41,7 +41,7 @@
 				"follow": false,
 				"sidebar": { "enabled": false },
 				"breadcrumb": { "label": "Campaigns", "route": "Campaigns", "separator": "/" },
-				"headerMeta": "{startAt|date} · {venue}",
+				"headerMeta": "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}",
 				"statusPill": {
 					"field": "signupStatus",
 					"labels": { "draft": "Draft", "open": "Registration open", "full": "Fully booked", "closed": "Registration closed", "cancelled": "Cancelled" },
@@ -52,7 +52,6 @@
 					{
 						"id": "event-kpi-registered",
 						"type": "stat",
-						"title": "Registered",
 						"content": {
 							"label": "Registered",
 							"caption": "of {capacity} places",
@@ -62,7 +61,6 @@
 					{
 						"id": "event-kpi-waitlist",
 						"type": "stat",
-						"title": "Waiting list",
 						"content": {
 							"label": "Waiting list",
 							"caption": "moves up when someone cancels",
@@ -72,7 +70,6 @@
 					{
 						"id": "event-kpi-newsletter",
 						"type": "stat",
-						"title": "From the newsletter",
 						"content": {
 							"label": "From the newsletter",
 							"caption": "the rest came through the website and posts",
@@ -82,7 +79,6 @@
 					{
 						"id": "event-kpi-new",
 						"type": "stat",
-						"title": "New in pipelinq",
 						"content": {
 							"label": "New in pipelinq",
 							"caption": "registrations without an existing record became a contact",
@@ -97,7 +93,8 @@
 							"ariaLabel": "Campaign event",
 							"tabs": [
 								{ "label": "Overview", "widgetIds": ["event-data", "event-registrations-recent"] },
-								{ "label": "Registrations", "widgetId": "event-registrations" },
+								{ "label": "Registrations", "widgetId": "event-registrations", "countFrom": { "register": "pipelinq", "schema": "eventRegistration", "filter": { "event": "@objectId" } } },
+								{ "label": "Registration form", "widgetId": "event-form" },
 								{ "label": "History", "widgetId": "event-history" }
 							]
 						}
@@ -127,7 +124,7 @@
 								{ "key": "address", "label": "Address" },
 								{ "key": "source", "label": "Registered via" },
 								{ "key": "registeredAt", "label": "Registered on", "formatter": "date" },
-								{ "key": "status", "label": "Status" }
+								{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "waitlist": "warning", "cancelled": "default" } } }
 							]
 						}
 					},
@@ -142,14 +139,13 @@
 							"sort": { "field": "registeredAt", "dir": "asc" },
 							"limit": 50,
 							"emptyText": "No registrations yet.",
+							"_columnsNote": "PqEvenement's Registrations tab: name, address, how and when, and the status as a coloured pill. The party size and the waiting list position stay on the Registrations list page (EventRegistrations), which lists every field.",
 							"columns": [
 								{ "key": "name", "label": "Name", "cellClass": "cn-cell--strong" },
 								{ "key": "address", "label": "Address" },
-								{ "key": "partySize", "label": "People" },
 								{ "key": "source", "label": "Registered via" },
 								{ "key": "registeredAt", "label": "Registered on", "formatter": "date" },
-								{ "key": "status", "label": "Status" },
-								{ "key": "waitlistPosition", "label": "Waiting list position" }
+								{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "waitlist": "warning", "cancelled": "default" } } }
 							]
 						}
 					},
@@ -185,12 +181,15 @@
 						"content": { "auditTrail": true, "order": "desc", "limit": 3 }
 					}
 				],
+				"_bandNote": "PqEvenement: the four counts stand in a row across the page, above the tabs and the side column.",
+				"band": [
+					{ "widgetId": "event-kpi-registered", "span": 3 },
+					{ "widgetId": "event-kpi-waitlist", "span": 3 },
+					{ "widgetId": "event-kpi-newsletter", "span": 3 },
+					{ "widgetId": "event-kpi-new", "span": 3 }
+				],
 				"layout": [
-					{ "id": "1", "widgetId": "event-kpi-registered", "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2 },
-					{ "id": "2", "widgetId": "event-kpi-waitlist", "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2 },
-					{ "id": "3", "widgetId": "event-kpi-newsletter", "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2 },
-					{ "id": "4", "widgetId": "event-kpi-new", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2 },
-					{ "id": "5", "widgetId": "event-panels", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 6, "showTitle": false, "sizeToContent": true }
+					{ "id": "5", "widgetId": "event-panels", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6, "showTitle": false, "sizeToContent": true }
 				],
 				"sideColumn": ["event-form", "event-location", "event-side-history"]
 			}
