@@ -3,7 +3,47 @@
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
   -->
 <template>
-	<tr class="pos-line-row">
+	<tr v-if="!editing" class="pos-line-row pos-line-row--read" data-testid="pos-line-read">
+		<td class="pos-line-row__product">
+			<strong class="pos-line-row__name">{{ productName }}</strong>
+			<span v-if="lineNote" class="pos-line-row__note">{{ lineNote }}</span>
+		</td>
+		<td class="pos-line-row__num">
+			{{ formatNumber(line.quantity) }}
+		</td>
+		<td class="pos-line-row__num">
+			{{ formatEur(line.unitPrice) }}
+		</td>
+		<td class="pos-line-row__num">
+			{{ formatNumber(line.discount) }}%
+		</td>
+		<td class="pos-line-row__num">
+			{{ formatNumber(line.taxRate) }}%
+		</td>
+		<td class="pos-line-row__total">
+			{{ formatEur(readTotal) }}
+		</td>
+		<td class="pos-line-row__actions">
+			<NcButton
+				variant="tertiary"
+				:aria-label="t('pipelinq', 'Edit line {name}', { name: productName })"
+				data-testid="pos-line-edit"
+				@click="$emit('edit')">
+				<template #icon>
+					<Pencil :size="18" />
+				</template>
+			</NcButton>
+			<NcButton
+				variant="tertiary"
+				:aria-label="t('pipelinq', 'Remove line')"
+				@click="$emit('remove')">
+				<template #icon>
+					<Delete :size="18" />
+				</template>
+			</NcButton>
+		</td>
+	</tr>
+	<tr v-else class="pos-line-row pos-line-row--edit" data-testid="pos-line-edit-row">
 		<td class="pos-line-row__product">
 			<NcSelect
 				:modelValue="selectedProduct"
@@ -13,12 +53,10 @@
 				label="label"
 				:clearable="true"
 				@update:modelValue="onProductSelect" />
-		</td>
-		<td class="pos-line-row__description">
 			<NcTextField
 				v-model="local.description"
+				class="pos-line-row__description"
 				:label="t('pipelinq', 'Description')"
-				:labelVisible="false"
 				@update:modelValue="emitUpdate" />
 		</td>
 		<td class="pos-line-row__num">
@@ -26,7 +64,6 @@
 				v-model="local.quantity"
 				type="number"
 				:label="t('pipelinq', 'Quantity')"
-				:labelVisible="false"
 				min="0.001"
 				step="0.001"
 				@update:modelValue="emitUpdate" />
@@ -36,7 +73,6 @@
 				v-model="local.unitPrice"
 				type="number"
 				:label="t('pipelinq', 'Unit price')"
-				:labelVisible="false"
 				min="0"
 				step="0.01"
 				@update:modelValue="emitUpdate" />
@@ -46,7 +82,6 @@
 				v-model="local.discount"
 				type="number"
 				:label="t('pipelinq', 'Discount %')"
-				:labelVisible="false"
 				min="0"
 				max="100"
 				step="1"
@@ -66,10 +101,19 @@
 		<td class="pos-line-row__actions">
 			<NcButton
 				variant="tertiary"
+				:aria-label="t('pipelinq', 'Done editing the line')"
+				data-testid="pos-line-done"
+				@click="$emit('done')">
+				<template #icon>
+					<Check :size="18" />
+				</template>
+			</NcButton>
+			<NcButton
+				variant="tertiary"
 				:aria-label="t('pipelinq', 'Remove line')"
 				@click="$emit('remove')">
 				<template #icon>
-					<Delete :size="20" />
+					<Delete :size="18" />
 				</template>
 			</NcButton>
 		</td>
@@ -78,7 +122,10 @@
 
 <script>
 import { NcButton, NcInputField, NcSelect, NcTextField } from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
+import { getUserLocale } from '../../services/localeUtils.js'
 import { formatEur, recalculateLine } from '../../services/posTotals.js'
 
 export default {
@@ -88,7 +135,9 @@ export default {
 		NcTextField,
 		NcInputField,
 		NcButton,
+		Check,
 		Delete,
+		Pencil,
 	},
 
 	props: {
@@ -106,24 +155,60 @@ export default {
 			type: String,
 			default: 'excl',
 		},
+
+		/**
+		 * Whether the line shows its inputs. A line reads as a table row
+		 * (product, quantity, prices, VAT, total) until it is edited.
+		 */
+		editing: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
-	emits: ['remove', 'update:line'],
+	emits: ['remove', 'update:line', 'edit', 'done'],
 
 	data() {
 		return {
-			local: {
-				description: this.line.description || '',
-				quantity: this.line.quantity ?? 1,
-				unitPrice: this.line.unitPrice ?? 0,
-				discount: this.line.discount ?? 0,
-				taxRate: this.line.taxRate ?? 21,
-				product: this.line.product || null,
-			},
+			local: this.localFrom(this.line),
 		}
 	},
 
 	computed: {
+		/**
+		 * The line's product as the row names it: the catalogue name, else
+		 * the line's description.
+		 *
+		 * @return {string} The name.
+		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 */
+		productName() {
+			const product = this.products.find((p) => this.line.product && (p.id === this.line.product || p['@self']?.id === this.line.product))
+			return product?.name || this.line.description || t('pipelinq', 'Item')
+		},
+
+		/**
+		 * The line's own description under the product name, when it says
+		 * more than the name.
+		 *
+		 * @return {string} The description, or ''.
+		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 */
+		lineNote() {
+			const description = String(this.line.description || '').trim()
+			return description !== '' && description !== this.productName ? description : ''
+		},
+
+		/**
+		 * The line total the read row shows.
+		 *
+		 * @return {number} The total.
+		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 */
+		readTotal() {
+			return recalculateLine(this.line, this.priceMode).lineTotal
+		},
+
 		/**
 		 * Product picker options derived from the catalog.
 		 *
@@ -185,8 +270,46 @@ export default {
 		},
 	},
 
+	watch: {
+		editing(value) {
+			if (value) {
+				this.local = this.localFrom(this.line)
+			}
+		},
+	},
+
 	methods: {
 		formatEur,
+
+		/**
+		 * A number as the locale writes it, without trailing zeros.
+		 *
+		 * @param {number|string} value The number.
+		 * @return {string} The text.
+		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 */
+		formatNumber(value) {
+			return (Number(value) || 0).toLocaleString(getUserLocale(), { maximumFractionDigits: 3 })
+		},
+
+		/**
+		 * The editable fields of a line.
+		 *
+		 * @param {object} line The line.
+		 * @return {object} The fields.
+		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 */
+		localFrom(line) {
+			return {
+				description: line.description || '',
+				quantity: line.quantity ?? 1,
+				unitPrice: line.unitPrice ?? 0,
+				discount: line.discount ?? 0,
+				taxRate: line.taxRate ?? 21,
+				product: line.product || null,
+			}
+		},
+
 		/**
 		 * Fill description / unitPrice / taxRate from the chosen product.
 		 *
@@ -228,17 +351,51 @@ export default {
 </script>
 
 <style scoped>
+.pos-line-row td {
+	padding: 12px 18px;
+	border-bottom: 1px solid var(--color-border);
+	vertical-align: middle;
+	font-size: 14px;
+	line-height: 1.2;
+}
+
+.pos-line-row:last-child td {
+	border-bottom: 0;
+}
+
+.pos-line-row__name {
+	display: block;
+	font-weight: 600;
+}
+
+.pos-line-row__note {
+	display: block;
+	margin-top: 2px;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+}
+
+.pos-line-row__num,
 .pos-line-row__total {
 	text-align: end;
-	font-weight: 600;
 	white-space: nowrap;
 }
 
-.pos-line-row__num {
-	max-width: 90px;
+.pos-line-row--edit .pos-line-row__num {
+	max-width: 110px;
+}
+
+.pos-line-row__description {
+	margin-top: 6px;
 }
 
 .pos-line-row__actions {
-	text-align: center;
+	white-space: nowrap;
+	text-align: end;
+	padding-inline: 6px 12px;
+}
+
+.pos-line-row__actions > * {
+	display: inline-flex;
 }
 </style>

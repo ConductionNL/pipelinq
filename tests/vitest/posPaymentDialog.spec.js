@@ -11,6 +11,8 @@
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
 import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
@@ -117,5 +119,29 @@ describe('the payment received dialog', () => {
 		wrapper.vm.sellAmount = '25'
 		wrapper.vm.sellGiftCard()
 		expect(wrapper.emitted('sellGiftCard')[0][0]).toEqual({ amount: 25 })
+	})
+})
+
+describe('the payment received dialog as the board draws it (PQB-7)', () => {
+	const source = readFileSync(resolve(__dirname, '../../src/dialogs/PosPaymentDialog.vue'), 'utf8')
+	const rule = (selector) => (source.match(new RegExp(selector.replace(/[.]/g, '\\.') + ' \\{([^}]*)\\}')) || [])[1] || ''
+
+	it('sums the split up in a green status line, not a note card', async () => {
+		const wrapper = mountDialog()
+		wrapper.vm.usePoints(200)
+		await flushPromises()
+		const note = wrapper.find('[data-testid="pos-payment-note"]')
+		expect(wrapper.findComponent({ name: 'NcNoteCard' }).exists()).toBe(false)
+		expect(note.attributes('role')).toBe('status')
+		expect(note.classes()).toContain('pos-payment__note--closes')
+		expect(rule('.pos-payment__note')).toMatch(/border-radius: 8px/)
+		expect(rule('.pos-payment__note--closes')).toMatch(/background: var\(--color-success-light/)
+	})
+
+	it('draws Add gift card and Check gift card balance as soft round pills', () => {
+		const chips = mountDialog().findAllComponents({ name: 'NcButton' }).filter((button) => button.vm.$attrs.class === 'pos-payment__chip')
+		expect(chips.map((chip) => chip.props('variant'))).toEqual(['tertiary', 'tertiary'])
+		expect(rule('.pos-payment__chip.pos-payment__chip')).toMatch(/border-radius: 17px/)
+		expect(rule('.pos-payment__chip.pos-payment__chip')).toMatch(/background: var\(--color-primary-element-light\)/)
 	})
 })

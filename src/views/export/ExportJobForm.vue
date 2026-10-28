@@ -112,6 +112,7 @@ import { CnDetailCard, CnDetailPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
+import { collectionRows } from '../../services/collectionRows.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 // The pipelinq schemas the export pipeline may read. `ticket` is the unified
@@ -308,9 +309,7 @@ export default {
 				await this.objectStore.fetchCollection('exportDestination', {
 					_limit: 200,
 				})
-				this.destinations =
-					this.objectStore.getCollection('exportDestination')?.results
-					|| []
+				this.destinations = collectionRows(this.objectStore.getCollection('exportDestination'))
 			} catch {
 				this.destinations = []
 			}

@@ -17,6 +17,7 @@
 		:breadcrumb="breadcrumb"
 		:headerMeta="headerMeta"
 		:loading="loading"
+		:actionsMenu="headerMenu"
 		class="pos-form">
 		<template #actions>
 			<NcButton
@@ -35,8 +36,11 @@
 		<div class="pos-form__layout">
 			<div class="pos-form__main">
 				<CnDetailCard :title="t('pipelinq', 'Lines')">
+					<label for="pos-form-barcode" class="pos-form__label">{{ t('pipelinq', 'Scan or type a barcode') }}</label>
 					<form class="pos-form__scan" @submit.prevent="addFromBarcode">
 						<NcTextField
+							id="pos-form-barcode"
+							ref="barcode"
 							v-model="barcode"
 							class="pos-form__barcode"
 							:label="t('pipelinq', 'Scan or type a barcode')"
@@ -53,30 +57,36 @@
 							{{ t('pipelinq', 'Add line') }}
 						</NcButton>
 					</form>
-					<table v-if="lines.length" class="pos-form__lines">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Product') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Description') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Qty') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Discount %') }}</th>
-								<th scope="col">{{ t('pipelinq', 'VAT') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Line total') }}</th>
-								<th scope="col" />
-							</tr>
-						</thead>
-						<tbody>
-							<PosLineItemRow
-								v-for="(line, index) in lines"
-								:key="line._key"
-								:line="line"
-								:products="products"
-								:priceMode="priceMode"
-								@update:line="updateLine(index, $event)"
-								@remove="removeLine(index)" />
-						</tbody>
-					</table>
+					<div v-if="lines.length" class="pos-form__lines-wrap">
+						<table class="pos-form__lines" data-testid="pos-lines">
+							<thead>
+								<tr>
+									<th scope="col">{{ t('pipelinq', 'Product') }}</th>
+									<th scope="col" class="num">{{ t('pipelinq', 'Qty') }}</th>
+									<th scope="col" class="num">{{ t('pipelinq', 'Unit price') }}</th>
+									<th scope="col" class="num">{{ t('pipelinq', 'Discount %') }}</th>
+									<th scope="col" class="num">{{ t('pipelinq', 'VAT') }}</th>
+									<th scope="col" class="num">{{ t('pipelinq', 'Line total') }}</th>
+									<th scope="col">
+										<span class="hidden-visually">{{ t('pipelinq', 'Actions') }}</span>
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								<PosLineItemRow
+									v-for="(line, index) in lines"
+									:key="line._key"
+									:line="line"
+									:products="products"
+									:priceMode="priceMode"
+									:editing="editingKey === line._key"
+									@edit="editingKey = line._key"
+									@done="editingKey = null"
+									@update:line="updateLine(index, $event)"
+									@remove="removeLine(index)" />
+							</tbody>
+						</table>
+					</div>
 					<p class="pos-form__hint">
 						{{ linesHint }}
 					</p>
@@ -84,15 +94,19 @@
 
 				<CnDetailCard :title="t('pipelinq', 'Transaction')">
 					<div class="pos-form__fields">
-						<NcTextField
-							v-model="transaction.terminalId"
-							:label="t('pipelinq', 'Register')"
-							labelOutside />
+						<div class="pos-form__field">
+							<label for="pos-form-register" class="pos-form__label">{{ t('pipelinq', 'Register') }}</label>
+							<NcTextField
+								id="pos-form-register"
+								v-model="transaction.terminalId"
+								:label="t('pipelinq', 'Register')"
+								labelOutside
+								data-testid="pos-register" />
+						</div>
 						<NcSelect
 							:modelValue="selectedPriceMode"
 							:options="priceModeOptions"
 							:inputLabel="t('pipelinq', 'Price display')"
-							labelOutside
 							label="label"
 							:clearable="false"
 							@update:modelValue="onPriceModeSelect" />
@@ -100,7 +114,6 @@
 							:modelValue="selectedTender"
 							:options="tenderOptions"
 							:inputLabel="t('pipelinq', 'Tender')"
-							labelOutside
 							label="label"
 							:clearable="false"
 							data-testid="tender-type"
@@ -117,9 +130,10 @@
 						:preload="true"
 						data-testid="pos-form-client"
 						@update:modelValue="onClientSelect" />
+					<label for="pos-form-notes" class="pos-form__label pos-form__notes">{{ t('pipelinq', 'Notes') }}</label>
 					<NcTextField
+						id="pos-form-notes"
 						v-model="transaction.notes"
-						class="pos-form__notes"
 						:label="t('pipelinq', 'Receipt notes')"
 						:placeholder="t('pipelinq', 'Optional note on the receipt')"
 						labelOutside />
@@ -229,6 +243,7 @@
 						</div>
 						<NcButton
 							variant="tertiary"
+							class="pos-form__remove-customer"
 							:aria-label="t('pipelinq', 'Remove customer')"
 							data-testid="clear-customer"
 							:disabled="saving"
@@ -304,6 +319,7 @@ import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vu
 import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
 import PosPaymentDialog from '../../dialogs/PosPaymentDialog.vue'
 import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
+import { collectionRows } from '../../services/collectionRows.js'
 import { formatDate, getUserLocale } from '../../services/localeUtils.js'
 import {
 	attachCustomer as apiAttachCustomer,
@@ -318,19 +334,6 @@ const TENDER_LABELS = {
 	cash: 'Cash',
 	card: 'Card',
 	onAccount: 'On account',
-}
-
-/**
- * Normalise an object-store collection into a plain rows array.
- *
- * @param {Array|object} collection The collection.
- * @return {Array<object>} The rows.
- */
-function collectionRows(collection) {
-	if (Array.isArray(collection)) {
-		return collection
-	}
-	return (collection && collection.results) || []
 }
 
 /**
@@ -393,6 +396,7 @@ export default {
 			},
 
 			lines: [],
+			editingKey: null,
 			products: [],
 			deletedLineIds: [],
 			loading: false,
@@ -498,6 +502,17 @@ export default {
 
 		breadcrumb() {
 			return { label: 'Transactions', route: 'PosTransactions', separator: '/' }
+		},
+
+		/**
+		 * The till's header holds only Check out: no More menu with refresh
+		 * or help links.
+		 *
+		 * @return {object} The CnDetailPage actions menu config.
+		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-header-and-fields-follow-the-board
+		 */
+		headerMenu() {
+			return { showRefresh: false, showHelpLinks: false }
 		},
 
 		headerMeta() {
@@ -608,6 +623,7 @@ export default {
 		} finally {
 			this.loading = false
 		}
+		this.$nextTick(() => this.$refs.barcode?.focus?.())
 	},
 
 	methods: {
@@ -644,7 +660,8 @@ export default {
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 				.map((l) => ({ ...l, _key: this.nextKey() }))
 			if (this.transaction.customer) {
-				this.selectedCustomer = { id: this.transaction.customer, name: tx.customerName || this.transaction.customer, doNotContact: false }
+				const name = tx.customerName || await this.contactName(this.transaction.customer)
+				this.selectedCustomer = { id: this.transaction.customer, name: name || this.transaction.customer, doNotContact: false }
 				await this.loadCustomerFacts(this.transaction.customer)
 			} else if (this.transaction.client) {
 				await this.loadClientAsCustomer(this.transaction.client)
@@ -709,8 +726,15 @@ export default {
 			}, this.priceMode))
 		},
 
+		/**
+		 * Add an empty line, open for editing.
+		 *
+		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 */
 		addLine() {
-			this.lines.push(recalculateLine({ _key: this.nextKey(), description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 21, product: null }))
+			const key = this.nextKey()
+			this.lines.push(recalculateLine({ _key: key, description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 21, product: null }))
+			this.editingKey = key
 		},
 
 		/**
@@ -729,6 +753,9 @@ export default {
 
 		removeLine(index) {
 			const line = this.lines[index]
+			if (this.editingKey === line._key) {
+				this.editingKey = null
+			}
 			if (line.id) {
 				this.deletedLineIds.push(line.id)
 			}
@@ -1028,6 +1055,21 @@ export default {
 		},
 
 		/**
+		 * The name of the contact a sale's customer points at.
+		 *
+		 * @param {string} contactId The contact.
+		 * @return {Promise<string>} The name, '' when it cannot be read.
+		 */
+		async contactName(contactId) {
+			try {
+				const contact = await this.objectStore.fetchObject('contact', contactId)
+				return contact?.name || ''
+			} catch {
+				return ''
+			}
+		},
+
+		/**
 		 * A sale for a client (an account customer) shows that client as the
 		 * customer, with the client's loyalty account and earlier sales.
 		 *
@@ -1156,6 +1198,19 @@ export default {
 	flex: 1;
 }
 
+.pos-form__label {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.pos-form__lines-wrap {
+	overflow-x: auto;
+	border: 1px solid var(--color-border);
+	border-radius: 8px;
+}
+
 .pos-form__lines {
 	width: 100%;
 	border-collapse: collapse;
@@ -1163,10 +1218,36 @@ export default {
 
 .pos-form__lines th {
 	text-align: start;
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 600;
-	padding: 8px;
+	line-height: 1.2;
+	color: var(--color-text-maxcontrast);
+	background: var(--color-main-background);
+	padding: 10px 18px;
 	border-bottom: 1px solid var(--color-border);
+	white-space: nowrap;
+}
+
+.pos-form__lines th.num {
+	text-align: end;
+}
+
+.pos-form__fields :deep(.select__label) {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.pos-form__add.pos-form__add {
+	min-height: 40px;
+	height: 40px;
+}
+
+.pos-form__barcode :deep(input:focus) {
+	border-color: var(--color-primary-element);
+}
+
+.pos-form__remove-customer.pos-form__remove-customer {
+	border-radius: 18px;
 }
 
 .pos-form__hint,
@@ -1187,22 +1268,28 @@ export default {
 	margin-top: 12px;
 }
 
+.pos-form__fields {
+	align-items: end;
+}
+
 .pos-form__header-button.pos-form__header-button {
+	order: 1;
 	min-height: 34px;
 	height: 34px;
 	padding-inline: 12px;
 }
 
 .pos-totals {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	column-gap: 16px;
+	row-gap: 4px;
+	align-items: baseline;
 	margin: 0 0 12px;
 }
 
 .pos-totals__row {
-	display: grid;
-	grid-template-columns: 72px 1fr;
-	gap: 12px;
-	align-items: baseline;
-	padding: 2px 0;
+	display: contents;
 }
 
 .pos-totals__row dt {
@@ -1219,12 +1306,18 @@ export default {
 	font-weight: 700;
 }
 
-.pos-form__closes {
+.pos-form__closes.pos-form__closes {
 	margin: 12px 0;
+	padding: 10px 14px;
+	border: 1px solid var(--color-success);
+	border-radius: 8px;
 }
 
-.pos-form__checkout {
+.pos-form__checkout.pos-form__checkout {
 	margin-top: 12px;
+	min-height: 48px;
+	height: 48px;
+	font-size: 16px;
 }
 
 .pos-form__secondary {

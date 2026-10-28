@@ -75,6 +75,7 @@ import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { collectionRows } from '../../services/collectionRows.js'
 import {
 	fetchOriginalLines,
 	fetchRefundLines,
@@ -235,7 +236,7 @@ export default {
 				const store = useObjectStore()
 				this.lines = await fetchRefundLines(store, this.refundId)
 				await store.fetchCollection('refundReason', { _limit: 100 })
-				this.reasons = store.getCollection('refundReason')?.results || []
+				this.reasons = collectionRows(store.getCollection('refundReason'))
 				this.originalLines = await fetchOriginalLines(
 					store,
 					this.originalTransaction,
