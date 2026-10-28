@@ -1,0 +1,16 @@
+{
+	"$comment": "POS-2026-1043, Pieter's sale at Balie 2 this morning, belongs to the shift that was open there (SHIFT-2026-0214), as PqKassabon's Gerelateerd card and the shift's sales count read it. The server sets posTransaction.shift when a sale is confirmed; a seeded sale is written settled, so the link is set here, after the shift exists.",
+	"changes": [
+		{
+			"key": "kassabon-1043-in-dienst",
+			"register": "pipelinq",
+			"schema": "posTransaction",
+			"where": {
+				"reference": "POS-2026-1043"
+			},
+			"set": {
+				"shift": "{{object:kassadienst-7okt-balie2.id}}"
+			}
+		}
+	]
+}
