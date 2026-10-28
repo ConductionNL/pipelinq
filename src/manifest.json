@@ -1421,7 +1421,12 @@
 									"metric": "count",
 									"sort": "desc",
 									"limit": 3,
-									"otherBucket": true
+									"otherBucket": true,
+									"reference": {
+										"schema": "ticketCategory",
+										"keyField": "key",
+										"labelField": "name"
+									}
 								}
 							}
 						}
