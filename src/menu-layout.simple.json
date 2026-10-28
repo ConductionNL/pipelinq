@@ -1128,23 +1128,76 @@
 					},
 					{
 						"id": "side-customer",
-						"type": "data",
+						"type": "facts",
 						"title": "Customer",
 						"content": {
-							"title": "Customer",
-							"columns": 1,
-							"include": [
-								"client",
-								"contact",
-								"channel"
+							"source": {
+								"register": "pipelinq",
+								"schema": "client",
+								"id": "@object.client"
+							},
+							"fields": [
+								{
+									"as": "lead",
+									"initialsPath": "name",
+									"title": [
+										{
+											"path": "name"
+										}
+									],
+									"subtitle": [
+										{
+											"path": "type",
+											"map": {
+												"organization": "Organisation",
+												"person": "Resident"
+											}
+										},
+										{
+											"path": "address"
+										}
+									]
+								},
+								{
+									"from": "object",
+									"label": "Channel",
+									"path": "channel",
+									"map": {
+										"telefoon": "Phone",
+										"phone": "Phone",
+										"email": "Email",
+										"balie": "Desk",
+										"counter": "Desk",
+										"chat": "Chat",
+										"social": "Social media",
+										"brief": "Letter",
+										"letter": "Letter",
+										"sms": "Text message",
+										"web": "Web form"
+									}
+								},
+								{
+									"from": "object",
+									"label": "Contact",
+									"path": "contact",
+									"resolve": {
+										"register": "pipelinq",
+										"schema": "contact",
+										"labelField": "name"
+									}
+								}
 							],
 							"hideEmpty": true,
-							"editable": false,
-							"overrides": {
-								"channel": {
-									"formatter": "enumText"
+							"link": {
+								"label": "Contact details and earlier tickets",
+								"route": {
+									"name": "ClientDetail",
+									"params": {
+										"id": "@object.client"
+									}
 								}
-							}
+							},
+							"emptyText": "No client linked to this ticket yet."
 						},
 						"visibleWhen": {
 							"field": "ticketType",
@@ -1154,26 +1207,32 @@
 					},
 					{
 						"id": "side-deadline",
-						"type": "data",
-						"title": "Deadline",
+						"type": "facts",
+						"title": "Time limit",
 						"content": {
-							"title": "Deadline",
-							"columns": 1,
-							"include": [
-								"slaDeadline",
-								"priority",
-								"assignee"
-							],
-							"hideEmpty": true,
-							"editable": false,
-							"overrides": {
-								"priority": {
-									"formatter": "enumText"
+							"fields": [
+								{
+									"as": "title",
+									"path": "slaDeadline",
+									"format": "longdatetime"
 								},
-								"assignee": {
-									"formatter": "userDisplayName"
+								{
+									"label": "Priority",
+									"path": "priority",
+									"map": {
+										"low": "Low",
+										"normal": "Normal",
+										"high": "High",
+										"urgent": "Urgent"
+									}
+								},
+								{
+									"label": "Handler",
+									"path": "assignee",
+									"format": "user"
 								}
-							}
+							],
+							"hideEmpty": true
 						},
 						"visibleWhen": {
 							"field": "ticketType",
@@ -1183,17 +1242,22 @@
 					},
 					{
 						"id": "side-case",
-						"type": "data",
+						"type": "facts",
 						"title": "Linked case",
 						"content": {
-							"title": "Linked case",
-							"columns": 1,
-							"include": [
-								"caseReference",
-								"primaryCaseReference"
+							"fields": [
+								{
+									"label": "Case",
+									"path": "caseReference",
+									"resolve": {
+										"register": "dossiq",
+										"schema": "case",
+										"labelField": "title"
+									}
+								}
 							],
 							"hideEmpty": true,
-							"editable": false
+							"emptyText": "No case linked yet."
 						},
 						"visibleWhen": {
 							"field": "ticketType",
