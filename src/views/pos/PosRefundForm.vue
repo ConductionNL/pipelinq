@@ -486,6 +486,11 @@ export default {
 			return formatDate(value, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', '')
 		},
 
+		/**
+		 * Loads the sales a refund can be made against.
+		 *
+		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 */
 		async loadTransactions() {
 			try {
 				await this.objectStore.fetchCollection('posTransaction', { _limit: 500 })
@@ -495,6 +500,11 @@ export default {
 			}
 		},
 
+		/**
+		 * Loads the refund reasons.
+		 *
+		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 */
 		async loadReasons() {
 			try {
 				await this.objectStore.fetchCollection('refundReason', { _limit: 100 })
@@ -524,6 +534,11 @@ export default {
 			}
 		},
 
+		/**
+		 * Loads the refund being edited with its lines.
+		 *
+		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 */
 		async loadRefund() {
 			const r = await this.objectStore.fetchObject('posRefund', this.refundId)
 			this.refund = { ...r }
@@ -550,6 +565,13 @@ export default {
 			})
 		},
 
+		/**
+		 * Loads the lines of the sale being refunded.
+		 *
+		 * @param {string} transactionId The sale being refunded.
+		 *
+		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 */
 		async loadOriginalLines(transactionId) {
 			if (!transactionId) {
 				this.originalLines = []

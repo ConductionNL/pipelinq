@@ -613,6 +613,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Loads the products and, for an existing sale, the sale itself.
+	 *
+	 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+	 */
 	async mounted() {
 		this.loading = true
 		try {
@@ -651,6 +656,11 @@ export default {
 			}
 		},
 
+		/**
+		 * Loads the sale being edited with its lines and customer.
+		 *
+		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 */
 		async loadTransaction() {
 			const tx = await this.objectStore.fetchObject('posTransaction', this.transactionId)
 			this.transaction = { tenderType: 'cash', marketingConsent: false, customer: null, ...tx }
@@ -751,6 +761,13 @@ export default {
 			this.lines.splice(index, 1, { ...line, _key: this.lines[index]._key, _giftCard: this.lines[index]._giftCard })
 		},
 
+		/**
+		 * Removes a sale line, closing its editor when it is open.
+		 *
+		 * @param {number} index The line's position.
+		 *
+		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 */
 		removeLine(index) {
 			const line = this.lines[index]
 			if (this.editingKey === line._key) {
@@ -1059,6 +1076,8 @@ export default {
 		 *
 		 * @param {string} contactId The contact.
 		 * @return {Promise<string>} The name, '' when it cannot be read.
+		 *
+		 * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-the-sale-page-reads-as-the-board
 		 */
 		async contactName(contactId) {
 			try {

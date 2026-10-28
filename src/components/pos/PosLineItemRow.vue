@@ -271,6 +271,13 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Copies the line into the editor when the row opens for editing.
+		 *
+		 * @param {boolean} value Whether the row is open for editing.
+		 *
+		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 */
 		editing(value) {
 			if (value) {
 				this.local = this.localFrom(this.line)
