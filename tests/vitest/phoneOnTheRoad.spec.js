@@ -173,9 +173,11 @@ describe('callers', () => {
 		const pages = JSON.parse(read('src/manifest.json')).pages
 		const widgets = (id) =>
 			pages.find((p) => p.id === id).config.bodyWidgets.map((w) => w.component)
-		expect(widgets('ClientDetail')).toEqual(
-			expect.arrayContaining(['ContactLinks', 'LogVisitAction']),
-		)
+		// The client page draws them in its contact strip (PqKlant).
+		expect(widgets('ClientDetail')).toContain('PartyContactStrip')
+		const strip = read('src/components/PartyContactStrip.vue')
+		expect(strip).toContain('<ContactLinks')
+		expect(strip).toContain('<LogVisitAction')
 		// The contact person page calls and mails from its header instead
 		// (PqContactpersoon on the shared relation frame): tel: and mailto:
 		// links, quick actions, so a phone still reaches them in one tap.

@@ -1877,6 +1877,7 @@
 			"type": "detail",
 			"title": "Client",
 			"config": {
+				"recordLastChange": true,
 				"register": "pipelinq",
 				"schema": "client",
 				"fieldOverrides": {
@@ -1921,6 +1922,36 @@
 					}
 				},
 				"headerActions": [
+					{
+						"id": "log-contact",
+						"label": "Log contact",
+						"icon": "PhoneLogOutline",
+						"type": "open-form",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"formTitle": "Log contact",
+						"includeFields": [
+							"title",
+							"channel",
+							"direction",
+							"description"
+						],
+						"props": {
+							"client": "@objectId",
+							"ticketType": "interaction"
+						},
+						"successMessage": "Contact moment logged."
+					},
+					{
+						"id": "new-request",
+						"label": "New request",
+						"icon": "TicketOutline",
+						"type": "open-modal",
+						"target": "RequestCreateDialog",
+						"props": {
+							"clientId": "@objectId"
+						}
+					},
 					{
 						"id": "make-letter",
 						"label": "Make a letter",
@@ -2041,7 +2072,6 @@
 						"title": "Open matters",
 						"content": {
 							"label": "Open matters",
-							"caption": "requests + complaints + contactmomenten",
 							"icon": "ClipboardCheckOutline",
 							"format": {
 								"style": "number",
@@ -2063,7 +2093,6 @@
 						"title": "New requests",
 						"content": {
 							"label": "New requests",
-							"caption": "requests with status new",
 							"icon": "ClipboardCheckOutline",
 							"format": {
 								"style": "number",
@@ -2084,10 +2113,9 @@
 					{
 						"id": "client-summary-sla-breached",
 						"type": "stat",
-						"title": "SLA breached",
+						"title": "Term passed",
 						"content": {
-							"label": "SLA breached",
-							"caption": "open tickets past their deadline",
+							"label": "Term passed",
 							"icon": "AlertCircleOutline",
 							"variant": "error",
 							"format": {
@@ -2107,10 +2135,9 @@
 					{
 						"id": "client-summary-sla-at-risk",
 						"type": "stat",
-						"title": "SLA at risk",
+						"title": "Term at risk",
 						"content": {
-							"label": "SLA at risk",
-							"caption": "deadline within 24h",
+							"label": "Term at risk",
 							"icon": "History",
 							"variant": "warning",
 							"format": {
@@ -2128,13 +2155,39 @@
 						}
 					},
 					{
+						"id": "client-summary-open-leads",
+						"type": "stat",
+						"title": "Open leads",
+						"content": {
+							"label": "Open leads",
+							"icon": "TrendingUp",
+							"format": {
+								"style": "currency",
+								"currency": "EUR",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "lead",
+								"metric": "sum",
+								"field": "value",
+								"filter": {
+									"client": "@objectId",
+									"status": "open"
+								}
+							}
+						}
+					},
+					{
 						"id": "client-summary-last-activity",
 						"type": "stat",
 						"title": "Last activity",
 						"content": {
 							"label": "Last activity",
-							"caption": "most recent interaction",
 							"icon": "History",
+							"format": {
+								"style": "date"
+							},
 							"source": {
 								"kind": "endpoint",
 								"url": "/apps/pipelinq/api/customer-360/summary",
@@ -2453,6 +2506,214 @@
 						"icon": "FolderOutline"
 					},
 					{
+						"id": "client-person-card",
+						"type": "facts",
+						"title": "Resident",
+						"icon": "CardAccountDetailsOutline",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Inwoner: two columns, label above value, as dossiq's DqContact Contact card. Fields the client does not carry are left out.",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"path": "name",
+									"label": "Name"
+								},
+								{
+									"path": "givenNames",
+									"label": "Given names"
+								},
+								{
+									"path": "surname",
+									"label": "Surname"
+								},
+								{
+									"path": "birthDate",
+									"label": "Date of birth",
+									"format": "longdate"
+								},
+								{
+									"path": "address",
+									"label": "Home address"
+								},
+								{
+									"path": "description",
+									"label": "Description"
+								}
+							]
+						}
+					},
+					{
+						"id": "client-organisation-card",
+						"type": "facts",
+						"title": "Organisation",
+						"icon": "OfficeBuildingOutline",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Organisatie: as dossiq's DqOrganisatie card.",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"path": "name",
+									"label": "Trade name"
+								},
+								{
+									"path": "kvkNumber",
+									"label": "KvK number"
+								},
+								{
+									"path": "legalForm",
+									"label": "Legal form"
+								},
+								{
+									"path": "address",
+									"label": "Address"
+								}
+							]
+						}
+					},
+					{
+						"id": "client-tickets",
+						"type": "record-list",
+						"title": "Tickets",
+						"icon": "TicketOutline",
+						"_note": "PqKlant/PqOrganisatie Tickets: every ticket of the client as a ruled row, as dossiq's DqContact draws the client's tickets: reference, kind and handler, the status pill, and done or due at the end.",
+						"content": {
+							"ruleAbove": true,
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"ticketType": {
+									"in": [
+										"request",
+										"complaint"
+									]
+								}
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 4,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{reference}",
+									"{ticketType}",
+									"assigned to {assignee|user}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"variant": "purple",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Awaiting customer",
+									"resolved": "Handled",
+									"closed": "Handled",
+									"completed": "Handled"
+								},
+								"colorMap": {
+									"resolved": "success",
+									"closed": "success",
+									"completed": "success",
+									"new": "info"
+								}
+							},
+							"trailing": [
+								"Done {resolvedAt|date}",
+								"By {slaDeadline|date}"
+							],
+							"valueLabels": {
+								"ticketType": {
+									"request": "Request",
+									"complaint": "Complaint"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"headerLink": {
+								"label": "View all {total} tickets",
+								"route": "Tickets",
+								"query": {
+									"client": "@objectId"
+								}
+							},
+							"emptyText": "No tickets for this client yet"
+						}
+					},
+					{
+						"id": "client-latest-moments",
+						"type": "record-list",
+						"title": "Latest contact moments",
+						"icon": "PhoneLogOutline",
+						"_note": "PqKlant/PqOrganisatie Laatste contactmomenten: the three newest interactions as a feed, as dossiq's DqContact draws them.",
+						"content": {
+							"ruleAbove": true,
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 3,
+							"presentation": "feed",
+							"icon": {
+								"field": "channel",
+								"map": {
+									"phone": "PhoneInTalk",
+									"email": "EmailOutline",
+									"balie": "AccountOutline",
+									"brief": "EmailOpenOutline",
+									"chat": "MessageTextOutline",
+									"webformulier": "Earth",
+									"portal": "EmailOutline"
+								},
+								"default": "EmailOutline"
+							},
+							"meta": {
+								"parts": [
+									"{occurredAt|datetime}",
+									"{channel}",
+									"{direction}",
+									"ticket {reference}"
+								]
+							},
+							"valueLabels": {
+								"channel": {
+									"phone": "phone",
+									"email": "email",
+									"webformulier": "web form",
+									"chat": "chat",
+									"social_media": "social media",
+									"balie": "desk",
+									"portal": "Mijn Zuiddrecht"
+								},
+								"direction": {
+									"inbound": "inbound",
+									"outbound": "outbound"
+								}
+							},
+							"text": "{title}",
+							"headerNote": "{total} in total",
+							"emptyText": "No contact moments yet"
+						}
+					},
+					{
 						"id": "client-open-requests",
 						"type": "record-list",
 						"title": "Open requests",
@@ -2519,30 +2780,37 @@
 						"type": "tabs",
 						"title": "Client",
 						"icon": "OfficeBuilding",
-						"_note": "One strip, at most seven tabs (shared relation frame, PqKlant and PqOrganisatie). Overview stacks the data cards and the open requests; Requests holds requests and complaints; Contracts holds contracts and projects. Mail, notes and files moved to the side column. Children stay out of layout, or the tabs widget and the grid would each render them once.",
+						"_note": "The tab strip as PqKlant and PqOrganisatie draw it: Overview, Tickets (requests and complaints), Contact persons (an organisation only), Contact moments, Sales (a resident only: leads, contracts, projects), Documents and History. Children stay out of layout, or the tabs widget and the grid would each render them once.",
 						"content": {
 							"ariaLabel": "Client",
 							"tabs": [
 								{
 									"widgetIds": [
-										"client-identity",
-										"client-commercial",
-										"client-open-requests"
+										"client-person-card",
+										"client-organisation-card",
+										"client-tickets",
+										"client-latest-moments"
 									],
 									"label": "Overview"
-								},
-								{
-									"widgetId": "client-quick-contacts",
-									"label": "Contacts",
-									"countFrom": "widget"
 								},
 								{
 									"widgetIds": [
 										"client-quick-requests",
 										"client-complaints"
 									],
-									"label": "Requests",
+									"label": "Tickets",
 									"countFrom": "widget"
+								},
+								{
+									"id": "client-contact-persons",
+									"widgetId": "client-quick-contacts",
+									"label": "Contact persons",
+									"countFrom": "widget",
+									"visibleWhen": {
+										"field": "type",
+										"op": "eq",
+										"value": "organization"
+									}
 								},
 								{
 									"widgetId": "client-contactmoments",
@@ -2550,16 +2818,22 @@
 									"countFrom": "widget"
 								},
 								{
-									"widgetId": "client-leads",
-									"label": "Leads",
-									"countFrom": "widget"
-								},
-								{
 									"widgetIds": [
+										"client-leads",
 										"client-contracts",
 										"client-projects"
 									],
-									"label": "Contracts"
+									"label": "Sales",
+									"countFrom": "widget",
+									"visibleWhen": {
+										"field": "type",
+										"op": "eq",
+										"value": "person"
+									}
+								},
+								{
+									"widgetId": "client-files",
+									"label": "Documents"
 								},
 								{
 									"widgetId": "client-history",
@@ -2569,57 +2843,67 @@
 						}
 					}
 				],
+				"_layoutNote": "PqKlant and PqOrganisatie: one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity), the tab strip under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab.",
 				"layout": [
 					{
 						"id": "1",
 						"widgetId": "client-summary-open-tickets",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 6,
-						"gridHeight": 2,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "2",
-						"widgetId": "client-summary-sla-breached",
-						"gridX": 6,
+						"widgetId": "client-summary-new-requests",
+						"gridX": 2,
 						"gridY": 0,
-						"gridWidth": 6,
-						"gridHeight": 2,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "3",
-						"widgetId": "client-summary-new-requests",
-						"gridX": 0,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2,
+						"widgetId": "client-summary-sla-breached",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "4",
 						"widgetId": "client-summary-sla-at-risk",
-						"gridX": 4,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2,
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "5",
-						"widgetId": "client-summary-last-activity",
+						"widgetId": "client-summary-open-leads",
 						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
+						"showTitle": false
+					},
+					{
+						"id": "6",
+						"widgetId": "client-summary-last-activity",
+						"gridX": 10,
+						"gridY": 0,
+						"gridWidth": 2,
+						"gridHeight": 1,
 						"showTitle": false
 					},
 					{
 						"id": "9",
 						"widgetId": "client-panels",
 						"gridX": 0,
-						"gridY": 4,
+						"gridY": 1,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
@@ -2627,31 +2911,16 @@
 				],
 				"bodyWidgets": [
 					{
-						"id": "party-indicators",
-						"component": "PartyIndicatorPanel",
+						"id": "contact-strip",
+						"component": "PartyContactStrip",
 						"placement": "before-body",
-						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
+						"_note": "PqKlant / PqOrganisatie: the warnings line (an aggression registration or a death is read before contact is made, pipelinq#2036) and the call, mail, directions and log-a-visit buttons in one card before the body (platform-phone-on-the-road).",
 						"props": {
-							"partyId": "@objectId"
-						}
-					},
-					{
-						"id": "contact-links",
-						"component": "ContactLinks",
-						"placement": "before-body",
-						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
-						"props": {
+							"partyId": "@objectId",
+							"partyKind": "@object.type",
 							"phone": "@object.phone",
 							"email": "@object.email",
 							"address": "@object.address"
-						}
-					},
-					{
-						"id": "log-visit",
-						"component": "LogVisitAction",
-						"placement": "before-body",
-						"props": {
-							"clientId": "@objectId"
 						}
 					},
 					{
@@ -2747,14 +3016,282 @@
 						}
 					]
 				},
+				"_sideColumnNote": "The side column in the boards' order with the cards dossiq's DqContact and DqOrganisatie draw: a resident reads Reachable via, Identity and Home address, an organisation KvK and address and Open tickets; both then Contact channels, Relations and Record history. Related, Emails and Notes stay under them until the Activity card carries mail and notes.",
 				"sideColumn": [
-					"client-kpis-sales",
-					"client-related",
+					{
+						"id": "side-reach",
+						"type": "facts",
+						"title": "Reachable via",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Bereikbaar via, as dossiq's DqContact card: the preferred channel first, then the e-mail and phone on file, and Log contact.",
+						"content": {
+							"fields": [
+								{
+									"key": "preferred",
+									"path": "preferredChannel",
+									"icon": "EmailOutline",
+									"map": {
+										"email": "E-mail",
+										"phone": "Phone",
+										"portal": "Mijn Zuiddrecht, message box",
+										"post": "Post",
+										"balie": "Desk"
+									}
+								},
+								{
+									"as": "line",
+									"separator": ", ",
+									"parts": [
+										{
+											"path": "email",
+											"label": "E-mail"
+										},
+										{
+											"path": "phone",
+											"label": "phone"
+										}
+									]
+								}
+							],
+							"action": {
+								"label": "Log contact",
+								"icon": "PhoneLogOutline",
+								"type": "open-form",
+								"register": "pipelinq",
+								"schema": "ticket",
+								"formTitle": "Log contact",
+								"includeFields": [
+									"title",
+									"channel",
+									"direction",
+									"description"
+								],
+								"props": {
+									"client": "@objectId",
+									"ticketType": "interaction"
+								}
+							}
+						}
+					},
+					{
+						"id": "side-identity",
+						"type": "facts",
+						"title": "Identity",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Identiteit: the client number and where the data comes from, as dossiq's DqContact Identity card.",
+						"content": {
+							"fields": [
+								{
+									"label": "Client number",
+									"path": "customerNumber",
+									"inline": true
+								},
+								{
+									"label": "Source",
+									"path": "source"
+								}
+							]
+						}
+					},
+					{
+						"id": "side-address",
+						"type": "facts",
+						"title": "Home address",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"content": {
+							"fields": [
+								{
+									"as": "text",
+									"path": "address"
+								}
+							],
+							"emptyText": "No address on file"
+						}
+					},
+					{
+						"id": "side-kvk",
+						"type": "facts",
+						"title": "KvK and address",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie KVK en adres, as dossiq's DqOrganisatie card.",
+						"content": {
+							"fields": [
+								{
+									"as": "lead",
+									"icon": "OfficeBuildingOutline",
+									"title": [
+										{
+											"path": "kvkNumber",
+											"label": "KvK"
+										}
+									],
+									"subtitle": [
+										"legalForm",
+										{
+											"text": "Trade register"
+										}
+									]
+								},
+								{
+									"as": "text",
+									"path": "address"
+								}
+							]
+						}
+					},
+					{
+						"id": "side-main-contact",
+						"type": "record-list",
+						"title": "Main contact",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Hoofdcontact: the contact person flagged mainContact (else the first), with initials, role and e-mail, and the link to the Contact persons tab. Card layout as dossiq's DqOrganisatie Main contact.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "contact",
+							"filter": {
+								"client": "@objectId"
+							},
+							"sort": {
+								"field": "mainContact",
+								"dir": "desc"
+							},
+							"limit": 1,
+							"presentation": "rows",
+							"density": "stacked",
+							"chevron": false,
+							"avatar": {
+								"text": "{name}",
+								"size": 32
+							},
+							"title": "{name}",
+							"meta": {
+								"parts": [
+									"{role}"
+								]
+							},
+							"text": "{email}",
+							"emptyText": "No contact persons yet",
+							"footerLink": {
+								"label": "All {total} contact persons",
+								"href": "#client-contact-persons"
+							}
+						}
+					},
+					{
+						"id": "side-open-ticket",
+						"type": "record-list",
+						"title": "Open tickets",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Open tickets: the open ticket due first, as dossiq's DqOrganisatie card.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@objectId",
+								"ticketType": {
+									"in": [
+										"request",
+										"complaint"
+									]
+								},
+								"status": {
+									"in": [
+										"new",
+										"in_progress",
+										"awaiting_customer"
+									]
+								}
+							},
+							"sort": {
+								"field": "slaDeadline",
+								"dir": "asc"
+							},
+							"limit": 1,
+							"presentation": "rows",
+							"density": "stacked",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{reference}",
+									"assigned to {assignee|user}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"variant": "purple",
+								"labels": {
+									"new": "New",
+									"in_progress": "In progress",
+									"awaiting_customer": "Awaiting customer"
+								}
+							},
+							"trailing": [
+								"By {slaDeadline|date}"
+							],
+							"rowRoute": "TicketDetail",
+							"emptyText": "No open tickets"
+						}
+					},
 					"client-channels",
 					"client-relationships",
+					{
+						"id": "side-history",
+						"type": "facts",
+						"title": "Record history",
+						"content": {
+							"fields": [
+								{
+									"as": "text",
+									"parts": [
+										{
+											"text": "Last changed on"
+										},
+										{
+											"path": "@self.updated",
+											"format": "longdate"
+										},
+										{
+											"path": "_lastChange.userName",
+											"label": "last changed by"
+										}
+									],
+									"separator": " "
+								}
+							],
+							"link": {
+								"label": "View history",
+								"icon": "History",
+								"sidebarTab": "audit"
+							}
+						}
+					},
+					"client-related",
 					"client-email",
-					"client-notes",
-					"client-files"
+					"client-notes"
 				],
 				"breadcrumb": {
 					"label": "Residents and businesses",
