@@ -253,6 +253,11 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Drop the raise's record once the page has re-read the Z-report.
+		 *
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 */
 		objectData() {
 			this.raised = null
 		},
