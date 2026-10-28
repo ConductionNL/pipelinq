@@ -20,4 +20,19 @@ describe('admin manager row buttons', () => {
 	])('%s opts its row buttons into the row size', (file, cls) => {
 		expect(read(file)).toContain(`<div class="${cls} cn-settings-row-actions">`)
 	})
+
+	it.each([
+		['views/settings/ProductCategoryManager.vue', 'category-item__buttons'],
+		['components/admin/AgentProfileSettings.vue', 'agent-item__actions'],
+		['components/admin/SkillSettings.vue', 'skill-item__actions'],
+	])('%s draws Edit as a secondary and the delete as an error button', (file, cls) => {
+		const source = read(file)
+		const at = source.indexOf(`<div class="${cls} cn-settings-row-actions">`)
+		const row = source.slice(at, source.indexOf('</div>', at))
+		const buttons = [...row.matchAll(/<NcButton([^>]*)>/g)].map((m) => m[1])
+
+		expect(buttons).toHaveLength(2)
+		expect(buttons[0]).not.toMatch(/variant="(tertiary|primary|error)"/)
+		expect(buttons[1]).toContain('variant="error"')
+	})
 })
