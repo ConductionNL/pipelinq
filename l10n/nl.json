@@ -8745,6 +8745,7 @@
         "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}": "{startAt|fulldate}, {startAt|time} tot {endAt|time} · {venue}",
         "Requested case type": "Gevraagd zaaktype",
         "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType.": "Het zaaktype dat gekozen is toen het verzoek werd omgezet naar een zaak (alleen bij een verzoek). De overdracht naar een zaak geeft het als ns#Case caseType mee aan de zaak.",
-        "This person is the organisation's main contact.": "Deze persoon is het hoofdcontact van de organisatie."
+        "This person is the organisation's main contact.": "Deze persoon is het hoofdcontact van de organisatie.",
+        "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first": "{shown} van {total} open leads · {pipeline|currency:EUR} in de pijplijn, {weighted|currency:EUR} gewogen · winkans eerst"
     }
 }

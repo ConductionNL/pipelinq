@@ -8741,6 +8741,7 @@
         "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}": "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}",
         "Requested case type": "Requested case type",
         "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType.": "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType.",
-        "This person is the organisation's main contact.": "This person is the organisation's main contact."
+        "This person is the organisation's main contact.": "This person is the organisation's main contact.",
+        "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first": "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first"
     }
 }
