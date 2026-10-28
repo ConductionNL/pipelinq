@@ -1460,7 +1460,14 @@
 				"description": "your queue, callbacks and contact today",
 				"showHeader": true,
 				"showWidgetActions": false,
-				"greeting": "first",
+				"greeting": {
+					"label": "Contact centre"
+				},
+				"descriptionSource": {
+					"url": "/apps/pipelinq/api/kcc-werkplek/state",
+					"path": "availabilityLine"
+				},
+				"actionsPlacement": "start",
 				"gridFloat": false,
 				"gridSideColumn": {
 					"width": 320
@@ -1492,31 +1499,23 @@
 							"layout": "attention",
 							"variant": "error",
 							"kicker": "First, today",
-							"title": "Tickets past their deadline",
-							"text": "Tickets past their deadline",
-							"reason": "{value} of your tickets in progress are past their deadline or end today.",
+							"title": "{subject.title}",
+							"text": "{subject.title}",
+							"reason": "{subject.clientName} · waiting {subject.waitingDays} days for an answer.",
+							"fallbackReason": "Waiting {subject.waitingDays} days for an answer.",
 							"visibleWhen": {
-								"source": {
-									"register": "pipelinq",
-									"schema": "ticket",
-									"filter": {
-										"assignee": "@me",
-										"status": "in_progress",
-										"slaDeadline[lt]": "@today+1d"
-									}
-								},
-								"op": "gt",
-								"value": 0
+								"endpoint": "/apps/pipelinq/api/worklist/first",
+								"field": "found",
+								"op": "eq",
+								"value": true
 							},
 							"actions": [
 								{
-									"label": "Open these tickets",
+									"label": "Answer it",
 									"route": {
-										"name": "Tickets",
-										"query": {
-											"assignee": "@me",
-											"status": "in_progress",
-											"slaDeadline[lt]": "@today+1d"
+										"name": "TicketDetail",
+										"params": {
+											"id": "@subject.id"
 										}
 									},
 									"primary": true
@@ -1822,6 +1821,10 @@
 							"limit": 3,
 							"presentation": "rows",
 							"ruleAbove": true,
+							"dot": {
+								"color": "var(--color-primary-element)",
+								"size": 10
+							},
 							"title": "{title}",
 							"meta": "{occurredAt|ago}",
 							"rowRoute": "TicketDetail",
@@ -1851,6 +1854,10 @@
 								"labelField": "name",
 								"placeholder": "Name, phone, email, postcode or client number",
 								"ariaLabel": "Client search"
+							},
+							"link": {
+								"label": "See an example",
+								"value": "@config.example_client?"
 							}
 						}
 					}

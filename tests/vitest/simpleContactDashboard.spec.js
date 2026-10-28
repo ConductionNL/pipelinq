@@ -16,8 +16,6 @@
  */
 
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
-import { buildQueryString } from '@conduction/nextcloud-vue/src/utils/headers.js'
-import { resolveFilterTokens } from '@conduction/nextcloud-vue/src/utils/resolveFilterTokens.js'
 import {
 	compareVisibleWhen,
 	readVisibleWhenValue,
@@ -178,11 +176,14 @@ describe('the dashboard', () => {
 			'stat',
 			'workspace-filter',
 		])
-		// PqDashboard (round 12): the page header carries the title, the
-		// greeting with the date and the actions; availability is the page's
-		// own actions component, so no grid cell repeats it.
+		// PqDashboard: the page header carries the title, then "Klantcontact ·
+		// <date> · <availability line>" and the actions; availability is the
+		// page's own actions component, first in the row, so no grid cell
+		// repeats it.
 		expect(simple.showHeader).toBe(true)
-		expect(simple.greeting).toBe('first')
+		expect(simple.greeting).toEqual({ label: 'Contact centre' })
+		expect(simple.descriptionSource).toEqual({ url: '/apps/pipelinq/api/kcc-werkplek/state', path: 'availabilityLine' })
+		expect(simple.actionsPlacement).toBe('start')
 		expect(page(builtSimple, 'KccWerkplek').title).toBe('My customer contact')
 		expect(byId['simple-greeting']).toBeUndefined()
 		expect(byId['simple-availability']).toBeUndefined()
@@ -224,13 +225,13 @@ describe('the dashboard', () => {
 		expect(simple.gridFloat).toBe(false)
 	})
 
-	it('offers one primary action on the attention card: the late tickets', () => {
+	it('offers one primary action on the attention card: answer the first ticket', () => {
 		const card = byId['simple-first-today'].content
 		expect(
 			card.actions.filter((action) => action.primary === true),
 		).toHaveLength(1)
 		expect(card.actions[0].primary).toBe(true)
-		expect(card.actions[0].route.query).toEqual(card.visibleWhen.source.filter)
+		expect(card.actions[0].route).toEqual({ name: 'TicketDetail', params: { id: '@subject.id' } })
 	})
 
 	it('shows the type of a waiting ticket as a pill with the labels the ticket page uses', () => {
@@ -289,8 +290,8 @@ describe('the dashboard', () => {
 				}
 			}
 		}
-		// The banner, four stats, three lists and the bar.
-		expect(sources).toBe(9)
+		// Four stats, three lists and the bar; the banner reads an endpoint.
+		expect(sources).toBe(8)
 	})
 
 	it('links every number to the list with the same filter', () => {
@@ -305,9 +306,6 @@ describe('the dashboard', () => {
 			expect(target.config.schema, widget.id).toBe(source.schema)
 		}
 		const banner = byId['simple-first-today'].content
-		expect(banner.actions[0].route.query).toEqual(
-			asQuery(banner.visibleWhen.source.filter),
-		)
 		for (const action of banner.actions) {
 			const name =
 				typeof action.route === 'string' ? action.route : action.route.name
@@ -327,6 +325,11 @@ describe('the dashboard', () => {
 			field: 'occurredAt',
 			dir: 'asc',
 		})
+	})
+
+	it('marks each latest contact with the small board dot and offers the example client', () => {
+		expect(byId['simple-latest-contact'].content.dot).toEqual({ color: 'var(--color-primary-element)', size: 10 })
+		expect(byId['simple-client-in-focus'].content.link).toEqual({ label: 'See an example', value: '@config.example_client?' })
 	})
 
 	it('opens a row on a page that exists', () => {
@@ -366,26 +369,10 @@ describe('the attention card asks a question OpenRegister can answer', () => {
 		return [...own, ...Object.values(value).flatMap(visibleWhenSources)]
 	}
 
-	it('builds its count request with a flat operator key and no JSON in the address', () => {
-		const source = page(builtSimple, 'KccWerkplek').config.widgets.find(
-			(widget) => widget.id === 'simple-first-today',
-		).content.visibleWhen.source
-		// The two calls the library's own visibleWhen reader makes.
-		const filter = resolveFilterTokens(source.filter, {})
-		const query = buildQueryString({ ...filter, _limit: 1 })
-		const address = decodeURIComponent(query)
-		expect(address).toMatch(/slaDeadline\[lt\]=\d{4}-\d{2}-\d{2}(&|$)/)
-		expect(address).toContain('status=in_progress')
-		expect(address).not.toContain('{')
-		expect(address).not.toContain('@today')
-	})
-
 	it('holds no nested operator in any visibleWhen source, on any page of the simple structure', () => {
 		const sources = builtSimple.pages.flatMap((item) =>
 			visibleWhenSources(item.config || {}),
 		)
-		// The control: there is at least the one this file is about.
-		expect(sources.length).toBeGreaterThan(0)
 		for (const source of sources) {
 			for (const [key, value] of Object.entries(source.filter || {})) {
 				expect(
@@ -414,35 +401,25 @@ describe('the attention card asks a question OpenRegister can answer', () => {
 	})
 
 	it.each([
-		[1, true],
-		[0, false],
-	])('is met with %i late ticket(s): %s', async (total, met) => {
+		[{ found: true, id: 'T1', title: 'Afvalpas werkt niet bij de container', clientName: 'M. de Graaf', waitingDays: 3 }, true],
+		[{ found: false }, false],
+	])('names the first ticket the endpoint answers (%o): %s', async (answer, met) => {
 		const asked = []
 		vi.stubGlobal(
 			'fetch',
 			vi.fn(async (url) => {
 				asked.push(String(url))
-				return {
-					ok: true,
-					status: 200,
-					json: async () => ({
-						results: total > 0 ? [{ id: 'T1' }] : [],
-						total,
-						page: 1,
-						pages: 1,
-						limit: 1,
-					}),
-				}
+				return { ok: true, status: 200, json: async () => answer }
 			}),
 		)
 		const cond = card().visibleWhen
+		const sink = {}
 		// The library's own reader and comparison, as the dashboard runs them.
-		const actual = await readVisibleWhenValue(cond, {})
-		expect(actual).toBe(total)
+		const actual = await readVisibleWhenValue(cond, {}, sink)
 		expect(compareVisibleWhen(actual, cond.op, cond.value, {})).toBe(met)
 		expect(asked).toHaveLength(1)
-		expect(asked[0]).toContain('/apps/openregister/api/objects/pipelinq/ticket?')
-		expect(decodeURIComponent(asked[0])).not.toContain('{')
+		expect(asked[0]).toContain('/apps/pipelinq/api/worklist/first')
+		expect(sink.row).toEqual(answer)
 	})
 
 	it('shows dates in the lists as dates, not as stored text', () => {

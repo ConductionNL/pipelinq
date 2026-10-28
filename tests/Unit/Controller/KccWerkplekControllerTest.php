@@ -73,7 +73,7 @@ class KccWerkplekControllerTest extends TestCase {
 	 *
 	 * @return KccWerkplekController The controller.
 	 */
-	private function controller(?string $uid = 'agent-1'): KccWerkplekController {
+	private function controller(?string $uid = 'agent-1', ?\OCP\IL10N $l10n = null): KccWerkplekController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
 			fn (string $key, $default = null) => ($this->params[$key] ?? $default)
@@ -92,6 +92,7 @@ class KccWerkplekControllerTest extends TestCase {
 			$this->service,
 			$session,
 			$this->createMock(LoggerInterface::class),
+			$l10n,
 		);
 	}//end controller()
 
@@ -144,7 +145,7 @@ class KccWerkplekControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(
-			['agentProfile', 'assignedRequests', 'openTasks'],
+			['agentProfile', 'assignedRequests', 'openTasks', 'availabilityLine'],
 			array_keys($data)
 		);
 		$this->assertSame('agent-1', $data['agentProfile']['userId']);
@@ -176,6 +177,26 @@ class KccWerkplekControllerTest extends TestCase {
 		$this->assertSame([], $data['assignedRequests']);
 		$this->assertFalse($data['agentProfile']['isAvailable']);
 	}//end testStateActionReturnsAFullEnvelopeForAnEmptyWorkspace()
+
+	/**
+	 * The state carries the dashboard header's availability line, worded by
+	 * whether the agent is available.
+	 *
+	 * @return void
+	 */
+	public function testStateActionWordsTheAvailabilityLine(): void {
+		$l10n = $this->createMock(\OCP\IL10N::class);
+		$l10n->method('t')->willReturnCallback(fn (string $text) => 'NL:'.$text);
+		$this->service->method('getWorkspaceState')->willReturnOnConsecutiveCalls(
+			['agentProfile' => ['isAvailable' => true], 'assignedRequests' => [], 'openTasks' => []],
+			['agentProfile' => ['isAvailable' => false], 'assignedRequests' => [], 'openTasks' => []]
+		);
+
+		$controller = $this->controller('agent-1', $l10n);
+
+		$this->assertSame('NL:you are available for calls and the queue', $controller->stateAction()->getData()['availabilityLine']);
+		$this->assertSame('NL:you are not taking calls or the queue', $controller->stateAction()->getData()['availabilityLine']);
+	}//end testStateActionWordsTheAvailabilityLine()
 
 	/**
 	 * A store failure is a 500 with a STATIC message — the underlying
