@@ -1,6 +1,9 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "%n days in stage": "%n dagen in fase",
+        "{percent}% chance": "{percent}% kans",
+        "%n day in stage": ["%n dag in fase","%n dagen in fase"],
         "Pipeline:": "Pijplijn:",
         "Search the pipeline": "Zoek in de pijplijn",
         "Columns:": "Kolommen:",

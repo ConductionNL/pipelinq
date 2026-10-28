@@ -285,7 +285,14 @@
 					class="kanban-column__header"
 					:style="stage.color ? { borderTopColor: stage.color } : {}">
 					<div class="column-header-top">
-						<span class="column-title">{{ stage.name }}</span>
+						<span class="column-title">
+							<span
+								v-if="isBoard"
+								class="column-dot"
+								:style="stage.color ? { background: stage.color } : null"
+								aria-hidden="true" />
+							{{ stage.name }}
+						</span>
 						<span class="column-count">{{
 							getStageItems(stage.name).length
 						}}</span>
@@ -306,6 +313,9 @@
 							{{ selectedPipeline.totalsLabel || '' }}
 							{{ getStageTotalValue(stage.name).toLocaleString() }}
 						</button>
+						<span
+							v-if="isBoard && stage.probability !== undefined && stage.probability !== null"
+							class="column-probability">· {{ stage.probability }}%</span>
 						<div
 							v-if="expandedBreakdownStage === stage.name"
 							class="stage-breakdown"
@@ -395,6 +405,7 @@
 							:entityType="item._schemaSlug"
 							:stages="sortedStages"
 							:columnProperty="getColumnProperty(item)"
+							:boardLook="isBoard"
 							@open="openItem"
 							@refresh="refreshItems" />
 					</template>
@@ -2192,6 +2203,63 @@ export default {
 	flex: 1;
 	/* An empty column still needs room to drop a card into. */
 	min-height: 80px;
+}
+
+/* Board look (PqPipeline): 240px columns on the grey ground, no border, the
+   stage's dot before its name, the cards 12px apart. */
+.cn-look-board .kanban-column {
+	width: 240px;
+	min-width: 240px;
+	max-width: 240px;
+	gap: 12px;
+	padding: 12px;
+	border: 0;
+	border-radius: 12px;
+	background: var(--color-background-dark);
+}
+
+.cn-look-board .kanban-column__header {
+	padding: 0 2px;
+	border: 0;
+	border-radius: 0;
+}
+
+.cn-look-board .column-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 15px;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+.cn-look-board .column-dot {
+	width: 10px;
+	height: 10px;
+	flex: none;
+	border-radius: 50%;
+	background: var(--color-primary-element);
+}
+
+.cn-look-board .column-count {
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+}
+
+.cn-look-board .column-value-wrapper {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+}
+
+.cn-look-board .column-probability {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.cn-look-board .kanban-column__body {
+	gap: 12px;
+	padding: 0;
 }
 
 .kanban-closed {
