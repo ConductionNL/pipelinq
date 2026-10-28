@@ -8870,7 +8870,18 @@ OC.L10N.register(
         "Download started": "Download gestart",
         "Points, tiers and what the outstanding points are worth": "Punten, niveaus en wat de openstaande punten waard zijn",
         "Loyalty sign-up": "Aanmelding loyaliteit",
-        "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent.": "Meld een klant aan voor een loyaliteitsprogramma. De AVG vraagt toestemming van de klant."
+        "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent.": "Meld een klant aan voor een loyaliteitsprogramma. De AVG vraagt toestemming van de klant.",
+        "Invoice history": "Factuurgeschiedenis",
+        "Every send to invoicing: the reference the invoicing app returned, when, by whom and the amount. The contract page reads this year's invoicing from it.": "Elke keer dat het contract naar facturering ging: het kenmerk dat de factuurapp teruggaf, wanneer, door wie en het bedrag. De contractpagina leest hieruit wat dit jaar is gefactureerd.",
+        "Sent by": "Verstuurd door",
+        "per month, from {annualValue|currency} a year": "per maand, uit {annualValue|currency} per jaar",
+        "notice date {noticeDate|date}": "opzegdatum {noticeDate|date}",
+        "Invoiced this year": "Dit jaar gefactureerd",
+        "{invoicesSent} of {invoicesDue} invoices sent": "{invoicesSent} van {invoicesDue} facturen verstuurd",
+        "The reference the invoicing app returned for this send.": "Het kenmerk dat de factuurapp voor deze verzending teruggaf.",
+        "When the contract was sent.": "Wanneer het contract is verstuurd.",
+        "The user who sent it.": "De gebruiker die het verstuurde.",
+        "The amount sent, the value per period.": "Het verstuurde bedrag, de waarde per periode."
     },
     "nplurals=2; plural=(n != 1);"
 )

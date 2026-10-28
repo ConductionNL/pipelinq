@@ -8920,6 +8920,17 @@
         "Download started": "Download started",
         "Points, tiers and what the outstanding points are worth": "Points, tiers and what the outstanding points are worth",
         "Loyalty sign-up": "Loyalty sign-up",
-        "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent.": "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent."
+        "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent.": "Enroll a customer in a loyalty programme. The AVG asks for the customer's consent.",
+        "Invoice history": "Invoice history",
+        "Every send to invoicing: the reference the invoicing app returned, when, by whom and the amount. The contract page reads this year's invoicing from it.": "Every send to invoicing: the reference the invoicing app returned, when, by whom and the amount. The contract page reads this year's invoicing from it.",
+        "Sent by": "Sent by",
+        "per month, from {annualValue|currency} a year": "per month, from {annualValue|currency} a year",
+        "notice date {noticeDate|date}": "notice date {noticeDate|date}",
+        "Invoiced this year": "Invoiced this year",
+        "{invoicesSent} of {invoicesDue} invoices sent": "{invoicesSent} of {invoicesDue} invoices sent",
+        "The reference the invoicing app returned for this send.": "The reference the invoicing app returned for this send.",
+        "When the contract was sent.": "When the contract was sent.",
+        "The user who sent it.": "The user who sent it.",
+        "The amount sent, the value per period.": "The amount sent, the value per period."
     }
 }
