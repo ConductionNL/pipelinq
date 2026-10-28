@@ -9108,6 +9108,16 @@
         "The portaliq form binding (portalFormBinding) the sign-up form is published with; empty when the form is not in portaliq. The event page links to it to edit the form.": "The portaliq form binding (portalFormBinding) the sign-up form is published with; empty when the form is not in portaliq. The event page links to it to edit the form.",
         "Event created": "Event created",
         "Places raised from {changed.capacity.old} to {changed.capacity.new}": "Places raised from {changed.capacity.old} to {changed.capacity.new}",
-        "{name} is on the waiting list": "{name} is on the waiting list"
+        "{name} is on the waiting list": "{name} is on the waiting list",
+        "Preview PDF": "Preview PDF",
+        "Version {version}": "Version {version}",
+        "not sent yet · prices excl. VAT": "not sent yet · prices excl. VAT",
+        "sent {sentAt|date} · prices excl. VAT": "sent {sentAt|date} · prices excl. VAT",
+        "after 30 days": "after 30 days",
+        "Add own line": "Add own line",
+        "Convert to order": "Convert to order",
+        "The quote is now an order.": "The quote is now an order.",
+        "Quote status": "Quote status",
+        "prices excl. VAT": "prices excl. VAT"
     }
 }

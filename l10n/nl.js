@@ -9043,7 +9043,17 @@ OC.L10N.register(
         "The portaliq form binding (portalFormBinding) the sign-up form is published with; empty when the form is not in portaliq. The event page links to it to edit the form.": "De portaliq-formulierkoppeling (portalFormBinding) waarmee het aanmeldformulier is gepubliceerd; leeg als het formulier niet in portaliq staat. De evenementpagina linkt ernaar om het formulier te bewerken.",
         "Event created": "Evenement aangemaakt",
         "Places raised from {changed.capacity.old} to {changed.capacity.new}": "Plaatsen verhoogd van {changed.capacity.old} naar {changed.capacity.new}",
-        "{name} is on the waiting list": "{name} staat op de wachtlijst"
+        "{name} is on the waiting list": "{name} staat op de wachtlijst",
+        "Preview PDF": "Voorbeeld pdf",
+        "Version {version}": "Versie {version}",
+        "not sent yet · prices excl. VAT": "nog niet verstuurd · prijzen excl. btw",
+        "sent {sentAt|date} · prices excl. VAT": "verstuurd op {sentAt|date} · prijzen excl. btw",
+        "after 30 days": "na 30 dagen",
+        "Add own line": "Eigen regel toevoegen",
+        "Convert to order": "Omzetten naar bestelling",
+        "The quote is now an order.": "De offerte is nu een bestelling.",
+        "Quote status": "Status offerte",
+        "prices excl. VAT": "prijzen excl. btw"
     },
     "nplurals=2; plural=(n != 1);"
 )
