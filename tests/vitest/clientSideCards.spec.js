@@ -22,9 +22,9 @@ const person = { field: 'type', op: 'eq', value: 'person' }
 const organisation = { field: 'type', op: 'eq', value: 'organization' }
 
 describe('ClientDetail side cards after Relations', () => {
-	it('come in the boards\' order: appointments and business, the history, then the knowledge base', () => {
+	it('come in the boards\' order: appointments and business, the history, e-mails and notes, then the knowledge base', () => {
 		const from = ids.indexOf('client-relationships')
-		expect(ids.slice(from, from + 6)).toEqual(['client-relationships', 'side-appointments', 'side-business-person', 'side-business-organisation', 'side-history', 'side-knowledge'])
+		expect(ids.slice(from, from + 8)).toEqual(['client-relationships', 'side-appointments', 'side-business-person', 'side-business-organisation', 'side-history', 'client-email', 'client-notes', 'side-knowledge'])
 	})
 
 	it('lists a resident\'s coming appointments as a linked line with status and handler', () => {

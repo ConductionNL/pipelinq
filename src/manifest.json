@@ -3607,6 +3607,8 @@
 							}
 						}
 					},
+					"client-email",
+					"client-notes",
 					{
 						"id": "side-knowledge",
 						"type": "kb-search",
@@ -3640,10 +3642,9 @@
 							"suggestLimit": 2
 						}
 					},
-					"client-related",
-					"client-email",
-					"client-notes"
+					"client-related"
 				],
+				"sideColumnOrder": "declared",
 				"breadcrumb": {
 					"label": "Residents and businesses",
 					"route": "Clients"
