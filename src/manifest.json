@@ -5893,7 +5893,7 @@
 									"shift": "@objectId"
 								},
 								"sort": {
-									"field": "@self.created",
+									"field": "_created",
 									"dir": "desc"
 								}
 							},
@@ -7245,7 +7245,7 @@
 									"action": "print"
 								},
 								"sort": {
-									"field": "@self.created",
+									"field": "_created",
 									"dir": "desc"
 								}
 							},
