@@ -1,5 +1,5 @@
 {
-	"$comment": "pipelinq's till in the Zuiddrecht set as PqKassa and PqKassaAfrekenen draw it: a sale parked at Balie 2 for Sanne de Vries with the three items the boards scan (open it at /pos/<uuid>/edit), and gift card ZD-GC-7731, sold at Balie 1 on 14 August and valid for two years. Sanne's parked sale and her two earlier purchases (POS-2026-0871, POS-2026-0214) name her contact as customer, which the till's purchase history and consent read; the two earlier ones are changes, because the main file declares them before her contact.",
+	"$comment": "pipelinq's till in the Zuiddrecht set as PqKassa and PqKassaAfrekenen draw it: a sale parked at Balie 2 for Sanne de Vries with the three items the boards scan (open it at /pos/<uuid>/edit), and gift card ZD-GC-7731, sold at Balie 1 on 14 August and valid for two years. Sanne's parked sale and her two earlier purchases (POS-2026-0871, POS-2026-0214) name her contact as customer, which the till's purchase history and consent read; the two earlier ones are changes, because the main file declares them before her contact. Her two earlier purchases each have their one sale line (a yearly parking permit, an extra afvalpas), so the purchase history counts 1 and 1.",
 	"objects": [
 		{
 			"key": "kassa-geparkeerd-sanne",
@@ -99,6 +99,40 @@
 				"balanceAfter": 25,
 				"timestamp": "{{datetime:-54 14:05}}",
 				"processedBy": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "kassabon-0871-regel-1",
+			"register": "pipelinq",
+			"schema": "posTransactionLine",
+			"data": {
+				"transaction": "{{object:kassabon-0871.id}}",
+				"product": "{{object:product-parkeervergunning-jaar.id}}",
+				"description": "Parkeervergunning bewoners, jaar",
+				"quantity": 1,
+				"unitPrice": 75,
+				"discount": 0,
+				"taxRate": 0,
+				"taxAmount": 0,
+				"lineTotal": 75,
+				"sortOrder": 1
+			}
+		},
+		{
+			"key": "kassabon-0214-regel-1",
+			"register": "pipelinq",
+			"schema": "posTransactionLine",
+			"data": {
+				"transaction": "{{object:kassabon-0214.id}}",
+				"product": "{{object:product-afvalpas-extra.id}}",
+				"description": "Afvalpas, extra",
+				"quantity": 1,
+				"unitPrice": 12.5,
+				"discount": 0,
+				"taxRate": 21,
+				"taxAmount": 2.17,
+				"lineTotal": 12.5,
+				"sortOrder": 1
 			}
 		}
 	],
