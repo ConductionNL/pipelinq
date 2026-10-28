@@ -61,7 +61,7 @@
 			</CnDetailCard>
 		</template>
 
-		<CnTabs card :ariaLabel="t('pipelinq', 'Resource')">
+		<CnTabs :ariaLabel="t('pipelinq', 'Resource')">
 			<CnTab :title="t('pipelinq', 'Overview')">
 		<CnDetailCard :title="t('pipelinq', 'Resource details')">
 			<div class="resource-facts">
@@ -766,7 +766,9 @@ export default {
 .resource-schedule {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	align-items: start;
 	gap: 20px;
+	margin-top: 20px;
 }
 
 .resource-schedule__note {
@@ -777,15 +779,16 @@ export default {
 
 .viewTableContainer {
 	background: var(--color-main-background);
-	border-radius: var(--border-radius);
+	border-radius: var(--border-radius-large, 8px);
 	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
 	border: 1px solid var(--color-border);
 }
 
 .viewTable {
 	width: 100%;
 	border-collapse: collapse;
+	font-size: 14px;
+	line-height: 1.2;
 }
 
 .viewTable th,
@@ -796,9 +799,18 @@ export default {
 }
 
 .viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
+	padding-block: 10px;
+	background-color: var(--color-main-background);
+	font-weight: 600;
 	color: var(--color-text-maxcontrast);
+}
+
+.viewTable :is(th, td):first-child {
+	padding-inline-start: 18px;
+}
+
+.viewTable :is(th, td):last-child {
+	padding-inline-end: 18px;
 }
 
 .section-empty {
