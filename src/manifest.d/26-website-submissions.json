@@ -15,6 +15,7 @@
 				"sortOrder": "desc",
 				"showViewAction": false,
 				"showAdd": false,
+				"filterMenu": true,
 				"countText": "{shown} of {total} submissions · newest first",
 				"footerNote": "Linking connects a submission to a client, a contact person and, if you like, a lead.",
 				"quickFilters": [

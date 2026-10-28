@@ -53,26 +53,28 @@
 				<CnDetailCard
 					:title="t('pipelinq', 'Deal movements (week over week)')"
 					class="forecast-trend__delta">
-					<table v-if="movements.length" class="accuracy-table" data-testid="forecast-movements">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Seller') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Movement') }}</th>
-								<th scope="col" class="forecast-trend__amount">{{ t('pipelinq', 'Value') }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="move in movements" :key="move.owner_id">
-								<td>{{ move.name || move.owner_id }}</td>
-								<td>
-									<span class="forecast-trend__move" :class="'forecast-trend__move--' + move.direction">
-										{{ move.direction === 'into' ? t('pipelinq', 'Moved into commit') : t('pipelinq', 'Moved out of commit') }}
-									</span>
-								</td>
-								<td class="forecast-trend__amount">{{ formatMoney(move.amount) }}</td>
-							</tr>
-						</tbody>
-					</table>
+					<div v-if="movements.length" class="pq-board-table-card">
+						<table class="pq-board-table" data-testid="forecast-movements">
+							<thead>
+								<tr>
+									<th scope="col">{{ t('pipelinq', 'Seller') }}</th>
+									<th scope="col">{{ t('pipelinq', 'Movement') }}</th>
+									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Value') }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="move in movements" :key="move.owner_id">
+									<td>{{ move.name || move.owner_id }}</td>
+									<td>
+										<span class="forecast-trend__move" :class="'forecast-trend__move--' + move.direction">
+											{{ move.direction === 'into' ? t('pipelinq', 'Moved into commit') : t('pipelinq', 'Moved out of commit') }}
+										</span>
+									</td>
+									<td class="pq-board-table__num">{{ formatMoney(move.amount) }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 					<p v-else class="forecast-trend__none">
 						{{ t('pipelinq', 'No commit moved since last week.') }}
 					</p>
@@ -81,30 +83,32 @@
 					:title="t('pipelinq', 'Forecast accuracy')"
 					:subtitle="accuracySubtitle"
 					class="forecast-trend__accuracy">
-					<table v-if="accuracyRows.length" class="accuracy-table">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Rep') }}</th>
-								<th scope="col">
-									{{ t('pipelinq', 'Week 1 commit') }}
-								</th>
-								<th scope="col">
-									{{ t('pipelinq', 'Actual closed won') }}
-								</th>
-								<th scope="col">{{ t('pipelinq', 'Accuracy') }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="row in accuracyRows" :key="row.owner_id">
-								<td>{{ row.name || row.owner_id }}</td>
-								<td>{{ formatMoney(row.weekOneCommit) }}</td>
-								<td>{{ formatMoney(row.actual) }}</td>
-								<td :class="'accuracy--' + bandFor(row.score)">
-									{{ Math.round(row.score * 100) }}%
-								</td>
-							</tr>
-						</tbody>
-					</table>
+					<div v-if="accuracyRows.length" class="pq-board-table-card">
+						<table class="accuracy-table pq-board-table">
+							<thead>
+								<tr>
+									<th scope="col">{{ t('pipelinq', 'Rep') }}</th>
+									<th scope="col" class="pq-board-table__num">
+										{{ t('pipelinq', 'Week 1 commit') }}
+									</th>
+									<th scope="col" class="pq-board-table__num">
+										{{ t('pipelinq', 'Actual closed won') }}
+									</th>
+									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Accuracy') }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="row in accuracyRows" :key="row.owner_id">
+									<td>{{ row.name || row.owner_id }}</td>
+									<td class="pq-board-table__num">{{ formatMoney(row.weekOneCommit) }}</td>
+									<td class="pq-board-table__num">{{ formatMoney(row.actual) }}</td>
+									<td class="pq-board-table__num" :class="'accuracy--' + bandFor(row.score)">
+										{{ Math.round(row.score * 100) }}%
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 					<NcEmptyContent
 						v-else
 						:name="t('pipelinq', 'No closed periods yet')"
@@ -367,10 +371,6 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.forecast-trend__amount {
-	text-align: end;
-}
-
 /* A move is a pill: into commit green, out of it red (PqForecast). */
 .forecast-trend__move {
 	display: inline-block;
@@ -394,18 +394,6 @@ export default {
 .forecast-trend__none {
 	margin: 0;
 	color: var(--color-text-maxcontrast);
-}
-
-.accuracy-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.accuracy-table th,
-.accuracy-table td {
-	text-align: start;
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--color-border);
 }
 
 .accuracy--green {

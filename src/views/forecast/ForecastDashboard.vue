@@ -64,59 +64,61 @@
 					{{ atRiskMessage }}
 				</NcNoteCard>
 				<template v-if="rows.length">
-					<table class="forecast-table">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Owner') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Commit') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Best Case') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Pipeline') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Closed Won') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Quota') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Override') }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="row in rows" :key="row.owner_id">
-								<td data-testid="forecast-owner">{{ ownerName(row) }}</td>
-								<td>
-									{{ formatMoney(row.commit) }}
-									<span
-										v-if="hasOverride(row)"
-										class="forecast-table__was"
-										data-testid="forecast-was">
-										{{ t('pipelinq', 'was {amount}', { amount: formatMoney(row.original_commit) }) }}
-									</span>
-								</td>
-								<td>{{ formatMoney(row.best_case) }}</td>
-								<td>{{ formatMoney(row.pipeline) }}</td>
-								<td>{{ formatMoney(row.closed_won) }}</td>
-								<td>
-									{{
-										row.quota === null ? '—' : formatMoney(row.quota)
-									}}
-								</td>
-								<td>
-									<span
-										v-if="hasOverride(row)"
-										class="forecast-table__badge"
-										data-testid="forecast-overridden"
-										:title="overrideTitle(row)">
-										{{ t('pipelinq', 'Overridden') }}
-									</span>
-									<NcButton
-										v-else
-										variant="secondary"
-										@click="openOverride(row)">
-										<template #icon>
-											<Pencil :size="20" />
-										</template>
-										{{ t('pipelinq', 'Override') }}
-									</NcButton>
-								</td>
-							</tr>
-						</tbody>
-					</table>
+					<div class="pq-board-table-card forecast-table-card">
+						<table class="forecast-table pq-board-table">
+							<thead>
+								<tr>
+									<th scope="col">{{ t('pipelinq', 'Owner') }}</th>
+									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Commit') }}</th>
+									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Best Case') }}</th>
+									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Pipeline') }}</th>
+									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Closed Won') }}</th>
+									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Quota') }}</th>
+									<th scope="col">{{ t('pipelinq', 'Override') }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="row in rows" :key="row.owner_id">
+									<td data-testid="forecast-owner">{{ ownerName(row) }}</td>
+									<td class="pq-board-table__num">
+										{{ formatMoney(row.commit) }}
+										<span
+											v-if="hasOverride(row)"
+											class="forecast-table__was"
+											data-testid="forecast-was">
+											{{ t('pipelinq', 'was {amount}', { amount: formatMoney(row.original_commit) }) }}
+										</span>
+									</td>
+									<td class="pq-board-table__num">{{ formatMoney(row.best_case) }}</td>
+									<td class="pq-board-table__num">{{ formatMoney(row.pipeline) }}</td>
+									<td class="pq-board-table__num">{{ formatMoney(row.closed_won) }}</td>
+									<td class="pq-board-table__num">
+										{{
+											row.quota === null ? '—' : formatMoney(row.quota)
+										}}
+									</td>
+									<td>
+										<span
+											v-if="hasOverride(row)"
+											class="forecast-table__badge"
+											data-testid="forecast-overridden"
+											:title="overrideTitle(row)">
+											{{ t('pipelinq', 'Overridden') }}
+										</span>
+										<NcButton
+											v-else
+											variant="secondary"
+											@click="openOverride(row)">
+											<template #icon>
+												<Pencil :size="20" />
+											</template>
+											{{ t('pipelinq', 'Override') }}
+										</NcButton>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 					<p
 						v-for="row in overriddenRows"
 						:key="'note-' + row.owner_id"
@@ -571,26 +573,8 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.forecast-table {
-	width: 100%;
-	border-collapse: collapse;
+.forecast-table-card {
 	margin-top: 12px;
-}
-
-.forecast-table th,
-.forecast-table td {
-	text-align: start;
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-/* The head as the boards draw a table's: 14px/600 in the muted ink on a
-   normal line (PqForecast: 700 in the text ink). */
-.forecast-table th {
-	font-size: 14px;
-	font-weight: 600;
-	line-height: normal;
-	color: var(--color-text-maxcontrast);
 }
 
 /* An overridden commit keeps the seller's figure beside it, small and muted,

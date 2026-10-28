@@ -203,6 +203,43 @@ describe('the full profile', () => {
 		).toBe(true)
 	})
 
+	it('gives a page that hides Add the default header buttons without the Add button', () => {
+		const defaults = {
+			index: {
+				headerButtons: [
+					{ action: 'export', label: 'Download' },
+					{ action: 'add', variant: 'primary', icon: 'Plus' },
+				],
+			},
+		}
+		const built = applyPageDefaults(
+			{
+				pages: [
+					{ id: 'noAdd', type: 'index', config: { showAdd: false } },
+					{ id: 'withAdd', type: 'index', config: {} },
+				],
+			},
+			defaults,
+		)
+
+		expect(built.pages[0].config.headerButtons).toEqual([
+			{ action: 'export', label: 'Download' },
+		])
+		expect(built.pages[1].config.headerButtons).toEqual(
+			defaults.index.headerButtons,
+		)
+		// The defaults themselves stay as they are.
+		expect(defaults.index.headerButtons).toHaveLength(2)
+	})
+
+	it('draws the website submissions header as its board: Download and Filter, no Add', () => {
+		const page = buildSimple().pages.find((item) => item.id === 'WebsiteSubmissions')
+
+		expect(page.config.headerButtons.map((button) => button.action)).not.toContain('add')
+		expect(page.config.headerButtons.map((button) => button.action)).toContain('export')
+		expect(page.config.filterMenu).toBe(true)
+	})
+
 	it('does not link to the Modules page, which only the simple menu needs', () => {
 		const routes = flat(build(fullFile).menu).map((entry) => entry.route)
 		expect(routes).not.toContain('Modules')
