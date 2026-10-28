@@ -34,7 +34,7 @@
 			</dl>
 			<NcActions
 				:menuName="t('pipelinq', 'Add channel')"
-				class="contact-channels-section__add--pill"
+				class="contact-channels-section__add--pill cn-button--tonal"
 				data-testid="channels-add">
 				<template #icon>
 					<Plus :size="16" />
@@ -741,13 +741,6 @@ export default {
 
 .contact-channels-section__compact-row dd {
 	margin: 0;
-}
-
-.contact-channels-section__add--pill :deep(.button-vue) {
-	border-radius: var(--border-radius-pill, 17px);
-	background: var(--color-primary-element-light);
-	color: var(--color-primary-element-light-text);
-	font-weight: 600;
 }
 
 .contact-channels-section {

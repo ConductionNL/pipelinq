@@ -24,7 +24,7 @@
 				)
 			">
 			<div class="deliverability-settings__toolbar">
-				<NcButton :disabled="loading" @click="fetchTransports">
+				<NcButton class="cn-button--tonal" :disabled="loading" @click="fetchTransports">
 					{{ t('pipelinq', 'Refresh') }}
 				</NcButton>
 			</div>
