@@ -10342,7 +10342,7 @@
 						"note": "A closed stage ends the item: won or lost.",
 						"action": { "id": "edit", "label": "Add stage" }
 					},
-					"buttons": [{ "action": "edit", "label": "Edit" }],
+					"buttons": [{ "action": "edit", "label": "Edit", "icon": "Pencil" }],
 					"open": "first"
 				},
 				"cardLayout": {

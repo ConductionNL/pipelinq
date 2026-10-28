@@ -24,7 +24,7 @@ describe('the pipelines list', () => {
 		expect(rows.badge.label).toBe('Default')
 		expect(rows.table.columns.map((c) => c.as || 'text')).toEqual(['order', 'text', 'bar', 'check', 'yesNo', 'pill'])
 		expect(rows.chips.tones.map((t) => t.variant)).toEqual(['success', 'error', 'primary'])
-		expect(rows.buttons).toEqual([{ action: 'edit', label: 'Edit' }])
+		expect(rows.buttons).toEqual([{ action: 'edit', label: 'Edit', icon: 'Pencil' }])
 	})
 
 	it('draws each pipeline with its stage count and its stages as chips', () => {
