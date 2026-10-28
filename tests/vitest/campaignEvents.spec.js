@@ -91,6 +91,14 @@ describe('the event page', () => {
 		expect(list.content.searchPlaceholder).toBe('Search a name or street')
 	})
 
+	it('counts each registrations lens and offers the Filter button, as the Aanmeldingen tab draws them', () => {
+		const list = widget(detail, 'event-registrations')
+		for (const lens of list.content.quickFilters) {
+			expect(lens.showCount, lens.label).toBe(true)
+		}
+		expect(list.content.filterMenu).toBe(true)
+	})
+
 	it('sends the reminder and opens the check-in list from the header', () => {
 		const actions = detail.config.headerActions
 		const reminder = actions.find((action) => action.id === 'send-reminder')
