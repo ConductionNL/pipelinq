@@ -55,9 +55,9 @@
 
 		<template #widget-resource-week>
 			<CnDetailCard :title="t('pipelinq', 'This week')">
-				<p class="resource-week">
-					{{ weekSummary }}
-				</p>
+				<KpiFigure
+					:value="weekLoad.count"
+					:caption="weekCaption" />
 			</CnDetailCard>
 		</template>
 
@@ -225,6 +225,7 @@ import { computed } from 'vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ResourceHoursEditor from '../../components/bookings/ResourceHoursEditor.vue'
 import ResourceVacationsEditor from '../../components/bookings/ResourceVacationsEditor.vue'
+import KpiFigure from '../../components/KpiFigure.vue'
 import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
 import ResourceForm from './ResourceForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -247,6 +248,7 @@ export default {
 		ResourceHoursEditor,
 		ResourceVacationsEditor,
 		DeleteResourceDialog,
+		KpiFigure,
 	},
 
 	props: {
@@ -355,24 +357,32 @@ export default {
 		},
 
 		/**
-		 * "22 bookings, 74% of the bookable time" for the current week.
+		 * This week's bookings and their share of the bookable time.
 		 *
-		 * @return {string}
+		 * @return {{count: number, percent: (number|null)}}
 		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
 		 */
-		weekSummary() {
-			const load = resourceWeekLoad({
+		weekLoad() {
+			return resourceWeekLoad({
 				bookings: this.weekBookings,
 				resourceId: this.resourceId,
 				workingHours: this.workingHours,
 				vacations: this.vacations,
 				now: new Date(),
 			})
-			const count = load.count
-			if (load.percent === null) {
-				return t('pipelinq', '{count} bookings, no bookable time this week', { count })
+		},
+
+		/**
+		 * The line under the week's count: "bookings, 74% of the bookable time".
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		weekCaption() {
+			if (this.weekLoad.percent === null) {
+				return t('pipelinq', 'bookings, no bookable time this week')
 			}
-			return t('pipelinq', '{count} bookings, {percent}% of the bookable time', { count, percent: load.percent })
+			return t('pipelinq', 'bookings, {percent}% of the bookable time', { percent: this.weekLoad.percent })
 		},
 
 		workingHours() {
@@ -757,11 +767,6 @@ export default {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 	gap: 20px;
-}
-
-.resource-week {
-	margin: 0;
-	color: var(--color-text-maxcontrast);
 }
 
 .resource-schedule__note {
