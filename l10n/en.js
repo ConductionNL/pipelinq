@@ -8705,7 +8705,17 @@ OC.L10N.register(
         "Where cashiers see this": "Where cashiers see this",
         "Open the till": "Open the till",
         "Set how cashiers search for customers, how much purchase history they see at checkout and how marketing consent goes to the linked contact.": "Set how cashiers search for customers, how much purchase history they see at checkout and how marketing consent goes to the linked contact.",
-        "The customer card at the till: the search, the purchase history and the consent question.": "The customer card at the till: the search, the purchase history and the consent question."
+        "The customer card at the till: the search, the purchase history and the consent question.": "The customer card at the till: the search, the purchase history and the consent question.",
+        "Pipeline:": "Pipeline:",
+        "Search the pipeline": "Search the pipeline",
+        "Columns:": "Columns:",
+        "stage": "stage",
+        "One column per stage. Drag a lead to change its stage.": "One column per stage. Drag a lead to change its stage.",
+        "Filter": "Filter",
+        "Pipeline: {name}": "Pipeline: {name}",
+        "Type: {name}": "Type: {name}",
+        "Search: {text}": "Search: {text}",
+        "Filter, %n active": ["Filter, %n active","Filter, %n active"]
     },
     "nplurals=2; plural=(n != 1);"
 )

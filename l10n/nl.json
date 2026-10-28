@@ -2922,7 +2922,7 @@
         "Pipeline funnel": "Pijplijntrechter",
         "Pipeline is required": "Pipeline is verplicht",
         "Pipeline must have at least one non-closed stage": "Pipeline moet ten minste één niet-gesloten fase hebben",
-        "Pipeline settings": "Pipeline instellingen",
+        "Pipeline settings": "Pijplijninstellingen",
         "Pipeline stage & status changes": "Pipeline fase- & statuswijzigingen",
         "Pipeline stages": "Pipeline fasen",
         "Pipeline title is required": "Pipeline titel is verplicht",
@@ -8759,6 +8759,19 @@
         "Where cashiers see this": "Waar kassamedewerkers dit zien",
         "Open the till": "Kassa openen",
         "Set how cashiers search for customers, how much purchase history they see at checkout and how marketing consent goes to the linked contact.": "Stel in hoe kassamedewerkers klanten zoeken, hoeveel geschiedenis ze bij het afrekenen zien en hoe toestemming voor marketing naar het gekoppelde contact gaat.",
-        "The customer card at the till: the search, the purchase history and the consent question.": "De klantkaart op de kassa: zoeken, de aankoopgeschiedenis en de toestemmingsvraag."
+        "The customer card at the till: the search, the purchase history and the consent question.": "De klantkaart op de kassa: zoeken, de aankoopgeschiedenis en de toestemmingsvraag.",
+        "Pipeline:": "Pijplijn:",
+        "Search the pipeline": "Zoek in de pijplijn",
+        "Columns:": "Kolommen:",
+        "stage": "fase",
+        "One column per stage. Drag a lead to change its stage.": "Eén kolom per fase. Sleep een lead om de fase te wijzigen.",
+        "Filter": "Filter",
+        "Pipeline: {name}": "Pijplijn: {name}",
+        "Type: {name}": "Type: {name}",
+        "Search: {text}": "Zoeken: {text}",
+        "Filter, %n active": [
+            "Filter, %n actief",
+            "Filter, %n actief"
+        ]
     }
 }

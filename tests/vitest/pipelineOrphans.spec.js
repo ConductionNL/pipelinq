@@ -20,6 +20,10 @@ vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn() }))
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => ({}) }))
 vi.mock('../../src/store/store.js', () => ({ initializeStores: vi.fn() }))
 vi.mock('@nextcloud/vue', () => ({
+	NcActionButton: {},
+	NcActionCaption: {},
+	NcActionCheckbox: {},
+	NcActions: {},
 	NcButton: {},
 	NcCheckboxRadioSwitch: {},
 	NcLoadingIcon: {},
@@ -28,10 +32,13 @@ vi.mock('@nextcloud/vue', () => ({
 	NcTextField: {},
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
+	CnActionsBar: {},
+	CnBuildiqEditButton: {},
 	CnPageHeader: {},
 	CnBuildiqEditButton: {},
 	CnQuickFilterBar: {},
 	openRowTarget: vi.fn(),
+	useLook: () => ({ isBoard: false, lookClass: '' }),
 }))
 vi.mock('../../src/dialogs/LeadCreateDialog.vue', () => ({ default: {} }))
 vi.mock('../../src/components/leadScore/LeadScoreBadge.vue', () => ({ default: {} }))
