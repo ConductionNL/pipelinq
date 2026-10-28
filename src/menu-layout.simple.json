@@ -548,13 +548,8 @@
 						"type": "open-modal",
 						"target": "LinkSubmissionToClientModal",
 						"icon": "AccountArrowRightOutline",
-						"props": {
-							"ticketId": "@objectId"
-						},
-						"visibleWhen": {
-							"field": "client",
-							"op": "empty"
-						}
+						"props": { "ticketId": "@objectId" },
+						"visibleWhen": { "field": "client", "op": "empty" }
 					},
 					{
 						"id": "ticket-answer",
