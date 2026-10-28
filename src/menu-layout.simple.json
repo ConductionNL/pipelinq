@@ -2634,6 +2634,7 @@
 			"id": "Tickets",
 			"_note": "The tickets list in the simple structure (openspec/changes/simple-contact-dashboard). No view is dropped: the four the page had keep their filter and gain a count, three join them, five show and the rest sit behind the overflow chip. `Waiting for me`, `New` and `Waiting for customer` use the same filters as the dashboard stats that link here. THE AVATAR IS THE HANDLER'S: `assignee` holds a Nextcloud user id. The design draws the customer's initials, and a ticket holds its client as a reference without a name. THE COLOUR IS ON THE DEADLINE: late or due today is red (`lte 0`), due within two days is amber. How long a ticket has waited cannot be coloured, a date rule counts days until a date and a wait lies in the past. BOARD PqTickets: no menu per row (a row opens the ticket, where Edit and the rest live; copy and delete stay on the selection), and the footer says how the list is sorted.",
 			"config": {
+				"createModal": "RequestCreateDialog",
 				"quickFilterMaxVisible": 6,
 				"columns": [
 					{
