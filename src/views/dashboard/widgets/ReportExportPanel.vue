@@ -59,8 +59,8 @@ const FIGURES = ['leadConversionRate', 'avgRequestResolutionTime', 'contactMomen
  * period before.
  *
  * @param {object} overview The /api/analytics/overview payload.
- * @param {Function} label Maps a figure key to its readable name.
- * @return {Array<Array<*>>} The rows: figure, this period, the period before.
+ * @param {(key: string) => string} label Maps a figure key to its readable name.
+ * @return {Array<Array<(string|number)>>} The rows: figure, this period, the period before.
  * @spec openspec/specs/dashboard/spec.md
  */
 export function overviewRows(overview, label) {
