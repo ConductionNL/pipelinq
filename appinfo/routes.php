@@ -122,6 +122,8 @@ return [
         // aggregation the declarative layer can't express; per-object read guard on the client in the body.
         ['name' => 'customer360#summary', 'url' => '/api/customer-360/summary', 'verb' => 'GET'],
         // Letters from a filinq template (work-letter-from-filinq-template).
+        // An event's reminder to everyone with a confirmed place (event-reminder-and-check-in).
+        ['name' => 'eventReminder#send', 'url' => '/api/campaign-events/{id}/reminder', 'verb' => 'POST'],
         ['name' => 'letter#templates', 'url' => '/api/letters/templates', 'verb' => 'GET'],
         ['name' => 'letter#create', 'url' => '/api/clients/{id}/letters', 'verb' => 'POST'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
