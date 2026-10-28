@@ -350,16 +350,9 @@
 								"currencyField": "currency",
 								"decimals": 0
 							},
-							"caption": "per period",
-							"source": {
-								"register": "pipelinq",
-								"schema": "salesContract",
-								"metric": "sum",
-								"field": "valuePerInterval",
-								"filter": {
-									"id": "@objectId"
-								}
-							}
+							"caption": "per month, from {annualValue|currency} a year",
+							"endpointSource": { "url": "/apps/pipelinq/api/contracts/@objectId/figures" },
+							"valueField": "monthlyValue"
 						}
 					},
 					{
@@ -368,35 +361,25 @@
 						"title": "Days to end date",
 						"content": {
 							"label": "Days to end date",
-							"objectField": "endDate",
-							"display": "countdown",
-							"countdown": {
-								"unit": "days"
-							},
-							"caption": "until the end date"
+							"endpointSource": { "url": "/apps/pipelinq/api/contracts/@objectId/figures" },
+							"valueField": "daysToEnd",
+							"caption": "notice date {noticeDate|date}"
 						}
 					},
 					{
 						"id": "contract-kpi-invoiced",
 						"type": "stat",
-						"title": "Contract value",
+						"title": "Invoiced this year",
 						"content": {
-							"label": "Value",
+							"label": "Invoiced this year",
 							"format": {
 								"style": "currency",
 								"currencyField": "currency",
 								"decimals": 0
 							},
-							"caption": "{billingInterval}",
-							"source": {
-								"register": "pipelinq",
-								"schema": "salesContract",
-								"metric": "sum",
-								"field": "value",
-								"filter": {
-									"id": "@objectId"
-								}
-							}
+							"caption": "{invoicesSent} of {invoicesDue} invoices sent",
+							"endpointSource": { "url": "/apps/pipelinq/api/contracts/@objectId/figures" },
+							"valueField": "invoicedThisYear"
 						}
 					},
 					{

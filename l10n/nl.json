@@ -8606,6 +8606,13 @@
         "Sent to invoicing": "Naar facturering gestuurd",
         "When the contract was last sent to invoicing.": "Wanneer het contract het laatst naar facturering is gestuurd.",
         "Sent to invoicing by": "Naar facturering gestuurd door",
-        "The user who last sent the contract to invoicing.": "De gebruiker die het contract het laatst naar facturering stuurde."
+        "The user who last sent the contract to invoicing.": "De gebruiker die het contract het laatst naar facturering stuurde.",
+        "Invoice history": "Factuurgeschiedenis",
+        "Every send to invoicing: the reference the invoicing app returned, when, by whom and the amount. The contract page reads this year's invoicing from it.": "Elke keer dat het contract naar facturering ging: het kenmerk dat de factuurapp teruggaf, wanneer, door wie en het bedrag. De contractpagina leest hieruit wat dit jaar is gefactureerd.",
+        "Sent by": "Verstuurd door",
+        "per month, from {annualValue|currency} a year": "per maand, uit {annualValue|currency} per jaar",
+        "notice date {noticeDate|date}": "opzegdatum {noticeDate|date}",
+        "Invoiced this year": "Dit jaar gefactureerd",
+        "{invoicesSent} of {invoicesDue} invoices sent": "{invoicesSent} van {invoicesDue} facturen verstuurd"
     }
 }

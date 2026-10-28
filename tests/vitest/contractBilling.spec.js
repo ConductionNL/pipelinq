@@ -68,4 +68,16 @@ describe('the contract page\'s billing', () => {
 		expect(props.invoicedAt.format).toBe('date-time')
 		expect(props.invoicedBy.format).toBe('user')
 	})
+
+	it('reads the three tiles from the contract\'s figures, as the board captions them', () => {
+		const url = '/apps/pipelinq/api/contracts/@objectId/figures'
+		expect(widget('contract-kpi-recurring').content).toMatchObject({ endpointSource: { url }, valueField: 'monthlyValue', caption: 'per month, from {annualValue|currency} a year' })
+		expect(widget('contract-kpi-days').content).toMatchObject({ endpointSource: { url }, valueField: 'daysToEnd', caption: 'notice date {noticeDate|date}' })
+		expect(widget('contract-kpi-invoiced').content).toMatchObject({ endpointSource: { url }, valueField: 'invoicedThisYear', caption: '{invoicesSent} of {invoicesDue} invoices sent' })
+	})
+
+	it('keeps every send to invoicing', () => {
+		const props = fragment.components.schemas.salesContract.properties
+		expect(Object.keys(props.invoiceHistory.items.properties)).toEqual(['reference', 'sentAt', 'sentBy', 'amount'])
+	})
 })

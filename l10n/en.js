@@ -8588,7 +8588,14 @@ OC.L10N.register(
         "Sent to invoicing": "Sent to invoicing",
         "When the contract was last sent to invoicing.": "When the contract was last sent to invoicing.",
         "Sent to invoicing by": "Sent to invoicing by",
-        "The user who last sent the contract to invoicing.": "The user who last sent the contract to invoicing."
+        "The user who last sent the contract to invoicing.": "The user who last sent the contract to invoicing.",
+        "Invoice history": "Invoice history",
+        "Every send to invoicing: the reference the invoicing app returned, when, by whom and the amount. The contract page reads this year's invoicing from it.": "Every send to invoicing: the reference the invoicing app returned, when, by whom and the amount. The contract page reads this year's invoicing from it.",
+        "Sent by": "Sent by",
+        "per month, from {annualValue|currency} a year": "per month, from {annualValue|currency} a year",
+        "notice date {noticeDate|date}": "notice date {noticeDate|date}",
+        "Invoiced this year": "Invoiced this year",
+        "{invoicesSent} of {invoicesDue} invoices sent": "{invoicesSent} of {invoicesDue} invoices sent"
     },
     "nplurals=2; plural=(n != 1);"
 )

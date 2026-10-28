@@ -783,6 +783,7 @@ return [
         // reads go through OpenRegister directly via useObjectStore (ADR-022).
         ['name' => 'contract#create',         'url' => '/api/contracts', 'verb' => 'POST'],
         ['name' => 'contract#transition',     'url' => '/api/contracts/{id}/transition', 'verb' => 'POST'],
+        ['name' => 'contract#figures',        'url' => '/api/contracts/{id}/figures', 'verb' => 'GET'],
         ['name' => 'contract#summary',        'url' => '/api/contracts/metrics/summary', 'verb' => 'GET'],
         ['name' => 'contract#renewalMetrics', 'url' => '/api/contracts/metrics/renewal', 'verb' => 'GET'],
 
