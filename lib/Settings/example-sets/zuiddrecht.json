@@ -3264,7 +3264,7 @@
 				"category": "vergunningen",
 				"occurredAt": "{{datetime:-3 10:15}}",
 				"assignee": "{{cast:fatmayildiz.uid}}",
-				"slaDeadline": "{{datetime:4 17:00}}"
+				"slaDeadline": "{{datetime:3 17:00}}"
 			}
 		},
 		{
