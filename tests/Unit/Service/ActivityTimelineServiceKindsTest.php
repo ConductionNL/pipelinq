@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Service\ActivityItemNormalizer;
 use OCA\Pipelinq\Service\ActivityTimelineService;
 use OCA\Pipelinq\Service\NotesService;
 use OCA\Pipelinq\Service\TicketService;
@@ -127,7 +128,7 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 			ticketService: $tickets,
 			objectService: $objects,
 			notesService: $notesService,
-			userManager: $users,
+			itemNormalizer: new ActivityItemNormalizer(userManager: $users),
 		);
 	}//end makeService()
 

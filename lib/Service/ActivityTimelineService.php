@@ -42,7 +42,6 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -86,7 +85,7 @@ class ActivityTimelineService {
 	 *                                     `ticketType=contactmoment`, not their own schema.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 * @param NotesService $notesService Reader of the notes on a record (Nextcloud comments).
-	 * @param IUserManager $userManager Resolves an author's display name.
+	 * @param ActivityItemNormalizer $itemNormalizer Turns a source row into an activity item.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -95,7 +94,7 @@ class ActivityTimelineService {
 		private TicketService $ticketService,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly NotesService $notesService,
-		private readonly IUserManager $userManager,
+		private readonly ActivityItemNormalizer $itemNormalizer,
 	) {
 	}//end __construct()
 
@@ -704,182 +703,9 @@ class ActivityTimelineService {
 	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
 	 */
 	public function normalizeActivity(string $sourceType, array $object, string $entityType, string $entityId): ?array {
-		$item = $this->normalizeBySource(sourceType: $sourceType, object: $object, entityType: $entityType, entityId: $entityId);
-		if ($item === null) {
-			return null;
-		}
-
-		$item['userName'] ??= $this->displayName(userId: $item['user']);
-		return $item;
+		return $this->itemNormalizer->normalize(sourceType: $sourceType, object: $object, entityType: $entityType, entityId: $entityId);
 	}//end normalizeActivity()
 
-	/**
-	 * The display name of a user, the id itself when the user is unknown.
-	 *
-	 * @param string|null $userId The user id.
-	 *
-	 * @return string|null The display name, or null without a user.
-	 */
-	private function displayName(?string $userId): ?string {
-		if ($userId === null) {
-			return null;
-		}
-
-		return $this->userManager->get($userId)?->getDisplayName() ?? $userId;
-	}//end displayName()
-
-	/**
-	 * Normalise a raw note (a comment on the record) into an activity item.
-	 *
-	 * @param array<string,mixed> $note The note as NotesService reads it.
-	 * @param string $entityType The originating entityType.
-	 * @param string $entityId The originating entityId.
-	 *
-	 * @return array<string,mixed> The activity item.
-	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
-	 */
-	private function normalizeNote(array $note, string $entityType, string $entityId): array {
-		return [
-			'type' => 'note',
-			'id' => (string)($note['id'] ?? ''),
-			'title' => (string)($note['message'] ?? ''),
-			'description' => '',
-			'date' => $this->stringOrNull(value: ($note['timestamp'] ?? null)),
-			'user' => $this->stringOrNull(value: ($note['authorId'] ?? null)),
-			'userName' => $this->stringOrNull(value: ($note['authorName'] ?? null)),
-			'entityType' => $entityType,
-			'entityId' => $entityId,
-			'metadata' => [],
-		];
-	}//end normalizeNote()
-
-	/**
-	 * Normalise a raw WhatsApp/SMS message into an activity item.
-	 *
-	 * @param array<string,mixed> $message The channelMessage object.
-	 * @param string $entityType The originating entityType.
-	 * @param string $entityId The originating entityId.
-	 *
-	 * @return array<string,mixed> The activity item.
-	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
-	 */
-	private function normalizeMessage(array $message, string $entityType, string $entityId): array {
-		return [
-			'type' => 'message',
-			'id' => (string)($message['id'] ?? $message['uuid'] ?? ''),
-			'title' => (string)($message['body'] ?? ''),
-			'description' => '',
-			'date' => $this->stringOrNull(value: ($message['sentAt'] ?? null)),
-			'user' => null,
-			'entityType' => $entityType,
-			'entityId' => $entityId,
-			'metadata' => [
-				'channel' => $this->stringOrNull(value: ($message['channel'] ?? null)),
-				'direction' => $this->stringOrNull(value: ($message['direction'] ?? null)),
-				'deliveryStatus' => $this->stringOrNull(value: ($message['deliveryStatus'] ?? null)),
-			],
-		];
-	}//end normalizeMessage()
-
-	/**
-	 * Normalise a raw object of one source into the unified activity item shape.
-	 *
-	 * @param string $sourceType The internal source-type key.
-	 * @param array<string,mixed> $object The raw object array.
-	 * @param string $entityType The originating entityType for back-reference.
-	 * @param string $entityId The originating entityId for back-reference.
-	 *
-	 * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
-	 */
-	private function normalizeBySource(string $sourceType, array $object, string $entityType, string $entityId): ?array {
-		$id = (string)($object['id'] ?? $object['uuid'] ?? '');
-
-		switch ($sourceType) {
-			case 'interaction':
-				// Ticket field names (unify-ticket-supertype): subject -> title,
-				// summary -> description, contactedAt -> occurredAt, agent -> assignee.
-				$channel = (string)($object['channel'] ?? '');
-				$type = 'interaction';
-				if ($channel === 'worklog') {
-					$type = 'worklog';
-				}
-				return [
-					'type' => $type,
-					'id' => $id,
-					'title' => (string)($object['title'] ?? $object['description'] ?? ''),
-					'description' => (string)($object['description'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['occurredAt'] ?? null)),
-					'user' => $this->stringOrNull(value: ($object['assignee'] ?? null)),
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'channel' => $channel,
-						'direction' => $this->stringOrNull(value: ($object['direction'] ?? null)),
-						'duration' => $this->stringOrNull(value: ($object['duration'] ?? null)),
-						'outcome' => $this->stringOrNull(value: ($object['outcome'] ?? null)),
-					],
-				];
-
-			case 'task':
-				return [
-					'type' => 'task',
-					'id' => $id,
-					'title' => (string)($object['subject'] ?? $object['title'] ?? ''),
-					'description' => (string)($object['description'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['deadline'] ?? $object['createdAt'] ?? null)),
-					'user' => $this->stringOrNull(value: ($object['assigneeUserId'] ?? null)),
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'status' => $this->stringOrNull(value: ($object['status'] ?? null)),
-						'priority' => $this->stringOrNull(value: ($object['priority'] ?? null)),
-					],
-				];
-
-			case 'emailLink':
-				return [
-					'type' => 'email',
-					'id' => $id,
-					'title' => (string)($object['subject'] ?? ''),
-					'description' => (string)($object['sender'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['date'] ?? null)),
-					'user' => null,
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'direction' => $this->stringOrNull(value: ($object['direction'] ?? null)),
-						'messageId' => $this->stringOrNull(value: ($object['messageId'] ?? null)),
-					],
-				];
-
-			case 'calendarLink':
-				return [
-					'type' => 'calendar',
-					'id' => $id,
-					'title' => (string)($object['title'] ?? $object['subject'] ?? ''),
-					'description' => (string)($object['notes'] ?? $object['description'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['startDate'] ?? null)),
-					'user' => null,
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'endDate' => $this->stringOrNull(value: ($object['endDate'] ?? null)),
-						'location' => $this->stringOrNull(value: ($object['location'] ?? null)),
-					],
-				];
-
-			case 'note':
-				return $this->normalizeNote(note: $object, entityType: $entityType, entityId: $entityId);
-
-			case 'message':
-				return $this->normalizeMessage(message: $object, entityType: $entityType, entityId: $entityId);
-
-			default:
-				return null;
-		}//end switch
-	}//end normalizeBySource()
 
 	/**
 	 * Create a worklog entry as a contactmoment ticket with channel='worklog'.
