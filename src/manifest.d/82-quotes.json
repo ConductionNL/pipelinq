@@ -214,7 +214,7 @@
 						"icon": "FileDocumentEditOutline",
 						"content": {
 							"title": "Quote",
-							"columns": 2,
+							"columns": 3,
 							"include": [
 								"lead",
 								"client",
@@ -227,12 +227,42 @@
 							],
 							"overrides": {
 								"assignee": {
-									"formatter": "userDisplayName"
+									"formatter": "userDisplayName",
+									"order": 6,
+									"hint": "Signs the quote"
 								},
 								"sentAt": {
-									"editable": false
+									"editable": false,
+									"order": 4,
+									"hint": "Set when it is sent",
+									"emptyValue": "Not yet sent"
+								},
+								"lead": {
+									"order": 0,
+									"hint": "The quote belongs to this lead"
+								},
+								"client": {
+									"order": 1,
+									"hint": "From the lead"
+								},
+								"contact": {
+									"order": 2,
+									"hint": "Receives the quote by e-mail"
+								},
+								"title": {
+									"order": 3,
+									"hint": "Printed on the PDF"
+								},
+								"expiresAt": {
+									"order": 5,
+									"hint": "30 days after sending"
+								},
+								"paymentTerm": {
+									"order": 7,
+									"hint": "Printed on the PDF"
 								}
-							}
+							},
+							"fieldLook": "input"
 						}
 					},
 					{
@@ -252,12 +282,12 @@
 							},
 							"columns": [
 								{
-									"key": "description",
+									"key": "name",
 									"label": "Product"
 								},
 								{
-									"key": "kind",
-									"label": "Kind"
+									"key": "description",
+									"label": "Description"
 								},
 								{
 									"key": "quantity",
@@ -312,7 +342,7 @@
 									"currencyField": "currency"
 								},
 								{
-									"label": "VAT",
+									"label": "VAT {vatRate}%",
 									"path": "vatAmount",
 									"format": "currency",
 									"currencyField": "currency"

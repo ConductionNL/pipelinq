@@ -1,6 +1,15 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "The quote belongs to this lead": "The quote belongs to this lead",
+        "From the lead": "From the lead",
+        "Receives the quote by e-mail": "Receives the quote by e-mail",
+        "Printed on the PDF": "Printed on the PDF",
+        "Set when it is sent": "Set when it is sent",
+        "30 days after sending": "30 days after sending",
+        "Signs the quote": "Signs the quote",
+        "Not yet sent": "Not yet sent",
+        "VAT {vatRate}%": "VAT {vatRate}%",
         "Preview PDF": "Preview PDF",
         "assigned to {assignee|user}": "assigned to {assignee|user}",
         "Awaiting customer": "Awaiting customer",

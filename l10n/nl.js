@@ -1,6 +1,15 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "The quote belongs to this lead": "De offerte hoort bij deze lead",
+        "From the lead": "Uit de lead",
+        "Receives the quote by e-mail": "Ontvangt de offerte per e-mail",
+        "Printed on the PDF": "Staat op de pdf",
+        "Set when it is sent": "Wordt gezet bij verzenden",
+        "30 days after sending": "30 dagen na verzending",
+        "Signs the quote": "Tekent de offerte",
+        "Not yet sent": "Nog niet verstuurd",
+        "VAT {vatRate}%": "Btw {vatRate}%",
         "Preview PDF": "Voorbeeld pdf",
         "Open (lead status)": "Open",
         "New newsletter, step {step} of {total}": "Nieuwe nieuwsbrief, stap {step} van {total}",
