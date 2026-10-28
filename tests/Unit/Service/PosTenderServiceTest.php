@@ -112,10 +112,9 @@ class TenderFakeObjectService {
 	 * Opt-in switch that makes the fake ALSO honour a register/schema supplied
 	 * at the TOP LEVEL of the config array. Real OpenRegister does not.
 	 *
-	 * ⚠️ It exists for exactly one reason: `PosTenderService` still has three
+	 * ⚠️ It exists for exactly one reason: `PosTenderService` still has two
 	 * mis-keyed `findAll()` sites that pipelinq#793 sequences behind guards
 	 * this change deliberately does not build —
-	 *   `listTenderTypes()`      (:155, flips the endpoint permissive→rejecting)
 	 *   `listUnpostedTenders()`  (:828, unbounded whole-table read on a 5-min
 	 *                             cron, one outbound GL CloudEvent per row)
 	 *   `countTendersForType()`  (:921, makes any ever-used tender type
@@ -468,16 +467,11 @@ class PosTenderServiceTest extends TestCase {
 	// -----------------------------------------------------------------
 
 	/**
-	 * ⚠️ `listTenderTypes()` (:155) is still a mis-keyed #793 site — pipelinq#793
-	 * sequences it behind a product decision (it flips the endpoint from
-	 * permissive to rejecting), so this change does not repair it. The flag
-	 * restores the store's reachability so the sort rule is still asserted.
+	 * Tender types come back sorted by sortOrder, read with no sticky context.
 	 *
 	 * @return void
 	 */
 	public function testListTenderTypesReturnsAllSortedBySortOrder(): void {
-		$this->objects->acceptTopLevelContext = true;
-
 		$this->seedTenderType(['id' => 't1', 'code' => 'CASH', 'sortOrder' => 2]);
 		$this->seedTenderType(['id' => 't2', 'code' => 'CARD', 'sortOrder' => 1]);
 		$this->seedTenderType(['id' => 't3', 'code' => 'OFF',  'sortOrder' => 3, 'isActive' => false]);
@@ -491,13 +485,11 @@ class PosTenderServiceTest extends TestCase {
 	}//end testListTenderTypesReturnsAllSortedBySortOrder()
 
 	/**
-	 * ⚠️ Same known-broken site as above: `listTenderTypes()` (:155), #793.
+	 * The active-only list drops a deactivated type.
 	 *
 	 * @return void
 	 */
 	public function testListTenderTypesActiveOnlyFiltersDeactivated(): void {
-		$this->objects->acceptTopLevelContext = true;
-
 		$this->seedTenderType(['id' => 't1', 'code' => 'CASH']);
 		$this->seedTenderType(['id' => 't2', 'code' => 'OFF', 'isActive' => false]);
 
@@ -547,14 +539,11 @@ class PosTenderServiceTest extends TestCase {
 	}//end testCreateTenderTypeRequiresGlAccount()
 
 	/**
-	 * ⚠️ The uniqueness check reads through `listTenderTypes()` (:155), a
-	 * known-broken #793 site this change does not repair.
+	 * The uniqueness check reads through `listTenderTypes()`.
 	 *
 	 * @return void
 	 */
 	public function testCreateTenderTypeRejectsDuplicateCode(): void {
-		$this->objects->acceptTopLevelContext = true;
-
 		$this->seedTenderType(['id' => 't1', 'code' => 'CASH']);
 
 		$this->expectException(OCSBadRequestException::class);
@@ -918,6 +907,27 @@ class PosTenderServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('register', $config);
 		$this->assertArrayNotHasKey('schema', $config);
 	}//end testGetTendersQueriesWithContextInsideFiltersOnly()
+
+	/**
+	 * The tender type list reads the tender type schema and nothing else: a
+	 * read left behind by another schema's write must not leak in (PqBeheerKassa
+	 * listed "Hello World" and "OpenCatalogi").
+	 *
+	 * @return void
+	 */
+	public function testListTenderTypesReadsOnlyTheTenderTypeSchema(): void {
+		$this->seedTenderType(['id' => 't1', 'code' => 'CASH']);
+		$this->objects->store['application'] = ['a1' => ['id' => 'a1', 'name' => 'Hello World']];
+		$this->objects->currentRegister = 'reg';
+		$this->objects->currentSchema = 'application';
+
+		$types = $this->service->listTenderTypes(activeOnly: false);
+
+		$this->assertSame(['CASH'], array_column($types, 'code'));
+		$config = $this->objects->queries[0];
+		$this->assertSame('posTenderType', $config['filters']['schema']);
+		$this->assertArrayNotHasKey('schema', $config);
+	}//end testListTenderTypesReadsOnlyTheTenderTypeSchema()
 
 	/**
 	 * One line, two call orders, one answer.
