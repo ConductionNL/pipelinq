@@ -213,7 +213,7 @@ describe('the new sale (PqKassa)', () => {
 
 	it('lines the totals up in a label column as wide as the longest label', () => {
 		const source = readFileSync(resolve(__dirname, '../../src/views/pos/PosTransactionForm.vue'), 'utf8')
-		const rule = (selector) => (source.match(new RegExp(selector.replace(/[.]/g, '\\.') + ' \\{([^}]*)\\}')) || [])[1] || ''
+		const rule = (selector) => (source.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{([^}]*)\\}')) || [])[1] || ''
 		expect(rule('.pos-totals')).toMatch(/grid-template-columns: max-content 1fr/)
 		expect(rule('.pos-totals__row')).toMatch(/display: contents/)
 	})

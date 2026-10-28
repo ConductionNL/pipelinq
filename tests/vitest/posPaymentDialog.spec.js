@@ -124,7 +124,7 @@ describe('the payment received dialog', () => {
 
 describe('the payment received dialog as the board draws it (PQB-7)', () => {
 	const source = readFileSync(resolve(__dirname, '../../src/dialogs/PosPaymentDialog.vue'), 'utf8')
-	const rule = (selector) => (source.match(new RegExp(selector.replace(/[.]/g, '\\.') + ' \\{([^}]*)\\}')) || [])[1] || ''
+	const rule = (selector) => (source.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{([^}]*)\\}')) || [])[1] || ''
 
 	it('sums the split up in a green status line, not a note card', async () => {
 		const wrapper = mountDialog()

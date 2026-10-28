@@ -65,7 +65,7 @@ describe('the till customer lookup settings', () => {
 
 	it('sets the two cards side by side, the settings wide and the note 300px, with a full-width depth select', () => {
 		const source = readFileSync(resolve(__dirname, '../../src/views/admin/PosCustomerSettings.vue'), 'utf8')
-		const rule = (selector) => (source.match(new RegExp(selector.replace(/[.]/g, '\\.') + ' \\{([^}]*)\\}')) || [])[1] || ''
+		const rule = (selector) => (source.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{([^}]*)\\}')) || [])[1] || ''
 		expect(rule('.pos-customer-settings-cards.pos-customer-settings-cards')).toMatch(/grid-template-columns: minmax\(0, 1fr\) 300px/)
 		expect(rule('.pos-customer-settings__depth')).toMatch(/width: 100%/)
 		expect(rule('.pos-customer-settings__actions')).toMatch(/flex-direction: row-reverse/)

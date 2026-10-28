@@ -104,7 +104,7 @@ describe('the declared admin sections', () => {
 		}
 		expect(Object.keys(guards).sort()).toEqual(Object.keys(sections).sort())
 		for (const [id, guard] of Object.entries(guards)) {
-			expect(settings, id).toMatch(new RegExp(`<CnSettingsFieldsSection\\s+v-if="${guard.replace(/[&]/g, '\\$&')}"\\s+v-bind="sections\\.${id}"`))
+			expect(settings, id).toMatch(new RegExp(`<CnSettingsFieldsSection\\s+v-if="${guard.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"\\s+v-bind="sections\\.${id}"`))
 		}
 	})
 })
