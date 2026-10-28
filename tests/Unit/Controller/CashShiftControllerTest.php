@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\CashShiftController;
 use OCA\Pipelinq\Service\CashShiftService;
+use OCA\Pipelinq\Service\CashShiftSummaryService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -51,6 +52,9 @@ class CashShiftControllerTest extends TestCase {
 	/** @var CashShiftService&MockObject */
 	private CashShiftService $service;
 
+	/** @var CashShiftSummaryService&MockObject */
+	private CashShiftSummaryService $summaries;
+
 	/** @var IRequest&MockObject */
 	private IRequest $request;
 
@@ -65,6 +69,7 @@ class CashShiftControllerTest extends TestCase {
 	protected function setUp(): void {
 		$this->request = $this->createMock(IRequest::class);
 		$this->service = $this->createMock(CashShiftService::class);
+		$this->summaries = $this->createMock(originalClassName: CashShiftSummaryService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
 		$l10n = $this->createMock(IL10N::class);
@@ -72,6 +77,7 @@ class CashShiftControllerTest extends TestCase {
 
 		$this->controller = new CashShiftController($this->request,
 			$this->service,
+			$this->summaries,
 			$this->userSession,
 			$l10n,
 			$this->createMock(LoggerInterface::class),
@@ -294,7 +300,7 @@ class CashShiftControllerTest extends TestCase {
 		$this->request->method('getParam')->willReturnMap([
 			['keys', [], ['s-1', 's-2']],
 		]);
-		$this->service->expects($this->once())
+		$this->summaries->expects($this->once())
 			->method('summarise')
 			->with(['s-1', 's-2'])
 			->willReturn([
@@ -317,7 +323,7 @@ class CashShiftControllerTest extends TestCase {
 	 */
 	public function testSummaryRefusesAnUnknownMeasure(): void {
 		$this->loginAs(uid: 'clerk');
-		$this->service->expects($this->never())->method('summarise');
+		$this->summaries->expects($this->never())->method('summarise');
 
 		$response = $this->controller->summary(measure: 'floatAmount; drop');
 
@@ -331,7 +337,7 @@ class CashShiftControllerTest extends TestCase {
 	 */
 	public function testShiftSummaryDelegates(): void {
 		$this->loginAs(uid: 'clerk');
-		$this->service->expects($this->once())
+		$this->summaries->expects($this->once())
 			->method('shiftSummary')
 			->with('shift-1')
 			->willReturn(['id' => 'shift-1', 'dropCount' => 2]);

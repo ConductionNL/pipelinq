@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\CashShiftService;
+use OCA\Pipelinq\Service\CashShiftSummaryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -70,6 +71,7 @@ class CashShiftController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param CashShiftService $service The cash-shift service.
+	 * @param CashShiftSummaryService $summaries The cash-shift summary reader.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
@@ -77,6 +79,7 @@ class CashShiftController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private CashShiftService $service,
+		private CashShiftSummaryService $summaries,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
@@ -278,7 +281,7 @@ class CashShiftController extends Controller {
 				'available' => true,
 				'values' => array_map(
 					fn (array $summary): mixed => $summary[$measure] ?? null,
-					$this->service->summarise(shiftIds: $keys)
+					$this->summaries->summarise(shiftIds: $keys)
 				),
 			],
 			label: 'summary'
@@ -303,7 +306,7 @@ class CashShiftController extends Controller {
 		}
 
 		return $this->run(
-			action: fn (): array => $this->service->shiftSummary(shiftId: $id),
+			action: fn (): array => $this->summaries->shiftSummary(shiftId: $id),
 			label: 'shiftSummary'
 		);
 	}//end shiftSummary()

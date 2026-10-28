@@ -36,6 +36,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\CashShiftService;
+use OCA\Pipelinq\Service\CashShiftSummaryService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -798,7 +799,7 @@ class CashShiftServiceTest extends TestCase {
 		];
 		$this->objects->store['cashShift_schema']['shift-2'] = ['id' => 'shift-2', 'status' => 'open', 'floatAmount' => 150.0];
 
-		$summary = $this->service->summarise(shiftIds: ['shift-1', 'shift-2']);
+		$summary = (new CashShiftSummaryService(shifts: $this->service))->summarise(shiftIds: ['shift-1', 'shift-2']);
 
 		$this->assertSame(expected: 2, actual: $summary['shift-1']['dropCount']);
 		$this->assertSame(expected: 250.0, actual: $summary['shift-1']['dropTotal']);
@@ -831,7 +832,7 @@ class CashShiftServiceTest extends TestCase {
 
 		$this->objects->store['cashShift_schema']['d'] = ['id' => 'd', 'status' => 'closed'];
 
-		$summary = $this->service->summarise(shiftIds: ['a', 'b', 'c', 'd']);
+		$summary = (new CashShiftSummaryService(shifts: $this->service))->summarise(shiftIds: ['a', 'b', 'c', 'd']);
 
 		$this->assertSame(expected: 'approved', actual: $summary['a']['outcome']);
 		$this->assertSame(expected: 'within the margin', actual: $summary['b']['outcome']);
@@ -854,7 +855,7 @@ class CashShiftServiceTest extends TestCase {
 		$this->objects->store['posZReport_schema']['z-2'] = ['id' => 'z-2', 'reference' => 'Z-2', 'terminalId' => 'Balie 2', 'reportDate' => '2026-05-21'];
 		$this->objects->store['posZReport_schema']['z-3'] = ['id' => 'z-3', 'reference' => 'Z-3', 'terminalId' => 'Balie 3', 'reportDate' => '2026-05-20'];
 
-		$summary = $this->service->shiftSummary(shiftId: 'shift-1');
+		$summary = (new CashShiftSummaryService(shifts: $this->service))->shiftSummary(shiftId: 'shift-1');
 
 		$this->assertSame(expected: [['id' => 'sales', 'count' => 1]], actual: $summary['sales']);
 		$this->assertSame(expected: ['z-1'], actual: array_column($summary['zReports'], 'id'));

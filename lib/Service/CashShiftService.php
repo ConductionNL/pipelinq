@@ -456,172 +456,6 @@ class CashShiftService {
 	}//end rejectDiff()
 
 	/**
-	 * Read what the shifts list and the shift page show beside a shift: its
-	 * drops, its newest cash difference and the outcome word the list draws
-	 * as a pill. A shift that cannot be read is left out.
-	 *
-	 * @param array<int, string> $shiftIds The shift UUIDs.
-	 *
-	 * @return array<string, array<string, mixed>> The summary per shift UUID.
-	 *
-	 * @spec openspec/changes/pos-shift-summary/specs/pos-cash-management/spec.md#requirement-a-shift-summary-reads-its-drops-and-difference
-	 */
-	public function summarise(array $shiftIds): array {
-		$out = [];
-		foreach (array_unique(array_filter(array_map('strval', $shiftIds))) as $shiftId) {
-			try {
-				$shift = $this->fetchShift(id: $shiftId);
-			} catch (OCSNotFoundException $e) {
-				continue;
-			}
-
-			$out[$shiftId] = $this->summaryOf(shift: $shift, shiftId: $shiftId);
-		}
-
-		return $out;
-	}//end summarise()
-
-	/**
-	 * The summary of one shift for its page: the list summary plus the sales
-	 * booked in the shift and the Z report of its till on its day.
-	 *
-	 * @param string $shiftId The shift UUID.
-	 *
-	 * @return array<string, mixed> The summary.
-	 *
-	 * @throws OCSNotFoundException If the shift does not exist.
-	 *
-	 * @spec openspec/changes/pos-shift-summary/specs/pos-cash-management/spec.md#requirement-a-shift-page-names-its-sales-and-z-report
-	 */
-	public function shiftSummary(string $shiftId): array {
-		$shift = $this->fetchShift(id: $shiftId);
-		$summary = $this->summaryOf(shift: $shift, shiftId: $shiftId);
-		$sales = count($this->fetchByShift(schemaKey: 'posTransaction_schema', shiftId: $shiftId));
-		$summary['sales'] = [['id' => 'sales', 'count' => $sales]];
-		$summary['zReports'] = $this->zReportsFor(
-			drawer: (string)($shift['drawer'] ?? ''),
-			day: substr((string)($shift['floatAt'] ?? ''), 0, 10)
-		);
-
-		return $summary;
-	}//end shiftSummary()
-
-	/**
-	 * The summary of a shift record.
-	 *
-	 * @param array<string, mixed> $shift The shift.
-	 * @param string $shiftId The shift UUID.
-	 *
-	 * @return array<string, mixed> The summary.
-	 */
-	private function summaryOf(array $shift, string $shiftId): array {
-		$drops = $this->fetchByShift(schemaKey: 'cashDrop_schema', shiftId: $shiftId);
-		$total = 0.0;
-		foreach ($drops as $drop) {
-			$total += (float)($drop['amount'] ?? 0);
-		}
-
-		// The newest difference: the pending one, else the last read.
-		$diffs = $this->fetchByShift(schemaKey: 'cashDiff_schema', shiftId: $shiftId);
-		$pending = array_values(array_filter($diffs, fn (array $row): bool => ($row['status'] ?? '') === 'pending'));
-		$diff = $pending[0] ?? ($diffs[count($diffs) - 1] ?? []);
-
-		$difference = null;
-		$tolerance = null;
-		if ($diff !== []) {
-			$difference = (float)($diff['diffAmount'] ?? 0);
-			$tolerance = (float)($diff['tolerancePercentage'] ?? 0);
-		}
-
-		return [
-			'id' => $shiftId,
-			'floatAmount' => (float)($shift['floatAmount'] ?? 0),
-			'dropCount' => count($drops),
-			'dropTotal' => $this->money(value: $total),
-			'difference' => $difference,
-			'tolerancePercentage' => $tolerance,
-			'outcome' => $this->outcomeOf(status: (string)($shift['status'] ?? ''), diff: $diff),
-		];
-	}//end summaryOf()
-
-	/**
-	 * The outcome word of a shift: open, counted, approved (an exact count),
-	 * within the margin, outside the margin, or rejected.
-	 *
-	 * @param string $status The shift status.
-	 * @param array<string, mixed> $diff The newest difference, or [].
-	 *
-	 * @return string The outcome word.
-	 */
-	private function outcomeOf(string $status, array $diff): string {
-		if ($status === 'open') {
-			return 'open';
-		}
-
-		if ($diff === []) {
-			return 'counted';
-		}
-
-		if ((string)($diff['status'] ?? '') === 'rejected') {
-			return 'rejected';
-		}
-
-		if (abs((float)($diff['diffAmount'] ?? 0)) < 0.005 && (string)($diff['status'] ?? '') === 'approved') {
-			return 'approved';
-		}
-
-		if (($diff['withinTolerance'] ?? false) === true) {
-			return 'within the margin';
-		}
-
-		return 'outside the margin';
-	}//end outcomeOf()
-
-	/**
-	 * The Z reports of a till on a day: the till name starts the drawer's
-	 * name ("Balie 3" for "Balie 3, stadskantoor").
-	 *
-	 * @param string $drawer The shift's drawer.
-	 * @param string $day The shift's day, Y-m-d.
-	 *
-	 * @return array<int, array<string, mixed>> The Z reports: id, reference, reportDate, terminalId.
-	 */
-	private function zReportsFor(string $drawer, string $day): array {
-		if ($drawer === '' || $day === '') {
-			return [];
-		}
-
-		try {
-			[$register, $schema] = $this->config(schemaKey: 'posZReport_schema');
-			$results = $this->getObjectService()->findAll(
-				config: ['filters' => ['register' => $register, 'schema' => $schema, 'reportDate' => $day]]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: failed to read Z reports for a shift', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		$reports = [];
-		foreach (($results ?? []) as $result) {
-			$row = $this->toArray(object: $result);
-			$till = trim((string)($row['terminalId'] ?? ''));
-			$sameDay = substr((string)($row['reportDate'] ?? ''), 0, 10) === $day;
-			if ($till === '' || $sameDay === false || stripos($drawer, $till) !== 0) {
-				continue;
-			}
-
-			$reports[] = [
-				'id' => (string)($row['id'] ?? $row['uuid'] ?? ''),
-				'reference' => (string)($row['reference'] ?? ''),
-				'reportDate' => (string)($row['reportDate'] ?? ''),
-				'terminalId' => $till,
-			];
-		}
-
-		return $reports;
-	}//end zReportsFor()
-
-	/**
 	 * Sum the totals of confirmed/settled POS transactions inside a time window.
 	 *
 	 * Queries posTransaction objects and sums `total` for those with status
@@ -844,7 +678,7 @@ class CashShiftService {
 	 *
 	 * @throws OCSNotFoundException If the shift is not found.
 	 */
-	private function fetchShift(string $id): array {
+	public function fetchShift(string $id): array {
 		return $this->fetchOne(schemaKey: 'cashShift_schema', id: $id, label: 'Shift niet gevonden.');
 	}//end fetchShift()
 
@@ -896,7 +730,7 @@ class CashShiftService {
 	 *
 	 * @return array<int, array<string, mixed>> The linked objects.
 	 */
-	private function fetchByShift(string $schemaKey, string $shiftId): array {
+	public function fetchByShift(string $schemaKey, string $shiftId): array {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
@@ -929,6 +763,28 @@ class CashShiftService {
 
 		return $rows;
 	}//end fetchByShift()
+
+	/**
+	 * Fetch the objects of a schema that match some filters.
+	 *
+	 * @param string $schemaKey The app-config schema key.
+	 * @param array<string, mixed> $filters The filters.
+	 *
+	 * @return array<int, array<string, mixed>> The objects; none when they cannot be read.
+	 */
+	public function fetchWhere(string $schemaKey, array $filters): array {
+		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+		try {
+			$results = $this->getObjectService()->findAll(
+				config: ['filters' => array_merge($filters, ['register' => $register, 'schema' => $schema])]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: failed to fetch cash objects', ['exception' => $e->getMessage(), 'schemaKey' => $schemaKey]);
+			return [];
+		}
+
+		return array_map(fn (mixed $row): array => $this->toArray(object: $row), ($results ?? []));
+	}//end fetchWhere()
 
 	/**
 	 * Persist a shift via the OR ObjectService.
