@@ -8561,7 +8561,9 @@ OC.L10N.register(
         "Card in the address book {book}, updated {when}.": "Kaart in het adresboek {book}, {when} bijgewerkt.",
         "today {time}": "vandaag {time}",
         "Social profile": "Sociaal profiel",
-        "preferred": "voorkeur"
+        "preferred": "voorkeur",
+        "{name}, client": "{name}, klant",
+        "Request {reference}": "Verzoek {reference}"
     },
     "nplurals=2; plural=(n != 1);"
 )
