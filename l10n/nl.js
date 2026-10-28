@@ -9186,7 +9186,11 @@ OC.L10N.register(
         "The event this newsletter invites to.": "Het evenement waarvoor deze nieuwsbrief uitnodigt.",
         "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel.",
         "A contact moment has no customer to answer.": "Een contactmoment heeft geen klant om te beantwoorden.",
-        "Close it via More, Close the contact moment.": "Rond af via Meer, Contactmoment sluiten."
+        "Close it via More, Close the contact moment.": "Rond af via Meer, Contactmoment sluiten.",
+        "waiting {n} days": "wacht {n} dagen",
+        "waiting since today": "wacht sinds vandaag",
+        "not assigned": "niet toegewezen",
+        "waiting for 1 day": "wacht 1 dag"
     },
     "nplurals=2; plural=(n != 1);"
 )

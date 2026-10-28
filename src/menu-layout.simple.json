@@ -1777,6 +1777,7 @@
 							"label": "Conversation notes",
 							"rows": 5,
 							"savedText": "Saved automatically as you type. Last saved {time}.",
+							"outcomeBelow": true,
 							"outcome": {
 								"field": "outcome",
 								"label": "Outcome",
@@ -1843,8 +1844,16 @@
 											}
 										},
 										{
+											"path": "occurredAt",
+											"format": "days-since",
+											"phrase": "waiting {n} days",
+											"phraseOne": "waiting for 1 day",
+											"phraseZero": "waiting since today"
+										},
+										{
 											"path": "assignee",
-											"format": "user"
+											"format": "user",
+											"empty": "not assigned"
 										}
 									],
 									"card": true,

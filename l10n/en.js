@@ -9174,7 +9174,11 @@ OC.L10N.register(
         "The event this newsletter invites to.": "The event this newsletter invites to.",
         "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own.",
         "A contact moment has no customer to answer.": "A contact moment has no customer to answer.",
-        "Close it via More, Close the contact moment.": "Close it via More, Close the contact moment."
+        "Close it via More, Close the contact moment.": "Close it via More, Close the contact moment.",
+        "waiting {n} days": "waiting {n} days",
+        "waiting since today": "waiting since today",
+        "not assigned": "not assigned",
+        "waiting for 1 day": "waiting for 1 day"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -682,6 +682,21 @@ describe('the contact moment (board PqContactmoment)', () => {
 		expect(widgetById['contact-request'].content.link).toBeUndefined()
 	})
 
+	it('puts the outcome under the save status, as the board', () => {
+		expect(widgetById['contact-notes'].content.outcomeBelow).toBe(true)
+	})
+
+	it('says how long the request has waited and that nobody holds it, as the board', () => {
+		const lead = widgetById['contact-request'].content.fields.find((field) => field.as === 'lead')
+		const age = lead.subtitle.find((part) => part.format === 'days-since')
+		expect(age.path).toBe('occurredAt')
+		expect(nl[age.phrase]).toBe('wacht {n} dagen')
+		expect(nl[age.phraseOne]).toBe('wacht 1 dag')
+		const handler = lead.subtitle.find((part) => part.path === 'assignee')
+		expect(nl[handler.empty]).toBe('niet toegewezen')
+		expect(lead.subtitle.indexOf(age)).toBeLessThan(lead.subtitle.indexOf(handler))
+	})
+
 	it('makes noting the outcome the primary button of the notes', () => {
 		expect(widgetById['contact-notes'].content.outcome.saveVariant).toBe('primary')
 	})
