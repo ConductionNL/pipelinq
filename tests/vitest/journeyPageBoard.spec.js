@@ -87,6 +87,11 @@ describe('journey steps', () => {
 		expect(steps.content.fields.map((f) => f.label)).toEqual(['Trigger', 'Wait', 'Condition', 'Action'])
 	})
 
+	it('sets three step tiles in a row and the Action tile across the card (DATA-29 632)', () => {
+		expect(steps.content.columns).toBe(3)
+		expect(steps.content.fields.filter((f) => f.wide).map((f) => f.label)).toEqual(['Action'])
+	})
+
 	it('names the trigger and the action in their own words, else by their kind', () => {
 		for (const [label, path] of [['Trigger', 'trigger'], ['Action', 'action']]) {
 			const [own, kind] = field(label).firstOf
