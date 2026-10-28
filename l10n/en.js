@@ -9169,7 +9169,10 @@ OC.L10N.register(
         "30 days after sending": "30 days after sending",
         "Signs the quote": "Signs the quote",
         "Not yet sent": "Not yet sent",
-        "VAT {vatRate}%": "VAT {vatRate}%"
+        "VAT {vatRate}%": "VAT {vatRate}%",
+        "The VAT percentage the quote's VAT is worked out at.": "The VAT percentage the quote's VAT is worked out at.",
+        "The event this newsletter invites to.": "The event this newsletter invites to.",
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own."
     },
     "nplurals=2; plural=(n != 1);"
 )
