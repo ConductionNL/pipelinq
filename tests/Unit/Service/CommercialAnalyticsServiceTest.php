@@ -219,6 +219,35 @@ class CommercialAnalyticsServiceTest extends TestCase {
 	}
 
 	/**
+	 * The open-pipeline figures follow a lead filter (the leads list's
+	 * pipeline and active filters, board PqLeads), and a list value matches
+	 * any of its values; a key that is not a plain field name is ignored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/leads-list-board-line/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
+	 */
+	public function testOpenPipelineFollowsALeadFilter(): void {
+		$data = $this->fixture();
+		$data['lead_schema'] = [
+			['id' => 'A', 'status' => 'open', 'value' => 1000, 'pipeline' => 'sales', 'qualificationScore' => 50],
+			['id' => 'B', 'status' => 'open', 'value' => 2000, 'pipeline' => 'partners', 'qualificationScore' => 100],
+			['id' => 'C', 'status' => 'open', 'value' => 4000, 'pipeline' => 'sales', 'priority' => 'high', 'qualificationScore' => 25],
+		];
+		$service = $this->buildService(byCollection: $data);
+
+		$sales = $service->getCommercialOverview(period: 'month', leadFilter: ['pipeline' => 'sales']);
+		$this->assertSame(expected: 1500.0, actual: $sales['weightedForecast']);
+		$this->assertSame(expected: 5000.0, actual: $sales['openPipelineValue']);
+
+		$high = $service->getCommercialOverview(period: 'month', leadFilter: ['pipeline' => ['sales', 'partners'], 'priority' => 'high']);
+		$this->assertSame(expected: 1000.0, actual: $high['weightedForecast']);
+
+		$odd = $service->getCommercialOverview(period: 'month', leadFilter: ['@self[updated]' => 'x']);
+		$this->assertSame(expected: 3500.0, actual: $odd['weightedForecast']);
+	}
+
+	/**
 	 * An unknown period is rejected.
 	 *
 	 * @return void
