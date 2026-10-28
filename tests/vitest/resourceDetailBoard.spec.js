@@ -16,7 +16,11 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const src = readFileSync(resolve(__dirname, '../../src/views/bookings/ResourceDetail.vue'), 'utf8')
-const rule = (selector) => {
+/**
+ * @param {string} selector A rule's selector, as written in the style block.
+ * @return {string} The rule's body, '' when there is none.
+ */
+function rule(selector) {
 	const at = src.indexOf(`\n${selector} {`)
 	return at === -1 ? '' : src.slice(at, src.indexOf('}', at))
 }
