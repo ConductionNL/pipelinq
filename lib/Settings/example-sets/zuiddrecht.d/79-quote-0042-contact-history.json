@@ -58,7 +58,7 @@
 	"appConfig": [
 		{
 			"key": "record_document_templates",
-			"value": "{\"salesQuote\": {\"template\": \"offerte\", \"ownerField\": \"assignee\"}}"
+			"value": "{\"salesQuote\": {\"template\": \"offerte\", \"ownerField\": \"assignee\", \"lists\": [{\"schema\": \"salesQuoteLine\", \"field\": \"quote\", \"as\": \"lines\", \"order\": {\"sortOrder\": \"ASC\"}}]}}"
 		}
 	]
 }

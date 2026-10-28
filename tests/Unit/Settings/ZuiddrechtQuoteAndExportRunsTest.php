@@ -75,7 +75,13 @@ class ZuiddrechtQuoteAndExportRunsTest extends TestCase {
 
 		$config = array_column($fragment['appConfig'], 'value', 'key');
 		$this->assertSame(
-			expected: ['salesQuote' => ['template' => 'offerte', 'ownerField' => 'assignee']],
+			expected: [
+				'salesQuote' => [
+					'template'   => 'offerte',
+					'ownerField' => 'assignee',
+					'lists'      => [['schema' => 'salesQuoteLine', 'field' => 'quote', 'as' => 'lines', 'order' => ['sortOrder' => 'ASC']]],
+				],
+			],
 			actual: json_decode($config['record_document_templates'], true)
 		);
 
@@ -87,6 +93,16 @@ class ZuiddrechtQuoteAndExportRunsTest extends TestCase {
 		}
 
 		$this->assertSame(expected: ['create', 'update', 'update'], actual: array_column($history, 'action'));
+
+		$this->assertSame(expected: 21, actual: $objects['offerte-0042']['data']['vatRate']);
+		$this->assertSame(expected: '30 dagen na factuurdatum', actual: $objects['offerte-0042']['data']['paymentTerm']);
+		$names = [];
+		foreach ([1, 2, 3, 4] as $line) {
+			$names[] = $objects['offerte-0042-regel-'.$line]['data']['name'];
+		}
+
+		$this->assertSame(expected: ['Website, basispakket', 'Hosting, per maand', 'Workshop teksten', 'Koppeling met het kassasysteem'], actual: $names);
+		$this->assertSame(expected: 'Dagvoorraad tonen op de website', actual: $objects['offerte-0042-regel-4']['data']['description']);
 		$this->assertSame(expected: $objects['offerte-0042']['data']['subtotal'], actual: $history[2]['changed']['subtotal']['new']);
 		$this->assertSame(expected: $history[1]['changed']['subtotal']['new'], actual: $history[2]['changed']['subtotal']['old']);
 	}//end testTheQuoteHasItsContactExpiryAndHistory()
@@ -123,4 +139,24 @@ class ZuiddrechtQuoteAndExportRunsTest extends TestCase {
 		$this->assertSame(expected: 3, actual: $jobs['Afspraken en niet verschenen']['lastRunFilesExpected']);
 		$this->assertSame(expected: 3, actual: $objects['export-run-appointments']['data']['fileCountExpected']);
 	}//end testTheExportJobsCarryTheirLastRun()
+
+	/**
+	 * Lotte sent the October newsletter six days ago, naming the warmtenet evening.
+	 *
+	 * @return void
+	 */
+	public function testTheOctoberNewsletterInvitedToTheEvent(): void {
+		$objects = array_column($this->fragment()['objects'], null, 'key');
+		$blast   = $objects['nieuwsbrief-oktober-warmtenet']['data'];
+
+		$this->assertSame(expected: 'Nieuwsbrief oktober', actual: $blast['name']);
+		$this->assertSame(expected: 'sent', actual: $blast['status']);
+		$this->assertSame(expected: '{{datetime:-6 09:00}}', actual: $blast['sentAt']);
+		$this->assertSame(expected: '{{cast:lotte.uid}}', actual: $blast['createdBy']);
+		$this->assertSame(expected: '{{object:evenement-warmtenet-oost.id}}', actual: $blast['event']);
+		$this->assertStringContainsString(
+			needle: '{{unsubscribe_link}}',
+			haystack: $objects['sjabloon-nieuwsbrief-oktober-warmtenet']['data']['bodyText']
+		);
+	}//end testTheOctoberNewsletterInvitedToTheEvent()
 }//end class
