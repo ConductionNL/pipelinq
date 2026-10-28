@@ -163,9 +163,11 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 //     (marketing-segments-ui-repair) on their index pages. ---
 import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
+import BrpClientCheckDialog from './dialogs/BrpClientCheckDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
 import ContactImportDialog from './dialogs/ContactImportDialog.vue'
+import ContactLogDialog from './dialogs/ContactLogDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import OrganisationEnrichDialog from './dialogs/OrganisationEnrichDialog.vue'
@@ -593,13 +595,13 @@ const registry = {
 	},
 	ListSignupFormWidget: {
 		kind: 'widget',
-		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId })),
+		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId }), { card: true }),
 		...PANEL_WIDGET_META,
 		_note: 'The embed code of a mailing list sign-up form, posting to the public subscribe endpoint, with a copy button. Side card on MailingListDetail (PqMailinglijst).',
 	},
 	ListSubscriberViewWidget: {
 		kind: 'widget',
-		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId })),
+		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId }), { card: true }),
 		...PANEL_WIDGET_META,
 		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
@@ -1271,6 +1273,20 @@ const registry = {
 		component: LeadCreateDialog,
 		propsSchema: null,
 		_note: "New Lead. Target of the Sales/Operational dashboards' new-lead header action and the Leads index Add button.",
+	},
+
+	BrpClientCheckDialog: {
+		kind: 'modal',
+		component: BrpClientCheckDialog,
+		propsSchema: null,
+		_note: 'brp-verifies-the-client. Target of "Look up in the BRP" on the werkplek\'s "Who is it" card (board PqWerkplekKlant): BSN, what was checked and the purpose binding, POST /api/brp/lookup with verifiedClient so the client records its verified identity.',
+	},
+
+	ContactLogDialog: {
+		kind: 'modal',
+		component: ContactLogDialog,
+		propsSchema: null,
+		_note: 'contact-log-dialog. Target of the ticket page Log contact action: board PqTicketContactLoggen (channel, direction, date and time, duration, subject, notes, customer). Saves a ticket of type interaction under the ticket the route names.',
 	},
 
 	TicketAnswerDialog: {

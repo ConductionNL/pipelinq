@@ -42,3 +42,15 @@ The side column of an organisation SHALL show, under KvK and address, the contac
 - **THEN** the Hoofdcontact card shows SV, Sanne de Vries, Secretaris, bestuur@buurtoost.nl and "Alle 2 contactpersonen"
 - **WHEN** the user follows that link
 - **THEN** the Contact persons tab opens
+
+### Requirement: The client page lists the client's cases
+
+The client page SHALL list the client's cases, which live in dossiq, read by the client's master entity through dossiq's case leaf (`GET /api/clients/{id}/cases`): three in the overview's Zaken card with a link to all of them, all of them in the Zaken tab after Overzicht, and on an organisation the open case due first as Open zaken under the main contact. The client SHALL be read with the caller's rights first (403 when the caller may not read it), and dossiq SHALL read the cases with the caller's rights. Without dossiq, or without a master entity, the client has no cases. A case row SHALL open the case in dossiq.
+
+#### Scenario: Buurtvereniging Oost
+
+- **GIVEN** Buurtvereniging Oost, whose dossiq organisation requested one open and two closed cases
+- **THEN** the Zaken card shows the open case first with its status pill and "Uiterlijk" date, then the closed cases with "Klaar" and their end date, and "Alle 3 zaken bekijken"
+- **AND** Open zaken shows the open case
+- **WHEN** the user opens a case row
+- **THEN** the case opens in dossiq

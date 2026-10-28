@@ -119,7 +119,8 @@ export default {
 					key: 'assignee',
 					label: t('pipelinq', 'Owner'),
 					widget: 'avatar',
-					widgetProps: { user: true },
+					// The Pq boards draw the owner as a 28px grey chip.
+					widgetProps: { user: true, tone: 'neutral', size: 28 },
 				},
 			],
 
@@ -170,7 +171,10 @@ export default {
 		quickFilters() {
 			return [
 				{
-					label: t('pipelinq', 'Open'),
+					// The key, untranslated: the bar translates its labels, and a
+					// label whose translation equals its key ("Open") falls back to
+					// the library catalogue, where Open is the verb "Openen".
+					label: 'Open (lead status)',
 					filter: { status: 'open' },
 					default: true,
 					showCount: true,

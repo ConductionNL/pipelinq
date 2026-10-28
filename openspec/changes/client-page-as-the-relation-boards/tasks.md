@@ -4,8 +4,8 @@
 - [x] The boards' tab strip; sales and files out of the side column
 - [x] Resident and organisation cards, tickets as rows, latest contact moments
 - [x] Header: Log contact, New request for this client (RequestCreateDialog clientId)
-- [x] Side column in the boards' order with dossiq's widgets (reachable via, identity, home address, KvK and address, open tickets, channels, relations, record history); open cases, appointments, projects and invoicing, knowledge base still to come
+- [x] Side column in the boards' order with dossiq's widgets (reachable via, identity, home address, KvK and address, open tickets, channels, relations, record history); appointments, projects and invoicing, knowledge base still to come
 - [x] Warnings strip with the contact buttons in one card
 - [x] Main contact on an organisation: the contact flagged mainContact (register.d/98-main-contact.json), initials, role, e-mail, link to the Contact persons tab
 - [ ] Activity with chips and the note composer
-- [ ] Cases by the client's master key (endpoint)
+- [x] Cases by the client's master key: GET /api/clients/{id}/cases (ClientCaseReader over dossiq's CaseLeafProvider, dossiq feat/case-leaf-by-master-entity); Zaken card, Zaken tab, Open zaken; rows open the case in dossiq (nextcloud-vue feat/record-list-row-href)

@@ -11,6 +11,10 @@
 			"value": "dossiq-medewerkers"
 		},
 		{
+			"key": "portal_name",
+			"value": "Mijn Zuiddrecht"
+		},
+		{
 			"key": "brp.allowed_groups",
 			"value": "{{cast:kcc.gid}}"
 		},

@@ -1,0 +1,29 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "When a contract went to invoicing and who sent it (PqContract: 'Op 2 januari 2026 naar facturering gestuurd door Pieter Jansen'). Named 99-zz so it merges after 96-contract-renewal, which declares the schema."
+	},
+	"components": {
+		"schemas": {
+			"salesContract": {
+				"slug": "salesContract",
+				"version": "1.1.0",
+				"properties": {
+					"invoicedAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Sent to invoicing",
+						"description": "When the contract was last sent to invoicing."
+					},
+					"invoicedBy": {
+						"type": "string",
+						"format": "user",
+						"title": "Sent to invoicing by",
+						"description": "The user who last sent the contract to invoicing."
+					}
+				}
+			}
+		}
+	}
+}

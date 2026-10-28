@@ -33,7 +33,124 @@
 			v-if="showLeadCreate"
 			@close="showLeadCreate = false"
 			@created="onLeadCreated" />
+		<!-- Board look (PqPipeline): row 1 the chips, Filter and the view
+		     switch; row 2 the pipeline, the search, the pipeline's settings
+		     and the column choice; row 3 the hint and the active filters. -->
+		<CnActionsBar
+			v-if="isBoard"
+			layout="board"
+			class="pipeline-board__toolbar"
+			data-testid="pipeline-toolbar"
+			:viewMode="viewMode === 'list' ? 'table' : 'board'"
+			:availableViewModes="['table', 'board']"
+			:viewSwitch="['table', 'cards', 'board', 'map']"
+			:viewModeLinks="viewModeLinks"
+			:disabledViewModes="['map']"
+			:activeFilterChips="activeFilterChips"
+			:showAdd="false"
+			:showActionsMenu="false"
+			:showCount="false"
+			:showBuildiqButton="false"
+			:selectable="false"
+			:showMassImport="false"
+			:showMassExport="false"
+			:showMassCopy="false"
+			:showMassDelete="false"
+			@viewModeChange="(mode) => (viewMode = mode === 'table' ? 'list' : 'kanban')"
+			@removeFilter="removeActiveFilter"
+			@clearFilters="clearActiveFilters">
+			<template #filters>
+				<CnQuickFilterBar
+					class="pipeline-board__chips"
+					:tabs="chipTabs"
+					:counts="chipCounts"
+					:activeIndex="chipIndex"
+					@update:activeIndex="
+						(value) => (chipIndex = value === null ? 0 : value)
+					" />
+			</template>
+			<template #filter-menu>
+				<NcActions
+					class="cn-actions-bar__filter-menu"
+					:class="{ 'cn-actions-bar__filter-menu--counted': activeFilterChips.length > 0 }"
+					:style="activeFilterChips.length > 0 ? { '--cn-filter-menu-count': `&quot;${activeFilterChips.length}&quot;` } : null"
+					:aria-label="filterMenuLabel"
+					variant="secondary"
+					:forceMenu="true"
+					:menuName="t('pipelinq', 'Filter')"
+					data-testid="pipeline-filter-menu">
+					<template #icon>
+						<Tune :size="16" />
+					</template>
+					<template v-if="hasMultipleSchemas">
+						<NcActionCaption :name="t('pipelinq', 'Type')" />
+						<NcActionButton
+							v-for="option in showFilterOptions"
+							:key="option.id"
+							type="radio"
+							:modelValue="(showFilter?.id || showFilter) === option.id"
+							@click="showFilter = option.id">
+							{{ option.label }}
+						</NcActionButton>
+					</template>
+					<NcActionCaption :name="t('pipelinq', 'Order')" />
+					<NcActionCheckbox
+						:modelValue="scoreOrder"
+						@update:modelValue="(value) => (scoreOrder = value)">
+						{{ t('pipelinq', 'Highest score first') }}
+					</NcActionCheckbox>
+				</NcActions>
+			</template>
+			<template #after-search>
+				<label class="cn-index-page__board-control" data-testid="pipeline-select">
+					<span class="cn-index-page__board-control-label">{{ t('pipelinq', 'Pipeline:') }}</span>
+					<select
+						class="cn-index-page__board-select cn-index-page__board-select--strong"
+						:value="selectedPipelineId"
+						@change="selectPipeline($event.target.value)">
+						<option
+							v-for="option in pipelineSelectOptions"
+							:key="option.value"
+							:value="option.value">
+							{{ option.label }}
+						</option>
+					</select>
+				</label>
+				<div class="cn-actions-bar__search pipeline-board__search">
+					<Magnify :size="18" class="cn-actions-bar__search-icon" />
+					<input
+						type="search"
+						class="cn-actions-bar__search-input"
+						:placeholder="t('pipelinq', 'Search the pipeline')"
+						:aria-label="t('pipelinq', 'Search the pipeline')"
+						:value="searchQuery"
+						@input="searchQuery = $event.target.value">
+				</div>
+				<button
+					type="button"
+					class="pipeline-board__settings-link"
+					data-testid="pipeline-settings-link"
+					:disabled="!selectedPipeline"
+					@click="showPipelineForm = true">
+					<Cog :size="16" />
+					{{ t('pipelinq', 'Pipeline settings') }}
+				</button>
+				<label class="cn-index-page__board-control" data-testid="pipeline-columns">
+					<span class="cn-index-page__board-control-label">{{ t('pipelinq', 'Columns:') }}</span>
+					<select class="cn-index-page__board-select cn-index-page__board-select--strong" value="stage">
+						<option value="stage">
+							{{ t('pipelinq', 'stage') }}
+						</option>
+					</select>
+				</label>
+				<span class="pipeline-board__toolbar-break" aria-hidden="true" />
+				<span v-if="viewMode === 'kanban'" class="cn-index-page__board-hint">
+					{{ t('pipelinq', 'One column per stage. Drag a lead to change its stage.') }}
+				</span>
+			</template>
+		</CnActionsBar>
 		<CnQuickFilterBar
+			v-if="!isBoard"
 			class="pipeline-board__chips"
 			:tabs="chipTabs"
 			:counts="chipCounts"
@@ -41,7 +158,7 @@
 			@update:activeIndex="
 				(value) => (chipIndex = value === null ? 0 : value)
 			" />
-		<div class="pipeline-board__header">
+		<div v-if="!isBoard" class="pipeline-board__header">
 			<div class="pipeline-board__controls">
 				<NcSelect
 					v-model="selectedPipelineId"
@@ -168,7 +285,14 @@
 					class="kanban-column__header"
 					:style="stage.color ? { borderTopColor: stage.color } : {}">
 					<div class="column-header-top">
-						<span class="column-title">{{ stage.name }}</span>
+						<span class="column-title">
+							<span
+								v-if="isBoard"
+								class="column-dot"
+								:style="stage.color ? { background: stage.color } : null"
+								aria-hidden="true" />
+							{{ stage.name }}
+						</span>
 						<span class="column-count">{{
 							getStageItems(stage.name).length
 						}}</span>
@@ -189,6 +313,9 @@
 							{{ selectedPipeline.totalsLabel || '' }}
 							{{ getStageTotalValue(stage.name).toLocaleString() }}
 						</button>
+						<span
+							v-if="isBoard && stage.probability !== undefined && stage.probability !== null"
+							class="column-probability">· {{ stage.probability }}%</span>
 						<div
 							v-if="expandedBreakdownStage === stage.name"
 							class="stage-breakdown"
@@ -278,6 +405,7 @@
 							:entityType="item._schemaSlug"
 							:stages="sortedStages"
 							:columnProperty="getColumnProperty(item)"
+							:boardLook="isBoard"
 							@open="openItem"
 							@refresh="refreshItems" />
 					</template>
@@ -445,6 +573,7 @@
 
 <script>
 import {
+	CnActionsBar,
 	CnBuildiqEditButton,
 	CnPageHeader,
 	CnQuickFilterBar,
@@ -454,6 +583,10 @@ import {
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
+	NcActionButton,
+	NcActionCaption,
+	NcActionCheckbox,
+	NcActions,
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcLoadingIcon,
@@ -465,7 +598,9 @@ import Draggable from 'vuedraggable'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Tune from 'vue-material-design-icons/Tune.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import LeadScoreBadge from '../../components/leadScore/LeadScoreBadge.vue'
 import LeadCreateDialog from '../../dialogs/LeadCreateDialog.vue'
@@ -508,8 +643,15 @@ const DRAG_OPTIONS = {
 export default {
 	name: 'PipelineBoard',
 	components: {
+		CnActionsBar,
 		CnBuildiqEditButton,
 		Download,
+		Magnify,
+		NcActionButton,
+		NcActionCaption,
+		NcActionCheckbox,
+		NcActions,
+		Tune,
 		LeadCreateDialog,
 		Plus,
 		CnPageHeader,
@@ -530,8 +672,8 @@ export default {
 	},
 
 	setup() {
-		const { lookClass } = useLook()
-		return { lookClass }
+		const { isBoard, lookClass } = useLook()
+		return { isBoard, lookClass }
 	},
 
 	data() {
@@ -797,6 +939,57 @@ export default {
 					this.allItems.filter((item) => this.matchesChip(item, index))
 						.length,
 			)
+		},
+
+		/**
+		 * Board look: what narrows the board, as the toolbar's active chips:
+		 * the pipeline, the type, the chip above the board and the search.
+		 *
+		 * @return {Array<{key: string, label: string}>}
+		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 */
+		activeFilterChips() {
+			const chips = []
+			if (this.selectedPipeline) {
+				chips.push({ key: 'pipeline', label: this.t('pipelinq', 'Pipeline: {name}', { name: this.selectedPipeline.title }) })
+			}
+			const type = this.showFilter?.id || this.showFilter || 'all'
+			if (type !== 'all') {
+				const option = this.showFilterOptions.find((o) => o.id === type)
+				chips.push({ key: 'type', label: this.t('pipelinq', 'Type: {name}', { name: option ? option.label : type }) })
+			}
+			if (this.chipIndex > 0 && this.chipTabs[this.chipIndex]) {
+				chips.push({ key: 'chip', label: this.chipTabs[this.chipIndex].label })
+			}
+			if (this.searchQuery.trim()) {
+				chips.push({ key: 'search', label: this.t('pipelinq', 'Search: {text}', { text: this.searchQuery.trim() }) })
+			}
+			return chips
+		},
+
+		/**
+		 * The Filter button's accessible name, with the count while filters are active.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 */
+		filterMenuLabel() {
+			const count = this.activeFilterChips.length
+			return count > 0
+				? this.n('pipelinq', 'Filter, %n active', 'Filter, %n active', count)
+				: this.t('pipelinq', 'Filter')
+		},
+
+		/**
+		 * Board look: the view switch's cards segment opens the leads list.
+		 *
+		 * @return {{[mode: string]: {href: string, to: object}}}
+		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 */
+		viewModeLinks() {
+			const to = { name: 'Leads' }
+			const href = this.$router ? this.$router.resolve(to).href : ''
+			return href ? { cards: { href, to } } : {}
 		},
 
 		/**
@@ -1138,6 +1331,52 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-18
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
 		 */
+		/**
+		 * The board look's pipeline select chose a pipeline.
+		 *
+		 * @param {string} id The pipeline's id.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 */
+		async selectPipeline(id) {
+			if (!id || id === this.selectedPipelineId) return
+			this.selectedPipelineId = id
+			await this.onPipelineChange()
+		},
+
+		/**
+		 * An active chip's remove button: the pipeline goes back to the one
+		 * the board opens with, the others back to their default.
+		 *
+		 * @param {{key: string}} chip The chip.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 */
+		async removeActiveFilter(chip) {
+			if (chip.key === 'pipeline') {
+				await this.selectPipeline(choosePipeline(this.pipelines, this.allLeads))
+			} else if (chip.key === 'type') {
+				this.showFilter = 'all'
+			} else if (chip.key === 'chip') {
+				this.chipIndex = 0
+			} else if (chip.key === 'search') {
+				this.searchQuery = ''
+			}
+		},
+
+		/**
+		 * Clear all: every narrowing back to its default.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 */
+		async clearActiveFilters() {
+			this.showFilter = 'all'
+			this.chipIndex = 0
+			this.searchQuery = ''
+			await this.selectPipeline(choosePipeline(this.pipelines, this.allLeads))
+		},
+
 		async onPipelineChange() {
 			this.searchQuery = ''
 			await this.fetchPipelineItems()
@@ -1694,6 +1933,47 @@ export default {
 	margin-bottom: 16px;
 }
 
+.pipeline-board__toolbar {
+	margin-bottom: 20px;
+	flex-shrink: 0;
+}
+
+.pipeline-board__toolbar .pipeline-board__chips {
+	margin-bottom: 0;
+}
+
+.pipeline-board__toolbar .pipeline-board__search {
+	flex: 1 1 260px;
+	max-width: 360px;
+}
+
+.pipeline-board__settings-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-primary-element);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.pipeline-board__settings-link:disabled {
+	color: var(--color-text-maxcontrast);
+	cursor: default;
+}
+
+/* Row 3 under the pipeline and the search: the hint, then the active filters on the right. */
+.pipeline-board__toolbar-break {
+	flex: 0 0 100%;
+	height: 0;
+}
+
 .pipeline-board__header {
 	display: flex;
 	justify-content: space-between;
@@ -1923,6 +2203,67 @@ export default {
 	flex: 1;
 	/* An empty column still needs room to drop a card into. */
 	min-height: 80px;
+}
+
+/* Board look (PqPipeline): 240px columns on the grey ground, 16px apart, no
+   border, the stage's dot before its name, the cards 12px apart. */
+.cn-look-board .pipeline-board__columns {
+	gap: 16px;
+}
+
+.cn-look-board .kanban-column {
+	width: 240px;
+	min-width: 240px;
+	max-width: 240px;
+	gap: 12px;
+	padding: 12px;
+	border: 0;
+	border-radius: 12px;
+	background: var(--color-background-dark);
+}
+
+.cn-look-board .kanban-column__header {
+	padding: 0 2px;
+	border: 0;
+	border-radius: 0;
+}
+
+.cn-look-board .column-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 15px;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+.cn-look-board .column-dot {
+	width: 10px;
+	height: 10px;
+	flex: none;
+	border-radius: 50%;
+	background: var(--color-primary-element);
+}
+
+.cn-look-board .column-count {
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+}
+
+.cn-look-board .column-value-wrapper {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+}
+
+.cn-look-board .column-probability {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.cn-look-board .kanban-column__body {
+	gap: 12px;
+	padding: 0;
 }
 
 .kanban-closed {

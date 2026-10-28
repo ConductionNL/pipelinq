@@ -317,7 +317,17 @@ class HaalCentraalClient {
 			return [self::OR_EMPTY_SENTINEL_KEY => true];
 		}
 
+		// A source in mock mode answers every person it knows to any BSN; a
+		// live source answers only the one asked. Read the one asked for, and
+		// the first person when none carries that BSN (as before).
 		$first = $results[0];
+		foreach ($results as $candidate) {
+			if (is_array($candidate) === true && (string)($candidate['burgerservicenummer'] ?? '') === $bsn) {
+				$first = $candidate;
+				break;
+			}
+		}
+
 		if (is_array($first) === false) {
 			return null;
 		}
@@ -599,6 +609,15 @@ class HaalCentraalClient {
 		$name = [];
 		if (is_array($raw['name'] ?? null) === true) {
 			$name = $raw['name'];
+		} else if (is_array($raw['naam'] ?? null) === true) {
+			// HaalCentraal Personen v2 spells the name in Dutch (`naam`).
+			$name = [
+				'givenNames' => ($raw['naam']['voornamen'] ?? ''),
+				'initials'   => ($raw['naam']['voorletters'] ?? ''),
+				'namePrefix' => ($raw['naam']['voorvoegsel'] ?? ''),
+				'surname'    => ($raw['naam']['geslachtsnaam'] ?? ''),
+				'adellijkeTitelPredicaat' => ($raw['naam']['adellijkeTitelPredicaat'] ?? ''),
+			];
 		}
 
 		$birth = [];

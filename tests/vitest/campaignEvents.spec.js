@@ -69,18 +69,39 @@ describe('the event page', () => {
 		expect(widget(detail, 'event-kpi-registered').content.caption).toBe('of {capacity} places')
 	})
 
-	it('has the Overview, Registrations, Registration form and History tabs, with form, location and history beside them', () => {
+	it('has the Overview, Registrations, Registration form, Results and History tabs, with form, location and history beside them', () => {
 		const tabs = widget(detail, 'event-panels').content.tabs
-		expect(tabs.map((tab) => tab.label)).toEqual(['Overview', 'Registrations', 'Registration form', 'History'])
+		expect(tabs.map((tab) => tab.label)).toEqual(['Overview', 'Registrations', 'Registration form', 'Results', 'History'])
 		expect(tabs[1].countFrom).toEqual({ register: 'pipelinq', schema: 'eventRegistration', filter: { event: '@objectId' } })
 		expect(detail.config.sideColumn).toEqual(['event-form', 'event-location', 'event-side-history'])
 	})
 
-	it('writes the day in full on the header line, and the status as a coloured pill', () => {
+	it('writes the day in full on the header line', () => {
 		expect(detail.config.headerMeta).toBe('{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}')
-		const status = widget(detail, 'event-registrations').content.columns.find((column) => column.key === 'status')
-		expect(status.widget).toBe('badge')
-		expect(status.widgetProps.colorMap).toEqual({ confirmed: 'success', waitlist: 'warning', cancelled: 'default' })
+		const recent = widget(detail, 'event-registrations-recent').content.columns.find((column) => column.key === 'status')
+		expect(recent.widget).toBe('badge')
+	})
+
+	it('lists the registrations in the tab with a list page\'s toolbar, narrowed to this event', () => {
+		const list = widget(detail, 'event-registrations')
+		expect(list.type).toBe('index-list')
+		expect(list.content.filter).toEqual({ event: '@objectId' })
+		expect(list.content.quickFilters.map((lens) => lens.label)).toEqual(['All', 'Confirmed', 'Waiting list', 'Cancelled'])
+		expect(list.content.viewModes).toEqual(['table', 'cards', 'board'])
+		expect(list.content.searchPlaceholder).toBe('Search a name or street')
+	})
+
+	it('sends the reminder and opens the check-in list from the header', () => {
+		const actions = detail.config.headerActions
+		const reminder = actions.find((action) => action.id === 'send-reminder')
+		expect(reminder.url).toBe('/apps/pipelinq/api/campaign-events/@objectId/reminder')
+		expect(reminder.confirm).toBe(true)
+		expect(actions.find((action) => action.id === 'check-in').target).toBe('/campaign-events/@objectId/check-in')
+	})
+
+	it('counts who came and who did not on the Results tab', () => {
+		expect(widget(detail, 'event-result-came').content.source.filter).toEqual({ event: '@objectId', status: 'confirmed', checkedInAt: 'IS NOT NULL' })
+		expect(widget(detail, 'event-result-missed').content.source.filter).toEqual({ event: '@objectId', status: 'confirmed', checkedInAt: 'IS NULL' })
 	})
 })
 
@@ -97,5 +118,23 @@ describe('the lists', () => {
 		const card = widget(detail, 'campaign-events')
 		expect(card.content.filter).toEqual({ campaign: '@objectId' })
 		expect(card.content.rowRoute).toBe('CampaignEventDetail')
+	})
+})
+
+describe('the check-in list', () => {
+	const checkIn = page(events.pages, 'EventCheckIn')
+
+	it('lists the event\'s confirmed registrations, who is not in yet first', () => {
+		expect(checkIn.route).toBe('/campaign-events/:id/check-in')
+		expect(checkIn.config.filter).toEqual({ event: ':id', status: 'confirmed' })
+		expect(checkIn.config.quickFilters[0]).toEqual({ label: 'Not in yet', filter: { checkedInAt: 'IS NULL' }, default: true })
+	})
+
+	it('checks someone in with one press, stamping the moment, and can undo it', () => {
+		const [checkInAction, undo] = checkIn.config.actions
+		expect(checkInAction.method).toBe('PATCH')
+		expect(checkInAction.payload).toEqual({ checkedInAt: '@now' })
+		expect(checkInAction.visibleWhen).toEqual({ field: 'checkedInAt', op: 'empty' })
+		expect(undo.payload).toEqual({ checkedInAt: null })
 	})
 })

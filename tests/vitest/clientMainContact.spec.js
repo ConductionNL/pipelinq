@@ -24,7 +24,7 @@ const card = config.sideColumn.find((entry) => entry.id === 'side-main-contact')
 describe('ClientDetail main contact', () => {
 	it('stands under KvK and address and above the open tickets, on an organisation only', () => {
 		expect(sideIds.indexOf('side-main-contact')).toBe(sideIds.indexOf('side-kvk') + 1)
-		expect(sideIds.indexOf('side-open-ticket')).toBe(sideIds.indexOf('side-main-contact') + 1)
+		expect(sideIds.indexOf('side-open-ticket')).toBe(sideIds.indexOf('side-main-contact') + 2)
 		expect(card.visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
 		expect(nl[card.title]).toBe('Hoofdcontact')
 	})
@@ -33,7 +33,8 @@ describe('ClientDetail main contact', () => {
 		const content = card.content
 		expect(content).toMatchObject({ register: 'pipelinq', schema: 'contact', filter: { client: '@objectId' }, limit: 1 })
 		expect(content.sort).toEqual({ field: 'mainContact', dir: 'desc' })
-		expect(content.avatar).toEqual({ text: '{name}', size: 32 })
+		// The record card's person chip: 40px, 16px initials on grey (nc-vue avatar.size 40).
+		expect(content.avatar).toEqual({ text: '{name}', size: 40 })
 		expect(content.title).toBe('{name}')
 		expect(content.meta.parts).toEqual(['{role}'])
 		expect(content.text).toBe('{email}')

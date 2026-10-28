@@ -2,10 +2,13 @@
 	<CnIndexPage
 		class="prospects-view"
 		:title="t('pipelinq', 'Prospects')"
+		:description="headerLine"
 		:showTitle="true"
 		:showTitleIcon="false"
 		:objects="pagedProspects"
 		:columns="columns"
+		:activeFilters="activeFilters"
+		:filterMenu="true"
 		:loading="prospectStore.loading"
 		:pagination="pagination"
 		:countText="countText"
@@ -32,22 +35,34 @@
 		rowTitle="plain"
 		:searchPlaceholder="t('pipelinq', 'Search by company, SBI code or place')"
 		@sort="onSort"
+		@search="onSearch"
+		@filterChange="onFilterChange"
 		@pageChanged="page = $event">
 		<template #below-header>
 			<CnDetailCard
 				:title="t('pipelinq', 'Ideal customer profile')"
-				class="prospects-view__icp">
-				<template #header-actions>
-					<a :href="profileUrl" class="prospects-view__edit">{{
-						t('pipelinq', 'Edit profile')
-					}}</a>
+				:collapsible="true"
+				class="prospects-view__icp"
+				data-testid="prospects-icp">
+				<template #actions>
+					<a
+						:href="profileUrl"
+						class="prospects-view__edit"
+						data-testid="prospects-edit-profile"
+						@click.stop>
+						<Pencil :size="16" />
+						{{ t('pipelinq', 'Edit profile') }}
+					</a>
 				</template>
-				<dl v-if="icpFacts.length" class="prospects-view__facts">
-					<div v-for="fact in icpFacts" :key="fact.key">
-						<dt>{{ fact.label }}</dt>
-						<dd>{{ fact.value }}</dd>
+				<div v-if="icpFacts.length" class="prospects-view__facts">
+					<div
+						v-for="fact in icpFacts"
+						:key="fact.key"
+						class="prospects-view__fact">
+						<span class="prospects-view__fact-label">{{ fact.label }}</span>
+						<span class="prospects-view__fact-value">{{ fact.value }}</span>
 					</div>
-				</dl>
+				</div>
 				<p v-else class="prospects-view__unset">
 					{{
 						t(
@@ -57,6 +72,15 @@
 					}}
 				</p>
 			</CnDetailCard>
+		</template>
+		<template #toolbar-start>
+			<CnQuickFilterBar
+				inline
+				:tabs="lensTabs"
+				:counts="lensCounts"
+				:activeIndex="lens"
+				data-testid="prospects-lenses"
+				@update:activeIndex="(value) => selectLens(value)" />
 		</template>
 		<template #column-fitScore="{ row }">
 			<span class="prospects-view__score" :class="scoreClass(row.fitScore)">{{
@@ -110,13 +134,15 @@
 // profile they are matched on above the list and Add as client per row.
 //
 // @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
-import { CnDetailCard, CnIndexPage } from '@conduction/nextcloud-vue'
+import { CnDetailCard, CnIndexPage, CnQuickFilterBar } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent } from '@nextcloud/vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
 import { createWithContact } from '../../services/contactSyncApi.js'
 import { icpFacts } from '../../services/icpFacts.js'
+import { matchesProspectLens, prospectMatches } from '../../services/prospectLenses.js'
 import { useProspectStore } from '../../store/modules/prospect.js'
 
 export default {
@@ -124,9 +150,11 @@ export default {
 	components: {
 		CnDetailCard,
 		CnIndexPage,
+		CnQuickFilterBar,
 		NcButton,
 		NcEmptyContent,
 		Magnify,
+		Pencil,
 	},
 
 	// The page config the renderer hands a custom page would otherwise fall
@@ -150,6 +178,11 @@ export default {
 			addingKvk: null,
 			page: 1,
 			pageSize: 20,
+			/** The lens above the list: 0 every company, 1 good fit, 2 new this week. */
+			lens: 0,
+			search: '',
+			/** The Filter menu's choices: { field: [values] }. */
+			activeFilters: {},
 		}
 	},
 
@@ -174,7 +207,12 @@ export default {
 					label: t('pipelinq', 'Employees'),
 					sortable: true,
 				},
-				{ key: 'address.city', label: t('pipelinq', 'Location') },
+				{
+					key: 'address.city',
+					label: t('pipelinq', 'Location'),
+					// The places in the list, for the Filter menu.
+					enum: [...new Set((this.prospectStore.prospects || []).map((p) => p.address?.city).filter(Boolean))].sort(),
+				},
 				{ key: 'kvkNumber', label: t('pipelinq', 'KVK') },
 			]
 		},
@@ -212,6 +250,65 @@ export default {
 					handler: () => this.refresh(),
 				},
 			]
+		},
+
+		/**
+		 * The lenses above the list, as the board draws them.
+		 *
+		 * @return {Array<{label: string}>}
+		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 */
+		lensTabs() {
+			return [
+				{ label: t('pipelinq', 'All') },
+				{ label: t('pipelinq', 'Good fit') },
+				{ label: t('pipelinq', 'New this week') },
+			]
+		},
+
+		/**
+		 * How many companies each lens holds, within the search and the Filter menu.
+		 *
+		 * @return {number[]}
+		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 */
+		lensCounts() {
+			return this.lensTabs.map((_, index) => this.narrowedProspects.filter((p) => matchesProspectLens(p, index, new Date())).length)
+		},
+
+		/**
+		 * The companies the search and the Filter menu leave.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 */
+		narrowedProspects() {
+			return (this.prospectStore.prospects || []).filter((p) => prospectMatches(p, this.search, this.activeFilters))
+		},
+
+		/**
+		 * The line under the title: how many companies, best first, and when
+		 * the list was refreshed.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 */
+		headerLine() {
+			const parts = [
+				t('pipelinq', '{shown} of {total} companies from the KVK register that fit your profile', {
+					shown: this.sortedProspects.length,
+					total: (this.prospectStore.prospects || []).length,
+				}),
+				t('pipelinq', 'best first'),
+			]
+			const at = this.prospectStore.cachedAt ? new Date(this.prospectStore.cachedAt) : null
+			if (at && !Number.isNaN(at.getTime())) {
+				const time = at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+				parts.push(at.toDateString() === new Date().toDateString()
+					? t('pipelinq', 'refreshed today at {time}', { time })
+					: t('pipelinq', 'refreshed on {date}', { date: at.toLocaleDateString() }))
+			}
+			return parts.join(' · ')
 		},
 
 		/**
@@ -287,7 +384,7 @@ export default {
 		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		sortedProspects() {
-			const list = [...(this.prospectStore.prospects || [])]
+			const list = this.narrowedProspects.filter((p) => matchesProspectLens(p, this.lens, new Date()))
 			const key = this.sortKey
 			const dir = this.sortAsc ? 1 : -1
 			return list.sort((a, b) => {
@@ -348,6 +445,46 @@ export default {
 		 */
 		refresh() {
 			this.prospectStore.fetchProspects(true)
+		},
+
+		/**
+		 * A lens chip was chosen; choosing the active one again goes back to All.
+		 *
+		 * @param {number|null} value The lens index.
+		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 */
+		selectLens(value) {
+			this.lens = value === null ? 0 : value
+			this.page = 1
+		},
+
+		/**
+		 * The search field: company, SBI code or place.
+		 *
+		 * @param {string} value The search text.
+		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 */
+		onSearch(value) {
+			this.search = typeof value === 'string' ? value : ''
+			this.page = 1
+		},
+
+		/**
+		 * A choice in the Filter menu.
+		 *
+		 * @param {{key: string, values: string[]}} payload The field and its chosen values.
+		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 */
+		onFilterChange(payload) {
+			if (!payload || !payload.key) return
+			const next = { ...this.activeFilters }
+			if (Array.isArray(payload.values) && payload.values.length > 0) {
+				next[payload.key] = payload.values
+			} else {
+				delete next[payload.key]
+			}
+			this.activeFilters = next
+			this.page = 1
 		},
 
 		/**
@@ -438,23 +575,34 @@ export default {
 }
 
 .prospects-view__facts {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-	gap: 12px 24px;
-	margin: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 28px;
 }
 
-.prospects-view__facts dt {
+.prospects-view__fact {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.prospects-view__fact-label {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
 
-.prospects-view__facts dd {
-	margin: 2px 0 0;
+.prospects-view__fact-value {
+	font-size: 14px;
 	font-weight: 600;
 }
 
 .prospects-view__edit {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--color-primary-element);
+	font-size: 14px;
+	font-weight: 600;
 	text-decoration: underline;
 }
 

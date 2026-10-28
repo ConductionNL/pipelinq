@@ -157,6 +157,29 @@ class BrpControllerTest extends TestCase {
 	}//end testLookupPersistsMetaIntoAuditRecord()
 
 	/**
+	 * A lookup that verifies a client records on the client when its identity
+	 * was verified, via the BRP, and what the employee checked.
+	 *
+	 * @spec openspec/changes/brp-verifies-the-client/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
+	 *
+	 * @return void
+	 */
+	public function testLookupRecordsTheVerifiedIdentityOnTheClient(): void {
+		$controller = $this->buildController(
+			remotePerson: ['givenNames' => 'Sanne', 'surname' => 'de Vries', 'indicationSecret' => '0'],
+			extraParams: ['verifiedClient' => 'client-sanne', 'identityCheck' => 'Geboortedatum en adres gevraagd']
+		);
+
+		self::assertSame(200, $controller->lookup()->getStatus());
+
+		$client = ($this->requestHolder['client'] ?? null);
+		self::assertIsArray($client);
+		self::assertSame('BRP', $client['identityVerifiedVia']);
+		self::assertSame('Geboortedatum en adres gevraagd', $client['identityCheck']);
+		self::assertNotFalse(\DateTimeImmutable::createFromFormat(DATE_ATOM, $client['identityVerifiedAt']));
+	}//end testLookupRecordsTheVerifiedIdentityOnTheClient()
+
+	/**
 	 * A null correlation id from the client (no upstream X-Correlation-ID) must
 	 * persist as an absent `haalcentraalCorrelationId` (the controller filters
 	 * nulls), exactly as the legacy path records today.
@@ -197,16 +220,16 @@ class BrpControllerTest extends TestCase {
 	 *
 	 * @return BrpController
 	 */
-	private function buildController(array $remotePerson, bool $privileged = true): BrpController {
+	private function buildController(array $remotePerson, bool $privileged = true, array $extraParams = []): BrpController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
-			static function (string $key, $default = null) {
+			static function (string $key, $default = null) use ($extraParams) {
 				$params = [
 					'bsn' => self::DEMO_BSN,
 					'verzoekreden' => 'Adresverificatie',
 					'purposeBinding' => 'Wet BRP',
 					'basis' => 'Wet BRP art. 1.4',
-				];
+				] + $extraParams;
 				return $params[$key] ?? $default;
 			}
 		);
@@ -232,6 +255,7 @@ class BrpControllerTest extends TestCase {
 					'register' => 'reg-1',
 					'brpLookupVerzoek_schema' => 'schema-verzoek',
 					'brpPersoon_schema' => 'schema-persoon',
+					'client_schema' => 'schema-client',
 				];
 				return $cfg[$key] ?? $default;
 			}
@@ -305,8 +329,12 @@ class BrpControllerTest extends TestCase {
 				?IUser $currentUser = null,
 				bool $failIfExists = false,
 			): ObjectEntityInterface {
-				if (isset($object['verzoekreden']) === true && $this->holder->count() === 0) {
+				if (isset($object['verzoekreden']) === true && isset($this->holder['verzoek']) === false) {
 					$this->holder['verzoek'] = $object;
+				}
+
+				if ($schema === 'schema-client') {
+					$this->holder['client'] = $object;
 				}
 
 				$entity = new ObjectEntity();
@@ -317,6 +345,42 @@ class BrpControllerTest extends TestCase {
 
 				return $entity;
 			}//end saveObject()
+
+			/**
+			 * The client the lookup verifies; nothing else is found.
+			 *
+			 * @param int|string                $id            The id.
+			 * @param array<string, mixed>|null $_extend       Unused.
+			 * @param bool                      $files         Unused.
+			 * @param string|int|null           $register      Unused.
+			 * @param string|int|null           $schema        The schema.
+			 * @param bool                      $_rbac         Unused.
+			 * @param bool                      $_multitenancy Unused.
+			 * @param bool                      $_render       Unused.
+			 * @param bool                      $_audit        Unused.
+			 *
+			 * @return ObjectEntityInterface|null The client.
+			 */
+			public function find(
+				int|string $id,
+				?array $_extend = [],
+				bool $files = false,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $_render = true,
+				bool $_audit = true,
+			): ?ObjectEntityInterface {
+				if ($schema !== 'schema-client' || $id !== 'client-sanne') {
+					return null;
+				}
+
+				$entity = new ObjectEntity();
+				$entity->setUuid('client-sanne');
+				$entity->setObject(['name' => 'Sanne de Vries', 'source' => 'Mijn Zuiddrecht']);
+				return $entity;
+			}//end find()
 		};
 
 		$container = $this->createMock(ContainerInterface::class);

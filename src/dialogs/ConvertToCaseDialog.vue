@@ -64,6 +64,15 @@
 			<p class="convert-to-case__hint">
 				{{ t('pipelinq', 'Otherwise it reads Converted to a case, with a link to the case.') }}
 			</p>
+			<NcCheckboxRadioSwitch
+				:modelValue="informCustomer"
+				data-testid="convert-to-case-inform-customer"
+				@update:modelValue="informCustomer = $event">
+				{{ informLabel }}
+			</NcCheckboxRadioSwitch>
+			<p class="convert-to-case__hint">
+				{{ informHint }}
+			</p>
 		</div>
 		<template #actions>
 			<NcButton data-testid="convert-to-case-cancel" @click="$emit('close')">
@@ -73,7 +82,7 @@
 				variant="primary"
 				:disabled="busy"
 				data-testid="convert-to-case-confirm"
-				@click="$emit('confirm', { caseType, keepOpen })">
+				@click="$emit('confirm', { caseType, keepOpen, informCustomer })">
 				<template #icon>
 					<NcLoadingIcon v-if="busy" :size="20" />
 					<FolderPlusOutline v-else :size="20" />
@@ -119,6 +128,12 @@ export default {
 			default: false,
 		},
 
+		/** The customer portal's name ("Mijn Zuiddrecht"), or '' for a generic name. */
+		portalName: {
+			type: String,
+			default: '',
+		},
+
 		/** Where the case types are listed (`{ register, schema }`), or null to ask for none. */
 		caseTypeSource: {
 			type: Object,
@@ -132,10 +147,35 @@ export default {
 		return {
 			caseType: '',
 			keepOpen: false,
+			informCustomer: false,
 		}
 	},
 
 	computed: {
+		/**
+		 * "Klant informeren in Mijn Zuiddrecht".
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/convert-informs-the-customer/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
+		 */
+		informLabel() {
+			return this.portalName
+				? t('pipelinq', 'Inform the customer in {portal}', { portal: this.portalName })
+				: t('pipelinq', 'Inform the customer in the customer portal')
+		},
+
+		/**
+		 * "Sanne ziet het zaaknummer en wie de zaak behandelt."
+		 *
+		 * @return {string}
+		 */
+		informHint() {
+			const first = (this.requester || '').trim().split(/\s+/)[0]
+			return first
+				? t('pipelinq', '{name} sees the case number and who handles the case.', { name: first })
+				: t('pipelinq', 'The customer sees the case number and who handles the case.')
+		},
+
 		/**
 		 * The line above the title: "Convert · PQ-2026-0417".
 		 *

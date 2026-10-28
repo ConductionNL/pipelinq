@@ -169,3 +169,41 @@ export function listAssignableUserIds(limit = 200) {
 export function resetAssignableUsers() {
 	assignableUsers = null
 }
+
+const displayNames = new Map()
+
+/**
+ * A user's display name, asked once per uid for the page's lifetime.
+ *
+ * @param {string} uid The uid.
+ * @return {Promise<string>} The display name, or the uid.
+ * @spec openspec/changes/pipeline-board-cards/specs/pipeline/spec.md
+ */
+export function cachedUserDisplayName(uid) {
+	const key = String(uid || '')
+	if (key === '') {
+		return Promise.resolve('')
+	}
+	if (!displayNames.has(key)) {
+		displayNames.set(key, fetchUserDisplayName(key).catch(() => key))
+	}
+	return displayNames.get(key)
+}
+
+/**
+ * The initials of a name: the first letters of its first and last word
+ * ("Pieter Jansen" PJ), or the first letter of a single word.
+ *
+ * @param {string} name The name.
+ * @return {string} One or two capitals, or ''.
+ * @spec openspec/changes/pipeline-board-cards/specs/pipeline/spec.md
+ */
+export function initialsOf(name) {
+	const words = String(name || '').trim().split(/[\s._-]+/).filter(Boolean)
+	if (words.length === 0) {
+		return ''
+	}
+	const first = words[0].charAt(0)
+	const last = words.length > 1 ? words[words.length - 1].charAt(0) : ''
+	return (first + last).toUpperCase()
+}

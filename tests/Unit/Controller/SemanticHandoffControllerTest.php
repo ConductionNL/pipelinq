@@ -32,6 +32,7 @@ use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -194,6 +195,7 @@ class SemanticHandoffControllerTest extends TestCase {
 				appConfig: $this->createMock(originalClassName: IAppConfig::class)
 			),
 			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			l10n: $this->l10n(),
 		);
 	}//end rebuildControllerWithGroupManager()
 
@@ -454,6 +456,42 @@ class SemanticHandoffControllerTest extends TestCase {
 	}//end testSendContractSuccess()
 
 	/**
+	 * An expiring contract still runs until its end date, so it may be sent
+	 * to invoicing; the contract records when and by whom (PqContract).
+	 *
+	 * @return void
+	 */
+	public function testAnExpiringContractIsSentAndRecordsWhoSentIt(): void {
+		$this->signIn();
+		$this->objectService->store['c-1'] = ['uuid' => 'c-1', 'status' => 'expiring', 'contractNumber' => 'CON-2026-0031', 'ownerId' => 'agent-1'];
+		$this->handoffService->method('hasImplementer')->willReturn(true);
+		$this->handoffService->method('handoff')->willReturn(['ok' => true, 'targetUuid' => 'inv-8', 'correlationId' => 'corr-3', 'reason' => '']);
+
+		$response = $this->controller->sendContractToInvoicing(id: 'c-1');
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$stored = $this->objectService->store['c-1'];
+		$this->assertSame(expected: 'inv-8', actual: $stored['invoiceReference']);
+		$this->assertSame(expected: 'agent-1', actual: $stored['invoicedBy']);
+		$this->assertNotFalse(condition: strtotime($stored['invoicedAt']));
+	}//end testAnExpiringContractIsSentAndRecordsWhoSentIt()
+
+	/**
+	 * The availability probe offers sending on an expiring contract too.
+	 *
+	 * @return void
+	 */
+	public function testContractAvailabilityAllowsSendingAnExpiringContract(): void {
+		$this->signIn();
+		$this->objectService->store['c-3'] = ['uuid' => 'c-3', 'status' => 'expiring', 'ownerId' => 'agent-1'];
+		$this->handoffService->method('hasImplementer')->willReturn(true);
+
+		$response = $this->controller->contractAvailability(id: 'c-3');
+
+		$this->assertSame(expected: ['available' => true, 'status' => 'expiring', 'canSend' => true], actual: $response->getData());
+	}//end testContractAvailabilityAllowsSendingAnExpiringContract()
+
+	/**
 	 * Unauthenticated contract-availability probe is refused with 401 and no
 	 * implementer lookup is attempted.
 	 *
@@ -649,4 +687,47 @@ class SemanticHandoffControllerTest extends TestCase {
 
 		$this->assertSame([], $this->objectService->saves);
 	}//end testContractAvailabilityWritesNothing()
+
+	/**
+	 * A translator that fills its placeholders as the real one does.
+	 *
+	 * @return IL10N The translator.
+	 */
+	private function l10n(): IL10N {
+		$l10n = $this->createMock(originalClassName: IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text, array $parameters = []): string => vsprintf($text, $parameters));
+		return $l10n;
+	}//end l10n()
+
+	/**
+	 * With informCustomer the customer is answered with the new case's number,
+	 * the way every answer reaches the portal.
+	 *
+	 * @spec openspec/changes/convert-informs-the-customer/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
+	 *
+	 * @return void
+	 */
+	public function testConvertCanInformTheCustomerOfTheCaseNumber(): void {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => (['informCustomer' => 'true'][$key] ?? $default)
+		);
+		$this->requestMock = $request;
+		$this->signIn();
+		$this->withPrivilegedCaller();
+		$this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'in_progress', 'portalAnswers' => [['message' => 'Bedankt', 'createdAt' => '2026-10-04T11:02:00Z']]];
+		$this->objectService->store['case-9'] = ['uuid' => 'case-9', 'identifier' => '2026-4890', 'assigneeName' => 'Esra Demir'];
+		$this->handoffService->method('hasImplementer')->willReturn(true);
+		$this->handoffService->method('handoff')->willReturn(['ok' => true, 'targetUuid' => 'case-9', 'correlationId' => 'c', 'reason' => '']);
+
+		$this->controller->convertRequestToCase(id: 'req-1');
+
+		$saved = $this->objectService->store['req-1'];
+		$this->assertSame(
+			expected: 'Your request is now case 2026-4890. You can follow it on your personal page. Esra Demir handles the case.',
+			actual: $saved['customerMessage']
+		);
+		$this->assertCount(expectedCount: 2, haystack: $saved['portalAnswers']);
+		$this->assertSame(expected: $saved['customerMessage'], actual: $saved['portalAnswers'][1]['message']);
+	}//end testConvertCanInformTheCustomerOfTheCaseNumber()
 }//end class

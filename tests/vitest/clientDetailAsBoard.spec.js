@@ -42,9 +42,9 @@ describe('ClientDetail as the boards draw it', () => {
 
 	it('orders the tabs as the boards do, contact persons for an organisation and sales for a resident', () => {
 		const tabs = widget('client-panels').content.tabs
-		expect(tabs.map((tab) => nl[tab.label])).toEqual(['Overzicht', 'Tickets', 'Contactpersonen', 'Contactmomenten', 'Verkoop', 'Documenten', 'Geschiedenis'])
-		expect(tabs[2].visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
-		expect(tabs[4].visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
+		expect(tabs.map((tab) => nl[tab.label])).toEqual(['Overzicht', 'Zaken', 'Tickets', 'Contactpersonen', 'Contactmomenten', 'Verkoop', 'Documenten', 'Geschiedenis'])
+		expect(tabs[3].visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
+		expect(tabs[5].visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
 	})
 
 	it('keeps the sales figures and the files out of the side column', () => {
@@ -56,7 +56,7 @@ describe('ClientDetail as the boards draw it', () => {
 describe('ClientDetail overview as the boards draw it', () => {
 	it('opens on the resident or organisation card, the tickets and the latest contact moments', () => {
 		const overview = widget('client-panels').content.tabs[0]
-		expect(overview.widgetIds).toEqual(['client-person-card', 'client-organisation-card', 'client-tickets', 'client-latest-moments'])
+		expect(overview.widgetIds).toEqual(['client-person-card', 'client-organisation-card', 'client-cases', 'client-tickets', 'client-latest-moments'])
 		expect(widget('client-person-card').visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
 		expect(widget('client-organisation-card').visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
 		expect(widget('client-person-card').content.fields.map((field) => nl[field.label])).toEqual(['Naam', 'Voornamen', 'Achternaam', 'Geboortedatum', 'Woonadres', 'Omschrijving'])
@@ -89,7 +89,7 @@ describe('ClientDetail side column as the boards draw it', () => {
 	const card = (id) => config.sideColumn.find((entry) => typeof entry === 'object' && entry.id === id)
 
 	it('keeps the boards\' order: resident cards, organisation cards, then the shared ones', () => {
-		expect(ids.slice(0, 9)).toEqual(['side-reach', 'side-identity', 'side-address', 'side-kvk', 'side-main-contact', 'side-open-ticket', 'client-channels', 'client-relationships', 'side-history'])
+		expect(ids.slice(0, 10)).toEqual(['side-reach', 'side-identity', 'side-address', 'side-kvk', 'side-main-contact', 'side-open-case', 'side-open-ticket', 'client-channels', 'client-relationships', 'side-history'])
 	})
 
 	it('shows the resident cards for a resident and the organisation cards for an organisation', () => {

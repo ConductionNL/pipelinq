@@ -198,7 +198,9 @@
 									"order": 6,
 									"gridColumn": 2
 								}
-							}
+							},
+							"collapsedFields": 7,
+							"editable": false
 						}
 					},
 					{
@@ -256,9 +258,10 @@
 						"title": "Subscribers",
 						"placement": "end",
 						"props": {
-							"listId": "@objectId"
+							"listId": "@objectId",
+							"card": true
 						},
-						"card": true,
+						"card": false,
 						"colSpan": 12
 					}
 				],
@@ -304,7 +307,8 @@
 					"list-side-history",
 					"list-signup-form",
 					"list-subscriber-view"
-				]
+				],
+				"sideColumnOrder": "declared"
 			}
 		}
 	]
