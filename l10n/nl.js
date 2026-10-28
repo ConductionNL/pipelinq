@@ -9040,7 +9040,10 @@ OC.L10N.register(
         "Built with portaliq; every sign-up arrives here as a registration.": "Gebouwd met portaliq; elke aanmelding komt hier binnen als registratie.",
         "No registration form yet.": "Nog geen aanmeldformulier.",
         "Form binding": "Formulierkoppeling",
-        "The portaliq form binding (portalFormBinding) the sign-up form is published with; empty when the form is not in portaliq. The event page links to it to edit the form.": "De portaliq-formulierkoppeling (portalFormBinding) waarmee het aanmeldformulier is gepubliceerd; leeg als het formulier niet in portaliq staat. De evenementpagina linkt ernaar om het formulier te bewerken."
+        "The portaliq form binding (portalFormBinding) the sign-up form is published with; empty when the form is not in portaliq. The event page links to it to edit the form.": "De portaliq-formulierkoppeling (portalFormBinding) waarmee het aanmeldformulier is gepubliceerd; leeg als het formulier niet in portaliq staat. De evenementpagina linkt ernaar om het formulier te bewerken.",
+        "Event created": "Evenement aangemaakt",
+        "Places raised from {changed.capacity.old} to {changed.capacity.new}": "Plaatsen verhoogd van {changed.capacity.old} naar {changed.capacity.new}",
+        "{name} is on the waiting list": "{name} staat op de wachtlijst"
     },
     "nplurals=2; plural=(n != 1);"
 )
