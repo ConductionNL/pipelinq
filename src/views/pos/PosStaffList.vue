@@ -39,7 +39,7 @@
 									: t('pipelinq', 'Yes')
 							}}
 						</td>
-						<td>{{ row.lastLoginAt || '—' }}</td>
+						<td>{{ loginMoment(row.lastLoginAt) }}</td>
 						<td>
 							<NcButton @click="edit(row)">
 								{{ t('pipelinq', 'Edit') }}
@@ -50,6 +50,9 @@
 			</table>
 			<p v-else>
 				{{ t('pipelinq', 'No staff members defined yet.') }}
+			</p>
+			<p class="pos-staff-list__note">
+				{{ t('pipelinq', 'Every staff member signs in at the till with a PIN of 4 to 6 digits.') }}
 			</p>
 		</template>
 	</div>
@@ -108,6 +111,24 @@ export default {
 			}
 		},
 
+		/**
+		 * The last login as a moment in the reader's language.
+		 *
+		 * @param {string} iso The stored moment, or empty.
+		 * @return {string} Day, month and time, or a dash.
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
+		 */
+		loginMoment(iso) {
+			if (!iso) {
+				return '—'
+			}
+			const date = new Date(iso)
+			if (Number.isNaN(date.getTime())) {
+				return String(iso)
+			}
+			return date.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+		},
+
 		roleName(id) {
 			const role = this.roles.find((r) => r.id === id)
 			return role?.name || id || '—'
@@ -141,6 +162,12 @@ export default {
 </script>
 
 <style scoped>
+.pos-staff-list__note {
+	margin: 12px 0 0;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+}
+
 .pos-staff-list {
 	display: flex;
 	flex-direction: column;

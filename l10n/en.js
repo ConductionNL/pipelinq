@@ -9186,7 +9186,9 @@ OC.L10N.register(
         "Record consent": "Record consent",
         "Template (optional)": "Template (optional)",
         "Message (optional)": "Message (optional)",
-        "The message is saved as a contact moment.": "The message is saved as a contact moment."
+        "The message is saved as a contact moment.": "The message is saved as a contact moment.",
+        "Enable {provider}": "Enable {provider}",
+        "Every staff member signs in at the till with a PIN of 4 to 6 digits.": "Every staff member signs in at the till with a PIN of 4 to 6 digits."
     },
     "nplurals=2; plural=(n != 1);"
 )
