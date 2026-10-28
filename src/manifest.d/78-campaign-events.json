@@ -48,6 +48,28 @@
 					"colorMap": { "open": "success", "full": "warning", "draft": "info", "closed": "default", "cancelled": "error" }
 				},
 				"actionsMenu": { "label": "More" },
+				"_headerActionsNote": "PqEvenement: Herinnering versturen mails everyone with a confirmed place (POST /api/campaign-events/{id}/reminder, which stamps reminderSentAt as the caller first); Inchecken bij de deur opens the event's check-in list, where each confirmed registration is checked in with one press.",
+				"headerActions": [
+					{
+						"id": "send-reminder",
+						"type": "api-call",
+						"label": "Send reminder",
+						"icon": "Send",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/campaign-events/@objectId/reminder",
+						"confirm": true,
+						"successMessage": "The reminder is on its way to everyone with a confirmed place.",
+						"errorMessage": "The reminder could not be sent.",
+						"visibleWhen": { "field": "signupStatus", "op": "in", "value": ["open", "full", "closed"] }
+					},
+					{
+						"id": "check-in",
+						"type": "navigate",
+						"label": "Check in at the door",
+						"icon": "Check",
+						"target": "/campaign-events/@objectId/check-in"
+					}
+				],
 				"widgets": [
 					{
 						"id": "event-kpi-registered",
@@ -95,6 +117,7 @@
 								{ "label": "Overview", "widgetIds": ["event-data", "event-registrations-recent"] },
 								{ "label": "Registrations", "widgetId": "event-registrations", "countFrom": { "register": "pipelinq", "schema": "eventRegistration", "filter": { "event": "@objectId" } } },
 								{ "label": "Registration form", "widgetId": "event-form" },
+								{ "label": "Results", "widgetIds": ["event-result-came", "event-result-missed", "event-result-attendees"] },
 								{ "label": "History", "widgetId": "event-history" }
 							]
 						}
@@ -130,23 +153,61 @@
 					},
 					{
 						"id": "event-registrations",
-						"type": "object-table",
+						"type": "index-list",
 						"title": "Registrations",
+						"_note": "PqEvenement's Aanmeldingen tab: the registrations list with its own toolbar (status lenses with counts, Filter, the view switch, a search on name or street, the pager), as the Registrations list page has it, narrowed to this event. The party size and the waiting list position stay on the cards and the list page.",
 						"content": {
 							"register": "pipelinq",
 							"schema": "eventRegistration",
 							"filter": { "event": "@objectId" },
-							"sort": { "field": "registeredAt", "dir": "asc" },
+							"sortKey": "registeredAt",
+							"sortOrder": "asc",
+							"viewModes": ["table", "cards", "board"],
+							"board": { "statusField": "status" },
+							"quickFilters": [
+								{ "label": "All", "filter": {}, "default": true },
+								{ "label": "Confirmed", "filter": { "status": "confirmed" } },
+								{ "label": "Waiting list", "filter": { "status": "waitlist" } },
+								{ "label": "Cancelled", "filter": { "status": "cancelled" } }
+							],
+							"searchPlaceholder": "Search a name or street",
+							"selectable": true,
+							"columns": ["name", "address", "source", "registeredAt", "status"],
+							"emptyText": "No registrations yet."
+						}
+					},
+					{
+						"id": "event-result-came",
+						"type": "stat",
+						"content": {
+							"label": "Came",
+							"caption": "checked in at the door",
+							"source": { "register": "pipelinq", "schema": "eventRegistration", "metric": "count", "filter": { "event": "@objectId", "status": "confirmed", "checkedInAt": "IS NOT NULL" } }
+						}
+					},
+					{
+						"id": "event-result-missed",
+						"type": "stat",
+						"content": {
+							"label": "Did not come",
+							"caption": "had a place and did not check in",
+							"source": { "register": "pipelinq", "schema": "eventRegistration", "metric": "count", "filter": { "event": "@objectId", "status": "confirmed", "checkedInAt": "IS NULL" } }
+						}
+					},
+					{
+						"id": "event-result-attendees",
+						"type": "record-list",
+						"title": "Checked in",
+						"content": {
+							"register": "pipelinq",
+							"schema": "eventRegistration",
+							"filter": { "event": "@objectId", "checkedInAt": "IS NOT NULL" },
+							"sort": { "field": "checkedInAt", "dir": "asc" },
 							"limit": 50,
-							"emptyText": "No registrations yet.",
-							"_columnsNote": "PqEvenement's Registrations tab: name, address, how and when, and the status as a coloured pill. The party size and the waiting list position stay on the Registrations list page (EventRegistrations), which lists every field.",
-							"columns": [
-								{ "key": "name", "label": "Name", "cellClass": "cn-cell--strong" },
-								{ "key": "address", "label": "Address" },
-								{ "key": "source", "label": "Registered via" },
-								{ "key": "registeredAt", "label": "Registered on", "formatter": "date" },
-								{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "waitlist": "warning", "cancelled": "default" } } }
-							]
+							"presentation": "rows",
+							"title": "{name}",
+							"meta": "{address} · {checkedInAt|time}",
+							"emptyText": "Nobody has been checked in yet."
 						}
 					},
 					{
@@ -215,6 +276,52 @@
 					{ "label": "Cancelled", "filter": { "status": "cancelled" } }
 				],
 				"columns": ["name", "event", "address", "source", "registeredAt", "status"]
+			}
+		},
+		{
+			"id": "EventCheckIn",
+			"_note": "event-reminder-and-check-in (PqEvenement: Inchecken bij de deur). The confirmed registrations of one event, for the colleague at the door: who is not in yet first, and one press checks someone in (checkedInAt is stamped with the moment). The Results tab of the event counts from it.",
+			"route": "/campaign-events/:id/check-in",
+			"type": "index",
+			"title": "Check in at the door",
+			"config": {
+				"register": "pipelinq",
+				"schema": "eventRegistration",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"filter": { "event": ":id", "status": "confirmed" },
+				"sortKey": "name",
+				"sortOrder": "asc",
+				"quickFilters": [
+					{ "label": "Not in yet", "filter": { "checkedInAt": "IS NULL" }, "default": true },
+					{ "label": "Checked in", "filter": { "checkedInAt": "IS NOT NULL" } },
+					{ "label": "All", "filter": {} }
+				],
+				"searchPlaceholder": "Search a name or street",
+				"columns": ["name", "address", "partySize", "checkedInAt"],
+				"actions": [
+					{
+						"id": "check-in",
+						"type": "api-call",
+						"label": "Check in",
+						"icon": "Check",
+						"method": "PATCH",
+						"url": "/apps/openregister/api/objects/pipelinq/eventRegistration/@objectId",
+						"payload": { "checkedInAt": "@now" },
+						"successMessage": "Checked in.",
+						"visibleWhen": { "field": "checkedInAt", "op": "empty" }
+					},
+					{
+						"id": "undo-check-in",
+						"type": "api-call",
+						"label": "Undo check-in",
+						"icon": "Undo",
+						"method": "PATCH",
+						"url": "/apps/openregister/api/objects/pipelinq/eventRegistration/@objectId",
+						"payload": { "checkedInAt": null },
+						"successMessage": "Check-in undone.",
+						"visibleWhen": { "field": "checkedInAt", "op": "notEmpty" }
+					}
+				]
 			}
 		}
 	]
