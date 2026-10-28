@@ -35,6 +35,7 @@
 			v-if="dialogOpen"
 			:ticket="ticket"
 			:requester="requester"
+			:requesterAddress="requesterAddress"
 			:busy="busy"
 			:caseTypeSource="availability.caseTypeSource || null"
 			:portalName="availability.portalName || ''"
@@ -107,6 +108,7 @@ export default {
 			dialogOpen: false,
 			ticket: {},
 			requester: '',
+			requesterAddress: '',
 		}
 	},
 
@@ -175,6 +177,7 @@ export default {
 				if (typeof clientId === 'string' && clientId !== '') {
 					const client = await store.fetchObject('client', clientId)
 					this.requester = client?.name || ''
+					this.requesterAddress = typeof client?.address === 'string' ? client.address.split(',')[0].trim() : ''
 				}
 			} catch {
 				this.ticket = {}

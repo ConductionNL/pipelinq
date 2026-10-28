@@ -29,7 +29,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 			return h('div', { class: 'cn-dialog', 'data-eyebrow': this.eyebrow, 'data-subtitle': this.subtitle }, [this.name, this.$slots.default?.(), this.$slots.actions?.()])
 		},
 	},
-	CnNoteCard: { props: ['text'], render() { return h('p', this.text) } },
+	CnNoteCard: { props: ['text', 'type'], render() { return h('p', { class: 'cn-note', 'data-type': this.type }, this.text) } },
 	CnResourceSelect: {
 		props: ['modelValue', 'register', 'schema'],
 		emits: ['update:modelValue'],
@@ -104,6 +104,25 @@ describe('ConvertToCaseDialog', () => {
 		expect(w.emitted('confirm')[0][0].informCustomer).toBe(true)
 	})
 
+	it('says dossiq is available in a success note, as the board', () => {
+		const w = mount(Dialog, { props: { ticket }, global })
+		expect(w.find('.cn-note').attributes('data-type')).toBe('success')
+	})
+
+	it('sets what goes with the case in a tinted block, each label over its value, the requester with the address', () => {
+		const w = mount(Dialog, { props: { ticket, requester: 'Sanne de Vries', requesterAddress: 'Lindelaan 14' }, global })
+		const block = w.find('.convert-to-case__carried')
+		expect(block.classes()).toContain('convert-to-case__carried--block')
+		expect(block.find('.convert-to-case__lock').exists()).toBe(true)
+		expect(block.findAll('.convert-to-case__fact').length).toBeGreaterThanOrEqual(2)
+		expect(block.text()).toContain('Sanne de Vries, Lindelaan 14')
+	})
+
+	it('puts each hint inside its checkbox row', () => {
+		const w = mount(Dialog, { props: { ticket, requester: 'Sanne de Vries' }, global })
+		expect(w.findAll('.convert-to-case__option .convert-to-case__hint')).toHaveLength(2)
+	})
+
 	it('emits confirm only from its confirm button', async () => {
 		const w = mount(Dialog, { props: { ticket }, global })
 		await w.find('[data-testid="convert-to-case-cancel"]').trigger('click')
@@ -127,5 +146,16 @@ describe('RequestConversionSection', () => {
 		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
 		await flushPromises()
 		expect(http.post).toHaveBeenCalledWith('/apps/pipelinq/api/handoff/request/t1/convert-to-case', { keepOpen: false, informCustomer: false })
+	})
+
+	it('hands the dialog the street line of the customer address', async () => {
+		http.get.mockResolvedValue({ data: { available: true, status: 'in_progress', canConvert: true, caseReference: '' } })
+		store.fetchObject.mockImplementation((type) => Promise.resolve(type === 'ticket' ? ticket : { name: 'Sanne de Vries', address: 'Lindelaan 14, 1234 AB Zuiddrecht' }))
+		const w = mount(Section, { props: { requestId: 't1' }, global })
+		await flushPromises()
+		await w.find('button').trigger('click')
+		await flushPromises()
+		expect(w.find('.convert-to-case__carried').text()).toContain('Sanne de Vries, Lindelaan 14')
+		expect(w.find('.convert-to-case__carried').text()).not.toContain('1234 AB')
 	})
 })
