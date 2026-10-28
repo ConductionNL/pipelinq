@@ -29,7 +29,8 @@
 						"label": "Owner",
 						"widget": "avatar",
 						"widgetProps": {
-							"user": true
+							"user": true,
+							"size": 28
 						}
 					},
 					{
