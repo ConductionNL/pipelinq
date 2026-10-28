@@ -123,6 +123,8 @@ return [
         ['name' => 'customer360#summary', 'url' => '/api/customer-360/summary', 'verb' => 'GET'],
         // Letters from a filinq template (work-letter-from-filinq-template).
         ['name' => 'letter#templates', 'url' => '/api/letters/templates', 'verb' => 'GET'],
+        ['name' => 'record_document#template', 'url' => '/api/records/{schema}/document-template', 'verb' => 'GET'],
+        ['name' => 'record_document#document', 'url' => '/api/records/{schema}/{id}/document', 'verb' => 'GET'],
         ['name' => 'letter#create', 'url' => '/api/clients/{id}/letters', 'verb' => 'POST'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
         // see openspec/changes/migrate-forms-to-forms-leaf.
