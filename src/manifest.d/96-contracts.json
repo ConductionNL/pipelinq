@@ -295,14 +295,14 @@
 							"objectRows": {
 								"path": "lineItems",
 								"refs": [
-									{ "field": "productRef", "register": "pipelinq", "schema": "product", "as": "product" }
+									{ "field": "productRef", "register": "pipelinq", "schema": "product", "as": "productRecord" }
 								]
 							},
 							"columns": [
-								{ "label": "Product", "value": "{product.name}" },
+								{ "label": "Product", "value": ["{productRecord.name}", "{product}"] },
 								{ "label": "Description", "value": "{description}" },
 								{ "label": "Quantity", "value": "{quantity}", "align": "end" },
-								{ "label": "Value per unit", "value": "{unitValue|currency}", "align": "end" }
+								{ "label": "Value per unit", "value": ["{unitValue|currency}", "{unitPrice|currency}"], "align": "end" }
 							],
 							"emptyText": "No lines on this contract."
 						}

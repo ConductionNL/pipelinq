@@ -78,8 +78,9 @@ describe('contract page', () => {
 		expect(widget(detail, 'contract-billing-fields').content.include).not.toContain('lineItems')
 		const lines = widget(detail, 'contract-lines').content
 		expect(lines.presentation).toBe('table')
-		expect(lines.objectRows.refs).toEqual([{ field: 'productRef', register: 'pipelinq', schema: 'product', as: 'product' }])
-		expect(lines.columns.map((c) => c.value)).toEqual(['{product.name}', '{description}', '{quantity}', '{unitValue|currency}'])
+		expect(lines.objectRows.refs).toEqual([{ field: 'productRef', register: 'pipelinq', schema: 'product', as: 'productRecord' }])
+		// A line names its product by reference (the schema) or by name (older data).
+		expect(lines.columns.map((c) => c.value)).toEqual([['{productRecord.name}', '{product}'], '{description}', '{quantity}', ['{unitValue|currency}', '{unitPrice|currency}']])
 	})
 
 	it('keeps sending to invoicing and the status transitions', () => {
