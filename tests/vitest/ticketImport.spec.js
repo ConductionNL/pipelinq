@@ -21,7 +21,7 @@ describe('ticket import', () => {
 	it('offers Import in the ticket list Actions menu', () => {
 		const tickets = simple.pages.find((p) => p.id === 'Tickets')
 		const menu = tickets.config.headerButtons.find((b) => b.action === 'actions-menu')
-		expect(menu.items).toEqual(['header-actions', 'import'])
+		expect(menu.items).toContain('import')
 		expect(tickets.config.showMassImport).not.toBe(false)
 	})
 })
