@@ -9070,6 +9070,32 @@
         "To check": "Te controleren",
         "Filter by cashier or till": "Filter op kassamedewerker of kassa",
         "{shown} of {total}": "{shown} van {total}",
-        "A shift is closed with a blind count. The difference is checked against the margin.": "Een dienst wordt gesloten met een blinde telling. Het verschil wordt getoetst aan de marge."
+        "A shift is closed with a blind count. The difference is checked against the margin.": "Een dienst wordt gesloten met een blinde telling. Het verschil wordt getoetst aan de marge.",
+        "Projects and invoicing": "Projecten en facturering",
+        "Sales, contracts and invoicing": "Verkoop, contracten en facturering",
+        "Further in Shillinq": "Verder in Shillinq",
+        "Search the knowledge base": "Zoek in de kennisbank",
+        "No appointments": "Geen afspraken",
+        "with {assignee|user}": "met {assignee|user}",
+        "No projects.": "Geen projecten.",
+        "No invoices for this resident.": "Geen facturen voor deze inwoner.",
+        "No invoices for this organisation.": "Geen facturen voor deze organisatie.",
+        "active": "actief",
+        "on hold": "gepauzeerd",
+        "cancelled": "geannuleerd",
+        "%s, ends %s": "%s, loopt af %s",
+        "%s, renews %s": "%s, verlengt %s",
+        "_%n open lead: %s, %s_::_%n open leads, the largest: %s, %s_": [
+            "%n open lead: %s, %s",
+            "%n open leads, de grootste: %s, %s"
+        ],
+        "_%n project: %s, %s._::_%n projects, the first: %s, %s._": [
+            "%n project: %s, %s.",
+            "%n projecten, het eerste: %s, %s."
+        ],
+        "_%n invoice, %s open._::_%n invoices, %s open._": [
+            "%n factuur, %s open.",
+            "%n facturen, %s open."
+        ]
     }
 }

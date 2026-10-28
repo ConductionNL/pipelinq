@@ -8978,7 +8978,24 @@ OC.L10N.register(
         "To check": "To check",
         "Filter by cashier or till": "Filter by cashier or till",
         "{shown} of {total}": "{shown} of {total}",
-        "A shift is closed with a blind count. The difference is checked against the margin.": "A shift is closed with a blind count. The difference is checked against the margin."
+        "A shift is closed with a blind count. The difference is checked against the margin.": "A shift is closed with a blind count. The difference is checked against the margin.",
+        "Projects and invoicing": "Projects and invoicing",
+        "Sales, contracts and invoicing": "Sales, contracts and invoicing",
+        "Further in Shillinq": "Further in Shillinq",
+        "Search the knowledge base": "Search the knowledge base",
+        "No appointments": "No appointments",
+        "with {assignee|user}": "with {assignee|user}",
+        "No projects.": "No projects.",
+        "No invoices for this resident.": "No invoices for this resident.",
+        "No invoices for this organisation.": "No invoices for this organisation.",
+        "active": "active",
+        "on hold": "on hold",
+        "cancelled": "cancelled",
+        "%s, ends %s": "%s, ends %s",
+        "%s, renews %s": "%s, renews %s",
+        "_%n open lead: %s, %s_::_%n open leads, the largest: %s, %s_": ["%n open lead: %s, %s","%n open leads, the largest: %s, %s"],
+        "_%n project: %s, %s._::_%n projects, the first: %s, %s._": ["%n project: %s, %s.","%n projects, the first: %s, %s."],
+        "_%n invoice, %s open._::_%n invoices, %s open._": ["%n invoice, %s open.","%n invoices, %s open."]
     },
     "nplurals=2; plural=(n != 1);"
 )
