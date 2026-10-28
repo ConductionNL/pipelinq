@@ -8580,7 +8580,17 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Then: write down the result and finish the task",
         "What now? Try again before the deadline": "What now? Try again before the deadline",
         "An attempt is logged": "An attempt is logged",
-        "Call the customer": "Call the customer"
+        "Call the customer": "Call the customer",
+        "Price per unit": "Price per unit",
+        "VAT (%)": "VAT (%)",
+        "Receipt": "Receipt",
+        "Printed": "Printed",
+        "{@self.created:date} on {printerDevice}": "{@self.created:date} on {printerDevice}",
+        "Not printed yet": "Not printed yet",
+        "Print log": "Print log",
+        "Tax return and invoice split": "Tax return and invoice split",
+        "%n line": ["%n line","%n lines"],
+        "%n lines": "%n lines"
     },
     "nplurals=2; plural=(n != 1);"
 )

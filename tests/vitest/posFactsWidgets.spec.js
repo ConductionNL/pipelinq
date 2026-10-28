@@ -48,7 +48,8 @@ describe('the payment provider on a POS transaction', () => {
 	it('is a facts card shown only when a provider handled the payment', () => {
 		expect(provider.type).toBe('facts')
 		expect(provider.visibleWhen.any.map((c) => c.field)).toEqual(['paymentProvider', 'paymentStatus'])
-		expect(manifest.pages.find((p) => p.id === 'PosTransactionDetail').config.layout.some((l) => l.widgetId === 'pos-tx-provider')).toBe(true)
+		const panels = manifest.pages.find((p) => p.id === 'PosTransactionDetail').config.widgets.find((w) => w.id === 'pos-tx-panels')
+		expect(panels.content.tabs[0].widgetIds).toContain('pos-tx-provider')
 	})
 
 	it('tries a failed payment again with the provider and method it already has', () => {

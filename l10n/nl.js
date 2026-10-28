@@ -1478,7 +1478,7 @@ OC.L10N.register(
         "Example data fills the lists, dashboards and the 360 degree client view so you can see the app working straight away. Pick \"None\" on a production install.": "Voorbeeldgegevens vullen de lijsten, dashboards en het 360 graden klantbeeld, zodat je de app meteen ziet werken. Kies \"Geen\" op een productieomgeving.",
         "Example data fills the lists, detail pages and dashboards so you can see the app working straight away. Pick \"None\" on a production install.": "Voorbeeldgegevens vullen de lijsten, detailpagina’s en dashboards, zodat je de app meteen ziet werken. Kies \"Geen\" op een productieomgeving.",
         "Excl. BTW": "Excl. BTW",
-        "Excl. VAT": "Excl. BTW",
+        "Excl. VAT": "Excl. btw",
         "Exclude inactive companies": "Inactieve bedrijven uitsluiten",
         "Excluded addresses (comma separated)": "Uitgesloten adressen (kommagescheiden)",
         "Execute merge": "Samenvoeging uitvoeren",
@@ -1946,7 +1946,7 @@ OC.L10N.register(
         "Inactive Leads": "Inactieve leads",
         "Inboekstatus shillinq": "Inboekstatus shillinq",
         "Incl. BTW": "Incl. BTW",
-        "Incl. VAT": "Incl. BTW",
+        "Incl. VAT": "Incl. btw",
         "Included with Pipelinq": "Meegeleverd met Pipelinq",
         "Incoming": "Inkomend",
         "Incorrect PIN": "Onjuiste PIN",
@@ -8551,7 +8551,17 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Daarna: schrijf het resultaat op en rond de taak af",
         "What now? Try again before the deadline": "Wat nu? Opnieuw proberen voor de termijn",
         "An attempt is logged": "Er is een poging vastgelegd",
-        "Call the customer": "Bellen"
+        "Call the customer": "Bellen",
+        "Price per unit": "Stukprijs",
+        "VAT (%)": "Btw %",
+        "Receipt": "Bon",
+        "Printed": "Geprint",
+        "{@self.created:date} on {printerDevice}": "{@self.created:date} op {printerDevice}",
+        "Not printed yet": "Nog niet geprint",
+        "Print log": "Printlog",
+        "Tax return and invoice split": "Btw-specificatie en factuurverdeling",
+        "%n line": ["%n regel","%n regels"],
+        "%n lines": "%n regels"
     },
     "nplurals=2; plural=(n != 1);"
 )
