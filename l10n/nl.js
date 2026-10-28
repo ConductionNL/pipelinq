@@ -3223,6 +3223,8 @@ OC.L10N.register(
         "Remove from {list}": "Verwijderen uit {list}",
         "Remove group": "Groep verwijderen",
         "Remove line": "Regel verwijderen",
+        "Edit line {name}": "Regel {name} bewerken",
+        "Done editing the line": "Klaar met de regel",
         "Remove option": "Optie verwijderen",
         "Remove option {n}": "Optie {n} verwijderen",
         "Remove question {n}": "Vraag {n} verwijderen",

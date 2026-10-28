@@ -224,3 +224,36 @@ describe('the new sale (PqKassa)', () => {
 		expect(wrapper.vm.lines[0]).toMatchObject({ _giftCard: true, description: 'Gift card', unitPrice: 25, taxRate: 0 })
 	})
 })
+
+describe('the sale as the board draws it (PqKassa, PQB-7)', () => {
+	it('has no More menu in its header, only Check out', async () => {
+		const wrapper = await mountNew()
+		const page = wrapper.findComponent({ name: 'CnDetailPage' })
+		expect(page.attributes('actionsmenu') ?? page.vm.$attrs.actionsMenu).toEqual({ showRefresh: false, showHelpLinks: false })
+	})
+
+	it('labels the barcode, register and notes fields above them', async () => {
+		const wrapper = await mountNew()
+		const labels = wrapper.findAll('label.pos-form__label').map((label) => [label.attributes('for'), label.text()])
+		expect(labels).toEqual([
+			['pos-form-barcode', 'Scan or type a barcode'],
+			['pos-form-register', 'Register'],
+			['pos-form-notes', 'Notes'],
+		])
+		const selects = wrapper.findAllComponents({ name: 'NcSelect' })
+		expect(selects.every((select) => select.vm.$attrs.labelOutside === undefined)).toBe(true)
+	})
+
+	it('heads the lines Product, Qty, Unit price, Discount %, VAT, Line total; a new empty line opens for editing', async () => {
+		const wrapper = await mountNew()
+		wrapper.vm.addProductLine({ id: 'p1', name: 'City map', unitPrice: 4.95, taxRate: 9 })
+		await flushPromises()
+		const heads = wrapper.findAll('[data-testid="pos-lines"] th').map((th) => th.text())
+		expect(heads).toEqual(['Product', 'Qty', 'Unit price', 'Discount %', 'VAT', 'Line total', 'Actions'])
+		expect(wrapper.vm.editingKey).toBe(null)
+		wrapper.vm.addLine()
+		expect(wrapper.vm.editingKey).toBe(wrapper.vm.lines[1]._key)
+		wrapper.vm.removeLine(1)
+		expect(wrapper.vm.editingKey).toBe(null)
+	})
+})

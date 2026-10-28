@@ -3276,6 +3276,8 @@ OC.L10N.register(
         "Remove from {list}": "Remove from {list}",
         "Remove group": "Remove group",
         "Remove line": "Remove line",
+        "Edit line {name}": "Edit line {name}",
+        "Done editing the line": "Done editing the line",
         "Remove option": "Remove option",
         "Remove option {n}": "Remove option {n}",
         "Remove question {n}": "Remove question {n}",
