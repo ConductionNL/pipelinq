@@ -1187,6 +1187,13 @@ export default {
 	min-width: 0;
 }
 
+/* Side cards head with a muted label, as CnDetailPage's own side column does. */
+.cn-look-board .pos-form__side :deep(.cn-detail-card__title) {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--cn-board-side-heading-size, 15px);
+	font-weight: 600;
+}
+
 .pos-form__scan {
 	display: flex;
 	align-items: flex-end;
