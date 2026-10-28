@@ -461,9 +461,9 @@ class SocialMetricsServiceTest extends TestCase {
 
 		$rows = $this->service()->networkTotals(days: 30);
 
-		$this->assertCount(1, $rows);
+		$this->assertCount(expectedCount: 1, haystack: $rows);
 		$this->assertSame(
-			[
+			expected: [
 				'network' => 'mastodon',
 				'label' => 'Mastodon',
 				'published' => 2,
@@ -474,7 +474,7 @@ class SocialMetricsServiceTest extends TestCase {
 				'followers' => 2140,
 				'engagementPercent' => 5.6,
 			],
-			$rows[0],
+			actual: $rows[0],
 		);
 	}
 
@@ -493,8 +493,8 @@ class SocialMetricsServiceTest extends TestCase {
 
 		$rows = $this->service()->networkTotals(days: 30);
 
-		$this->assertNull($rows[0]['engagementPercent']);
-		$this->assertSame(4, $rows[0]['likes']);
+		$this->assertNull(actual: $rows[0]['engagementPercent']);
+		$this->assertSame(expected: 4, actual: $rows[0]['likes']);
 	}
 
 	/**

@@ -298,8 +298,8 @@ class SocialPostControllerTest extends TestCase {
 
 		$response = $this->controller->networkPerformance(days: 30);
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame('mastodon', $response->getData()['data'][0]['network']);
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: 'mastodon', actual: $response->getData()['data'][0]['network']);
 	}
 
 	/**
@@ -314,7 +314,7 @@ class SocialPostControllerTest extends TestCase {
 
 		$response = $this->controller->networkPerformance();
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
 	}
 
 	/**
