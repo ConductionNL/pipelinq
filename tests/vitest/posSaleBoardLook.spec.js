@@ -14,10 +14,10 @@
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
-import { h } from 'vue'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
+import { describe, expect, it, vi } from 'vitest'
+import { h } from 'vue'
 
 /**
  * A stub that renders its slots and keeps its props readable.
