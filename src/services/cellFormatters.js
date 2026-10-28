@@ -11,6 +11,7 @@
 
 import { translate as t } from '@nextcloud/l10n'
 import { timeRange } from '../utils/bookingTime.js'
+import { exportMoment, exportSchedule } from '../views/export/exportRunText.js'
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
 import { createUserDisplayNameFormatter } from './userDisplayName.js'
@@ -69,6 +70,20 @@ export function enumText(value) {
 	}
 	const word = String(value)
 	return t('pipelinq', word.charAt(0).toUpperCase() + word.slice(1))
+}
+
+/**
+ * A stored code as a translated word inside a sentence: `phone` reads
+ * "telefoon" in "Via telefoon". As enumText, with the first letter in
+ * lower case.
+ *
+ * @param {unknown} value The stored value.
+ * @return {string} The word, or '' for an empty value.
+ * @spec openspec/specs/dashboard/spec.md
+ */
+export function enumWord(value) {
+	const word = enumText(value)
+	return word === '' ? '' : word.charAt(0).toLowerCase() + word.slice(1)
 }
 
 /**
@@ -251,11 +266,68 @@ export function longDate(value) {
 	return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(date)
 }
 
+/**
+ * A moment as the board's record cards write it: day, short month, year and
+ * time ("7 okt 2026, 11:42").
+ *
+ * @param {unknown} value The moment, ISO.
+ * @param {object} [_row] The record (unused).
+ * @param {object} [_property] The schema property (unused).
+ * @param {{locale?: string}} [options] The locale (tests).
+ * @return {string} The moment, '' when empty, or the value as stored when it is not a date.
+ * @spec openspec/specs/pos-transaction-core/spec.md
+ */
+export function shortDateTime(value, _row, _property, options) {
+	if (value === null || value === undefined || value === '') {
+		return ''
+	}
+	const date = new Date(String(value))
+	if (Number.isNaN(date.getTime())) {
+		return String(value)
+	}
+	const locale =
+		options?.locale
+		|| (typeof OC !== 'undefined' && OC.getLocale
+			? OC.getLocale().replace('_', '-')
+			: undefined)
+	const dayText = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(date).replace('.', '')
+	const timeText = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(date)
+	return dayText + ', ' + timeText
+}
+
+/**
+ * The hour and minute of a moment ("12:10"), for a list of events within
+ * one day.
+ *
+ * @param {unknown} value The moment, ISO.
+ * @param {object} [_row] The record (unused).
+ * @param {object} [_property] The schema property (unused).
+ * @param {{locale?: string}} [options] The locale (tests).
+ * @return {string} The time, '' when empty, or the value as stored when it is not a date.
+ * @spec openspec/specs/pos-transaction-core/spec.md
+ */
+export function timeOfDay(value, _row, _property, options) {
+	if (value === null || value === undefined || value === '') {
+		return ''
+	}
+	const date = new Date(String(value))
+	if (Number.isNaN(date.getTime())) {
+		return String(value)
+	}
+	const locale =
+		options?.locale
+		|| (typeof OC !== 'undefined' && OC.getLocale
+			? OC.getLocale().replace('_', '-')
+			: undefined)
+	return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(date)
+}
+
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
 	transactionMoment,
 	enumText,
+	enumWord,
 	enumLabel,
 	yesNo,
 	callDuration: isoDuration,
@@ -263,6 +335,10 @@ export const CELL_FORMATTERS = {
 	languageCodes,
 	labelList,
 	longDate,
+	shortDateTime,
+	timeOfDay,
+	exportMoment: (value) => exportMoment(value),
+	exportSchedule: (value) => exportSchedule(value),
 }
 
 /**

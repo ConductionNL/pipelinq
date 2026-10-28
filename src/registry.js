@@ -19,11 +19,11 @@
 //   - openspec/changes/pipelinq-manifest-v1/design.md
 //   - hydra/openspec/architecture/adr-036-manifest-v2.md
 
-import ActivityTimeline from './components/ActivityTimeline.vue'
 // --- Shillinq time-intake billing handoff (time-billing-handoff-emit): the
 //     real emit side of the delegated time-approval-workflow. Self-fetches
 //     its availability endpoint and falls back to the existing Shillinq
 //     deep-link — same self-fetching-by-props pattern as the sections above. ---
+import * as NextcloudVue from '@conduction/nextcloud-vue'
 import ClientBillingHandoffSection from './components/billing/ClientBillingHandoffSection.vue'
 // BookingDetail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
 // declarative); its array-on-object tables + computed timeline + notes editor
@@ -47,6 +47,7 @@ import ContactChannelsSection from './components/ContactChannelsSection.vue'
 import ContactLinks from './components/ContactLinks.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
+import ContactsSyncSection from './components/ContactsSyncSection.vue'
 import CustomerReplySection from './components/CustomerReplySection.vue'
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
@@ -173,6 +174,7 @@ import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import OrganisationEnrichDialog from './dialogs/OrganisationEnrichDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
+import TaxAuthorityExportDialog from './dialogs/TaxAuthorityExportDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
@@ -236,8 +238,6 @@ import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 //     and CSV import/export via the platform mass dialogs. ---
 import LeadListView from './views/leads/LeadList.vue'
 import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
-// --- Loyalty program (loyalty-program). ---
-import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
 // --- Articles new/edit route wrapper (marketing-article-hub): thin host for
 //     ArticleEditModal, the one editing surface the change owns. ---
 import ArticleFormView from './views/marketing/ArticleFormView.vue'
@@ -264,7 +264,6 @@ import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 //     signed register actions chained per register, with an admin-only tax
 //     authority export. The list keeps its date range and export dialog; the
 //     entry is a declarative detail page over the endpoint. ---
-import CashRegisterAuditListView from './views/pos/CashRegisterAuditList.vue'
 // --- POS cash drawer. The detail page is now a declarative type:"detail" page
 //     (pipelinq-pos-mdm-detail-declarative): the shift's float fields auto-render,
 //     the drops are a relatedCollections table, and the variance/diff projection
@@ -288,7 +287,6 @@ import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 import SocialPostFormView from './views/social/SocialPostFormView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
-import StoreGallery from './views/store/StoreGallery.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 import { ProductSupplyCard, ProductTariffsCard } from './components/products/productCards.js'
@@ -352,12 +350,6 @@ const registry = {
 		kind: 'page',
 		component: FeaturesRoadmapView,
 		_note: 'Wraps the library\'s CnFeaturesAndRoadmapPage and adds one link to the help desk capability comparison on pipelinq.conduction.nl/compare. The library component declares no slots, so the link cannot be added from the manifest; the page moves back to type:"roadmap" the day the library can carry it.',
-	},
-
-	StoreGallery: {
-		kind: 'page',
-		component: StoreGallery,
-		_note: "ADR-080 store plane. Reads /api/store/items, a thin action over AppHost GenericStoreService, so the SSRF guard, the redirect refusal and the token all live in the engine and pipelinq builds no registry URL. A custom component rather than type:index because store items are REMOTE objects and the object-backed index renderer resolves a local register plus schema, which cannot address them. With no registry configured the engine answers not_configured WITHOUT a network call and the page renders pipelinq's built-in templates, which is Decision 4 and the only reason this surface may carry the word Store at all. Install is pipelinq's own and admin-guarded (Decision 3), and it writes commercial CONFIGURATION only; the record schemas are refused by StoreController::INSTALLABLE_SLUGS.",
 	},
 
 	// --- Dashboard widgets (rendered as #widget-{id} slots inside
@@ -468,11 +460,6 @@ const registry = {
 		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
 	},
 	// --- Loyalty program (loyalty-program). ---
-	LoyaltyReportingView: {
-		kind: 'page',
-		component: LoyaltyReportingView,
-		_note: 'KEPT CUSTOM (pipelinq-dashboards-declarative): programme reporting (active accounts, points issued/redeemed/expired, breakage %, redemption rate, outstanding-points liability per IFRS 15 / RJ 270, tier distribution, CSV export). The 8 KPIs come from one summary endpoint GET /api/loyalty/reporting/{programmeId}/kpis, but {programmeId} is a PATH segment requiring a programme UUID picked from a DYNAMIC selector (options from the OR loyaltyProgramme collection); pageFilters only support static options, so @page.programmeId cannot enumerate programmes, and there is no all-programmes aggregate. Missing primitives: an OR-collection-sourced pageFilter (dynamic options) + a relative-window period token (30d/90d/365d -> from/to). Same dynamic-selector blocker as PipelineAnalytics/Forecast; kept custom.',
-	},
 	LoyaltyAccountCreationView: {
 		kind: 'page',
 		component: LoyaltyAccountCreationView,
@@ -547,11 +534,14 @@ const registry = {
 		_note: 'Admin settings panel for the POS customer-link lookup: search fields, purchase-history depth, marketing-consent sync toggle and the on-account-requires-customer invariant (pos-customer-link, REQ-PCL-006).',
 	},
 
-	// --- Cash register audit log (pos-kassakoppeling-audit). ---
-	CashRegisterAuditListView: {
-		kind: 'page',
-		component: CashRegisterAuditListView,
-		_note: 'Append-only cash register audit log list: streams from the /api/kassakoppeling/audit endpoint (the OR object store only stores entries), drives the date / register / operator / action filter bar and the admin-only tax authority export modal (pos-kassakoppeling-audit REQ-AUDIT-003 / REQ-AUDIT-005).',
+	// --- Cash register audit log (pos-kassakoppeling-audit). The list is a
+	//     declared index (KassakoppelingAuditList); its export header action
+	//     opens this dialog. ---
+	TaxAuthorityExportModal: {
+		kind: 'modal',
+		component: TaxAuthorityExportDialog,
+		propsSchema: null,
+		_note: 'Admin-only tax authority export: date range and format, then downloads the signed export package (pos-kassakoppeling-audit REQ-AUDIT-005).',
 	},
 
 	// --- Billing categories (billable-categories-and-tags). The Billing categories
@@ -663,11 +653,6 @@ const registry = {
 		component: SocialPublicationsSection,
 		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement end). One row per account the post named, with the failure reason where it did not go out. The Retry button appears only on the two of six failure codes a retry can fix, because a Retry on a dead grant or an unfiled developer application is a button that cannot work. Also hosts the share path for accounts no application may post to: the prepared text, a copy action, a link into the network\'s own composer and the confirmation.',
 	},
-	ActivityTimeline: {
-		kind: 'section',
-		component: ActivityTimeline,
-		_note: 'Chronological activity feed for an entity; self-fetches by entityType/entityId.',
-	},
 	CommunicationHistory: {
 		kind: 'section',
 		component: CommunicationHistory,
@@ -733,6 +718,7 @@ const registry = {
 				entityId: objectId,
 				entityType: content.entityType || 'contact',
 				entityName: objectData.name || '',
+				compact: content.compact === true,
 			}),
 			{ card: true },
 		),
@@ -824,6 +810,21 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'ResidentViewSection as a tab widget.',
 	},
+	ContactsSyncWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactsSyncWidget',
+			ContactsSyncSection,
+			({ objectId, objectData, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+				contactsUid: objectData.contactsUid || '',
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The record\'s card in Nextcloud Contacts: synced or not, its address book, its last change, and Update in Contacts (write-back). Side card on ContactDetail (PqContactpersoon).',
+	},
 	ContactChannelsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -832,6 +833,7 @@ const registry = {
 			({ objectId, content }) => ({
 				entityId: objectId,
 				entityType: content.entityType || 'contact',
+				compact: content.compact === true,
 			}),
 			{ card: true },
 		),
@@ -1241,6 +1243,12 @@ const registry = {
 	//     dialog cannot express. Placement stays declarative; only the form
 	//     body is app-owned. CnAppRoot mounts these and forwards `close`, so
 	//     each dialog routes to its own detail page on success. ---
+	// "E-mail koppelen" on the client page's Activity card (PqKlant,
+	// PqOrganisatie): the library's Mail picker plus the link to the record.
+	// Registered when the library ships it.
+	...(NextcloudVue.CnEmailLinkDialog
+		? { EmailLinkDialog: { kind: 'modal', component: NextcloudVue.CnEmailLinkDialog, propsSchema: null } }
+		: {}),
 	// Link to a client on the ticket page (PqAanvraagOmzetten, decision 179).
 	LinkSubmissionToClientModal: {
 		kind: 'modal',

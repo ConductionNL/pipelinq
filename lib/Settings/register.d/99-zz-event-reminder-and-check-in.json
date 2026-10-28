@@ -2,14 +2,20 @@
 	"_meta": {
 		"spdx-license": "EUPL-1.2",
 		"spdx-copyright": "2026 Conduction B.V.",
-		"description": "When an event's reminder went out, and when each registration was checked in at the door (PqEvenement: Herinnering versturen, Inchecken bij de deur, Resultaten). Named 99-zz so it merges after 98-campaign-events, which declares both schemas."
+		"description": "When an event's reminder went out, and when each registration was checked in at the door (PqEvenement: Herinnering versturen, Inchecken bij de deur, Resultaten), and the portaliq form binding behind \"Formulier bewerken\". Named 99-zz so it merges after 98-campaign-events, which declares both schemas."
 	},
 	"components": {
 		"schemas": {
 			"campaignEvent": {
 				"slug": "campaignEvent",
-				"version": "1.1.0",
+				"version": "1.2.0",
 				"properties": {
+					"formBinding": {
+						"type": "string",
+						"format": "uuid",
+						"title": "Form binding",
+						"description": "The portaliq form binding (portalFormBinding) the sign-up form is published with; empty when the form is not in portaliq. The event page links to it to edit the form."
+					},
 					"reminderSentAt": {
 						"type": "string",
 						"format": "date-time",

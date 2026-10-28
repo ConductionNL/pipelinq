@@ -216,8 +216,6 @@
 									"widgetIds": [
 										"contract-terms",
 										"contract-billing",
-										"contract-invoice",
-										"contract-lines",
 										"contract-related",
 										"contract-files"
 									]
@@ -262,11 +260,23 @@
 					},
 					{
 						"id": "contract-billing",
-						"type": "data",
+						"type": "sections",
 						"title": "Billing",
 						"icon": "CurrencyEur",
 						"content": {
-							"columns": 3,
+							"sections": [
+								{ "widgetId": "contract-billing-fields" },
+								{ "widgetId": "contract-invoice" },
+								{ "title": "Lines", "widgetId": "contract-lines" }
+							]
+						}
+					},
+					{
+						"id": "contract-billing-fields",
+						"type": "data",
+						"title": "Billing",
+						"content": {
+							"columns": 2,
 							"include": [
 								"billingInterval",
 								"valuePerInterval",
@@ -292,15 +302,20 @@
 						"id": "contract-lines",
 						"type": "record-list",
 						"title": "Lines",
-						"_note": "PqContract Facturering: the contract's line items as a small table (product, description, quantity, unit value). The rows are the contract's own lineItems.",
 						"content": {
-							"objectRows": { "path": "lineItems" },
 							"presentation": "table",
+							"limit": 50,
+							"objectRows": {
+								"path": "lineItems",
+								"refs": [
+									{ "field": "productRef", "register": "pipelinq", "schema": "product", "as": "productRecord" }
+								]
+							},
 							"columns": [
-								{ "label": "Product", "value": ["{product}", "{productRef}"] },
+								{ "label": "Product", "value": ["{productRecord.name}", "{product}"] },
 								{ "label": "Description", "value": "{description}" },
-								{ "label": "Quantity", "value": "{quantity}" },
-								{ "label": "Unit value", "value": ["{unitPrice|currency}", "{unitValue|currency}"] }
+								{ "label": "Quantity", "value": "{quantity}", "align": "end" },
+								{ "label": "Unit value", "value": ["{unitValue|currency}", "{unitPrice|currency}"], "align": "end" }
 							],
 							"emptyText": "No lines on this contract."
 						}
@@ -335,16 +350,9 @@
 								"currencyField": "currency",
 								"decimals": 0
 							},
-							"caption": "per period",
-							"source": {
-								"register": "pipelinq",
-								"schema": "salesContract",
-								"metric": "sum",
-								"field": "valuePerInterval",
-								"filter": {
-									"id": "@objectId"
-								}
-							}
+							"caption": "per month, from {annualValue|currency} a year",
+							"endpointSource": { "url": "/apps/pipelinq/api/contracts/@objectId/figures" },
+							"valueField": "monthlyValue"
 						}
 					},
 					{
@@ -353,35 +361,25 @@
 						"title": "Days to end date",
 						"content": {
 							"label": "Days to end date",
-							"objectField": "endDate",
-							"display": "countdown",
-							"countdown": {
-								"unit": "days"
-							},
-							"caption": "until the end date"
+							"endpointSource": { "url": "/apps/pipelinq/api/contracts/@objectId/figures" },
+							"valueField": "daysToEnd",
+							"caption": "notice date {noticeDate|date}"
 						}
 					},
 					{
 						"id": "contract-kpi-invoiced",
 						"type": "stat",
-						"title": "Contract value",
+						"title": "Invoiced this year",
 						"content": {
-							"label": "Value",
+							"label": "Invoiced this year",
 							"format": {
 								"style": "currency",
 								"currencyField": "currency",
 								"decimals": 0
 							},
-							"caption": "{billingInterval}",
-							"source": {
-								"register": "pipelinq",
-								"schema": "salesContract",
-								"metric": "sum",
-								"field": "value",
-								"filter": {
-									"id": "@objectId"
-								}
-							}
+							"caption": "{invoicesSent} of {invoicesDue} invoices sent",
+							"endpointSource": { "url": "/apps/pipelinq/api/contracts/@objectId/figures" },
+							"valueField": "invoicedThisYear"
 						}
 					},
 					{

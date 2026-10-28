@@ -74,14 +74,19 @@ class FilinqLetterAdapterTest extends TestCase
      * @param object|null $templates The TemplateService stand-in, or null for absent.
      * @param object|null $documents The DocumentService stand-in, or null for absent.
      * @param string|null $uid       The acting user, or null.
+     * @param object|null $slugs     The TemplateSlugResolver stand-in, or null for absent.
      *
      * @return FilinqLetterAdapter
      */
-    private function adapter(?object $templates, ?object $documents, ?string $uid='ann'): FilinqLetterAdapter
+    private function adapter(?object $templates, ?object $documents, ?string $uid='ann', ?object $slugs=null): FilinqLetterAdapter
     {
         $container = $this->createMock(ContainerInterface::class);
         $container->method('get')->willReturnCallback(
-            static function (string $id) use ($templates, $documents): object {
+            static function (string $id) use ($templates, $documents, $slugs): object {
+                if ($id === 'OCA\Filinq\Service\TemplateSlugResolver' && $slugs !== null) {
+                    return $slugs;
+                }
+
                 if ($id === 'OCA\Filinq\Service\TemplateService' && $templates !== null) {
                     return $templates;
                 }
@@ -482,6 +487,101 @@ class FilinqLetterAdapterTest extends TestCase
         $adapter->render('tpl-1', [], 'Letter');
 
     }//end testAnEmptyDocumentIsAFailure()
+
+
+
+    /**
+     * A TemplateSlugResolver stand-in holding the Offerte template under its slug.
+     *
+     * @return object
+     */
+    private function slugs(): object
+    {
+        return new class($this->calls) {
+
+
+            /**
+             * @param \ArrayObject $calls Call log.
+             */
+            public function __construct(private \ArrayObject $calls)
+            {
+            }
+
+
+            /**
+             * @param string      $namespace The namespace.
+             * @param string      $slug      The slug.
+             * @param string|null $tenantId  The tenant.
+             *
+             * @return array<string, mixed>
+             */
+            public function resolve(string $namespace, string $slug, ?string $tenantId=null): array
+            {
+                $this->calls[] = ['resolve', $namespace, $slug];
+                if ($namespace === 'pipelinq' && $slug === 'offerte') {
+                    return ['id' => '4f1c0d6e-9b2a-4c3d-8e5f-6a7b8c9d0e1f', 'name' => 'Offerte', 'namespace' => 'pipelinq'];
+                }
+
+                throw new RuntimeException(message: 'No template found', code: 404);
+            }
+
+
+        };
+
+    }//end slugs()
+
+
+    /**
+     * A template named by its slug is found in pipelinq's namespace through filinq's slug resolver.
+     *
+     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     *
+     * @return void
+     */
+    public function testFindTemplateResolvesASlugInPipelinqsNamespace(): void
+    {
+        $adapter = $this->adapter(templates: $this->templates(rows: []), documents: $this->documents(result: []), slugs: $this->slugs());
+
+        $this->assertSame(
+            expected: ['id' => '4f1c0d6e-9b2a-4c3d-8e5f-6a7b8c9d0e1f', 'name' => 'Offerte', 'description' => ''],
+            actual: $adapter->findTemplate(templateId: 'offerte')
+        );
+        $this->assertSame(expected: [['resolve', 'pipelinq', 'offerte']], actual: $this->calls->getArrayCopy());
+
+    }//end testFindTemplateResolvesASlugInPipelinqsNamespace()
+
+
+    /**
+     * An unknown slug, or no slug resolver, finds nothing.
+     *
+     * @return void
+     */
+    public function testAnUnknownSlugFindsNothing(): void
+    {
+        $withResolver    = $this->adapter(templates: $this->templates(rows: []), documents: $this->documents(result: []), slugs: $this->slugs());
+        $withoutResolver = $this->adapter(templates: $this->templates(rows: []), documents: $this->documents(result: []));
+
+        $this->assertNull(actual: $withResolver->findTemplate(templateId: 'unknown'));
+        $this->assertNull(actual: $withoutResolver->findTemplate(templateId: 'offerte'));
+
+    }//end testAnUnknownSlugFindsNothing()
+
+
+    /**
+     * The render hands filinq the lists the template reads beside the record.
+     *
+     * @return void
+     */
+    public function testRenderPassesListReferences(): void
+    {
+        $adapter  = $this->adapter(templates: $this->templates(rows: []), documents: $this->documents(result: ['content' => '%PDF-1.7']));
+        $listRefs = [['register' => '7', 'schema' => 'salesQuoteLine', 'filter' => ['quote' => 'q-1'], 'as' => 'lines']];
+
+        $adapter->render(templateId: 'tpl-1', dataRefs: [], filename: 'Offerte', outputMode: 'return', listRefs: $listRefs);
+
+        $this->assertSame(expected: $listRefs, actual: $this->calls[0][3]['listRefs']);
+
+    }//end testRenderPassesListReferences()
 
 
 }//end class

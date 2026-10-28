@@ -4,15 +4,16 @@
   -
   - TaxAuthorityExportDialog: admin-only modal to confirm the date range
   - and format (XML or JSON) for the kassakoppeling audit log export pack
-  - delivered to the Dutch tax authority. Extracted to its own file per
-  - ADR-004 (modal-isolation).
+  - delivered to the Dutch tax authority, and to download it. Registered as
+  - TaxAuthorityExportModal, the target of the audit log's export header
+  - action. Extracted to its own file per ADR-004 (modal-isolation).
   -
   - @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Export for the tax authority')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="bd-export">
@@ -76,28 +77,24 @@
 				{{ t('pipelinq', 'Download export package') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcCheckboxRadioSwitch, NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 
 export default {
 	name: 'TaxAuthorityExportDialog',
 	components: {
 		NcButton,
 		NcCheckboxRadioSwitch,
-		NcDialog,
+		CnDialog,
 	},
 
-	props: {
-		submitting: {
-			type: Boolean,
-			default: false,
-		},
-	},
-
-	emits: ['close', 'confirm'],
+	emits: ['close'],
 	data() {
 		const today = new Date()
 		const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
@@ -106,6 +103,7 @@ export default {
 			toDate: this.formatIsoDate(today),
 			format: 'xml',
 			errorMessage: '',
+			submitting: false,
 		}
 	},
 
@@ -124,11 +122,12 @@ export default {
 		},
 
 		/**
-		 * Validate inputs and emit the confirm event with the selected range and format.
+		 * Validate the range, then download the export package and close.
 		 *
+		 * @return {Promise<void>}
 		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
 		 */
-		submit() {
+		async submit() {
 			this.errorMessage = ''
 			if (!this.fromDate || !this.toDate) {
 				this.errorMessage = t(
@@ -144,11 +143,50 @@ export default {
 				)
 				return
 			}
-			this.$emit('confirm', {
-				from: this.fromDate,
-				to: this.toDate,
-				format: this.format,
-			})
+			this.submitting = true
+			try {
+				if (await this.download()) {
+					showSuccess(t('pipelinq', 'Tax authority export downloaded.'))
+					this.$emit('close')
+				}
+			} catch {
+				showError(t('pipelinq', 'Tax authority export failed.'))
+			} finally {
+				this.submitting = false
+			}
+		},
+
+		/**
+		 * Fetch the export package for the chosen range and format and save it.
+		 *
+		 * @return {Promise<boolean>} Whether the file was saved.
+		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
+		 */
+		async download() {
+			const params = new URLSearchParams({ from: this.fromDate, to: this.toDate, format: this.format })
+			const response = await fetch(
+				generateUrl(`/apps/pipelinq/api/kassakoppeling/audit/export?${params.toString()}`),
+				{ method: 'GET', headers: { requesttoken: OC.requestToken } },
+			)
+			if (!response.ok) {
+				showError(response.status === 403
+					? t('pipelinq', 'Only administrators may export for the tax authority.')
+					: t('pipelinq', 'Tax authority export failed.'))
+				return false
+			}
+			const blob = await response.blob()
+			const matched = (response.headers.get('Content-Disposition') || '').match(/filename="?([^";]+)"?/)
+			const objectUrl = window.URL.createObjectURL(blob)
+			const link = document.createElement('a')
+			link.href = objectUrl
+			link.download = matched
+				? matched[1]
+				: `cash-register-audit-export-${this.fromDate}-to-${this.toDate}.${this.format}`
+			document.body.appendChild(link)
+			link.click()
+			link.remove()
+			window.URL.revokeObjectURL(objectUrl)
+			return true
 		},
 	},
 }

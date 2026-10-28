@@ -29,7 +29,16 @@
 		rowTitle="plain"
 		:searchPlaceholder="t('pipelinq', 'Filter by title or client')"
 		:headerButtons="headerButtons"
-		:countText="t('pipelinq', '{shown} of {total} leads · win chance first')"
+		:countText="
+			t(
+				'pipelinq',
+				'{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first',
+			)
+		"
+		:countValues="countValues"
+		:defaultFilters="defaultFilters"
+		:appConfig="appConfig"
+		:extend="['client']"
 		:footerNote="
 			t(
 				'pipelinq',
@@ -74,7 +83,7 @@ export default {
 				{
 					key: 'title',
 					label: t('pipelinq', 'Lead'),
-					secondary: '{source}',
+					secondary: '{client.name} · {source}',
 				},
 				{
 					key: 'stage',
@@ -132,6 +141,16 @@ export default {
 			// The sort Call first replaced, restored when it is switched off.
 			sortBeforeCallFirst: [],
 			stages: [],
+			// The default pipeline the list opens on, once it is read.
+			defaultPipelineId: '',
+			// The board opens on the default pipeline, as a removable filter.
+			defaultFilters: { pipeline: '@config.defaultPipeline?' },
+			// The open pipeline's value and its win-chance weighted forecast,
+			// both under the list's filters.
+			countValues: {
+				pipeline: { metric: 'sum', field: 'value', filter: { status: 'open' } },
+				weighted: { endpoint: '/apps/pipelinq/api/analytics/commercial', path: 'weightedForecast', followFilters: true },
+			},
 		}
 	},
 
@@ -202,11 +221,7 @@ export default {
 					},
 
 					// The row badge and this list filter both read `@self.updated`.
-					// The count request goes to OpenRegister's aggregation endpoint,
-					// which ignores `@self[updated]` and answered 0, so no count is
-					// shown until the library can send a date filter that endpoint
-					// understands (library-gaps.md).
-					showCount: false,
+					showCount: true,
 				},
 				{
 					label: t('pipelinq', 'Won'),
@@ -238,6 +253,17 @@ export default {
 					label: t('pipelinq', 'New lead'),
 				},
 			]
+		},
+
+		/**
+		 * The app config the list's default filter reads: the default
+		 * pipeline, once it is read.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/leads-list-board-line/specs/leads-list-board-line/spec.md#requirement-the-leads-list-is-the-board
+		 */
+		appConfig() {
+			return this.defaultPipelineId ? { defaultPipeline: this.defaultPipelineId } : {}
 		},
 
 		/**
@@ -338,6 +364,9 @@ export default {
 				if (!Array.isArray(pipelines)) return
 				const defaultPipeline =
 					pipelines.find((p) => p.isDefault) || pipelines[0]
+				if (defaultPipeline && defaultPipeline.id) {
+					this.defaultPipelineId = String(defaultPipeline.id)
+				}
 				if (defaultPipeline && Array.isArray(defaultPipeline.stages)) {
 					this.stages = defaultPipeline.stages
 				}

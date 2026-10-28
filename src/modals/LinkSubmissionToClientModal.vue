@@ -9,7 +9,8 @@
   - the signed-in colleague; the plan lives in utils/submissionLink.js.
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Link to a client')"
 		size="normal"
 		@closing="$emit('close')">
@@ -107,15 +108,20 @@
 				{{ linking ? t('pipelinq', 'Linking…') : t('pipelinq', 'Link') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { CnPartyPicker } from '@conduction/nextcloud-vue'
+import { CnDialog, CnPartyPicker } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showSuccess, showWarning } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcNoteCard,
+} from '@nextcloud/vue'
 import { createWithContact } from '../services/contactSyncApi.js'
 import { linkPlan, runLinkPlan, submittedParty } from '../utils/submissionLink.js'
 
@@ -148,7 +154,7 @@ async function firstMatch(schema, params) {
 export default {
 	name: 'LinkSubmissionToClientModal',
 
-	components: { CnPartyPicker, NcButton, NcCheckboxRadioSwitch, NcDialog, NcLoadingIcon, NcNoteCard },
+	components: { CnPartyPicker, NcButton, NcCheckboxRadioSwitch, CnDialog, NcLoadingIcon, NcNoteCard },
 
 	props: {
 		/** The ticket to link. */

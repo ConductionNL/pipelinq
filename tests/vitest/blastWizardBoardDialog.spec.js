@@ -34,4 +34,19 @@ describe('the new-newsletter wizard as drawn', () => {
 		expect(subtitle(0)).toBe('Step 1 of 6: Basics')
 		expect(subtitle(5)).toBe('Step 6 of 6: check everything before the blast is created')
 	})
+
+	it('names who a send would skip for lack of consent on the review step', () => {
+		const n = (_app, one, many, count, vars = {}) => t(_app, (count === 1 ? one : many).replace('%n', String(count)), vars)
+		const ctx = { t, n, selectedChannel: 'email', reviewMissing: [{ name: 'Bakkerij De Graaf' }, { name: 'Installatiebedrijf Verhoef BV' }, { name: 'Joke Smit' }, { name: 'A' }, { email: 'b@example.nl' }] }
+		expect(Wizard.computed.reviewConsentLine.call(ctx)).toBe('5 contacts in this segment have no consent for email. Choose how to continue.')
+		expect(Wizard.computed.reviewMissingNames.call(ctx)).toBe('Bakkerij De Graaf, Installatiebedrijf Verhoef BV, Joke Smit and 2 others')
+	})
+
+	it('creates without asking again once the marketer chose to skip on the review step', async () => {
+		const ctx = { selectedSegment: { id: 'seg-1' }, consentChoice: 'skip' }
+		expect(await Wizard.methods.preflightCompliance.call(ctx)).toBe(true)
+		expect(source).toContain('data-testid="blast-review-consent"')
+		expect(source).toContain('data-testid="blast-review-template-check"')
+	})
 })
+

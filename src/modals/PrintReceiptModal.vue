@@ -3,9 +3,9 @@
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Print Receipt')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="receipt-modal">
@@ -40,20 +40,21 @@
 				{{ t('pipelinq', 'Print') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcSelect } from '@nextcloud/vue'
 import ReceiptPreviewPane from '../components/pos/ReceiptPreviewPane.vue'
 import { loadActiveReceiptTemplates } from '../services/receiptTemplates.js'
 
 export default {
 	name: 'PrintReceiptModal',
 	components: {
-		NcDialog,
+		CnDialog,
 		NcButton,
 		NcSelect,
 		ReceiptPreviewPane,

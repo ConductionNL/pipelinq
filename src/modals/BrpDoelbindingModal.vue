@@ -10,9 +10,9 @@
   - @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Request purpose limitation')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<form class="brp-doelbinding" @submit.prevent="submit">
@@ -51,14 +51,14 @@
 				{{ t('pipelinq', 'Retrieve') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
-	NcDialog,
 	NcSelect,
 	NcTextArea,
 } from '@nextcloud/vue'
@@ -67,7 +67,7 @@ export default {
 	name: 'BrpDoelbindingModal',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcSelect,
 		NcTextArea,
 		NcCheckboxRadioSwitch,

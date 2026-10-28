@@ -31,7 +31,11 @@ vi.mock('../../src/services/partyIndicators.js', () => ({
 }))
 vi.mock('../../src/components/LogVisitAction.vue', () => ({ default: { name: 'LogVisitAction', props: ['clientId'], template: '<button class="stub-visit" />' } }))
 
+vi.mock('@nextcloud/event-bus', () => ({ emit: vi.fn(), subscribe: vi.fn(), unsubscribe: vi.fn() }))
+
 vi.stubGlobal('t', (app, text) => text)
+
+const { emit } = await import('@nextcloud/event-bus')
 
 const { default: PartyContactStrip } = await import('../../src/components/PartyContactStrip.vue')
 const global = { config: { globalProperties: { t: (app, text) => text } } }
@@ -51,5 +55,14 @@ describe('PartyContactStrip', () => {
 		expect(wrapper.find('.contact-links--buttons').exists()).toBe(true)
 		expect(wrapper.findAll('.contact-links__link').map((link) => link.text())).toEqual(['Call them', 'Email them', 'Directions'])
 		expect(wrapper.find('.stub-visit').exists()).toBe(true)
+	})
+
+	it('ends with Send a message, which asks the page to open the message composer for this client', async () => {
+		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'person' }, global })
+		await flushPromises()
+		const button = wrapper.find('[data-testid="party-contact-strip-message"]')
+		expect(button.text()).toBe('Send a message')
+		await button.trigger('click')
+		expect(emit).toHaveBeenCalledWith('pipelinq:messaging:compose', { entityId: 'c-1' })
 	})
 })

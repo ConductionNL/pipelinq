@@ -112,7 +112,7 @@
 					"route": "Leads",
 					"separator": "/"
 				},
-				"statusPill": {
+				"typePill": {
 					"field": "status",
 					"colorMap": {
 						"draft": "default",
@@ -131,14 +131,34 @@
 						"ordered": "Ordered"
 					}
 				},
-				"headerFields": [
+				"statusPill": {
+					"text": "Version {version}",
+					"variant": "primary"
+				},
+				"headerMeta": "prices excl. VAT",
+				"headerMetaWhen": [
 					{
-						"key": "version",
-						"format": "badge"
+						"when": {
+							"field": "status",
+							"value": "draft"
+						},
+						"text": "not sent yet · prices excl. VAT"
+					},
+					{
+						"when": {
+							"field": "sentAt",
+							"op": "notEmpty"
+						},
+						"text": "sent {sentAt|date} · prices excl. VAT"
 					}
 				],
-				"headerMeta": "{number} · prices excl. VAT",
 				"identifierField": "number",
+				"titleTemplate": "{number} {title}",
+				"follow": false,
+				"showEditAction": false,
+				"primaryActionByStage": {
+					"draft": "send-quote"
+				},
 				"actionsMenu": {
 					"label": "More"
 				},
@@ -168,10 +188,23 @@
 						"label": "Back to the lead",
 						"icon": "TrendingUp",
 						"target": "/leads/@object.lead"
+					},
+					{
+						"id": "quote-pdf",
+						"type": "navigate",
+						"label": "Preview PDF",
+						"icon": "FilePdfBox",
+						"target": "/index.php/apps/pipelinq/api/records/salesQuote/@objectId/document",
+						"visibleWhen": {
+							"endpoint": "/apps/pipelinq/api/records/salesQuote/document-template",
+							"field": "available",
+							"op": "eq",
+							"value": true
+						}
 					}
 				],
 				"quickActions": [
-					"send-quote"
+					"quote-pdf"
 				],
 				"widgets": [
 					{
@@ -181,7 +214,7 @@
 						"icon": "FileDocumentEditOutline",
 						"content": {
 							"title": "Quote",
-							"columns": 2,
+							"columns": 3,
 							"include": [
 								"lead",
 								"client",
@@ -194,12 +227,42 @@
 							],
 							"overrides": {
 								"assignee": {
-									"formatter": "userDisplayName"
+									"formatter": "userDisplayName",
+									"order": 6,
+									"hint": "Signs the quote"
 								},
 								"sentAt": {
-									"editable": false
+									"editable": false,
+									"order": 4,
+									"hint": "Set when it is sent",
+									"emptyValue": "Not yet sent"
+								},
+								"lead": {
+									"order": 0,
+									"hint": "The quote belongs to this lead"
+								},
+								"client": {
+									"order": 1,
+									"hint": "From the lead"
+								},
+								"contact": {
+									"order": 2,
+									"hint": "Receives the quote by e-mail"
+								},
+								"title": {
+									"order": 3,
+									"hint": "Printed on the PDF"
+								},
+								"expiresAt": {
+									"order": 5,
+									"hint": "30 days after sending"
+								},
+								"paymentTerm": {
+									"order": 7,
+									"hint": "Printed on the PDF"
 								}
-							}
+							},
+							"fieldLook": "input"
 						}
 					},
 					{
@@ -219,12 +282,24 @@
 							},
 							"columns": [
 								{
-									"key": "description",
-									"label": "Product"
+									"key": "name",
+									"label": "Product",
+									"firstOf": [
+										"name",
+										"product.name",
+										"description"
+									],
+									"secondary": "{kind}",
+									"secondaryLabels": {
+										"kind": {
+											"catalogue": "Catalogue product",
+											"own": "Own line"
+										}
+									}
 								},
 								{
-									"key": "kind",
-									"label": "Kind"
+									"key": "description",
+									"label": "Description"
 								},
 								{
 									"key": "quantity",
@@ -256,33 +331,42 @@
 							"addLabel": "Add product",
 							"limit": 50,
 							"emptyText": "No lines yet. Add a product from the catalogue or a line of your own.",
-							"footerNote": "Products come from the catalogue at their current price. A line of your own is for work the catalogue does not hold."
-						}
-					},
-					{
-						"id": "quote-totals",
-						"type": "data",
-						"title": "Totals",
-						"icon": "Calculator",
-						"content": {
-							"title": "Totals",
-							"columns": 3,
-							"include": [
-								"subtotal",
-								"vatAmount",
-								"total"
-							],
-							"overrides": {
-								"subtotal": {
-									"editable": false
-								},
-								"vatAmount": {
-									"editable": false
-								},
-								"total": {
-									"editable": false
+							"footnote": "Products come from the catalogue at their current price. A line of your own is for work the catalogue does not hold.",
+							"tableBleed": true,
+							"rowTitle": "strong",
+							"createDefaults": {
+								"kind": "catalogue"
+							},
+							"addActions": [
+								{
+									"label": "Add own line",
+									"icon": "Pencil",
+									"createDefaults": {
+										"kind": "own"
+									}
 								}
-							}
+							],
+							"totals": [
+								{
+									"label": "Subtotal",
+									"path": "subtotal",
+									"format": "currency",
+									"currencyField": "currency"
+								},
+								{
+									"label": "VAT {vatRate}%",
+									"path": "vatAmount",
+									"format": "currency",
+									"currencyField": "currency"
+								},
+								{
+									"label": "Total",
+									"path": "total",
+									"format": "currency",
+									"currencyField": "currency",
+									"emphasis": true
+								}
+							]
 						}
 					},
 					{
@@ -300,38 +384,17 @@
 					},
 					{
 						"id": "side-status",
-						"type": "facts",
+						"type": "sections",
 						"title": "Status",
 						"icon": "ProgressCheck",
 						"content": {
-							"fields": [
+							"dividers": true,
+							"sections": [
 								{
-									"as": "pill",
-									"path": "status",
-									"map": {
-										"draft": "Draft",
-										"sent": "Sent",
-										"accepted": "Accepted",
-										"rejected": "Rejected",
-										"expired": "Expired",
-										"ordered": "Ordered"
-									},
-									"variantMap": {
-										"draft": "default",
-										"sent": "info",
-										"accepted": "success",
-										"rejected": "error",
-										"expired": "warning",
-										"ordered": "teal"
-									}
+									"widgetId": "quote-stages"
 								},
 								{
-									"as": "line",
-									"text": "Draft, sent, then accepted or rejected. A sent quote expires after 30 days."
-								},
-								{
-									"as": "line",
-									"text": "Convert to order is available once the client accepts the quote."
+									"widgetId": "quote-order"
 								}
 							]
 						}
@@ -379,7 +442,74 @@
 						"id": "side-history",
 						"type": "audit-trail",
 						"title": "History",
-						"icon": "History"
+						"icon": "History",
+						"content": {
+							"excludeActions": [
+								"read"
+							],
+							"layout": "stacked"
+						}
+					},
+					{
+						"id": "quote-stages",
+						"type": "stages",
+						"title": "Status",
+						"content": {
+							"currentField": "status",
+							"variant": "list",
+							"transition": false,
+							"ariaLabel": "Quote status",
+							"stages": [
+								{
+									"id": "draft",
+									"label": "Draft"
+								},
+								{
+									"id": "sent",
+									"label": "Sent"
+								},
+								{
+									"id": "accepted",
+									"label": "Accepted"
+								},
+								{
+									"id": "rejected",
+									"label": "Rejected"
+								},
+								{
+									"id": "expired",
+									"label": "Expired",
+									"hint": "after 30 days"
+								}
+							]
+						}
+					},
+					{
+						"id": "quote-order",
+						"type": "facts",
+						"title": "Convert to order",
+						"content": {
+							"fields": [],
+							"actions": [
+								{
+									"id": "quote-to-order",
+									"type": "api-call",
+									"label": "Convert to order",
+									"icon": "FileDocumentOutline",
+									"method": "POST",
+									"url": "/apps/openregister/api/objects/@objectId/transition",
+									"payload": {
+										"action": "toOrder"
+									},
+									"visibleWhen": {
+										"field": "status",
+										"value": "accepted"
+									},
+									"successMessage": "The quote is now an order."
+								}
+							],
+							"footnote": "Convert to order is available once the client accepts the quote."
+						}
 					}
 				],
 				"layout": [
@@ -398,14 +528,6 @@
 						"gridY": 5,
 						"gridWidth": 12,
 						"gridHeight": 6
-					},
-					{
-						"id": "3",
-						"widgetId": "quote-totals",
-						"gridX": 0,
-						"gridY": 11,
-						"gridWidth": 12,
-						"gridHeight": 2
 					},
 					{
 						"id": "4",

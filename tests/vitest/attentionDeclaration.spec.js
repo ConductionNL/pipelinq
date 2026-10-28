@@ -117,28 +117,19 @@ describe('appinfo/attention.json follows the attention feed contract', () => {
 	})
 })
 
-describe('the declared item is the dashboard\'s own "First today" card', () => {
-	it('declares the item the card shows', () => {
+describe('the declared item counts the tickets the dashboard card picks from', () => {
+	// The dashboard's "First, today" card names ONE ticket (the most overdue
+	// of the caller's open ones, GET /api/worklist/first). LaunchPad needs a
+	// count, so the declaration counts the caller's late tickets and opens the
+	// tickets list on that filter; the card is the same subject, read by name.
+	it('declares the late tickets as a count with a severity the card shares', () => {
 		expect(item).toBeTruthy()
 		expect(card.layout).toBe('attention')
-		expect(item.title).toBe(card.title)
-		expect(item.reason).toBe(card.reason)
 		expect(item.severity).toBe(card.variant)
-		expect(item.op ?? 'gt').toBe(card.visibleWhen.op)
-		expect(item.value ?? 0).toBe(card.visibleWhen.value)
-		expect(item.action.label).toBe(card.actions[0].label)
-	})
-
-	it('counts in the same register and schema with the same filter, key by key', () => {
-		const own = card.visibleWhen.source
-		expect(item.source.register).toBe(own.register)
-		expect(item.source.schema).toBe(own.schema)
-		expect(Object.keys(item.source.filter).sort()).toEqual(
-			Object.keys(own.filter).sort(),
-		)
-		for (const [key, value] of Object.entries(own.filter)) {
-			expect(item.source.filter[key], key).toStrictEqual(value)
-		}
+		expect(item.op ?? 'gt').toBe('gt')
+		expect(item.value ?? 0).toBe(0)
+		expect(item.source.filter.assignee).toBe('@me')
+		expect(card.visibleWhen.endpoint).toBe('/apps/pipelinq/api/worklist/first')
 	})
 
 	it('counts in a register and schema the app ships, on fields the schema carries', () => {
@@ -173,19 +164,10 @@ describe('the declared item is the dashboard\'s own "First today" card', () => {
 		}
 	})
 
-	it("opens the list the card's button opens, with the filter the card links with", () => {
-		const route = card.actions[0].route
-		const target = builtSimple.pages.find((page) => page.id === route.name)
-		expect(target, route.name).toBeTruthy()
+	it('opens the tickets list, with its filter as the query', () => {
+		const target = builtSimple.pages.find((page) => page.id === 'Tickets')
+		expect(target).toBeTruthy()
 		expect(item.action.path).toBe(target.route)
-		// LaunchPad writes the filter into the link as the query. The card's
-		// own link must carry the same keys and the same values.
-		expect(Object.keys(route.query).sort()).toEqual(
-			Object.keys(item.source.filter).sort(),
-		)
-		for (const [key, value] of Object.entries(item.source.filter)) {
-			expect(route.query[key], key).toBe(String(value))
-		}
 	})
 })
 

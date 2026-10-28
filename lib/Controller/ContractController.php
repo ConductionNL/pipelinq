@@ -30,9 +30,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\ContractFiguresService;
 use OCA\Pipelinq\Service\ContractService;
 use OCA\Pipelinq\Service\RecurringRevenueService;
 use OCP\AppFramework\Controller;
@@ -49,6 +51,8 @@ use Throwable;
  * Contract lifecycle + recurring-revenue controller.
  *
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The contract endpoints: lifecycle, revenue, figures and per-object access.
  */
 class ContractController extends Controller {
 	/**
@@ -61,6 +65,7 @@ class ContractController extends Controller {
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner authorization.
 	 * @param ContainerInterface $container The DI container.
 	 * @param LoggerInterface $logger PSR logger.
+	 * @param ContractFiguresService $figuresService Reads a contract's figures.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -70,6 +75,7 @@ class ContractController extends Controller {
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
+		private ContractFiguresService $figuresService,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -182,6 +188,37 @@ class ContractController extends Controller {
 
 		return new JSONResponse($saved);
 	}//end transition()
+
+	/**
+	 * The figures a contract's page shows: monthly and annual value, the
+	 * notice date, the days to the end and this year's invoicing.
+	 *
+	 * @param string $id The contract UUID.
+	 *
+	 * @return JSONResponse The figures.
+	 *
+	 * @spec openspec/changes/contract-figures/specs/contract-renewal-tracking/spec.md#requirement-a-contract-page-reads-its-figures
+	 */
+	#[NoAdminRequired]
+	public function figures(string $id): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$contract = $this->loadContract(id: $id);
+		if ($contract === null) {
+			return new JSONResponse(['message' => 'Contract not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		if ($this->isAuthorized(uid: $user->getUID(), contract: $contract) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
+		return new JSONResponse(
+			$this->figuresService->figures(contract: $contract, today: new DateTimeImmutable('today'))
+		);
+	}//end figures()
 
 	/**
 	 * Recurring-revenue summary (MRR/ARR + counts) for dashboard widgets.

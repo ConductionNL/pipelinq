@@ -31,6 +31,16 @@
 				</template>
 				{{ t('pipelinq', 'Refresh') }}
 			</NcButton>
+			<NcButton
+				v-if="listId"
+				variant="secondary"
+				data-testid="subscriptions-manage-signups"
+				@click="showSignups = true">
+				<template #icon>
+					<AccountGroup :size="18" />
+				</template>
+				{{ t('pipelinq', 'Manage sign-ups') }}
+			</NcButton>
 		</template>
 		<header v-if="listId && !card" class="subscriptions-section__head">
 			<p class="subscriptions-section__subtitle">
@@ -63,15 +73,41 @@
 				</caption>
 				<thead>
 					<tr>
-						<th scope="col">{{ t('pipelinq', 'Subscriber') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Source') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Ground') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Confirmed') }}</th>
+						<th
+							v-for="column in columns"
+							:key="column.key"
+							scope="col"
+							:aria-sort="sortKey === column.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'">
+							<span class="subscriptions-section__th">
+								<button
+									type="button"
+									class="subscriptions-section__sort"
+									:data-testid="`subscriptions-sort-${column.key}`"
+									@click="sortBy(column.key)">
+									{{ column.label }}
+									<MenuUp v-if="sortKey === column.key && sortDir === 'desc'" :size="16" />
+									<MenuDown v-else :size="16" />
+								</button>
+								<NcActions
+									:aria-label="t('pipelinq', 'Filter on {column}', { column: column.label })"
+									:data-testid="`subscriptions-filter-${column.key}`">
+									<template #icon>
+										<FilterOutline :size="16" />
+									</template>
+									<NcActionCheckbox
+										v-for="option in filterOptions(column)"
+										:key="option"
+										:modelValue="isFiltered(column.key, option)"
+										@update:modelValue="toggleFilter(column.key, option, $event)">
+										{{ option }}
+									</NcActionCheckbox>
+								</NcActions>
+							</span>
+						</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="row in rows" :key="rowKey(row)">
+					<tr v-for="row in shownRows" :key="rowKey(row)">
 						<td>
 							<strong class="subscriptions-section__who">{{ subscriberLabel(row) }}</strong>
 							<span v-if="listId && row.name && row.email" class="subscriptions-section__email">{{ row.email }}</span>
@@ -108,6 +144,13 @@
 			</div>
 		</template>
 
+		<ListSignupsManageDialog
+			v-if="showSignups"
+			:listId="listId"
+			:subscriptions="rows"
+			@close="showSignups = false"
+			@changed="load" />
+
 		<SubscriptionManageModal
 			v-if="showManage"
 			:contactId="contactId"
@@ -120,8 +163,13 @@
 <script>
 import { CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { getLanguage } from '@nextcloud/l10n'
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { NcActionCheckbox, NcActions, NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
+import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
+import MenuDown from 'vue-material-design-icons/MenuDown.vue'
+import MenuUp from 'vue-material-design-icons/MenuUp.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
+import ListSignupsManageDialog from '../../dialogs/ListSignupsManageDialog.vue'
 import SubscriptionManageModal from '../../modals/SubscriptionManageModal.vue'
 import {
 	fetchContactSubscriptions,
@@ -136,7 +184,14 @@ export default {
 	name: 'SubscriptionsSection',
 
 	components: {
+		AccountGroup,
 		CnDetailCard,
+		FilterOutline,
+		ListSignupsManageDialog,
+		MenuDown,
+		MenuUp,
+		NcActionCheckbox,
+		NcActions,
 		CnStatusBadge,
 		NcButton,
 		NcLoadingIcon,
@@ -179,10 +234,52 @@ export default {
 			rows: [],
 			counts: countByState([]),
 			showManage: false,
+			showSignups: false,
+			sortKey: '',
+			sortDir: 'asc',
+			filters: {},
 		}
 	},
 
 	computed: {
+		/**
+		 * The table's columns: each a label, the value a filter offers and
+		 * the value a sort compares.
+		 *
+		 * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 * @return {Array<{key: string, label: string, text: (row: object) => string, sort: (row: object) => string}>}
+		 */
+		columns() {
+			return [
+				{ key: 'subscriber', label: this.t('pipelinq', 'Subscriber'), text: (row) => this.subscriberLabel(row), sort: (row) => this.subscriberLabel(row).toLowerCase() },
+				{ key: 'state', label: this.t('pipelinq', 'Status'), text: (row) => this.stateLabel(row.state), sort: (row) => this.stateLabel(row.state) },
+				{ key: 'source', label: this.t('pipelinq', 'Source'), text: (row) => row.source || '—', sort: (row) => row.source || '' },
+				{ key: 'ground', label: this.t('pipelinq', 'Ground'), text: (row) => this.groundLabel(row.lawfulBasis), sort: (row) => this.groundLabel(row.lawfulBasis) },
+				{ key: 'confirmed', label: this.t('pipelinq', 'Confirmed'), text: (row) => (row.confirmedAt ? this.formatDate(row.confirmedAt) : this.t('pipelinq', 'not yet')), sort: (row) => row.confirmedAt || '' },
+			]
+		},
+
+		/**
+		 * The rows the table shows: those every column filter lets through,
+		 * in the chosen order.
+		 *
+		 * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 * @return {Array<object>}
+		 */
+		shownRows() {
+			const columns = this.columns
+			let out = this.rows.filter((row) => columns.every((column) => {
+				const chosen = this.filters[column.key]
+				return !chosen || chosen.length === 0 || chosen.includes(column.text(row))
+			}))
+			const column = columns.find((c) => c.key === this.sortKey)
+			if (column) {
+				const dir = this.sortDir === 'desc' ? -1 : 1
+				out = [...out].sort((a, b) => String(column.sort(a)).localeCompare(String(column.sort(b))) * dir)
+			}
+			return out
+		},
+
 		/**
 		 * The card's title and subtitle, when the section is its own card.
 		 *
@@ -261,6 +358,54 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Sort on a column; the same column again turns the order around.
+		 *
+		 * @param {string} key The column.
+		 * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 */
+		sortBy(key) {
+			if (this.sortKey === key) {
+				this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc'
+				return
+			}
+			this.sortKey = key
+			this.sortDir = 'asc'
+		},
+
+		/**
+		 * The values a column's filter offers: those its rows hold.
+		 *
+		 * @param {object} column The column.
+		 * @return {Array<string>}
+		 */
+		filterOptions(column) {
+			return [...new Set(this.rows.map((row) => column.text(row)))].sort()
+		},
+
+		/**
+		 * Whether a column's filter holds a value.
+		 *
+		 * @param {string} key The column.
+		 * @param {string} option The value.
+		 * @return {boolean}
+		 */
+		isFiltered(key, option) {
+			return (this.filters[key] || []).includes(option)
+		},
+
+		/**
+		 * Add a value to a column's filter, or take it out.
+		 *
+		 * @param {string} key The column.
+		 * @param {string} option The value.
+		 * @param {boolean} on Whether the value is chosen.
+		 */
+		toggleFilter(key, option, on) {
+			const now = (this.filters[key] || []).filter((value) => value !== option)
+			this.filters = { ...this.filters, [key]: on ? [...now, option] : now }
 		},
 
 		/**
@@ -450,6 +595,24 @@ export default {
 	text-align: start;
 	padding: 0.4rem 0.6rem;
 	border-block-end: 1px solid var(--color-border);
+}
+
+.subscriptions-section__th {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.subscriptions-section__sort {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
 }
 
 .subscriptions-section--card .subscriptions-section__table th {

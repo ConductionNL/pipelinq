@@ -29,6 +29,7 @@ use OCA\Pipelinq\Service\ContactLinkedUidsService;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCA\Pipelinq\Service\ContactSyncSettingsService;
 use OCA\Pipelinq\Service\ContactVcardService;
+use OCA\Pipelinq\Service\VcardRevision;
 use OCP\AppFramework\Http;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
@@ -740,6 +741,7 @@ class ContactSyncControllerTest extends TestCase {
 			$this->createMock(ContactLinkedUidsService::class),
 			$appConfig,
 			objectService: $objectService,
+			revisions: new VcardRevision(),
 		);
 	}//end realSyncService()
 }//end class

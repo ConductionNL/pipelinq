@@ -56,7 +56,7 @@ describe('ClientDetail as the boards draw it', () => {
 describe('ClientDetail overview as the boards draw it', () => {
 	it('opens on the resident or organisation card, the tickets and the latest contact moments', () => {
 		const overview = widget('client-panels').content.tabs[0]
-		expect(overview.widgetIds).toEqual(['client-person-card', 'client-organisation-card', 'client-cases', 'client-tickets', 'client-latest-moments'])
+		expect(overview.widgetIds).toEqual(['client-person-card', 'client-organisation-card', 'client-cases', 'client-tickets', 'client-latest-moments', 'client-activity'])
 		expect(widget('client-person-card').visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
 		expect(widget('client-organisation-card').visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
 		expect(widget('client-person-card').content.fields.map((field) => nl[field.label])).toEqual(['Naam', 'Voornamen', 'Achternaam', 'Geboortedatum', 'Woonadres', 'Omschrijving'])
@@ -89,7 +89,7 @@ describe('ClientDetail side column as the boards draw it', () => {
 	const card = (id) => config.sideColumn.find((entry) => typeof entry === 'object' && entry.id === id)
 
 	it('keeps the boards\' order: resident cards, organisation cards, then the shared ones', () => {
-		expect(ids.slice(0, 10)).toEqual(['side-reach', 'side-identity', 'side-address', 'side-kvk', 'side-main-contact', 'side-open-case', 'side-open-ticket', 'client-channels', 'client-relationships', 'side-history'])
+		expect(ids.slice(0, 9)).toEqual(['side-reach', 'side-identity', 'side-address', 'side-kvk', 'side-main-contact', 'side-open-case', 'side-open-ticket', 'client-channels', 'client-relationships'])
 	})
 
 	it('shows the resident cards for a resident and the organisation cards for an organisation', () => {

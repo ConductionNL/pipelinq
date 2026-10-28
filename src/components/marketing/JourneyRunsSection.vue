@@ -229,23 +229,41 @@ export default {
 
 .journey-runs__frame {
 	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
+	border-radius: 8px;
+	background: var(--color-main-background);
 	overflow-x: auto;
 }
 
-.journey-runs__table {
+.journey-runs .journey-runs__frame .journey-runs__table {
 	width: 100%;
 	border-collapse: collapse;
+	line-height: 1.2;
 
 	th,
 	td {
-		padding: 10px 18px;
+		padding: 12px;
 		text-align: start;
+		line-height: 1.2;
+		background: var(--color-main-background);
 		border-bottom: 1px solid var(--color-border);
 	}
 
 	th {
+		--nldesign-component-table-header-background-color: var(--color-main-background);
+		--nldesign-component-table-header-color: var(--color-text-maxcontrast);
+		padding-block: 10px;
 		font-weight: 600;
+		color: var(--color-text-maxcontrast);
+	}
+
+	th:first-child,
+	td:first-child {
+		padding-inline-start: 18px;
+	}
+
+	th:last-child,
+	td:last-child {
+		padding-inline-end: 18px;
 	}
 
 	tbody tr:last-child td {

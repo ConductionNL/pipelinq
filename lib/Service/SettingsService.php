@@ -48,6 +48,9 @@ class SettingsService {
 	private const CONFIG_KEYS = [
 		'register',
 		'currency',
+		// The client "See an example" opens on the contact dashboard (an
+		// example set's sample resident); unset, the link is not drawn.
+		'example_client',
 		'client_schema',
 		'contact_schema',
 		'lead_schema',

@@ -214,15 +214,30 @@
 						"id": "event-history",
 						"type": "timeline",
 						"title": "History",
-						"content": { "auditTrail": true, "order": "desc" }
+						"content": { "auditTrail": true, "order": "desc", "excludeActions": ["read"], "actionLabels": { "create": [{ "when": { "field": "campaign", "op": "notEmpty" }, "text": "Event created in campaign {object.campaign}" }, { "text": "Event created" }] }, "resolve": { "campaign": { "schema": "campaign" } }, "changeLabels": [{ "field": "capacity", "label": "Places raised from {changed.capacity.old} to {changed.capacity.new}" }], "related": [{ "schema": "eventRegistration", "field": "event", "dateField": "registeredAt", "label": "{name} is on the waiting list", "when": { "field": "status", "value": "waitlist" } }, { "schema": "blast", "field": "event", "dateField": "sentAt", "label": "{name} sent with the invitation", "when": { "field": "status", "value": "sent" } }] }
 					},
 					{
 						"id": "event-form",
-						"type": "data",
+						"type": "facts",
 						"title": "Registration form",
+						"_note": "PqEvenement: the portaliq form people register with, the page it is on (a link) and when it closes, with the line that every sign-up arrives here as a registration.",
 						"content": {
-							"columns": 1,
-							"include": ["formTitle", "pageUrl", "signupClosesAt"]
+							"fields": [
+								{ "label": "Form", "path": "formTitle" },
+								{ "label": "On page", "path": "pageUrl", "format": "url" },
+								{ "label": "Closes", "template": "{signupClosesAt:date-long}" }
+							],
+							"actions": [
+								{
+									"id": "edit-form",
+									"label": "Edit form",
+									"icon": "PencilOutline",
+									"type": "navigate",
+									"target": "/index.php/apps/portaliq/form-bindings/@source.formBinding"
+								}
+							],
+							"footnote": "Built with portaliq; every sign-up arrives here as a registration.",
+							"emptyText": "No registration form yet."
 						}
 					},
 					{
@@ -239,7 +254,7 @@
 						"id": "event-side-history",
 						"type": "timeline",
 						"title": "History",
-						"content": { "auditTrail": true, "order": "desc", "limit": 3 }
+						"content": { "auditTrail": true, "order": "desc", "limit": 4, "excludeActions": ["read"], "actionLabels": { "create": [{ "when": { "field": "campaign", "op": "notEmpty" }, "text": "Event created in campaign {object.campaign}" }, { "text": "Event created" }] }, "resolve": { "campaign": { "schema": "campaign" } }, "changeLabels": [{ "field": "capacity", "label": "Places raised from {changed.capacity.old} to {changed.capacity.new}" }], "related": [{ "schema": "eventRegistration", "field": "event", "dateField": "registeredAt", "label": "{name} is on the waiting list", "when": { "field": "status", "value": "waitlist" } }, { "schema": "blast", "field": "event", "dateField": "sentAt", "label": "{name} sent with the invitation", "when": { "field": "status", "value": "sent" } }] }
 					}
 				],
 				"_bandNote": "PqEvenement: the four counts stand in a row across the page, above the tabs and the side column.",

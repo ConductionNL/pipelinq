@@ -12,9 +12,9 @@
   - @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="wizard"
 		:name="modalTitle"
-		:open="true"
 		size="large"
 		:closeOnClickOutside="false"
 		@closing="$emit('close')">
@@ -110,7 +110,7 @@
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" :disabled="saving" @click="$emit('close')">
+			<NcButton :disabled="saving" @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
@@ -128,15 +128,14 @@
 				}}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { CnMarkdownEditor } from '@conduction/nextcloud-vue'
+import { CnDialog, CnMarkdownEditor } from '@conduction/nextcloud-vue'
 import { FilePickerClosed, getFilePickerBuilder } from '@nextcloud/dialogs'
 import {
 	NcButton,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
@@ -160,7 +159,7 @@ export default {
 		CnMarkdownEditor,
 		FolderImage,
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,

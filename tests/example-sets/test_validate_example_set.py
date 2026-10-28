@@ -162,5 +162,25 @@ class OptionalNullTest(unittest.TestCase):
         self.assertEqual(1, len(self.errors({'name': 'x', 'verified': 'ja'})))
 
 
+class OverriddenDeclarationTest(unittest.TestCase):
+
+    TICKET = {'key': 't', 'register': 'pipelinq', 'schema': 'ticket', 'data': {'slaDeadline': '{{datetime:2 17:00}}', 'status': 'new'}}
+
+    def change(self, sets, where=None):
+        return {'key': 'c', 'register': 'pipelinq', 'schema': 'ticket', 'where': where or {'id': '{{object:t.id}}'}, 'set': sets}
+
+    def problems(self, change):
+        return validator.overridden_declarations({'objects': [self.TICKET], 'changes': [change]})
+
+    def test_a_declared_field_set_to_another_value_is_refused(self):
+        self.assertEqual(1, len(self.problems(self.change({'slaDeadline': '{{datetime:-1 17:00}}'}))))
+
+    def test_a_field_the_object_does_not_declare_may_be_set(self):
+        self.assertEqual([], self.problems(self.change({'assignee': '{{cast:pieter.uid}}'})))
+
+    def test_a_change_found_by_another_field_is_left_alone(self):
+        self.assertEqual([], self.problems(self.change({'slaDeadline': 'x'}, where={'title': 'T'})))
+
+
 if __name__ == '__main__':
     unittest.main()

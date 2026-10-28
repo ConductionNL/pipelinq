@@ -3,6 +3,7 @@
 
 import {
 	buildManifest,
+	buildManifestRoutes,
 	CnPageRenderer,
 	defaultPageTypes,
 	registerBuiltinDashboardWidgets,
@@ -230,6 +231,10 @@ function routesFromManifest(manifest) {
 		component: RoutePageRenderer,
 		props: page.route.includes(':'),
 	}))
+	// An index page declaring `splitView` opens a row beside the list at a
+	// second address (`<route>/split/:id`); the library builds that record.
+	routes.push(...buildManifestRoutes(manifest, { component: RoutePageRenderer, props: true })
+		.filter((record) => record.meta?.cnSplitOf))
 	// vue-router matches in declaration order, so a param route like `/pos/:id`
 	// would otherwise swallow a static sibling like `/pos/tender-types` on a
 	// direct (non-SPA) load. Manifest page order isn't guaranteed — manifest.d

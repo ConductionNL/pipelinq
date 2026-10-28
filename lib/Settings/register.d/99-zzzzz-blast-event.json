@@ -1,0 +1,21 @@
+{
+    "$comment": "A newsletter can name the event it invites to, so the event's history lists it (PqEvenement: \"Nieuwsbrief oktober verstuurd met de uitnodiging\"). Optional and additive; the blast schema version moves 1.3.0 -> 1.4.0 and the register needs a fresh import before the link is kept.",
+    "components": {
+        "schemas": {
+            "blast": {
+                "slug": "blast",
+                "version": "1.4.0",
+                "properties": {
+                    "event": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Event",
+                        "description": "The event this newsletter invites to.",
+                        "$ref": "campaignEvent",
+                        "facetable": true
+                    }
+                }
+            }
+        }
+    }
+}

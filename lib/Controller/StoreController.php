@@ -46,12 +46,16 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use DateTimeImmutable;
 use OCA\OpenRegister\AppHost\Service\GenericStoreService;
 use OCA\OpenRegister\AppHost\Service\StoreDescriptor;
+use OCA\OpenRegister\AppHost\Store\StoreActionAuthorizer;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\RegisterResolverService;
 use OCA\Pipelinq\Service\Settings\SchemaSlugMap;
+use OCA\Pipelinq\Service\Store\StoreInstallLedger;
+use OCA\Pipelinq\Service\Store\StoreTemplateAssembler;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -62,6 +66,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use InvalidArgumentException;
 use Throwable;
 
 /**
@@ -126,6 +131,20 @@ class StoreController extends Controller {
 	];
 
 	/**
+	 * What a published store item may carry next to its slug.
+	 *
+	 * @var array<int, string>
+	 */
+	private const PUBLISH_FIELDS = ['title', 'description', 'kind', 'category', 'version', 'publisher', 'icon', 'components'];
+
+	/**
+	 * Who may publish: administrators (OpenRegister admits them always).
+	 *
+	 * @var array<int, string>
+	 */
+	private const PUBLISH_GROUPS = ['admin'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The current HTTP request.
@@ -135,8 +154,14 @@ class StoreController extends Controller {
 	 * @param GenericStoreService $storeService Engine-owned store discovery client.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 * @param RegisterResolverService $registerResolver Resolves pipelinq's register id.
+	 * @param StoreInstallLedger $installLedger What this instance installed, and the last registry check.
+	 * @param StoreTemplateAssembler $assembler Offers local configuration and builds a published item's components.
+	 * @param StoreActionAuthorizer $actionAuthorizer Decides who may publish (OpenRegister).
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Nextcloud constructor injection: discovery,
+	 *   install, the install ledger and publish each need their own collaborator.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -146,6 +171,9 @@ class StoreController extends Controller {
 		private readonly GenericStoreService $storeService,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly RegisterResolverService $registerResolver,
+		private readonly StoreInstallLedger $installLedger,
+		private readonly StoreTemplateAssembler $assembler,
+		private readonly StoreActionAuthorizer $actionAuthorizer,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -170,7 +198,10 @@ class StoreController extends Controller {
 				'category' => 'category',
 				'version' => 'version',
 				'publisher' => 'publisher',
-			]
+				'icon' => 'icon',
+			],
+			publishFields: self::PUBLISH_FIELDS,
+			publishGroups: self::PUBLISH_GROUPS
 		);
 	}//end descriptor()
 
@@ -228,8 +259,16 @@ class StoreController extends Controller {
 			);
 		}
 
+		if ($result['outcome'] === GenericStoreService::OUTCOME_OK) {
+			$this->installLedger->markChecked(when: new DateTimeImmutable());
+		}
+
 		return new JSONResponse(
-			data: ['outcome' => $result['outcome'], 'cards' => $result['cards']],
+			data: [
+				'outcome'   => $result['outcome'],
+				'cards'     => $this->installLedger->annotate(cards: $result['cards']),
+				'checkedAt' => $this->installLedger->checkedAt(),
+			],
 			statusCode: Http::STATUS_OK
 		);
 	}//end search()
@@ -274,11 +313,92 @@ class StoreController extends Controller {
 			);
 		}
 
+		$report = $this->installComponents(components: $this->components(item: $item));
+		if ($report['success'] === true) {
+			$this->installLedger->record(slug: $slug, version: (string) ($item['version'] ?? ''));
+		}
+
+		return new JSONResponse(data: $report, statusCode: Http::STATUS_OK);
+	}//end install()
+
+	/**
+	 * The local configuration a store item of a kind may carry, for the publish dialog.
+	 *
+	 * @return JSONResponse `{objects: [{schema, id, title}]}`; 403 for a user who may not publish.
+	 *
+	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 */
+	#[NoAdminRequired]
+	public function publishable(): JSONResponse {
+		$refusal = $this->publishRefusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$kind = $this->request->getParam('kind');
+		if (is_string($kind) === false) {
+			$kind = '';
+		}
+
+		return new JSONResponse(data: ['objects' => $this->assembler->publishable(kind: $kind)], statusCode: Http::STATUS_OK);
+	}//end publishable()
+
+	/**
+	 * Publish a store item built from local configuration to the configured registry.
+	 *
+	 * The body is `{item: {slug, title, kind, version, ...}, objects: [{schema, id}]}`.
+	 * The chosen objects become the item's components (StoreTemplateAssembler);
+	 * OpenRegister then sends the slug and the declared publish fields only.
+	 *
+	 * @return JSONResponse `{outcome, slug}`; 401 anonymous, 403 not admitted, 400 a refused item.
+	 *
+	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 */
+	#[NoAdminRequired]
+	public function publish(): JSONResponse {
+		$refusal = $this->publishRefusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$item    = $this->request->getParam('item');
+		$objects = $this->request->getParam('objects', []);
+		if (is_array($item) === false || is_array($objects) === false) {
+			return new JSONResponse(data: ['outcome' => GenericStoreService::OUTCOME_NOT_PUBLISHABLE, 'slug' => ''], statusCode: Http::STATUS_BAD_REQUEST);
+		}
+
+		try {
+			$item['components'] = $this->assembler->components(kind: (string) ($item['kind'] ?? ''), chosen: $objects);
+		} catch (InvalidArgumentException $e) {
+			return new JSONResponse(
+				data: ['outcome' => GenericStoreService::OUTCOME_NOT_PUBLISHABLE, 'slug' => '', 'message' => $e->getMessage()],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
 		return new JSONResponse(
-			data: $this->installComponents(components: $this->components(item: $item)),
+			data: $this->storeService->publish(descriptor: $this->descriptor(), payload: $item),
 			statusCode: Http::STATUS_OK
 		);
-	}//end install()
+	}//end publish()
+
+	/**
+	 * Why the caller may not publish, or null when they may.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function publishRefusal(): ?JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['outcome' => 'unauthenticated', 'slug' => ''], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->actionAuthorizer->canPublish(descriptor: $this->descriptor(), user: $user) === false) {
+			return new JSONResponse(data: ['outcome' => 'forbidden', 'slug' => ''], statusCode: Http::STATUS_FORBIDDEN);
+		}
+
+		return null;
+	}//end publishRefusal()
 
 	/**
 	 * Read the components a resolved store item declares.

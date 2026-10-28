@@ -193,11 +193,14 @@ class CashShiftController extends Controller {
 			return $uid;
 		}
 
-		$diffId = (string)$this->request->getParam('diffId', $id);
+		$diffId = (string)$this->request->getParam('diffId', '');
 
 		return $this->run(
 			action: fn (): array => [
-				'diff' => $this->service->approveDiff(diffId: $diffId, userId: $uid),
+				'diff' => $this->service->approveDiff(
+					diffId: $this->diffIdFor(shiftId: $id, diffId: $diffId),
+					userId: $uid
+				),
 			],
 			label: 'approve'
 		);
@@ -219,16 +222,37 @@ class CashShiftController extends Controller {
 			return $uid;
 		}
 
-		$diffId = (string)$this->request->getParam('diffId', $id);
+		$diffId = (string)$this->request->getParam('diffId', '');
 		$reason = (string)$this->request->getParam('reason', '');
 
 		return $this->run(
 			action: fn (): array => [
-				'diff' => $this->service->rejectDiff(diffId: $diffId, reason: $reason, userId: $uid),
+				'diff' => $this->service->rejectDiff(
+					diffId: $this->diffIdFor(shiftId: $id, diffId: $diffId),
+					reason: $reason,
+					userId: $uid
+				),
 			],
 			label: 'reject'
 		);
 	}//end reject()
+
+	/**
+	 * The difference an approve or reject acts on: the one named in the
+	 * request, else the shift's pending difference.
+	 *
+	 * @param string $shiftId The shift UUID.
+	 * @param string $diffId  The diff UUID from the request, or ''.
+	 *
+	 * @return string The diff UUID.
+	 */
+	private function diffIdFor(string $shiftId, string $diffId): string {
+		if ($diffId !== '') {
+			return $diffId;
+		}
+
+		return $this->service->pendingDiffId(shiftId: $shiftId);
+	}//end diffIdFor()
 
 	/**
 	 * Require an authenticated user, returning their UID.

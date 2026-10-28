@@ -11,9 +11,9 @@
   - @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="isEdit ? editTitle : addTitle"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="contact-email-phone-modal">
@@ -55,14 +55,14 @@
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
-	NcDialog,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
@@ -73,7 +73,7 @@ const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
 export default {
 	name: 'ContactEmailPhoneModal',
 	components: {
-		NcDialog,
+		CnDialog,
 		NcButton,
 		NcTextField,
 		NcSelect,
