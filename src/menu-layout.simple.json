@@ -2289,6 +2289,19 @@
 			"title": "Transactions",
 			"config": {
 				"addLabel": "New transaction",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "create",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New transaction"
+					}
+				],
+				"filterMenu": true,
 				"countText": "{shown} of {total} transactions · newest first",
 				"sortKey": "momentAt",
 				"sortOrder": "desc",
