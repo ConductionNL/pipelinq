@@ -9043,6 +9043,7 @@
 			"config": {
 				"showRefresh": true,
 				"showWidgetActions": false,
+				"headerActionsViewport": "wide",
 				"gridFloat": false,
 				"greeting": "date",
 				"descriptionSource": {
@@ -9068,6 +9069,7 @@
 					{
 						"id": "my-lens",
 						"type": "workspace-filter",
+						"borderless": "narrow",
 						"title": "Show",
 						"showTitle": false,
 						"content": {
@@ -9075,6 +9077,7 @@
 							"controls": [
 								{
 									"style": "chips",
+									"chipsOnPhone": "pills",
 									"label": "Show",
 									"writes": "@workspace.lens",
 									"urlKey": "lens",
@@ -9237,6 +9240,8 @@
 								"emptyText": "No due date"
 							},
 							"groupBy": "dueGroup",
+							"groupLook": "cards",
+							"groupTones": { "late": "error" },
 							"groupOrder": [
 								"late",
 								"today",
@@ -9840,7 +9845,8 @@
 						"gridY": 16,
 						"gridWidth": 12,
 						"gridHeight": 4,
-						"sizeToContent": true
+						"sizeToContent": true,
+						"borderless": true
 					},
 					{
 						"id": "0",
