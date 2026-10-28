@@ -960,6 +960,7 @@
 				"lifecycleStage": "customer",
 				"accountStatus": "active",
 				"preferredChannel": "phone",
+				"preferredContactTime": "'s ochtends",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
 				"notes": "Belt het liefst 's ochtends.",
