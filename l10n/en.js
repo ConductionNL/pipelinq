@@ -9091,7 +9091,8 @@ OC.L10N.register(
         "{who} is off this list.": "{who} is off this list.",
         "The member could not be taken off the list.": "The member could not be taken off the list.",
         "Filter on {column}": "Filter on {column}",
-        "Send the list's confirmation link, or take a member off the list.": "Send the list's confirmation link, or take a member off the list."
+        "Send the list's confirmation link, or take a member off the list.": "Send the list's confirmation link, or take a member off the list.",
+        "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first": "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first"
     },
     "nplurals=2; plural=(n != 1);"
 )

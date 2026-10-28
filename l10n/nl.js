@@ -9103,7 +9103,8 @@ OC.L10N.register(
         "{who} is off this list.": "{who} staat niet meer op deze lijst.",
         "The member could not be taken off the list.": "De abonnee kon niet van de lijst worden gehaald.",
         "Filter on {column}": "Filteren op {column}",
-        "Send the list's confirmation link, or take a member off the list.": "Stuur de bevestigingslink van de lijst, of haal een abonnee van de lijst."
+        "Send the list's confirmation link, or take a member off the list.": "Stuur de bevestigingslink van de lijst, of haal een abonnee van de lijst.",
+        "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first": "{shown} van {total} open leads · {pipeline|currency:EUR} in de pijplijn, {weighted|currency:EUR} gewogen · winkans eerst"
     },
     "nplurals=2; plural=(n != 1);"
 )
