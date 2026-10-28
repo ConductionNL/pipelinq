@@ -1,5 +1,13 @@
 {
     "translations": {
+        "Version {version}": "Versie {version}",
+        "not sent yet · prices excl. VAT": "nog niet verstuurd · prijzen excl. btw",
+        "sent {sentAt|date} · prices excl. VAT": "verstuurd op {sentAt|date} · prijzen excl. btw",
+        "after 30 days": "na 30 dagen",
+        "Add own line": "Eigen regel toevoegen",
+        "Convert to order": "Omzetten naar bestelling",
+        "The quote is now an order.": "De offerte is nu een bestelling.",
+        "Quote status": "Status offerte",
         "New newsletter, step {step} of {total}": "Nieuwe nieuwsbrief, stap {step} van {total}",
         "Step {step} of {total}: check everything before the blast is created": "Stap {step} van {total}: controleer alles voordat de blast wordt aangemaakt",
         "Step {step} of {total}: {label}": "Stap {step} van {total}: {label}",

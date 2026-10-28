@@ -47,11 +47,10 @@ describe('quote schemas', () => {
 })
 
 describe('quote page', () => {
-	it('edits the quote, lists its lines and ends with totals and notes', () => {
+	it('edits the quote, lists its lines with their totals, and ends with notes', () => {
 		expect(detail.config.layout.map((item) => item.widgetId)).toEqual([
 			'quote-facts',
 			'quote-lines',
-			'quote-totals',
 			'quote-notes',
 		])
 		const lines = detail.config.widgets.find((w) => w.id === 'quote-lines')
@@ -99,5 +98,52 @@ describe('quote page as the PqOfferte board draws it', () => {
 			excludeActions: ['read'],
 			layout: 'stacked',
 		})
+	})
+})
+
+describe('quote page parts as the PqOfferte board draws them', () => {
+	const widget = (id) => detail.config.widgets.find((w) => w.id === id)
+	const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+
+	it('puts the status pill first, then the version pill', () => {
+		expect(detail.config.typePill).toMatchObject({ field: 'status' })
+		expect(detail.config.statusPill).toEqual({ text: 'Version {version}', variant: 'primary' })
+		expect(nl['Version {version}']).toBe('Versie {version}')
+	})
+
+	it('says a draft is not sent yet, and when a sent quote went out', () => {
+		expect(detail.config.headerMeta).toBe('prices excl. VAT')
+		expect(detail.config.headerMetaWhen).toEqual([
+			{ when: { field: 'status', value: 'draft' }, text: 'not sent yet · prices excl. VAT' },
+			{ when: { field: 'sentAt', op: 'notEmpty' }, text: 'sent {sentAt|date} · prices excl. VAT' },
+		])
+		expect(nl['not sent yet · prices excl. VAT']).toBe('nog niet verstuurd · prijzen excl. btw')
+	})
+
+	it('lists the stages in the Status card, the current one marked', () => {
+		const status = widget('side-status')
+		expect(status.type).toBe('sections')
+		const stages = detail.config.widgets.find((w) => w.id === status.content.sections[0].widgetId)
+		expect(stages.type).toBe('stages')
+		expect(stages.content).toMatchObject({ currentField: 'status', variant: 'list', transition: false })
+		expect(stages.content.stages.map((s) => s.id)).toEqual(['draft', 'sent', 'accepted', 'rejected', 'expired'])
+		expect(stages.content.stages[4].hint).toBe('after 30 days')
+		expect(nl['after 30 days']).toBe('na 30 dagen')
+		expect(nl['you are here']).toBeUndefined()
+	})
+
+	it('offers converting to an order once accepted, below the stages', () => {
+		const order = detail.config.widgets.find((w) => w.id === widget('side-status').content.sections[1].widgetId)
+		expect(order.content.actions[0]).toMatchObject({ type: 'api-call', payload: { action: 'toOrder' }, visibleWhen: { field: 'status', value: 'accepted' } })
+		expect(order.content.footnote).toBe('Convert to order is available once the client accepts the quote.')
+	})
+
+	it('runs the lines edge to edge with a second add and the totals under them', () => {
+		const lines = widget('quote-lines').content
+		expect(lines).toMatchObject({ tableBleed: true, rowTitle: 'strong', createDefaults: { kind: 'catalogue' } })
+		expect(lines.addActions).toEqual([{ label: 'Add own line', icon: 'Pencil', createDefaults: { kind: 'own' } }])
+		expect(lines.totals.map((t) => t.path)).toEqual(['subtotal', 'vatAmount', 'total'])
+		expect(lines.totals[2].emphasis).toBe(true)
+		expect(detail.config.layout.map((item) => item.widgetId)).not.toContain('quote-totals')
 	})
 })

@@ -1,6 +1,14 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Version {version}": "Version {version}",
+        "not sent yet · prices excl. VAT": "not sent yet · prices excl. VAT",
+        "sent {sentAt|date} · prices excl. VAT": "sent {sentAt|date} · prices excl. VAT",
+        "after 30 days": "after 30 days",
+        "Add own line": "Add own line",
+        "Convert to order": "Convert to order",
+        "The quote is now an order.": "The quote is now an order.",
+        "Quote status": "Quote status",
         "Cash register audit": "Cash register audit",
         "Cash register audit entry": "Cash register audit entry",
         "Verification done. The status shows the result.": "Verification done. The status shows the result.",
