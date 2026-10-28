@@ -2056,7 +2056,6 @@
 					{
 						"action": "actions-menu",
 						"items": [
-							"header-actions",
 							"import"
 						]
 					},
@@ -2065,6 +2064,21 @@
 						"variant": "primary",
 						"icon": "Plus",
 						"label": "New request"
+					}
+				],
+				"_headerActionsNote": "Log contact is the contact moments view's primary button (its preset names it in headerButtons). The requests list's Actions menu names only Import, so it does not list it.",
+				"headerActions": [
+					{
+						"id": "log-contact",
+						"label": "Log contact",
+						"type": "open-form",
+						"formTitle": "Log contact",
+						"icon": "Plus",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"props": {
+							"ticketType": "interaction"
+						}
 					}
 				],
 				"countText": "{shown} of {total} tickets · customer contact · newest first",
@@ -2154,25 +2168,63 @@
 								"showCount": true
 							}
 						],
+						"headerButtons": [
+							{
+								"action": "export",
+								"label": "Download"
+							},
+							{
+								"action": "log-contact",
+								"variant": "primary",
+								"icon": "Plus",
+								"label": "Log contact"
+							}
+						],
 						"columns": [
 							{
 								"key": "title",
-								"label": "Subject"
+								"label": "Subject",
+								"secondary": "{reference}",
+								"cellClass": "cn-cell--strong cn-cell--wrap"
 							},
 							{
 								"key": "client",
 								"label": "Client",
-								"labelField": "name"
+								"labelField": "name",
+								"cellClass": "cn-cell--wrap"
 							},
 							{
 								"key": "channel",
 								"label": "Channel",
-								"formatter": "enumText"
+								"template": "{channel} · {direction}",
+								"secondaryLabels": {
+									"channel": {
+										"telefoon": "Phone",
+										"phone": "Phone",
+										"balie": "Counter",
+										"counter": "Counter",
+										"email": "Email",
+										"portal": "Online",
+										"web": "Web form",
+										"chat": "Chat",
+										"brief": "Letter",
+										"letter": "Letter",
+										"sms": "SMS",
+										"whatsapp": "WhatsApp",
+										"social": "Social media"
+									},
+									"direction": {
+										"inbound": "incoming",
+										"outbound": "outgoing",
+										"internal": "internal"
+									}
+								}
 							},
 							{
 								"key": "outcome",
 								"label": "Outcome",
-								"formatter": "enumLabel"
+								"formatter": "enumLabel",
+								"cellClass": "cn-cell--wrap"
 							},
 							{
 								"key": "duration",
@@ -2195,7 +2247,7 @@
 							{
 								"key": "occurredAt",
 								"label": "When",
-								"formatter": "datetime"
+								"template": "{occurredAt|relativetime}"
 							},
 							{
 								"key": "assignee",
