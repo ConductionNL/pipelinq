@@ -2445,4 +2445,32 @@ export default {
 		transition: none;
 	}
 }
+
+/* Board look (PqPipeline): the stage columns are grey panels without a
+   frame, 240px at the least, their title in sentence case. */
+.cn-look-board .pipeline-board__columns {
+	gap: 16px;
+}
+
+.cn-look-board .kanban-column {
+	min-width: 240px;
+	max-width: none;
+	flex: 1 0 240px;
+	padding: 12px;
+	border: 0;
+	border-radius: 12px;
+	background: var(--color-background-dark, #eceef1);
+}
+
+.cn-look-board .kanban-column__header {
+	padding: 0 0 12px;
+	border: 0;
+	border-radius: 0;
+}
+
+.cn-look-board .column-title {
+	font-size: 15px;
+	text-transform: none;
+	letter-spacing: 0;
+}
 </style>
