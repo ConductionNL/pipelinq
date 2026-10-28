@@ -166,12 +166,15 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
+import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import SendMessageModal from '../../modals/SendMessageModal.vue'
 import { PAGE_REFRESH_CHANNEL } from '../../services/pageRefreshOnCreate.js'
 import { useObjectStore } from '../../store/modules/object.js'
+
+/** Event-bus channel: open the composer for an entity (`{ entityId }`), sent by the client page's contact strip. */
+const COMPOSE_CHANNEL = 'pipelinq:messaging:compose'
 
 const EMPTY_PREFLIGHT = {
 	channels: { sms: false, whatsapp: false },
@@ -356,6 +359,7 @@ export default {
 	 */
 	async mounted() {
 		subscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
+		subscribe(COMPOSE_CHANNEL, this.onComposeRequested)
 		if (this.entityType === 'contact') {
 			await this.resolveContactClient()
 			await Promise.all([
@@ -370,6 +374,7 @@ export default {
 
 	beforeUnmount() {
 		unsubscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
+		unsubscribe(COMPOSE_CHANNEL, this.onComposeRequested)
 	},
 
 	methods: {
@@ -723,6 +728,19 @@ export default {
 			this.fetchMessages()
 			this.fetchConversations()
 			this.fetchPreflight()
+			emit('cn:timeline:changed', { objectId: this.entityId, source: 'messaging' })
+		},
+
+		/**
+		 * Open the composer when the contact strip asks for it on this entity.
+		 *
+		 * @param {object} payload `{ entityId }`.
+		 * @spec openspec/changes/client-activity-card/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
+		 */
+		onComposeRequested(payload) {
+			if (payload && payload.entityId === this.entityId) {
+				this.openComposer()
+			}
 		},
 	},
 }

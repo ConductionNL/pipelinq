@@ -5,8 +5,9 @@ Copyright (C) 2026 Conduction B.V.
 The client page's contact strip, as boards PqKlant and PqOrganisatie draw it:
 one card with the warnings line on top (or "No warnings on this resident."
 with Add a warning) and the ways to reach the party under it: call, mail,
-directions and log a visit. It composes the warnings panel, the contact links
-and the visit action, which stay usable on their own.
+directions, log a visit and send a message. It composes the warnings panel,
+the contact links and the visit action, which stay usable on their own; Send a
+message opens the page's Messages composer for this client.
 -->
 <template>
 	<section class="party-contact-strip" data-testid="party-contact-strip">
@@ -18,11 +19,23 @@ and the visit action, which stay usable on their own.
 				:address="address"
 				variant="buttons" />
 			<LogVisitAction :clientId="partyId" />
+			<NcButton
+				variant="secondary"
+				data-testid="party-contact-strip-message"
+				@click="composeMessage">
+				<template #icon>
+					<MessageTextOutline :size="20" />
+				</template>
+				{{ t('pipelinq', 'Send a message') }}
+			</NcButton>
 		</div>
 	</section>
 </template>
 
 <script>
+import { emit } from '@nextcloud/event-bus'
+import { NcButton } from '@nextcloud/vue'
+import MessageTextOutline from 'vue-material-design-icons/MessageTextOutline.vue'
 import ContactLinks from './ContactLinks.vue'
 import LogVisitAction from './LogVisitAction.vue'
 import PartyIndicatorPanel from './PartyIndicatorPanel.vue'
@@ -33,7 +46,7 @@ import PartyIndicatorPanel from './PartyIndicatorPanel.vue'
 export default {
 	name: 'PartyContactStrip',
 
-	components: { ContactLinks, LogVisitAction, PartyIndicatorPanel },
+	components: { ContactLinks, LogVisitAction, MessageTextOutline, NcButton, PartyIndicatorPanel },
 
 	props: {
 		/** The client. */
@@ -46,6 +59,17 @@ export default {
 		email: { type: String, default: '' },
 		/** Postal address as typed. */
 		address: { type: String, default: '' },
+	},
+
+	methods: {
+		/**
+		 * Ask the page's Messages section to open its composer for this client.
+		 *
+		 * @spec openspec/changes/client-activity-card/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
+		 */
+		composeMessage() {
+			emit('pipelinq:messaging:compose', { entityId: this.partyId })
+		},
 	},
 }
 </script>
@@ -73,6 +97,7 @@ export default {
 	margin: 0;
 }
 
+.party-contact-strip__actions > :deep(.button-vue),
 .party-contact-strip__actions :deep(.log-visit-action button) {
 	min-height: 40px;
 	height: 40px;

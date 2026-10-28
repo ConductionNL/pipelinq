@@ -9007,7 +9007,19 @@ OC.L10N.register(
         "%s, renews %s": "%s, verlengt %s",
         "_%n open lead: %s, %s_::_%n open leads, the largest: %s, %s_": ["%n open lead: %s, %s","%n open leads, de grootste: %s, %s"],
         "_%n project: %s, %s._::_%n projects, the first: %s, %s._": ["%n project: %s, %s.","%n projecten, het eerste: %s, %s."],
-        "_%n invoice, %s open._::_%n invoices, %s open._": ["%n factuur, %s open.","%n facturen, %s open."]
+        "_%n invoice, %s open._::_%n invoices, %s open._": ["%n factuur, %s open.","%n facturen, %s open."],
+        "email, linked": "e-mail, gekoppeld",
+        "Link email": "E-mail koppelen",
+        "Compose in Mail": "Opstellen in Mail",
+        "contact moment": "contactmoment",
+        "work log": "werklog",
+        "note": "notitie",
+        "task": "taak",
+        "calendar": "agenda",
+        "message": "bericht",
+        "Add an internal note. Type @ to mention a colleague.": "Voeg een interne notitie toe. Typ @ om een collega te noemen.",
+        "Contact moments, notes, tasks, mail and messages about this client appear here.": "Contactmomenten, notities, taken, mail en berichten over deze klant verschijnen hier.",
+        "Send a message": "Bericht sturen"
     },
     "nplurals=2; plural=(n != 1);"
 )

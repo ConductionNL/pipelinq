@@ -2536,7 +2536,7 @@
 						"id": "client-notes",
 						"type": "integration",
 						"integrationId": "notes",
-						"title": "Notes",
+						"title": "Client notes",
 						"icon": "NoteTextOutline"
 					},
 					{
@@ -2774,6 +2774,91 @@
 						}
 					},
 					{
+						"id": "client-activity",
+						"type": "timeline",
+						"title": "Activity",
+						"icon": "TimelineTextOutline",
+						"_note": "PqKlant / PqOrganisatie Activiteit: the merged timeline of /api/timeline (contact moments, notes, tasks, mail, calendar, WhatsApp/SMS messages) as feed rows, newest first, a chip per kind, the internal-note box (an OpenRegister note on the client) and Link email / Compose in Mail in the header.",
+						"headerActions": [
+							{
+								"label": "Link email",
+								"icon": "EmailOutline",
+								"variant": "tonal",
+								"action": {
+									"type": "open-modal",
+									"target": "EmailLinkDialog",
+									"props": {
+										"register": "pipelinq",
+										"schema": "client",
+										"objectId": "@objectId"
+									}
+								}
+							},
+							{
+								"label": "Compose in Mail",
+								"icon": "EmailArrowRightOutline",
+								"variant": "tonal",
+								"action": {
+									"type": "navigate",
+									"target": "/index.php/apps/mail/compose?uri=mailto:@object.email"
+								}
+							}
+						],
+						"content": {
+							"order": "desc",
+							"layout": "feed",
+							"composer": {
+								"placeholder": "Add an internal note. Type @ to mention a colleague.",
+								"label": "Add note",
+								"submitLabel": "Add note"
+							},
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/timeline",
+								"params": {
+									"entityType": "client",
+									"entityId": "@objectId"
+								},
+								"userField": "userName",
+								"typeLabels": {
+									"interaction": "contact moment",
+									"worklog": "work log",
+									"note": "note",
+									"task": "task",
+									"email": "email, linked",
+									"calendar": "calendar",
+									"message": "message"
+								},
+								"icons": {
+									"path": "metadata.channel",
+									"map": {
+										"phone": "PhoneInTalk",
+										"email": "EmailOutline",
+										"whatsapp": "MessageTextOutline",
+										"sms": "MessageTextOutline"
+									},
+									"typeMap": {
+										"interaction": "PhoneInTalk",
+										"worklog": "ClockOutline",
+										"note": "NoteTextOutline",
+										"task": "CheckCircleOutline",
+										"email": "EmailOutline",
+										"calendar": "CalendarBlankOutline",
+										"message": "MessageTextOutline"
+									}
+								}
+							},
+							"typeChips": [
+								{ "value": "interaction", "label": "Contact moments" },
+								{ "value": "note", "label": "Client notes" },
+								{ "value": "task", "label": "Tasks" },
+								{ "value": "email", "label": "Email" },
+								{ "value": "calendar", "label": "Calendar" },
+								{ "value": "message", "label": "Messages" }
+							],
+							"emptyText": "Contact moments, notes, tasks, mail and messages about this client appear here."
+						}
+					},
+					{
 						"id": "client-latest-moments",
 						"type": "record-list",
 						"title": "Latest contact moments",
@@ -2911,7 +2996,8 @@
 										"client-organisation-card",
 										"client-cases",
 										"client-tickets",
-										"client-latest-moments"
+										"client-latest-moments",
+										"client-activity"
 									],
 									"label": "Overview"
 								},
@@ -3083,18 +3169,6 @@
 							"clientId": "@objectId"
 						},
 						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "activity",
-						"component": "ActivityTimeline",
-						"title": "Activity",
-						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "client"
-						},
-						"colSpan": 12,
 						"card": true
 					},
 					{

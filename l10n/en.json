@@ -1,5 +1,17 @@
 {
     "translations": {
+        "email, linked": "email, linked",
+        "Link email": "Link email",
+        "Compose in Mail": "Compose in Mail",
+        "contact moment": "contact moment",
+        "work log": "work log",
+        "note": "note",
+        "task": "task",
+        "calendar": "calendar",
+        "message": "message",
+        "Add an internal note. Type @ to mention a colleague.": "Add an internal note. Type @ to mention a colleague.",
+        "Contact moments, notes, tasks, mail and messages about this client appear here.": "Contact moments, notes, tasks, mail and messages about this client appear here.",
+        "Send a message": "Send a message",
         "assigned to {assignee|user}": "assigned to {assignee|user}",
         "Awaiting customer": "Awaiting customer",
         "By {slaDeadline|date}": "By {slaDeadline|date}",
