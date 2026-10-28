@@ -16,74 +16,124 @@
   - @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
   -->
 <template>
-	<CnDialog width="form" :name="t('pipelinq', 'Send message')" @closing="$emit('close')">
+	<CnDialog
+		width="form"
+		:name="t('pipelinq', 'Send message')"
+		:eyebrow="eyebrow"
+		:subtitle="subtitle"
+		data-testid="send-message-dialog"
+		@closing="$emit('close')">
 		<div class="send-message">
-			<NcSelect
-				v-model="channel"
-				:options="channelOptions"
-				:inputLabel="t('pipelinq', 'Channel')"
-				label="label"
-				:reduce="(o) => o.value" />
-
-			<template v-if="channel">
+			<fieldset class="send-message__channel">
+				<legend class="send-message__label">
+					{{ t('pipelinq', 'Channel') }}
+				</legend>
 				<div
-					class="send-message__consent"
-					:class="
-						consentOk
-							? 'send-message__consent--ok'
-							: 'send-message__consent--warn'
-					">
-					<p>
-						{{
-							t('pipelinq', 'Consent for {channel}: {state}', {
-								channel: channelLabel,
-								state: consentLabel,
-							})
-						}}
-					</p>
-					<template v-if="!consentOk">
-						<NcTextField
-							v-model="consentEvidence"
-							:label="t('pipelinq', 'Evidence (required)')"
-							:placeholder="
-								t(
-									'pipelinq',
-									'e.g. verbal confirmation during call on {date}',
-									{ date: today },
-								)
-							" />
-						<NcSelect
-							v-model="consentLegalBasis"
-							:options="legalBasisOptions"
-							:inputLabel="t('pipelinq', 'Legal basis')"
-							label="label"
-							:reduce="(o) => o.value" />
-						<NcButton
-							variant="secondary"
-							:disabled="!consentEvidence || recordingConsent"
-							@click="recordConsent">
-							{{
-								recordingConsent
-									? t('pipelinq', 'Recording…')
-									: t('pipelinq', 'Record opt-in')
-							}}
-						</NcButton>
-					</template>
+					role="radiogroup"
+					class="send-message__switch"
+					:aria-label="t('pipelinq', 'Channel')">
+					<button
+						v-for="option in channelChoices"
+						:key="option.value"
+						type="button"
+						role="radio"
+						class="send-message__switch-option"
+						:class="{ 'send-message__switch-option--on': channel === option.value }"
+						:aria-checked="channel === option.value ? 'true' : 'false'"
+						:disabled="!option.available"
+						@click="channel = option.value">
+						<component :is="option.icon" :size="16" />
+						{{ option.label }}
+					</button>
 				</div>
+				<p
+					v-if="channelOptions.length === 0"
+					class="send-message__hint"
+					data-testid="send-message-no-channel">
+					{{
+						t(
+							'pipelinq',
+							'No SMS or WhatsApp provider is active. An administrator sets one up under Connections.',
+						)
+					}}
+				</p>
+				<p
+					v-if="channel && consentOk"
+					role="status"
+					class="send-message__consent-state send-message__consent-state--ok"
+					data-testid="send-message-consent-state">
+					<CheckCircleOutline :size="16" />
+					{{ consentText }}
+				</p>
+			</fieldset>
 
-				<template v-if="whatsappNeedsTemplate">
-					<p class="send-message__hint">
-						{{
+			<section
+				v-if="channel && !consentOk"
+				class="send-message__consent"
+				data-testid="send-message-consent">
+				<p
+					role="status"
+					class="send-message__consent-state"
+					:class="
+						effectiveConsentState === 'opted-out'
+							? 'send-message__consent-state--error'
+							: 'send-message__consent-state--warn'
+					"
+					data-testid="send-message-consent-state">
+					<AlertCircleOutline :size="16" />
+					{{ consentText }}
+				</p>
+				<div class="send-message__pair">
+					<NcSelect
+						v-model="consentLegalBasis"
+						:options="legalBasisOptions"
+						:inputLabel="t('pipelinq', 'Legal basis (optional)')"
+						label="label"
+						:reduce="(o) => o.value" />
+					<NcTextField
+						v-model="consentEvidence"
+						:label="t('pipelinq', 'Evidence')"
+						:placeholder="
 							t(
 								'pipelinq',
-								'The 24-hour WhatsApp session window is closed — an approved template is required to start a new business-initiated message.',
+								'e.g. verbal confirmation during call on {date}',
+								{ date: today },
 							)
-						}}
-					</p>
+						" />
+				</div>
+				<NcButton
+					class="send-message__tonal"
+					:disabled="!consentEvidence || recordingConsent"
+					@click="recordConsent">
+					<template #icon>
+						<ShieldCheckOutline :size="16" />
+					</template>
+					{{
+						recordingConsent
+							? t('pipelinq', 'Recording…')
+							: t('pipelinq', 'Record consent')
+					}}
+				</NcButton>
+			</section>
+
+			<template v-if="channel">
+				<p v-if="whatsappNeedsTemplate" class="send-message__hint">
+					{{
+						t(
+							'pipelinq',
+							'The 24-hour WhatsApp session window is closed — an approved template is required to start a new business-initiated message.',
+						)
+					}}
+				</p>
+				<template v-if="showTemplates">
 					<NcSelect
 						v-model="templateId"
 						:options="templateOptions"
-						:inputLabel="t('pipelinq', 'Template')"
+						:inputLabel="
+							whatsappNeedsTemplate
+								? t('pipelinq', 'Template')
+								: t('pipelinq', 'Template (optional)')
+						"
 						label="label"
 						:reduce="(o) => o.value" />
 					<p
@@ -91,13 +141,15 @@
 						class="send-message__template-preview">
 						{{ selectedTemplate.body }}
 					</p>
-					<NcTextField
-						v-for="(param, index) in templateParams"
-						:key="index"
-						v-model="templateParams[index]"
-						:label="t('pipelinq', 'Parameter {n}', { n: index + 1 })" />
+					<div v-if="templateParams.length" class="send-message__pair">
+						<NcTextField
+							v-for="(param, index) in templateParams"
+							:key="index"
+							v-model="templateParams[index]"
+							:label="t('pipelinq', 'Parameter {n}', { n: index + 1 })" />
+					</div>
 				</template>
-				<template v-else>
+				<template v-if="!whatsappNeedsTemplate">
 					<SavedReplyPicker
 						:key="channel"
 						:channel="channel"
@@ -106,10 +158,19 @@
 						@pick="body = $event" />
 					<NcTextArea
 						v-model="body"
-						:label="t('pipelinq', 'Message')"
+						:label="
+							showTemplates
+								? t('pipelinq', 'Message (optional)')
+								: t('pipelinq', 'Message')
+						"
 						:placeholder="t('pipelinq', 'Type your message…')" />
 				</template>
 			</template>
+
+			<p class="send-message__note" data-testid="send-message-note">
+				<InformationOutline :size="16" />
+				{{ t('pipelinq', 'The message is saved as a contact moment.') }}
+			</p>
 
 			<p
 				v-if="sendResult && sendResult.status !== 'sent'"
@@ -119,12 +180,15 @@
 			</p>
 		</div>
 		<template #actions>
-				<NcButton @click="$emit('close')">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton variant="primary" :disabled="!canSend" @click="send">
-					{{ sending ? t('pipelinq', 'Sending…') : t('pipelinq', 'Send') }}
-				</NcButton>
+			<NcButton @click="$emit('close')">
+				{{ t('pipelinq', 'Cancel') }}
+			</NcButton>
+			<NcButton variant="primary" :disabled="!canSend" @click="send">
+				<template #icon>
+					<Send class="send-message__send-icon" :size="16" />
+				</template>
+				{{ sending ? t('pipelinq', 'Sending…') : t('pipelinq', 'Send') }}
+			</NcButton>
 		</template>
 	</CnDialog>
 </template>
@@ -135,13 +199,25 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
+import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
+import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
+import MessageTextOutline from 'vue-material-design-icons/MessageTextOutline.vue'
+import Send from 'vue-material-design-icons/Send.vue'
+import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
+import Whatsapp from 'vue-material-design-icons/Whatsapp.vue'
 import SavedReplyPicker from '../components/SavedReplyPicker.vue'
 
 export default {
 	name: 'SendMessageModal',
 	components: {
+		AlertCircleOutline,
+		CheckCircleOutline,
+		InformationOutline,
 		NcButton,
 		CnDialog,
+		Send,
+		ShieldCheckOutline,
 		NcSelect,
 		NcTextArea,
 		NcTextField,
@@ -155,6 +231,24 @@ export default {
 		},
 
 		clientId: {
+			type: String,
+			default: '',
+		},
+
+		/** The client the message is about, named in the dialog's eyebrow. */
+		clientName: {
+			type: String,
+			default: '',
+		},
+
+		/** Who receives the message, named in the dialog's subtitle. */
+		recipientName: {
+			type: String,
+			default: '',
+		},
+
+		/** The number the message goes to, after the recipient's name. */
+		recipientPhone: {
 			type: String,
 			default: '',
 		},
@@ -191,7 +285,7 @@ export default {
 	emits: ['sent', 'close'],
 	data() {
 		return {
-			channel: this.initialChannel || null,
+			channel: this.initialChannel || this.onlyChannel(),
 			body: '',
 			templateId: null,
 			templateParams: [],
@@ -233,6 +327,68 @@ export default {
 			return this.channel === 'sms'
 				? t('pipelinq', 'SMS')
 				: t('pipelinq', 'WhatsApp')
+		},
+
+		/**
+		 * Both channels as switch options, each enabled when a provider for
+		 * it is active.
+		 *
+		 * @return {Array<object>} value, label, icon and available per channel.
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
+		channelChoices() {
+			const channels = this.preflight.channels || {}
+			return [
+				{ value: 'sms', label: t('pipelinq', 'SMS'), icon: MessageTextOutline, available: !!channels.sms },
+				{ value: 'whatsapp', label: t('pipelinq', 'WhatsApp'), icon: Whatsapp, available: !!channels.whatsapp },
+			]
+		},
+
+		/**
+		 * The client the message is about, as the eyebrow names it.
+		 *
+		 * @return {string} "Message · {client}", or empty without a name.
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
+		eyebrow() {
+			const name = this.clientName || this.recipientName
+			return name ? t('pipelinq', 'Message · {name}', { name }) : ''
+		},
+
+		/**
+		 * The recipient and the number the message goes to.
+		 *
+		 * @return {string} "To {name}, {phone}", or the parts there are.
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
+		subtitle() {
+			const parts = [this.recipientName, this.recipientPhone].filter(Boolean)
+			return parts.length ? t('pipelinq', 'To {recipient}', { recipient: parts.join(', ') }) : ''
+		},
+
+		/**
+		 * The consent state of the chosen channel, in words.
+		 *
+		 * @return {string} "Consent for {channel}: {state}".
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
+		consentText() {
+			return t('pipelinq', 'Consent for {channel}: {state}', {
+				channel: this.channelLabel,
+				state: this.consentLabel,
+			})
+		},
+
+		/**
+		 * Whether the approved WhatsApp templates are offered: on WhatsApp,
+		 * when there are templates or one is required.
+		 *
+		 * @return {boolean} True to show the template select.
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
+		showTemplates() {
+			return this.channel === 'whatsapp'
+				&& (this.whatsappNeedsTemplate || this.templateOptions.length > 0)
 		},
 
 		whatsappNeedsTemplate() {
@@ -320,10 +476,21 @@ export default {
 			if (this.sending || !this.channel || !this.consentOk) {
 				return false
 			}
-			if (this.whatsappNeedsTemplate) {
+			if (this.whatsappNeedsTemplate || this.templateId) {
 				return !!this.templateId
 			}
 			return this.body.trim() !== ''
+		},
+
+		/**
+		 * Whether the send goes out as the chosen template.
+		 *
+		 * @return {boolean} True when a template is required or picked.
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
+		useTemplate() {
+			return this.channel === 'whatsapp'
+				&& (this.whatsappNeedsTemplate || !!this.templateId)
 		},
 
 		resultMessage() {
@@ -393,6 +560,18 @@ export default {
 
 	methods: {
 		/**
+		 * The channel to open on when only one has an active provider.
+		 *
+		 * @return {string|null} That channel, or null.
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
+		onlyChannel() {
+			const channels = (this.preflight && this.preflight.channels) || {}
+			const available = ['sms', 'whatsapp'].filter((key) => channels[key])
+			return available.length === 1 ? available[0] : null
+		},
+
+		/**
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async recordConsent() {
@@ -439,13 +618,9 @@ export default {
 					{
 						contactId: this.contactId,
 						channel: this.channel,
-						body: this.whatsappNeedsTemplate ? '' : this.body,
-						templateId: this.whatsappNeedsTemplate
-							? this.templateId
-							: null,
-						parameters: this.whatsappNeedsTemplate
-							? this.templateParams
-							: [],
+						body: this.useTemplate ? '' : this.body,
+						templateId: this.useTemplate ? this.templateId : null,
+						parameters: this.useTemplate ? this.templateParams : [],
 						clientId: this.clientId,
 					},
 				)
@@ -469,36 +644,123 @@ export default {
 
 <style scoped>
 .send-message {
-	padding: 20px;
-	max-width: 560px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.send-message__channel {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.send-message__label {
+	padding: 0 0 6px;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+/* The channel as a two-option switch: a grey track, the chosen option raised. */
+.send-message__switch {
+	align-self: flex-start;
+	display: flex;
+	gap: 2px;
+	padding: 3px;
+	border-radius: var(--border-radius-large, 8px);
+	background: var(--color-background-dark);
+}
+
+.send-message__switch-option {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	height: 36px;
+	min-height: 36px;
+	margin: 0;
+	padding: 0 14px;
+	border: 0;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--color-main-text);
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.send-message__switch-option--on {
+	background: var(--color-main-background);
+	box-shadow: 0 1px 2px rgba(27, 28, 29, 0.12);
+}
+
+.send-message__switch-option:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.send-message__consent-state {
+	margin: 0;
+	display: inline-flex;
+	align-self: flex-start;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 12px;
+	border-radius: var(--border-radius-large, 8px);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.send-message__consent-state--ok {
+	background: var(--color-success-light, #e7f3ea);
+	color: var(--color-success-text);
+}
+
+.send-message__consent-state--warn {
+	background: var(--color-warning-light, #fff4de);
+	color: var(--color-warning-text);
+}
+
+.send-message__consent-state--error {
+	background: var(--color-error-light, #fcedec);
+	color: var(--color-error-text);
+}
+
+/* Consent still missing: the fields that record it, in a dashed box. */
+.send-message__consent {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-}
-
-.send-message__consent {
-	padding: 8px 12px;
-	border-radius: var(--border-radius);
+	padding: 14px 16px;
+	border: 1px dashed var(--color-border-maxcontrast);
+	border-radius: 10px;
 	background: var(--color-background-hover);
 }
 
-.send-message__consent p {
-	margin: 0 0 8px;
+.send-message__pair {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 14px;
+	align-items: end;
 }
 
-.send-message__consent--warn {
-	box-shadow: inset 3px 0 0 0 var(--color-warning);
-}
-
-.send-message__consent--ok {
-	box-shadow: inset 3px 0 0 0 var(--color-success);
+.send-message__tonal {
+	align-self: flex-start;
+	--button-size: 34px;
+	min-height: 34px;
+	border: 0;
+	border-radius: 17px;
+	background-color: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	font-size: 13px;
 }
 
 .send-message__hint {
 	margin: 0;
-	font-size: 12px;
+	font-size: 13px;
 	color: var(--color-text-maxcontrast);
-	font-style: italic;
 }
 
 .send-message__template-preview {
@@ -510,15 +772,20 @@ export default {
 	white-space: pre-wrap;
 }
 
+.send-message__note {
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 12px;
+	border-radius: var(--border-radius-large, 8px);
+	background: var(--color-background-hover);
+	color: var(--color-text-maxcontrast);
+	font-size: 14px;
+}
+
 .send-message__result {
 	color: var(--color-error);
 	margin: 0;
-}
-
-.send-message__actions {
-	display: flex;
-	gap: 8px;
-	justify-content: flex-end;
-	margin-top: 8px;
 }
 </style>

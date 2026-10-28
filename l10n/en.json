@@ -9258,6 +9258,14 @@
         "VAT {vatRate}%": "VAT {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "The VAT percentage the quote's VAT is worked out at.",
         "The event this newsletter invites to.": "The event this newsletter invites to.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own.",
+        "Message · {name}": "Message · {name}",
+        "To {recipient}": "To {recipient}",
+        "No SMS or WhatsApp provider is active. An administrator sets one up under Connections.": "No SMS or WhatsApp provider is active. An administrator sets one up under Connections.",
+        "Legal basis (optional)": "Legal basis (optional)",
+        "Record consent": "Record consent",
+        "Template (optional)": "Template (optional)",
+        "Message (optional)": "Message (optional)",
+        "The message is saved as a contact moment.": "The message is saved as a contact moment."
     }
 }
