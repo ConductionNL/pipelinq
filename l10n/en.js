@@ -8726,7 +8726,8 @@ OC.L10N.register(
         "The user who last sent the contract to invoicing.": "The user who last sent the contract to invoicing.",
         "%n days in stage": "%n days in stage",
         "{percent}% chance": "{percent}% chance",
-        "%n day in stage": ["%n day in stage","%n days in stage"]
+        "%n day in stage": ["%n day in stage","%n days in stage"],
+        "Open (lead status)": "Open"
     },
     "nplurals=2; plural=(n != 1);"
 )

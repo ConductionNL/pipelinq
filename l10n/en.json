@@ -8782,6 +8782,7 @@
         "%n day in stage": [
             "%n day in stage",
             "%n days in stage"
-        ]
+        ],
+        "Open (lead status)": "Open"
     }
 }
