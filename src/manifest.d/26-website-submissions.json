@@ -29,9 +29,9 @@
 					{ "key": "reporterName", "label": "From" },
 					{ "key": "reporterOrganisation", "label": "Organisation" },
 					{ "key": "source", "label": "Form" },
-					{ "key": "sourceUrl", "label": "Page" },
+					{ "key": "sourceUrl", "label": "Page", "hidden": true },
 					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "new": "primary", "in_progress": "warning", "awaiting_customer": "warning", "resolved": "success", "completed": "success", "rejected": "default", "closed": "default" } } },
-					{ "key": "assignee", "label": "Handled by", "formatter": "userDisplayName" }
+					{ "key": "assignee", "label": "Handled by", "formatter": "userDisplayName", "hidden": true }
 				],
 				"actions": [
 					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "TicketDetail" }
