@@ -79,13 +79,13 @@
 			</div>
 
 			<div class="pos-payment__chips">
-				<NcButton variant="secondary" class="pos-payment__chip" @click="openCard('add')">
+				<NcButton variant="tertiary" class="pos-payment__chip" @click="openCard('add')">
 					<template #icon>
 						<Plus :size="16" />
 					</template>
 					{{ t('pipelinq', 'Add gift card') }}
 				</NcButton>
-				<NcButton variant="secondary" class="pos-payment__chip" @click="openCard('check')">
+				<NcButton variant="tertiary" class="pos-payment__chip" @click="openCard('check')">
 					<template #icon>
 						<Magnify :size="16" />
 					</template>
@@ -117,12 +117,15 @@
 				</NcButton>
 			</form>
 
-			<NcNoteCard
-				:type="split.closes ? 'success' : 'warning'"
+			<div
+				role="status"
 				class="pos-payment__note"
+				:class="split.closes ? 'pos-payment__note--closes' : 'pos-payment__note--open'"
 				data-testid="pos-payment-note">
+				<Check v-if="split.closes" :size="18" />
+				<AlertOutline v-else :size="18" />
 				{{ closingText }}
-			</NcNoteCard>
+			</div>
 		</div>
 
 		<template #actions>
@@ -153,7 +156,8 @@
 import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcTextField } from '@nextcloud/vue'
+import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
 import Check from 'vue-material-design-icons/Check.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import CreditCardOutline from 'vue-material-design-icons/CreditCardOutline.vue'
@@ -168,6 +172,7 @@ import { formatEur } from '../services/posTotals.js'
 export default {
 	name: 'PosPaymentDialog',
 	components: {
+		AlertOutline,
 		Check,
 		Close,
 		CnDialog,
@@ -175,7 +180,6 @@ export default {
 		Gift,
 		Magnify,
 		NcButton,
-		NcNoteCard,
 		NcTextField,
 		Plus,
 		Star,
@@ -373,6 +377,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
+	margin-top: -8px;
 }
 
 .pos-payment__due {
@@ -459,10 +464,38 @@ export default {
 }
 
 .pos-payment__note {
-	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 14px;
+	border-radius: 8px;
+	font-size: 14px;
+	font-weight: 600;
 }
 
-.pos-payment__sell {
+.pos-payment__note--closes {
+	background: var(--color-success-light, #e7f3ea);
+	color: var(--color-success-text);
+}
+
+.pos-payment__note--open {
+	background: var(--color-warning-light, #fdf3e2);
+	color: var(--color-warning-text);
+}
+
+.pos-payment__chip.pos-payment__chip {
+	min-height: 34px;
+	height: 34px;
+	padding-inline: 12px;
+	border: 0;
+	border-radius: 17px;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	font-size: 13px;
+}
+
+.pos-payment__sell.pos-payment__sell {
 	margin-inline-end: auto;
+	padding-inline: 14px;
 }
 </style>
