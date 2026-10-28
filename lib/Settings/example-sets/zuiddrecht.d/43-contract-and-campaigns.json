@@ -33,10 +33,10 @@
 				"clientRef": "{{object:client-sportclub.id}}",
 				"lineItems": [
 					{
-						"product": "Veldonderhoud, per veld",
+						"productRef": "Veldonderhoud, per veld",
 						"description": "Maaien, lijnen trekken, drainage controleren",
 						"quantity": 4,
-						"unitPrice": 8750
+						"unitValue": 8750
 					}
 				],
 				"billingInterval": "annual",
@@ -61,22 +61,22 @@
 				"clientRef": "{{object:client-sportclub.id}}",
 				"lineItems": [
 					{
-						"product": "Veldonderhoud, per veld",
+						"productRef": "Veldonderhoud, per veld",
 						"description": "Maaien, lijnen trekken, drainage controleren",
 						"quantity": 4,
-						"unitPrice": 8750
+						"unitValue": 8750
 					},
 					{
-						"product": "Winterdienst",
+						"productRef": "Winterdienst",
 						"description": "Vorstafdekking en strooien van paden",
 						"quantity": 1,
-						"unitPrice": 4200
+						"unitValue": 4200
 					},
 					{
-						"product": "Inspectierapport",
+						"productRef": "Inspectierapport",
 						"description": "Jaarlijks veiligheidsrapport voor het bestuur",
 						"quantity": 1,
-						"unitPrice": 2800
+						"unitValue": 2800
 					}
 				],
 				"billingInterval": "annual",
