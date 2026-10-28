@@ -283,7 +283,19 @@
 							"columns": [
 								{
 									"key": "name",
-									"label": "Product"
+									"label": "Product",
+									"firstOf": [
+										"name",
+										"product.name",
+										"description"
+									],
+									"secondary": "{kind}",
+									"secondaryLabels": {
+										"kind": {
+											"catalogue": "Catalogue product",
+											"own": "Own line"
+										}
+									}
 								},
 								{
 									"key": "description",

@@ -203,3 +203,19 @@ describe('the quote form, line names and the VAT rate', () => {
 		expect(nl['VAT {vatRate}%']).toBe('Btw {vatRate}%')
 	})
 })
+
+describe('the Product cell of a line without a name', () => {
+	const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+
+	it('reads the line\'s name, else the linked product\'s name, else its description, with the kind under it', () => {
+		const product = detail.config.widgets.find((w) => w.id === 'quote-lines').content.columns[0]
+		expect(product).toMatchObject({
+			key: 'name',
+			firstOf: ['name', 'product.name', 'description'],
+			secondary: '{kind}',
+			secondaryLabels: { kind: { catalogue: 'Catalogue product', own: 'Own line' } },
+		})
+		expect(nl['Catalogue product']).toBe('Catalogusproduct')
+		expect(nl['Own line']).toBe('Eigen regel')
+	})
+})
