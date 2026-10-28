@@ -274,6 +274,7 @@
 				"showMassCopy": false,
 				"showMassDelete": false,
 				"selectable": true,
+				"filterMenu": true,
 				"sortKey": "startAt",
 				"sortOrder": "asc",
 				"countText": "{shown} of {total} appointments · sorted by time",
@@ -292,7 +293,7 @@
 					{ "key": "customerId", "label": "With whom", "formatter": "bookingCustomerName" },
 					{ "key": "subject", "label": "About", "secondary": "{source}", "cellClass": "cn-cell--strong" },
 					{ "key": "location", "label": "Location or desk" },
-					{ "key": "assignee", "label": "Handler", "formatter": "userDisplayName", "widget": "avatar", "widgetProps": { "user": true } },
+					{ "key": "assignee", "label": "Handler", "formatter": "userDisplayName", "widget": "avatar", "widgetProps": { "user": true, "size": 28, "tone": "neutral" } },
 					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "completed": "primary", "no-show": "error", "pending-deposit": "warning", "cancelled-by-customer": "default", "cancelled-by-business": "default", "rescheduled": "default" } } }
 				],
 				"actions": [
