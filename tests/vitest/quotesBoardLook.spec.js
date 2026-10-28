@@ -147,3 +147,25 @@ describe('quote page parts as the PqOfferte board draws them', () => {
 		expect(detail.config.layout.map((item) => item.widgetId)).not.toContain('quote-totals')
 	})
 })
+
+describe('the quote PDF', () => {
+	const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+
+	it('offers "Voorbeeld pdf" beside the header actions while a template can make it', () => {
+		const action = detail.config.headerActions.find((a) => a.id === 'quote-pdf')
+		expect(action).toMatchObject({
+			type: 'navigate',
+			label: 'Preview PDF',
+			target: '/index.php/apps/pipelinq/api/records/salesQuote/@objectId/document',
+			visibleWhen: { endpoint: '/apps/pipelinq/api/records/salesQuote/document-template', field: 'available', op: 'eq', value: true },
+		})
+		expect(detail.config.quickActions).toContain('quote-pdf')
+		expect(nl['Preview PDF']).toBe('Voorbeeld pdf')
+	})
+
+	it('routes the document endpoints', () => {
+		const routes = readFileSync(resolve(__dirname, '../../appinfo/routes.php'), 'utf8')
+		expect(routes).toContain("'url' => '/api/records/{schema}/{id}/document'")
+		expect(routes).toContain("'url' => '/api/records/{schema}/document-template'")
+	})
+})

@@ -188,7 +188,23 @@
 						"label": "Back to the lead",
 						"icon": "TrendingUp",
 						"target": "/leads/@object.lead"
+					},
+					{
+						"id": "quote-pdf",
+						"type": "navigate",
+						"label": "Preview PDF",
+						"icon": "FilePdfBox",
+						"target": "/index.php/apps/pipelinq/api/records/salesQuote/@objectId/document",
+						"visibleWhen": {
+							"endpoint": "/apps/pipelinq/api/records/salesQuote/document-template",
+							"field": "available",
+							"op": "eq",
+							"value": true
+						}
 					}
+				],
+				"quickActions": [
+					"quote-pdf"
 				],
 				"widgets": [
 					{

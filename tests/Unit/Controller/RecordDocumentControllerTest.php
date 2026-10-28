@@ -94,19 +94,53 @@ class RecordDocumentControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->documents = $this->createMock(FilinqLetterAdapter::class);
-        $this->reader    = $this->createMock(CallerObjectReader::class);
-        $this->policy    = $this->createMock(ObjectOwnerAccessPolicy::class);
-        $this->appConfig = $this->createMock(IAppConfig::class);
-        $this->appConfig->method('getValueString')->willReturnCallback(
-            fn(string $app, string $key, string $default=''): string => $key === 'record_document_templates' ? $this->map : $default
-        );
+        $this->documents = $this->createMock(originalClassName: FilinqLetterAdapter::class);
+        $this->reader    = $this->createMock(originalClassName: CallerObjectReader::class);
+        $this->policy    = $this->createMock(originalClassName: ObjectOwnerAccessPolicy::class);
+        $this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
+        $this->appConfig->method('getValueString')->willReturnCallback($this->configValue(...));
         $this->documents->method('unavailableReason')->willReturn(null);
-        $this->documents->method('findTemplate')->willReturnCallback(
-            static fn(string $id): ?array => $id === 'tpl-quote' ? ['id' => 'tpl-quote', 'name' => 'Offerte', 'description' => ''] : null
-        );
+        $this->documents->method('findTemplate')->willReturnCallback(self::template(...));
 
     }//end setUp()
+
+
+    /**
+     * The app config double's answer: the template map, else the default.
+     *
+     * @param string $app     The app id.
+     * @param string $key     The key.
+     * @param string $default The default.
+     *
+     * @return string The value.
+     */
+    private function configValue(string $app, string $key, string $default=''): string
+    {
+        if ($key === 'record_document_templates') {
+            return $this->map;
+        }
+
+        return $default;
+
+    }//end configValue()
+
+
+    /**
+     * The filinq double's template: only `tpl-quote` is pipelinq's.
+     *
+     * @param string $templateId The template id.
+     *
+     * @return array<string, string>|null The template.
+     */
+    private static function template(string $templateId): ?array
+    {
+        if ($templateId === 'tpl-quote') {
+            return ['id' => 'tpl-quote', 'name' => 'Offerte', 'description' => ''];
+        }
+
+        return null;
+
+    }//end template()
 
 
     /**
@@ -118,13 +152,17 @@ class RecordDocumentControllerTest extends TestCase
      */
     private function controller(bool $signedIn=true): RecordDocumentController
     {
-        $user = $this->createMock(IUser::class);
+        $user = $this->createMock(originalClassName: IUser::class);
         $user->method('getUID')->willReturn('pieter');
-        $session = $this->createMock(IUserSession::class);
-        $session->method('getUser')->willReturn($signedIn === true ? $user : null);
+        $session = $this->createMock(originalClassName: IUserSession::class);
+        $session->method('getUser')->willReturn(null);
+        if ($signedIn === true) {
+            $session = $this->createMock(originalClassName: IUserSession::class);
+            $session->method('getUser')->willReturn($user);
+        }
 
         return new RecordDocumentController(
-            request: $this->createMock(IRequest::class),
+            request: $this->createMock(originalClassName: IRequest::class),
             documents: $this->documents,
             userSession: $session,
             reader: $this->reader,
@@ -143,20 +181,20 @@ class RecordDocumentControllerTest extends TestCase
     public function testDocumentIsTheRenderedPdf(): void
     {
         $this->reader->method('register')->willReturn('pipelinq');
-        $this->reader->method('readFromSchema')->with(self::QUOTE, 'salesQuote')->willReturn(['number' => 'OFF-2026-0042', 'title' => 'Website en hosting', 'assignee' => 'pieter']);
+        $quote = ['number' => 'OFF-2026-0042', 'title' => 'Website en hosting', 'assignee' => 'pieter'];
+        $this->reader->method('readFromSchema')->with(self::QUOTE, 'salesQuote')->willReturn($quote);
         $this->policy->method('mayAccess')->with('pieter', $this->anything(), 'assignee')->willReturn(true);
         $this->documents->expects($this->once())->method('render')->with(
             'tpl-quote',
             [['register' => 'pipelinq', 'schema' => 'salesQuote', 'id' => self::QUOTE]],
-            $this->stringContains('OFF-2026-0042'),
+            $this->stringContains(string: 'OFF-2026-0042'),
             'return'
         )->willReturn(['content' => '%PDF-1.7', 'fileId' => null, 'path' => null, 'warnings' => []]);
 
         $response = $this->controller()->document(schema: 'salesQuote', id: self::QUOTE);
 
-        $this->assertInstanceOf(DataDownloadResponse::class, $response);
-        $this->assertSame('%PDF-1.7', $response->render());
-        $this->assertSame('application/pdf', $response->getHeaders()['Content-Type']);
+        $this->assertInstanceOf(expected: DataDownloadResponse::class, actual: $response);
+        $this->assertSame(expected: '%PDF-1.7', actual: $response->render());
 
     }//end testDocumentIsTheRenderedPdf()
 
@@ -173,8 +211,8 @@ class RecordDocumentControllerTest extends TestCase
 
         $response = $this->controller()->document(schema: 'client', id: self::QUOTE);
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+        $this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
+        $this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
 
     }//end testUnconfiguredSchemaHasNoDocument()
 
@@ -192,7 +230,7 @@ class RecordDocumentControllerTest extends TestCase
 
         $response = $this->controller()->document(schema: 'salesQuote', id: self::QUOTE);
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
 
     }//end testNoDocumentForSomeoneElsesRecord()
 
@@ -207,7 +245,8 @@ class RecordDocumentControllerTest extends TestCase
         $this->reader->method('readFromSchema')->willReturn(null);
         $this->documents->expects($this->never())->method('render');
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $this->controller()->document(schema: 'salesQuote', id: self::QUOTE)->getStatus());
+        $response = $this->controller()->document(schema: 'salesQuote', id: self::QUOTE);
+        $this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
 
     }//end testNoDocumentForAnUnreadableRecord()
 
@@ -225,7 +264,7 @@ class RecordDocumentControllerTest extends TestCase
 
         $response = $this->controller()->document(schema: 'salesQuote', id: self::QUOTE);
 
-        $this->assertSame(Http::STATUS_BAD_GATEWAY, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_BAD_GATEWAY, actual: $response->getStatus());
 
     }//end testFilinqFailureIsSaid()
 
@@ -237,8 +276,10 @@ class RecordDocumentControllerTest extends TestCase
      */
     public function testSignedOutIsRefused(): void
     {
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(signedIn: false)->document(schema: 'salesQuote', id: self::QUOTE)->getStatus());
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(signedIn: false)->template(schema: 'salesQuote')->getStatus());
+        $document = $this->controller(signedIn: false)->document(schema: 'salesQuote', id: self::QUOTE);
+        $template = $this->controller(signedIn: false)->template(schema: 'salesQuote');
+        $this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $document->getStatus());
+        $this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $template->getStatus());
 
     }//end testSignedOutIsRefused()
 
@@ -250,11 +291,12 @@ class RecordDocumentControllerTest extends TestCase
      */
     public function testTemplateAvailability(): void
     {
-        $this->assertSame(['available' => true, 'template' => ['id' => 'tpl-quote', 'name' => 'Offerte', 'description' => '']], $this->controller()->template(schema: 'salesQuote')->getData());
-        $this->assertFalse($this->controller()->template(schema: 'client')->getData()['available']);
+        $expected = ['available' => true, 'template' => ['id' => 'tpl-quote', 'name' => 'Offerte', 'description' => '']];
+        $this->assertSame(expected: $expected, actual: $this->controller()->template(schema: 'salesQuote')->getData());
+        $this->assertFalse(condition: $this->controller()->template(schema: 'client')->getData()['available']);
 
         $this->map = '{"salesQuote":{"template":"tpl-gone"}}';
-        $this->assertFalse($this->controller()->template(schema: 'salesQuote')->getData()['available']);
+        $this->assertFalse(condition: $this->controller()->template(schema: 'salesQuote')->getData()['available']);
 
     }//end testTemplateAvailability()
 

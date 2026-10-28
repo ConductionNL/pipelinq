@@ -1,6 +1,7 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Preview PDF": "Preview PDF",
         "assigned to {assignee|user}": "assigned to {assignee|user}",
         "Awaiting customer": "Awaiting customer",
         "By {slaDeadline|date}": "By {slaDeadline|date}",
