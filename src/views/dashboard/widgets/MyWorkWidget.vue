@@ -12,7 +12,7 @@
 	per-row destination (ConductionNL/nextcloud-vue#91 Wave 2 gap).
 -->
 <template>
-	<div class="my-work">
+	<div class="my-work cn-board-ruled-rows">
 		<p v-if="!loaded" class="my-work__note">
 			{{ t('pipelinq', 'Loading…') }}
 		</p>
@@ -206,6 +206,10 @@ export default {
 </script>
 
 <style scoped>
+.my-work {
+	padding: 0 var(--cn-board-dashboard-card-inset, 22px) 8px;
+}
+
 .my-work__list {
 	margin: 0;
 	padding: 0;
@@ -221,6 +225,13 @@ export default {
 	border-top: 1px solid var(--color-border);
 	color: var(--color-main-text);
 	text-decoration: none;
+}
+
+/* A row is a link, but only its hover says so: no underline on any text run,
+   however the host styles its links. */
+.my-work__row,
+.my-work__row :is(strong, span) {
+	text-decoration: none !important;
 }
 
 .my-work__icon {

@@ -255,7 +255,7 @@
 		},
 		{
 			"id": "Blasts",
-			"_note": "Marketing blast list as a declarative type:index page (pipelinq-declarative-pages-round1). A row click and the built-in View open the live monitor (BlastMonitor, via rowRoute); Add opens BlastWizardDialog in the form-dialog slot: a multi-step wizard with a compliance gate (conditional advancing, an optional A/B split, template validation and a consent preflight that holds the create back pending the marketer's decision), which no declarative form expresses. Selection is off: there are no bulk actions.",
+			"_note": "Marketing blast list as a declarative type:index page (pipelinq-declarative-pages-round1). A row click and the built-in View open the live monitor (BlastMonitor, via rowRoute); Add opens BlastWizardDialog in the form-dialog slot: a multi-step wizard with a compliance gate (conditional advancing, an optional A/B split, template validation and a consent preflight that holds the create back pending the marketer's decision), which no declarative form expresses. Rows can be selected, as board PqNieuwsbrieven draws, and a selection downloaded.",
 			"route": "/blasts",
 			"type": "index",
 			"title": "Newsletters",
@@ -271,14 +271,14 @@
 					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"selectable": false,
+				"selectable": true,
 				"rowRoute": "BlastMonitor",
 				"addLabel": "New newsletter",
 				"showEditAction": false,
 				"showCopyAction": false,
 				"showDeleteAction": false,
 				"showMassImport": false,
-				"showMassExport": false,
+				"showMassExport": true,
 				"showMassCopy": false,
 				"showMassDelete": false,
 				"countText": "{shown} of {total} newsletters · open and click rate from our own measurements · newest first",
@@ -327,7 +327,19 @@
 									}
 								}
 							},
-							"caption": "messages handed to the provider"
+							"caption": "{count} messages",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"metric": "sum",
+								"field": "totals.sent",
+								"filter": {
+									"status": "sent",
+									"sentAt": {
+										"gte": "@monthStart"
+									}
+								}
+							}
 						}
 					},
 					{
@@ -421,7 +433,32 @@
 					{
 						"key": "name",
 						"label": "Newsletter",
-						"secondary": "{channel}"
+						"secondary": [
+							"Segment: {segment.name|lowerfirst} · {segment.estimatedSize|number} contacts",
+							"Mailing list: {list.name} · {list.subscribers|number} subscribers"
+						],
+						"secondaryRefs": {
+							"segment": {
+								"field": "segmentId",
+								"register": "pipelinq",
+								"schema": "segment"
+							},
+							"list": {
+								"field": "listId",
+								"register": "pipelinq",
+								"schema": "mailingList",
+								"counts": {
+									"subscribers": {
+										"register": "pipelinq",
+										"schema": "subscription",
+										"where": {
+											"listId": "@self.id",
+											"state": "confirmed"
+										}
+									}
+								}
+							}
+						}
 					},
 					{
 						"key": "status",

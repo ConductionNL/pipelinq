@@ -49,9 +49,9 @@ describe('ticket page values', () => {
 		for (const field of ['category', 'channel', 'priority']) {
 			expect(overrides[field], field).toEqual({ formatter: 'enumText' })
 		}
-		const side = Object.fromEntries(page.config.sideColumn.filter((w) => typeof w === 'object').map((w) => [w.id, w.content?.overrides || {}]))
-		expect(side['side-customer'].channel).toEqual({ formatter: 'enumText' })
-		expect(side['side-deadline'].priority).toEqual({ formatter: 'enumText' })
+		const side = Object.fromEntries(page.config.sideColumn.filter((w) => typeof w === 'object').map((w) => [w.id, Object.fromEntries((w.content?.fields || []).map((f) => [f.path, f]))]))
+		expect(side['side-customer'].channel.map.phone).toBe('Phone')
+		expect(side['side-deadline'].priority.map.normal).toBe('Normal')
 	})
 
 	it('reads phone and normal the way the board does, in Dutch', () => {

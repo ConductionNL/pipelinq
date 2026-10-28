@@ -60,7 +60,8 @@ const records = {
 }
 const store = {
 	fetchCollection: vi.fn(async () => {}),
-	getCollection: (type) => ({ results: records[type] || [] }),
+	// The nc-vue object store keeps a collection as a plain array.
+	getCollection: (type) => records[type] || [],
 	fetchObject: vi.fn(async () => ({ name: 'Sanne de Vries' })),
 	saveObject: vi.fn(),
 }
@@ -126,5 +127,19 @@ describe('the new refund page (PqKassaRetour)', () => {
 		wrapper.vm.toggleAll(true)
 		expect(wrapper.vm.allSelected).toBe(true)
 		expect(wrapper.vm.selectedLines).toHaveLength(2)
+	})
+})
+
+describe('the refund reads what the store holds (PQB-7)', () => {
+	it('lists the original sale and its lines from the store\'s plain arrays', async () => {
+		const wrapper = await mountNew()
+		expect(wrapper.vm.selectedTransaction).toMatchObject({ id: 'tx1' })
+		expect(wrapper.vm.candidates.map((row) => row.originalLine)).toEqual(['l1', 'l2'])
+		expect(wrapper.vm.reasonOptions).toEqual([{ id: 'r1', label: 'Wrong product' }])
+	})
+
+	it('has no More menu in its header, only Save', async () => {
+		const page = (await mountNew()).findComponent({ name: 'CnDetailPage' })
+		expect(page.vm.$attrs.actionsMenu).toEqual({ showRefresh: false, showHelpLinks: false })
 	})
 })

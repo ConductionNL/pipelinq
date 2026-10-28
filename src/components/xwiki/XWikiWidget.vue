@@ -162,7 +162,7 @@ export default {
 
 .xwiki-widget--bare {
 	gap: 8px;
-	padding: 0;
+	padding: 0 var(--cn-board-dashboard-card-inset, 22px) 20px;
 	border: 0;
 	background: none;
 }
@@ -182,6 +182,9 @@ export default {
 	box-sizing: border-box;
 	width: 100%;
 	height: 40px;
+	/* Nextcloud's input rule sets its own height with a stronger selector;
+	   a min-height still lifts the field to 40px. */
+	min-height: 40px;
 	margin: 0;
 	padding-block: 0;
 	padding-inline: 38px 12px;

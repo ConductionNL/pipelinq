@@ -366,6 +366,23 @@ export function applyProfileTours(built, tours) {
 }
 
 /**
+ * One default config value for a page. A page that hides its Add button
+ * (`showAdd: false`) gets the default header buttons without the Add one.
+ *
+ * @param {string} key The config key.
+ * @param {unknown} value The profile's default for it.
+ * @param {object} config The page's own config.
+ * @return {unknown} The value the page gets.
+ * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ */
+function defaultFor(key, value, config) {
+	if (key === 'headerButtons' && config.showAdd === false && Array.isArray(value)) {
+		return value.filter((button) => button?.action !== 'add')
+	}
+	return value
+}
+
+/**
  * Config defaults per page type, from the profile file's `pageDefaults`
  * (`{ "<page type>": { "<config key>": value } }`). A page of that type gets
  * each key it does not set itself; a page that sets the key keeps its own
@@ -373,6 +390,8 @@ export function applyProfileTours(built, tours) {
  * turns on by default (nextcloud-vue 2.62.0 gave every index table header a
  * sort and filter control, `config.headerFilters`), so that profile renders
  * as it did on ^2.61.0. A file without `pageDefaults` returns `built` itself.
+ * A page that sets `showAdd: false` gets the default header buttons without
+ * the Add button.
  *
  * @param {object} built The built manifest.
  * @param {object|undefined} defaults The profile file's `pageDefaults`.
@@ -395,7 +414,7 @@ export function applyPageDefaults(built, defaults) {
 		const config = { ...(page.config || {}) }
 		for (const [key, value] of Object.entries(forType)) {
 			if (config[key] === undefined) {
-				config[key] = value
+				config[key] = defaultFor(key, value, config)
 			}
 		}
 		return { ...page, config }

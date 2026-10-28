@@ -59,10 +59,10 @@
 						}}</span>
 					</div>
 					<div class="category-item__buttons cn-settings-row-actions">
-						<NcButton variant="tertiary" @click="startEditing(cat)">
+						<NcButton @click="startEditing(cat)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton variant="tertiary" @click="confirmRemove(cat)">
+						<NcButton variant="error" @click="confirmRemove(cat)">
 							{{ t('pipelinq', 'Remove') }}
 						</NcButton>
 					</div>

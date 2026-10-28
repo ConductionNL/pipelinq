@@ -15,6 +15,7 @@
 		:breadcrumb="breadcrumb"
 		:headerMeta="headerMeta"
 		:loading="loading"
+		:actionsMenu="headerMenu"
 		class="pos-refund-form">
 		<template #actions>
 			<NcButton
@@ -177,6 +178,7 @@ import {
 } from '@nextcloud/vue'
 import Check from 'vue-material-design-icons/Check.vue'
 import Close from 'vue-material-design-icons/Close.vue'
+import { collectionRows } from '../../services/collectionRows.js'
 import { formatDate } from '../../services/localeUtils.js'
 import { computeRefundTotals, formatEur, refundLineAmounts } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -350,6 +352,17 @@ export default {
 			return { label: 'Refunds', route: 'PosRefunds', separator: '/' }
 		},
 
+		/**
+		 * The refund's header holds only Save: no More menu with refresh or
+		 * help links.
+		 *
+		 * @return {object} The CnDetailPage actions menu config.
+		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-the-refund-header-holds-only-save
+		 */
+		headerMenu() {
+			return { showRefresh: false, showHelpLinks: false }
+		},
+
 		headerMeta() {
 			return t('pipelinq', 'from {fromReference} · {clientName}')
 		},
@@ -473,19 +486,29 @@ export default {
 			return formatDate(value, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', '')
 		},
 
+		/**
+		 * Loads the sales a refund can be made against.
+		 *
+		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 */
 		async loadTransactions() {
 			try {
 				await this.objectStore.fetchCollection('posTransaction', { _limit: 500 })
-				this.transactions = this.objectStore.getCollection('posTransaction')?.results || []
+				this.transactions = collectionRows(this.objectStore.getCollection('posTransaction'))
 			} catch {
 				this.transactions = []
 			}
 		},
 
+		/**
+		 * Loads the refund reasons.
+		 *
+		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 */
 		async loadReasons() {
 			try {
 				await this.objectStore.fetchCollection('refundReason', { _limit: 100 })
-				this.reasons = this.objectStore.getCollection('refundReason')?.results || []
+				this.reasons = collectionRows(this.objectStore.getCollection('refundReason'))
 			} catch {
 				this.reasons = []
 			}
@@ -511,13 +534,18 @@ export default {
 			}
 		},
 
+		/**
+		 * Loads the refund being edited with its lines.
+		 *
+		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 */
 		async loadRefund() {
 			const r = await this.objectStore.fetchObject('posRefund', this.refundId)
 			this.refund = { ...r }
 			await this.loadOriginalLines(this.refund.originalTransaction)
 
 			await this.objectStore.fetchCollection('posRefundLine', { refund: this.refundId, _limit: 500 })
-			const existing = (this.objectStore.getCollection('posRefundLine')?.results || [])
+			const existing = collectionRows(this.objectStore.getCollection('posRefundLine'))
 				.filter((l) => l.refund === this.refundId)
 
 			this.candidates = this.originalLines.map((original) => {
@@ -537,6 +565,13 @@ export default {
 			})
 		},
 
+		/**
+		 * Loads the lines of the sale being refunded.
+		 *
+		 * @param {string} transactionId The sale being refunded.
+		 *
+		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 */
 		async loadOriginalLines(transactionId) {
 			if (!transactionId) {
 				this.originalLines = []
@@ -544,7 +579,7 @@ export default {
 				return
 			}
 			await this.objectStore.fetchCollection('posTransactionLine', { transaction: transactionId, _limit: 500 })
-			this.originalLines = (this.objectStore.getCollection('posTransactionLine')?.results || [])
+			this.originalLines = collectionRows(this.objectStore.getCollection('posTransactionLine'))
 				.filter((l) => l.transaction === transactionId)
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 			this.candidates = this.originalLines.map((o) => this.blankCandidate(o))
@@ -705,9 +740,15 @@ export default {
 }
 
 .pos-refund-form__save.pos-refund-form__save {
+	order: 1;
 	min-height: 34px;
 	height: 34px;
 	padding-inline: 12px;
+}
+
+.pos-refund-form__notes :deep(textarea) {
+	height: 58px;
+	min-height: 58px;
 }
 
 .pos-refund-form__qty {
@@ -741,9 +782,9 @@ export default {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	height: 30px;
+	height: 34px;
 	padding: 0 12px;
-	border-radius: 15px;
+	border-radius: 17px;
 	background: var(--color-primary-element-light);
 	color: var(--color-primary-element-light-text);
 	font-weight: 600;

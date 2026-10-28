@@ -108,3 +108,15 @@ export const WATCH_SCHEDULE_LABELS = {
 	daily: 'Every day',
 	weekly: 'Every week',
 }
+
+/** The channel a campaign touchpoint or blast went out on (touchpoint.channel, blast.channel). */
+export const CAMPAIGN_CHANNEL_LABELS = {
+	email: 'Newsletter',
+	sms: 'SMS',
+	social: 'Social media',
+	mastodon: 'Mastodon',
+	bluesky: 'Bluesky',
+	linkedin: 'LinkedIn',
+	website: 'Website',
+	direct: 'Direct',
+}

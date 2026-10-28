@@ -103,12 +103,12 @@
 					'The customer card at the till: the search, the purchase history and the consent question.',
 				)
 			">
-			<NcButton
-				variant="secondary"
+			<a
 				:href="tillUrl"
+				class="pos-customer-settings__till-link"
 				data-testid="customer-settings-open-till">
 				{{ t('pipelinq', 'Open the till') }}
-			</NcButton>
+			</a>
 		</NcSettingsSection>
 	</div>
 </template>
@@ -281,11 +281,23 @@ export default {
 </script>
 
 <style scoped>
+.pos-customer-settings-cards.pos-customer-settings-cards {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 300px;
+	gap: 20px;
+	align-items: start;
+}
+
+@media (max-width: 1024px) {
+	.pos-customer-settings-cards.pos-customer-settings-cards {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
 .pos-customer-settings {
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
-	max-width: 720px;
 }
 
 .pos-customer-settings__group {
@@ -304,13 +316,20 @@ export default {
 }
 
 .pos-customer-settings__depth {
-	max-width: 320px;
+	width: 100%;
 }
 
 .pos-customer-settings__actions {
 	display: flex;
+	flex-direction: row-reverse;
 	align-items: center;
 	gap: 16px;
+}
+
+.pos-customer-settings__till-link {
+	color: var(--color-primary-element);
+	font-weight: 600;
+	text-decoration: underline;
 }
 
 .pos-customer-settings__status {

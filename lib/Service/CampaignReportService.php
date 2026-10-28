@@ -118,12 +118,13 @@ class CampaignReportService {
 	}//end forCampaign()
 
 	/**
-	 * Reach and clicks per channel.
+	 * Reach, clicks and leads per channel.
 	 *
 	 * Email reach comes from the blasts' own totals, because a delivery
 	 * that was sent is reach whether or not anybody clicked. Every other
 	 * channel has no reach figure of its own yet, so it reports its
-	 * touchpoints and leaves reach null rather than guessing.
+	 * touchpoints and leaves reach null rather than guessing. A channel's
+	 * leads are the distinct leads its touchpoints carry.
 	 *
 	 * @param array<int, array<string, mixed>> $blasts The campaign's blasts.
 	 * @param array<int, array<string, mixed>> $touchpoints The campaign's touchpoints.
@@ -145,12 +146,18 @@ class CampaignReportService {
 			$rows[$channel] = $row;
 		}
 
+		$leadsPerChannel = [];
 		foreach ($touchpoints as $touchpoint) {
 			$channel = (string)($touchpoint['channel'] ?? 'direct');
 			$row = ($rows[$channel] ?? $this->emptyChannel(channel: $channel));
 			$kind = (string)($touchpoint['kind'] ?? '');
 			if (isset($row[$kind]) === true) {
 				$row[$kind]++;
+			}
+
+			$leadId = trim((string)($touchpoint['leadId'] ?? ''));
+			if ($leadId !== '') {
+				$leadsPerChannel[$channel][$leadId] = true;
 			}
 
 			$rows[$channel] = $row;
@@ -161,6 +168,7 @@ class CampaignReportService {
 				$rows[$channel]['reach'] = null;
 			}
 
+			$rows[$channel]['leads'] = count($leadsPerChannel[$channel] ?? []);
 			unset($rows[$channel]['reported']);
 		}
 

@@ -58,7 +58,7 @@ class RoadmapFeatureCatalog {
 	/**
 	 * Build the Features & Roadmap list from openspec/specs at runtime so the
 	 * surface stays current with the specs without depending on a committed
-	 * docs/features.json (which can drift). Cached per app version — the specs
+	 * docs/features.json (which can drift). Cached per app version and curated file — the specs
 	 * only change when the app updates — with the committed docs/features.json
 	 * as a fallback for deploys that ship without openspec/.
 	 *
@@ -69,7 +69,14 @@ class RoadmapFeatureCatalog {
 	public function load(): array {
 		$version = (string)$this->appManager->getAppVersion('pipelinq');
 		$cache = $this->cacheFactory->createLocal('pipelinq_features');
-		$cacheKey = 'v' . $version;
+		// The curated file can change without a version bump (a deploy from a
+		// branch), so its content is part of the key.
+		$curatedHash = 'specs';
+		if (is_file(self::CURATED_PATH) === true) {
+			$curatedHash = (string)md5_file(self::CURATED_PATH);
+		}
+
+		$cacheKey = 'v' . $version . ':' . $curatedHash;
 
 		$cached = $cache->get($cacheKey);
 		if (is_array($cached) === true) {
