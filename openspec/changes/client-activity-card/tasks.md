@@ -2,3 +2,4 @@
 - [x] 2. ClientDetail: `client-activity` timeline widget last in the overview, header actions, chips, composer; ActivityTimeline removed (vitest clientActivityCard)
 - [x] 3. Contact strip "Send a message" opens the Messages composer; a sent message refreshes the card (vitest partyContactStrip, messagingComposeFromStrip)
 - [x] 4. l10n en/nl, icons registered
+- [x] 5. Bookings as `calendar`, linked mail as `email` through OpenRegister's reader; reading split into ActivityTimelineReader

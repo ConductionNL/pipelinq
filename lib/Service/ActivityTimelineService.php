@@ -46,7 +46,6 @@ use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Aggregates CRM activity data from multiple OpenRegister schemas.
@@ -68,13 +67,6 @@ class ActivityTimelineService {
 	private const DEFAULT_LIMIT = 20;
 
 	/**
-	 * Per-schema fetch ceiling when aggregating timelines. The service queries
-	 * each source schema, merges results, sorts by date desc and applies
-	 * pagination in PHP, so we must cap the per-schema window.
-	 */
-	private const PER_SCHEMA_CEILING = 500;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config service.
@@ -83,8 +75,7 @@ class ActivityTimelineService {
 	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype —
 	 *                                     contactmomenten (incl. worklogs) are tickets with
 	 *                                     `ticketType=contactmoment`, not their own schema.
-	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
-	 * @param NotesService $notesService Reader of the notes on a record (Nextcloud comments).
+	 * @param ActivityTimelineReader $reader Reads the raw rows of every source.
 	 * @param ActivityItemNormalizer $itemNormalizer Turns a source row into an activity item.
 	 */
 	public function __construct(
@@ -92,22 +83,10 @@ class ActivityTimelineService {
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private TicketService $ticketService,
-		private readonly ObjectServiceInterface $objectService,
-		private readonly NotesService $notesService,
+		private readonly ActivityTimelineReader $reader,
 		private readonly ActivityItemNormalizer $itemNormalizer,
 	) {
 	}//end __construct()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The OpenRegister ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Read the configured register and schema IDs.
@@ -137,8 +116,6 @@ class ActivityTimelineService {
 			'task' => $task,
 			'emailLink' => $emailLink,
 			'calendarLink' => $calendarLink,
-			'contact' => $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', ''),
-			'message' => $this->appConfig->getValueString(Application::APP_ID, 'message_schema', ''),
 		];
 	}//end getConfig()
 
@@ -234,7 +211,7 @@ class ActivityTimelineService {
 				continue;
 			}
 
-			$objects = $this->querySchema(
+			$objects = $this->reader->query(
 				registerId: $registerId,
 				schemaId: $schemaId,
 				filters: $sourceFilter
@@ -254,11 +231,13 @@ class ActivityTimelineService {
 		}//end foreach
 
 		$extraSources = [
-			'note' => fn (): array => $this->notesService->getNotes(objectType: 'openregister', objectId: $entityId),
-			'message' => fn (): array => $this->queryMessages(entityType: $entityType, entityId: $entityId, config: $config),
+			'note' => fn (): array => $this->reader->notes(entityId: $entityId),
+			'message' => fn (): array => $this->reader->messages(entityType: $entityType, entityId: $entityId, registerId: $registerId),
+			'booking' => fn (): array => $this->reader->bookings(entityType: $entityType, entityId: $entityId, registerId: $registerId),
+			'linkedEmail' => fn (): array => $this->reader->linkedEmails(entityId: $entityId),
 		];
 		foreach ($extraSources as $sourceType => $read) {
-			if ($typesFilter !== null && in_array($sourceType, $typesFilter, true) === false) {
+			if ($typesFilter !== null && in_array($this->sourceToActivityType(sourceType: $sourceType), $typesFilter, true) === false) {
 				continue;
 			}
 
@@ -277,44 +256,6 @@ class ActivityTimelineService {
 
 		return $merged;
 	}//end collectActivities()
-
-	/**
-	 * Read the WhatsApp/SMS messages of an entity. Messages belong to a person
-	 * (`contactId`), so a client's messages are those of its contact persons.
-	 *
-	 * @param string $entityType The entity type (client|contact).
-	 * @param string $entityId The entity UUID.
-	 * @param array<string,string> $config The resolved register/schema config.
-	 *
-	 * @return array<int,array<string,mixed>> The raw message objects.
-	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
-	 */
-	private function queryMessages(string $entityType, string $entityId, array $config): array {
-		if ($config['message'] === '') {
-			return [];
-		}
-
-		$contactIds = [];
-		if ($entityType === 'contact') {
-			$contactIds = [$entityId];
-		}
-
-		if ($entityType === 'client' && $config['contact'] !== '') {
-			$contacts = $this->querySchema(registerId: $config['register'], schemaId: $config['contact'], filters: ['client' => $entityId]);
-			$contactIds = array_filter(array_map(static fn (array $contact): string => (string)($contact['id'] ?? ''), $contacts));
-		}
-
-		$messages = [];
-		foreach ($contactIds as $contactId) {
-			$messages = array_merge(
-				$messages,
-				$this->querySchema(registerId: $config['register'], schemaId: $config['message'], filters: ['contactId' => $contactId])
-			);
-		}
-
-		return $messages;
-	}//end queryMessages()
 
 	/**
 	 * Extract the optional from/to date bounds from request params.
@@ -426,8 +367,8 @@ class ActivityTimelineService {
 		return match ($sourceType) {
 			'interaction' => 'interaction',
 			'task' => 'task',
-			'emailLink' => 'email',
-			'calendarLink' => 'calendar',
+			'emailLink', 'linkedEmail' => 'email',
+			'calendarLink', 'booking' => 'calendar',
 			default => $sourceType,
 		};
 	}//end sourceToActivityType()
@@ -466,107 +407,6 @@ class ActivityTimelineService {
 
 		return array_values(array_unique($result));
 	}//end normaliseTypes()
-
-	/**
-	 * Query a single OpenRegister schema using a set of equality filters.
-	 *
-	 * @param string $registerId The register ID.
-	 * @param string $schemaId The schema ID.
-	 * @param array<string,mixed> $filters Field equality filters.
-	 *
-	 * @return array<int,array<string,mixed>> The raw object arrays.
-	 *
-	 * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
-	 */
-	private function querySchema(string $registerId, string $schemaId, array $filters): array {
-		try {
-			$objectService = $this->getObjectService();
-
-			$params = [
-				'filters' => array_merge(
-					[
-						'register' => $registerId,
-						'schema' => $schemaId,
-					],
-					$filters
-				),
-				'limit' => self::PER_SCHEMA_CEILING,
-			];
-
-			$results = $objectService->findAll($params);
-
-			return $this->normaliseResultset(results: $results);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'ActivityTimelineService: failed to query schema',
-				[
-					'exception' => $e->getMessage(),
-					'schemaId' => $schemaId,
-				]
-			);
-			return [];
-		}//end try
-	}//end querySchema()
-
-	/**
-	 * Normalise an OpenRegister findAll result into an array of plain arrays.
-	 *
-	 * @param mixed $results The raw ObjectService->findAll return value.
-	 *
-	 * @return array<int,array<string,mixed>> A list of plain object arrays.
-	 *
-	 * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
-	 */
-	private function normaliseResultset(mixed $results): array {
-		if (is_array($results) === false) {
-			return [];
-		}
-
-		$output = [];
-		foreach ($results as $item) {
-			$normalised = $this->normaliseResultItem(item: $item);
-			if ($normalised !== null) {
-				$output[] = $normalised;
-			}
-		}//end foreach
-
-		return $output;
-	}//end normaliseResultset()
-
-	/**
-	 * Normalise a single result-set entry into an array payload.
-	 *
-	 * Arrays pass through unchanged; OpenRegister entities are unwrapped via
-	 * getObject() (promoting id/uuid when missing); other objects are cast to
-	 * array. Scalars yield null.
-	 *
-	 * @param mixed $item The raw result entry.
-	 *
-	 * @return array<string,mixed>|null The normalised payload, or null to skip.
-	 */
-	private function normaliseResultItem(mixed $item): ?array {
-		if (is_array($item) === true) {
-			return $item;
-		}
-
-		if (is_object($item) === false) {
-			return null;
-		}
-
-		if (method_exists($item, 'getObject') === true) {
-			$value = $item->getObject();
-			if (is_array($value) === true) {
-				// Promote id/uuid into the object payload if missing.
-				if (isset($value['id']) === false && method_exists($item, 'getUuid') === true) {
-					$value['id'] = $item->getUuid();
-				}
-
-				return $value;
-			}
-		}
-
-		return (array)$item;
-	}//end normaliseResultItem()
 
 	/**
 	 * Apply optional date range filtering to a normalised item.
@@ -706,7 +546,6 @@ class ActivityTimelineService {
 		return $this->itemNormalizer->normalize(sourceType: $sourceType, object: $object, entityType: $entityType, entityId: $entityId);
 	}//end normalizeActivity()
 
-
 	/**
 	 * Create a worklog entry as a contactmoment ticket with channel='worklog'.
 	 *
@@ -815,7 +654,7 @@ class ActivityTimelineService {
 			$filters['parentTicket'] = $entityId;
 		}
 
-		$rawObjects = $this->querySchema(
+		$rawObjects = $this->reader->query(
 			registerId: $config['register'],
 			schemaId: $config['interaction'],
 			filters: $filters

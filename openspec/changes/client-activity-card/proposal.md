@@ -11,9 +11,12 @@ The contact strip has a fifth button, "Bericht sturen". pipelinq drew activity w
 ## What changes
 
 - ClientDetail gets the library's `timeline` widget as the overview's last card, over `/api/timeline`, as manifest config. ActivityTimeline.vue and its registry entry go.
-- `/api/timeline` lists two more kinds:
+- `/api/timeline` lists four more sources:
   - `note`: the notes on the record;
-  - `message`: the WhatsApp/SMS messages of the client's contact persons.
+  - `message`: the WhatsApp/SMS messages of the client's contact persons;
+  - `calendar`: the client's appointment bookings (pipelinq declares no calendarLink schema, so this kind was always empty);
+  - `email`: the mail linked to the record, through OpenRegister's new `EmailLinkReaderInterface` (openregister feat/email-link-reader).
+- Reading moves to `ActivityTimelineReader`, turning rows into items to `ActivityItemNormalizer`.
 - Every item carries `userName`, its author's display name.
 - "Send a message" in the contact strip opens the Messages section's composer for the client. A sent message makes the Activity card read again.
 - `EmailLinkDialog` is registered from the library for the header's "Link email".
