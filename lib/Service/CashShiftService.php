@@ -521,7 +521,11 @@ class CashShiftService {
 			$total += (float)($drop['amount'] ?? 0);
 		}
 
-		$diff = $this->newestDiff(shiftId: $shiftId);
+		// The newest difference: the pending one, else the last read.
+		$diffs = $this->fetchByShift(schemaKey: 'cashDiff_schema', shiftId: $shiftId);
+		$pending = array_values(array_filter($diffs, fn (array $row): bool => ($row['status'] ?? '') === 'pending'));
+		$diff = $pending[0] ?? ($diffs[count($diffs) - 1] ?? []);
+
 		$difference = null;
 		$tolerance = null;
 		if ($diff !== []) {
@@ -539,28 +543,6 @@ class CashShiftService {
 			'outcome' => $this->outcomeOf(status: (string)($shift['status'] ?? ''), diff: $diff),
 		];
 	}//end summaryOf()
-
-	/**
-	 * A shift's newest cash difference: the pending one, else the last read.
-	 *
-	 * @param string $shiftId The shift UUID.
-	 *
-	 * @return array<string, mixed> The difference, or an empty array.
-	 */
-	private function newestDiff(string $shiftId): array {
-		$pending = $this->findPendingDiff(shiftId: $shiftId);
-		if ($pending !== []) {
-			return $pending;
-		}
-
-		$diffs = $this->fetchByShift(schemaKey: 'cashDiff_schema', shiftId: $shiftId);
-
-		if ($diffs === []) {
-			return [];
-		}
-
-		return $diffs[count($diffs) - 1];
-	}//end newestDiff()
 
 	/**
 	 * The outcome word of a shift: open, counted, approved (an exact count),
