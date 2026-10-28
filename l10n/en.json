@@ -9276,6 +9276,15 @@
         "Enable {provider}": "Enable {provider}",
         "Every staff member signs in at the till with a PIN of 4 to 6 digits.": "Every staff member signs in at the till with a PIN of 4 to 6 digits.",
         "No case linked yet.": "No case linked yet.",
-        "No client linked to this ticket yet.": "No client linked to this ticket yet."
+        "No client linked to this ticket yet.": "No client linked to this ticket yet.",
+        "Export these figures for the chosen period.": "Export these figures for the chosen period.",
+        "Customer satisfaction": "Customer satisfaction",
+        "Figure": "Figure",
+        "This period": "This period",
+        "The period before": "The period before",
+        "The report could not be exported.": "The report could not be exported.",
+        "was {previousPeriod.leadConversionRate|tile} in the period before": "was {previousPeriod.leadConversionRate|tile} in the period before",
+        "was {previousPeriod.avgRequestResolutionTime|tile}": "was {previousPeriod.avgRequestResolutionTime|tile}",
+        "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contact moments, was {previousPeriod.contactMomentVolume|tile}"
     }
 }

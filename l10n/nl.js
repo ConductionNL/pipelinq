@@ -9202,7 +9202,16 @@ OC.L10N.register(
         "Enable {provider}": "{provider} inschakelen",
         "Every staff member signs in at the till with a PIN of 4 to 6 digits.": "Elke medewerker logt bij de kassa in met een pincode van 4 tot 6 cijfers.",
         "No case linked yet.": "Nog geen zaak gekoppeld.",
-        "No client linked to this ticket yet.": "Nog geen klant bij dit ticket."
+        "No client linked to this ticket yet.": "Nog geen klant bij dit ticket.",
+        "Export these figures for the chosen period.": "Exporteer deze cijfers voor de gekozen periode.",
+        "Customer satisfaction": "Klanttevredenheid",
+        "Figure": "Cijfer",
+        "This period": "Deze periode",
+        "The period before": "De periode ervoor",
+        "The report could not be exported.": "Het rapport kon niet worden geëxporteerd.",
+        "was {previousPeriod.leadConversionRate|tile} in the period before": "was {previousPeriod.leadConversionRate|tile} in de periode ervoor",
+        "was {previousPeriod.avgRequestResolutionTime|tile}": "was {previousPeriod.avgRequestResolutionTime|tile}",
+        "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contactmomenten, was {previousPeriod.contactMomentVolume|tile}"
     },
     "nplurals=2; plural=(n != 1);"
 )
