@@ -106,6 +106,7 @@ return [
         // leads + requests (replaces the MyWorkWidget/MyWork client-side union).
         ['name' => 'worklist#mine', 'url' => '/api/worklist/mine', 'verb' => 'GET'],
         ['name' => 'worklist#items', 'url' => '/api/worklist/items', 'verb' => 'GET'],
+        ['name' => 'leadRelatedSummary#show', 'url' => '/api/leads/{id}/related-summary', 'verb' => 'GET'],
         ['name' => 'worklist#summary', 'url' => '/api/worklist/summary', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
