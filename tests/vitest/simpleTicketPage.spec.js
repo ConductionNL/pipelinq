@@ -326,24 +326,8 @@ describe('the quick actions and the menu', () => {
 		}
 	})
 
-	it('log a contact moment on this ticket, seeded only with what always resolves', () => {
-		const log = actionsById['ticket-log-contact']
-		expect(log).toMatchObject({
-			type: 'open-form',
-			register: 'pipelinq',
-			schema: 'ticket',
-		})
-		for (const field of Object.keys(log.props)) {
-			expect(ticketProperties[field], field).toBeTruthy()
-		}
-		expect(TYPES).toContain(log.props.ticketType)
-		expect(log.props.parentTicket).toBe('@objectId')
-		// A token the library cannot resolve stays in the form as written. A
-		// ticket without a contact would save `@object.contact` as a foreign
-		// key, so no seed value may read a field of the record.
-		for (const value of Object.values(log.props)) {
-			expect(String(value).startsWith('@object.'), value).toBe(false)
-		}
+	it('logs a contact moment on this ticket in its own dialog (board PqTicketContactLoggen)', () => {
+		expect(actionsById['ticket-log-contact']).toMatchObject({ type: 'open-modal', target: 'ContactLogDialog' })
 	})
 
 	it('group the rest, and hide nothing behind an admin flag', () => {
@@ -467,10 +451,8 @@ describe('the body', () => {
 		const list = simple.widgets.find(
 			(widget) => widget.id === 'ticket-contactmoments',
 		)
-		expect(list.content.filter).toEqual({
-			parentTicket: actionsById['ticket-log-contact'].props.parentTicket,
-			ticketType: actionsById['ticket-log-contact'].props.ticketType,
-		})
+		// ContactLogDialog saves ticketType interaction with parentTicket the ticket's id.
+		expect(list.content.filter).toEqual({ parentTicket: '@objectId', ticketType: 'interaction' })
 		for (const column of list.content.columns) {
 			expect(ticketProperties[column.key], column.key).toBeTruthy()
 		}

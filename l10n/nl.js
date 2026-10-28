@@ -8806,7 +8806,15 @@ OC.L10N.register(
         "Who is it": "Wie is het",
         "Preference": "Voorkeur",
         "Customer page": "Klantpagina",
-        "No customer in this call yet.": "Nog geen klant in dit gesprek."
+        "No customer in this call yet.": "Nog geen klant in dit gesprek.",
+        "Belongs to ticket": "Hoort bij ticket",
+        "Filled in with now": "Ingevuld met nu",
+        "e.g. 4 minutes": "bijv. 4 minuten",
+        "Contact moment · {reference}": "Contactmoment · {reference}",
+        "Inbound": "Inkomend",
+        "Outbound": "Uitgaand",
+        "Text message": "Sms",
+        "The contact moment is not saved. Try again.": "Het contactmoment is niet opgeslagen. Probeer het opnieuw."
     },
     "nplurals=2; plural=(n != 1);"
 )

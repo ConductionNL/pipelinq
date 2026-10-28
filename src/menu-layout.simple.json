@@ -565,68 +565,10 @@
 					},
 					{
 						"id": "ticket-log-contact",
-						"type": "open-form",
+						"type": "open-modal",
+						"target": "ContactLogDialog",
 						"label": "Log contact",
-						"formTitle": "Log contact",
-						"icon": "Phone",
-						"register": "pipelinq",
-						"schema": "ticket",
-						"props": {
-							"ticketType": "interaction",
-							"parentTicket": "@objectId",
-							"occurredAt": "@now",
-							"direction": "inbound"
-						},
-						"formEyebrow": "Contact moment",
-						"formSubtitle": "A contact moment with the customer, saved with this ticket",
-						"includeFields": [
-							"channel",
-							"direction",
-							"occurredAt",
-							"duration",
-							"title",
-							"notes",
-							"client"
-						],
-						"columns": 2,
-						"fieldOverrides": {
-							"channel": {
-								"order": 1,
-								"label": "Channel",
-								"description": ""
-							},
-							"direction": {
-								"order": 2,
-								"label": "Direction",
-								"description": ""
-							},
-							"occurredAt": {
-								"order": 3,
-								"label": "When",
-								"description": ""
-							},
-							"duration": {
-								"order": 4,
-								"label": "Duration",
-								"description": ""
-							},
-							"title": {
-								"order": 5,
-								"label": "Subject",
-								"description": ""
-							},
-							"notes": {
-								"order": 6,
-								"label": "Notes",
-								"description": ""
-							},
-							"client": {
-								"order": 7,
-								"label": "Client",
-								"description": ""
-							}
-						},
-						"formConfirmLabel": "Save contact moment"
+						"icon": "Phone"
 					},
 					{
 						"id": "ticket-resume",
