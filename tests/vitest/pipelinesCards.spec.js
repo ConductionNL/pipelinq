@@ -27,6 +27,13 @@ describe('the pipelines list', () => {
 		expect(rows.buttons).toEqual([{ action: 'edit', label: 'Edit', icon: 'Pencil' }])
 	})
 
+	it('sorts and filters the stage table on its headers and reorders stages by drag, as the board draws it', () => {
+		const table = page.config.expandableRows.table
+		expect(table.sortable).toBe(true)
+		expect(table.filterable).toBe(true)
+		expect(table.reorder).toEqual({ key: 'order' })
+	})
+
 	it('draws each pipeline with its stage count and its stages as chips', () => {
 		expect(page.config.cardLayout).toMatchObject({
 			title: 'title',
