@@ -763,6 +763,14 @@ export default {
 	font-weight: 700;
 }
 
+/* The board draws the owner as a 26px chip in the light primary. */
+.pipeline-card--board .pipeline-card__owner {
+	width: 26px;
+	height: 26px;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+}
+
 .pipeline-card__menu {
 	flex-shrink: 0;
 	margin-block: -6px;

@@ -1974,6 +1974,68 @@ export default {
 	height: 0;
 }
 
+/* Board look (PqPipeline): the content starts 24px down and the header 4px
+   under that, so the title sits at 96. The title and the 40px buttons share
+   the first row, 10px apart; the count line takes the row 6px under it and
+   the header ends 8px lower, 20px above the chips. */
+.cn-look-board.pipeline-board {
+	padding-top: 24px;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) repeat(3, auto);
+	align-items: start;
+	row-gap: 6px;
+	column-gap: 10px;
+	padding: 4px 0 8px;
+	margin-bottom: 20px;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header .cn-page-header__text {
+	display: contents;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header .cn-page-header__title {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header .cn-page-header__description {
+	grid-column: 1 / -1;
+	grid-row: 2;
+	margin: 0;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header > .button-vue {
+	grid-row: 1;
+	height: var(--cn-board-control-height, 40px) !important;
+	min-height: var(--cn-board-control-height, 40px) !important;
+	padding: 0 14px !important;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header > .button-vue--primary {
+	padding: 0 16px !important;
+}
+
+/* The chips stand on the page, without the quick filter bar's band. */
+.cn-look-board .pipeline-board__toolbar .pipeline-board__chips {
+	padding: 0;
+	background: transparent;
+}
+
+/* The settings link is a bare underlined link. Nextcloud gives every
+   `button:not(.button-vue)` a margin and a ground, and a theme sets the
+   ground with `!important`, so these are `!important` too. */
+.cn-look-board .pipeline-board__toolbar button.pipeline-board__settings-link {
+	--nldesign-component-button-background-color: transparent;
+	min-height: 0;
+	margin: 0 !important;
+	border: 0 !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+}
+
 .pipeline-board__header {
 	display: flex;
 	justify-content: space-between;
@@ -2223,9 +2285,13 @@ export default {
 }
 
 .cn-look-board .kanban-column__header {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 	padding: 0 2px;
 	border: 0;
 	border-radius: 0;
+	line-height: normal;
 }
 
 .cn-look-board .column-title {
@@ -2246,14 +2312,29 @@ export default {
 }
 
 .cn-look-board .column-count {
+	min-width: 0;
+	height: auto;
+	padding: 1px 8px;
 	background: var(--color-main-background);
-	color: var(--color-main-text);
+	color: var(--cn-board-text-soft, var(--color-main-text));
+	font-size: 12px;
+	font-weight: 700;
 }
 
 .cn-look-board .column-value-wrapper {
 	display: flex;
 	align-items: baseline;
 	gap: 4px;
+	margin-top: 0;
+	padding-inline-start: 18px;
+	font-size: 13px;
+}
+
+.cn-look-board .column-value {
+	width: auto;
+	margin-top: 0;
+	color: var(--color-main-text);
+	font-weight: 700;
 }
 
 .cn-look-board .column-probability {
