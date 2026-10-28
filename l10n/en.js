@@ -9246,7 +9246,8 @@ OC.L10N.register(
         "Whether residents can use the portal (live) or it is still being prepared (draft).": "Whether residents can use the portal (live) or it is still being prepared (draft).",
         "Save market insight settings": "Save market insight settings",
         "Signup form copied to the clipboard.": "Signup form copied to the clipboard.",
-        "Could not copy the signup form.": "Could not copy the signup form."
+        "Could not copy the signup form.": "Could not copy the signup form.",
+        "An agent wrote this summary: {agent}, on {when}": "An agent wrote this summary: {agent}, on {when}"
     },
     "nplurals=2; plural=(n != 1);"
 )

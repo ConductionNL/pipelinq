@@ -17,22 +17,25 @@
 -->
 <template>
 	<div class="weekly-review">
-		<header class="weekly-review__header">
-			<div class="weekly-review__heading">
-				<h2 class="weekly-review__title">{{ t('pipelinq', 'Weekly review') }}</h2>
-				<p class="weekly-review__subtitle">{{ subtitle }}</p>
-			</div>
-			<NcButton
-				variant="secondary"
-				data-testid="weekly-review-refresh"
-				:disabled="loading"
-				@click="regenerate">
-				<template #icon>
-					<Refresh :size="20" />
-				</template>
-				{{ t('pipelinq', 'Compose again') }}
-			</NcButton>
-		</header>
+		<CnPageHeader
+			:title="t('pipelinq', 'Weekly review')"
+			:description="subtitle">
+			<template #extra>
+				<div class="weekly-review__header-actions">
+					<NcButton
+						variant="secondary"
+						data-testid="weekly-review-refresh"
+						:disabled="loading"
+						@click="regenerate">
+						<template #icon>
+							<Refresh :size="18" />
+						</template>
+						{{ t('pipelinq', 'Compose again') }}
+					</NcButton>
+					<CnBuildiqEditButton />
+				</div>
+			</template>
+		</CnPageHeader>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
 
@@ -62,15 +65,21 @@
 					class="weekly-review__agent"
 					data-testid="weekly-review-agent-mark">
 					{{
-						t('pipelinq', 'An agent wrote this summary: {agent}', {
-							agent: review.agentAuthoredBy,
-						})
+						generatedLabel
+							? t('pipelinq', 'An agent wrote this summary: {agent}, on {when}', {
+								agent: review.agentAuthoredBy,
+								when: generatedLabel,
+							})
+							: t('pipelinq', 'An agent wrote this summary: {agent}', {
+								agent: review.agentAuthoredBy,
+							})
 					}}
 				</p>
 			</section>
 
 			<NcNoteCard
 				v-if="degraded.length > 0"
+				class="weekly-review__notice"
 				type="warning"
 				data-testid="weekly-review-degraded">
 				{{
@@ -138,7 +147,7 @@
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnBuildiqEditButton, CnPageHeader, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { getCanonicalLocale } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import ArrowDown from 'vue-material-design-icons/ArrowDown.vue'
@@ -157,6 +166,8 @@ export default {
 		ArrowDown,
 		ArrowUp,
 		CalendarWeek,
+		CnBuildiqEditButton,
+		CnPageHeader,
 		CnStatusBadge,
 		NcButton,
 		NcEmptyContent,
@@ -215,6 +226,28 @@ export default {
 		 */
 		agentAuthored() {
 			return isAgentAuthored(this.review)
+		},
+
+		/**
+		 * When the review was written, as the agent line names it
+		 * ("maandag 5 oktober om 07:00"); '' without a valid generatedAt.
+		 *
+		 * @return {string} The moment in words.
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+		 */
+		generatedLabel() {
+			const date = this.review?.generatedAt ? new Date(this.review.generatedAt) : null
+			if (date === null || Number.isNaN(date.getTime())) {
+				return ''
+			}
+			return new Intl.DateTimeFormat(getCanonicalLocale() || undefined, {
+				weekday: 'long',
+				day: 'numeric',
+				month: 'long',
+				hour: '2-digit',
+				minute: '2-digit',
+				hourCycle: 'h23',
+			}).format(date)
 		},
 
 		/**
@@ -285,23 +318,11 @@ export default {
 	padding: 24px 28px;
 }
 
-.weekly-review__header {
+.weekly-review__header-actions {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: flex-start;
-	justify-content: space-between;
-	gap: 12px;
-}
-
-.weekly-review__title {
-	font-size: 28px;
-	font-weight: 700;
-	line-height: 1.2;
-	margin: 0;
-}
-
-.weekly-review__subtitle {
-	color: var(--color-text-maxcontrast);
-	margin: 6px 0 0;
+	gap: 10px;
 }
 
 .weekly-review__none {
@@ -325,6 +346,15 @@ export default {
 	margin: 0 0 12px;
 	font-size: 1.1rem;
 	font-weight: 700;
+	line-height: normal;
+}
+
+.weekly-review__notice.notecard {
+	margin: 0;
+	border-inline-start: 0;
+	border-radius: 8px;
+	background: var(--cn-board-notice-bg, var(--color-warning-light, #fff4e5));
+	color: var(--cn-board-notice-ink, var(--color-warning-text));
 }
 
 .weekly-review__pair {

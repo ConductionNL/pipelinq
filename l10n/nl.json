@@ -9359,6 +9359,9 @@
         "Whether residents can use the portal (live) or it is still being prepared (draft).": "Of inwoners het portaal kunnen gebruiken (live) of dat het nog wordt voorbereid (concept).",
         "Save market insight settings": "Instellingen voor marktinzicht opslaan",
         "Signup form copied to the clipboard.": "Aanmeldformulier gekopieerd.",
-        "Could not copy the signup form.": "Het aanmeldformulier kon niet worden gekopieerd."
+        "Could not copy the signup form.": "Het aanmeldformulier kon niet worden gekopieerd.",
+        "An agent wrote this summary: {agent}, on {when}": "Een agent schreef deze samenvatting: {agent}, op {when}",
+        "An agent wrote this summary: {agent}": "Een agent schreef deze samenvatting: {agent}",
+        "These sources hold nothing yet, so their absence here is missing data and not a zero: {sources}": "Deze bronnen bevatten nog niets, dus wat hier ontbreekt is ontbrekende data en geen nul: {sources}"
     }
 }
