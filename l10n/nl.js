@@ -9184,7 +9184,16 @@ OC.L10N.register(
         "VAT {vatRate}%": "Btw {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "Het btw-percentage waarmee de btw van de offerte wordt berekend.",
         "The event this newsletter invites to.": "Het evenement waarvoor deze nieuwsbrief uitnodigt.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel.",
+        "Export these figures for the chosen period.": "Exporteer deze cijfers voor de gekozen periode.",
+        "Customer satisfaction": "Klanttevredenheid",
+        "Figure": "Cijfer",
+        "This period": "Deze periode",
+        "The period before": "De periode ervoor",
+        "The report could not be exported.": "Het rapport kon niet worden geëxporteerd.",
+        "was {previousPeriod.leadConversionRate|tile} in the period before": "was {previousPeriod.leadConversionRate|tile} in de periode ervoor",
+        "was {previousPeriod.avgRequestResolutionTime|tile}": "was {previousPeriod.avgRequestResolutionTime|tile}",
+        "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contactmomenten, was {previousPeriod.contactMomentVolume|tile}"
     },
     "nplurals=2; plural=(n != 1);"
 )

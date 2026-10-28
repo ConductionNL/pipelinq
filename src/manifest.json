@@ -1373,9 +1373,8 @@
 								}
 							},
 							"valueField": "leadConversionRate",
-							"previousField": "previousPeriod.leadConversionRate",
-							"goodDirection": "up",
-							"layout": "stacked"
+							"layout": "stacked",
+							"caption": "was {previousPeriod.leadConversionRate|tile} in the period before"
 						}
 					},
 					{
@@ -1395,9 +1394,8 @@
 								}
 							},
 							"valueField": "avgRequestResolutionTime",
-							"previousField": "previousPeriod.avgRequestResolutionTime",
-							"goodDirection": "down",
-							"layout": "stacked"
+							"layout": "stacked",
+							"caption": "was {previousPeriod.avgRequestResolutionTime|tile}"
 						}
 					},
 					{
@@ -1417,9 +1415,8 @@
 								}
 							},
 							"valueField": "contactMomentVolume",
-							"previousField": "previousPeriod.contactMomentVolume",
-							"goodDirection": "up",
-							"layout": "stacked"
+							"layout": "stacked",
+							"caption": "contact moments, was {previousPeriod.contactMomentVolume|tile}"
 						}
 					},
 					{
@@ -1455,8 +1452,47 @@
 						"id": "requests-by-category",
 						"type": "chart",
 						"title": "Requests by category",
+						"_note": "PqOperationeel: the ring 150px with the total in the middle, the legend on the right naming each category with its count, no percentages on the ring.",
 						"content": {
 							"chartKind": "donut",
+							"height": 150,
+							"legendPosition": "right",
+							"legendValues": true,
+							"options": {
+								"dataLabels": {
+									"enabled": false
+								},
+								"plotOptions": {
+									"pie": {
+										"donut": {
+											"size": "62%",
+											"labels": {
+												"show": true,
+												"name": {
+													"show": false
+												},
+												"value": {
+													"show": true,
+													"fontSize": "16px",
+													"fontWeight": 700,
+													"offsetY": 6
+												},
+												"total": {
+													"show": true,
+													"showAlways": true,
+													"label": ""
+												}
+											}
+										}
+									}
+								},
+								"legend": {
+									"fontSize": "14px",
+									"itemMargin": {
+										"vertical": 3
+									}
+								}
+							},
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "ticket",
@@ -1600,8 +1636,7 @@
 							"columns": [
 								{
 									"key": "name",
-									"label": "Client",
-									"cellClass": "cn-cell--strong"
+									"label": "Client"
 								},
 								{
 									"key": "email",
@@ -1793,8 +1828,7 @@
 						"gridY": 18,
 						"gridWidth": 6,
 						"gridHeight": 5,
-						"sizeToContent": true,
-						"showTitle": false
+						"sizeToContent": true
 					},
 					{
 						"id": "20",

@@ -9258,6 +9258,15 @@
         "VAT {vatRate}%": "VAT {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "The VAT percentage the quote's VAT is worked out at.",
         "The event this newsletter invites to.": "The event this newsletter invites to.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own.",
+        "Export these figures for the chosen period.": "Export these figures for the chosen period.",
+        "Customer satisfaction": "Customer satisfaction",
+        "Figure": "Figure",
+        "This period": "This period",
+        "The period before": "The period before",
+        "The report could not be exported.": "The report could not be exported.",
+        "was {previousPeriod.leadConversionRate|tile} in the period before": "was {previousPeriod.leadConversionRate|tile} in the period before",
+        "was {previousPeriod.avgRequestResolutionTime|tile}": "was {previousPeriod.avgRequestResolutionTime|tile}",
+        "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contact moments, was {previousPeriod.contactMomentVolume|tile}"
     }
 }

@@ -84,7 +84,7 @@
 				class="navi-widget__input"
 				:placeholder="t('pipelinq', 'Which category took longest to resolve this month?')">
 			<NcButton
-				variant="secondary"
+				variant="tertiary"
 				type="submit"
 				class="navi-widget__ask"
 				:disabled="loading || !query.trim()">
@@ -257,6 +257,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
+	padding: 0 var(--cn-board-dashboard-card-inset, 22px) 20px;
 }
 
 .navi-widget__form {
@@ -280,6 +281,9 @@ export default {
 	border: 1px solid var(--color-border-maxcontrast);
 	border-radius: var(--border-radius-large, 8px);
 	font-size: 15px;
+	/* Nextcloud's input rule sets its own height with a stronger selector;
+	   a min-height still lifts the field to 40px. */
+	min-height: 40px;
 }
 
 .navi-widget__ask {
@@ -287,10 +291,14 @@ export default {
 	margin-top: 2px;
 }
 
-:deep(.navi-widget__ask.button-vue) {
+.navi-widget__ask.button-vue.button-vue {
+	--button-padding: 12px;
 	min-height: 34px;
 	height: 34px;
+	border: 0;
 	border-radius: 17px;
+	background-color: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
 	font-size: 13px;
 }
 
