@@ -9170,7 +9170,9 @@ OC.L10N.register(
         "Question from {subject.clientName} about {subject.title}": "Vraag van {subject.clientName} over {subject.title}",
         "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.": "Via {subject.channel|enumWord} · wacht {subject.waitingDays} dagen op antwoord.",
         "{count} bookings, no bookable time this week": "{count} boekingen, deze week geen boekbare tijd",
-        "{count} bookings, {percent}% of the bookable time": "{count} boekingen, {percent}% van de boekbare tijd"
+        "{count} bookings, {percent}% of the bookable time": "{count} boekingen, {percent}% van de boekbare tijd",
+        "{name} sent with the invitation": "{name} verstuurd met de uitnodiging",
+        "Event created in campaign {object.campaign}": "Evenement aangemaakt in campagne {object.campaign}"
     },
     "nplurals=2; plural=(n != 1);"
 )

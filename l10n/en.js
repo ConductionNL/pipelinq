@@ -9158,7 +9158,9 @@ OC.L10N.register(
         "Question from {subject.clientName} about {subject.title}": "Question from {subject.clientName} about {subject.title}",
         "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.": "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.",
         "{count} bookings, no bookable time this week": "{count} bookings, no bookable time this week",
-        "{count} bookings, {percent}% of the bookable time": "{count} bookings, {percent}% of the bookable time"
+        "{count} bookings, {percent}% of the bookable time": "{count} bookings, {percent}% of the bookable time",
+        "{name} sent with the invitation": "{name} sent with the invitation",
+        "Event created in campaign {object.campaign}": "Event created in campaign {object.campaign}"
     },
     "nplurals=2; plural=(n != 1);"
 )
