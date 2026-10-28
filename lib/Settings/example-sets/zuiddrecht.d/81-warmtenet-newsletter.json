@@ -1,0 +1,76 @@
+{
+	"$comment": "The October newsletter that invited Oost to Informatieavond warmtenet Oost, as PqEvenement's history draws it (\"Nieuwsbrief oktober verstuurd met de uitnodiging\", 1 October by Lotte Mulder, six days before the board's day): a segment of residents on the Lindelaan, an invitation template with the unsubscribe link and the sender's address, and the sent blast naming the event (blast 1.4.0).",
+	"objects": [
+		{
+			"key": "segment-bewoners-oost",
+			"register": "pipelinq",
+			"schema": "segment",
+			"data": {
+				"name": "Bewoners van Oost",
+				"description": "Inwoners met een adres aan de Lindelaan, waar het warmtenet Oost komt.",
+				"entityType": "customer",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "type",
+							"operator": "equals",
+							"value": "person"
+						},
+						{
+							"field": "address",
+							"operator": "contains",
+							"value": "Lindelaan"
+						}
+					]
+				},
+				"estimatedSize": 640,
+				"createdBy": "{{cast:lotte.uid}}"
+			}
+		},
+		{
+			"key": "sjabloon-nieuwsbrief-oktober-warmtenet",
+			"register": "pipelinq",
+			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
+			"data": {
+				"name": "Nieuwsbrief oktober, uitnodiging warmtenet",
+				"channel": "email",
+				"subject": "Nieuwsbrief oktober: kom naar de informatieavond over het warmtenet",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "nieuws@zuiddrecht.example",
+				"language": "nl",
+				"bodyText": "Nieuwsbrief oktober\n\nOp de informatieavond over het warmtenet Oost hoort u hoe de aansluiting werkt, wat het kost en wanneer de straat open gaat. Wijkcentrum De Linde, Lindelaan 2. Meld u aan via zuiddrecht.example/warmtenet-oost.\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"createdBy": "{{cast:lotte.uid}}"
+			}
+		},
+		{
+			"key": "nieuwsbrief-oktober-warmtenet",
+			"register": "pipelinq",
+			"schema": "blast",
+			"data": {
+				"name": "Nieuwsbrief oktober",
+				"templateId": "{{object:sjabloon-nieuwsbrief-oktober-warmtenet.id}}",
+				"channel": "email",
+				"status": "sent",
+				"createdBy": "{{cast:lotte.uid}}",
+				"segmentId": "{{object:segment-bewoners-oost.id}}",
+				"event": "{{object:evenement-warmtenet-oost.id}}",
+				"scheduledFor": "{{datetime:-6 09:00}}",
+				"sentAt": "{{datetime:-6 09:00}}",
+				"totals": {
+					"queued": 0,
+					"sent": 640,
+					"delivered": 631,
+					"bounced": 9,
+					"opened": 352,
+					"clicked": 118,
+					"unsubscribed": 2,
+					"complained": 0
+				}
+			}
+		}
+	]
+}

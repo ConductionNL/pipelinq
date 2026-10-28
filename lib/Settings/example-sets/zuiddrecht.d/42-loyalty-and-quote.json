@@ -129,7 +129,7 @@
 				"accountStatus": "active",
 				"language": "nl",
 				"correspondenceLanguage": "nl",
-				"notes": "Eenmanszaak. Anna de Vries regelt de website."
+				"notes": "Eenmanszaak. Kees Bakker regelt de website."
 			}
 		},
 		{
@@ -204,6 +204,7 @@
 			"register": "pipelinq",
 			"schema": "salesQuote",
 			"data": {
+				"vatRate": 21,
 				"number": "OFF-2026-0042",
 				"title": "Website en hosting Bakkerij De Graaf",
 				"lead": "{{object:lead-bakkerijdegraaf-website.id}}",
@@ -211,12 +212,12 @@
 				"status": "draft",
 				"version": 1,
 				"assignee": "{{cast:pieter.uid}}",
-				"paymentTerm": "30 dagen",
+				"paymentTerm": "30 dagen na factuurdatum",
 				"currency": "EUR",
 				"subtotal": 4428,
 				"vatAmount": 929.88,
 				"total": 5357.88,
-				"notes": "Anna de Vries wil de nieuwe website live hebben voordat de kerstbestellingen beginnen. 10% op hosting telefonisch afgesproken op 5 oktober."
+				"notes": "Kees Bakker wil de nieuwe website live hebben voordat de kerstbestellingen beginnen. 10% op hosting telefonisch afgesproken op 5 oktober."
 			}
 		},
 		{
@@ -224,6 +225,7 @@
 			"register": "pipelinq",
 			"schema": "salesQuoteLine",
 			"data": {
+				"name": "Website, basispakket",
 				"quote": "{{object:offerte-0042.id}}",
 				"kind": "catalogue",
 				"description": "Ontwerp en bouw, tot 8 pagina's",
@@ -241,6 +243,7 @@
 			"register": "pipelinq",
 			"schema": "salesQuoteLine",
 			"data": {
+				"name": "Hosting, per maand",
 				"quote": "{{object:offerte-0042.id}}",
 				"kind": "catalogue",
 				"description": "Hosting met dagelijkse back-ups en SSL",
@@ -258,6 +261,7 @@
 			"register": "pipelinq",
 			"schema": "salesQuoteLine",
 			"data": {
+				"name": "Workshop teksten",
 				"quote": "{{object:offerte-0042.id}}",
 				"kind": "catalogue",
 				"description": "Halve dag, samen de teksten schrijven",
@@ -275,9 +279,10 @@
 			"register": "pipelinq",
 			"schema": "salesQuoteLine",
 			"data": {
+				"name": "Koppeling met het kassasysteem",
 				"quote": "{{object:offerte-0042.id}}",
 				"kind": "own",
-				"description": "Koppeling met het kassasysteem: dagvoorraad tonen op de website",
+				"description": "Dagvoorraad tonen op de website",
 				"note": "Schatting. Hangt af van de leverancier van de kassa.",
 				"quantity": 1,
 				"unitPrice": 750,

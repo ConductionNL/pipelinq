@@ -278,6 +278,7 @@
 			"register": "pipelinq",
 			"schema": "contact",
 			"data": {
+				"role": "Eigenaar",
 				"name": "Kees Bakker",
 				"client": "{{object:client-bakkerijdegraaf.id}}",
 				"email": "kees@bakkerijdegraaf.example",
