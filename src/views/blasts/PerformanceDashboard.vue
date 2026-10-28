@@ -389,6 +389,7 @@ export default {
 			activeTab: 'overview',
 			blasts: [],
 			segments: {},
+			templateSubjects: {},
 			attributionRows: [],
 			// Site traffic per campaign: null until the first performance read
 			// answers, then whether a portal is connected.
@@ -608,6 +609,7 @@ export default {
 			this.error = ''
 			try {
 				await Promise.all([this.fetchBlasts(), this.fetchSegments()])
+				await this.fetchTemplateSubjects()
 			} catch (e) {
 				this.error =
 					e?.response?.data?.error
@@ -700,6 +702,29 @@ export default {
 				params: { limit: OVERVIEW_LIMIT },
 			})
 			this.blasts = data?.data || data?.results || []
+		},
+
+		/**
+		 * GET /api/templates/:id for each template an A/B blast sent, keeping
+		 * its subject. Failure is non-fatal: the variant card then shows no
+		 * subject line.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/newsletter-results-board/specs/marketing/spec.md
+		 */
+		async fetchTemplateSubjects() {
+			const subjects = {}
+			await Promise.all(abTemplateIds(this.blasts).map(async (id) => {
+				try {
+					const { data } = await axios.get(generateUrl('/apps/pipelinq/api/templates/{id}', { id }))
+					if (data?.subject) {
+						subjects[id] = data.subject
+					}
+				} catch {
+					// No subject for this variant.
+				}
+			}))
+			this.templateSubjects = subjects
 		},
 
 		/**
@@ -897,8 +922,8 @@ export default {
 		 * @return {object}
 		 */
 		buildAbPair(parent, variant) {
-			const a = variantStats(parent)
-			const b = variantStats(variant)
+			const a = variantStats(parent, this.templateSubjects)
+			const b = variantStats(variant, this.templateSubjects)
 			const elapsedOk = this.elapsedSinceSend(parent) >= AB_MIN_ELAPSED_MS
 				&& this.elapsedSinceSend(variant) >= AB_MIN_ELAPSED_MS
 			const nOk = a.delivered >= AB_MIN_DELIVERED && b.delivered >= AB_MIN_DELIVERED

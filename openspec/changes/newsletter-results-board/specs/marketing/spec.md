@@ -23,3 +23,12 @@ When an A/B test has enough data for a verdict, the A/B tab MUST mark the varian
 - WHEN the user opens the A/B testing tab
 - THEN the newest test is shown in full, with its variant cards
 - AND the other test is one line: its name, both click rates and the verdict
+
+#### Scenario: each variant shows the subject it was sent with
+
+@e2e exclude Asserted in tests/vitest/newsletterResultsBoard.spec.js; the pixel check against board PqNieuwsbriefABTest covers the drawn subject lines.
+
+- GIVEN an A/B test whose variant B sent a different template than variant A
+- WHEN the user opens the A/B testing tab
+- THEN each variant card shows "Onderwerp:" with the subject of the template that variant sent
+- AND a variant whose template cannot be read shows no subject line
