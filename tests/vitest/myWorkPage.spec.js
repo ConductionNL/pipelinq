@@ -160,6 +160,21 @@ describe('the My work page', () => {
 		}
 	})
 
+	// Board PqMobiel at 375px: only the title in the header, the filter bar on
+	// the page ground with the lens chips as pills, each due group a card
+	// under an uppercase heading, "Te laat" in the error ink.
+	it('draws the phone view as PqMobiel does', () => {
+		expect(page.config.headerActionsViewport).toBe('wide')
+		const lens = widget('my-lens')
+		expect(lens.borderless).toBe('narrow')
+		expect(lens.content.controls.find((c) => c.style === 'chips').chipsOnPhone).toBe('pills')
+		expect(lens.content.controls.map((c) => c.style)).toEqual(['chips', 'toggle', 'select'])
+		const phone = widget('my-items-phone')
+		expect(phone.content.groupLook).toBe('cards')
+		expect(phone.content.groupTones).toEqual({ late: 'error' })
+		expect(page.config.layout.find((l) => l.widgetId === 'my-items-phone').borderless).toBe(true)
+	})
+
 	it('heads the page with the date and a summary of the work', () => {
 		expect(page.config.greeting).toBe('date')
 		expect(page.config.descriptionSource.url).toBe('/apps/pipelinq/api/worklist/summary')

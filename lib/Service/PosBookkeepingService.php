@@ -440,6 +440,7 @@ class PosBookkeepingService {
 		}
 
 		if ($this->shouldDispatch() === false) {
+			$zReport = $this->withFailure(zReport: $zReport, reason: 'not_configured');
 			return $this->projectPending(
 				zReport: $zReport,
 				reason: 'shillinq journal integration not configured'
@@ -450,11 +451,28 @@ class PosBookkeepingService {
 		$dispatched = $this->dispatch(eventName: self::EVENT_JOURNAL_RAISE, payload: $payload);
 
 		if ($dispatched === false) {
-			return $this->onRaiseFailure(zReport: $zReport);
+			return $this->onRaiseFailure(zReport: $this->withFailure(zReport: $zReport, reason: 'unreachable'));
 		}
 
 		return $this->onRaised(zReport: $zReport, idempotencyKey: $idempotencyKey);
 	}//end dispatchRaise()
+
+	/**
+	 * Stamp why and when the last raise did not reach shillinq.
+	 *
+	 * @param array<string, mixed> $zReport The Z-report.
+	 * @param string               $reason  `unreachable` or `not_configured`.
+	 *
+	 * @return array<string, mixed> The Z-report with the failure stamped.
+	 *
+	 * @spec openspec/changes/zreport-failure-reason/specs/pipelinq-bookkeeping-to-shillinq/spec.md
+	 */
+	private function withFailure(array $zReport, string $reason): array {
+		$zReport['bookkeepingFailureReason'] = $reason;
+		$zReport['bookkeepingFailedAt'] = $this->now();
+
+		return $zReport;
+	}//end withFailure()
 
 	/**
 	 * Persist a successful raise: bookkeepingStatus -> raised.
@@ -472,6 +490,8 @@ class PosBookkeepingService {
 	private function onRaised(array $zReport, string $idempotencyKey): array {
 		$zReport['bookkeepingStatus'] = 'raised';
 		$zReport['shillinqJournalEntryId'] = $idempotencyKey;
+		$zReport['bookkeepingFailureReason'] = null;
+		$zReport['bookkeepingFailedAt'] = null;
 		$zReport['bookkeepingAttempts'] = ((int)($zReport['bookkeepingAttempts'] ?? 0)) + 1;
 
 		$saved = $this->saveObjectFor(

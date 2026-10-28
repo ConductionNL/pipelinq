@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+	abTemplateIds,
 	chiSquarePValue,
 	higherVariant,
 	variantSplit,
@@ -25,10 +26,22 @@ const view = readFileSync(
 )
 
 describe('A/B arithmetic', () => {
-	it('reads delivered, clicked, click rate and subject of a variant', () => {
-		expect(variantStats({ subject: 'S', totals: { delivered: 200, clicked: 50 } }))
+	it('reads delivered, clicked, click rate and the subject of the variant\'s template', () => {
+		expect(variantStats({ templateId: 't1', totals: { delivered: 200, clicked: 50 } }, { t1: 'S' }))
 			.toEqual({ delivered: 200, clicked: 50, clickRate: 0.25, subject: 'S' })
 		expect(variantStats({}).clickRate).toBe(0)
+		expect(variantStats({ templateId: 'unknown' }, { t1: 'S' }).subject).toBe('')
+	})
+
+	it('collects the template ids of every blast in an A/B pair, once each', () => {
+		const blasts = [
+			{ id: 'a', templateId: 't1' },
+			{ id: 'b', templateId: 't2', abVariantOf: 'a' },
+			{ id: 'c', templateId: 't1', abVariantOf: 'a' },
+			{ id: 'd', templateId: 't9' },
+		]
+		expect(abTemplateIds(blasts).sort()).toEqual(['t1', 't2'])
+		expect(abTemplateIds([])).toEqual([])
 	})
 
 	it('gives a small p-value for clearly different click rates and null for a degenerate table', () => {
@@ -89,6 +102,12 @@ describe('the A/B-test tab (board PqNieuwsbriefABTest)', () => {
 		expect(view).toMatch(/const AB_MIN_DELIVERED = 500/)
 		expect(view).toMatch(/const winner = eligible \? higherVariant\(a, b\) : null/)
 		expect(view).toMatch(/v-if="!pair.eligible"[\s\S]*?'Results not yet available/)
+	})
+
+	it('reads each variant\'s subject from its template, since a blast has no subject of its own', () => {
+		expect(view).toMatch(/fetchTemplateSubjects\(\)/)
+		expect(view).toMatch(/variantStats\(parent, this\.templateSubjects\)/)
+		expect(view).toMatch(/variantStats\(variant, this\.templateSubjects\)/)
 	})
 
 	it('shows the first test in full and every later one as a summary line', () => {

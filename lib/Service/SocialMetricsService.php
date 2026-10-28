@@ -46,6 +46,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Social\SocialAdapterCall;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
@@ -71,6 +72,21 @@ use OCP\IAppConfig;
  *  into every adapter, would add a collaborator that constructs a struct.
  */
 class SocialMetricsService {
+	/**
+	 * How each network is named on screen.
+	 *
+	 * @var array<string, string>
+	 */
+	private const NETWORK_LABELS = [
+		'mastodon' => 'Mastodon',
+		'bluesky' => 'Bluesky',
+		'linkedin' => 'LinkedIn',
+		'instagram' => 'Instagram',
+		'facebook' => 'Facebook',
+		'threads' => 'Threads',
+		'x' => 'X',
+	];
+
 	/**
 	 * Constructor.
 	 *
@@ -249,6 +265,119 @@ class SocialMetricsService {
 
 		return array_slice($rows, 0, max(1, $limit));
 	}//end ranking()
+
+	/**
+	 * Each network's publications of the last `$days` days, summed.
+	 *
+	 * One row per network that published in the period, most publications
+	 * first: the count, the summed numbers, the follower count of the
+	 * network's accounts and the interaction rate (likes, comments and shares
+	 * over views, in percent to one decimal; null without views).
+	 *
+	 * @param int $days The period in days, ending now.
+	 *
+	 * @return array<int, array<string, mixed>> The per-network rows.
+	 *
+	 * @spec openspec/changes/social-network-totals/specs/social-metrics/spec.md#requirement-social-performance-is-summed-per-network-for-a-period
+	 */
+	public function networkTotals(int $days = 30): array {
+		$since = (new DateTimeImmutable('-' . max(1, $days) . ' days'))->getTimestamp();
+
+		$totals = [];
+		foreach ($this->publications->findAll() as $publication) {
+			$network = (string)($publication['network'] ?? '');
+			if ($network === '' || $this->publishedSince(publication: $publication, since: $since) === false) {
+				continue;
+			}
+
+			$totals[$network] = $this->addPublication(row: ($totals[$network] ?? $this->emptyTotal(network: $network)), publication: $publication);
+		}
+
+		foreach ($this->accounts->listAccounts()['data'] as $account) {
+			$network = (string)($account['network'] ?? '');
+			if (isset($totals[$network]) === true) {
+				$totals[$network]['followers'] += (int)($account['followerCount'] ?? 0);
+			}
+		}
+
+		$rows = [];
+		foreach ($totals as $row) {
+			$engagement = ($row['likes'] + $row['comments'] + $row['shares']);
+			$row['engagementPercent'] = null;
+			if ($row['views'] > 0) {
+				$row['engagementPercent'] = round((100 * $engagement / $row['views']), 1);
+			}
+
+			$rows[] = $row;
+		}
+
+		usort(
+			$rows,
+			static fn (array $left, array $right): int => ($right['published'] <=> $left['published'])
+		);
+
+		return $rows;
+	}//end networkTotals()
+
+	/**
+	 * Whether a publication went out at or after a moment.
+	 *
+	 * @param array<string, mixed> $publication The publication.
+	 * @param int $since The moment, as a Unix timestamp.
+	 *
+	 * @return bool True when it is published and not older than `$since`.
+	 */
+	private function publishedSince(array $publication, int $since): bool {
+		if (($publication['status'] ?? '') !== SocialPublicationStore::PUBLISHED) {
+			return false;
+		}
+
+		$publishedAt = strtotime((string)($publication['publishedAt'] ?? ''));
+
+		return $publishedAt !== false && $publishedAt >= $since;
+	}//end publishedSince()
+
+	/**
+	 * A network's row before any publication is added.
+	 *
+	 * @param string $network The network.
+	 *
+	 * @return array<string, mixed> The empty row.
+	 */
+	private function emptyTotal(string $network): array {
+		return [
+			'network' => $network,
+			'label' => (self::NETWORK_LABELS[$network] ?? ucfirst($network)),
+			'published' => 0,
+			'views' => 0,
+			'likes' => 0,
+			'comments' => 0,
+			'shares' => 0,
+			'followers' => 0,
+		];
+	}//end emptyTotal()
+
+	/**
+	 * Add one publication's numbers to its network's row.
+	 *
+	 * @param array<string, mixed> $row The network's row so far.
+	 * @param array<string, mixed> $publication The publication.
+	 *
+	 * @return array<string, mixed> The row with the publication added.
+	 */
+	private function addPublication(array $row, array $publication): array {
+		$metrics = ($publication['metrics'] ?? []);
+		if (is_array($metrics) === false) {
+			$metrics = [];
+		}
+
+		$row['published']++;
+		foreach (['views', 'likes', 'comments', 'shares'] as $key) {
+			$row[$key] += (int)($metrics[$key] ?? 0);
+		}
+
+		return $row;
+	}//end addPublication()
 
 	/**
 	 * One ranking row: the publication, its engagement and its rate.

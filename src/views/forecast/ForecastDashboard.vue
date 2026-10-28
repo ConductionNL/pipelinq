@@ -42,9 +42,13 @@
 			</div>
 			<CnDetailCard :title="quarterTitle" class="forecast-quarter">
 				<template #actions>
-					<NcButton variant="secondary" data-testid="forecast-export-csv" @click="exportCsv">
+					<NcButton
+						class="cn-button--tonal"
+						variant="secondary"
+						data-testid="forecast-export-csv"
+						@click="exportCsv">
 						<template #icon>
-							<Download :size="20" />
+							<Download :size="16" />
 						</template>
 						{{ t('pipelinq', 'Export CSV') }}
 					</NcButton>

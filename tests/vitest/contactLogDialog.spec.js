@@ -23,7 +23,7 @@ const store = vi.hoisted(() => ({
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => store }))
 vi.mock('@nextcloud/event-bus', () => ({ emit: vi.fn() }))
 vi.mock('@nextcloud/vue', () => ({
-	NcButton: { props: ['disabled'], emits: ['click'], render() { return h('button', { disabled: this.disabled, onClick: () => this.$emit('click') }, this.$slots.default?.()) } },
+	NcButton: { props: ['disabled'], emits: ['click'], render() { return h('button', { disabled: this.disabled, onClick: () => this.$emit('click') }, [this.$slots.icon?.(), this.$slots.default?.()]) } },
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnDialog: { props: ['name', 'eyebrow', 'subtitle', 'width'], render() { return h('div', { 'data-eyebrow': this.eyebrow }, [this.$slots.default?.(), this.$slots.actions?.()]) } },
@@ -75,5 +75,28 @@ describe('ContactLogDialog', () => {
 		})
 		expect(new Date(payload.occurredAt).getHours()).toBe(10)
 		expect(w.emitted('close')).toHaveLength(1)
+	})
+
+	it('initials the customer by first and last name, as the board ("SV")', async () => {
+		const w = await open()
+		expect(w.find('.contact-log__initials').text()).toBe('SV')
+	})
+
+	it('names the date field When, as the board labels it', async () => {
+		const w = await open()
+		expect(w.find('[data-testid="contact-log-date"]').attributes('aria-label')).toBe('When')
+	})
+
+	it('sets the ticket note in a tinted block with a link icon', async () => {
+		const w = await open()
+		const note = w.find('[data-testid="contact-log-parent"]')
+		expect(note.classes()).toContain('contact-log__parent--block')
+		expect(note.find('.contact-log__parent-icon').exists()).toBe(true)
+	})
+
+	it('draws the customer as a full-width field box and the save button with an icon', async () => {
+		const w = await open()
+		expect(w.find('[data-testid="contact-log-client"]').classes()).toContain('contact-log__control')
+		expect(w.find('[data-testid="contact-log-save"] .contact-log__save-icon').exists()).toBe(true)
 	})
 })

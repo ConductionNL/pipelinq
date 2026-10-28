@@ -35,7 +35,8 @@
 <div class="cn-header-actions">
 			<NcButton
 				v-if="canCancel"
-				variant="error"
+				class="blast-monitor__cancel"
+				variant="secondary"
 				:disabled="cancelling"
 				@click="cancel">
 				<template #icon>
@@ -563,7 +564,7 @@ export default {
 				if (isNaN(date.getTime())) {
 					return ts
 				}
-				return date.toLocaleTimeString()
+				return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 			} catch {
 				return ts
 			}
@@ -603,6 +604,15 @@ export default {
 .blast-monitor__header h1 {
 	margin: 0 0 8px;
 	font-size: 28px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.blast-monitor__cancel.button-vue {
+	min-height: 40px;
+	border: 1px solid var(--color-error-text);
+	background-color: var(--color-main-background);
+	color: var(--color-error-text);
 }
 
 .blast-monitor__meta {
@@ -651,7 +661,8 @@ export default {
 	gap: 8px;
 
 	strong {
-		font-size: 26px;
+		font-size: 28px;
+		line-height: 1.2;
 	}
 }
 
@@ -693,6 +704,10 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
+}
+
+.blast-monitor__card.blast-monitor__total {
+	padding: 16px 18px;
 }
 
 .blast-monitor__total-label,
@@ -738,6 +753,7 @@ export default {
 }
 
 .blast-monitor__timeline li {
+	font-size: 14px;
 	display: grid;
 	grid-template-columns: 100px 1fr auto;
 	align-items: center;

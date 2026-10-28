@@ -145,6 +145,20 @@ class PortalAuditService {
 	}//end getForTenant()
 
 	/**
+	 * The latest audit events of every tenant, newest first, and how many
+	 * there are in all.
+	 *
+	 * @param int $limit The most events to return.
+	 *
+	 * @return array{events: array<int, array<string, mixed>>, total: int} The events and the total.
+		 * @spec openspec/changes/portal-tenants-on-one-admin-tab/specs/customer-portal/spec.md#requirement-the-admin-tab-shows-the-latest-portal-actions-across-portals
+	 */
+	public function getRecent(int $limit): array {
+		$events = $this->sortByOccurredAtDesc(events: $this->repository->findAll(self::SCHEMA));
+		return ['events' => array_slice($events, 0, max(1, $limit)), 'total' => count($events)];
+	}//end getRecent()
+
+	/**
 	 * Sort events by occurredAt descending (most recent first).
 	 *
 	 * @param array<int, array<string, mixed>> $events The events.

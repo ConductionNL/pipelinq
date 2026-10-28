@@ -65,24 +65,34 @@
 					)
 				"
 				defaultGroup="pipelinq-messaging-service" />
-		</NcSettingsSection>
 
-		<NcSettingsSection
-			class="cn-settings-section--wide"
-			:name="t('pipelinq', 'Providers')"
-			:description="
-				t(
-					'pipelinq',
-					'WhatsApp and SMS senders. Credentials live on the OpenConnector source (sourceId) — never here.',
-				)
-			">
-			<div class="messaging-settings__toolbar">
-				<NcButton :disabled="loadingProviders" @click="fetchProviders">
-					{{ t('pipelinq', 'Refresh') }}
-				</NcButton>
-				<NcButton variant="primary" @click="startNewProvider">
-					{{ t('pipelinq', 'Add provider') }}
-				</NcButton>
+			<hr class="messaging-settings__hair">
+			<div class="messaging-settings__head">
+				<div class="messaging-settings__head-text">
+					<h3>{{ t('pipelinq', 'Providers') }}</h3>
+					<p>
+						{{
+							t(
+								'pipelinq',
+								'WhatsApp and SMS senders. Credentials live on the OpenConnector source (sourceId) — never here.',
+							)
+						}}
+					</p>
+				</div>
+				<span class="messaging-settings__head-actions">
+					<NcButton :disabled="loadingProviders" @click="fetchProviders">
+						<template #icon>
+							<Refresh :size="20" />
+						</template>
+						{{ t('pipelinq', 'Refresh') }}
+					</NcButton>
+					<NcButton variant="primary" @click="startNewProvider">
+						<template #icon>
+							<Plus :size="20" />
+						</template>
+						{{ t('pipelinq', 'Add provider') }}
+					</NcButton>
+				</span>
 			</div>
 
 			<NcLoadingIcon v-if="loadingProviders" :size="28" />
@@ -93,121 +103,94 @@
 					t('pipelinq', 'No channel providers configured yet.')
 				" />
 
-			<ul v-else class="messaging-settings__records">
-				<li
-					v-for="provider in providers"
-					:key="provider.id"
-					class="messaging-settings__record"
-					data-testid="messaging-provider">
-					<div class="messaging-settings__record-head">
-						<h3 class="messaging-settings__record-name">
-							{{ provider.displayName }}
-						</h3>
-						<span
-							class="messaging-settings__badge"
-							:class="
-								provider.active
-									? 'messaging-settings__badge--on'
-									: 'messaging-settings__badge--off'
-							">
-							{{
-								provider.active
-									? t('pipelinq', 'Active')
-									: t('pipelinq', 'Inactive')
-							}}
-						</span>
-						<span
-							v-if="provider.sandbox"
-							class="messaging-settings__badge messaging-settings__badge--sandbox">
-							{{ t('pipelinq', 'Sandbox') }}
-						</span>
-					</div>
-					<dl class="messaging-settings__facts">
-						<div>
-							<dt>{{ t('pipelinq', 'Kind') }}</dt>
-							<dd>{{ kindLabel(provider.kind) }}</dd>
-						</div>
-						<div>
-							<dt>{{ t('pipelinq', 'Vendor') }}</dt>
-							<dd>{{ vendorLabel(provider.vendor) }}</dd>
-						</div>
-						<div>
-							<dt>{{ t('pipelinq', 'Source') }}</dt>
-							<dd>
-								<code>{{ provider.sourceId || '—' }}</code>
-							</dd>
-						</div>
-						<div>
-							<dt>{{ t('pipelinq', 'Phone / account') }}</dt>
-							<dd>{{ provider.phoneNumber || '—' }}</dd>
-						</div>
-						<div>
-							<dt>{{ t('pipelinq', 'Priority') }}</dt>
-							<dd>{{ provider.priority ?? 10 }}</dd>
-						</div>
-						<div class="messaging-settings__fact--wide">
-							<dt>{{ t('pipelinq', 'Webhook URL') }}</dt>
-							<dd class="messaging-settings__webhook-cell">
-								<code class="messaging-settings__webhook-url">{{
-									/**
-									 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
-									 */
-									webhookUrl(provider)
-								}}</code>
-								<NcButton
-									variant="tertiary"
-									:aria-label="t('pipelinq', 'Copy webhook URL')"
-									@click="copyWebhookUrl(provider)">
-									<template #icon>
-										<ContentCopy :size="18" />
-									</template>
-								</NcButton>
-							</dd>
-						</div>
-					</dl>
-					<div class="messaging-settings__record-actions">
-						<NcButton
-							:disabled="testingProviderId === provider.id"
-							@click="testProviderConnection(provider)">
-							{{
-								testingProviderId === provider.id
-									? t('pipelinq', 'Testing…')
-									: t('pipelinq', 'Test connection')
-							}}
-						</NcButton>
-						<NcButton @click="editProvider(provider)">
-							{{ t('pipelinq', 'Edit') }}
-						</NcButton>
-						<NcButton variant="error" @click="deleteProvider(provider)">
-							{{ t('pipelinq', 'Delete') }}
-						</NcButton>
-						<span
-							v-if="testResults[provider.id]"
-							class="messaging-settings__test-result">
-							<span
-								v-if="testResults[provider.id].reachable"
-								class="messaging-settings__badge messaging-settings__badge--on">
-								{{
-									testResults[provider.id].mock
-										? t('pipelinq', 'Reachable (mock mode)')
-										: t('pipelinq', 'Reachable')
-								}}
+			<table
+				v-else
+				class="messaging-settings__table"
+				data-testid="messaging-providers">
+				<thead>
+					<tr>
+						<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Kind') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Vendor') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Source') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Phone / account') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Priority') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Webhook URL') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Actions') }}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="provider in providers"
+						:key="provider.id"
+						data-testid="messaging-provider">
+						<td><strong>{{ provider.displayName }}</strong></td>
+						<td>{{ kindLabel(provider.kind) }}</td>
+						<td>{{ vendorLabel(provider.vendor) }}</td>
+						<td><code>{{ provider.sourceId || '—' }}</code></td>
+						<td class="messaging-settings__nowrap">{{ provider.phoneNumber || '—' }}</td>
+						<td>{{ provider.priority ?? 10 }}</td>
+						<td>
+							<span class="messaging-settings__status">
+								<span
+									class="cn-status-badge"
+									:class="provider.active ? 'cn-status-badge--success' : 'cn-status-badge--default'">
+									{{
+										provider.active
+											? t('pipelinq', 'Active')
+											: t('pipelinq', 'Inactive')
+									}}
+								</span>
+								<span
+									v-if="provider.sandbox"
+									class="cn-status-badge cn-status-badge--warning">
+									{{ t('pipelinq', 'Sandbox') }}
+								</span>
+								<span
+									v-if="testResults[provider.id]"
+									class="messaging-settings__test-result"
+									:class="testResults[provider.id].reachable ? 'messaging-settings__test-result--ok' : 'messaging-settings__test-result--error'">
+									{{ testResultLabel(testResults[provider.id]) }}
+								</span>
 							</span>
-							<span
-								v-else
-								class="messaging-settings__badge messaging-settings__badge--error">
+						</td>
+						<td>
+							<code
+								class="messaging-settings__webhook-url"
+								:title="webhookUrl(provider)">{{ shortWebhookUrl(provider) }}</code>
+						</td>
+						<td class="messaging-settings__row-actions">
+							<NcButton
+								:aria-label="t('pipelinq', 'Copy webhook URL')"
+								:title="t('pipelinq', 'Copy webhook URL')"
+								@click="copyWebhookUrl(provider)">
+								<template #icon>
+									<ContentCopy :size="18" />
+								</template>
+							</NcButton>
+							<NcButton
+								:disabled="testingProviderId === provider.id"
+								@click="testProviderConnection(provider)">
 								{{
-									t('pipelinq', 'Degraded: {cause}', {
-										cause:
-											testResults[provider.id].cause
-											|| t('pipelinq', 'unknown'),
-									})
+									testingProviderId === provider.id
+										? t('pipelinq', 'Testing…')
+										: t('pipelinq', 'Test connection')
 								}}
-							</span>
-						</span>
-					</div>
-				</li>
-			</ul>
+							</NcButton>
+							<NcButton variant="tertiary" @click="editProvider(provider)">
+								{{ t('pipelinq', 'Edit') }}
+							</NcButton>
+							<NcButton
+								variant="tertiary"
+								class="messaging-settings__delete"
+								@click="deleteProvider(provider)">
+								{{ t('pipelinq', 'Delete') }}
+							</NcButton>
+						</td>
+					</tr>
+				</tbody>
+			</table>
 
 			<div v-if="showProviderForm" class="messaging-settings__form-panel">
 				<h3>
@@ -286,27 +269,37 @@
 					</NcButton>
 				</div>
 			</div>
-		</NcSettingsSection>
 
-		<NcSettingsSection
-			class="cn-settings-section--wide"
-			:name="t('pipelinq', 'Send budgets')"
-			:description="
-				t(
-					'pipelinq',
-					'Per-provider send caps. Hard-stop refuses further sends past the cap; alert-only just notifies once per period.',
-				)
-			">
-			<div class="messaging-settings__toolbar">
-				<NcButton :disabled="loadingBudgets" @click="fetchBudgets">
-					{{ t('pipelinq', 'Refresh') }}
-				</NcButton>
-				<NcButton
-					variant="primary"
-					:disabled="providers.length === 0"
-					@click="startNewBudget">
-					{{ t('pipelinq', 'Add budget') }}
-				</NcButton>
+			<hr class="messaging-settings__hair">
+			<div class="messaging-settings__head">
+				<div class="messaging-settings__head-text">
+					<h3>{{ t('pipelinq', 'Send budgets') }}</h3>
+					<p>
+						{{
+							t(
+								'pipelinq',
+								'Per-provider send caps. Hard-stop refuses further sends past the cap; alert-only just notifies once per period.',
+							)
+						}}
+					</p>
+				</div>
+				<span class="messaging-settings__head-actions">
+					<NcButton :disabled="loadingBudgets" @click="fetchBudgets">
+						<template #icon>
+							<Refresh :size="20" />
+						</template>
+						{{ t('pipelinq', 'Refresh') }}
+					</NcButton>
+					<NcButton
+						variant="primary"
+						:disabled="providers.length === 0"
+						@click="startNewBudget">
+						<template #icon>
+							<Plus :size="20" />
+						</template>
+						{{ t('pipelinq', 'Add budget') }}
+					</NcButton>
+				</span>
 			</div>
 
 			<NcLoadingIcon v-if="loadingBudgets" :size="28" />
@@ -315,76 +308,107 @@
 				v-else-if="budgets.length === 0"
 				:description="t('pipelinq', 'No send budgets configured yet.')" />
 
-			<ul v-else class="messaging-settings__records">
-				<li
-					v-for="budget in budgets"
-					:key="budget.id"
-					class="messaging-settings__record"
-					data-testid="messaging-budget">
-					<div class="messaging-settings__record-head">
-						<h3 class="messaging-settings__record-name">
-							{{ providerDisplayName(budget.providerId) }}
-						</h3>
-					</div>
-					<dl class="messaging-settings__facts">
-						<div>
-							<dt>{{ t('pipelinq', 'Used this period') }}</dt>
-							<dd>
-								{{ budget.currentPeriodMessages || 0 }}
-								{{ t('pipelinq', 'msgs') }} / €{{
-									(budget.currentPeriodCostEur || 0).toFixed(2)
+			<table
+				v-else
+				class="messaging-settings__table"
+				data-testid="messaging-budgets">
+				<thead>
+					<tr>
+						<th scope="col">{{ t('pipelinq', 'Provider') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Period') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Max messages') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Max cost (EUR)') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Alert threshold (0-1)') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Hard stop') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Used this period') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Actions') }}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="budget in budgets"
+						:key="budget.id"
+						data-testid="messaging-budget">
+						<td><strong>{{ providerDisplayName(budget.providerId) }}</strong></td>
+						<td class="messaging-settings__period">
+							<NcSelect
+								v-model="budget.period"
+								:options="periodOptions"
+								:ariaLabelCombobox="t('pipelinq', 'Period')"
+								:clearable="false"
+								label="label"
+								:reduce="(o) => o.value" />
+						</td>
+						<td>
+							<input
+								v-model.number="budget.maxMessages"
+								class="messaging-settings__cell-input"
+								type="number"
+								min="0"
+								:aria-label="t('pipelinq', 'Max messages')">
+						</td>
+						<td>
+							<input
+								v-model.number="budget.maxCostEur"
+								class="messaging-settings__cell-input"
+								type="number"
+								min="0"
+								step="0.01"
+								:aria-label="t('pipelinq', 'Max cost (EUR)')">
+						</td>
+						<td>
+							<input
+								v-model.number="budget.alertThresholdPct"
+								class="messaging-settings__cell-input messaging-settings__cell-input--short"
+								type="number"
+								min="0"
+								max="1"
+								step="0.05"
+								:aria-label="t('pipelinq', 'Alert threshold (0-1)')">
+						</td>
+						<td>
+							<NcCheckboxRadioSwitch
+								v-model="budget.hardStop"
+								type="switch"
+								:aria-label="t('pipelinq', 'Hard stop')" />
+						</td>
+						<td>
+							<span class="messaging-settings__usage">
+								<span>
+									{{ budget.currentPeriodMessages || 0 }}
+									{{ t('pipelinq', 'msgs') }} / €{{
+										(budget.currentPeriodCostEur || 0).toFixed(2)
+									}}
+								</span>
+								<span class="messaging-settings__bar" aria-hidden="true">
+									<span
+										class="messaging-settings__bar-fill"
+										:class="{ 'messaging-settings__bar-fill--alert': budgetUsageShare(budget) >= (budget.alertThresholdPct || 1) }"
+										:style="{ width: Math.round(budgetUsageShare(budget) * 100) + '%' }" />
+								</span>
+							</span>
+						</td>
+						<td class="messaging-settings__row-actions">
+							<NcButton
+								variant="primary"
+								:disabled="savingBudgetId === budget.id"
+								@click="saveBudget(budget)">
+								{{
+									savingBudgetId === budget.id
+										? t('pipelinq', 'Saving…')
+										: t('pipelinq', 'Save')
 								}}
-							</dd>
-						</div>
-					</dl>
-					<div class="messaging-settings__fields">
-						<NcSelect
-							v-model="budget.period"
-							:options="periodOptions"
-							:inputLabel="t('pipelinq', 'Period')"
-							label="label"
-							:reduce="(o) => o.value" />
-						<NcTextField
-							v-model.number="budget.maxMessages"
-							:label="t('pipelinq', 'Max messages')"
-							type="number"
-							min="0" />
-						<NcTextField
-							v-model.number="budget.maxCostEur"
-							:label="t('pipelinq', 'Max cost (EUR)')"
-							type="number"
-							min="0"
-							step="0.01" />
-						<NcTextField
-							v-model.number="budget.alertThresholdPct"
-							:label="t('pipelinq', 'Alert threshold (0-1)')"
-							type="number"
-							min="0"
-							max="1"
-							step="0.05" />
-						<NcCheckboxRadioSwitch
-							v-model="budget.hardStop"
-							type="switch">
-							{{ t('pipelinq', 'Hard stop') }}
-						</NcCheckboxRadioSwitch>
-					</div>
-					<div class="messaging-settings__record-actions">
-						<NcButton
-							variant="primary"
-							:disabled="savingBudgetId === budget.id"
-							@click="saveBudget(budget)">
-							{{
-								savingBudgetId === budget.id
-									? t('pipelinq', 'Saving…')
-									: t('pipelinq', 'Save')
-							}}
-						</NcButton>
-						<NcButton variant="error" @click="deleteBudget(budget)">
-							{{ t('pipelinq', 'Delete') }}
-						</NcButton>
-					</div>
-				</li>
-			</ul>
+							</NcButton>
+							<NcButton
+								variant="tertiary"
+								class="messaging-settings__delete"
+								@click="deleteBudget(budget)">
+								{{ t('pipelinq', 'Delete') }}
+							</NcButton>
+						</td>
+					</tr>
+				</tbody>
+			</table>
 
 			<div v-if="showBudgetForm" class="messaging-settings__form-panel">
 				<h3>{{ t('pipelinq', 'Add budget') }}</h3>
@@ -436,21 +460,28 @@
 					</NcButton>
 				</div>
 			</div>
-		</NcSettingsSection>
 
-		<NcSettingsSection
-			class="cn-settings-section--wide"
-			:name="t('pipelinq', 'Templates')"
-			:description="
-				t(
-					'pipelinq',
-					'Local mirror of provider-side WhatsApp HSM templates. Approval status and sync time come from the provider; templates are synced, not authored here.',
-				)
-			">
-			<div class="messaging-settings__toolbar">
-				<NcButton :disabled="loadingTemplates" @click="fetchTemplates">
-					{{ t('pipelinq', 'Refresh') }}
-				</NcButton>
+			<hr class="messaging-settings__hair">
+			<div class="messaging-settings__head">
+				<div class="messaging-settings__head-text">
+					<h3>{{ t('pipelinq', 'Templates') }}</h3>
+					<p>
+						{{
+							t(
+								'pipelinq',
+								'Local mirror of provider-side WhatsApp HSM templates. Approval status and sync time come from the provider; templates are synced, not authored here.',
+							)
+						}}
+					</p>
+				</div>
+				<span class="messaging-settings__head-actions">
+					<NcButton :disabled="loadingTemplates" @click="fetchTemplates">
+						<template #icon>
+							<Refresh :size="20" />
+						</template>
+						{{ t('pipelinq', 'Refresh') }}
+					</NcButton>
+				</span>
 			</div>
 
 			<NcLoadingIcon v-if="loadingTemplates" :size="28" />
@@ -459,38 +490,36 @@
 				v-else-if="templates.length === 0"
 				:description="t('pipelinq', 'No templates synced yet.')" />
 
-			<ul v-else class="messaging-settings__records">
-				<li
-					v-for="template in templates"
-					:key="template.id"
-					class="messaging-settings__record"
-					data-testid="messaging-template">
-					<div class="messaging-settings__record-head">
-						<h3 class="messaging-settings__record-name">
-							<code>{{ template.externalId }}</code>
-						</h3>
-						<span
-							class="messaging-settings__badge"
-							:class="templateStatusClass(template.status)">
-							{{ templateStatusLabel(template.status) }}
-						</span>
-					</div>
-					<dl class="messaging-settings__facts">
-						<div>
-							<dt>{{ t('pipelinq', 'Provider') }}</dt>
-							<dd>{{ providerDisplayName(template.providerId) }}</dd>
-						</div>
-						<div>
-							<dt>{{ t('pipelinq', 'Language') }}</dt>
-							<dd>{{ template.language }}</dd>
-						</div>
-						<div>
-							<dt>{{ t('pipelinq', 'Last synced') }}</dt>
-							<dd>{{ formatDate(template.lastSyncedAt) }}</dd>
-						</div>
-					</dl>
-				</li>
-			</ul>
+			<table
+				v-else
+				class="messaging-settings__table"
+				data-testid="messaging-templates">
+				<thead>
+					<tr>
+						<th scope="col">{{ t('pipelinq', 'Provider') }}</th>
+						<th scope="col">{{ t('pipelinq', 'External ID') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Language') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Last synced') }}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="template in templates"
+						:key="template.id"
+						data-testid="messaging-template">
+						<td>{{ providerDisplayName(template.providerId) }}</td>
+						<td><code>{{ template.externalId }}</code></td>
+						<td>{{ template.language }}</td>
+						<td>
+							<span class="cn-status-badge" :class="templateStatusClass(template.status)">
+								{{ templateStatusLabel(template.status) }}
+							</span>
+						</td>
+						<td class="messaging-settings__muted">{{ formatDate(template.lastSyncedAt) }}</td>
+					</tr>
+				</tbody>
+			</table>
 		</NcSettingsSection>
 		<ConfirmDialog
 			v-if="pendingDeleteProvider"
@@ -523,6 +552,8 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import ServiceAccountPicker from '../../components/admin/ServiceAccountPicker.vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -543,10 +574,10 @@ const VENDOR_LABELS = {
 }
 
 const TEMPLATE_STATUS_CLASSES = {
-	approved: 'messaging-settings__badge--on',
-	pending: 'messaging-settings__badge--sandbox',
-	rejected: 'messaging-settings__badge--error',
-	disabled: 'messaging-settings__badge--off',
+	approved: 'cn-status-badge--success',
+	pending: 'cn-status-badge--warning',
+	rejected: 'cn-status-badge--error',
+	disabled: 'cn-status-badge--default',
 }
 
 /**
@@ -593,6 +624,8 @@ export default {
 		NcSettingsSection,
 		NcTextField,
 		ContentCopy,
+		Plus,
+		Refresh,
 		ServiceAccountPicker,
 	},
 
@@ -737,7 +770,7 @@ export default {
 		 */
 		templateStatusClass(status) {
 			return (
-				TEMPLATE_STATUS_CLASSES[status] || 'messaging-settings__badge--off'
+				TEMPLATE_STATUS_CLASSES[status] || 'cn-status-badge--default'
 			)
 		},
 
@@ -775,6 +808,52 @@ export default {
 				},
 			)
 			return window.location.origin + path
+		},
+
+		/**
+		 * The webhook URL as the table shows it: its last two path parts after
+		 * an ellipsis. The full URL is the cell's title and what Copy copies.
+		 *
+		 * @param {object} provider The provider.
+		 * @return {string} The shortened URL.
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
+		shortWebhookUrl(provider) {
+			const parts = this.webhookUrl(provider).split('/').filter(Boolean)
+			return '…/' + parts.slice(-2).join('/')
+		},
+
+		/**
+		 * The words for a connection test's result.
+		 *
+		 * @param {object} result The test result.
+		 * @return {string} Reachable, reachable in mock mode, or degraded with its cause.
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
+		testResultLabel(result) {
+			if (result.reachable) {
+				return result.mock
+					? t('pipelinq', 'Reachable (mock mode)')
+					: t('pipelinq', 'Reachable')
+			}
+			return t('pipelinq', 'Degraded: {cause}', {
+				cause: result.cause || t('pipelinq', 'unknown'),
+			})
+		},
+
+		/**
+		 * How much of a budget's message cap this period used, 0 to 1.
+		 *
+		 * @param {object} budget The send budget.
+		 * @return {number} The share; 0 without a cap.
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
+		budgetUsageShare(budget) {
+			const cap = Number(budget.maxMessages) || 0
+			if (cap <= 0) {
+				return 0
+			}
+			return Math.min(1, (Number(budget.currentPeriodMessages) || 0) / cap)
 		},
 
 		/**
@@ -1060,128 +1139,138 @@ export default {
 	gap: 12px;
 }
 
-.messaging-settings__toolbar {
-	display: flex;
-	gap: 8px;
-	margin-bottom: 12px;
-}
-
-.messaging-settings__records {
-	display: flex;
-	flex-direction: column;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.messaging-settings__record {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	padding: 14px 0;
+.messaging-settings__hair {
+	width: 100%;
+	margin: 6px 0;
+	border: 0;
 	border-top: 1px solid var(--color-border);
 }
 
-.messaging-settings__record:last-child {
-	border-bottom: 1px solid var(--color-border);
-}
-
-.messaging-settings__record-head {
+/* A sub-head inside the card: a 17px title and its line, the actions at the
+   end of the row, as the board draws Providers, Send budgets and Templates. */
+.messaging-settings__head {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 4px 8px;
+	justify-content: space-between;
+	gap: 12px 16px;
 }
 
-.messaging-settings__record-name {
+.messaging-settings__head-text {
+	flex: 1 1 420px;
+	min-width: 0;
+}
+
+.messaging-settings__head-text h3 {
 	margin: 0;
-	font-size: 15px;
-	font-weight: 600;
-	overflow-wrap: anywhere;
+	font-size: 17px;
+	font-weight: 700;
 }
 
-.messaging-settings__facts {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-	gap: 8px 16px;
-	margin: 0;
-}
-
-.messaging-settings__facts dt,
-.messaging-settings__facts dd {
-	display: block;
-	width: auto;
-	margin: 0;
-	padding: 0;
-	text-align: start;
-}
-
-.messaging-settings__facts dt {
-	font-size: 12px;
+.messaging-settings__head-text p {
+	margin: 4px 0 0;
 	color: var(--color-text-maxcontrast);
 }
 
-.messaging-settings__facts dd {
-	overflow-wrap: break-word;
-}
-
-.messaging-settings__fact--wide {
-	grid-column: 1 / -1;
-}
-
-.messaging-settings__fields {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-	align-items: end;
-	gap: 8px 16px;
-}
-
-.messaging-settings__record-actions {
-	display: flex;
+.messaging-settings__head-actions {
+	display: inline-flex;
 	flex-wrap: wrap;
-	align-items: center;
 	gap: 8px;
 }
 
-.messaging-settings__badge {
-	display: inline-block;
-	padding: 2px 8px;
-	border-radius: var(--border-radius-pill, 12px);
-	font-size: 11px;
-	font-weight: 600;
-	margin-inline-end: 4px;
+.messaging-settings__table {
+	width: 100%;
+	border-collapse: collapse;
 }
 
-.messaging-settings__badge--on {
-	background: var(--color-success);
-	color: var(--color-primary-element-text);
+.messaging-settings__nowrap {
+	white-space: nowrap;
 }
 
-.messaging-settings__badge--off {
-	background: var(--color-background-dark);
+.messaging-settings__muted {
 	color: var(--color-text-maxcontrast);
 }
 
-.messaging-settings__badge--sandbox {
-	background: var(--color-warning);
-	color: var(--color-primary-element-text);
-}
-
-.messaging-settings__badge--error {
-	background: var(--color-error);
-	color: var(--color-primary-element-text);
-}
-
-.messaging-settings__facts dd.messaging-settings__webhook-cell {
+.messaging-settings__status {
 	display: flex;
-	align-items: center;
+	flex-direction: column;
+	align-items: flex-start;
 	gap: 4px;
 }
 
+.messaging-settings__test-result {
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.messaging-settings__test-result--ok {
+	color: var(--color-success-text);
+}
+
+.messaging-settings__test-result--error {
+	color: var(--color-error-text);
+}
+
 .messaging-settings__webhook-url {
-	min-width: 0;
-	overflow-wrap: anywhere;
-	font-size: 11px;
+	white-space: nowrap;
+	font-size: 12px;
+}
+
+.messaging-settings__row-actions {
+	white-space: nowrap;
+}
+
+.messaging-settings__row-actions > * {
+	display: inline-flex;
+	vertical-align: middle;
+}
+
+.messaging-settings__row-actions > * + * {
+	margin-inline-start: 4px;
+}
+
+.messaging-settings__delete {
+	color: var(--color-error-text) !important;
+}
+
+.messaging-settings__period {
+	min-width: 130px;
+}
+
+.messaging-settings__cell-input {
+	width: 100px;
+	height: 36px;
+	min-height: 36px;
+	margin: 0;
+}
+
+.messaging-settings__cell-input--short {
+	width: 76px;
+}
+
+.messaging-settings__usage {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 150px;
+}
+
+.messaging-settings__bar {
+	display: block;
+	height: 6px;
+	border-radius: 3px;
+	background: var(--color-background-dark);
+	overflow: hidden;
+}
+
+.messaging-settings__bar-fill {
+	display: block;
+	height: 100%;
+	background: var(--color-success);
+}
+
+.messaging-settings__bar-fill--alert {
+	background: var(--color-warning);
 }
 
 .messaging-settings__hint {

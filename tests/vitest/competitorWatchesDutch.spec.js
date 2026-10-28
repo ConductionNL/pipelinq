@@ -62,6 +62,16 @@ function stub(name, tag = 'div') {
 	}
 }
 
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnStatusBadge: {
+		name: 'CnStatusBadge',
+		props: ['label', 'variant'],
+		render() {
+			return h('span', { 'data-stub': 'CnStatusBadge', 'data-variant': this.variant }, this.label)
+		},
+	},
+}))
+
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: stub('NcButton', 'button'),
 	NcEmptyContent: stub('NcEmptyContent'),
@@ -202,5 +212,38 @@ describe('the competitors page in Dutch', () => {
 		expect(meta[2]).not.toContain('T09:00')
 		expect(meta[2]).toMatch(/2026/)
 		expect(wrapper.get('.competitors__relevance').text()).toBe('Geen score')
+	})
+})
+
+describe('the competitors section of the search insight page', () => {
+	it('pills the outcome, names only the kind and sums up what changed in one line', async () => {
+		axiosGet.mockResolvedValue({
+			data: {
+				configured: true,
+				competitors: [{ id: 'c1', name: 'Gemeente Dordrecht' }],
+				watches: [
+					{ id: 'w1', competitorId: 'c1', kind: 'rss', target: 'https://example.org/feed.xml', schedule: 'daily', lastOutcome: 'ok' },
+					{ id: 'w2', competitorId: 'c1', kind: 'sitemap', target: 'https://example.org/s.xml', schedule: 'weekly', lastOutcome: 'unavailable' },
+				],
+				events: [
+					{ id: 'e1', competitorId: 'c1', kind: 'rss', url: 'https://example.org/a', title: 'Gratis compostbak voor inwoners', relevanceScore: 82 },
+				],
+			},
+		})
+		const wrapper = mount(CompetitorWatches, {
+			props: { embedded: true },
+			global: { mocks: { t: translate } },
+		})
+		await flushPromises()
+
+		const badges = wrapper.findAll('[data-stub="CnStatusBadge"]')
+		expect(badges.map((b) => b.attributes('data-variant'))).toEqual(['success', 'error'])
+		expect(badges[0].text()).toBe('Gelezen')
+		const firstRow = wrapper.findAll('tbody tr')[0].findAll('td').map((td) => td.text())
+		expect(firstRow[1]).toBe('Feed')
+		expect(wrapper.find('h3').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="competitors-events"]').exists()).toBe(false)
+		const changed = wrapper.get('[data-testid="competitors-changed"]').findAll('span').map((span) => span.text())
+		expect(changed).toEqual([NL['What changed'], 'Gemeente Dordrecht publiceerde "Gratis compostbak voor inwoners", relevantie 82'])
 	})
 })

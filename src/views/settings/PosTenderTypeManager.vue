@@ -23,9 +23,9 @@
 		">
 		<!-- Adding one is the section's title-row button, as the board draws it. -->
 		<template #actions>
-			<NcButton variant="secondary" @click="$refs.list.createNew()">
+			<NcButton class="cn-button--tonal" variant="secondary" @click="$refs.list.createNew()">
 				<template #icon>
-					<Plus :size="20" />
+					<Plus :size="16" />
 				</template>
 				{{ t('pipelinq', 'New tender type') }}
 			</NcButton>

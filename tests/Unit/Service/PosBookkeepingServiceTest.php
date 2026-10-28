@@ -587,6 +587,45 @@ class PosBookkeepingServiceTest extends TestCase {
 	}//end testMaxAttemptsBecomesFailedWithAlert()
 
 	/**
+	 * A failed dispatch stores why and when, so the Z-report can say
+	 * "Failed: shillinq did not respond at 23:00"; a later raise clears it.
+	 *
+	 * @return void
+	 */
+	public function testFailedDispatchStoresTheReasonAndARaiseClearsIt(): void {
+		$this->asAdmin();
+		$this->webhooks->fail = true;
+		$this->seedZReport();
+
+		$failed = $this->service->raiseJournalEntry(zReportId: 'zr-1', userId: 'boss');
+
+		$this->assertSame(expected: 'unreachable', actual: $failed['bookkeepingFailureReason']);
+		$this->assertNotEmpty(actual: $failed['bookkeepingFailedAt']);
+
+		$this->webhooks->fail = false;
+		$raised = $this->service->raiseJournalEntry(zReportId: 'zr-1', userId: 'boss');
+
+		$this->assertSame(expected: 'raised', actual: $raised['bookkeepingStatus']);
+		$this->assertNull(actual: $raised['bookkeepingFailureReason']);
+		$this->assertNull(actual: $raised['bookkeepingFailedAt']);
+	}//end testFailedDispatchStoresTheReasonAndARaiseClearsIt()
+
+	/**
+	 * An unconfigured integration stores that as the reason.
+	 *
+	 * @return void
+	 */
+	public function testUnconfiguredIntegrationStoresTheReason(): void {
+		$this->asAdmin();
+		$this->appConfigStore['shillinq_journal_webhook_url'] = '';
+		$this->seedZReport();
+
+		$result = $this->service->raiseJournalEntry(zReportId: 'zr-1', userId: 'boss');
+
+		$this->assertSame(expected: 'not_configured', actual: $result['bookkeepingFailureReason']);
+	}//end testUnconfiguredIntegrationStoresTheReason()
+
+	/**
 	 * shouldDispatch only enables on a valid HTTPS webhook URL.
 	 *
 	 * @return void

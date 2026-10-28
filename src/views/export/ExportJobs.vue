@@ -133,6 +133,7 @@ export default {
 				},
 				{
 					key: 'nextRunAt',
+					hidden: true,
 					label: t('pipelinq', 'Next run'),
 					formatter: 'exportMoment',
 					emptyValue: t('pipelinq', 'Not scheduled'),

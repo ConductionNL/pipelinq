@@ -29,7 +29,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 			return h('div', { class: 'cn-dialog', 'data-eyebrow': this.eyebrow, 'data-subtitle': this.subtitle }, [this.name, this.$slots.default?.(), this.$slots.actions?.()])
 		},
 	},
-	CnNoteCard: { props: ['text'], render() { return h('p', this.text) } },
+	CnNoteCard: { props: ['text', 'type'], render() { return h('p', { class: 'cn-note', 'data-type': this.type }, this.text) } },
 	CnResourceSelect: {
 		props: ['modelValue', 'register', 'schema'],
 		emits: ['update:modelValue'],
@@ -90,7 +90,7 @@ describe('ConvertToCaseDialog', () => {
 		await w.find('select').trigger('change')
 		await w.find('input[type="checkbox"]').trigger('change')
 		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
-		expect(w.emitted('confirm')[0][0]).toEqual({ caseType: 'b6c1f5a2-0d3e-4a7b-9c8d-2e1f0a9b8c7d', keepOpen: true, informCustomer: false })
+		expect(w.emitted('confirm')[0][0]).toEqual({ caseType: 'b6c1f5a2-0d3e-4a7b-9c8d-2e1f0a9b8c7d', keepOpen: false, informCustomer: true })
 	})
 
 	// Board PqTicketOmzetten: "Klant informeren in Mijn Zuiddrecht / Sanne ziet het
@@ -101,7 +101,34 @@ describe('ConvertToCaseDialog', () => {
 		expect(w.text()).toContain('Sanne sees the case number and who handles the case.')
 		await w.findAll('input[type="checkbox"]').at(-1).trigger('change')
 		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
-		expect(w.emitted('confirm')[0][0].informCustomer).toBe(true)
+		expect(w.emitted('confirm')[0][0].informCustomer).toBe(false)
+	})
+
+	// Board PqTicketOmzetten (Ruben, 28 Oct): both options start ticked; the
+	// handler unticks what does not apply.
+	it('ticks keeping the ticket open and informing the customer by default', async () => {
+		const w = mount(Dialog, { props: { ticket }, global })
+		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
+		expect(w.emitted('confirm')[0][0]).toMatchObject({ keepOpen: true, informCustomer: true })
+	})
+
+	it('says dossiq is available in a success note, as the board', () => {
+		const w = mount(Dialog, { props: { ticket }, global })
+		expect(w.find('.cn-note').attributes('data-type')).toBe('success')
+	})
+
+	it('sets what goes with the case in a tinted block, each label over its value, the requester with the address', () => {
+		const w = mount(Dialog, { props: { ticket, requester: 'Sanne de Vries', requesterAddress: 'Lindelaan 14' }, global })
+		const block = w.find('.convert-to-case__carried')
+		expect(block.classes()).toContain('convert-to-case__carried--block')
+		expect(block.find('.convert-to-case__lock').exists()).toBe(true)
+		expect(block.findAll('.convert-to-case__fact').length).toBeGreaterThanOrEqual(2)
+		expect(block.text()).toContain('Sanne de Vries, Lindelaan 14')
+	})
+
+	it('puts each hint inside its checkbox row', () => {
+		const w = mount(Dialog, { props: { ticket, requester: 'Sanne de Vries' }, global })
+		expect(w.findAll('.convert-to-case__option .convert-to-case__hint')).toHaveLength(2)
 	})
 
 	it('emits confirm only from its confirm button', async () => {
@@ -126,6 +153,17 @@ describe('RequestConversionSection', () => {
 		expect(w.find('[data-testid="convert-to-case-dialog"]').exists() || w.find('.cn-dialog').exists()).toBe(true)
 		await w.find('[data-testid="convert-to-case-confirm"]').trigger('click')
 		await flushPromises()
-		expect(http.post).toHaveBeenCalledWith('/apps/pipelinq/api/handoff/request/t1/convert-to-case', { keepOpen: false, informCustomer: false })
+		expect(http.post).toHaveBeenCalledWith('/apps/pipelinq/api/handoff/request/t1/convert-to-case', { keepOpen: true, informCustomer: true })
+	})
+
+	it('hands the dialog the street line of the customer address', async () => {
+		http.get.mockResolvedValue({ data: { available: true, status: 'in_progress', canConvert: true, caseReference: '' } })
+		store.fetchObject.mockImplementation((type) => Promise.resolve(type === 'ticket' ? ticket : { name: 'Sanne de Vries', address: 'Lindelaan 14, 1234 AB Zuiddrecht' }))
+		const w = mount(Section, { props: { requestId: 't1' }, global })
+		await flushPromises()
+		await w.find('button').trigger('click')
+		await flushPromises()
+		expect(w.find('.convert-to-case__carried').text()).toContain('Sanne de Vries, Lindelaan 14')
+		expect(w.find('.convert-to-case__carried').text()).not.toContain('1234 AB')
 	})
 })

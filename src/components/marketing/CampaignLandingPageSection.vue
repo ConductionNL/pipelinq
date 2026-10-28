@@ -91,7 +91,7 @@
 		</p>
 
 		<NcButton
-			class="campaign-landing__report"
+			class="campaign-landing__report cn-button--tonal"
 			variant="secondary"
 			:href="reportHref">
 			<template #icon>

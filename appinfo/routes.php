@@ -280,6 +280,7 @@ return [
         // receiptTemplate / receiptPrintLog CRUD is handled by OpenRegister's generic
         // object API; these are the render/email/thermal-print actions on a transaction.
         ['name' => 'posReceipt#preview', 'url' => '/api/pos-transactions/{id}/receipt/preview', 'verb' => 'GET'],
+        ['name' => 'posReceipt#log',     'url' => '/api/pos-transactions/{id}/receipt/log',     'verb' => 'GET'],
         ['name' => 'posReceipt#email',   'url' => '/api/pos-transactions/{id}/receipt/email',   'verb' => 'POST'],
         ['name' => 'posReceipt#print',   'url' => '/api/pos-transactions/{id}/receipt/print',   'verb' => 'POST'],
 
@@ -298,6 +299,8 @@ return [
         ['name' => 'cashShift#count',   'url' => '/api/pos-shifts/{id}/count',        'verb' => 'POST'],
         ['name' => 'cashShift#approve', 'url' => '/api/pos-shifts/{id}/diff/approve', 'verb' => 'POST'],
         ['name' => 'cashShift#reject',  'url' => '/api/pos-shifts/{id}/diff/reject',  'verb' => 'POST'],
+        ['name' => 'cashShift#summary', 'url' => '/api/pos-shifts/summary/{measure}', 'verb' => 'GET'],
+        ['name' => 'cashShift#shiftSummary', 'url' => '/api/pos-shifts/{id}/summary', 'verb' => 'GET'],
 
         // POS staff + role permissions (pos-staff-pin-permissions). Static auth
         // route precedes the {id} wildcard routes for the same resource.
@@ -435,6 +438,7 @@ return [
         ['name' => 'portalAdmin#getConfig',    'url' => '/portal/api/admin/tenant-config', 'verb' => 'GET'],
         ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
+        ['name' => 'portalAdmin#tenants',      'url' => '/portal/api/admin/tenants',       'verb' => 'GET'],
         ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
         ['name' => 'portalAdmin#getServiceAccount',  'url' => '/portal/api/admin/service-account', 'verb' => 'GET'],
         ['name' => 'portalAdmin#saveServiceAccount', 'url' => '/portal/api/admin/service-account', 'verb' => 'PUT'],
@@ -682,6 +686,7 @@ return [
         ['name' => 'socialAccount#sync',    'url' => '/api/social-accounts/{id}/sync',    'verb' => 'POST'],
         ['name' => 'socialAccount#show',    'url' => '/api/social-accounts/{id}',         'verb' => 'GET'],
 
+        ['name' => 'socialPost#networkPerformance', 'url' => '/api/social-performance/networks', 'verb' => 'GET'],
         ['name' => 'socialPost#performance',  'url' => '/api/social-performance',              'verb' => 'GET'],
         ['name' => 'socialPost#index',        'url' => '/api/social-posts',                    'verb' => 'GET'],
         ['name' => 'socialPost#create',       'url' => '/api/social-posts',                    'verb' => 'POST'],
