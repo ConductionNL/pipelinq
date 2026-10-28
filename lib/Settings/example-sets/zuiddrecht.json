@@ -66,7 +66,10 @@
 				"notes": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan.",
 				"masterEntityRef": "0f5e0000-0000-4000-8000-000000000012",
 				"phone": "06 12 34 56 78",
-				"description": "Aanvrager van de vergunning voor het straatfeest, Parkstraat"
+				"description": "Aanvrager van de vergunning voor het straatfeest, Parkstraat",
+				"identityCheck": "Geboortedatum en adres gevraagd",
+				"identityVerifiedVia": "BRP",
+				"identityVerifiedAt": "{{datetime:0 10:24}}"
 			}
 		},
 		{
