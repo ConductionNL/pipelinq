@@ -1,0 +1,9 @@
+{
+	"$comment": "The till's receipt names the seller as the boards draw it (PqKassabon, PqKassabonnen, PqKassaAfrekenen): Gemeente Zuiddrecht.",
+	"appConfig": [
+		{
+			"key": "receipt_company_name",
+			"value": "Gemeente Zuiddrecht"
+		}
+	]
+}
