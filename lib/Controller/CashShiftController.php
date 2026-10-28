@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\CashShiftService;
+use OCA\Pipelinq\Service\CashShiftSummaryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -59,10 +60,18 @@ use Psr\Log\LoggerInterface;
  */
 class CashShiftController extends Controller {
 	/**
+	 * The measures the shifts list can ask for per shift.
+	 *
+	 * @var array<int, string>
+	 */
+	private const SUMMARY_MEASURES = ['dropCount', 'dropTotal', 'difference', 'outcome'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
 	 * @param CashShiftService $service The cash-shift service.
+	 * @param CashShiftSummaryService $summaries The cash-shift summary reader.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
@@ -70,6 +79,7 @@ class CashShiftController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private CashShiftService $service,
+		private CashShiftSummaryService $summaries,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
@@ -236,6 +246,70 @@ class CashShiftController extends Controller {
 			label: 'reject'
 		);
 	}//end reject()
+
+	/**
+	 * One measure of the shifts named by `keys`, as a list column's endpoint
+	 * aggregate reads it: `{ available, values: { shiftId: value } }`.
+	 * Measures: dropCount, dropTotal, difference, outcome.
+	 *
+	 * @param string $measure The measure.
+	 *
+	 * @return JSONResponse The values per shift.
+	 *
+	 * @spec openspec/changes/pos-shift-summary/specs/pos-cash-management/spec.md#requirement-a-shift-summary-reads-its-drops-and-difference
+	 */
+	#[NoAdminRequired]
+	public function summary(string $measure): JSONResponse {
+		$uid = $this->requireUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		if (in_array($measure, self::SUMMARY_MEASURES, true) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Unknown measure')], Http::STATUS_UNPROCESSABLE_ENTITY);
+		}
+
+		$keys = $this->request->getParam('keys', []);
+		if (is_array($keys) === false) {
+			$keys = [];
+		}
+
+		$keys = array_values(array_filter($keys, 'is_string'));
+
+		return $this->run(
+			action: fn (): array => [
+				'available' => true,
+				'values' => array_map(
+					fn (array $summary): mixed => $summary[$measure] ?? null,
+					$this->summaries->summarise(shiftIds: $keys)
+				),
+			],
+			label: 'summary'
+		);
+	}//end summary()
+
+	/**
+	 * The summary of one shift for its page: drops, difference, outcome, the
+	 * sales booked in it and the Z report of its till on its day.
+	 *
+	 * @param string $id The shift UUID.
+	 *
+	 * @return JSONResponse The summary.
+	 *
+	 * @spec openspec/changes/pos-shift-summary/specs/pos-cash-management/spec.md#requirement-a-shift-page-names-its-sales-and-z-report
+	 */
+	#[NoAdminRequired]
+	public function shiftSummary(string $id): JSONResponse {
+		$uid = $this->requireUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		return $this->run(
+			action: fn (): array => $this->summaries->shiftSummary(shiftId: $id),
+			label: 'shiftSummary'
+		);
+	}//end shiftSummary()
 
 	/**
 	 * The difference an approve or reject acts on: the one named in the

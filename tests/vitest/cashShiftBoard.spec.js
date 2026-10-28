@@ -56,10 +56,11 @@ describe('cash shift page', () => {
 	it('names the shift fields as the board does', () => {
 		const data = widget('shift-data').content
 		expect(data.columns).toBe(3)
-		expect(data.include).toEqual(['drawer', 'operator', 'floatAt', 'closedAt', 'status'])
-		expect(nl[data.overrides.drawer.label]).toBe('Kassa')
-		expect(nl[data.overrides.operator.label]).toBe('Kassamedewerker')
-		expect(nl[data.overrides.status.enumLabels.closed]).toBe('Geteld')
+		expect(data.fields.filter((f) => f.from === 'object').map((f) => f.path)).toEqual(['drawer', 'operator', 'floatAt', 'closedAt', 'status'])
+		const field = (key) => data.fields.find((f) => f.key === key)
+		expect(nl[field('drawer').label]).toBe('Kassa')
+		expect(nl[field('operator').label]).toBe('Kassamedewerker')
+		expect(nl[field('status').map.closed]).toBe('Geteld')
 	})
 
 	it('lists the drops as Afstortingen with money and times', () => {
@@ -78,10 +79,10 @@ describe('cash shift page', () => {
 		const opening = widget('shift-opening')
 		expect(nl[opening.title]).toBe('Beginsaldo')
 		expect(opening.content.fields[0]).toMatchObject({ as: 'title', path: 'floatAmount', format: 'currency' })
-		expect(opening.content.fields[1].countFrom.schema).toBe('cashDrop')
+		expect(opening.content.endpointSource.url).toBe('/apps/pipelinq/api/pos-shifts/@objectId/summary')
 		const related = widget('shift-related')
-		expect(related.type).toBe('facts')
-		expect(related.content.fields[0].countFrom).toEqual({ register: 'pipelinq', schema: 'posTransaction', filter: { shift: '@objectId' } })
+		expect(related.type).toBe('related')
+		expect(related.content.layout).toBe('links')
 		expect(widget('shift-side-history').type).toBe('audit-trail')
 	})
 })

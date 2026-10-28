@@ -7069,45 +7069,66 @@
 					},
 					{
 						"id": "shift-data",
-						"type": "data",
+						"type": "facts",
 						"title": "Shift",
-						"icon": "FileDocument",
+						"_note": "The shift fields read the shift itself (from: object); the margin comes from the shift summary (its newest cash difference).",
 						"content": {
-							"title": "Shift",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/pos-shifts/@objectId/summary"
+							},
 							"columns": 3,
-							"hideEmpty": true,
-							"include": [
-								"drawer",
-								"operator",
-								"floatAt",
-								"closedAt",
-								"status"
-							],
-							"overrides": {
-								"drawer": {
+							"fields": [
+								{
+									"key": "drawer",
+									"from": "object",
+									"path": "drawer",
 									"label": "Till"
 								},
-								"operator": {
+								{
+									"key": "operator",
+									"from": "object",
+									"path": "operator",
 									"label": "Cashier",
-									"formatter": "userDisplayName"
+									"format": "user"
 								},
-								"floatAt": {
+								{
+									"key": "opened",
+									"from": "object",
+									"path": "floatAt",
 									"label": "Opened",
-									"formatter": "shortDateTime"
+									"format": "longdatetime"
 								},
-								"closedAt": {
+								{
+									"key": "closed",
+									"from": "object",
+									"path": "closedAt",
 									"label": "Closed",
-									"formatter": "shortDateTime"
+									"format": "longdatetime"
 								},
-								"status": {
-									"editable": false,
-									"enumLabels": {
+								{
+									"key": "status",
+									"from": "object",
+									"path": "status",
+									"label": "Status",
+									"map": {
 										"open": "Open",
 										"closed": "Counted",
 										"reconciled": "Reconciled"
+									},
+									"pill": {
+										"variantMap": {
+											"open": "info",
+											"closed": "warning",
+											"reconciled": "success"
+										}
 									}
+								},
+								{
+									"key": "margin",
+									"label": "Margin",
+									"template": "{tolerancePercentage}%"
 								}
-							}
+							]
 						}
 					},
 					{
@@ -7154,25 +7175,41 @@
 								{
 									"path": "diffAmount",
 									"label": "Difference",
-									"format": "currency"
-								},
-								{
-									"path": "diffPercentage",
-									"label": "Percentage",
-									"format": "number",
-									"suffix": "%"
-								},
-								{
-									"as": "pill",
-									"key": "tolerance",
-									"path": "withinTolerance",
-									"map": {
-										"true": "Within tolerance",
-										"false": "Outside tolerance"
-									},
-									"variantMap": {
-										"true": "success",
-										"false": "warning"
+									"format": "currency",
+									"tone": [
+										{
+											"when": {
+												"field": "diffAmount",
+												"op": "lt",
+												"value": 0
+											},
+											"variant": "error"
+										}
+									],
+									"note": {
+										"separator": ", ",
+										"parts": [
+											{
+												"separator": "",
+												"parts": [
+													{
+														"path": "diffPercentage",
+														"format": "number",
+														"decimals": 1
+													},
+													{
+														"text": "%"
+													}
+												]
+											},
+											{
+												"path": "withinTolerance",
+												"map": {
+													"true": "within the margin",
+													"false": "outside the margin"
+												}
+											}
+										]
 									}
 								},
 								{
@@ -7190,7 +7227,7 @@
 									"id": "diff-approve",
 									"label": "Approve",
 									"type": "api-call",
-									"variant": "primary",
+									"variant": "secondary",
 									"adminOnly": true,
 									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
 									"payload": {
@@ -7200,33 +7237,56 @@
 									"visibleWhen": {
 										"field": "status",
 										"value": "pending"
-									}
+									},
+									"icon": "Check"
 								},
 								{
 									"id": "diff-reject",
 									"label": "Reject",
-									"type": "open-form",
-									"variant": "error",
+									"type": "api-call",
+									"variant": "secondary",
 									"adminOnly": true,
-									"endpoint": {
-										"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/reject?diffId=@source.id",
-										"method": "POST"
-									},
-									"formProperties": {
-										"reason": {
-											"type": "string",
-											"title": "Rejection reason",
-											"description": "This rejects the cash difference and reopens the shift for a recount."
-										}
-									},
 									"successMessage": "Cash difference rejected. The shift is open for a recount.",
 									"visibleWhen": {
 										"field": "status",
 										"value": "pending"
+									},
+									"icon": "Close",
+									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/reject",
+									"payload": {
+										"diffId": "@source.id",
+										"reason": "@input.reason"
 									}
 								}
 							],
-							"emptyText": "Not counted yet. The difference appears once the shift is closed and counted."
+							"emptyText": "Not counted yet. The difference appears once the shift is closed and counted.",
+							"layout": "tiles",
+							"tileStyle": "figures",
+							"notice": {
+								"text": "Outside the margin. A manager approves the difference or rejects it with a reason.",
+								"variant": "error",
+								"visibleWhen": {
+									"all": [
+										{
+											"field": "withinTolerance",
+											"value": false
+										},
+										{
+											"field": "status",
+											"value": "pending"
+										}
+									]
+								}
+							},
+							"input": {
+								"key": "reason",
+								"label": "Reason for rejection",
+								"placeholder": "Needed if you reject",
+								"visibleWhen": {
+									"field": "status",
+									"value": "pending"
+								}
+							}
 						}
 					},
 					{
@@ -7287,6 +7347,9 @@
 						"title": "Opening float",
 						"_note": "The opening float with the drops taken out of the drawer during the shift.",
 						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/pos-shifts/@objectId/summary"
+							},
 							"fields": [
 								{
 									"as": "title",
@@ -7295,43 +7358,57 @@
 								},
 								{
 									"as": "line",
-									"countFrom": {
-										"register": "pipelinq",
-										"schema": "cashDrop",
-										"filter": {
-											"shift": "@objectId"
-										}
+									"when": {
+										"field": "dropCount",
+										"value": 1
 									},
-									"suffix": " drops"
+									"template": "{dropCount} drop, {dropTotal:currency} out of the drawer"
+								},
+								{
+									"as": "line",
+									"when": {
+										"field": "dropCount",
+										"op": "neq",
+										"value": 1
+									},
+									"template": "{dropCount} drops, {dropTotal:currency} out of the drawer"
 								}
 							]
 						}
 					},
 					{
 						"id": "shift-related",
-						"type": "facts",
+						"type": "related",
 						"title": "Related",
-						"_note": "The sales booked in this shift (posTransaction.shift), with the transactions list as the way in.",
+						"_note": "The sales booked in the shift and the Z report of its till on its day as plain links (shift summary); Show all opens every relation.",
 						"content": {
-							"fields": [
+							"layout": "links",
+							"showTotalCount": false,
+							"extraSources": [
 								{
-									"as": "line",
-									"countFrom": {
-										"register": "pipelinq",
-										"schema": "posTransaction",
-										"filter": {
-											"shift": "@objectId"
+									"key": "sales",
+									"label": "Sales",
+									"endpoint": "/apps/pipelinq/api/pos-shifts/@objectId/summary",
+									"path": "sales",
+									"itemLabel": "{count} transactions in this shift",
+									"rowRoute": {
+										"name": "PosTransactions"
+									}
+								},
+								{
+									"key": "zreports",
+									"label": "Z reports",
+									"endpoint": "/apps/pipelinq/api/pos-shifts/@objectId/summary",
+									"path": "zReports",
+									"itemLabel": "Z report {reportDate|date}, {terminalId}",
+									"rowRoute": {
+										"name": "ZReportDetail",
+										"params": {
+											"id": "{id}"
 										}
-									},
-									"suffix": " transactions in this shift"
+									}
 								}
-							],
-							"link": {
-								"label": "Transactions",
-								"route": {
-									"name": "PosTransactions"
-								}
-							}
+							]
 						}
 					},
 					{
@@ -8418,6 +8495,15 @@
 										"confirmed": "Confirmed",
 										"settled": "Settled",
 										"refunded": "Refunded"
+									},
+									"pill": {
+										"variantMap": {
+											"draft": "default",
+											"parked": "warning",
+											"confirmed": "info",
+											"settled": "success",
+											"refunded": "default"
+										}
 									}
 								},
 								"cashier": {
@@ -8619,7 +8705,7 @@
 									"label": "Reverse",
 									"type": "open-form",
 									"adminOnly": true,
-									"variant": "error",
+									"variant": "error-outline",
 									"endpoint": {
 										"url": "/apps/pipelinq/api/pos-payments/@source.id/refund",
 										"method": "POST"
@@ -8702,22 +8788,54 @@
 						"icon": "ReceiptText",
 						"_note": "The latest print of this receipt from the print log, and the receipt buttons.",
 						"content": {
-							"source": {
-								"register": "pipelinq",
-								"schema": "receiptPrintLog",
-								"filter": {
-									"transaction": "@objectId",
-									"action": "print"
-								},
-								"sort": {
-									"field": "_created",
-									"dir": "desc"
-								}
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/pos-transactions/@objectId/receipt/log",
+								"responsePath": "log"
 							},
 							"fields": [
 								{
+									"key": "printed",
 									"label": "Printed",
-									"template": "{@self.created:date} on {printerDevice}"
+									"template": "{printedAt:longdatetime} on {printerDevice}",
+									"emptyValue": "Not printed yet"
+								},
+								{
+									"key": "emailed",
+									"label": "Emailed",
+									"template": "{emailedAt:longdatetime} to {emailRecipient}",
+									"emptyValue": "Not sent"
+								},
+								{
+									"key": "layout-receipt",
+									"label": "Layout",
+									"when": {
+										"field": "layout",
+										"value": "receipt"
+									},
+									"parts": [
+										{
+											"text": "Receipt"
+										},
+										{
+											"path": "invoiceThreshold",
+											"format": "currency",
+											"label": "an invoice from"
+										}
+									],
+									"separator": "; "
+								},
+								{
+									"key": "layout-invoice",
+									"label": "Layout",
+									"when": {
+										"field": "layout",
+										"value": "invoice"
+									},
+									"parts": [
+										{
+											"text": "Invoice"
+										}
+									]
 								}
 							],
 							"actions": [
@@ -8742,7 +8860,6 @@
 									}
 								}
 							],
-							"emptyText": "Not printed yet",
 							"link": {
 								"label": "Print log",
 								"icon": "History",
@@ -8756,10 +8873,72 @@
 						"title": "Related",
 						"icon": "LinkVariant",
 						"content": {
-							"showFiles": false,
-							"showIntegrations": false,
-							"showAddFooter": false,
-							"showTotalCount": false
+							"layout": "links",
+							"showTotalCount": false,
+							"sectionOrder": [
+								"shift",
+								"refunds",
+								"audit"
+							],
+							"referenceSections": [
+								{
+									"key": "shift",
+									"label": "Shift",
+									"field": "shift",
+									"register": "pipelinq",
+									"schema": "cashShift",
+									"labelTemplate": "Shift {floatAt|date}, {drawer}",
+									"route": {
+										"name": "CashShiftDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								}
+							],
+							"extraSources": [
+								{
+									"key": "refunds",
+									"label": "Refunds",
+									"endpoint": "/apps/openregister/api/objects/pipelinq/posRefund?originalTransaction=@objectId",
+									"path": "results",
+									"itemLabel": "Refund {reference}",
+									"itemMeta": "{status}",
+									"valueLabels": {
+										"status": {
+											"pending": "awaiting approval",
+											"completed": "completed",
+											"rejected": "rejected"
+										}
+									},
+									"rowRoute": {
+										"name": "PosRefundDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								},
+								{
+									"key": "audit",
+									"label": "Till audit",
+									"endpoint": "/apps/openregister/api/objects/pipelinq/kassakoppelingAuditLog?transactionUuid=@objectId",
+									"path": "results",
+									"itemLabel": "Audit entry",
+									"itemMeta": "{action}",
+									"valueLabels": {
+										"action": {
+											"sale": "sale",
+											"refund": "refund"
+										}
+									},
+									"rowRoute": {
+										"name": "KassakoppelingAuditDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								}
+							]
 						}
 					},
 					{

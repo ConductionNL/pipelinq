@@ -280,6 +280,7 @@ return [
         // receiptTemplate / receiptPrintLog CRUD is handled by OpenRegister's generic
         // object API; these are the render/email/thermal-print actions on a transaction.
         ['name' => 'posReceipt#preview', 'url' => '/api/pos-transactions/{id}/receipt/preview', 'verb' => 'GET'],
+        ['name' => 'posReceipt#log',     'url' => '/api/pos-transactions/{id}/receipt/log',     'verb' => 'GET'],
         ['name' => 'posReceipt#email',   'url' => '/api/pos-transactions/{id}/receipt/email',   'verb' => 'POST'],
         ['name' => 'posReceipt#print',   'url' => '/api/pos-transactions/{id}/receipt/print',   'verb' => 'POST'],
 
@@ -298,6 +299,8 @@ return [
         ['name' => 'cashShift#count',   'url' => '/api/pos-shifts/{id}/count',        'verb' => 'POST'],
         ['name' => 'cashShift#approve', 'url' => '/api/pos-shifts/{id}/diff/approve', 'verb' => 'POST'],
         ['name' => 'cashShift#reject',  'url' => '/api/pos-shifts/{id}/diff/reject',  'verb' => 'POST'],
+        ['name' => 'cashShift#summary', 'url' => '/api/pos-shifts/summary/{measure}', 'verb' => 'GET'],
+        ['name' => 'cashShift#shiftSummary', 'url' => '/api/pos-shifts/{id}/summary', 'verb' => 'GET'],
 
         // POS staff + role permissions (pos-staff-pin-permissions). Static auth
         // route precedes the {id} wildcard routes for the same resource.

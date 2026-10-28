@@ -678,7 +678,7 @@ class CashShiftService {
 	 *
 	 * @throws OCSNotFoundException If the shift is not found.
 	 */
-	private function fetchShift(string $id): array {
+	public function fetchShift(string $id): array {
 		return $this->fetchOne(schemaKey: 'cashShift_schema', id: $id, label: 'Shift niet gevonden.');
 	}//end fetchShift()
 
@@ -730,7 +730,7 @@ class CashShiftService {
 	 *
 	 * @return array<int, array<string, mixed>> The linked objects.
 	 */
-	private function fetchByShift(string $schemaKey, string $shiftId): array {
+	public function fetchByShift(string $schemaKey, string $shiftId): array {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
@@ -763,6 +763,28 @@ class CashShiftService {
 
 		return $rows;
 	}//end fetchByShift()
+
+	/**
+	 * Fetch the objects of a schema that match some filters.
+	 *
+	 * @param string $schemaKey The app-config schema key.
+	 * @param array<string, mixed> $filters The filters.
+	 *
+	 * @return array<int, array<string, mixed>> The objects; none when they cannot be read.
+	 */
+	public function fetchWhere(string $schemaKey, array $filters): array {
+		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+		try {
+			$results = $this->getObjectService()->findAll(
+				config: ['filters' => array_merge($filters, ['register' => $register, 'schema' => $schema])]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: failed to fetch cash objects', ['exception' => $e->getMessage(), 'schemaKey' => $schemaKey]);
+			return [];
+		}
+
+		return array_map(fn (mixed $row): array => $this->toArray(object: $row), ($results ?? []));
+	}//end fetchWhere()
 
 	/**
 	 * Persist a shift via the OR ObjectService.
