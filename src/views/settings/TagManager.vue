@@ -35,15 +35,19 @@
 						@keyup.escape="cancelEdit" />
 					<button
 						class="tag-chip__action tag-chip__action--save"
+						type="button"
+						:aria-label="t('pipelinq', 'Save')"
 						:title="t('pipelinq', 'Save')"
 						@click="saveRename(tag.id)">
-						&#10003;
+						<Check :size="16" />
 					</button>
 					<button
 						class="tag-chip__action tag-chip__action--cancel"
+						type="button"
+						:aria-label="t('pipelinq', 'Cancel')"
 						:title="t('pipelinq', 'Cancel')"
 						@click="cancelEdit">
-						&#10005;
+						<Close :size="16" />
 					</button>
 				</template>
 				<template v-else>
@@ -76,15 +80,19 @@
 					@keyup.escape="cancelAdding" />
 				<button
 					class="tag-chip__action tag-chip__action--save"
+					type="button"
+					:aria-label="t('pipelinq', 'Add')"
 					:title="t('pipelinq', 'Add')"
 					@click="saveNew">
-					&#10003;
+					<Check :size="16" />
 				</button>
 				<button
 					class="tag-chip__action tag-chip__action--cancel"
+					type="button"
+					:aria-label="t('pipelinq', 'Cancel')"
 					:title="t('pipelinq', 'Cancel')"
 					@click="cancelAdding">
-					&#10005;
+					<Close :size="16" />
 				</button>
 			</div>
 		</div>
@@ -98,12 +106,14 @@
 <script>
 import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 
 export default {
 	name: 'TagManager',
 	components: {
+		Check,
 		Close,
 		CnSettingsSection,
 		Plus,
@@ -405,20 +415,30 @@ export default {
 	color: var(--color-error-text, var(--color-error));
 }
 
+/* Save and Cancel while a tag is renamed or added: 26px round pills, Save
+   in the success tint, Cancel in grey (PqBeheer). */
 .tag-chip__action {
-	background: none;
-	border: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	min-width: 26px;
+	height: 26px;
+	min-height: 26px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 13px;
 	cursor: pointer;
-	font-size: 14px;
-	line-height: 1;
-	padding: 0 2px;
 }
 
 .tag-chip__action--save {
-	color: var(--color-success);
+	background-color: var(--cn-board-success-tint, var(--color-success-light, #e7f3ea));
+	color: var(--color-success-text, var(--color-success));
 }
 
 .tag-chip__action--cancel {
+	background-color: var(--color-background-dark, #f0f1f3);
 	color: var(--color-text-maxcontrast);
 }
 </style>
