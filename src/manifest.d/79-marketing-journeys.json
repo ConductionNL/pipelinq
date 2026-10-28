@@ -178,10 +178,12 @@
 							],
 							"overrides": {
 								"description": {
-									"order": 0
+									"order": 0,
+									"editable": false
 								},
 								"status": {
 									"order": 1,
+									"editable": false,
 									"enumLabels": {
 										"draft": "Draft",
 										"active": "Active",
@@ -189,16 +191,20 @@
 									}
 								},
 								"audienceSegment": {
-									"order": 2
+									"order": 2,
+									"editable": false
 								},
 								"waitFor": {
-									"order": 3
+									"order": 3,
+									"editable": false
 								},
 								"flowStatus": {
-									"order": 4
+									"order": 4,
+									"editable": false
 								},
 								"flowError": {
-									"order": 5
+									"order": 5,
+									"editable": false
 								}
 							}
 						}
@@ -242,11 +248,27 @@
 					},
 					{
 						"id": "journey-history",
-						"type": "timeline",
+						"type": "audit-trail",
 						"title": "History",
 						"content": {
-							"auditTrail": true,
-							"order": "desc"
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "active",
+									"label": "Activated by {actor}"
+								},
+								{
+									"field": "flowStatus",
+									"to": "compiled",
+									"label": "Flow compiled"
+								}
+							]
 						}
 					},
 					{
@@ -295,12 +317,28 @@
 					},
 					{
 						"id": "journey-side-history",
-						"type": "timeline",
+						"type": "audit-trail",
 						"title": "History",
 						"content": {
-							"auditTrail": true,
-							"order": "desc",
-							"limit": 3
+							"maxDisplay": 3,
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "active",
+									"label": "Activated by {actor}"
+								},
+								{
+									"field": "flowStatus",
+									"to": "compiled",
+									"label": "Flow compiled"
+								}
+							]
 						}
 					},
 					{

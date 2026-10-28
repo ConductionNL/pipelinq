@@ -4452,6 +4452,8 @@ OC.L10N.register(
         "What this campaign is meant to achieve, in one sentence.": "What this campaign is meant to achieve, in one sentence.",
         "What this campaign should achieve, in one sentence": "What this campaign should achieve, in one sentence",
         "What this journey did": "What this journey did",
+        "Activated by {actor}": "Activated by {actor}",
+        "Flow compiled": "Flow compiled",
         "What this journey is for, in the marketer's own words.": "What this journey is for, in the marketer's own words.",
         "What this post says on every network": "What this post says on every network",
         "What this publication cost in euros. Only X charges per post and per read today; every other network records zero.": "What this publication cost in euros. Only X charges per post and per read today; every other network records zero.",
