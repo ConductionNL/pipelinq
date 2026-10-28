@@ -130,8 +130,8 @@ class WeeklyReviewServiceTest extends TestCase {
 
 		$review = $this->service()->compose();
 
-		$this->assertCount(count($review['highlights']), $review['highlightDirections']);
-		$this->assertSame(['down', 'flat', 'up', 'up'], $review['highlightDirections']);
+		$this->assertCount(expectedCount: count(value: $review['highlights']), haystack: $review['highlightDirections']);
+		$this->assertSame(expected: ['down', 'flat', 'up', 'up'], actual: $review['highlightDirections']);
 	}//end testEachHighlightCarriesItsDirectionAgainstTheWeekBefore()
 
 	/**
