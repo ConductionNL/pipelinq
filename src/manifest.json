@@ -3746,6 +3746,7 @@
 			"_note": "Unified ticket workspace (unify-ticket-supertype). One index over the ticket schema replacing the former Requests/Complaints/Contactmomenten pages; a ticketType quickFilter tab strip narrows to each subtype. Type-specific columns (complaintCategory, outcome) are omitted from the shared table — they surface on the detail page.",
 			"config": {
 				"register": "pipelinq",
+				"createModal": "RequestCreateDialog",
 				"schema": "ticket",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_sortNote": "Newest contact first. Without a default the list came in creation order, oldest first, so a new ticket sat on the last page (Woo round 3).",
