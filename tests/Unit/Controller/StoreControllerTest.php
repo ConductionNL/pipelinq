@@ -36,6 +36,7 @@ use OCA\OpenRegister\AppHost\Service\GenericStoreService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\StoreController;
 use OCA\Pipelinq\Service\RegisterResolverService;
+use OCA\Pipelinq\Service\Store\StoreInstallLedger;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -66,6 +67,7 @@ class StoreControllerTest extends TestCase {
 		?IAppConfig $appConfig = null,
 		bool $signedIn = true,
 		string $registerId = '18',
+		?StoreInstallLedger $installLedger = null,
 	): StoreController {
 		$session = $this->createMock(originalClassName: IUserSession::class);
 		$user = null;
@@ -99,8 +101,97 @@ class StoreControllerTest extends TestCase {
 			storeService: ($storeService ?? $this->createMock(originalClassName: GenericStoreService::class)),
 			objectService: ($objectService ?? $this->createMock(originalClassName: ObjectServiceInterface::class)),
 			registerResolver: $resolver,
+			installLedger: ($installLedger ?? $this->createMock(originalClassName: StoreInstallLedger::class)),
 		);
 	}//end controller()
+
+	/**
+	 * Search marks the installed cards and says when the registry last answered.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 */
+	public function testSearchAnnotatesCardsAndReturnsTheLastCheck(): void {
+		$store = $this->createMock(originalClassName: GenericStoreService::class);
+		$store->method('search')->willReturn(['outcome' => 'ok', 'cards' => [['slug' => 'b2b', 'version' => '1.3.0']]]);
+
+		$ledger = $this->createMock(originalClassName: StoreInstallLedger::class);
+		$ledger->expects($this->once())->method('annotate')
+			->willReturn([['slug' => 'b2b', 'version' => '1.3.0', 'installed' => true]]);
+		$ledger->expects($this->once())->method('markChecked');
+		$ledger->method('checkedAt')->willReturn('2026-10-28T06:00:00+01:00');
+
+		$data = $this->controller(storeService: $store, installLedger: $ledger)->search()->getData();
+
+		$this->assertTrue(condition: $data['cards'][0]['installed']);
+		$this->assertSame(expected: '2026-10-28T06:00:00+01:00', actual: $data['checkedAt']);
+	}//end testSearchAnnotatesCardsAndReturnsTheLastCheck()
+
+	/**
+	 * A registry that did not answer is not noted as checked.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 */
+	public function testAnUnansweredSearchIsNotMarkedChecked(): void {
+		$store = $this->createMock(originalClassName: GenericStoreService::class);
+		$store->method('search')->willReturn(['outcome' => 'store_unreachable', 'cards' => []]);
+
+		$ledger = $this->createMock(originalClassName: StoreInstallLedger::class);
+		$ledger->expects($this->never())->method('markChecked');
+
+		$data = $this->controller(storeService: $store, installLedger: $ledger)->search()->getData();
+
+		$this->assertSame(expected: 'store_unreachable', actual: $data['outcome']);
+	}//end testAnUnansweredSearchIsNotMarkedChecked()
+
+	/**
+	 * A successful install is recorded with the item's version.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 */
+	public function testASuccessfulInstallIsRecorded(): void {
+		$store = $this->createMock(originalClassName: GenericStoreService::class);
+		$store->method('resolve')->willReturn([
+			'slug' => 'b2b-sales-pipeline',
+			'version' => '1.3.0',
+			'components' => [['schema' => 'pipeline', 'object' => ['title' => 'B2B']]],
+		]);
+
+		$ledger = $this->createMock(originalClassName: StoreInstallLedger::class);
+		$ledger->expects($this->once())->method('record')->with('b2b-sales-pipeline', '1.3.0');
+
+		$data = $this->controller(storeService: $store, installLedger: $ledger)->install(slug: 'b2b-sales-pipeline')->getData();
+
+		$this->assertTrue(condition: $data['success']);
+	}//end testASuccessfulInstallIsRecorded()
+
+	/**
+	 * An install that wrote nothing is not recorded.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 */
+	public function testARefusedInstallIsNotRecorded(): void {
+		$store = $this->createMock(originalClassName: GenericStoreService::class);
+		$store->method('resolve')->willReturn([
+			'slug' => 'lead-pack',
+			'version' => '1.0.0',
+			'components' => [['schema' => 'lead', 'object' => ['title' => 'A lead']]],
+		]);
+
+		$ledger = $this->createMock(originalClassName: StoreInstallLedger::class);
+		$ledger->expects($this->never())->method('record');
+
+		$data = $this->controller(storeService: $store, installLedger: $ledger)->install(slug: 'lead-pack')->getData();
+
+		$this->assertFalse(condition: $data['success']);
+	}//end testARefusedInstallIsNotRecorded()
 
 	/**
 	 * Call a private method on the controller.

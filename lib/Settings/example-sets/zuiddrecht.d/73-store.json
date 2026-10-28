@@ -1,0 +1,212 @@
+{
+	"$comment": "Board PqStore: pipelinq's store reads this instance's own register (registry_url local, OpenRegister's LocalStoreRegistry) and holds the nine items the board draws. Five are installed, two of them behind the registry's version (Routering voor de servicedesk 2.0.1 against 2.1.0, Asterisk-telefonie 2.6.1 against 3.0.0); store_installed is the ledger the store page reads.",
+	"appConfig": [
+		{
+			"key": "registry_url",
+			"value": "local"
+		},
+		{
+			"key": "registry_register",
+			"value": "pipelinq"
+		},
+		{
+			"key": "store_installed",
+			"value": "{\"b2b-sales-pipeline\":{\"version\":\"1.3.0\",\"installedAt\":\"2026-09-02T10:00:00+02:00\"},\"service-desk-routing\":{\"version\":\"2.0.1\",\"installedAt\":\"2026-09-02T10:05:00+02:00\"},\"residents-pass\":{\"version\":\"1.0.0\",\"installedAt\":\"2026-09-15T14:20:00+02:00\"},\"brevo-bulk-mail\":{\"version\":\"1.4.0\",\"installedAt\":\"2026-09-20T09:10:00+02:00\"},\"asterisk-telephony\":{\"version\":\"2.6.1\",\"installedAt\":\"2026-08-28T11:30:00+02:00\"}}"
+		}
+	],
+	"objects": [
+		{
+			"key": "store-b2b-sales-pipeline",
+			"register": "pipelinq",
+			"schema": "commercial-template",
+			"data": {
+				"slug": "b2b-sales-pipeline",
+				"title": "B2B-verkooppipeline",
+				"description": "Van kwalificatie tot afsluiten, met de fases die een langere deal doorloopt.",
+				"kind": "pipeline",
+				"category": "pipeline",
+				"version": "1.3.0",
+				"publisher": "Conduction",
+				"icon": "board",
+				"components": [
+					{
+						"schema": "pipeline",
+						"object": {
+							"title": "B2B-verkooppipeline"
+						}
+					}
+				]
+			}
+		},
+		{
+			"key": "store-service-desk-routing",
+			"register": "pipelinq",
+			"schema": "commercial-template",
+			"data": {
+				"slug": "service-desk-routing",
+				"title": "Routering voor de servicedesk",
+				"description": "Wachtrijen en vaardigheden die een binnenkomend verzoek bij iemand leggen die het kan beantwoorden.",
+				"kind": "queue-routing",
+				"category": "queue-routing",
+				"version": "2.1.0",
+				"publisher": "Conduction",
+				"icon": "queue",
+				"components": [
+					{
+						"schema": "skill",
+						"object": {
+							"title": "Eerste lijn"
+						}
+					}
+				]
+			}
+		},
+		{
+			"key": "store-retail-pos-setup",
+			"register": "pipelinq",
+			"schema": "commercial-template",
+			"data": {
+				"slug": "retail-pos-setup",
+				"title": "Kassa-inrichting voor de winkel",
+				"description": "Betaalwijzen, retourredenen, kassarollen en een bonsjabloon.",
+				"kind": "pos-setup",
+				"category": "pos-setup",
+				"version": "1.1.0",
+				"publisher": "Conduction",
+				"icon": "payment",
+				"components": [
+					{
+						"schema": "posTenderType",
+						"object": {
+							"title": "Pin"
+						}
+					}
+				]
+			}
+		},
+		{
+			"key": "store-woo-request-pipeline",
+			"register": "pipelinq",
+			"schema": "commercial-template",
+			"data": {
+				"slug": "woo-request-pipeline",
+				"title": "Pipeline voor Woo-vragen",
+				"description": "Fases voor een Woo-vraag, van intake tot overdracht aan dossiq.",
+				"kind": "pipeline",
+				"category": "pipeline",
+				"version": "1.2.0",
+				"publisher": "Gemeente Lindewaard",
+				"icon": "board",
+				"components": [
+					{
+						"schema": "pipeline",
+						"object": {
+							"title": "Woo-vragen"
+						}
+					}
+				]
+			}
+		},
+		{
+			"key": "store-counter-products-and-fees",
+			"register": "pipelinq",
+			"schema": "commercial-template",
+			"data": {
+				"slug": "counter-products-and-fees",
+				"title": "Baliproducten en leges",
+				"description": "Producten en diensten die aan de balie worden verkocht, met prijzen en btw-tarieven.",
+				"kind": "catalogue",
+				"category": "catalogue",
+				"version": "0.9.2",
+				"publisher": "Gemeente Lindewaard",
+				"icon": "catalogue",
+				"components": [
+					{
+						"schema": "productCategory",
+						"object": {
+							"title": "Balieproducten"
+						}
+					}
+				]
+			}
+		},
+		{
+			"key": "store-residents-pass",
+			"register": "pipelinq",
+			"schema": "commercial-template",
+			"data": {
+				"slug": "residents-pass",
+				"title": "Bewonerspas",
+				"description": "Punten voor bezoek aan bibliotheek, zwembad en sportpark, in drie niveaus.",
+				"kind": "loyalty-programme",
+				"category": "loyalty-programme",
+				"version": "1.0.0",
+				"publisher": "Gemeente Oosterwold",
+				"icon": "client",
+				"components": [
+					{
+						"schema": "loyaltyProgramme",
+						"object": {
+							"title": "Bewonerspas"
+						}
+					}
+				]
+			}
+		},
+		{
+			"key": "store-brevo-bulk-mail",
+			"register": "pipelinq",
+			"schema": "commercial-template",
+			"data": {
+				"slug": "brevo-bulk-mail",
+				"title": "Bulkmail via Brevo",
+				"description": "Verstuurt mailings via Brevo, over een bron in integriq.",
+				"kind": "connector",
+				"category": "connector",
+				"version": "1.4.0",
+				"publisher": "Conduction",
+				"icon": "correspondence",
+				"components": []
+			}
+		},
+		{
+			"key": "store-asterisk-telephony",
+			"register": "pipelinq",
+			"schema": "commercial-template",
+			"data": {
+				"slug": "asterisk-telephony",
+				"title": "Asterisk-telefonie",
+				"description": "Schermmeldingen en klikken om te bellen via een Asterisk-centrale.",
+				"kind": "connector",
+				"category": "connector",
+				"version": "3.0.0",
+				"publisher": "Conduction",
+				"icon": "chat",
+				"components": []
+			}
+		},
+		{
+			"key": "store-message-box",
+			"register": "pipelinq",
+			"schema": "commercial-template",
+			"data": {
+				"slug": "message-box",
+				"title": "Berichtenbox",
+				"description": "Berichten naar de Berichtenbox van MijnOverheid van een inwoner, via Logius.",
+				"kind": "connector",
+				"category": "connector",
+				"version": "1.0.0",
+				"publisher": "Conduction",
+				"icon": "correspondence",
+				"components": [
+					{
+						"schema": "berichtenboxTemplate",
+						"object": {
+							"title": "Bericht aan inwoner"
+						}
+					}
+				]
+			}
+		}
+	]
+}
