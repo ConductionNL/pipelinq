@@ -8597,7 +8597,11 @@ OC.L10N.register(
         "At time": "At time",
         "drops": "drops",
         "transactions in this shift": "transactions in this shift",
-        "Drops can only be added to an open shift. An open shift has Close and count shift at the top.": "Drops can only be added to an open shift. An open shift has Close and count shift at the top."
+        "Drops can only be added to an open shift. An open shift has Close and count shift at the top.": "Drops can only be added to an open shift. An open shift has Close and count shift at the top.",
+        "To check": "To check",
+        "Filter by cashier or till": "Filter by cashier or till",
+        "{shown} of {total}": "{shown} of {total}",
+        "A shift is closed with a blind count. The difference is checked against the margin.": "A shift is closed with a blind count. The difference is checked against the margin."
     },
     "nplurals=2; plural=(n != 1);"
 )

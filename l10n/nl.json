@@ -2248,7 +2248,7 @@
         "Make default": "Maak standaard",
         "Manage API tokens and OAuth 2.0 configuration for external integrations": "Beheer API-tokens en OAuth 2.0-configuratie voor externe integraties",
         "Manage callback requests and follow-up tasks": "Terugbelverzoeken en opvolgtaken beheren",
-        "Manage cash shifts: opening float, drops, blind counting and reconciliation": "Beheer kassashifts: openingsfloat, drops, blind tellen en reconciliatie",
+        "Manage cash shifts: opening float, drops, blind counting and reconciliation": "Beheer kassadiensten: beginsaldo, afstortingen, blind tellen en afstemmen",
         "Manage categories": "Categorieën beheren",
         "Manage structured billing classifications (Declarabel, Niet-declarabel, Intern, WBSO, DBA) for time entries.": "Beheer gestructureerde factuurcategorieën (Declarabel, Niet-declarabel, Intern, WBSO, DBA) voor tijdregels.",
         "Manage subscriptions": "Inschrijvingen beheren",
@@ -2752,7 +2752,7 @@
         "Open renewal lead": "Verlengingslead openen",
         "Open requests": "Open verzoeken",
         "Open settings": "Instellingen openen",
-        "Open shift": "Shift openen",
+        "Open shift": "Dienst openen",
         "Open the Pipeline and move your lead to the next stage": "Open de Pipeline en verplaats je lead naar de volgende fase",
         "Open the campaign report": "Open het campagnerapport",
         "Open the composer": "Open de opsteller",
@@ -8618,6 +8618,10 @@
         "At time": "Om",
         "drops": "afstortingen",
         "transactions in this shift": "transacties in deze dienst",
-        "Drops can only be added to an open shift. An open shift has Close and count shift at the top.": "Afstortingen kun je alleen bij een open dienst toevoegen. Bij een open dienst staat bovenaan Dienst sluiten en tellen."
+        "Drops can only be added to an open shift. An open shift has Close and count shift at the top.": "Afstortingen kun je alleen bij een open dienst toevoegen. Bij een open dienst staat bovenaan Dienst sluiten en tellen.",
+        "To check": "Te controleren",
+        "Filter by cashier or till": "Filter op kassamedewerker of kassa",
+        "{shown} of {total}": "{shown} van {total}",
+        "A shift is closed with a blind count. The difference is checked against the margin.": "Een dienst wordt gesloten met een blinde telling. Het verschil wordt getoetst aan de marge."
     }
 }
