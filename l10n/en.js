@@ -1,6 +1,8 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded": "{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded",
+        "Signed up via": "Signed up via",
         "Checked": "Checked",
         "Look up in the BRP": "Look up in the BRP",
         "Verify the customer's identity in the population register": "Verify the customer's identity in the population register",

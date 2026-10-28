@@ -1943,7 +1943,11 @@
 								},
 								{
 									"label": "Source",
-									"template": "{identityVerifiedVia}, looked up {identityVerifiedAt:date}"
+									"template": "{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded"
+								},
+								{
+									"path": "source",
+									"label": "Signed up via"
 								},
 								{
 									"path": "preferredChannel",
