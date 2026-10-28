@@ -7033,14 +7033,206 @@
 		},
 		{
 			"id": "KassakoppelingAuditList",
-			"_note": "The cash register audit log: a bespoke viewer over /api/kassakoppeling/audit with a date range, register, operator and action filter and the admin export for the tax authority. The detail is declarative (KassakoppelingAuditDetail).",
+			"_note": "The cash register audit log (PqKassaAudit): a declared index over the app's own endpoint (entitySource \"endpoint\", GET /api/kassakoppeling/audit), newest first. The lenses ask the endpoint for invalid signatures and entries not exported yet; the sidebar narrows by date, register, operator and action; a row opens beside the list in KassakoppelingAuditDetail. Amounts are stored in cents. Only administrators see the tax authority export.",
 			"route": "/cash-register-audit",
-			"type": "custom",
-			"title": "Cash register audit",
-			"component": "CashRegisterAuditListView",
+			"type": "index",
+			"title": "Cash register audit log",
+			"splitView": {
+				"enabled": true
+			},
 			"config": {
-				"register": "pipelinq",
-				"schema": "kassakoppelingAuditLog"
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/pipelinq/api/kassakoppeling/audit",
+					"rowsPath": "entries",
+					"searchParam": "search",
+					"order": "desc",
+					"searchFields": {
+						"from": {
+							"param": "from",
+							"single": true
+						},
+						"to": {
+							"param": "to",
+							"single": true
+						},
+						"registerNumber": {
+							"param": "registerNumber",
+							"single": true
+						},
+						"operatorId": {
+							"param": "operatorId",
+							"single": true
+						},
+						"action": {
+							"param": "action",
+							"single": true
+						},
+						"verified": {
+							"param": "verified",
+							"single": true
+						},
+						"exported": {
+							"param": "exported",
+							"single": true
+						}
+					}
+				},
+				"description": "Immutable, cryptographically signed record of every register action for tax authority audits · only administrators can export",
+				"searchPlaceholder": "Search by register, operator or transaction",
+				"rowRoute": "KassakoppelingAuditDetail",
+				"countText": "{shown} of {total} · newest first",
+				"emptyText": "No audit entries found for the selected filters.",
+				"showAdd": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"allowSavedViews": true,
+				"savedViewsScope": "source:cash-register-audit",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"showCount": true
+					},
+					{
+						"label": "Invalid signature",
+						"filter": {
+							"verified": "false"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Not exported",
+						"filter": {
+							"exported": "false"
+						},
+						"showCount": true
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": false,
+					"fields": {
+						"from": {
+							"type": "string",
+							"format": "date",
+							"title": "From",
+							"facetable": true,
+							"inputControl": "date"
+						},
+						"to": {
+							"type": "string",
+							"format": "date",
+							"title": "Up to and including",
+							"facetable": true,
+							"inputControl": "date"
+						},
+						"registerNumber": {
+							"type": "string",
+							"title": "Register",
+							"facetable": true,
+							"inputControl": "text"
+						},
+						"operatorId": {
+							"type": "string",
+							"title": "Operator",
+							"facetable": true,
+							"inputControl": "text"
+						},
+						"action": {
+							"type": "string",
+							"title": "Action",
+							"facetable": true,
+							"inputControl": "select",
+							"enum": [
+								"sale",
+								"void",
+								"refund",
+								"no-sale"
+							],
+							"enumLabels": {
+								"sale": "Sale",
+								"void": "Cancellation",
+								"refund": "Refund",
+								"no-sale": "No sale"
+							}
+						}
+					}
+				},
+				"columns": [
+					{
+						"key": "timestamp",
+						"label": "Time",
+						"format": "date-time",
+						"link": true
+					},
+					{
+						"key": "operatorId",
+						"label": "Operated by"
+					},
+					{
+						"key": "registerNumber",
+						"label": "Register"
+					},
+					{
+						"key": "action",
+						"label": "Action",
+						"enum": [
+							"sale",
+							"void",
+							"refund",
+							"no-sale"
+						],
+						"enumLabels": {
+							"sale": "Sale",
+							"void": "Cancellation",
+							"refund": "Refund",
+							"no-sale": "No sale"
+						}
+					},
+					{
+						"key": "amount",
+						"label": "Amount",
+						"format": {
+							"style": "currency",
+							"currency": "EUR",
+							"minorUnits": true
+						},
+						"class": "num",
+						"cellClass": "num"
+					},
+					{
+						"key": "verification",
+						"label": "Check",
+						"enum": [
+							"pending",
+							"true",
+							"false"
+						],
+						"enumLabels": {
+							"pending": "To be checked",
+							"true": "Verified",
+							"false": "Invalid signature"
+						},
+						"colorMap": {
+							"pending": "default",
+							"true": "success",
+							"false": "error"
+						}
+					}
+				],
+				"headerActions": [
+					{
+						"id": "audit-export",
+						"label": "Export for the tax authority",
+						"icon": "Download",
+						"type": "open-modal",
+						"target": "TaxAuthorityExportModal",
+						"adminOnly": true
+					}
+				]
 			}
 		},
 		{
