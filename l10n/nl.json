@@ -9326,6 +9326,10 @@
         "Bookkeeping failure reason": "Reden dat doorgeven mislukte",
         "Bookkeeping failed at": "Doorgeven mislukt op",
         "Why the last raise did not reach shillinq: unreachable when the registry dispatch failed, not_configured when no shillinq journal connection is set up. Cleared when a raise succeeds.": "Waarom het laatste doorgeven shillinq niet bereikte: unreachable als het versturen via het integratieregister mislukte, not_configured als er geen koppeling met shillinq is ingesteld. Wordt gewist zodra doorgeven lukt.",
-        "When the last raise did not reach shillinq. Cleared when a raise succeeds.": "Wanneer het laatste doorgeven shillinq niet bereikte. Wordt gewist zodra doorgeven lukt."
+        "When the last raise did not reach shillinq. Cleared when a raise succeeds.": "Wanneer het laatste doorgeven shillinq niet bereikte. Wordt gewist zodra doorgeven lukt.",
+        "Higher than the week before": "Hoger dan de week ervoor",
+        "Lower than the week before": "Lager dan de week ervoor",
+        "Highlight directions": "Richting van de hoogtepunten",
+        "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order.": "Of het cijfer van elk hoogtepunt steeg, daalde of gelijk bleef tegenover de week ervoor, één waarde per hoogtepunt in dezelfde volgorde."
     }
 }

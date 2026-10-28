@@ -9213,7 +9213,11 @@ OC.L10N.register(
         "Bookkeeping failure reason": "Bookkeeping failure reason",
         "Bookkeeping failed at": "Bookkeeping failed at",
         "Why the last raise did not reach shillinq: unreachable when the registry dispatch failed, not_configured when no shillinq journal connection is set up. Cleared when a raise succeeds.": "Why the last raise did not reach shillinq: unreachable when the registry dispatch failed, not_configured when no shillinq journal connection is set up. Cleared when a raise succeeds.",
-        "When the last raise did not reach shillinq. Cleared when a raise succeeds.": "When the last raise did not reach shillinq. Cleared when a raise succeeds."
+        "When the last raise did not reach shillinq. Cleared when a raise succeeds.": "When the last raise did not reach shillinq. Cleared when a raise succeeds.",
+        "Higher than the week before": "Higher than the week before",
+        "Lower than the week before": "Lower than the week before",
+        "Highlight directions": "Highlight directions",
+        "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order.": "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order."
     },
     "nplurals=2; plural=(n != 1);"
 )

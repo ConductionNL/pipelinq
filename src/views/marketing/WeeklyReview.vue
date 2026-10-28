@@ -86,10 +86,23 @@
 				<section class="weekly-review__card">
 					<h3>{{ t('pipelinq', 'What moved') }}</h3>
 					<ul class="weekly-review__lines" data-testid="weekly-review-highlights">
-						<li v-for="(line, index) in review.highlights" :key="`h${index}`">
-							{{ line }}
+						<li
+							v-for="(line, index) in highlights"
+							:key="`h${index}`"
+							class="weekly-review__highlight">
+							<ArrowUp
+								v-if="line.direction === 'up'"
+								class="weekly-review__direction weekly-review__direction--up"
+								:size="16"
+								:title="t('pipelinq', 'Higher than the week before')" />
+							<ArrowDown
+								v-else-if="line.direction === 'down'"
+								class="weekly-review__direction weekly-review__direction--down"
+								:size="16"
+								:title="t('pipelinq', 'Lower than the week before')" />
+							<span>{{ line.text }}</span>
 						</li>
-						<li v-if="!review.highlights || review.highlights.length === 0" class="weekly-review__none">
+						<li v-if="highlights.length === 0" class="weekly-review__none">
 							{{ t('pipelinq', 'Nothing moved that the sources can show.') }}
 						</li>
 					</ul>
@@ -128,9 +141,11 @@
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { getCanonicalLocale } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import ArrowDown from 'vue-material-design-icons/ArrowDown.vue'
+import ArrowUp from 'vue-material-design-icons/ArrowUp.vue'
 import CalendarWeek from 'vue-material-design-icons/CalendarWeek.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
-import { degradedSources, isAgentAuthored } from '../../services/journeyLabels.js'
+import { degradedSources, highlightLines, isAgentAuthored } from '../../services/journeyLabels.js'
 import {
 	fetchWeeklyReview,
 	generateWeeklyReview,
@@ -139,6 +154,8 @@ import {
 export default {
 	name: 'WeeklyReviewView',
 	components: {
+		ArrowDown,
+		ArrowUp,
 		CalendarWeek,
 		CnStatusBadge,
 		NcButton,
@@ -206,6 +223,14 @@ export default {
 		 */
 		degraded() {
 			return degradedSources(this.review)
+		},
+
+		/**
+		 * @return {Array<{text: string, direction: string}>} The highlight lines with their direction.
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+		 */
+		highlights() {
+			return highlightLines(this.review)
 		},
 	},
 
@@ -342,6 +367,24 @@ export default {
 }
 
 .weekly-review__error {
+	color: var(--color-error-text, var(--color-error));
+}
+
+.weekly-review__highlight {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.weekly-review__direction {
+	flex: none;
+}
+
+.weekly-review__direction--up {
+	color: var(--color-success-text, var(--color-success));
+}
+
+.weekly-review__direction--down {
 	color: var(--color-error-text, var(--color-error));
 }
 </style>
