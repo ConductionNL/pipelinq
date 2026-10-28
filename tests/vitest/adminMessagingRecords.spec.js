@@ -143,20 +143,6 @@ beforeEach(() => {
 })
 
 /**
- * The facts of one record as {label: text}.
- *
- * @param {object} record The record wrapper.
- * @return {object} Each dt's text mapped to its dd's text.
- */
-function factsOf(record) {
-	const facts = {}
-	for (const pair of record.findAll('dl > div')) {
-		facts[pair.find('dt').text()] = pair.find('dd').text()
-	}
-	return facts
-}
-
-/**
  * The cell texts of one table row.
  *
  * @param {object} row The row wrapper.

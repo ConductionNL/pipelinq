@@ -380,8 +380,8 @@ import Check from 'vue-material-design-icons/Check.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
-import { downloadCsv } from '../../services/csvExport.js'
 import ServiceAccountPicker from './ServiceAccountPicker.vue'
+import { downloadCsv } from '../../services/csvExport.js'
 
 /** How many audit events the section shows. */
 const RECENT_EVENT_LIMIT = 20
