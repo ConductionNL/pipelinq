@@ -9044,7 +9044,14 @@ OC.L10N.register(
         "Convert to order": "Convert to order",
         "The quote is now an order.": "The quote is now an order.",
         "Quote status": "Quote status",
-        "prices excl. VAT": "prices excl. VAT"
+        "prices excl. VAT": "prices excl. VAT",
+        "Clients with an account on a network we publish on": "Clients with an account on a network we publish on",
+        "Follows feeds, sitemaps, shares of pages, public fediverse timelines and saved searches": "Follows feeds, sitemaps, shares of pages, public fediverse timelines and saved searches",
+        "No connections checked yet.": "No connections checked yet.",
+        "Search insight": "Search insight",
+        "Suggestions from the search data: what to improve first": "Suggestions from the search data: what to improve first",
+        "Username": "Username",
+        "Where residents find us in search engines, and what others publish · four pages under Marketing": "Where residents find us in search engines, and what others publish · four pages under Marketing"
     },
     "nplurals=2; plural=(n != 1);"
 )

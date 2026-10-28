@@ -9056,7 +9056,14 @@ OC.L10N.register(
         "Convert to order": "Omzetten naar bestelling",
         "The quote is now an order.": "De offerte is nu een bestelling.",
         "Quote status": "Status offerte",
-        "prices excl. VAT": "prijzen excl. btw"
+        "prices excl. VAT": "prijzen excl. btw",
+        "Search insight": "Zoekinzicht",
+        "Where residents find us in search engines, and what others publish · four pages under Marketing": "Waar inwoners ons vinden in zoekmachines, en wat anderen publiceren · vier pagina's onder Marketing",
+        "Suggestions from the search data: what to improve first": "Voorstellen uit de zoekgegevens: wat je eerst verbetert",
+        "Follows feeds, sitemaps, shares of pages, public fediverse timelines and saved searches": "Volgt feeds, sitemaps, delen van pagina's, openbare fediverse-tijdlijnen en opgeslagen zoekopdrachten",
+        "Clients with an account on a network we publish on": "Klanten met een account op een netwerk waar wij op publiceren",
+        "No connections checked yet.": "Nog geen verbindingen gecontroleerd.",
+        "Username": "Gebruikersnaam"
     },
     "nplurals=2; plural=(n != 1);"
 )
