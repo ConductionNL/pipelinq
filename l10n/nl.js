@@ -8551,7 +8551,17 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Daarna: schrijf het resultaat op en rond de taak af",
         "What now? Try again before the deadline": "Wat nu? Opnieuw proberen voor de termijn",
         "An attempt is logged": "Er is een poging vastgelegd",
-        "Call the customer": "Bellen"
+        "Call the customer": "Bellen",
+        "How the till prints and mails receipts. Every field is optional, so leave one blank to skip it.": "Hoe de kassa bonnen print en mailt. Elk veld is optioneel, laat een veld leeg om het over te slaan.",
+        "Where Pipelinq hands work to the other apps. Every field is optional, so leave one blank to skip it.": "Waar Pipelinq werk aan de andere apps doorgeeft. Elk veld is optioneel, laat een veld leeg om het over te slaan.",
+        "Saved per field as you continue. You can change everything later in the Nextcloud admin settings for Pipelinq.": "Per veld opgeslagen als je verdergaat. Je kunt alles later wijzigen in de Nextcloud-beheerinstellingen voor Pipelinq.",
+        "Saved per field as you continue. The payment methods and the staff of the till are set in the admin settings, under Till.": "Per veld opgeslagen als je verdergaat. De betaalmethoden en het personeel van de kassa stel je in bij de beheerinstellingen, onder Kassa.",
+        "Saved per field as you continue. Every connection, with its status, is in the admin settings under Integrations.": "Per veld opgeslagen als je verdergaat. Elke koppeling, met haar status, staat in de beheerinstellingen onder Integraties.",
+        "Receipt printer address": "Adres van de bonprinter",
+        "Receipt printer port": "Poort van de bonprinter",
+        "Send receipts from": "Bonnen versturen vanaf",
+        "Address that takes the till's day totals (shillinq)": "Adres dat de dagtotalen van de kassa ontvangt (shillinq)",
+        "Group that may send contracts to invoicing": "Groep die contracten naar facturering mag sturen"
     },
     "nplurals=2; plural=(n != 1);"
 )

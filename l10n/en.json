@@ -8627,6 +8627,16 @@
         "Then: write down the result and finish the task": "Then: write down the result and finish the task",
         "What now? Try again before the deadline": "What now? Try again before the deadline",
         "An attempt is logged": "An attempt is logged",
-        "Call the customer": "Call the customer"
+        "Call the customer": "Call the customer",
+        "How the till prints and mails receipts. Every field is optional, so leave one blank to skip it.": "How the till prints and mails receipts. Every field is optional, so leave one blank to skip it.",
+        "Where Pipelinq hands work to the other apps. Every field is optional, so leave one blank to skip it.": "Where Pipelinq hands work to the other apps. Every field is optional, so leave one blank to skip it.",
+        "Saved per field as you continue. You can change everything later in the Nextcloud admin settings for Pipelinq.": "Saved per field as you continue. You can change everything later in the Nextcloud admin settings for Pipelinq.",
+        "Saved per field as you continue. The payment methods and the staff of the till are set in the admin settings, under Till.": "Saved per field as you continue. The payment methods and the staff of the till are set in the admin settings, under Till.",
+        "Saved per field as you continue. Every connection, with its status, is in the admin settings under Integrations.": "Saved per field as you continue. Every connection, with its status, is in the admin settings under Integrations.",
+        "Receipt printer address": "Receipt printer address",
+        "Receipt printer port": "Receipt printer port",
+        "Send receipts from": "Send receipts from",
+        "Address that takes the till's day totals (shillinq)": "Address that takes the till's day totals (shillinq)",
+        "Group that may send contracts to invoicing": "Group that may send contracts to invoicing"
     }
 }
