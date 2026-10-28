@@ -70,6 +70,12 @@ vi.mock('@nextcloud/axios', () => ({
 			return { data: {} }
 		}),
 		get: vi.fn(async (url) => {
+			if (url.endsWith('/customerLoyaltyAccount')) {
+				return { data: { results: [{ '@self': { id: 'acc-1' }, programmeId: 'prog-1', currentBalance: 340 }] } }
+			}
+			if (url.endsWith('/loyaltyProgramme/prog-1')) {
+				return { data: { pointValue: 0.05 } }
+			}
 			if (url.endsWith('/tender-types')) {
 				return { data: { results: [{ id: 't-pin', code: 'PIN' }, { id: 't-bon', code: 'BON' }, { id: 't-pts', code: 'LOYALTY' }] } }
 			}
@@ -78,10 +84,12 @@ vi.mock('@nextcloud/axios', () => ({
 	},
 }))
 
+const collections = {}
+const records = {}
 const store = {
 	fetchCollection: vi.fn(async () => {}),
-	getCollection: () => [],
-	fetchObject: vi.fn(async () => ({})),
+	getCollection: (type) => collections[type] || [],
+	fetchObject: vi.fn(async (type, id) => records[`${type}/${id}`] || {}),
 	saveObject: vi.fn(async (type, payload) => ({ id: type === 'posTransaction' ? 'tx-1' : 'line', ...payload })),
 	deleteObject: vi.fn(),
 }
@@ -113,7 +121,7 @@ describe('the new sale (PqKassa)', () => {
 		expect(page.props('title')).toBe('New transaction')
 		expect(page.props('typePill')).toEqual({ text: 'Draft' })
 		expect(page.props('breadcrumb')).toMatchObject({ label: 'Transactions', route: 'PosTransactions' })
-		expect(page.props('headerMeta')).toBe('{terminalId} · cashier {cashierName}')
+		expect(page.props('headerMeta')).toBe('{terminalId} · cashier {cashierName} · shift open since {shiftSince}')
 		expect(page.props('object').cashierName).toBe('Pieter Jansen')
 		expect(wrapper.text()).not.toContain('Back to list')
 	})
@@ -167,6 +175,27 @@ describe('the new sale (PqKassa)', () => {
 		expect(posts.find(([url]) => url.endsWith('/gift-card/redeem'))[1]).toMatchObject({ giftCardId: 'g1', amount: 25, posTransactionId: 'tx-1' })
 		const tenders = posts.filter(([url]) => url.endsWith('/tx-1/tenders')).map(([, body]) => [body.tenderType, body.amount])
 		expect(tenders).toEqual([['t-pts', 10], ['t-bon', 25], ['t-pin', 61.41]])
+	})
+
+	it('opens the parked sale of a client as the board draws it', async () => {
+		records['posTransaction/tx-parked'] = { id: 'tx-parked', status: 'parked', terminalId: 'Balie 2, stadskantoor', cashier: 'pieter', client: 'client-sanne' }
+		records['client/client-sanne'] = { name: 'Sanne de Vries' }
+		collections.posTransaction = [
+			{ id: 'tx-0871', client: 'client-sanne', status: 'settled', reference: 'POS-2026-0871', confirmedAt: '2026-09-12T10:12:00Z', total: 75, tenderType: 'card' },
+			{ id: 'tx-other', client: 'client-other', status: 'settled', reference: 'POS-2026-0001', total: 5 },
+		]
+		collections.cashShift = [{ status: 'open', drawer: 'Balie 2, stadskantoor', floatAt: '2026-10-07T08:30:00' }]
+		const wrapper = mount(PosTransactionForm, {
+			global: { mocks: { t: globalThis.t, $route: { params: { id: 'tx-parked' } }, $router: { push: vi.fn() } } },
+		})
+		await flushPromises()
+		const page = wrapper.findComponent({ name: 'CnDetailPage' })
+		expect(page.props('title')).toBe('New transaction')
+		expect(page.props('typePill')).toEqual({ text: 'Draft' })
+		expect(page.props('object')).toMatchObject({ cashierName: 'Pieter Jansen', shiftSince: '08:30' })
+		expect(wrapper.vm.selectedCustomer).toMatchObject({ id: 'client-sanne', name: 'Sanne de Vries', isClient: true })
+		expect(wrapper.vm.history.map((row) => row.reference)).toEqual(['POS-2026-0871'])
+		expect(wrapper.vm.loyalty).toEqual({ accountId: 'acc-1', balance: 340, pointValue: 0.05 })
 	})
 
 	it('puts a gift card sold in the dialog on the sale without VAT', async () => {

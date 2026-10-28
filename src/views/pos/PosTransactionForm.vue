@@ -11,7 +11,7 @@
   -->
 <template>
 	<CnDetailPage
-		:title="isNew ? t('pipelinq', 'New transaction') : transaction.reference || t('pipelinq', 'Transaction')"
+		:title="transaction.reference || (isOpenSale ? t('pipelinq', 'New transaction') : t('pipelinq', 'Transaction'))"
 		:object="headerRecord"
 		:typePill="statusPill"
 		:breadcrumb="breadcrumb"
@@ -304,7 +304,7 @@ import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vu
 import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
 import PosPaymentDialog from '../../dialogs/PosPaymentDialog.vue'
 import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
-import { formatDate } from '../../services/localeUtils.js'
+import { formatDate, getUserLocale } from '../../services/localeUtils.js'
 import {
 	attachCustomer as apiAttachCustomer,
 	detachCustomer as apiDetachCustomer,
@@ -401,6 +401,7 @@ export default {
 			selectedCustomer: null,
 			history: [],
 			loyalty: null,
+			shiftSince: '',
 			showCustomerModal: false,
 			showPayment: false,
 			barcode: '',
@@ -467,17 +468,27 @@ export default {
 		 * @return {object} The transaction with the cashier's name.
 		 */
 		headerRecord() {
-			return { ...this.transaction, cashierName: this.transaction.cashier || this.cashierName }
+			const user = window.OC?.getCurrentUser?.()
+			const cashier = !this.transaction.cashier || this.transaction.cashier === user?.uid ? this.cashierName : this.transaction.cashier
+			return { ...this.transaction, cashierName: cashier, shiftSince: this.shiftSince }
+		},
+
+		/**
+		 * Whether the sale is still being rung up: new, a draft or parked.
+		 *
+		 * @return {boolean}
+		 */
+		isOpenSale() {
+			return this.isNew || ['draft', 'parked'].includes(this.transaction.status)
 		},
 
 		statusPill() {
-			if (this.isNew || this.transaction.status === 'draft') {
+			if (this.isOpenSale) {
 				return { text: t('pipelinq', 'Draft') }
 			}
 			return {
 				field: 'status',
 				labels: {
-					parked: t('pipelinq', 'Parked'),
 					confirmed: t('pipelinq', 'Confirmed'),
 					settled: t('pipelinq', 'Settled'),
 					refunded: t('pipelinq', 'Refunded'),
@@ -490,7 +501,7 @@ export default {
 		},
 
 		headerMeta() {
-			return t('pipelinq', '{terminalId} · cashier {cashierName}')
+			return t('pipelinq', '{terminalId} · cashier {cashierName} · shift open since {shiftSince}')
 		},
 
 		totals() {
@@ -635,7 +646,10 @@ export default {
 			if (this.transaction.customer) {
 				this.selectedCustomer = { id: this.transaction.customer, name: tx.customerName || this.transaction.customer, doNotContact: false }
 				await this.loadCustomerFacts(this.transaction.customer)
+			} else if (this.transaction.client) {
+				await this.loadClientAsCustomer(this.transaction.client)
 			}
+			await this.loadShift()
 			const provider = tx?.paymentProvider || 'cash'
 			const method = tx?.paymentMethod || 'cash'
 			this.paymentProvider = provider
@@ -981,6 +995,9 @@ export default {
 		},
 
 		async clearCustomer() {
+			if (this.selectedCustomer?.isClient) {
+				this.transaction.client = null
+			}
 			this.selectedCustomer = null
 			this.transaction.customer = null
 			this.transaction.marketingConsent = false
@@ -1011,6 +1028,54 @@ export default {
 		},
 
 		/**
+		 * A sale for a client (an account customer) shows that client as the
+		 * customer, with the client's loyalty account and earlier sales.
+		 *
+		 * @param {string} clientId The client.
+		 * @return {Promise<void>}
+		 */
+		async loadClientAsCustomer(clientId) {
+			let client
+			try {
+				client = await this.objectStore.fetchObject('client', clientId)
+			} catch {
+				client = null
+			}
+			this.selectedCustomer = { id: clientId, name: client?.name || clientId, email: client?.email || '', doNotContact: false, isClient: true }
+			try {
+				await this.objectStore.fetchCollection('posTransaction', { client: clientId, _limit: 50 })
+				this.history = collectionRows(this.objectStore.getCollection('posTransaction'))
+					.filter((tx) => tx.client === clientId && uuidOf(tx) !== this.transactionId && ['confirmed', 'settled', 'refunded'].includes(tx.status))
+					.map((tx) => ({ id: uuidOf(tx), createdAt: tx.confirmedAt || tx.settledAt, reference: tx.reference, itemCount: tx.itemCount, total: tx.total, tenderType: tx.tenderType }))
+					.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+			} catch {
+				this.history = []
+			}
+			this.loyalty = await this.loadLoyalty(clientId)
+		},
+
+		/**
+		 * The time the open shift at this sale's register started, for the header.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadShift() {
+			if (!this.transaction.terminalId) {
+				return
+			}
+			try {
+				await this.objectStore.fetchCollection('cashShift', { status: 'open', _limit: 50 })
+				const shift = collectionRows(this.objectStore.getCollection('cashShift'))
+					.find((row) => row.status === 'open' && row.drawer === this.transaction.terminalId)
+				this.shiftSince = shift?.floatAt
+					? new Date(shift.floatAt).toLocaleTimeString(getUserLocale(), { hour: '2-digit', minute: '2-digit' })
+					: ''
+			} catch {
+				this.shiftSince = ''
+			}
+		},
+
+		/**
 		 * The customer's loyalty account with what a point is worth.
 		 *
 		 * @param {string} customerId The contact.
@@ -1032,7 +1097,7 @@ export default {
 		},
 
 		async syncCustomerAttachment(txId) {
-			if (!txId || !this.selectedCustomer) {
+			if (!txId || !this.selectedCustomer || this.selectedCustomer.isClient) {
 				return
 			}
 			try {

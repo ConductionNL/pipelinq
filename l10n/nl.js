@@ -8601,10 +8601,10 @@ OC.L10N.register(
         "{name}, latest {count} transactions": "{name}, laatste {count} transacties",
         "{points} points": "{points} punten",
         "{points} points is {amount}": "{points} punten is {amount}",
-        "{terminalId} · cashier {cashierName}": "{terminalId} · kassamedewerker {cashierName}",
         "Preview of the receipt": "Voorbeeld van de bon",
         "Receipt notes": "Notities",
-        "Check balance": "Controleren"
+        "Check balance": "Controleren",
+        "{terminalId} · cashier {cashierName} · shift open since {shiftSince}": "{terminalId} · kassamedewerker {cashierName} · dienst open sinds {shiftSince}"
     },
     "nplurals=2; plural=(n != 1);"
 )

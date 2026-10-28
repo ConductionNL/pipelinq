@@ -8630,10 +8630,10 @@ OC.L10N.register(
         "{name}, latest {count} transactions": "{name}, latest {count} transactions",
         "{points} points": "{points} points",
         "{points} points is {amount}": "{points} points is {amount}",
-        "{terminalId} · cashier {cashierName}": "{terminalId} · cashier {cashierName}",
         "Preview of the receipt": "Preview of the receipt",
         "Receipt notes": "Receipt notes",
-        "Check balance": "Check balance"
+        "Check balance": "Check balance",
+        "{terminalId} · cashier {cashierName} · shift open since {shiftSince}": "{terminalId} · cashier {cashierName} · shift open since {shiftSince}"
     },
     "nplurals=2; plural=(n != 1);"
 )
