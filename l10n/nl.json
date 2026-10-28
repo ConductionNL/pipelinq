@@ -1,5 +1,15 @@
 {
     "translations": {
+        "Prospect data from the KVK": "Prospectgegevens uit de KVK",
+        "Hours on this lead: {hours}": "Uren op deze lead: {hours}",
+        "won": "gewonnen",
+        "lost": "verloren",
+        "both won": "allebei gewonnen",
+        "both lost": "allebei verloren",
+        "all won": "allemaal gewonnen",
+        "all lost": "allemaal verloren",
+        "%1$s: %2$s won, %3$s lost": "%1$s: %2$s gewonnen, %3$s verloren",
+        "_%n earlier deal_::_%n earlier deals_": ["%n eerdere deal", "%n eerdere deals"],
         "Stage {stage} sets the starting chance. Recent contact raises it; without a step in 14 days it drops.": "Fase {stage} geeft de startkans. Recent contact verhoogt die; zonder stap in 14 dagen daalt hij.",
         "No quote for this lead yet.": "Nog geen offerte voor deze lead.",
         "Expected closing": "Verwachte afsluiting",

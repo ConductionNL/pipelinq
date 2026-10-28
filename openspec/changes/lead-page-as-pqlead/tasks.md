@@ -5,3 +5,4 @@
 - [x] Quotes tab before History; Mail and Notes read "Mail" and "Notities"
 - [x] Client card names the lead's contact person
 - [x] Win chance explained in one line; products drawn as a plain, filterable table
+- [x] Related card: KVK, earlier deals, hours link rows over GET /api/leads/{id}/related-summary (nc-vue 24t2m related links)

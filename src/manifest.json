@@ -4757,7 +4757,29 @@
 						"id": "side-related",
 						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
+						"icon": "LinkVariant",
+						"content": {
+							"links": [
+								{
+									"label": "Prospect data from the KVK",
+									"icon": "OfficeBuildingOutline",
+									"route": {
+										"name": "Prospects"
+									}
+								},
+								{
+									"label": "{earlier}",
+									"icon": "Trophy",
+									"endpoint": "/apps/pipelinq/api/leads/@objectId/related-summary"
+								},
+								{
+									"label": "Hours on this lead: {hours}",
+									"icon": "ClockOutline",
+									"endpoint": "/apps/pipelinq/api/leads/@objectId/related-summary"
+								}
+							]
+						},
+						"_note": "Board PqLead 'Gerelateerd': three link rows (KVK prospect data, the client's earlier deals and how they ended, the hours on this lead; GET /api/leads/{id}/related-summary) above the related objects, which stay."
 					},
 					{
 						"id": "lead-kpi-value",

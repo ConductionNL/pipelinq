@@ -1,5 +1,15 @@
 {
     "translations": {
+        "Prospect data from the KVK": "Prospect data from the KVK",
+        "Hours on this lead: {hours}": "Hours on this lead: {hours}",
+        "won": "won",
+        "lost": "lost",
+        "both won": "both won",
+        "both lost": "both lost",
+        "all won": "all won",
+        "all lost": "all lost",
+        "%1$s: %2$s won, %3$s lost": "%1$s: %2$s won, %3$s lost",
+        "_%n earlier deal_::_%n earlier deals_": ["%n earlier deal", "%n earlier deals"],
         "Stage {stage} sets the starting chance. Recent contact raises it; without a step in 14 days it drops.": "Stage {stage} sets the starting chance. Recent contact raises it; without a step in 14 days it drops.",
         "No quote for this lead yet.": "No quote for this lead yet.",
         "Expected closing": "Expected closing",

@@ -60,4 +60,11 @@ describe('the lead page (board PqLead)', () => {
 		expect(widget('side-win-chance').content.fields[1].template).toContain('{stage}')
 		expect(widget('lead-lines').content).toMatchObject({ rowTitle: 'plain', filterable: true })
 	})
+
+	it('starts the Related card with the board\'s three link rows, keeping the related objects', () => {
+		const related = widget('side-related')
+		expect(related.type).toBe('related')
+		expect(related.content.links.map((link) => link.label)).toEqual(['Prospect data from the KVK', '{earlier}', 'Hours on this lead: {hours}'])
+		expect(related.content.links[1].endpoint).toBe('/apps/pipelinq/api/leads/@objectId/related-summary')
+	})
 })
