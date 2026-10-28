@@ -57,7 +57,7 @@ describe('ClientDetail Activity card', () => {
 			worklog: 'werklog',
 			note: 'notitie',
 			task: 'taak',
-			email: 'e-mail',
+			email: 'e-mail, gekoppeld',
 			calendar: 'agenda',
 			message: 'bericht',
 		})

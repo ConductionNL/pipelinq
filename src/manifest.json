@@ -2768,7 +2768,7 @@
 									"worklog": "work log",
 									"note": "note",
 									"task": "task",
-									"email": "email",
+									"email": "email, linked",
 									"calendar": "calendar",
 									"message": "message"
 								},

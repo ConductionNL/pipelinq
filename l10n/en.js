@@ -1,6 +1,7 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "email, linked": "email, linked",
         "Link email": "Link email",
         "Compose in Mail": "Compose in Mail",
         "contact moment": "contact moment",
