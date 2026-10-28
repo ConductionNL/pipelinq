@@ -9150,6 +9150,11 @@
         "Store item": "Store item",
         "The configuration objects installing the item writes: each a schema slug and an object.": "The configuration objects installing the item writes: each a schema slug and an object.",
         "The item's current version; a newer one than the installed version is an update.": "The item's current version; a newer one than the installed version is an update.",
-        "One installable item of a pipelinq store: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector, with the configuration objects installing it writes. Read by the store plane (ADR-080), here or on a remote registry.": "One installable item of a pipelinq store: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector, with the configuration objects installing it writes. Read by the store plane (ADR-080), here or on a remote registry."
+        "One installable item of a pipelinq store: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector, with the configuration objects installing it writes. Read by the store plane (ADR-080), here or on a remote registry.": "One installable item of a pipelinq store: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector, with the configuration objects installing it writes. Read by the store plane (ADR-080), here or on a remote registry.",
+        "Core CRM": "Core CRM",
+        "Customer contact and government": "Customer contact and government",
+        "Analysis and insight": "Analysis and insight",
+        "Automation and organisation": "Automation and organisation",
+        "Infrastructure": "Infrastructure"
     }
 }
