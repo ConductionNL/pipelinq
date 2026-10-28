@@ -8831,6 +8831,26 @@
         "When the person was checked in at the door; empty while they have not come in.": "Wanneer de persoon bij de deur is ingecheckt; leeg zolang die niet binnen is.",
         "Reminder: %s": "Herinnering: %s",
         "You are registered for %1$s on %2$s at %3$s. We look forward to seeing you.": "U bent aangemeld voor %1$s op %2$s in %3$s. We zien u graag.",
-        "You may not send this event's reminder.": "U mag de herinnering van dit evenement niet versturen."
+        "You may not send this event's reminder.": "U mag de herinnering van dit evenement niet versturen.",
+        "one": "een",
+        "two": "twee",
+        "three": "drie",
+        "four": "vier",
+        "five": "vijf",
+        "six": "zes",
+        "seven": "zeven",
+        "eight": "acht",
+        "nine": "negen",
+        "ten": "tien",
+        "eleven": "elf",
+        "twelve": "twaalf",
+        "thirteen": "dertien",
+        "fourteen": "veertien",
+        "fifteen": "vijftien",
+        "sixteen": "zestien",
+        "seventeen": "zeventien",
+        "eighteen": "achttien",
+        "nineteen": "negentien",
+        "twenty": "twintig"
     }
 }
