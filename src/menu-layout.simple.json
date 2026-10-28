@@ -548,8 +548,13 @@
 						"type": "open-modal",
 						"target": "LinkSubmissionToClientModal",
 						"icon": "AccountArrowRightOutline",
-						"props": { "ticketId": "@objectId" },
-						"visibleWhen": { "field": "client", "op": "empty" }
+						"props": {
+							"ticketId": "@objectId"
+						},
+						"visibleWhen": {
+							"field": "client",
+							"op": "empty"
+						}
 					},
 					{
 						"id": "ticket-answer",
@@ -784,7 +789,8 @@
 											"hint": "What was agreed, and who does what"
 										}
 									],
-									"after": "A contact moment has no customer to answer. Close it via More, Close the contact moment."
+									"afterTitle": "A contact moment has no customer to answer.",
+									"after": "Close it via More, Close the contact moment."
 								},
 								"in_progress": {
 									"title": "What now? Step 2: in progress",
@@ -803,7 +809,8 @@
 											"hint": "What was agreed, and who does what"
 										}
 									],
-									"after": "A contact moment has no customer to answer. Close it via More, Close the contact moment."
+									"afterTitle": "A contact moment has no customer to answer.",
+									"after": "Close it via More, Close the contact moment."
 								}
 							}
 						}
@@ -1372,7 +1379,12 @@
 					"woo-conversion": null,
 					"resident-view": null,
 					"routing-suggestions": {
-						"title": "Suggested colleagues"
+						"title": "Suggested colleagues",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
 					}
 				},
 				"widgets": {
@@ -1788,7 +1800,8 @@
 										"value": "callbackRequest",
 										"label": "Callback arranged"
 									}
-								]
+								],
+								"saveVariant": "primary"
 							}
 						}
 					},
@@ -1838,32 +1851,39 @@
 											"path": "assignee",
 											"format": "user"
 										}
-									]
-								},
-								{
-									"label": "Status",
-									"path": "status",
-									"map": {
-										"new": "New",
-										"in_progress": "In progress",
-										"awaiting_customer": "Waiting for customer",
-										"resolved": "Resolved",
-										"completed": "Completed",
-										"rejected": "Rejected",
-										"converted": "Converted to a case",
-										"closed": "Closed"
+									],
+									"card": true,
+									"route": {
+										"name": "TicketDetail",
+										"params": {
+											"id": "@object.parentTicket"
+										}
+									},
+									"pill": {
+										"path": "status",
+										"map": {
+											"new": "New",
+											"in_progress": "In progress",
+											"awaiting_customer": "Waiting for customer",
+											"resolved": "Resolved",
+											"completed": "Completed",
+											"rejected": "Rejected",
+											"converted": "Converted to a case",
+											"closed": "Closed"
+										},
+										"variantMap": {
+											"new": "info",
+											"in_progress": "purple",
+											"awaiting_customer": "warning",
+											"resolved": "success",
+											"completed": "success",
+											"rejected": "default",
+											"converted": "default",
+											"closed": "default"
+										}
 									}
 								}
 							],
-							"link": {
-								"label": "Open the request",
-								"route": {
-									"name": "TicketDetail",
-									"params": {
-										"id": "@object.parentTicket"
-									}
-								}
-							},
 							"footnote": "The notes above are kept with the request as a contact moment, with your name and the time."
 						}
 					}

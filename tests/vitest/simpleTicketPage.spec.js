@@ -667,6 +667,39 @@ describe('the contact moment (board PqContactmoment)', () => {
 		}
 	})
 
+	it('draws the request it was about as one linked card ending on its status pill, as the board', () => {
+		const lead = widgetById['contact-request'].content.fields.find((field) => field.as === 'lead')
+		expect(lead.card).toBe(true)
+		expect(lead.route).toEqual({ name: 'TicketDetail', params: { id: '@object.parentTicket' } })
+		expect(lead.pill.path).toBe('status')
+		expect(lead.pill.variantMap.in_progress).toBe('purple')
+		const allowed = schemaProperties('ticket').status.enum
+		for (const value of Object.keys(lead.pill.map)) {
+			expect(allowed, value).toContain(value)
+		}
+		// The status is on the pill and the card is the link: no separate row or foot link.
+		expect(widgetById['contact-request'].content.fields.some((field) => field.label === 'Status')).toBe(false)
+		expect(widgetById['contact-request'].content.link).toBeUndefined()
+	})
+
+	it('makes noting the outcome the primary button of the notes', () => {
+		expect(widgetById['contact-notes'].content.outcome.saveVariant).toBe('primary')
+	})
+
+	it('states in bold that a contact moment has no customer to answer, above how to finish it', () => {
+		const stages = simpleFile.pages.find((page) => page.id === 'TicketDetail').config.nextStep.variants[0].stages
+		for (const [stage, entry] of Object.entries(stages)) {
+			expect(entry.afterTitle, stage).toBe('A contact moment has no customer to answer.')
+			expect(entry.after, stage).toBe('Close it via More, Close the contact moment.')
+		}
+	})
+
+	it('shows the suggested colleagues on a contact moment once, in the side column', () => {
+		const section = simple.bodyWidgets.find((entry) => entry.id === 'routing-suggestions')
+		expect(evaluateVisibleWhenLocal(section.visibleWhen, MOMENT)).toBe(false)
+		expect(evaluateVisibleWhenLocal(section.visibleWhen, REQUEST)).toBe(true)
+	})
+
 	it('plans a callback as a callback task on this contact moment', () => {
 		const followUp = simple.sideColumn.find((card) => card.id === 'side-cm-follow-up')
 		const task = schemaProperties('crmTask')
@@ -754,6 +787,7 @@ describe('the words', () => {
 					'ariaLabel',
 					'emptyText',
 					'after',
+					'afterTitle',
 					'hint',
 				].includes(key)
 			) {

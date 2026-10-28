@@ -9172,7 +9172,9 @@ OC.L10N.register(
         "VAT {vatRate}%": "VAT {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "The VAT percentage the quote's VAT is worked out at.",
         "The event this newsletter invites to.": "The event this newsletter invites to.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own.",
+        "A contact moment has no customer to answer.": "A contact moment has no customer to answer.",
+        "Close it via More, Close the contact moment.": "Close it via More, Close the contact moment."
     },
     "nplurals=2; plural=(n != 1);"
 )
