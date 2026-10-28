@@ -9188,7 +9188,9 @@ OC.L10N.register(
         "Message (optional)": "Message (optional)",
         "The message is saved as a contact moment.": "The message is saved as a contact moment.",
         "Enable {provider}": "Enable {provider}",
-        "Every staff member signs in at the till with a PIN of 4 to 6 digits.": "Every staff member signs in at the till with a PIN of 4 to 6 digits."
+        "Every staff member signs in at the till with a PIN of 4 to 6 digits.": "Every staff member signs in at the till with a PIN of 4 to 6 digits.",
+        "No case linked yet.": "No case linked yet.",
+        "No client linked to this ticket yet.": "No client linked to this ticket yet."
     },
     "nplurals=2; plural=(n != 1);"
 )

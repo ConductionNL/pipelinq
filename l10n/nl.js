@@ -9200,7 +9200,9 @@ OC.L10N.register(
         "Message (optional)": "Bericht (optioneel)",
         "The message is saved as a contact moment.": "Het bericht wordt opgeslagen als contactmoment.",
         "Enable {provider}": "{provider} inschakelen",
-        "Every staff member signs in at the till with a PIN of 4 to 6 digits.": "Elke medewerker logt bij de kassa in met een pincode van 4 tot 6 cijfers."
+        "Every staff member signs in at the till with a PIN of 4 to 6 digits.": "Elke medewerker logt bij de kassa in met een pincode van 4 tot 6 cijfers.",
+        "No case linked yet.": "Nog geen zaak gekoppeld.",
+        "No client linked to this ticket yet.": "Nog geen klant bij dit ticket."
     },
     "nplurals=2; plural=(n != 1);"
 )
