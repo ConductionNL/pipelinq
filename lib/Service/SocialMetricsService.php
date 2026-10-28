@@ -286,12 +286,7 @@ class SocialMetricsService {
 		$totals = [];
 		foreach ($this->publications->findAll() as $publication) {
 			$network = (string)($publication['network'] ?? '');
-			$publishedAt = strtotime((string)($publication['publishedAt'] ?? ''));
-			if ($network === ''
-				|| ($publication['status'] ?? '') !== SocialPublicationStore::PUBLISHED
-				|| $publishedAt === false
-				|| $publishedAt < $since
-			) {
+			if ($network === '' || $this->publishedSince(publication: $publication, since: $since) === false) {
 				continue;
 			}
 
@@ -323,6 +318,24 @@ class SocialMetricsService {
 
 		return $rows;
 	}//end networkTotals()
+
+	/**
+	 * Whether a publication went out at or after a moment.
+	 *
+	 * @param array<string, mixed> $publication The publication.
+	 * @param int $since The moment, as a Unix timestamp.
+	 *
+	 * @return bool True when it is published and not older than `$since`.
+	 */
+	private function publishedSince(array $publication, int $since): bool {
+		if (($publication['status'] ?? '') !== SocialPublicationStore::PUBLISHED) {
+			return false;
+		}
+
+		$publishedAt = strtotime((string)($publication['publishedAt'] ?? ''));
+
+		return $publishedAt !== false && $publishedAt >= $since;
+	}//end publishedSince()
 
 	/**
 	 * A network's row before any publication is added.
