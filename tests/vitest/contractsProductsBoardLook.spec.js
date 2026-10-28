@@ -66,6 +66,8 @@ describe('contract page', () => {
 		expect(widget(detail, 'contract-panels').content.tabs[0].widgetIds).toEqual([
 			'contract-terms',
 			'contract-billing',
+			'contract-invoice',
+			'contract-lines',
 			'contract-related',
 			'contract-files',
 		])
