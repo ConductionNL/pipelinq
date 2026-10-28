@@ -1,6 +1,9 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Expected closing": "Expected closing",
+        "Make quote": "Make quote",
+        "Quote made.": "Quote made.",
         "assigned to {assignee|user}": "assigned to {assignee|user}",
         "Awaiting customer": "Awaiting customer",
         "By {slaDeadline|date}": "By {slaDeadline|date}",

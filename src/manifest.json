@@ -4288,7 +4288,7 @@
 						"type": "data",
 						"title": "Deal",
 						"icon": "HandshakeOutline",
-						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out. The client sits here too (decision 207): a lead can exist with no client linked, and the Related card only lists a client once there is one, so this field is where a client is read, added and taken off.",
+						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out. The client sits here too (decision 207): a lead can exist with no client linked, and the Related card only lists a client once there is one, so this field is where a client is read, added and taken off. Board PqLead (r33): the eight deal facts in two columns (fixedColumns, nc-vue 24t2l); the title, client, status, stage, description and notes are read and edited in the edit form and the client card.",
 						"content": {
 							"title": "Deal",
 							"columns": 2,
@@ -4300,30 +4300,46 @@
 								"source",
 								"category",
 								"assignee",
-								"stageEnteredAt",
-								"title",
-								"client",
-								"status",
-								"stage",
-								"description",
-								"notes"
+								"stageEnteredAt"
 							],
 							"overrides": {
 								"assignee": {
-									"formatter": "userDisplayName"
+									"formatter": "userDisplayName",
+									"order": 7,
+									"label": "Owner"
 								},
 								"status": {
 									"editable": false
 								},
 								"stageEnteredAt": {
 									"editable": false,
-									"label": "In this stage since"
+									"label": "In this stage since",
+									"order": 8
 								},
 								"qualificationScore": {
-									"label": "Win chance"
+									"label": "Win chance",
+									"order": 2
+								},
+								"value": {
+									"order": 1,
+									"label": "Value"
+								},
+								"expectedCloseDate": {
+									"order": 3,
+									"label": "Expected closing"
+								},
+								"priority": {
+									"order": 4
+								},
+								"source": {
+									"order": 5
+								},
+								"category": {
+									"order": 6
 								}
 							},
-							"hideEmpty": true
+							"hideEmpty": true,
+							"fixedColumns": true
 						}
 					},
 					{
@@ -4636,7 +4652,8 @@
 							"fields": [
 								{
 									"as": "title",
-									"path": "qualificationScore"
+									"path": "qualificationScore",
+									"suffix": "%"
 								},
 								{
 									"as": "line",
@@ -4758,9 +4775,29 @@
 					"field": "stage",
 					"variant": "purple"
 				},
-				"headerMeta": "via {source} · {stageEnteredAt|days} days in this stage · owner {assignee}",
+				"headerMeta": "via {source} · {stageEnteredAt|days} days in this stage · owner {assignee|user}",
 				"stageField": "stage",
 				"headerActions": [
+					{
+						"id": "log-contact",
+						"type": "open-form",
+						"label": "Log contact",
+						"icon": "PhoneLogOutline",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"formTitle": "Log contact",
+						"includeFields": [
+							"title",
+							"channel",
+							"direction",
+							"description"
+						],
+						"props": {
+							"lead": "@objectId",
+							"ticketType": "interaction"
+						},
+						"successMessage": "Contact moment logged."
+					},
 					{
 						"id": "close-won",
 						"type": "api-call",
@@ -4796,9 +4833,36 @@
 							"op": "eq",
 							"value": "open"
 						}
+					},
+					{
+						"id": "make-quote",
+						"type": "open-form",
+						"label": "Make quote",
+						"icon": "FileDocumentEditOutline",
+						"register": "pipelinq",
+						"schema": "salesQuote",
+						"formTitle": "Make quote",
+						"includeFields": [
+							"title",
+							"expiresAt",
+							"paymentTerm",
+							"notes"
+						],
+						"props": {
+							"lead": "@objectId",
+							"title": "@object.title",
+							"status": "draft"
+						},
+						"successMessage": "Quote made.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "open"
+						}
 					}
 				],
 				"quickActions": [
+					"log-contact",
 					"close-won",
 					"close-lost"
 				],
@@ -4985,6 +5049,10 @@
 							]
 						}
 					}
+				},
+				"primaryActionByStage": {
+					"Gekwalificeerd": "make-quote",
+					"Voorstel": "make-quote"
 				},
 				"identifierField": "id",
 				"follow": false

@@ -1,0 +1,3 @@
+- [x] headerMeta owner name, log-contact quick action, make-quote primary by stage
+- [x] Deal card eight facts, two columns; win chance percent
+- [x] vitest leadPageBoard, detailPageWidgets updated
