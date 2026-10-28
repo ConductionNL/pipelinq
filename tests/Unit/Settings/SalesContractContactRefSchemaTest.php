@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Tests\Unit\Settings;
 
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
 use OCP\App\IAppManager;
+use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -66,6 +67,32 @@ class SalesContractContactRefSchemaTest extends TestCase {
 		$this->assertNotContains('contactRef', ($schema['required'] ?? []));
 
 	}//end testContactRefIsAnOptionalReferenceToAContact()
+
+	/**
+	 * The renewal lead outcome accepts null as well as its words.
+	 *
+	 * OpenRegister stores the declared default "" as null, so a contract
+	 * saved without an outcome reads back with null. Any later validation
+	 * of that contract (an edit in the app, an example-set change) refused
+	 * it as "should be type 'string' but is 'null'".
+	 *
+	 * @return void
+	 */
+	public function testTheRenewalLeadOutcomeAcceptsNull(): void {
+		$property = ($this->schema()['properties']['renewalLeadOutcome'] ?? null);
+		$this->assertIsArray($property);
+
+		$keywords = array_intersect_key($property, array_flip(['type', 'enum']));
+		$schema   = json_decode((string) json_encode(['type' => 'object', 'properties' => ['renewalLeadOutcome' => $keywords]]));
+		foreach ([null, '', 'won', 'lost'] as $value) {
+			$valid = (new Validator())->validate(json_decode((string) json_encode(['renewalLeadOutcome' => $value])), $schema)->isValid();
+			$this->assertTrue($valid, 'renewalLeadOutcome should accept '.var_export($value, true));
+		}
+
+		$invalid = (new Validator())->validate(json_decode((string) json_encode(['renewalLeadOutcome' => 'maybe'])), $schema)->isValid();
+		$this->assertFalse($invalid);
+
+	}//end testTheRenewalLeadOutcomeAcceptsNull()
 
 	/**
 	 * Adding the field bumps the schema to 1.1.0, so OpenRegister re-imports it.

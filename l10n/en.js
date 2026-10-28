@@ -8595,7 +8595,8 @@ OC.L10N.register(
         "Request {reference}": "Request {reference}",
         "Contact Ref": "Contact Ref",
         "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it.": "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it.",
-        "Contract {contractNumber}": "Contract {contractNumber}"
+        "Contract {contractNumber}": "Contract {contractNumber}",
+        "Reconciliation marker for the renewal lead: 'won' or 'lost'. Empty (stored as null) until the renewal lead closes.": "Reconciliation marker for the renewal lead: 'won' or 'lost'. Empty (stored as null) until the renewal lead closes."
     },
     "nplurals=2; plural=(n != 1);"
 )

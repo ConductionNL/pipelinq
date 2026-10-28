@@ -8613,6 +8613,7 @@
         "Request {reference}": "Verzoek {reference}",
         "Contact Ref": "Contactpersoon",
         "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it.": "De contactpersoon bij de klant met wie het contract is gesloten. Optioneel; de pagina van de contactpersoon toont de contracten die hem noemen.",
-        "Contract {contractNumber}": "Contract {contractNumber}"
+        "Contract {contractNumber}": "Contract {contractNumber}",
+        "Reconciliation marker for the renewal lead: 'won' or 'lost'. Empty (stored as null) until the renewal lead closes.": "Markering voor de verlengingslead: 'won' of 'lost'. Leeg (opgeslagen als null) totdat de verlengingslead is afgesloten."
     }
 }
