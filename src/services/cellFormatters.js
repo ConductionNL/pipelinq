@@ -11,6 +11,7 @@
 
 import { translate as t } from '@nextcloud/l10n'
 import { timeRange } from '../utils/bookingTime.js'
+import { exportMoment, exportSchedule } from '../views/export/exportRunText.js'
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
 import { createUserDisplayNameFormatter } from './userDisplayName.js'
@@ -321,6 +322,8 @@ export const CELL_FORMATTERS = {
 	longDate,
 	shortDateTime,
 	timeOfDay,
+	exportMoment: (value) => exportMoment(value),
+	exportSchedule: (value) => exportSchedule(value),
 }
 
 /**
