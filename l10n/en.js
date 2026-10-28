@@ -9172,7 +9172,14 @@ OC.L10N.register(
         "VAT {vatRate}%": "VAT {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "The VAT percentage the quote's VAT is worked out at.",
         "The event this newsletter invites to.": "The event this newsletter invites to.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "The line's name on the quote: the product's name, or your own for a line of your own.",
+        "Bookkeeping": "Bookkeeping",
+        "The general ledger, the VAT posting and the journal entry are managed in shillinq. Pipelinq only passes on the facts of this POS day through the integration registry.": "The general ledger, the VAT posting and the journal entry are managed in shillinq. Pipelinq only passes on the facts of this POS day through the integration registry.",
+        "Journal entry id in shillinq": "Journal entry id in shillinq",
+        "none yet": "none yet",
+        "Pass on to shillinq again": "Pass on to shillinq again",
+        "Waiting for shillinq": "Waiting for shillinq",
+        "Passed on to shillinq": "Passed on to shillinq"
     },
     "nplurals=2; plural=(n != 1);"
 )

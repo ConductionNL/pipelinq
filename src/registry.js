@@ -107,9 +107,9 @@ import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWid
 //     flat fields auto-render via CnObjectDataWidget; the BTW + payment-method
 //     breakdown tables (array fields on the object) and the shillinq
 //     bookkeeping-status projection + manager-gated re-raise live in one
-//     kind:'section' bodyWidget (ZReportBookkeepingSection). The GL journal
+//     grid widget in the Overview tab (ZReportBookkeepingWidget). The GL journal
 //     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
-import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
+import ZReportBookkeepingWidget from './components/pos/ZReportBookkeepingWidget.vue'
 import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
 import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
 // --- Reporting dashboards (lib gap: no chart-widget page type). ---
@@ -521,12 +521,13 @@ const registry = {
 	// --- POS end-of-day bookkeeping. The Z-report list is a declarative
 	//     type:"index" page and the per-report page is now a declarative
 	//     type:"detail" page (pipelinq-detail-pages-declarative-r3); only this
-	//     in-body section (breakdown tables + bookkeeping projection + re-raise)
+	//     grid widget (breakdown tables + bookkeeping projection + re-raise)
 	//     stays as host-app code. ---
-	ZReportBookkeepingSection: {
-		kind: 'section',
-		component: ZReportBookkeepingSection,
-		_note: 'Z-report in-body section for the declarative type:"detail" ZReportDetail page: BTW + payment-method breakdown tables (array fields on the object, not FK children) plus the shillinq bookkeeping-status projection and the manager-gated, idempotent re-raise action (POST /api/pos-bookkeeping/post). Self-fetches by @objectId so it stays in sync after a re-raise. The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
+	ZReportBookkeepingWidget: {
+		kind: 'widget',
+		component: ZReportBookkeepingWidget,
+		...PANEL_WIDGET_META,
+		_note: 'ZReportDetail grid widget, board PqZRapport\'s Boekhouding card: the shillinq bookkeeping status and journal entry id, the manager-gated, idempotent pass-on-again action (POST /api/pos-bookkeeping/post) and the VAT and payment-method breakdowns (arrays on the Z-report, not child records). The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
 	},
 	PosCustomerSettingsView: {
 		kind: 'page',

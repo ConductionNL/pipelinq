@@ -2873,7 +2873,7 @@ OC.L10N.register(
         "Payment completed.": "Betaling afgerond.",
         "Payment failed": "Betaling mislukt",
         "Payment method": "Betaalmethode",
-        "Payment methods": "Betaalmethoden",
+        "Payment methods": "Betaalwijzen",
         "Payment pending": "Betaling in behandeling",
         "Payment providers (PSP)": "Betaalproviders (PSP)",
         "Payment reversed.": "Betaling teruggeboekt.",
@@ -4294,7 +4294,7 @@ OC.L10N.register(
         "VAT": "Btw",
         "VAT %": "Btw-percentage",
         "VAT amount": "BTW bedrag",
-        "VAT breakdown": "BTW uitsplitsing",
+        "VAT breakdown": "Btw-uitsplitsing",
         "VAT number": "Btw-nummer",
         "VAT rate": "Btw-tarief",
         "VAT {rate}%": "Btw {rate}%",
@@ -4966,7 +4966,7 @@ OC.L10N.register(
         "Bookable Online": "Online boekbaar",
         "Booked on": "Geboekt op",
         "Bookkeeping Attempts": "Pogingen tot boeken",
-        "Bookkeeping status": "Boekingsstatus",
+        "Bookkeeping status": "Boekhoudstatus",
         "Bounce classification used by ConsentRecord soft-bounce counter.": "Bounceclassificatie die de softbounceteller van ConsentRecord gebruikt.",
         "Bounce Type": "Soort bounce",
         "Bounced At": "Gebounced op",
@@ -9184,7 +9184,14 @@ OC.L10N.register(
         "VAT {vatRate}%": "Btw {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "Het btw-percentage waarmee de btw van de offerte wordt berekend.",
         "The event this newsletter invites to.": "Het evenement waarvoor deze nieuwsbrief uitnodigt.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel.",
+        "Bookkeeping": "Boekhouding",
+        "The general ledger, the VAT posting and the journal entry are managed in shillinq. Pipelinq only passes on the facts of this POS day through the integration registry.": "Het grootboek, de btw-boeking en de journaalpost worden beheerd in shillinq. Pipelinq geeft alleen de feiten van deze kassadag door via het integratieregister.",
+        "Journal entry id in shillinq": "Id journaalpost in Shillinq",
+        "none yet": "nog geen",
+        "Pass on to shillinq again": "Opnieuw doorgeven aan shillinq",
+        "Waiting for shillinq": "Wacht op shillinq",
+        "Passed on to shillinq": "Doorgegeven aan shillinq"
     },
     "nplurals=2; plural=(n != 1);"
 )
