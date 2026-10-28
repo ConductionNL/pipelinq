@@ -33,6 +33,7 @@ use OCP\IAppConfig;
 use OCA\Pipelinq\Tests\Unit\Service\Portal\InstalledAppConfig;
 use OCA\Pipelinq\Util\ContrastRatioCalculator;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
@@ -89,7 +90,11 @@ class PortalAdminControllerTest extends TestCase {
 		return new PortalAdminController(
 			$request,
 			new PortalTenantService($this->repository, new ContrastRatioCalculator()),
-			$this->createMock(PortalAuditService::class),
+			new PortalAuditService(
+				repository: $this->repository,
+				time: $this->createMock(originalClassName: ITimeFactory::class),
+				logger: $this->createMock(originalClassName: LoggerInterface::class)
+			),
 			$this->repository,
 			$session,
 			$groups,
@@ -213,4 +218,79 @@ class PortalAdminControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertSame('No account "ghost" exists.', $response->getData()['message']);
 	}//end testAnUnusableServiceAccountIsRefused()
+
+	/**
+	 * Every stored portal is listed, sorted by name; a record without a
+	 * status reads as live.
+	 *
+	 * @return void
+	 */
+	public function testTenantsListsEveryStoredPortal(): void {
+		$this->repository->seed(
+			'portalTenantConfig',
+			'cfg-b',
+			['tenantId' => 'west', 'displayName' => 'Mijn West', 'customDomain' => 'mijn.west.example', 'status' => 'draft']
+		);
+		$this->repository->seed('portalTenantConfig', 'cfg-a', ['tenantId' => 'oost', 'displayName' => 'Mijn Oost', 'enabledFeatures' => ['requests']]);
+
+		$response = $this->controller(isAdmin: true)->tenants();
+		$tenants = $response->getData()['tenants'];
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['oost', 'west'], actual: array_column($tenants, 'tenantId'));
+		$this->assertSame(expected: 'live', actual: $tenants[0]['status']);
+		$this->assertSame(expected: 'draft', actual: $tenants[1]['status']);
+		$this->assertSame(expected: 'mijn.west.example', actual: $tenants[1]['customDomain']);
+	}//end testTenantsListsEveryStoredPortal()
+
+	/**
+	 * A non-admin gets 403 and no list.
+	 *
+	 * @return void
+	 */
+	public function testTenantsRefusesANonAdmin(): void {
+		$this->repository->seed('portalTenantConfig', 'cfg-a', ['tenantId' => 'oost', 'displayName' => 'Mijn Oost']);
+
+		$response = $this->controller(isAdmin: false)->tenants();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+		$this->assertArrayNotHasKey(key: 'tenants', array: (array)$response->getData());
+	}//end testTenantsRefusesANonAdmin()
+
+	/**
+	 * With all=1 the latest events of every tenant come back newest first,
+	 * capped at the limit, with the total count.
+	 *
+	 * @return void
+	 */
+	public function testAuditEventsOfAllTenantsComeNewestFirstWithTheTotal(): void {
+		$this->repository->seed('portalAuditEvent', 'e1', ['tenantId' => 'oost', 'eventType' => 'login', 'occurredAt' => '2026-10-28T09:40:00Z']);
+		$this->repository->seed('portalAuditEvent', 'e2', ['tenantId' => 'west', 'eventType' => 'invoice-download', 'occurredAt' => '2026-10-28T09:58:00']);
+		$this->repository->seed(
+			'portalAuditEvent',
+			'e3',
+			['tenantId' => 'oost', 'eventType' => 'question-answered', 'occurredAt' => '2026-10-28T10:14:00']
+		);
+		$this->params = ['all' => '1', 'limit' => '2'];
+
+		$body = $this->controller(isAdmin: true)->auditEvents()->getData();
+
+		$this->assertSame(expected: ['question-answered', 'invoice-download'], actual: array_column($body['events'], 'eventType'));
+		$this->assertSame(expected: 3, actual: $body['total']);
+	}//end testAuditEventsOfAllTenantsComeNewestFirstWithTheTotal()
+
+	/**
+	 * Without all=1 the endpoint keeps answering one tenant.
+	 *
+	 * @return void
+	 */
+	public function testAuditEventsOfOneTenantStayScoped(): void {
+		$this->repository->seed('portalAuditEvent', 'e1', ['tenantId' => 'oost', 'eventType' => 'login', 'occurredAt' => '2026-10-28T09:40:00Z']);
+		$this->repository->seed('portalAuditEvent', 'e2', ['tenantId' => 'west', 'eventType' => 'login', 'occurredAt' => '2026-10-28T09:58:00Z']);
+		$this->params = ['tenantId' => 'west'];
+
+		$body = $this->controller(isAdmin: true)->auditEvents()->getData();
+
+		$this->assertSame(expected: ['west'], actual: array_column($body['events'], 'tenantId'));
+	}//end testAuditEventsOfOneTenantStayScoped()
 }//end class

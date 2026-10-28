@@ -48,6 +48,8 @@ function slot(tag) {
 }
 
 vi.mock('@nextcloud/vue', () => ({
+	NcActions: { name: 'NcActions', ...slot('div') },
+	NcActionButton: { name: 'NcActionButton', ...slot('button') },
 	NcButton: { name: 'NcButton', ...slot('button') },
 	NcCheckboxRadioSwitch: { name: 'NcCheckboxRadioSwitch', ...slot('label') },
 	NcLoadingIcon: { name: 'NcLoadingIcon', render: () => h('span') },
@@ -128,6 +130,8 @@ describe('PortalSettings', () => {
 		expect(wrapper.find('#portal-custom-domain').element.value).toBe(
 			'portaal.voorbeeld.nl',
 		)
+		// Accounts and the tenant's own audit trail sit on the Audit log tab.
+		await wrapper.find('[data-testid="portal-tab-audit"]').trigger('click')
 		expect(wrapper.text()).toContain('jan@example.nl')
 		expect(wrapper.text()).toContain('login')
 	})

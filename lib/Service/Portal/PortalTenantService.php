@@ -55,6 +55,13 @@ class PortalTenantService {
 	public const DEFAULT_TENANT = 'default';
 
 	/**
+	 * The status of a portal residents can use.
+	 *
+	 * @var string
+	 */
+	public const STATUS_LIVE = 'live';
+
+	/**
 	 * Public (client-safe) config fields. Everything else is admin-only.
 	 *
 	 * @var array<int, string>
@@ -219,6 +226,30 @@ class PortalTenantService {
 
 		return $this->repository->save(self::SCHEMA, $config, $id);
 	}//end saveConfig()
+
+	/**
+	 * Every stored tenant config, sorted by display name. A record without a
+	 * status reads as live.
+	 *
+	 * @return array<int, array<string, mixed>> The configs.
+		 * @spec openspec/changes/portal-tenants-on-one-admin-tab/specs/customer-portal/spec.md#requirement-the-admin-tab-lists-every-portal-tenant
+	 */
+	public function listConfigs(): array {
+		$configs = [];
+		foreach ($this->repository->findAll(self::SCHEMA) as $config) {
+			$config['status'] = (string)($config['status'] ?? self::STATUS_LIVE);
+			$configs[] = $config;
+		}
+
+		usort(
+			$configs,
+			static function (array $left, array $right): int {
+				return strcmp((string)($left['displayName'] ?? ''), (string)($right['displayName'] ?? ''));
+			}
+		);
+
+		return $configs;
+	}//end listConfigs()
 
 	/**
 	 * Whether a feature is enabled for a tenant.
