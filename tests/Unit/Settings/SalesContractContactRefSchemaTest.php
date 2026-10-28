@@ -82,7 +82,13 @@ class SalesContractContactRefSchemaTest extends TestCase {
 		$property = ($this->schema()['properties']['renewalLeadOutcome'] ?? null);
 		$this->assertIsArray($property);
 
+		// OpenRegister refuses a union type at import, so the schema declares a
+		// single type and null in its enum; validation then widens a
+		// non-required property to accept null (ValidateObject).
+		$this->assertSame('string', $property['type']);
+		$this->assertContains(null, $property['enum']);
 		$keywords = array_intersect_key($property, array_flip(['type', 'enum']));
+		$keywords['type'] = [$keywords['type'], 'null'];
 		$schema   = json_decode((string) json_encode(['type' => 'object', 'properties' => ['renewalLeadOutcome' => $keywords]]));
 		foreach ([null, '', 'won', 'lost'] as $value) {
 			$valid = (new Validator())->validate(json_decode((string) json_encode(['renewalLeadOutcome' => $value])), $schema)->isValid();
