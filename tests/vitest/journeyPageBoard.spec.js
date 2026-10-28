@@ -68,3 +68,37 @@ describe('journey runs card', () => {
 		expect(css).toMatch(/line-height:\s*1\.2/)
 	})
 })
+
+describe('journey steps', () => {
+	const steps = widget('journey-steps')
+	const field = (label) => steps.content.fields.find((f) => f.label === label)
+
+	it('sits in the details card, under the facts, with no rule between them', () => {
+		const card = widget('journey-details')
+		expect(card).toMatchObject({ type: 'sections', title: 'Journey details' })
+		expect(card.content.dividers).toBe(false)
+		expect(card.content.sections.map((s) => s.widgetId)).toEqual(['journey-data', 'journey-steps'])
+		const overview = widget('journey-panels').content.tabs[0]
+		expect(overview.widgetIds).toEqual(['journey-details', 'journey-runs'])
+	})
+
+	it('draws the steps as tiles', () => {
+		expect(steps.content.layout).toBe('tiles')
+		expect(steps.content.fields.map((f) => f.label)).toEqual(['Trigger', 'Wait', 'Condition', 'Action'])
+	})
+
+	it('names the trigger and the action in their own words, else by their kind', () => {
+		for (const [label, path] of [['Trigger', 'trigger'], ['Action', 'action']]) {
+			const [own, kind] = field(label).firstOf
+			expect(own).toBe(`${path}.label`)
+			expect(kind.path).toBe(`${path}.kind`)
+			expect(Object.keys(kind.map).length).toBeGreaterThan(1)
+		}
+	})
+
+	it('says the condition and the wait in words', () => {
+		expect(field('Condition').map.marketingConsentEmail).toBe('Has consent for e-mail marketing')
+		expect(nl['Has consent for e-mail marketing']).toBe('Heeft toestemming voor marketing per e-mail')
+		expect(field('Wait').format).toBe('duration')
+	})
+})

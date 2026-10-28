@@ -148,8 +148,7 @@
 							"tabs": [
 								{
 									"widgetIds": [
-										"journey-data",
-										"journey-steps",
+										"journey-details",
 										"journey-runs"
 									],
 									"label": "Overview"
@@ -210,38 +209,69 @@
 						}
 					},
 					{
+						"id": "journey-details",
+						"type": "sections",
+						"title": "Journey details",
+						"content": {
+							"dividers": false,
+							"sections": [
+								{
+									"widgetId": "journey-data"
+								},
+								{
+									"widgetId": "journey-steps"
+								}
+							]
+						}
+					},
+					{
 						"id": "journey-steps",
 						"type": "facts",
 						"title": "Steps",
 						"content": {
+							"layout": "tiles",
 							"fields": [
 								{
-									"path": "trigger.kind",
 									"label": "Trigger",
-									"map": {
-										"leadStageChanged": "A lead moved stage",
-										"contractRenewalWindow": "A contract is up for renewal",
-										"listConfirmed": "Someone confirmed a subscription",
-										"shillinqSignal": "A bookkeeping signal changed",
-										"addressChanged": "A resident or business got a new address",
-										"ticketClosed": "A ticket was closed"
-									}
+									"firstOf": [
+										"trigger.label",
+										{
+											"path": "trigger.kind",
+											"map": {
+												"leadStageChanged": "A lead moved stage",
+												"contractRenewalWindow": "A contract is up for renewal",
+												"listConfirmed": "Someone confirmed a subscription",
+												"shillinqSignal": "A bookkeeping signal changed",
+												"addressChanged": "A resident or business got a new address",
+												"ticketClosed": "A ticket was closed"
+											}
+										}
+									]
 								},
 								{
 									"path": "waitFor",
-									"label": "Wait"
+									"label": "Wait",
+									"format": "duration"
 								},
 								{
 									"path": "condition.field",
-									"label": "Condition"
+									"label": "Condition",
+									"map": {
+										"marketingConsentEmail": "Has consent for e-mail marketing"
+									}
 								},
 								{
-									"path": "action.kind",
 									"label": "Action",
-									"map": {
-										"sendMailing": "Send a mailing",
-										"createTask": "Create a task"
-									}
+									"firstOf": [
+										"action.label",
+										{
+											"path": "action.kind",
+											"map": {
+												"sendMailing": "Send a mailing",
+												"createTask": "Create a task"
+											}
+										}
+									]
 								}
 							]
 						}

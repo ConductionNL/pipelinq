@@ -249,6 +249,8 @@ export default {
 	}
 
 	th {
+		--nldesign-component-table-header-background-color: var(--color-main-background);
+		--nldesign-component-table-header-color: var(--color-text-maxcontrast);
 		padding-block: 10px;
 		font-weight: 600;
 		color: var(--color-text-maxcontrast);

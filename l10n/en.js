@@ -4454,6 +4454,7 @@ OC.L10N.register(
         "What this journey did": "What this journey did",
         "Activated by {actor}": "Activated by {actor}",
         "Flow compiled": "Flow compiled",
+        "Has consent for e-mail marketing": "Has consent for e-mail marketing",
         "What this journey is for, in the marketer's own words.": "What this journey is for, in the marketer's own words.",
         "What this post says on every network": "What this post says on every network",
         "What this publication cost in euros. Only X charges per post and per read today; every other network records zero.": "What this publication cost in euros. Only X charges per post and per read today; every other network records zero.",
