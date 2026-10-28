@@ -19,15 +19,12 @@
 -->
 <template>
 	<div class="performance-dashboard" :class="lookClass">
-		<NcButton
+		<router-link
 			class="performance-dashboard__back"
-			variant="tertiary"
 			:to="{ name: 'Blasts' }">
-			<template #icon>
-				<ArrowLeft :size="18" />
-			</template>
+			<ArrowLeft :size="16" />
 			{{ t('pipelinq', 'Back to blasts') }}
-		</NcButton>
+		</router-link>
 		<CnPageHeader
 			:title="t('pipelinq', 'Results of your sends')"
 			:description="t('pipelinq', '{shown} of {total} newsletters · opened and clicked from our own measurements · newest first', {
@@ -353,10 +350,10 @@ import {
 	variantStats,
 	wholePercent,
 } from '../../services/abTest.js'
-import { trafficOutcome } from '../../services/campaignTraffic.js'
+import { readTrafficRows, trafficOutcome } from '../../services/campaignTraffic.js'
 
 const OVERVIEW_LIMIT = 50
-/** How many per-blast attribution reads may be in flight at once. */
+/** How many per-blast attribution or traffic reads may be in flight at once. */
 const ATTRIBUTION_CONCURRENCY = 6
 const AB_MIN_DELIVERED = 500
 const AB_MIN_ELAPSED_MS = 24 * 60 * 60 * 1000
@@ -800,47 +797,17 @@ export default {
 		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 		 */
 		async fetchTrafficRows() {
-			const rows = []
-			let connected = null
-			// Counted, not inferred. "No answer" has two causes that need
-			// different words: there was no blast to ask about, or every ask
-			// failed. Neither is "loading", and neither may leave the spinner up.
-			let asked = 0
-			let answered = 0
-
-			for (const blast of this.blasts) {
-				const id = blast.id || blast.uuid || blast.slug
-				if (!id) {
-					continue
-				}
-				asked += 1
-				try {
-					const url = generateUrl(
-						`/apps/pipelinq/api/blasts/${id}/performance`,
-					)
+			// Counted, not inferred: "no blast to ask about" and "every ask
+			// failed" need different words, and neither may leave the spinner up.
+			const { rows, connected, asked, answered } = await readTrafficRows(
+				this.blasts,
+				async (id) => {
+					const url = generateUrl(`/apps/pipelinq/api/blasts/${id}/performance`)
 					const { data } = await axios.get(url)
-					answered += 1
-					connected = Boolean(data?.connected)
-					if (!connected) {
-						break
-					}
-					if ((data?.site?.sessions || 0) > 0) {
-						rows.push({
-							id,
-							name: blast.name || id,
-							campaign: data.campaign || '',
-							opened: data.email?.opened || 0,
-							clicked: data.email?.clicked || 0,
-							sessions: data.site?.sessions || 0,
-							dealCount: data.deals?.dealCount || 0,
-						})
-					}
-				} catch {
-					// Skip; keep loop alive. The count above is what makes this
-					// swallow visible: a run where every request threw ends with
-					// asked > 0 and answered === 0, which the block names.
-				}
-			}
+					return data
+				},
+				ATTRIBUTION_CONCURRENCY,
+			)
 
 			this.trafficConnected = connected
 			this.trafficRows = rows
@@ -1071,7 +1038,17 @@ export default {
 
 .performance-dashboard__back {
 	align-self: flex-start;
-	margin-inline-start: -12px;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--color-primary-element-text-dark, var(--color-primary-element));
+	text-decoration: none;
+}
+
+.performance-dashboard__back:hover {
+	text-decoration: underline;
 }
 
 .performance-dashboard__header-actions {
@@ -1244,6 +1221,7 @@ export default {
 
 .performance-dashboard__ab-variant dt {
 	font-size: 13px;
+	text-align: start;
 	color: var(--color-text-maxcontrast);
 }
 
@@ -1294,6 +1272,39 @@ export default {
 	flex-direction: column;
 	gap: 14px;
 	margin-top: 6px;
+}
+
+/* Board look (PqNieuwsbriefPrestaties, PqNieuwsbriefABTest,
+   PqNieuwsbriefToeschrijving): the header is padded 4px 0 8px and the page's
+   20px gap follows, its buttons are 40px, the open tab's panel is a white
+   card, and tables and cards stand on that card's ground with their text on a
+   1.2 line. */
+.cn-look-board :deep(.cn-page-header) {
+	padding-block: 4px 8px;
+	margin-bottom: 0;
+}
+
+.cn-look-board .performance-dashboard__header-actions :deep(.button-vue) {
+	min-height: 40px;
+	block-size: 40px;
+}
+
+.cn-look-board :deep(.performance-dashboard__body) {
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: 0 12px 12px 12px;
+}
+
+.cn-look-board .performance-dashboard__table th {
+	background: transparent;
+}
+
+.cn-look-board .performance-dashboard__table :is(th, td) {
+	line-height: 1.2;
+}
+
+.cn-look-board .performance-dashboard__ab-variant-title {
+	line-height: 1.2;
 }
 
 .performance-dashboard__error {
