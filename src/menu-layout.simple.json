@@ -784,7 +784,8 @@
 											"hint": "What was agreed, and who does what"
 										}
 									],
-									"after": "A contact moment has no customer to answer. Close it via More, Close the contact moment."
+									"afterTitle": "A contact moment has no customer to answer.",
+									"after": "Close it via More, Close the contact moment."
 								},
 								"in_progress": {
 									"title": "What now? Step 2: in progress",
@@ -803,7 +804,8 @@
 											"hint": "What was agreed, and who does what"
 										}
 									],
-									"after": "A contact moment has no customer to answer. Close it via More, Close the contact moment."
+									"afterTitle": "A contact moment has no customer to answer.",
+									"after": "Close it via More, Close the contact moment."
 								}
 							}
 						}
@@ -1437,7 +1439,12 @@
 					"woo-conversion": null,
 					"resident-view": null,
 					"routing-suggestions": {
-						"title": "Suggested colleagues"
+						"title": "Suggested colleagues",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
 					}
 				},
 				"widgets": {
@@ -1835,6 +1842,7 @@
 							"label": "Conversation notes",
 							"rows": 5,
 							"savedText": "Saved automatically as you type. Last saved {time}.",
+							"outcomeBelow": true,
 							"outcome": {
 								"field": "outcome",
 								"label": "Outcome",
@@ -1853,7 +1861,8 @@
 										"value": "callbackRequest",
 										"label": "Callback arranged"
 									}
-								]
+								],
+								"saveVariant": "primary"
 							}
 						}
 					},
@@ -1900,35 +1909,50 @@
 											}
 										},
 										{
+											"path": "occurredAt",
+											"format": "days-since",
+											"phrase": "waiting {n} days",
+											"phraseOne": "waiting for 1 day",
+											"phraseZero": "waiting since today"
+										},
+										{
 											"path": "assignee",
-											"format": "user"
+											"format": "user",
+											"empty": "not assigned"
 										}
-									]
-								},
-								{
-									"label": "Status",
-									"path": "status",
-									"map": {
-										"new": "New",
-										"in_progress": "In progress",
-										"awaiting_customer": "Waiting for customer",
-										"resolved": "Resolved",
-										"completed": "Completed",
-										"rejected": "Rejected",
-										"converted": "Converted to a case",
-										"closed": "Closed"
+									],
+									"card": true,
+									"route": {
+										"name": "TicketDetail",
+										"params": {
+											"id": "@object.parentTicket"
+										}
+									},
+									"pill": {
+										"path": "status",
+										"map": {
+											"new": "New",
+											"in_progress": "In progress",
+											"awaiting_customer": "Waiting for customer",
+											"resolved": "Resolved",
+											"completed": "Completed",
+											"rejected": "Rejected",
+											"converted": "Converted to a case",
+											"closed": "Closed"
+										},
+										"variantMap": {
+											"new": "info",
+											"in_progress": "purple",
+											"awaiting_customer": "warning",
+											"resolved": "success",
+											"completed": "success",
+											"rejected": "default",
+											"converted": "default",
+											"closed": "default"
+										}
 									}
 								}
 							],
-							"link": {
-								"label": "Open the request",
-								"route": {
-									"name": "TicketDetail",
-									"params": {
-										"id": "@object.parentTicket"
-									}
-								}
-							},
 							"footnote": "The notes above are kept with the request as a contact moment, with your name and the time."
 						}
 					}

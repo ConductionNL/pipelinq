@@ -9250,7 +9250,13 @@ OC.L10N.register(
         "An agent wrote this summary: {agent}, on {when}": "An agent wrote this summary: {agent}, on {when}",
         "Nothing has been seen yet.": "Nothing has been seen yet.",
         "{competitor} published \"{title}\"": "{competitor} published \"{title}\"",
-        "{competitor} published \"{title}\", relevance {score}": "{competitor} published \"{title}\", relevance {score}"
+        "{competitor} published \"{title}\", relevance {score}": "{competitor} published \"{title}\", relevance {score}",
+        "A contact moment has no customer to answer.": "A contact moment has no customer to answer.",
+        "Close it via More, Close the contact moment.": "Close it via More, Close the contact moment.",
+        "waiting {n} days": "waiting {n} days",
+        "waiting since today": "waiting since today",
+        "not assigned": "not assigned",
+        "waiting for 1 day": "waiting for 1 day"
     },
     "nplurals=2; plural=(n != 1);"
 )
