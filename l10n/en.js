@@ -9149,7 +9149,14 @@ OC.L10N.register(
         "No quote for this lead yet.": "No quote for this lead yet.",
         "Expected closing": "Expected closing",
         "Make quote": "Make quote",
-        "Quote made.": "Quote made."
+        "Quote made.": "Quote made.",
+        "Waiting {subject.waitingDays} days for an answer.": "Waiting {subject.waitingDays} days for an answer.",
+        "Answer it": "Answer it",
+        "you are available for calls and the queue": "you are available for calls and the queue",
+        "you are not taking calls or the queue": "you are not taking calls or the queue",
+        "See an example": "See an example",
+        "Question from {subject.clientName} about {subject.title}": "Question from {subject.clientName} about {subject.title}",
+        "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.": "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -9161,7 +9161,14 @@ OC.L10N.register(
         "No quote for this lead yet.": "Nog geen offerte voor deze lead.",
         "Expected closing": "Verwachte afsluiting",
         "Make quote": "Offerte maken",
-        "Quote made.": "Offerte gemaakt."
+        "Quote made.": "Offerte gemaakt.",
+        "Waiting {subject.waitingDays} days for an answer.": "Wacht {subject.waitingDays} dagen op antwoord.",
+        "Answer it": "Beantwoorden",
+        "you are available for calls and the queue": "je bent beschikbaar voor gesprekken en de wachtrij",
+        "you are not taking calls or the queue": "je neemt geen gesprekken of wachtrij aan",
+        "See an example": "Bekijk een voorbeeld",
+        "Question from {subject.clientName} about {subject.title}": "Vraag van {subject.clientName} over {subject.title}",
+        "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.": "Via {subject.channel|enumWord} · wacht {subject.waitingDays} dagen op antwoord."
     },
     "nplurals=2; plural=(n != 1);"
 )

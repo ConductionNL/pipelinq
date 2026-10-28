@@ -73,6 +73,20 @@ export function enumText(value) {
 }
 
 /**
+ * A stored code as a translated word inside a sentence: `phone` reads
+ * "telefoon" in "Via telefoon". As enumText, with the first letter in
+ * lower case.
+ *
+ * @param {unknown} value The stored value.
+ * @return {string} The word, or '' for an empty value.
+ * @spec openspec/specs/dashboard/spec.md
+ */
+export function enumWord(value) {
+	const word = enumText(value)
+	return word === '' ? '' : word.charAt(0).toLowerCase() + word.slice(1)
+}
+
+/**
  * Print a stored enum value as its label: the schema property's
  * `x-enum-labels` entry, through pipelinq's translate. The library's `badge`
  * cell widget prints the formatted value and its plain formatter does not
@@ -313,6 +327,7 @@ export const CELL_FORMATTERS = {
 	objectCurrency,
 	transactionMoment,
 	enumText,
+	enumWord,
 	enumLabel,
 	yesNo,
 	callDuration: isoDuration,
