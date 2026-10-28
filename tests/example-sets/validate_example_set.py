@@ -309,6 +309,26 @@ def lookup_problem(where, name, lookup, looked_for, register, own_registers, dec
         warnings.append('%s: lookup %s finds no %s %s in this set with %s; it must exist on the instance' % (where, name, source, lookup['schema'], words))
 
 
+def overridden_declarations(fragment):
+    """Changes that set a field the set's own object declares to another value.
+
+    The read-back proof compares the object with its declaration, so such a
+    field reads as written but not kept, and a refresh writes the declaration back.
+    """
+    problems = []
+    raw = {o.get('key'): o for o in fragment.get('objects', []) if isinstance(o, dict) and isinstance(o.get('data'), dict)}
+    for change in fragment.get('changes', []):
+        where = change.get('where') or {}
+        target = re.fullmatch(r'\{\{object:([^.}]+)\.(?:id|uuid)\}\}', str(where.get('id', '')))
+        obj = raw.get(target.group(1)) if target and len(where) == 1 else None
+        if obj is None or (obj.get('register'), obj.get('schema')) != (change.get('register'), change.get('schema')):
+            continue
+        for field, value in (change.get('set') or {}).items():
+            if field in obj['data'] and obj['data'][field] != value:
+                problems.append('change "%s": sets %s on object "%s", which declares %s itself; the read-back proof reports it written but not kept and a refresh writes it back, so change the declaration instead' % (change.get('key'), field, obj['key'], field))
+    return problems
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--fragment', required=True)
@@ -381,6 +401,7 @@ def main():
         if undeclared:
             problems.append('%s: keys the schema does not declare (the read-back proof would exit 2): %s' % (where, ', '.join(undeclared)))
         counts[(obj['register'], obj['schema'])] = counts.get((obj['register'], obj['schema']), 0) + 1
+    problems.extend(overridden_declarations(fragment))
     for index, entry in enumerate(fragment.get('appConfig', [])):
         where = 'appConfig %d' % index
         if not isinstance(entry, dict):
