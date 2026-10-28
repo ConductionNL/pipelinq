@@ -9017,7 +9017,14 @@ OC.L10N.register(
         "Card in the address book {book}, updated {when}.": "Card in the address book {book}, updated {when}.",
         "today {time}": "today {time}",
         "Social profile": "Social profile",
-        "preferred": "preferred"
+        "preferred": "preferred",
+        "%n day late": ["%n day late","%n days late"],
+        "closes {date}": "closes {date}",
+        "due {date}": "due {date}",
+        "%n days late": "%n days late",
+        "Ask a question about these figures": "Ask a question about these figures",
+        "Which category took longest to resolve this month?": "Which category took longest to resolve this month?",
+        "Ask": "Ask"
     },
     "nplurals=2; plural=(n != 1);"
 )

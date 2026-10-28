@@ -9118,6 +9118,16 @@
         "Card in the address book {book}, updated {when}.": "Kaart in het adresboek {book}, {when} bijgewerkt.",
         "today {time}": "vandaag {time}",
         "Social profile": "Sociaal profiel",
-        "preferred": "voorkeur"
+        "preferred": "voorkeur",
+        "%n day late": [
+            "%n dag te laat",
+            "%n dagen te laat"
+        ],
+        "closes {date}": "afsluiting {date}",
+        "due {date}": "uiterlijk {date}",
+        "%n days late": "%n dagen te laat",
+        "Ask a question about these figures": "Stel een vraag over deze cijfers",
+        "Which category took longest to resolve this month?": "Welke categorie duurde deze maand het langst om op te lossen?",
+        "Ask": "Vragen"
     }
 }

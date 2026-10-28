@@ -1426,8 +1426,19 @@
 						"id": "leads-over-time",
 						"type": "chart",
 						"title": "Leads over time",
+						"_note": "PqOperationeel: the count on each bar, short month names, no value axis or grid.",
 						"content": {
 							"chartKind": "bar",
+							"categoryFormat": "month",
+							"height": 190,
+							"options": {
+								"chart": { "toolbar": { "show": false } },
+								"plotOptions": { "bar": { "columnWidth": "60%", "borderRadius": 6, "borderRadiusApplication": "end", "dataLabels": { "position": "top" } } },
+								"dataLabels": { "enabled": true, "offsetY": -18, "style": { "fontSize": "12px", "fontWeight": 400, "colors": ["var(--color-main-text)"] } },
+								"yaxis": { "show": false },
+								"grid": { "show": false },
+								"xaxis": { "axisBorder": { "show": false }, "axisTicks": { "show": false } }
+							},
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
