@@ -90,6 +90,18 @@ class WorklistService {
 	private const DEFAULT_PRIORITY_RANK = 2;
 
 	/**
+	 * Counts one to twenty as words, through the translations.
+	 *
+	 * @var array<int, string>
+	 */
+	private const NUMBER_WORDS = [
+		1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six', 7 => 'seven',
+		8 => 'eight', 9 => 'nine', 10 => 'ten', 11 => 'eleven', 12 => 'twelve', 13 => 'thirteen',
+		14 => 'fourteen', 15 => 'fifteen', 16 => 'sixteen', 17 => 'seventeen', 18 => 'eighteen',
+		19 => 'nineteen', 20 => 'twenty',
+	];
+
+	/**
 	 * Request statuses that mean "done" — excluded from the worklist
 	 * (MyWorkWidget.vue:90, MyWork.vue:242).
 	 *
@@ -525,9 +537,9 @@ class WorklistService {
 		$parts = array_values(
 			array_filter(
 				[
-					$this->l10n->n('%n ticket', '%n tickets', $counts['tickets']),
-					$this->l10n->n('%n lead', '%n leads', $counts['leads']),
-					$this->l10n->n('%n follow-up', '%n follow-ups', $counts['tasks']),
+					$this->counted(singular: '%n ticket', plural: '%n tickets', count: $counts['tickets']),
+					$this->counted(singular: '%n lead', plural: '%n leads', count: $counts['leads']),
+					$this->counted(singular: '%n follow-up', plural: '%n follow-ups', count: $counts['tasks']),
 				],
 				static fn (string $part, int $index): bool => (array_values($counts)[$index] > 0),
 				ARRAY_FILTER_USE_BOTH
@@ -539,13 +551,41 @@ class WorklistService {
 			$kinds = $this->l10n->t('%1$s and %2$s', [implode(', ', $parts), $last]);
 		}
 
-		$sentence = $this->l10n->n('%n item is with you', '%n items are with you', count($items)) . ': ' . $kinds;
+		$sentence = $this->counted(singular: '%n item is with you', plural: '%n items are with you', count: count($items)) . ': ' . $kinds;
 		if ($dueNow > 0) {
-			$sentence .= '; ' . $this->l10n->n('%n must be answered today', '%n must be answered today', $dueNow);
+			$sentence .= '; ' . $this->counted(singular: '%n must be answered today', plural: '%n must be answered today', count: $dueNow);
 		}
 
 		return $sentence;
 	}//end summary()
+
+	/**
+	 * A counted phrase with the count written as a word from one to twenty
+	 * ("negen items", board PqMijnWerk), as digits above.
+	 *
+	 * @param string $singular The phrase for one, with `%n`.
+	 * @param string $plural   The phrase for more, with `%n`.
+	 * @param int    $count    The count.
+	 *
+	 * @return string The phrase.
+	 *
+	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	private function counted(string $singular, string $plural, int $count): string {
+		$phrase = $this->l10n->n($singular, $plural, $count);
+		$word   = (self::NUMBER_WORDS[$count] ?? '');
+		if ($word === '') {
+			return $phrase;
+		}
+
+		$digits = (string)$count;
+		$offset = strpos($phrase, $digits);
+		if ($offset === false) {
+			return $phrase;
+		}
+
+		return substr($phrase, 0, $offset) . $this->l10n->t($word) . substr($phrase, ($offset + strlen($digits)));
+	}//end counted()
 
 	/**
 	 * Each item with the name of its client (`clientName`), read once per

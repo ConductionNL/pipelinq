@@ -666,7 +666,26 @@ class WorklistServiceTest extends TestCase {
 			],
 		]);
 
-		self::assertSame('3 items are with you: 2 tickets and 1 lead; 1 must be answered today', $service->summary(userId: 'pieter'));
+		self::assertSame('three items are with you: two tickets and one lead; one must be answered today', $service->summary(userId: 'pieter'));
 		self::assertSame('Nothing is with you right now', $this->buildService([])->summary(userId: 'pieter'));
 	}//end testSummaryCountsTheWorkByKind()
+
+	/**
+	 * Above twenty the count stays in digits.
+	 *
+	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testSummaryWritesCountsAboveTwentyInDigits(): void {
+		$tickets = [];
+		for ($index = 0; $index < 21; $index++) {
+			$tickets[] = ['id' => 't' . $index, 'title' => 'T' . $index, 'ticketType' => 'request', 'status' => 'new'];
+		}
+
+		self::assertSame(
+			'21 items are with you: 21 tickets',
+			$this->buildService(['ticket_schema:request' => $tickets])->summary(userId: 'pieter')
+		);
+	}//end testSummaryWritesCountsAboveTwentyInDigits()
 }
