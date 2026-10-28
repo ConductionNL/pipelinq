@@ -18,18 +18,32 @@ const config = manifest.pages.find((page) => page.id === 'ClientDetail').config
 const widget = (id) => config.widgets.find((entry) => entry.id === id)
 
 describe('ClientDetail as the boards draw it', () => {
-	it('lays the six figures out in one row above the tabs', () => {
-		const row = config.layout.filter((item) => item.gridY === 0).map((item) => item.widgetId)
-		expect(row).toEqual([
+	/**
+	 * @spec openspec/changes/client-band-and-strip/specs/client-detail/spec.md#requirement-the-contact-strip-and-the-figures-span-the-page
+	 */
+	it('draws the contact strip and the six figures in a compact band across the page, the tabs under it', () => {
+		expect(config.bandDensity).toBe('compact')
+		expect(config.band[0]).toMatchObject({ id: 'contact-strip', type: 'PartyContactStripWidget', chrome: 'bare' })
+		expect(config.band.slice(1)).toEqual([
 			'client-summary-open-tickets',
 			'client-summary-new-requests',
 			'client-summary-sla-breached',
 			'client-summary-sla-at-risk',
 			'client-summary-open-leads',
 			'client-summary-last-activity',
-		])
-		expect(config.layout.every((item) => item.gridY > 0 || item.gridWidth === 2)).toBe(true)
-		expect(config.layout.find((item) => item.widgetId === 'client-panels').gridY).toBe(1)
+		].map((widgetId) => ({ widgetId, span: 2, chrome: 'bare' })))
+		expect(config.layout.map((item) => item.widgetId)).toEqual(['client-panels'])
+		expect(config.layout[0].gridY).toBe(0)
+		expect((config.bodyWidgets || []).some((entry) => entry.component === 'PartyContactStrip')).toBe(false)
+	})
+
+	/**
+	 * @spec openspec/changes/client-band-and-strip/specs/client-detail/spec.md#requirement-log-contact-and-new-request-are-header-buttons
+	 */
+	it('shows Log contact and New request as header buttons before Edit', () => {
+		expect(config.quickActions).toEqual(['log-contact', 'new-request'])
+		expect(nl['Log contact']).toBe('Contact vastleggen')
+		expect(nl['New request']).toBe('Nieuw verzoek')
 	})
 
 	it('draws each figure as its label and value, in the boards\' words', () => {

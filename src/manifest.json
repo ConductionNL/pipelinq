@@ -1973,6 +1973,7 @@
 						"widget": "timezone"
 					}
 				},
+				"quickActions": ["log-contact", "new-request"],
 				"headerActions": [
 					{
 						"id": "log-contact",
@@ -3068,86 +3069,29 @@
 						}
 					}
 				],
-				"_layoutNote": "PqKlant and PqOrganisatie: one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity), the tab strip under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab.",
+				"_layoutNote": "PqKlant and PqOrganisatie: the contact strip and one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity) span the page in a compact band, above the tab strip and the side column. The sales figures moved from the side column into the Sales tab, the files into the Documents tab.",
+				"bandDensity": "compact",
+				"band": [
+					{ "id": "contact-strip", "type": "PartyContactStripWidget", "chrome": "bare" },
+					{ "widgetId": "client-summary-open-tickets", "span": 2, "chrome": "bare" },
+					{ "widgetId": "client-summary-new-requests", "span": 2, "chrome": "bare" },
+					{ "widgetId": "client-summary-sla-breached", "span": 2, "chrome": "bare" },
+					{ "widgetId": "client-summary-sla-at-risk", "span": 2, "chrome": "bare" },
+					{ "widgetId": "client-summary-open-leads", "span": 2, "chrome": "bare" },
+					{ "widgetId": "client-summary-last-activity", "span": 2, "chrome": "bare" }
+				],
 				"layout": [
-					{
-						"id": "1",
-						"widgetId": "client-summary-open-tickets",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
-					{
-						"id": "2",
-						"widgetId": "client-summary-new-requests",
-						"gridX": 2,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
-					{
-						"id": "3",
-						"widgetId": "client-summary-sla-breached",
-						"gridX": 4,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
-					{
-						"id": "4",
-						"widgetId": "client-summary-sla-at-risk",
-						"gridX": 6,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
-					{
-						"id": "5",
-						"widgetId": "client-summary-open-leads",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
-					{
-						"id": "6",
-						"widgetId": "client-summary-last-activity",
-						"gridX": 10,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 1,
-						"showTitle": false
-					},
 					{
 						"id": "9",
 						"widgetId": "client-panels",
 						"gridX": 0,
-						"gridY": 1,
+						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"showTitle": false
 					}
 				],
 				"bodyWidgets": [
-					{
-						"id": "contact-strip",
-						"component": "PartyContactStrip",
-						"placement": "before-body",
-						"_note": "PqKlant / PqOrganisatie: the warnings line (an aggression registration or a death is read before contact is made, pipelinq#2036) and the call, mail, directions and log-a-visit buttons in one card before the body (platform-phone-on-the-road).",
-						"props": {
-							"partyId": "@objectId",
-							"partyKind": "@object.type",
-							"phone": "@object.phone",
-							"email": "@object.email",
-							"address": "@object.address"
-						}
-					},
 					{
 						"id": "messaging-conversation",
 						"component": "MessagingConversationSection",

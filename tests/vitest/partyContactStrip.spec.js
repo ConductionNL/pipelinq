@@ -49,6 +49,18 @@ describe('PartyContactStrip', () => {
 		expect(wrapper.find('[data-testid="party-indicators-add"]').exists()).toBe(true)
 	})
 
+	/**
+	 * @spec openspec/changes/client-band-and-strip/specs/client-detail/spec.md#requirement-the-warning-form-opens-on-request
+	 */
+	it('keeps the warning form closed until Add a warning is pressed', async () => {
+		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'organization' }, global })
+		await flushPromises()
+		expect(wrapper.find('.party-indicators__form').exists()).toBe(false)
+		await wrapper.find('[data-testid="party-indicators-add"]').trigger('click')
+		await flushPromises()
+		expect(wrapper.find('.party-indicators__form').exists()).toBe(true)
+	})
+
 	it('draws the contact links as buttons with a verb, and the visit action', async () => {
 		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'person', phone: '06 12 34 56 78', email: 's@example.nl', address: 'Parkstraat 24, Zuiddrecht' }, global })
 		await flushPromises()

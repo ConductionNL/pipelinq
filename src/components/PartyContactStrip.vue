@@ -79,7 +79,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	margin: 0 0 20px;
+	margin: 0;
 	padding: 16px 20px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--cn-board-card-radius, 12px);
