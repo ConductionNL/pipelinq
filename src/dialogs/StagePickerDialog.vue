@@ -9,7 +9,7 @@
   - inside its parent (ADR-004); it was extracted out of PipelineCard.vue.
   -->
 <template>
-	<NcDialog :name="t('pipelinq', 'Move to stage')" @closing="$emit('close')">
+	<CnDialog width="form" :name="t('pipelinq', 'Move to stage')" @closing="$emit('close')">
 		<div class="dialog-list">
 			<NcButton
 				v-for="stage in stages"
@@ -20,17 +20,18 @@
 				{{ stage.name }}
 			</NcButton>
 		</div>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'StagePickerDialog',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 	},
 
 	props: {

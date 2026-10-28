@@ -16,7 +16,7 @@
   - @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
   -->
 <template>
-	<NcModal :name="t('pipelinq', 'Send message')" @close="$emit('close')">
+	<CnDialog width="form" :name="t('pipelinq', 'Send message')" @closing="$emit('close')">
 		<div class="send-message">
 			<NcSelect
 				v-model="channel"
@@ -117,31 +117,31 @@
 				role="alert">
 				{{ resultMessage }}
 			</p>
-
-			<div class="send-message__actions">
+		</div>
+		<template #actions>
 				<NcButton @click="$emit('close')">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
 				<NcButton variant="primary" :disabled="!canSend" @click="send">
 					{{ sending ? t('pipelinq', 'Sending…') : t('pipelinq', 'Send') }}
 				</NcButton>
-			</div>
-		</div>
-	</NcModal>
+		</template>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcModal, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
 import SavedReplyPicker from '../components/SavedReplyPicker.vue'
 
 export default {
 	name: 'SendMessageModal',
 	components: {
 		NcButton,
-		NcModal,
+		CnDialog,
 		NcSelect,
 		NcTextArea,
 		NcTextField,

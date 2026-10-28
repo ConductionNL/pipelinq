@@ -10,9 +10,9 @@
   - @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Export for the tax authority')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="bd-export">
@@ -76,18 +76,19 @@
 				{{ t('pipelinq', 'Download export package') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcCheckboxRadioSwitch, NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 
 export default {
 	name: 'TaxAuthorityExportDialog',
 	components: {
 		NcButton,
 		NcCheckboxRadioSwitch,
-		NcDialog,
+		CnDialog,
 	},
 
 	props: {

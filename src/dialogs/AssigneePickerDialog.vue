@@ -9,7 +9,7 @@
   - inside its parent (ADR-004); it was extracted out of PipelineCard.vue.
   -->
 <template>
-	<NcDialog :name="t('pipelinq', 'Assign user')" @closing="$emit('close')">
+	<CnDialog width="form" :name="t('pipelinq', 'Assign user')" @closing="$emit('close')">
 		<NcSelect
 			v-model="picked"
 			:options="options"
@@ -26,17 +26,18 @@
 				{{ t('pipelinq', 'Assign') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcSelect } from '@nextcloud/vue'
 
 export default {
 	name: 'AssigneePickerDialog',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcSelect,
 	},
 

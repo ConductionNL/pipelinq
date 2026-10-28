@@ -24,6 +24,17 @@ vi.mock('../../src/store/modules/object.js', () => ({
 	useObjectStore: () => storeMock,
 }))
 vi.mock('@nextcloud/dialogs', () => dialogs)
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		render() {
+			return h('div', { class: 'nc-dialog' }, [
+				this.$slots.default?.(),
+				this.$slots.actions?.(),
+			])
+		},
+	},
+}))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: {
 		name: 'NcButton',

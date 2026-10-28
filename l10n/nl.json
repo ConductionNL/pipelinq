@@ -8898,6 +8898,19 @@
         "Search a client or username": "Zoek een klant of gebruikersnaam",
         "The source the identity was verified against, such as BRP.": "De bron waartegen de identiteit is gecontroleerd, zoals de BRP.",
         "What the employee checked with the customer, such as their date of birth and address.": "Wat de medewerker met de klant heeft gecontroleerd, zoals geboortedatum en adres.",
-        "When the customer's identity was last verified, for example by a lookup in the population register.": "Wanneer de identiteit van de klant voor het laatst is gecontroleerd, bijvoorbeeld door opzoeken in de BRP."
+        "When the customer's identity was last verified, for example by a lookup in the population register.": "Wanneer de identiteit van de klant voor het laatst is gecontroleerd, bijvoorbeeld door opzoeken in de BRP.",
+        "{names} and %n other": [
+            "{names} en %n andere",
+            "{names} en %n anderen"
+        ],
+        "{names} and %n others": "{names} en %n anderen",
+        "%n contact in this segment has no consent for {channel}. Choose how to continue.": [
+            "%n contact in dit segment heeft geen toestemming voor {channel}. Kies hoe je verdergaat.",
+            "%n contacten in dit segment hebben geen toestemming voor {channel}. Kies hoe je verdergaat."
+        ],
+        "%n contacts in this segment have no consent for {channel}. Choose how to continue.": "%n contacten in dit segment hebben geen toestemming voor {channel}. Kies hoe je verdergaat.",
+        "Consent missing": "Toestemming ontbreekt",
+        "Unsubscribe link found in the template": "Afmeldlink gevonden in het sjabloon",
+        "Telephony": "Telefonie"
     }
 }

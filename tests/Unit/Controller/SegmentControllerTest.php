@@ -38,6 +38,7 @@ use OCA\Pipelinq\Controller\SegmentController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
+use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
@@ -105,7 +106,8 @@ class SegmentControllerTest extends TestCase {
 		$this->controller = new SegmentController($this->request,
 			$this->segmentService,
 			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			$this->createMock(originalClassName: ComplianceService::class)
 		);
 	}//end setUp()
 
@@ -244,7 +246,8 @@ class SegmentControllerTest extends TestCase {
 		return new SegmentController($this->createMock(IRequest::class),
 			$service,
 			$session,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			$this->createMock(originalClassName: ComplianceService::class)
 		);
 	}//end wiredController()
 
@@ -551,7 +554,8 @@ class SegmentControllerTest extends TestCase {
 		$controller = new SegmentController($request,
 			$this->segmentService,
 			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			$this->createMock(originalClassName: ComplianceService::class)
 		);
 
 		$response = $controller->preview();
@@ -684,7 +688,8 @@ class SegmentControllerTest extends TestCase {
 		$controller = new SegmentController($request,
 			$this->getWiredService($objects),
 			$this->wiredSession(),
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			$this->createMock(originalClassName: ComplianceService::class)
 		);
 
 		$response = $controller->update('seg-1');
@@ -780,4 +785,38 @@ class SegmentControllerTest extends TestCase {
 
 		return $session;
 	}//end wiredSession()
+
+	/**
+	 * GET /api/segments/{id}/compliance names the members a send would skip
+	 * for lack of consent, so the wizard can show them before it creates the blast.
+	 *
+	 * @return void
+	 */
+	public function testComplianceNamesTheMembersWithoutConsent(): void {
+		$this->authenticate(uid: 'marketeer');
+		$compliance = $this->createMock(originalClassName: ComplianceService::class);
+		$compliance->method('checkSegmentCompliance')->willReturn(['missingConsent' => ['c-2'], 'suppressed' => ['c-9']]);
+		$this->segmentService->method('getMembersForBlast')->willReturn([
+			['contactId' => 'c-1', 'firstName' => 'Joke', 'lastName' => 'Smit', 'email' => 'joke@example.nl'],
+			['contactId' => 'c-2', 'firstName' => 'Bakkerij', 'lastName' => 'De Graaf', 'email' => 'info@bakkerijdegraaf.nl'],
+		]);
+		$controller = new SegmentController(
+			$this->request,
+			$this->segmentService,
+			$this->userSession,
+			$this->createConfiguredMock(originalClassName: ObjectOwnerAccessPolicy::class, configuration: ['isPrivileged' => true, 'mayAccess' => true]),
+			$compliance
+		);
+
+		$data = $controller->compliance(id: 'seg-1', channel: 'email')->getData();
+
+		$this->assertSame(
+			expected: [
+				'missingConsent' => [['id' => 'c-2', 'name' => 'Bakkerij De Graaf', 'email' => 'info@bakkerijdegraaf.nl']],
+				'missingCount' => 1,
+				'suppressedCount' => 1,
+			],
+			actual: $data
+		);
+	}//end testComplianceNamesTheMembersWithoutConsent()
 }//end class

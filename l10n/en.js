@@ -8815,7 +8815,14 @@ OC.L10N.register(
         "The customer sees the case number and who handles the case.": "The customer sees the case number and who handles the case.",
         "The source the identity was verified against, such as BRP.": "The source the identity was verified against, such as BRP.",
         "What the employee checked with the customer, such as their date of birth and address.": "What the employee checked with the customer, such as their date of birth and address.",
-        "When the customer's identity was last verified, for example by a lookup in the population register.": "When the customer's identity was last verified, for example by a lookup in the population register."
+        "When the customer's identity was last verified, for example by a lookup in the population register.": "When the customer's identity was last verified, for example by a lookup in the population register.",
+        "{names} and %n other": ["{names} and %n other","{names} and %n others"],
+        "{names} and %n others": "{names} and %n others",
+        "%n contact in this segment has no consent for {channel}. Choose how to continue.": ["%n contact in this segment has no consent for {channel}. Choose how to continue.","%n contacts in this segment have no consent for {channel}. Choose how to continue."],
+        "%n contacts in this segment have no consent for {channel}. Choose how to continue.": "%n contacts in this segment have no consent for {channel}. Choose how to continue.",
+        "Consent missing": "Consent missing",
+        "Unsubscribe link found in the template": "Unsubscribe link found in the template",
+        "Telephony": "Telephony"
     },
     "nplurals=2; plural=(n != 1);"
 )

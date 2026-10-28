@@ -9,9 +9,9 @@
   - @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Add customer')"
-		:open="true"
 		size="normal"
 		@closing="onCancel">
 		<div class="customer-lookup">
@@ -95,11 +95,12 @@
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { searchCustomers } from '../services/posCustomerApi.js'
 
 const DEBOUNCE_MS = 300
@@ -109,7 +110,7 @@ export default {
 	name: 'CustomerLookupModal',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcTextField,
 	},
