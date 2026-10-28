@@ -2586,6 +2586,86 @@
 						}
 					},
 					{
+						"id": "client-cases",
+						"type": "record-list",
+						"title": "Cases",
+						"icon": "FolderAccountOutline",
+						"_note": "PqKlant/PqOrganisatie Zaken: the client's cases from dossiq, read by the client's master entity (GET /api/clients/{id}/cases over dossiq's CaseLeafProvider), open first, then closed newest first. A row opens the case in dossiq (rowHrefField, nextcloud-vue record-list-row-href).",
+						"content": {
+							"ruleAbove": true,
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/clients/@objectId/cases",
+								"params": {
+									"status": "all",
+									"limit": 100
+								},
+								"responsePath": "results"
+							},
+							"limit": 3,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{identifier}",
+									"{caseTypeTitle}",
+									"handler {assigneeName}"
+								]
+							},
+							"pill": {
+								"field": "statusName",
+								"variant": "purple",
+								"colorField": "statusColour"
+							},
+							"trailing": [
+								"Done {endDate|date}",
+								"By {deadline|date}"
+							],
+							"rowHrefField": "url",
+							"headerLink": {
+								"label": "View all {total} cases",
+								"href": "#client-cases-tab"
+							},
+							"emptyText": "No cases for this client"
+						}
+					},
+					{
+						"id": "client-cases-all",
+						"type": "record-list",
+						"title": "Cases",
+						"icon": "FolderAccountOutline",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/clients/@objectId/cases",
+								"params": {
+									"status": "all",
+									"limit": 100
+								},
+								"responsePath": "results"
+							},
+							"limit": 100,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{identifier}",
+									"{caseTypeTitle}",
+									"handler {assigneeName}"
+								]
+							},
+							"pill": {
+								"field": "statusName",
+								"variant": "purple",
+								"colorField": "statusColour"
+							},
+							"trailing": [
+								"Done {endDate|date}",
+								"By {deadline|date}"
+							],
+							"rowHrefField": "url",
+							"emptyText": "No cases for this client"
+						}
+					},
+					{
 						"id": "client-tickets",
 						"type": "record-list",
 						"title": "Tickets",
@@ -2793,10 +2873,17 @@
 									"widgetIds": [
 										"client-person-card",
 										"client-organisation-card",
+										"client-cases",
 										"client-tickets",
 										"client-latest-moments"
 									],
 									"label": "Overview"
+								},
+								{
+									"id": "client-cases-tab",
+									"widgetId": "client-cases-all",
+									"label": "Cases",
+									"countFrom": "widget"
 								},
 								{
 									"widgetIds": [
@@ -3200,6 +3287,45 @@
 								"label": "All {total} contact persons",
 								"href": "#client-contact-persons"
 							}
+						}
+					},
+					{
+						"id": "side-open-case",
+						"type": "record-list",
+						"title": "Open cases",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Open zaken: the open case due first, from dossiq by the client's master entity, as dossiq's DqOrganisatie card.",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/clients/@objectId/cases",
+								"params": {
+									"status": "open",
+									"limit": 1
+								},
+								"responsePath": "results"
+							},
+							"limit": 1,
+							"presentation": "rows",
+							"density": "stacked",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{identifier}",
+									"handler {assigneeName}"
+								]
+							},
+							"pill": {
+								"field": "statusName",
+								"variant": "purple",
+								"colorField": "statusColour"
+							},
+							"trailing": "By {deadline|date}",
+							"rowHrefField": "url",
+							"emptyText": "No open cases"
 						}
 					},
 					{

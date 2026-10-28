@@ -24,7 +24,7 @@ const card = config.sideColumn.find((entry) => entry.id === 'side-main-contact')
 describe('ClientDetail main contact', () => {
 	it('stands under KvK and address and above the open tickets, on an organisation only', () => {
 		expect(sideIds.indexOf('side-main-contact')).toBe(sideIds.indexOf('side-kvk') + 1)
-		expect(sideIds.indexOf('side-open-ticket')).toBe(sideIds.indexOf('side-main-contact') + 1)
+		expect(sideIds.indexOf('side-open-ticket')).toBe(sideIds.indexOf('side-main-contact') + 2)
 		expect(card.visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
 		expect(nl[card.title]).toBe('Hoofdcontact')
 	})

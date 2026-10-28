@@ -8793,6 +8793,13 @@
         "{shown} of {total} companies from the KVK register that fit your profile": "{shown} van {total} bedrijven uit het KVK-handelsregister die bij je profiel passen",
         "best first": "beste eerst",
         "refreshed today at {time}": "vandaag om {time} vernieuwd",
-        "refreshed on {date}": "vernieuwd op {date}"
+        "refreshed on {date}": "vernieuwd op {date}",
+        "Cases": "Zaken",
+        "View all {total} cases": "Alle {total} zaken bekijken",
+        "No cases for this client": "Nog geen zaken voor deze klant",
+        "No open cases": "Geen open zaken",
+        "handler {assigneeName}": "behandelaar {assigneeName}",
+        "Done {endDate|date}": "Klaar {endDate|date}",
+        "By {deadline|date}": "Uiterlijk {deadline|date}"
     }
 }
