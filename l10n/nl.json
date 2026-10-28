@@ -8598,6 +8598,18 @@
         "Then: write down the result and finish the task": "Daarna: schrijf het resultaat op en rond de taak af",
         "What now? Try again before the deadline": "Wat nu? Opnieuw proberen voor de termijn",
         "An attempt is logged": "Er is een poging vastgelegd",
-        "Call the customer": "Bellen"
+        "Call the customer": "Bellen",
+        "No confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}": "Geen bevestigde abonnees · aangemaakt door {createdBy|user} op {createdAt|longdate}",
+        "1 confirmed subscriber · created by {createdBy|user} on {createdAt|longdate}": "1 bevestigde abonnee · aangemaakt door {createdBy|user} op {createdAt|longdate}",
+        "{count:confirmed} confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}": "{count:confirmed} bevestigde abonnees · aangemaakt door {createdBy|user} op {createdAt|longdate}",
+        "Manage sign-ups": "Aanmeldingen beheren",
+        "Send confirmation link": "Bevestigingslink sturen",
+        "The person is added once they open the link.": "De persoon wordt toegevoegd zodra die de link opent.",
+        "Take {who} off this list": "{who} van deze lijst halen",
+        "A confirmation link went to {email}.": "Er is een bevestigingslink naar {email} gestuurd.",
+        "No link was sent. Check the address, and that the list takes sign-ups.": "Er is geen link gestuurd. Controleer het adres, en of de lijst aanmeldingen aanneemt.",
+        "{who} is off this list.": "{who} staat niet meer op deze lijst.",
+        "The member could not be taken off the list.": "De abonnee kon niet van de lijst worden gehaald.",
+        "Filter on {column}": "Filteren op {column}"
     }
 }

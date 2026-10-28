@@ -28,10 +28,13 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 	CnStatusBadge: { name: 'CnStatusBadge', props: ['label'], template: '<span>{{ label }}</span>' },
 }))
 vi.mock('@nextcloud/vue', () => ({
+	NcActions: { name: 'NcActions', template: '<div class="actions-menu" v-bind="$attrs"><slot /></div>' },
+	NcActionCheckbox: { name: 'NcActionCheckbox', props: ['modelValue'], emits: ['update:modelValue'], template: '<label class="filter-option"><input type="checkbox" :checked="modelValue" @change="$emit(\'update:modelValue\', $event.target.checked)"><slot /></label>' },
 	NcButton: { name: 'NcButton', template: '<button v-bind="$attrs"><slot /></button>' },
 	NcLoadingIcon: { name: 'NcLoadingIcon', template: '<span />' },
 	NcNoteCard: { name: 'NcNoteCard', template: '<div><slot /></div>' },
 }))
+vi.mock('../../src/modals/ListSignupsManageModal.vue', () => ({ default: { name: 'ListSignupsManageModal', template: '<div class="signups-modal" />' } }))
 vi.mock('../../src/modals/SubscriptionManageModal.vue', () => ({ default: { name: 'SubscriptionManageModal', template: '<div />' } }))
 vi.mock('../../src/services/mailingListApi.js', () => ({
 	fetchListSubscriptions: vi.fn(async () => ({
@@ -90,5 +93,40 @@ describe('the mailing list page as the board', () => {
 		expect(first.find('.subscriptions-section__email').text()).toBe('info@bakkerijdegraaf.example')
 		expect(first.text()).toContain('2 okt 2026')
 		expect(wrapper.findAll('tbody tr')[1].find('.subscriptions-section__who').text()).toBe('balie@sportcentrum.example')
+	})
+})
+
+describe('the Subscribers table and header line', () => {
+	it('heads the page with the confirmed count, who made the list and when', () => {
+		expect(page.config.headerMeta).toMatchObject({ count: 'confirmed', other: expect.stringContaining('{count:confirmed} confirmed subscribers · created by {createdBy|user} on {createdAt|longdate}') })
+		expect(page.config.headerMetaCounts.confirmed).toEqual({ register: 'pipelinq', schema: 'subscription', filter: { listId: '@objectId', state: 'confirmed' } })
+	})
+
+	it('sorts on a column, the same column again turns the order', async () => {
+		const wrapper = mount(SubscriptionsSection, { props: { listId: 'l-1', card: true }, global: { mocks: { t: (_app, s) => s } } })
+		await flushPromises()
+		const names = () => wrapper.findAll('tbody .subscriptions-section__who').map((el) => el.text())
+		await wrapper.find('[data-testid="subscriptions-sort-subscriber"]').trigger('click')
+		expect(names()).toEqual(['Bakkerij De Graaf', 'balie@sportcentrum.example'])
+		await wrapper.find('[data-testid="subscriptions-sort-subscriber"]').trigger('click')
+		expect(names()).toEqual(['balie@sportcentrum.example', 'Bakkerij De Graaf'])
+	})
+
+	it('filters a column on the values its rows hold', async () => {
+		const wrapper = mount(SubscriptionsSection, { props: { listId: 'l-1', card: true }, global: { mocks: { t: (_app, s) => s } } })
+		await flushPromises()
+		const status = wrapper.find('[data-testid="subscriptions-filter-state"]')
+		const options = status.findAll('.filter-option')
+		expect(options.map((o) => o.text())).toEqual(['Confirmed', 'Waiting for confirmation'])
+		await options[1].find('input').setValue(true)
+		expect(wrapper.findAll('tbody tr')).toHaveLength(1)
+		expect(wrapper.find('tbody .subscriptions-section__who').text()).toBe('balie@sportcentrum.example')
+	})
+
+	it('opens Manage sign-ups from the card header', async () => {
+		const wrapper = mount(SubscriptionsSection, { props: { listId: 'l-1', card: true }, global: { mocks: { t: (_app, s) => s } } })
+		await flushPromises()
+		await wrapper.find('.actions [data-testid="subscriptions-manage-signups"]').trigger('click')
+		expect(wrapper.find('.signups-modal').exists()).toBe(true)
 	})
 })
