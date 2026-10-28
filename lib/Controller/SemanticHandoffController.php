@@ -87,6 +87,12 @@ class SemanticHandoffController extends Controller {
 	private const HANDOFF_SEND_TO_INVOICING = 'send-to-invoicing';
 
 	/**
+	 * The statuses of a running contract, which may be sent to invoicing: an
+	 * expiring contract still runs until its end date (PqContract).
+	 */
+	private const INVOICEABLE_STATUSES = ['active', 'expiring'];
+
+	/**
 	 * Built-in slug of the unified ticket schema (app-config overridable).
 	 */
 	private const TICKET_SCHEMA_SLUG = 'ticket';
@@ -337,7 +343,7 @@ class SemanticHandoffController extends Controller {
 			[
 				'available' => $available,
 				'status' => $status,
-				'canSend' => ($available === true && $status === 'active'),
+				'canSend' => ($available === true && in_array($status, self::INVOICEABLE_STATUSES, true) === true),
 			]
 		);
 	}//end contractAvailability()
@@ -369,9 +375,9 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
-		if ((string)($contract['status'] ?? '') !== 'active') {
+		if (in_array((string)($contract['status'] ?? ''), self::INVOICEABLE_STATUSES, true) === false) {
 			return new JSONResponse(
-				['status' => 'invalid-status', 'message' => 'Send to invoicing is only available on an active contract.'],
+				['status' => 'invalid-status', 'message' => 'Send to invoicing is only available on a running contract (active or expiring).'],
 				Http::STATUS_CONFLICT
 			);
 		}
@@ -395,6 +401,8 @@ class SemanticHandoffController extends Controller {
 		}
 
 		$contract['invoiceReference'] = (string)$result['targetUuid'];
+		$contract['invoicedAt'] = (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM);
+		$contract['invoicedBy'] = $user->getUID();
 		$this->saveObject(
 			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
 			id: $id,
