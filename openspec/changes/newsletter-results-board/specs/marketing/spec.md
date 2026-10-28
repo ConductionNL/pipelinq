@@ -10,10 +10,19 @@ When an A/B test has enough data for a verdict, the A/B tab MUST mark the varian
 
 @e2e exclude Asserted in tests/vitest/newsletterResultsBoard.spec.js; the verdict and p-value are covered by the A/B tests in tests/e2e/spec-coverage/marketing.spec.ts.
 
-- GIVEN an A/B test of 203 and 201 delivered mails, sent more than a day ago, with click rates of 15% and 26%
+- GIVEN an A/B test of at least 500 delivered mails per variant, sent more than a day ago, with click rates of 15% and 26%
 - WHEN the user opens the A/B testing tab
 - THEN variant B carries the "Higher click rate" pill
 - AND the line under the cards gives the p-value
+
+#### Scenario: a test without enough data
+
+@e2e exclude Asserted in tests/vitest/newsletterResultsBoard.spec.js; the pending state is covered by the A/B tests in tests/e2e/spec-coverage/marketing.spec.ts.
+
+- GIVEN an A/B test of 203 and 201 delivered mails
+- WHEN the user opens the A/B testing tab
+- THEN no variant carries the "Higher click rate" pill
+- AND the line under the cards says the results are not yet available, with the current counts
 
 #### Scenario: older tests are summarised
 

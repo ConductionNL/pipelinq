@@ -85,6 +85,12 @@ describe('the A/B-test tab (board PqNieuwsbriefABTest)', () => {
 		expect(view).toMatch(/'Subject: \{subject\}'/)
 	})
 
+	it('marks a winner only once each variant has at least 500 delivered and a day has passed', () => {
+		expect(view).toMatch(/const AB_MIN_DELIVERED = 500/)
+		expect(view).toMatch(/const winner = eligible \? higherVariant\(a, b\) : null/)
+		expect(view).toMatch(/v-if="!pair.eligible"[\s\S]*?'Results not yet available/)
+	})
+
 	it('shows the first test in full and every later one as a summary line', () => {
 		expect(view).toMatch(/performance-dashboard__ab-summary/)
 	})
