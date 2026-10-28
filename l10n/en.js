@@ -8580,7 +8580,11 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Then: write down the result and finish the task",
         "What now? Try again before the deadline": "What now? Try again before the deadline",
         "An attempt is logged": "An attempt is logged",
-        "Call the customer": "Call the customer"
+        "Call the customer": "Call the customer",
+        "Where cashiers see this": "Where cashiers see this",
+        "Open the till": "Open the till",
+        "Set how cashiers search for customers, how much purchase history they see at checkout and how marketing consent goes to the linked contact.": "Set how cashiers search for customers, how much purchase history they see at checkout and how marketing consent goes to the linked contact.",
+        "The customer card at the till: the search, the purchase history and the consent question.": "The customer card at the till: the search, the purchase history and the consent question."
     },
     "nplurals=2; plural=(n != 1);"
 )
