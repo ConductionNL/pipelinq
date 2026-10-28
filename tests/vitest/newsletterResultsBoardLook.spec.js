@@ -41,9 +41,9 @@ describe('the header in the board look', () => {
 		expect(rule('.performance-dashboard__back {')).toMatch(/font-weight: 600/)
 	})
 
-	it('ends the header 8px under its line, without the header\'s own bottom margin', () => {
+	it('pads the header 4px 0 8px, without the header\'s own bottom margin', () => {
 		const header = rule('.cn-look-board :deep(.cn-page-header)')
-		expect(header).toMatch(/padding-bottom: 8px/)
+		expect(header).toMatch(/padding-block: 4px 8px/)
 		expect(header).toMatch(/margin-bottom: 0/)
 	})
 

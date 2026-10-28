@@ -1275,12 +1275,12 @@ export default {
 }
 
 /* Board look (PqNieuwsbriefPrestaties, PqNieuwsbriefABTest,
-   PqNieuwsbriefToeschrijving): the header ends 8px under its line and the
-   page's 20px gap follows, its buttons are 40px, the open tab's panel is a
-   white card, and tables and cards stand on that card's ground with their
-   text on a 1.2 line. */
+   PqNieuwsbriefToeschrijving): the header is padded 4px 0 8px and the page's
+   20px gap follows, its buttons are 40px, the open tab's panel is a white
+   card, and tables and cards stand on that card's ground with their text on a
+   1.2 line. */
 .cn-look-board :deep(.cn-page-header) {
-	padding-bottom: 8px;
+	padding-block: 4px 8px;
 	margin-bottom: 0;
 }
 
