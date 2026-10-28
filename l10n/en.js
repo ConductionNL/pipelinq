@@ -8687,7 +8687,8 @@ OC.L10N.register(
         "Choose a case type": "Choose a case type",
         "The case types come from {app}.": "The case types come from {app}.",
         "Keep this ticket open until the case is made": "Keep this ticket open until the case is made",
-        "Otherwise it reads Converted to a case, with a link to the case.": "Otherwise it reads Converted to a case, with a link to the case."
+        "Otherwise it reads Converted to a case, with a link to the case.": "Otherwise it reads Converted to a case, with a link to the case.",
+        "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}": "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}"
     },
     "nplurals=2; plural=(n != 1);"
 )
