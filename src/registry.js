@@ -167,6 +167,7 @@ import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
 import ContactImportDialog from './dialogs/ContactImportDialog.vue'
+import ContactLogDialog from './dialogs/ContactLogDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import OrganisationEnrichDialog from './dialogs/OrganisationEnrichDialog.vue'
@@ -1244,6 +1245,13 @@ const registry = {
 		component: LeadCreateDialog,
 		propsSchema: null,
 		_note: "New Lead. Target of the Sales/Operational dashboards' new-lead header action and the Leads index Add button.",
+	},
+
+	ContactLogDialog: {
+		kind: 'modal',
+		component: ContactLogDialog,
+		propsSchema: null,
+		_note: 'contact-log-dialog. Target of the ticket page Log contact action: board PqTicketContactLoggen (channel, direction, date and time, duration, subject, notes, customer). Saves a ticket of type interaction under the ticket the route names.',
 	},
 
 	TicketAnswerDialog: {

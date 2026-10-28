@@ -1,6 +1,14 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Belongs to ticket": "Hoort bij ticket",
+        "Filled in with now": "Ingevuld met nu",
+        "e.g. 4 minutes": "bijv. 4 minuten",
+        "Contact moment · {reference}": "Contactmoment · {reference}",
+        "Inbound": "Inkomend",
+        "Outbound": "Uitgaand",
+        "Text message": "Sms",
+        "The contact moment is not saved. Try again.": "Het contactmoment is niet opgeslagen. Probeer het opnieuw.",
         "Cash register audit": "Kassa-audit",
         "Cash register audit entry": "Kassa-auditregel",
         "Verification done. The status shows the result.": "Controle gedaan. De status toont de uitkomst.",

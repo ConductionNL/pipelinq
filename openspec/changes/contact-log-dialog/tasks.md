@@ -1,0 +1,3 @@
+- [x] ContactLogDialog + registry
+- [x] ticket-log-contact opens it
+- [x] vitest contactLogDialog, simpleTicketPage
