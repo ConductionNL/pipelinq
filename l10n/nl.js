@@ -1,6 +1,11 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Core CRM": "Basis-CRM",
+        "Customer contact and government": "Klantcontact en overheid",
+        "Analysis and insight": "Analyse en inzicht",
+        "Automation and organisation": "Automatisering en organisatie",
+        "Infrastructure": "Infrastructuur",
         "Open (lead status)": "Open",
         "New newsletter, step {step} of {total}": "Nieuwe nieuwsbrief, stap {step} van {total}",
         "Step {step} of {total}: check everything before the blast is created": "Stap {step} van {total}: controleer alles voordat de blast wordt aangemaakt",

@@ -674,10 +674,9 @@ class Application extends App implements IBootstrap {
 
 		try {
 			$initialState = $this->getContainer()->get(IInitialState::class);
-			$initialState->provideInitialState(
-				'features_roadmap_features',
-				$this->getContainer()->get(RoadmapFeatureCatalog::class)->load()
-			);
+			$roadmap = $this->getContainer()->get(RoadmapFeatureCatalog::class);
+			$initialState->provideInitialState('features_roadmap_features', $roadmap->load());
+			$initialState->provideInitialState('features_roadmap_categories', $roadmap->categories());
 
 			$dependencies = $this->readManifestDependencies();
 			$dependencyStatus = $this->resolveDependencyStatuses(context: $context, dependencies: $dependencies);

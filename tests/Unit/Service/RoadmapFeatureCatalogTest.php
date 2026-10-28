@@ -102,4 +102,60 @@ class RoadmapFeatureCatalogTest extends TestCase {
 
 		$this->assertNotEmpty($catalog->load());
 	}//end testLoadReadsAndCachesPerVersion()
+
+	/**
+	 * The curated list is the board's: 36 features in five groups, each with a
+	 * known status, Dutch texts, and a link to a spec that exists.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/roadmap-curated-list/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 */
+	public function testCuratedListIsTheBoards(): void {
+		$catalog    = $this->catalog(cached: null);
+		$features   = $catalog->curatedFeatures(path: __DIR__.'/../../../lib/Settings/roadmap.json');
+		$categories = $catalog->categories(path: __DIR__.'/../../../lib/Settings/roadmap.json');
+
+		$this->assertCount(expectedCount: 36, haystack: $features);
+		$this->assertSame(
+			expected: ['core-crm', 'customer-contact', 'insight', 'automation', 'infrastructure'],
+			actual: array_keys($categories)
+		);
+		foreach ($features as $feature) {
+			$this->assertArrayHasKey(key: $feature['category'], array: $categories, message: $feature['slug']);
+			$this->assertContains(needle: $feature['status'], haystack: ['available', 'beta', 'planned'], message: $feature['slug']);
+			$this->assertNotSame(expected: '', actual: $feature['title_nl'], message: $feature['slug']);
+			$this->assertStringNotContainsString(needle: "\u{2014}", haystack: $feature['title'].$feature['summary'], message: $feature['slug']);
+			if ($feature['docsUrl'] !== '') {
+				$this->assertFileExists(filename: __DIR__.'/../../../'.$feature['docsUrl'], message: $feature['slug']);
+			}
+		}
+	}//end testCuratedListIsTheBoards()
+
+	/**
+	 * Without a curated file there is no curated list, and no categories.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/roadmap-curated-list/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 */
+	public function testNoCuratedFile(): void {
+		$catalog = $this->catalog(cached: null);
+		$this->assertNull(actual: $catalog->curatedFeatures(path: '/nonexistent/roadmap.json'));
+		$this->assertSame(expected: [], actual: $catalog->categories(path: '/nonexistent/roadmap.json'));
+	}//end testNoCuratedFile()
+
+	/**
+	 * The page gets the curated list, not the raw specs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/roadmap-curated-list/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 */
+	public function testLoadPrefersTheCuratedList(): void {
+		$features = $this->catalog(cached: null)->load();
+		$this->assertCount(expectedCount: 36, haystack: $features);
+		$this->assertSame(expected: 'client-management', actual: $features[0]['slug']);
+		$this->assertSame(expected: 'core-crm', actual: $features[0]['category']);
+	}//end testLoadPrefersTheCuratedList()
 }//end class

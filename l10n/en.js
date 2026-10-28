@@ -1,6 +1,11 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Core CRM": "Core CRM",
+        "Customer contact and government": "Customer contact and government",
+        "Analysis and insight": "Analysis and insight",
+        "Automation and organisation": "Automation and organisation",
+        "Infrastructure": "Infrastructure",
         "assigned to {assignee|user}": "assigned to {assignee|user}",
         "Awaiting customer": "Awaiting customer",
         "By {slaDeadline|date}": "By {slaDeadline|date}",
