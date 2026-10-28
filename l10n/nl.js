@@ -9184,7 +9184,10 @@ OC.L10N.register(
         "VAT {vatRate}%": "Btw {vatRate}%",
         "The VAT percentage the quote's VAT is worked out at.": "Het btw-percentage waarmee de btw van de offerte wordt berekend.",
         "The event this newsletter invites to.": "Het evenement waarvoor deze nieuwsbrief uitnodigt.",
-        "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel."
+        "The line's name on the quote: the product's name, or your own for a line of your own.": "De naam van de regel op de offerte: de naam van het product, of je eigen naam voor een eigen regel.",
+        "An agent wrote this summary: {agent}, on {when}": "Een agent schreef deze samenvatting: {agent}, op {when}",
+        "An agent wrote this summary: {agent}": "Een agent schreef deze samenvatting: {agent}",
+        "These sources hold nothing yet, so their absence here is missing data and not a zero: {sources}": "Deze bronnen bevatten nog niets, dus wat hier ontbreekt is ontbrekende data en geen nul: {sources}"
     },
     "nplurals=2; plural=(n != 1);"
 )
