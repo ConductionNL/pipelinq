@@ -5884,6 +5884,13 @@
 										"open": "Open",
 										"closed": "Counted",
 										"reconciled": "Reconciled"
+									},
+									"pill": {
+										"variantMap": {
+											"open": "info",
+											"closed": "warning",
+											"reconciled": "success"
+										}
 									}
 								},
 								{
@@ -7023,6 +7030,15 @@
 										"confirmed": "Confirmed",
 										"settled": "Settled",
 										"refunded": "Refunded"
+									},
+									"pill": {
+										"variantMap": {
+											"draft": "default",
+											"parked": "warning",
+											"confirmed": "info",
+											"settled": "success",
+											"refunded": "default"
+										}
 									}
 								},
 								"cashier": {
@@ -7394,6 +7410,11 @@
 						"content": {
 							"layout": "links",
 							"showTotalCount": false,
+							"sectionOrder": [
+								"shift",
+								"refunds",
+								"audit"
+							],
 							"referenceSections": [
 								{
 									"key": "shift",

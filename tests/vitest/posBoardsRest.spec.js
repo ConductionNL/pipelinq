@@ -43,6 +43,15 @@ describe('receipt page', () => {
 		expect(related.showFiles).toBeUndefined()
 	})
 
+	it('puts the shift first in Gerelateerd', () => {
+		expect(widget(config, 'pos-tx-related').content.sectionOrder).toEqual(['shift', 'refunds', 'audit'])
+	})
+
+	it('draws the status in the transaction card as a pill', () => {
+		const status = widget(config, 'pos-tx-data').content.overrides.status
+		expect(status.pill.variantMap).toEqual({ draft: 'default', parked: 'warning', confirmed: 'info', settled: 'success', refunded: 'default' })
+	})
+
 	it('draws the reversal as an outlined red button', () => {
 		const reverse = widget(config, 'pos-tx-provider').content.actions.find((a) => a.id === 'payment-reverse')
 		expect(reverse.variant).toBe('error-outline')
@@ -61,6 +70,11 @@ describe('cash shift page', () => {
 		const margin = data.content.fields.find((f) => f.key === 'margin')
 		expect(nl[margin.label]).toBe('Marge')
 		expect(routes).toContain("'url' => '/api/pos-shifts/{id}/summary'")
+	})
+
+	it('draws the shift status as a pill', () => {
+		const status = widget(config, 'shift-data').content.fields.find((f) => f.key === 'status')
+		expect(status.pill.variantMap).toEqual({ open: 'info', closed: 'warning', reconciled: 'success' })
 	})
 
 	it('draws the cash difference as figures with a band and a reason', () => {
