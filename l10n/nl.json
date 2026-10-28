@@ -1,5 +1,16 @@
 {
     "translations": {
+        "Link email": "E-mail koppelen",
+        "Compose in Mail": "Opstellen in Mail",
+        "contact moment": "contactmoment",
+        "work log": "werklog",
+        "note": "notitie",
+        "task": "taak",
+        "calendar": "agenda",
+        "message": "bericht",
+        "Add an internal note. Type @ to mention a colleague.": "Voeg een interne notitie toe. Typ @ om een collega te noemen.",
+        "Contact moments, notes, tasks, mail and messages about this client appear here.": "Contactmomenten, notities, taken, mail en berichten over deze klant verschijnen hier.",
+        "Send a message": "Bericht sturen",
         "assigned to {assignee|user}": "toegewezen aan {assignee|user}",
         "Awaiting customer": "Wacht op klant",
         "By {slaDeadline|date}": "Uiterlijk {slaDeadline|date}",

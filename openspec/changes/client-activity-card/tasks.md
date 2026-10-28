@@ -1,0 +1,4 @@
+- [x] 1. ActivityTimelineService: `note` and `message` kinds, `userName` on every item (PHPUnit ActivityTimelineServiceKindsTest)
+- [x] 2. ClientDetail: `client-activity` timeline widget last in the overview, header actions, chips, composer; ActivityTimeline removed (vitest clientActivityCard)
+- [x] 3. Contact strip "Send a message" opens the Messages composer; a sent message refreshes the card (vitest partyContactStrip, messagingComposeFromStrip)
+- [x] 4. l10n en/nl, icons registered

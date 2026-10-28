@@ -4,7 +4,8 @@
  * Pipelinq ActivityTimelineService.
  *
  * Service that aggregates CRM activity instances (contactmomenten, tasks,
- * emailLinks, calendarLinks) for an entity into a unified timeline, and
+ * emailLinks, calendarLinks, notes, WhatsApp/SMS messages) for an entity into
+ * a unified timeline, and
  * provides worklog read/create operations stored as contactmomenten with
  * channel='worklog'.
  *
@@ -41,6 +42,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
+use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -83,6 +85,8 @@ class ActivityTimelineService {
 	 *                                     contactmomenten (incl. worklogs) are tickets with
 	 *                                     `ticketType=contactmoment`, not their own schema.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param NotesService $notesService Reader of the notes on a record (Nextcloud comments).
+	 * @param IUserManager $userManager Resolves an author's display name.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -90,6 +94,8 @@ class ActivityTimelineService {
 		private LoggerInterface $logger,
 		private TicketService $ticketService,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly NotesService $notesService,
+		private readonly IUserManager $userManager,
 	) {
 	}//end __construct()
 
@@ -132,6 +138,8 @@ class ActivityTimelineService {
 			'task' => $task,
 			'emailLink' => $emailLink,
 			'calendarLink' => $calendarLink,
+			'contact' => $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', ''),
+			'message' => $this->appConfig->getValueString(Application::APP_ID, 'message_schema', ''),
 		];
 	}//end getConfig()
 
@@ -246,8 +254,68 @@ class ActivityTimelineService {
 			);
 		}//end foreach
 
+		$extraSources = [
+			'note' => fn (): array => $this->notesService->getNotes(objectType: 'openregister', objectId: $entityId),
+			'message' => fn (): array => $this->queryMessages(entityType: $entityType, entityId: $entityId, config: $config),
+		];
+		foreach ($extraSources as $sourceType => $read) {
+			if ($typesFilter !== null && in_array($sourceType, $typesFilter, true) === false) {
+				continue;
+			}
+
+			$merged = array_merge(
+				$merged,
+				$this->normalizeSchemaObjects(
+					objects: $read(),
+					sourceType: $sourceType,
+					entityType: $entityType,
+					entityId: $entityId,
+					from: $from,
+					to: $to
+				)
+			);
+		}
+
 		return $merged;
 	}//end collectActivities()
+
+	/**
+	 * Read the WhatsApp/SMS messages of an entity. Messages belong to a person
+	 * (`contactId`), so a client's messages are those of its contact persons.
+	 *
+	 * @param string $entityType The entity type (client|contact).
+	 * @param string $entityId The entity UUID.
+	 * @param array<string,string> $config The resolved register/schema config.
+	 *
+	 * @return array<int,array<string,mixed>> The raw message objects.
+	 *
+	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
+	 */
+	private function queryMessages(string $entityType, string $entityId, array $config): array {
+		if ($config['message'] === '') {
+			return [];
+		}
+
+		$contactIds = [];
+		if ($entityType === 'contact') {
+			$contactIds = [$entityId];
+		}
+
+		if ($entityType === 'client' && $config['contact'] !== '') {
+			$contacts = $this->querySchema(registerId: $config['register'], schemaId: $config['contact'], filters: ['client' => $entityId]);
+			$contactIds = array_filter(array_map(static fn (array $contact): string => (string)($contact['id'] ?? ''), $contacts));
+		}
+
+		$messages = [];
+		foreach ($contactIds as $contactId) {
+			$messages = array_merge(
+				$messages,
+				$this->querySchema(registerId: $config['register'], schemaId: $config['message'], filters: ['contactId' => $contactId])
+			);
+		}
+
+		return $messages;
+	}//end queryMessages()
 
 	/**
 	 * Extract the optional from/to date bounds from request params.
@@ -384,7 +452,7 @@ class ActivityTimelineService {
 			$rawTypes = explode(',', (string)$rawTypes);
 		}
 
-		$allowed = ['interaction', 'task', 'email', 'calendar', 'worklog'];
+		$allowed = ['interaction', 'task', 'email', 'calendar', 'worklog', 'note', 'message'];
 		$result = [];
 		foreach ($rawTypes as $type) {
 			$type = strtolower(trim((string)$type));
@@ -622,7 +690,10 @@ class ActivityTimelineService {
 	/**
 	 * Normalise a raw object array into the unified activity item shape.
 	 *
-	 * @param string $sourceType The internal source-type key (contactmoment|task|emailLink|calendarLink).
+	 * Every item carries `userName`, its author's display name (the user id
+	 * when the user is unknown).
+	 *
+	 * @param string $sourceType The internal source-type key (interaction|task|emailLink|calendarLink|note|message).
 	 * @param array<string,mixed> $object The raw object array from OpenRegister.
 	 * @param string $entityType The originating entityType for back-reference.
 	 * @param string $entityId The originating entityId for back-reference.
@@ -630,8 +701,99 @@ class ActivityTimelineService {
 	 * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
 	 *
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
+	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
 	 */
 	public function normalizeActivity(string $sourceType, array $object, string $entityType, string $entityId): ?array {
+		$item = $this->normalizeBySource(sourceType: $sourceType, object: $object, entityType: $entityType, entityId: $entityId);
+		if ($item === null) {
+			return null;
+		}
+
+		$item['userName'] ??= $this->displayName(userId: $item['user']);
+		return $item;
+	}//end normalizeActivity()
+
+	/**
+	 * The display name of a user, the id itself when the user is unknown.
+	 *
+	 * @param string|null $userId The user id.
+	 *
+	 * @return string|null The display name, or null without a user.
+	 */
+	private function displayName(?string $userId): ?string {
+		if ($userId === null) {
+			return null;
+		}
+
+		return $this->userManager->get($userId)?->getDisplayName() ?? $userId;
+	}//end displayName()
+
+	/**
+	 * Normalise a raw note (a comment on the record) into an activity item.
+	 *
+	 * @param array<string,mixed> $note The note as NotesService reads it.
+	 * @param string $entityType The originating entityType.
+	 * @param string $entityId The originating entityId.
+	 *
+	 * @return array<string,mixed> The activity item.
+	 *
+	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
+	 */
+	private function normalizeNote(array $note, string $entityType, string $entityId): array {
+		return [
+			'type' => 'note',
+			'id' => (string)($note['id'] ?? ''),
+			'title' => (string)($note['message'] ?? ''),
+			'description' => '',
+			'date' => $this->stringOrNull(value: ($note['timestamp'] ?? null)),
+			'user' => $this->stringOrNull(value: ($note['authorId'] ?? null)),
+			'userName' => $this->stringOrNull(value: ($note['authorName'] ?? null)),
+			'entityType' => $entityType,
+			'entityId' => $entityId,
+			'metadata' => [],
+		];
+	}//end normalizeNote()
+
+	/**
+	 * Normalise a raw WhatsApp/SMS message into an activity item.
+	 *
+	 * @param array<string,mixed> $message The channelMessage object.
+	 * @param string $entityType The originating entityType.
+	 * @param string $entityId The originating entityId.
+	 *
+	 * @return array<string,mixed> The activity item.
+	 *
+	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
+	 */
+	private function normalizeMessage(array $message, string $entityType, string $entityId): array {
+		return [
+			'type' => 'message',
+			'id' => (string)($message['id'] ?? $message['uuid'] ?? ''),
+			'title' => (string)($message['body'] ?? ''),
+			'description' => '',
+			'date' => $this->stringOrNull(value: ($message['sentAt'] ?? null)),
+			'user' => null,
+			'entityType' => $entityType,
+			'entityId' => $entityId,
+			'metadata' => [
+				'channel' => $this->stringOrNull(value: ($message['channel'] ?? null)),
+				'direction' => $this->stringOrNull(value: ($message['direction'] ?? null)),
+				'deliveryStatus' => $this->stringOrNull(value: ($message['deliveryStatus'] ?? null)),
+			],
+		];
+	}//end normalizeMessage()
+
+	/**
+	 * Normalise a raw object of one source into the unified activity item shape.
+	 *
+	 * @param string $sourceType The internal source-type key.
+	 * @param array<string,mixed> $object The raw object array.
+	 * @param string $entityType The originating entityType for back-reference.
+	 * @param string $entityId The originating entityId for back-reference.
+	 *
+	 * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
+	 */
+	private function normalizeBySource(string $sourceType, array $object, string $entityType, string $entityId): ?array {
 		$id = (string)($object['id'] ?? $object['uuid'] ?? '');
 
 		switch ($sourceType) {
@@ -708,10 +870,16 @@ class ActivityTimelineService {
 					],
 				];
 
+			case 'note':
+				return $this->normalizeNote(note: $object, entityType: $entityType, entityId: $entityId);
+
+			case 'message':
+				return $this->normalizeMessage(message: $object, entityType: $entityType, entityId: $entityId);
+
 			default:
 				return null;
 		}//end switch
-	}//end normalizeActivity()
+	}//end normalizeBySource()
 
 	/**
 	 * Create a worklog entry as a contactmoment ticket with channel='worklog'.
