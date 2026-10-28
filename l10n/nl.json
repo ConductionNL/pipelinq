@@ -9128,6 +9128,10 @@
         "%n days late": "%n dagen te laat",
         "Ask a question about these figures": "Stel een vraag over deze cijfers",
         "Which category took longest to resolve this month?": "Welke categorie duurde deze maand het langst om op te lossen?",
-        "Ask": "Vragen"
+        "Ask": "Vragen",
+        "Built with portaliq; every sign-up arrives here as a registration.": "Gebouwd met portaliq; elke aanmelding komt hier binnen als registratie.",
+        "No registration form yet.": "Nog geen aanmeldformulier.",
+        "Form binding": "Formulierkoppeling",
+        "The portaliq form binding (portalFormBinding) the sign-up form is published with; empty when the form is not in portaliq. The event page links to it to edit the form.": "De portaliq-formulierkoppeling (portalFormBinding) waarmee het aanmeldformulier is gepubliceerd; leeg als het formulier niet in portaliq staat. De evenementpagina linkt ernaar om het formulier te bewerken."
     }
 }

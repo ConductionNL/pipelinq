@@ -218,11 +218,26 @@
 					},
 					{
 						"id": "event-form",
-						"type": "data",
+						"type": "facts",
 						"title": "Registration form",
+						"_note": "PqEvenement: the portaliq form people register with, the page it is on (a link) and when it closes, with the line that every sign-up arrives here as a registration.",
 						"content": {
-							"columns": 1,
-							"include": ["formTitle", "pageUrl", "signupClosesAt"]
+							"fields": [
+								{ "label": "Form", "path": "formTitle" },
+								{ "label": "On page", "path": "pageUrl", "format": "url" },
+								{ "label": "Closes", "template": "{signupClosesAt:date-long}" }
+							],
+							"actions": [
+								{
+									"id": "edit-form",
+									"label": "Edit form",
+									"icon": "PencilOutline",
+									"type": "navigate",
+									"target": "/index.php/apps/portaliq/form-bindings/@source.formBinding"
+								}
+							],
+							"footnote": "Built with portaliq; every sign-up arrives here as a registration.",
+							"emptyText": "No registration form yet."
 						}
 					},
 					{
