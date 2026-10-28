@@ -1,5 +1,5 @@
 {
-  "_note": "bi-export-board. Board PqBiExport shows each job's last run (status, when, rows) and its next run, and filters on a failed last run. A job keeps those as fields of its own: ExportJobService::recordRun writes the last run's summary when a run finishes (ExportExecutionService), and nextRunAt is set when a job is enabled or after each run, null while it is disabled. The list reads and filters them like any field. Version 1.1.0 adds optional fields only.",
+  "_note": "bi-export-board. Board PqBiExport shows each job's last run (status, when, rows) and its next run, and filters on a failed last run. A job keeps those as fields of its own: ExportJobService::recordRun writes the last run's summary when a run finishes (ExportExecutionService), and nextRunAt is set when a job is enabled or after each run, null while it is disabled. The list reads and filters them like any field. Version 1.1.0 adds optional fields only. A run also records how many files it should write (fileCountExpected: one per dataset), so a partial run reads \"2 van 3 bestanden\".",
   "components": {
     "schemas": {
       "exportJob": {
@@ -10,7 +10,11 @@
             "type": "string",
             "title": "Last run status",
             "description": "Status of the job's last finished run.",
-            "enum": ["succeeded", "partial", "failed"],
+            "enum": [
+              "succeeded",
+              "partial",
+              "failed"
+            ],
             "x-enum-labels": {
               "succeeded": "Succeeded",
               "partial": "Partial",
@@ -44,6 +48,22 @@
             "format": "date-time",
             "title": "Next run at",
             "description": "When the job runs next on its schedule; empty while it is disabled."
+          },
+          "lastRunFilesExpected": {
+            "type": "integer",
+            "title": "Last run files expected",
+            "description": "Files the last run should have uploaded: one per dataset."
+          }
+        }
+      },
+      "exportRun": {
+        "slug": "exportRun",
+        "version": "1.1.0",
+        "properties": {
+          "fileCountExpected": {
+            "type": "integer",
+            "title": "Files expected",
+            "description": "Files the run should write: one per dataset of its job."
           }
         }
       }

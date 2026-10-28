@@ -1,5 +1,14 @@
 {
     "translations": {
+        "{files} of {expected} files": "{files} van {expected} bestanden",
+        "Every night at {time}": "Elke nacht om {time}",
+        "Every day at {time}": "Elke dag om {time}",
+        "{weekday} at {time}": "{weekday} om {time}",
+        "On day {day} of every month at {time}": "Op dag {day} van elke maand om {time}",
+        "Last run files expected": "Verwachte bestanden laatste uitvoering",
+        "Files the last run should have uploaded: one per dataset.": "Bestanden die de laatste uitvoering had moeten uploaden: één per dataset.",
+        "Files expected": "Verwachte bestanden",
+        "Files the run should write: one per dataset of its job.": "Bestanden die de uitvoering moet schrijven: één per dataset van de taak.",
         "New newsletter, step {step} of {total}": "Nieuwe nieuwsbrief, stap {step} van {total}",
         "Step {step} of {total}: check everything before the blast is created": "Stap {step} van {total}: controleer alles voordat de blast wordt aangemaakt",
         "Step {step} of {total}: {label}": "Stap {step} van {total}: {label}",

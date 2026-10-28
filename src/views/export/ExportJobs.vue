@@ -58,7 +58,31 @@ import { NcButton } from '@nextcloud/vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 import { exportApi } from '../../services/exportApi.js'
 import { exportJobSecondaryLabels, exportPageTabs } from './exportPageTabs.js'
-import { lastRunLine } from './exportRunText.js'
+import { exportSchedule, lastRunLine } from './exportRunText.js'
+
+/** A destination's type as its product name, under the destination's name. */
+const DESTINATION_TYPES = {
+	s3: 'Amazon S3',
+	azure_data_lake: 'Azure Data Lake',
+	gcs: 'Google Cloud Storage',
+	bigquery: 'BigQuery',
+	snowflake: 'Snowflake',
+	sftp: 'SFTP',
+	postgres: 'PostgreSQL',
+}
+
+/**
+ * The schedule as written, under its words; nothing when the words are the
+ * expression itself.
+ *
+ * @param {object} row The job row.
+ * @return {string} The expression, or ''.
+ * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-reads-its-schedule-in-words
+ */
+function scheduleSource(row) {
+	const written = typeof row?.scheduleCron === 'string' ? row.scheduleCron : ''
+	return written !== '' && exportSchedule(written) !== written ? written : ''
+}
 
 export default {
 	name: 'ExportJobs',
@@ -81,7 +105,7 @@ export default {
 					secondaryLabels: exportJobSecondaryLabels(t),
 					cellClass: 'cn-cell--strong',
 				},
-				{ key: 'sourceSchemas', label: t('pipelinq', 'Dataset') },
+				{ key: 'sourceSchemas', label: t('pipelinq', 'Dataset'), widget: 'badge' },
 				{
 					key: 'destinationId',
 					label: t('pipelinq', 'Destination'),
@@ -90,9 +114,16 @@ export default {
 						register: 'pipelinq',
 						schema: 'exportDestination',
 						labelField: 'name',
+						secondaryTemplate: '{type}',
+						secondaryLabels: { type: DESTINATION_TYPES },
 					},
 				},
-				{ key: 'scheduleCron', label: t('pipelinq', 'Schedule') },
+				{
+					key: 'scheduleCron',
+					label: t('pipelinq', 'Schedule'),
+					formatter: 'exportSchedule',
+					secondary: (row) => scheduleSource(row),
+				},
 				{
 					key: 'lastRunStatus',
 					label: t('pipelinq', 'Last run'),

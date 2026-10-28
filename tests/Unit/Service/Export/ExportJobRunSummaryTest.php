@@ -56,6 +56,7 @@ class ExportJobRunSummaryTest extends TestCase {
 			'endedAt'   => '2026-10-05T03:12:00+02:00',
 			'rowCount'  => 480,
 			'fileCount' => 2,
+			'fileCountExpected' => 3,
 		]);
 		$this->assertSame(
 			expected: [
@@ -63,6 +64,7 @@ class ExportJobRunSummaryTest extends TestCase {
 				'lastRunAt'     => '2026-10-05T03:12:00+02:00',
 				'lastRunRows'   => 480,
 				'lastRunFiles'  => 2,
+				'lastRunFilesExpected' => 3,
 				'lastRunError'  => null,
 			],
 			actual: $summary

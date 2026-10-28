@@ -42,11 +42,12 @@ class ExportRunSummary {
 
 	/**
 	 * What a job shows of its last run: the status, when it ended (else began),
-	 * the rows and files it wrote, and its error.
+	 * the rows and files it wrote, the files it should have, and its error.
 	 *
 	 * @param array<string, mixed> $run The finished run.
 	 *
-	 * @return array{lastRunStatus: string, lastRunAt: string|null, lastRunRows: int, lastRunFiles: int, lastRunError: string|null}
+	 * @return array{lastRunStatus: string, lastRunAt: string|null, lastRunRows: int, lastRunFiles: int,
+	 *     lastRunFilesExpected: int, lastRunError: string|null}
 	 *
 	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
 	 */
@@ -66,6 +67,7 @@ class ExportRunSummary {
 			'lastRunAt'     => $endedAt,
 			'lastRunRows'   => (int)($run['rowCount'] ?? 0),
 			'lastRunFiles'  => (int)($run['fileCount'] ?? 0),
+			'lastRunFilesExpected' => (int)($run['fileCountExpected'] ?? 0),
 			'lastRunError'  => $error,
 		];
 	}//end lastRunSummary()

@@ -77,6 +77,19 @@ describe('the BI export pages (pl2 PqBiExport)', () => {
 		expect(job).not.toContain("t('pipelinq', 'Disable')")
 	})
 
+	it('reads the schedule in words, the datasets as chips and the destination with its type', () => {
+		const job = view('ExportJobs.vue')
+		expect(job).toContain("formatter: 'exportSchedule'")
+		expect(job).toContain('secondary: (row) => scheduleSource(row)')
+		expect(job).toMatch(/key: 'sourceSchemas',[^}]*widget: 'badge'/)
+		expect(job).toContain("secondaryTemplate: '{type}'")
+		const types = schemas.exportDestination.properties.type.enum
+		const labels = job.slice(job.indexOf('DESTINATION_TYPES'))
+		for (const type of types) {
+			expect(labels, type).toContain(`${type}:`)
+		}
+	})
+
 	it('has its words in English and Dutch', () => {
 		const words = ['Jobs', 'Destinations', 'Runs', 'incremental', 'full']
 		for (const word of words) {

@@ -37,3 +37,15 @@ ingepland", and SHALL offer a lens on a failed last run. Enabled SHALL be a swit
 
 - **GIVEN** a disabled job
 - **THEN** its next run reads "Niet ingepland" and its switch is off
+
+### Requirement: A job reads its schedule in words
+
+The jobs list SHALL show a job's schedule in words ("Elk uur", "Elke nacht om 02:00", "Maandag om 03:00", "Op dag 1
+van elke maand om 04:00") with the expression beneath it, and an expression it cannot put in words as written. A job's
+datasets SHALL show as chips, and its destination with the destination's type beneath the name. A partial last run
+SHALL say how many of its expected files it wrote ("2 van 3 bestanden"): a run records one expected file per dataset.
+
+#### Scenario: Board PqBiExport
+
+- **GIVEN** a weekly job on `0 3 * * 1` with datasets `appointmentBooking`, writing to "Regionaal datameer" (Azure Data Lake), whose last run wrote 2 of 3 files
+- **THEN** its row reads "Maandag om 03:00" over `0 3 * * 1`, the chip "appointmentBooking", "Regionaal datameer" over "Azure Data Lake", and "Gedeeltelijk" over "5 okt, 03:12 · 2 van 3 bestanden"

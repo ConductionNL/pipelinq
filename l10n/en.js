@@ -1,6 +1,15 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "{files} of {expected} files": "{files} of {expected} files",
+        "Every night at {time}": "Every night at {time}",
+        "Every day at {time}": "Every day at {time}",
+        "{weekday} at {time}": "{weekday} at {time}",
+        "On day {day} of every month at {time}": "On day {day} of every month at {time}",
+        "Last run files expected": "Last run files expected",
+        "Files the last run should have uploaded: one per dataset.": "Files the last run should have uploaded: one per dataset.",
+        "Files expected": "Files expected",
+        "Files the run should write: one per dataset of its job.": "Files the run should write: one per dataset of its job.",
         "Cash register audit": "Cash register audit",
         "Cash register audit entry": "Cash register audit entry",
         "Verification done. The status shows the result.": "Verification done. The status shows the result.",
