@@ -180,11 +180,13 @@ class RecordDocumentController extends Controller
 
         $filename = $this->filename(templateName: $template['name'], record: $record);
         try {
+            $register = $this->reader->register();
             $document = $this->documents->render(
-                templateId: $config['template'],
-                dataRefs: [['register' => $this->reader->register(), 'schema' => $schema, 'id' => $id]],
+                templateId: $template['id'],
+                dataRefs: [['register' => $register, 'schema' => $schema, 'id' => $id]],
                 filename: $filename,
-                outputMode: 'return'
+                outputMode: 'return',
+                listRefs: $this->listRefs(lists: $config['lists'], register: $register, id: $id)
             );
         } catch (RuntimeException $e) {
             return new JSONResponse(['message' => 'filinq could not make the document.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
@@ -200,7 +202,7 @@ class RecordDocumentController extends Controller
      *
      * @param string $schema The schema slug.
      *
-     * @return array{template: string, ownerField: string}|null The configuration.
+     * @return array{template: string, ownerField: string, lists: list<array<string, mixed>>}|null The configuration.
      */
     private function configFor(string $schema): ?array
     {
@@ -219,9 +221,52 @@ class RecordDocumentController extends Controller
             $ownerField = 'ownerId';
         }
 
-        return ['template' => $template, 'ownerField' => $ownerField];
+        $lists = [];
+        if (is_array($map[$schema]['lists'] ?? null) === true) {
+            $lists = array_values(array_filter($map[$schema]['lists'], 'is_array'));
+        }
+
+        return ['template' => $template, 'ownerField' => $ownerField, 'lists' => $lists];
 
     }//end configFor()
+
+
+    /**
+     * filinq's list references for the record's configured lists: each list's
+     * schema filtered on its `field` holding the record's id, under its `as`
+     * key (a quote's lines as `lines`). An entry without schema, field or as
+     * is left out.
+     *
+     * @param list<array<string, mixed>> $lists    The configured lists (`schema`, `field`, `as`, `order?`).
+     * @param string                     $register The register.
+     * @param string                     $id       The record id.
+     *
+     * @return list<array<string, mixed>> The list references.
+     *
+     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     */
+    private function listRefs(array $lists, string $register, string $id): array
+    {
+        $refs = [];
+        foreach ($lists as $list) {
+            $schema = trim((string) ($list['schema'] ?? ''));
+            $field  = trim((string) ($list['field'] ?? ''));
+            $asKey  = trim((string) ($list['as'] ?? ''));
+            if ($schema === '' || $field === '' || $asKey === '') {
+                continue;
+            }
+
+            $ref = ['register' => $register, 'schema' => $schema, 'filter' => [$field => $id], 'as' => $asKey];
+            if (is_array($list['order'] ?? null) === true) {
+                $ref['order'] = $list['order'];
+            }
+
+            $refs[] = $ref;
+        }
+
+        return $refs;
+
+    }//end listRefs()
 
 
     /**

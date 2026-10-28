@@ -14,7 +14,8 @@ A record type can have a document, made by filinq from a configured template.
 
 ### Requirement: A configured record type has a document
 
-Pipelinq SHALL read `record_document_templates` (a JSON map from a schema slug to `{ template, ownerField? }`) and SHALL
+Pipelinq SHALL read `record_document_templates` (a JSON map from a schema slug to `{ template, ownerField?, lists? }`,
+`template` an id or a slug, `lists` the record's lists `[{ schema, field, as, order? }]`) and SHALL
 make a document only for a schema in the map, from a template in pipelinq's filinq namespace. A schema not in the map,
 or a template that is not pipelinq's, SHALL answer 404.
 
@@ -24,6 +25,14 @@ or a template that is not pipelinq's, SHALL answer 404.
 - **WHEN** a salesperson asks `GET /api/records/salesQuote/{id}/document` for a quote they may act on
 - **THEN** filinq renders T for that quote and the PDF comes back as a download
 - **AND** nothing is filed in Files and nothing is logged
+
+#### Scenario: A template named by its slug, with the record's lines
+
+- **GIVEN** `record_document_templates` maps `salesQuote` to `{ template: "offerte", lists: [{ schema: "salesQuoteLine",
+  field: "quote", as: "lines" }] }`
+- **WHEN** the quote's document is asked for
+- **THEN** pipelinq resolves "offerte" through filinq's slug resolver in pipelinq's namespace and renders the template it
+  names, with the quote's lines passed as the list `lines`
 
 #### Scenario: A schema without a document
 

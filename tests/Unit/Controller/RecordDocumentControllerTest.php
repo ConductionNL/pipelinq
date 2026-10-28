@@ -138,6 +138,10 @@ class RecordDocumentControllerTest extends TestCase
             return ['id' => 'tpl-quote', 'name' => 'Offerte', 'description' => ''];
         }
 
+        if ($templateId === 'offerte') {
+            return ['id' => '4f1c0d6e-9b2a-4c3d-8e5f-6a7b8c9d0e1f', 'name' => 'Offerte', 'description' => ''];
+        }
+
         return null;
 
     }//end template()
@@ -299,6 +303,45 @@ class RecordDocumentControllerTest extends TestCase
         $this->assertFalse(condition: $this->controller()->template(schema: 'salesQuote')->getData()['available']);
 
     }//end testTemplateAvailability()
+
+
+
+    /**
+     * A template named by slug renders by the id it resolves to, with the configured lists of the record.
+     *
+     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     *
+     * @return void
+     */
+    public function testSlugTemplateRendersWithTheRecordsLists(): void
+    {
+        $lists     = [['schema' => 'salesQuoteLine', 'field' => 'quote', 'as' => 'lines', 'order' => ['sortOrder' => 'ASC']]];
+        $this->map = (string) json_encode(value: ['salesQuote' => ['template' => 'offerte', 'ownerField' => 'assignee', 'lists' => $lists]]);
+        $this->reader->method('register')->willReturn('pipelinq');
+        $this->reader->method('readFromSchema')->willReturn(['number' => 'OFF-2026-0042', 'assignee' => 'pieter']);
+        $this->policy->method('mayAccess')->willReturn(true);
+        $listRefs = [
+            [
+                'register' => 'pipelinq',
+                'schema'   => 'salesQuoteLine',
+                'filter'   => ['quote' => self::QUOTE],
+                'as'       => 'lines',
+                'order'    => ['sortOrder' => 'ASC'],
+            ],
+        ];
+        $this->documents->expects($this->once())->method('render')->with(
+            '4f1c0d6e-9b2a-4c3d-8e5f-6a7b8c9d0e1f',
+            [['register' => 'pipelinq', 'schema' => 'salesQuote', 'id' => self::QUOTE]],
+            $this->stringContains(string: 'OFF-2026-0042'),
+            'return',
+            $listRefs
+        )->willReturn(['content' => '%PDF-1.7', 'fileId' => null, 'path' => null, 'warnings' => []]);
+
+        $response = $this->controller()->document(schema: 'salesQuote', id: self::QUOTE);
+
+        $this->assertInstanceOf(expected: DataDownloadResponse::class, actual: $response);
+
+    }//end testSlugTemplateRendersWithTheRecordsLists()
 
 
 }//end class

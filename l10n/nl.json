@@ -9273,6 +9273,15 @@
         "{count} bookings, no bookable time this week": "{count} boekingen, deze week geen boekbare tijd",
         "{count} bookings, {percent}% of the bookable time": "{count} boekingen, {percent}% van de boekbare tijd",
         "{name} sent with the invitation": "{name} verstuurd met de uitnodiging",
-        "Event created in campaign {object.campaign}": "Evenement aangemaakt in campagne {object.campaign}"
+        "Event created in campaign {object.campaign}": "Evenement aangemaakt in campagne {object.campaign}",
+        "The quote belongs to this lead": "De offerte hoort bij deze lead",
+        "From the lead": "Uit de lead",
+        "Receives the quote by e-mail": "Ontvangt de offerte per e-mail",
+        "Printed on the PDF": "Staat op de pdf",
+        "Set when it is sent": "Wordt gezet bij verzenden",
+        "30 days after sending": "30 dagen na verzending",
+        "Signs the quote": "Tekent de offerte",
+        "Not yet sent": "Nog niet verstuurd",
+        "VAT {vatRate}%": "Btw {vatRate}%"
     }
 }
