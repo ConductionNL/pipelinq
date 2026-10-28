@@ -8614,7 +8614,11 @@ OC.L10N.register(
         "Missing a report?": "Mis je een rapportage?",
         "Build one yourself in Nextcloud Analytics with New analysis report, or ask an administrator to add a report to the app.": "Bouw er zelf een in Nextcloud Analytics met Nieuw analyserapport, of vraag een beheerder een rapportage aan de app toe te voegen.",
         "Revenue and forecast": "Omzet en prognose",
-        "Customer loyalty": "Klantloyaliteit"
+        "Customer loyalty": "Klantloyaliteit",
+        "Chance": "Kans",
+        "Start stage": "Startfase",
+        "New items start here": "Nieuwe items beginnen hier",
+        "A closed stage ends the item: won or lost.": "Een gesloten fase beëindigt het item: gewonnen of verloren."
     },
     "nplurals=2; plural=(n != 1);"
 )

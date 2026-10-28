@@ -8625,7 +8625,11 @@ OC.L10N.register(
         "Build one yourself in Nextcloud Analytics with New analysis report, or ask an administrator to add a report to the app.": "Build one yourself in Nextcloud Analytics with New analysis report, or ask an administrator to add a report to the app.",
         "Revenue and forecast": "Revenue and forecast",
         "Customer loyalty": "Customer loyalty",
-        "Marketing and campaigns": "Marketing and campaigns"
+        "Marketing and campaigns": "Marketing and campaigns",
+        "Chance": "Chance",
+        "Start stage": "Start stage",
+        "New items start here": "New items start here",
+        "A closed stage ends the item: won or lost.": "A closed stage ends the item: won or lost."
     },
     "nplurals=2; plural=(n != 1);"
 )
