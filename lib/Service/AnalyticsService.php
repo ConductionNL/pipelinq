@@ -661,6 +661,7 @@ class AnalyticsService {
 	 *   - previousPeriod:    windowed figures for the preceding equal-length window
 	 *
 	 * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+	 * @param array<string, mixed> $leadFilter Field filters the open-pipeline figures follow, as the leads list sends them.
 	 *
 	 * @return array{
 	 *   revenue: float,
@@ -678,7 +679,7 @@ class AnalyticsService {
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
-	public function getCommercialOverview(string $period = self::DEFAULT_PERIOD): array {
+	public function getCommercialOverview(string $period = self::DEFAULT_PERIOD, array $leadFilter = []): array {
 		if (in_array($period, self::ALLOWED_OVERVIEW_PERIODS, true) === false) {
 			throw new InvalidArgumentException(message: 'Invalid period');
 		}
@@ -695,7 +696,7 @@ class AnalyticsService {
 		$current = $this->aggregateCommercialWindow(from: $currentStart, to: $now, leads: $leads, pos: $pos);
 		$previous = $this->aggregateCommercialWindow(from: $previousStart, to: $currentStart, leads: $leads, pos: $pos);
 
-		$forecast = $this->aggregateOpenPipeline(leads: $leads);
+		$forecast = $this->aggregateOpenPipeline(leads: $this->leadsMatching(leads: $leads, filter: $leadFilter));
 
 		return [
 			'revenue' => $current['revenue'],
@@ -813,6 +814,45 @@ class AnalyticsService {
 			'openPipelineValue' => round($openPipelineValue, 2),
 		];
 	}//end aggregateOpenPipeline()
+
+	/**
+	 * The leads every filter field matches: equal to its value, or to one of
+	 * its values for a list. A key that is not a plain field name is ignored.
+	 *
+	 * @param array<int, array<string, mixed>> $leads Lead rows.
+	 * @param array<string, mixed> $filter Field filters.
+	 *
+	 * @return array<int, array<string, mixed>> The matching leads.
+	 *
+	 * @spec openspec/changes/leads-list-board-line/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
+	 */
+	private function leadsMatching(array $leads, array $filter): array {
+		$fields = [];
+		foreach ($filter as $key => $expected) {
+			if (is_string($key) === true && preg_match('/^[A-Za-z0-9_]+$/', $key) === 1) {
+				$fields[$key] = array_map('strval', (array)$expected);
+			}
+		}
+
+		if ($fields === []) {
+			return $leads;
+		}
+
+		return array_values(
+			array_filter(
+				$leads,
+				static function (array $lead) use ($fields): bool {
+					foreach ($fields as $key => $values) {
+						if (in_array((string)($lead[$key] ?? ''), $values, true) === false) {
+							return false;
+						}
+					}
+
+					return true;
+				}
+			)
+		);
+	}//end leadsMatching()
 
 	/**
 	 * A lead's value weighted by its win chance.

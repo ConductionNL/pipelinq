@@ -120,7 +120,7 @@ describe('lead detail', () => {
 	})
 
 	it('puts logging a visit and the two close buttons in the header', () => {
-		expect(lead.config.quickActions).toEqual(['close-won', 'close-lost'])
+		expect(lead.config.quickActions).toEqual(['log-contact', 'close-won', 'close-lost'])
 		expect(lead.actionsComponent).toBe('LogVisitAction')
 		const won = lead.config.headerActions.find((a) => a.id === 'close-won')
 		expect(won.payload).toEqual({ action: 'win' })

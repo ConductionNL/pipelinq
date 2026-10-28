@@ -36,7 +36,9 @@ use OCA\OpenRegister\AppHost\Service\GenericStoreService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\StoreController;
 use OCA\Pipelinq\Service\RegisterResolverService;
+use OCA\OpenRegister\AppHost\Store\StoreActionAuthorizer;
 use OCA\Pipelinq\Service\Store\StoreInstallLedger;
+use OCA\Pipelinq\Service\Store\StoreTemplateAssembler;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -68,6 +70,9 @@ class StoreControllerTest extends TestCase {
 		bool $signedIn = true,
 		string $registerId = '18',
 		?StoreInstallLedger $installLedger = null,
+		?StoreTemplateAssembler $assembler = null,
+		?StoreActionAuthorizer $authorizer = null,
+		?IRequest $request = null,
 	): StoreController {
 		$session = $this->createMock(originalClassName: IUserSession::class);
 		$user = null;
@@ -94,7 +99,7 @@ class StoreControllerTest extends TestCase {
 		}
 
 		return new StoreController(
-			request: $this->createMock(originalClassName: IRequest::class),
+			request: ($request ?? $this->createMock(originalClassName: IRequest::class)),
 			logger: $this->createMock(originalClassName: LoggerInterface::class),
 			userSession: $session,
 			appConfig: $appConfig,
@@ -102,8 +107,126 @@ class StoreControllerTest extends TestCase {
 			objectService: ($objectService ?? $this->createMock(originalClassName: ObjectServiceInterface::class)),
 			registerResolver: $resolver,
 			installLedger: ($installLedger ?? $this->createMock(originalClassName: StoreInstallLedger::class)),
+			assembler: ($assembler ?? $this->createMock(originalClassName: StoreTemplateAssembler::class)),
+			actionAuthorizer: ($authorizer ?? $this->createMock(originalClassName: StoreActionAuthorizer::class)),
 		);
 	}//end controller()
+
+	/**
+	 * A request whose `item` and `objects` params are the given values.
+	 *
+	 * @param array<string, mixed> $params The request params.
+	 *
+	 * @return IRequest
+	 */
+	private function requestWith(array $params): IRequest {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $key, mixed $default=null): mixed => ($params[$key] ?? $default)
+		);
+
+		return $request;
+	}//end requestWith()
+
+	/**
+	 * The local objects a kind may carry are listed for the publish dialog.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 */
+	public function testPublishableListsTheLocalObjectsOfAKind(): void {
+		$assembler = $this->createMock(originalClassName: StoreTemplateAssembler::class);
+		$assembler->expects($this->once())->method('publishable')->with('pipeline')
+			->willReturn([['schema' => 'pipeline', 'id' => 'p-1', 'title' => 'Verkoop']]);
+
+		$authorizer = $this->createMock(originalClassName: StoreActionAuthorizer::class);
+		$authorizer->method('canPublish')->willReturn(true);
+
+		$data = $this->controller(assembler: $assembler, authorizer: $authorizer, request: $this->requestWith(params: ['kind' => 'pipeline']))->publishable()->getData();
+
+		$this->assertSame([['schema' => 'pipeline', 'id' => 'p-1', 'title' => 'Verkoop']], $data['objects']);
+	}//end testPublishableListsTheLocalObjectsOfAKind()
+
+	/**
+	 * Someone the publish groups do not admit gets 403, and nothing is sent.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 */
+	public function testPublishRefusesAUserWhoMayNotPublish(): void {
+		$authorizer = $this->createMock(originalClassName: StoreActionAuthorizer::class);
+		$authorizer->method('canPublish')->willReturn(false);
+		$store = $this->createMock(originalClassName: GenericStoreService::class);
+		$store->expects($this->never())->method('publish');
+
+		$response = $this->controller(storeService: $store, authorizer: $authorizer, request: $this->requestWith(params: ['item' => ['slug' => 'woo', 'kind' => 'pipeline']]))->publish();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+	}//end testPublishRefusesAUserWhoMayNotPublish()
+
+	/**
+	 * An admitted publish sends the item with the assembled components, under
+	 * a descriptor that may publish.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 */
+	public function testPublishSendsTheItemWithTheAssembledComponents(): void {
+		$authorizer = $this->createMock(originalClassName: StoreActionAuthorizer::class);
+		$authorizer->method('canPublish')->willReturn(true);
+		$assembler = $this->createMock(originalClassName: StoreTemplateAssembler::class);
+		$assembler->method('components')->with('pipeline', [['schema' => 'pipeline', 'id' => 'p-2']])
+			->willReturn([['schema' => 'pipeline', 'object' => ['title' => 'Woo-vragen']]]);
+
+		$store = $this->createMock(originalClassName: GenericStoreService::class);
+		$store->expects($this->once())->method('publish')
+			->with(
+				$this->callback(static fn ($descriptor): bool => $descriptor->isPublishable() === true && in_array('components', $descriptor->publishFields, true) === true),
+				['slug' => 'woo', 'title' => 'Pipeline voor Woo-vragen', 'kind' => 'pipeline', 'version' => '1.0.0', 'components' => [['schema' => 'pipeline', 'object' => ['title' => 'Woo-vragen']]]]
+			)
+			->willReturn(['outcome' => 'ok', 'slug' => 'woo']);
+
+		$response = $this->controller(
+			storeService: $store,
+			assembler: $assembler,
+			authorizer: $authorizer,
+			request: $this->requestWith(params: [
+				'item' => ['slug' => 'woo', 'title' => 'Pipeline voor Woo-vragen', 'kind' => 'pipeline', 'version' => '1.0.0'],
+				'objects' => [['schema' => 'pipeline', 'id' => 'p-2']],
+			])
+		)->publish();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['outcome' => 'ok', 'slug' => 'woo'], actual: $response->getData());
+	}//end testPublishSendsTheItemWithTheAssembledComponents()
+
+	/**
+	 * A chosen object the assembler refuses is a 400, and nothing is sent.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 */
+	public function testPublishWithARefusedObjectIsABadRequest(): void {
+		$authorizer = $this->createMock(originalClassName: StoreActionAuthorizer::class);
+		$authorizer->method('canPublish')->willReturn(true);
+		$assembler = $this->createMock(originalClassName: StoreTemplateAssembler::class);
+		$assembler->method('components')->willThrowException(new \InvalidArgumentException('A pipeline template cannot carry a lead.'));
+		$store = $this->createMock(originalClassName: GenericStoreService::class);
+		$store->expects($this->never())->method('publish');
+
+		$response = $this->controller(
+			storeService: $store,
+			assembler: $assembler,
+			authorizer: $authorizer,
+			request: $this->requestWith(params: ['item' => ['slug' => 'woo', 'kind' => 'pipeline'], 'objects' => [['schema' => 'lead', 'id' => 'l-1']]])
+		)->publish();
+
+		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
+	}//end testPublishWithARefusedObjectIsABadRequest()
 
 	/**
 	 * Search marks the installed cards and says when the registry last answered.

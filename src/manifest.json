@@ -4784,6 +4784,17 @@
 									"countFrom": "widget"
 								},
 								{
+									"label": "Quotes",
+									"widgetId": "lead-quotes",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "salesQuote",
+										"filter": {
+											"lead": "@objectId"
+										}
+									}
+								},
+								{
 									"label": "History",
 									"widgetId": "lead-history"
 								}
@@ -4817,7 +4828,7 @@
 						"type": "data",
 						"title": "Deal",
 						"icon": "HandshakeOutline",
-						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out. The client sits here too (decision 207): a lead can exist with no client linked, and the Related card only lists a client once there is one, so this field is where a client is read, added and taken off.",
+						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out. The client sits here too (decision 207): a lead can exist with no client linked, and the Related card only lists a client once there is one, so this field is where a client is read, added and taken off. Board PqLead (r33): the eight deal facts in two columns (fixedColumns, nc-vue 24t2l); the title, client, status, stage, description and notes are read and edited in the edit form and the client card.",
 						"content": {
 							"title": "Deal",
 							"columns": 2,
@@ -4829,30 +4840,46 @@
 								"source",
 								"category",
 								"assignee",
-								"stageEnteredAt",
-								"title",
-								"client",
-								"status",
-								"stage",
-								"description",
-								"notes"
+								"stageEnteredAt"
 							],
 							"overrides": {
 								"assignee": {
-									"formatter": "userDisplayName"
+									"formatter": "userDisplayName",
+									"order": 7,
+									"label": "Owner"
 								},
 								"status": {
 									"editable": false
 								},
 								"stageEnteredAt": {
 									"editable": false,
-									"label": "In this stage since"
+									"label": "In this stage since",
+									"order": 8
 								},
 								"qualificationScore": {
-									"label": "Win chance"
+									"label": "Win chance",
+									"order": 2
+								},
+								"value": {
+									"order": 1,
+									"label": "Value"
+								},
+								"expectedCloseDate": {
+									"order": 3,
+									"label": "Expected closing"
+								},
+								"priority": {
+									"order": 4
+								},
+								"source": {
+									"order": 5
+								},
+								"category": {
+									"order": 6
 								}
 							},
-							"hideEmpty": true
+							"hideEmpty": true,
+							"fixedColumns": true
 						}
 					},
 					{
@@ -4906,7 +4933,51 @@
 							"limit": 25,
 							"emptyText": "No products quoted on this deal yet. Add a line to build the quote.",
 							"addLabel": "Add product",
-							"footerNote": "The value of the lead follows the line totals. Change a line and the value changes with it."
+							"footerNote": "The value of the lead follows the line totals. Change a line and the value changes with it.",
+							"rowTitle": "plain",
+							"filterable": true
+						}
+					},
+					{
+						"id": "lead-quotes",
+						"type": "object-list",
+						"title": "Quotes",
+						"icon": "FileDocumentEditOutline",
+						"content": {
+							"register": "pipelinq",
+							"schema": "salesQuote",
+							"filter": {
+								"lead": "@objectId"
+							},
+							"columns": [
+								{
+									"key": "number",
+									"label": "Number"
+								},
+								{
+									"key": "title",
+									"label": "Title"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "total",
+									"label": "Total",
+									"format": {
+										"style": "currency",
+										"currency": "@config.currency"
+									}
+								},
+								{
+									"key": "expiresAt",
+									"label": "Valid until",
+									"format": "date"
+								}
+							],
+							"rowRoute": "QuoteDetail",
+							"emptyText": "No quote for this lead yet."
 						}
 					},
 					{
@@ -5118,6 +5189,16 @@
 									]
 								},
 								{
+									"label": "Contact",
+									"path": "contact",
+									"from": "object",
+									"resolve": {
+										"register": "pipelinq",
+										"schema": "contact",
+										"labelField": "name"
+									}
+								},
+								{
 									"label": "Email",
 									"path": "email",
 									"format": "email"
@@ -5165,16 +5246,12 @@
 							"fields": [
 								{
 									"as": "title",
-									"path": "qualificationScore"
+									"path": "qualificationScore",
+									"suffix": "%"
 								},
 								{
 									"as": "line",
-									"path": "stage",
-									"label": "Stage"
-								},
-								{
-									"as": "line",
-									"text": "The chance of the stage, raised by recent contact and lowered when the lead stands still for 14 days."
+									"template": "Stage {stage} sets the starting chance. Recent contact raises it; without a step in 14 days it drops."
 								}
 							]
 						}
@@ -5209,7 +5286,29 @@
 						"id": "side-related",
 						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
+						"icon": "LinkVariant",
+						"content": {
+							"links": [
+								{
+									"label": "Prospect data from the KVK",
+									"icon": "OfficeBuildingOutline",
+									"route": {
+										"name": "Prospects"
+									}
+								},
+								{
+									"label": "{earlier}",
+									"icon": "Trophy",
+									"endpoint": "/apps/pipelinq/api/leads/@objectId/related-summary"
+								},
+								{
+									"label": "Hours on this lead: {hours}",
+									"icon": "ClockOutline",
+									"endpoint": "/apps/pipelinq/api/leads/@objectId/related-summary"
+								}
+							]
+						},
+						"_note": "Board PqLead 'Gerelateerd': three link rows (KVK prospect data, the client's earlier deals and how they ended, the hours on this lead; GET /api/leads/{id}/related-summary) above the related objects, which stay."
 					},
 					{
 						"id": "lead-kpi-value",
@@ -5287,9 +5386,29 @@
 					"field": "stage",
 					"variant": "purple"
 				},
-				"headerMeta": "via {source} · {stageEnteredAt|days} days in this stage · owner {assignee}",
+				"headerMeta": "via {source} · {stageEnteredAt|days} days in this stage · owner {assignee|user}",
 				"stageField": "stage",
 				"headerActions": [
+					{
+						"id": "log-contact",
+						"type": "open-form",
+						"label": "Log contact",
+						"icon": "PhoneLogOutline",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"formTitle": "Log contact",
+						"includeFields": [
+							"title",
+							"channel",
+							"direction",
+							"description"
+						],
+						"props": {
+							"lead": "@objectId",
+							"ticketType": "interaction"
+						},
+						"successMessage": "Contact moment logged."
+					},
 					{
 						"id": "close-won",
 						"type": "api-call",
@@ -5325,9 +5444,36 @@
 							"op": "eq",
 							"value": "open"
 						}
+					},
+					{
+						"id": "make-quote",
+						"type": "open-form",
+						"label": "Make quote",
+						"icon": "FileDocumentEditOutline",
+						"register": "pipelinq",
+						"schema": "salesQuote",
+						"formTitle": "Make quote",
+						"includeFields": [
+							"title",
+							"expiresAt",
+							"paymentTerm",
+							"notes"
+						],
+						"props": {
+							"lead": "@objectId",
+							"title": "@object.title",
+							"status": "draft"
+						},
+						"successMessage": "Quote made.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "open"
+						}
 					}
 				],
 				"quickActions": [
+					"log-contact",
 					"close-won",
 					"close-lost"
 				],
@@ -5515,6 +5661,11 @@
 						}
 					}
 				},
+				"primaryActionByStage": {
+					"Gekwalificeerd": "make-quote",
+					"Voorstel": "make-quote"
+				},
+				"headerActionsBelow": true,
 				"identifierField": "id",
 				"follow": false
 			}
@@ -10226,6 +10377,7 @@
 			"config": {
 				"app": "pipelinq",
 				"storeRegistry": true,
+				"publishable": true,
 				"description": "Templates and connectors for Pipelinq, {count} in the registry",
 				"kinds": [
 					"pipeline",

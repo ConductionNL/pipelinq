@@ -145,11 +145,11 @@ export default {
 			defaultPipelineId: '',
 			// The board opens on the default pipeline, as a removable filter.
 			defaultFilters: { pipeline: '@config.defaultPipeline?' },
-			// The open pipeline's value under the list's filters, and the
-			// win-chance weighted forecast of the open leads.
+			// The open pipeline's value and its win-chance weighted forecast,
+			// both under the list's filters.
 			countValues: {
 				pipeline: { metric: 'sum', field: 'value', filter: { status: 'open' } },
-				weighted: { endpoint: '/apps/pipelinq/api/analytics/commercial', path: 'weightedForecast' },
+				weighted: { endpoint: '/apps/pipelinq/api/analytics/commercial', path: 'weightedForecast', followFilters: true },
 			},
 		}
 	},

@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -63,6 +64,7 @@ class ExportJobService extends AbstractExportService {
 	 * @param ExportDataService $data The data extraction service.
 	 * @param CronExpressionHelper $cron The cron helper.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ExportRunSummary $summary A job's last and next run.
 	 */
 	public function __construct(
 		ContainerInterface $container,
@@ -72,6 +74,7 @@ class ExportJobService extends AbstractExportService {
 		private ExportDataService $data,
 		private CronExpressionHelper $cron,
 		private LoggerInterface $logger,
+		private ExportRunSummary $summary,
 	) {
 		parent::__construct(
 			container: $container,
@@ -130,6 +133,7 @@ class ExportJobService extends AbstractExportService {
 		$data['createdBy'] = $userId;
 		$data['createdAt'] = $this->now();
 		$data['scheduleCron'] = $this->cron->normalize(expression: (string)($data['scheduleCron'] ?? ''));
+		$data['nextRunAt'] = null;
 
 		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $data, id: null);
 	}//end createJob()
@@ -153,6 +157,7 @@ class ExportJobService extends AbstractExportService {
 
 		$merged['enabled'] = false;
 		$merged['scheduleCron'] = $this->cron->normalize(expression: (string)($merged['scheduleCron'] ?? ''));
+		$merged['nextRunAt'] = null;
 
 		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $merged, id: $id);
 	}//end updateJob()
@@ -196,6 +201,7 @@ class ExportJobService extends AbstractExportService {
 		}
 
 		$job['enabled'] = true;
+		$job['nextRunAt'] = $this->summary->nextRunAt(job: $job, now: new DateTimeImmutable());
 
 		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $id);
 	}//end enableJob()
@@ -213,9 +219,28 @@ class ExportJobService extends AbstractExportService {
 	public function disableJob(string $id): array {
 		$job = $this->getJob(id: $id);
 		$job['enabled'] = false;
+		$job['nextRunAt'] = null;
 
 		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $id);
 	}//end disableJob()
+
+	/**
+	 * Keep a finished run on its job: the last run's summary and the next run.
+	 *
+	 * @param string $jobId The job UUID.
+	 * @param array<string, mixed> $run The finished run.
+	 *
+	 * @return array<string, mixed> The updated job.
+	 *
+	 * @throws OCSNotFoundException When the job is absent.
+	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 */
+	public function recordRun(string $jobId, array $run): array {
+		$job = array_merge($this->getJob(id: $jobId), $this->summary->lastRunSummary(run: $run));
+		$job['nextRunAt'] = $this->summary->nextRunAt(job: $job, now: new DateTimeImmutable());
+
+		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $jobId);
+	}//end recordRun()
 
 	/**
 	 * Run a non-destructive test of a job: extract <=100 rows per schema and

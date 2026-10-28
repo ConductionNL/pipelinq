@@ -15,12 +15,14 @@
 		<WerkplekAgentStatus
 			v-else
 			:isAvailable="isAvailable"
-			@update:isAvailable="isAvailable = $event" />
+			@update:isAvailable="isAvailable = $event"
+			@saved="onSaved" />
 	</div>
 </template>
 
 <script>
 import axios from '@nextcloud/axios'
+import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
 import WerkplekAgentStatus from '../../../components/werkplek/WerkplekAgentStatus.vue'
@@ -180,6 +182,17 @@ export default {
 			} else {
 				Object.assign(holder, values)
 			}
+		},
+
+		/**
+		 * The availability is saved: the dashboard header line that says
+		 * whether the agent is available reads it again.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1
+		 */
+		onSaved() {
+			emit('cn:dashboard:description-refresh', {})
 		},
 
 		/**

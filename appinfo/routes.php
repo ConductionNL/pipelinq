@@ -106,7 +106,9 @@ return [
         // leads + requests (replaces the MyWorkWidget/MyWork client-side union).
         ['name' => 'worklist#mine', 'url' => '/api/worklist/mine', 'verb' => 'GET'],
         ['name' => 'worklist#items', 'url' => '/api/worklist/items', 'verb' => 'GET'],
+        ['name' => 'leadRelatedSummary#show', 'url' => '/api/leads/{id}/related-summary', 'verb' => 'GET'],
         ['name' => 'worklist#summary', 'url' => '/api/worklist/summary', 'verb' => 'GET'],
+        ['name' => 'firstTicket#show', 'url' => '/api/worklist/first', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
         ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
@@ -811,6 +813,8 @@ return [
         ['name' => 'store#install',      'url' => '/api/store/items/{slug}/install',  'verb' => 'POST', 'requirements' => ['slug' => '[a-z0-9][a-z0-9-]*[a-z0-9]']],
         ['name' => 'store#getSettings',  'url' => '/api/store/settings',              'verb' => 'GET'],
         ['name' => 'store#saveSettings', 'url' => '/api/store/settings',              'verb' => 'PUT'],
+        ['name' => 'store#publishable',  'url' => '/api/store/publishable',           'verb' => 'GET'],
+        ['name' => 'store#publish',      'url' => '/api/store/publish',               'verb' => 'POST'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

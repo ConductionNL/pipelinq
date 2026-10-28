@@ -42,7 +42,7 @@ describe('the leads list as the board', () => {
 	it('names the pipeline value and the weighted forecast on the count line', () => {
 		const ctx = state()
 		expect(ctx.countValues.pipeline).toEqual({ metric: 'sum', field: 'value', filter: { status: 'open' } })
-		expect(ctx.countValues.weighted).toEqual({ endpoint: '/apps/pipelinq/api/analytics/commercial', path: 'weightedForecast' })
+		expect(ctx.countValues.weighted).toEqual({ endpoint: '/apps/pipelinq/api/analytics/commercial', path: 'weightedForecast', followFilters: true })
 		expect(source).toContain('{pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted')
 		expect(source).toContain(':countValues="countValues"')
 	})

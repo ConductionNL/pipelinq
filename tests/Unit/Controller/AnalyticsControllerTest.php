@@ -403,6 +403,31 @@ class AnalyticsControllerTest extends TestCase {
 	}
 
 	/**
+	 * The commercial overview hands the list's `filter` to the service as the
+	 * lead filter, and a filter that is not a map as none.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/leads-list-board-line/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
+	 */
+	public function testCommercialPassesTheListFilter(): void {
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('test-user');
+		$this->userSession->method('getUser')->willReturn($user);
+		$params = ['period' => 'month', 'filter' => ['pipeline' => 'sales', 'status' => 'open']];
+		$this->request->method('getParam')->willReturnCallback(
+			fn (string $key, mixed $default = null): mixed => ($params[$key] ?? $default)
+		);
+
+		$this->service->expects($this->once())
+			->method('getCommercialOverview')
+			->with('month', ['pipeline' => 'sales', 'status' => 'open'])
+			->willReturn([]);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->buildController()->commercial()->getStatus());
+	}//end testCommercialPassesTheListFilter()
+
+	/**
 	 * GET /api/analytics/commercial returns 200 with every documented KPI key.
 	 *
 	 * @return void

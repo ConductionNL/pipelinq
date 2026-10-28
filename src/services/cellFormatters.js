@@ -11,6 +11,7 @@
 
 import { translate as t } from '@nextcloud/l10n'
 import { timeRange } from '../utils/bookingTime.js'
+import { exportMoment, exportSchedule } from '../views/export/exportRunText.js'
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
 import { createUserDisplayNameFormatter } from './userDisplayName.js'
@@ -69,6 +70,20 @@ export function enumText(value) {
 	}
 	const word = String(value)
 	return t('pipelinq', word.charAt(0).toUpperCase() + word.slice(1))
+}
+
+/**
+ * A stored code as a translated word inside a sentence: `phone` reads
+ * "telefoon" in "Via telefoon". As enumText, with the first letter in
+ * lower case.
+ *
+ * @param {unknown} value The stored value.
+ * @return {string} The word, or '' for an empty value.
+ * @spec openspec/specs/dashboard/spec.md
+ */
+export function enumWord(value) {
+	const word = enumText(value)
+	return word === '' ? '' : word.charAt(0).toLowerCase() + word.slice(1)
 }
 
 /**
@@ -312,6 +327,7 @@ export const CELL_FORMATTERS = {
 	objectCurrency,
 	transactionMoment,
 	enumText,
+	enumWord,
 	enumLabel,
 	yesNo,
 	callDuration: isoDuration,
@@ -321,6 +337,8 @@ export const CELL_FORMATTERS = {
 	longDate,
 	shortDateTime,
 	timeOfDay,
+	exportMoment: (value) => exportMoment(value),
+	exportSchedule: (value) => exportSchedule(value),
 }
 
 /**

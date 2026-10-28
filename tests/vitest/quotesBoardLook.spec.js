@@ -169,3 +169,53 @@ describe('the quote PDF', () => {
 		expect(routes).toContain("'url' => '/api/records/{schema}/document-template'")
 	})
 })
+
+describe('the quote form, line names and the VAT rate', () => {
+	const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+	const part = JSON.parse(readFileSync(resolve(__dirname, '../../lib/Settings/register.d/99-zzzzz-quote-name-and-vat-rate.json'), 'utf8')).components.schemas
+	const widget = (id) => detail.config.widgets.find((w) => w.id === id)
+
+	it('draws the quote\'s facts as the board\'s form, each with what it is for', () => {
+		const facts = widget('quote-facts').content
+		expect(facts.fieldLook).toBe('input')
+		expect(facts.columns).toBe(3)
+		expect(facts.overrides.title.hint).toBe('Printed on the PDF')
+		expect(facts.overrides.sentAt).toMatchObject({ editable: false, hint: 'Set when it is sent', emptyValue: 'Not yet sent' })
+		for (const field of facts.include) {
+			expect(typeof facts.overrides[field].hint).toBe('string')
+		}
+		expect(nl['Printed on the PDF']).toBe('Staat op de pdf')
+		expect(nl['Not yet sent']).toBe('Nog niet verstuurd')
+	})
+
+	it('gives a line a name of its own, and lists name and description apart', () => {
+		expect(part.salesQuoteLine.properties.name).toMatchObject({ type: 'string' })
+		const columns = widget('quote-lines').content.columns.map((c) => c.key)
+		expect(columns).toEqual(['name', 'description', 'quantity', 'unitPrice', 'discount', 'total'])
+	})
+
+	it('keeps the VAT rate on the quote and names it in the totals', () => {
+		expect(part.salesQuote.properties.vatRate).toMatchObject({ type: 'number', default: 21 })
+		expect(part.salesQuote.version).toBe('1.1.0')
+		expect(part.salesQuoteLine.version).toBe('1.1.0')
+		const vat = widget('quote-lines').content.totals.find((t) => t.path === 'vatAmount')
+		expect(vat.label).toBe('VAT {vatRate}%')
+		expect(nl['VAT {vatRate}%']).toBe('Btw {vatRate}%')
+	})
+})
+
+describe('the Product cell of a line without a name', () => {
+	const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+
+	it('reads the line\'s name, else the linked product\'s name, else its description, with the kind under it', () => {
+		const product = detail.config.widgets.find((w) => w.id === 'quote-lines').content.columns[0]
+		expect(product).toMatchObject({
+			key: 'name',
+			firstOf: ['name', 'product.name', 'description'],
+			secondary: '{kind}',
+			secondaryLabels: { kind: { catalogue: 'Catalogue product', own: 'Own line' } },
+		})
+		expect(nl['Catalogue product']).toBe('Catalogusproduct')
+		expect(nl['Own line']).toBe('Eigen regel')
+	})
+})
