@@ -1,6 +1,9 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Event created": "Evenement aangemaakt",
+        "Places raised from {changed.capacity.old} to {changed.capacity.new}": "Plaatsen verhoogd van {changed.capacity.old} naar {changed.capacity.new}",
+        "{name} is on the waiting list": "{name} staat op de wachtlijst",
         "New newsletter, step {step} of {total}": "Nieuwe nieuwsbrief, stap {step} van {total}",
         "Step {step} of {total}: check everything before the blast is created": "Stap {step} van {total}: controleer alles voordat de blast wordt aangemaakt",
         "Step {step} of {total}: {label}": "Stap {step} van {total}: {label}",

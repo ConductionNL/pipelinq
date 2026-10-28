@@ -1,6 +1,9 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Event created": "Event created",
+        "Places raised from {changed.capacity.old} to {changed.capacity.new}": "Places raised from {changed.capacity.old} to {changed.capacity.new}",
+        "{name} is on the waiting list": "{name} is on the waiting list",
         "assigned to {assignee|user}": "assigned to {assignee|user}",
         "Awaiting customer": "Awaiting customer",
         "By {slaDeadline|date}": "By {slaDeadline|date}",
