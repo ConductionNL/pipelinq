@@ -62,7 +62,10 @@ describe('the invitation newsletter and the campaign in the history', () => {
 				label: '{name} sent with the invitation',
 				when: { field: 'status', value: 'sent' },
 			}))
-			expect(content.actionLabels.create).toBe('Event created in campaign {object.campaign}')
+			expect(content.actionLabels.create).toEqual([
+				{ when: { field: 'campaign', op: 'notEmpty' }, text: 'Event created in campaign {object.campaign}' },
+				{ text: 'Event created' },
+			])
 			expect(content.resolve).toEqual({ campaign: { schema: 'campaign' } })
 		})
 	}
@@ -70,5 +73,6 @@ describe('the invitation newsletter and the campaign in the history', () => {
 	it('says it in Dutch as the board does', () => {
 		expect(nl['{name} sent with the invitation']).toBe('{name} verstuurd met de uitnodiging')
 		expect(nl['Event created in campaign {object.campaign}']).toBe('Evenement aangemaakt in campagne {object.campaign}')
+		expect(nl['Event created']).toBe('Evenement aangemaakt')
 	})
 })
