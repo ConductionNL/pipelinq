@@ -464,6 +464,13 @@
         "Back to journeys": "Back to journeys",
         "Back to kennisbank": "Back to kennisbank",
         "Back to knowledge base": "Back to knowledge base",
+        "%n day late": [
+            "%n day late",
+            "%n days late"
+        ],
+        "closes {date}": "closes {date}",
+        "due {date}": "due {date}",
+        "%n days late": "%n days late",
         "Back to list": "Back to list",
         "Back to project": "Back to project",
         "Back to queues": "Back to queues",

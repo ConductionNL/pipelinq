@@ -491,6 +491,13 @@
         "Back to dashboard": "Terug naar dashboard",
         "Back to kennisbank": "Terug naar kennisbank",
         "Back to knowledge base": "Terug naar kennisbank",
+        "%n day late": [
+            "%n dag te laat",
+            "%n dagen te laat"
+        ],
+        "closes {date}": "afsluiting {date}",
+        "due {date}": "uiterlijk {date}",
+        "%n days late": "%n dagen te laat",
         "Back to list": "Terug naar lijst",
         "Back to project": "Terug naar project",
         "Back to queues": "Terug naar wachtrijen",
