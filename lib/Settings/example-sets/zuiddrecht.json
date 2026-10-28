@@ -3313,8 +3313,9 @@
 				"priority": "normal",
 				"channel": "phone",
 				"category": "afval",
+				"assignee": "{{cast:pieter.uid}}",
 				"occurredAt": "{{datetime:-3 10:05}}",
-				"slaDeadline": "{{datetime:2 17:00}}"
+				"slaDeadline": "{{datetime:-1 17:00}}"
 			}
 		},
 		{
