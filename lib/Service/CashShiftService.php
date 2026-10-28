@@ -383,6 +383,28 @@ class CashShiftService {
 	}//end approveDiff()
 
 	/**
+	 * The id of a shift's pending cash difference, so an action on the shift
+	 * can approve or reject it without naming the difference.
+	 *
+	 * @param string $shiftId The shift UUID.
+	 *
+	 * @return string The pending diff UUID.
+	 *
+	 * @throws OCSNotFoundException If the shift has no pending difference.
+	 *
+	 * @spec openspec/changes/pos-cash-management/tasks.md#4.1
+	 */
+	public function pendingDiffId(string $shiftId): string {
+		$diff = $this->findPendingDiff(shiftId: $shiftId);
+		$diffId = (string)($diff['id'] ?? $diff['uuid'] ?? '');
+		if ($diffId === '') {
+			throw new OCSNotFoundException('Deze dienst heeft geen openstaand kasverschil.');
+		}
+
+		return $diffId;
+	}//end pendingDiffId()
+
+	/**
 	 * Reject a pending variance (POS manager only) and reopen the shift.
 	 *
 	 * Requires a non-empty reason. Stamps approvedBy / approvedAt /

@@ -280,6 +280,33 @@ export function shortDateTime(value, _row, _property, options) {
 	return dayText + ', ' + timeText
 }
 
+/**
+ * The hour and minute of a moment ("12:10"), for a list of events within
+ * one day.
+ *
+ * @param {unknown} value The moment, ISO.
+ * @param {object} [_row] The record (unused).
+ * @param {object} [_property] The schema property (unused).
+ * @param {{locale?: string}} [options] The locale (tests).
+ * @return {string} The time, '' when empty, or the value as stored when it is not a date.
+ * @spec openspec/specs/pos-transaction-core/spec.md
+ */
+export function timeOfDay(value, _row, _property, options) {
+	if (value === null || value === undefined || value === '') {
+		return ''
+	}
+	const date = new Date(String(value))
+	if (Number.isNaN(date.getTime())) {
+		return String(value)
+	}
+	const locale =
+		options?.locale
+		|| (typeof OC !== 'undefined' && OC.getLocale
+			? OC.getLocale().replace('_', '-')
+			: undefined)
+	return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(date)
+}
+
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
@@ -293,6 +320,7 @@ export const CELL_FORMATTERS = {
 	labelList,
 	longDate,
 	shortDateTime,
+	timeOfDay,
 }
 
 /**

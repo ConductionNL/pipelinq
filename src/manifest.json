@@ -5754,38 +5754,366 @@
 				"titleTemplate": "Shift {floatAt|date}, {drawer}",
 				"titleField": "reference",
 				"stageField": "status",
-				"primaryActionByStage": { "open": "shift-count" },
+				"primaryActionByStage": {
+					"open": "shift-count",
+					"closed": "shift-approve-diff"
+				},
 				"headerActions": [
 					{
 						"id": "shift-count",
 						"label": "Close and count shift",
 						"type": "open-form",
 						"icon": "CashRegister",
-						"endpoint": { "url": "/apps/pipelinq/api/pos-shifts/@objectId/count", "method": "POST" },
+						"endpoint": {
+							"url": "/apps/pipelinq/api/pos-shifts/@objectId/count",
+							"method": "POST"
+						},
 						"formProperties": {
-							"amount": { "type": "number", "minimum": 0, "title": "Counted amount", "description": "Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).", "required": true },
-							"notes": { "type": "string", "title": "Notes" }
+							"amount": {
+								"type": "number",
+								"minimum": 0,
+								"title": "Counted amount",
+								"description": "Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).",
+								"required": true
+							},
+							"notes": {
+								"type": "string",
+								"title": "Notes"
+							}
 						},
 						"successMessage": "Count recorded.",
-						"visibleWhen": { "field": "status", "value": "open" }
+						"visibleWhen": {
+							"field": "status",
+							"value": "open"
+						}
+					},
+					{
+						"id": "shift-approve-diff",
+						"label": "Approve difference",
+						"type": "api-call",
+						"icon": "Check",
+						"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
+						"successMessage": "Cash difference approved.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "status",
+									"value": "closed"
+								},
+								{
+									"field": "reconciliationStatus",
+									"value": "pending"
+								}
+							]
+						}
 					}
 				],
 				"register": "pipelinq",
 				"schema": "cashShift",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "FINANCIAL archetype (bespoke-detail-pages). A cash-drawer shift is a cash-management ledger record, so NO comms leaves (cashShift declares no email/calendar linkedType). Two columns: the shift fields 8-wide beside the Opening float and Drops tiles and the cash-reconciliation variance; the cash drops (CashShiftDropsWidget: an object-list on cashDrop, FK 'shift', with Add drop) beside Related. Audit-trail is a sidebar tab.",
+				"_note": "FINANCIAL archetype (bespoke-detail-pages). A cash-drawer shift is a cash-management ledger record, so NO comms leaves. Board look: one tab strip as the body (the shift, the cash difference with its approve and reject actions, the drops), and the opening float, the sales in this shift and recent history in the side column. The three KPI tiles stay declared for the dashboard catalogue but are not placed.",
 				"widgets": [
+					{
+						"id": "shift-panels",
+						"type": "tabs",
+						"title": "Shift",
+						"_note": "The board tab strip: the children stay out of `layout` because the tabs widget renders them.",
+						"content": {
+							"ariaLabel": "Shift",
+							"tabs": [
+								{
+									"label": "Overview",
+									"widgetIds": [
+										"shift-data",
+										"shift-variance",
+										"shift-drops"
+									]
+								},
+								{
+									"label": "History",
+									"widgetId": "shift-history",
+									"countFrom": "widget"
+								}
+							]
+						}
+					},
 					{
 						"id": "shift-data",
 						"type": "data",
 						"title": "Shift",
 						"icon": "FileDocument",
 						"content": {
-							"columns": 2,
+							"title": "Shift",
+							"columns": 3,
+							"hideEmpty": true,
+							"include": [
+								"drawer",
+								"operator",
+								"floatAt",
+								"closedAt",
+								"status"
+							],
 							"overrides": {
-								"operator": { "formatter": "userDisplayName" },
-								"managedBy": { "formatter": "userDisplayName" }
+								"drawer": {
+									"label": "Till"
+								},
+								"operator": {
+									"label": "Cashier",
+									"formatter": "userDisplayName"
+								},
+								"floatAt": {
+									"label": "Opened",
+									"formatter": "shortDateTime"
+								},
+								"closedAt": {
+									"label": "Closed",
+									"formatter": "shortDateTime"
+								},
+								"status": {
+									"editable": false,
+									"enumLabels": {
+										"open": "Open",
+										"closed": "Counted",
+										"reconciled": "Reconciled"
+									}
+								}
 							}
+						}
+					},
+					{
+						"id": "shift-variance",
+						"type": "facts",
+						"title": "Cash difference",
+						"icon": "ScaleBalance",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "cashDiff",
+								"filter": {
+									"shift": "@objectId"
+								},
+								"sort": {
+									"field": "@self.created",
+									"dir": "desc"
+								}
+							},
+							"headerPill": {
+								"path": "status",
+								"map": {
+									"pending": "Pending",
+									"approved": "Approved",
+									"rejected": "Rejected"
+								},
+								"variantMap": {
+									"pending": "warning",
+									"approved": "success",
+									"rejected": "error"
+								}
+							},
+							"fields": [
+								{
+									"path": "expectedAmount",
+									"label": "Expected amount",
+									"format": "currency"
+								},
+								{
+									"path": "actualAmount",
+									"label": "Counted amount",
+									"format": "currency"
+								},
+								{
+									"path": "diffAmount",
+									"label": "Difference",
+									"format": "currency"
+								},
+								{
+									"path": "diffPercentage",
+									"label": "Percentage",
+									"format": "number",
+									"suffix": "%"
+								},
+								{
+									"as": "pill",
+									"key": "tolerance",
+									"path": "withinTolerance",
+									"map": {
+										"true": "Within tolerance",
+										"false": "Outside tolerance"
+									},
+									"variantMap": {
+										"true": "success",
+										"false": "warning"
+									}
+								},
+								{
+									"path": "approvedBy",
+									"label": "Reviewed by",
+									"format": "user"
+								},
+								{
+									"path": "rejectionReason",
+									"label": "Rejection reason"
+								}
+							],
+							"actions": [
+								{
+									"id": "diff-approve",
+									"label": "Approve",
+									"type": "api-call",
+									"variant": "primary",
+									"adminOnly": true,
+									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
+									"payload": {
+										"diffId": "@source.id"
+									},
+									"successMessage": "Cash difference approved.",
+									"visibleWhen": {
+										"field": "status",
+										"value": "pending"
+									}
+								},
+								{
+									"id": "diff-reject",
+									"label": "Reject",
+									"type": "open-form",
+									"variant": "error",
+									"adminOnly": true,
+									"endpoint": {
+										"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/reject?diffId=@source.id",
+										"method": "POST"
+									},
+									"formProperties": {
+										"reason": {
+											"type": "string",
+											"title": "Rejection reason",
+											"description": "This rejects the cash difference and reopens the shift for a recount."
+										}
+									},
+									"successMessage": "Cash difference rejected. The shift is open for a recount.",
+									"visibleWhen": {
+										"field": "status",
+										"value": "pending"
+									}
+								}
+							],
+							"emptyText": "Not counted yet. The difference appears once the shift is closed and counted."
+						}
+					},
+					{
+						"id": "shift-drops",
+						"type": "CashShiftDropsWidget",
+						"title": "Drops",
+						"icon": "CashMinus",
+						"content": {
+							"register": "pipelinq",
+							"schema": "cashDrop",
+							"filter": {
+								"shift": "@objectId"
+							},
+							"sort": {
+								"field": "droppedAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "reason",
+									"label": "Reason"
+								},
+								{
+									"key": "amount",
+									"label": "Amount",
+									"align": "right",
+									"format": {
+										"style": "currency",
+										"currency": "EUR"
+									}
+								},
+								{
+									"key": "droppedAt",
+									"label": "At time",
+									"formatter": "timeOfDay"
+								},
+								{
+									"key": "droppedBy",
+									"label": "By",
+									"formatter": "userDisplayName"
+								}
+							],
+							"limit": 25,
+							"allowCreate": false,
+							"emptyText": "No cash drops recorded on this shift yet.",
+							"footnote": "Drops can only be added to an open shift. An open shift has Close and count shift at the top."
+						}
+					},
+					{
+						"id": "shift-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "shift-opening",
+						"type": "facts",
+						"title": "Opening float",
+						"_note": "The opening float with the drops taken out of the drawer during the shift.",
+						"content": {
+							"fields": [
+								{
+									"as": "title",
+									"path": "floatAmount",
+									"format": "currency"
+								},
+								{
+									"as": "line",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "cashDrop",
+										"filter": {
+											"shift": "@objectId"
+										}
+									},
+									"suffix": " drops"
+								}
+							]
+						}
+					},
+					{
+						"id": "shift-related",
+						"type": "facts",
+						"title": "Related",
+						"_note": "The sales booked in this shift (posTransaction.shift), with the transactions list as the way in.",
+						"content": {
+							"fields": [
+								{
+									"as": "line",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "posTransaction",
+										"filter": {
+											"shift": "@objectId"
+										}
+									},
+									"suffix": " transactions in this shift"
+								}
+							],
+							"link": {
+								"label": "Transactions",
+								"route": {
+									"name": "PosTransactions"
+								}
+							}
+						}
+					},
+					{
+						"id": "shift-side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"content": {
+							"maxDisplay": 4,
+							"excludeActions": [
+								"read"
+							]
 						}
 					},
 					{
@@ -5802,7 +6130,9 @@
 									"metric": "sum",
 									"field": "floatAmount",
 									"currency": "EUR",
-									"filter": { "id": "@objectId" }
+									"filter": {
+										"id": "@objectId"
+									}
 								}
 							]
 						}
@@ -5820,91 +6150,11 @@
 									"schema": "cashDrop",
 									"metric": "count",
 									"countLabel": "drops",
-									"filter": { "shift": "@objectId" }
+									"filter": {
+										"shift": "@objectId"
+									}
 								}
 							]
-						}
-					},
-					{
-						"id": "shift-variance",
-						"type": "facts",
-						"title": "Cash difference",
-						"icon": "ScaleBalance",
-						"content": {
-							"source": {
-								"register": "pipelinq",
-								"schema": "cashDiff",
-								"filter": { "shift": "@objectId" },
-								"sort": { "field": "@self.created", "dir": "desc" }
-							},
-							"headerPill": {
-								"path": "status",
-								"map": { "pending": "Pending", "approved": "Approved", "rejected": "Rejected" },
-								"variantMap": { "pending": "warning", "approved": "success", "rejected": "error" }
-							},
-							"fields": [
-								{ "path": "expectedAmount", "label": "Expected amount", "format": "currency" },
-								{ "path": "actualAmount", "label": "Counted amount", "format": "currency" },
-								{ "path": "diffAmount", "label": "Difference", "format": "currency" },
-								{ "path": "diffPercentage", "label": "Percentage", "format": "number", "suffix": "%" },
-								{
-									"as": "pill",
-									"key": "tolerance",
-									"path": "withinTolerance",
-									"map": { "true": "Within tolerance", "false": "Outside tolerance" },
-									"variantMap": { "true": "success", "false": "warning" }
-								},
-								{ "path": "approvedBy", "label": "Reviewed by", "format": "user" },
-								{ "path": "rejectionReason", "label": "Rejection reason" }
-							],
-							"actions": [
-								{
-									"id": "diff-approve",
-									"label": "Approve",
-									"type": "api-call",
-									"variant": "primary",
-									"adminOnly": true,
-									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
-									"payload": { "diffId": "@source.id" },
-									"successMessage": "Cash difference approved.",
-									"visibleWhen": { "field": "status", "value": "pending" }
-								},
-								{
-									"id": "diff-reject",
-									"label": "Reject",
-									"type": "open-form",
-									"variant": "error",
-									"adminOnly": true,
-									"endpoint": { "url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/reject?diffId=@source.id", "method": "POST" },
-									"formProperties": {
-										"reason": { "type": "string", "title": "Rejection reason", "description": "This rejects the cash difference and reopens the shift for a recount." }
-									},
-									"successMessage": "Cash difference rejected. The shift is open for a recount.",
-									"visibleWhen": { "field": "status", "value": "pending" }
-								}
-							],
-							"emptyText": "Not counted yet. The difference appears once the shift is closed and counted."
-						}
-					},
-					{
-						"id": "shift-drops",
-						"type": "CashShiftDropsWidget",
-						"title": "Drops",
-						"icon": "CashMinus",
-						"content": {
-							"register": "pipelinq",
-							"schema": "cashDrop",
-							"filter": { "shift": "@objectId" },
-							"sort": { "field": "droppedAt", "dir": "desc" },
-							"columns": [
-								{ "key": "reason", "label": "Reden" },
-								{ "key": "amount", "label": "Bedrag" },
-								{ "key": "droppedAt", "label": "Op" },
-								{ "key": "droppedBy", "label": "Door" }
-							],
-							"limit": 25,
-							"allowCreate": false,
-							"emptyText": "No cash drops recorded on this shift yet."
 						}
 					},
 					{
@@ -5926,70 +6176,16 @@
 								}
 							]
 						}
-					},
-					{
-						"id": "shift-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "shift-data",
+						"widgetId": "shift-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 6
-					},
-					{
-						"id": "2-1",
-						"widgetId": "shift-kpis-opening-float",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-2",
-						"widgetId": "shift-kpis-drops",
-						"gridX": 10,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-3",
-						"widgetId": "shift-variance",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "3",
-						"widgetId": "shift-drops",
-						"gridX": 0,
-						"gridY": 6,
-						"gridWidth": 8,
-						"gridHeight": 5
-					},
-					{
-						"id": "4",
-						"widgetId": "shift-related",
-						"gridX": 8,
-						"gridY": 6,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "5",
-						"widgetId": "shift-kpis-sales",
-						"gridX": 8,
-						"gridY": 11,
-						"gridWidth": 4,
-						"gridHeight": 2
+						"gridWidth": 12,
+						"gridHeight": 12
 					}
 				],
 				"sidebar": {
@@ -6000,10 +6196,40 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
-				}
+				},
+				"_boardNote": "Board PqKassadienst: the shift name, the status pill, the Kassalade breadcrumb and a meta line with the cashier and the hours; Approve difference as the primary button of a counted shift; the shift, its cash difference and its drops in an Overview tab beside History; the opening float, related records and a short history in the side column.",
+				"follow": false,
+				"showEditAction": false,
+				"breadcrumb": {
+					"label": "Cash drawer",
+					"route": "CashShifts"
+				},
+				"headerMeta": "{operator|user} · {floatAt|time} to {closedAt|time}",
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"open": "Open",
+						"closed": "Counted",
+						"reconciled": "Reconciled"
+					},
+					"colorMap": {
+						"open": "info",
+						"closed": "warning",
+						"reconciled": "success"
+					}
+				},
+				"sideColumn": [
+					"shift-opening",
+					"shift-related",
+					"shift-side-history"
+				]
 			}
 		},
 		{

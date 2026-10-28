@@ -8590,7 +8590,14 @@ OC.L10N.register(
         "Print log": "Print log",
         "Tax return and invoice split": "Tax return and invoice split",
         "%n line": ["%n line","%n lines"],
-        "%n lines": "%n lines"
+        "%n lines": "%n lines",
+        "Approve difference": "Approve difference",
+        "Counted": "Counted",
+        "{operator|user} · {floatAt|time} to {closedAt|time}": "{operator|user} · {floatAt|time} to {closedAt|time}",
+        "At time": "At time",
+        "drops": "drops",
+        "transactions in this shift": "transactions in this shift",
+        "Drops can only be added to an open shift. An open shift has Close and count shift at the top.": "Drops can only be added to an open shift. An open shift has Close and count shift at the top."
     },
     "nplurals=2; plural=(n != 1);"
 )

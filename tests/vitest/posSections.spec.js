@@ -62,6 +62,9 @@ describe('a shift by name, with its sales', () => {
 	it('counts the sales linked to the shift', () => {
 		const sales = page('CashShiftDetail').config.widgets.find((w) => w.id === 'shift-kpis-sales')
 		expect(sales.content.entries[0]).toMatchObject({ schema: 'posTransaction', metric: 'count', filter: { shift: '@objectId' } })
-		expect(page('CashShiftDetail').config.layout.map((l) => l.widgetId)).toContain('shift-kpis-sales')
+		const config = page('CashShiftDetail').config
+		const related = config.widgets.find((w) => w.id === 'shift-related')
+		expect(config.sideColumn).toContain('shift-related')
+		expect(related.content.fields[0].countFrom).toEqual({ register: 'pipelinq', schema: 'posTransaction', filter: { shift: '@objectId' } })
 	})
 })
