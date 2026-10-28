@@ -9211,7 +9211,8 @@ OC.L10N.register(
         "The report could not be exported.": "Het rapport kon niet worden geëxporteerd.",
         "was {previousPeriod.leadConversionRate|tile} in the period before": "was {previousPeriod.leadConversionRate|tile} in de periode ervoor",
         "was {previousPeriod.avgRequestResolutionTime|tile}": "was {previousPeriod.avgRequestResolutionTime|tile}",
-        "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contactmomenten, was {previousPeriod.contactMomentVolume|tile}"
+        "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contactmomenten, was {previousPeriod.contactMomentVolume|tile}",
+        "of @object.capacity places": "van @object.capacity plaatsen"
     },
     "nplurals=2; plural=(n != 1);"
 )
