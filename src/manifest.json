@@ -3138,15 +3138,12 @@
 						"type": "tabs",
 						"title": "Contact",
 						"icon": "AccountBoxOutline",
-						"_note": "One strip, at most seven tabs. Overview stacks the data card and the deals table; the list tabs count their list.",
+						"_note": "The board's strip (PqContactpersoon): Overview, then every list and panel the person has, History last. Overview holds the details, the deals, the relationships and the channels as headed sections of one card.",
 						"content": {
 							"ariaLabel": "Contact",
 							"tabs": [
 								{
-									"widgetIds": [
-										"contact-data",
-										"contact-deals"
-									],
+									"widgetId": "contact-overview",
 									"label": "Overview"
 								},
 								{
@@ -3170,12 +3167,77 @@
 									"countFrom": "widget"
 								},
 								{
+									"widgetId": "contact-relationships",
+									"label": "Relationships"
+								},
+								{
+									"widgetId": "contact-subscriptions",
+									"label": "Subscriptions"
+								},
+								{
+									"widgetId": "contact-brp",
+									"label": "BSN and BRP"
+								},
+								{
+									"widgetId": "contact-channels",
+									"label": "Channels"
+								},
+								{
+									"widgetId": "contact-email",
+									"label": "Mailbox"
+								},
+								{
+									"widgetId": "contact-messages",
+									"label": "Messages"
+								},
+								{
+									"widgetId": "contact-calendar",
+									"label": "Appointments"
+								},
+								{
 									"widgetId": "contact-files",
 									"label": "Files"
 								},
 								{
 									"widgetId": "contact-history",
 									"label": "History"
+								}
+							]
+						}
+					},
+					{
+						"id": "contact-overview",
+						"type": "sections",
+						"title": "Overview",
+						"content": {
+							"sections": [
+								{
+									"widgetId": "contact-data",
+									"title": "Contact details"
+								},
+								{
+									"widgetId": "contact-deals",
+									"title": "Deals"
+								},
+								{
+									"title": "Relationships",
+									"widget": {
+										"type": "ContactRelationshipsWidget",
+										"content": {
+											"entityType": "contact",
+											"card": false
+										}
+									}
+								},
+								{
+									"title": "Channels",
+									"widget": {
+										"type": "ContactChannelsWidget",
+										"content": {
+											"entityType": "contact",
+											"card": false
+										}
+									}
 								}
 							]
 						}
@@ -3199,10 +3261,9 @@
 								"correspondenceLanguage",
 								"timezone",
 								"marketingConsent",
-								"doNotContact",
-								"surveyOptOut",
-								"secrecy"
-							]
+								"doNotContact"
+							],
+							"collapsedFields": 11
 						}
 					},
 					{
@@ -3461,6 +3522,16 @@
 						"integrationId": "calendar",
 						"title": "Meetings",
 						"icon": "Calendar"
+					},
+					{
+						"id": "contact-side-history",
+						"type": "timeline",
+						"title": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc",
+							"limit": 3
+						}
 					}
 				],
 				"layout": [
@@ -3514,7 +3585,9 @@
 				},
 				"headerMeta": "{role} at {client.name}",
 				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip.",
-				"headerFields": ["preferredName"],
+				"headerFields": [
+					"preferredName"
+				],
 				"headerActions": [
 					{
 						"id": "call",
@@ -3538,14 +3611,7 @@
 				"sideColumn": [
 					"contact-kpis-deals",
 					"contact-related",
-					"contact-channels",
-					"contact-relationships",
-					"contact-subscriptions",
-					"contact-brp",
-					"contact-email",
-					"contact-messages",
-					"contact-calendar",
-					"contact-history"
+					"contact-side-history"
 				]
 			}
 		},

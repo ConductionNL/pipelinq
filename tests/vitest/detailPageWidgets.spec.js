@@ -80,17 +80,18 @@ describe('contact detail', () => {
 		])
 	})
 
-	it('holds at most seven tabs, History last', () => {
+	it('opens on Overview and ends on History (board PqContactpersoon)', () => {
 		const tabs = widget(contact, 'contact-panels').content.tabs
-		expect(tabs.length).toBeLessThanOrEqual(7)
-		expect(tabs[0].widgetIds).toEqual(['contact-data', 'contact-deals'])
+		expect(tabs[0].widgetId).toBe('contact-overview')
 		expect(tabs[tabs.length - 1].widgetId).toBe('contact-history')
 	})
 
-	it('shows channels and relationships as side cards', () => {
-		expect(contact.config.sideColumn).toEqual(
-			expect.arrayContaining(['contact-channels', 'contact-relationships']),
-		)
+	it('shows channels and relationships in Overview and as tabs, not as side cards', () => {
+		const sections = widget(contact, 'contact-overview').content.sections
+		expect(sections.map((s) => s.widget?.type).filter(Boolean)).toEqual(['ContactRelationshipsWidget', 'ContactChannelsWidget'])
+		const tabIds = widget(contact, 'contact-panels').content.tabs.map((t) => t.widgetId)
+		expect(tabIds).toEqual(expect.arrayContaining(['contact-channels', 'contact-relationships']))
+		expect(contact.config.sideColumn).not.toContain('contact-channels')
 	})
 })
 

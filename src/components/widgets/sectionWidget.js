@@ -26,7 +26,8 @@ import { computed, h } from 'vue'
  *   The section's props from the page context.
  * @param {{card?: boolean, context?: boolean}} [options] `card` wraps the section in a titled
  *   card (title from `content.title`, through the page's translate), for a widget that sits in the grid on
- *   its own rather than inside a tab, which already names it. `context` provides
+ *   its own rather than inside a tab, which already names it; an instance under a heading of its own (a
+ *   `sections` widget) sets `content.card: false` to draw the section bare. `context` provides
  *   `cnSectionContext` (`{ object, objectId }`) as a body section gets it, for a
  *   section that reads the page's record from there.
  * @return {object} A Vue component.
@@ -73,7 +74,7 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 					content: this.content || {},
 				}),
 			)
-			if (!options.card) {
+			if (!options.card || this.content?.card === false) {
 				return inner
 			}
 			const title = this.content?.title || ''
