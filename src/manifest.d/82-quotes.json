@@ -137,8 +137,14 @@
 						"format": "badge"
 					}
 				],
-				"headerMeta": "{number} · prices excl. VAT",
+				"headerMeta": "prices excl. VAT",
 				"identifierField": "number",
+				"titleTemplate": "{number} {title}",
+				"follow": false,
+				"showEditAction": false,
+				"primaryActionByStage": {
+					"draft": "send-quote"
+				},
 				"actionsMenu": {
 					"label": "More"
 				},
@@ -169,9 +175,6 @@
 						"icon": "TrendingUp",
 						"target": "/leads/@object.lead"
 					}
-				],
-				"quickActions": [
-					"send-quote"
 				],
 				"widgets": [
 					{
@@ -256,7 +259,7 @@
 							"addLabel": "Add product",
 							"limit": 50,
 							"emptyText": "No lines yet. Add a product from the catalogue or a line of your own.",
-							"footerNote": "Products come from the catalogue at their current price. A line of your own is for work the catalogue does not hold."
+							"footnote": "Products come from the catalogue at their current price. A line of your own is for work the catalogue does not hold."
 						}
 					},
 					{
@@ -379,7 +382,13 @@
 						"id": "side-history",
 						"type": "audit-trail",
 						"title": "History",
-						"icon": "History"
+						"icon": "History",
+						"content": {
+							"excludeActions": [
+								"read"
+							],
+							"layout": "stacked"
+						}
 					}
 				],
 				"layout": [

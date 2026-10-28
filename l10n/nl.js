@@ -8361,6 +8361,7 @@ OC.L10N.register(
         "The subtotal with VAT.": "Het subtotaal met btw.",
         "The sum of the line totals, excl. VAT.": "De som van de regeltotalen, excl. btw.",
         "{number} · prices excl. VAT": "{number} · prijzen excl. btw",
+        "prices excl. VAT": "prijzen excl. btw",
         "30 days after sending.": "30 dagen na verzending.",
         "Accepted": "Geaccepteerd",
         "Ordered": "Besteld",

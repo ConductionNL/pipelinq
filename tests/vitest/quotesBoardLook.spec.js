@@ -66,11 +66,38 @@ describe('quote page', () => {
 	it('sends a draft to the client through the lifecycle', () => {
 		const send = detail.config.headerActions.find((a) => a.id === 'send-quote')
 		expect(send.payload).toEqual({ action: 'send' })
-		expect(detail.config.quickActions).toEqual(['send-quote'])
+		expect(detail.config.primaryActionByStage).toEqual({ draft: 'send-quote' })
 		expect(detail.config.sideColumn).toEqual([
 			'side-status',
 			'side-client',
 			'side-history',
 		])
+	})
+})
+
+describe('quote page as the PqOfferte board draws it', () => {
+	const widget = (id) => detail.config.widgets.find((w) => w.id === id)
+
+	it('names the quote by its number and title', () => {
+		expect(detail.config.titleTemplate).toBe('{number} {title}')
+	})
+
+	it('makes Send to client the primary button of a draft, beside no Edit or Follow', () => {
+		expect(detail.config.quickActions || []).not.toContain('send-quote')
+		expect(detail.config.showEditAction).toBe(false)
+		expect(detail.config.follow).toBe(false)
+	})
+
+	it('ends the lines with the catalogue note the list widget reads', () => {
+		const lines = widget('quote-lines').content
+		expect(lines.footnote).toBe('Products come from the catalogue at their current price. A line of your own is for work the catalogue does not hold.')
+		expect(lines).not.toHaveProperty('footerNote')
+	})
+
+	it('lists what changed in the history, not who read the quote', () => {
+		expect(widget('side-history').content).toMatchObject({
+			excludeActions: ['read'],
+			layout: 'stacked',
+		})
 	})
 })

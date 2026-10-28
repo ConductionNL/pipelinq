@@ -8360,6 +8360,7 @@ OC.L10N.register(
         "The subtotal with VAT.": "The subtotal with VAT.",
         "The sum of the line totals, excl. VAT.": "The sum of the line totals, excl. VAT.",
         "{number} · prices excl. VAT": "{number} · prices excl. VAT",
+        "prices excl. VAT": "prices excl. VAT",
         "30 days after sending.": "30 days after sending.",
         "Accepted": "Accepted",
         "Lines": "Lines",
