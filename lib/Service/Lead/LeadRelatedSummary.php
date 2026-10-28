@@ -128,15 +128,18 @@ class LeadRelatedSummary {
 	 * @return string The words.
 	 */
 	private function allEnded(int $total, bool $won): string {
-		if ($total === 1) {
-			return $won === true ? $this->l10n->t('won') : $this->l10n->t('lost');
+		$outcome = 'lost';
+		if ($won === true) {
+			$outcome = 'won';
 		}
 
-		if ($total === 2) {
-			return $won === true ? $this->l10n->t('both won') : $this->l10n->t('both lost');
-		}
+		$words = [
+			1 => ['won' => $this->l10n->t('won'), 'lost' => $this->l10n->t('lost')],
+			2 => ['won' => $this->l10n->t('both won'), 'lost' => $this->l10n->t('both lost')],
+			3 => ['won' => $this->l10n->t('all won'), 'lost' => $this->l10n->t('all lost')],
+		];
 
-		return $won === true ? $this->l10n->t('all won') : $this->l10n->t('all lost');
+		return ($words[$total] ?? $words[3])[$outcome];
 	}//end allEnded()
 
 	/**
@@ -179,7 +182,11 @@ class LeadRelatedSummary {
 		}
 
 		$rows = [];
-		foreach ($this->objectService->findAll(config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters), 'limit' => self::LIMIT]) as $result) {
+		$config = [
+			'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
+			'limit'   => self::LIMIT,
+		];
+		foreach ($this->objectService->findAll(config: $config) as $result) {
 			if (is_array($result) === true) {
 				$rows[] = $result;
 			} else if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
