@@ -8580,7 +8580,14 @@ OC.L10N.register(
         "Then: write down the result and finish the task": "Then: write down the result and finish the task",
         "What now? Try again before the deadline": "What now? Try again before the deadline",
         "An attempt is logged": "An attempt is logged",
-        "Call the customer": "Call the customer"
+        "Call the customer": "Call the customer",
+        "Clients with an account on a network we publish on": "Clients with an account on a network we publish on",
+        "Follows feeds, sitemaps, shares of pages, public fediverse timelines and saved searches": "Follows feeds, sitemaps, shares of pages, public fediverse timelines and saved searches",
+        "No connections checked yet.": "No connections checked yet.",
+        "Search insight": "Search insight",
+        "Suggestions from the search data: what to improve first": "Suggestions from the search data: what to improve first",
+        "Username": "Username",
+        "Where residents find us in search engines, and what others publish · four pages under Marketing": "Where residents find us in search engines, and what others publish · four pages under Marketing"
     },
     "nplurals=2; plural=(n != 1);"
 )

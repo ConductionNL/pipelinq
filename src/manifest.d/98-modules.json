@@ -177,7 +177,7 @@
 					},
 					{
 						"id": "SearchQueries",
-						"label": "Search queries",
+						"label": "Search insight",
 						"description": "What people typed into a search engine before they reached you.",
 						"icon": "Magnify",
 						"category": "marketing",

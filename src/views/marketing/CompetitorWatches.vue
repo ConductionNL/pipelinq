@@ -17,8 +17,8 @@
   @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 -->
 <template>
-	<div class="competitors">
-		<header class="competitors__header">
+	<div class="competitors" :class="{ 'competitors--embedded': embedded }">
+		<header v-if="!embedded" class="competitors__header">
 			<h2>{{ t('pipelinq', 'Competitors') }}</h2>
 		</header>
 
@@ -179,6 +179,14 @@ export default {
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
+	},
+
+	props: {
+		/** Drawn as a section of the search insight page: no own header (board PqZoekinzicht). */
+		embedded: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	data() {
