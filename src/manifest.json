@@ -54,6 +54,9 @@
 				"type": "config-fields",
 				"title": "Organisation",
 				"body": "Your organisation details. They appear on receipts and reports. Every field is optional, so leave one blank to skip it.",
+				"optionalLabels": true,
+				"skippable": true,
+				"note": "Saved per field as you continue. You can change everything later in the Nextcloud admin settings for Pipelinq.",
 				"schema": {
 					"type": "object",
 					"properties": {
@@ -109,6 +112,39 @@
 							"title": "Website",
 							"order": 10
 						}
+					}
+				}
+			},
+			{
+				"id": "pos",
+				"type": "config-fields",
+				"title": "Till",
+				"body": "How the till prints and mails receipts. Every field is optional, so leave one blank to skip it.",
+				"optionalLabels": true,
+				"skippable": true,
+				"note": "Saved per field as you continue. The payment methods and the staff of the till are set in the admin settings, under Till.",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"receipt_printer_host": { "type": "string", "title": "Receipt printer address", "order": 1 },
+						"receipt_printer_port": { "type": "integer", "title": "Receipt printer port", "order": 2 },
+						"receipt_email_sender": { "type": "string", "format": "email", "title": "Send receipts from", "order": 3 }
+					}
+				}
+			},
+			{
+				"id": "integrations",
+				"type": "config-fields",
+				"title": "Integrations",
+				"body": "Where Pipelinq hands work to the other apps. Every field is optional, so leave one blank to skip it.",
+				"optionalLabels": true,
+				"skippable": true,
+				"note": "Saved per field as you continue. Every connection, with its status, is in the admin settings under Integrations.",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"shillinq_journal_webhook_url": { "type": "string", "format": "uri", "title": "Address that takes the till's day totals (shillinq)", "order": 1 },
+						"billing_handoff_manager_group": { "type": "string", "title": "Group that may send contracts to invoicing", "order": 2 }
 					}
 				}
 			},
