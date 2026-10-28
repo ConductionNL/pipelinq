@@ -172,6 +172,10 @@ class SetupController extends Controller {
 		// Organisation step done once the operator has named the organisation.
 		$organisationDone = $this->config(key: 'receipt_company_name') !== '';
 
+		// The till and integrations steps are optional; each is done once one of its fields is set.
+		$posDone          = $this->anyConfigured(keys: ['receipt_printer_host', 'receipt_email_sender']);
+		$integrationsDone = $this->anyConfigured(keys: ['shillinq_journal_webhook_url', 'billing_handoff_manager_group']);
+
 		if ($currencyDone === true) {
 			$this->appConfig->setValueString(Application::APP_ID, 'setup_completed_version', (string)self::SETUP_VERSION);
 		}
@@ -186,19 +190,37 @@ class SetupController extends Controller {
 				// dataset missing from this list is a dataset nobody can pick.
 				'datasets' => $this->demoSeedService->listChoices(),
 				// Exactly the ids of `manifest.setup.steps`, asserted by
-				// SetupControllerStatusContractTest. Provisioning and the
-				// integrations are not steps any more: provisioning is an admin
-				// settings action and integrations are detected, not asked.
+				// SetupControllerStatusContractTest. Provisioning is not a step:
+				// it is an admin settings action.
 				'steps' => [
 					'welcome' => ['done' => true],
 					'demo-data' => ['done' => $demoDataDone],
 					'currency' => ['done' => $currencyDone],
 					'organisation' => ['done' => $organisationDone],
+					'pos' => ['done' => $posDone],
+					'integrations' => ['done' => $integrationsDone],
 					'done' => ['done' => true],
 				],
 			]
 		);
 	}//end status()
+
+	/**
+	 * Whether any of the given app config keys holds a value.
+	 *
+	 * @param list<string> $keys The app config keys.
+	 *
+	 * @return bool True when at least one key is set.
+	 */
+	private function anyConfigured(array $keys): bool {
+		foreach ($keys as $key) {
+			if ($this->config(key: $key) !== '') {
+				return true;
+			}
+		}
+
+		return false;
+	}//end anyConfigured()
 
 	/**
 	 * Record that the operator has dealt with the optional demo-data step.

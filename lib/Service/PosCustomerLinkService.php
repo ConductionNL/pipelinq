@@ -375,8 +375,41 @@ class PosCustomerLinkService {
 			static fn (array $a, array $b): int => strcmp((string)($b['createdAt'] ?? ''), (string)($a['createdAt'] ?? ''))
 		);
 
-		return array_slice($history, 0, $cap);
+		$history = array_slice($history, 0, $cap);
+		foreach ($history as $index => $row) {
+			$history[$index]['itemCount'] = $this->countLines(transactionId: (string)$row['id'], register: $register);
+		}
+
+		return $history;
 	}//end getCustomerHistory()
+
+	/**
+	 * How many lines a sale has: the history's Items column.
+	 *
+	 * @param string $transactionId The sale.
+	 * @param string $register      The register.
+	 *
+	 * @return int The number of lines; 0 when they cannot be read.
+	 */
+	private function countLines(string $transactionId, string $register): int {
+		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransactionLine_schema', '');
+		if ($transactionId === '' || $schema === '') {
+			return 0;
+		}
+
+		try {
+			$lines = $this->getObjectService()->findAll(
+				config: [
+					'filters' => ['register' => $register, 'schema' => $schema, 'transaction' => $transactionId],
+					'limit' => 500,
+				]
+			);
+		} catch (Throwable $e) {
+			return 0;
+		}
+
+		return count((array)$lines);
+	}//end countLines()
 
 	/**
 	 * Sync the marketing-consent flag onto the linked pipelinq contact.
@@ -576,7 +609,6 @@ class PosCustomerLinkService {
 			'totalTax' => (float)($data['totalTax'] ?? 0),
 			'tenderType' => (string)($data['tenderType'] ?? 'cash'),
 			'status' => (string)($data['status'] ?? ''),
-			'itemCount' => (int)($data['itemCount'] ?? 0),
 		];
 	}//end summariseTransaction()
 

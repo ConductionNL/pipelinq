@@ -36,7 +36,7 @@
 						:aria-current="idx === currentStep ? 'step' : null"
 						@click="goTo(idx)">
 						<span class="blast-wizard__step-number" aria-hidden="true">
-							<Check v-if="idx < currentStep" :size="16" />
+							<Check v-if="idx < currentStep" :size="12" />
 							<template v-else>{{ idx + 1 }}</template>
 						</span>
 						<span class="blast-wizard__step-label">{{ s.label }}</span>
@@ -327,6 +327,42 @@
 							</dd>
 						</template>
 					</dl>
+					<div
+						v-if="reviewMissing.length > 0"
+						class="blast-wizard__consent"
+						role="status"
+						data-testid="blast-review-consent">
+						<strong>{{ t('pipelinq', 'Consent missing') }}</strong>
+						<p>{{ reviewConsentLine }}</p>
+						<p class="blast-wizard__consent-names">
+							{{ reviewMissingNames }}
+						</p>
+						<span class="blast-wizard__consent-actions">
+							<NcButton data-testid="blast-review-consent-request" @click="onConsentRequest">
+								<template #icon>
+									<EmailOutline :size="20" />
+								</template>
+								{{ t('pipelinq', 'Request consent') }}
+							</NcButton>
+							<NcButton
+								:pressed="consentChoice === 'skip'"
+								data-testid="blast-review-consent-skip"
+								@click="consentChoice = 'skip'">
+								<template #icon>
+									<Send :size="20" />
+								</template>
+								{{ t('pipelinq', 'Skip and send') }}
+							</NcButton>
+						</span>
+					</div>
+					<p
+						v-if="templateChecked"
+						class="blast-wizard__check"
+						:class="{ 'blast-wizard__check--error': templateValidationError }"
+						data-testid="blast-review-template-check">
+						<Check v-if="!templateValidationError" :size="18" />
+						{{ templateValidationError || t('pipelinq', 'Unsubscribe link found in the template') }}
+					</p>
 				</section>
 
 				<NcNoteCard
@@ -400,6 +436,8 @@ import {
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import Check from 'vue-material-design-icons/Check.vue'
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
+import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
+import Send from 'vue-material-design-icons/Send.vue'
 import MissingConsentModal from '../modals/MissingConsentModal.vue'
 import { previewTemplate } from '../services/articlesApi.js'
 
@@ -442,6 +480,8 @@ export default {
 	name: 'BlastWizardDialog',
 	components: {
 		Check,
+		EmailOutline,
+		Send,
 		ArrowLeft,
 		ChevronRight,
 		MissingConsentModal,
@@ -505,6 +545,10 @@ export default {
 			showConsentModal: false,
 			missingConsentContacts: [],
 			consentDecision: null,
+			/** The segment members a send would skip for lack of consent, read on the review step. */
+			reviewMissing: [],
+			/** 'skip' once the marketer chose to send without them on the review step. */
+			consentChoice: null,
 		}
 	},
 
@@ -543,6 +587,31 @@ export default {
 			return this.isLastStep
 				? this.t('pipelinq', 'Step {step} of {total}: check everything before the blast is created', position)
 				: this.t('pipelinq', 'Step {step} of {total}: {label}', { ...position, label: this.steps[this.currentStep].label })
+		},
+
+		/** @return {string} "7 contacten in dit segment hebben geen toestemming voor e-mail. Kies hoe je verdergaat." */
+		reviewConsentLine() {
+			const channel = this.selectedChannel === 'sms' ? this.t('pipelinq', 'SMS') : this.t('pipelinq', 'email')
+			return this.n(
+				'pipelinq',
+				'%n contact in this segment has no consent for {channel}. Choose how to continue.',
+				'%n contacts in this segment have no consent for {channel}. Choose how to continue.',
+				this.reviewMissing.length,
+				{ channel },
+			)
+		},
+
+		/** @return {string} The first three names, and how many more. */
+		reviewMissingNames() {
+			const names = this.reviewMissing.map((c) => c.name || c.email || '').filter(Boolean)
+			const shown = names.slice(0, 3).join(', ')
+			const more = names.length - 3
+			return more > 0 ? this.n('pipelinq', '{names} and %n other', '{names} and %n others', more, { names: shown }) : shown
+		},
+
+		/** @return {boolean} Whether an email template was checked, so the review can say how it went. */
+		templateChecked() {
+			return this.selectedChannel === 'email' && !!this.selectedTemplate && !this.templateValidating
 		},
 
 		isLastStep() {
@@ -724,6 +793,18 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Read the consent shortfall when the review step opens.
+		 *
+		 * @param {string} value The step key.
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
+		 */
+		step(value) {
+			if (value === 'review') {
+				this.loadReviewConsent()
+			}
+		},
+
 		show: {
 			immediate: true,
 			/**
@@ -1133,6 +1214,29 @@ export default {
 		},
 
 		/**
+		 * Read who a segment send would skip for lack of consent, so the
+		 * review step names them and offers the choice before Create.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
+		 */
+		async loadReviewConsent() {
+			this.reviewMissing = []
+			if (!this.selectedSegment) {
+				return
+			}
+			try {
+				const { data } = await axios.get(
+					generateUrl(`/apps/pipelinq/api/segments/${this.selectedSegment.id}/compliance`),
+					{ params: { channel: this.selectedChannel } },
+				)
+				this.reviewMissing = data?.missingConsent || []
+			} catch {
+				this.reviewMissing = []
+			}
+		},
+
+		/**
 		 * Check a segment's contacts for consent before sending; a shortfall
 		 * waits on the marketer's decision in MissingConsentModal.
 		 *
@@ -1140,7 +1244,7 @@ export default {
 		 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
 		 */
 		async preflightCompliance() {
-			if (!this.selectedSegment) {
+			if (!this.selectedSegment || this.consentChoice === 'skip') {
 				return true
 			}
 			try {
@@ -1273,45 +1377,37 @@ export default {
 
 .blast-wizard__steps {
 	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 8px;
 	margin: 0;
 	padding: 0;
 	list-style: none;
-	counter-reset: none;
 }
 
 .blast-wizard__step {
-	position: relative;
-	flex: 1 1 0;
-	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
 }
 
-/* The line joining one step to the next. */
+/* The dash between one step and the next, as the board draws the row. */
 .blast-wizard__step:not(:last-child)::after {
-	content: '';
-	position: absolute;
-	top: 14px;
-	inset-inline-start: calc(50% + 18px);
-	inset-inline-end: calc(-50% + 18px);
-	height: 2px;
-	background: var(--color-border-dark);
-}
-
-.blast-wizard__step--done:not(:last-child)::after {
-	background: var(--color-primary-element);
+	content: '–';
+	color: var(--color-text-maxcontrast);
 }
 
 .blast-wizard__step-button {
-	display: flex;
-	flex-direction: column;
+	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	width: 100%;
 	min-height: 0;
 	margin: 0;
-	padding: 0 4px;
+	padding: 0;
 	border: 0;
 	background: none;
-	color: var(--color-text-maxcontrast);
+	color: var(--color-main-text);
+	font-size: 13px;
 	font-weight: normal;
 	cursor: pointer;
 }
@@ -1326,47 +1422,41 @@ export default {
 	border: 0;
 	border-radius: 0;
 	background: none;
-	color: var(--color-text-maxcontrast);
+	color: var(--color-main-text);
 }
 
 .blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:disabled {
 	cursor: default;
-	opacity: 0.6;
+	color: var(--color-text-maxcontrast);
 }
 
 .blast-wizard__step-number {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 30px;
-	height: 30px;
-	border: 2px solid var(--color-border-dark);
+	width: 18px;
+	height: 18px;
 	border-radius: 50%;
-	background: var(--color-main-background);
+	background: var(--color-background-dark);
+	font-size: 11px;
 	font-weight: 700;
 }
 
 .blast-wizard__step--current .blast-wizard__step-number {
-	border-color: var(--color-primary-element);
-	color: var(--color-primary-element);
-}
-
-.blast-wizard__step--done .blast-wizard__step-number {
-	border-color: var(--color-primary-element);
 	background: var(--color-primary-element);
 	color: var(--color-primary-element-text);
 }
 
+.blast-wizard__step--done .blast-wizard__step-number {
+	background: var(--color-success-light, #e7f3ea);
+	color: var(--color-success-text, #1e6b2a);
+}
+
 .blast-wizard__step--current .blast-wizard__step-label {
-	color: var(--color-main-text);
 	font-weight: 700;
 }
 
 .blast-wizard__step-label {
-	max-width: 100%;
-	overflow: hidden;
-	font-size: 0.9em;
-	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
@@ -1417,6 +1507,50 @@ export default {
 
 .blast-wizard__note {
 	margin: 0;
+}
+
+.blast-wizard__consent {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 12px 14px;
+	border-radius: 8px;
+	background: var(--color-warning-light, #fdf2e5);
+	color: var(--color-warning-text, #7a4f00);
+	font-size: 14px;
+}
+
+.blast-wizard__consent p {
+	margin: 0;
+}
+
+.blast-wizard__consent-names {
+	font-size: 13px;
+}
+
+.blast-wizard__consent-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 4px;
+}
+
+.blast-wizard__check {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	padding: 8px 12px;
+	border-radius: 8px;
+	background: var(--color-success-light, #e7f3ea);
+	color: var(--color-success-text, #1e6b2a);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.blast-wizard__check--error {
+	background: var(--color-error-light, #fbe9e8);
+	color: var(--color-error-text, #a30000);
 }
 
 .blast-wizard__preview {

@@ -10,7 +10,8 @@
   - parent (ADR-004), and PipelineManager.vue and the pipeline board open it.
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="wizard"
 		size="large"
 		:name="
 			isEdit ? t('pipelinq', 'Edit pipeline') : t('pipelinq', 'New pipeline')
@@ -324,21 +325,21 @@
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" @click="$emit('cancel')">
+			<NcButton @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="primary" :disabled="!isValid" @click="onSave">
 				{{ isEdit ? t('pipelinq', 'Save') : t('pipelinq', 'Create') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
-	NcDialog,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
@@ -358,7 +359,7 @@ export default {
 	components: {
 		NcButton,
 		NcCheckboxRadioSwitch,
-		NcDialog,
+		CnDialog,
 		NcSelect,
 		NcTextField,
 		Draggable: draggable,

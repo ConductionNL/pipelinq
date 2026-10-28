@@ -49,7 +49,7 @@ describe('ticket page values', () => {
 		for (const field of ['category', 'channel', 'priority']) {
 			expect(overrides[field], field).toEqual({ formatter: 'enumText' })
 		}
-		const side = Object.fromEntries(page.config.sideColumn.filter((w) => typeof w === 'object').map((w) => [w.id, w.content.overrides || {}]))
+		const side = Object.fromEntries(page.config.sideColumn.filter((w) => typeof w === 'object').map((w) => [w.id, w.content?.overrides || {}]))
 		expect(side['side-customer'].channel).toEqual({ formatter: 'enumText' })
 		expect(side['side-deadline'].priority).toEqual({ formatter: 'enumText' })
 	})

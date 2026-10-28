@@ -1,7 +1,7 @@
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'New Lead')"
-		:open="true"
 		size="normal"
 		data-testid="lead-create-dialog"
 		@closing="$emit('close')">
@@ -22,12 +22,13 @@
 				{{ saving ? t('pipelinq', 'Creating…') : t('pipelinq', 'Create') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { NcButton } from '@nextcloud/vue'
 import LeadForm from '../views/leads/LeadForm.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -35,7 +36,7 @@ export default {
 	name: 'LeadCreateDialog',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 		LeadForm,
 	},
 

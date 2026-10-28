@@ -54,6 +54,9 @@
 				"type": "config-fields",
 				"title": "Organisation",
 				"body": "Your organisation details. They appear on receipts and reports. Every field is optional, so leave one blank to skip it.",
+				"optionalLabels": true,
+				"skippable": true,
+				"note": "Saved per field as you continue. You can change everything later in the Nextcloud admin settings for Pipelinq.",
 				"schema": {
 					"type": "object",
 					"properties": {
@@ -109,6 +112,39 @@
 							"title": "Website",
 							"order": 10
 						}
+					}
+				}
+			},
+			{
+				"id": "pos",
+				"type": "config-fields",
+				"title": "Till",
+				"body": "How the till prints and mails receipts. Every field is optional, so leave one blank to skip it.",
+				"optionalLabels": true,
+				"skippable": true,
+				"note": "Saved per field as you continue. The payment methods and the staff of the till are set in the admin settings, under Till.",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"receipt_printer_host": { "type": "string", "title": "Receipt printer address", "order": 1 },
+						"receipt_printer_port": { "type": "integer", "title": "Receipt printer port", "order": 2 },
+						"receipt_email_sender": { "type": "string", "format": "email", "title": "Send receipts from", "order": 3 }
+					}
+				}
+			},
+			{
+				"id": "integrations",
+				"type": "config-fields",
+				"title": "Integrations",
+				"body": "Where Pipelinq hands work to the other apps. Every field is optional, so leave one blank to skip it.",
+				"optionalLabels": true,
+				"skippable": true,
+				"note": "Saved per field as you continue. Every connection, with its status, is in the admin settings under Integrations.",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"shillinq_journal_webhook_url": { "type": "string", "format": "uri", "title": "Address that takes the till's day totals (shillinq)", "order": 1 },
+						"billing_handoff_manager_group": { "type": "string", "title": "Group that may send contracts to invoicing", "order": 2 }
 					}
 				}
 			},
@@ -1390,8 +1426,19 @@
 						"id": "leads-over-time",
 						"type": "chart",
 						"title": "Leads over time",
+						"_note": "PqOperationeel: the count on each bar, short month names, no value axis or grid.",
 						"content": {
 							"chartKind": "bar",
+							"categoryFormat": "month",
+							"height": 190,
+							"options": {
+								"chart": { "toolbar": { "show": false } },
+								"plotOptions": { "bar": { "columnWidth": "60%", "borderRadius": 6, "borderRadiusApplication": "end", "dataLabels": { "position": "top" } } },
+								"dataLabels": { "enabled": true, "offsetY": -18, "style": { "fontSize": "12px", "fontWeight": 400, "colors": ["var(--color-main-text)"] } },
+								"yaxis": { "show": false },
+								"grid": { "show": false },
+								"xaxis": { "axisBorder": { "show": false }, "axisTicks": { "show": false } }
+							},
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
@@ -2500,7 +2547,7 @@
 						"id": "client-notes",
 						"type": "integration",
 						"integrationId": "notes",
-						"title": "Notes",
+						"title": "Client notes",
 						"icon": "NoteTextOutline"
 					},
 					{
@@ -2738,6 +2785,91 @@
 						}
 					},
 					{
+						"id": "client-activity",
+						"type": "timeline",
+						"title": "Activity",
+						"icon": "TimelineTextOutline",
+						"_note": "PqKlant / PqOrganisatie Activiteit: the merged timeline of /api/timeline (contact moments, notes, tasks, mail, calendar, WhatsApp/SMS messages) as feed rows, newest first, a chip per kind, the internal-note box (an OpenRegister note on the client) and Link email / Compose in Mail in the header.",
+						"headerActions": [
+							{
+								"label": "Link email",
+								"icon": "EmailOutline",
+								"variant": "tonal",
+								"action": {
+									"type": "open-modal",
+									"target": "EmailLinkDialog",
+									"props": {
+										"register": "pipelinq",
+										"schema": "client",
+										"objectId": "@objectId"
+									}
+								}
+							},
+							{
+								"label": "Compose in Mail",
+								"icon": "EmailArrowRightOutline",
+								"variant": "tonal",
+								"action": {
+									"type": "navigate",
+									"target": "/index.php/apps/mail/compose?uri=mailto:@object.email"
+								}
+							}
+						],
+						"content": {
+							"order": "desc",
+							"layout": "feed",
+							"composer": {
+								"placeholder": "Add an internal note. Type @ to mention a colleague.",
+								"label": "Add note",
+								"submitLabel": "Add note"
+							},
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/timeline",
+								"params": {
+									"entityType": "client",
+									"entityId": "@objectId"
+								},
+								"userField": "userName",
+								"typeLabels": {
+									"interaction": "contact moment",
+									"worklog": "work log",
+									"note": "note",
+									"task": "task",
+									"email": "email, linked",
+									"calendar": "calendar",
+									"message": "message"
+								},
+								"icons": {
+									"path": "metadata.channel",
+									"map": {
+										"phone": "PhoneInTalk",
+										"email": "EmailOutline",
+										"whatsapp": "MessageTextOutline",
+										"sms": "MessageTextOutline"
+									},
+									"typeMap": {
+										"interaction": "PhoneInTalk",
+										"worklog": "ClockOutline",
+										"note": "NoteTextOutline",
+										"task": "CheckCircleOutline",
+										"email": "EmailOutline",
+										"calendar": "CalendarBlankOutline",
+										"message": "MessageTextOutline"
+									}
+								}
+							},
+							"typeChips": [
+								{ "value": "interaction", "label": "Contact moments" },
+								{ "value": "note", "label": "Client notes" },
+								{ "value": "task", "label": "Tasks" },
+								{ "value": "email", "label": "Email" },
+								{ "value": "calendar", "label": "Calendar" },
+								{ "value": "message", "label": "Messages" }
+							],
+							"emptyText": "Contact moments, notes, tasks, mail and messages about this client appear here."
+						}
+					},
+					{
 						"id": "client-latest-moments",
 						"type": "record-list",
 						"title": "Latest contact moments",
@@ -2875,7 +3007,8 @@
 										"client-organisation-card",
 										"client-cases",
 										"client-tickets",
-										"client-latest-moments"
+										"client-latest-moments",
+										"client-activity"
 									],
 									"label": "Overview"
 								},
@@ -3047,18 +3180,6 @@
 							"clientId": "@objectId"
 						},
 						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "activity",
-						"component": "ActivityTimeline",
-						"title": "Activity",
-						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "client"
-						},
-						"colSpan": 12,
 						"card": true
 					},
 					{
@@ -3390,6 +3511,127 @@
 					"client-channels",
 					"client-relationships",
 					{
+						"id": "side-appointments",
+						"type": "record-list",
+						"title": "Appointments",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Afspraken: the resident's coming appointment as a linked line, its status and handler under it.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "appointmentBooking",
+							"filter": {
+								"customerId": "@objectId",
+								"status": {
+									"in": [
+										"pending-deposit",
+										"confirmed",
+										"rescheduled"
+									]
+								}
+							},
+							"sort": {
+								"field": "startAt",
+								"dir": "asc"
+							},
+							"limit": 2,
+							"presentation": "rows",
+							"density": "stacked",
+							"title": "{subject}, {startAt|datetime}",
+							"meta": {
+								"parts": [
+									"{status}",
+									"with {assignee|user}"
+								]
+							},
+							"valueLabels": {
+								"status": {
+									"pending-deposit": "Awaiting deposit",
+									"confirmed": "Confirmed",
+									"rescheduled": "Rescheduled"
+								}
+							},
+							"rowRoute": "BookingDetail",
+							"emptyText": "No appointments"
+						}
+					},
+					{
+						"id": "side-business-person",
+						"type": "facts",
+						"title": "Projects and invoicing",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "person"
+						},
+						"_note": "PqKlant Projecten en facturering: the resident's projects in planninq and invoices in shillinq, as the sentences GET /api/clients/{id}/business builds; a sentence whose app is missing is left out.",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/clients/@objectId/business"
+							},
+							"fields": [
+								{
+									"as": "text",
+									"path": "projectsLine"
+								},
+								{
+									"as": "text",
+									"path": "invoicesLine",
+									"joinPrevious": true
+								}
+							],
+							"link": {
+								"label": "Further in Shillinq",
+								"icon": "OpenInNew",
+								"href": "{shillinqUrl}",
+								"target": "_blank"
+							}
+						}
+					},
+					{
+						"id": "side-business-organisation",
+						"type": "facts",
+						"title": "Sales, contracts and invoicing",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "organization"
+						},
+						"_note": "PqOrganisatie Verkoop, contracten en facturering: the open leads, running contracts, projects and invoices of the organisation, as the sentences GET /api/clients/{id}/business builds.",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/clients/@objectId/business"
+							},
+							"fields": [
+								{
+									"as": "text",
+									"path": "leadsLine"
+								},
+								{
+									"as": "text",
+									"path": "contractsLine"
+								},
+								{
+									"as": "text",
+									"path": "projectsLine"
+								},
+								{
+									"as": "text",
+									"path": "invoicesLine"
+								}
+							],
+							"link": {
+								"label": "Further in Shillinq",
+								"icon": "OpenInNew",
+								"href": "{shillinqUrl}",
+								"target": "_blank"
+							}
+						}
+					},
+					{
 						"id": "side-history",
 						"type": "facts",
 						"title": "Record history",
@@ -3418,6 +3660,39 @@
 								"icon": "History",
 								"sidebarTab": "audit"
 							}
+						}
+					},
+					{
+						"id": "side-knowledge",
+						"type": "kb-search",
+						"title": "Knowledge base",
+						"_note": "PqKlant/PqOrganisatie Kennisbank: the knowledge base search as a side card (board look: placeholder and search icon), with the two best articles for the subject of the client's most recent open ticket or contact moment (nc-vue suggestFrom); nothing shows without a match.",
+						"content": {
+							"endpoint": "/apps/openregister/api/integrations/xwiki/search",
+							"queryParam": "q",
+							"minChars": 3,
+							"limit": 5,
+							"placeholder": "Search the knowledge base",
+							"suggestFrom": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"filter": {
+									"client": "@objectId",
+									"status": {
+										"in": [
+											"new",
+											"in_progress",
+											"awaiting_customer"
+										]
+									}
+								},
+								"sort": {
+									"field": "occurredAt",
+									"dir": "desc"
+								},
+								"path": "title"
+							},
+							"suggestLimit": 2
 						}
 					},
 					"client-related",
@@ -3821,15 +4096,12 @@
 						"type": "tabs",
 						"title": "Contact",
 						"icon": "AccountBoxOutline",
-						"_note": "One strip, at most seven tabs. Overview stacks the data card and the deals table; the list tabs count their list.",
+						"_note": "The board's strip (PqContactpersoon): Overview, then every list and panel the person has, History last. Overview holds the details, the deals, the relationships and the channels as headed sections of one card.",
 						"content": {
 							"ariaLabel": "Contact",
 							"tabs": [
 								{
-									"widgetIds": [
-										"contact-data",
-										"contact-deals"
-									],
+									"widgetId": "contact-overview",
 									"label": "Overview"
 								},
 								{
@@ -3853,12 +4125,79 @@
 									"countFrom": "widget"
 								},
 								{
+									"widgetId": "contact-relationships",
+									"label": "Relationships"
+								},
+								{
+									"widgetId": "contact-subscriptions",
+									"label": "Subscriptions"
+								},
+								{
+									"widgetId": "contact-brp",
+									"label": "BSN and BRP"
+								},
+								{
+									"widgetId": "contact-channels",
+									"label": "Channels"
+								},
+								{
+									"widgetId": "contact-email",
+									"label": "Mailbox"
+								},
+								{
+									"widgetId": "contact-messages",
+									"label": "Messages"
+								},
+								{
+									"widgetId": "contact-calendar",
+									"label": "Appointments"
+								},
+								{
 									"widgetId": "contact-files",
 									"label": "Files"
 								},
 								{
 									"widgetId": "contact-history",
 									"label": "History"
+								}
+							]
+						}
+					},
+					{
+						"id": "contact-overview",
+						"type": "sections",
+						"title": "Overview",
+						"content": {
+							"sections": [
+								{
+									"widgetId": "contact-data",
+									"title": "Contact details"
+								},
+								{
+									"widgetId": "contact-deals",
+									"title": "Deals"
+								},
+								{
+									"title": "Relationships",
+									"widget": {
+										"type": "ContactRelationshipsWidget",
+										"content": {
+											"entityType": "contact",
+											"card": false,
+											"compact": true
+										}
+									}
+								},
+								{
+									"title": "Channels",
+									"widget": {
+										"type": "ContactChannelsWidget",
+										"content": {
+											"entityType": "contact",
+											"card": false,
+											"compact": true
+										}
+									}
 								}
 							]
 						}
@@ -3882,10 +4221,9 @@
 								"correspondenceLanguage",
 								"timezone",
 								"marketingConsent",
-								"doNotContact",
-								"surveyOptOut",
-								"secrecy"
-							]
+								"doNotContact"
+							],
+							"collapsedFields": 11
 						}
 					},
 					{
@@ -4084,7 +4422,52 @@
 						"id": "contact-related",
 						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
+						"icon": "LinkVariant",
+						"content": {
+							"layout": "links",
+							"referenceSections": [
+								{
+									"key": "client",
+									"label": "Client",
+									"field": "client",
+									"register": "pipelinq",
+									"schema": "client",
+									"labelTemplate": "{name}, client",
+									"route": {
+										"name": "ClientDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								}
+							],
+							"extraSources": [
+								{
+									"key": "contracts",
+									"endpoint": "/apps/openregister/api/objects/pipelinq/salesContract?contactRef=@objectId",
+									"path": "results",
+									"itemLabel": "Contract {contractNumber}",
+									"rowRoute": {
+										"name": "ContractDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								},
+								{
+									"key": "requests",
+									"endpoint": "/apps/openregister/api/objects/pipelinq/ticket?contact=@objectId&ticketType=request",
+									"path": "results",
+									"itemLabel": "Request {reference}",
+									"rowRoute": {
+										"name": "TicketDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								}
+							]
+						}
 					},
 					{
 						"id": "contact-channels",
@@ -4144,6 +4527,25 @@
 						"integrationId": "calendar",
 						"title": "Meetings",
 						"icon": "Calendar"
+					},
+					{
+						"id": "contact-side-history",
+						"type": "timeline",
+						"title": "History",
+						"content": {
+							"auditTrail": true,
+							"order": "desc",
+							"limit": 3
+						}
+					},
+					{
+						"id": "contact-sync",
+						"type": "ContactsSyncWidget",
+						"title": "Nextcloud Contacts",
+						"content": {
+							"entityType": "contact",
+							"title": "Nextcloud Contacts"
+						}
 					}
 				],
 				"layout": [
@@ -4197,7 +4599,9 @@
 				},
 				"headerMeta": "{role} at {client.name}",
 				"_headerFieldsNote": "clients-preferred-name: the name a person asks to be called by sits under the full name. An empty value shows no chip.",
-				"headerFields": ["preferredName"],
+				"headerFields": [
+					"preferredName"
+				],
 				"headerActions": [
 					{
 						"id": "call",
@@ -4221,14 +4625,8 @@
 				"sideColumn": [
 					"contact-kpis-deals",
 					"contact-related",
-					"contact-channels",
-					"contact-relationships",
-					"contact-subscriptions",
-					"contact-brp",
-					"contact-email",
-					"contact-messages",
-					"contact-calendar",
-					"contact-history"
+					"contact-sync",
+					"contact-side-history"
 				]
 			}
 		},
@@ -6454,38 +6852,366 @@
 				"titleTemplate": "Shift {floatAt|date}, {drawer}",
 				"titleField": "reference",
 				"stageField": "status",
-				"primaryActionByStage": { "open": "shift-count" },
+				"primaryActionByStage": {
+					"open": "shift-count",
+					"closed": "shift-approve-diff"
+				},
 				"headerActions": [
 					{
 						"id": "shift-count",
 						"label": "Close and count shift",
 						"type": "open-form",
 						"icon": "CashRegister",
-						"endpoint": { "url": "/apps/pipelinq/api/pos-shifts/@objectId/count", "method": "POST" },
+						"endpoint": {
+							"url": "/apps/pipelinq/api/pos-shifts/@objectId/count",
+							"method": "POST"
+						},
 						"formProperties": {
-							"amount": { "type": "number", "minimum": 0, "title": "Counted amount", "description": "Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).", "required": true },
-							"notes": { "type": "string", "title": "Notes" }
+							"amount": {
+								"type": "number",
+								"minimum": 0,
+								"title": "Counted amount",
+								"description": "Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).",
+								"required": true
+							},
+							"notes": {
+								"type": "string",
+								"title": "Notes"
+							}
 						},
 						"successMessage": "Count recorded.",
-						"visibleWhen": { "field": "status", "value": "open" }
+						"visibleWhen": {
+							"field": "status",
+							"value": "open"
+						}
+					},
+					{
+						"id": "shift-approve-diff",
+						"label": "Approve difference",
+						"type": "api-call",
+						"icon": "Check",
+						"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
+						"successMessage": "Cash difference approved.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "status",
+									"value": "closed"
+								},
+								{
+									"field": "reconciliationStatus",
+									"value": "pending"
+								}
+							]
+						}
 					}
 				],
 				"register": "pipelinq",
 				"schema": "cashShift",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "FINANCIAL archetype (bespoke-detail-pages). A cash-drawer shift is a cash-management ledger record, so NO comms leaves (cashShift declares no email/calendar linkedType). Two columns: the shift fields 8-wide beside the Opening float and Drops tiles and the cash-reconciliation variance; the cash drops (CashShiftDropsWidget: an object-list on cashDrop, FK 'shift', with Add drop) beside Related. Audit-trail is a sidebar tab.",
+				"_note": "FINANCIAL archetype (bespoke-detail-pages). A cash-drawer shift is a cash-management ledger record, so NO comms leaves. Board look: one tab strip as the body (the shift, the cash difference with its approve and reject actions, the drops), and the opening float, the sales in this shift and recent history in the side column. The three KPI tiles stay declared for the dashboard catalogue but are not placed.",
 				"widgets": [
+					{
+						"id": "shift-panels",
+						"type": "tabs",
+						"title": "Shift",
+						"_note": "The board tab strip: the children stay out of `layout` because the tabs widget renders them.",
+						"content": {
+							"ariaLabel": "Shift",
+							"tabs": [
+								{
+									"label": "Overview",
+									"widgetIds": [
+										"shift-data",
+										"shift-variance",
+										"shift-drops"
+									]
+								},
+								{
+									"label": "History",
+									"widgetId": "shift-history",
+									"countFrom": "widget"
+								}
+							]
+						}
+					},
 					{
 						"id": "shift-data",
 						"type": "data",
 						"title": "Shift",
 						"icon": "FileDocument",
 						"content": {
-							"columns": 2,
+							"title": "Shift",
+							"columns": 3,
+							"hideEmpty": true,
+							"include": [
+								"drawer",
+								"operator",
+								"floatAt",
+								"closedAt",
+								"status"
+							],
 							"overrides": {
-								"operator": { "formatter": "userDisplayName" },
-								"managedBy": { "formatter": "userDisplayName" }
+								"drawer": {
+									"label": "Till"
+								},
+								"operator": {
+									"label": "Cashier",
+									"formatter": "userDisplayName"
+								},
+								"floatAt": {
+									"label": "Opened",
+									"formatter": "shortDateTime"
+								},
+								"closedAt": {
+									"label": "Closed",
+									"formatter": "shortDateTime"
+								},
+								"status": {
+									"editable": false,
+									"enumLabels": {
+										"open": "Open",
+										"closed": "Counted",
+										"reconciled": "Reconciled"
+									}
+								}
 							}
+						}
+					},
+					{
+						"id": "shift-variance",
+						"type": "facts",
+						"title": "Cash difference",
+						"icon": "ScaleBalance",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "cashDiff",
+								"filter": {
+									"shift": "@objectId"
+								},
+								"sort": {
+									"field": "_created",
+									"dir": "desc"
+								}
+							},
+							"headerPill": {
+								"path": "status",
+								"map": {
+									"pending": "Pending",
+									"approved": "Approved",
+									"rejected": "Rejected"
+								},
+								"variantMap": {
+									"pending": "warning",
+									"approved": "success",
+									"rejected": "error"
+								}
+							},
+							"fields": [
+								{
+									"path": "expectedAmount",
+									"label": "Expected amount",
+									"format": "currency"
+								},
+								{
+									"path": "actualAmount",
+									"label": "Counted amount",
+									"format": "currency"
+								},
+								{
+									"path": "diffAmount",
+									"label": "Difference",
+									"format": "currency"
+								},
+								{
+									"path": "diffPercentage",
+									"label": "Percentage",
+									"format": "number",
+									"suffix": "%"
+								},
+								{
+									"as": "pill",
+									"key": "tolerance",
+									"path": "withinTolerance",
+									"map": {
+										"true": "Within tolerance",
+										"false": "Outside tolerance"
+									},
+									"variantMap": {
+										"true": "success",
+										"false": "warning"
+									}
+								},
+								{
+									"path": "approvedBy",
+									"label": "Reviewed by",
+									"format": "user"
+								},
+								{
+									"path": "rejectionReason",
+									"label": "Rejection reason"
+								}
+							],
+							"actions": [
+								{
+									"id": "diff-approve",
+									"label": "Approve",
+									"type": "api-call",
+									"variant": "primary",
+									"adminOnly": true,
+									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
+									"payload": {
+										"diffId": "@source.id"
+									},
+									"successMessage": "Cash difference approved.",
+									"visibleWhen": {
+										"field": "status",
+										"value": "pending"
+									}
+								},
+								{
+									"id": "diff-reject",
+									"label": "Reject",
+									"type": "open-form",
+									"variant": "error",
+									"adminOnly": true,
+									"endpoint": {
+										"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/reject?diffId=@source.id",
+										"method": "POST"
+									},
+									"formProperties": {
+										"reason": {
+											"type": "string",
+											"title": "Rejection reason",
+											"description": "This rejects the cash difference and reopens the shift for a recount."
+										}
+									},
+									"successMessage": "Cash difference rejected. The shift is open for a recount.",
+									"visibleWhen": {
+										"field": "status",
+										"value": "pending"
+									}
+								}
+							],
+							"emptyText": "Not counted yet. The difference appears once the shift is closed and counted."
+						}
+					},
+					{
+						"id": "shift-drops",
+						"type": "CashShiftDropsWidget",
+						"title": "Drops",
+						"icon": "CashMinus",
+						"content": {
+							"register": "pipelinq",
+							"schema": "cashDrop",
+							"filter": {
+								"shift": "@objectId"
+							},
+							"sort": {
+								"field": "droppedAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "reason",
+									"label": "Reason"
+								},
+								{
+									"key": "amount",
+									"label": "Amount",
+									"align": "right",
+									"format": {
+										"style": "currency",
+										"currency": "EUR"
+									}
+								},
+								{
+									"key": "droppedAt",
+									"label": "At time",
+									"formatter": "timeOfDay"
+								},
+								{
+									"key": "droppedBy",
+									"label": "By",
+									"formatter": "userDisplayName"
+								}
+							],
+							"limit": 25,
+							"allowCreate": false,
+							"emptyText": "No cash drops recorded on this shift yet.",
+							"footnote": "Drops can only be added to an open shift. An open shift has Close and count shift at the top."
+						}
+					},
+					{
+						"id": "shift-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "shift-opening",
+						"type": "facts",
+						"title": "Opening float",
+						"_note": "The opening float with the drops taken out of the drawer during the shift.",
+						"content": {
+							"fields": [
+								{
+									"as": "title",
+									"path": "floatAmount",
+									"format": "currency"
+								},
+								{
+									"as": "line",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "cashDrop",
+										"filter": {
+											"shift": "@objectId"
+										}
+									},
+									"suffix": " drops"
+								}
+							]
+						}
+					},
+					{
+						"id": "shift-related",
+						"type": "facts",
+						"title": "Related",
+						"_note": "The sales booked in this shift (posTransaction.shift), with the transactions list as the way in.",
+						"content": {
+							"fields": [
+								{
+									"as": "line",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "posTransaction",
+										"filter": {
+											"shift": "@objectId"
+										}
+									},
+									"suffix": " transactions in this shift"
+								}
+							],
+							"link": {
+								"label": "Transactions",
+								"route": {
+									"name": "PosTransactions"
+								}
+							}
+						}
+					},
+					{
+						"id": "shift-side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"content": {
+							"maxDisplay": 4,
+							"excludeActions": [
+								"read"
+							]
 						}
 					},
 					{
@@ -6502,7 +7228,9 @@
 									"metric": "sum",
 									"field": "floatAmount",
 									"currency": "EUR",
-									"filter": { "id": "@objectId" }
+									"filter": {
+										"id": "@objectId"
+									}
 								}
 							]
 						}
@@ -6520,91 +7248,11 @@
 									"schema": "cashDrop",
 									"metric": "count",
 									"countLabel": "drops",
-									"filter": { "shift": "@objectId" }
+									"filter": {
+										"shift": "@objectId"
+									}
 								}
 							]
-						}
-					},
-					{
-						"id": "shift-variance",
-						"type": "facts",
-						"title": "Cash difference",
-						"icon": "ScaleBalance",
-						"content": {
-							"source": {
-								"register": "pipelinq",
-								"schema": "cashDiff",
-								"filter": { "shift": "@objectId" },
-								"sort": { "field": "@self.created", "dir": "desc" }
-							},
-							"headerPill": {
-								"path": "status",
-								"map": { "pending": "Pending", "approved": "Approved", "rejected": "Rejected" },
-								"variantMap": { "pending": "warning", "approved": "success", "rejected": "error" }
-							},
-							"fields": [
-								{ "path": "expectedAmount", "label": "Expected amount", "format": "currency" },
-								{ "path": "actualAmount", "label": "Counted amount", "format": "currency" },
-								{ "path": "diffAmount", "label": "Difference", "format": "currency" },
-								{ "path": "diffPercentage", "label": "Percentage", "format": "number", "suffix": "%" },
-								{
-									"as": "pill",
-									"key": "tolerance",
-									"path": "withinTolerance",
-									"map": { "true": "Within tolerance", "false": "Outside tolerance" },
-									"variantMap": { "true": "success", "false": "warning" }
-								},
-								{ "path": "approvedBy", "label": "Reviewed by", "format": "user" },
-								{ "path": "rejectionReason", "label": "Rejection reason" }
-							],
-							"actions": [
-								{
-									"id": "diff-approve",
-									"label": "Approve",
-									"type": "api-call",
-									"variant": "primary",
-									"adminOnly": true,
-									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
-									"payload": { "diffId": "@source.id" },
-									"successMessage": "Cash difference approved.",
-									"visibleWhen": { "field": "status", "value": "pending" }
-								},
-								{
-									"id": "diff-reject",
-									"label": "Reject",
-									"type": "open-form",
-									"variant": "error",
-									"adminOnly": true,
-									"endpoint": { "url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/reject?diffId=@source.id", "method": "POST" },
-									"formProperties": {
-										"reason": { "type": "string", "title": "Rejection reason", "description": "This rejects the cash difference and reopens the shift for a recount." }
-									},
-									"successMessage": "Cash difference rejected. The shift is open for a recount.",
-									"visibleWhen": { "field": "status", "value": "pending" }
-								}
-							],
-							"emptyText": "Not counted yet. The difference appears once the shift is closed and counted."
-						}
-					},
-					{
-						"id": "shift-drops",
-						"type": "CashShiftDropsWidget",
-						"title": "Drops",
-						"icon": "CashMinus",
-						"content": {
-							"register": "pipelinq",
-							"schema": "cashDrop",
-							"filter": { "shift": "@objectId" },
-							"sort": { "field": "droppedAt", "dir": "desc" },
-							"columns": [
-								{ "key": "reason", "label": "Reden" },
-								{ "key": "amount", "label": "Bedrag" },
-								{ "key": "droppedAt", "label": "Op" },
-								{ "key": "droppedBy", "label": "Door" }
-							],
-							"limit": 25,
-							"allowCreate": false,
-							"emptyText": "No cash drops recorded on this shift yet."
 						}
 					},
 					{
@@ -6626,70 +7274,16 @@
 								}
 							]
 						}
-					},
-					{
-						"id": "shift-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "shift-data",
+						"widgetId": "shift-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 6
-					},
-					{
-						"id": "2-1",
-						"widgetId": "shift-kpis-opening-float",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-2",
-						"widgetId": "shift-kpis-drops",
-						"gridX": 10,
-						"gridY": 0,
-						"gridWidth": 2,
-						"gridHeight": 2
-					},
-					{
-						"id": "2-3",
-						"widgetId": "shift-variance",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "3",
-						"widgetId": "shift-drops",
-						"gridX": 0,
-						"gridY": 6,
-						"gridWidth": 8,
-						"gridHeight": 5
-					},
-					{
-						"id": "4",
-						"widgetId": "shift-related",
-						"gridX": 8,
-						"gridY": 6,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "5",
-						"widgetId": "shift-kpis-sales",
-						"gridX": 8,
-						"gridY": 11,
-						"gridWidth": 4,
-						"gridHeight": 2
+						"gridWidth": 12,
+						"gridHeight": 12
 					}
 				],
 				"sidebar": {
@@ -6700,10 +7294,40 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
-				}
+				},
+				"_boardNote": "Board PqKassadienst: the shift name, the status pill, the Kassalade breadcrumb and a meta line with the cashier and the hours; Approve difference as the primary button of a counted shift; the shift, its cash difference and its drops in an Overview tab beside History; the opening float, related records and a short history in the side column.",
+				"follow": false,
+				"showEditAction": false,
+				"breadcrumb": {
+					"label": "Cash drawer",
+					"route": "CashShifts"
+				},
+				"headerMeta": "{operator|user} · {floatAt|time} to {closedAt|time}",
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"open": "Open",
+						"closed": "Counted",
+						"reconciled": "Reconciled"
+					},
+					"colorMap": {
+						"open": "info",
+						"closed": "warning",
+						"reconciled": "success"
+					}
+				},
+				"sideColumn": [
+					"shift-opening",
+					"shift-related",
+					"shift-side-history"
+				]
 			}
 		},
 		{
@@ -6997,14 +7621,206 @@
 		},
 		{
 			"id": "KassakoppelingAuditList",
-			"_note": "The cash register audit log: a bespoke viewer over /api/kassakoppeling/audit with a date range, register, operator and action filter and the admin export for the tax authority. The detail is declarative (KassakoppelingAuditDetail).",
+			"_note": "The cash register audit log (PqKassaAudit): a declared index over the app's own endpoint (entitySource \"endpoint\", GET /api/kassakoppeling/audit), newest first. The lenses ask the endpoint for invalid signatures and entries not exported yet; the sidebar narrows by date, register, operator and action; a row opens beside the list in KassakoppelingAuditDetail. Amounts are stored in cents. Only administrators see the tax authority export.",
 			"route": "/cash-register-audit",
-			"type": "custom",
-			"title": "Cash register audit",
-			"component": "CashRegisterAuditListView",
+			"type": "index",
+			"title": "Cash register audit log",
+			"splitView": {
+				"enabled": true
+			},
 			"config": {
-				"register": "pipelinq",
-				"schema": "kassakoppelingAuditLog"
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/pipelinq/api/kassakoppeling/audit",
+					"rowsPath": "entries",
+					"searchParam": "search",
+					"order": "desc",
+					"searchFields": {
+						"from": {
+							"param": "from",
+							"single": true
+						},
+						"to": {
+							"param": "to",
+							"single": true
+						},
+						"registerNumber": {
+							"param": "registerNumber",
+							"single": true
+						},
+						"operatorId": {
+							"param": "operatorId",
+							"single": true
+						},
+						"action": {
+							"param": "action",
+							"single": true
+						},
+						"verified": {
+							"param": "verified",
+							"single": true
+						},
+						"exported": {
+							"param": "exported",
+							"single": true
+						}
+					}
+				},
+				"description": "Immutable, cryptographically signed record of every register action for tax authority audits · only administrators can export",
+				"searchPlaceholder": "Search by register, operator or transaction",
+				"rowRoute": "KassakoppelingAuditDetail",
+				"countText": "{shown} of {total} · newest first",
+				"emptyText": "No audit entries found for the selected filters.",
+				"showAdd": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"allowSavedViews": true,
+				"savedViewsScope": "source:cash-register-audit",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"showCount": true
+					},
+					{
+						"label": "Invalid signature",
+						"filter": {
+							"verified": "false"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Not exported",
+						"filter": {
+							"exported": "false"
+						},
+						"showCount": true
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": false,
+					"fields": {
+						"from": {
+							"type": "string",
+							"format": "date",
+							"title": "From",
+							"facetable": true,
+							"inputControl": "date"
+						},
+						"to": {
+							"type": "string",
+							"format": "date",
+							"title": "Up to and including",
+							"facetable": true,
+							"inputControl": "date"
+						},
+						"registerNumber": {
+							"type": "string",
+							"title": "Register",
+							"facetable": true,
+							"inputControl": "text"
+						},
+						"operatorId": {
+							"type": "string",
+							"title": "Operator",
+							"facetable": true,
+							"inputControl": "text"
+						},
+						"action": {
+							"type": "string",
+							"title": "Action",
+							"facetable": true,
+							"inputControl": "select",
+							"enum": [
+								"sale",
+								"void",
+								"refund",
+								"no-sale"
+							],
+							"enumLabels": {
+								"sale": "Sale",
+								"void": "Cancellation",
+								"refund": "Refund",
+								"no-sale": "No sale"
+							}
+						}
+					}
+				},
+				"columns": [
+					{
+						"key": "timestamp",
+						"label": "Time",
+						"format": "date-time",
+						"link": true
+					},
+					{
+						"key": "operatorId",
+						"label": "Operated by"
+					},
+					{
+						"key": "registerNumber",
+						"label": "Register"
+					},
+					{
+						"key": "action",
+						"label": "Action",
+						"enum": [
+							"sale",
+							"void",
+							"refund",
+							"no-sale"
+						],
+						"enumLabels": {
+							"sale": "Sale",
+							"void": "Cancellation",
+							"refund": "Refund",
+							"no-sale": "No sale"
+						}
+					},
+					{
+						"key": "amount",
+						"label": "Amount",
+						"format": {
+							"style": "currency",
+							"currency": "EUR",
+							"minorUnits": true
+						},
+						"class": "num",
+						"cellClass": "num"
+					},
+					{
+						"key": "verification",
+						"label": "Check",
+						"enum": [
+							"pending",
+							"true",
+							"false"
+						],
+						"enumLabels": {
+							"pending": "To be checked",
+							"true": "Verified",
+							"false": "Invalid signature"
+						},
+						"colorMap": {
+							"pending": "default",
+							"true": "success",
+							"false": "error"
+						}
+					}
+				],
+				"headerActions": [
+					{
+						"id": "audit-export",
+						"label": "Export for the tax authority",
+						"icon": "Download",
+						"type": "open-modal",
+						"target": "TaxAuthorityExportModal",
+						"adminOnly": true
+					}
+				]
 			}
 		},
 		{
@@ -7213,8 +8029,16 @@
 			"title": "Transactie",
 			"config": {
 				"stageField": "status",
-				"primaryActionByStage": { "draft": "tx-confirm", "parked": "tx-resume", "confirmed": "tx-settle" },
-				"quickActions": ["tx-print-receipt", "tx-email-receipt", "tx-register-refund"],
+				"primaryActionByStage": {
+					"draft": "tx-confirm",
+					"parked": "tx-resume",
+					"confirmed": "tx-settle"
+				},
+				"quickActions": [
+					"tx-print-receipt",
+					"tx-email-receipt",
+					"tx-register-refund"
+				],
 				"headerActions": [
 					{
 						"id": "tx-confirm",
@@ -7225,8 +8049,26 @@
 						"successMessage": "Transaction confirmed.",
 						"visibleWhen": {
 							"all": [
-								{ "field": "status", "op": "in", "value": ["draft", "parked"] },
-								{ "source": { "register": "pipelinq", "schema": "posTransactionLine", "filter": { "transaction": "@objectId" } }, "field": "@total", "op": "gt", "value": 0 }
+								{
+									"field": "status",
+									"op": "in",
+									"value": [
+										"draft",
+										"parked"
+									]
+								},
+								{
+									"source": {
+										"register": "pipelinq",
+										"schema": "posTransactionLine",
+										"filter": {
+											"transaction": "@objectId"
+										}
+									},
+									"field": "@total",
+									"op": "gt",
+									"value": 0
+								}
 							]
 						}
 					},
@@ -7236,7 +8078,10 @@
 						"type": "api-call",
 						"url": "/apps/pipelinq/api/pos-transactions/@objectId/resume",
 						"successMessage": "Transaction resumed.",
-						"visibleWhen": { "field": "status", "value": "parked" }
+						"visibleWhen": {
+							"field": "status",
+							"value": "parked"
+						}
 					},
 					{
 						"id": "tx-settle",
@@ -7245,7 +8090,10 @@
 						"icon": "CashRegister",
 						"url": "/apps/pipelinq/api/pos-transactions/@objectId/settle",
 						"successMessage": "Transaction settled.",
-						"visibleWhen": { "field": "status", "value": "confirmed" }
+						"visibleWhen": {
+							"field": "status",
+							"value": "confirmed"
+						}
 					},
 					{
 						"id": "tx-print-receipt",
@@ -7253,8 +8101,18 @@
 						"type": "open-modal",
 						"icon": "Printer",
 						"target": "PrintReceiptModal",
-						"props": { "transactionId": "@objectId" },
-						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled", "refunded"] }
+						"props": {
+							"transactionId": "@objectId"
+						},
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"confirmed",
+								"settled",
+								"refunded"
+							]
+						}
 					},
 					{
 						"id": "tx-email-receipt",
@@ -7262,8 +8120,18 @@
 						"type": "open-modal",
 						"icon": "EmailOutline",
 						"target": "EmailReceiptModal",
-						"props": { "transactionId": "@objectId" },
-						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled", "refunded"] }
+						"props": {
+							"transactionId": "@objectId"
+						},
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"confirmed",
+								"settled",
+								"refunded"
+							]
+						}
 					},
 					{
 						"id": "tx-register-refund",
@@ -7271,7 +8139,14 @@
 						"type": "navigate",
 						"icon": "CashRefund",
 						"target": "/pos/refunds/new/@objectId",
-						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled"] }
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"confirmed",
+								"settled"
+							]
+						}
 					},
 					{
 						"id": "tx-edit-lines",
@@ -7279,7 +8154,14 @@
 						"type": "navigate",
 						"icon": "PencilOutline",
 						"target": "/pos/@objectId/edit",
-						"visibleWhen": { "field": "status", "op": "in", "value": ["draft", "parked"] }
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"draft",
+								"parked"
+							]
+						}
 					},
 					{
 						"id": "tx-park",
@@ -7287,37 +8169,458 @@
 						"type": "api-call",
 						"url": "/apps/pipelinq/api/pos-transactions/@objectId/park",
 						"successMessage": "Transaction parked.",
-						"visibleWhen": { "field": "status", "value": "draft" }
+						"visibleWhen": {
+							"field": "status",
+							"value": "draft"
+						}
 					},
 					{
 						"id": "tx-reverse",
 						"label": "Reverse",
 						"type": "open-form",
 						"adminOnly": true,
-						"endpoint": { "url": "/apps/pipelinq/api/pos-transactions/@objectId/refund", "method": "POST" },
+						"endpoint": {
+							"url": "/apps/pipelinq/api/pos-transactions/@objectId/refund",
+							"method": "POST"
+						},
 						"formProperties": {
-							"reason": { "type": "string", "title": "Reason", "description": "This will reverse the transaction. Enter a reason for the refund.", "required": true }
+							"reason": {
+								"type": "string",
+								"title": "Reason",
+								"description": "This will reverse the transaction. Enter a reason for the refund.",
+								"required": true
+							}
 						},
 						"successMessage": "Transaction refunded.",
-						"visibleWhen": { "field": "status", "op": "in", "value": ["confirmed", "settled"] }
+						"visibleWhen": {
+							"field": "status",
+							"op": "in",
+							"value": [
+								"confirmed",
+								"settled"
+							]
+						}
 					}
 				],
 				"register": "pipelinq",
 				"schema": "posTransaction",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS transaction is a receipt/ledger record, so deliberately NO comms leaves (posTransaction declares no email/calendar linkedType). The money sits top-right beside the fields so a cashier or auditor reads it first, and the audit trail is a sidebar tab, the home for the immutable change log of a financial record.",
-				"excludeFields": ["taxBreakdown", "invoiceBreakdown"],
+				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS transaction is a receipt/ledger record, so deliberately NO comms leaves. Board look: one tab strip as the body and the money, the receipt, related records and recent history in the side column. The line-count KPI stays declared for the dashboard catalogue but is not placed; the totals card counts the lines itself.",
+				"excludeFields": [
+					"taxBreakdown",
+					"invoiceBreakdown"
+				],
 				"widgets": [
+					{
+						"id": "pos-tx-panels",
+						"type": "tabs",
+						"title": "Transaction",
+						"_note": "The board tab strip: the children stay out of `layout` because the tabs widget renders them.",
+						"content": {
+							"ariaLabel": "Transaction",
+							"tabs": [
+								{
+									"label": "Overview",
+									"widgetIds": [
+										"pos-tx-data",
+										"pos-tx-lines",
+										"pos-tx-provider",
+										"pos-tx-payment"
+									]
+								},
+								{
+									"label": "History",
+									"widgetId": "pos-tx-history",
+									"countFrom": "widget"
+								}
+							]
+						}
+					},
 					{
 						"id": "pos-tx-data",
 						"type": "data",
 						"title": "Transaction",
 						"icon": "FileDocument",
 						"content": {
-							"columns": 2,
+							"title": "Transaction",
+							"columns": 3,
+							"hideEmpty": true,
+							"include": [
+								"reference",
+								"status",
+								"cashier",
+								"terminalId",
+								"priceMode",
+								"client",
+								"confirmedAt",
+								"settledAt"
+							],
 							"overrides": {
-								"cashier": { "formatter": "userDisplayName" }
+								"reference": {
+									"label": "Identifier"
+								},
+								"status": {
+									"editable": false,
+									"enumLabels": {
+										"draft": "Draft",
+										"parked": "Parked",
+										"confirmed": "Confirmed",
+										"settled": "Settled",
+										"refunded": "Refunded"
+									}
+								},
+								"cashier": {
+									"label": "Cashier",
+									"formatter": "userDisplayName"
+								},
+								"terminalId": {
+									"label": "Till"
+								},
+								"priceMode": {
+									"label": "Price display",
+									"enumLabels": {
+										"incl": "Incl. VAT",
+										"excl": "Excl. VAT"
+									}
+								},
+								"client": {
+									"label": "Client"
+								},
+								"confirmedAt": {
+									"label": "Created",
+									"formatter": "shortDateTime"
+								},
+								"settledAt": {
+									"label": "Settled",
+									"formatter": "shortDateTime"
+								}
 							}
+						}
+					},
+					{
+						"id": "pos-tx-lines",
+						"type": "object-list",
+						"title": "Lines",
+						"icon": "FormatListBulleted",
+						"content": {
+							"register": "pipelinq",
+							"schema": "posTransactionLine",
+							"filter": {
+								"transaction": "@objectId"
+							},
+							"sort": {
+								"field": "sortOrder",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "description",
+									"label": "Description"
+								},
+								{
+									"key": "quantity",
+									"label": "Qty",
+									"align": "right"
+								},
+								{
+									"key": "unitPrice",
+									"label": "Price per unit",
+									"align": "right",
+									"format": {
+										"style": "currency",
+										"currency": "EUR"
+									}
+								},
+								{
+									"key": "discount",
+									"label": "Discount %",
+									"align": "right",
+									"format": {
+										"style": "percent"
+									}
+								},
+								{
+									"key": "taxRate",
+									"label": "VAT (%)",
+									"align": "right",
+									"format": {
+										"style": "percent"
+									}
+								},
+								{
+									"key": "lineTotal",
+									"label": "Line total",
+									"align": "right",
+									"format": {
+										"style": "currency",
+										"currency": "EUR"
+									}
+								}
+							],
+							"limit": 25,
+							"allowCreate": false,
+							"emptyText": "This transaction has no line items."
+						}
+					},
+					{
+						"id": "pos-tx-provider",
+						"type": "facts",
+						"title": "Payment",
+						"icon": "CreditCardOutline",
+						"visibleWhen": {
+							"any": [
+								{
+									"field": "paymentProvider",
+									"op": "notEmpty"
+								},
+								{
+									"field": "paymentStatus",
+									"op": "notEmpty"
+								}
+							]
+						},
+						"content": {
+							"fields": [
+								{
+									"as": "pill",
+									"key": "payment-status",
+									"path": "paymentStatus",
+									"map": {
+										"pending": "In progress",
+										"captured": "Authorized",
+										"settled": "Settled",
+										"failed": "Failed",
+										"refunded": "Reversed"
+									},
+									"variantMap": {
+										"pending": "warning",
+										"captured": "primary",
+										"settled": "success",
+										"failed": "error",
+										"refunded": "default"
+									}
+								},
+								{
+									"path": "paymentProvider",
+									"label": "Provider",
+									"map": {
+										"mollie": "Mollie",
+										"ccv": "CCV",
+										"adyen": "Adyen",
+										"stripe": "Stripe",
+										"cash": "Cash",
+										"voucher": "Gift voucher",
+										"account": "Account"
+									}
+								},
+								{
+									"path": "paymentMethod",
+									"label": "Method",
+									"map": {
+										"ideal": "iDEAL",
+										"bancontact": "Bancontact",
+										"card": "Card",
+										"creditcard": "Credit card",
+										"cash": "Cash"
+									}
+								},
+								{
+									"path": "total",
+									"label": "Amount",
+									"format": "currency"
+								},
+								{
+									"path": "paymentSessionId",
+									"label": "Session",
+									"copy": true
+								}
+							],
+							"actions": [
+								{
+									"id": "payment-complete",
+									"label": "Complete",
+									"type": "api-call",
+									"variant": "primary",
+									"url": "/apps/pipelinq/api/pos-payments/@source.id/capture",
+									"successMessage": "Payment completed.",
+									"visibleWhen": {
+										"field": "paymentStatus",
+										"value": "pending"
+									}
+								},
+								{
+									"id": "payment-retry",
+									"label": "Try again",
+									"type": "api-call",
+									"url": "/apps/pipelinq/api/pos-payments/@source.id/initiate",
+									"payload": {
+										"providerName": "@source.paymentProvider",
+										"paymentMethod": "@source.paymentMethod"
+									},
+									"successMessage": "Payment started again.",
+									"visibleWhen": {
+										"field": "paymentStatus",
+										"value": "failed"
+									}
+								},
+								{
+									"id": "payment-reverse",
+									"label": "Reverse",
+									"type": "open-form",
+									"adminOnly": true,
+									"variant": "error",
+									"endpoint": {
+										"url": "/apps/pipelinq/api/pos-payments/@source.id/refund",
+										"method": "POST"
+									},
+									"formProperties": {
+										"reason": {
+											"type": "string",
+											"title": "Reason for reversal",
+											"description": "Why is this payment being reversed?"
+										}
+									},
+									"successMessage": "Payment reversed.",
+									"visibleWhen": {
+										"all": [
+											{
+												"field": "paymentStatus",
+												"op": "in",
+												"value": [
+													"settled",
+													"captured"
+												]
+											},
+											{
+												"field": "status",
+												"op": "in",
+												"value": [
+													"confirmed",
+													"settled"
+												]
+											}
+										]
+									},
+									"icon": "Undo"
+								}
+							]
+						}
+					},
+					{
+						"id": "pos-tx-payment",
+						"type": "PosTransactionPaymentWidget",
+						"title": "Payment",
+						"icon": "CreditCardOutline",
+						"visibleWhen": {
+							"any": [
+								{
+									"field": "status",
+									"op": "in",
+									"value": [
+										"draft",
+										"parked",
+										"confirmed"
+									]
+								},
+								{
+									"field": "paymentProvider",
+									"op": "empty"
+								}
+							]
+						}
+					},
+					{
+						"id": "pos-tx-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "pos-tx-totals",
+						"type": "PosTransactionTotalsWidget",
+						"title": "Totals",
+						"icon": "Cash",
+						"content": {
+							"layout": "summary"
+						}
+					},
+					{
+						"id": "pos-tx-receipt",
+						"type": "facts",
+						"title": "Receipt",
+						"icon": "ReceiptText",
+						"_note": "The latest print of this receipt from the print log, and the receipt buttons.",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "receiptPrintLog",
+								"filter": {
+									"transaction": "@objectId",
+									"action": "print"
+								},
+								"sort": {
+									"field": "_created",
+									"dir": "desc"
+								}
+							},
+							"fields": [
+								{
+									"label": "Printed",
+									"template": "{@self.created:date} on {printerDevice}"
+								}
+							],
+							"actions": [
+								{
+									"id": "receipt-print",
+									"label": "Print receipt",
+									"icon": "Printer",
+									"type": "open-modal",
+									"target": "PrintReceiptModal",
+									"props": {
+										"transactionId": "@objectId"
+									}
+								},
+								{
+									"id": "receipt-email",
+									"label": "Email receipt",
+									"icon": "EmailOutline",
+									"type": "open-modal",
+									"target": "EmailReceiptModal",
+									"props": {
+										"transactionId": "@objectId"
+									}
+								}
+							],
+							"emptyText": "Not printed yet",
+							"link": {
+								"label": "Print log",
+								"icon": "History",
+								"sidebarTab": "audit"
+							}
+						}
+					},
+					{
+						"id": "pos-tx-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"showFiles": false,
+							"showIntegrations": false,
+							"showAddFooter": false,
+							"showTotalCount": false
+						}
+					},
+					{
+						"id": "pos-tx-side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"content": {
+							"maxDisplay": 3,
+							"excludeActions": [
+								"read"
+							]
 						}
 					},
 					{
@@ -7333,179 +8636,22 @@
 									"schema": "posTransactionLine",
 									"metric": "count",
 									"countLabel": "lines",
-									"filter": { "transaction": "@objectId" }
-								}
-							]
-						}
-					},
-					{
-						"id": "pos-tx-totals",
-						"type": "PosTransactionTotalsWidget",
-						"title": "Totals",
-						"icon": "Cash"
-					},
-					{
-						"id": "pos-tx-lines",
-						"type": "object-list",
-						"title": "Line items",
-						"icon": "FormatListBulleted",
-						"content": {
-							"register": "pipelinq",
-							"schema": "posTransactionLine",
-							"filter": { "transaction": "@objectId" },
-							"sort": { "field": "sortOrder", "dir": "asc" },
-							"columns": [
-								{ "key": "description", "label": "Description" },
-								{ "key": "quantity", "label": "Qty" },
-								{ "key": "unitPrice", "label": "Unit price" },
-								{ "key": "discount", "label": "Discount %" },
-								{ "key": "taxRate", "label": "VAT %" },
-								{ "key": "lineTotal", "label": "Line total" }
-							],
-							"limit": 25,
-							"allowCreate": false,
-							"emptyText": "This transaction has no line items."
-						}
-					},
-					{
-						"id": "pos-tx-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
-					},
-					{
-						"id": "pos-tx-provider",
-						"type": "facts",
-						"title": "Payment provider",
-						"icon": "CreditCardOutline",
-						"visibleWhen": {
-							"any": [
-								{ "field": "paymentProvider", "op": "notEmpty" },
-								{ "field": "paymentStatus", "op": "notEmpty" }
-							]
-						},
-						"content": {
-							"headerPill": {
-								"path": "paymentStatus",
-								"map": { "pending": "In progress", "captured": "Authorized", "settled": "Settled", "failed": "Failed", "refunded": "Reversed" },
-								"variantMap": { "pending": "warning", "captured": "primary", "settled": "success", "failed": "error", "refunded": "default" }
-							},
-							"fields": [
-								{
-									"path": "paymentProvider",
-									"label": "Provider",
-									"map": { "mollie": "Mollie", "ccv": "CCV", "adyen": "Adyen", "stripe": "Stripe", "cash": "Cash", "voucher": "Gift voucher", "account": "Account" }
-								},
-								{
-									"path": "paymentMethod",
-									"label": "Method",
-									"map": { "ideal": "iDEAL", "bancontact": "Bancontact", "card": "Card", "creditcard": "Credit card", "cash": "Cash" }
-								},
-								{ "path": "paymentSessionId", "label": "Session", "copy": true }
-							],
-							"actions": [
-								{
-									"id": "payment-complete",
-									"label": "Complete",
-									"type": "api-call",
-									"variant": "primary",
-									"url": "/apps/pipelinq/api/pos-payments/@source.id/capture",
-									"successMessage": "Payment completed.",
-									"visibleWhen": { "field": "paymentStatus", "value": "pending" }
-								},
-								{
-									"id": "payment-retry",
-									"label": "Try again",
-									"type": "api-call",
-									"url": "/apps/pipelinq/api/pos-payments/@source.id/initiate",
-									"payload": { "providerName": "@source.paymentProvider", "paymentMethod": "@source.paymentMethod" },
-									"successMessage": "Payment started again.",
-									"visibleWhen": { "field": "paymentStatus", "value": "failed" }
-								},
-								{
-									"id": "payment-reverse",
-									"label": "Reverse",
-									"type": "open-form",
-									"adminOnly": true,
-									"variant": "error",
-									"endpoint": { "url": "/apps/pipelinq/api/pos-payments/@source.id/refund", "method": "POST" },
-									"formProperties": {
-										"reason": { "type": "string", "title": "Reason for reversal", "description": "Why is this payment being reversed?" }
-									},
-									"successMessage": "Payment reversed.",
-									"visibleWhen": {
-										"all": [
-											{ "field": "paymentStatus", "op": "in", "value": ["settled", "captured"] },
-											{ "field": "status", "op": "in", "value": ["confirmed", "settled"] }
-										]
+									"filter": {
+										"transaction": "@objectId"
 									}
 								}
 							]
 						}
-					},
-					{
-						"id": "pos-tx-payment",
-						"type": "PosTransactionPaymentWidget",
-						"title": "Payment",
-						"icon": "CreditCardOutline"
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "pos-tx-data",
+						"widgetId": "pos-tx-panels",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 8,
-						"gridHeight": 7
-					},
-					{
-						"id": "2",
-						"widgetId": "pos-tx-kpis-line-items",
-						"gridX": 8,
-						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "3",
-						"widgetId": "pos-tx-totals",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 8
-					},
-					{
-						"id": "4",
-						"widgetId": "pos-tx-lines",
-						"gridX": 0,
-						"gridY": 7,
-						"gridWidth": 8,
-						"gridHeight": 5
-					},
-					{
-						"id": "5",
-						"widgetId": "pos-tx-related",
-						"gridX": 8,
-						"gridY": 10,
-						"gridWidth": 4,
-						"gridHeight": 5
-					},
-					{
-						"id": "6",
-						"widgetId": "pos-tx-provider",
-						"gridX": 0,
-						"gridY": 12,
-						"gridWidth": 8,
-						"gridHeight": 3
-					},
-					{
-						"id": "7",
-						"widgetId": "pos-tx-payment",
-						"gridX": 0,
-						"gridY": 15,
 						"gridWidth": 12,
-						"gridHeight": 5
+						"gridHeight": 12
 					}
 				],
 				"sidebar": {
@@ -7516,10 +8662,49 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
-				}
+				},
+				"_boardNote": "Board PqKassabon: the reference as the title, the status pill, the Transactions breadcrumb and a meta line with the amount, the client and the moment; the transaction, its lines and the payment in an Overview tab with History beside it; totals, the receipt, related records and a short history in the side column.",
+				"titleField": "reference",
+				"follow": false,
+				"showEditAction": false,
+				"extend": [
+					"client"
+				],
+				"breadcrumb": {
+					"label": "Transactions",
+					"route": "PosTransactions"
+				},
+				"headerMeta": "{total|currency} · {client.name} · {settledAt|longdate} {settledAt|time}",
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"draft": "Draft",
+						"parked": "Parked",
+						"confirmed": "Confirmed",
+						"settled": "Settled",
+						"refunded": "Refunded"
+					},
+					"colorMap": {
+						"draft": "default",
+						"parked": "warning",
+						"confirmed": "info",
+						"settled": "success",
+						"refunded": "default"
+					}
+				},
+				"sideColumn": [
+					"pos-tx-totals",
+					"pos-tx-receipt",
+					"pos-tx-related",
+					"pos-tx-side-history"
+				]
 			}
 		},
 		{
@@ -9016,7 +10201,15 @@
 					],
 					"description": "description",
 					"chips": [
-						{ "field": "stages", "each": "name" }
+						{
+							"field": "stages",
+							"each": "name",
+							"tones": [
+								{ "when": { "field": "isWon", "op": "eq", "value": true }, "variant": "success" },
+								{ "when": { "field": "isClosed", "op": "eq", "value": true }, "variant": "error" },
+								{ "when": { "field": "isDefault", "op": "eq", "value": true }, "variant": "primary" }
+							]
+						}
 					]
 				},
 				"sidebar": {
@@ -9028,14 +10221,46 @@
 		{
 			"id": "Store",
 			"route": "/store",
-			"type": "custom",
+			"type": "store",
 			"title": "Store",
-			"component": "StoreGallery",
 			"config": {
+				"app": "pipelinq",
 				"storeRegistry": true,
+				"description": "Templates and connectors for Pipelinq, {count} in the registry",
+				"kinds": [
+					"pipeline",
+					"queue-routing",
+					"catalogue",
+					"pos-setup",
+					"loyalty-programme",
+					"connector"
+				],
+				"kindLenses": [
+					{
+						"kind": "connector",
+						"label": "Connectors"
+					}
+				],
+				"builtIn": [
+					{
+						"slug": "b2b-sales-pipeline",
+						"title": "B2B sales pipeline",
+						"description": "Qualification through to close, with the stages a longer deal moves along."
+					},
+					{
+						"slug": "service-desk-routing",
+						"title": "Service desk routing",
+						"description": "Queues and skills that put an incoming request in front of someone who can answer it."
+					},
+					{
+						"slug": "retail-pos-setup",
+						"title": "Retail POS setup",
+						"description": "Tender types, refund reasons, till roles and a receipt template."
+					}
+				],
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			},
-			"_note": "ADR-080: the store plane. Discovery belongs to OpenRegister, so this page reads /api/store/items, a thin action over AppHost's GenericStoreService, and the SSRF guard, the redirect refusal and the token stay in the engine. A custom component rather than type:index because store items are REMOTE objects: the object-backed index renderer resolves a local register plus schema and cannot address them. With no registry configured the engine answers not_configured WITHOUT a network call and the page renders pipelinq's built-in templates, which is Decision 4 and the only reason this surface may carry the word Store at all. Install is pipelinq's own and admin-guarded (Decision 3), and it writes commercial CONFIGURATION only (pipelines, skills, catalogues, POS and loyalty setup); the record schemas are refused. PLACEMENT: footer, order 180, which is BETWEEN Documentation (160) and Reports (200). ADR-114 Decision 1 fixes the RELATIVE order Documentation > Store > Reports > Features & roadmap, not the numbers. dossiq uses 92 because its Documentation sits at 90; copying that number here put Store BEFORE Documentation, because pipelinq runs its footer at 160/200/230. gate-107 caught it. openbuild, hermiq and integriq put Store in the main section instead; ADR-080 records no placement decision, so one of the two conventions is wrong and the ADR needs an amendment either way. Ported from dossiq's Store and retargeted from case configuration to commercial configuration."
+			"_note": "ADR-080: the store plane, board PqStore. Discovery belongs to OpenRegister, so this page reads /api/store/items, a thin action over AppHost's GenericStoreService, and the SSRF guard, the redirect refusal and the token stay in the engine. The library's CnStorePage (type store) draws it; pipelinq's StoreController adds what this instance installed (installed, installedVersion, updateAvailable, openUrl) and when the registry last answered (checkedAt), which the board-look side column and lens chips read. With no registry configured the engine answers not_configured WITHOUT a network call and the page renders pipelinq's built-in templates, which is Decision 4 and the only reason this surface may carry the word Store at all. Install is pipelinq's own and admin-guarded (Decision 3), and it writes commercial CONFIGURATION only (pipelines, skills, catalogues, POS and loyalty setup); the record schemas are refused. PLACEMENT: footer, order 180, which is BETWEEN Documentation (160) and Reports (200). ADR-114 Decision 1 fixes the RELATIVE order Documentation > Store > Reports > Features & roadmap, not the numbers. dossiq uses 92 because its Documentation sits at 90; copying that number here put Store BEFORE Documentation, because pipelinq runs its footer at 160/200/230. gate-107 caught it. openbuild, hermiq and integriq put Store in the main section instead; ADR-080 records no placement decision, so one of the two conventions is wrong and the ADR needs an amendment either way. Ported from dossiq's Store and retargeted from case configuration to commercial configuration."
 		},
 		{
 			"id": "FeaturesRoadmap",

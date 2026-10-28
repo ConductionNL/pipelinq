@@ -73,3 +73,16 @@ export async function writeBack(objectType, objectId, notify = showError) {
 	}
 	return uid
 }
+
+/**
+ * A record's address book card: whether it exists, its address book and its
+ * last change.
+ *
+ * @param {string} uid The record's `contactsUid`.
+ * @return {Promise<{linked: boolean, addressBook: string, updatedAt: string|null}>} The status.
+ * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
+ */
+export async function cardStatus(uid) {
+	const { data } = await axios.get(base('/api/contacts-sync/status'), { params: { uid } })
+	return data
+}

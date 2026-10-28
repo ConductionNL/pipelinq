@@ -46,12 +46,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use DateTimeImmutable;
 use OCA\OpenRegister\AppHost\Service\GenericStoreService;
 use OCA\OpenRegister\AppHost\Service\StoreDescriptor;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\RegisterResolverService;
 use OCA\Pipelinq\Service\Settings\SchemaSlugMap;
+use OCA\Pipelinq\Service\Store\StoreInstallLedger;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -135,6 +137,7 @@ class StoreController extends Controller {
 	 * @param GenericStoreService $storeService Engine-owned store discovery client.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 * @param RegisterResolverService $registerResolver Resolves pipelinq's register id.
+	 * @param StoreInstallLedger $installLedger What this instance installed, and the last registry check.
 	 *
 	 * @return void
 	 */
@@ -146,6 +149,7 @@ class StoreController extends Controller {
 		private readonly GenericStoreService $storeService,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly RegisterResolverService $registerResolver,
+		private readonly StoreInstallLedger $installLedger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -170,6 +174,7 @@ class StoreController extends Controller {
 				'category' => 'category',
 				'version' => 'version',
 				'publisher' => 'publisher',
+				'icon' => 'icon',
 			]
 		);
 	}//end descriptor()
@@ -228,8 +233,16 @@ class StoreController extends Controller {
 			);
 		}
 
+		if ($result['outcome'] === GenericStoreService::OUTCOME_OK) {
+			$this->installLedger->markChecked(when: new DateTimeImmutable());
+		}
+
 		return new JSONResponse(
-			data: ['outcome' => $result['outcome'], 'cards' => $result['cards']],
+			data: [
+				'outcome'   => $result['outcome'],
+				'cards'     => $this->installLedger->annotate(cards: $result['cards']),
+				'checkedAt' => $this->installLedger->checkedAt(),
+			],
 			statusCode: Http::STATUS_OK
 		);
 	}//end search()
@@ -274,10 +287,12 @@ class StoreController extends Controller {
 			);
 		}
 
-		return new JSONResponse(
-			data: $this->installComponents(components: $this->components(item: $item)),
-			statusCode: Http::STATUS_OK
-		);
+		$report = $this->installComponents(components: $this->components(item: $item));
+		if ($report['success'] === true) {
+			$this->installLedger->record(slug: $slug, version: (string) ($item['version'] ?? ''));
+		}
+
+		return new JSONResponse(data: $report, statusCode: Http::STATUS_OK);
 	}//end install()
 
 	/**

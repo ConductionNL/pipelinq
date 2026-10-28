@@ -477,6 +477,30 @@ class SemanticHandoffControllerTest extends TestCase {
 	}//end testAnExpiringContractIsSentAndRecordsWhoSentIt()
 
 	/**
+	 * Every send is kept in the contract's invoice history, so a second send
+	 * adds to it and this year's invoiced figure counts both.
+	 *
+	 * @return void
+	 */
+	public function testEachSendIsKeptInTheInvoiceHistory(): void {
+		$this->signIn();
+		$this->objectService->store['c-1'] = [
+			'uuid' => 'c-1', 'status' => 'active', 'ownerId' => 'agent-1', 'valuePerInterval' => 3000,
+			'invoiceHistory' => [['reference' => 'inv-1', 'sentAt' => '2026-01-02T09:00:00+00:00', 'sentBy' => 'agent-1', 'amount' => 3000]],
+		];
+		$this->handoffService->method('hasImplementer')->willReturn(true);
+		$this->handoffService->method('handoff')->willReturn(['ok' => true, 'targetUuid' => 'inv-2', 'correlationId' => 'corr-4', 'reason' => '']);
+
+		$this->controller->sendContractToInvoicing(id: 'c-1');
+
+		$history = $this->objectService->store['c-1']['invoiceHistory'];
+		$this->assertCount(expectedCount: 2, haystack: $history);
+		$this->assertSame(expected: 'inv-2', actual: $history[1]['reference']);
+		$this->assertSame(expected: 'agent-1', actual: $history[1]['sentBy']);
+		$this->assertSame(expected: 3000.0, actual: $history[1]['amount']);
+	}//end testEachSendIsKeptInTheInvoiceHistory()
+
+	/**
 	 * The availability probe offers sending on an expiring contract too.
 	 *
 	 * @return void

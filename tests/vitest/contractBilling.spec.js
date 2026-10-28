@@ -40,8 +40,9 @@ const config = findPage(contracts).config
 const widget = (id) => config.widgets.find((w) => w.id === id)
 
 describe('the contract page\'s billing', () => {
-	it('keeps the billing fields in their own card', () => {
-		expect(widget('contract-billing').content.include).toEqual(['billingInterval', 'valuePerInterval', 'value', 'currency'])
+	it('draws the billing fields, the invoice reference and the lines as one Facturering card', () => {
+		expect(widget('contract-billing').content.sections.map((s) => s.widgetId)).toEqual(['contract-billing-fields', 'contract-invoice', 'contract-lines'])
+		expect(widget('contract-billing-fields').content.include).toEqual(['billingInterval', 'valuePerInterval', 'value', 'currency'])
 	})
 
 	it('shows the invoice reference with a copy button, and when and by whom it went', () => {
@@ -52,19 +53,31 @@ describe('the contract page\'s billing', () => {
 
 	it('lists the line items as a table from the contract\'s own rows', () => {
 		const lines = widget('contract-lines').content
-		expect(lines.objectRows).toEqual({ path: 'lineItems' })
+		expect(lines.objectRows.path).toBe('lineItems')
 		expect(lines.presentation).toBe('table')
 		expect(lines.columns.map((column) => column.label)).toEqual(['Product', 'Description', 'Quantity', 'Unit value'])
 	})
 
-	it('places the three in the Overview tab after the terms', () => {
+	it('places the billing card in the Overview tab after the terms', () => {
 		const overview = widget('contract-panels').content.tabs[0].widgetIds
-		expect(overview.slice(0, 4)).toEqual(['contract-terms', 'contract-billing', 'contract-invoice', 'contract-lines'])
+		expect(overview.slice(0, 2)).toEqual(['contract-terms', 'contract-billing'])
 	})
 
 	it('records when and by whom a contract went to invoicing', () => {
 		const props = fragment.components.schemas.salesContract.properties
 		expect(props.invoicedAt.format).toBe('date-time')
 		expect(props.invoicedBy.format).toBe('user')
+	})
+
+	it('reads the three tiles from the contract\'s figures, as the board captions them', () => {
+		const url = '/apps/pipelinq/api/contracts/@objectId/figures'
+		expect(widget('contract-kpi-recurring').content).toMatchObject({ endpointSource: { url }, valueField: 'monthlyValue', caption: 'per month, from {annualValue|currency} a year' })
+		expect(widget('contract-kpi-days').content).toMatchObject({ endpointSource: { url }, valueField: 'daysToEnd', caption: 'notice date {noticeDate|date}' })
+		expect(widget('contract-kpi-invoiced').content).toMatchObject({ endpointSource: { url }, valueField: 'invoicedThisYear', caption: '{invoicesSent} of {invoicesDue} invoices sent' })
+	})
+
+	it('keeps every send to invoicing', () => {
+		const props = fragment.components.schemas.salesContract.properties
+		expect(Object.keys(props.invoiceHistory.items.properties)).toEqual(['reference', 'sentAt', 'sentBy', 'amount'])
 	})
 })

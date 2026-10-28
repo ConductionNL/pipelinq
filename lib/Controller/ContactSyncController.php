@@ -66,6 +66,35 @@ class ContactSyncController extends Controller {
 	}//end __construct()
 
 	/**
+	 * A record's address book card: linked or not, its address book and when
+	 * it last changed. Query param `uid`, the record's `contactsUid`.
+	 *
+	 * @return JSONResponse The card's status.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
+	 */
+	public function status(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
+
+		$uid = trim((string)$this->request->getParam('uid', ''));
+		try {
+			return new JSONResponse($this->contactSyncService->cardStatus(uid: $uid));
+		} catch (\Exception $e) {
+			$this->logger->error('ContactSyncController::status failed', ['exception' => $e]);
+			return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
+		}
+	}//end status()
+
+	/**
 	 * Search Nextcloud addressbooks for contacts.
 	 *
 	 * @return JSONResponse The search results.

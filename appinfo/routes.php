@@ -38,6 +38,7 @@ return [
 
         // Contacts sync (camelCase slug matches ContactSyncController class name)
         ['name' => 'contactSync#search', 'url' => '/api/contacts-sync/search', 'verb' => 'GET'],
+        ['name' => 'contactSync#status', 'url' => '/api/contacts-sync/status', 'verb' => 'GET'],
         ['name' => 'contactSync#import', 'url' => '/api/contacts-sync/import', 'verb' => 'POST'],
         ['name' => 'contactSync#writeBack', 'url' => '/api/contacts-sync/write-back', 'verb' => 'POST'],
         // The contacts section of the user settings (contacts-sync-settings).
@@ -125,10 +126,13 @@ return [
         ['name' => 'customer360#summary', 'url' => '/api/customer-360/summary', 'verb' => 'GET'],
         // The client's cases from dossiq's case leaf, by the client's master entity (PqKlant / PqOrganisatie Zaken).
         ['name' => 'clientCase#index', 'url' => '/api/clients/{id}/cases', 'verb' => 'GET'],
+        ['name' => 'clientBusiness#index', 'url' => '/api/clients/{id}/business', 'verb' => 'GET'],
         // Letters from a filinq template (work-letter-from-filinq-template).
         // An event's reminder to everyone with a confirmed place (event-reminder-and-check-in).
         ['name' => 'eventReminder#send', 'url' => '/api/campaign-events/{id}/reminder', 'verb' => 'POST'],
         ['name' => 'letter#templates', 'url' => '/api/letters/templates', 'verb' => 'GET'],
+        ['name' => 'record_document#template', 'url' => '/api/records/{schema}/document-template', 'verb' => 'GET'],
+        ['name' => 'record_document#document', 'url' => '/api/records/{schema}/{id}/document', 'verb' => 'GET'],
         ['name' => 'letter#create', 'url' => '/api/clients/{id}/letters', 'verb' => 'POST'],
         ['name' => 'letter#preview', 'url' => '/api/clients/{id}/letters/preview', 'verb' => 'POST'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
@@ -490,6 +494,7 @@ return [
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
         ['name' => 'loyalty#getAccountHistory',  'url' => '/api/loyalty/accounts/{accountId}/history',  'verb' => 'GET'],
         ['name' => 'loyalty#getRedemptionOptions',    'url' => '/api/loyalty/redemption/options/{programmeId}/{accountId}', 'verb' => 'GET'],
+        ['name' => 'loyaltyPayment#pay',               'url' => '/api/loyalty/accounts/{accountId}/pay',                   'verb' => 'POST'],
         ['name' => 'loyalty#initiateRedemption',      'url' => '/api/loyalty/redemption/initiate/{accountId}/{optionId}',   'verb' => 'POST'],
         ['name' => 'loyalty#lookupRedemptionCode',    'url' => '/api/loyalty/redemption/{code}/validate',                   'verb' => 'POST'],
         ['name' => 'loyalty#useRedemptionCode',       'url' => '/api/loyalty/redemption/{code}/use',                        'verb' => 'POST'],
@@ -619,6 +624,7 @@ return [
         ['name' => 'segment#preview',       'url' => '/api/segments/preview',          'verb' => 'POST'],
         ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
         ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
+        ['name' => 'segment#compliance',    'url' => '/api/segments/{id}/compliance',  'verb' => 'GET'],
         ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
         ['name' => 'segment#update',        'url' => '/api/segments/{id}',             'verb' => 'PATCH'],
 
@@ -791,6 +797,7 @@ return [
         // reads go through OpenRegister directly via useObjectStore (ADR-022).
         ['name' => 'contract#create',         'url' => '/api/contracts', 'verb' => 'POST'],
         ['name' => 'contract#transition',     'url' => '/api/contracts/{id}/transition', 'verb' => 'POST'],
+        ['name' => 'contract#figures',        'url' => '/api/contracts/{id}/figures', 'verb' => 'GET'],
         ['name' => 'contract#summary',        'url' => '/api/contracts/metrics/summary', 'verb' => 'GET'],
         ['name' => 'contract#renewalMetrics', 'url' => '/api/contracts/metrics/renewal', 'verb' => 'GET'],
 

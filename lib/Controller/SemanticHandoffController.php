@@ -413,9 +413,23 @@ class SemanticHandoffController extends Controller {
 			);
 		}
 
+		$sentAt = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 		$contract['invoiceReference'] = (string)$result['targetUuid'];
-		$contract['invoicedAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+		$contract['invoicedAt'] = $sentAt;
 		$contract['invoicedBy'] = $user->getUID();
+		// Every send is kept, so this year's invoicing can be read back.
+		$history = $contract['invoiceHistory'] ?? [];
+		if (is_array($history) === false) {
+			$history = [];
+		}
+
+		$history[] = [
+			'reference' => (string)$result['targetUuid'],
+			'sentAt' => $sentAt,
+			'sentBy' => $user->getUID(),
+			'amount' => (float)($contract['valuePerInterval'] ?? $contract['value'] ?? 0),
+		];
+		$contract['invoiceHistory'] = array_values($history);
 		$this->saveObject(
 			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
 			id: $id,

@@ -19,5 +19,7 @@ addresses.
 - `GET /api/mailing-lists/{id}/subscriptions` names each row's contact (contact person, then client), so the row reads as
   the name above the address. A public signup with no contact keeps its address alone.
 
-Not in this change: "Aanmeldingen beheren" (the board's second header button) needs a list-side management flow that
-pipelinq does not have; the column sort and filter buttons; the header's "3 bevestigde abonnees · aangemaakt door".
+- "Manage sign-ups" (Aanmeldingen beheren): send the list's own confirmation link, or take a known member off the list.
+- The Subscribers table sorts and filters on every column.
+- The header reads "{n} bevestigde abonnees · aangemaakt door {who} op {date}" (headerMetaCounts over confirmed
+  subscriptions).

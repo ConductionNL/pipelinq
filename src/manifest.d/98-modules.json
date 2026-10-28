@@ -118,7 +118,7 @@
 								"route": "ConnectionAudit"
 							},
 							{
-								"label": "Search queries",
+								"label": "Search insight",
 								"route": "SearchQueries"
 							}
 						],

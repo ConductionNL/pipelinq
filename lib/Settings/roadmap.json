@@ -1,0 +1,372 @@
+{
+  "_note": "The curated Features & roadmap list (board PqRoadmap). The page reads this file, not the raw spec list: a spec says how a capability is built, this says what a user gets. Each feature names its category, its status (available, beta, planned) and, when one exists, the openspec spec it is built from (openspec/specs/<spec>/spec.md). Dutch texts are the board's; bump version when the list changes.",
+  "version": "1.0.0",
+  "categories": {
+    "core-crm": "Core CRM",
+    "customer-contact": "Customer contact and government",
+    "insight": "Analysis and insight",
+    "automation": "Automation and organisation",
+    "infrastructure": "Infrastructure"
+  },
+  "features": [
+    {
+      "slug": "client-management",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Client management",
+      "title_nl": "Klantbeheer",
+      "summary": "People and organisations with their contact persons, kept in sync with Nextcloud Contacts.",
+      "summary_nl": "Personen en organisaties met hun contactpersonen, gesynchroniseerd met Nextcloud Contacten.",
+      "spec": "client-management"
+    },
+    {
+      "slug": "lead-management",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Lead management",
+      "title_nl": "Leadbeheer",
+      "summary": "Sales opportunities that move through stages you set up.",
+      "summary_nl": "Verkoopkansen die door instelbare fases gaan.",
+      "spec": "lead-management"
+    },
+    {
+      "slug": "request-management",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Request management",
+      "title_nl": "Verzoekbeheer",
+      "summary": "Questions from residents, handled before they become a case.",
+      "summary_nl": "Vragen van inwoners, afgehandeld voordat ze een zaak worden.",
+      "spec": "request-management"
+    },
+    {
+      "slug": "pipeline",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Pipeline and kanban",
+      "title_nl": "Pijplijn en kanban",
+      "summary": "Kanban boards with your own stages for leads and requests.",
+      "summary_nl": "Kanbanborden met je eigen fases voor leads en verzoeken.",
+      "spec": "pipeline"
+    },
+    {
+      "slug": "dashboard",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Dashboard",
+      "title_nl": "Dashboard",
+      "summary": "KPI cards, charts, recent activity and quick actions.",
+      "summary_nl": "KPI-kaarten, grafieken, recente activiteit en snelle acties.",
+      "spec": "dashboard"
+    },
+    {
+      "slug": "action-widgets",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Action widgets",
+      "title_nl": "Actiewidgets",
+      "summary": "Start a request, lead or client straight from the Nextcloud dashboard.",
+      "summary_nl": "Start een verzoek, lead of klant direct vanuit het Nextcloud-dashboard."
+    },
+    {
+      "slug": "my-work",
+      "category": "core-crm",
+      "status": "available",
+      "title": "My work",
+      "title_nl": "Mijn werk",
+      "summary": "One personal queue with everything assigned to you.",
+      "summary_nl": "Eén persoonlijke wachtrij met alles wat aan jou is toegewezen.",
+      "spec": "my-work"
+    },
+    {
+      "slug": "contacts-sync",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Contacts sync",
+      "title_nl": "Synchronisatie met Contacten",
+      "summary": "Two-way sync with Nextcloud Contacts.",
+      "summary_nl": "Synchronisatie in twee richtingen met Nextcloud Contacten.",
+      "spec": "contacts-sync"
+    },
+    {
+      "slug": "entity-notes",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Notes on records",
+      "title_nl": "Notities bij records",
+      "summary": "Internal notes and replies on every record in the CRM.",
+      "summary_nl": "Interne notities en reacties bij elk record in het CRM.",
+      "spec": "entity-notes"
+    },
+    {
+      "slug": "notifications-activity",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Notifications and activity",
+      "title_nl": "Meldingen en activiteit",
+      "summary": "Activity and push notifications when a record changes.",
+      "summary_nl": "Activiteit en pushmeldingen als een record verandert.",
+      "spec": "notifications-activity"
+    },
+    {
+      "slug": "activity-timeline",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Activity timeline",
+      "title_nl": "Tijdlijn van activiteit",
+      "summary": "A timeline of everything that happened, on every detail page.",
+      "summary_nl": "Een tijdlijn van alles wat er gebeurde, op elke detailpagina.",
+      "spec": "activity-timeline"
+    },
+    {
+      "slug": "product-service-catalog",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Product and service catalogue",
+      "title_nl": "Catalogus van producten en diensten",
+      "summary": "Products and services with prices, ready to link to leads.",
+      "summary_nl": "Producten en diensten met prijzen, klaar om aan leads te koppelen.",
+      "spec": "product-service-catalog"
+    },
+    {
+      "slug": "lead-product-link",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Products on a lead",
+      "title_nl": "Producten op een lead",
+      "summary": "Lines with quantity and value on a lead.",
+      "summary_nl": "Regels met aantal en waarde op een lead.",
+      "spec": "lead-product-link"
+    },
+    {
+      "slug": "prospect-discovery",
+      "category": "core-crm",
+      "status": "available",
+      "title": "Prospect discovery",
+      "title_nl": "Prospects vinden",
+      "summary": "Find prospects in Chamber of Commerce (KVK) data that fit your ideal client profile.",
+      "summary_nl": "Vind prospects in KVK-gegevens die bij je ideale klantprofiel passen.",
+      "spec": "prospect-discovery"
+    },
+    {
+      "slug": "omnichannel-registratie",
+      "category": "customer-contact",
+      "status": "beta",
+      "title": "Registration on every channel",
+      "title_nl": "Registratie via elk kanaal",
+      "summary": "Log every contact with its channel: phone, email, desk or chat.",
+      "summary_nl": "Leg elk contact vast met het kanaal: telefoon, e-mail, balie of chat.",
+      "spec": "omnichannel-registratie"
+    },
+    {
+      "slug": "contactmomenten",
+      "category": "customer-contact",
+      "status": "planned",
+      "title": "Contact moments",
+      "title_nl": "Contactmomenten",
+      "summary": "Log every contact with a resident and keep the history.",
+      "summary_nl": "Leg elk contact met een inwoner vast en bewaar de geschiedenis.",
+      "spec": "contactmomenten"
+    },
+    {
+      "slug": "contactmomenten-rapportage",
+      "category": "customer-contact",
+      "status": "planned",
+      "title": "Contact moment reports",
+      "title_nl": "Rapportages over contactmomenten",
+      "summary": "Management dashboards and KPIs on contact moments.",
+      "summary_nl": "Managementdashboards en KPI's over contactmomenten.",
+      "spec": "contactmomenten-rapportage"
+    },
+    {
+      "slug": "callback-management",
+      "category": "customer-contact",
+      "status": "planned",
+      "title": "Callbacks and tasks",
+      "title_nl": "Terugbellen en taken",
+      "summary": "Callback requests and follow-up tasks with a deadline.",
+      "summary_nl": "Terugbelverzoeken en vervolgtaken met een termijn.",
+      "spec": "callback-management"
+    },
+    {
+      "slug": "skill-routing",
+      "category": "customer-contact",
+      "status": "planned",
+      "title": "Skill-based routing",
+      "title_nl": "Routering op vaardigheid",
+      "summary": "Send a ticket to the best-fitting agent with room in their queue.",
+      "summary_nl": "Stuur een ticket naar de best passende medewerker met ruimte in de wachtrij.",
+      "spec": "skill-routing"
+    },
+    {
+      "slug": "klachtenregistratie",
+      "category": "customer-contact",
+      "status": "planned",
+      "title": "Complaint registration",
+      "title_nl": "Klachtregistratie",
+      "summary": "Register, sort and follow complaints with deadlines and an audit trail.",
+      "summary_nl": "Registreer, sorteer en volg klachten met termijnen en een audittrail.",
+      "spec": "klachtenregistratie"
+    },
+    {
+      "slug": "kennisbank",
+      "category": "customer-contact",
+      "status": "planned",
+      "title": "Knowledge base",
+      "title_nl": "Kennisbank",
+      "summary": "Searchable articles for customer contact staff.",
+      "summary_nl": "Doorzoekbare artikelen voor medewerkers klantcontact.",
+      "spec": "kennisbank"
+    },
+    {
+      "slug": "customer-360",
+      "category": "customer-contact",
+      "status": "planned",
+      "title": "Client view",
+      "title_nl": "Klantbeeld",
+      "summary": "One profile with everything about a resident or business.",
+      "summary_nl": "Eén profiel met alles over een inwoner of bedrijf.",
+      "spec": "customer-360"
+    },
+    {
+      "slug": "kcc-werkplek",
+      "category": "customer-contact",
+      "status": "planned",
+      "title": "Customer contact workplace",
+      "title_nl": "Werkplek klantcontact",
+      "summary": "One workplace for the municipality's customer contact centre.",
+      "summary_nl": "Eén werkplek voor het klantcontactcentrum van de gemeente.",
+      "spec": "kcc-werkplek"
+    },
+    {
+      "slug": "contact-relationship-mapping",
+      "category": "insight",
+      "status": "beta",
+      "title": "Relationships between contacts",
+      "title_nl": "Relaties tussen contacten",
+      "summary": "Relationships between contacts and organisations, beside the link to the client.",
+      "summary_nl": "Relaties tussen contacten en organisaties, naast de koppeling met de klant.",
+      "spec": "contact-relationship-mapping"
+    },
+    {
+      "slug": "pipeline-insights",
+      "category": "insight",
+      "status": "planned",
+      "title": "Pipeline insight",
+      "title_nl": "Inzicht in de pijplijn",
+      "summary": "Revenue per stage, stale leads and how long leads wait.",
+      "summary_nl": "Omzet per fase, verouderde leads en hoe lang leads wachten.",
+      "spec": "pipeline-insights"
+    },
+    {
+      "slug": "customer-satisfaction",
+      "category": "insight",
+      "status": "planned",
+      "title": "Customer satisfaction",
+      "title_nl": "Klanttevredenheid",
+      "summary": "Surveys, NPS and satisfaction analysis.",
+      "summary_nl": "Enquêtes, NPS en analyse van tevredenheid.",
+      "spec": "customer-satisfaction"
+    },
+    {
+      "slug": "crm-mcp-tool-surface",
+      "category": "automation",
+      "status": "available",
+      "title": "CRM tools for the assistant",
+      "title_nl": "CRM-hulpmiddelen voor de assistent",
+      "summary": "Clients, leads, forecast and contact moments as tools for the Nextcloud Assistant.",
+      "summary_nl": "Klanten, leads, prognose en contactmomenten als hulpmiddelen voor de Nextcloud Assistent.",
+      "spec": "crm-mcp-tool-surface"
+    },
+    {
+      "slug": "marketing",
+      "category": "automation",
+      "status": "beta",
+      "title": "Marketing",
+      "title_nl": "Marketing",
+      "summary": "Segments, templates and email blasts now, lists and campaigns in later phases.",
+      "summary_nl": "Segmenten, sjablonen en e-mailblasts nu, lijsten en campagnes in latere fases.",
+      "spec": "marketing-blast"
+    },
+    {
+      "slug": "crm-workflow-automation",
+      "category": "automation",
+      "status": "planned",
+      "title": "Workflow automation",
+      "title_nl": "Automatisering van werkstromen",
+      "summary": "n8n rules that run when something changes in the CRM.",
+      "summary_nl": "n8n-regels die draaien als er iets verandert in het CRM.",
+      "spec": "crm-workflow-automation"
+    },
+    {
+      "slug": "email-calendar-sync",
+      "category": "automation",
+      "status": "planned",
+      "title": "Email and calendar sync",
+      "title_nl": "E-mail- en agendasynchronisatie",
+      "summary": "Link emails and calendar appointments to records in the CRM.",
+      "summary_nl": "Koppel e-mails en agenda-afspraken aan records in het CRM.",
+      "spec": "email-calendar-sync"
+    },
+    {
+      "slug": "public-intake-forms",
+      "category": "automation",
+      "status": "planned",
+      "title": "Public intake forms",
+      "title_nl": "Openbare intakeformulieren",
+      "summary": "Forms residents fill in themselves, straight into Pipelinq.",
+      "summary_nl": "Formulieren die inwoners zelf invullen, direct in Pipelinq.",
+      "spec": "public-intake-forms"
+    },
+    {
+      "slug": "product-catalog-quoting",
+      "category": "automation",
+      "status": "planned",
+      "title": "Quotes from the catalogue",
+      "title_nl": "Offertes uit de catalogus",
+      "summary": "Quotes built from lines in the catalogue.",
+      "summary_nl": "Offertes opgebouwd uit regels uit de catalogus.",
+      "spec": "product-catalog-quoting"
+    },
+    {
+      "slug": "openregister-integration",
+      "category": "infrastructure",
+      "status": "available",
+      "title": "OpenRegister integration",
+      "title_nl": "Koppeling met OpenRegister",
+      "summary": "Every record is stored as an object in OpenRegister.",
+      "summary_nl": "Elk record wordt als object in OpenRegister opgeslagen.",
+      "spec": "openregister-integration"
+    },
+    {
+      "slug": "admin-settings",
+      "category": "infrastructure",
+      "status": "available",
+      "title": "Admin settings",
+      "title_nl": "Beheerinstellingen",
+      "summary": "Pipelines, stages, channels and prospect settings for administrators.",
+      "summary_nl": "Pipelines, fases, kanalen en prospectinstellingen voor beheerders.",
+      "spec": "admin-settings"
+    },
+    {
+      "slug": "register-i18n",
+      "category": "infrastructure",
+      "status": "available",
+      "title": "Register translations",
+      "title_nl": "Vertalingen van registers",
+      "summary": "Register and schema names in Dutch and English.",
+      "summary_nl": "Namen van registers en schema's in het Nederlands en Engels.",
+      "spec": "register-i18n"
+    },
+    {
+      "slug": "prometheus-metrics",
+      "category": "infrastructure",
+      "status": "available",
+      "title": "Prometheus metrics",
+      "title_nl": "Prometheus-metrics",
+      "summary": "A metrics endpoint for monitoring.",
+      "summary_nl": "Een metrics-adres voor monitoring.",
+      "spec": "prometheus-metrics"
+    }
+  ]
+}

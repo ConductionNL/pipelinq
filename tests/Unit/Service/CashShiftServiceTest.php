@@ -37,6 +37,7 @@ use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\CashShiftService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
+use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -747,4 +748,31 @@ class CashShiftServiceTest extends TestCase {
 		$diff = array_values($diffs)[0];
 		$this->assertSame(590.00, $diff['actualAmount']);
 	}//end testRecordCountUpdatesPendingDiffInPlace()
+
+	/**
+	 * pendingDiffId names the shift's pending difference, so a header button
+	 * can approve it without knowing the diff.
+	 *
+	 * @return void
+	 */
+	public function testPendingDiffIdNamesTheShiftsPendingDiff(): void {
+		$this->asAdmin();
+		$this->seedShift(floatAmount: 100.00, salesTotal: 500.00);
+		$result = $this->service->recordCount('shift-1', 615.00, 'boss');
+
+		$this->assertSame(expected: $result['diff']['id'], actual: $this->service->pendingDiffId('shift-1'));
+	}//end testPendingDiffIdNamesTheShiftsPendingDiff()
+
+	/**
+	 * pendingDiffId refuses a shift without a pending difference.
+	 *
+	 * @return void
+	 */
+	public function testPendingDiffIdWithoutPendingDiffIsNotFound(): void {
+		$this->asAdmin();
+		$this->seedShift(floatAmount: 100.00, salesTotal: 0.00);
+
+		$this->expectException(exception: OCSNotFoundException::class);
+		$this->service->pendingDiffId('shift-1');
+	}//end testPendingDiffIdWithoutPendingDiffIsNotFound()
 }//end class

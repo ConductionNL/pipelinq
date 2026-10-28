@@ -69,6 +69,7 @@ import Check from 'vue-material-design-icons/Check.vue'
 import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarkedCircleOutline.vue'
 import CheckboxMarkedOutline from 'vue-material-design-icons/CheckboxMarkedOutline.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import ClipboardAccountOutline from 'vue-material-design-icons/ClipboardAccountOutline.vue'
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
@@ -89,6 +90,7 @@ import DatabaseSearchOutline from 'vue-material-design-icons/DatabaseSearchOutli
 import Domain from 'vue-material-design-icons/Domain.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Email from 'vue-material-design-icons/Email.vue'
+import EmailArrowRightOutline from 'vue-material-design-icons/EmailArrowRightOutline.vue'
 import EmailEditOutline from 'vue-material-design-icons/EmailEditOutline.vue'
 import EmailFastOutline from 'vue-material-design-icons/EmailFastOutline.vue'
 import EmailMultiple from 'vue-material-design-icons/EmailMultiple.vue'
@@ -143,6 +145,7 @@ import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed
 import Pause from 'vue-material-design-icons/Pause.vue'
 import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
+import PhoneInTalk from 'vue-material-design-icons/PhoneInTalk.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
@@ -174,6 +177,7 @@ import TagOutline from 'vue-material-design-icons/TagOutline.vue'
 import ThumbsUpDown from 'vue-material-design-icons/ThumbsUpDown.vue'
 import TicketOutline from 'vue-material-design-icons/TicketOutline.vue'
 import Timeline from 'vue-material-design-icons/Timeline.vue'
+import TimelineTextOutline from 'vue-material-design-icons/TimelineTextOutline.vue'
 import Timer from 'vue-material-design-icons/Timer.vue'
 import Tray from 'vue-material-design-icons/Tray.vue'
 import TrayFull from 'vue-material-design-icons/TrayFull.vue'
@@ -242,6 +246,7 @@ export default {
 	ChartTimelineVariantShimmer,
 	Check,
 	CheckCircle,
+	CheckCircleOutline,
 	CheckboxMarkedCircleOutline,
 	CheckboxMarkedOutline,
 	ClipboardAccountOutline,
@@ -264,6 +269,7 @@ export default {
 	Domain,
 	Download,
 	Email,
+	EmailArrowRightOutline,
 	EmailEditOutline,
 	EmailFastOutline,
 	EmailMultiple,
@@ -320,6 +326,7 @@ export default {
 	Pause,
 	PencilOutline,
 	Phone,
+	PhoneInTalk,
 	PhoneMessage,
 	PhoneOutline,
 	Pipe,
@@ -350,6 +357,7 @@ export default {
 	ThumbsUpDown,
 	TicketOutline,
 	Timeline,
+	TimelineTextOutline,
 	Timer,
 	Tray,
 	TrayFull,

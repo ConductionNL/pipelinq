@@ -239,4 +239,47 @@ class CashShiftControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
 		$this->assertStringNotContainsString('secret', (string)($data['error'] ?? ''));
 	}//end testUnexpectedErrorIsGeneric()
+
+	/**
+	 * approve() without a diffId approves the shift's pending difference.
+	 *
+	 * @return void
+	 */
+	public function testApproveWithoutDiffIdUsesThePendingDiff(): void {
+		$this->loginAs(uid: 'boss');
+		$this->request->method('getParam')->willReturnMap([
+			['diffId', '', ''],
+		]);
+		$this->service->expects($this->once())
+			->method('pendingDiffId')
+			->with('shift-1')
+			->willReturn('diff-7');
+		$this->service->expects($this->once())
+			->method('approveDiff')
+			->with('diff-7', 'boss')
+			->willReturn(['id' => 'diff-7', 'status' => 'approved']);
+
+		$response = $this->controller->approve('shift-1');
+
+		$this->assertSame(expected: 'approved', actual: $response->getData()['diff']['status']);
+	}//end testApproveWithoutDiffIdUsesThePendingDiff()
+
+	/**
+	 * approve() with a diffId approves that difference.
+	 *
+	 * @return void
+	 */
+	public function testApproveWithDiffIdUsesIt(): void {
+		$this->loginAs(uid: 'boss');
+		$this->request->method('getParam')->willReturnMap([
+			['diffId', '', 'diff-3'],
+		]);
+		$this->service->expects($this->never())->method('pendingDiffId');
+		$this->service->expects($this->once())
+			->method('approveDiff')
+			->with('diff-3', 'boss')
+			->willReturn(['id' => 'diff-3', 'status' => 'approved']);
+
+		$this->controller->approve('shift-1');
+	}//end testApproveWithDiffIdUsesIt()
 }//end class
