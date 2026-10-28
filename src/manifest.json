@@ -9113,6 +9113,7 @@
 								},
 								{
 									"style": "toggle",
+									"control": "checkbox",
 									"label": "Show completed",
 									"writes": "@workspace.showDone",
 									"urlKey": "done",
@@ -9174,8 +9175,8 @@
 									"complaint": "error",
 									"melding": "warning",
 									"interaction": "default",
-									"lead": "success",
-									"task": "default"
+									"lead": "teal",
+									"task": "purple"
 								}
 							},
 							"due": {
@@ -9343,6 +9344,7 @@
 						"title": "Answer today",
 						"viewport": "wide",
 						"content": {
+							"ruleAbove": true,
 							"headerNote": "deadline is today or has passed",
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
@@ -9373,8 +9375,8 @@
 									"complaint": "error",
 									"melding": "warning",
 									"interaction": "default",
-									"lead": "success",
-									"task": "default"
+									"lead": "teal",
+									"task": "purple"
 								}
 							},
 							"badges": [
@@ -9426,6 +9428,7 @@
 						"title": "Waiting on me",
 						"viewport": "wide",
 						"content": {
+							"ruleAbove": true,
 							"headerNote": "the customer has replied",
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
@@ -9456,8 +9459,8 @@
 									"complaint": "error",
 									"melding": "warning",
 									"interaction": "default",
-									"lead": "success",
-									"task": "default"
+									"lead": "teal",
+									"task": "purple"
 								}
 							},
 							"badges": [
@@ -9509,6 +9512,7 @@
 						"title": "Waiting on the customer",
 						"viewport": "wide",
 						"content": {
+							"ruleAbove": true,
 							"headerNote": "nothing to do until they reply",
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
@@ -9539,8 +9543,8 @@
 									"complaint": "error",
 									"melding": "warning",
 									"interaction": "default",
-									"lead": "success",
-									"task": "default"
+									"lead": "teal",
+									"task": "purple"
 								}
 							},
 							"badges": [
