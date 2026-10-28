@@ -7658,35 +7658,39 @@
 					},
 					{
 						"id": "z-day-total",
-						"type": "data",
+						"type": "stat",
 						"title": "Day total",
 						"content": {
-							"title": "Day total",
-							"columns": 1,
-							"include": [
-								"total",
-								"totalTax",
-								"transactionCount"
-							],
-							"overrides": {
-							"transactionCount": {
-								"label": "Transactions"
-							},
-								"total": {
-									"formatter": "objectCurrency",
-									"formatterOptions": {
-										"decimals": 2
-									}
-								},
-								"totalTax": {
-								"label": "VAT",
-									"formatter": "objectCurrency",
-									"formatterOptions": {
-										"decimals": 2
-									}
-								}
-							},
-							"editable": false
+							"label": "Day total",
+							"objectField": "total",
+							"format": {
+								"style": "currency",
+								"currency": "@config.currency",
+								"decimals": 2
+							}
+						}
+					},
+					{
+						"id": "z-day-tax",
+						"type": "stat",
+						"title": "VAT",
+						"content": {
+							"label": "VAT",
+							"objectField": "totalTax",
+							"format": {
+								"style": "currency",
+								"currency": "@config.currency",
+								"decimals": 2
+							}
+						}
+					},
+					{
+						"id": "z-day-count",
+						"type": "stat",
+						"title": "Transactions",
+						"content": {
+							"label": "Transactions",
+							"objectField": "transactionCount"
 						}
 					},
 					{
@@ -7772,6 +7776,8 @@
 				"_boardNote": "Board PqZRapport: the reference as the title, the till, day and transactions on the meta line, the status pill, \"Journaalpost opnieuw doorgeven\" as a header button and no Edit (the day-close job writes the report), the report over its Boekhouding card (ZReportBookkeepingWidget) in an Overview tab with History beside it, and the day total over the latest history in the side column.",
 				"sideColumn": [
 					"z-day-total",
+					"z-day-tax",
+					"z-day-count",
 					"z-side-history"
 				]
 			}

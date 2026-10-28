@@ -37,8 +37,10 @@ const dutch = {
 	'Pass on to shillinq again': 'Opnieuw doorgeven aan shillinq',
 	'VAT breakdown': 'Btw-uitsplitsing',
 	'Payment methods': 'Betaalwijzen',
+	'shillinq did not respond': 'shillinq reageerde niet',
+	'{status}: {reason} at {time}': '{status}: {reason} om {time}',
 }
-globalThis.t = (_app, text) => dutch[text] || text
+globalThis.t = (_app, text, vars = {}) => String(dutch[text] || text).replace(/\{(\w+)\}/g, (whole, key) => vars[key] ?? whole)
 window.OC = { isUserAdmin: () => true }
 const { default: ZReportBookkeepingWidget } = await import('../../src/components/pos/ZReportBookkeepingWidget.vue')
 
@@ -87,5 +89,15 @@ describe('the Z report bookkeeping card', () => {
 
 	it('shows no button on a day that is passed on', () => {
 		expect(mountCard({ ...report, bookkeepingStatus: 'raised', shillinqJournalEntryId: 'JE-1' }).find('[data-testid="pos-eod-retry"]').exists()).toBe(false)
+	})
+
+	it('says why and when passing on failed, as the board does', () => {
+		const failedAt = new Date(2026, 9, 6, 23, 0).toISOString()
+		const card = mountCard({ ...report, bookkeepingFailureReason: 'unreachable', bookkeepingFailedAt: failedAt })
+		expect(card.find('[data-testid="pos-eod-bookkeeping-status"]').text()).toMatch(/^Mislukt: shillinq reageerde niet om 23[:.]00$/)
+	})
+
+	it('keeps the plain status when no reason is stored', () => {
+		expect(mountCard().find('[data-testid="pos-eod-bookkeeping-status"]').text()).toBe('Mislukt')
 	})
 })

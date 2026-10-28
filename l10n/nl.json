@@ -9292,6 +9292,13 @@
         "none yet": "nog geen",
         "Pass on to shillinq again": "Opnieuw doorgeven aan shillinq",
         "Waiting for shillinq": "Wacht op shillinq",
-        "Passed on to shillinq": "Doorgegeven aan shillinq"
+        "Passed on to shillinq": "Doorgegeven aan shillinq",
+        "{status}: {reason} at {time}": "{status}: {reason} om {time}",
+        "shillinq did not respond": "shillinq reageerde niet",
+        "no shillinq connection is set up": "er is geen koppeling met shillinq ingesteld",
+        "Bookkeeping failure reason": "Reden dat doorgeven mislukte",
+        "Bookkeeping failed at": "Doorgeven mislukt op",
+        "Why the last raise did not reach shillinq: unreachable when the registry dispatch failed, not_configured when no shillinq journal connection is set up. Cleared when a raise succeeds.": "Waarom het laatste doorgeven shillinq niet bereikte: unreachable als het versturen via het integratieregister mislukte, not_configured als er geen koppeling met shillinq is ingesteld. Wordt gewist zodra doorgeven lukt.",
+        "When the last raise did not reach shillinq. Cleared when a raise succeeds.": "Wanneer het laatste doorgeven shillinq niet bereikte. Wordt gewist zodra doorgeven lukt."
     }
 }

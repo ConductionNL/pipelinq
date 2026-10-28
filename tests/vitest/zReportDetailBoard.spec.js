@@ -32,8 +32,7 @@ describe('Z report page', () => {
 		const tabs = widget('z-panels').content.tabs
 		expect(tabs.map((tab) => tab.widgetIds || [tab.widgetId])).toEqual([['z-data', 'z-bookkeeping'], ['z-history']])
 		expect(config.layout.map((cell) => cell.widgetId)).toEqual(['z-panels'])
-		expect(config.sideColumn[0]).toBe('z-day-total')
-		expect(widget('z-day-total').content.include).toEqual(['total', 'totalTax', 'transactionCount'])
+		expect(config.sideColumn.slice(0, 3)).toEqual(['z-day-total', 'z-day-tax', 'z-day-count'])
 	})
 
 	it('labels the fields as the board does', () => {
@@ -72,10 +71,19 @@ describe('Z report page', () => {
 	})
 
 	it('lists the latest history in a Geschiedenis side card under the day total', () => {
-		expect(config.sideColumn).toEqual(['z-day-total', 'z-side-history'])
+		expect(config.sideColumn).toEqual(['z-day-total', 'z-day-tax', 'z-day-count', 'z-side-history'])
 		const history = widget('z-side-history')
 		expect(history.type).toBe('audit-trail')
 		expect(nl[history.title]).toBe('Geschiedenis')
 		expect(history.content.excludeActions).toEqual(['read'])
+	})
+
+	it('draws Dagtotaal, Btw and Transacties as three stat tiles off the report (pl3 item 5)', () => {
+		const tiles = ['z-day-total', 'z-day-tax', 'z-day-count'].map(widget)
+		expect(tiles.map((tile) => tile.type)).toEqual(['stat', 'stat', 'stat'])
+		expect(tiles.map((tile) => nl[tile.content.label])).toEqual(['Dagtotaal', 'Btw', 'Transacties'])
+		expect(tiles.map((tile) => tile.content.objectField)).toEqual(['total', 'totalTax', 'transactionCount'])
+		expect(tiles[0].content.format).toEqual({ style: 'currency', currency: '@config.currency', decimals: 2 })
+		expect(tiles[1].content.format).toEqual({ style: 'currency', currency: '@config.currency', decimals: 2 })
 	})
 })

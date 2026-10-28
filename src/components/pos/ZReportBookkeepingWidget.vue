@@ -137,6 +137,7 @@ import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcNoteCard } from '@nextcloud/vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
+import { getUserLocale } from '../../services/localeUtils.js'
 import { raiseJournalEntry } from '../../services/posBookkeepingApi.js'
 import { formatEur } from '../../services/posTotals.js'
 
@@ -144,6 +145,11 @@ const BOOKKEEPING_STATUS_LABELS = {
 	pending: 'Waiting for shillinq',
 	raised: 'Passed on to shillinq',
 	failed: 'Failed',
+}
+
+const FAILURE_REASON_LABELS = {
+	unreachable: 'shillinq did not respond',
+	not_configured: 'no shillinq connection is set up',
 }
 
 export default {
@@ -226,14 +232,24 @@ export default {
 		},
 
 		/**
-		 * The bookkeeping status in words.
+		 * The bookkeeping status in words, with why and when the last pass-on
+		 * failed when the report stores it.
 		 *
 		 * @return {string} The label.
 		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		bookkeepingStatusLabel() {
 			const key = this.zReport.bookkeepingStatus || 'pending'
-			return t('pipelinq', BOOKKEEPING_STATUS_LABELS[key] || key)
+			const status = t('pipelinq', BOOKKEEPING_STATUS_LABELS[key] || key)
+			const reason = FAILURE_REASON_LABELS[this.zReport.bookkeepingFailureReason]
+			if (key === 'raised' || !reason || !this.zReport.bookkeepingFailedAt) {
+				return status
+			}
+			return t('pipelinq', '{status}: {reason} at {time}', {
+				status,
+				reason: t('pipelinq', reason),
+				time: new Date(this.zReport.bookkeepingFailedAt).toLocaleTimeString(getUserLocale(), { hour: '2-digit', minute: '2-digit' }),
+			})
 		},
 
 		/**
