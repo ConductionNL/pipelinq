@@ -8740,7 +8740,16 @@ OC.L10N.register(
         "{shown} of {total} companies from the KVK register that fit your profile": "{shown} of {total} companies from the KVK register that fit your profile",
         "best first": "best first",
         "refreshed today at {time}": "refreshed today at {time}",
-        "refreshed on {date}": "refreshed on {date}"
+        "refreshed on {date}": "refreshed on {date}",
+        "was {amount}": "was {amount}",
+        "Overridden": "Overridden",
+        "{name}: the seller gave {original}, {reason}": "{name}: the seller gave {original}, {reason}",
+        "level {level}": "level {level}",
+        "snapshot of {date}": "snapshot of {date}",
+        "Weekly snapshots, taken every Monday": "Weekly snapshots, taken every Monday",
+        "Quarter {quarter}, closed": "Quarter {quarter}, closed",
+        "Movement": "Movement",
+        "No commit moved since last week.": "No commit moved since last week."
     },
     "nplurals=2; plural=(n != 1);"
 )

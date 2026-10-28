@@ -41,8 +41,8 @@
 				</CnDetailCard>
 			</div>
 			<CnDetailCard :title="quarterTitle" class="forecast-quarter">
-				<template #header-actions>
-					<NcButton variant="secondary" @click="exportCsv">
+				<template #actions>
+					<NcButton variant="secondary" data-testid="forecast-export-csv" @click="exportCsv">
 						<template #icon>
 							<Download :size="20" />
 						</template>
@@ -63,57 +63,68 @@
 				<NcNoteCard v-if="atRisk" type="warning">
 					{{ atRiskMessage }}
 				</NcNoteCard>
-				<table v-if="rows.length" class="forecast-table">
-					<thead>
-						<tr>
-							<th scope="col">{{ t('pipelinq', 'Owner') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Commit') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Best Case') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Pipeline') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Closed Won') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Quota') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Override') }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="row in rows" :key="row.owner_id">
-							<td>{{ row.owner_id }}</td>
-							<td>
-								<span
-									:class="{
-										'forecast-table__overridden':
-											hasOverride(row),
-									}">
+				<template v-if="rows.length">
+					<table class="forecast-table">
+						<thead>
+							<tr>
+								<th scope="col">{{ t('pipelinq', 'Owner') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Commit') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Best Case') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Pipeline') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Closed Won') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Quota') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Override') }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="row in rows" :key="row.owner_id">
+								<td data-testid="forecast-owner">{{ ownerName(row) }}</td>
+								<td>
 									{{ formatMoney(row.commit) }}
-								</span>
-								<span
-									v-if="hasOverride(row)"
-									class="forecast-table__badge"
-									:title="overrideTitle(row)">
-									{{ t('pipelinq', 'override') }}
-								</span>
-							</td>
-							<td>{{ formatMoney(row.best_case) }}</td>
-							<td>{{ formatMoney(row.pipeline) }}</td>
-							<td>{{ formatMoney(row.closed_won) }}</td>
-							<td>
-								{{
-									row.quota === null ? '—' : formatMoney(row.quota)
-								}}
-							</td>
-							<td>
-								<NcButton
-									variant="secondary"
-									@click="openOverride(row)">
-									<template #icon>
-										<Pencil :size="20" />
-									</template>
-									{{ t('pipelinq', 'Override') }}
-								</NcButton>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+									<span
+										v-if="hasOverride(row)"
+										class="forecast-table__was"
+										data-testid="forecast-was">
+										{{ t('pipelinq', 'was {amount}', { amount: formatMoney(row.original_commit) }) }}
+									</span>
+								</td>
+								<td>{{ formatMoney(row.best_case) }}</td>
+								<td>{{ formatMoney(row.pipeline) }}</td>
+								<td>{{ formatMoney(row.closed_won) }}</td>
+								<td>
+									{{
+										row.quota === null ? '—' : formatMoney(row.quota)
+									}}
+								</td>
+								<td>
+									<span
+										v-if="hasOverride(row)"
+										class="forecast-table__badge"
+										data-testid="forecast-overridden"
+										:title="overrideTitle(row)">
+										{{ t('pipelinq', 'Overridden') }}
+									</span>
+									<NcButton
+										v-else
+										variant="secondary"
+										@click="openOverride(row)">
+										<template #icon>
+											<Pencil :size="20" />
+										</template>
+										{{ t('pipelinq', 'Override') }}
+									</NcButton>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<p
+						v-for="row in overriddenRows"
+						:key="'note-' + row.owner_id"
+						class="forecast-table__note"
+						data-testid="forecast-override-note">
+						{{ t('pipelinq', '{name}: the seller gave {original}, {reason}', { name: ownerName(row), original: formatMoney(row.original_commit), reason: row.commit_override_reason }) }}
+					</p>
+				</template>
 				<NcEmptyContent
 					v-else
 					:name="t('pipelinq', 'No snapshots yet')"
@@ -161,6 +172,7 @@ import {
 	latestPerOwner,
 	projectedAttainment,
 } from '../../services/forecastMath.js'
+import { fetchUserDisplayName } from '../../services/userDisplayName.js'
 
 export default {
 	name: 'ForecastDashboard',
@@ -183,6 +195,7 @@ export default {
 			loading: false,
 			level: 'team',
 			rows: [],
+			names: {},
 			overrideTarget: null,
 			daysRemaining: 30,
 		}
@@ -220,10 +233,39 @@ export default {
 		 */
 		subtitle() {
 			const option = this.levelOptions.find((o) => o.value === this.level)
-			return t('pipelinq', '{quarter} · level {level}', {
-				quarter: this.quarterTitle,
-				level: option ? option.label.toLowerCase() : this.level,
-			})
+			const level = t('pipelinq', 'level {level}', { level: option ? option.label.toLowerCase() : this.level })
+			const snapshot = this.snapshotDate
+				? t('pipelinq', 'snapshot of {date}', { date: this.snapshotDate })
+				: ''
+			return [this.quarterTitle, snapshot, level].filter(Boolean).join(' · ')
+		},
+
+		/**
+		 * The day the shown snapshots were taken, written out ("maandag 5 oktober").
+		 *
+		 * @return {string} The date, or '' without snapshots.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		snapshotDate() {
+			const dates = this.rows.map((row) => String(row.as_of_date || '')).filter(Boolean).sort()
+			if (dates.length === 0) {
+				return ''
+			}
+			const date = new Date(dates[dates.length - 1] + 'T12:00:00')
+			if (Number.isNaN(date.getTime())) {
+				return ''
+			}
+			return new Intl.DateTimeFormat(undefined, { weekday: 'long', day: 'numeric', month: 'long' }).format(date)
+		},
+
+		/**
+		 * The rows whose commit a lead overrode, for the notes under the table.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		overriddenRows() {
+			return this.rows.filter((row) => this.hasOverride(row))
 		},
 
 		/**
@@ -347,6 +389,31 @@ export default {
 			return !!row.commit_override_reason
 		},
 
+		/**
+		 * The owner's display name once it is known, else the user id.
+		 *
+		 * @param {object} row A snapshot row.
+		 * @return {string} The name.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		ownerName(row) {
+			return this.names[row.owner_id] || row.owner_id
+		},
+
+		/**
+		 * Look up the display names of the rows' owners.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		async loadNames() {
+			const ids = [...new Set(this.rows.map((row) => row.owner_id).filter(Boolean))]
+			const names = await Promise.all(ids.map((id) => fetchUserDisplayName(id).catch(() => id)))
+			const found = {}
+			ids.forEach((id, index) => { found[id] = names[index] || id })
+			this.names = found
+		},
+
 		overrideTitle(row) {
 			return t('pipelinq', 'Rep submitted: {original} — {reason}', {
 				original: this.formatMoney(row.original_commit),
@@ -377,6 +444,7 @@ export default {
 					level: this.childLevel,
 				})
 				this.rows = latestPerOwner(data.snapshots || [])
+				await this.loadNames()
 			} catch {
 				this.rows = []
 			} finally {
@@ -516,15 +584,38 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 }
 
-.forecast-table__overridden {
-	color: var(--color-error);
+/* The head as the boards draw a table's: 14px/600 in the muted ink on a
+   normal line (PqForecast: 700 in the text ink). */
+.forecast-table th {
+	font-size: 14px;
 	font-weight: 600;
+	line-height: normal;
+	color: var(--color-text-maxcontrast);
+}
+
+/* An overridden commit keeps the seller's figure beside it, small and muted,
+   and the row says so with a pill where the Override button stood (PqForecast). */
+.forecast-table__was {
+	margin-inline-start: 4px;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
 }
 
 .forecast-table__badge {
-	margin-inline-start: 6px;
-	font-size: 0.8em;
-	color: var(--color-error);
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 10px;
+	border-radius: var(--border-radius-pill, 999px);
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text, var(--color-primary-element));
+	font-size: 12px;
+	font-weight: 600;
 	cursor: help;
+}
+
+.forecast-table__note {
+	margin: 12px 0 0;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
 }
 </style>
