@@ -2480,7 +2480,7 @@
 						"id": "client-notes",
 						"type": "integration",
 						"integrationId": "notes",
-						"title": "Notes",
+						"title": "Client notes",
 						"icon": "NoteTextOutline"
 					},
 					{

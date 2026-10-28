@@ -76,6 +76,12 @@ describe('ClientDetail Activity card', () => {
 		expect(fs.readFileSync(path.join(ROOT, 'src/registry.js'), 'utf8')).not.toMatch(/ActivityTimeline/)
 	})
 
+	it('keeps the E-mails and Notities side cards, in the boards\' words', () => {
+		expect(config.sideColumn).toEqual(expect.arrayContaining(['client-email', 'client-notes']))
+		expect(nl[widget('client-email').title]).toBe('E-mails')
+		expect(nl[widget('client-notes').title]).toBe('Notities')
+	})
+
 	it('registers the link-an-email dialog the header opens', () => {
 		expect(fs.readFileSync(path.join(ROOT, 'src/registry.js'), 'utf8')).toMatch(/EmailLinkDialog/)
 	})
