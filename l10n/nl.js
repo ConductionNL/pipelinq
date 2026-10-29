@@ -3529,6 +3529,7 @@ OC.L10N.register(
         "Select auth mode": "Selecteer authenticatiemodus",
         "Select category": "Selecteer categorie",
         "Select channel": "Selecteer kanaal",
+        "Select a category": "Selecteer een categorie",
         "Select client": "Selecteer klant",
         "Select client first": "Selecteer eerst een klant",
         "Select contact": "Selecteer contactpersoon",
@@ -9301,8 +9302,7 @@ OC.L10N.register(
         "Create a proposal for this ticket": "Voorstel maken voor dit ticket",
         "Call {callbackPhoneNumber}": "Bel {callbackPhoneNumber}",
         "Task finished.": "Taak afgerond.",
-        "of @object.capacity places": "van @object.capacity plaatsen",
-        "Select a category": "Selecteer een categorie"
+        "of @object.capacity places": "van @object.capacity plaatsen"
     },
     "nplurals=2; plural=(n != 1);"
 )

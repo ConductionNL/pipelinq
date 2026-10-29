@@ -3571,6 +3571,7 @@ OC.L10N.register(
         "Select auth mode": "Select auth mode",
         "Select category": "Select category",
         "Select channel": "Select channel",
+        "Select a category": "Select a category",
         "Select client": "Select client",
         "Select client first": "Select client first",
         "Select contact": "Select contact",
@@ -9287,8 +9288,7 @@ OC.L10N.register(
         "Create a proposal for this ticket": "Create a proposal for this ticket",
         "Call {callbackPhoneNumber}": "Call {callbackPhoneNumber}",
         "Task finished.": "Task finished.",
-        "of @object.capacity places": "of @object.capacity places",
-        "Select a category": "Select a category"
+        "of @object.capacity places": "of @object.capacity places"
     },
     "nplurals=2; plural=(n != 1);"
 )
