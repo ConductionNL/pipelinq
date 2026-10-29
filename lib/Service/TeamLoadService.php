@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
+use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -52,18 +53,21 @@ class TeamLoadService {
 	 * @param IAppConfig             $appConfig     The app config.
 	 * @param RoutingService         $routing       The workload count and the capacity rule.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param IUserManager           $userManager   Names a colleague whose profile has no display name.
 	 * @param LoggerInterface        $logger        The logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly RoutingService $routing,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly IUserManager $userManager,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
 
 	/**
-	 * The team's load: one row per agent profile, sorted by name.
+	 * The team's load: one row per colleague (the first agent profile of a
+	 * user id), sorted by name.
 	 *
 	 * Each row holds the user id and name, whether the agent is available,
 	 * their open request tickets and leads, their maxConcurrent and whether
@@ -73,19 +77,20 @@ class TeamLoadService {
 	 * @return array<int, array<string, mixed>> The rows.
 	 *
 	 * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+	 * @spec openspec/changes/team-today-names-colleagues/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
 	 */
 	public function getTeamLoad(): array {
 		$rows = [];
 		foreach ($this->loadProfiles() as $profile) {
 			$userId = (string) ($profile['userId'] ?? '');
-			if ($userId === '') {
+			if ($userId === '' || isset($rows[$userId]) === true) {
 				continue;
 			}
 
 			$open = $this->routing->getAgentWorkload(userId: $userId);
-			$rows[] = [
+			$rows[$userId] = [
 				'userId' => $userId,
-				'displayName' => (string) ($profile['displayName'] ?? $userId),
+				'displayName' => $this->displayName(profile: $profile, userId: $userId),
 				'isAvailable' => ($profile['isAvailable'] ?? true) !== false,
 				'open' => $open,
 				'maxConcurrent' => (int) ($profile['maxConcurrent'] ?? self::DEFAULT_MAX_CONCURRENT),
@@ -93,10 +98,31 @@ class TeamLoadService {
 			];
 		}
 
+		$rows = array_values($rows);
 		usort($rows, static fn (array $a, array $b): int => strcasecmp($a['displayName'], $b['displayName']));
 
 		return $rows;
 	}//end getTeamLoad()
+
+	/**
+	 * The name a colleague shows under: the profile's display name, else the
+	 * Nextcloud user's, else the user id.
+	 *
+	 * @param array<string, mixed> $profile The agent profile.
+	 * @param string               $userId  The profile's user id.
+	 *
+	 * @return string The name.
+	 *
+	 * @spec openspec/changes/team-today-names-colleagues/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
+	 */
+	private function displayName(array $profile, string $userId): string {
+		$name = (string) ($profile['displayName'] ?? '');
+		if ($name !== '') {
+			return $name;
+		}
+
+		return $this->userManager->getDisplayName($userId) ?? $userId;
+	}//end displayName()
 
 	/**
 	 * Every agent profile as a plain array.
