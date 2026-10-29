@@ -49,8 +49,7 @@ describe('the operational dashboard cards', () => {
 
 	it('asks Navi with a tonal pill', () => {
 		const src = read('src/views/dashboard/widgets/NaviAnalyticsWidget.vue')
-		expect(src).toMatch(/\.navi-widget__ask\.button-vue\.button-vue \{[^}]*background-color: var\(--color-primary-element-light\)/)
-		expect(src).toMatch(/\.navi-widget__ask\.button-vue\.button-vue \{[^}]*border: 0/)
+		expect(src).toContain('class="navi-widget__ask cn-button--tonal"')
 	})
 
 	it('titles the knowledge base card', () => {
