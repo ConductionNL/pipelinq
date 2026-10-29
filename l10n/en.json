@@ -4637,6 +4637,8 @@
         "Why are you confident in this deal?": "Why are you confident in this deal?",
         "Why are you confident in this deal? (e.g. decision-maker engaged, contract draft signed)": "Why are you confident in this deal? (e.g. decision-maker engaged, contract draft signed)",
         "Why is this caller getting in touch?": "Why is this caller getting in touch?",
+        "(optional)": "(optional)",
+        "Company or organisation": "Company or organisation",
         "Why is this payment being reversed?": "Why is this payment being reversed?",
         "Why the account holds its current status, in words a marketer can act on. Written by the connect and publish paths, never by a client.": "Why the account holds its current status, in words a marketer can act on. Written by the connect and publish paths, never by a client.",
         "Why the action was refused or failed. Empty on a send that went out.": "Why the action was refused or failed. Empty on a send that went out.",
