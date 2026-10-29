@@ -2652,6 +2652,7 @@ OC.L10N.register(
         "None": "Geen",
         "None, I will set this up myself": "Geen, ik richt dit zelf in",
         "Normal": "Normaal",
+        "Not started": "Niet gestart",
         "Not counted yet. The difference appears once the shift is closed and counted.": "Nog niet geteld. Het verschil verschijnt zodra de shift is afgesloten en geteld.",
         "Not available": "Niet beschikbaar",
         "Not compiled yet": "Nog niet gecompileerd",

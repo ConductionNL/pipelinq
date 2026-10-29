@@ -2703,6 +2703,7 @@ OC.L10N.register(
         "None": "None",
         "None, I will set this up myself": "None, I will set this up myself",
         "Normal": "Normal",
+        "Not started": "Not started",
         "Not counted yet. The difference appears once the shift is closed and counted.": "Not counted yet. The difference appears once the shift is closed and counted.",
         "Not compiled yet": "Not compiled yet",
         "Not configured": "Not configured",
