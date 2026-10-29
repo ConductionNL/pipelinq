@@ -803,7 +803,6 @@ OC.L10N.register(
         "Closed Lost": "Closed Lost",
         "Closed Won": "Closed Won",
         "Closed on": "Closed on",
-        "Closed — template required": "Closed — template required",
         "Closes soon": "Closes soon",
         "Closes this month": "Closes this month",
         "Closing soon": "Closing soon",
@@ -9299,7 +9298,8 @@ OC.L10N.register(
         "Link an existing case": "Link an existing case",
         "The term is set.": "The term is set.",
         "The request is linked to the case.": "The request is linked to the case.",
-        "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.": "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request."
+        "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.": "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.",
+        "Closed, template required": "Closed, template required"
     },
     "nplurals=2; plural=(n != 1);"
 )

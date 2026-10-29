@@ -775,7 +775,6 @@ OC.L10N.register(
         "Closed Lost": "Afgesloten - Lost",
         "Closed Won": "Afgesloten - Won",
         "Closed on": "Afgesloten op",
-        "Closed — template required": "Gesloten — sjabloon vereist",
         "Closes soon": "Sluit binnenkort",
         "Closes this month": "Sluit deze maand",
         "Closing soon": "Sluit binnenkort",
@@ -9313,7 +9312,8 @@ OC.L10N.register(
         "Link an existing case": "Bestaande zaak koppelen",
         "The term is set.": "De termijn is ingesteld.",
         "The request is linked to the case.": "Het verzoek is aan de zaak gekoppeld.",
-        "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.": "De termijn waarbinnen het ticket moet zijn afgehandeld: de afhandeldeadline volgens de SLA bij een klacht, de termijn van een verzoek."
+        "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.": "De termijn waarbinnen het ticket moet zijn afgehandeld: de afhandeldeadline volgens de SLA bij een klacht, de termijn van een verzoek.",
+        "Closed, template required": "Gesloten, sjabloon vereist"
     },
     "nplurals=2; plural=(n != 1);"
 )
