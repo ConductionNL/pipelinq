@@ -60,9 +60,15 @@
 				<p
 					v-if="channel && consentOk"
 					role="status"
-					class="send-message__consent-state send-message__consent-state--ok"
+					class="send-message__consent-state"
+					:class="
+						effectiveConsentState === 'opted-in'
+							? 'send-message__consent-state--ok'
+							: 'send-message__consent-state--warn'
+					"
 					data-testid="send-message-consent-state">
-					<CheckCircleOutline :size="16" />
+					<CheckCircleOutline v-if="effectiveConsentState === 'opted-in'" :size="16" />
+					<AlertCircleOutline v-else :size="16" />
 					{{ consentText }}
 				</p>
 			</fieldset>
