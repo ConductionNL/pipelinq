@@ -72,8 +72,9 @@
 			<NcTextField
 				:modelValue="form.title"
 				:label="t('pipelinq', 'Subject')"
-				:error="!!errors.title"
-				:helperText="errors.title"
+				:error="!!shownErrors.title"
+				:helperText="shownErrors.title"
+				@blur="touched.title = true"
 				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
@@ -314,6 +315,8 @@ export default {
 
 			saving: false,
 			errorMessage: '',
+			// Fields the agent has left; their errors show from then on.
+			touched: { title: false },
 
 			// The draft ticket kept on the server for this author, client and request.
 			draftId: null,
@@ -357,6 +360,17 @@ export default {
 				errors.channel = t('pipelinq', 'Channel is required')
 			}
 			return errors
+		},
+
+		/**
+		 * The errors of the fields the agent has left, so an empty form does
+		 * not open with a complaint.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
+		 */
+		shownErrors() {
+			return Object.fromEntries(Object.entries(this.errors).filter(([field]) => this.touched[field]))
 		},
 
 		isValid() {
@@ -762,6 +776,7 @@ export default {
 <style scoped>
 .contactmoment-quicklog {
 	max-width: 600px;
+	min-width: 0;
 }
 
 .contactmoment-quicklog h3 {
@@ -769,7 +784,14 @@ export default {
 }
 
 .form-group {
+	min-width: 0;
 	margin-bottom: 16px;
+}
+
+/* NcSelect keeps a 260px minimum, which pushed a half-width card's paired fields past its edge. */
+.form-group :deep(.v-select.select) {
+	min-width: 0;
+	width: 100%;
 }
 
 .form-group label {
@@ -781,12 +803,9 @@ export default {
 }
 
 .form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 12px;
 }
 
 .draft-actions {
