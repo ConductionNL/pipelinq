@@ -199,6 +199,7 @@
 									"gridColumn": 2
 								}
 							},
+							"fixedColumns": true,
 							"collapsedFields": 7,
 							"editable": false
 						}
@@ -255,7 +256,6 @@
 					{
 						"id": "list-subscriptions",
 						"component": "SubscriptionsSection",
-						"title": "Subscribers",
 						"placement": "end",
 						"props": {
 							"listId": "@objectId",
