@@ -732,6 +732,13 @@ export default {
 	min-width: 0;
 }
 
+/* Side cards head with a muted label, as CnDetailPage's own side column does. */
+.cn-look-board .pos-refund-form__side :deep(.cn-detail-card__title) {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--cn-board-side-heading-size, 15px);
+	font-weight: 600;
+}
+
 .pos-refund-form__fields {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));

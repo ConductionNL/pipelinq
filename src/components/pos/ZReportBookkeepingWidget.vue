@@ -46,6 +46,7 @@
 
 		<div v-if="canRetry" class="z-bookkeeping__action">
 			<NcButton
+				class="cn-button--tonal"
 				variant="secondary"
 				:disabled="busy"
 				data-testid="pos-eod-retry"

@@ -366,7 +366,7 @@
           "slaDeadline": {
             "type": "string",
             "title": "SLA Deadline",
-            "description": "Service-level resolution deadline (complaint only).",
+            "description": "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.",
             "format": "date-time"
           },
           "resolvedAt": {

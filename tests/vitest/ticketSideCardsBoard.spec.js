@@ -57,4 +57,43 @@ describe('the request side cards as the board draws them', () => {
 		expect(en[linked.content.emptyText]).toBe('No case linked yet.')
 		expect(nl[linked.content.emptyText]).toBe('Nog geen zaak gekoppeld.')
 	})
+
+	/**
+	 * @spec openspec/changes/request-term-and-case-link/specs/request-management/spec.md#requirement-the-termijn-card-writes-the-term-as-its-figure
+	 */
+	it('writes the term as the card\'s 26px figure', () => {
+		const [when] = card('side-deadline').content.fields
+		expect(when.size).toBe(26)
+	})
+
+	/**
+	 * @spec openspec/changes/request-term-and-case-link/specs/request-management/spec.md#requirement-a-requests-term-can-be-set-from-its-termijn-card
+	 */
+	it('offers Termijn instellen to whoever may update the ticket, patching slaDeadline through OpenRegister', () => {
+		const [action] = card('side-deadline').content.actions
+		expect(action).toMatchObject({
+			type: 'open-form',
+			requires: 'update',
+			endpoint: { url: '/apps/openregister/api/objects/pipelinq/ticket/@objectId', method: 'PATCH' },
+		})
+		expect(Object.keys(action.formProperties)).toEqual(['slaDeadline'])
+		expect(action.formProperties.slaDeadline).toMatchObject({ type: 'string', format: 'date-time' })
+		expect(nl[action.label]).toBe('Termijn instellen')
+	})
+
+	/**
+	 * @spec openspec/changes/request-term-and-case-link/specs/request-management/spec.md#requirement-a-request-can-be-linked-to-an-existing-case
+	 */
+	it('offers Bestaande zaak koppelen while no case is linked and a case app is there, writing caseReference only', () => {
+		const [action] = card('side-case').content.actions
+		expect(action).toMatchObject({
+			type: 'open-form',
+			requires: 'update',
+			endpoint: { url: '/apps/openregister/api/objects/pipelinq/ticket/@objectId', method: 'PATCH' },
+			visibleWhen: { all: [{ field: 'caseReference', op: 'empty' }, { appInstalled: 'dossiq' }] },
+		})
+		expect(Object.keys(action.formProperties)).toEqual(['caseReference'])
+		expect(action.fieldOverrides.caseReference.resource).toEqual({ register: 'dossiq', schema: 'case', labelField: 'title' })
+		expect(nl[action.label]).toBe('Bestaande zaak koppelen')
+	})
 })

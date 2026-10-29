@@ -76,7 +76,8 @@ describe('the cash shift header', () => {
 
 	it('closes and counts an open shift, asking for the amount', () => {
 		expect(shift.actionsComponent).toBeUndefined()
-		expect(shift.config.primaryActionByStage).toEqual({ open: 'shift-count', closed: 'shift-approve-diff' })
+		expect(shift.config.primaryActionByStage).toEqual({ open: 'shift-count' })
+		expect(shift.config.quickActions).toEqual(['shift-approve-diff'])
 		const count = action(shift, 'shift-count')
 		expect(count.endpoint.url).toBe('/apps/pipelinq/api/pos-shifts/@objectId/count')
 		expect(count.formProperties.amount).toMatchObject({ type: 'number', minimum: 0, required: true })

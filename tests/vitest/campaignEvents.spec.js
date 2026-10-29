@@ -112,6 +112,22 @@ describe('the event page', () => {
 		expect(list.content.filterMenu).toBe(true)
 	})
 
+	it('ends the registrations list with the event\'s whole count, however narrowed (PqEvenement "73 aanmeldingen in totaal")', () => {
+		const list = widget(detail, 'event-registrations')
+		// nextcloud-vue footer-unfiltered-total: read under the event filter only.
+		expect(list.content.countValues).toEqual({ allRegistrations: { metric: 'count', unfiltered: true } })
+		expect(list.content.footerNote).toBe('{allRegistrations} registrations in total')
+		const nl = read('l10n', 'nl.json').translations
+		expect(nl[list.content.footerNote]).toBe('{allRegistrations} aanmeldingen in totaal')
+	})
+
+	it('tones each registration status in the tab as the latest registrations do', () => {
+		const recent = widget(detail, 'event-registrations-recent').content.columns.find((column) => column.key === 'status')
+		const status = widget(detail, 'event-registrations').content.columns.find((column) => column?.key === 'status')
+		expect(status).toMatchObject({ label: recent.label, widget: 'badge', widgetProps: { colorMap: recent.widgetProps.colorMap } })
+		expect(recent.widgetProps.colorMap.confirmed).toBe('success')
+	})
+
 	it('sends the reminder and opens the check-in list from the header', () => {
 		const actions = detail.config.headerActions
 		const reminder = actions.find((action) => action.id === 'send-reminder')

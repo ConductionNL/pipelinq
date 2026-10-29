@@ -12,6 +12,8 @@
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
 import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
@@ -141,5 +143,14 @@ describe('the refund reads what the store holds (PQB-7)', () => {
 	it('has no More menu in its header, only Save', async () => {
 		const page = (await mountNew()).findComponent({ name: 'CnDetailPage' })
 		expect(page.vm.$attrs.actionsMenu).toEqual({ showRefresh: false, showHelpLinks: false })
+	})
+
+	it('heads its side cards as 15px muted labels, as the board and Dq draw side cards', () => {
+		const source = readFileSync(resolve(__dirname, '../../src/views/pos/PosRefundForm.vue'), 'utf8')
+		const rule = (selector) => (source.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{([^}]*)\\}')) || [])[1] || ''
+		const title = rule('.cn-look-board .pos-refund-form__side :deep(.cn-detail-card__title)')
+		expect(title).toMatch(/font-size: var\(--cn-board-side-heading-size, 15px\)/)
+		expect(title).toMatch(/font-weight: 600/)
+		expect(title).toMatch(/color: var\(--color-text-maxcontrast\)/)
 	})
 })

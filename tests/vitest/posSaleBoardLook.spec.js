@@ -256,4 +256,13 @@ describe('the sale as the board draws it (PqKassa, PQB-7)', () => {
 		wrapper.vm.removeLine(1)
 		expect(wrapper.vm.editingKey).toBe(null)
 	})
+
+	it('heads its side cards Totals, Customer and Preview of the receipt as 15px muted labels, as the board and Dq draw side cards', () => {
+		const source = readFileSync(resolve(__dirname, '../../src/views/pos/PosTransactionForm.vue'), 'utf8')
+		const rule = (selector) => (source.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{([^}]*)\\}')) || [])[1] || ''
+		const title = rule('.cn-look-board .pos-form__side :deep(.cn-detail-card__title)')
+		expect(title).toMatch(/font-size: var\(--cn-board-side-heading-size, 15px\)/)
+		expect(title).toMatch(/font-weight: 600/)
+		expect(title).toMatch(/color: var\(--color-text-maxcontrast\)/)
+	})
 })

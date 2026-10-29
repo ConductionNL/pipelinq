@@ -173,9 +173,18 @@
 							],
 							"searchPlaceholder": "Search a name or street",
 							"filterMenu": true,
+							"filterLabels": { "address": { "label": "Street" } },
 							"selectable": true,
-							"columns": ["name", "address", "source", "registeredAt", "status"],
-							"emptyText": "No registrations yet."
+							"columns": [
+								"name",
+								"address",
+								"source",
+								"registeredAt",
+								{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "waitlist": "warning", "cancelled": "default" } } }
+							],
+							"emptyText": "No registrations yet.",
+							"countValues": { "allRegistrations": { "metric": "count", "unfiltered": true } },
+							"footerNote": "{allRegistrations} registrations in total"
 						}
 					},
 					{

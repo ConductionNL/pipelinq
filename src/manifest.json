@@ -983,7 +983,7 @@
 							"limit": 3,
 							"presentation": "rows",
 							"title": "{title}",
-							"meta": "{stage} · {expectedCloseDate|date} · {assignee}",
+							"meta": "{stage} · {expectedCloseDate|date} · {assignee|user}",
 							"trailing": [
 								"{value|currency}"
 							],
@@ -1011,12 +1011,11 @@
 							"limit": 3,
 							"presentation": "rows",
 							"title": "{title}",
-							"meta": "{expectedCloseDate|date} · {assignee}",
-							"pill": {
-								"field": "status",
-								"variantMap": {
-									"won": "success",
-									"lost": "error"
+							"meta": "{status} {expectedCloseDate|date} · {assignee|user}",
+							"valueLabels": {
+								"status": {
+									"won": "Won",
+									"lost": "Lost"
 								}
 							},
 							"trailing": [
@@ -1861,6 +1860,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"sortKey": "name",
+				"sortOrder": "asc",
 				"createModal": "ClientCreateDialog",
 				"fieldOverrides": {
 					"industry": {
@@ -7049,9 +7050,9 @@
 				"titleField": "reference",
 				"stageField": "status",
 				"primaryActionByStage": {
-					"open": "shift-count",
-					"closed": "shift-approve-diff"
+					"open": "shift-count"
 				},
+				"quickActions": ["shift-approve-diff"],
 				"headerActions": [
 					{
 						"id": "shift-count",
@@ -7575,7 +7576,7 @@
 						}
 					]
 				},
-				"_boardNote": "Board PqKassadienst: the shift name, the status pill, the Kassalade breadcrumb and a meta line with the cashier and the hours; Approve difference as the primary button of a counted shift; the shift, its cash difference and its drops in an Overview tab beside History; the opening float, related records and a short history in the side column.",
+				"_boardNote": "Board PqKassadienst: the shift name, the status pill, the Kassalade breadcrumb and a meta line with the cashier and the hours; Approve difference as a secondary header button (with its check icon) of a counted shift; the shift, its cash difference and its drops in an Overview tab beside History; the opening float, related records and a short history in the side column.",
 				"follow": false,
 				"showEditAction": false,
 				"breadcrumb": {
@@ -10779,7 +10780,12 @@
 			"route": "/flows",
 			"type": "index",
 			"title": "Flows",
-			"config": { "entitySource": "flows", "app": "pipelinq" },
+			"config": {
+				"entitySource": "flows",
+				"app": "pipelinq",
+				"filterMenu": true,
+				"filterMenuFields": [{ "key": "owner", "label": "Owner", "referenceType": "nextcloud-user" }]
+			},
 			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source (config.entitySource) rather than the deprecated `flows` page type, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app."
 		},
 		{
