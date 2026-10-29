@@ -499,6 +499,7 @@ export default {
 	grid-template-columns: auto 1fr;
 	gap: 6px 16px;
 	margin: 0;
+	padding: 0;
 	font-variant-numeric: tabular-nums;
 }
 
@@ -506,12 +507,18 @@ export default {
 	display: contents;
 }
 
+/* Nextcloud's global dt rule (130px, right-aligned, padded) spaces the rows apart. */
 .pos-tx-totals__item dt {
+	width: auto;
+	padding: 0;
+	white-space: normal;
+	text-align: start;
 	color: var(--color-text-maxcontrast);
 }
 
 .pos-tx-totals__item dd {
 	margin: 0;
+	padding: 0;
 }
 
 .pos-tx-totals__item--total dt {

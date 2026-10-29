@@ -9,6 +9,7 @@
  * short history are the side column.
  *
  * @spec openspec/specs/declarative-view-system/spec.md
+ * @spec openspec/changes/pos-receipt-transaction-card/specs/pos-receipt-transaction-card/spec.md#requirement-the-receipts-transaction-card-reads-as-the-board
  */
 
 import fs from 'fs'
@@ -87,4 +88,23 @@ describe('POS receipt page', () => {
 			{ field: 'paymentProvider', op: 'empty' },
 		])
 	})
+
+	it('orders the transaction fields as the board reads them, row by row', () => {
+		const { include, overrides } = widget('pos-tx-data').content
+		expect(include.map((key) => overrides[key].order)).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
+	})
+
+	it('shows the created and settled moments, which the schema hides elsewhere', () => {
+		const { overrides } = widget('pos-tx-data').content
+		for (const key of ['confirmedAt', 'settledAt']) {
+			expect(overrides[key].hidden).toBe(false)
+			expect(overrides[key].editable).toBe(false)
+		}
+	})
+
+	it('draws the receipt card buttons as the board\'s light-blue pills', () => {
+		const actions = widget('pos-tx-receipt').content.actions
+		expect(actions.map((a) => [a.id, a.variant])).toEqual([['receipt-print', 'tonal'], ['receipt-email', 'tonal']])
+	})
 })
+
