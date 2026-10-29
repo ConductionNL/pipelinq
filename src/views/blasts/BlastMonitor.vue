@@ -373,9 +373,12 @@ export default {
 
 		/**
 		 * Build the reverse-chronological event timeline (capped at 50 entries).
+		 * Events of the same moment keep the order the deliveries come in.
 		 *
 		 * @param {Array} deliveries Raw delivery objects.
 		 * @return {Array} Trimmed timeline entries.
+		 *
+		 * @spec openspec/changes/send-monitor-event-order/specs/marketing-ui/spec.md#requirement-events-of-the-same-moment-keep-their-order-in-the-send-monitor
 		 */
 		buildTimeline(deliveries) {
 			if (!Array.isArray(deliveries)) {
@@ -398,7 +401,12 @@ export default {
 						|| d.createdAt,
 				}))
 				.filter((d) => d.timestamp)
-				.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
+				.sort((a, b) => {
+					if (a.timestamp === b.timestamp) {
+						return 0
+					}
+					return a.timestamp < b.timestamp ? 1 : -1
+				})
 				.slice(0, TIMELINE_MAX)
 		},
 

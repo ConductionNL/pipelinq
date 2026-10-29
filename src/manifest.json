@@ -4557,7 +4557,10 @@
 						"placement": "before-body",
 						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
 						"props": {
-							"partyId": "@objectId"
+							"partyId": "@objectId",
+							"compact": true,
+							"framed": true,
+							"partyKind": "contact"
 						}
 					}
 				],
@@ -5238,7 +5241,8 @@
 								{
 									"as": "title",
 									"path": "qualificationScore",
-									"suffix": "%"
+									"suffix": "%",
+									"size": 26
 								},
 								{
 									"as": "line",
@@ -7200,6 +7204,7 @@
 						"id": "shift-variance",
 						"type": "facts",
 						"title": "Cash difference",
+						"subtitle": "Drawer reconciliation",
 						"icon": "ScaleBalance",
 						"content": {
 							"source": {
@@ -7216,7 +7221,7 @@
 							"headerPill": {
 								"path": "status",
 								"map": {
-									"pending": "Pending",
+									"pending": "",
 									"approved": "Approved",
 									"rejected": "Rejected"
 								},
@@ -7419,7 +7424,8 @@
 								{
 									"as": "title",
 									"path": "floatAmount",
-									"format": "currency"
+									"format": "currency",
+									"size": 26
 								},
 								{
 									"as": "line",
@@ -7482,6 +7488,24 @@
 						"title": "History",
 						"icon": "History",
 						"content": {
+							"layout": "stacked",
+							"density": "compact",
+							"actionLabels": {
+								"create": "Opened by {actor}",
+								"update": "Updated"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "closed",
+									"label": "Closed and counted"
+								},
+								{
+									"field": "status",
+									"to": "reconciled",
+									"label": "Reconciled"
+								}
+							],
 							"maxDisplay": 4,
 							"excludeActions": [
 								"read"
@@ -8550,9 +8574,11 @@
 							],
 							"overrides": {
 								"reference": {
+									"order": 0,
 									"label": "Identifier"
 								},
 								"status": {
+									"order": 1,
 									"editable": false,
 									"enumLabels": {
 										"draft": "Draft",
@@ -8572,13 +8598,16 @@
 									}
 								},
 								"cashier": {
+									"order": 2,
 									"label": "Cashier",
 									"formatter": "userDisplayName"
 								},
 								"terminalId": {
+									"order": 3,
 									"label": "Till"
 								},
 								"priceMode": {
+									"order": 4,
 									"label": "Price display",
 									"enumLabels": {
 										"incl": "Incl. VAT",
@@ -8586,13 +8615,20 @@
 									}
 								},
 								"client": {
+									"order": 5,
 									"label": "Client"
 								},
 								"confirmedAt": {
+									"order": 6,
+									"hidden": false,
+									"editable": false,
 									"label": "Created",
 									"formatter": "shortDateTime"
 								},
 								"settledAt": {
+									"order": 7,
+									"hidden": false,
+									"editable": false,
 									"label": "Settled",
 									"formatter": "shortDateTime"
 								}
@@ -8906,6 +8942,7 @@
 							"actions": [
 								{
 									"id": "receipt-print",
+									"variant": "tonal",
 									"label": "Print receipt",
 									"icon": "Printer",
 									"type": "open-modal",
@@ -8916,6 +8953,7 @@
 								},
 								{
 									"id": "receipt-email",
+									"variant": "tonal",
 									"label": "Email receipt",
 									"icon": "EmailOutline",
 									"type": "open-modal",
@@ -9012,6 +9050,29 @@
 						"title": "History",
 						"icon": "History",
 						"content": {
+							"layout": "stacked",
+							"density": "compact",
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "confirmed",
+									"label": "Confirmed"
+								},
+								{
+									"field": "status",
+									"to": "settled",
+									"label": "Settled"
+								},
+								{
+									"field": "status",
+									"to": "refunded",
+									"label": "Refunded"
+								}
+							],
 							"maxDisplay": 3,
 							"excludeActions": [
 								"read"

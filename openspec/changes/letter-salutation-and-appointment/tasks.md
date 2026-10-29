@@ -1,0 +1,4 @@
+- [x] register.d: `salutation` on client and contact
+- [x] LetterController: optional `appointmentId`, read as the caller, guarded by client or ticket, passed as `appointmentBooking`
+- [x] LetterFromTemplateModal: pass the client's next appointment
+- [x] Tests: controller, schema fragment, dialog

@@ -57,6 +57,7 @@
 import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { CALL_FIRST_SORT, isCallFirstSort } from '../../services/leadScore.js'
 import {
+	defaultPipelineFor,
 	getOverdueDays,
 	getStaleThreshold,
 	isLeadOverdue,
@@ -361,9 +362,7 @@ export default {
 					'pipeline',
 					{ _limit: 50 },
 				)
-				if (!Array.isArray(pipelines)) return
-				const defaultPipeline =
-					pipelines.find((p) => p.isDefault) || pipelines[0]
+				const defaultPipeline = defaultPipelineFor(pipelines, 'lead')
 				if (defaultPipeline && defaultPipeline.id) {
 					this.defaultPipelineId = String(defaultPipeline.id)
 				}

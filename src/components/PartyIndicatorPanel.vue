@@ -18,7 +18,7 @@
 	<component
 		:is="compact ? 'div' : 'CnDetailCard'"
 		:title="compact ? undefined : t('pipelinq', 'Warnings')"
-		:class="{ 'party-indicators--compact': compact }">
+		:class="{ 'party-indicators--compact': compact, 'party-indicators--framed': compact && framed }">
 		<div v-if="loading" class="party-indicators__state">
 			<NcLoadingIcon :size="24" />
 		</div>
@@ -158,6 +158,8 @@ export default {
 		 * this resident." with an Add a warning link when there are none.
 		 */
 		compact: { type: Boolean, default: false },
+		/** With `compact`: draw the line as its own bordered strip (a page with no contact strip around it). */
+		framed: { type: Boolean, default: false },
 		/** The party's kind, for the none line: `person` or `organization`. */
 		partyKind: { type: String, default: '' },
 	},
@@ -176,13 +178,20 @@ export default {
 	},
 
 	computed: {
-		/** @return {string} The line that says there are no warnings, by the party's kind. */
+		/**
+		 * @return {string} The line that says there are no warnings, by the party's kind.
+		 *
+		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+		 */
 		noneText() {
 			if (this.partyKind === 'person') {
 				return t('pipelinq', 'No warnings on this resident.')
 			}
 			if (this.partyKind === 'organization') {
 				return t('pipelinq', 'No warnings on this organisation.')
+			}
+			if (this.partyKind === 'contact') {
+				return t('pipelinq', 'No warnings on this contact person.')
 			}
 			return t('pipelinq', 'No warnings on this record.')
 		},
@@ -335,6 +344,13 @@ export default {
 </script>
 
 <style scoped>
+.party-indicators--framed {
+	padding: 10px 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 8px);
+	background: var(--color-main-background);
+}
+
 .party-indicators__none {
 	display: flex;
 	flex-wrap: wrap;

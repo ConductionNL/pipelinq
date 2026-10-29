@@ -210,6 +210,7 @@ import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
 import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
+import { nextAppointment } from '../services/letterAppointment.js'
 import {
 	downloadLetter,
 	fetchLetterTemplates,
@@ -258,6 +259,7 @@ export default {
 			clientName: '',
 			tickets: [],
 			aboutTicketId: null,
+			appointmentId: null,
 			resolvedClientId: '',
 			resolvedTicketId: '',
 			making: false,
@@ -328,15 +330,31 @@ export default {
 			return t('pipelinq', 'Still empty: {fields}', { fields: empty.join(', ') })
 		},
 
-		/** @return {string} What the preview depends on; a change asks for a new one. */
+		/**
+		 * @return {string} What the preview depends on; a change asks for a new one.
+		 *
+		 * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+		 */
 		previewKey() {
-			return [this.templateId, this.resolvedClientId, this.contactId, this.resolvedTicketId || this.aboutTicketId].join('|')
+			return [this.templateId, this.resolvedClientId, this.contactId, this.resolvedTicketId || this.aboutTicketId, this.appointmentId].join('|')
 		},
 	},
 
 	watch: {
 		previewKey() {
 			this.loadPreview()
+		},
+
+		/**
+		 * Reloads the appointment when the letter's ticket changes.
+		 *
+		 * @param {string|null} now The ticket now.
+		 * @param {string|null} before The ticket before.
+		 *
+		 * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+		 */
+		aboutTicketId(now, before) {
+			if (before) this.loadAppointment(useObjectStore())
 		},
 	},
 
@@ -407,12 +425,35 @@ export default {
 						client: this.resolvedClientId,
 						_limit: 100,
 					})) || []
+				await this.loadAppointment(store)
 			} catch {
 				this.error = t(
 					'pipelinq',
 					'The letter templates could not be loaded.',
 				)
 			}
+		},
+
+		/**
+		 * The client's next appointment, for the letter's Afspraak field.
+		 * Without one the letter is made all the same.
+		 *
+		 * @param {object} store The object store.
+		 * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+		 */
+		async loadAppointment(store) {
+			const ticketId = this.resolvedTicketId || this.aboutTicketId || ''
+			const bookings = (await store.fetchCollection('appointmentBooking', {
+				customerId: this.resolvedClientId,
+				_limit: 200,
+			}).catch(() => [])) || []
+			if (ticketId) {
+				bookings.push(...((await store.fetchCollection('appointmentBooking', {
+					ticket: ticketId,
+					_limit: 50,
+				}).catch(() => [])) || []))
+			}
+			this.appointmentId = nextAppointment(bookings, ticketId)?.id || null
 		},
 
 		/**
@@ -472,6 +513,7 @@ export default {
 					templateId: this.templateId,
 					contactId: this.contactId || undefined,
 					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
+					appointmentId: this.appointmentId || undefined,
 				})
 				if (request !== this.previewRequest) return
 				this.previewHtml = letterPreviewBody(preview.html)
@@ -501,6 +543,7 @@ export default {
 					templateId: this.templateId,
 					contactId: this.contactId || undefined,
 					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
+					appointmentId: this.appointmentId || undefined,
 					downloadOnly: true,
 				})
 				downloadLetter(letter)
@@ -527,6 +570,7 @@ export default {
 					templateId: this.templateId,
 					contactId: this.contactId || undefined,
 					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
+					appointmentId: this.appointmentId || undefined,
 				})
 				downloadLetter(letter)
 				this.result = letter
@@ -650,15 +694,15 @@ export default {
 	gap: 8px;
 	padding: 10px 12px;
 	border-radius: var(--border-radius-large, 8px);
-	background: var(--color-success-hover, var(--color-background-hover));
-	color: var(--color-success-text, var(--color-main-text));
+	background: var(--cn-board-success-tint, #e7f3ea);
+	color: var(--cn-board-success-ink, #1e6b2a);
 	font-size: 14px;
 	font-weight: 600;
 }
 
 .letter-modal__check--missing {
-	background: var(--color-warning-hover, var(--color-background-hover));
-	color: var(--color-warning-text, var(--color-main-text));
+	background: var(--cn-board-notice-bg, #fff4de);
+	color: var(--cn-board-notice-ink, #7a4f00);
 }
 
 /* "Download PDF" stands at the start of the footer, the other two at the end. */

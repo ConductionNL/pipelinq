@@ -18,9 +18,10 @@
 		data-testid="convert-to-case-dialog"
 		@closing="$emit('close')">
 		<div class="convert-to-case">
-			<CnNoteCard
-				type="success"
-				:text="t('pipelinq', '{app} is available and can take over this request as a case.', { app: targetApp })" />
+			<p class="convert-to-case__available" role="status" data-testid="convert-to-case-available">
+				<CheckCircleOutline class="convert-to-case__available-icon" :size="18" />
+				{{ t('pipelinq', '{app} is available and can take over this request as a case.', { app: targetApp }) }}
+			</p>
 			<div v-if="caseTypeSource" class="convert-to-case__field">
 				<CnResourceSelect
 					:register="caseTypeSource.register"
@@ -101,15 +102,16 @@
 </template>
 
 <script>
-import { CnDialog, CnNoteCard, CnResourceSelect } from '@conduction/nextcloud-vue'
+import { CnDialog, CnResourceSelect } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon } from '@nextcloud/vue'
+import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import FolderPlusOutline from 'vue-material-design-icons/FolderPlusOutline.vue'
 import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 
 export default {
 	name: 'ConvertToCaseDialog',
-	components: { CnDialog, CnNoteCard, CnResourceSelect, FolderPlusOutline, LockOutline, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon },
+	components: { CheckCircleOutline, CnDialog, CnResourceSelect, FolderPlusOutline, LockOutline, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon },
 
 	props: {
 		/** The request ticket being converted. */
@@ -240,6 +242,27 @@ export default {
 	gap: 16px;
 }
 
+/* Board PqTicketOmzetten: the target app's availability as a green strip,
+   the sentence in bold success ink beside a check outline. */
+.convert-to-case__available {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	padding: 9px 14px;
+	border-radius: var(--border-radius-large, 8px);
+	background: var(--cn-board-success-tint, var(--color-success-light, #e7f3ea));
+	color: var(--cn-board-success-ink, var(--color-success-text, #1e6b2a));
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 20px;
+}
+
+.convert-to-case__available-icon {
+	display: inline-flex;
+	flex: none;
+}
+
 .convert-to-case__hint {
 	margin: 4px 0 0;
 	color: var(--color-text-maxcontrast);
@@ -252,8 +275,8 @@ export default {
 
 .convert-to-case__carried--block {
 	padding: 14px 16px;
-	border-radius: var(--border-radius-large, 8px);
-	background: var(--color-background-hover);
+	border-radius: var(--cn-board-control-radius, 8px);
+	background: var(--cn-board-sunken-ground, var(--color-background-hover));
 }
 
 .convert-to-case__heading {
@@ -262,7 +285,7 @@ export default {
 	gap: 8px;
 	margin: 0 0 10px;
 	font-size: 14px;
-	font-weight: 600;
+	font-weight: 700;
 }
 
 .convert-to-case__lock {
@@ -277,7 +300,20 @@ export default {
 	margin: 0;
 }
 
+/* Each label over its value, as the board draws them, also under a theme
+   that floats a definition term beside its value. */
+.convert-to-case__fact {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
 .convert-to-case__facts dt {
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 0;
+	text-align: start;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
@@ -288,5 +324,6 @@ export default {
 
 .convert-to-case__facts dd {
 	margin: 0;
+	padding: 0;
 }
 </style>

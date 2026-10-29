@@ -43,6 +43,17 @@ describe('the BI export pages (pl2 PqBiExport)', () => {
 		}
 	})
 
+	it('puts Test run in each job\'s row menu, the outlined ⋯ the board draws', () => {
+		const jobs = view('ExportJobs.vue')
+		// An inline tertiary "Test run" ran past the card's right edge.
+		expect(jobs).not.toContain('#row-actions')
+		expect(jobs).toContain(':actions="rowActions"')
+		expect(jobs).toMatch(/id: 'test-run',\s*label: t\('pipelinq', 'Test run'\)/)
+		for (const builtin of ['showEditAction', 'showCopyAction', 'showDeleteAction']) {
+			expect(jobs, builtin).toContain(`:${builtin}="false"`)
+		}
+	})
+
 	it('offers the Filter button on the jobs list', () => {
 		expect(view('ExportJobs.vue')).toContain(':filterMenu="true"')
 	})

@@ -30,13 +30,9 @@
 					<li
 						v-for="contact in results"
 						:key="contact.uid"
-						class="import-result">
-						<NcAvatar
-							:displayName="contact.name || t('pipelinq', 'Unknown')"
-							:size="36"
-							:disableMenu="true"
-							:disableTooltip="true"
-							:isNoUser="true" />
+						class="import-result"
+						:class="{ 'import-result--selected': isSelected(contact) }">
+						<span class="import-result__initials" aria-hidden="true">{{ initialsOf(contact.name || t('pipelinq', 'Unknown')) }}</span>
 						<div class="import-result__info">
 							<span class="import-result__name">{{ contact.name || t('pipelinq', 'Unknown') }}</span>
 							<span class="import-result__meta">{{ metaLine(contact) }}</span>
@@ -48,10 +44,11 @@
 						</span>
 						<NcButton
 							v-else
-							:pressed="isSelected(contact)"
+							:aria-pressed="isSelected(contact) ? 'true' : 'false'"
 							:disabled="importing"
 							variant="secondary"
-							@update:pressed="toggle(contact)">
+							data-testid="import-result-toggle"
+							@click="toggle(contact)">
 							<template #icon>
 								<AccountPlusOutline :size="20" />
 							</template>
@@ -67,9 +64,10 @@
 				{{ t('pipelinq', 'No contacts found') }}
 			</p>
 
-			<NcNoteCard type="info" class="import-dialog__note">
+			<p class="import-dialog__note" data-testid="import-dialog-note">
+				<InformationOutline :size="16" class="import-dialog__note-icon" />
 				{{ t('pipelinq', 'Importing creates a contact in Pipelinq and links it to the card, so later changes go both ways. Type at least 2 characters to search your Nextcloud contacts.') }}
-			</NcNoteCard>
+			</p>
 		</div>
 
 		<template #actions>
@@ -93,20 +91,21 @@
 import { CnDialog } from '@conduction/nextcloud-vue'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcAvatar, NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
+import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
+import { initialsOf } from '../services/userDisplayName.js'
 
 export default {
 	name: 'ContactImportDialog',
 	components: {
 		AccountPlusOutline,
+		InformationOutline,
 		Magnify,
-		NcAvatar,
 		CnDialog,
 		NcButton,
 		NcLoadingIcon,
-		NcNoteCard,
 		NcTextField,
 	},
 
@@ -125,8 +124,13 @@ export default {
 
 	emits: ['close', 'imported'],
 
+	/**
+	 * Exposes the translation and initials helpers to the template.
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md
+	 */
 	setup() {
-		return { t, n }
+		return { t, n, initialsOf }
 	},
 
 	data() {
@@ -315,6 +319,25 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 }
 
+/* A chosen card keeps its outlined Import button; the row carries the choice. */
+.import-result--selected {
+	background: var(--color-primary-element-light);
+}
+
+.import-result__initials {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: var(--color-background-hover);
+	color: var(--cn-board-text-soft, #3d4047);
+	font-size: 12px;
+	font-weight: 700;
+}
+
 .import-result__info {
 	display: flex;
 	flex: 1;
@@ -335,13 +358,26 @@ export default {
 .import-result__linked {
 	padding: 2px 8px;
 	border-radius: var(--border-radius-pill);
-	background: var(--color-success-hover, var(--color-background-hover));
-	color: var(--color-success-text, var(--color-success));
-	font-size: 13px;
+	background: var(--cn-board-success-tint, #e7f3ea);
+	color: var(--cn-board-success-ink, #1e6b2a);
+	font-size: 12px;
 	font-weight: 600;
 }
 
 .import-dialog__note {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
 	margin: 0;
+	padding: 10px 12px;
+	border-radius: var(--border-radius-large, 8px);
+	background: var(--color-background-hover);
+	color: var(--cn-board-text-soft, #3d4047);
+	font-size: 14px;
+}
+
+.import-dialog__note-icon {
+	flex: none;
+	margin-top: 2px;
 }
 </style>

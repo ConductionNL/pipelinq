@@ -19,7 +19,12 @@ describe('the Ask Navi card', () => {
 		expect(src).toContain("t('pipelinq', 'Ask a question about these figures')")
 		expect(src).toMatch(/<label :for="inputId"/)
 		expect(src).toContain("t('pipelinq', 'Ask')")
-		expect(src).toContain('border-radius: 17px')
+	})
+
+	it('draws Ask as the shared tonal pill, so the light primary ground is the body tint', () => {
+		// NcButton redefines --color-primary-element-light inside the button.
+		expect(src).toMatch(/class="navi-widget__ask cn-button--tonal"/)
+		expect(src).not.toMatch(/\.navi-widget__ask\.button-vue[^{]*\{[^}]*background-color/)
 	})
 
 	it('shows no welcome text and draws the conversation only once there is one', () => {

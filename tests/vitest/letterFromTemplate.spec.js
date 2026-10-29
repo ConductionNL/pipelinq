@@ -370,6 +370,39 @@ describe('LetterFromTemplateModal preview', () => {
 		expect(w.find('[data-testid="letter-fields"]').text()).toContain('Not filled in, uit Afspraken')
 	})
 
+	it('passes the client\'s next appointment, so the Afspraak field can be filled', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
+		storeMock.fetchCollection.mockImplementation(async (type, params) => {
+			if (type === 'appointmentBooking' && params.customerId === CLIENT) {
+				return [{ id: 'appt-1', startAt: '2999-10-14T10:30:00+02:00', status: 'confirmed' }]
+			}
+			return []
+		})
+
+		mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+
+		expect(api.previewLetter).toHaveBeenLastCalledWith(CLIENT, { templateId: 'tpl-1', contactId: undefined, ticketId: undefined, appointmentId: 'appt-1' })
+	})
+
+	it('takes the appointment on the ticket the user picks', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
+		storeMock.fetchCollection.mockImplementation(async (type, params) => {
+			if (type === 'ticket') return [{ id: 't-1', title: 'Een' }, { id: 't-2', title: 'Twee' }]
+			if (type === 'appointmentBooking' && params.ticket === 't-2') {
+				return [{ id: 'appt-2', startAt: '2999-10-14T10:30:00+02:00', status: 'confirmed', ticket: 't-2' }]
+			}
+			return []
+		})
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+		w.vm.aboutTicketId = 't-2'
+		await flushPromises()
+
+		expect(api.previewLetter).toHaveBeenLastCalledWith(CLIENT, { templateId: 'tpl-1', contactId: undefined, ticketId: 't-2', appointmentId: 'appt-2' })
+	})
+
 	it('downloads the PDF without filing or logging it', async () => {
 		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
 		api.makeLetter.mockResolvedValue({ content: 'JVBERg==', filename: 'x.pdf', warnings: [], contactMomentId: null })

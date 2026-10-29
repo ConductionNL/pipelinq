@@ -1,3 +1,4 @@
 - [x] ContactLogDialog + registry
 - [x] ticket-log-contact opens it
 - [x] vitest contactLogDialog, simpleTicketPage
+- [x] Customer as a picker starting on the ticket's customer; save for the picked customer (vitest contactLogDialog)

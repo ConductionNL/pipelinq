@@ -668,6 +668,8 @@ return [
         ['name' => 'article#publish',    'url' => '/api/articles/{id}/publish',   'verb' => 'POST'],
         ['name' => 'article#archive',    'url' => '/api/articles/{id}/archive',   'verb' => 'POST'],
         ['name' => 'article#transition', 'url' => '/api/articles/{id}/transition', 'verb' => 'POST'],
+        // Shared label list: a rename also rewrites the items that carry the label.
+        ['name' => 'label#rename', 'url' => '/api/labels/{id}/rename', 'verb' => 'POST'],
         ['name' => 'article#usages',     'url' => '/api/articles/{id}/usages',    'verb' => 'GET'],
         ['name' => 'article#show',       'url' => '/api/articles/{id}',           'verb' => 'GET'],
         ['name' => 'article#update',     'url' => '/api/articles/{id}',           'verb' => 'PATCH'],

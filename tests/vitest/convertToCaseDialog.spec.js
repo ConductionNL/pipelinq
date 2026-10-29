@@ -11,6 +11,8 @@
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
@@ -71,6 +73,7 @@ beforeEach(() => {
 	store.fetchObject.mockReset()
 })
 
+const source = readFileSync(resolve(__dirname, '../../src/dialogs/ConvertToCaseDialog.vue'), 'utf8')
 const global = { mixins: [{ methods: { t: (app, text) => text } }] }
 const ticket = { reference: 'PQ-2026-0417', title: 'Vraag over vergunning straatfeest Parkstraat', description: 'Een straatfeest.', client: 'c1' }
 
@@ -112,9 +115,29 @@ describe('ConvertToCaseDialog', () => {
 		expect(w.emitted('confirm')[0][0]).toMatchObject({ keepOpen: true, informCustomer: true })
 	})
 
-	it('says dossiq is available in a success note, as the board', () => {
+	// Board PqTicketOmzetten: a green strip with a check outline and the
+	// sentence in bold green ink, no note card with its side bar.
+	it('says dossiq is available in the board\'s green strip', () => {
 		const w = mount(Dialog, { props: { ticket }, global })
-		expect(w.find('.cn-note').attributes('data-type')).toBe('success')
+		const strip = w.find('[data-testid="convert-to-case-available"]')
+		expect(strip.exists()).toBe(true)
+		expect(strip.attributes('role')).toBe('status')
+		expect(strip.classes()).toContain('convert-to-case__available')
+		expect(strip.find('.convert-to-case__available-icon').exists()).toBe(true)
+		expect(strip.text()).toBe('dossiq is available and can take over this request as a case.')
+		expect(w.find('.cn-note').exists()).toBe(false)
+	})
+
+	it('draws the strip on the success tint in bold success ink, and stacks each fact label over its value', () => {
+		const style = source.slice(source.indexOf('<style'))
+		expect(style).toMatch(/\.convert-to-case__available \{[^}]*background: var\(--cn-board-success-tint/)
+		expect(style).toMatch(/\.convert-to-case__available \{[^}]*color: var\(--cn-board-success-ink/)
+		expect(style).toMatch(/\.convert-to-case__available \{[^}]*font-weight: 600/)
+		expect(style).toMatch(/\.convert-to-case__fact \{[^}]*flex-direction: column/)
+		expect(style).toMatch(/\.convert-to-case__facts dt \{[^}]*text-align: start/)
+		expect(style).toMatch(/\.convert-to-case__carried--block \{[^}]*background: var\(--cn-board-sunken-ground/)
+		expect(style).toMatch(/\.convert-to-case__carried--block \{[^}]*border-radius: var\(--cn-board-control-radius, 8px\)/)
+		expect(style).toMatch(/\.convert-to-case__heading \{[^}]*font-weight: 700/)
 	})
 
 	it('sets what goes with the case in a tinted block, each label over its value, the requester with the address', () => {

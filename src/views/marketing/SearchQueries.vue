@@ -429,7 +429,8 @@ export default {
 	box-sizing: border-box;
 	width: 100%;
 	max-width: 1240px;
-	padding: 24px 28px;
+	/* The title at 96, as the Dq page headers (28px under the content top). */
+	padding: 28px 28px 24px;
 	display: flex;
 	flex-direction: column;
 	gap: 20px;

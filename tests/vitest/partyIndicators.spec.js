@@ -63,9 +63,20 @@ describe('party warnings are mounted', () => {
 			)
 			expect(widget, `${pageId} mounts PartyIndicatorPanel`).toBeTruthy()
 			expect(widget.placement).toBe('before-body')
-			expect(widget.props).toEqual({ partyId: '@objectId' })
+			// Board PqContactpersoon: one framed line with the shield, "No
+			// warnings on this contact person." and the Add a warning link.
+			expect(widget.props).toEqual({ partyId: '@objectId', compact: true, framed: true, partyKind: 'contact' })
 		},
 	)
+
+	it('names a contact person in the none line and frames the strip on its own', () => {
+		const panel = readFileSync(resolve(root, 'src/components/PartyIndicatorPanel.vue'), 'utf8')
+		expect(panel).toContain("t('pipelinq', 'No warnings on this contact person.')")
+		expect(panel).toMatch(/'party-indicators--framed': compact && framed/)
+		const nl = JSON.parse(readFileSync(resolve(root, 'l10n/nl.json'), 'utf8')).translations
+		expect(nl['No warnings on this contact person.']).toBe('Geen waarschuwingen bij deze contactpersoon.')
+		expect(nl.Call).toBe('Bellen')
+	})
 
 	it('registers the panel as a section component', () => {
 		expect(registry).toMatch(

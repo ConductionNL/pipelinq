@@ -382,12 +382,12 @@ export default {
 }
 
 .forecast-trend__move--into {
-	background: var(--color-success-hover, #e7f3ea);
-	color: var(--color-success-text, #1e6b2a);
+	background: var(--cn-board-success-tint, #e7f3ea);
+	color: var(--cn-board-success-ink, #1e6b2a);
 }
 
 .forecast-trend__move--out {
-	background: var(--color-error-hover, #fcedec);
+	background: var(--cn-board-red-tag-ground, #fcedec);
 	color: var(--color-error-text, #a30000);
 }
 
