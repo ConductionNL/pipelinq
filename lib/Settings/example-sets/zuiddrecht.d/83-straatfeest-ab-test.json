@@ -38,7 +38,8 @@
 				"senderName": "Gemeente Zuiddrecht",
 				"senderEmail": "nieuws@zuiddrecht.example",
 				"language": "nl",
-				"bodyText": "Straatfeest deze zomer? Dit moet je regelen\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"bodyText": "Straatfeest deze zomer? Dit moet je regelen\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
+				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:pieter.uid}}"
 			}
 		},

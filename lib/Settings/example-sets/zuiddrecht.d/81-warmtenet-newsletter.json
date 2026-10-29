@@ -42,7 +42,8 @@
 				"senderName": "Gemeente Zuiddrecht",
 				"senderEmail": "nieuws@zuiddrecht.example",
 				"language": "nl",
-				"bodyText": "Nieuwsbrief oktober\n\nOp de informatieavond over het warmtenet Oost hoort u hoe de aansluiting werkt, wat het kost en wanneer de straat open gaat. Wijkcentrum De Linde, Lindelaan 2. Meld u aan via zuiddrecht.example/warmtenet-oost.\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"bodyText": "Nieuwsbrief oktober\n\nOp de informatieavond over het warmtenet Oost hoort u hoe de aansluiting werkt, wat het kost en wanneer de straat open gaat. Wijkcentrum De Linde, Lindelaan 2. Meld u aan via zuiddrecht.example/warmtenet-oost.\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
+				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:lotte.uid}}"
 			}
 		},

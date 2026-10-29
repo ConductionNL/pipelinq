@@ -251,7 +251,8 @@
 				"senderName": "Gemeente Zuiddrecht",
 				"senderEmail": "nieuws@zuiddrecht.example",
 				"language": "nl",
-				"bodyText": "Van 28 september tot 11 oktober is het Afvalvrije week. Bestel een gratis compostbak voor uw tuin op https://mijn.zuiddrecht.example/afvalvrij.\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"bodyText": "Van 28 september tot 11 oktober is het Afvalvrije week. Bestel een gratis compostbak voor uw tuin op https://mijn.zuiddrecht.example/afvalvrij.\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
+				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:pieter.uid}}"
 			}
 		},
@@ -286,7 +287,8 @@
 				"senderName": "Gemeente Zuiddrecht",
 				"senderEmail": "nieuws@zuiddrecht.example",
 				"language": "nl",
-				"bodyText": "De Afvalvrije week loopt tot 11 oktober. Wie nog een gratis compostbak wil, bestelt hem op https://mijn.zuiddrecht.example/afvalvrij.\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"bodyText": "De Afvalvrije week loopt tot 11 oktober. Wie nog een gratis compostbak wil, bestelt hem op https://mijn.zuiddrecht.example/afvalvrij.\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
+				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:pieter.uid}}"
 			}
 		},
