@@ -7481,6 +7481,24 @@
 						"title": "History",
 						"icon": "History",
 						"content": {
+							"layout": "stacked",
+							"density": "compact",
+							"actionLabels": {
+								"create": "Opened by {actor}",
+								"update": "Updated"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "closed",
+									"label": "Closed and counted"
+								},
+								{
+									"field": "status",
+									"to": "reconciled",
+									"label": "Reconciled"
+								}
+							],
 							"maxDisplay": 4,
 							"excludeActions": [
 								"read"
@@ -9011,6 +9029,29 @@
 						"title": "History",
 						"icon": "History",
 						"content": {
+							"layout": "stacked",
+							"density": "compact",
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "confirmed",
+									"label": "Confirmed"
+								},
+								{
+									"field": "status",
+									"to": "settled",
+									"label": "Settled"
+								},
+								{
+									"field": "status",
+									"to": "refunded",
+									"label": "Refunded"
+								}
+							],
 							"maxDisplay": 3,
 							"excludeActions": [
 								"read"
