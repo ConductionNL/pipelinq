@@ -1556,7 +1556,8 @@
 								{
 									"widgetId": "ticket-contactmoments",
 									"label": "Contact moments",
-									"countFrom": "widget"
+									"countFrom": "widget",
+									"showTitle": true
 								},
 								{
 									"widgetId": "ticket-related",
@@ -1668,6 +1669,10 @@
 							"emptyText": "No contact moments on this ticket yet.",
 							"allowCreate": true,
 							"addLabel": "Log contact",
+							"_addPlacementNote": "Board PqTicketContactmomenten: Log contact is the outlined phone button in the tab's title row, with the count line under the title.",
+							"addPlacement": "header",
+							"addIcon": "Phone",
+							"headerSubtitle": "{total} on this ticket, newest first",
 							"formIncludeFields": [
 								"channel",
 								"direction",

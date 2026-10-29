@@ -9310,7 +9310,8 @@ OC.L10N.register(
         "Closed, template required": "Closed, template required",
         "Labels from the shared list.": "Labels from the shared list.",
         "The word people pick, for example duurzaam. Unique in the list, whatever the case.": "The word people pick, for example duurzaam. Unique in the list, whatever the case.",
-        "When to use this label.": "When to use this label."
+        "When to use this label.": "When to use this label.",
+        "{total} on this ticket, newest first": "{total} on this ticket, newest first"
     },
     "nplurals=2; plural=(n != 1);"
 )
