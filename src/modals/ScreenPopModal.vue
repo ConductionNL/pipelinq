@@ -151,8 +151,12 @@ export default {
 </script>
 
 <style scoped>
+/* Board PqInkomendGesprek: the matches fill the dialog's content width, the
+   name column first and the button column last flush with the content edge,
+   the head in soft ink on the dialog ground. */
 .screen-pop__table {
 	width: 100%;
+	table-layout: fixed;
 	border-collapse: collapse;
 }
 
@@ -160,7 +164,37 @@ export default {
 .screen-pop__table td {
 	padding: 8px 12px;
 	text-align: start;
+	white-space: normal;
+	overflow-wrap: break-word;
 	border-bottom: 1px solid var(--color-border);
+	font-size: 14px;
+	line-height: 1.2;
+}
+
+.screen-pop__table th:first-child,
+.screen-pop__table td:first-child {
+	width: 30%;
+	padding-inline-start: 0;
+}
+
+.screen-pop__table th:nth-child(2),
+.screen-pop__table td:nth-child(2) {
+	width: 28%;
+}
+
+.screen-pop__table th:nth-child(3),
+.screen-pop__table td:nth-child(3) {
+	width: 22%;
+}
+
+.screen-pop__table th:last-child,
+.screen-pop__table td:last-child {
+	width: 20%;
+	padding-inline-end: 0;
+}
+
+.screen-pop__table td:first-child {
+	font-weight: 600;
 }
 
 .screen-pop__actions {
@@ -177,7 +211,14 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+.screen-pop__full-name {
+	font-weight: 400;
+}
+
 .screen-pop__table th {
+	padding-block: 6px 13px;
+	background: transparent;
+	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 	font-weight: 600;
 }
