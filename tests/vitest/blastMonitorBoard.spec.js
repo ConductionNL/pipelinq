@@ -61,8 +61,16 @@ describe('the send monitor as board PqVerzendmonitor', () => {
 		const cancel = wrapper.find('.blast-monitor__cancel')
 		expect(cancel.exists()).toBe(true)
 		expect(cancel.attributes('data-variant')).toBe('secondary')
-		expect(source).toMatch(/\.blast-monitor__cancel[^{]*\{[^}]*color: var\(--color-error-text\)/)
 		wrapper.unmount()
+	})
+
+	it('outranks the board look\'s neutral secondary with the error tag ink', () => {
+		// look-board.css makes every secondary neutral at (0,3,0); the scoped
+		// rule needs the page's class in front to win.
+		const rule = source.match(/\.blast-monitor \.blast-monitor__cancel\.button-vue \{([^}]*)\}/)
+		expect(rule).not.toBeNull()
+		expect(rule[1]).toMatch(/border: 1px solid var\(--nldesign-component-status-badge-error-color, var\(--nl-color-red-text, var\(--color-error-text\)\)\)/)
+		expect(rule[1]).toMatch(/color: var\(--nldesign-component-status-badge-error-color/)
 	})
 
 	it('sets the page title bold at 28px on a 1.2 line', () => {
