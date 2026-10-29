@@ -179,7 +179,7 @@
 								"address",
 								"source",
 								"registeredAt",
-								{ "key": "status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "waitlist": "warning", "cancelled": "default" } } }
+								{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "waitlist": "warning", "cancelled": "default" } } }
 							],
 							"emptyText": "No registrations yet."
 						}

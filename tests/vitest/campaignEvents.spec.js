@@ -115,7 +115,7 @@ describe('the event page', () => {
 	it('tones each registration status in the tab as the latest registrations do', () => {
 		const recent = widget(detail, 'event-registrations-recent').content.columns.find((column) => column.key === 'status')
 		const status = widget(detail, 'event-registrations').content.columns.find((column) => column?.key === 'status')
-		expect(status).toMatchObject({ widget: 'badge', widgetProps: { colorMap: recent.widgetProps.colorMap } })
+		expect(status).toMatchObject({ label: recent.label, widget: 'badge', widgetProps: { colorMap: recent.widgetProps.colorMap } })
 		expect(recent.widgetProps.colorMap.confirmed).toBe('success')
 	})
 
