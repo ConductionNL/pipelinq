@@ -7731,6 +7731,7 @@ OC.L10N.register(
         "deadline still ahead": "uiterste datum nog niet bereikt",
         "Past the deadline": "Over de termijn",
         "pick these up first": "pak deze eerst op",
+        "take the red ones first": "pak de rode eerst",
         "Website form": "Websiteformulier",
         "Unpublished": "Niet gepubliceerd",
         "The form's name, as admins see it.": "De naam van het formulier, zoals beheerders die zien.",

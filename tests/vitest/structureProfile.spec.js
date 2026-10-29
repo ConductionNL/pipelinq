@@ -186,7 +186,8 @@ describe('the full profile', () => {
 		)
 		expect(simpleIndex.length).toBeGreaterThan(0)
 		for (const page of simpleIndex) {
-			expect(page.config?.headerFilters, page.id).toBe(true)
+			// A list without column heads has no heads to filter in.
+			expect(page.config?.headerFilters || page.config?.hideTableHeader === true, page.id).toBe(true)
 			expect(page.config?.showTitle, page.id).toBe(true)
 		}
 		const unchanged = { pages: [{ id: 'x', type: 'detail', config: {} }] }

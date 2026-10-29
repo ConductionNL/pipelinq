@@ -7823,6 +7823,7 @@ OC.L10N.register(
         "deadline still ahead": "deadline still ahead",
         "Past the deadline": "Past the deadline",
         "pick these up first": "pick these up first",
+        "take the red ones first": "take the red ones first",
         "Website form": "Website form",
         "Unpublished": "Unpublished",
         "The form's name, as admins see it.": "The form's name, as admins see it.",

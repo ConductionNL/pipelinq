@@ -3514,7 +3514,7 @@
 		},
 		{
 			"id": "Queue",
-			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, past the deadline), the type tabs with a channel strip under them, and per row the wait, the title with the customer and channel, the type, the priority, Take on as a pill and View as an eye beside it with no menu (`rowInlineActions`, nextcloud-vue index-row-inline-actions). No search field, no add button and no column filters: a queue is worked from the top. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated. THE CHANNEL STRIP: channel is a free string and each ticket type stores its own spelling (phone and web on requests and complaints, telefoon and balie on contact moments), so each pill lists its spellings in `values` (nextcloud-vue filter-strip-option-values). Before that library change an option without `value` is skipped and the strip stays away, as it was.",
+			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, and within the deadline: the waiting tickets minus those past their deadline, out of all waiting ones, through `limitSource` and `limitStyle: \"of\"`, nextcloud-vue stat-limit-of-a-count), the type tabs as a segmented control at the top of the list card with \"Kind, then channel\" beside them and the channel strip under them (`quickFilterPlacement: \"card\"`, nextcloud-vue index-lenses-in-list-card), rows without column heads (`hideTableHeader`), and per row the wait, the title with the customer and channel, the type, the priority, Take on as a pill and View as an eye beside it with no menu (`rowInlineActions`, nextcloud-vue index-row-inline-actions). No search field, no add button and no column filters: a queue is worked from the top. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated. THE CHANNEL STRIP: channel is a free string and each ticket type stores its own spelling (phone and web on requests and complaints, telefoon and balie on contact moments), so each pill lists its spellings in `values` (nextcloud-vue filter-strip-option-values). Before that library change an option without `value` is skipped and the strip stays away, as it was.",
 			"config": {
 				"headerButtons": [
 					{
@@ -3535,6 +3535,9 @@
 				"search": false,
 				"showAdd": false,
 				"headerFilters": false,
+				"hideTableHeader": true,
+				"quickFilterPlacement": "card",
+				"quickFilterCaption": "Kind, then channel",
 				"footerNote": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
 				"filterStrip": {
 					"field": "channel",
@@ -3696,13 +3699,90 @@
 							},
 							"caption": "the oldest ticket nobody has picked up"
 						}
+					},
+					{
+						"id": "queue-within-deadline",
+						"type": "stat",
+						"title": "Within the deadline",
+						"content": {
+							"label": "Within the deadline",
+							"caption": "take the red ones first",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"kind": "computed",
+								"register": "pipelinq",
+								"schema": "ticket",
+								"formula": "A - B",
+								"parts": {
+									"A": {
+										"filter": {
+											"assignee": {
+												"isnull": true
+											},
+											"status": {
+												"notIn": [
+													"resolved",
+													"completed",
+													"rejected",
+													"converted",
+													"closed"
+												]
+											}
+										}
+									},
+									"B": {
+										"filter": {
+											"assignee": {
+												"isnull": true
+											},
+											"status": {
+												"notIn": [
+													"resolved",
+													"completed",
+													"rejected",
+													"converted",
+													"closed"
+												]
+											},
+											"slaDeadline[lt]": "@now"
+										}
+									}
+								}
+							},
+							"limitSource": {
+								"filter": {
+									"assignee": {
+										"isnull": true
+									},
+									"status": {
+										"notIn": [
+											"resolved",
+											"completed",
+											"rejected",
+											"converted",
+											"closed"
+										]
+									}
+								}
+							},
+							"limitStyle": "of"
+						}
 					}
 				]
+			},
+			"configPatch": {
+				"statRow": {
+					"queue-past-deadline": null
+				}
 			},
 			"configOrder": {
 				"statRow": [
 					"queue-unassigned",
-					"queue-longest-waiting"
+					"queue-longest-waiting",
+					"queue-within-deadline"
 				]
 			}
 		},

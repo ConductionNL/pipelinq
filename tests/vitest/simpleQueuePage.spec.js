@@ -69,7 +69,7 @@ describe('the queue, simple structure', () => {
 		expect(simple.statRow.map((tile) => tile.id)).toEqual([
 			'queue-unassigned',
 			'queue-longest-waiting',
-			'queue-past-deadline',
+			'queue-within-deadline',
 		])
 		const longest = simple.statRow[1].content
 		expect(longest.display).toBe('countdown')
@@ -131,8 +131,9 @@ describe('the queue, simple structure', () => {
 			...overlay.configAppend.statRow.flatMap((tile) => [
 				tile.title,
 				tile.content.caption,
-				tile.content.countdown.pastLabel,
+				...(tile.content.countdown ? [tile.content.countdown.pastLabel] : []),
 			]),
+			overlay.config.quickFilterCaption,
 			...overlay.config.sidePanel.map((card) => card.title),
 			overlay.config.sidePanel[1].content.text,
 			overlay.config.sidePanel[1].content.link.label,
