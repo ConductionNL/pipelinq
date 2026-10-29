@@ -116,22 +116,22 @@ class LabelRenameServiceTest extends TestCase {
 			}
 		};
 
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
 
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnArgument(2);
 
-		$userSession = $this->createMock(IUserSession::class);
+		$userSession = $this->createMock(originalClassName: IUserSession::class);
 		$user = null;
 		if ($this->userId !== null) {
-			$user = $this->createMock(IUser::class);
+			$user = $this->createMock(originalClassName: IUser::class);
 			$user->method('getUID')->willReturn($this->userId);
 		}
 
 		$userSession->method('getUser')->willReturn($user);
 
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturnCallback(fn (string $uid): bool => $uid === $this->userId && $this->isAdmin);
 
 		return new LabelRenameService(
@@ -140,7 +140,7 @@ class LabelRenameServiceTest extends TestCase {
 			userSession: $userSession,
 			groupManager: $groupManager,
 			jobList: $this->jobList,
-			logger: $this->createMock(LoggerInterface::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
 		);
 	}//end service()
 
@@ -151,7 +151,7 @@ class LabelRenameServiceTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		$this->jobList = $this->createMock(IJobList::class);
+		$this->jobList = $this->createMock(originalClassName: IJobList::class);
 		foreach (['afval', 'duurzaam', 'parkeren', 'ondernemers', 'evenementen'] as $i => $name) {
 			$this->store['label']['l'.$i] = ['id' => 'l'.$i, 'name' => $name];
 		}
@@ -173,15 +173,15 @@ class LabelRenameServiceTest extends TestCase {
 	public function testARenamedLabelFollowsItsItems(): void {
 		$result = $this->service()->rename(labelId: 'l3', name: 'ondernemers centrum');
 
-		$this->assertSame('ondernemers centrum', $this->store['label']['l3']['name']);
+		$this->assertSame(expected: 'ondernemers centrum', actual: $this->store['label']['l3']['name']);
 		for ($i = 1; $i <= 5; $i++) {
-			$this->assertSame(['ondernemers centrum', 'duurzaam'], $this->store['lead']['lead'.$i]['labels']);
+			$this->assertSame(expected: ['ondernemers centrum', 'duurzaam'], actual: $this->store['lead']['lead'.$i]['labels']);
 		}
 
-		$this->assertSame(['afval'], $this->store['lead']['lead6']['labels']);
-		$this->assertSame(['ondernemers centrum'], $this->store['client']['c1']['labels']);
-		$this->assertSame(['ondernemers centrum'], $this->store['article']['a1']['tags'], 'an article on both names keeps one');
-		$this->assertSame(['id' => 'l3', 'name' => 'ondernemers centrum', 'rewritten' => 7, 'queued' => false], $result);
+		$this->assertSame(expected: ['afval'], actual: $this->store['lead']['lead6']['labels']);
+		$this->assertSame(expected: ['ondernemers centrum'], actual: $this->store['client']['c1']['labels']);
+		$this->assertSame(expected: ['ondernemers centrum'], actual: $this->store['article']['a1']['tags'], message: 'an article on both names keeps one');
+		$this->assertSame(expected: ['id' => 'l3', 'name' => 'ondernemers centrum', 'rewritten' => 7, 'queued' => false], actual: $result);
 	}//end testARenamedLabelFollowsItsItems()
 
 	/**
@@ -195,12 +195,12 @@ class LabelRenameServiceTest extends TestCase {
 
 		try {
 			$service->rename(labelId: 'l3', name: 'ondernemers centrum');
-			$this->fail('the rename went through');
+			$this->fail(message: 'the rename went through');
 		} catch (LabelRenameException $e) {
-			$this->assertSame(403, $e->getStatus());
+			$this->assertSame(expected: 403, actual: $e->getStatus());
 		}
 
-		$this->assertSame([], $this->writes);
+		$this->assertSame(expected: [], actual: $this->writes);
 	}//end testANonAdministratorIsRefusedBeforeAnyWrite()
 
 	/**
@@ -210,7 +210,7 @@ class LabelRenameServiceTest extends TestCase {
 	 */
 	public function testNoSessionIsRefused(): void {
 		$this->userId = null;
-		$this->expectExceptionObject(new LabelRenameException(message: 'Only an administrator can rename a label.', status: 403));
+		$this->expectExceptionObject(exception: new LabelRenameException(message: 'Only an administrator can rename a label.', status: 403));
 		$this->service()->rename(labelId: 'l3', name: 'x');
 	}//end testNoSessionIsRefused()
 
@@ -222,12 +222,12 @@ class LabelRenameServiceTest extends TestCase {
 	public function testANameOnTheListIsRefused(): void {
 		try {
 			$this->service()->rename(labelId: 'l3', name: ' Duurzaam ');
-			$this->fail('the rename went through');
+			$this->fail(message: 'the rename went through');
 		} catch (LabelRenameException $e) {
-			$this->assertSame(409, $e->getStatus());
+			$this->assertSame(expected: 409, actual: $e->getStatus());
 		}
 
-		$this->assertSame([], $this->writes);
+		$this->assertSame(expected: [], actual: $this->writes);
 	}//end testANameOnTheListIsRefused()
 
 	/**
@@ -240,13 +240,13 @@ class LabelRenameServiceTest extends TestCase {
 		foreach ([['l3', '  ', 400], ['nope', 'nieuw', 404]] as [$id, $name, $status]) {
 			try {
 				$service->rename(labelId: $id, name: $name);
-				$this->fail('the rename went through');
+				$this->fail(message: 'the rename went through');
 			} catch (LabelRenameException $e) {
-				$this->assertSame($status, $e->getStatus());
+				$this->assertSame(expected: $status, actual: $e->getStatus());
 			}
 		}
 
-		$this->assertSame([], $this->writes);
+		$this->assertSame(expected: [], actual: $this->writes);
 	}//end testAnEmptyNameAndAnUnknownLabelAreRefused()
 
 	/**
@@ -257,9 +257,9 @@ class LabelRenameServiceTest extends TestCase {
 	public function testACaseChangeRenames(): void {
 		$result = $this->service()->rename(labelId: 'l1', name: 'Duurzaam');
 
-		$this->assertSame('Duurzaam', $this->store['label']['l1']['name']);
-		$this->assertSame(['ondernemers', 'Duurzaam'], $this->store['lead']['lead1']['labels']);
-		$this->assertSame(5, $result['rewritten']);
+		$this->assertSame(expected: 'Duurzaam', actual: $this->store['label']['l1']['name']);
+		$this->assertSame(expected: ['ondernemers', 'Duurzaam'], actual: $this->store['lead']['lead1']['labels']);
+		$this->assertSame(expected: 5, actual: $result['rewritten']);
 	}//end testACaseChangeRenames()
 
 	/**
@@ -270,9 +270,9 @@ class LabelRenameServiceTest extends TestCase {
 	public function testTheWritesKeepOpenRegistersAccessCheck(): void {
 		$this->service()->rename(labelId: 'l3', name: 'ondernemers centrum');
 
-		$this->assertNotSame([], $this->writes);
+		$this->assertNotSame(expected: [], actual: $this->writes);
 		foreach ($this->writes as [$schema, $id, , $rbac]) {
-			$this->assertTrue($rbac, "{$schema} {$id} was written past the access check");
+			$this->assertTrue(condition: $rbac, message: "{$schema} {$id} was written past the access check");
 		}
 	}//end testTheWritesKeepOpenRegistersAccessCheck()
 
@@ -293,8 +293,8 @@ class LabelRenameServiceTest extends TestCase {
 
 		$result = $this->service()->rename(labelId: 'l3', name: 'ondernemers centrum');
 
-		$this->assertSame(200, $result['rewritten']);
-		$this->assertTrue($result['queued']);
+		$this->assertSame(expected: 200, actual: $result['rewritten']);
+		$this->assertTrue(condition: $result['queued']);
 	}//end testPastTwoHundredItemsTheRestIsQueued()
 
 	/**
@@ -308,12 +308,12 @@ class LabelRenameServiceTest extends TestCase {
 		}
 
 		$this->isAdmin = false;
-		$this->assertSame(0, $this->service()->rewriteAll(from: 'ondernemers', to: 'ondernemers centrum', userId: 'admin'));
-		$this->assertSame([], $this->writes);
+		$this->assertSame(expected: 0, actual: $this->service()->rewriteAll(from: 'ondernemers', to: 'ondernemers centrum', userId: 'admin'));
+		$this->assertSame(expected: [], actual: $this->writes);
 
 		$this->isAdmin = true;
-		$this->assertSame(261, $this->service()->rewriteAll(from: 'ondernemers', to: 'ondernemers centrum', userId: 'admin'));
-		$this->assertSame(['ondernemers centrum'], $this->store['lead']['lead260']['labels']);
+		$this->assertSame(expected: 261, actual: $this->service()->rewriteAll(from: 'ondernemers', to: 'ondernemers centrum', userId: 'admin'));
+		$this->assertSame(expected: ['ondernemers centrum'], actual: $this->store['lead']['lead260']['labels']);
 	}//end testTheQueuedPassRewritesTheRestForAnAdministratorOnly()
 
 	/**

@@ -48,9 +48,9 @@ class SharedLabelListSchemaTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 3));
-		$this->config = (new ConfigFileLoaderService($appManager))->loadConfigurationFile();
+		$this->config = (new ConfigFileLoaderService(appManager: $appManager))->loadConfigurationFile();
 	}//end setUp()
 
 	/**
@@ -59,13 +59,13 @@ class SharedLabelListSchemaTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheRegisterCarriesTheLabelSchema(): void {
-		$this->assertContains('label', $this->config['components']['registers']['pipelinq']['schemas']);
+		$this->assertContains(needle: 'label', haystack: $this->config['components']['registers']['pipelinq']['schemas']);
 
 		$label = $this->config['components']['schemas']['label'];
-		$this->assertSame('label', $label['slug']);
-		$this->assertSame(['name'], $label['required']);
-		$this->assertSame('string', $label['properties']['name']['type']);
-		$this->assertSame('string', $label['properties']['description']['type']);
+		$this->assertSame(expected: 'label', actual: $label['slug']);
+		$this->assertSame(expected: ['name'], actual: $label['required']);
+		$this->assertSame(expected: 'string', actual: $label['properties']['name']['type']);
+		$this->assertSame(expected: 'string', actual: $label['properties']['description']['type']);
 	}//end testTheRegisterCarriesTheLabelSchema()
 
 	/**
@@ -81,10 +81,10 @@ class SharedLabelListSchemaTest extends TestCase {
 	public function testOnlyAnAdministratorWritesTheList(): void {
 		$authorization = $this->config['components']['schemas']['label']['authorization'];
 
-		$this->assertSame(['sales', 'user:pipelinq-system'], $authorization['read']);
-		$this->assertSame(['sales', 'user:pipelinq-system'], $authorization['export']);
+		$this->assertSame(expected: ['sales', 'user:pipelinq-system'], actual: $authorization['read']);
+		$this->assertSame(expected: ['sales', 'user:pipelinq-system'], actual: $authorization['export']);
 		foreach (['create', 'update', 'delete'] as $verb) {
-			$this->assertSame([], $authorization[$verb], 'label.'.$verb);
+			$this->assertSame(expected: [], actual: $authorization[$verb], message: 'label.'.$verb);
 		}
 	}//end testOnlyAnAdministratorWritesTheList()
 
@@ -99,19 +99,19 @@ class SharedLabelListSchemaTest extends TestCase {
 
 		foreach ($fields as $schema => $field) {
 			$property = $schemas[$schema]['properties'][$field] ?? null;
-			$this->assertIsArray($property, "{$schema}.{$field} must be declared or storage drops it");
-			$this->assertSame('array', $property['type'], "{$schema}.{$field}");
-			$this->assertSame('string', $property['items']['type'], "{$schema}.{$field}");
+			$this->assertIsArray(actual: $property, message: "{$schema}.{$field} must be declared or storage drops it");
+			$this->assertSame(expected: 'array', actual: $property['type'], message: "{$schema}.{$field}");
+			$this->assertSame(expected: 'string', actual: $property['items']['type'], message: "{$schema}.{$field}");
 			$this->assertSame(
-				[
+				expected: [
 					'register'      => 'pipelinq',
 					'schema'        => 'label',
 					'valueField'    => 'name',
 					'labelField'    => 'name',
 					'hideWhenEmpty' => true,
 				],
-				$property['items']['x-options-from'],
-				"{$schema}.{$field} offers the label list and hides when it is empty"
+				actual: $property['items']['x-options-from'],
+				message: "{$schema}.{$field} offers the label list and hides when it is empty"
 			);
 		}
 	}//end testLeadsClientsAndArticlesPickFromTheList()
@@ -128,8 +128,8 @@ class SharedLabelListSchemaTest extends TestCase {
 		$jsonSchema = json_decode((string)json_encode(['type' => 'object', 'properties' => ['labels' => $keywords]]));
 
 		$validator = new Validator();
-		$this->assertTrue($validator->validate(json_decode('{"labels":["ondernemers","duurzaam"]}'), $jsonSchema)->isValid());
-		$this->assertTrue($validator->validate(json_decode('{}'), $jsonSchema)->isValid());
-		$this->assertFalse($validator->validate(json_decode('{"labels":"ondernemers"}'), $jsonSchema)->isValid());
+		$this->assertTrue(condition: $validator->validate(json_decode('{"labels":["ondernemers","duurzaam"]}'), $jsonSchema)->isValid());
+		$this->assertTrue(condition: $validator->validate(json_decode('{}'), $jsonSchema)->isValid());
+		$this->assertFalse(condition: $validator->validate(json_decode('{"labels":"ondernemers"}'), $jsonSchema)->isValid());
 	}//end testALabelledLeadValidates()
 }//end class

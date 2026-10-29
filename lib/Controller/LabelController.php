@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Labels\LabelRenameException;
 use OCA\Pipelinq\Service\Labels\LabelRenameService;
+use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -74,7 +75,7 @@ class LabelController extends Controller {
 	 *
 	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
 	public function rename(string $id): JSONResponse {
 		try {
 			return new JSONResponse(

@@ -47,10 +47,10 @@ class LabelControllerTest extends TestCase {
 	 * @return LabelController
 	 */
 	private function controller(LabelRenameService $service, string $name): LabelController {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturnMap([['name', '', $name]]);
 
-		return new LabelController(request: $request, service: $service, logger: $this->createMock(LoggerInterface::class));
+		return new LabelController(request: $request, service: $service, logger: $this->createMock(originalClassName: LoggerInterface::class));
 	}//end controller()
 
 	/**
@@ -60,8 +60,8 @@ class LabelControllerTest extends TestCase {
 	 */
 	public function testTheRenameIsAnAdminEndpoint(): void {
 		$method = new ReflectionMethod(LabelController::class, 'rename');
-		$this->assertNotSame([], $method->getAttributes(AuthorizedAdminSetting::class));
-		$this->assertSame([], $method->getAttributes(NoAdminRequired::class));
+		$this->assertNotSame(expected: [], actual: $method->getAttributes(AuthorizedAdminSetting::class));
+		$this->assertSame(expected: [], actual: $method->getAttributes(NoAdminRequired::class));
 	}//end testTheRenameIsAnAdminEndpoint()
 
 	/**
@@ -70,14 +70,14 @@ class LabelControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testARenameAnswersTheResult(): void {
-		$service = $this->createMock(LabelRenameService::class);
+		$service = $this->createMock(originalClassName: LabelRenameService::class);
 		$service->expects($this->once())->method('rename')->with('l3', 'ondernemers centrum')
 			->willReturn(['id' => 'l3', 'name' => 'ondernemers centrum', 'rewritten' => 5, 'queued' => false]);
 
 		$response = $this->controller(service: $service, name: 'ondernemers centrum')->rename(id: 'l3');
 
-		$this->assertSame(200, $response->getStatus());
-		$this->assertSame(5, $response->getData()['rewritten']);
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: 5, actual: $response->getData()['rewritten']);
 	}//end testARenameAnswersTheResult()
 
 	/**
@@ -86,13 +86,13 @@ class LabelControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testARefusalAnswersItsStatus(): void {
-		$service = $this->createMock(LabelRenameService::class);
+		$service = $this->createMock(originalClassName: LabelRenameService::class);
 		$service->method('rename')->willThrowException(new LabelRenameException(message: 'Another label already has this name.', status: 409));
 
 		$response = $this->controller(service: $service, name: 'duurzaam')->rename(id: 'l3');
 
-		$this->assertSame(409, $response->getStatus());
-		$this->assertSame('Another label already has this name.', $response->getData()['error']);
+		$this->assertSame(expected: 409, actual: $response->getStatus());
+		$this->assertSame(expected: 'Another label already has this name.', actual: $response->getData()['error']);
 	}//end testARefusalAnswersItsStatus()
 
 	/**
@@ -101,12 +101,12 @@ class LabelControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFailureAnswers500(): void {
-		$service = $this->createMock(LabelRenameService::class);
+		$service = $this->createMock(originalClassName: LabelRenameService::class);
 		$service->method('rename')->willThrowException(new RuntimeException('db down at host x'));
 
 		$response = $this->controller(service: $service, name: 'x')->rename(id: 'l3');
 
-		$this->assertSame(500, $response->getStatus());
-		$this->assertSame('The label could not be renamed.', $response->getData()['error']);
+		$this->assertSame(expected: 500, actual: $response->getStatus());
+		$this->assertSame(expected: 'The label could not be renamed.', actual: $response->getData()['error']);
 	}//end testAFailureAnswers500()
 }//end class
