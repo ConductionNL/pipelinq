@@ -9407,6 +9407,7 @@
         "Set the term": "Termijn instellen",
         "Link an existing case": "Bestaande zaak koppelen",
         "The term is set.": "De termijn is ingesteld.",
-        "The request is linked to the case.": "Het verzoek is aan de zaak gekoppeld."
+        "The request is linked to the case.": "Het verzoek is aan de zaak gekoppeld.",
+        "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.": "De termijn waarbinnen het ticket moet zijn afgehandeld: de afhandeldeadline volgens de SLA bij een klacht, de termijn van een verzoek."
     }
 }

@@ -9292,7 +9292,8 @@ OC.L10N.register(
         "Set the term": "Set the term",
         "Link an existing case": "Link an existing case",
         "The term is set.": "The term is set.",
-        "The request is linked to the case.": "The request is linked to the case."
+        "The request is linked to the case.": "The request is linked to the case.",
+        "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.": "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request."
     },
     "nplurals=2; plural=(n != 1);"
 )
