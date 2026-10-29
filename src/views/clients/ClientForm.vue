@@ -13,33 +13,44 @@
 				{{ option.label }}
 			</NcCheckboxRadioSwitch>
 		</fieldset>
-		<NcTextField
-			class="client-form__wide"
-			:label="t('pipelinq', 'Name')"
-			labelOutside
-			:modelValue="form.name"
-			:error="!!shownErrors.name"
-			:helperText="shownErrors.name"
-			:maxlength="255"
-			data-testid="client-name-input"
-			@update:modelValue="(v) => (form.name = v)" />
-		<NcTextField
-			:label="t('pipelinq', 'Email')"
-			labelOutside
-			:modelValue="form.email"
-			:error="!!shownErrors.email"
-			:helperText="shownErrors.email"
-			type="email"
-			data-testid="client-email-input"
-			@update:modelValue="(v) => (form.email = v)" />
-		<NcTextField
-			:label="t('pipelinq', 'Phone')"
-			labelOutside
-			:modelValue="form.phone"
-			:error="!!shownErrors.phone"
-			:helperText="shownErrors.phone"
-			data-testid="client-phone-input"
-			@update:modelValue="(v) => (form.phone = v)" />
+		<div class="client-form__field client-form__wide">
+			<label for="client-board-name" class="client-form__label">{{ t('pipelinq', 'Name') }}</label>
+			<NcTextField
+				id="client-board-name"
+				:label="t('pipelinq', 'Name')"
+				labelOutside
+				:modelValue="form.name"
+				:error="!!shownErrors.name"
+				:helperText="shownErrors.name"
+				:maxlength="255"
+				data-testid="client-name-input"
+				@update:modelValue="(v) => (form.name = v)" />
+		</div>
+		<div class="client-form__field">
+			<label for="client-board-email" class="client-form__label">{{ t('pipelinq', 'Email') }}</label>
+			<NcTextField
+				id="client-board-email"
+				:label="t('pipelinq', 'Email')"
+				labelOutside
+				:modelValue="form.email"
+				:error="!!shownErrors.email"
+				:helperText="shownErrors.email"
+				type="email"
+				data-testid="client-email-input"
+				@update:modelValue="(v) => (form.email = v)" />
+		</div>
+		<div class="client-form__field">
+			<label for="client-board-phone" class="client-form__label">{{ t('pipelinq', 'Phone') }}</label>
+			<NcTextField
+				id="client-board-phone"
+				:label="t('pipelinq', 'Phone')"
+				labelOutside
+				:modelValue="form.phone"
+				:error="!!shownErrors.phone"
+				:helperText="shownErrors.phone"
+				data-testid="client-phone-input"
+				@update:modelValue="(v) => (form.phone = v)" />
+		</div>
 		<div v-if="duplicate" class="client-form__wide client-form__duplicate" role="status" data-testid="client-duplicate">
 			<strong>{{ t('pipelinq', 'Possible duplicate: {name} has the same {field}', { name: duplicate.name, field: duplicate.field }) }}</strong>
 			<span class="client-form__duplicate-actions">
@@ -47,67 +58,93 @@
 				<a href="#" data-testid="client-duplicate-save" @click.prevent="onSave">{{ t('pipelinq', 'Save anyway') }}</a>
 			</span>
 		</div>
-		<NcTextField
-			class="client-form__wide"
-			:label="t('pipelinq', 'Address')"
-			labelOutside
-			:modelValue="form.address"
-			data-testid="client-address-input"
-			@update:modelValue="(v) => (form.address = v)" />
-		<NcSelect
-			v-model="form.industry"
-			:inputLabel="t('pipelinq', 'Industry')"
-			labelOutside
-			multiple
-			:options="industryOptions"
-			:placeholder="t('pipelinq', 'Pick sectors')"
-			data-testid="client-industry-select" />
-		<NcTextField
-			:label="t('pipelinq', 'Website')"
-			labelOutside
-			:modelValue="form.website"
-			:error="!!shownErrors.website"
-			:helperText="shownErrors.website"
-			data-testid="client-website-input"
-			@update:modelValue="(v) => (form.website = v)" />
-		<NcTextArea
-			class="client-form__wide"
-			:label="t('pipelinq', 'Client notes')"
-			labelOutside
-			:modelValue="form.notes"
-			rows="3"
-			data-testid="client-notes-input"
-			@update:modelValue="(v) => (form.notes = v)" />
+		<div class="client-form__field client-form__wide">
+			<label for="client-board-address" class="client-form__label">{{ t('pipelinq', 'Address') }}</label>
+			<NcTextField
+				id="client-board-address"
+				:label="t('pipelinq', 'Address')"
+				labelOutside
+				:modelValue="form.address"
+				data-testid="client-address-input"
+				@update:modelValue="(v) => (form.address = v)" />
+		</div>
+		<div class="client-form__field">
+			<label for="client-board-industry" class="client-form__label">{{ t('pipelinq', 'Industry') }}</label>
+			<NcSelect
+				v-model="form.industry"
+				inputId="client-board-industry"
+				:inputLabel="t('pipelinq', 'Industry')"
+				labelOutside
+				multiple
+				:options="industryOptions"
+				:placeholder="t('pipelinq', 'Pick sectors')"
+				data-testid="client-industry-select" />
+		</div>
+		<div class="client-form__field">
+			<label for="client-board-website" class="client-form__label">{{ t('pipelinq', 'Website') }}</label>
+			<NcTextField
+				id="client-board-website"
+				:label="t('pipelinq', 'Website')"
+				labelOutside
+				:modelValue="form.website"
+				:error="!!shownErrors.website"
+				:helperText="shownErrors.website"
+				data-testid="client-website-input"
+				@update:modelValue="(v) => (form.website = v)" />
+		</div>
+		<div class="client-form__field client-form__wide">
+			<label for="client-board-notes" class="client-form__label">{{ t('pipelinq', 'Client notes') }}</label>
+			<NcTextArea
+				id="client-board-notes"
+				:label="t('pipelinq', 'Client notes')"
+				labelOutside
+				:modelValue="form.notes"
+				rows="3"
+				data-testid="client-notes-input"
+				@update:modelValue="(v) => (form.notes = v)" />
+		</div>
 		<details class="client-form__wide client-form__more">
 			<summary>{{ t('pipelinq', 'More details') }}</summary>
 			<div class="client-form__more-fields">
-				<NcSelect
-					v-model="form.accountOwner"
-					:inputLabel="t('pipelinq', 'Account owner')"
-					labelOutside
-					:options="userOptions"
-					:reduce="(option) => option.id"
-					label="displayName"
-					:filterable="false"
-					:loading="searchingUsers"
-					:placeholder="t('pipelinq', 'Search a user')"
-					data-testid="client-account-owner-select"
-					@search="searchUsers" />
-				<NcSelect
-					v-model="form.correspondenceLanguage"
-					:inputLabel="t('pipelinq', 'Correspondence language')"
-					labelOutside
-					:options="languageOptions"
-					:reduce="(option) => option.id"
-					label="label"
-					data-testid="client-language-select" />
-				<NcSelect
-					v-model="form.timezone"
-					:inputLabel="t('pipelinq', 'Timezone')"
-					labelOutside
-					:options="timezoneOptions"
-					:placeholder="t('pipelinq', 'Select a timezone')"
-					data-testid="client-timezone-select" />
+				<div class="client-form__field">
+					<label for="client-board-account-owner" class="client-form__label">{{ t('pipelinq', 'Account owner') }}</label>
+					<NcSelect
+						v-model="form.accountOwner"
+						inputId="client-board-account-owner"
+						:inputLabel="t('pipelinq', 'Account owner')"
+						labelOutside
+						:options="userOptions"
+						:reduce="(option) => option.id"
+						label="displayName"
+						:filterable="false"
+						:loading="searchingUsers"
+						:placeholder="t('pipelinq', 'Search a user')"
+						data-testid="client-account-owner-select"
+						@search="searchUsers" />
+				</div>
+				<div class="client-form__field">
+					<label for="client-board-language" class="client-form__label">{{ t('pipelinq', 'Correspondence language') }}</label>
+					<NcSelect
+						v-model="form.correspondenceLanguage"
+						inputId="client-board-language"
+						:inputLabel="t('pipelinq', 'Correspondence language')"
+						labelOutside
+						:options="languageOptions"
+						:reduce="(option) => option.id"
+						label="label"
+						data-testid="client-language-select" />
+				</div>
+				<div class="client-form__field">
+					<label for="client-board-timezone" class="client-form__label">{{ t('pipelinq', 'Timezone') }}</label>
+					<NcSelect
+						v-model="form.timezone"
+						inputId="client-board-timezone"
+						:inputLabel="t('pipelinq', 'Timezone')"
+						labelOutside
+						:options="timezoneOptions"
+						:placeholder="t('pipelinq', 'Select a timezone')"
+						data-testid="client-timezone-select" />
+				</div>
 			</div>
 		</details>
 	</div>
@@ -650,6 +687,19 @@ export default {
 .client-form__wide,
 .client-form__type {
 	grid-column: 1 / -1;
+}
+
+/* The label above the field, as board PqKlantNieuw draws it. */
+.client-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.client-form__label {
+	font-size: 14px;
+	font-weight: 600;
 }
 
 .client-form__type {

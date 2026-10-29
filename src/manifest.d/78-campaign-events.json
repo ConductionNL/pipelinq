@@ -42,6 +42,7 @@
 				"sidebar": { "enabled": false },
 				"breadcrumb": { "label": "Campaigns", "route": "Campaigns", "separator": "/" },
 				"headerMeta": "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}",
+				"typePill": { "text": "Campaign event", "variant": "purple" },
 				"statusPill": {
 					"field": "signupStatus",
 					"labels": { "draft": "Draft", "open": "Registration open", "full": "Fully booked", "closed": "Registration closed", "cancelled": "Cancelled" },
@@ -76,7 +77,7 @@
 						"type": "stat",
 						"content": {
 							"label": "Registered",
-							"caption": "of {capacity} places",
+							"caption": "of @object.capacity places",
 							"source": { "register": "pipelinq", "schema": "eventRegistration", "metric": "count", "filter": { "event": "@objectId", "status": "confirmed" } }
 						}
 					},

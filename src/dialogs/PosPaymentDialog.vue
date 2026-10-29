@@ -38,6 +38,7 @@
 							type="number"
 							min="0"
 							:label="t('pipelinq', 'Points to use')"
+							:aria-label="t('pipelinq', 'Points to use')"
 							labelOutside
 							@update:modelValue="setPoints" />
 						<NcButton variant="tertiary-no-background" class="pos-payment__max" @click="usePoints(maxUsablePoints)">
@@ -94,8 +95,17 @@
 			</div>
 
 			<form v-if="cardMode" class="pos-payment__card-form" @submit.prevent="lookupCard">
-				<NcTextField v-model="cardSerial" :label="t('pipelinq', 'Gift card number')" labelOutside />
-				<NcTextField v-model="cardPin" :label="t('pipelinq', 'PIN')" labelOutside type="password" />
+				<NcTextField
+					v-model="cardSerial"
+					:label="t('pipelinq', 'Gift card number')"
+					:aria-label="t('pipelinq', 'Gift card number')"
+					labelOutside />
+				<NcTextField
+					v-model="cardPin"
+					:label="t('pipelinq', 'PIN')"
+					:aria-label="t('pipelinq', 'PIN')"
+					labelOutside
+					type="password" />
 				<NcButton type="submit" :disabled="!cardSerial || looking">
 					{{ cardMode === 'add' ? t('pipelinq', 'Add') : t('pipelinq', 'Check balance') }}
 				</NcButton>
@@ -111,6 +121,7 @@
 					min="1"
 					step="0.01"
 					:label="t('pipelinq', 'Gift card amount')"
+					:aria-label="t('pipelinq', 'Gift card amount')"
 					labelOutside />
 				<NcButton type="submit" :disabled="!(Number(sellAmount) > 0)">
 					{{ t('pipelinq', 'Add to the sale') }}
