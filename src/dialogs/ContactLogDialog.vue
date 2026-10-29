@@ -407,8 +407,8 @@ export default {
 	gap: 10px;
 	margin: 0;
 	padding: 10px 14px;
-	border-radius: var(--border-radius-large, 8px);
-	background: var(--color-background-hover);
+	border-radius: var(--cn-board-control-radius, 8px);
+	background: var(--cn-board-sunken-ground, var(--color-background-hover));
 	font-size: 14px;
 }
 

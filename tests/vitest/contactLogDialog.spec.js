@@ -11,6 +11,8 @@
  * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
  */
 import { flushPromises, mount } from '@vue/test-utils'
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
 import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
@@ -136,5 +138,15 @@ describe('ContactLogDialog', () => {
 		w.findComponent({ name: 'NcSelect' }).vm.$emit('search', 'Graaf')
 		await flushPromises()
 		expect(store.fetchCollectionForOptions).toHaveBeenCalledWith('client', expect.objectContaining({ _search: 'Graaf' }))
+	})
+})
+
+describe('ContactLogDialog style', () => {
+	it('sets the ticket note on the sunken ground with the 8px control radius, as the board', () => {
+		const source = readFileSync(resolve(__dirname, '../../src/dialogs/ContactLogDialog.vue'), 'utf8')
+		const at = source.indexOf('.contact-log__parent {')
+		const rule = source.slice(at, source.indexOf('}', at))
+		expect(rule).toContain('background: var(--cn-board-sunken-ground')
+		expect(rule).toContain('border-radius: var(--cn-board-control-radius, 8px)')
 	})
 })
