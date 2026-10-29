@@ -1011,12 +1011,11 @@
 							"limit": 3,
 							"presentation": "rows",
 							"title": "{title}",
-							"meta": "{expectedCloseDate|date} · {assignee}",
-							"pill": {
-								"field": "status",
-								"variantMap": {
-									"won": "success",
-									"lost": "error"
+							"meta": "{status} {expectedCloseDate|date} · {assignee|user}",
+							"valueLabels": {
+								"status": {
+									"won": "Won",
+									"lost": "Lost"
 								}
 							},
 							"trailing": [

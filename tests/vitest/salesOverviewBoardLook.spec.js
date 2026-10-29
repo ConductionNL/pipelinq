@@ -53,4 +53,11 @@ describe('sales overview', () => {
 			expect(widget.content.trailing).toEqual(['{value|currency}'])
 		}
 	})
+
+	it('says won or lost and who closed it in the meta line, not as a raw pill and a user id', () => {
+		const widget = dashboard.config.widgets.find((w) => w.id === 'recently-won-lost')
+		expect(widget.content.meta).toBe('{status} {expectedCloseDate|date} · {assignee|user}')
+		expect(widget.content.valueLabels).toEqual({ status: { won: 'Won', lost: 'Lost' } })
+		expect(widget.content.pill).toBeUndefined()
+	})
 })
