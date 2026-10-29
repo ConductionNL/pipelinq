@@ -99,6 +99,14 @@ describe('forecast page', () => {
 		expect(dashboard).toMatch(/<ForecastTrend embedded :level="childLevel"/)
 	})
 
+	it('draws Download and the buildiq square in the page header, at the board\'s 40px', () => {
+		// PqForecast: Downloaden 40px tall beside the orange square, as the
+		// other custom pages (WeeklyReview) carry it in CnPageHeader's extra slot.
+		expect(dashboard).toMatch(/<template #extra>\s*<div class="forecast-dashboard__header-actions">\s*<NcButton[^>]*data-testid="forecast-download"[\s\S]*?<CnBuildiqEditButton \/>/)
+		const style = dashboard.split('<style')[1]
+		expect(style).toMatch(/\.forecast-dashboard__download \{[^}]*min-height: var\(--cn-board-control-height, 40px\);/)
+	})
+
 	it('puts Export CSV in the quarter card\'s header, in the slot CnDetailCard draws', () => {
 		expect(dashboard).toMatch(/<template #actions>\s*<NcButton[^>]*data-testid="forecast-export-csv"/)
 		expect(dashboard).not.toMatch(/#header-actions/)

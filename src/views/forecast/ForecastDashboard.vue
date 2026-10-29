@@ -4,17 +4,24 @@
   -->
 <template>
 	<div class="forecast-dashboard">
-		<div class="forecast-dashboard__header">
-			<CnPageHeader
-				:title="t('pipelinq', 'Forecast')"
-				:description="subtitle" />
-			<NcButton class="forecast-dashboard__download" @click="exportCsv">
-				<template #icon>
-					<Download :size="20" />
-				</template>
-				{{ t('pipelinq', 'Download') }}
-			</NcButton>
-		</div>
+		<CnPageHeader
+			:title="t('pipelinq', 'Forecast')"
+			:description="subtitle">
+			<template #extra>
+				<div class="forecast-dashboard__header-actions">
+					<NcButton
+						class="forecast-dashboard__download"
+						data-testid="forecast-download"
+						@click="exportCsv">
+						<template #icon>
+							<Download :size="20" />
+						</template>
+						{{ t('pipelinq', 'Download') }}
+					</NcButton>
+					<CnBuildiqEditButton />
+				</div>
+			</template>
+		</CnPageHeader>
 		<CnSegmentedControl
 			:modelValue="level"
 			:options="levelOptions"
@@ -160,6 +167,7 @@
 
 <script>
 import {
+	CnBuildiqEditButton,
 	CnDataTable,
 	CnDetailCard,
 	CnPageHeader,
@@ -185,6 +193,7 @@ import { applyFilterParams, filterRows, sortRows } from './forecastLocalTable.js
 export default {
 	name: 'ForecastDashboard',
 	components: {
+		CnBuildiqEditButton,
 		CnDataTable,
 		CnDetailCard,
 		CnPageHeader,
@@ -600,12 +609,16 @@ export default {
 	margin-top: 8px;
 }
 
-.forecast-dashboard__header {
+/* PqForecast: Downloaden at the boards' 40px beside the buildiq square. */
+.forecast-dashboard__header-actions {
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
 	flex-wrap: wrap;
-	gap: 12px;
+	align-items: flex-start;
+	gap: 10px;
+}
+
+.forecast-dashboard__download {
+	min-height: var(--cn-board-control-height, 40px);
 }
 
 .forecast-progress {
