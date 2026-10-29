@@ -19,6 +19,8 @@
  */
 
 import { mount } from '@vue/test-utils'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
@@ -35,6 +37,7 @@ vi.mock('@nextcloud/l10n', () => ({
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnFeaturesAndRoadmapPage: {
 		name: 'CnFeaturesAndRoadmapPage',
+		props: { board: { type: Object, default: null } },
 		render() {
 			return h('div', { class: 'cn-features-and-roadmap-view' })
 		},
@@ -97,5 +100,19 @@ describe('FeaturesRoadmapView', () => {
 		expect(
 			wrapper.find('a.features-roadmap__compare-link').attributes('href'),
 		).toBe('https://pipelinq.conduction.nl/nl/compare')
+	})
+
+	it('hands the manifest board options to the library page (PqRoadmap subtitle)', () => {
+		const board = { subtitle: 'What Pipelinq does now and what is coming, {count} features' }
+		const wrapper = mount(FeaturesRoadmapView, { props: { board } })
+		expect(wrapper.findComponent({ name: 'CnFeaturesAndRoadmapPage' }).props('board')).toEqual(board)
+	})
+
+	it('draws the board subtitle with the feature count, as PqRoadmap does', () => {
+		const manifest = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'))
+		const page = manifest.pages.find((p) => p.id === 'FeaturesRoadmap')
+		expect(page.config.board.subtitle).toBe('What Pipelinq does now and what is coming, {count} features')
+		const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8'))
+		expect(nl.translations[page.config.board.subtitle]).toBe('Wat Pipelinq nu doet en wat eraan komt, {count} functies')
 	})
 })

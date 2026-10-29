@@ -4033,6 +4033,7 @@ OC.L10N.register(
         "The deadline follows from the kind of ticket and its service level. A conversation is also saved as a contact moment on this ticket.": "The deadline follows from the kind of ticket and its service level. A conversation is also saved as a contact moment on this ticket.",
         "The ticket is created.": "The ticket is created.",
         "What does the customer ask?": "What does the customer ask?",
+        "What Pipelinq does now and what is coming, {count} features": "What Pipelinq does now and what is coming, {count} features",
         "What is it?": "What is it?",
         "The humaniq `TimeEntry` this line bills. A plain uuid and not a `$ref`: humaniq's register is a different register, and ADR-062 rule 7 gives a target outside this register no `$ref`.": "The humaniq `TimeEntry` this line bills. A plain uuid and not a `$ref`: humaniq's register is a different register, and ADR-062 rule 7 gives a target outside this register no `$ref`.",
         "The id of the credential the OpenRegister broker holds for Matomo. Store the token there, not here: a value that looks like a Matomo token is refused.": "The id of the credential the OpenRegister broker holds for Matomo. Store the token there, not here: a value that looks like a Matomo token is refused.",

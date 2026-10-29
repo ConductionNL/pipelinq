@@ -3998,6 +3998,7 @@
         "The deadline follows from the kind of ticket and its service level. A conversation is also saved as a contact moment on this ticket.": "De termijn volgt uit de soort ticket en het serviceniveau. Het gesprek wordt ook als contactmoment bij dit ticket opgeslagen.",
         "The ticket is created.": "Het ticket is aangemaakt.",
         "What does the customer ask?": "Wat vraagt de klant?",
+        "What Pipelinq does now and what is coming, {count} features": "Wat Pipelinq nu doet en wat eraan komt, {count} functies",
         "What is it?": "Wat is het?",
         "The entry has not been verified yet. Click \"Verify signature\" to recompute the HMAC and chain hash live.": "De entry is nog niet geverifieerd. Klik op \"Handtekening verifiëren\" om de HMAC en keten-hash live opnieuw te berekenen.",
         "The exact text the owner of a share-mode account is asked to post, with the network's variant already applied and the campaign link already added. It is stored here rather than rebuilt on read, so the words the person copies are the words they were asked to post even after the post is edited.": "De exacte tekst die de eigenaar van een deel-account wordt gevraagd te plaatsen, met de variant van het netwerk al toegepast en de campagnelink al toegevoegd. Hij wordt hier opgeslagen in plaats van bij het lezen opnieuw opgebouwd, zodat de woorden die iemand kopieert de woorden zijn die gevraagd werden, ook nadat de post is bewerkt.",
