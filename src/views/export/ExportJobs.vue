@@ -32,18 +32,14 @@
 				)
 			"
 			:emptyText="t('pipelinq', 'No export jobs yet')"
+			:actions="rowActions"
+			:showEditAction="false"
+			:showCopyAction="false"
+			:showDeleteAction="false"
 			rowClickToView
 			@add="createNew"
 			@rowClick="openJob"
-			@view="openJob">
-			<template #row-actions="{ row }">
-				<NcButton
-					variant="tertiary"
-					@click.stop="testRun(row)">
-					{{ t('pipelinq', 'Test run') }}
-				</NcButton>
-			</template>
-		</CnIndexPage>
+			@view="openJob" />
 		<ExportTestRunModal
 			v-if="testRunJobId"
 			:jobId="testRunJobId"
@@ -54,7 +50,6 @@
 <script>
 import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton } from '@nextcloud/vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 import { exportApi } from '../../services/exportApi.js'
 import { exportJobSecondaryLabels, exportPageTabs } from './exportPageTabs.js'
@@ -88,7 +83,6 @@ export default {
 	name: 'ExportJobs',
 	components: {
 		CnIndexPage,
-		NcButton,
 		ExportTestRunModal,
 	},
 
@@ -97,6 +91,15 @@ export default {
 			register: 'pipelinq',
 			schema: 'exportJob',
 			testRunJobId: null,
+			rowActions: [
+				{
+					id: 'test-run',
+					label: t('pipelinq', 'Test run'),
+					icon: 'PlayOutline',
+					handler: (row) => this.testRun(row),
+				},
+			],
+
 			columns: [
 				{
 					key: 'name',
