@@ -17,7 +17,7 @@
 		:placeholder="t('pipelinq', 'Pick labels')"
 		:loading="loading"
 		multiple
-		:closeOnSelect="false"
+		keepOpen
 		data-testid="label-select"
 		@update:modelValue="(value) => $emit('update:modelValue', value || [])" />
 </template>
