@@ -72,11 +72,27 @@ describe('the ticket page declares a Decisions tab', () => {
 		expect(decisions.visibleWhen).toEqual({ appInstalled: 'decidiq' })
 	})
 
-	it("mounts decidiq's leaf for the ticket itself, with no other host named", () => {
+	it("mounts decidiq's leaf for the ticket itself, with no other host named and no collapse", () => {
 		const leaf = byId('ticket-decisions')
 		expect(leaf.type).toBe('integration')
 		expect(leaf.integrationId).toBe('decidesk-decisions')
-		expect(leaf.props).toBeUndefined()
+		expect(leaf.props).toEqual({ collapsible: false })
+	})
+
+	it("gives the leaf the ticket's words for its empty state (board PqTicketBesluitvorming)", () => {
+		// nextcloud-vue translates `labels` in pipelinq's language and hands
+		// them to the leaf (leaf-labels-in-the-host-language); decidiq draws
+		// them (decisions-leaf-speaks-the-hosts-words).
+		const leaf = byId('ticket-decisions')
+		expect(leaf.labels).toEqual({
+			emptyTitle: 'No decision linked',
+			emptyText: 'A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.',
+			createLabel: 'Create a proposal for this ticket',
+		})
+		const nl = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+		expect(nl['No decision linked']).toBe('Geen besluit gekoppeld')
+		expect(nl['Create a proposal for this ticket']).toBe('Voorstel maken voor dit ticket')
+		expect(nl[leaf.labels.emptyText]).toBeTruthy()
 	})
 
 	it("mounts the same leaf for the linked case, by the ticket's caseReference", () => {
@@ -177,15 +193,13 @@ describe('TicketDecisionRoutes', () => {
 		})
 	}
 
-	it('says what the tab holds and names the two routes', () => {
+	it('says what the tab holds; the two routes are the leaf\'s empty state, not a second line here', () => {
 		const wrapper = mountRoutes()
 
 		expect(wrapper.text()).toContain(
 			'Formal decisions on this ticket, made and signed in decidiq',
 		)
-		expect(wrapper.text()).toContain(
-			'A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.',
-		)
+		expect(wrapper.text()).not.toContain('the request becomes a case in dossiq')
 	})
 
 	it('offers the existing Convert to case action for this ticket', () => {
@@ -200,6 +214,6 @@ describe('TicketDecisionRoutes', () => {
 		const wrapper = mountRoutes({ hideConvert: true })
 
 		expect(wrapper.find('[data-stub="convert"]').exists()).toBe(false)
-		expect(wrapper.text()).toContain('the request becomes a case in dossiq')
+		expect(wrapper.text()).toContain('made and signed in decidiq')
 	})
 })
