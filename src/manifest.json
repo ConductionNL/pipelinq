@@ -1861,6 +1861,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"sortKey": "name",
+				"sortOrder": "asc",
 				"createModal": "ClientCreateDialog",
 				"fieldOverrides": {
 					"industry": {
