@@ -1,0 +1,115 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "shared-label-list (board PqBeheerMarketing, Labels card). One list of labels that articles, leads and clients pick from, so two colleagues no longer write 'Ondernemers' and 'ondernemer'. A label is a word in the list, not a link: an item stores the label's name. The forms offer the list through x-options-from on the items; hideWhenEmpty keeps a form from falling back to free text while the list is empty. Only an administrator writes the list: OpenRegister lets the admin group through before any rule, and the write verbs name nobody else. Renaming a label rewrites it on the items that carry it (LabelRenameService); deleting one leaves the text on its items. A fresh install starts with an empty list; the Zuiddrecht example set brings the five board labels. Sorts after 97-marketing-articles.json so the picker lands on article.tags."
+  },
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "label"
+        ]
+      }
+    },
+    "schemas": {
+      "label": {
+        "slug": "label",
+        "title": "Label",
+        "icon": "TagOutline",
+        "version": "1.0.0",
+        "summary": "A label people pick for articles, leads and clients",
+        "description": "One label in the shared list. Articles, leads and clients store its name.",
+        "required": [
+          "name"
+        ],
+        "authorization": {
+          "read": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "export": [
+            "sales",
+            "user:pipelinq-system"
+          ],
+          "create": [],
+          "update": [],
+          "delete": []
+        },
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The word people pick, for example duurzaam. Unique in the list, whatever the case.",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "When to use this label.",
+            "maxLength": 500
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "properties": {
+          "labels": {
+            "type": "array",
+            "title": "Labels",
+            "description": "Labels from the shared list.",
+            "items": {
+              "type": "string",
+              "maxLength": 80,
+              "x-options-from": {
+                "register": "pipelinq",
+                "schema": "label",
+                "valueField": "name",
+                "labelField": "name",
+                "hideWhenEmpty": true
+              }
+            }
+          }
+        }
+      },
+      "client": {
+        "slug": "client",
+        "properties": {
+          "labels": {
+            "type": "array",
+            "title": "Labels",
+            "description": "Labels from the shared list.",
+            "items": {
+              "type": "string",
+              "maxLength": 80,
+              "x-options-from": {
+                "register": "pipelinq",
+                "schema": "label",
+                "valueField": "name",
+                "labelField": "name",
+                "hideWhenEmpty": true
+              }
+            }
+          }
+        }
+      },
+      "article": {
+        "slug": "article",
+        "properties": {
+          "tags": {
+            "items": {
+              "x-options-from": {
+                "register": "pipelinq",
+                "schema": "label",
+                "valueField": "name",
+                "labelField": "name",
+                "hideWhenEmpty": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
