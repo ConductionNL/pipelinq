@@ -144,6 +144,12 @@ describe('the PqMailinglijst board look (pl4)', () => {
 		expect(data.fixedColumns).toBe(true)
 	})
 
+	it('ends the details card at its content, so Subscribers stands right under it', () => {
+		// A floating grid keeps the size-to-content cell on whole 80px rows.
+		expect(page.config.gridFloat).toBe(false)
+		expect(page.config.layout.find((l) => l.widgetId === 'list-panels').sizeToContent).toBe(true)
+	})
+
 	it('puts no second Subscribers heading above the card', () => {
 		const body = page.config.bodyWidgets.find((w) => w.id === 'list-subscriptions')
 		expect(body.title).toBeUndefined()

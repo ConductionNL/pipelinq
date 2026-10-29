@@ -129,6 +129,7 @@
 				"register": "pipelinq",
 				"schema": "mailingList",
 				"documentationUrl": "https://pipelinq.conduction.nl",
+				"gridFloat": false,
 				"widgets": [
 					{
 						"id": "list-panels",
