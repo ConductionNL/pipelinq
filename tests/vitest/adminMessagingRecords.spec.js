@@ -57,7 +57,8 @@ function stub(name, tag = 'div') {
 	}
 }
 
-vi.mock('@conduction/nextcloud-vue', () => ({
+vi.mock('@conduction/nextcloud-vue', async () => ({
+	CnDataTable: (await import('./support/cnDataTableStub.js')).CnDataTableStub,
 	CnSettingsSection: {
 		name: 'CnSettingsSection',
 		props: ['name', 'description'],
@@ -266,6 +267,9 @@ describe('deliverability settings', () => {
 		await flushPromises()
 
 		const table = wrapper.get('[data-testid="mail-transports"]')
+		// Every head sorts and filters the rows the table holds (PqBeheerMarketing "Standaard ▾").
+		expect(table.attributes('data-filterable')).toBe('true')
+		expect(table.attributes('data-local-headers')).toBe('true')
 		expect(headsOf(table)).toEqual([
 			'Name',
 			'Kind',
@@ -275,7 +279,7 @@ describe('deliverability settings', () => {
 			'Active',
 			'Actions',
 		])
-		const row = wrapper.get('[data-testid="mail-transport"]')
+		const row = wrapper.get('.deliverability-settings__row')
 		const cells = cellsOf(row)
 		expect(cells[0]).toBe('Instance mail server')
 		expect(cells[2]).toBe('gemeente.example.nl')
@@ -294,7 +298,7 @@ describe('deliverability settings', () => {
 		const wrapper = mount(DeliverabilitySettings, mountOptions)
 		await flushPromises()
 
-		const row = wrapper.get('[data-testid="mail-transport"]')
+		const row = wrapper.get('.deliverability-settings__row')
 		expect(cellsOf(row)[4]).toBe('Make default')
 		expect(row.get('.cn-status-badge--error').text()).toBe('DKIM missing')
 	})

@@ -42,85 +42,72 @@
 				v-else-if="transports.length === 0"
 				:description="t('pipelinq', 'No mail transports configured yet.')" />
 
-			<table
+			<CnDataTable
 				v-else
 				class="deliverability-settings__table"
-				data-testid="mail-transports">
-				<thead>
-					<tr>
-						<th scope="col">{{ t('pipelinq', 'Name') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Kind') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Sender domain') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Deliverability') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Default') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Active') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Actions') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="transport in transports"
-						:key="transport.id"
-						data-testid="mail-transport">
-						<td>{{ transport.displayName }}</td>
-						<td>{{ kindLabel(transport.kind) }}</td>
-						<td>{{ transport.senderDomain || '—' }}</td>
-						<td>
-							<span
-								v-if="!transport.senderDomain"
-								class="cn-status-badge cn-status-badge--default">
-								{{ t('pipelinq', 'No sender domain') }}
-							</span>
-							<span v-else class="deliverability-settings__verdict">
-								<span
-									class="cn-status-badge"
-									:class="dkimBadgeClass(transport)">
-									{{
-										transport.dkimVerified
-											? t('pipelinq', 'DKIM found')
-											: t('pipelinq', 'DKIM missing')
-									}}
-								</span>
-								<span
-									class="cn-status-badge"
-									:class="dmarcBadgeClass(transport)">
-									{{ dmarcVerdictText(transport) }}
-								</span>
-							</span>
-						</td>
-						<td>
-							<span
-								v-if="transport.default"
-								class="cn-status-badge cn-status-badge--primary">
-								{{ t('pipelinq', 'Default') }}
-							</span>
-							<NcButton v-else @click="setDefault(transport)">
-								{{ t('pipelinq', 'Make default') }}
-							</NcButton>
-						</td>
-						<td>
-							<NcCheckboxRadioSwitch
-								type="switch"
-								:modelValue="!!transport.active"
-								:aria-label="t('pipelinq', 'Active')"
-								@update:modelValue="(v) => toggleActive(transport, v)" />
-						</td>
-						<td>
-							<NcButton
-								:disabled="checkingId === transport.id"
-								@click="checkDeliverability(transport)">
-								{{ t('pipelinq', 'Check now') }}
-							</NcButton>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+				data-testid="mail-transports"
+				:columns="columns"
+				:schema="tableSchema"
+				:rows="tableRows"
+				:rowClass="() => 'deliverability-settings__row'"
+				filterable
+				localHeaders>
+				<template #column-kind="{ row }">
+					{{ kindLabel(row.kind) }}
+				</template>
+				<template #column-deliverability="{ row }">
+					<span
+						v-if="!row.transport.senderDomain"
+						class="cn-status-badge cn-status-badge--default">
+						{{ t('pipelinq', 'No sender domain') }}
+					</span>
+					<span v-else class="deliverability-settings__verdict">
+						<span
+							class="cn-status-badge"
+							:class="dkimBadgeClass(row.transport)">
+							{{ dkimText(row.transport) }}
+						</span>
+						<span
+							class="cn-status-badge"
+							:class="dmarcBadgeClass(row.transport)">
+							{{ dmarcVerdictText(row.transport) }}
+						</span>
+					</span>
+				</template>
+				<template #column-default="{ row }">
+					<span
+						v-if="row.default"
+						class="cn-status-badge cn-status-badge--primary">
+						{{ t('pipelinq', 'Default') }}
+					</span>
+					<NcButton v-else @click="setDefault(row.transport)">
+						{{ t('pipelinq', 'Make default') }}
+					</NcButton>
+				</template>
+				<template #column-active="{ row }">
+					<NcCheckboxRadioSwitch
+						type="switch"
+						:modelValue="row.active"
+						:aria-label="t('pipelinq', 'Active')"
+						@update:modelValue="(v) => toggleActive(row.transport, v)" />
+				</template>
+				<template #actions-header>
+					{{ t('pipelinq', 'Actions') }}
+				</template>
+				<template #row-actions="{ row }">
+					<NcButton
+						:disabled="checkingId === row.id"
+						@click="checkDeliverability(row.transport)">
+						{{ t('pipelinq', 'Check now') }}
+					</NcButton>
+				</template>
+			</CnDataTable>
 		</CnSettingsSection>
 	</div>
 </template>
 
 <script>
-import { CnSettingsSection } from '@conduction/nextcloud-vue'
+import { CnDataTable, CnSettingsSection } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -142,6 +129,7 @@ import {
 export default {
 	name: 'DeliverabilitySettings',
 	components: {
+		CnDataTable,
 		CnSettingsSection,
 		NcButton,
 		NcCheckboxRadioSwitch,
@@ -159,6 +147,65 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The table's columns, every one sortable and filterable from its head
+		 * except the deliverability verdict, which only filters.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
+		 */
+		columns() {
+			return [
+				{ key: 'displayName', label: t('pipelinq', 'Name') },
+				{ key: 'kind', label: t('pipelinq', 'Kind') },
+				{ key: 'senderDomain', label: t('pipelinq', 'Sender domain') },
+				{ key: 'deliverability', label: t('pipelinq', 'Deliverability'), sortable: false },
+				{ key: 'default', label: t('pipelinq', 'Default') },
+				{ key: 'active', label: t('pipelinq', 'Active') },
+			]
+		},
+
+		/**
+		 * The fields the heads sort and filter on; a kind filters by its label.
+		 *
+		 * @return {object}
+		 */
+		tableSchema() {
+			const kinds = ['instance', 'mailAccount', 'provider']
+			return {
+				properties: {
+					displayName: { type: 'string' },
+					kind: { type: 'string', enum: kinds, 'x-enum-labels': Object.fromEntries(kinds.map((kind) => [kind, this.kindLabel(kind)])) },
+					senderDomain: { type: 'string' },
+					deliverability: { type: 'string' },
+					default: { type: 'boolean' },
+					active: { type: 'boolean' },
+				},
+			}
+		},
+
+		/**
+		 * One row per transport, its verdict in words for the head filter, the
+		 * transport itself kept for the cell controls.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
+		 */
+		tableRows() {
+			return this.transports.map((transport) => ({
+				id: transport.id,
+				displayName: transport.displayName,
+				kind: transport.kind,
+				senderDomain: transport.senderDomain || '—',
+				deliverability: transport.senderDomain
+					? this.dkimText(transport) + ', ' + this.dmarcVerdictText(transport)
+					: t('pipelinq', 'No sender domain'),
+				default: !!transport.default,
+				active: !!transport.active,
+				transport,
+			}))
+		},
+
 		/**
 		 * @spec openspec/changes/marketing-mail-transports/tasks.md#4.2
 		 */
@@ -188,6 +235,16 @@ export default {
 		 */
 		dmarcVerdictText(transport) {
 			return t('pipelinq', dmarcVerdictText(transport.dmarcStatus))
+		},
+
+		/**
+		 * Whether a DKIM record was found, in words.
+		 *
+		 * @param {object} transport The transport.
+		 * @return {string}
+		 */
+		dkimText(transport) {
+			return transport.dkimVerified ? t('pipelinq', 'DKIM found') : t('pipelinq', 'DKIM missing')
 		},
 
 		/**

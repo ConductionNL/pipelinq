@@ -23,6 +23,7 @@ const axiosMock = vi.hoisted(() => ({ get: vi.fn(), delete: vi.fn() }))
 const ctiMock = vi.hoisted(() => ({ getEventLog: vi.fn() }))
 
 vi.mock('@nextcloud/axios', () => ({ default: axiosMock }))
+vi.mock('@conduction/nextcloud-vue', async () => ({ CnDataTable: (await import('./support/cnDataTableStub.js')).CnDataTableStub }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => '/index.php' + path }))
 vi.mock('../../src/services/ctiApi.js', () => ctiMock)
@@ -144,8 +145,12 @@ describe('POS tender types', () => {
 		const wrapper = mount(PosTenderTypeList, mountOptions)
 		await flushPromises()
 
-		// One table row per tender type, as the board draws it (pl2 PqBeheerKassa).
-		const type = wrapper.get('[data-testid="pos-tender-type"]')
+		// One table row per tender type, as the board draws it (pl2 PqBeheerKassa),
+		// sorted and filtered from its own heads.
+		const table = wrapper.get('[data-stub="CnDataTable"]')
+		expect(table.attributes('data-filterable')).toBe('true')
+		expect(table.attributes('data-local-headers')).toBe('true')
+		const type = wrapper.get('.pos-tender-type-list__row')
 		expect(type.element.tagName).toBe('TR')
 		expect(type.findAll('td').map((c) => c.text()).slice(0, 5)).toEqual(['Pin', 'PIN', '1100', 'PIN', 'Active'])
 		const actions = type
