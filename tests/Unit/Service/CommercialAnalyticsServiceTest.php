@@ -67,7 +67,11 @@ class CommercialAnalyticsServiceTest extends TestCase {
 		);
 		$appConfig->method('getValueInt')->willReturnCallback(
 			static function (string $appId, string $key, int $default = 0) use ($pipelineTarget): int {
-				return $key === 'pipeline_target' ? $pipelineTarget : $default;
+				if ($key === 'pipeline_target') {
+					return $pipelineTarget;
+				}
+
+				return $default;
 			}
 		);
 
