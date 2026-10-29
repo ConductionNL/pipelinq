@@ -6316,6 +6316,9 @@
 						"icon": "Stairs",
 						"content": {
 							"presentation": "table",
+							"tableLook": "data",
+							"sortable": true,
+							"filterable": true,
 							"objectRows": { "path": "priceTiers" },
 							"columns": [
 								{ "label": "Quantity from", "value": "{minQuantity}" },
@@ -6332,11 +6335,15 @@
 						"icon": "ShapeOutline",
 						"content": {
 							"presentation": "table",
+							"tableLook": "data",
+							"sortable": true,
+							"filterable": true,
 							"objectRows": { "path": "variants" },
 							"valueLabels": { "status": { "active": "Active", "inactive": "Inactive" } },
 							"columns": [
 								{ "label": "SKU", "value": "{sku}" },
 								{ "label": "Name", "value": "{name}" },
+								{ "label": "Characteristics", "value": "{attributes|values}" },
 								{ "label": "Price", "value": "{unitPrice|currency}", "align": "end" },
 								{ "label": "Barcode", "value": "{barcode}" },
 								{ "label": "Status", "value": "{status}", "tone": { "field": "status", "map": { "active": "success" }, "default": "default" } }
@@ -6359,7 +6366,7 @@
 						"title": "Publication",
 						"icon": "Earth",
 						"content": {
-							"columns": 2,
+							"columns": 3,
 							"include": [
 								"status",
 								"publishedAt",
