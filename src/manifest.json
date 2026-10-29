@@ -9166,6 +9166,7 @@
 						"id": "view",
 						"label": "View",
 						"icon": "EyeOutline",
+						"iconOnly": true,
 						"handler": "navigate",
 						"route": "TicketDetail"
 					}
