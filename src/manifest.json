@@ -6061,7 +6061,6 @@
 						"type": "navigate",
 						"label": "Call the customer",
 						"primaryLabel": "Call {callbackPhoneNumber}",
-						"icon": "Phone",
 						"target": "tel:@object.callbackPhoneNumber",
 						"visibleWhen": {
 							"field": "callbackPhoneNumber",
@@ -6073,7 +6072,6 @@
 						"type": "navigate",
 						"label": "Call the customer",
 						"primaryLabel": "Call {callbackPhoneNumber}",
-						"icon": "Phone",
 						"target": "tel:@object.callbackPhoneNumber",
 						"visibleWhen": {
 							"field": "callbackPhoneNumber",
