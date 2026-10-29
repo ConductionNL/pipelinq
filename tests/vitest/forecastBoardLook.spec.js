@@ -94,6 +94,15 @@ describe('forecast page', () => {
 		expect(dashboard).toMatch(/value: 'rep', label: t\('pipelinq', 'Seller'\)/)
 	})
 
+	it('draws the level as the boards\' group of pressed buttons, compact (PqForecast 21-24)', () => {
+		// The boards draw a role=group of buttons with aria-pressed, as the Dq
+		// period groups (CnSegmentedControl mode toggle), not a radio group.
+		const control = dashboard.match(/<CnSegmentedControl[\s\S]*?\/>/)[0]
+		expect(control).toMatch(/mode="toggle"/)
+		expect(control).toMatch(/size="compact"/)
+		expect(control).toMatch(/:ariaLabel="t\('pipelinq', 'Level'\)"/)
+	})
+
 	it('draws the quarter card and the trend of the level shown', () => {
 		expect(dashboard).toMatch(/:title="quarterTitle"/)
 		expect(dashboard).toMatch(/<ForecastTrend embedded :level="childLevel"/)

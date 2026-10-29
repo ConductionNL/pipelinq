@@ -26,6 +26,7 @@
 			:modelValue="level"
 			:options="levelOptions"
 			:ariaLabel="t('pipelinq', 'Level')"
+			mode="toggle"
 			size="compact"
 			class="forecast-dashboard__levels"
 			@update:modelValue="setLevel" />
