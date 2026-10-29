@@ -2180,7 +2180,72 @@
 					}
 				],
 				"showActionsMenu": false,
-				"_inCallNote": "In a call (the header sets @workspace.callActive from client=<id>&call=active or inCallPreview=<number>), the dashboard cards step aside and the client-bound cards float up: the contact form, the open requests, the knowledge base, the tasks and callbacks for the client and the earlier contact (board PqWerkplekKlant)."
+				"layoutWhen": [
+					{
+						"when": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"layout": [
+							{
+								"id": "cw",
+								"widgetId": "simple-call-who",
+								"gridX": 0,
+								"gridY": 0,
+								"gridWidth": 4,
+								"gridHeight": 5,
+								"sizeToContent": true
+							},
+							{
+								"id": "ci",
+								"widgetId": "interaction",
+								"gridX": 4,
+								"gridY": 0,
+								"gridWidth": 4,
+								"gridHeight": 6,
+								"sizeToContent": true
+							},
+							{
+								"id": "cc",
+								"widgetId": "client-cases",
+								"gridX": 4,
+								"gridY": 6,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							},
+							{
+								"id": "ck",
+								"widgetId": "knowledge",
+								"gridX": 8,
+								"gridY": 0,
+								"gridWidth": 4,
+								"gridHeight": 5,
+								"sizeToContent": true
+							},
+							{
+								"id": "ct",
+								"widgetId": "simple-call-tasks",
+								"gridX": 8,
+								"gridY": 5,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							},
+							{
+								"id": "cm",
+								"widgetId": "client-contacts",
+								"gridX": 8,
+								"gridY": 9,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							}
+						]
+					}
+				],
+				"_inCallNote": "In a call (the header sets @workspace.callActive from client=<id>&call=active or inCallPreview=<number>), the dashboard cards step aside and the client-bound cards float up: the contact form, the open requests, the knowledge base, the tasks and callbacks for the client and the earlier contact (board PqWerkplekKlant). `layoutWhen` gives the call its own arrangement in three columns: who is it on the left, the contact form and the open requests in the middle, the knowledge base, the tasks and the earlier contact on the right (nextcloud-vue dashboard-layout-when; before it the key is ignored and the cards close up as before)."
 			},
 			"configAppend": {
 				"widgets": [
