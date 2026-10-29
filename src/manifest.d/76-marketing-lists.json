@@ -141,7 +141,8 @@
 									"widgetIds": [
 										"mailing-list-data"
 									],
-									"label": "Overview"
+									"label": "Overview",
+									"showTitle": true
 								},
 								{
 									"widgetId": "list-history",
