@@ -9288,7 +9288,11 @@ OC.L10N.register(
         "Call {callbackPhoneNumber}": "Call {callbackPhoneNumber}",
         "Task finished.": "Task finished.",
         "of @object.capacity places": "of @object.capacity places",
-        "{allRegistrations} registrations in total": "{allRegistrations} registrations in total"
+        "{allRegistrations} registrations in total": "{allRegistrations} registrations in total",
+        "Set the term": "Set the term",
+        "Link an existing case": "Link an existing case",
+        "The term is set.": "The term is set.",
+        "The request is linked to the case.": "The request is linked to the case."
     },
     "nplurals=2; plural=(n != 1);"
 )
