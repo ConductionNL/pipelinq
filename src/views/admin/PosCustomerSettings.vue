@@ -96,6 +96,7 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			class="pos-customer-settings__note"
 			:name="t('pipelinq', 'Where cashiers see this')"
 			:description="
 				t(
@@ -324,6 +325,12 @@ export default {
 	flex-direction: row-reverse;
 	align-items: center;
 	gap: 16px;
+}
+
+.pos-customer-settings__note :deep(.settings-section__name) {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--cn-board-side-heading-size, 15px);
+	font-weight: 600;
 }
 
 .pos-customer-settings__till-link {

@@ -86,4 +86,15 @@ describe('the till customer lookup settings', () => {
 		await w.vm.save()
 		expect(api.updateCustomerSettings).not.toHaveBeenCalled()
 	})
+
+	it('heads the where-cashiers-see-this note as a 15px muted label', () => {
+		const source = readFileSync(resolve(__dirname, '../../src/views/admin/PosCustomerSettings.vue'), 'utf8')
+		const rule = (selector) => (source.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{([^}]*)\\}')) || [])[1] || ''
+		const title = rule('.pos-customer-settings__note :deep(.settings-section__name)')
+		expect(title).toMatch(/font-size: var\(--cn-board-side-heading-size, 15px\)/)
+		expect(title).toMatch(/font-weight: 600/)
+		expect(title).toMatch(/color: var\(--color-text-maxcontrast\)/)
+		const w = mountSettings()
+		expect(w.findAll('[data-stub="NcSettingsSection"]')[1].classes()).toContain('pos-customer-settings__note')
+	})
 })
