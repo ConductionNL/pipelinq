@@ -5876,7 +5876,10 @@
 						"type": "integration",
 						"integrationId": "files",
 						"title": "Documents",
-						"icon": "FolderOutline"
+						"icon": "FolderOutline",
+						"props": {
+							"addable": true
+						}
 					},
 					{
 						"id": "task-history",
@@ -5911,6 +5914,17 @@
 						"type": "related",
 						"title": "Related",
 						"icon": "LinkVariant"
+					},
+					{
+						"id": "task-side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"content": {
+							"maxDisplay": 3,
+							"excludeActions": [
+								"read"
+							]
+						}
 					}
 				],
 				"layout": [
@@ -5927,7 +5941,8 @@
 					"field": "status"
 				},
 				"sideColumn": [
-					"task-related"
+					"task-related",
+					"task-side-history"
 				],
 				"headerCard": true,
 				"breadcrumb": {
@@ -5975,10 +5990,28 @@
 							"field": "callbackPhoneNumber",
 							"op": "notEmpty"
 						}
+					},
+					{
+						"id": "task-complete",
+						"type": "api-call",
+						"label": "Finish",
+						"icon": "Check",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"payload": {
+							"action": "complete"
+						},
+						"successMessage": "Task finished.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "in_progress"
+						}
 					}
 				],
 				"quickActions": [
-					"task-call"
+					"task-call",
+					"task-complete"
 				],
 				"nextStep": {
 					"title": "What now?",
@@ -6018,10 +6051,32 @@
 					}
 				},
 				"primaryActionByStage": {
-					"open": "task-call",
-					"in_progress": "task-call"
+					"open": {
+						"id": "task-call-next",
+						"type": "navigate",
+						"label": "Call the customer",
+						"primaryLabel": "Call {callbackPhoneNumber}",
+						"icon": "Phone",
+						"target": "tel:@object.callbackPhoneNumber",
+						"visibleWhen": {
+							"field": "callbackPhoneNumber",
+							"op": "notEmpty"
+						}
+					},
+					"in_progress": {
+						"id": "task-call-next",
+						"type": "navigate",
+						"label": "Call the customer",
+						"primaryLabel": "Call {callbackPhoneNumber}",
+						"icon": "Phone",
+						"target": "tel:@object.callbackPhoneNumber",
+						"visibleWhen": {
+							"field": "callbackPhoneNumber",
+							"op": "notEmpty"
+						}
+					}
 				},
-				"_boardNote": "Board PqTaak: the subject as the title, kind and status pills, the deadline on the meta line, Call as the primary action, the next step per stage, the task and its documents in an Overview tab beside History, and the related records in the side column."
+				"_boardNote": "Board PqTaak: the subject as the title, kind and status pills, the deadline on the meta line, Call and Finish in the header, the next step per stage with a call button that names the number (primaryLabel, nc-vue 2.161+), the task and its documents in an Overview tab beside History, and the related records over the latest history in the side column."
 			}
 		},
 		{

@@ -31,13 +31,43 @@ describe('task page', () => {
 		const call = config.headerActions.find((action) => action.id === 'task-call')
 		expect(call.target).toBe('tel:@object.callbackPhoneNumber')
 		expect(nl[call.label]).toBe('Bellen')
-		expect(config.primaryActionByStage.open).toBe('task-call')
+		expect(config.primaryActionByStage.open.id).toBe('task-call-next')
 		expect(Object.keys(config.nextStep.stages)).toEqual(['open', 'in_progress'])
 	})
 
 	it('puts the task in an Overview tab beside History, the related records aside', () => {
 		const tabs = config.widgets.find((w) => w.id === 'task-panels').content.tabs
 		expect(tabs.map((tab) => tab.label)).toEqual(['Overview', 'History'])
-		expect(config.sideColumn).toEqual(['task-related'])
+		expect(config.sideColumn[0]).toBe('task-related')
+	})
+
+	it('puts Call and Finish in the header beside Edit', () => {
+		expect(config.quickActions).toEqual(['task-call', 'task-complete'])
+		const finish = config.headerActions.find((action) => action.id === 'task-complete')
+		expect(nl[finish.label]).toBe('Afronden')
+		expect(finish.url).toBe('/apps/openregister/api/objects/@objectId/transition')
+		expect(finish.payload).toEqual({ action: 'complete' })
+		expect(finish.visibleWhen).toEqual({ field: 'status', op: 'eq', value: 'in_progress' })
+	})
+
+	it('names the number on the next step\'s call button', () => {
+		const next = config.primaryActionByStage.in_progress
+		expect(next.target).toBe('tel:@object.callbackPhoneNumber')
+		expect(nl[next.primaryLabel]).toBe('Bel {callbackPhoneNumber}')
+		expect(config.primaryActionByStage.open).toEqual(next)
+	})
+
+	it('lists the latest history in a side card under the related records', () => {
+		expect(config.sideColumn).toEqual(['task-related', 'task-side-history'])
+		const history = config.widgets.find((w) => w.id === 'task-side-history')
+		expect(history.type).toBe('audit-trail')
+		expect(nl[history.title]).toBe('Geschiedenis')
+		expect(history.content.excludeActions).toEqual(['read'])
+	})
+
+	it('offers "Bestand toevoegen" in the Documenten card header (pl3 item 4)', () => {
+		const files = config.widgets.find((w) => w.id === 'task-files')
+		expect(files.integrationId).toBe('files')
+		expect(files.props).toEqual({ addable: true })
 	})
 })

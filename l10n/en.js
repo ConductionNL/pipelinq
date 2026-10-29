@@ -9282,7 +9282,9 @@ OC.L10N.register(
         "Outside the margin": "Outside the margin",
         "Unknown measure": "Unknown measure",
         "No decision linked": "No decision linked",
-        "Create a proposal for this ticket": "Create a proposal for this ticket"
+        "Create a proposal for this ticket": "Create a proposal for this ticket",
+        "Call {callbackPhoneNumber}": "Call {callbackPhoneNumber}",
+        "Task finished.": "Task finished."
     },
     "nplurals=2; plural=(n != 1);"
 )
