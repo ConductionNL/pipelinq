@@ -2026,6 +2026,7 @@
 						"gridY": 7,
 						"gridWidth": 8,
 						"gridHeight": 5,
+						"track": "main",
 						"showTitle": true,
 						"headerLink": {
 							"label": "Whole queue",
@@ -2040,6 +2041,7 @@
 						"gridY": 12,
 						"gridWidth": 8,
 						"gridHeight": 3,
+						"track": "main",
 						"showTitle": true,
 						"sizeToContent": true
 					},
@@ -2050,6 +2052,7 @@
 						"gridY": 7,
 						"gridWidth": 4,
 						"gridHeight": 5,
+						"track": "side",
 						"showTitle": true,
 						"sizeToContent": true
 					},
@@ -2060,6 +2063,7 @@
 						"gridY": 12,
 						"gridWidth": 4,
 						"gridHeight": 4,
+						"track": "side",
 						"showTitle": true,
 						"sizeToContent": true
 					},
@@ -2079,7 +2083,8 @@
 						"gridX": 0,
 						"gridY": 16,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"track": "main"
 					},
 					{
 						"id": "wi",
@@ -2087,7 +2092,8 @@
 						"gridX": 8,
 						"gridY": 16,
 						"gridWidth": 4,
-						"gridHeight": 8
+						"gridHeight": 8,
+						"track": "side"
 					},
 					{
 						"id": "wt",
@@ -2095,7 +2101,8 @@
 						"gridX": 0,
 						"gridY": 20,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"track": "main"
 					},
 					{
 						"id": "wk",
@@ -2103,7 +2110,8 @@
 						"gridX": 8,
 						"gridY": 24,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"track": "side"
 					},
 					{
 						"id": "wc",
@@ -2111,7 +2119,8 @@
 						"gridX": 0,
 						"gridY": 24,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"track": "main"
 					},
 					{
 						"id": "wm",
@@ -2119,7 +2128,8 @@
 						"gridX": 4,
 						"gridY": 24,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"track": "main"
 					},
 					{
 						"id": "sct",
@@ -2127,7 +2137,8 @@
 						"gridX": 0,
 						"gridY": 29,
 						"gridWidth": 4,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"track": "main"
 					},
 					{
 						"id": "who",
@@ -2136,6 +2147,7 @@
 						"gridY": 29,
 						"gridWidth": 4,
 						"gridHeight": 4,
+						"track": "side",
 						"sizeToContent": true
 					}
 				],
@@ -2164,6 +2176,8 @@
 				"gridSideColumn": {
 					"width": 320
 				},
+				"gridMargin": 10,
+				"_gridMarginNote": "10px: the board spaces these cards 20px apart, as the Dq dashboards do; GridStack's default 12 drew them 24 apart. The cards from row 7 down carry a `track`, so the side column is drawn at gridSideColumn's width (without one every card keeps its twelfth shares, 357px).",
 				"headerActions": [
 					{
 						"id": "log-contact",
