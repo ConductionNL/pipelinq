@@ -18,8 +18,10 @@
 					:value="option.value"
 					name="request-form-type"
 					type="radio"
-					buttonVariant
-					buttonVariantGrouped="horizontal">
+					buttonVariant>
+					<template #icon>
+						<component :is="option.icon" :size="18" />
+					</template>
 					{{ option.label }}
 				</NcCheckboxRadioSwitch>
 			</div>
@@ -32,9 +34,9 @@
 				:label="
 					boardLayout ? t('pipelinq', 'Subject') : t('pipelinq', 'Title')
 				"
-				:error="!!errors.title"
-				:helperText="errors.title"
-				@update:modelValue="(v) => (form.title = v)" />
+				:error="showTitleError"
+				:helperText="showTitleError ? errors.title : ''"
+				@update:modelValue="onTitleInput" />
 		</div>
 
 		<!-- Description -->
@@ -63,6 +65,7 @@
 				<NcSelect
 					v-model="form.status"
 					:options="availableStatuses"
+					:getOptionLabel="getStatusLabel"
 					:aria-label-combobox="t('pipelinq', 'Status')"
 					labelOutside
 					:clearable="false"
@@ -73,6 +76,7 @@
 				<NcSelect
 					v-model="form.priority"
 					:options="priorityOptions"
+					:getOptionLabel="getPriorityLabel"
 					:aria-label-combobox="t('pipelinq', 'Priority')"
 					labelOutside
 					:clearable="false"
@@ -109,7 +113,18 @@
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select channel')" />
 			</div>
-			<div class="form-group">
+			<div v-if="categoryChoices.length > 0" class="form-group">
+				<label>{{ t('pipelinq', 'Category') }}</label>
+				<NcSelect
+					:modelValue="selectedCategory"
+					:options="categoryChoices"
+					:aria-label-combobox="t('pipelinq', 'Category')"
+					labelOutside
+					:clearable="true"
+					:placeholder="t('pipelinq', 'Select a category')"
+					@update:modelValue="(option) => (form.category = option ? option.value : '')" />
+			</div>
+			<div v-else class="form-group">
 				<NcTextField
 					:modelValue="form.category"
 					:label="t('pipelinq', 'Category')"
@@ -142,7 +157,10 @@
 					:createHandler="createClient"
 					@update:modelValue="onClientChange" />
 				<div v-if="boardLayout" class="rf-client__actions">
-					<NcButton variant="secondary" size="small" @click="newClient">
+					<NcButton
+						variant="secondary"
+						class="cn-button--tonal"
+						@click="newClient">
 						<template #icon>
 							<AccountPlusOutline :size="16" />
 						</template>
@@ -224,14 +242,17 @@
 			</div>
 		</div>
 
-		<NcNoteCard v-if="boardLayout" type="info" class="rf-note">
-			{{
-				t(
-					'pipelinq',
-					'The deadline follows from the kind of ticket and its service level. A conversation is also saved as a contact moment on this ticket.',
-				)
-			}}
-		</NcNoteCard>
+		<p v-if="boardLayout" class="rf-note" data-testid="request-form-term">
+			<ClockOutline :size="18" class="rf-note__icon" />
+			<span>
+				{{
+					t(
+						'pipelinq',
+						'The deadline follows from the kind of ticket and its service level. A conversation is also saved as a contact moment on this ticket.',
+					)
+				}}
+			</span>
+		</p>
 		<div v-if="boardLayout" class="rf-more-toggle">
 			<NcButton
 				variant="tertiary"
@@ -265,18 +286,27 @@ import {
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDateTimePickerNative,
-	NcNoteCard,
 	NcSelect,
 	NcTextArea,
 	NcTextField,
 } from '@nextcloud/vue'
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
+import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
+import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
+import MessageTextOutline from 'vue-material-design-icons/MessageTextOutline.vue'
+import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
-import { getAllowedTransitions } from '../../services/requestStatus.js'
+import {
+	getAllowedTransitions,
+	getPriorityLabel,
+	getStatusLabel,
+} from '../../services/requestStatus.js'
+import { categoryOptions, fetchTicketCategories } from '../../services/ticketCategories.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 
@@ -285,12 +315,12 @@ export default {
 	components: {
 		AccountPlusOutline,
 		ClientCreateDialog,
+		ClockOutline,
 		CnResourceSelect,
 		ContactCreateDialog,
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcDateTimePickerNative,
-		NcNoteCard,
 		NcSelect,
 		NcTextArea,
 		NcTextField,
@@ -340,6 +370,8 @@ export default {
 
 	data() {
 		return {
+			/** The tenant's ticketCategory objects, read when the form opens. */
+			ticketCategories: [],
 			form: {
 				title: '',
 				description: '',
@@ -355,6 +387,7 @@ export default {
 			},
 
 			showMore: false,
+			titleTouched: false,
 			typeLabelId: `request-form-type-${Math.random().toString(36).slice(2, 8)}`,
 
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
@@ -418,6 +451,26 @@ export default {
 		},
 
 		/**
+		 * The tenant's active categories as select options, the stored one kept.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+		 */
+		categoryChoices() {
+			return categoryOptions(this.ticketCategories, this.form.category)
+		},
+
+		/**
+		 * The option of the stored category, or null.
+		 *
+		 * @return {{value: string, label: string}|null}
+		 * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+		 */
+		selectedCategory() {
+			return this.categoryChoices.find((option) => option.value === this.form.category) || null
+		},
+
+		/**
 		 * The kinds of ticket the board layout offers.
 		 *
 		 * @return {Array<{value: string, label: string}>}
@@ -425,9 +478,26 @@ export default {
 		 */
 		typeOptions() {
 			return [
-				{ value: 'request', label: t('pipelinq', 'Request') },
-				{ value: 'complaint', label: t('pipelinq', 'Complaint') },
-				{ value: 'interaction', label: t('pipelinq', 'Contact moment') },
+				{
+					value: 'request',
+					label: t('pipelinq', 'Request'),
+					icon: MessageTextOutline,
+				},
+				{
+					value: 'melding',
+					label: t('pipelinq', 'Public-space report'),
+					icon: AlertOutline,
+				},
+				{
+					value: 'complaint',
+					label: t('pipelinq', 'Complaint'),
+					icon: AlertCircleOutline,
+				},
+				{
+					value: 'interaction',
+					label: t('pipelinq', 'Contact moment'),
+					icon: PhoneOutline,
+				},
 			]
 		},
 
@@ -520,6 +590,17 @@ export default {
 			return errors
 		},
 
+		/**
+		 * Whether the subject's "required" message shows: only once someone
+		 * typed in the field, so a new form does not open in error.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
+		 */
+		showTitleError() {
+			return this.titleTouched && !!this.errors.title
+		},
+
 		isValid() {
 			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
 		},
@@ -540,10 +621,12 @@ export default {
 	 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
 	 */
 	async created() {
-		await Promise.all([
+		const [, , categories] = await Promise.all([
 			this.objectStore.fetchCollection('pipeline', { _limit: 100 }),
 			this.requestChannelsStore.fetchChannels(),
+			fetchTicketCategories(),
 		])
+		this.ticketCategories = categories
 
 		if (this.request) {
 			this.form = {
@@ -622,7 +705,20 @@ export default {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-46
 		 */
+		getPriorityLabel,
+		getStatusLabel,
+
+		/**
+		 * @param {string} value The typed subject.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
+		 */
+		onTitleInput(value) {
+			this.form.title = value
+			this.titleTouched = true
+		},
+
 		onSave() {
+			this.titleTouched = true
 			if (!this.isValid) return
 
 			const data = { ...this.form }
@@ -721,6 +817,23 @@ export default {
 	flex-wrap: wrap;
 	gap: 8px;
 	margin-top: 8px;
+}
+
+.rf-note {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+	margin: 0;
+	padding: 12px 14px;
+	border-radius: 10px;
+	background: var(--color-background-hover);
+	color: var(--color-main-text);
+	font-size: 14px;
+}
+
+.rf-note__icon {
+	flex: none;
+	color: var(--color-text-maxcontrast);
 }
 
 .rf-hint {

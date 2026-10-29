@@ -3529,6 +3529,7 @@ OC.L10N.register(
         "Select auth mode": "Selecteer authenticatiemodus",
         "Select category": "Selecteer categorie",
         "Select channel": "Selecteer kanaal",
+        "Select a category": "Selecteer een categorie",
         "Select client": "Selecteer klant",
         "Select client first": "Selecteer eerst een klant",
         "Select contact": "Selecteer contactpersoon",

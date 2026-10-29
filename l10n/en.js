@@ -3572,6 +3572,7 @@ OC.L10N.register(
         "Select auth mode": "Select auth mode",
         "Select category": "Select category",
         "Select channel": "Select channel",
+        "Select a category": "Select a category",
         "Select client": "Select client",
         "Select client first": "Select client first",
         "Select contact": "Select contact",

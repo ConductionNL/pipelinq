@@ -33,6 +33,10 @@ vi.mock('../../src/store/modules/requestChannels.js', () => ({
 		channelNames: [],
 	}),
 }))
+vi.mock('../../src/services/ticketCategories.js', () => ({
+	fetchTicketCategories: vi.fn(async () => []),
+	categoryOptions: () => [],
+}))
 vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({
 	default: { name: 'ClientCreateDialog', render: () => null },
 }))
@@ -45,7 +49,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 vi.mock('@nextcloud/vue', () => {
 	const field = (name) => ({
 		name,
-		props: ['label', 'modelValue', 'ariaLabelCombobox', 'options'],
+		props: ['label', 'modelValue', 'ariaLabelCombobox', 'options', 'error', 'helperText', 'getOptionLabel'],
 		emits: ['update:modelValue'],
 		render() {
 			return h('label', { 'data-label': this.ariaLabelCombobox || this.label })
@@ -67,11 +71,10 @@ vi.mock('@nextcloud/vue', () => {
 			name: 'NcCheckboxRadioSwitch',
 			props: ['value', 'modelValue'],
 			render() {
-				return h(
-					'span',
-					{ 'data-type': this.value },
+				return h('span', { 'data-type': this.value }, [
+					this.$slots.icon?.(),
 					this.$slots.default?.(),
-				)
+				])
 			},
 		},
 		NcNoteCard: {
@@ -86,6 +89,12 @@ vi.mock('@nextcloud/vue', () => {
 		NcTextField: field('NcTextField'),
 	}
 })
+
+vi.mock('vue-material-design-icons/MessageTextOutline.vue', () => ({ default: { render: () => h('i', { 'data-icon': 'request' }) } }))
+vi.mock('vue-material-design-icons/AlertOutline.vue', () => ({ default: { render: () => h('i', { 'data-icon': 'melding' }) } }))
+vi.mock('vue-material-design-icons/AlertCircleOutline.vue', () => ({ default: { render: () => h('i', { 'data-icon': 'complaint' }) } }))
+vi.mock('vue-material-design-icons/PhoneOutline.vue', () => ({ default: { render: () => h('i', { 'data-icon': 'interaction' }) } }))
+vi.mock('vue-material-design-icons/ClockOutline.vue', () => ({ default: { render: () => h('i', { 'data-icon': 'clock' }) } }))
 
 globalThis.t = (_app, text, vars) =>
 	vars ? text.replace('{name}', vars.name) : text
@@ -106,11 +115,11 @@ function labels(wrapper) {
 }
 
 describe('RequestForm board layout', () => {
-	it('offers the three kinds of ticket and starts on a request, handled by the person filling it in', async () => {
+	it('offers the four kinds of ticket and starts on a request, handled by the person filling it in', async () => {
 		const wrapper = await mountForm({ boardLayout: true })
 		expect(
 			wrapper.findAll('[data-type]').map((el) => el.attributes('data-type')),
-		).toEqual(['request', 'complaint', 'interaction'])
+		).toEqual(['request', 'melding', 'complaint', 'interaction'])
 		expect(wrapper.vm.form.ticketType).toBe('request')
 		expect(wrapper.vm.form.assignee).toBe('pieter')
 		expect(wrapper.vm.assigneeOptions.map((o) => o.label)).toEqual([
@@ -145,6 +154,46 @@ describe('RequestForm board layout', () => {
 		const [data] = wrapper.emitted('save')[0]
 		expect(data.ticketType).toBe('complaint')
 		expect('assignee' in data).toBe(false)
+	})
+
+	it('draws the kinds as separate buttons, each with its icon', async () => {
+		const wrapper = await mountForm({ boardLayout: true })
+		const kinds = wrapper.findAllComponents({ name: 'NcCheckboxRadioSwitch' })
+		expect(kinds).toHaveLength(4)
+		for (const kind of kinds) {
+			expect(kind.attributes('buttonvariantgrouped')).toBeUndefined()
+			expect(kind.find('[data-icon]').exists()).toBe(true)
+		}
+	})
+
+	it('names the priority and the status, not their stored values', async () => {
+		const wrapper = await mountForm({ boardLayout: true })
+		const priority = wrapper.findAllComponents({ name: 'NcSelect' }).find((c) => c.props('ariaLabelCombobox') === 'Priority')
+		expect(priority.props('getOptionLabel')('normal')).toBe('Normal')
+	})
+
+	it('does not call the subject missing before anyone typed in it', async () => {
+		const wrapper = await mountForm({ boardLayout: true })
+		const subject = wrapper.findAllComponents({ name: 'NcTextField' }).find((c) => c.props('label') === 'Subject')
+		expect(subject.props('error')).toBe(false)
+		subject.vm.$emit('update:modelValue', '')
+		await flushPromises()
+		expect(subject.props('error')).toBe(true)
+		expect(subject.props('helperText')).toBe('Title is required')
+	})
+
+	it('draws New client as the tonal pill', async () => {
+		const wrapper = await mountForm({ boardLayout: true })
+		const button = wrapper.findAll('button').find((b) => b.text() === 'New client')
+		expect(button.classes()).toContain('cn-button--tonal')
+	})
+
+	it('says when the answer is due as a plain line on the sunken ground, with a clock', async () => {
+		const wrapper = await mountForm({ boardLayout: true })
+		const note = wrapper.find('[data-testid="request-form-term"]')
+		expect(note.exists()).toBe(true)
+		expect(note.find('[data-icon]').exists()).toBe(true)
+		expect(wrapper.findComponent({ name: 'NcNoteCard' }).exists()).toBe(false)
 	})
 
 	it('leaves the edit form as it was', async () => {
