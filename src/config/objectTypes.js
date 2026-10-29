@@ -400,6 +400,17 @@ export function objectTypes() {
 				'Replies the team writes once and agents insert when they answer',
 			),
 		},
+		// The shared label list (shared-label-list): articles, leads and
+		// clients pick from it; admins keep it on Beheer, Marketing.
+		{
+			slug: 'label',
+			group: 'marketing',
+			label: t(APP, 'Label'),
+			description: t(
+				APP,
+				'The labels people can pick for articles, leads and clients.',
+			),
+		},
 		{
 			slug: 'channelProvider',
 			group: 'marketing',

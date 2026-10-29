@@ -197,6 +197,10 @@
 					:placeholder="t('pipelinq', 'Pick sectors')"
 					data-testid="client-industry-select" />
 			</div>
+			<!-- Labels from the shared list (shared-label-list). -->
+			<div class="form-group" data-testid="client-form-labels">
+				<LabelSelect v-model="form.labels" />
+			</div>
 			<div class="form-group">
 				<label for="client-account-owner">{{
 					t('pipelinq', 'Account owner')
@@ -285,6 +289,7 @@ import axios from '@nextcloud/axios'
 import { getLanguage, translate } from '@nextcloud/l10n'
 import { generateOcsUrl, generateUrl } from '@nextcloud/router'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
+import LabelSelect from '../../components/LabelSelect.vue'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import { findClientDuplicate } from '../../services/clientDuplicates.js'
 import {
@@ -319,6 +324,7 @@ const TYPE_MAPPING = {
 export default {
 	name: 'ClientForm',
 	components: {
+		LabelSelect,
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcTextArea,
@@ -378,6 +384,7 @@ export default {
 				address: '',
 				notes: '',
 				industry: [],
+				labels: [],
 				accountOwner: currentUser()?.uid || null,
 				correspondenceLanguage: '',
 				timezone: null,
@@ -550,6 +557,7 @@ export default {
 				address: data.address || '',
 				notes: data.notes || '',
 				industry: industryList(data.industry),
+				labels: Array.isArray(data.labels) ? [...data.labels] : [],
 				accountOwner: data.accountOwner || null,
 				correspondenceLanguage: data.correspondenceLanguage || '',
 				timezone: data.timezone || null,

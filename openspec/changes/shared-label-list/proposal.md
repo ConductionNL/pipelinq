@@ -24,11 +24,11 @@ Today only `article` carries `tags`, as free text. `lead` and `client` carry no 
 
 Not small: two schema changes (lead, client: additive, no migration), one new schema, three form pickers, one admin card, and a rename pass. Suggested order:
 1. Schema: `label`, `lead.labels`, `client.labels` (register.d fragment).
-2. Admin card as manifest config over a generic nc-vue chip-list manager over an OpenRegister schema (add, rename on double-click, delete), so other apps can reuse it.
+2. Admin card, last on the Marketing tab as the board draws it, over a generic nc-vue chip-list manager over an OpenRegister schema (add, rename on double-click, delete), so other apps can reuse it.
 3. Pickers: the forms' `labels` / `tags` field gets `fieldOverrides` with the label list as its options source.
 4. Rename pass: `LabelRenameService` (writes as the caller, after the update right on each item is checked by OpenRegister).
 
-## Open questions (coordinator)
+## Decisions (Ruben, 29 Oct 03:00)
 
-- Rename rewrites items (proposed) or only the list (like delete)? The board says nothing about rename and items.
-- Should the shipped set seed the five board labels, or the Zuiddrecht example set only? Proposed: the example set only.
+- Renaming a label rewrites it on every lead and client that carries it. Articles carry the same list in `tags`, so the rename rewrites those too.
+- The five board labels ship in the Zuiddrecht example set only. A fresh install starts with an empty list.

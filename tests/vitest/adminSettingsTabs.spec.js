@@ -152,9 +152,28 @@ describe('the admin page tabs', () => {
 			'<MailingListEmbedSettings',
 			'<ProspectSettings',
 			'v-bind="sections.exportConfiguration"',
+			'<CnChipListManager',
 		].map((tag) => markup.indexOf(tag))
 		expect(order.every((index) => index > -1)).toBe(true)
 		expect(order).toEqual([...order].sort((a, b) => a - b))
+	})
+
+	it('draws the shared label list last on Marketing, as board PqBeheerMarketing', () => {
+		const markup = tab('marketing')
+		const card = markup.slice(markup.indexOf('<CnChipListManager'))
+		expect(card).toContain('v-if="isAdmin && isConfigured"')
+		expect(card).toContain('schema="label"')
+		expect(card).toContain(':renameUrl="labelRenameUrl"')
+		expect(source).toContain("`${generateUrl('/apps/pipelinq/api/labels')}/{id}/rename`")
+		expect(nl.Labels).toBe('Labels')
+		expect(nl['The labels people can pick for articles, leads and clients.']).toBe(
+			'De labels die mensen kunnen kiezen bij artikelen, leads en klanten.',
+		)
+		expect(nl['New label']).toBe('Nieuw label')
+		expect(nl['Enter a name']).toBe('Naam invullen')
+		expect(nl['Double-click a label to rename it. A deleted label stays on the items that already use it.']).toBe(
+			'Dubbelklik op een label om het te hernoemen. Een verwijderd label blijft staan op items die het al gebruiken.',
+		)
 	})
 
 	it('draws the connections on the Integraties tab, as board PqIntegrations', () => {
