@@ -133,7 +133,6 @@ describe('the queue, simple structure', () => {
 				tile.content.caption,
 				...(tile.content.countdown ? [tile.content.countdown.pastLabel] : []),
 			]),
-			overlay.config.quickFilterCaption,
 			...overlay.config.sidePanel.map((card) => card.title),
 			overlay.config.sidePanel[1].content.text,
 			overlay.config.sidePanel[1].content.link.label,

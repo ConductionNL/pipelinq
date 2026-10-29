@@ -3,11 +3,11 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
  * The queue's list card and tiles as board PqWachtrij draws them: the kind
- * lenses open the card with "Kind, then channel" and the channel strip, the
- * rows have no column heads, and the third tile counts the tickets within
+ * lenses stay above the card as on DqTeamwachtrij (Dq wins), the rows have no
+ * column heads, and the third tile counts the tickets within
  * their deadline out of all waiting ones.
  *
- * @spec openspec/changes/queue-list-card-board/specs/queue/spec.md#requirement-the-queue-list-card-opens-with-its-lenses
+ * @spec openspec/changes/queue-list-card-board/specs/queue/spec.md#requirement-the-queue-list-draws-rows-without-column-heads
  * @spec openspec/changes/queue-list-card-board/specs/queue/spec.md#requirement-the-queue-counts-the-tickets-within-their-deadline
  */
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
@@ -27,9 +27,9 @@ const simple = built.pages.find((page) => page.id === 'Queue').config
 const l10n = (lang) => readJson('l10n', `${lang}.json`).translations
 
 describe('the queue list card (PqWachtrij)', () => {
-	it('opens the card with the lenses, the caption and the channel strip', () => {
-		expect(simple.quickFilterPlacement).toBe('card')
-		expect(simple.quickFilterCaption).toBe('Kind, then channel')
+	it('keeps the lenses above the card as DqTeamwachtrij does, the channel strip under them', () => {
+		expect(simple.quickFilterPlacement).toBeUndefined()
+		expect(simple.quickFilterCaption).toBeUndefined()
 		expect(simple.filterStrip.field).toBe('channel')
 	})
 

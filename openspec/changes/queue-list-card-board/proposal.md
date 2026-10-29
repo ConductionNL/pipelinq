@@ -9,16 +9,15 @@ the card, a table with sortable heads, and "Over de termijn 2".
 
 ## What changes
 
-- The simple profile's queue sets `quickFilterPlacement: "card"` and `quickFilterCaption: "Kind, then channel"`
-  (nextcloud-vue index-lenses-in-list-card): the lenses, the caption and the channel strip open the list card.
 - `hideTableHeader: true`: plain rows, no column heads. The list keeps its order, oldest first.
 - The tile "Past the deadline" gives way to "Within the deadline": the open unassigned tickets minus those past their
   deadline (a ticket without a deadline is within it), out of all open unassigned tickets (`limitSource`,
   `limitStyle: "of"`, nextcloud-vue stat-limit-of-a-count), caption "take the red ones first". The tiles read
   Unassigned, Longest waiting, Within the deadline.
-- Before those library changes the keys are ignored: the lenses stay above the card and the tile reads its count
-  with a quieter "/ 12".
+- Before the library change the tile reads its count with a quieter "/ 12".
 
 ## Not in this change
 
+- The lenses inside the list card: DqTeamwachtrij draws its lenses as chips above the card and Dq wins, so the
+  PqWachtrij board is amended to match instead.
 - The footer: the card already ends in the count, the note and the pager, as DqTeamwachtrij draws its queue footer.

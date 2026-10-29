@@ -2,16 +2,16 @@
 
 ## ADDED Requirements
 
-### Requirement: The queue list card opens with its lenses
+### Requirement: The queue list draws rows without column heads
 
-In the simple profile the queue SHALL draw its kind lenses as a segmented control at the top of the list card, with
-"Kind, then channel" beside them and the channel strip under them, and SHALL draw its rows without column heads.
+In the simple profile the queue SHALL draw its rows without column heads, and SHALL keep its kind lenses above the list
+card with the channel strip under them, as DqTeamwachtrij draws its lenses.
 
 #### Scenario: Board PqWachtrij
 
 - **WHEN** an agent opens the queue
-- **THEN** the list card opens with "Alle · Verzoeken · Klachten · Contactmomenten" and "Soort, dan kanaal"
-- **AND** the channel strip under them, then rows without column heads
+- **THEN** the lenses "Alle · Verzoeken · Klachten · Contactmomenten" sit above the list card, the channel strip under them
+- **AND** the card holds rows without column heads
 
 ### Requirement: The queue counts the tickets within their deadline
 
