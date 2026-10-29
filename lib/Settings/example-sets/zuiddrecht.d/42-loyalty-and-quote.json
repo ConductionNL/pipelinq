@@ -102,7 +102,7 @@
 			"schema": "customerLoyaltyAccount",
 			"data": {
 				"accountId": "SP-0001-0340",
-				"customerId": "{{object:client-sanne.id}}",
+				"customerId": "{{object:contact-sanne-thuis.id}}",
 				"programmeId": "{{object:spaarpas.id}}",
 				"currentBalance": 340,
 				"lifetimePoints": 520,
