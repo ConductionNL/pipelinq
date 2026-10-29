@@ -28,6 +28,9 @@ beforeAll(async () => {
 function mergedRegister() {
 	const merge = (a, b) => {
 		for (const [k, v] of Object.entries(b)) {
+			if (k === '__proto__' || k === 'constructor' || k === 'prototype') {
+				continue
+			}
 			if (v && typeof v === 'object' && !Array.isArray(v) && a[k] && typeof a[k] === 'object') {
 				merge(a[k], v)
 			} else {

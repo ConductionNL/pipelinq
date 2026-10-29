@@ -57,6 +57,9 @@ const manifest = readJson('src', 'manifest.json')
 function merge(base, overlay) {
 	const isObject = (v) => v && typeof v === 'object' && !Array.isArray(v)
 	for (const [key, value] of Object.entries(overlay)) {
+		if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+			continue
+		}
 		if (isObject(value) && isObject(base[key])) {
 			merge(base[key], value)
 		} else {
