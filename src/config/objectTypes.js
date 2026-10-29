@@ -403,7 +403,7 @@ export function objectTypes() {
 		// The shared label list (shared-label-list): articles, leads and
 		// clients pick from it; admins keep it on Beheer, Marketing.
 		{
-			slug: 'label',
+			slug: 'itemLabel',
 			group: 'marketing',
 			label: t(APP, 'Label'),
 			description: t(

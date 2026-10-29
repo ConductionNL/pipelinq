@@ -8,7 +8,7 @@ Today only `article` carries `tags`, as free text. `lead` and `client` carry no 
 
 ## What changes
 
-- A `label` schema in the pipelinq register: one object per label, `name` (unique, case-insensitive) and an optional `description`. It is the vocabulary, not a link: an item stores the label's name.
+- An `itemLabel` schema in the pipelinq register (not `label`: OpenRegister slugs are global and planninq owns `label`): one object per label, `name` (unique, case-insensitive) and an optional `description`. It is the vocabulary, not a link: an item stores the label's name.
 - `lead` and `client` get `labels` (array of strings), next to `article.tags`, which keeps its name and is read as the same kind of value.
 - The pickers on the article, lead and client forms offer the label list (an `NcSelect` with the list as options; typing a new value is refused, so the list stays the source).
 - Beheer, Marketing: a Labels card lists the labels as chips, adds one, renames one on double-click, and deletes one.
@@ -23,7 +23,7 @@ Today only `article` carries `tags`, as free text. `lead` and `client` carry no 
 ## Size and order
 
 Not small: two schema changes (lead, client: additive, no migration), one new schema, three form pickers, one admin card, and a rename pass. Suggested order:
-1. Schema: `label`, `lead.labels`, `client.labels` (register.d fragment).
+1. Schema: `itemLabel`, `lead.labels`, `client.labels` (register.d fragment).
 2. Admin card, last on the Marketing tab as the board draws it, over a generic nc-vue chip-list manager over an OpenRegister schema (add, rename on double-click, delete), so other apps can reuse it.
 3. Pickers: the forms' `labels` / `tags` field gets `fieldOverrides` with the label list as its options source.
 4. Rename pass: `LabelRenameService` (writes as the caller, after the update right on each item is checked by OpenRegister).

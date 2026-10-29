@@ -162,7 +162,7 @@ describe('the admin page tabs', () => {
 		const markup = tab('marketing')
 		const card = markup.slice(markup.indexOf('<CnChipListManager'))
 		expect(card).toContain('v-if="isAdmin && isConfigured"')
-		expect(card).toContain('schema="label"')
+		expect(card).toContain('schema="itemLabel"')
 		expect(card).toContain(':renameUrl="labelRenameUrl"')
 		expect(source).toContain("`${generateUrl('/apps/pipelinq/api/labels')}/{id}/rename`")
 		expect(nl.Labels).toBe('Labels')

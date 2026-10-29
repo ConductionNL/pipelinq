@@ -2,19 +2,19 @@
   "_meta": {
     "spdx-license": "EUPL-1.2",
     "spdx-copyright": "2026 Conduction B.V.",
-    "description": "shared-label-list (board PqBeheerMarketing, Labels card). One list of labels that articles, leads and clients pick from, so two colleagues no longer write 'Ondernemers' and 'ondernemer'. A label is a word in the list, not a link: an item stores the label's name. The forms offer the list through x-options-from on the items; hideWhenEmpty keeps a form from falling back to free text while the list is empty. Only an administrator writes the list: OpenRegister lets the admin group through before any rule, and the write verbs name nobody else. Renaming a label rewrites it on the items that carry it (LabelRenameService); deleting one leaves the text on its items. A fresh install starts with an empty list; the Zuiddrecht example set brings the five board labels. Sorts after 97-marketing-articles.json so the picker lands on article.tags."
+    "description": "shared-label-list (board PqBeheerMarketing, Labels card). One list of labels that articles, leads and clients pick from, so two colleagues no longer write 'Ondernemers' and 'ondernemer'. A label is a word in the list, not a link: an item stores the label's name. The forms offer the list through x-options-from on the items; hideWhenEmpty keeps a form from falling back to free text while the list is empty. Only an administrator writes the list: OpenRegister lets the admin group through before any rule, and the write verbs name nobody else. Renaming a label rewrites it on the items that carry it (LabelRenameService); deleting one leaves the text on its items. A fresh install starts with an empty list; the Zuiddrecht example set brings the five board labels. Sorts after 97-marketing-articles.json so the picker lands on article.tags. The slug is itemLabel, not label: OpenRegister slugs are global and planninq owns label."
   },
   "components": {
     "registers": {
       "pipelinq": {
         "schemas": [
-          "label"
+          "itemLabel"
         ]
       }
     },
     "schemas": {
-      "label": {
-        "slug": "label",
+      "itemLabel": {
+        "slug": "itemLabel",
         "title": "Label",
         "icon": "TagOutline",
         "version": "1.0.0",
@@ -64,7 +64,7 @@
               "maxLength": 80,
               "x-options-from": {
                 "register": "pipelinq",
-                "schema": "label",
+                "schema": "itemLabel",
                 "valueField": "name",
                 "labelField": "name",
                 "hideWhenEmpty": true
@@ -85,7 +85,7 @@
               "maxLength": 80,
               "x-options-from": {
                 "register": "pipelinq",
-                "schema": "label",
+                "schema": "itemLabel",
                 "valueField": "name",
                 "labelField": "name",
                 "hideWhenEmpty": true
@@ -98,10 +98,12 @@
         "slug": "article",
         "properties": {
           "tags": {
+            "title": "Tags",
+            "description": "Labels from the shared list.",
             "items": {
               "x-options-from": {
                 "register": "pipelinq",
-                "schema": "label",
+                "schema": "itemLabel",
                 "valueField": "name",
                 "labelField": "name",
                 "hideWhenEmpty": true

@@ -59,10 +59,10 @@ class SharedLabelListSchemaTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheRegisterCarriesTheLabelSchema(): void {
-		$this->assertContains(needle: 'label', haystack: $this->config['components']['registers']['pipelinq']['schemas']);
+		$this->assertContains(needle: 'itemLabel', haystack: $this->config['components']['registers']['pipelinq']['schemas']);
 
-		$label = $this->config['components']['schemas']['label'];
-		$this->assertSame(expected: 'label', actual: $label['slug']);
+		$label = $this->config['components']['schemas']['itemLabel'];
+		$this->assertSame(expected: 'itemLabel', actual: $label['slug']);
 		$this->assertSame(expected: ['name'], actual: $label['required']);
 		$this->assertSame(expected: 'string', actual: $label['properties']['name']['type']);
 		$this->assertSame(expected: 'string', actual: $label['properties']['description']['type']);
@@ -79,7 +79,7 @@ class SharedLabelListSchemaTest extends TestCase {
 	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
 	 */
 	public function testOnlyAnAdministratorWritesTheList(): void {
-		$authorization = $this->config['components']['schemas']['label']['authorization'];
+		$authorization = $this->config['components']['schemas']['itemLabel']['authorization'];
 
 		$this->assertSame(expected: ['sales', 'user:pipelinq-system'], actual: $authorization['read']);
 		$this->assertSame(expected: ['sales', 'user:pipelinq-system'], actual: $authorization['export']);
@@ -105,7 +105,7 @@ class SharedLabelListSchemaTest extends TestCase {
 			$this->assertSame(
 				expected: [
 					'register'      => 'pipelinq',
-					'schema'        => 'label',
+					'schema'        => 'itemLabel',
 					'valueField'    => 'name',
 					'labelField'    => 'name',
 					'hideWhenEmpty' => true,
@@ -115,6 +115,63 @@ class SharedLabelListSchemaTest extends TestCase {
 			);
 		}
 	}//end testLeadsClientsAndArticlesPickFromTheList()
+
+	/**
+	 * The slug is pipelinq's own: OpenRegister slugs are global and planninq declares `label`.
+	 *
+	 * @return void
+	 */
+	public function testTheSlugIsNotTheWordPlanninqOwns(): void {
+		$this->assertArrayNotHasKey(key: 'label', array: $this->config['components']['schemas']);
+		$this->assertNotContains(needle: 'label', haystack: $this->config['components']['registers']['pipelinq']['schemas']);
+	}//end testTheSlugIsNotTheWordPlanninqOwns()
+
+	/**
+	 * Article tags carry a title and a description for the form and the gates.
+	 *
+	 * @return void
+	 */
+	public function testArticleTagsHaveATitleAndADescription(): void {
+		$tags = $this->config['components']['schemas']['article']['properties']['tags'];
+		$this->assertSame(expected: 'Tags', actual: $tags['title']);
+		$this->assertNotSame(expected: '', actual: trim((string)($tags['description'] ?? '')));
+	}//end testArticleTagsHaveATitleAndADescription()
+
+	/**
+	 * The demo data offers three labels, each valid for the schema.
+	 *
+	 * @return void
+	 */
+	public function testTheDemoDataOffersThreeValidLabels(): void {
+		$mock = json_decode(json: (string)file_get_contents(dirname(__DIR__, 3).'/lib/Settings/pipelinq_mock_register.json'), associative: true);
+		$labels = array_values(
+			array_filter(
+				$mock['components']['objects'],
+				static fn (array $object): bool => ($object['@self']['schema'] ?? '') === 'itemLabel'
+			)
+		);
+		$this->assertCount(expectedCount: 3, haystack: $labels);
+
+		$properties = $this->config['components']['schemas']['itemLabel']['properties'];
+		$jsonSchema = json_decode(
+			json: (string)json_encode(
+				[
+					'type'                 => 'object',
+					'required'             => ['name'],
+					'additionalProperties' => false,
+					'properties'           => array_map(
+						static fn (array $property): array => array_intersect_key($property, array_flip(['type', 'minLength', 'maxLength'])),
+						$properties
+					),
+				]
+			)
+		);
+		foreach ($labels as $label) {
+			unset($label['@self']);
+			$result = (new Validator())->validate(json_decode(json: (string)json_encode($label)), $jsonSchema);
+			$this->assertTrue(condition: $result->isValid(), message: (string)json_encode($label));
+		}
+	}//end testTheDemoDataOffersThreeValidLabels()
 
 	/**
 	 * A lead with two labels validates, and a lead without labels still does.

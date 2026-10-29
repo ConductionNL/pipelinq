@@ -335,7 +335,7 @@
 			<CnChipListManager
 				v-if="isAdmin && isConfigured"
 				register="pipelinq"
-				schema="label"
+				schema="itemLabel"
 				:title="t('pipelinq', 'Labels')"
 				:description="t('pipelinq', 'The labels people can pick for articles, leads and clients.')"
 				:addLabel="t('pipelinq', 'New label')"

@@ -73,7 +73,7 @@ export default {
 	async mounted() {
 		this.loading = true
 		try {
-			const rows = (await useObjectStore().fetchCollection('label', { _limit: 500 })) || []
+			const rows = (await useObjectStore().fetchCollection('itemLabel', { _limit: 500 })) || []
 			this.names = rows.map((row) => String(row?.name ?? '')).filter((name) => name !== '')
 		} catch {
 			this.names = []

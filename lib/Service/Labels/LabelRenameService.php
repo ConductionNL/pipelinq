@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service\Labels;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
+use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -52,7 +53,7 @@ class LabelRenameService {
 	 *
 	 * @var string
 	 */
-	public const LABEL_SCHEMA = 'label';
+	public const LABEL_SCHEMA = 'itemLabel';
 
 	/**
 	 * The fields that hold label names, by schema slug.
@@ -90,6 +91,7 @@ class LabelRenameService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container    DI container (OpenRegister's ObjectService).
+	 * @param IAppManager        $appManager   Answers whether OpenRegister is installed.
 	 * @param IAppConfig         $appConfig    Pipelinq app config (the register slug).
 	 * @param IUserSession       $userSession  The caller's session.
 	 * @param IGroupManager      $groupManager Answers whether the caller is an administrator.
@@ -100,6 +102,7 @@ class LabelRenameService {
 	 */
 	public function __construct(
 		private ContainerInterface $container,
+		private IAppManager $appManager,
 		private IAppConfig $appConfig,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,
@@ -117,8 +120,8 @@ class LabelRenameService {
 	 * @return array{id: string, name: string, rewritten: int, queued: bool}
 	 *
 	 * @throws LabelRenameException When the caller is not an administrator (403), the name is
-	 *                              empty or too long (400), the label is unknown (404) or another
-	 *                              label already has the name (409).
+	 *                              empty or too long (400), the label is unknown (404), another
+	 *                              label already has the name (409) or OpenRegister is missing (503).
 	 *
 	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
@@ -352,11 +355,17 @@ class LabelRenameService {
 	}//end findLabel()
 
 	/**
-	 * OpenRegister's ObjectService.
+	 * OpenRegister's ObjectService, once OpenRegister is known to be installed.
 	 *
 	 * @return object
+	 *
+	 * @throws LabelRenameException With 503 when OpenRegister is not installed.
 	 */
 	private function objectService(): object {
+		if ($this->appManager->isInstalled('openregister') === false) {
+			throw new LabelRenameException(message: 'OpenRegister is not available.', status: 503);
+		}
+
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 

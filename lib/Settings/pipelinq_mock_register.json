@@ -36,6 +36,33 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "itemLabel",
+          "slug": "itemlabel-nieuwsbrief"
+        },
+        "name": "nieuwsbrief",
+        "description": "Wil de nieuwsbrief ontvangen."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "itemLabel",
+          "slug": "itemlabel-vip"
+        },
+        "name": "vip",
+        "description": "Krijgt persoonlijke aandacht van het team."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "itemLabel",
+          "slug": "itemlabel-terugbellen"
+        },
+        "name": "terugbellen",
+        "description": "Wacht op een telefoontje van ons."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "savedReply",
           "slug": "savedreply-openingstijden"
         },

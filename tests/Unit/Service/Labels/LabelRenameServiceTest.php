@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Labels;
 use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
 use OCA\Pipelinq\Service\Labels\LabelRenameException;
 use OCA\Pipelinq\Service\Labels\LabelRenameService;
+use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -67,6 +68,20 @@ class LabelRenameServiceTest extends TestCase {
 	 * @var boolean
 	 */
 	private bool $isAdmin = true;
+
+	/**
+	 * Whether OpenRegister is installed.
+	 *
+	 * @var boolean
+	 */
+	private bool $openRegister = true;
+
+	/**
+	 * Whether the container was asked for OpenRegister.
+	 *
+	 * @var boolean
+	 */
+	private bool $lookedUp = false;
 
 	/**
 	 * The job list mock.
@@ -117,7 +132,13 @@ class LabelRenameServiceTest extends TestCase {
 		};
 
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
+		$container->method('get')->willReturnCallback(function () use ($objectService): object {
+			$this->lookedUp = true;
+			return $objectService;
+		});
+
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
+		$appManager->method('isInstalled')->willReturnCallback(fn (string $app): bool => $app === 'openregister' && $this->openRegister);
 
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnArgument(2);
@@ -136,6 +157,7 @@ class LabelRenameServiceTest extends TestCase {
 
 		return new LabelRenameService(
 			container: $container,
+			appManager: $appManager,
 			appConfig: $appConfig,
 			userSession: $userSession,
 			groupManager: $groupManager,
@@ -153,7 +175,7 @@ class LabelRenameServiceTest extends TestCase {
 		parent::setUp();
 		$this->jobList = $this->createMock(originalClassName: IJobList::class);
 		foreach (['afval', 'duurzaam', 'parkeren', 'ondernemers', 'evenementen'] as $i => $name) {
-			$this->store['label']['l'.$i] = ['id' => 'l'.$i, 'name' => $name];
+			$this->store['itemLabel']['l'.$i] = ['id' => 'l'.$i, 'name' => $name];
 		}
 
 		for ($i = 1; $i <= 5; $i++) {
@@ -173,7 +195,7 @@ class LabelRenameServiceTest extends TestCase {
 	public function testARenamedLabelFollowsItsItems(): void {
 		$result = $this->service()->rename(labelId: 'l3', name: 'ondernemers centrum');
 
-		$this->assertSame(expected: 'ondernemers centrum', actual: $this->store['label']['l3']['name']);
+		$this->assertSame(expected: 'ondernemers centrum', actual: $this->store['itemLabel']['l3']['name']);
 		for ($i = 1; $i <= 5; $i++) {
 			$this->assertSame(expected: ['ondernemers centrum', 'duurzaam'], actual: $this->store['lead']['lead'.$i]['labels']);
 		}
@@ -202,6 +224,25 @@ class LabelRenameServiceTest extends TestCase {
 
 		$this->assertSame(expected: [], actual: $this->writes);
 	}//end testANonAdministratorIsRefusedBeforeAnyWrite()
+
+	/**
+	 * Without OpenRegister the rename answers 503 and never asks the container.
+	 *
+	 * @return void
+	 */
+	public function testWithoutOpenRegisterTheRenameIsUnavailable(): void {
+		$this->openRegister = false;
+
+		try {
+			$this->service()->rename(labelId: 'l3', name: 'ondernemers centrum');
+			$this->fail(message: 'the rename went through');
+		} catch (LabelRenameException $e) {
+			$this->assertSame(expected: 503, actual: $e->getStatus());
+		}
+
+		$this->assertFalse(condition: $this->lookedUp);
+		$this->assertSame(expected: [], actual: $this->writes);
+	}//end testWithoutOpenRegisterTheRenameIsUnavailable()
 
 	/**
 	 * Without a session the rename is refused too.
@@ -257,7 +298,7 @@ class LabelRenameServiceTest extends TestCase {
 	public function testACaseChangeRenames(): void {
 		$result = $this->service()->rename(labelId: 'l1', name: 'Duurzaam');
 
-		$this->assertSame(expected: 'Duurzaam', actual: $this->store['label']['l1']['name']);
+		$this->assertSame(expected: 'Duurzaam', actual: $this->store['itemLabel']['l1']['name']);
 		$this->assertSame(expected: ['ondernemers', 'Duurzaam'], actual: $this->store['lead']['lead1']['labels']);
 		$this->assertSame(expected: 5, actual: $result['rewritten']);
 	}//end testACaseChangeRenames()

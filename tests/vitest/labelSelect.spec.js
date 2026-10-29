@@ -64,7 +64,7 @@ describe('LabelSelect', () => {
 	it('offers the shared list in alphabetical order and refuses a typed word', async () => {
 		const wrapper = await mountIt()
 		const select = wrapper.findComponent({ name: 'NcSelect' })
-		expect(storeMock.fetchCollection).toHaveBeenCalledWith('label', { _limit: 500 })
+		expect(storeMock.fetchCollection).toHaveBeenCalledWith('itemLabel', { _limit: 500 })
 		expect(select.props('options')).toEqual(['afval', 'duurzaam', 'ondernemers'])
 		expect(select.props('multiple')).toBe(true)
 		expect(select.props('taggable')).toBeFalsy()
@@ -89,7 +89,7 @@ describe('LabelSelect', () => {
 	})
 
 	it('registers the label type in the store', () => {
-		expect(objectTypes().map((type) => type.slug)).toContain('label')
+		expect(objectTypes().map((type) => type.slug)).toContain('itemLabel')
 	})
 })
 
