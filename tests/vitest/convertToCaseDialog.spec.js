@@ -135,6 +135,9 @@ describe('ConvertToCaseDialog', () => {
 		expect(style).toMatch(/\.convert-to-case__available \{[^}]*font-weight: 600/)
 		expect(style).toMatch(/\.convert-to-case__fact \{[^}]*flex-direction: column/)
 		expect(style).toMatch(/\.convert-to-case__facts dt \{[^}]*text-align: start/)
+		expect(style).toMatch(/\.convert-to-case__carried--block \{[^}]*background: var\(--cn-board-sunken-ground/)
+		expect(style).toMatch(/\.convert-to-case__carried--block \{[^}]*border-radius: var\(--cn-board-control-radius, 8px\)/)
+		expect(style).toMatch(/\.convert-to-case__heading \{[^}]*font-weight: 700/)
 	})
 
 	it('sets what goes with the case in a tinted block, each label over its value, the requester with the address', () => {

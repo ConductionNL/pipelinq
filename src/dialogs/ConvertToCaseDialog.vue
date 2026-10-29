@@ -275,8 +275,8 @@ export default {
 
 .convert-to-case__carried--block {
 	padding: 14px 16px;
-	border-radius: var(--border-radius-large, 8px);
-	background: var(--color-background-hover);
+	border-radius: var(--cn-board-control-radius, 8px);
+	background: var(--cn-board-sunken-ground, var(--color-background-hover));
 }
 
 .convert-to-case__heading {
@@ -285,7 +285,7 @@ export default {
 	gap: 8px;
 	margin: 0 0 10px;
 	font-size: 14px;
-	font-weight: 600;
+	font-weight: 700;
 }
 
 .convert-to-case__lock {
