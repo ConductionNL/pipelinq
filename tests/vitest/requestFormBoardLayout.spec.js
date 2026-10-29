@@ -33,6 +33,10 @@ vi.mock('../../src/store/modules/requestChannels.js', () => ({
 		channelNames: [],
 	}),
 }))
+vi.mock('../../src/services/ticketCategories.js', () => ({
+	fetchTicketCategories: vi.fn(async () => []),
+	categoryOptions: () => [],
+}))
 vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({
 	default: { name: 'ClientCreateDialog', render: () => null },
 }))

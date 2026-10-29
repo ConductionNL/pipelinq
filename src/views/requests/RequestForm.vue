@@ -113,7 +113,18 @@
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select channel')" />
 			</div>
-			<div class="form-group">
+			<div v-if="categoryChoices.length > 0" class="form-group">
+				<label>{{ t('pipelinq', 'Category') }}</label>
+				<NcSelect
+					:modelValue="selectedCategory"
+					:options="categoryChoices"
+					:aria-label-combobox="t('pipelinq', 'Category')"
+					labelOutside
+					:clearable="true"
+					:placeholder="t('pipelinq', 'Select a category')"
+					@update:modelValue="(option) => (form.category = option ? option.value : '')" />
+			</div>
+			<div v-else class="form-group">
 				<NcTextField
 					:modelValue="form.category"
 					:label="t('pipelinq', 'Category')"
@@ -295,6 +306,7 @@ import {
 	getPriorityLabel,
 	getStatusLabel,
 } from '../../services/requestStatus.js'
+import { categoryOptions, fetchTicketCategories } from '../../services/ticketCategories.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 
@@ -358,6 +370,8 @@ export default {
 
 	data() {
 		return {
+			/** The tenant's ticketCategory objects, read when the form opens. */
+			ticketCategories: [],
 			form: {
 				title: '',
 				description: '',
@@ -434,6 +448,26 @@ export default {
 		 */
 		channelOptions() {
 			return this.requestChannelsStore.channelNames
+		},
+
+		/**
+		 * The tenant's active categories as select options, the stored one kept.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+		 */
+		categoryChoices() {
+			return categoryOptions(this.ticketCategories, this.form.category)
+		},
+
+		/**
+		 * The option of the stored category, or null.
+		 *
+		 * @return {{value: string, label: string}|null}
+		 * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+		 */
+		selectedCategory() {
+			return this.categoryChoices.find((option) => option.value === this.form.category) || null
 		},
 
 		/**
@@ -587,10 +621,12 @@ export default {
 	 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
 	 */
 	async created() {
-		await Promise.all([
+		const [, , categories] = await Promise.all([
 			this.objectStore.fetchCollection('pipeline', { _limit: 100 }),
 			this.requestChannelsStore.fetchChannels(),
+			fetchTicketCategories(),
 		])
+		this.ticketCategories = categories
 
 		if (this.request) {
 			this.form = {
