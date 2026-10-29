@@ -41,8 +41,10 @@
 				</p>
 				<div v-else class="letter-modal__fields">
 					<div class="letter-modal__field">
+						<label for="letter-modal-template" class="letter-modal__label">{{ t('pipelinq', 'Template') }}</label>
 						<NcSelect
 							v-model="templateId"
+							inputId="letter-modal-template"
 							:options="templateOptions"
 							:inputLabel="t('pipelinq', 'Template')"
 							labelOutside
@@ -53,24 +55,30 @@
 							{{ n('pipelinq', 'Templates come from filinq; %n is shared with pipelinq.', 'Templates come from filinq; %n are shared with pipelinq.', templates.length) }}
 						</p>
 					</div>
-					<NcSelect
-						v-if="ticketOptions.length > 0"
-						v-model="aboutTicketId"
-						:options="ticketOptions"
-						:inputLabel="t('pipelinq', 'About')"
-						labelOutside
-						:reduce="(o) => o.value"
-						label="label"
-						data-testid="letter-about" />
-					<NcSelect
-						v-if="contactOptions.length > 0"
-						v-model="contactId"
-						:options="contactOptions"
-						:inputLabel="t('pipelinq', 'Contact person (optional)')"
-						labelOutside
-						:reduce="(o) => o.value"
-						label="label"
-						data-testid="letter-contact" />
+					<div v-if="ticketOptions.length > 0" class="letter-modal__field">
+						<label for="letter-modal-about" class="letter-modal__label">{{ t('pipelinq', 'About') }}</label>
+						<NcSelect
+							v-model="aboutTicketId"
+							inputId="letter-modal-about"
+							:options="ticketOptions"
+							:inputLabel="t('pipelinq', 'About')"
+							labelOutside
+							:reduce="(o) => o.value"
+							label="label"
+							data-testid="letter-about" />
+					</div>
+					<div v-if="contactOptions.length > 0" class="letter-modal__field">
+						<label for="letter-modal-contact" class="letter-modal__label">{{ t('pipelinq', 'Contact person') }}<span class="letter-modal__optional"> {{ t('pipelinq', '(optional)') }}</span></label>
+						<NcSelect
+							v-model="contactId"
+							inputId="letter-modal-contact"
+							:options="contactOptions"
+							:inputLabel="t('pipelinq', 'Contact person (optional)')"
+							labelOutside
+							:reduce="(o) => o.value"
+							label="label"
+							data-testid="letter-contact" />
+					</div>
 				</div>
 				<div v-if="templateId" class="letter-modal__review" data-testid="letter-review">
 					<div class="letter-modal__preview" data-testid="letter-preview">
@@ -107,8 +115,10 @@
 							{{ checkLine }}
 						</div>
 						<div class="letter-modal__field">
+							<label for="letter-modal-channel" class="letter-modal__label">{{ t('pipelinq', 'Send as') }}</label>
 							<NcSelect
 								v-model="channel"
+								inputId="letter-modal-channel"
 								:options="channelOptions"
 								:inputLabel="t('pipelinq', 'Send as')"
 								labelOutside
@@ -352,31 +362,38 @@ export default {
 
 		/**
 		 * Load the templates, the ticket's client and the client's contacts.
+		 * The templates decide what the dialog shows, so `loading` ends when
+		 * they answer; the client and its tickets and contacts follow.
 		 *
 		 * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
 		 */
 		async load() {
 			this.loading = true
 			this.error = ''
+			const { clientId, ticketId } = this.routeIds()
+			this.resolvedTicketId = ticketId
+			this.resolvedClientId = clientId
+			const templatesLoaded = this.loadTemplates()
 			try {
-				const { clientId, ticketId } = this.routeIds()
-				this.resolvedTicketId = ticketId
-				this.resolvedClientId = clientId
 				const store = useObjectStore()
 				if (!clientId && ticketId) {
 					const ticket = await store.fetchObject('ticket', ticketId)
 					this.resolvedClientId = ticket?.client || ''
 				}
-				const answer = await fetchLetterTemplates()
-				this.available = answer.available
-				this.templates = answer.templates
-				if (this.templates.length === 1)
-					this.templateId = this.templates[0].id
-				if (this.resolvedClientId) {
-					const client = await store.fetchObject('client', this.resolvedClientId).catch(() => null)
-					this.clientName = client?.name || ''
+				await templatesLoaded
+				if (!this.available) {
+					return
 				}
-				if (this.available && this.resolvedClientId && !ticketId) {
+				if (!this.resolvedClientId) {
+					this.error = t(
+						'pipelinq',
+						'This ticket has no client, so there is nobody to write to.',
+					)
+					return
+				}
+				const client = await store.fetchObject('client', this.resolvedClientId).catch(() => null)
+				this.clientName = client?.name || ''
+				if (!ticketId) {
 					this.tickets = (await store.fetchCollection('ticket', {
 						client: this.resolvedClientId,
 						_limit: 50,
@@ -385,18 +402,31 @@ export default {
 						this.aboutTicketId = this.tickets[0].id
 					}
 				}
-				if (this.available && this.resolvedClientId) {
-					this.contacts =
-						(await store.fetchCollection('contact', {
-							client: this.resolvedClientId,
-							_limit: 100,
-						})) || []
-				}
-				if (this.available && !this.resolvedClientId) {
-					this.error = t(
-						'pipelinq',
-						'This ticket has no client, so there is nobody to write to.',
-					)
+				this.contacts =
+					(await store.fetchCollection('contact', {
+						client: this.resolvedClientId,
+						_limit: 100,
+					})) || []
+			} catch {
+				this.error = t(
+					'pipelinq',
+					'The letter templates could not be loaded.',
+				)
+			}
+		},
+
+		/**
+		 * Ask filinq, through pipelinq, for the templates; `loading` ends here.
+		 *
+		 * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+		 */
+		async loadTemplates() {
+			try {
+				const answer = await fetchLetterTemplates()
+				this.available = answer.available
+				this.templates = answer.templates
+				if (this.templates.length === 1) {
+					this.templateId = this.templates[0].id
 				}
 			} catch {
 				this.error = t(
@@ -534,6 +564,16 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
+}
+
+.letter-modal__label {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.letter-modal__optional {
+	font-weight: 400;
+	color: var(--color-text-maxcontrast);
 }
 
 .letter-modal__hint {

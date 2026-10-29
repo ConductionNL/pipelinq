@@ -4556,6 +4556,8 @@ OC.L10N.register(
         "Why are you confident in this deal?": "Waarom heeft u vertrouwen in deze deal?",
         "Why are you confident in this deal? (e.g. decision-maker engaged, contract draft signed)": "Waarom heeft u vertrouwen in deze deal? (bijv. beslisser betrokken, conceptcontract getekend)",
         "Why is this caller getting in touch?": "Waarom neemt deze beller contact op?",
+        "(optional)": "(optioneel)",
+        "Company or organisation": "Bedrijf of organisatie",
         "Why is this payment being reversed?": "Waarom wordt deze betaling gestorneerd?",
         "Why the account holds its current status, in words a marketer can act on. Written by the connect and publish paths, never by a client.": "Waarom het account deze status heeft, in woorden waar een marketeer iets mee kan. Het koppel- en plaatspad schrijven dit, nooit een client.",
         "Why the action was refused or failed. Empty on a send that went out.": "Waarom de actie is geweigerd of mislukt. Leeg bij een verzending die eruit ging.",
