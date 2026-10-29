@@ -4919,6 +4919,7 @@
 									}
 								}
 							],
+							"tableFrame": true,
 							"allowEdit": true,
 							"limit": 25,
 							"emptyText": "No products quoted on this deal yet. Add a line to build the quote.",
@@ -7395,6 +7396,8 @@
 							],
 							"limit": 25,
 							"allowCreate": false,
+							"tableFrame": true,
+							"rowTitle": "text",
 							"emptyText": "No cash drops recorded on this shift yet.",
 							"footnote": "Drops can only be added to an open shift. An open shift has Close and count shift at the top."
 						}
@@ -8660,6 +8663,8 @@
 							],
 							"limit": 25,
 							"allowCreate": false,
+							"tableFrame": true,
+							"rowTitle": "text",
 							"emptyText": "This transaction has no line items."
 						}
 					},
