@@ -44,8 +44,24 @@ function rule(selector) {
 	return at === -1 ? '' : appCss.slice(at, appCss.indexOf('}', at))
 }
 
+describe('the forecast quarter table (PqForecast 9)', () => {
+	const source = read('src', 'views', 'forecast', 'ForecastDashboard.vue')
+
+	it('is a CnDataTable with sortable, filterable heads, sorted and filtered in the browser', () => {
+		expect(source).not.toMatch(/<table/)
+		expect(source).toMatch(/<CnDataTable[\s\S]*?:columns="quarterColumns"[\s\S]*?:rows="quarterRows"[\s\S]*?filterable[\s\S]*?@sort="onQuarterSort"[\s\S]*?@columnFilter="onQuarterFilter"/)
+		expect(source).toMatch(/sortRows\(filterRows\(/)
+		expect(source).toMatch(/key: 'name'[^}]*sortable: true/)
+		expect(source).toMatch(/const figure = \(key, label\) => \(\{ key, label, type: 'number', sortable: true/)
+		for (const key of ['commit', 'best_case', 'pipeline', 'closed_won', 'quota']) {
+			expect(source, key).toContain(`figure('${key}'`)
+		}
+		expect(source).toMatch(/key: 'override'[^}]*sortable: false, filterable: false/)
+	})
+})
+
 describe('the forecast tables', () => {
-	for (const name of ['ForecastDashboard', 'ForecastTrend']) {
+	for (const name of ['ForecastTrend']) {
 		it(`${name}: every table is a board table inside a bordered card`, () => {
 			const found = tables(name)
 			expect(found.length).toBeGreaterThan(0)

@@ -105,10 +105,11 @@ describe('forecast page', () => {
 	})
 
 	it('names each owner, and marks an overridden commit with a pill, the seller\'s figure and a note', () => {
-		expect(dashboard).toMatch(/data-testid="forecast-owner">\{\{ ownerName\(row\) \}\}/)
+		expect(dashboard).toMatch(/data-testid="forecast-owner">\{\{ row\.name \}\}/)
+		expect(dashboard).toMatch(/name: this\.ownerName\(row\)/)
 		expect(dashboard).toMatch(/fetchUserDisplayName/)
-		expect(dashboard).toMatch(/v-if="hasOverride\(row\)"[\s\S]*?data-testid="forecast-overridden"/)
-		expect(dashboard).toMatch(/v-else[\s\S]*?@click="openOverride\(row\)"/)
+		expect(dashboard).toMatch(/v-if="hasOverride\(row\.source\)"[\s\S]*?data-testid="forecast-overridden"/)
+		expect(dashboard).toMatch(/v-else[\s\S]*?@click="openOverride\(row\.source\)"/)
 		expect(dashboard).toMatch(/'was \{amount\}'/)
 		expect(dashboard).toMatch(/data-testid="forecast-override-note"/)
 	})
