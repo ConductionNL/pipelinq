@@ -9324,7 +9324,11 @@ OC.L10N.register(
         "Closed, template required": "Gesloten, sjabloon vereist",
         "Labels from the shared list.": "Labels uit de gedeelde lijst.",
         "The word people pick, for example duurzaam. Unique in the list, whatever the case.": "Het woord dat mensen kiezen, bijvoorbeeld duurzaam. Uniek in de lijst, met of zonder hoofdletters.",
-        "When to use this label.": "Wanneer je dit label gebruikt."
+        "When to use this label.": "Wanneer je dit label gebruikt.",
+        "Escalated": "Geëscaleerd",
+        "Wrong number": "Verkeerd nummer",
+        "No answer": "Geen gehoor",
+        "Hung up": "Opgehangen"
     },
     "nplurals=2; plural=(n != 1);"
 )
