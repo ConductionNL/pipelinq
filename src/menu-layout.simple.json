@@ -2703,6 +2703,7 @@
 								{
 									"type": "open-modal",
 									"target": "BrpClientCheckDialog",
+									"variant": "tonal",
 									"label": "Look up in the BRP",
 									"props": {
 										"clientId": "@source.id"
