@@ -1,3 +1,4 @@
+import { mount } from '@vue/test-utils'
 // @vitest-environment jsdom
 /**
  * SPDX-License-Identifier: EUPL-1.2
@@ -14,7 +15,6 @@
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 import { sectionWidget } from '../../src/components/widgets/sectionWidget.js'
