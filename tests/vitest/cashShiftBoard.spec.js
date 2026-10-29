@@ -4,7 +4,7 @@
  *
  * Board PqKassadienst as configuration: the shift's name, its status as a
  * pill, the Kassalade breadcrumb and a meta line with the cashier and the
- * hours; Approve difference as the header button of a counted shift; the
+ * hours; Approve difference as a secondary header button of a counted shift; the
  * shift, its cash difference and its drops in an Overview tab beside
  * History; the opening float, related records and a short history aside.
  *
@@ -32,8 +32,10 @@ describe('cash shift page', () => {
 		expect(nl[config.headerMeta]).toBe('{operator|user} · {floatAt|time} tot {closedAt|time}')
 	})
 
-	it('offers Approve difference as the primary button of a counted shift', () => {
-		expect(config.primaryActionByStage.closed).toBe('shift-approve-diff')
+	// Board PqKassadienst draws "Verschil goedkeuren" as a secondary button with its check icon.
+	it('offers Approve difference as a secondary header button of a counted shift', () => {
+		expect(config.primaryActionByStage.closed).toBeUndefined()
+		expect(config.quickActions).toContain('shift-approve-diff')
 		const approve = config.headerActions.find((a) => a.id === 'shift-approve-diff')
 		expect(approve.type).toBe('api-call')
 		expect(approve.url).toBe('/apps/pipelinq/api/pos-shifts/@objectId/diff/approve')
