@@ -328,7 +328,7 @@ export default {
 }
 
 .pos-customer-settings__note :deep(.settings-section__name) {
-	color: var(--color-text-maxcontrast);
+	color: var(--color-text-maxcontrast) !important;
 	font-size: var(--cn-board-side-heading-size, 15px);
 	font-weight: 600;
 }

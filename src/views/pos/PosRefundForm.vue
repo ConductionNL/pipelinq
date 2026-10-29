@@ -732,9 +732,10 @@ export default {
 	min-width: 0;
 }
 
-/* Side cards head with a muted label, as CnDetailPage's own side column does. */
+/* Side cards head with a muted label, as CnDetailPage's own side column does.
+   The tone carries !important against a theme that colours every heading. */
 .cn-look-board .pos-refund-form__side :deep(.cn-detail-card__title) {
-	color: var(--color-text-maxcontrast);
+	color: var(--color-text-maxcontrast) !important;
 	font-size: var(--cn-board-side-heading-size, 15px);
 	font-weight: 600;
 }
