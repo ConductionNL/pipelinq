@@ -26,8 +26,10 @@
 					v-model="form.subject"
 					:label="t('pipelinq', 'Subject')"
 					labelOutside
+					aria-required="true"
+					:error="subjectTouched && !form.subject.trim()"
 					data-testid="cti-disposition-subject"
-					required />
+					@blur="subjectTouched = true" />
 			</div>
 			<fieldset class="cti-disposition__outcomes" data-testid="cti-disposition-outcome">
 				<legend>{{ t('pipelinq', 'Outcome') }}</legend>
@@ -109,14 +111,31 @@ import {
 import Check from 'vue-material-design-icons/Check.vue'
 import { readablePhone } from '../utils/readablePhone.js'
 
-const OUTCOMES = [
+export const OUTCOMES = [
 	{ value: 'resolved', label: 'Resolved' },
 	{ value: 'callback', label: 'Callback' },
 	{ value: 'escalated', label: 'Escalated' },
 	{ value: 'wrong-number', label: 'Wrong number' },
 	{ value: 'no-answer', label: 'No answer' },
-	{ value: 'abandoned', label: 'Abandoned' },
+	{ value: 'abandoned', label: 'Hung up' },
 ]
+
+/**
+ * The outcome labels, each through a literal t() call so the catalogue finds them.
+ *
+ * @return {{[key: string]: string}} Translated label per outcome label.
+ * @spec openspec/specs/cti-screenpop-adapter/spec.md
+ */
+function outcomeLabels() {
+	return {
+		Resolved: t('pipelinq', 'Resolved'),
+		Callback: t('pipelinq', 'Callback'),
+		Escalated: t('pipelinq', 'Escalated'),
+		'Wrong number': t('pipelinq', 'Wrong number'),
+		'No answer': t('pipelinq', 'No answer'),
+		'Hung up': t('pipelinq', 'Hung up'),
+	}
+}
 
 /**
  * How long a call took, in words ("4 minutes 12 seconds").
@@ -174,6 +193,8 @@ export default {
 				notes: '',
 				queue: '',
 			},
+
+			subjectTouched: false,
 		}
 	},
 
@@ -184,9 +205,10 @@ export default {
 		},
 
 		outcomeOptions() {
+			const labels = outcomeLabels()
 			return OUTCOMES.map((o) => ({
 				value: o.value,
-				label: t('pipelinq', o.label),
+				label: labels[o.label],
 			}))
 		},
 
@@ -215,6 +237,7 @@ export default {
 
 	methods: {
 		submit() {
+			this.subjectTouched = true
 			if (!this.valid) {
 				return
 			}
@@ -280,11 +303,17 @@ export default {
 	font-size: 13px;
 }
 
+/* Nextcloud's core dt/dd box (130px, end-aligned, padded) would push each label away from its value. */
 .cti-disposition__facts dt {
+	width: auto;
+	padding: 0;
+	text-align: start;
+	white-space: normal;
 	color: var(--color-text-maxcontrast);
 }
 
 .cti-disposition__facts dd {
 	margin: 0;
+	padding: 0;
 }
 </style>
