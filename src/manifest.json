@@ -8549,9 +8549,11 @@
 							],
 							"overrides": {
 								"reference": {
+									"order": 0,
 									"label": "Identifier"
 								},
 								"status": {
+									"order": 1,
 									"editable": false,
 									"enumLabels": {
 										"draft": "Draft",
@@ -8571,13 +8573,16 @@
 									}
 								},
 								"cashier": {
+									"order": 2,
 									"label": "Cashier",
 									"formatter": "userDisplayName"
 								},
 								"terminalId": {
+									"order": 3,
 									"label": "Till"
 								},
 								"priceMode": {
+									"order": 4,
 									"label": "Price display",
 									"enumLabels": {
 										"incl": "Incl. VAT",
@@ -8585,13 +8590,20 @@
 									}
 								},
 								"client": {
+									"order": 5,
 									"label": "Client"
 								},
 								"confirmedAt": {
+									"order": 6,
+									"hidden": false,
+									"editable": false,
 									"label": "Created",
 									"formatter": "shortDateTime"
 								},
 								"settledAt": {
+									"order": 7,
+									"hidden": false,
+									"editable": false,
 									"label": "Settled",
 									"formatter": "shortDateTime"
 								}
@@ -8905,6 +8917,7 @@
 							"actions": [
 								{
 									"id": "receipt-print",
+									"variant": "tonal",
 									"label": "Print receipt",
 									"icon": "Printer",
 									"type": "open-modal",
@@ -8915,6 +8928,7 @@
 								},
 								{
 									"id": "receipt-email",
+									"variant": "tonal",
 									"label": "Email receipt",
 									"icon": "EmailOutline",
 									"type": "open-modal",

@@ -11,6 +11,8 @@
  * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-005-tax-breakdown-display-on-detail-view
  */
 
+import fs from 'node:fs'
+import path from 'node:path'
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CELL_FORMATTERS, shortDateTime } from '../../src/services/cellFormatters.js'
@@ -117,3 +119,29 @@ describe('shortDateTime', () => {
 		expect(CELL_FORMATTERS.shortDateTime).toBe(shortDateTime)
 	})
 })
+
+describe('PosTransactionTotalsWidget summary list style', () => {
+	const css = fs.readFileSync(path.resolve(__dirname, '../../src/components/pos/PosTransactionTotalsWidget.vue'), 'utf8').split('<style')[1]
+	const block = (selector) => {
+		const start = css.indexOf(selector + ' {')
+		expect(start, selector).toBeGreaterThan(-1)
+		return css.slice(start, css.indexOf('}', start))
+	}
+
+	it('drops the server padding on the list', () => {
+		expect(block('.pos-tx-totals__list')).toMatch(/padding: 0;/)
+	})
+
+	it('puts each label at the start of its column, as wide as its text', () => {
+		const dt = block('.pos-tx-totals__item dt')
+		expect(dt).toMatch(/width: auto;/)
+		expect(dt).toMatch(/padding: 0;/)
+		expect(dt).toMatch(/text-align: start;/)
+		expect(dt).toMatch(/white-space: normal;/)
+	})
+
+	it('starts each value at its column without server padding', () => {
+		expect(block('.pos-tx-totals__item dd')).toMatch(/padding: 0;/)
+	})
+})
+
