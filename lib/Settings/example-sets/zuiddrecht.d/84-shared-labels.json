@@ -4,7 +4,7 @@
 		{
 			"key": "label-afval",
 			"register": "pipelinq",
-			"schema": "label",
+			"schema": "itemLabel",
 			"data": {
 				"name": "afval",
 				"description": "Afvalinzameling, containers en de afvalpas."
@@ -13,7 +13,7 @@
 		{
 			"key": "label-duurzaam",
 			"register": "pipelinq",
-			"schema": "label",
+			"schema": "itemLabel",
 			"data": {
 				"name": "duurzaam",
 				"description": "Energie, isolatie en het warmtenet."
@@ -22,7 +22,7 @@
 		{
 			"key": "label-parkeren",
 			"register": "pipelinq",
-			"schema": "label",
+			"schema": "itemLabel",
 			"data": {
 				"name": "parkeren",
 				"description": "Vergunningen, zones en tarieven."
@@ -31,7 +31,7 @@
 		{
 			"key": "label-ondernemers",
 			"register": "pipelinq",
-			"schema": "label",
+			"schema": "itemLabel",
 			"data": {
 				"name": "ondernemers",
 				"description": "Bedrijven en winkeliers in de gemeente."
@@ -40,7 +40,7 @@
 		{
 			"key": "label-evenementen",
 			"register": "pipelinq",
-			"schema": "label",
+			"schema": "itemLabel",
 			"data": {
 				"name": "evenementen",
 				"description": "Straatfeesten, markten en andere evenementen."
