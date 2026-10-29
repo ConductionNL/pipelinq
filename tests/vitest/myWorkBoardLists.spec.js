@@ -4,7 +4,9 @@
  *
  * Mijn werk as board PqMijnWerk draws its lists: a rule under each list's
  * header, the kind pills in the board's tones (Opvolging violet, Lead
- * teal) and "Show completed" as a checkbox in the lens bar.
+ * teal), a chevron at the end of every bucket row, the priority as words in
+ * its tone beside the kind pill, and "Show completed" as a checkbox in the
+ * lens bar.
  *
  * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md
  */
@@ -27,6 +29,17 @@ describe('Mijn werk lists as the board draws them', () => {
 	it('draws a follow-up violet and a lead teal in every list', () => {
 		;[...BUCKETS, 'my-items-phone'].forEach((id) => {
 			expect(widget(id).content.pill.colorMap).toMatchObject({ lead: 'teal', task: 'purple' })
+		})
+	})
+
+	it('ends every bucket row with the chevron', () => {
+		BUCKETS.forEach((id) => expect(widget(id).content.chevron).toBe(true))
+	})
+
+	it('reads the priority as words in its tone, not a pill', () => {
+		BUCKETS.forEach((id) => {
+			const priority = widget(id).content.badges.find((badge) => badge.field === 'priority')
+			expect(priority.look).toBe('text')
 		})
 	})
 
