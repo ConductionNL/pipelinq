@@ -9301,7 +9301,8 @@ OC.L10N.register(
         "Create a proposal for this ticket": "Voorstel maken voor dit ticket",
         "Call {callbackPhoneNumber}": "Bel {callbackPhoneNumber}",
         "Task finished.": "Taak afgerond.",
-        "of @object.capacity places": "van @object.capacity plaatsen"
+        "of @object.capacity places": "van @object.capacity plaatsen",
+        "{allRegistrations} registrations in total": "{allRegistrations} aanmeldingen in totaal"
     },
     "nplurals=2; plural=(n != 1);"
 )
