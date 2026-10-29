@@ -104,7 +104,7 @@
 									v-if="row.selected"
 									:modelValue="reasonOptions.find((o) => o.id === row.returnReason) || null"
 									:options="reasonOptions"
-									:inputLabel="t('pipelinq', 'Return reason')"
+									:ariaLabelCombobox="t('pipelinq', 'Return reason')"
 									:labelOutside="true"
 									label="label"
 									:clearable="false"
