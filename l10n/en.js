@@ -9287,7 +9287,16 @@ OC.L10N.register(
         "Create a proposal for this ticket": "Create a proposal for this ticket",
         "Call {callbackPhoneNumber}": "Call {callbackPhoneNumber}",
         "Task finished.": "Task finished.",
-        "of @object.capacity places": "of @object.capacity places"
+        "of @object.capacity places": "of @object.capacity places",
+        "Reserved": "Reserved",
+        "Who and what is booked, from the Resources tab": "Who and what is booked, from the Resources tab",
+        "Status: Awaiting deposit": "Status: Awaiting deposit",
+        "Status: Confirmed": "Status: Confirmed",
+        "Status: Finished": "Status: Finished",
+        "Status: No-show": "Status: No-show",
+        "Status: Cancelled by the customer": "Status: Cancelled by the customer",
+        "Status: Cancelled by us": "Status: Cancelled by us",
+        "Status: Rescheduled": "Status: Rescheduled"
     },
     "nplurals=2; plural=(n != 1);"
 )

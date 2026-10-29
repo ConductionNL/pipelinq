@@ -1178,9 +1178,10 @@ const registry = {
 			'BookingAssignmentsWidget',
 			BookingAssignments,
 			({ objectId }) => ({ bookingId: objectId }),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
-		_note: 'BookingDetail: the resourceAssignments array-on-object table, with resource names.',
+		_note: 'BookingDetail (PqAfspraak Toegewezen resources): the resourceAssignments array-on-object table in a titled card, with resource names, types, times and a status pill.',
 	},
 	BookingHeaderActions: {
 		kind: 'widget',

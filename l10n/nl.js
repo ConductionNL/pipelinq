@@ -3308,7 +3308,7 @@ OC.L10N.register(
         "Resolve conflicts": "Conflicten oplossen",
         "Resolved": "Opgelost",
         "Resolved at": "Opgelost op",
-        "Resource": "Bron",
+        "Resource": "Resource",
         "Resource assignments": "Brontoewijzingen",
         "Resource information": "Broninformatie",
         "Resource saved.": "Bron opgeslagen.",
@@ -9301,7 +9301,16 @@ OC.L10N.register(
         "Create a proposal for this ticket": "Voorstel maken voor dit ticket",
         "Call {callbackPhoneNumber}": "Bel {callbackPhoneNumber}",
         "Task finished.": "Taak afgerond.",
-        "of @object.capacity places": "van @object.capacity plaatsen"
+        "of @object.capacity places": "van @object.capacity plaatsen",
+        "Reserved": "Gereserveerd",
+        "Who and what is booked, from the Resources tab": "Wie en wat is geboekt, uit het tabblad Resources",
+        "Status: Awaiting deposit": "Status: Wacht op aanbetaling",
+        "Status: Confirmed": "Status: Bevestigd",
+        "Status: Finished": "Status: Afgerond",
+        "Status: No-show": "Status: Niet verschenen",
+        "Status: Cancelled by the customer": "Status: Geannuleerd door de klant",
+        "Status: Cancelled by us": "Status: Geannuleerd door ons",
+        "Status: Rescheduled": "Status: Verzet"
     },
     "nplurals=2; plural=(n != 1);"
 )
