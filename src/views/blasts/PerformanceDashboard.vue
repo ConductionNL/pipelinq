@@ -148,8 +148,13 @@
 										</h3>
 										<CnStatusBadge
 											v-if="variant.winner"
+											class="performance-dashboard__ab-winner"
 											variant="success"
-											:label="t('pipelinq', 'Higher click rate')" />
+											:label="t('pipelinq', 'Higher click rate')">
+											<template #icon>
+												<Check :size="14" />
+											</template>
+										</CnStatusBadge>
 									</div>
 									<span v-if="variant.stats.subject" class="performance-dashboard__ab-subject">
 										{{ t('pipelinq', 'Subject: {subject}', { subject: variant.stats.subject }) }}
@@ -342,8 +347,10 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import {
+	abTemplateIds,
 	chiSquarePValue,
 	higherVariant,
 	variantSplit,
@@ -366,6 +373,7 @@ export default {
 		CnBuildiqEditButton,
 		CnPageHeader,
 		ArrowLeft,
+		Check,
 		Download,
 		NcButton,
 		NcLoadingIcon,
@@ -1211,7 +1219,13 @@ export default {
 }
 
 .performance-dashboard__ab-variant--winner {
-	border-color: var(--color-success-text, var(--color-success));
+	border-color: var(--nldesign-component-status-badge-success-color, var(--nl-color-green-text, var(--color-success-text, var(--color-success))));
+}
+
+.performance-dashboard__ab-winner {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
 }
 
 .performance-dashboard__ab-variant-head {
@@ -1238,6 +1252,13 @@ export default {
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 12px;
 	margin: 0;
+	padding: 0;
+}
+
+/* Undo Nextcloud's global dt/dd box (fixed width, end alignment, padding). */
+.performance-dashboard__ab-variant :is(dt, dd) {
+	width: auto;
+	padding: 0;
 }
 
 .performance-dashboard__ab-variant dl > div {
@@ -1309,6 +1330,14 @@ export default {
 .cn-look-board :deep(.cn-page-header) {
 	padding-block: 4px 8px;
 	margin-bottom: 0;
+}
+
+.cn-look-board .performance-dashboard__back {
+	line-height: 1.2;
+}
+
+.cn-look-board .performance-dashboard__pane {
+	line-height: 1.2;
 }
 
 .cn-look-board .performance-dashboard__header-actions :deep(.button-vue) {

@@ -72,6 +72,41 @@ describe('the tab panel and its content in the board look', () => {
 	})
 })
 
+describe('the A/B and Toeschrijving cards as the boards draw them', () => {
+	const script = view.slice(view.indexOf('<script'), view.indexOf('</script>'))
+
+	it('imports abTemplateIds, so the variant subjects load instead of failing the page', () => {
+		expect(script).toMatch(/import \{[^}]*\babTemplateIds\b[^}]*\} from '\.\.\/\.\.\/services\/abTest\.js'/)
+	})
+
+	it('undoes Nextcloud\'s global dt/dd box in the variant figures', () => {
+		expect(rule('.performance-dashboard__ab-variant dl {')).toMatch(/padding: 0/)
+		const cells = rule('.performance-dashboard__ab-variant :is(dt, dd)')
+		expect(cells).toMatch(/width: auto/)
+		expect(cells).toMatch(/padding: 0/)
+	})
+
+	it('draws the winning variant\'s border in the success badge ink', () => {
+		expect(rule('.performance-dashboard__ab-variant--winner')).toMatch(/border-color: var\(--nldesign-component-status-badge-success-color, var\(--nl-color-green-text/)
+	})
+
+	it('gives the winner pill a check icon', () => {
+		expect(view).toMatch(/class="performance-dashboard__ab-winner"[\s\S]*?<template #icon>\s*<Check :size="14" \/>/)
+		expect(rule('.performance-dashboard__ab-winner')).toMatch(/gap: 4px/)
+	})
+
+	it('sets the back link and the tab panes on a 1.2 line', () => {
+		expect(rule('.cn-look-board .performance-dashboard__back')).toMatch(/line-height: 1.2/)
+		expect(rule('.cn-look-board .performance-dashboard__pane')).toMatch(/line-height: 1.2/)
+	})
+
+	it('writes the rates as one Dutch word', () => {
+		const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+		expect(nl['Click rate']).toBe('Klikratio')
+		expect(nl['Open rate']).toBe('Openratio')
+	})
+})
+
 describe('readTrafficRows', () => {
 	const blasts = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }, { name: 'no id' }]
 
