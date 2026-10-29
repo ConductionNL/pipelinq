@@ -206,7 +206,7 @@ import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import { isCurrencyCode, normaliseCurrency } from '../../services/leadCurrency.js'
 import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
-import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
+import { defaultPipelineFor, pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { reportingCurrency } from '../../services/reportingCurrency.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -453,8 +453,7 @@ export default {
 		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
 		 */
 		autoAssignDefaultPipeline() {
-			const defaultPipeline =
-				this.leadPipelines.find((p) => p.isDefault) || this.leadPipelines[0]
+			const defaultPipeline = defaultPipelineFor(this.leadPipelines, 'lead')
 			if (defaultPipeline) {
 				this.form.pipeline = defaultPipeline.id
 				const stages = [...(defaultPipeline.stages || [])].sort(
