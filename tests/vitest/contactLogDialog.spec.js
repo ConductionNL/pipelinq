@@ -19,11 +19,21 @@ const store = vi.hoisted(() => ({
 		? { id: 't-1', reference: 'PQ-2026-0417', title: 'Vraag over vergunning straatfeest Parkstraat', client: 'c-1' }
 		: { id: 'c-1', name: 'Sanne de Vries' })),
 	saveObject: vi.fn(() => Promise.resolve({ id: 'cm-1' })),
+	fetchCollectionForOptions: vi.fn(() => Promise.resolve([
+		{ id: 'c-1', name: 'Sanne de Vries' },
+		{ id: 'c-2', name: 'Bakkerij De Graaf' },
+	])),
 }))
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => store }))
 vi.mock('@nextcloud/event-bus', () => ({ emit: vi.fn() }))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: { props: ['disabled'], emits: ['click'], render() { return h('button', { disabled: this.disabled, onClick: () => this.$emit('click') }, [this.$slots.icon?.(), this.$slots.default?.()]) } },
+	NcSelect: {
+		name: 'NcSelect',
+		props: ['modelValue', 'options', 'ariaLabelCombobox', 'clearable', 'filterable'],
+		emits: ['update:modelValue', 'search'],
+		render() { return h('div', { class: 'nc-select-stub' }, [this.modelValue ? this.$slots['selected-option']?.(this.modelValue) : null]) },
+	},
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnDialog: { props: ['name', 'eyebrow', 'subtitle', 'width'], render() { return h('div', { 'data-eyebrow': this.eyebrow }, [this.$slots.default?.(), this.$slots.actions?.()]) } },
@@ -94,9 +104,37 @@ describe('ContactLogDialog', () => {
 		expect(note.find('.contact-log__parent-icon').exists()).toBe(true)
 	})
 
-	it('draws the customer as a full-width field box and the save button with an icon', async () => {
+	it('draws the save button with an icon', async () => {
 		const w = await open()
-		expect(w.find('[data-testid="contact-log-client"]').classes()).toContain('contact-log__control')
 		expect(w.find('[data-testid="contact-log-save"] .contact-log__save-icon').exists()).toBe(true)
+	})
+
+	it('draws the customer as a picker that starts on the ticket\'s customer', async () => {
+		const w = await open()
+		const picker = w.findComponent({ name: 'NcSelect' })
+		expect(picker.exists()).toBe(true)
+		expect(picker.props('modelValue')).toMatchObject({ id: 'c-1', label: 'Sanne de Vries' })
+		expect(picker.props('ariaLabelCombobox')).toBe('Customer')
+		expect(picker.props('clearable')).toBe(false)
+		expect(picker.props('options').map((o) => o.id)).toEqual(['c-1', 'c-2'])
+	})
+
+	it('saves the contact moment for the customer picked in the dialog', async () => {
+		store.saveObject.mockClear()
+		const w = await open()
+		const picker = w.findComponent({ name: 'NcSelect' })
+		picker.vm.$emit('update:modelValue', { id: 'c-2', label: 'Bakkerij De Graaf' })
+		await w.find('[data-testid="contact-log-subject"]').setValue('Vraag over de bestelling')
+		await w.find('[data-testid="contact-log-save"]').trigger('click')
+		await flushPromises()
+		expect(store.saveObject.mock.calls[0][1].client).toBe('c-2')
+	})
+
+	it('searches the clients by what is typed in the picker', async () => {
+		const w = await open()
+		store.fetchCollectionForOptions.mockClear()
+		w.findComponent({ name: 'NcSelect' }).vm.$emit('search', 'Graaf')
+		await flushPromises()
+		expect(store.fetchCollectionForOptions).toHaveBeenCalledWith('client', expect.objectContaining({ _search: 'Graaf' }))
 	})
 })
