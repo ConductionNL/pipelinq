@@ -131,7 +131,7 @@ describe('the dashboard', () => {
 			expect(withoutInCall(byId[widget.id]), widget.id).toEqual(withoutInCall(widget))
 		}
 		expect(simple.widgets).toHaveLength(before.widgets.length + added.length)
-		expect(added).toHaveLength(12)
+		expect(added).toHaveLength(13)
 	})
 
 	it('moves the old cards down by one fixed number of rows and changes nothing else', () => {

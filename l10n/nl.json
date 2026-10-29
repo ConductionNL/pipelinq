@@ -9402,6 +9402,17 @@
         "Create a proposal for this ticket": "Voorstel maken voor dit ticket",
         "Call {callbackPhoneNumber}": "Bel {callbackPhoneNumber}",
         "Task finished.": "Taak afgerond.",
-        "of @object.capacity places": "van @object.capacity plaatsen"
+        "of @object.capacity places": "van @object.capacity plaatsen",
+        "Book an appointment": "Afspraak boeken",
+        "To the back office": "Naar backoffice",
+        "Register a complaint": "Klacht registreren",
+        "Another channel": "Ander kanaal",
+        "This contact moment": "Dit contactmoment",
+        "Earlier contact": "Eerder contact",
+        "Phone, incoming": "Telefoon, inkomend",
+        "Identified": "Geïdentificeerd",
+        "Hand over to the back office": "Overdragen aan de backoffice",
+        "Log contact on another channel": "Contact via een ander kanaal vastleggen",
+        "Next steps": "Volgende stappen"
     }
 }

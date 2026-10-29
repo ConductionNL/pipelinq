@@ -3,20 +3,27 @@
 <!-- @spec openspec/changes/pipelinq-werkplek-declarative/tasks.md#task-3 -->
 <template>
 	<div class="werkplek-header-actions">
+		<WerkplekAgentStatus
+			:isAvailable="isAvailable"
+			:inCall="callActive"
+			@update:isAvailable="isAvailable = $event"
+			@saved="onSaved" />
 		<template v-if="callActive">
-			<span class="werkplek-header-actions__call" data-testid="werkplek-call-state">
-				{{ t('pipelinq', 'In call') }}
-				<span class="werkplek-header-actions__timer">{{ elapsed }}</span>
+			<span
+				class="werkplek-header-actions__timer"
+				role="timer"
+				:aria-label="t('pipelinq', 'Call duration')"
+				data-testid="werkplek-call-timer">
+				<TimerOutline :size="16" aria-hidden="true" />
+				{{ elapsed }}
 			</span>
 			<NcButton variant="primary" data-testid="werkplek-call-end" @click="endCall">
+				<template #icon>
+					<PhoneHangup :size="20" />
+				</template>
 				{{ t('pipelinq', 'End and finish') }}
 			</NcButton>
 		</template>
-		<WerkplekAgentStatus
-			v-else
-			:isAvailable="isAvailable"
-			@update:isAvailable="isAvailable = $event"
-			@saved="onSaved" />
 	</div>
 </template>
 
@@ -25,6 +32,8 @@ import axios from '@nextcloud/axios'
 import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
+import PhoneHangup from 'vue-material-design-icons/PhoneHangup.vue'
+import TimerOutline from 'vue-material-design-icons/TimerOutline.vue'
 import WerkplekAgentStatus from '../../../components/werkplek/WerkplekAgentStatus.vue'
 import { screenPop } from '../../../services/ctiApi.js'
 import { useObjectStore } from '../../../store/modules/object.js'
@@ -40,7 +49,7 @@ import { useObjectStore } from '../../../store/modules/object.js'
 export default {
 	name: 'WerkplekHeaderActions',
 
-	components: { NcButton, WerkplekAgentStatus },
+	components: { NcButton, PhoneHangup, TimerOutline, WerkplekAgentStatus },
 
 	inject: {
 		cnWorkspaceContext: { default: null },
@@ -136,7 +145,7 @@ export default {
 				clientName = match ? String(match.name || '') : ''
 			}
 			if (clientId !== '') {
-				this.writeWorkspace({ selectedClient: clientId, callActive: true, callStartedAt: new Date().toISOString() })
+				this.writeWorkspace({ selectedClient: clientId, callActive: true, callIdentified: true, callStartedAt: new Date().toISOString() })
 				this.writeWorkspace({ selectedClientName: clientName || await this.clientNameOf(clientId) })
 			}
 		},
@@ -163,7 +172,7 @@ export default {
 		 * @spec openspec/specs/kcc-werkplek/spec.md
 		 */
 		endCall() {
-			this.writeWorkspace({ callActive: false, callStartedAt: '' })
+			this.writeWorkspace({ callActive: false, callIdentified: false, callStartedAt: '' })
 		},
 
 		/**
@@ -223,18 +232,17 @@ export default {
 	gap: 8px;
 }
 
-.werkplek-header-actions__call {
+/* The call's running time as its own amber chip (PqWerkplekKlant). */
+.werkplek-header-actions__timer {
 	display: inline-flex;
 	align-items: center;
-	gap: 8px;
-	padding: 6px 12px;
-	border-radius: var(--border-radius-pill, 18px);
-	background: var(--color-success-hover, #e7f3ea);
-	color: var(--color-success-text, #1e6b2a);
+	gap: 6px;
+	min-height: 40px;
+	padding: 0 14px;
+	border-radius: var(--border-radius-element, 8px);
+	background: var(--color-warning-hover, var(--color-background-dark));
+	color: var(--color-warning-text, var(--color-main-text));
 	font-weight: 600;
-}
-
-.werkplek-header-actions__timer {
 	font-variant-numeric: tabular-nums;
 }
 </style>

@@ -26,14 +26,15 @@ describe('werkplek in-call layout (PqWerkplekKlant)', () => {
 	})
 
 	it('puts each in-call card in the board\'s column, top to bottom', () => {
-		const column = (x) => entry.layout
+		const cards = entry.layout.filter((item) => item.widgetId !== 'simple-call-actions')
+		const column = (x) => cards
 			.filter((item) => item.gridX === x)
 			.sort((a, b) => a.gridY - b.gridY)
 			.map((item) => item.widgetId)
 		expect(column(0)).toEqual(['simple-call-who'])
 		expect(column(4)).toEqual(['interaction', 'client-cases'])
 		expect(column(8)).toEqual(['knowledge', 'simple-call-tasks', 'client-contacts'])
-		for (const item of entry.layout) {
+		for (const item of cards) {
 			expect(item.gridWidth, item.widgetId).toBe(4)
 		}
 	})

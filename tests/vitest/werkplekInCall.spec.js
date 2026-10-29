@@ -68,7 +68,7 @@ describe('werkplek in-call state', () => {
 		expect(workspace.value.callActive).toBe(true)
 		// The page title reads "Gesprek met Sanne de Vries" (PqWerkplekKlant).
 		expect(workspace.value.selectedClientName).toBe('Sanne de Vries')
-		expect(w.find('[data-testid="werkplek-call-state"]').exists()).toBe(true)
+		expect(w.find('[data-testid="werkplek-call-timer"]').exists()).toBe(true)
 	})
 
 	it('looks a previewed number up as a real call would, and only reads', async () => {

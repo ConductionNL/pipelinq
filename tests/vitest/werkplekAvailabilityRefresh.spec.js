@@ -18,7 +18,7 @@ vi.mock('@nextcloud/event-bus', () => ({ emit: bus.emit, subscribe: vi.fn(), uns
 vi.mock('@nextcloud/axios', () => ({ default: http }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => path }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn() }))
-vi.mock('@nextcloud/vue', () => ({ NcButton: {} }))
+vi.mock('@nextcloud/vue', () => ({ NcActionButton: {}, NcActions: {}, NcButton: {} }))
 vi.mock('../../src/services/ctiApi.js', () => ({ screenPop: vi.fn() }))
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => ({}) }))
 
