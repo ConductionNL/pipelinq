@@ -726,6 +726,7 @@ export default {
 	flex-direction: column;
 	gap: 8px;
 	margin: 0;
+	padding: 0;
 	font-size: 14px;
 }
 
@@ -735,12 +736,18 @@ export default {
 	gap: 12px;
 }
 
+/* Nextcloud's core stylesheet gives every dt a 130px end-aligned box and
+   every dt/dd 12px padding, which ran the labels over their values. */
 .contact-channels-section__compact-row dt {
+	width: auto;
+	padding: 0;
+	text-align: start;
 	color: var(--color-text-maxcontrast);
 }
 
 .contact-channels-section__compact-row dd {
 	margin: 0;
+	padding: 0;
 }
 
 .contact-channels-section {

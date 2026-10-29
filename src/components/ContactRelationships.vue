@@ -772,6 +772,7 @@ export default {
 	flex-direction: column;
 	gap: 8px;
 	margin: 0;
+	padding: 0;
 	font-size: 14px;
 }
 
@@ -781,12 +782,18 @@ export default {
 	gap: 12px;
 }
 
-.contact-relationships__compact dt {
+/* Nextcloud's core stylesheet gives every dt a 130px end-aligned box and
+   every dt/dd 12px padding, which ran the labels over their values. */
+.contact-relationships__compact-row dt {
+	width: auto;
+	padding: 0;
+	text-align: start;
 	color: var(--color-text-maxcontrast);
 }
 
-.contact-relationships__compact dd {
+.contact-relationships__compact-row dd {
 	margin: 0;
+	padding: 0;
 }
 
 .contact-relationships__add--pill {
