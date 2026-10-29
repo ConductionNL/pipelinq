@@ -168,9 +168,11 @@
 
 		<!-- Summary → ticket.description -->
 		<div class="form-group">
-			<NcTextField
+			<NcTextArea
 				:modelValue="form.description"
 				:label="t('pipelinq', 'Summary')"
+				resize="vertical"
+				rows="3"
 				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
@@ -184,15 +186,17 @@
 
 		<!-- Notes -->
 		<div class="form-group">
-			<NcTextField
+			<NcTextArea
 				:modelValue="form.notes"
 				:label="t('pipelinq', 'Notes')"
+				resize="vertical"
+				rows="3"
 				@update:modelValue="(v) => (form.notes = v)" />
 		</div>
 
 		<!-- Actions -->
 		<div class="form-actions">
-			<NcButton variant="tertiary" @click="$emit('cancel')">
+			<NcButton variant="secondary" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
@@ -213,7 +217,7 @@
 import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcNoteCard, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
 import ClientCreateDialog from '../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../dialogs/ContactCreateDialog.vue'
 import linkedPartyCascadeMixin from '../mixins/linkedPartyCascadeMixin.js'
@@ -254,6 +258,7 @@ export default {
 		NcButton,
 		NcNoteCard,
 		NcSelect,
+		NcTextArea,
 		NcTextField,
 	},
 
@@ -816,6 +821,7 @@ export default {
 
 .form-actions {
 	display: flex;
+	justify-content: flex-end;
 	gap: 8px;
 	margin-top: 20px;
 }
