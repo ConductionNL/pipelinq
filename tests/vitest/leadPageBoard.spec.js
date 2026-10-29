@@ -58,7 +58,7 @@ describe('the lead page (board PqLead)', () => {
 
 	it('explains the win chance in one line and draws the products as a plain table', () => {
 		expect(widget('side-win-chance').content.fields[1].template).toContain('{stage}')
-		expect(widget('lead-lines').content).toMatchObject({ rowTitle: 'plain', filterable: true })
+		expect(widget('lead-lines').content).toMatchObject({ rowTitle: 'text', filterable: true })
 	})
 
 	it('starts the Related card with the board\'s three link rows, keeping the related objects', () => {
