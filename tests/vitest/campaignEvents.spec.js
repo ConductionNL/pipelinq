@@ -66,7 +66,6 @@ describe('the event page', () => {
 			expect(source.metric).toBe('count')
 			expect(source.filter.event).toBe('@objectId')
 		}
-		expect(widget(detail, 'event-kpi-registered').content.caption).toBe('of {capacity} places')
 	})
 
 	it('has the Overview, Registrations, Registration form, Results and History tabs, with form, location and history beside them', () => {
@@ -74,6 +73,20 @@ describe('the event page', () => {
 		expect(tabs.map((tab) => tab.label)).toEqual(['Overview', 'Registrations', 'Registration form', 'Results', 'History'])
 		expect(tabs[1].countFrom).toEqual({ register: 'pipelinq', schema: 'eventRegistration', filter: { event: '@objectId' } })
 		expect(detail.config.sideColumn).toEqual(['event-form', 'event-location', 'event-side-history'])
+	})
+
+	it('marks the page as an event with a purple type pill beside the status, as the board', () => {
+		const pill = page(events.pages, 'CampaignEventDetail').config.typePill
+		expect(pill).toEqual({ text: 'Campaign event', variant: 'purple' })
+		const nl = read('l10n', 'nl.json').translations
+		expect(nl[pill.text]).toBe('Evenement')
+	})
+
+	it('reads the places of the event under the registered count', () => {
+		const tile = widget(page(events.pages, 'CampaignEventDetail'), 'event-kpi-registered')
+		expect(tile.content.caption).toBe('of @object.capacity places')
+		const nl = read('l10n', 'nl.json').translations
+		expect(nl[tile.content.caption]).toBe('van @object.capacity plaatsen')
 	})
 
 	it('writes the day in full on the header line', () => {

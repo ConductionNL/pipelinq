@@ -9300,7 +9300,8 @@ OC.L10N.register(
         "No decision linked": "Geen besluit gekoppeld",
         "Create a proposal for this ticket": "Voorstel maken voor dit ticket",
         "Call {callbackPhoneNumber}": "Bel {callbackPhoneNumber}",
-        "Task finished.": "Taak afgerond."
+        "Task finished.": "Taak afgerond.",
+        "of @object.capacity places": "van @object.capacity plaatsen"
     },
     "nplurals=2; plural=(n != 1);"
 )

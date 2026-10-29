@@ -9286,7 +9286,8 @@ OC.L10N.register(
         "No decision linked": "No decision linked",
         "Create a proposal for this ticket": "Create a proposal for this ticket",
         "Call {callbackPhoneNumber}": "Call {callbackPhoneNumber}",
-        "Task finished.": "Task finished."
+        "Task finished.": "Task finished.",
+        "of @object.capacity places": "of @object.capacity places"
     },
     "nplurals=2; plural=(n != 1);"
 )
