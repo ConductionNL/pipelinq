@@ -50,6 +50,7 @@ OC.L10N.register(
         "No tickets for this client yet": "No tickets for this client yet",
         "No warnings on this organisation.": "No warnings on this organisation.",
         "No warnings on this resident.": "No warnings on this resident.",
+        "No warnings on this contact person.": "No warnings on this contact person.",
         "outbound": "outbound",
         "phone": "phone",
         "Reachable via": "Reachable via",

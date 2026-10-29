@@ -4556,7 +4556,10 @@
 						"placement": "before-body",
 						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
 						"props": {
-							"partyId": "@objectId"
+							"partyId": "@objectId",
+							"compact": true,
+							"framed": true,
+							"partyKind": "contact"
 						}
 					}
 				],
