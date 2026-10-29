@@ -1,6 +1,7 @@
 # Tasks: request-dialog-client-lookups
 
-- [ ] RequestForm: Klant as a search field with the result list (kind, address, open tickets, "Bekend")
+- [x] RequestForm: Klant as a search field with the result list (initials, kind, address) on CnSearchSelect, the DqNieuweZaak "Aanvrager" field
+- [ ] Each row also names the open tickets and marks a known client "Bekend"
 - [ ] BRP pill: lookup dialog on POST /api/brp/lookup; select or create a resident client; offered only to brp.allowed_groups
 - [ ] GET /api/kvk/search wrapping KvkApiClient (login, rate limit); KVK pill selects or creates an organisation client
 - [ ] Tonal pills as the board draws them

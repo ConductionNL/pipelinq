@@ -146,7 +146,20 @@
 		     Pipeline below. Both can create what they cannot find. -->
 		<div class="form-row rf-client">
 			<div class="form-group" data-testid="request-form-client">
+				<CnSearchSelect
+					v-if="boardLayout"
+					class="rf-client__search"
+					:modelValue="form.client || null"
+					:options="clientOptions"
+					:loading="clientSearching"
+					:filterable="false"
+					:inputLabel="t('pipelinq', 'Client')"
+					:placeholder="t('pipelinq', 'Search by name')"
+					data-testid="request-form-client-search"
+					@search="onClientSearch"
+					@update:modelValue="onClientChange" />
 				<CnResourceSelect
+					v-else
 					register="pipelinq"
 					schema="client"
 					labelField="name"
@@ -280,7 +293,7 @@
 </template>
 
 <script>
-import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { CnResourceSelect, CnSearchSelect } from '@conduction/nextcloud-vue'
 import { getCurrentUser } from '@nextcloud/auth'
 import {
 	NcButton,
@@ -317,6 +330,7 @@ export default {
 		ClientCreateDialog,
 		ClockOutline,
 		CnResourceSelect,
+		CnSearchSelect,
 		ContactCreateDialog,
 		NcButton,
 		NcCheckboxRadioSwitch,
@@ -388,6 +402,10 @@ export default {
 
 			showMore: false,
 			titleTouched: false,
+			/** The clients the board's search field lists, as search rows. */
+			clientOptions: [],
+			clientSearching: false,
+			clientSearchTicket: 0,
 			typeLabelId: `request-form-type-${Math.random().toString(36).slice(2, 8)}`,
 
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
@@ -648,6 +666,7 @@ export default {
 				this.form.client = this.preLinkedClient
 			}
 			if (this.boardLayout) {
+				this.loadPickedClient()
 				this.form.ticketType = 'request'
 				this.form.assignee = getCurrentUser()?.uid || null
 			}
@@ -657,6 +676,80 @@ export default {
 
 	methods: {
 		/**
+		 * A client as a row of the board's search list: initials, the name,
+		 * and what kind of client it is and where.
+		 *
+		 * @param {object} client A client object.
+		 * @return {{id: string, label: string, secondary: string, avatar: boolean}} The row.
+		 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
+		 */
+		clientRow(client) {
+			const kind = client.type === 'organization'
+				? t('pipelinq', 'Organisation')
+				: t('pipelinq', 'Resident')
+			return {
+				id: client.id,
+				label: client.name || '',
+				secondary: [kind, client.address].filter(Boolean).join(' · '),
+				avatar: true,
+			}
+		},
+
+		/**
+		 * List the clients matching the typed name. A slower answer to an
+		 * older search never replaces a newer one.
+		 *
+		 * @param {string} query The typed text.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
+		 */
+		async onClientSearch(query) {
+			const term = (query || '').trim()
+			const ticket = ++this.clientSearchTicket
+			if (term === '') {
+				this.clientOptions = this.clientOptions.filter((o) => o.id === this.form.client)
+				return
+			}
+			this.clientSearching = true
+			try {
+				const found = await this.objectStore.fetchCollectionForOptions('client', { _search: term, _limit: 20 })
+				if (ticket === this.clientSearchTicket) {
+					this.clientOptions = (Array.isArray(found) ? found : []).map((c) => this.clientRow(c))
+				}
+			} catch {
+				if (ticket === this.clientSearchTicket) {
+					this.clientOptions = []
+				}
+			} finally {
+				if (ticket === this.clientSearchTicket) {
+					this.clientSearching = false
+				}
+			}
+		},
+
+		/**
+		 * Put the client the form opened with (or just created) in the list,
+		 * so the field shows its name.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
+		 */
+		async loadPickedClient() {
+			const id = this.form.client
+			if (!id || this.clientOptions.some((o) => o.id === id)) {
+				return
+			}
+			try {
+				const client = await this.objectStore.fetchObject('client', String(id))
+				if (client && this.form.client === id) {
+					this.clientOptions = [this.clientRow(client), ...this.clientOptions]
+				}
+			} catch {
+				// The field then shows the id rather than failing the form.
+			}
+		},
+
+		/**
 		 * Create a client from the New client button and put it on the ticket.
 		 *
 		 * @return {Promise<void>}
@@ -665,6 +758,7 @@ export default {
 		async newClient() {
 			const created = await this.createClient('')
 			if (created && created.id) {
+				this.clientOptions = [this.clientRow(created), ...this.clientOptions.filter((o) => o.id !== created.id)]
 				this.onClientChange(created.id)
 			}
 		},

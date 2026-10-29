@@ -7964,6 +7964,7 @@ OC.L10N.register(
         "Importing creates a contact in Pipelinq and links it to the card, so later changes go both ways. Type at least 2 characters to search your Nextcloud contacts.": "Importing creates a contact in Pipelinq and links it to the card, so later changes go both ways. Type at least 2 characters to search your Nextcloud contacts.",
         "With deals": "With deals",
         "{shown} of {total} organisations · sorted by name": "{shown} of {total} organisations · sorted by name",
+        "Search by name": "Search by name",
         "Search by name, KvK number or place": "Search by name, KvK number or place",
         "click a column heading to sort": "click a column heading to sort",
         "Associations": "Associations",
