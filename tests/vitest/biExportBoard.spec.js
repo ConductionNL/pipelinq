@@ -43,11 +43,6 @@ describe('the BI export pages (pl2 PqBiExport)', () => {
 		}
 	})
 
-	it('draws Acties at the end of the tab strip, with the list actions the header took over (pl4 PqBiExport 12/13)', () => {
-		const job = view('ExportJobs.vue')
-		expect(job).toMatch(/\{\s*action: 'actions-menu',\s*placement: 'tabs',\s*items: \['refresh', 'separator', 'copy-selected', 'delete-selected'\],?\s*\}/)
-	})
-
 	it('offers the Filter button on the jobs list', () => {
 		expect(view('ExportJobs.vue')).toContain(':filterMenu="true"')
 	})
@@ -80,6 +75,11 @@ describe('the BI export pages (pl2 PqBiExport)', () => {
 		expect(job).toContain("widget: 'switch'")
 		expect(job).toContain("ariaLabel: (row) => t('pipelinq', 'Run {name} on its schedule', { name: row.name })")
 		expect(job).not.toContain("t('pipelinq', 'Disable')")
+	})
+
+	it('draws Acties at the end of the tab strip, with the list actions the header took over (pl4 PqBiExport 12/13)', () => {
+		const job = view('ExportJobs.vue')
+		expect(job).toMatch(/\{\s*action: 'actions-menu',\s*placement: 'tabs',\s*items: \['refresh', 'separator', 'copy-selected', 'delete-selected'\],?\s*\}/)
 	})
 
 	it('reads the schedule in words, the datasets as chips and the destination with its type', () => {
