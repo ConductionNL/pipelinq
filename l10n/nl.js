@@ -9294,7 +9294,9 @@ OC.L10N.register(
         "Z report {reportDate|date}, {terminalId}": "Z-rapport {reportDate|date}, {terminalId}",
         "Within the margin": "Binnen de marge",
         "Outside the margin": "Buiten de marge",
-        "Unknown measure": "Onbekende maat"
+        "Unknown measure": "Onbekende maat",
+        "No decision linked": "Geen besluit gekoppeld",
+        "Create a proposal for this ticket": "Voorstel maken voor dit ticket"
     },
     "nplurals=2; plural=(n != 1);"
 )

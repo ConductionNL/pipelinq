@@ -3876,7 +3876,16 @@
 						"type": "integration",
 						"integrationId": "decidesk-decisions",
 						"title": "On this ticket",
-						"icon": "Gavel"
+						"icon": "Gavel",
+						"_labelsNote": "Board PqTicketBesluitvorming: the leaf's empty state in the ticket's words. nextcloud-vue translates `labels` in pipelinq's language and hands them to decidiq's leaf (leaf-labels-in-the-host-language); the leaf draws them as its empty-state panel (decidiq decisions-leaf-speaks-the-hosts-words).",
+						"labels": {
+							"emptyTitle": "No decision linked",
+							"emptyText": "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.",
+							"createLabel": "Create a proposal for this ticket"
+						},
+						"props": {
+							"collapsible": false
+						}
 					},
 					{
 						"id": "ticket-case-decisions",
