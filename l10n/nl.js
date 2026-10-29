@@ -414,6 +414,7 @@ OC.L10N.register(
         "Attributed value": "Toegekende waarde",
         "Attributed value per channel": "Toegekende waarde per kanaal",
         "Attributes": "Attributen",
+        "Not started": "Niet gestart",
         "Attributes (e.g. maat=S, kleur=Wit)": "Attributen (bijv. maat=S, kleur=Wit)",
         "Attribution": "Attributie",
         "Attribution model": "Attributiemodel",
