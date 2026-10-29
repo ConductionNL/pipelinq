@@ -30,11 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Labels;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
-use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -47,6 +45,13 @@ use Throwable;
  * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
  */
 class LabelRenameService {
+
+	/**
+	 * The register the label fragment declares the schema in.
+	 *
+	 * @var string
+	 */
+	public const REGISTER = 'pipelinq';
 
 	/**
 	 * The label schema slug.
@@ -92,7 +97,6 @@ class LabelRenameService {
 	 *
 	 * @param ContainerInterface $container    DI container (OpenRegister's ObjectService).
 	 * @param IAppManager        $appManager   Answers whether OpenRegister is installed.
-	 * @param IAppConfig         $appConfig    Pipelinq app config (the register slug).
 	 * @param IUserSession       $userSession  The caller's session.
 	 * @param IGroupManager      $groupManager Answers whether the caller is an administrator.
 	 * @param IJobList           $jobList      Queues the rest of a large rename.
@@ -103,7 +107,6 @@ class LabelRenameService {
 	public function __construct(
 		private ContainerInterface $container,
 		private IAppManager $appManager,
-		private IAppConfig $appConfig,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,
 		private IJobList $jobList,
@@ -151,7 +154,7 @@ class LabelRenameService {
 		}
 
 		$label['name'] = $name;
-		$objects->saveObject(object: $label, register: $this->register(), schema: self::LABEL_SCHEMA, uuid: $labelId);
+		$objects->saveObject(object: $label, register: self::REGISTER, schema: self::LABEL_SCHEMA, uuid: $labelId);
 
 		$result['rewritten'] = $this->rewrite(objects: $objects, from: $from, to: $name, budget: self::INLINE_LIMIT);
 		if ($this->anyCarries(objects: $objects, name: $from) === true) {
@@ -197,7 +200,7 @@ class LabelRenameService {
 	 */
 	private function assertNameIsFree(object $objects, string $labelId, string $name): void {
 		$rows = $objects->findAll(
-			config: ['limit' => 1000, 'filters' => ['register' => $this->register(), 'schema' => self::LABEL_SCHEMA]]
+			config: ['limit' => 1000, 'filters' => ['register' => self::REGISTER, 'schema' => self::LABEL_SCHEMA]]
 		);
 		foreach ($rows as $row) {
 			$other = $this->toArray(value: $row);
@@ -275,7 +278,7 @@ class LabelRenameService {
 		$id = (string)($row['id'] ?? ($row['@self']['id'] ?? ''));
 		$row[$field] = $names;
 		try {
-			$objects->saveObject(object: $row, register: $this->register(), schema: $schema, uuid: $id);
+			$objects->saveObject(object: $row, register: self::REGISTER, schema: $schema, uuid: $id);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'LabelRenameService: an item kept the old label',
@@ -323,7 +326,7 @@ class LabelRenameService {
 		$rows = $objects->findAll(
 			config: [
 				'limit'   => $limit,
-				'filters' => [$field => $name, 'register' => $this->register(), 'schema' => $schema],
+				'filters' => [$field => $name, 'register' => self::REGISTER, 'schema' => $schema],
 			]
 		);
 
@@ -348,7 +351,7 @@ class LabelRenameService {
 	 */
 	private function findLabel(object $objects, string $labelId): mixed {
 		try {
-			return $objects->find(id: $labelId, register: $this->register(), schema: self::LABEL_SCHEMA);
+			return $objects->find(id: $labelId, register: self::REGISTER, schema: self::LABEL_SCHEMA);
 		} catch (Throwable $e) {
 			return null;
 		}
@@ -368,20 +371,6 @@ class LabelRenameService {
 
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
-
-	/**
-	 * The pipelinq register slug.
-	 *
-	 * @return string
-	 */
-	private function register(): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'pipelinq');
-		if ($register === '') {
-			return 'pipelinq';
-		}
-
-		return $register;
-	}//end register()
 
 	/**
 	 * An object as a plain array.

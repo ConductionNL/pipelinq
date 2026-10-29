@@ -27,7 +27,6 @@ use OCA\Pipelinq\Service\Labels\LabelRenameException;
 use OCA\Pipelinq\Service\Labels\LabelRenameService;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
-use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -140,8 +139,6 @@ class LabelRenameServiceTest extends TestCase {
 		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('isInstalled')->willReturnCallback(fn (string $app): bool => $app === 'openregister' && $this->openRegister);
 
-		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
-		$appConfig->method('getValueString')->willReturnArgument(2);
 
 		$userSession = $this->createMock(originalClassName: IUserSession::class);
 		$user = null;
@@ -158,7 +155,6 @@ class LabelRenameServiceTest extends TestCase {
 		return new LabelRenameService(
 			container: $container,
 			appManager: $appManager,
-			appConfig: $appConfig,
 			userSession: $userSession,
 			groupManager: $groupManager,
 			jobList: $this->jobList,
