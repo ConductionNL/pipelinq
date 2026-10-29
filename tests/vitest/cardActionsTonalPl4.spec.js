@@ -37,4 +37,11 @@ describe('the service and Z-report card actions', () => {
 	])('%s draws "%s" as the tonal pill', (file, label) => {
 		expect(buttonTag(file, label)).toContain('cn-button--tonal')
 	})
+
+	it('draws the pencil before "Edit steps", as PqService does', () => {
+		const source = fs.readFileSync(path.join(ROOT, 'src/views/bookings/ServiceDetail.vue'), 'utf8')
+		const at = source.indexOf("t('pipelinq', 'Edit steps')")
+		const button = source.slice(source.slice(0, at).lastIndexOf('<NcButton'), at)
+		expect(button).toMatch(/<template #icon>\s*<PencilOutline :size="16" \/>/)
+	})
 })
