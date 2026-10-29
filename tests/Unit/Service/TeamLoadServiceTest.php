@@ -66,7 +66,7 @@ class TeamLoadServiceTest extends TestCase {
 			static fn (array $profile, int $workload): bool => $workload >= (int) ($profile['maxConcurrent'] ?? 10)
 		);
 
-		$users = $this->createMock(IUserManager::class);
+		$users = $this->createMock(originalClassName: IUserManager::class);
 		$users->method('getDisplayName')->willReturnCallback(
 			static fn (string $uid): ?string => $names[$uid] ?? null
 		);
