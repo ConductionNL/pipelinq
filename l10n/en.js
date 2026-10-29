@@ -3188,6 +3188,7 @@ OC.L10N.register(
         "Rechtmatig belang": "Legitimate interest",
         "Recipient user ID": "Recipient user ID",
         "Reconciliatie": "Reconciliation",
+        "Drawer reconciliation": "Drawer reconciliation",
         "Reconciliation": "Reconciliation",
         "Reconnect": "Reconnect",
         "Reconnect needed": "Reconnect needed",
