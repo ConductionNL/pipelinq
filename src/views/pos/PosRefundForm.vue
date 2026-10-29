@@ -102,9 +102,9 @@
 							<template #column-returnReason="{ row }">
 								<NcSelect
 									v-if="row.selected"
+									:ariaLabelCombobox="t('pipelinq', 'Return reason')"
 									:modelValue="reasonOptions.find((o) => o.id === row.returnReason) || null"
 									:options="reasonOptions"
-									:ariaLabelCombobox="t('pipelinq', 'Return reason')"
 									:labelOutside="true"
 									label="label"
 									:clearable="false"
