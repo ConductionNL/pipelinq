@@ -206,13 +206,23 @@
 						"href": "/index.php/settings/admin/pipelinq",
 						"permission": "admin",
 						"status": "Opens in a new tab"
+					},
+					{
+						"id": "PersonalSettings",
+						"label": "Personal settings",
+						"description": "Your notifications per kind of event, your skills for routing and your default view.",
+						"icon": "AccountCogOutline",
+						"category": "admin",
+						"action": "user-settings",
+						"status": "Only for you"
 					}
 				],
 				"panel": {
 					"label": "For administrators",
 					"badge": {
 						"label": "Administrators only",
-						"icon": "ShieldAccountOutline"
+						"icon": "ShieldAccountOutline",
+						"tone": "purple"
 					},
 					"text": "Pipelinq opens with the simple menu. Extended brings every item back. Both menus open the same pages, so links and bookmarks keep working. The choice applies to everyone and therefore lives on the Nextcloud admin page, not in the app.",
 					"link": {
