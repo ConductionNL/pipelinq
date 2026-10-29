@@ -217,6 +217,7 @@ import {
 	makeLetter,
 	previewLetter,
 } from '../services/letters.js'
+import { nextAppointment } from '../services/letterAppointment.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {
@@ -258,6 +259,7 @@ export default {
 			clientName: '',
 			tickets: [],
 			aboutTicketId: null,
+			appointmentId: null,
 			resolvedClientId: '',
 			resolvedTicketId: '',
 			making: false,
@@ -330,13 +332,17 @@ export default {
 
 		/** @return {string} What the preview depends on; a change asks for a new one. */
 		previewKey() {
-			return [this.templateId, this.resolvedClientId, this.contactId, this.resolvedTicketId || this.aboutTicketId].join('|')
+			return [this.templateId, this.resolvedClientId, this.contactId, this.resolvedTicketId || this.aboutTicketId, this.appointmentId].join('|')
 		},
 	},
 
 	watch: {
 		previewKey() {
 			this.loadPreview()
+		},
+
+		aboutTicketId(now, before) {
+			if (before) this.loadAppointment(useObjectStore())
 		},
 	},
 
@@ -407,12 +413,35 @@ export default {
 						client: this.resolvedClientId,
 						_limit: 100,
 					})) || []
+				await this.loadAppointment(store)
 			} catch {
 				this.error = t(
 					'pipelinq',
 					'The letter templates could not be loaded.',
 				)
 			}
+		},
+
+		/**
+		 * The client's next appointment, for the letter's Afspraak field.
+		 * Without one the letter is made all the same.
+		 *
+		 * @param {object} store The object store.
+		 * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+		 */
+		async loadAppointment(store) {
+			const ticketId = this.resolvedTicketId || this.aboutTicketId || ''
+			const bookings = (await store.fetchCollection('appointmentBooking', {
+				customerId: this.resolvedClientId,
+				_limit: 200,
+			}).catch(() => [])) || []
+			if (ticketId) {
+				bookings.push(...((await store.fetchCollection('appointmentBooking', {
+					ticket: ticketId,
+					_limit: 50,
+				}).catch(() => [])) || []))
+			}
+			this.appointmentId = nextAppointment(bookings, ticketId)?.id || null
 		},
 
 		/**
@@ -472,6 +501,7 @@ export default {
 					templateId: this.templateId,
 					contactId: this.contactId || undefined,
 					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
+					appointmentId: this.appointmentId || undefined,
 				})
 				if (request !== this.previewRequest) return
 				this.previewHtml = letterPreviewBody(preview.html)
@@ -501,6 +531,7 @@ export default {
 					templateId: this.templateId,
 					contactId: this.contactId || undefined,
 					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
+					appointmentId: this.appointmentId || undefined,
 					downloadOnly: true,
 				})
 				downloadLetter(letter)
@@ -527,6 +558,7 @@ export default {
 					templateId: this.templateId,
 					contactId: this.contactId || undefined,
 					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
+					appointmentId: this.appointmentId || undefined,
 				})
 				downloadLetter(letter)
 				this.result = letter
