@@ -40,7 +40,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -438,51 +437,9 @@ class SegmentSignalService {
 		return [
 			self::FIELD_RENEWAL_DAYS => $this->renewalDays(clientId: $clientId),
 			self::FIELD_STALLED_DAYS => $this->stalledDays(clientId: $clientId),
-			self::FIELD_LAST_CONTACT_AT => $this->lastContactAt(clientId: $clientId),
+			self::FIELD_LAST_CONTACT_AT => (new LastContactReader(store: $this->store))->forClient(clientId: $clientId),
 		];
 	}//end crmSignals()
-
-	/**
-	 * When the latest contact moment of this client took place.
-	 *
-	 * A contact moment is a ticket of type `interaction`; requests and
-	 * complaints are what the contact was about, not the contact itself.
-	 *
-	 * @param string $clientId The pipelinq client id.
-	 *
-	 * @return string|null The `occurredAt` of the newest moment, or null when none is dated.
-	 *
-	 * @spec openspec/changes/segment-last-contact-signal/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
-	 */
-	private function lastContactAt(string $clientId): ?string {
-		$rows = $this->store->findAll(
-			schemaSlug: $this->store->schemaSlug('ticket_schema', 'ticket'),
-			filters: ['client' => $clientId, 'ticketType' => TicketService::TYPE_CONTACTMOMENT]
-		);
-
-		$latest = null;
-		$latestStamp = null;
-		foreach ($rows as $row) {
-			if ((string)($row['client'] ?? '') !== $clientId
-				|| (string)($row['ticketType'] ?? '') !== TicketService::TYPE_CONTACTMOMENT
-			) {
-				continue;
-			}
-
-			$moment = trim((string)($row['occurredAt'] ?? ''));
-			$stamp = strtotime($moment);
-			if ($moment === '' || $stamp === false) {
-				continue;
-			}
-
-			if ($latestStamp === null || $stamp > $latestStamp) {
-				$latest = $moment;
-				$latestStamp = $stamp;
-			}
-		}
-
-		return $latest;
-	}//end lastContactAt()
 
 	/**
 	 * Days until the nearest contract of this client ends.
