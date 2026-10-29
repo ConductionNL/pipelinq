@@ -328,6 +328,21 @@
 				v-bind="sections.exportConfiguration"
 				appId="pipelinq"
 				@saved="onSectionSaved" />
+
+			<!-- The shared label list (shared-label-list): articles, leads and
+			     clients pick from it. A rename rewrites the items that carry
+			     the label; a delete leaves them as they are. -->
+			<CnChipListManager
+				v-if="isAdmin && isConfigured"
+				register="pipelinq"
+				schema="itemLabel"
+				:title="t('pipelinq', 'Labels')"
+				:description="t('pipelinq', 'The labels people can pick for articles, leads and clients.')"
+				:addLabel="t('pipelinq', 'New label')"
+				:placeholder="t('pipelinq', 'Enter a name')"
+				:submitLabel="t('pipelinq', 'Add')"
+				:note="t('pipelinq', 'Double-click a label to rename it. A deleted label stays on the items that already use it.')"
+				:renameUrl="labelRenameUrl" />
 		</template>
 
 		<template #tab-portal>
@@ -341,6 +356,7 @@
 <script>
 import {
 	CnAdminSettingsShell,
+	CnChipListManager,
 	CnConnectionsPanel,
 	CnRegisterMapping,
 	CnSettingsFieldsSection,
@@ -493,6 +509,7 @@ export default {
 		PortalSettings,
 		PosCustomerSettings,
 		CnAdminSettingsShell,
+		CnChipListManager,
 		CnRegisterMapping,
 		CnSettingsFieldsSection,
 		NcButton,
@@ -637,6 +654,17 @@ export default {
 		 */
 		posCustomerLookupUrl() {
 			return '?tab=pos-lookup'
+		},
+
+		/**
+		 * Where the Labels card sends a rename, so the items follow it.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+		 */
+		labelRenameUrl() {
+			// The card fills {id}; generateUrl would escape the braces.
+			return `${generateUrl('/apps/pipelinq/api/labels')}/{id}/rename`
 		},
 
 		/**

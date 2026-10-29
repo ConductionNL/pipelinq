@@ -27,6 +27,11 @@
 				@update:modelValue="(v) => (form.category = v)" />
 		</div>
 
+		<!-- Labels from the shared list (shared-label-list). -->
+		<div class="form-group" data-testid="lead-form-labels">
+			<LabelSelect v-model="form.labels" />
+		</div>
+
 		<!-- Value + currency row. The win chance is the qualification score
 		     (pipeline-numbers-tell-the-truth), so there is no probability input. -->
 		<div class="form-row">
@@ -199,6 +204,7 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import LabelSelect from '../../components/LabelSelect.vue'
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
@@ -218,6 +224,7 @@ export default {
 		ClientCreateDialog,
 		CnResourceSelect,
 		ContactCreateDialog,
+		LabelSelect,
 		NcButton,
 		NcDateTimePickerNative,
 		NcSelect,
@@ -256,6 +263,7 @@ export default {
 				title: '',
 				description: '',
 				category: '',
+				labels: [],
 				value: null,
 				// The deal's currency (pipelinq#2040). New deals start in the
 				// reporting currency; the forecast converts any other one.
@@ -423,6 +431,7 @@ export default {
 				title: this.lead.title || '',
 				description: this.lead.description || '',
 				category: this.lead.category || '',
+				labels: Array.isArray(this.lead.labels) ? [...this.lead.labels] : [],
 				value: this.lead.value ?? null,
 				currency: this.lead.currency || reportingCurrency(),
 				// Not editable any more; carried so a full save keeps the stored value.

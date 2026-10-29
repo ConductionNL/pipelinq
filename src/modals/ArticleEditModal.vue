@@ -88,16 +88,8 @@
 							:clearable="false"
 							:searchable="false" />
 					</div>
-					<NcTextField
-						id="article-edit-tags"
-						v-model="tagsText"
-						:label="t('pipelinq', 'Tags')"
-						:placeholder="
-							t(
-								'pipelinq',
-								'Comma-separated, such as release, product',
-							)
-						" />
+					<!-- Tags from the shared label list (shared-label-list). -->
+					<LabelSelect v-model="tags" :inputLabel="t('pipelinq', 'Tags')" />
 					<NcTextField
 						id="article-edit-portal-ref"
 						v-model="model.portalPageRef"
@@ -143,6 +135,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import FolderImage from 'vue-material-design-icons/FolderImage.vue'
+import LabelSelect from '../components/LabelSelect.vue'
 import { createArticle, updateArticle } from '../services/articlesApi.js'
 
 import '@nextcloud/dialogs/style.css'
@@ -160,6 +153,7 @@ export default {
 		FolderImage,
 		NcButton,
 		CnDialog,
+		LabelSelect,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
@@ -192,7 +186,7 @@ export default {
 				portalPageRef: source.portalPageRef || '',
 			},
 
-			tagsText: Array.isArray(source.tags) ? source.tags.join(', ') : '',
+			tags: Array.isArray(source.tags) ? [...source.tags] : [],
 			links: Array.isArray(source.links)
 				? source.links.map((link) => ({ ...link }))
 				: [],
@@ -302,20 +296,15 @@ export default {
 		},
 
 		/**
-		 * Build the payload from the model, splitting the tags text field
-		 * back into an array.
+		 * Build the payload from the model.
 		 *
 		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {object} The payload the API expects.
 		 */
 		buildPayload() {
-			const tags = this.tagsText
-				.split(',')
-				.map((tag) => tag.trim())
-				.filter((tag) => tag !== '')
 			return {
 				...this.model,
-				tags,
+				tags: this.tags,
 				links: this.links,
 			}
 		},
