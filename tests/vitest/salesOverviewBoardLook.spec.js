@@ -60,4 +60,9 @@ describe('sales overview', () => {
 		expect(widget.content.valueLabels).toEqual({ status: { won: 'Won', lost: 'Lost' } })
 		expect(widget.content.pill).toBeUndefined()
 	})
+
+	it('names the owner of a deal closing soon, not their user id', () => {
+		const widget = dashboard.config.widgets.find((w) => w.id === 'closing-soon')
+		expect(widget.content.meta).toBe('{stage} · {expectedCloseDate|date} · {assignee|user}')
+	})
 })

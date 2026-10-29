@@ -983,7 +983,7 @@
 							"limit": 3,
 							"presentation": "rows",
 							"title": "{title}",
-							"meta": "{stage} · {expectedCloseDate|date} · {assignee}",
+							"meta": "{stage} · {expectedCloseDate|date} · {assignee|user}",
 							"trailing": [
 								"{value|currency}"
 							],
