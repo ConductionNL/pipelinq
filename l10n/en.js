@@ -802,7 +802,6 @@ OC.L10N.register(
         "Closed Lost": "Closed Lost",
         "Closed Won": "Closed Won",
         "Closed on": "Closed on",
-        "Closed — template required": "Closed — template required",
         "Closes soon": "Closes soon",
         "Closes this month": "Closes this month",
         "Closing soon": "Closing soon",
@@ -9296,7 +9295,8 @@ OC.L10N.register(
         "Status: No-show": "Status: No-show",
         "Status: Cancelled by the customer": "Status: Cancelled by the customer",
         "Status: Cancelled by us": "Status: Cancelled by us",
-        "Status: Rescheduled": "Status: Rescheduled"
+        "Status: Rescheduled": "Status: Rescheduled",
+        "Closed, template required": "Closed, template required"
     },
     "nplurals=2; plural=(n != 1);"
 )

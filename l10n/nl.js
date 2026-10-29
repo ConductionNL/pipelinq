@@ -775,7 +775,6 @@ OC.L10N.register(
         "Closed Lost": "Afgesloten - Lost",
         "Closed Won": "Afgesloten - Won",
         "Closed on": "Afgesloten op",
-        "Closed — template required": "Gesloten — sjabloon vereist",
         "Closes soon": "Sluit binnenkort",
         "Closes this month": "Sluit deze maand",
         "Closing soon": "Sluit binnenkort",
@@ -9310,7 +9309,8 @@ OC.L10N.register(
         "Status: No-show": "Status: Niet verschenen",
         "Status: Cancelled by the customer": "Status: Geannuleerd door de klant",
         "Status: Cancelled by us": "Status: Geannuleerd door ons",
-        "Status: Rescheduled": "Status: Verzet"
+        "Status: Rescheduled": "Status: Verzet",
+        "Closed, template required": "Gesloten, sjabloon vereist"
     },
     "nplurals=2; plural=(n != 1);"
 )
