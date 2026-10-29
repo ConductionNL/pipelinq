@@ -35,7 +35,7 @@
 						: t('pipelinq', 'Drops can only be added to an open shift.')
 				">
 				<NcButton
-					variant="secondary"
+					class="cn-button--tonal"
 					:disabled="busy || !canDrop"
 					@click="showDrop = true">
 					<template #icon>
