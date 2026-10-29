@@ -17,6 +17,7 @@
   - schema and cannot break one field out into four counts on one strip.
   -
   - @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+  - @spec openspec/changes/mailing-list-subscribers-card-table/specs/marketing-lists/spec.md#requirement-the-subscribers-table-fits-its-card
   -->
 <template>
 	<component
@@ -597,26 +598,53 @@ export default {
 	border-block-end: 1px solid var(--color-border);
 }
 
+/* The filter funnel is a 22px button with a 4px radius, as the boards draw
+   it, not Nextcloud's 34px clickable area. */
 .subscriptions-section__th {
+	--default-clickable-area: 22px;
+	--border-radius-element: 4px;
 	display: inline-flex;
 	align-items: center;
-	gap: 2px;
+	gap: 4px;
 }
 
+/* The sort button is the bare label: Nextcloud's `button` rule gives it a
+   34px height, a width and a radius the boards do not draw. */
 .subscriptions-section__sort {
 	display: inline-flex;
 	align-items: center;
 	gap: 2px;
+	width: auto;
+	min-height: 0;
+	height: auto;
 	padding: 0;
 	border: 0;
+	border-radius: 0;
 	background: transparent;
 	font: inherit;
 	color: inherit;
 	cursor: pointer;
 }
 
+/* In a card the table runs to the card's edges, as every Pq card table does
+   (PqMailinglijst): the board look's card padding is taken back, and the
+   first column starts 18px in. */
+.subscriptions-section--card .subscriptions-section__table {
+	width: calc(100% + 2 * var(--cn-board-card-inline-padding, 0px));
+	margin-inline: calc(-1 * var(--cn-board-card-inline-padding, 0px));
+	line-height: normal;
+}
+
+/* The head sits on the card's ground. The theme paints every `th` and the
+   buttons in it through its table-header and button tokens, so those get
+   the board's ground and weight too. */
 .subscriptions-section--card .subscriptions-section__table th {
+	--nldesign-component-table-header-background-color: var(--color-main-background);
+	--nldesign-component-table-header-color: var(--color-text-maxcontrast);
+	--nldesign-component-button-font-weight: 600;
 	padding: 10px 12px;
+	background: var(--color-main-background);
+	font-size: 14px;
 	font-weight: 600;
 	color: var(--color-text-maxcontrast);
 }
@@ -624,6 +652,12 @@ export default {
 .subscriptions-section--card .subscriptions-section__table td {
 	padding: 12px;
 	vertical-align: middle;
+	white-space: normal;
+}
+
+.subscriptions-section--card .subscriptions-section__table th:first-child,
+.subscriptions-section--card .subscriptions-section__table td:first-child {
+	padding-inline-start: 18px;
 }
 
 .subscriptions-section--card .subscriptions-section__who {

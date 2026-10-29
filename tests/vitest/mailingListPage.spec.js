@@ -130,3 +130,37 @@ describe('the Subscribers table and header line', () => {
 		expect(wrapper.find('.signups-modal').exists()).toBe(true)
 	})
 })
+
+/**
+ * @spec openspec/changes/mailing-list-subscribers-card-table/specs/marketing-lists/spec.md#requirement-the-subscribers-table-fits-its-card
+ */
+describe('the PqMailinglijst board look (pl4)', () => {
+	const sfc = fs.readFileSync(path.join(ROOT, 'src/components/marketing/SubscriptionsSection.vue'), 'utf8')
+	const style = sfc.slice(sfc.indexOf('<style'))
+
+	it('lays the list details out in the two columns the board draws', () => {
+		const data = widget('mailing-list-data').content
+		expect(data.columns).toBe(2)
+		expect(data.fixedColumns).toBe(true)
+	})
+
+	it('puts no second Subscribers heading above the card', () => {
+		const body = page.config.bodyWidgets.find((w) => w.id === 'list-subscriptions')
+		expect(body.title).toBeUndefined()
+	})
+
+	it('runs the Subscribers table to the card edges, heads on the card ground', () => {
+		expect(style).toMatch(/\.subscriptions-section--card \.subscriptions-section__table \{[^}]*margin-inline: calc\(-1 \* var\(--cn-board-card-inline-padding, 0px\)\)/)
+		expect(style).toMatch(/--nldesign-component-table-header-background-color: var\(--color-main-background\)/)
+		expect(style).toMatch(/\.subscriptions-section--card \.subscriptions-section__table th:first-child,\s*\.subscriptions-section--card \.subscriptions-section__table td:first-child \{\s*padding-inline-start: 18px;/)
+	})
+
+	it('wraps a long cell instead of pushing the last column out of the card', () => {
+		expect(style).toMatch(/\.subscriptions-section--card \.subscriptions-section__table td \{[^}]*white-space: normal;/)
+	})
+
+	it('draws a head as its bare label and a 22px funnel, not two 34px buttons', () => {
+		expect(style).toMatch(/\.subscriptions-section__sort \{[^}]*min-height: 0;[^}]*border-radius: 0;/)
+		expect(style).toMatch(/\.subscriptions-section__th \{[^}]*--default-clickable-area: 22px;[^}]*--border-radius-element: 4px;/)
+	})
+})
