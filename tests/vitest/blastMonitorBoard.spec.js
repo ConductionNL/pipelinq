@@ -74,3 +74,22 @@ describe('the send monitor as board PqVerzendmonitor', () => {
 		expect(source).toMatch(/\.blast-monitor__timeline li \{[^}]*font-size: 14px;/)
 	})
 })
+
+describe('the send monitor\'s recent events', () => {
+	// Board PqVerzendmonitor: eight events stamped the same minute, in the
+	// order the deliveries come (a***@ziggo first, r***@sportcentrum last).
+	it('keeps events of the same moment in the order they come', () => {
+		const at = '2026-10-29T10:02:00Z'
+		const emails = ['a@ziggo.example', 'm@gmail.example', 'j@hotmail.example', 'i@verhoef-bv.example', 'b@degraaf.example', 's@outlook.example', 'k@kpnmail.example', 'r@sportcentrum.example']
+		const timeline = BlastMonitor.methods.buildTimeline(emails.map((email, i) => ({ id: `d${i}`, email, status: 'delivered', sentAt: at })))
+		expect(timeline.map((event) => event.email)).toEqual(emails)
+	})
+
+	it('puts the newest event first', () => {
+		const timeline = BlastMonitor.methods.buildTimeline([
+			{ id: 'old', sentAt: '2026-10-29T10:01:00Z' },
+			{ id: 'new', sentAt: '2026-10-29T10:03:00Z' },
+		])
+		expect(timeline.map((event) => event.id)).toEqual(['new', 'old'])
+	})
+})
