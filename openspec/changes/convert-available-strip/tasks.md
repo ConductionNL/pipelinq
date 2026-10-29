@@ -1,0 +1,3 @@
+- [x] ConvertToCaseDialog: availability strip (role status, check outline, success tint and ink, 600)
+- [x] ConvertToCaseDialog: facts stacked label over value under any theme
+- [x] vitest convertToCaseDialog
