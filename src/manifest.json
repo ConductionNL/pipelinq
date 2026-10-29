@@ -10621,7 +10621,7 @@
 				"viewMode": "list",
 				"showViewToggle": false,
 				"search": false,
-				"_expandableNote": "Board PqPipelines: each pipeline is a row that opens to its stages (nextcloud-vue expandableRows, index-expandable-rows). The first row is open. Closed, the stages are chips coloured by stage kind; open, a table with the order, chance, start stage, closed and result. Edit and Add stage open the pipeline's own form, where the stages are edited. The board's drag handle is not drawn: the order is edited in the form.",
+				"_expandableNote": "Board PqPipelines: each pipeline is a row that opens to its stages (nextcloud-vue expandableRows, index-expandable-rows). The first row is open. Closed, the stages are chips coloured by stage kind; open, a table with the order, chance, start stage, closed and result. Edit, Add stage and each stage's pencil (entryAction) open the pipeline's own form, where the stages are edited. The board's drag handle is not drawn: the order is edited in the form.",
 				"expandableRows": {
 					"title": "title",
 					"badge": { "when": { "field": "isDefault", "op": "eq", "value": true }, "label": "Default" },
@@ -10654,7 +10654,8 @@
 							}
 						],
 						"note": "A closed stage ends the item: won or lost.",
-						"action": { "id": "edit", "label": "Add stage" }
+						"action": { "id": "edit", "label": "Add stage" },
+						"entryAction": { "id": "edit", "label": "Edit stage", "icon": "Pencil" }
 					},
 					"buttons": [{ "action": "edit", "label": "Edit" }],
 					"open": "first"

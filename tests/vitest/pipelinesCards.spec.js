@@ -44,4 +44,8 @@ describe('the pipelines list', () => {
 			['isDefault', 'primary'],
 		])
 	})
+
+	it('ends every stage with the board pencil, named for the stage', () => {
+		expect(page.config.expandableRows.table.entryAction).toEqual({ id: 'edit', label: 'Edit stage', icon: 'Pencil' })
+	})
 })

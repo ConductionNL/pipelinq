@@ -1398,6 +1398,7 @@ OC.L10N.register(
         "Edit rules": "Regels bewerken",
         "Edit segment": "Segment bewerken",
         "Edit social profile": "Sociaal profiel bewerken",
+        "Edit stage": "Fase bewerken",
         "Edit stages": "Fasen bewerken",
         "Edit survey": "Enquête bewerken",
         "Edit task": "Taak bewerken",

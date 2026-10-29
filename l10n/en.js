@@ -1434,6 +1434,7 @@ OC.L10N.register(
         "Edit relationship": "Edit relationship",
         "Edit segment": "Edit segment",
         "Edit social profile": "Edit social profile",
+        "Edit stage": "Edit stage",
         "Edit stages": "Edit stages",
         "Edit survey": "Edit survey",
         "Edit task": "Edit task",
