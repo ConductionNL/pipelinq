@@ -12,44 +12,38 @@
 		     on the admin page) already names and describes this surface. -->
 		<NcLoadingIcon v-if="loading" :size="32" />
 
-		<!-- One row per tender type, as the board draws it; adding one is the
-		     section's title-row button (PosTenderTypeManager). -->
-		<table v-else-if="tenderTypes.length > 0" class="pos-tender-type-list__table">
-			<thead>
-				<tr>
-					<th scope="col">{{ t('pipelinq', 'Name') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Code') }}</th>
-					<th scope="col">{{ t('pipelinq', 'GL account') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Flags') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Active') }}</th>
-					<th scope="col"><span class="hidden-visually">{{ t('pipelinq', 'Actions') }}</span></th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="type in tenderTypes"
-					:key="type.id || type.code"
-					data-testid="pos-tender-type">
-					<td>{{ type.name }}</td>
-					<td>{{ type.code }}</td>
-					<td>{{ type.glAccount || '—' }}</td>
-					<td>{{ flagsOf(type) || '—' }}</td>
-					<td>
-						<span class="cn-status-badge" :class="type.isActive ? 'cn-status-badge--success' : 'cn-status-badge--default'">
-							{{ type.isActive ? t('pipelinq', 'Active') : t('pipelinq', 'Inactive') }}
-						</span>
-					</td>
-					<td class="pos-tender-type-list__row-actions">
-						<NcButton @click="editType(type)">
-							{{ t('pipelinq', 'Edit') }}
-						</NcButton>
-						<NcButton variant="error" @click="deleteType(type)">
-							{{ t('pipelinq', 'Delete') }}
-						</NcButton>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<!-- One row per tender type, as the board draws it, with a sort and a
+		     filter in every head; adding one is the section's title-row button
+		     (PosTenderTypeManager). -->
+		<CnDataTable
+			v-else-if="tenderTypes.length > 0"
+			class="pos-tender-type-list__table"
+			data-testid="pos-tender-types"
+			:columns="columns"
+			:schema="tableSchema"
+			:rows="tableRows"
+			:rowClass="() => 'pos-tender-type-list__row'"
+			filterable
+			localHeaders>
+			<template #column-isActive="{ row }">
+				<span class="cn-status-badge" :class="row.isActive ? 'cn-status-badge--success' : 'cn-status-badge--default'">
+					{{ row.isActive ? t('pipelinq', 'Active') : t('pipelinq', 'Inactive') }}
+				</span>
+			</template>
+			<template #actions-header>
+				<span class="hidden-visually">{{ t('pipelinq', 'Actions') }}</span>
+			</template>
+			<template #row-actions="{ row }">
+				<span class="pos-tender-type-list__row-actions">
+					<NcButton @click="editType(row.type)">
+						{{ t('pipelinq', 'Edit') }}
+					</NcButton>
+					<NcButton variant="error" @click="deleteType(row.type)">
+						{{ t('pipelinq', 'Delete') }}
+					</NcButton>
+				</span>
+			</template>
+		</CnDataTable>
 
 		<p v-else class="pos-tender-type-list__empty">
 			{{ t('pipelinq', 'No tender types defined yet.') }}
@@ -75,6 +69,7 @@
 </template>
 
 <script>
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -85,6 +80,7 @@ import PosTenderTypeFormDialog from '../../modals/PosTenderTypeFormDialog.vue'
 export default {
 	name: 'PosTenderTypeList',
 	components: {
+		CnDataTable,
 		ConfirmDialog,
 		NcButton,
 		NcLoadingIcon,
@@ -103,6 +99,58 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The table's columns, every one sortable and filterable from its head.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 */
+		columns() {
+			return [
+				{ key: 'name', label: t('pipelinq', 'Name') },
+				{ key: 'code', label: t('pipelinq', 'Code') },
+				{ key: 'glAccount', label: t('pipelinq', 'GL account') },
+				{ key: 'flags', label: t('pipelinq', 'Flags') },
+				{ key: 'isActive', label: t('pipelinq', 'Active') },
+			]
+		},
+
+		/**
+		 * The fields the heads sort and filter on.
+		 *
+		 * @return {object}
+		 */
+		tableSchema() {
+			return {
+				properties: {
+					name: { type: 'string' },
+					code: { type: 'string' },
+					glAccount: { type: 'string' },
+					flags: { type: 'string' },
+					isActive: { type: 'boolean' },
+				},
+			}
+		},
+
+		/**
+		 * One row per tender type, its flags in words, the type itself kept for
+		 * the row actions.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 */
+		tableRows() {
+			return this.tenderTypes.map((type) => ({
+				id: this.idOf(type) || type.code,
+				name: type.name,
+				code: type.code,
+				glAccount: type.glAccount || '—',
+				flags: this.flagsOf(type) || '—',
+				isActive: !!type.isActive,
+				type,
+			}))
+		},
+
 		/**
 		 * Built here rather than inline in the template so the t() key stays
 		 * byte-identical to the one the old window.confirm used. Escaping the
