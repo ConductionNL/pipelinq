@@ -79,6 +79,24 @@ class ZuiddrechtStraatfeestAbTestTest extends TestCase {
 	}//end testBothArmsAreLargeEnoughAndBWins()
 
 	/**
+	 * Each arm sends its own template, so variant A reads "Straatfeest deze zomer?
+	 * Dit moet je regelen" and variant B "Je straatfeest, geregeld in 4 stappen".
+	 *
+	 * @return void
+	 */
+	public function testEachArmSendsItsOwnSubject(): void {
+		$part    = $this->part();
+		$objects = array_column($part['objects'], 'data', 'key');
+		$this->assertSame(expected: 'Straatfeest deze zomer? Dit moet je regelen', actual: $objects['sjabloon-straatfeest-variant-a']['subject']);
+		$this->assertSame(expected: '{{object:sjabloon-straatfeest-variant-a.id}}', actual: $part['changes'][0]['set']['templateId']);
+		$this->assertSame(expected: '{{object:sjabloon-straatfeest.id}}', actual: $objects['nieuwsbrief-straatfeest-variant-b']['templateId']);
+
+		$marketing = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.d/40-marketing.json'), true);
+		$this->assertIsArray(actual: $marketing);
+		$this->assertSame(expected: 'Je straatfeest, geregeld in 4 stappen', actual: array_column($marketing['objects'], 'data', 'key')['sjabloon-straatfeest']['subject']);
+	}//end testEachArmSendsItsOwnSubject()
+
+	/**
 	 * The chi-square statistic of clicked against not clicked for two arms.
 	 *
 	 * @param array<string, int> $a Arm A totals.

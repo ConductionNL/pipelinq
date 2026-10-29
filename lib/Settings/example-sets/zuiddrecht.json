@@ -3852,6 +3852,8 @@
 				"settledAt": "{{datetime:-1 23:00}}",
 				"bookkeepingStatus": "failed",
 				"bookkeepingAttempts": 1,
+				"bookkeepingFailureReason": "unreachable",
+				"bookkeepingFailedAt": "{{datetime:-1 23:00}}",
 				"subtotal": 880.0,
 				"discountTotal": 16.0,
 				"totalTax": 97.42,

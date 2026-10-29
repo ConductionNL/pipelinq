@@ -21,6 +21,11 @@
 					"Leads van de campagnepagina: 208",
 					"Interactie op Mastodon gedaald van 6,4% naar 5,5%"
 				],
+				"highlightDirections": [
+					"up",
+					"up",
+					"down"
+				],
 				"suggestions": [
 					"Stuur een herinnering aan inwoners die openden maar geen compostbak bestelden",
 					"Zet het bericht over de parkeervergunning op 08:00, als de meeste inwoners lezen",
