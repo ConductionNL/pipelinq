@@ -352,31 +352,38 @@ export default {
 
 		/**
 		 * Load the templates, the ticket's client and the client's contacts.
+		 * The templates decide what the dialog shows, so `loading` ends when
+		 * they answer; the client and its tickets and contacts follow.
 		 *
 		 * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
 		 */
 		async load() {
 			this.loading = true
 			this.error = ''
+			const { clientId, ticketId } = this.routeIds()
+			this.resolvedTicketId = ticketId
+			this.resolvedClientId = clientId
+			const templatesLoaded = this.loadTemplates()
 			try {
-				const { clientId, ticketId } = this.routeIds()
-				this.resolvedTicketId = ticketId
-				this.resolvedClientId = clientId
 				const store = useObjectStore()
 				if (!clientId && ticketId) {
 					const ticket = await store.fetchObject('ticket', ticketId)
 					this.resolvedClientId = ticket?.client || ''
 				}
-				const answer = await fetchLetterTemplates()
-				this.available = answer.available
-				this.templates = answer.templates
-				if (this.templates.length === 1)
-					this.templateId = this.templates[0].id
-				if (this.resolvedClientId) {
-					const client = await store.fetchObject('client', this.resolvedClientId).catch(() => null)
-					this.clientName = client?.name || ''
+				await templatesLoaded
+				if (!this.available) {
+					return
 				}
-				if (this.available && this.resolvedClientId && !ticketId) {
+				if (!this.resolvedClientId) {
+					this.error = t(
+						'pipelinq',
+						'This ticket has no client, so there is nobody to write to.',
+					)
+					return
+				}
+				const client = await store.fetchObject('client', this.resolvedClientId).catch(() => null)
+				this.clientName = client?.name || ''
+				if (!ticketId) {
 					this.tickets = (await store.fetchCollection('ticket', {
 						client: this.resolvedClientId,
 						_limit: 50,
@@ -385,18 +392,31 @@ export default {
 						this.aboutTicketId = this.tickets[0].id
 					}
 				}
-				if (this.available && this.resolvedClientId) {
-					this.contacts =
-						(await store.fetchCollection('contact', {
-							client: this.resolvedClientId,
-							_limit: 100,
-						})) || []
-				}
-				if (this.available && !this.resolvedClientId) {
-					this.error = t(
-						'pipelinq',
-						'This ticket has no client, so there is nobody to write to.',
-					)
+				this.contacts =
+					(await store.fetchCollection('contact', {
+						client: this.resolvedClientId,
+						_limit: 100,
+					})) || []
+			} catch {
+				this.error = t(
+					'pipelinq',
+					'The letter templates could not be loaded.',
+				)
+			}
+		},
+
+		/**
+		 * Ask filinq, through pipelinq, for the templates; `loading` ends here.
+		 *
+		 * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+		 */
+		async loadTemplates() {
+			try {
+				const answer = await fetchLetterTemplates()
+				this.available = answer.available
+				this.templates = answer.templates
+				if (this.templates.length === 1) {
+					this.templateId = this.templates[0].id
 				}
 			} catch {
 				this.error = t(

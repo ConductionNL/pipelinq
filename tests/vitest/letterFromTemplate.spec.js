@@ -213,6 +213,29 @@ describe('LetterFromTemplateModal', () => {
 		expect(storeMock.fetchCollection).not.toHaveBeenCalled()
 	})
 
+	it('says there are no templates yet while the client is still loading', async () => {
+		api.fetchLetterTemplates.mockResolvedValue({ available: true, templates: [] })
+		storeMock.fetchObject.mockReturnValue(new Promise(() => {}))
+		storeMock.fetchCollection.mockReturnValue(new Promise(() => {}))
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+
+		expect(w.text()).not.toContain('Loading templates')
+		expect(w.text()).toContain('There are no letter templates yet')
+	})
+
+	it('on a ticket page asks for the templates before the ticket has answered', async () => {
+		api.fetchLetterTemplates.mockResolvedValue({ available: true, templates: [] })
+		storeMock.fetchObject.mockReturnValue(new Promise(() => {}))
+
+		const w = mountOn(`/tickets/${TICKET}`, TICKET)
+		await flushPromises()
+
+		expect(api.fetchLetterTemplates).toHaveBeenCalledTimes(1)
+		expect(w.text()).toContain('There are no letter templates yet')
+	})
+
 	it('keeps the dialog open with the error when the letter fails', async () => {
 		api.fetchLetterTemplates.mockResolvedValue({
 			available: true,
