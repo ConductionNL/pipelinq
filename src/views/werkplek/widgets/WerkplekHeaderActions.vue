@@ -229,8 +229,8 @@ export default {
 	gap: 8px;
 	padding: 6px 12px;
 	border-radius: var(--border-radius-pill, 18px);
-	background: var(--color-success-hover, #e7f3ea);
-	color: var(--color-success-text, #1e6b2a);
+	background: var(--cn-board-success-tint, #e7f3ea);
+	color: var(--cn-board-success-ink, #1e6b2a);
 	font-weight: 600;
 }
 

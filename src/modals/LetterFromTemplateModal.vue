@@ -650,15 +650,15 @@ export default {
 	gap: 8px;
 	padding: 10px 12px;
 	border-radius: var(--border-radius-large, 8px);
-	background: var(--color-success-hover, var(--color-background-hover));
-	color: var(--color-success-text, var(--color-main-text));
+	background: var(--cn-board-success-tint, #e7f3ea);
+	color: var(--cn-board-success-ink, #1e6b2a);
 	font-size: 14px;
 	font-weight: 600;
 }
 
 .letter-modal__check--missing {
-	background: var(--color-warning-hover, var(--color-background-hover));
-	color: var(--color-warning-text, var(--color-main-text));
+	background: var(--cn-board-notice-bg, #fff4de);
+	color: var(--cn-board-notice-ink, #7a4f00);
 }
 
 /* "Download PDF" stands at the start of the footer, the other two at the end. */
