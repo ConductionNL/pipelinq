@@ -5,8 +5,8 @@ Copyright (C) 2026 Conduction B.V.
 Log a contact moment on a ticket (board PqTicketContactLoggen): the ticket it
 belongs to, the channel, the direction as two choices, when (a date and a
 time, filled with now), the duration, the subject, the notes and the
-customer. Saves a ticket of type interaction under the ticket the page is on,
-for the same customer.
+customer, a picker that starts on the ticket's customer. Saves a ticket of
+type interaction under the ticket the page is on, for the picked customer.
 
 An `open-modal` action carries no object context, so the route names the
 ticket. When the dialog closes after a save the page is asked to reload.
@@ -73,11 +73,31 @@ ticket. When the dialog closes after a save the page is asked to reload.
 				<span class="contact-log__label">{{ t('pipelinq', 'Notes') }}</span>
 				<textarea v-model="form.notes" rows="4" data-testid="contact-log-notes" />
 			</label>
-			<div v-if="clientName" class="contact-log__field">
-				<span class="contact-log__label">{{ t('pipelinq', 'Customer') }}</span>
-				<span class="contact-log__client contact-log__control" data-testid="contact-log-client">
-					<span class="contact-log__initials" aria-hidden="true">{{ initials }}</span>{{ clientName }}
-				</span>
+			<div class="contact-log__field">
+				<span class="contact-log__label" aria-hidden="true">{{ t('pipelinq', 'Customer') }}</span>
+				<NcSelect
+					v-model="client"
+					class="contact-log__client-select"
+					data-testid="contact-log-client"
+					:options="clientOptions"
+					:filterable="false"
+					:clearable="false"
+					:loading="clientsLoading"
+					:ariaLabelCombobox="t('pipelinq', 'Customer')"
+					:placeholder="t('pipelinq', 'Choose a client')"
+					label="label"
+					@search="searchClients">
+					<template #selected-option="option">
+						<span class="contact-log__client">
+							<span class="contact-log__initials" aria-hidden="true">{{ initialsOf(option.label) }}</span>{{ option.label }}
+						</span>
+					</template>
+					<template #option="option">
+						<span class="contact-log__client">
+							<span class="contact-log__initials" aria-hidden="true">{{ initialsOf(option.label) }}</span>{{ option.label }}
+						</span>
+					</template>
+				</NcSelect>
 			</div>
 			<p v-if="error" class="contact-log__error" role="alert">
 				{{ error }}
@@ -105,7 +125,7 @@ ticket. When the dialog closes after a save the page is asked to reload.
 import { CnDialog } from '@conduction/nextcloud-vue'
 import { emit } from '@nextcloud/event-bus'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton } from '@nextcloud/vue'
+import { NcButton, NcSelect } from '@nextcloud/vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
 import { initialsOf } from '../services/userDisplayName.js'
@@ -126,7 +146,7 @@ const pad = (n) => String(n).padStart(2, '0')
  */
 export default {
 	name: 'ContactLogDialog',
-	components: { CnDialog, ContentSave, LinkVariant, NcButton },
+	components: { CnDialog, ContentSave, LinkVariant, NcButton, NcSelect },
 	emits: ['close'],
 
 	data() {
@@ -135,7 +155,9 @@ export default {
 		const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`
 		return {
 			ticket: null,
-			clientName: '',
+			client: null,
+			clientResults: [],
+			clientsLoading: false,
 			busy: false,
 			error: '',
 			nowDate: date,
@@ -204,22 +226,30 @@ export default {
 		},
 
 		/**
-		 * The customer's initials.
+		 * The customers to pick from: the picked one first, then the search
+		 * results, each once.
 		 *
-		 * @return {string}
-		 * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
+		 * @return {Array<{id: string, label: string}>}
+		 * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-the-customer-of-a-contact-moment-can-be-changed-in-the-dialog
 		 */
-		initials() {
-			return initialsOf(this.clientName)
+		clientOptions() {
+			const options = this.client ? [this.client] : []
+			for (const result of this.clientResults) {
+				if (!options.some((option) => option.id === result.id)) {
+					options.push(result)
+				}
+			}
+			return options
 		},
 	},
 
 	async created() {
-		await this.loadTicket()
+		await Promise.all([this.loadTicket(), this.searchClients('')])
 	},
 
 	methods: {
 		t,
+		initialsOf,
 
 		/**
 		 * Read the ticket and its customer's name.
@@ -234,9 +264,9 @@ export default {
 			try {
 				this.ticket = (await store.fetchObject('ticket', this.ticketId)) || null
 				const clientId = this.ticket?.client
-				if (typeof clientId === 'string' && clientId !== '') {
+				if (typeof clientId === 'string' && clientId !== '' && this.client === null) {
 					const client = await store.fetchObject('client', clientId)
-					this.clientName = client?.name || ''
+					this.client = { id: clientId, label: client?.name || clientId }
 				}
 			} catch {
 				this.ticket = null
@@ -245,7 +275,7 @@ export default {
 
 		/**
 		 * The contact moment to save: a ticket of type interaction under this
-		 * ticket, for its customer.
+		 * ticket, for the picked customer.
 		 *
 		 * @return {object}
 		 * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
@@ -264,10 +294,33 @@ export default {
 			if (this.form.duration.trim() !== '') {
 				object.duration = this.form.duration.trim()
 			}
-			if (this.ticket && typeof this.ticket.client === 'string' && this.ticket.client !== '') {
-				object.client = this.ticket.client
+			if (this.client && this.client.id) {
+				object.client = this.client.id
 			}
 			return object
+		},
+
+		/**
+		 * Read the customers whose name matches what is typed in the picker.
+		 *
+		 * @param {string} term What is typed; empty lists the first customers.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-the-customer-of-a-contact-moment-can-be-changed-in-the-dialog
+		 */
+		async searchClients(term) {
+			const params = { _limit: 20 }
+			if (typeof term === 'string' && term.trim() !== '') {
+				params._search = term.trim()
+			}
+			this.clientsLoading = true
+			try {
+				const results = await useObjectStore().fetchCollectionForOptions('client', params)
+				this.clientResults = (Array.isArray(results) ? results : [])
+					.map((client) => ({ id: client?.id || client?.['@self']?.id || '', label: client?.name || '' }))
+					.filter((client) => client.id !== '' && client.label !== '')
+			} finally {
+				this.clientsLoading = false
+			}
 		},
 
 		/**
@@ -354,8 +407,8 @@ export default {
 	gap: 10px;
 	margin: 0;
 	padding: 10px 14px;
-	border-radius: var(--border-radius-large, 8px);
-	background: var(--color-background-hover);
+	border-radius: var(--cn-board-control-radius, 8px);
+	background: var(--cn-board-sunken-ground, var(--color-background-hover));
 	font-size: 14px;
 }
 
@@ -364,10 +417,9 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.contact-log__field input:not([type="radio"]),
+.contact-log__field input:not([type="radio"]):not(.vs__search),
 .contact-log__field select,
-.contact-log__field textarea,
-.contact-log__control {
+.contact-log__field textarea {
 	box-sizing: border-box;
 	width: 100%;
 	min-height: 40px;
@@ -385,8 +437,8 @@ export default {
 	flex: none;
 }
 
-.contact-log__control {
-	padding: 0 12px;
+.contact-log__client-select {
+	width: 100%;
 }
 
 .contact-log__client {
