@@ -5,7 +5,7 @@
  *
  * Makes a printable letter for one client from a filinq template
  * (work-letter-from-filinq-template). The browser talks only to pipelinq;
- * pipelinq reads the client, contact and ticket as the caller, hands filinq
+ * pipelinq reads the client, contact, ticket and appointment as the caller, hands filinq
  * references to them, and logs the letter as an outgoing contact moment.
  *
  * @category Controller
@@ -111,8 +111,8 @@ class LetterController extends Controller
     /**
      * POST /api/clients/{id}/letters: make a letter for this client.
      *
-     * Body: `templateId`, and optionally `contactId`, `ticketId` and
-     * `downloadOnly`. Every record is read as the caller, so one the caller
+     * Body: `templateId`, and optionally `contactId`, `ticketId`,
+     * `appointmentId` and `downloadOnly`. Every record is read as the caller, so one the caller
      * may not read answers 404. The answer carries the PDF (base64), the id
      * of the copy in the caller's Files, filinq's warnings and the logged
      * contact moment. With `downloadOnly` the PDF is only returned: no copy in
@@ -252,12 +252,14 @@ class LetterController extends Controller
 
 
     /**
-     * Read the client, and the contact and ticket named in the request, as the caller.
+     * Read the client, and the contact, ticket and appointment named in the request, as the caller.
      *
      * @param string $clientId The client id.
      *
      * @return array<string, mixed>|string The records (`client`, `contactId`, `ticketId`, `refs`: filinq's
      *         references), or the not-found message.
+     *
+     * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
      */
     private function readRecords(string $clientId): array|string
     {
@@ -289,6 +291,15 @@ class LetterController extends Controller
             }
 
             $refs[] = ['register' => $register, 'schema' => 'ticket', 'id' => $ticketId];
+        }
+
+        $appointmentId = $this->optionalId(name: 'appointmentId');
+        if ($appointmentId !== null) {
+            if ($this->appointmentOf(appointmentId: $appointmentId, clientId: $clientId, ticketId: $ticketId) === false) {
+                return 'Appointment not found';
+            }
+
+            $refs[] = ['register' => $register, 'schema' => 'appointmentBooking', 'id' => $appointmentId];
         }
 
         return ['client' => $client, 'contactId' => $contactId, 'ticketId' => $ticketId, 'refs' => $refs];
@@ -330,6 +341,33 @@ class LetterController extends Controller
         return $ticket !== null && (string) ($ticket['client'] ?? '') === $clientId;
 
     }//end ticketOfClient()
+
+
+    /**
+     * Whether the appointment exists, is readable and belongs to the client or to the letter's ticket.
+     *
+     * @param string      $appointmentId The appointment id.
+     * @param string      $clientId      The client id.
+     * @param string|null $ticketId      The letter's ticket, if any.
+     *
+     * @return bool True when the letter may read it.
+     *
+     * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     */
+    private function appointmentOf(string $appointmentId, string $clientId, ?string $ticketId): bool
+    {
+        $appointment = $this->reader->read(id: $appointmentId, schemaKey: 'booking_schema');
+        if ($appointment === null) {
+            return false;
+        }
+
+        if ((string) ($appointment['customerId'] ?? '') === $clientId) {
+            return true;
+        }
+
+        return $ticketId !== null && (string) ($appointment['ticket'] ?? '') === $ticketId;
+
+    }//end appointmentOf()
 
 
     /**
