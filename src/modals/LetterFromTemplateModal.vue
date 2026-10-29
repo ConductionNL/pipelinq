@@ -330,7 +330,11 @@ export default {
 			return t('pipelinq', 'Still empty: {fields}', { fields: empty.join(', ') })
 		},
 
-		/** @return {string} What the preview depends on; a change asks for a new one. */
+		/**
+		 * @return {string} What the preview depends on; a change asks for a new one.
+		 *
+		 * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+		 */
 		previewKey() {
 			return [this.templateId, this.resolvedClientId, this.contactId, this.resolvedTicketId || this.aboutTicketId, this.appointmentId].join('|')
 		},
@@ -341,6 +345,14 @@ export default {
 			this.loadPreview()
 		},
 
+		/**
+		 * Reloads the appointment when the letter's ticket changes.
+		 *
+		 * @param {string|null} now The ticket now.
+		 * @param {string|null} before The ticket before.
+		 *
+		 * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+		 */
 		aboutTicketId(now, before) {
 			if (before) this.loadAppointment(useObjectStore())
 		},

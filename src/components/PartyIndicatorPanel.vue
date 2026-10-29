@@ -178,7 +178,11 @@ export default {
 	},
 
 	computed: {
-		/** @return {string} The line that says there are no warnings, by the party's kind. */
+		/**
+		 * @return {string} The line that says there are no warnings, by the party's kind.
+		 *
+		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+		 */
 		noneText() {
 			if (this.partyKind === 'person') {
 				return t('pipelinq', 'No warnings on this resident.')

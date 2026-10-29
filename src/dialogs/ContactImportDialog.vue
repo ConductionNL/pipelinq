@@ -124,6 +124,11 @@ export default {
 
 	emits: ['close', 'imported'],
 
+	/**
+	 * Exposes the translation and initials helpers to the template.
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md
+	 */
 	setup() {
 		return { t, n, initialsOf }
 	},

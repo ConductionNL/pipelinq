@@ -255,6 +255,8 @@ export default {
 		 * Read the ticket and its customer's name.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-the-customer-of-a-contact-moment-can-be-changed-in-the-dialog
 		 */
 		async loadTicket() {
 			if (!this.ticketId) {

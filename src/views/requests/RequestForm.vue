@@ -717,6 +717,11 @@ export default {
 			this.titleTouched = true
 		},
 
+		/**
+		 * Emits the request without its empty fields.
+		 *
+		 * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+		 */
 		onSave() {
 			this.titleTouched = true
 			if (!this.isValid) return
