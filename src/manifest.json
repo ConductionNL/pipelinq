@@ -3734,6 +3734,25 @@
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"showViewAction": false,
+				"_bulkActionsNote": "Board PqTicketsSelectie: \"Toewijzen aan\" hands the selected tickets to one handler. The library's CnAssignDialog starts OpenRegister's openregister:assign job on `assignee`: OpenRegister checks each ticket's update rule for the user before it writes, refuses the rest and keeps the reason on every ticket. No pipelinq endpoint or loop.",
+				"bulkActions": [
+					{
+						"id": "assign",
+						"label": "Assign to",
+						"icon": "AccountArrowRightOutline",
+						"handler": "open-modal",
+						"target": "CnAssignDialog",
+						"props": {
+							"config": {
+								"title": "Assign the selected tickets",
+								"assignee": { "kinds": ["user"], "label": "Handler", "placeholder": "Search by name", "field": "assignee" },
+								"note": { "label": "Reason", "hint": "Every ticket that moves keeps this reason." },
+								"confirm": { "label": "Assign", "icon": "AccountArrowRightOutline" },
+								"bulkJob": { "register": "pipelinq", "schema": "ticket" }
+							}
+						}
+					}
+				],
 				"viewModes": ["table", "cards", "board"],
 				"_boardNote": "tickets-board-view (LijstBord). The board's columns are the ticket status; the switch also offers type, channel and handler. A drop runs moveTicketStatus, which checks the move against the ticket lifecycle (requestStatus.js) and writes the status, and ticketStatusTargets fades the columns the lifecycle does not allow. Type and channel are read-only: a drag does not change what a ticket is or how it came in. The enum's legacy and closing statuses show as columns until nextcloud-vue board.states (board-declared-states) is released.",
 				"board": {
