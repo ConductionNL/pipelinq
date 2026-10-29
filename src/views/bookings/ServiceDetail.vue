@@ -174,6 +174,9 @@
 					</NcButton>
 				</template>
 				<NcButton v-else class="cn-button--tonal" @click="startEditSteps">
+					<template #icon>
+						<PencilOutline :size="16" />
+					</template>
 					{{ t('pipelinq', 'Edit steps') }}
 				</NcButton>
 			</template>
@@ -270,6 +273,7 @@ import { translate } from '@nextcloud/l10n'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
+import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import ServiceForm from './ServiceForm.vue'
@@ -340,6 +344,7 @@ export default {
 	components: {
 		NcButton,
 		Pencil,
+		PencilOutline,
 		CnDetailPage,
 		CnDetailCard,
 		CnFormDialog,
