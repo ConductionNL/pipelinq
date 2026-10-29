@@ -658,6 +658,10 @@ class AnalyticsService {
 	 *   - avgDealSize:       mean won-lead value in window (null if none)
 	 *   - weightedForecast:  sum over OPEN leads of value * win chance (qualification score / 100)
 	 *   - openPipelineValue: sum of value over OPEN leads (forward-looking)
+	 *   - wonCount/lostCount: deals won and lost in window
+	 *   - openCount/scoredOpenCount: OPEN leads, and those with a qualification score
+	 *   - wonShareOfOpen:    won value as a whole percentage of the open value (null with nothing open)
+	 *   - targetRemaining/pipelineCover: target less won value, open value over it (null without a target)
 	 *   - previousPeriod:    windowed figures for the preceding equal-length window
 	 *
 	 * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
@@ -668,10 +672,17 @@ class AnalyticsService {
 	 *   wonValue: float,
 	 *   winRate: float|null,
 	 *   avgDealSize: float|null,
+	 *   wonCount: int,
+	 *   lostCount: int,
 	 *   weightedForecast: float,
 	 *   openPipelineValue: float,
+	 *   openCount: int,
+	 *   scoredOpenCount: int,
+	 *   wonShareOfOpen: int|null,
+	 *   targetRemaining: float|null,
+	 *   pipelineCover: float|null,
 	 *   period: string,
-	 *   previousPeriod: array<string, float|null>
+	 *   previousPeriod: array<string, float|int|null>
 	 * }
 	 *
 	 * @throws InvalidArgumentException When the period is not recognised.
@@ -697,14 +708,22 @@ class AnalyticsService {
 		$previous = $this->aggregateCommercialWindow(from: $previousStart, to: $currentStart, leads: $leads, pos: $pos);
 
 		$forecast = $this->aggregateOpenPipeline(leads: $this->leadsMatching(leads: $leads, filter: $leadFilter));
+		$cover = $this->pipelineCover(openValue: $forecast['openPipelineValue'], wonValue: $current['wonValue']);
 
 		return [
 			'revenue' => $current['revenue'],
 			'wonValue' => $current['wonValue'],
 			'winRate' => $current['winRate'],
 			'avgDealSize' => $current['avgDealSize'],
+			'wonCount' => $current['wonCount'],
+			'lostCount' => $current['lostCount'],
 			'weightedForecast' => $forecast['weightedForecast'],
 			'openPipelineValue' => $forecast['openPipelineValue'],
+			'openCount' => $forecast['openCount'],
+			'scoredOpenCount' => $forecast['scoredOpenCount'],
+			'wonShareOfOpen' => $this->wonShareOfOpen(wonValue: $current['wonValue'], openValue: $forecast['openPipelineValue']),
+			'targetRemaining' => $cover['targetRemaining'],
+			'pipelineCover' => $cover['pipelineCover'],
 			'period' => $period,
 			'previousPeriod' => $previous,
 		];
@@ -718,9 +737,10 @@ class AnalyticsService {
 	 * @param array<int, array<string, mixed>> $leads Lead rows.
 	 * @param array<int, array<string, mixed>> $pos POS transaction rows.
 	 *
-	 * @return array{revenue: float, wonValue: float, winRate: float|null, avgDealSize: float|null}
+	 * @return array{revenue: float, wonValue: float, winRate: float|null, avgDealSize: float|null, wonCount: int, lostCount: int}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
+	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential POS + lead window filters; extraction adds no clarity.
 	 * @SuppressWarnings(PHPMD.NPathComplexity)      Independent guard clauses inflate NPath without real branching depth.
@@ -784,6 +804,8 @@ class AnalyticsService {
 			'wonValue' => round($wonValue, 2),
 			'winRate' => $winRate,
 			'avgDealSize' => $avgDealSize,
+			'wonCount' => $wonCount,
+			'lostCount' => $lostCount,
 		];
 	}//end aggregateCommercialWindow()
 
@@ -792,17 +814,25 @@ class AnalyticsService {
 	 *
 	 * @param array<int, array<string, mixed>> $leads Lead rows.
 	 *
-	 * @return array{weightedForecast: float, openPipelineValue: float}
+	 * @return array{weightedForecast: float, openPipelineValue: float, openCount: int, scoredOpenCount: int}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
 	 */
 	private function aggregateOpenPipeline(array $leads): array {
 		$weightedForecast = 0.0;
 		$openPipelineValue = 0.0;
+		$openCount = 0;
+		$scoredOpenCount = 0;
 		foreach ($leads as $lead) {
 			if (((string)($lead['status'] ?? '')) !== 'open') {
 				continue;
+			}
+
+			$openCount++;
+			if (is_numeric($lead['qualificationScore'] ?? null) === true) {
+				$scoredOpenCount++;
 			}
 
 			$openPipelineValue += (float)($lead['value'] ?? 0);
@@ -812,8 +842,59 @@ class AnalyticsService {
 		return [
 			'weightedForecast' => round($weightedForecast, 2),
 			'openPipelineValue' => round($openPipelineValue, 2),
+			'openCount' => $openCount,
+			'scoredOpenCount' => $scoredOpenCount,
 		];
 	}//end aggregateOpenPipeline()
+
+	/**
+	 * The open pipeline over what is still to come in against the pipeline
+	 * target (the target less the won value of the window). Both are null
+	 * without a target; with the target met the remainder is 0 and there is
+	 * no cover to give.
+	 *
+	 * @param float $openValue The open pipeline value.
+	 * @param float $wonValue  The won value of the window.
+	 *
+	 * @return array{targetRemaining: float|null, pipelineCover: float|null}
+	 *
+	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-gives-the-pipeline-cover
+	 */
+	private function pipelineCover(float $openValue, float $wonValue): array {
+		$target = $this->appConfig->getValueInt(Application::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0);
+		if ($target <= 0) {
+			return ['targetRemaining' => null, 'pipelineCover' => null];
+		}
+
+		$remaining = max(0.0, ((float)$target - $wonValue));
+		if ($remaining <= 0.0) {
+			return ['targetRemaining' => 0.0, 'pipelineCover' => null];
+		}
+
+		return [
+			'targetRemaining' => round($remaining, 2),
+			'pipelineCover' => round(($openValue / $remaining), 1),
+		];
+	}//end pipelineCover()
+
+	/**
+	 * The won value as a whole percentage of the open pipeline value, null
+	 * when nothing is open.
+	 *
+	 * @param float $wonValue  The won value of the window.
+	 * @param float $openValue The open pipeline value.
+	 *
+	 * @return int|null The share.
+	 *
+	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
+	 */
+	private function wonShareOfOpen(float $wonValue, float $openValue): ?int {
+		if ($openValue <= 0.0) {
+			return null;
+		}
+
+		return (int)round(($wonValue * 100.0) / $openValue);
+	}//end wonShareOfOpen()
 
 	/**
 	 * The leads every filter field matches: equal to its value, or to one of

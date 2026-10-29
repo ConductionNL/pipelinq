@@ -53,15 +53,21 @@ class CommercialAnalyticsServiceTest extends TestCase {
 	 * fake ObjectService can resolve fixtures keyed by `lead_schema`,
 	 * `posTransaction_schema`, etc.
 	 *
-	 * @param array<string, array<int, array<string, mixed>>> $byCollection Per-schema fixture rows.
+	 * @param array<string, array<int, array<string, mixed>>> $byCollection   Per-schema fixture rows.
+	 * @param int                                              $pipelineTarget The configured pipeline target, 0 for none.
 	 *
 	 * @return AnalyticsService
 	 */
-	private function buildService(array $byCollection): AnalyticsService {
+	private function buildService(array $byCollection, int $pipelineTarget = 0): AnalyticsService {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			static function (string $appId, string $key, string $default = ''): string {
 				return $key === 'register' ? 'register-1' : $key;
+			}
+		);
+		$appConfig->method('getValueInt')->willReturnCallback(
+			static function (string $appId, string $key, int $default = 0) use ($pipelineTarget): int {
+				return $key === 'pipeline_target' ? $pipelineTarget : $default;
 			}
 		);
 
@@ -328,5 +334,55 @@ class CommercialAnalyticsServiceTest extends TestCase {
 		}
 		// Same 4400 as the overview revenue figure.
 		$this->assertSame(4400.0, round($total, 2));
+	}
+
+	/**
+	 * The overview counts the deals behind its figures, so a tile can say what
+	 * its number is made of (board PqVerkoopoverzicht: "1 deal gewonnen",
+	 * "1 gewonnen, 1 verloren", "geen lead heeft een score").
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
+	 */
+	public function testCommercialOverviewCountsTheDealsBehindItsFigures(): void {
+		$data = $this->fixture();
+		$data['lead_schema'][] = ['id' => 'G', 'status' => 'open', 'value' => 900, 'client' => 'c2'];
+
+		$overview = $this->buildService(byCollection: $data)->getCommercialOverview(period: 'month');
+
+		$this->assertSame(expected: 2, actual: $overview['wonCount']);
+		$this->assertSame(expected: 1, actual: $overview['lostCount']);
+		$this->assertSame(expected: 4, actual: $overview['openCount']);
+		$this->assertSame(expected: 3, actual: $overview['scoredOpenCount']);
+		// Won 4000 of open 7900 is 50.6%, written whole.
+		$this->assertSame(expected: 51, actual: $overview['wonShareOfOpen']);
+		$this->assertArrayHasKey(key: 'lostCount', array: $overview['previousPeriod']);
+	}
+
+	/**
+	 * The pipeline cover is the open pipeline over what is still to come in
+	 * against the target: target 9000, won 4000, open 7000 reads 1.4 times.
+	 * Without a target, or with the target already met, there is no cover.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-gives-the-pipeline-cover
+	 */
+	public function testCommercialOverviewGivesThePipelineCover(): void {
+		$withTarget = $this->buildService(byCollection: $this->fixture(), pipelineTarget: 9000)->getCommercialOverview(period: 'month');
+		$this->assertSame(expected: 5000.0, actual: $withTarget['targetRemaining']);
+		$this->assertSame(expected: 1.4, actual: $withTarget['pipelineCover']);
+
+		$noTarget = $this->buildService(byCollection: $this->fixture())->getCommercialOverview(period: 'month');
+		$this->assertNull(actual: $noTarget['pipelineCover']);
+		$this->assertNull(actual: $noTarget['targetRemaining']);
+
+		$nothingOpen = $this->buildService(byCollection: ['lead_schema' => []])->getCommercialOverview(period: 'month');
+		$this->assertNull(actual: $nothingOpen['wonShareOfOpen']);
+
+		$met = $this->buildService(byCollection: $this->fixture(), pipelineTarget: 3000)->getCommercialOverview(period: 'month');
+		$this->assertNull(actual: $met['pipelineCover']);
+		$this->assertSame(expected: 0.0, actual: $met['targetRemaining']);
 	}
 }
