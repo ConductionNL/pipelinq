@@ -43,6 +43,11 @@ describe('the BI export pages (pl2 PqBiExport)', () => {
 		}
 	})
 
+	it('draws Acties at the end of the tab strip, with the list actions the header took over (pl4 PqBiExport 12/13)', () => {
+		const job = view('ExportJobs.vue')
+		expect(job).toMatch(/\{\s*action: 'actions-menu',\s*placement: 'tabs',\s*items: \['refresh', 'separator', 'copy-selected', 'delete-selected'\],?\s*\}/)
+	})
+
 	it('offers the Filter button on the jobs list', () => {
 		expect(view('ExportJobs.vue')).toContain(':filterMenu="true"')
 	})
