@@ -11,9 +11,9 @@
  * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-005-tax-breakdown-display-on-detail-view
  */
 
+import { flushPromises, mount } from '@vue/test-utils'
 import fs from 'node:fs'
 import path from 'node:path'
-import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CELL_FORMATTERS, shortDateTime } from '../../src/services/cellFormatters.js'
 

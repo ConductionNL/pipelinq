@@ -9307,7 +9307,10 @@ OC.L10N.register(
         "The term is set.": "The term is set.",
         "The request is linked to the case.": "The request is linked to the case.",
         "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.": "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.",
-        "Closed, template required": "Closed, template required"
+        "Closed, template required": "Closed, template required",
+        "Labels from the shared list.": "Labels from the shared list.",
+        "The word people pick, for example duurzaam. Unique in the list, whatever the case.": "The word people pick, for example duurzaam. Unique in the list, whatever the case.",
+        "When to use this label.": "When to use this label."
     },
     "nplurals=2; plural=(n != 1);"
 )

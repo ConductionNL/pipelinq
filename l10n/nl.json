@@ -9422,6 +9422,9 @@
         "The term is set.": "De termijn is ingesteld.",
         "The request is linked to the case.": "Het verzoek is aan de zaak gekoppeld.",
         "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.": "De termijn waarbinnen het ticket moet zijn afgehandeld: de afhandeldeadline volgens de SLA bij een klacht, de termijn van een verzoek.",
-        "Closed, template required": "Gesloten, sjabloon vereist"
+        "Closed, template required": "Gesloten, sjabloon vereist",
+        "Labels from the shared list.": "Labels uit de gedeelde lijst.",
+        "The word people pick, for example duurzaam. Unique in the list, whatever the case.": "Het woord dat mensen kiezen, bijvoorbeeld duurzaam. Uniek in de lijst, met of zonder hoofdletters.",
+        "When to use this label.": "Wanneer je dit label gebruikt."
     }
 }
