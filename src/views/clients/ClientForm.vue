@@ -52,10 +52,13 @@
 				@update:modelValue="(v) => (form.phone = v)" />
 		</div>
 		<div v-if="duplicate" class="client-form__wide client-form__duplicate" role="status" data-testid="client-duplicate">
-			<strong>{{ t('pipelinq', 'Possible duplicate: {name} has the same {field}', { name: duplicate.name, field: duplicate.field }) }}</strong>
-			<span class="client-form__duplicate-actions">
-				<a :href="duplicate.href" data-testid="client-duplicate-open">{{ t('pipelinq', 'Open that client') }}</a>
-				<a href="#" data-testid="client-duplicate-save" @click.prevent="onSave">{{ t('pipelinq', 'Save anyway') }}</a>
+			<AlertOutline class="client-form__duplicate-icon" :size="20" data-testid="client-duplicate-icon" />
+			<span class="client-form__duplicate-body">
+				<strong>{{ t('pipelinq', 'Possible duplicate: {name} has the same {field}', { name: duplicate.name, field: duplicate.field }) }}</strong>
+				<span class="client-form__duplicate-actions">
+					<a :href="duplicate.href" data-testid="client-duplicate-open">{{ t('pipelinq', 'Open that client') }}</a>
+					<a href="#" data-testid="client-duplicate-save" @click.prevent="onSave">{{ t('pipelinq', 'Save anyway') }}</a>
+				</span>
 			</span>
 		</div>
 		<div class="client-form__field client-form__wide">
@@ -322,6 +325,7 @@ import axios from '@nextcloud/axios'
 import { getLanguage, translate } from '@nextcloud/l10n'
 import { generateOcsUrl, generateUrl } from '@nextcloud/router'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
+import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import { findClientDuplicate } from '../../services/clientDuplicates.js'
 import {
@@ -356,6 +360,7 @@ const TYPE_MAPPING = {
 export default {
 	name: 'ClientForm',
 	components: {
+		AlertOutline,
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcTextArea,
@@ -719,15 +724,32 @@ export default {
 	font-weight: 600;
 }
 
+/* The board's bordered warning notice: a 20px icon before the title, the
+   two links under it. */
 .client-form__duplicate {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 12px 14px;
+	border: 1px solid var(--cn-board-notice-border, #f0d9a8);
+	border-radius: 8px;
+	background: var(--cn-board-notice-bg, #fff4de);
+	color: var(--cn-board-notice-ink, var(--color-warning-text, #7a4f00));
+	font-size: 14px;
+}
+
+.client-form__duplicate-icon {
+	flex: none;
+}
+
+.client-form__duplicate-body {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
-	padding: 10px 14px;
-	border-radius: 8px;
-	background: var(--color-warning-light, #fdf2e5);
-	color: var(--color-warning-text, #7a4f00);
-	font-size: 14px;
+}
+
+.client-form--board :deep(#client-board-notes) {
+	min-height: 89.5px;
 }
 
 .client-form__duplicate-actions {
