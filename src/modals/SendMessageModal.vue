@@ -674,7 +674,10 @@ export default {
 	background: var(--color-background-dark);
 }
 
-.send-message__switch-option {
+/* `.send-message__switch` in front outranks server.css, which gives every
+   plain button a 3px end margin and the primary light tone on :hover and
+   :focus, so a clicked option no longer turned blue. */
+.send-message__switch .send-message__switch-option {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
@@ -685,14 +688,20 @@ export default {
 	border: 0;
 	border-radius: 6px;
 	background: transparent;
-	color: var(--color-main-text);
+	color: var(--cn-board-text-soft, #3d4047);
 	font-size: 14px;
 	font-weight: 600;
 	cursor: pointer;
 }
 
-.send-message__switch-option--on {
+.send-message__switch .send-message__switch-option:not(.send-message__switch-option--on, :disabled):is(:hover, :focus) {
+	background: var(--color-background-hover);
+}
+
+.send-message__switch .send-message__switch-option--on,
+.send-message__switch .send-message__switch-option--on:is(:hover, :focus) {
 	background: var(--color-main-background);
+	color: var(--color-main-text);
 	box-shadow: 0 1px 2px rgba(27, 28, 29, 0.12);
 }
 
