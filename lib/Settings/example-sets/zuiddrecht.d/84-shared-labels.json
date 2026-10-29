@@ -1,0 +1,50 @@
+{
+	"$comment": "The five labels board PqBeheerMarketing draws in its Labels card. They live in the Zuiddrecht set only: a fresh install starts with an empty label list (shared-label-list, Ruben 29 Oct).",
+	"objects": [
+		{
+			"key": "label-afval",
+			"register": "pipelinq",
+			"schema": "label",
+			"data": {
+				"name": "afval",
+				"description": "Afvalinzameling, containers en de afvalpas."
+			}
+		},
+		{
+			"key": "label-duurzaam",
+			"register": "pipelinq",
+			"schema": "label",
+			"data": {
+				"name": "duurzaam",
+				"description": "Energie, isolatie en het warmtenet."
+			}
+		},
+		{
+			"key": "label-parkeren",
+			"register": "pipelinq",
+			"schema": "label",
+			"data": {
+				"name": "parkeren",
+				"description": "Vergunningen, zones en tarieven."
+			}
+		},
+		{
+			"key": "label-ondernemers",
+			"register": "pipelinq",
+			"schema": "label",
+			"data": {
+				"name": "ondernemers",
+				"description": "Bedrijven en winkeliers in de gemeente."
+			}
+		},
+		{
+			"key": "label-evenementen",
+			"register": "pipelinq",
+			"schema": "label",
+			"data": {
+				"name": "evenementen",
+				"description": "Straatfeesten, markten en andere evenementen."
+			}
+		}
+	]
+}
