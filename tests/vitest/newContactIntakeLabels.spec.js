@@ -46,10 +46,12 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 
 let Modal
 
-const mountModal = () => mount(Modal, {
-	props: { prefillPhone: '0641228790' },
-	global: { mixins: [{ methods: { t: (_app, text, vars) => globalThis.t(_app, text, vars) } }] },
-})
+function mountModal() {
+	return mount(Modal, {
+		props: { prefillPhone: '0641228790' },
+		global: { mixins: [{ methods: { t: (_app, text, vars) => globalThis.t(_app, text, vars) } }] },
+	})
+}
 
 beforeAll(async () => {
 	globalThis.t = (_app, text, vars = {}) => text.replace(/\{(\w+)\}/g, (_all, key) => vars[key] ?? `{${key}}`)
