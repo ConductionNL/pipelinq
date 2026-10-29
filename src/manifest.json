@@ -5237,7 +5237,8 @@
 								{
 									"as": "title",
 									"path": "qualificationScore",
-									"suffix": "%"
+									"suffix": "%",
+									"size": 26
 								},
 								{
 									"as": "line",
@@ -7199,6 +7200,7 @@
 						"id": "shift-variance",
 						"type": "facts",
 						"title": "Cash difference",
+						"subtitle": "Drawer reconciliation",
 						"icon": "ScaleBalance",
 						"content": {
 							"source": {
@@ -7215,7 +7217,7 @@
 							"headerPill": {
 								"path": "status",
 								"map": {
-									"pending": "Pending",
+									"pending": "",
 									"approved": "Approved",
 									"rejected": "Rejected"
 								},
@@ -7418,7 +7420,8 @@
 								{
 									"as": "title",
 									"path": "floatAmount",
-									"format": "currency"
+									"format": "currency",
+									"size": 26
 								},
 								{
 									"as": "line",
