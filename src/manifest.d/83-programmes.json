@@ -208,6 +208,7 @@
 						"title": "Plan",
 						"icon": "ClipboardTextOutline",
 						"content": {
+							"columns": 3,
 							"fields": [
 								{
 									"label": "Project",
@@ -248,7 +249,8 @@
 								},
 								{
 									"label": "Owner",
-									"path": "owner"
+									"path": "owner",
+									"format": "user"
 								},
 								{
 									"label": "Progress mode",
@@ -288,7 +290,8 @@
 								},
 								{
 									"key": "assignee",
-									"label": "Assigned to"
+									"label": "Assigned to",
+									"formatter": "userDisplayName"
 								},
 								{
 									"key": "cycle",
@@ -411,7 +414,8 @@
 							"columns": [
 								{
 									"key": "user",
-									"label": "Person"
+									"label": "Person",
+									"formatter": "userDisplayName"
 								},
 								{
 									"key": "role",
@@ -551,7 +555,7 @@
 							},
 							"limit": 6,
 							"presentation": "rows",
-							"title": "{user}",
+							"title": "{user|user}",
 							"meta": "{role}",
 							"emptyText": "Nobody on the team yet."
 						}
@@ -598,7 +602,8 @@
 								},
 								{
 									"key": "assignee",
-									"label": "Assigned to"
+									"label": "Assigned to",
+									"formatter": "userDisplayName"
 								},
 								{
 									"key": "cycle",
