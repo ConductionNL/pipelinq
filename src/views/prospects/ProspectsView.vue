@@ -42,6 +42,7 @@
 			<CnDetailCard
 				:title="t('pipelinq', 'Ideal customer profile')"
 				:collapsible="true"
+				chevronStart
 				class="prospects-view__icp"
 				data-testid="prospects-icp">
 				<template #actions>
