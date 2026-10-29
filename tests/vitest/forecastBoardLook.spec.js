@@ -128,7 +128,7 @@ describe('forecast page', () => {
 	it('lists the week\'s commit moves per seller as a table with pills', () => {
 		const trend = view('ForecastTrend')
 		expect(trend).toMatch(/data-testid="forecast-movements"/)
-		expect(trend).toMatch(/forecast-trend__move--' \+ move\.direction/)
+		expect(trend).toMatch(/forecast-trend__move--' \+ row\.direction/)
 	})
 
 	it('says what the chart and the accuracy cover', () => {

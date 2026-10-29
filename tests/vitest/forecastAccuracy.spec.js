@@ -55,7 +55,7 @@ describe('the forecast trend', () => {
 		vi.doMock('../../src/services/userDisplayName.js', () => ({
 			fetchUserDisplayName: vi.fn(async (uid) => ({ pieter: 'Pieter Jansen', 'fatma.yildiz': 'Fatma Yildiz', 'joris.bakker': 'Joris Bakker' })[uid]),
 		}))
-		vi.doMock('@conduction/nextcloud-vue', () => ({ CnDetailCard: { template: '<div><slot /></div>' } }))
+		vi.doMock('@conduction/nextcloud-vue', () => ({ CnDataTable: { props: ['rows'], template: '<div />' }, CnDetailCard: { template: '<div><slot /></div>' } }))
 		vi.doMock('@nextcloud/vue', () => ({ NcEmptyContent: { template: '<div />' }, NcLoadingIcon: { template: '<div />' }, NcTextField: { template: '<input>' } }))
 		const { default: ForecastTrend } = await import('../../src/views/forecast/ForecastTrend.vue')
 		const wrapper = mount(ForecastTrend, {
@@ -63,8 +63,8 @@ describe('the forecast trend', () => {
 			global: { mocks: { t: (_app, text) => text }, stubs: {} },
 		})
 		await flushPromises()
-		const rows = wrapper.findAll('.accuracy-table tbody tr').map((tr) => tr.findAll('td').map((td) => td.text()))
-		expect(rows.map((r) => [r[0], r[3]])).toEqual([['Pieter Jansen', '95%'], ['Fatma Yildiz', '70%'], ['Joris Bakker', '105%']])
+		const rows = wrapper.vm.accuracyTableRows
+		expect(rows.map((r) => [r.name, `${Math.round(r.score * 100)}%`])).toEqual([['Pieter Jansen', '95%'], ['Fatma Yildiz', '70%'], ['Joris Bakker', '105%']])
 	}, 20000)
 })
 

@@ -53,28 +53,28 @@
 				<CnDetailCard
 					:title="t('pipelinq', 'Deal movements (week over week)')"
 					class="forecast-trend__delta">
-					<div v-if="movements.length" class="pq-board-table-card">
-						<table class="pq-board-table" data-testid="forecast-movements">
-							<thead>
-								<tr>
-									<th scope="col">{{ t('pipelinq', 'Seller') }}</th>
-									<th scope="col">{{ t('pipelinq', 'Movement') }}</th>
-									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Value') }}</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="move in movements" :key="move.owner_id">
-									<td>{{ move.name || move.owner_id }}</td>
-									<td>
-										<span class="forecast-trend__move" :class="'forecast-trend__move--' + move.direction">
-											{{ move.direction === 'into' ? t('pipelinq', 'Moved into commit') : t('pipelinq', 'Moved out of commit') }}
-										</span>
-									</td>
-									<td class="pq-board-table__num">{{ formatMoney(move.amount) }}</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
+					<CnDataTable
+						v-if="movements.length"
+						data-testid="forecast-movements"
+						:columns="movementColumns"
+						:rows="movementRows"
+						rowKey="id"
+						rowTitle="text"
+						:sortKey="movementSort.key"
+						:sortOrder="movementSort.order"
+						filterable
+						:activeFilters="movementFilters"
+						@sort="(sort) => (movementSort = readSort(sort))"
+						@columnFilter="(change) => (movementFilters = applyFilterParams(movementFilters, change.params))">
+						<template #column-direction="{ row }">
+							<span class="forecast-trend__move" :class="'forecast-trend__move--' + row.direction">
+								{{ row.direction === 'into' ? t('pipelinq', 'Moved into commit') : t('pipelinq', 'Moved out of commit') }}
+							</span>
+						</template>
+						<template #column-amount="{ row }">
+							{{ formatMoney(row.amount) }}
+						</template>
+					</CnDataTable>
 					<p v-else class="forecast-trend__none">
 						{{ t('pipelinq', 'No commit moved since last week.') }}
 					</p>
@@ -83,32 +83,29 @@
 					:title="t('pipelinq', 'Forecast accuracy')"
 					:subtitle="accuracySubtitle"
 					class="forecast-trend__accuracy">
-					<div v-if="accuracyRows.length" class="pq-board-table-card">
-						<table class="accuracy-table pq-board-table">
-							<thead>
-								<tr>
-									<th scope="col">{{ t('pipelinq', 'Rep') }}</th>
-									<th scope="col" class="pq-board-table__num">
-										{{ t('pipelinq', 'Week 1 commit') }}
-									</th>
-									<th scope="col" class="pq-board-table__num">
-										{{ t('pipelinq', 'Actual closed won') }}
-									</th>
-									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Accuracy') }}</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="row in accuracyRows" :key="row.owner_id">
-									<td>{{ row.name || row.owner_id }}</td>
-									<td class="pq-board-table__num">{{ formatMoney(row.weekOneCommit) }}</td>
-									<td class="pq-board-table__num">{{ formatMoney(row.actual) }}</td>
-									<td class="pq-board-table__num" :class="'accuracy--' + bandFor(row.score)">
-										{{ Math.round(row.score * 100) }}%
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
+					<CnDataTable
+						v-if="accuracyRows.length"
+						class="accuracy-table"
+						:columns="accuracyColumns"
+						:rows="accuracyTableRows"
+						rowKey="id"
+						rowTitle="text"
+						:sortKey="accuracySort.key"
+						:sortOrder="accuracySort.order"
+						filterable
+						:activeFilters="accuracyFilters"
+						@sort="(sort) => (accuracySort = readSort(sort))"
+						@columnFilter="(change) => (accuracyFilters = applyFilterParams(accuracyFilters, change.params))">
+						<template #column-weekOneCommit="{ row }">
+							{{ formatMoney(row.weekOneCommit) }}
+						</template>
+						<template #column-actual="{ row }">
+							{{ formatMoney(row.actual) }}
+						</template>
+						<template #column-score="{ row }">
+							<span :class="'accuracy--' + bandFor(row.score)">{{ Math.round(row.score * 100) }}%</span>
+						</template>
+					</CnDataTable>
 					<NcEmptyContent
 						v-else
 						:name="t('pipelinq', 'No closed periods yet')"
@@ -125,16 +122,17 @@
 </template>
 
 <script>
-import { CnDetailCard } from '@conduction/nextcloud-vue'
+import { CnDataTable, CnDetailCard } from '@conduction/nextcloud-vue'
 import { NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { formatEur } from '../../services/commercialFormat.js'
 import { fetchSnapshots } from '../../services/forecastApi.js'
 import { accuracyBand, accuracyRows, commitMovements, isoWeekOf, previousPeriodId, sumSnapshotsByDate } from '../../services/forecastMath.js'
 import { fetchUserDisplayName } from '../../services/userDisplayName.js'
+import { applyFilterParams, filterRows, sortRows } from './forecastLocalTable.js'
 
 export default {
 	name: 'ForecastTrend',
-	components: { CnDetailCard, NcEmptyContent, NcLoadingIcon, NcTextField },
+	components: { CnDataTable, CnDetailCard, NcEmptyContent, NcLoadingIcon, NcTextField },
 
 	props: {
 		/** Drawn inside the forecast page: no own heading, no owner field. */
@@ -151,10 +149,84 @@ export default {
 			series: [],
 			movements: [],
 			accuracyRows: [],
+			movementSort: { key: null, order: null },
+			movementFilters: {},
+			accuracySort: { key: null, order: null },
+			accuracyFilters: {},
 		}
 	},
 
 	computed: {
+		/**
+		 * The week's moves table: seller, movement and value, each sortable
+		 * and filterable from its head (PqForecast).
+		 *
+		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} The columns.
+		 */
+		movementColumns() {
+			return [
+				{ key: 'name', label: this.t('pipelinq', 'Seller'), sortable: true },
+				{
+					key: 'direction',
+					label: this.t('pipelinq', 'Movement'),
+					sortable: true,
+					enum: ['into', 'out'],
+					enumLabels: { into: this.t('pipelinq', 'Moved into commit'), out: this.t('pipelinq', 'Moved out of commit') },
+				},
+				{ key: 'amount', label: this.t('pipelinq', 'Value'), type: 'number', sortable: true, class: 'forecast-trend__num' },
+			]
+		},
+
+		/**
+		 * The week's moves, filtered and sorted as the heads ask.
+		 *
+		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} One row per seller.
+		 */
+		movementRows() {
+			const rows = this.movements.map((move) => ({
+				id: move.owner_id,
+				name: move.name || move.owner_id,
+				direction: move.direction,
+				amount: move.amount,
+			}))
+			return sortRows(filterRows(rows, this.movementFilters), this.movementSort.key, this.movementSort.order)
+		},
+
+		/**
+		 * The accuracy table: rep, week 1 commit, actual and accuracy, each
+		 * sortable and filterable from its head (PqForecast).
+		 *
+		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} The columns.
+		 */
+		accuracyColumns() {
+			return [
+				{ key: 'name', label: this.t('pipelinq', 'Rep'), sortable: true },
+				{ key: 'weekOneCommit', label: this.t('pipelinq', 'Week 1 commit'), type: 'number', sortable: true, class: 'forecast-trend__num' },
+				{ key: 'actual', label: this.t('pipelinq', 'Actual closed won'), type: 'number', sortable: true, class: 'forecast-trend__num' },
+				{ key: 'score', label: this.t('pipelinq', 'Accuracy'), type: 'number', sortable: true, class: 'forecast-trend__num' },
+			]
+		},
+
+		/**
+		 * The accuracy rows, filtered and sorted as the heads ask.
+		 *
+		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} One row per rep.
+		 */
+		accuracyTableRows() {
+			const rows = this.accuracyRows.map((row) => ({
+				id: row.owner_id,
+				name: row.name || row.owner_id,
+				weekOneCommit: row.weekOneCommit,
+				actual: row.actual,
+				score: row.score,
+			}))
+			return sortRows(filterRows(rows, this.accuracyFilters), this.accuracySort.key, this.accuracySort.order)
+		},
+
 		/**
 		 * The closed quarter the accuracy covers: "Quarter 3, closed".
 		 *
@@ -220,6 +292,19 @@ export default {
 	},
 
 	methods: {
+		applyFilterParams,
+
+		/**
+		 * A table head's sort event as `{ key, order }`.
+		 *
+		 * @param {{key: string|null, order: string|null}} sort The event.
+		 * @return {{key: string|null, order: string|null}} The sort.
+		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 */
+		readSort(sort) {
+			return { key: sort?.key || null, order: sort?.order || null }
+		},
+
 		/**
 		 * @spec exclude forecast snapshots have no owning requirement, see
 		 *   ForecastSettings::load for the same gap
@@ -394,6 +479,11 @@ export default {
 .forecast-trend__none {
 	margin: 0;
 	color: var(--color-text-maxcontrast);
+}
+
+.forecast-trend :deep(.forecast-trend__num) {
+	text-align: end;
+	font-variant-numeric: tabular-nums;
 }
 
 .accuracy--green {
