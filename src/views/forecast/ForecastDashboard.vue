@@ -81,12 +81,8 @@
 						:rows="quarterRows"
 						rowKey="id"
 						rowTitle="text"
-						:sortKey="quarterSort.key"
-						:sortOrder="quarterSort.order"
 						filterable
-						:activeFilters="quarterFilters"
-						@sort="onQuarterSort"
-						@columnFilter="onQuarterFilter">
+						localHeaders>
 						<template #column-name="{ row }">
 							<span data-testid="forecast-owner">{{ row.name }}</span>
 						</template>
@@ -188,7 +184,6 @@ import {
 	projectedAttainment,
 } from '../../services/forecastMath.js'
 import { fetchUserDisplayName } from '../../services/userDisplayName.js'
-import { applyFilterParams, filterRows, sortRows } from './forecastLocalTable.js'
 
 export default {
 	name: 'ForecastDashboard',
@@ -216,8 +211,6 @@ export default {
 			names: {},
 			overrideTarget: null,
 			daysRemaining: 30,
-			quarterSort: { key: null, order: null },
-			quarterFilters: {},
 		}
 	},
 
@@ -243,13 +236,13 @@ export default {
 		},
 
 		/**
-		 * The quarter table's rows, filtered and sorted as the heads ask.
+		 * The quarter table's rows; the table sorts and filters them from its heads.
 		 *
 		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
 		 * @return {Array<object>} One row per owner.
 		 */
 		quarterRows() {
-			const rows = this.rows.map((row) => ({
+			return this.rows.map((row) => ({
 				id: row.owner_id,
 				name: this.ownerName(row),
 				commit: row.commit,
@@ -259,7 +252,6 @@ export default {
 				quota: row.quota,
 				source: row,
 			}))
-			return sortRows(filterRows(rows, this.quarterFilters), this.quarterSort.key, this.quarterSort.order)
 		},
 
 		levelOptions() {
@@ -437,26 +429,6 @@ export default {
 	},
 
 	methods: {
-		/**
-		 * A quarter table head was sorted.
-		 *
-		 * @param {{key: string|null, order: string|null}} sort The new sort.
-		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
-		 */
-		onQuarterSort(sort) {
-			this.quarterSort = { key: sort?.key || null, order: sort?.order || null }
-		},
-
-		/**
-		 * A quarter table head filter was applied or cleared.
-		 *
-		 * @param {{params: object}} change The filter's query parameters.
-		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
-		 */
-		onQuarterFilter(change) {
-			this.quarterFilters = applyFilterParams(this.quarterFilters, change?.params)
-		},
-
 		sum(key) {
 			return this.rows.reduce((acc, row) => acc + Number(row[key] || 0), 0)
 		},

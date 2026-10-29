@@ -60,12 +60,8 @@
 						:rows="movementRows"
 						rowKey="id"
 						rowTitle="text"
-						:sortKey="movementSort.key"
-						:sortOrder="movementSort.order"
 						filterable
-						:activeFilters="movementFilters"
-						@sort="(sort) => (movementSort = readSort(sort))"
-						@columnFilter="(change) => (movementFilters = applyFilterParams(movementFilters, change.params))">
+						localHeaders>
 						<template #column-direction="{ row }">
 							<span class="forecast-trend__move" :class="'forecast-trend__move--' + row.direction">
 								{{ row.direction === 'into' ? t('pipelinq', 'Moved into commit') : t('pipelinq', 'Moved out of commit') }}
@@ -90,12 +86,8 @@
 						:rows="accuracyTableRows"
 						rowKey="id"
 						rowTitle="text"
-						:sortKey="accuracySort.key"
-						:sortOrder="accuracySort.order"
 						filterable
-						:activeFilters="accuracyFilters"
-						@sort="(sort) => (accuracySort = readSort(sort))"
-						@columnFilter="(change) => (accuracyFilters = applyFilterParams(accuracyFilters, change.params))">
+						localHeaders>
 						<template #column-weekOneCommit="{ row }">
 							{{ formatMoney(row.weekOneCommit) }}
 						</template>
@@ -128,7 +120,6 @@ import { formatEur } from '../../services/commercialFormat.js'
 import { fetchSnapshots } from '../../services/forecastApi.js'
 import { accuracyBand, accuracyRows, commitMovements, isoWeekOf, previousPeriodId, sumSnapshotsByDate } from '../../services/forecastMath.js'
 import { fetchUserDisplayName } from '../../services/userDisplayName.js'
-import { applyFilterParams, filterRows, sortRows } from './forecastLocalTable.js'
 
 export default {
 	name: 'ForecastTrend',
@@ -149,10 +140,6 @@ export default {
 			series: [],
 			movements: [],
 			accuracyRows: [],
-			movementSort: { key: null, order: null },
-			movementFilters: {},
-			accuracySort: { key: null, order: null },
-			accuracyFilters: {},
 		}
 	},
 
@@ -179,19 +166,18 @@ export default {
 		},
 
 		/**
-		 * The week's moves, filtered and sorted as the heads ask.
+		 * The week's moves; the table sorts and filters them from its heads.
 		 *
 		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
 		 * @return {Array<object>} One row per seller.
 		 */
 		movementRows() {
-			const rows = this.movements.map((move) => ({
+			return this.movements.map((move) => ({
 				id: move.owner_id,
 				name: move.name || move.owner_id,
 				direction: move.direction,
 				amount: move.amount,
 			}))
-			return sortRows(filterRows(rows, this.movementFilters), this.movementSort.key, this.movementSort.order)
 		},
 
 		/**
@@ -211,20 +197,19 @@ export default {
 		},
 
 		/**
-		 * The accuracy rows, filtered and sorted as the heads ask.
+		 * The accuracy rows; the table sorts and filters them from its heads.
 		 *
 		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
 		 * @return {Array<object>} One row per rep.
 		 */
 		accuracyTableRows() {
-			const rows = this.accuracyRows.map((row) => ({
+			return this.accuracyRows.map((row) => ({
 				id: row.owner_id,
 				name: row.name || row.owner_id,
 				weekOneCommit: row.weekOneCommit,
 				actual: row.actual,
 				score: row.score,
 			}))
-			return sortRows(filterRows(rows, this.accuracyFilters), this.accuracySort.key, this.accuracySort.order)
 		},
 
 		/**
@@ -292,19 +277,6 @@ export default {
 	},
 
 	methods: {
-		applyFilterParams,
-
-		/**
-		 * A table head's sort event as `{ key, order }`.
-		 *
-		 * @param {{key: string|null, order: string|null}} sort The event.
-		 * @return {{key: string|null, order: string|null}} The sort.
-		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
-		 */
-		readSort(sort) {
-			return { key: sort?.key || null, order: sort?.order || null }
-		},
-
 		/**
 		 * @spec exclude forecast snapshots have no owning requirement, see
 		 *   ForecastSettings::load for the same gap

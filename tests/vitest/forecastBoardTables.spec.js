@@ -4,12 +4,13 @@
  *
  * The forecast page's tables as the PqForecast board draws them: CnDataTables
  * with a sort chevron and a filter funnel on their heads, in the board look's
- * own bordered table card, sorted and filtered in the browser.
+ * own bordered table card. The table sorts and filters the rows it holds
+ * itself (CnDataTable `localHeaders`); the page keeps no sort or filter state.
  *
  * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md
  */
 
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -20,8 +21,8 @@ describe('the forecast quarter table (PqForecast 9)', () => {
 
 	it('is a CnDataTable with sortable, filterable heads, sorted and filtered in the browser', () => {
 		expect(source).not.toMatch(/<table/)
-		expect(source).toMatch(/<CnDataTable[\s\S]*?:columns="quarterColumns"[\s\S]*?:rows="quarterRows"[\s\S]*?filterable[\s\S]*?@sort="onQuarterSort"[\s\S]*?@columnFilter="onQuarterFilter"/)
-		expect(source).toMatch(/sortRows\(filterRows\(/)
+		expect(source).toMatch(/<CnDataTable[\s\S]*?:columns="quarterColumns"[\s\S]*?:rows="quarterRows"[\s\S]*?filterable[\s\S]*?localHeaders/)
+		expect(source).not.toMatch(/forecastLocalTable|onQuarterSort|onQuarterFilter|quarterFilters|quarterSort|:activeFilters/)
 		expect(source).toMatch(/key: 'name'[^}]*sortable: true/)
 		expect(source).toMatch(/const figure = \(key, label\) => \(\{ key, label, type: 'number', sortable: true/)
 		for (const key of ['commit', 'best_case', 'pipeline', 'closed_won', 'quota']) {
@@ -36,10 +37,16 @@ describe('the forecast trend tables (PqForecast 12, 13)', () => {
 
 	it('are CnDataTables with sortable, filterable heads, sorted and filtered in the browser', () => {
 		expect(source).not.toMatch(/<table/)
-		expect(source).toMatch(/<CnDataTable[\s\S]*?:columns="movementColumns"[\s\S]*?:rows="movementRows"[\s\S]*?filterable/)
-		expect(source).toMatch(/<CnDataTable[\s\S]*?:columns="accuracyColumns"[\s\S]*?:rows="accuracyTableRows"[\s\S]*?filterable/)
-		expect(source.match(/sortRows\(filterRows\(/g)).toHaveLength(2)
+		expect(source).toMatch(/<CnDataTable[\s\S]*?:columns="movementColumns"[\s\S]*?:rows="movementRows"[\s\S]*?filterable[\s\S]*?localHeaders/)
+		expect(source).toMatch(/<CnDataTable[\s\S]*?:columns="accuracyColumns"[\s\S]*?:rows="accuracyTableRows"[\s\S]*?filterable[\s\S]*?localHeaders/)
+		expect(source).not.toMatch(/forecastLocalTable|readSort|applyFilterParams|movementFilters|accuracyFilters|:activeFilters/)
 		expect(source).toMatch(/key: 'direction'[^}]*enum: \['into', 'out'\]/)
+	})
+})
+
+describe('the browser-side table helper', () => {
+	it('is gone: CnDataTable sorts and filters the rows it holds', () => {
+		expect(existsSync(resolve(__dirname, '../../src/views/forecast/forecastLocalTable.js'))).toBe(false)
 	})
 })
 
