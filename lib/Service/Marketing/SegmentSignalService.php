@@ -110,6 +110,13 @@ class SegmentSignalService {
 	public const FIELD_STALLED_DAYS = 'pipelinqStalledLeadDays';
 
 	/**
+	 * The moment of the customer's latest contact moment, a date-time string.
+	 *
+	 * @var string
+	 */
+	public const FIELD_LAST_CONTACT_AT = 'pipelinqLastContactAt';
+
+	/**
 	 * The dunning states a promotional send is suppressed on by default.
 	 *
 	 * @var array<int, string>
@@ -228,6 +235,12 @@ class SegmentSignalService {
 				'title' => 'Days a lead has been stalled',
 				'source' => 'pipelinq',
 				'description' => 'Days the longest-waiting open lead has sat in its current stage.',
+			],
+			self::FIELD_LAST_CONTACT_AT => [
+				'type' => 'string',
+				'title' => 'Last contact',
+				'source' => 'pipelinq',
+				'description' => 'When the latest contact moment with this customer took place.',
 			],
 		];
 	}//end catalogue()
@@ -414,16 +427,17 @@ class SegmentSignalService {
 	}//end forget()
 
 	/**
-	 * The two pipelinq signals for one client.
+	 * The three pipelinq signals for one client.
 	 *
 	 * @param string $clientId The pipelinq client id.
 	 *
-	 * @return array<string, int|null> The renewal and stall day counts.
+	 * @return array<string, int|string|null> The renewal and stall day counts and the last contact.
 	 */
 	private function crmSignals(string $clientId): array {
 		return [
 			self::FIELD_RENEWAL_DAYS => $this->renewalDays(clientId: $clientId),
 			self::FIELD_STALLED_DAYS => $this->stalledDays(clientId: $clientId),
+			self::FIELD_LAST_CONTACT_AT => (new LastContactReader(store: $this->store))->forClient(clientId: $clientId),
 		];
 	}//end crmSignals()
 
