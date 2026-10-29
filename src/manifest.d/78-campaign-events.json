@@ -49,6 +49,7 @@
 					"colorMap": { "open": "success", "full": "warning", "draft": "info", "closed": "default", "cancelled": "error" }
 				},
 				"actionsMenu": { "label": "More" },
+				"quickActions": ["send-reminder", "check-in"],
 				"_headerActionsNote": "PqEvenement: Herinnering versturen mails everyone with a confirmed place (POST /api/campaign-events/{id}/reminder, which stamps reminderSentAt as the caller first); Inchecken bij de deur opens the event's check-in list, where each confirmed registration is checked in with one press.",
 				"headerActions": [
 					{
@@ -175,7 +176,10 @@
 							"filterMenu": true,
 							"selectable": true,
 							"columns": ["name", "address", "source", "registeredAt", "status"],
-							"emptyText": "No registrations yet."
+							"emptyText": "No registrations yet.",
+							"_toolbarNote": "Board PqEvenement draws no add button and no Actions menu in the tab: a registration comes in through the form, and the tab strip carries the page's Acties.",
+							"showAdd": false,
+							"showActionsMenu": false
 						}
 					},
 					{

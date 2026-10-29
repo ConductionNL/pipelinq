@@ -118,6 +118,14 @@ describe('the event page', () => {
 		expect(reminder.url).toBe('/apps/pipelinq/api/campaign-events/@objectId/reminder')
 		expect(reminder.confirm).toBe(true)
 		expect(actions.find((action) => action.id === 'check-in').target).toBe('/campaign-events/@objectId/check-in')
+		// Board PqEvenement draws both as buttons before Bewerken, not in Meer.
+		expect(detail.config.quickActions).toEqual(['send-reminder', 'check-in'])
+	})
+
+	it('draws no add button or Actions menu in the registrations tab, as the board', () => {
+		const list = widget(detail, 'event-registrations')
+		expect(list.content.showAdd).toBe(false)
+		expect(list.content.showActionsMenu).toBe(false)
 	})
 
 	it('counts who came and who did not on the Results tab', () => {
