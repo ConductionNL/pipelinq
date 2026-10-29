@@ -71,6 +71,14 @@
 					"ownerId",
 					"clientRef"
 				],
+				"filterMenu": true,
+				"filterMenuFields": [
+					{
+						"key": "ownerId",
+						"label": "Owner",
+						"referenceType": "nextcloud-user"
+					}
+				],
 				"_note": "Board look (PqContracten, round 12): the count line, three KPI tiles above the list, quick filters by status, the status as a coloured pill and the client by name. Ending soonest first.",
 				"showTitle": true,
 				"showTitleIcon": false,

@@ -173,6 +173,7 @@
 							],
 							"searchPlaceholder": "Search a name or street",
 							"filterMenu": true,
+							"filterLabels": { "address": { "label": "Street" } },
 							"selectable": true,
 							"columns": [
 								"name",
