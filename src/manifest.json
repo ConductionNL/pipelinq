@@ -10787,9 +10787,8 @@
 			"route": "/flows/:id",
 			"type": "flow",
 			"title": "Flow",
-			"config": { "app": "pipelinq", "saveAsVersion": true },
-			"sidebarComponent": "FlowDetailSidebar",
-			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors procest/src/manifest.json:FlowDetail. PqFlow edits the flow in place: a published flow is not locked behind a read-only notice; Save publishes the edits as the next version and runs already started keep theirs (CnFlowBoard saveAsVersion)."
+			"config": { "app": "pipelinq", "saveAsVersion": true, "layout": "canvas" },
+			"_note": "The shared CnFlowDetail canvas over the same single engine, as boards PqFlow and PqFlowRun draw it (layout canvas): actions under the title, the canvas on the page ground, the inspector a floating panel opened by a step, a run or the side panel toggle. The inspector embeds CnFlowSidebar, so naming, describing, the trigger and step editing live there and the page mounts no app sidebar. PqFlow edits the flow in place: a published flow is not locked behind a read-only notice; Save publishes the edits as the next version and runs already started keep theirs (CnFlowBoard saveAsVersion)."
 		}
 	]
 }

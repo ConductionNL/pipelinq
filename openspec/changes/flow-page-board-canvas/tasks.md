@@ -1,0 +1,3 @@
+- [x] FlowDetail `config.layout: "canvas"`, no `sidebarComponent`
+- [x] Remove FlowDetailSidebar and its registry entry
+- [x] vitest flowPageBoardCanvas
