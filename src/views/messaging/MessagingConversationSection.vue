@@ -87,7 +87,7 @@
 					{{
 						preflight && preflight.whatsappSessionOpen
 							? t('pipelinq', 'Open (24h window)')
-							: t('pipelinq', 'Closed — template required')
+							: t('pipelinq', 'Closed, template required')
 					}}
 				</strong>
 			</span>

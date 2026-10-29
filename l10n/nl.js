@@ -775,7 +775,6 @@ OC.L10N.register(
         "Closed Lost": "Afgesloten - Lost",
         "Closed Won": "Afgesloten - Won",
         "Closed on": "Afgesloten op",
-        "Closed — template required": "Gesloten — sjabloon vereist",
         "Closes soon": "Sluit binnenkort",
         "Closes this month": "Sluit deze maand",
         "Closing soon": "Sluit binnenkort",
@@ -9301,7 +9300,8 @@ OC.L10N.register(
         "Create a proposal for this ticket": "Voorstel maken voor dit ticket",
         "Call {callbackPhoneNumber}": "Bel {callbackPhoneNumber}",
         "Task finished.": "Taak afgerond.",
-        "of @object.capacity places": "van @object.capacity plaatsen"
+        "of @object.capacity places": "van @object.capacity plaatsen",
+        "Closed, template required": "Gesloten, sjabloon vereist"
     },
     "nplurals=2; plural=(n != 1);"
 )

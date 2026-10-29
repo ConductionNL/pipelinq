@@ -802,7 +802,6 @@ OC.L10N.register(
         "Closed Lost": "Closed Lost",
         "Closed Won": "Closed Won",
         "Closed on": "Closed on",
-        "Closed — template required": "Closed — template required",
         "Closes soon": "Closes soon",
         "Closes this month": "Closes this month",
         "Closing soon": "Closing soon",
@@ -9287,7 +9286,8 @@ OC.L10N.register(
         "Create a proposal for this ticket": "Create a proposal for this ticket",
         "Call {callbackPhoneNumber}": "Call {callbackPhoneNumber}",
         "Task finished.": "Task finished.",
-        "of @object.capacity places": "of @object.capacity places"
+        "of @object.capacity places": "of @object.capacity places",
+        "Closed, template required": "Closed, template required"
     },
     "nplurals=2; plural=(n != 1);"
 )
