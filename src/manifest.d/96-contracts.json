@@ -345,7 +345,42 @@
 						"id": "contract-history",
 						"type": "audit-trail",
 						"title": "History",
-						"icon": "History"
+						"icon": "History",
+						"content": {
+							"layout": "stacked",
+							"density": "compact",
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated"
+							},
+							"valueLabels": {
+								"status": {
+									"draft": "Draft",
+									"active": "Active",
+									"expiring": "Expires soon",
+									"renewed": "Renewed",
+									"churned": "Churned",
+									"cancelled": "Cancelled"
+								}
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"label": "Status changed to {changed.status}"
+								},
+								{
+									"field": "renewalLeadRef",
+									"label": "Renewal lead created"
+								},
+								{
+									"field": "invoiceReference",
+									"label": "Sent to invoicing, {changed.invoiceReference}"
+								}
+							]
+						}
 					},
 					{
 						"id": "contract-kpi-recurring",
@@ -488,7 +523,40 @@
 						"title": "History",
 						"icon": "History",
 						"content": {
-							"limit": 4
+							"limit": 4,
+							"layout": "stacked",
+							"density": "compact",
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated"
+							},
+							"valueLabels": {
+								"status": {
+									"draft": "Draft",
+									"active": "Active",
+									"expiring": "Expires soon",
+									"renewed": "Renewed",
+									"churned": "Churned",
+									"cancelled": "Cancelled"
+								}
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"label": "Status changed to {changed.status}"
+								},
+								{
+									"field": "renewalLeadRef",
+									"label": "Renewal lead created"
+								},
+								{
+									"field": "invoiceReference",
+									"label": "Sent to invoicing, {changed.invoiceReference}"
+								}
+							]
 						}
 					}
 				],
@@ -648,7 +716,6 @@
 						"id": "open-renewal-lead",
 						"type": "navigate",
 						"label": "Open renewal lead",
-						"icon": "TrendingUp",
 						"target": "/leads/@object.renewalLeadRef",
 						"visibleWhen": {
 							"field": "renewalLeadRef",
