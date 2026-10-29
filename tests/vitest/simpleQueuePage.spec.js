@@ -90,6 +90,14 @@ describe('the queue, simple structure', () => {
 			'view',
 		])
 		expect(simple.filterStrip.field).toBe('channel')
+		// channel has no enum and each ticket type stores its own spelling, so
+		// the strip names its pills and gathers the spellings under each
+		expect(simple.filterStrip.options).toEqual([
+			{ values: ['phone', 'telefoon'], label: 'Phone' },
+			{ values: ['portal', 'web'], label: 'Portal' },
+			{ values: ['email'], label: 'Email' },
+			{ values: ['balie', 'counter'], label: 'Desk' },
+		])
 		expect(simple.columns.map((column) => column.key)).toEqual([
 			'occurredAt',
 			'title',
@@ -130,6 +138,7 @@ describe('the queue, simple structure', () => {
 			overlay.config.sidePanel[1].content.link.label,
 			overlay.config.footerNote,
 			overlay.config.filterStrip.label,
+			...overlay.config.filterStrip.options.map((option) => option.label),
 		]
 		for (const word of words) {
 			expect(en[word], word).toBeTruthy()

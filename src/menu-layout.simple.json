@@ -3514,7 +3514,7 @@
 		},
 		{
 			"id": "Queue",
-			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, past the deadline), the type tabs with a channel strip under them, and per row the wait, the title with the customer and channel, the type, the priority, Take on and View. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated.",
+			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, past the deadline), the type tabs with a channel strip under them, and per row the wait, the title with the customer and channel, the type, the priority, Take on and View. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated. THE CHANNEL STRIP: channel is a free string and each ticket type stores its own spelling (phone and web on requests and complaints, telefoon and balie on contact moments), so each pill lists its spellings in `values` (nextcloud-vue filter-strip-option-values). Before that library change an option without `value` is skipped and the strip stays away, as it was.",
 			"config": {
 				"headerButtons": [
 					{
@@ -3535,7 +3535,36 @@
 				"filterStrip": {
 					"field": "channel",
 					"label": "Kind, then channel",
-					"showCount": true
+					"showCount": true,
+					"options": [
+						{
+							"values": [
+								"phone",
+								"telefoon"
+							],
+							"label": "Phone"
+						},
+						{
+							"values": [
+								"portal",
+								"web"
+							],
+							"label": "Portal"
+						},
+						{
+							"values": [
+								"email"
+							],
+							"label": "Email"
+						},
+						{
+							"values": [
+								"balie",
+								"counter"
+							],
+							"label": "Desk"
+						}
+					]
 				},
 				"columns": [
 					{
