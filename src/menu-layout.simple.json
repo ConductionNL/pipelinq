@@ -2652,6 +2652,7 @@
 							"title": "Start a contact",
 							"description": "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.",
 							"writes": "@workspace.selectedClient",
+							"default": "",
 							"objectSource": {
 								"register": "pipelinq",
 								"schema": "client",
