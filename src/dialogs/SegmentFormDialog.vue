@@ -24,17 +24,21 @@
 
 			<template v-else>
 				<section class="segment-form__details">
-					<NcTextField
-						v-model="model.name"
-						:label="t('pipelinq', 'Segment name')"
-						labelOutside
-						:placeholder="t('pipelinq', 'Inactive Leads')"
-						required
-						class="segment-form__name" />
+					<div class="segment-form__field">
+						<label for="segment-form-name" class="segment-form__label">{{ t('pipelinq', 'Segment name') }}</label>
+						<NcTextField
+							id="segment-form-name"
+							v-model="model.name"
+							:label="t('pipelinq', 'Segment name')"
+							labelOutside
+							:placeholder="t('pipelinq', 'Inactive Leads')"
+							required
+							class="segment-form__name" />
+					</div>
 					<!-- The reason sits on a wrapper: a disabled select gets no
 					     mouse events, so a `title` on it would never show. -->
 					<div
-						class="segment-form__audience"
+						class="segment-form__field segment-form__audience"
 						:class="{ 'segment-form__audience--locked': isEditing }"
 						:title="
 							isEditing
@@ -44,10 +48,13 @@
 									)
 								: null
 						">
+						<label for="segment-form-audience" class="segment-form__label">{{ t('pipelinq', 'Audience') }}</label>
 						<NcSelect
 							v-model="entityTypeOption"
+							inputId="segment-form-audience"
 							:options="entityTypeOptions"
 							:inputLabel="t('pipelinq', 'Audience')"
+							labelOutside
 							label="label"
 							:clearable="false"
 							:searchable="false"
@@ -56,13 +63,16 @@
 							{{ audienceHint }}
 						</p>
 					</div>
-					<NcTextArea
-						v-model="model.description"
-						:label="t('pipelinq', 'Description')"
-						labelOutside
-						resize="vertical"
-						rows="2"
-						class="segment-form__description" />
+					<div class="segment-form__field segment-form__description">
+						<label for="segment-form-description" class="segment-form__label">{{ t('pipelinq', 'Description') }}</label>
+						<NcTextArea
+							id="segment-form-description"
+							v-model="model.description"
+							:label="t('pipelinq', 'Description')"
+							labelOutside
+							resize="vertical"
+							rows="2" />
+					</div>
 				</section>
 
 				<section class="segment-form__rules">
@@ -441,9 +451,17 @@ export default {
 	grid-column: 1 / -1;
 }
 
-/* Lines the select up with the name field beside it. */
-.segment-form__audience {
-	margin-top: 6px;
+/* The label above the field, as board PqSegmentBouwer draws it. */
+.segment-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.segment-form__label {
+	font-size: 14px;
+	font-weight: 600;
 }
 
 .segment-form__audience :deep(.v-select.select) {

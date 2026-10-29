@@ -1,5 +1,5 @@
 {
-	"$comment": "The question that became case 2026-0110 'Verlichting fietspad Lindelaan' (portaliq writes the case): Sanne de Vries asked for the documents on the new lighting along the cycle path, and the request was converted into the Woo case. DqZaak's 'Gekoppeld' card lists it as 'Vraag in pipelinq' through its caseReference. The case is found by its title, so this fragment needs no case id.",
+	"$comment": "The question that became case 2026-0110 'Verlichting fietspad Lindelaan' (portaliq writes the case): Sanne de Vries asked for the documents on the new lighting along the cycle path, and the request was converted into the Woo case. DqZaak's 'Gekoppeld' card lists it as 'Vraag in pipelinq' through its caseReference. The case is found by its title and its Mijn Zuiddrecht reference MZ-ZDR-2026-0412, because the set also holds a closed Woo request with the same title (dossiq 63-closed-lindelaan-woo.json), so this fragment needs no case id.",
 	"objects": [
 		{
 			"key": "ticket-sanne-fietspad-lindelaan",
@@ -10,7 +10,8 @@
 					"register": "dossiq",
 					"schema": "case",
 					"where": {
-						"title": "Verlichting fietspad Lindelaan"
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
 					}
 				}
 			},

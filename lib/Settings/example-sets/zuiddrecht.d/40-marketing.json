@@ -281,7 +281,8 @@
 				"senderName": "Gemeente Zuiddrecht",
 				"senderEmail": "nieuws@zuiddrecht.example",
 				"language": "nl",
-				"bodyText": "Je straatfeest, geregeld in 4 stappen\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"bodyText": "Je straatfeest, geregeld in 4 stappen\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
+				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:pieter.uid}}"
 			}
 		},
@@ -325,7 +326,8 @@
 				"senderName": "Gemeente Zuiddrecht",
 				"senderEmail": "nieuws@zuiddrecht.example",
 				"language": "nl",
-				"bodyText": "De afvalkalender voor 2027 staat klaar\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"bodyText": "De afvalkalender voor 2027 staat klaar\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
+				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:pieter.uid}}"
 			}
 		},
@@ -358,7 +360,8 @@
 				"senderName": "Gemeente Zuiddrecht",
 				"senderEmail": "nieuws@zuiddrecht.example",
 				"language": "nl",
-				"bodyText": "Ondernemersontbijt in november\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"bodyText": "Ondernemersontbijt in november\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
+				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:pieter.uid}}"
 			}
 		},
@@ -389,7 +392,8 @@
 				"senderName": "Gemeente Zuiddrecht",
 				"senderEmail": "nieuws@zuiddrecht.example",
 				"language": "nl",
-				"bodyText": "Subsidieronde voor buurtinitiatieven\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"bodyText": "Subsidieronde voor buurtinitiatieven\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
+				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:pieter.uid}}"
 			}
 		},
@@ -432,7 +436,8 @@
 				"senderName": "Gemeente Zuiddrecht",
 				"senderEmail": "nieuws@zuiddrecht.example",
 				"language": "nl",
-				"bodyText": "Wat vindt u van de openingstijden van de balie?\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"bodyText": "Wat vindt u van de openingstijden van de balie?\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
+				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:pieter.uid}}"
 			}
 		},
@@ -475,7 +480,8 @@
 				"senderName": "Gemeente Zuiddrecht",
 				"senderEmail": "nieuws@zuiddrecht.example",
 				"language": "nl",
-				"bodyText": "Ondernemersontbijt in oktober\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"bodyText": "Ondernemersontbijt in oktober\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
+				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:pieter.uid}}"
 			}
 		},

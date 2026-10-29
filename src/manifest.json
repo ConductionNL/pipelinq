@@ -983,7 +983,7 @@
 							"limit": 3,
 							"presentation": "rows",
 							"title": "{title}",
-							"meta": "{stage} · {expectedCloseDate|date} · {assignee}",
+							"meta": "{stage} · {expectedCloseDate|date} · {assignee|user}",
 							"trailing": [
 								"{value|currency}"
 							],
@@ -1011,12 +1011,11 @@
 							"limit": 3,
 							"presentation": "rows",
 							"title": "{title}",
-							"meta": "{expectedCloseDate|date} · {assignee}",
-							"pill": {
-								"field": "status",
-								"variantMap": {
-									"won": "success",
-									"lost": "error"
+							"meta": "{status} {expectedCloseDate|date} · {assignee|user}",
+							"valueLabels": {
+								"status": {
+									"won": "Won",
+									"lost": "Lost"
 								}
 							},
 							"trailing": [
@@ -1861,6 +1860,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"sortKey": "name",
+				"sortOrder": "asc",
 				"createModal": "ClientCreateDialog",
 				"fieldOverrides": {
 					"industry": {
@@ -3876,7 +3877,16 @@
 						"type": "integration",
 						"integrationId": "decidesk-decisions",
 						"title": "On this ticket",
-						"icon": "Gavel"
+						"icon": "Gavel",
+						"_labelsNote": "Board PqTicketBesluitvorming: the leaf's empty state in the ticket's words. nextcloud-vue translates `labels` in pipelinq's language and hands them to decidiq's leaf (leaf-labels-in-the-host-language); the leaf draws them as its empty-state panel (decidiq decisions-leaf-speaks-the-hosts-words).",
+						"labels": {
+							"emptyTitle": "No decision linked",
+							"emptyText": "A decision can be prepared straight from this ticket as a proposal in decidiq, or the request becomes a case in dossiq first. Either way the decision shows here.",
+							"createLabel": "Create a proposal for this ticket"
+						},
+						"props": {
+							"collapsible": false
+						}
 					},
 					{
 						"id": "ticket-case-decisions",
@@ -5867,7 +5877,10 @@
 						"type": "integration",
 						"integrationId": "files",
 						"title": "Documents",
-						"icon": "FolderOutline"
+						"icon": "FolderOutline",
+						"props": {
+							"addable": true
+						}
 					},
 					{
 						"id": "task-history",
@@ -5902,6 +5915,17 @@
 						"type": "related",
 						"title": "Related",
 						"icon": "LinkVariant"
+					},
+					{
+						"id": "task-side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"content": {
+							"maxDisplay": 3,
+							"excludeActions": [
+								"read"
+							]
+						}
 					}
 				],
 				"layout": [
@@ -5918,7 +5942,8 @@
 					"field": "status"
 				},
 				"sideColumn": [
-					"task-related"
+					"task-related",
+					"task-side-history"
 				],
 				"headerCard": true,
 				"breadcrumb": {
@@ -5966,10 +5991,28 @@
 							"field": "callbackPhoneNumber",
 							"op": "notEmpty"
 						}
+					},
+					{
+						"id": "task-complete",
+						"type": "api-call",
+						"label": "Finish",
+						"icon": "Check",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"payload": {
+							"action": "complete"
+						},
+						"successMessage": "Task finished.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "in_progress"
+						}
 					}
 				],
 				"quickActions": [
-					"task-call"
+					"task-call",
+					"task-complete"
 				],
 				"nextStep": {
 					"title": "What now?",
@@ -6009,10 +6052,32 @@
 					}
 				},
 				"primaryActionByStage": {
-					"open": "task-call",
-					"in_progress": "task-call"
+					"open": {
+						"id": "task-call-next",
+						"type": "navigate",
+						"label": "Call the customer",
+						"primaryLabel": "Call {callbackPhoneNumber}",
+						"icon": "Phone",
+						"target": "tel:@object.callbackPhoneNumber",
+						"visibleWhen": {
+							"field": "callbackPhoneNumber",
+							"op": "notEmpty"
+						}
+					},
+					"in_progress": {
+						"id": "task-call-next",
+						"type": "navigate",
+						"label": "Call the customer",
+						"primaryLabel": "Call {callbackPhoneNumber}",
+						"icon": "Phone",
+						"target": "tel:@object.callbackPhoneNumber",
+						"visibleWhen": {
+							"field": "callbackPhoneNumber",
+							"op": "notEmpty"
+						}
+					}
 				},
-				"_boardNote": "Board PqTaak: the subject as the title, kind and status pills, the deadline on the meta line, Call as the primary action, the next step per stage, the task and its documents in an Overview tab beside History, and the related records in the side column."
+				"_boardNote": "Board PqTaak: the subject as the title, kind and status pills, the deadline on the meta line, Call and Finish in the header, the next step per stage with a call button that names the number (primaryLabel, nc-vue 2.161+), the task and its documents in an Overview tab beside History, and the related records over the latest history in the side column."
 			}
 		},
 		{
@@ -6985,9 +7050,9 @@
 				"titleField": "reference",
 				"stageField": "status",
 				"primaryActionByStage": {
-					"open": "shift-count",
-					"closed": "shift-approve-diff"
+					"open": "shift-count"
 				},
+				"quickActions": ["shift-approve-diff"],
 				"headerActions": [
 					{
 						"id": "shift-count",
@@ -7511,7 +7576,7 @@
 						}
 					]
 				},
-				"_boardNote": "Board PqKassadienst: the shift name, the status pill, the Kassalade breadcrumb and a meta line with the cashier and the hours; Approve difference as the primary button of a counted shift; the shift, its cash difference and its drops in an Overview tab beside History; the opening float, related records and a short history in the side column.",
+				"_boardNote": "Board PqKassadienst: the shift name, the status pill, the Kassalade breadcrumb and a meta line with the cashier and the hours; Approve difference as a secondary header button (with its check icon) of a counted shift; the shift, its cash difference and its drops in an Overview tab beside History; the opening float, related records and a short history in the side column.",
 				"follow": false,
 				"showEditAction": false,
 				"breadcrumb": {
@@ -10715,7 +10780,12 @@
 			"route": "/flows",
 			"type": "index",
 			"title": "Flows",
-			"config": { "entitySource": "flows", "app": "pipelinq" },
+			"config": {
+				"entitySource": "flows",
+				"app": "pipelinq",
+				"filterMenu": true,
+				"filterMenuFields": [{ "key": "owner", "label": "Owner", "referenceType": "nextcloud-user" }]
+			},
 			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source (config.entitySource) rather than the deprecated `flows` page type, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app."
 		},
 		{

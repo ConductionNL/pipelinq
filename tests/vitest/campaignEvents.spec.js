@@ -66,7 +66,6 @@ describe('the event page', () => {
 			expect(source.metric).toBe('count')
 			expect(source.filter.event).toBe('@objectId')
 		}
-		expect(widget(detail, 'event-kpi-registered').content.caption).toBe('of {capacity} places')
 	})
 
 	it('has the Overview, Registrations, Registration form, Results and History tabs, with form, location and history beside them', () => {
@@ -74,6 +73,20 @@ describe('the event page', () => {
 		expect(tabs.map((tab) => tab.label)).toEqual(['Overview', 'Registrations', 'Registration form', 'Results', 'History'])
 		expect(tabs[1].countFrom).toEqual({ register: 'pipelinq', schema: 'eventRegistration', filter: { event: '@objectId' } })
 		expect(detail.config.sideColumn).toEqual(['event-form', 'event-location', 'event-side-history'])
+	})
+
+	it('marks the page as an event with a purple type pill beside the status, as the board', () => {
+		const pill = page(events.pages, 'CampaignEventDetail').config.typePill
+		expect(pill).toEqual({ text: 'Campaign event', variant: 'purple' })
+		const nl = read('l10n', 'nl.json').translations
+		expect(nl[pill.text]).toBe('Evenement')
+	})
+
+	it('reads the places of the event under the registered count', () => {
+		const tile = widget(page(events.pages, 'CampaignEventDetail'), 'event-kpi-registered')
+		expect(tile.content.caption).toBe('of @object.capacity places')
+		const nl = read('l10n', 'nl.json').translations
+		expect(nl[tile.content.caption]).toBe('van @object.capacity plaatsen')
 	})
 
 	it('writes the day in full on the header line', () => {
@@ -97,6 +110,22 @@ describe('the event page', () => {
 			expect(lens.showCount, lens.label).toBe(true)
 		}
 		expect(list.content.filterMenu).toBe(true)
+	})
+
+	it('ends the registrations list with the event\'s whole count, however narrowed (PqEvenement "73 aanmeldingen in totaal")', () => {
+		const list = widget(detail, 'event-registrations')
+		// nextcloud-vue footer-unfiltered-total: read under the event filter only.
+		expect(list.content.countValues).toEqual({ allRegistrations: { metric: 'count', unfiltered: true } })
+		expect(list.content.footerNote).toBe('{allRegistrations} registrations in total')
+		const nl = read('l10n', 'nl.json').translations
+		expect(nl[list.content.footerNote]).toBe('{allRegistrations} aanmeldingen in totaal')
+	})
+
+	it('tones each registration status in the tab as the latest registrations do', () => {
+		const recent = widget(detail, 'event-registrations-recent').content.columns.find((column) => column.key === 'status')
+		const status = widget(detail, 'event-registrations').content.columns.find((column) => column?.key === 'status')
+		expect(status).toMatchObject({ label: recent.label, widget: 'badge', widgetProps: { colorMap: recent.widgetProps.colorMap } })
+		expect(recent.widgetProps.colorMap.confirmed).toBe('success')
 	})
 
 	it('sends the reminder and opens the check-in list from the header', () => {

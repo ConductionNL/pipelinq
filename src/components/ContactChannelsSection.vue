@@ -726,21 +726,28 @@ export default {
 	flex-direction: column;
 	gap: 8px;
 	margin: 0;
+	padding: 0;
 	font-size: 14px;
 }
 
 .contact-channels-section__compact-row {
 	display: grid;
-	grid-template-columns: 80px minmax(0, 1fr);
+	grid-template-columns: 110px minmax(0, 1fr);
 	gap: 12px;
 }
 
+/* Nextcloud's global dt rule (130px, right-aligned, padded) would overlap the value. */
 .contact-channels-section__compact-row dt {
+	width: auto;
+	padding: 0;
+	white-space: normal;
+	text-align: start;
 	color: var(--color-text-maxcontrast);
 }
 
 .contact-channels-section__compact-row dd {
 	margin: 0;
+	padding: 0;
 }
 
 .contact-channels-section {

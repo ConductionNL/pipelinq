@@ -76,7 +76,7 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import IncomingCallCard from './components/IncomingCallCard.vue'
 import ContactsSyncSettingsSection from './components/settings/ContactsSyncSettingsSection.vue'
 import EmailCalendarSettingsSection from './components/settings/EmailCalendarSettingsSection.vue'
@@ -117,6 +117,10 @@ export default {
 			// Legacy channel — kept so bespoke index views (CnIndexPage
 			// wrappers) continue to inject it.
 			sidebarState: this.sidebarState,
+			// The manifest's look for what renders beside CnAppRoot (the
+			// incoming-call card and its dialogs); CnAppRoot provides its own
+			// to everything inside it.
+			cnLook: computed(() => (this.manifest?.look === 'board' ? 'board' : 'nextcloud')),
 		}
 	},
 

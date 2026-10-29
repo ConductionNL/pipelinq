@@ -42,6 +42,7 @@ const ACTIONS = [
 	['src/components/ContactChannelsSection.vue', 'Add channel'],
 	['src/components/ContactsSyncSection.vue', 'Update in Contacts'],
 	['src/views/forecast/ForecastDashboard.vue', 'Export CSV'],
+	['src/components/LeadContactRoles.vue', 'Add contact role'],
 ]
 
 describe('the board tonal card actions', () => {

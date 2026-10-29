@@ -26,6 +26,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\RoutingService;
 use OCA\Pipelinq\Service\TeamLoadService;
 use OCP\IAppConfig;
+use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -41,10 +42,11 @@ class TeamLoadServiceTest extends TestCase {
 	 * @param array<string, string>                 $config    App config values by key.
 	 * @param array<int, array<string, mixed>>|null $profiles  What findAll returns, or null to make it throw.
 	 * @param array<string, int>                    $workloads Open items by user id.
+	 * @param array<string, string>                 $names     Nextcloud display names by user id.
 	 *
 	 * @return TeamLoadService The service.
 	 */
-	private function service(array $config, ?array $profiles, array $workloads): TeamLoadService {
+	private function service(array $config, ?array $profiles, array $workloads, array $names = []): TeamLoadService {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default): string => $config[$key] ?? $default
@@ -64,10 +66,16 @@ class TeamLoadServiceTest extends TestCase {
 			static fn (array $profile, int $workload): bool => $workload >= (int) ($profile['maxConcurrent'] ?? 10)
 		);
 
+		$users = $this->createMock(originalClassName: IUserManager::class);
+		$users->method('getDisplayName')->willReturnCallback(
+			static fn (string $uid): ?string => $names[$uid] ?? null
+		);
+
 		return new TeamLoadService(
 			appConfig: $appConfig,
 			routing: $routing,
 			objectService: $objects,
+			userManager: $users,
 			logger: $this->createMock(LoggerInterface::class)
 		);
 	}//end service()
@@ -126,4 +134,50 @@ class TeamLoadServiceTest extends TestCase {
 			actual: $this->service(config: ['register' => 'pipelinq', 'agentProfile_schema' => 'agentProfile'], profiles: null, workloads: [])->getTeamLoad()
 		);
 	}//end testUnconfiguredOrUnreadableIsEmpty()
+
+	/**
+	 * A profile without a display name shows the colleague's Nextcloud name, not the user id.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/team-today-names-colleagues/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
+	 */
+	public function testNameFromTheNextcloudUser(): void {
+		$service = $this->service(
+			config: ['register' => 'pipelinq', 'agentProfile_schema' => 'agentProfile'],
+			profiles: [
+				['userId' => 'fatma.yildiz'],
+				['userId' => 'gone'],
+			],
+			workloads: [],
+			names: ['fatma.yildiz' => 'Fatma Yildiz']
+		);
+
+		$this->assertSame(
+			expected: ['Fatma Yildiz', 'gone'],
+			actual: array_column($service->getTeamLoad(), 'displayName')
+		);
+	}//end testNameFromTheNextcloudUser()
+
+	/**
+	 * A colleague with two agent profiles is one row: the first profile read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/team-today-names-colleagues/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
+	 */
+	public function testOneRowPerColleague(): void {
+		$service = $this->service(
+			config: ['register' => 'pipelinq', 'agentProfile_schema' => 'agentProfile'],
+			profiles: [
+				['userId' => 'fatma', 'displayName' => 'Fatma Yildiz', 'maxConcurrent' => 6],
+				['userId' => 'fatma', 'displayName' => 'Fatma Yildiz', 'maxConcurrent' => 12],
+			],
+			workloads: ['fatma' => 8]
+		);
+
+		$rows = $service->getTeamLoad();
+		$this->assertCount(expectedCount: 1, haystack: $rows);
+		$this->assertSame(expected: 6, actual: $rows[0]['maxConcurrent']);
+	}//end testOneRowPerColleague()
 }//end class

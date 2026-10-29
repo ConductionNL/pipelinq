@@ -102,9 +102,9 @@
 							<template #column-returnReason="{ row }">
 								<NcSelect
 									v-if="row.selected"
+									:ariaLabelCombobox="t('pipelinq', 'Return reason')"
 									:modelValue="reasonOptions.find((o) => o.id === row.returnReason) || null"
 									:options="reasonOptions"
-									:inputLabel="t('pipelinq', 'Return reason')"
 									:labelOutside="true"
 									label="label"
 									:clearable="false"
@@ -730,6 +730,13 @@ export default {
 	flex-direction: column;
 	gap: 20px;
 	min-width: 0;
+}
+
+/* Side cards head with a muted label, as CnDetailPage's own side column does. */
+.cn-look-board .pos-refund-form__side :deep(.cn-detail-card__title) {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--cn-board-side-heading-size, 15px);
+	font-weight: 600;
 }
 
 .pos-refund-form__fields {

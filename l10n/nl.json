@@ -4585,6 +4585,8 @@
         "Why are you confident in this deal?": "Waarom heeft u vertrouwen in deze deal?",
         "Why are you confident in this deal? (e.g. decision-maker engaged, contract draft signed)": "Waarom heeft u vertrouwen in deze deal? (bijv. beslisser betrokken, conceptcontract getekend)",
         "Why is this caller getting in touch?": "Waarom neemt deze beller contact op?",
+        "(optional)": "(optioneel)",
+        "Company or organisation": "Bedrijf of organisatie",
         "Why is this payment being reversed?": "Waarom wordt deze betaling gestorneerd?",
         "Why the account holds its current status, in words a marketer can act on. Written by the connect and publish paths, never by a client.": "Waarom het account deze status heeft, in woorden waar een marketeer iets mee kan. Het koppel- en plaatspad schrijven dit, nooit een client.",
         "Why the action was refused or failed. Empty on a send that went out.": "Waarom de actie is geweigerd of mislukt. Leeg bij een verzending die eruit ging.",
@@ -9401,6 +9403,17 @@
         "Z report {reportDate|date}, {terminalId}": "Z-rapport {reportDate|date}, {terminalId}",
         "Within the margin": "Binnen de marge",
         "Outside the margin": "Buiten de marge",
-        "Unknown measure": "Onbekende maat"
+        "Unknown measure": "Onbekende maat",
+        "No decision linked": "Geen besluit gekoppeld",
+        "Create a proposal for this ticket": "Voorstel maken voor dit ticket",
+        "Call {callbackPhoneNumber}": "Bel {callbackPhoneNumber}",
+        "Task finished.": "Taak afgerond.",
+        "of @object.capacity places": "van @object.capacity plaatsen",
+        "{allRegistrations} registrations in total": "{allRegistrations} aanmeldingen in totaal",
+        "Set the term": "Termijn instellen",
+        "Link an existing case": "Bestaande zaak koppelen",
+        "The term is set.": "De termijn is ingesteld.",
+        "The request is linked to the case.": "Het verzoek is aan de zaak gekoppeld.",
+        "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.": "De termijn waarbinnen het ticket moet zijn afgehandeld: de afhandeldeadline volgens de SLA bij een klacht, de termijn van een verzoek."
     }
 }

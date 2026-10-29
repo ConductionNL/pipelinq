@@ -4626,6 +4626,8 @@ OC.L10N.register(
         "Why are you confident in this deal?": "Why are you confident in this deal?",
         "Why are you confident in this deal? (e.g. decision-maker engaged, contract draft signed)": "Why are you confident in this deal? (e.g. decision-maker engaged, contract draft signed)",
         "Why is this caller getting in touch?": "Why is this caller getting in touch?",
+        "(optional)": "(optional)",
+        "Company or organisation": "Company or organisation",
         "Why is this payment being reversed?": "Why is this payment being reversed?",
         "Why the account holds its current status, in words a marketer can act on. Written by the connect and publish paths, never by a client.": "Why the account holds its current status, in words a marketer can act on. Written by the connect and publish paths, never by a client.",
         "Why the action was refused or failed. Empty on a send that went out.": "Why the action was refused or failed. Empty on a send that went out.",
@@ -9286,7 +9288,18 @@ OC.L10N.register(
         "Z report {reportDate|date}, {terminalId}": "Z report {reportDate|date}, {terminalId}",
         "Within the margin": "Within the margin",
         "Outside the margin": "Outside the margin",
-        "Unknown measure": "Unknown measure"
+        "Unknown measure": "Unknown measure",
+        "No decision linked": "No decision linked",
+        "Create a proposal for this ticket": "Create a proposal for this ticket",
+        "Call {callbackPhoneNumber}": "Call {callbackPhoneNumber}",
+        "Task finished.": "Task finished.",
+        "of @object.capacity places": "of @object.capacity places",
+        "{allRegistrations} registrations in total": "{allRegistrations} registrations in total",
+        "Set the term": "Set the term",
+        "Link an existing case": "Link an existing case",
+        "The term is set.": "The term is set.",
+        "The request is linked to the case.": "The request is linked to the case.",
+        "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.": "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request."
     },
     "nplurals=2; plural=(n != 1);"
 )

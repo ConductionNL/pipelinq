@@ -173,7 +173,7 @@
 						{{ t('pipelinq', 'Save steps') }}
 					</NcButton>
 				</template>
-				<NcButton v-else @click="startEditSteps">
+				<NcButton v-else class="cn-button--tonal" @click="startEditSteps">
 					{{ t('pipelinq', 'Edit steps') }}
 				</NcButton>
 			</template>

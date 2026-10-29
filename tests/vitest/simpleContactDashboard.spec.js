@@ -347,6 +347,11 @@ describe('the dashboard', () => {
 		expect(byId['simple-client-in-focus'].content.link).toEqual({ label: 'See an example', value: '@config.example_client?' })
 	})
 
+	it('opens with no client in focus, so the search is empty and the client cards ask for one', () => {
+		// Without a default the object picker puts the first client in focus.
+		expect(byId['simple-client-in-focus'].content.default).toBe('')
+	})
+
 	it('opens a row on a page that exists', () => {
 		const lists = added.filter((item) => item.type === 'record-list')
 		expect(lists).toHaveLength(3)

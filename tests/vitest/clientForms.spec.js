@@ -10,6 +10,8 @@
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 import manifest from '../../src/manifest.json'
@@ -262,6 +264,16 @@ describe('New client dialog as board PqKlantNieuw draws it', () => {
 		expect(notice.exists()).toBe(true)
 		expect(notice.text()).toContain('Possible duplicate: Bakkerij De Graaf has the same email address')
 		expect(wrapper.find('[data-testid="client-duplicate-open"]').attributes('href')).toBe('/apps/pipelinq/clients/c-9')
+		expect(notice.find('[data-testid="client-duplicate-icon"]').exists()).toBe(true)
+	})
+
+	/**
+	 * @spec openspec/changes/client-duplicate-notice-board/specs/client-management/spec.md#requirement-the-duplicate-warning-is-a-bordered-notice
+	 */
+	it('draws the duplicate warning as the board\'s bordered notice, 12px in, the notes field 89.5px tall', () => {
+		const sfc = readFileSync(resolve(__dirname, '../../src/views/clients/ClientForm.vue'), 'utf8')
+		const style = sfc.slice(sfc.indexOf('<style'))
+		expect(style).toMatch(/\.client-form__duplicate \{[^}]*padding: 12px 14px;[^}]*border: 1px solid var\(--cn-board-notice-border, #f0d9a8\);[^}]*background: var\(--cn-board-notice-bg, #fff4de\);/)
+		expect(style).toMatch(/:deep\(#client-board-notes\) \{\s*min-height: 89\.5px;/)
 	})
 })
-

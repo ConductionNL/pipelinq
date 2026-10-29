@@ -96,6 +96,8 @@ import axios from '@nextcloud/axios'
 import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { longDate } from '../services/cellFormatters.js'
+import { getStatusLabel } from '../services/requestStatus.js'
 
 /** The event-bus channel the page-level Refresh action broadcasts on. */
 const PAGE_REFRESH_CHANNEL = 'cn:page:refresh'
@@ -160,8 +162,8 @@ export default {
 				{ label: this.t('pipelinq', 'Number'), value: b.number },
 				{ label: this.t('pipelinq', 'Subject'), value: b.subject },
 				{ label: this.t('pipelinq', 'Category'), value: b.category },
-				{ label: this.t('pipelinq', 'Status'), value: b.status },
-				{ label: this.t('pipelinq', 'Date'), value: b.date },
+				{ label: this.t('pipelinq', 'Status'), value: b.status ? getStatusLabel(b.status) : b.status },
+				{ label: this.t('pipelinq', 'Date'), value: longDate(b.date) },
 				{ label: this.t('pipelinq', 'Description'), value: b.body },
 			]
 			if (b.assigneeHidden !== true) {

@@ -43,6 +43,9 @@ function readJson(...parts) {
 function merge(base, override) {
 	const isObject = (v) => v && typeof v === 'object' && !Array.isArray(v)
 	for (const [key, value] of Object.entries(override)) {
+		if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+			continue
+		}
 		if (isObject(value) && isObject(base[key])) {
 			merge(base[key], value)
 		} else {

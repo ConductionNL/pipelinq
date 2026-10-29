@@ -19,12 +19,16 @@
 		data-testid="cti-disposition-dialog"
 		@closing="$emit('close')">
 		<form class="cti-disposition" @submit.prevent="submit">
-			<NcTextField
-				v-model="form.subject"
-				:label="t('pipelinq', 'Subject')"
-				labelOutside
-				data-testid="cti-disposition-subject"
-				required />
+			<div class="cti-disposition__field">
+				<label for="cti-disposition-subject" class="cti-disposition__label">{{ t('pipelinq', 'Subject') }}</label>
+				<NcTextField
+					id="cti-disposition-subject"
+					v-model="form.subject"
+					:label="t('pipelinq', 'Subject')"
+					labelOutside
+					data-testid="cti-disposition-subject"
+					required />
+			</div>
 			<fieldset class="cti-disposition__outcomes" data-testid="cti-disposition-outcome">
 				<legend>{{ t('pipelinq', 'Outcome') }}</legend>
 				<NcCheckboxRadioSwitch
@@ -38,8 +42,10 @@
 				</NcCheckboxRadioSwitch>
 			</fieldset>
 			<div v-if="form.outcome === 'escalated' && queueOptions.length > 0" class="cti-disposition__queue">
+				<label for="cti-disposition-queue" class="cti-disposition__label">{{ t('pipelinq', 'Escalation queue') }}<span class="cti-disposition__optional"> {{ t('pipelinq', '(optional)') }}</span></label>
 				<NcSelect
 					v-model="form.queue"
+					inputId="cti-disposition-queue"
 					:options="queueOptions"
 					:inputLabel="t('pipelinq', 'Escalation queue (optional)')"
 					labelOutside
@@ -50,12 +56,16 @@
 					{{ t('pipelinq', 'Only shown when the outcome is Escalated. The ticket goes to this queue.') }}
 				</p>
 			</div>
-			<NcTextArea
-				v-model="form.notes"
-				:label="t('pipelinq', 'Notes (optional)')"
-				labelOutside
-				rows="3"
-				data-testid="cti-disposition-notes" />
+			<div class="cti-disposition__field">
+				<label for="cti-disposition-notes" class="cti-disposition__label">{{ t('pipelinq', 'Notes') }}<span class="cti-disposition__optional"> {{ t('pipelinq', '(optional)') }}</span></label>
+				<NcTextArea
+					id="cti-disposition-notes"
+					v-model="form.notes"
+					:label="t('pipelinq', 'Notes (optional)')"
+					labelOutside
+					rows="3"
+					data-testid="cti-disposition-notes" />
+			</div>
 			<dl v-if="facts.length > 0" class="cti-disposition__facts" data-testid="cti-disposition-facts">
 				<template v-for="fact in facts" :key="fact.label">
 					<dt>{{ fact.label }}</dt>
@@ -238,10 +248,21 @@ export default {
 	font-weight: 600;
 }
 
+.cti-disposition__field,
 .cti-disposition__queue {
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
+}
+
+.cti-disposition__label {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cti-disposition__optional {
+	font-weight: 400;
+	color: var(--color-text-maxcontrast);
 }
 
 .cti-disposition__hint {
