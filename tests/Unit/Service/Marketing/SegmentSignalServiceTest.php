@@ -396,8 +396,8 @@ class SegmentSignalServiceTest extends TestCase {
 		$this->store->save('ticket', ['client' => 'client-2', 'ticketType' => 'interaction', 'occurredAt' => '2026-09-05T08:00:00+00:00']);
 
 		$this->assertSame(
-			'2026-09-02T14:30:00+00:00',
-			$this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_LAST_CONTACT_AT]
+			expected: '2026-09-02T14:30:00+00:00',
+			actual: $this->service()->signalsFor(clientId: 'client-1')[SegmentSignalService::FIELD_LAST_CONTACT_AT]
 		);
 	}//end testLastContactIsTheNewestContactMoment()
 
@@ -409,7 +409,7 @@ class SegmentSignalServiceTest extends TestCase {
 	public function testLastContactIsNullWithoutAContactMoment(): void {
 		$this->store->save('ticket', ['client' => 'client-1', 'ticketType' => 'interaction', 'occurredAt' => '']);
 
-		$this->assertNull($this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_LAST_CONTACT_AT]);
+		$this->assertNull(actual: $this->service()->signalsFor(clientId: 'client-1')[SegmentSignalService::FIELD_LAST_CONTACT_AT]);
 	}//end testLastContactIsNullWithoutAContactMoment()
 
 	/**
