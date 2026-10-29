@@ -1217,7 +1217,8 @@
 								{
 									"as": "title",
 									"path": "slaDeadline",
-									"format": "longdatetime"
+									"format": "longdatetime",
+									"size": 26
 								},
 								{
 									"label": "Priority",
@@ -1235,7 +1236,28 @@
 									"format": "user"
 								}
 							],
-							"hideEmpty": true
+							"hideEmpty": true,
+							"actions": [
+								{
+									"id": "set-term",
+									"type": "open-form",
+									"label": "Set the term",
+									"formTitle": "Set the term",
+									"requires": "update",
+									"endpoint": {
+										"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId",
+										"method": "PATCH"
+									},
+									"formProperties": {
+										"slaDeadline": {
+											"type": "string",
+											"format": "date-time",
+											"title": "Time limit"
+										}
+									},
+									"successMessage": "The term is set."
+								}
+							]
 						},
 						"visibleWhen": {
 							"field": "ticketType",
@@ -1260,7 +1282,50 @@
 								}
 							],
 							"hideEmpty": true,
-							"emptyText": "No case linked yet."
+							"emptyText": "No case linked yet.",
+							"actions": [
+								{
+									"id": "link-case",
+									"type": "open-form",
+									"label": "Link an existing case",
+									"formTitle": "Link an existing case",
+									"requires": "update",
+									"visibleWhen": {
+										"all": [
+											{
+												"field": "caseReference",
+												"op": "empty"
+											},
+											{
+												"appInstalled": "dossiq"
+											}
+										]
+									},
+									"endpoint": {
+										"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId",
+										"method": "PATCH"
+									},
+									"formProperties": {
+										"caseReference": {
+											"type": "string",
+											"title": "Case"
+										}
+									},
+									"fieldOverrides": {
+										"caseReference": {
+											"widget": "resource",
+											"label": "Case",
+											"placeholder": "Pick a case",
+											"resource": {
+												"register": "dossiq",
+												"schema": "case",
+												"labelField": "title"
+											}
+										}
+									},
+									"successMessage": "The request is linked to the case."
+								}
+							]
 						},
 						"visibleWhen": {
 							"field": "ticketType",

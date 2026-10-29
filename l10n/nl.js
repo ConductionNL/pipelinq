@@ -9294,7 +9294,11 @@ OC.L10N.register(
         "Z report {reportDate|date}, {terminalId}": "Z-rapport {reportDate|date}, {terminalId}",
         "Within the margin": "Binnen de marge",
         "Outside the margin": "Buiten de marge",
-        "Unknown measure": "Onbekende maat"
+        "Unknown measure": "Onbekende maat",
+        "Set the term": "Termijn instellen",
+        "Link an existing case": "Bestaande zaak koppelen",
+        "The term is set.": "De termijn is ingesteld.",
+        "The request is linked to the case.": "Het verzoek is aan de zaak gekoppeld."
     },
     "nplurals=2; plural=(n != 1);"
 )
