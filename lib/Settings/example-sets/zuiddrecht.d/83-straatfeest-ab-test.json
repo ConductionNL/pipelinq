@@ -1,5 +1,5 @@
 {
-	"$comment": "The Straatfeestseizoen newsletter as an A/B test, as PqNieuwsbriefABTest draws it (coordinator 28 Oct, board canon): the sent newsletter is variant A, and a variant B blast (abVariantOf) went out at the same moment. Each arm has more than 500 delivered and was sent more than 24 hours ago, so the page computes a verdict: A clicks about 15%, B about 26%, B significantly higher (p < 0.05). The segment's 412 contacts and the board's 203/201 figures follow in a board amend.",
+	"$comment": "The Straatfeestseizoen newsletter as an A/B test, as PqNieuwsbriefABTest draws it (coordinator 28 Oct, board canon): the sent newsletter is variant A, and a variant B blast (abVariantOf) went out at the same moment. Each arm sends its own template, so A reads \"Straatfeest deze zomer? Dit moet je regelen\" and B \"Je straatfeest, geregeld in 4 stappen\". Each arm has more than 500 delivered and was sent more than 24 hours ago, so the page computes a verdict: A clicks about 15%, B about 26%, B significantly higher (p < 0.05). The segment's 412 contacts and the board's 203/201 figures follow in a board amend.",
 	"changes": [
 		{
 			"key": "nieuwsbrief-straatfeest-variant-a",
@@ -9,6 +9,7 @@
 				"name": "Straatfeestseizoen: wat regel je"
 			},
 			"set": {
+				"templateId": "{{object:sjabloon-straatfeest-variant-a.id}}",
 				"totals": {
 					"queued": 0,
 					"sent": 520,
@@ -23,6 +24,24 @@
 		}
 	],
 	"objects": [
+		{
+			"key": "sjabloon-straatfeest-variant-a",
+			"register": "pipelinq",
+			"schema": "campaignTemplate",
+			"verbatimFields": [
+				"bodyText"
+			],
+			"data": {
+				"name": "Straatfeestseizoen (variant A)",
+				"channel": "email",
+				"subject": "Straatfeest deze zomer? Dit moet je regelen",
+				"senderName": "Gemeente Zuiddrecht",
+				"senderEmail": "nieuws@zuiddrecht.example",
+				"language": "nl",
+				"bodyText": "Straatfeest deze zomer? Dit moet je regelen\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\nGemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
 		{
 			"key": "nieuwsbrief-straatfeest-variant-b",
 			"register": "pipelinq",
