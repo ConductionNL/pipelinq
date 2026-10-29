@@ -86,7 +86,7 @@
 			<NcButton
 				variant="tertiary"
 				type="submit"
-				class="navi-widget__ask"
+				class="navi-widget__ask cn-button--tonal"
 				:disabled="loading || !query.trim()">
 				<template #icon>
 					<CreationOutline :size="16" />
@@ -289,17 +289,6 @@ export default {
 .navi-widget__ask {
 	align-self: flex-start;
 	margin-top: 2px;
-}
-
-.navi-widget__ask.button-vue.button-vue {
-	--button-padding: 12px;
-	min-height: 34px;
-	height: 34px;
-	border: 0;
-	border-radius: 17px;
-	background-color: var(--color-primary-element-light);
-	color: var(--color-primary-element-light-text);
-	font-size: 13px;
 }
 
 .navi-widget__history {
