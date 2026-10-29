@@ -42,12 +42,12 @@ class SalutationSchemaTest extends TestCase {
 	 * @return array<string, mixed> The schema.
 	 */
 	private function schema(string $key): array {
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 3));
 
-		$register = (new ConfigFileLoaderService($appManager))->loadConfigurationFile();
+		$register = (new ConfigFileLoaderService(appManager: $appManager))->loadConfigurationFile();
 		$schema = ($register['components']['schemas'][$key] ?? null);
-		$this->assertIsArray($schema, "The {$key} schema was not read.");
+		$this->assertIsArray(actual: $schema, message: "The {$key} schema was not read.");
 
 		return $schema;
 	}//end schema()
@@ -61,15 +61,15 @@ class SalutationSchemaTest extends TestCase {
 		foreach (['contact', 'client'] as $key) {
 			$schema = $this->schema(key: $key);
 
-			$this->assertSame($key, $schema['slug'], 'A fragment without a slug is refused by the import.');
-			$this->assertArrayHasKey('salutation', $schema['properties'], "{$key} has no salutation.");
+			$this->assertSame(expected: $key, actual: $schema['slug'], message: 'A fragment without a slug is refused by the import.');
+			$this->assertArrayHasKey(key: 'salutation', array: $schema['properties'], message: "{$key} has no salutation.");
 			$property = $schema['properties']['salutation'];
-			$this->assertSame('string', $property['type']);
-			$this->assertSame('Salutation', $property['title']);
-			$this->assertArrayNotHasKey('default', $property, 'A default would greet someone in a way they never asked for.');
-			$this->assertArrayNotHasKey('enum', $property, 'A salutation is what the person stated, not a pick from a list.');
-			$this->assertNotContains('salutation', ($schema['required'] ?? []));
-			$this->assertArrayHasKey('name', $schema['properties'], 'The fragment replaced the schema instead of adding to it.');
+			$this->assertSame(expected: 'string', actual: $property['type']);
+			$this->assertSame(expected: 'Salutation', actual: $property['title']);
+			$this->assertArrayNotHasKey(key: 'default', array: $property, message: 'A default would greet someone in a way they never asked for.');
+			$this->assertArrayNotHasKey(key: 'enum', array: $property, message: 'A salutation is what the person stated, not a pick from a list.');
+			$this->assertNotContains(needle: 'salutation', haystack: ($schema['required'] ?? []));
+			$this->assertArrayHasKey(key: 'name', array: $schema['properties'], message: 'The fragment replaced the schema instead of adding to it.');
 		}
 	}//end testContactAndClientDeclareAnOptionalSalutation()
 }//end class

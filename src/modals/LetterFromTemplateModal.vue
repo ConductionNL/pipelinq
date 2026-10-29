@@ -210,6 +210,7 @@ import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
 import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
+import { nextAppointment } from '../services/letterAppointment.js'
 import {
 	downloadLetter,
 	fetchLetterTemplates,
@@ -217,7 +218,6 @@ import {
 	makeLetter,
 	previewLetter,
 } from '../services/letters.js'
-import { nextAppointment } from '../services/letterAppointment.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {

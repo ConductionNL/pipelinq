@@ -474,7 +474,8 @@ class LetterControllerTest extends TestCase
             ])
             ->willReturn(['html' => '', 'fields' => [], 'complete' => true, 'warnings' => []]);
 
-        $response = $this->controller(params: ['templateId' => 'tpl-1', 'ticketId' => self::TICKET, 'appointmentId' => self::APPOINTMENT])->preview(id: self::CLIENT);
+        $params   = ['templateId' => 'tpl-1', 'ticketId' => self::TICKET, 'appointmentId' => self::APPOINTMENT];
+        $response = $this->controller(params: $params)->preview(id: self::CLIENT);
 
         $this->assertSame(expected: 200, actual: $response->getStatus());
 
@@ -498,7 +499,8 @@ class LetterControllerTest extends TestCase
         $params = ['templateId' => 'tpl-1', 'appointmentId' => self::APPOINTMENT];
         $this->assertSame(expected: 404, actual: $this->controller(params: $params)->create(id: self::CLIENT)->getStatus());
         $this->assertSame(expected: 404, actual: $this->controller(params: $params)->preview(id: self::CLIENT)->getStatus());
-        $this->assertSame(expected: 'Appointment not found', actual: $this->controller(params: $params)->preview(id: self::CLIENT)->getData()['message']);
+        $message = $this->controller(params: $params)->preview(id: self::CLIENT)->getData()['message'];
+        $this->assertSame(expected: 'Appointment not found', actual: $message);
 
         // On another ticket than the letter's it stays refused.
         $this->readable[self::APPOINTMENT]['ticket'] = 'another-ticket';
