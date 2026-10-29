@@ -1977,7 +1977,9 @@ export default {
 /* Board look (PqPipeline): the content starts 24px down and the header 4px
    under that, so the title sits at 96. The title and the 40px buttons share
    the first row, 10px apart; the count line takes the row 6px under it and
-   the header ends 8px lower, 20px above the chips. */
+   the header ends 8px lower, 20px above the chips. The header's own text
+   is CnPageHeader's markup, which this scoped block reaches only through
+   :deep. */
 .cn-look-board.pipeline-board {
 	padding-top: 24px;
 }
@@ -1992,16 +1994,16 @@ export default {
 	margin-bottom: 20px;
 }
 
-.cn-look-board.pipeline-board > .cn-page-header .cn-page-header__text {
+.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__text) {
 	display: contents;
 }
 
-.cn-look-board.pipeline-board > .cn-page-header .cn-page-header__title {
+.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__title) {
 	grid-column: 1;
 	grid-row: 1;
 }
 
-.cn-look-board.pipeline-board > .cn-page-header .cn-page-header__description {
+.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__description) {
 	grid-column: 1 / -1;
 	grid-row: 2;
 	margin: 0;
