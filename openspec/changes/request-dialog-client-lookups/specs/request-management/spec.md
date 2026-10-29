@@ -8,12 +8,16 @@ The new request dialog MUST let the handler search the clients by name and pick 
 
 #### Scenario: a known client
 
+@e2e exclude Spec only so far; the build of this change adds the Playwright test.
+
 - GIVEN the client "Sanne de Vries" exists with one open ticket
 - WHEN the handler types "de Vries" under Klant
 - THEN the list shows "Sanne de Vries" with "Inwoner", her address and "1 open ticket", marked "Bekend"
 - AND picking her puts her on the request
 
 #### Scenario: a resident not yet a client
+
+@e2e exclude Spec only so far; the build of this change adds the Playwright test.
 
 - GIVEN the handler may look up in the BRP
 - WHEN the handler chooses "Opzoeken in de BRP", gives the BSN, a reason and the purpose binding
@@ -23,11 +27,15 @@ The new request dialog MUST let the handler search the clients by name and pick 
 
 #### Scenario: a company not yet a client
 
+@e2e exclude Spec only so far; the build of this change adds the Playwright test.
+
 - WHEN the handler chooses "Opzoeken in de KVK" and searches "Bakkerij De Graaf"
 - AND picks the company from the results
 - THEN an organisation client with its KVK number, legal form and place is created and put on the request
 
 #### Scenario: a handler without BRP access
+
+@e2e exclude Spec only so far; the build of this change adds the Playwright test.
 
 - GIVEN the handler is not in the groups the BRP settings allow
 - WHEN the handler opens the new request dialog
