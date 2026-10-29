@@ -179,13 +179,14 @@ describe('POS roles and staff', () => {
 		}
 	})
 
-	it('lets the POS staff headers wrap and drops the doubled padding', () => {
+	it('draws the POS staff through the shared table and drops the doubled padding', () => {
 		const source = readFileSync(
 			resolve(__dirname, '../../src/views/pos/PosStaffList.vue'),
 			'utf8',
 		)
 		const root = source.match(/\.pos-staff-list \{[^}]*\}/)[0]
 		expect(root).not.toMatch(/padding/)
-		expect(source).toMatch(/white-space: normal/)
+		expect(source).toContain('<CnDataTable')
+		expect(source).not.toContain('<table')
 	})
 })
