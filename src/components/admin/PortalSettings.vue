@@ -892,13 +892,13 @@ export default {
 }
 
 .portal-status--live {
-	background: var(--color-success-hover, #e7f3ea);
-	color: var(--color-success-text);
+	background: var(--cn-board-success-tint, #e7f3ea);
+	color: var(--cn-board-success-ink, #1e6b2a);
 }
 
 .portal-status--draft {
-	background: var(--color-warning-hover, #fff4de);
-	color: var(--color-warning-text);
+	background: var(--cn-board-notice-bg, #fff4de);
+	color: var(--cn-board-notice-ink, #7a4f00);
 }
 
 .portal-group {
