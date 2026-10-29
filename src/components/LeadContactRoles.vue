@@ -54,7 +54,7 @@
 		</p>
 
 		<div class="lead-contact-roles__footer">
-			<NcButton variant="secondary" @click="showAddDialog = true">
+			<NcButton class="cn-button--tonal" variant="secondary" @click="showAddDialog = true">
 				{{ t('pipelinq', 'Add contact role') }}
 			</NcButton>
 		</div>
