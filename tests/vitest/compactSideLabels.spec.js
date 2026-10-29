@@ -17,7 +17,7 @@ import { describe, expect, it } from 'vitest'
 
 const style = (file) => readFileSync(resolve(__dirname, '../../src/components', file), 'utf8').split('<style')[1]
 
-const block = (css, selector) => {
+function block(css, selector) {
 	const start = css.indexOf(selector + ' {')
 	expect(start, selector).toBeGreaterThan(-1)
 	return css.slice(start, css.indexOf('}', start))
