@@ -674,8 +674,8 @@ test.describe('Blasts ledger and wizard', () => {
 		await expect(dialog).toBeVisible({ timeout: 20000 })
 
 		// The six steps render as a stepper with exactly one current step.
-		await expect(dialog.locator('.blast-wizard__step')).toHaveCount(6)
-		await expect(dialog.locator('.blast-wizard__step--current')).toHaveCount(1)
+		await expect(dialog.locator('.cn-stepper__item')).toHaveCount(6)
+		await expect(dialog.locator('.cn-stepper__item--current')).toHaveCount(1)
 
 		// Basics. Next stays disabled until the name is filled in.
 		const next = dialog.getByRole('button', { name: 'Next' })

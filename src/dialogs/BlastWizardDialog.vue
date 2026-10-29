@@ -20,29 +20,12 @@
 		data-testid="blast-wizard-dialog"
 		@closing="close()">
 		<div class="blast-wizard">
-			<ol class="blast-wizard__steps">
-				<li
-					v-for="(s, idx) in steps"
-					:key="s.key"
-					class="blast-wizard__step"
-					:class="{
-						'blast-wizard__step--current': idx === currentStep,
-						'blast-wizard__step--done': idx < currentStep,
-					}">
-					<button
-						type="button"
-						class="blast-wizard__step-button"
-						:disabled="idx > reachableStep"
-						:aria-current="idx === currentStep ? 'step' : null"
-						@click="goTo(idx)">
-						<span class="blast-wizard__step-number" aria-hidden="true">
-							<Check v-if="idx < currentStep" :size="12" />
-							<template v-else>{{ idx + 1 }}</template>
-						</span>
-						<span class="blast-wizard__step-label">{{ s.label }}</span>
-					</button>
-				</li>
-			</ol>
+			<CnStepper
+				:steps="stepperSteps"
+				:currentIndex="currentStep"
+				:reachableIndex="reachableStep"
+				allowJumpBack
+				@jump="(id) => goTo(stepIndex(id))" />
 
 			<div class="blast-wizard__body">
 				<!-- Basics -->
@@ -314,10 +297,13 @@
 
 				<!-- Review -->
 				<section v-if="step === 'review'" class="blast-wizard__panel">
+					<h3 class="blast-wizard__review-label">
+						{{ steps[steps.length - 1].label }}
+					</h3>
 					<dl class="blast-wizard__review">
 						<template v-for="row in reviewRows" :key="row.key">
 							<dt>{{ row.label }}</dt>
-							<dd>{{ row.value }}</dd>
+							<dd class="blast-wizard__review-value">{{ row.value }}</dd>
 							<dd class="blast-wizard__review-change">
 								<NcButton
 									variant="tertiary"
@@ -332,35 +318,38 @@
 						class="blast-wizard__consent"
 						role="status"
 						data-testid="blast-review-consent">
-						<strong>{{ t('pipelinq', 'Consent missing') }}</strong>
-						<p>{{ reviewConsentLine }}</p>
-						<p class="blast-wizard__consent-names">
-							{{ reviewMissingNames }}
-						</p>
-						<span class="blast-wizard__consent-actions">
-							<NcButton data-testid="blast-review-consent-request" @click="onConsentRequest">
-								<template #icon>
-									<EmailOutline :size="20" />
-								</template>
-								{{ t('pipelinq', 'Request consent') }}
-							</NcButton>
-							<NcButton
-								:pressed="consentChoice === 'skip'"
-								data-testid="blast-review-consent-skip"
-								@click="consentChoice = 'skip'">
-								<template #icon>
-									<Send :size="20" />
-								</template>
-								{{ t('pipelinq', 'Skip and send') }}
-							</NcButton>
-						</span>
+						<AlertOutline :size="20" class="blast-wizard__consent-icon" />
+						<div class="blast-wizard__consent-body">
+							<strong>{{ t('pipelinq', 'Consent missing') }}</strong>
+							<p>{{ reviewConsentLine }}</p>
+							<p class="blast-wizard__consent-names">
+								{{ reviewMissingNames }}
+							</p>
+							<span class="blast-wizard__consent-actions">
+								<NcButton data-testid="blast-review-consent-request" @click="onConsentRequest">
+									<template #icon>
+										<EmailOutline :size="20" />
+									</template>
+									{{ t('pipelinq', 'Request consent') }}
+								</NcButton>
+								<NcButton
+									:pressed="consentChoice === 'skip'"
+									data-testid="blast-review-consent-skip"
+									@click="consentChoice = 'skip'">
+									<template #icon>
+										<Send :size="20" />
+									</template>
+									{{ t('pipelinq', 'Skip and send') }}
+								</NcButton>
+							</span>
+						</div>
 					</div>
 					<p
 						v-if="templateChecked"
 						class="blast-wizard__check"
 						:class="{ 'blast-wizard__check--error': templateValidationError }"
 						data-testid="blast-review-template-check">
-						<Check v-if="!templateValidationError" :size="18" />
+						<CheckCircle v-if="!templateValidationError" :size="20" />
 						{{ templateValidationError || t('pipelinq', 'Unsubscribe link found in the template') }}
 					</p>
 				</section>
@@ -375,9 +364,7 @@
 		</div>
 
 		<template #actions>
-			<NcButton
-				class="blast-wizard__cancel"
-				@click="close()">
+			<NcButton @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton v-if="currentStep > 0" @click="prev">
@@ -420,7 +407,7 @@
 </template>
 
 <script>
-import { CnDialog } from '@conduction/nextcloud-vue'
+import { CnDialog, CnStepper } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showInfo } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -433,8 +420,10 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import Check from 'vue-material-design-icons/Check.vue'
+import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Send from 'vue-material-design-icons/Send.vue'
@@ -479,7 +468,10 @@ function toLocalInput(date) {
 export default {
 	name: 'BlastWizardDialog',
 	components: {
+		AlertOutline,
 		Check,
+		CheckCircle,
+		CnStepper,
 		EmailOutline,
 		Send,
 		ArrowLeft,
@@ -565,6 +557,17 @@ export default {
 				key: s.key,
 				label: this.t('pipelinq', s.label),
 			}))
+		},
+
+		/**
+		 * The steps as the shared stepper takes them.
+		 *
+		 * @return {Array<{id: string, label: string}>}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
+		stepperSteps() {
+			return this.steps.map((s) => ({ id: s.key, label: s.label }))
 		},
 
 		/**
@@ -1375,91 +1378,6 @@ export default {
 	padding-bottom: 8px;
 }
 
-.blast-wizard__steps {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 6px 8px;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.blast-wizard__step {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-/* The dash between one step and the next, as the board draws the row. */
-.blast-wizard__step:not(:last-child)::after {
-	content: '–';
-	color: var(--color-text-maxcontrast);
-}
-
-.blast-wizard__step-button {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	min-height: 0;
-	margin: 0;
-	padding: 0;
-	border: 0;
-	background: none;
-	color: var(--color-main-text);
-	font-size: 13px;
-	font-weight: normal;
-	cursor: pointer;
-}
-
-/* Nextcloud's core button rules give every state a background, border and
-   radius, the strongest at (0,4,1); three classes plus the state outrank
-   them. The keyboard focus ring is left alone. */
-.blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:hover,
-.blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:focus,
-.blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:active,
-.blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:disabled {
-	border: 0;
-	border-radius: 0;
-	background: none;
-	color: var(--color-main-text);
-}
-
-.blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:disabled {
-	cursor: default;
-	color: var(--color-text-maxcontrast);
-}
-
-.blast-wizard__step-number {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 18px;
-	height: 18px;
-	border-radius: 50%;
-	background: var(--color-background-dark);
-	font-size: 11px;
-	font-weight: 700;
-}
-
-.blast-wizard__step--current .blast-wizard__step-number {
-	background: var(--color-primary-element);
-	color: var(--color-primary-element-text);
-}
-
-.blast-wizard__step--done .blast-wizard__step-number {
-	background: var(--color-success-light, #e7f3ea);
-	color: var(--color-success-text, #1e6b2a);
-}
-
-.blast-wizard__step--current .blast-wizard__step-label {
-	font-weight: 700;
-}
-
-.blast-wizard__step-label {
-	white-space: nowrap;
-}
-
 /* Tall enough for the biggest step, so the dialog does not jump between them. */
 .blast-wizard__body {
 	display: flex;
@@ -1511,13 +1429,24 @@ export default {
 
 .blast-wizard__consent {
 	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	padding: 12px 14px;
-	border-radius: 8px;
+	gap: 10px;
+	padding: 14px 16px;
+	border: 1px solid color-mix(in srgb, var(--color-warning) 45%, transparent);
+	border-radius: 10px;
 	background: var(--color-warning-light, #fdf2e5);
 	color: var(--color-warning-text, #7a4f00);
 	font-size: 14px;
+}
+
+.blast-wizard__consent-icon {
+	flex: none;
+}
+
+.blast-wizard__consent-body {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
 }
 
 .blast-wizard__consent p {
@@ -1544,7 +1473,7 @@ export default {
 	border-radius: 8px;
 	background: var(--color-success-light, #e7f3ea);
 	color: var(--color-success-text, #1e6b2a);
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 600;
 }
 
@@ -1616,22 +1545,38 @@ export default {
 	justify-content: space-between;
 }
 
+.blast-wizard__review-label {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
 .blast-wizard__review {
 	display: grid;
-	grid-template-columns: max-content minmax(0, 1fr) auto;
+	grid-template-columns: minmax(120px, 170px) minmax(0, 1fr) auto;
 	align-items: center;
-	gap: 0 16px;
 	margin: 0;
 }
 
-/* Nextcloud's core CSS pads every dt and dd by 12px. */
+/* Nextcloud's core CSS pads every dt and dd by 12px; each answer is a row
+   with a hairline under it. */
 .blast-wizard__review dt,
 .blast-wizard__review dd {
-	padding: 0;
+	align-self: stretch;
+	display: flex;
+	align-items: center;
+	min-height: 50px;
+	padding: 0 16px 0 0;
+	border-bottom: 1px solid var(--color-border);
 }
 
 .blast-wizard__review dt {
+	justify-content: flex-start;
 	color: var(--color-text-maxcontrast);
+	text-align: start;
 }
 
 .blast-wizard__review dd {
@@ -1639,17 +1584,12 @@ export default {
 	overflow-wrap: anywhere;
 }
 
-.blast-wizard__cancel {
-	margin-inline-end: auto;
+.blast-wizard__review-value {
+	font-weight: 600;
 }
 
-@media (max-width: 720px) {
-	.blast-wizard__step-label {
-		display: none;
-	}
-
-	.blast-wizard__step--current .blast-wizard__step-label {
-		display: block;
-	}
+.blast-wizard__review .blast-wizard__review-change {
+	justify-content: flex-end;
+	padding-inline-end: 0;
 }
 </style>

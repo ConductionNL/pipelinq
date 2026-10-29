@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('@conduction/nextcloud-vue', () => ({ CnDialog: { name: 'CnDialog' } }))
+vi.mock('@conduction/nextcloud-vue', () => ({ CnDialog: { name: 'CnDialog' }, CnStepper: { name: 'CnStepper' } }))
 vi.mock('@nextcloud/vue', () => Object.fromEntries(['NcButton', 'NcCheckboxRadioSwitch', 'NcDateTimePickerNative', 'NcLoadingIcon', 'NcModal', 'NcNoteCard', 'NcSelect', 'NcTextField'].map((name) => [name, { name }])))
 vi.mock('@nextcloud/axios', () => ({ default: { get: vi.fn(), post: vi.fn() } }))
 vi.mock('@nextcloud/dialogs', () => ({ showInfo: vi.fn() }))
@@ -48,5 +48,28 @@ describe('the new-newsletter wizard as drawn', () => {
 		expect(source).toContain('data-testid="blast-review-consent"')
 		expect(source).toContain('data-testid="blast-review-template-check"')
 	})
-})
 
+	it('draws the shared board stepper, a filled-in step ahead still one press away (needs nc-vue CnStepper)', () => {
+		expect(source).toMatch(/<CnStepper[\s\S]*?:reachableIndex="reachableStep"[\s\S]*?allowJumpBack/)
+		expect(source).not.toContain('class="blast-wizard__steps"')
+		const steps = [{ key: 'basics', label: 'Basics' }, { key: 'review', label: 'Review' }]
+		expect(Wizard.computed.stepperSteps.call({ steps })).toEqual([{ id: 'basics', label: 'Basics' }, { id: 'review', label: 'Review' }])
+	})
+
+	it('reviews under a section label, one ruled row per answer with the value in bold', () => {
+		expect(source).toContain('class="blast-wizard__review-label"')
+		expect(source).toMatch(/\.blast-wizard__review dt,\n\.blast-wizard__review dd \{[^}]*border-bottom: 1px solid var\(--color-border\)/)
+		expect(source).toMatch(/\.blast-wizard__review dt \{[^}]*text-align: start/)
+		expect(source).toMatch(/\.blast-wizard__review-value \{[^}]*font-weight: 600/)
+	})
+
+	it('draws the consent notice as an edged card with its warning icon, and the template check with a filled check', () => {
+		expect(source).toMatch(/data-testid="blast-review-consent">\s*<AlertOutline/)
+		expect(source).toMatch(/\.blast-wizard__consent \{[^}]*border: 1px solid/)
+		expect(source).toMatch(/<CheckCircle v-if="!templateValidationError"/)
+	})
+
+	it('keeps Cancel beside Back and Create on the right', () => {
+		expect(source).not.toMatch(/\.blast-wizard__cancel \{[^}]*margin-inline-end: auto/)
+	})
+})
