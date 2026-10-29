@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -108,6 +109,13 @@ class SegmentSignalService {
 	 * @var string
 	 */
 	public const FIELD_STALLED_DAYS = 'pipelinqStalledLeadDays';
+
+	/**
+	 * The moment of the customer's latest contact moment, a date-time string.
+	 *
+	 * @var string
+	 */
+	public const FIELD_LAST_CONTACT_AT = 'pipelinqLastContactAt';
 
 	/**
 	 * The dunning states a promotional send is suppressed on by default.
@@ -228,6 +236,12 @@ class SegmentSignalService {
 				'title' => 'Days a lead has been stalled',
 				'source' => 'pipelinq',
 				'description' => 'Days the longest-waiting open lead has sat in its current stage.',
+			],
+			self::FIELD_LAST_CONTACT_AT => [
+				'type' => 'string',
+				'title' => 'Last contact',
+				'source' => 'pipelinq',
+				'description' => 'When the latest contact moment with this customer took place.',
 			],
 		];
 	}//end catalogue()
@@ -414,18 +428,61 @@ class SegmentSignalService {
 	}//end forget()
 
 	/**
-	 * The two pipelinq signals for one client.
+	 * The three pipelinq signals for one client.
 	 *
 	 * @param string $clientId The pipelinq client id.
 	 *
-	 * @return array<string, int|null> The renewal and stall day counts.
+	 * @return array<string, int|string|null> The renewal and stall day counts and the last contact.
 	 */
 	private function crmSignals(string $clientId): array {
 		return [
 			self::FIELD_RENEWAL_DAYS => $this->renewalDays(clientId: $clientId),
 			self::FIELD_STALLED_DAYS => $this->stalledDays(clientId: $clientId),
+			self::FIELD_LAST_CONTACT_AT => $this->lastContactAt(clientId: $clientId),
 		];
 	}//end crmSignals()
+
+	/**
+	 * When the latest contact moment of this client took place.
+	 *
+	 * A contact moment is a ticket of type `interaction`; requests and
+	 * complaints are what the contact was about, not the contact itself.
+	 *
+	 * @param string $clientId The pipelinq client id.
+	 *
+	 * @return string|null The `occurredAt` of the newest moment, or null when none is dated.
+	 *
+	 * @spec openspec/changes/segment-last-contact-signal/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
+	 */
+	private function lastContactAt(string $clientId): ?string {
+		$rows = $this->store->findAll(
+			schemaSlug: $this->store->schemaSlug('ticket_schema', 'ticket'),
+			filters: ['client' => $clientId, 'ticketType' => TicketService::TYPE_CONTACTMOMENT]
+		);
+
+		$latest = null;
+		$latestStamp = null;
+		foreach ($rows as $row) {
+			if ((string)($row['client'] ?? '') !== $clientId
+				|| (string)($row['ticketType'] ?? '') !== TicketService::TYPE_CONTACTMOMENT
+			) {
+				continue;
+			}
+
+			$moment = trim((string)($row['occurredAt'] ?? ''));
+			$stamp = strtotime($moment);
+			if ($moment === '' || $stamp === false) {
+				continue;
+			}
+
+			if ($latestStamp === null || $stamp > $latestStamp) {
+				$latest = $moment;
+				$latestStamp = $stamp;
+			}
+		}
+
+		return $latest;
+	}//end lastContactAt()
 
 	/**
 	 * Days until the nearest contract of this client ends.

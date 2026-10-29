@@ -384,6 +384,35 @@ class SegmentSignalServiceTest extends TestCase {
 	}//end testStalledDaysIsNullWithoutADatedOpenLead()
 
 	/**
+	 * The last contact is the newest contact moment of the customer; a
+	 * ticket of another type and another customer's moment do not count.
+	 *
+	 * @return void
+	 */
+	public function testLastContactIsTheNewestContactMoment(): void {
+		$this->store->save('ticket', ['client' => 'client-1', 'ticketType' => 'interaction', 'occurredAt' => '2026-03-10T09:00:00+00:00']);
+		$this->store->save('ticket', ['client' => 'client-1', 'ticketType' => 'interaction', 'occurredAt' => '2026-09-02T14:30:00+00:00']);
+		$this->store->save('ticket', ['client' => 'client-1', 'ticketType' => 'request', 'occurredAt' => '2026-09-04T10:00:00+00:00']);
+		$this->store->save('ticket', ['client' => 'client-2', 'ticketType' => 'interaction', 'occurredAt' => '2026-09-05T08:00:00+00:00']);
+
+		$this->assertSame(
+			'2026-09-02T14:30:00+00:00',
+			$this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_LAST_CONTACT_AT]
+		);
+	}//end testLastContactIsTheNewestContactMoment()
+
+	/**
+	 * A customer never contacted resolves to nothing rather than to a date.
+	 *
+	 * @return void
+	 */
+	public function testLastContactIsNullWithoutAContactMoment(): void {
+		$this->store->save('ticket', ['client' => 'client-1', 'ticketType' => 'interaction', 'occurredAt' => '']);
+
+		$this->assertNull($this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_LAST_CONTACT_AT]);
+	}//end testLastContactIsNullWithoutAContactMoment()
+
+	/**
 	 * The catalogue and the property map agree on every field, so the
 	 * validator can never be offered a field the evaluator cannot answer.
 	 *
