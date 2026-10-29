@@ -41,8 +41,14 @@ describe('the pipeline board leftovers in the board look', () => {
 
 	it('puts the buttons on the title row at 40px and the count line under the row', () => {
 		expect(rule(board, '.cn-look-board.pipeline-board > .cn-page-header > .button-vue')).toMatch(/height: var\(--cn-board-control-height, 40px\) !important;/)
-		expect(rule(board, '.cn-look-board.pipeline-board > .cn-page-header .cn-page-header__description')).toMatch(/grid-row: 2;/)
-		expect(rule(board, '.cn-look-board.pipeline-board > .cn-page-header .cn-page-header__description')).toMatch(/margin: 0;/)
+		expect(rule(board, '.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__description)')).toMatch(/grid-row: 2;/)
+		expect(rule(board, '.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__description)')).toMatch(/margin: 0;/)
+	})
+
+	it('reaches the page header title and text through :deep, which a scoped rule needs to place them', () => {
+		expect(board).not.toMatch(/\.cn-page-header \.cn-page-header__(text|title|description) \{/)
+		expect(rule(board, '.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__text)')).toMatch(/display: contents;/)
+		expect(rule(board, '.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__title)')).toMatch(/grid-column: 1;/)
 	})
 
 	it('draws the view chips without a band', () => {
