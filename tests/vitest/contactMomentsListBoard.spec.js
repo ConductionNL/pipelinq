@@ -56,6 +56,10 @@ describe('the contact moments list (pl2 PqContactmomenten)', () => {
 		expect(preset.headerButtons.map((button) => button.action)).toEqual(['export', 'log-contact'])
 	})
 
+	it('offers no Add ticket of its own: a contact moment is added with Log contact', () => {
+		expect(preset.showAdd).toBe(false)
+	})
+
 	it('keeps the requests list\'s menu as it was: the new header action is not in it', () => {
 		const menu = config.headerButtons.find((button) => button.action === 'actions-menu')
 		expect(menu.items).not.toContain('header-actions')

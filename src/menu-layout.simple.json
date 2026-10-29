@@ -2845,6 +2845,7 @@
 							"ticketType": "interaction"
 						},
 						"title": "Contact moments",
+						"showAdd": false,
 						"countText": "{shown} of {total} contact moments · all channels · newest first",
 						"searchPlaceholder": "Filter by subject or client",
 						"defaultSort": [
