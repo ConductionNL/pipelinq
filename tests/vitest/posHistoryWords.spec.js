@@ -20,11 +20,26 @@ const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'manifest.jso
 const nl = JSON.parse(fs.readFileSync(path.join(ROOT, 'l10n', 'nl.json'), 'utf8')).translations
 const nlJs = fs.readFileSync(path.join(ROOT, 'l10n', 'nl.js'), 'utf8')
 const widget = (pageId, id) => manifest.pages.find((p) => p.id === pageId).config.widgets.find((w) => w.id === id)
-const words = (content) => [
-	...Object.values(content.actionLabels),
-	...content.changeLabels.map((c) => c.label),
-]
-const statusLabel = (content, to) => content.changeLabels.find((c) => c.field === 'status' && c.to === to).label
+/**
+ * Every word a history card declares.
+ *
+ * @param {object} content The card's content.
+ * @return {Array<string>} The labels.
+ */
+function words(content) {
+	return [...Object.values(content.actionLabels), ...content.changeLabels.map((c) => c.label)]
+}
+
+/**
+ * The label for a status change.
+ *
+ * @param {object} content The card's content.
+ * @param {string} to The status reached.
+ * @return {string} The label.
+ */
+function statusLabel(content, to) {
+	return content.changeLabels.find((c) => c.field === 'status' && c.to === to).label
+}
 
 describe('POS side history in words', () => {
 	const receipt = widget('PosTransactionDetail', 'pos-tx-side-history').content
