@@ -169,7 +169,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
-	padding: 8px 0;
 }
 
 .reschedule-form__slots {
@@ -179,14 +178,22 @@ export default {
 	grid-template-columns: max-content 1fr;
 	gap: 8px 16px;
 	margin: 0;
+	padding: 0;
+	font-size: 14px;
 }
 
+/* Nextcloud's global dt and dd rules pad and right-align them, which pulls the rows apart. */
 .reschedule-form__slots dt {
+	width: auto;
+	padding: 0;
+	white-space: normal;
+	text-align: start;
 	color: var(--color-text-maxcontrast);
 }
 
 .reschedule-form__slots dd {
 	margin: 0;
+	padding: 0;
 }
 
 .form-group {
