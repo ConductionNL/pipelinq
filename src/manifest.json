@@ -5444,7 +5444,6 @@
 						"id": "make-quote",
 						"type": "open-form",
 						"label": "Make quote",
-						"icon": "FileDocumentEditOutline",
 						"register": "pipelinq",
 						"schema": "salesQuote",
 						"formTitle": "Make quote",
