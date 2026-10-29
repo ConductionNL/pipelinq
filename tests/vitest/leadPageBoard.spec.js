@@ -30,6 +30,10 @@ describe('the lead page (board PqLead)', () => {
 		expect(config.primaryActionByStage).toEqual({ Gekwalificeerd: 'make-quote', Voorstel: 'make-quote' })
 	})
 
+	it('draws Make quote without an icon, as PqLead and the Dq what-now buttons', () => {
+		expect(action('make-quote')).not.toHaveProperty('icon')
+	})
+
 	it('draws the eight deal facts in two columns, in the board order', () => {
 		const deal = widget('lead-deal').content
 		expect(deal.include).toEqual(['value', 'qualificationScore', 'expectedCloseDate', 'priority', 'source', 'category', 'assignee', 'stageEnteredAt'])
