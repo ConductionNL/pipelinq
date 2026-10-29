@@ -9280,7 +9280,8 @@ OC.L10N.register(
         "Z report {reportDate|date}, {terminalId}": "Z report {reportDate|date}, {terminalId}",
         "Within the margin": "Within the margin",
         "Outside the margin": "Outside the margin",
-        "Unknown measure": "Unknown measure"
+        "Unknown measure": "Unknown measure",
+        "{allRegistrations} registrations in total": "{allRegistrations} registrations in total"
     },
     "nplurals=2; plural=(n != 1);"
 )

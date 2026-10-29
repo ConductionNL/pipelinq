@@ -99,6 +99,15 @@ describe('the event page', () => {
 		expect(list.content.filterMenu).toBe(true)
 	})
 
+	it('ends the registrations list with the event\'s whole count, however narrowed (PqEvenement "73 aanmeldingen in totaal")', () => {
+		const list = widget(detail, 'event-registrations')
+		// nextcloud-vue footer-unfiltered-total: read under the event filter only.
+		expect(list.content.countValues).toEqual({ allRegistrations: { metric: 'count', unfiltered: true } })
+		expect(list.content.footerNote).toBe('{allRegistrations} registrations in total')
+		const nl = read('l10n', 'nl.json').translations
+		expect(nl[list.content.footerNote]).toBe('{allRegistrations} aanmeldingen in totaal')
+	})
+
 	it('sends the reminder and opens the check-in list from the header', () => {
 		const actions = detail.config.headerActions
 		const reminder = actions.find((action) => action.id === 'send-reminder')
