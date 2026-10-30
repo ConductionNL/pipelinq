@@ -9367,7 +9367,10 @@ OC.L10N.register(
         "Finish this task": "Finish this task",
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
-        "Attempt logged.": "Attempt logged."
+        "Attempt logged.": "Attempt logged.",
+        "for {assigneeUserId|user}": "for {assigneeUserId|user}",
+        "No open matters for this client.": "No open matters for this client.",
+        "No earlier contact with this client.": "No earlier contact with this client."
     },
     "nplurals=2; plural=(n != 1);"
 )

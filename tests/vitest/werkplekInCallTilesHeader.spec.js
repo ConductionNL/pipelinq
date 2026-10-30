@@ -65,8 +65,8 @@ describe('werkplek in-call card titles (PqWerkplekKlant)', () => {
 			return nl[item.title] || item.title
 		}
 		expect(title('interaction')).toBe('Dit contactmoment')
-		expect(title('client-cases')).toBe('Openstaande zaken')
-		expect(title('client-contacts')).toBe('Eerder contact')
+		expect(title('simple-call-matters')).toBe('Openstaande zaken')
+		expect(title('simple-call-earlier')).toBe('Eerder contact')
 	})
 
 	it('has an English source and a Dutch text for every new string', () => {
