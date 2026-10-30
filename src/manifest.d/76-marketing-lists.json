@@ -207,21 +207,36 @@
 					},
 					{
 						"id": "list-history",
-						"type": "timeline",
+						"type": "audit-trail",
 						"title": "History",
 						"content": {
-							"auditTrail": true,
-							"order": "desc"
+							"maxDisplay": 20,
+							"layout": "stacked",
+							"density": "compact",
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated"
+							}
 						}
 					},
 					{
 						"id": "list-side-history",
-						"type": "timeline",
+						"type": "audit-trail",
 						"title": "History",
 						"content": {
-							"auditTrail": true,
-							"order": "desc",
-							"limit": 3
+							"maxDisplay": 3,
+							"layout": "stacked",
+							"density": "compact",
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated"
+							}
 						}
 					},
 					{
