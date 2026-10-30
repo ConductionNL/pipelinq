@@ -1,5 +1,5 @@
 {
-	"$comment": "pipelinq's loyalty programme and quote in the Zuiddrecht set: Zuiddrecht Spaarpas with its tiers and Sanne's account, and quote OFF-2026-0042 for Bakkerij De Graaf, as PqLoyaliteit and PqOfferte draw them.",
+	"$comment": "pipelinq's loyalty programme and quote in the Zuiddrecht set: Zuiddrecht Spaarpas with its tiers (Sanne's account is declared in 84-till-loyalty-and-whatsapp.json, after the contact it belongs to), and quote OFF-2026-0042 for Bakkerij De Graaf, as PqLoyaliteit and PqOfferte draw them.",
 	"appConfig": [
 		{
 			"key": "icp_sbi_codes",
@@ -94,25 +94,6 @@
 				"thresholdValue": 2500,
 				"upgradePolicy": "immediate",
 				"downgradePolicy": "end_of_year"
-			}
-		},
-		{
-			"key": "spaarpas-account-sanne",
-			"register": "pipelinq",
-			"schema": "customerLoyaltyAccount",
-			"data": {
-				"accountId": "SP-0001-0340",
-				"customerId": "{{object:client-sanne.id}}",
-				"programmeId": "{{object:spaarpas.id}}",
-				"currentBalance": 340,
-				"lifetimePoints": 520,
-				"currentTierId": "{{object:spaarpas-niveau-brons.id}}",
-				"status": "active",
-				"createdOn": "{{datetime:-120 10:05}}",
-				"lastActivityDate": "{{datetime:0 11:43}}",
-				"optInAccepted": true,
-				"optInTimestamp": "{{datetime:-120 10:05}}",
-				"optInTermsVersion": "2026-1"
 			}
 		},
 		{

@@ -5,7 +5,9 @@
 
 Run: python3 -I -m unittest discover -s tests/example-sets -p 'test_*.py'
 """
+import glob
 import importlib.util
+import json
 import os
 import unittest
 
@@ -180,6 +182,29 @@ class OverriddenDeclarationTest(unittest.TestCase):
 
     def test_a_change_found_by_another_field_is_left_alone(self):
         self.assertEqual([], self.problems(self.change({'slaDeadline': 'x'}, where={'title': 'T'})))
+
+    def test_a_change_naming_the_object_by_key_is_refused(self):
+        change = {'key': 'c', 'register': 'pipelinq', 'schema': 'ticket', 'object': 't', 'set': {'slaDeadline': 'x'}}
+        self.assertEqual(1, len(self.problems(change)))
+
+    def test_a_change_finding_the_object_by_a_declared_value_is_refused(self):
+        self.assertEqual(1, len(self.problems(self.change({'slaDeadline': 'x'}, where={'status': 'new'}))))
+
+    def test_a_change_finding_another_value_is_left_alone(self):
+        self.assertEqual([], self.problems(self.change({'slaDeadline': 'x'}, where={'status': 'closed'})))
+
+
+class ShippedSetTest(unittest.TestCase):
+
+    def test_no_change_sets_a_field_its_object_declares(self):
+        base = os.path.join(_HERE, '..', '..', 'lib', 'Settings', 'example-sets')
+        fragment = {'objects': [], 'changes': []}
+        for path in [os.path.join(base, 'zuiddrecht.json')] + sorted(glob.glob(os.path.join(base, 'zuiddrecht.d', '*.json'))):
+            with open(path, encoding='utf-8') as handle:
+                part = json.load(handle)
+            for section in fragment:
+                fragment[section] += part.get(section, [])
+        self.assertEqual([], validator.overridden_declarations(fragment))
 
 
 if __name__ == '__main__':

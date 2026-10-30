@@ -1,5 +1,5 @@
 {
-	"$comment": "pipelinq's marketing in the Zuiddrecht set: segments, mailing lists and their subscribers, newsletters with their templates, and journeys, as PqMailinglijst, PqNieuwsbrieven, PqNieuwsbriefPrestaties, PqJourneys and PqJourney draw them.",
+	"$comment": "pipelinq's marketing in the Zuiddrecht set: segments, mailing lists and their subscribers, newsletters with their templates (the Straatfeestseizoen newsletter is declared in 83-straatfeest-ab-test.json, after its variant A template), and journeys, as PqMailinglijst, PqNieuwsbrieven, PqNieuwsbriefPrestaties, PqJourneys and PqJourney draw them.",
 	"objects": [
 		{
 			"key": "segment-verenigingen",
@@ -284,32 +284,6 @@
 				"bodyText": "Je straatfeest, geregeld in 4 stappen\n\nGeen interesse meer? Afmelden: {{unsubscribe_link}}\n\n{{physical_address}}",
 				"footerOverride": "Gemeente Zuiddrecht, Marktplein 1, 2851 AB Zuiddrecht",
 				"createdBy": "{{cast:pieter.uid}}"
-			}
-		},
-		{
-			"key": "nieuwsbrief-straatfeest",
-			"register": "pipelinq",
-			"schema": "blast",
-			"data": {
-				"name": "Straatfeestseizoen: wat regel je",
-				"templateId": "{{object:sjabloon-straatfeest.id}}",
-				"channel": "email",
-				"status": "sent",
-				"createdBy": "{{cast:pieter.uid}}",
-				"segmentId": "{{object:segment-verenigingen.id}}",
-				"scheduledFor": "{{datetime:-6 09:00}}",
-				"sentAt": "{{datetime:-6 09:00}}",
-				"totals": {
-					"queued": 0,
-					"sent": 412,
-					"delivered": 412,
-					"bounced": 0,
-					"opened": 239,
-					"clicked": 87,
-					"unsubscribed": 3,
-					"complained": 0
-				},
-				"abSplitPercent": 50
 			}
 		},
 		{

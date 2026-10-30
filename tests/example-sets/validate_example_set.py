@@ -309,6 +309,18 @@ def lookup_problem(where, name, lookup, looked_for, register, own_registers, dec
         warnings.append('%s: lookup %s finds no %s %s in this set with %s; it must exist on the instance' % (where, name, source, lookup['schema'], words))
 
 
+def changed_object(change, raw):
+    """The set's own object a change targets: named by key, by its id, or found by values it declares."""
+    if isinstance(change.get('object'), str):
+        return raw.get(change['object'])
+    where = change.get('where') or {}
+    target = re.fullmatch(r'\{\{object:([^.}]+)\.(?:id|uuid)\}\}', str(where.get('id', '')))
+    if target and len(where) == 1:
+        return raw.get(target.group(1))
+    found = [o for o in raw.values() if where and all(f in o['data'] and o['data'][f] == v for f, v in where.items())]
+    return found[0] if len(found) == 1 else None
+
+
 def overridden_declarations(fragment):
     """Changes that set a field the set's own object declares to another value.
 
@@ -318,9 +330,7 @@ def overridden_declarations(fragment):
     problems = []
     raw = {o.get('key'): o for o in fragment.get('objects', []) if isinstance(o, dict) and isinstance(o.get('data'), dict)}
     for change in fragment.get('changes', []):
-        where = change.get('where') or {}
-        target = re.fullmatch(r'\{\{object:([^.}]+)\.(?:id|uuid)\}\}', str(where.get('id', '')))
-        obj = raw.get(target.group(1)) if target and len(where) == 1 else None
+        obj = changed_object(change, raw)
         if obj is None or (obj.get('register'), obj.get('schema')) != (change.get('register'), change.get('schema')):
             continue
         for field, value in (change.get('set') or {}).items():
