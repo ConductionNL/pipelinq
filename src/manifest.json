@@ -9711,6 +9711,7 @@
 						"viewport": "wide",
 						"content": {
 							"ruleAbove": true,
+							"chevron": true,
 							"headerNote": "deadline is today or has passed",
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
@@ -9748,6 +9749,7 @@
 							"badges": [
 								{
 									"field": "priority",
+									"look": "text",
 									"labels": {
 										"urgent": "Urgent priority",
 										"high": "High priority",
@@ -9795,6 +9797,7 @@
 						"viewport": "wide",
 						"content": {
 							"ruleAbove": true,
+							"chevron": true,
 							"headerNote": "the customer has replied",
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
@@ -9832,6 +9835,7 @@
 							"badges": [
 								{
 									"field": "priority",
+									"look": "text",
 									"labels": {
 										"urgent": "Urgent priority",
 										"high": "High priority",
@@ -9879,6 +9883,7 @@
 						"viewport": "wide",
 						"content": {
 							"ruleAbove": true,
+							"chevron": true,
 							"headerNote": "nothing to do until they reply",
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
@@ -9916,6 +9921,7 @@
 							"badges": [
 								{
 									"field": "priority",
+									"look": "text",
 									"labels": {
 										"urgent": "Urgent priority",
 										"high": "High priority",
