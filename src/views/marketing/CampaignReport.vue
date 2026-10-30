@@ -22,12 +22,7 @@
 					{{ t('pipelinq', 'Campaign report') }}
 				</component>
 				<p v-if="embedded && report" class="campaign-report__window">
-					{{
-						t('pipelinq', '{from} to {to}', {
-							from: report.window.from,
-							to: report.window.to,
-						})
-					}}
+					{{ windowText }}
 				</p>
 			</div>
 			<div class="campaign-report__pickers">
@@ -41,13 +36,20 @@
 					:inputLabel="t('pipelinq', 'Campaign')"
 					label="label"
 					@input="fetchReport" />
+				<span
+					v-if="embedded"
+					class="campaign-report__model-label"
+					aria-hidden="true">
+					{{ t('pipelinq', 'Attribution model') }}
+				</span>
 				<NcSelect
 					v-model="model"
 					class="campaign-report__picker"
 					data-testid="campaign-report-model"
 					:options="modelOptions"
 					:clearable="false"
-					:inputLabel="t('pipelinq', 'Attribution model')"
+					:inputLabel="embedded ? null : t('pipelinq', 'Attribution model')"
+					:ariaLabelCombobox="embedded ? t('pipelinq', 'Attribution model') : null"
 					label="label" />
 			</div>
 		</header>
@@ -225,6 +227,7 @@ import {
 	summaryTiles,
 } from '../../services/campaignReport.js'
 import { fetchCampaignReport, fetchCampaigns } from '../../services/campaignsApi.js'
+import { getUserLocale, toDateObject } from '../../services/localeUtils.js'
 import { CAMPAIGN_CHANNEL_LABELS, enumLabel } from '../../utils/enumLabels.js'
 
 export default {
@@ -285,6 +288,30 @@ export default {
 				{ key: 'attributed', label: this.t('pipelinq', 'Attributed value'), value: this.money(tiles.attributedValue) },
 				{ key: 'cost', label: this.t('pipelinq', 'Cost'), value: this.moneyOrAbsent(tiles.cost) },
 			]
+		},
+
+		/**
+		 * The report's period in the board's short dates, the year once at
+		 * the end unless the period crosses a year ("28 sep tot 7 okt 2026").
+		 *
+		 * @return {string} The period, or '' without a report.
+		 * @spec openspec/changes/campaign-page-board-cards/specs/marketing-campaigns/spec.md
+		 */
+		windowText() {
+			const from = toDateObject(this.report?.window?.from)
+			const to = toDateObject(this.report?.window?.to)
+			if (from === null || to === null) {
+				return ''
+			}
+			const short = (date, withYear) => new Intl.DateTimeFormat(getUserLocale(), {
+				day: 'numeric',
+				month: 'short',
+				...(withYear ? { year: 'numeric' } : {}),
+			}).format(date).replace('.', '')
+			return this.t('pipelinq', '{from} to {to}', {
+				from: short(from, from.getFullYear() !== to.getFullYear()),
+				to: short(to, true),
+			})
 		},
 
 		/**
@@ -536,6 +563,17 @@ export default {
 
 	.campaign-report__tiles li {
 		flex: 1 1 90px;
+		min-width: auto;
+	}
+
+	.campaign-report__pickers {
+		align-items: center;
+		gap: 8px;
+	}
+
+	.campaign-report__model-label {
+		font-size: 14px;
+		font-weight: 600;
 	}
 }
 
@@ -630,7 +668,7 @@ export default {
 
 	.campaign-report__scroll {
 		border: 1px solid var(--color-border);
-		border-radius: var(--border-radius-large, 8px);
+		border-radius: 8px;
 	}
 
 	.campaign-report__table {

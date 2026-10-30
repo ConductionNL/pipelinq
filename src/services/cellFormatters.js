@@ -57,6 +57,21 @@ export function objectCurrency(value, row, _property, options) {
 }
 
 /**
+ * An amount in whole currency units, as the boards write a budget
+ * ("€ 2.500"): `objectCurrency` without decimals.
+ *
+ * @param {unknown} value The amount.
+ * @param {object} [row] The row; its `currency` wins when valid.
+ * @param {object} [property] The schema property (unused).
+ * @param {{currencyField?: string, locale?: string}} [options] Column options.
+ * @return {string} The formatted amount.
+ * @spec openspec/changes/campaign-page-board-cards/specs/marketing-campaigns/spec.md
+ */
+export function wholeCurrency(value, row, property, options) {
+	return objectCurrency(value, row, property, { ...(options || {}), decimals: 0 })
+}
+
+/**
  * An enum value as plain, translated text (no pill), as the boards draw a
  * priority: `high` reads "Hoog".
  *
@@ -339,6 +354,7 @@ export function timeOfDay(value, _row, _property, options) {
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
+	wholeCurrency,
 	transactionMoment,
 	momentInYear,
 	enumText,

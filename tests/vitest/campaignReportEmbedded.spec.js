@@ -159,7 +159,7 @@ describe('the campaign page channel table', () => {
 			path.join(ROOT, 'src', 'views', 'marketing', 'CampaignReport.vue'),
 			'utf8',
 		)
-		expect(source).toMatch(/\.campaign-report__tiles li \{\s*flex: 1 1 90px;\s*\}/)
+		expect(source).toMatch(/\.campaign-report__tiles li \{\s*flex: 1 1 90px;\s*min-width: auto;\s*\}/)
 		expect(source).not.toContain('min-width: 120px;')
 	})
 
