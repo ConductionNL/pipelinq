@@ -27,8 +27,11 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Controller\Customer360Controller;
+use OCA\Pipelinq\Service\ClientReadAccess;
+use OCA\Pipelinq\Service\ClientRiskPresenter;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -128,14 +131,33 @@ class Customer360ControllerTest extends TestCase {
 			$summaryService->method('getSummary')->willReturn($summaryOrThrow ?? []);
 		}
 
-		return new Customer360Controller($request,
+		$logger = $logger ?? $this->createMock(LoggerInterface::class);
+
+		return new Customer360Controller(
+			$request,
 			$summaryService,
 			$userSession,
-			$appConfig,
-			$container,
-			$logger ?? $this->createMock(LoggerInterface::class),
+			new ClientReadAccess($container, $appConfig, $logger),
+			$logger,
+			new ClientRiskPresenter($this->l10n()),
 		);
 	}//end buildController()
+
+	/**
+	 * An IL10N double that returns the English text with its parameters filled in.
+	 *
+	 * @return IL10N
+	 */
+	private function l10n(): IL10N {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text, $parameters = []): string => vsprintf($text, (array)$parameters));
+		$l10n->method('n')->willReturnCallback(
+			static fn (string $singular, string $plural, int $count): string => str_replace('%n', (string)$count, $count === 1 ? $singular : $plural)
+		);
+		$l10n->method('l')->willReturnCallback(static fn (string $type, $data): string => $data->format('Y-m-d'));
+
+		return $l10n;
+	}//end l10n()
 
 	/**
 	 * Unauthenticated callers are rejected before any read happens.
@@ -393,4 +415,39 @@ class Customer360ControllerTest extends TestCase {
 
 		$this->assertSame(500, $response->getStatus());
 	}//end testUnexpectedReadFailureIsAnError()
+
+	/**
+	 * The summary carries the client's churn risk in words, with the
+	 * heaviest reason as the caption.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-history-summary-and-risk/specs/client-insight/spec.md#requirement-every-client-carries-a-risk-level-with-its-reasons-req-cin-001
+	 */
+	public function testSummaryCarriesThePresentedChurnRisk(): void {
+		$controller = $this->buildController(
+			clientId: 'client-1',
+			foundClient: [
+				'name' => 'Client',
+				'@self' => ['id' => 'client-1'],
+				'churnRisk' => [
+					'level' => 'high',
+					'score' => 65,
+					'reasons' => [
+						['signal' => 'detractor', 'points' => 25, 'objectId' => 'r-1', 'since' => '2026-10-15'],
+						['signal' => 'contract-churned', 'points' => 40, 'objectId' => 'c-9', 'objectType' => 'salesContract', 'since' => '2026-10-29'],
+					],
+				],
+			],
+			uid: 'agent-1',
+			summaryOrThrow: ['clientId' => 'client-1', 'openTicketCount' => 4],
+		);
+
+		$risk = $controller->summary()->getData()['churnRisk'];
+
+		$this->assertSame('high', $risk['level']);
+		$this->assertSame('High', $risk['label']);
+		$this->assertSame('Contract ended on 2026-10-29', $risk['caption']);
+		$this->assertSame('c-9', $risk['reasons'][0]['objectId']);
+	}//end testSummaryCarriesThePresentedChurnRisk()
 }//end class

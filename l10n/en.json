@@ -9453,6 +9453,43 @@
         "Finish this task": "Finish this task",
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
-        "Attempt logged.": "Attempt logged."
+        "Attempt logged.": "Attempt logged.",
+        "Risk": "Risk",
+        "Churn risk": "Churn risk",
+        "Not worked out yet": "Not worked out yet",
+        "No warning signs": "No warning signs",
+        "Contract ends soon": "Contract ends soon",
+        "Contract ends on %s": "Contract ends on %s",
+        "Contract ended": "Contract ended",
+        "Contract ended on %s": "Contract ended on %s",
+        "Unhappy survey answer": "Unhappy survey answer",
+        "Unhappy survey answer on %s": "Unhappy survey answer on %s",
+        "_%n open complaint_::_%n open complaints_": [
+            "%n open complaint",
+            "%n open complaints"
+        ],
+        "_%n deadline passed_::_%n deadlines passed_": [
+            "%n deadline passed",
+            "%n deadlines passed"
+        ],
+        "No contact for a long time": "No contact for a long time",
+        "No contact since %s": "No contact since %s",
+        "Other signal": "Other signal",
+        "Nothing happened with this client in the last 90 days.": "Nothing happened with this client in the last 90 days.",
+        "Computed at": "Computed at",
+        "How likely this client is to leave, and why. Worked out from contracts, survey answers, complaints, missed deadlines and time since the last contact.": "How likely this client is to leave, and why. Worked out from contracts, survey answers, complaints, missed deadlines and time since the last contact.",
+        "Reasons": "Reasons",
+        "Signal": "Signal",
+        "Since": "Since",
+        "How many points this reason adds.": "How many points this reason adds.",
+        "How many records the signal counted, such as open complaints.": "How many records the signal counted, such as open complaints.",
+        "Low, medium or high.": "Low, medium or high.",
+        "The date the reason refers to.": "The date the reason refers to.",
+        "The kind of record behind this reason.": "The kind of record behind this reason.",
+        "The points of every reason added up.": "The points of every reason added up.",
+        "The record behind this reason.": "The record behind this reason.",
+        "When the level was last worked out.": "When the level was last worked out.",
+        "Which signal this reason comes from.": "Which signal this reason comes from.",
+        "Why the client has this level, one entry per signal that counts.": "Why the client has this level, one entry per signal that counts."
     }
 }

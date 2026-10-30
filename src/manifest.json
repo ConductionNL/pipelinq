@@ -1980,6 +1980,9 @@
 					},
 					"timezone": {
 						"widget": "timezone"
+					},
+					"churnRisk": {
+						"readOnly": true
 					}
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -2015,6 +2018,19 @@
 							}
 						},
 						"widget": "badge"
+					},
+					{
+						"key": "churnRisk.level",
+						"label": "Risk",
+						"sortable": true,
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"high": "error",
+								"medium": "warning",
+								"low": "success"
+							}
+						}
 					}
 				],
 				"sidebar": {
@@ -2023,6 +2039,11 @@
 				},
 				"rowIcon": "OfficeBuildingOutline",
 				"countText": "{shown} of {total} clients",
+				"_quickFiltersNote": "clients-history-summary-and-risk (REQ-CIN-001): At risk lists the clients whose churnRisk.level is high or medium; OpenRegister filters on a field inside an object property.",
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "At risk", "filter": { "churnRisk.level": ["high", "medium"] } }
+				],
 				"_bulkActionsNote": "Board PqOrganisatiesVerrijken: selected organisations are looked up in the KvK and their empty registry fields filled (OrganisationEnrichDialog). People are never looked up; the server skips them.",
 				"bulkActions": [
 					{
@@ -2084,6 +2105,9 @@
 					},
 					"timezone": {
 						"widget": "timezone"
+					},
+					"churnRisk": {
+						"readOnly": true
 					}
 				},
 				"headerActions": [
@@ -2356,6 +2380,30 @@
 									"clientId": "@objectId"
 								}
 							}
+						}
+					},
+					{
+						"id": "client-summary-churn-risk",
+						"type": "stat",
+						"_note": "PqKlant / PqOrganisatie Afhaakrisico (clients-history-summary-and-risk, REQ-CIN-001): the level in the viewer's words and its heaviest reason under it, from churnRisk on the client as Customer360Controller presents it. The colour follows the stored level on the record.",
+						"content": {
+							"label": "Churn risk",
+							"icon": "AlertOutline",
+							"display": "text",
+							"source": {
+								"kind": "endpoint",
+								"url": "/apps/pipelinq/api/customer-360/summary",
+								"path": "churnRisk.label",
+								"params": {
+									"clientId": "@objectId"
+								}
+							},
+							"caption": "{churnRisk.caption}",
+							"overrides": [
+								{ "when": { "field": "churnRisk.level", "value": "high" }, "variant": "error", "captionVariant": "error" },
+								{ "when": { "field": "churnRisk.level", "value": "medium" }, "variant": "warning", "captionVariant": "warning" },
+								{ "when": { "field": "churnRisk.level", "value": "low" }, "variant": "success" }
+							]
 						}
 					},
 					{
@@ -3187,7 +3235,7 @@
 						}
 					}
 				],
-				"_layoutNote": "PqKlant and PqOrganisatie: the contact strip and one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity) stand in the band across the page; the tab strip and the side column start under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab.",
+				"_layoutNote": "PqKlant and PqOrganisatie: the contact strip and one row of seven figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity, churn risk) stand in the band across the page; the tab strip and the side column start under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab.",
 				"band": [
 					{ "widgetId": "client-contact-strip", "span": 12, "chrome": "bare" },
 					{ "widgetId": "client-summary-open-tickets", "span": 2 },
@@ -3195,7 +3243,8 @@
 					{ "widgetId": "client-summary-sla-breached", "span": 2 },
 					{ "widgetId": "client-summary-sla-at-risk", "span": 2 },
 					{ "widgetId": "client-summary-open-leads", "span": 2 },
-					{ "widgetId": "client-summary-last-activity", "span": 2 }
+					{ "widgetId": "client-summary-last-activity", "span": 2 },
+					{ "widgetId": "client-summary-churn-risk", "span": 2 }
 				],
 				"layout": [
 					{
