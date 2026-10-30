@@ -140,7 +140,7 @@ class TeamLoadServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/team-today-names-colleagues/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
+	 * @spec openspec/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
 	 */
 	public function testNameFromTheNextcloudUser(): void {
 		$service = $this->service(
@@ -164,7 +164,7 @@ class TeamLoadServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/team-today-names-colleagues/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
+	 * @spec openspec/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
 	 */
 	public function testOneRowPerColleague(): void {
 		$service = $this->service(

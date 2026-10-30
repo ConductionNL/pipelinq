@@ -5,7 +5,7 @@
  * PqAanvraagOmzetten after decision 179: the website submissions are a lens
  * over form tickets, and a colleague links one to a client and a contact.
  *
- * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md
+ * @spec openspec/specs/unify-ticket-supertype/spec.md
  */
 
 import { readFileSync } from 'node:fs'

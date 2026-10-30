@@ -1041,7 +1041,7 @@ class CtiService {
 	 *
 	 * @return array<int, array{id: string, label: string}> The queues.
 	 *
-	 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
 	 */
 	public function escalationQueues(): array {
 		return $this->dispositionService->queueChoices();

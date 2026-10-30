@@ -5,7 +5,7 @@
  * PqAanvragen as pl2 measured it: the status reads as a coloured pill, the
  * lenses carry their counts, and a submission is not added by hand.
  *
- * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
  */
 import { describe, expect, it } from 'vitest'
 import fragment from '../../src/manifest.d/26-website-submissions.json'

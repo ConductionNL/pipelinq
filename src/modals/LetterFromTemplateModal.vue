@@ -312,7 +312,7 @@ export default {
 
 		/**
 		 * @return {Array<{value: string, label: string}>} How the letter goes out.
-		 * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+		 * @spec openspec/specs/client-letters/spec.md
 		 */
 		channelOptions() {
 			return [{ value: 'pdf', label: t('pipelinq', 'PDF to print and post') }]
@@ -320,7 +320,7 @@ export default {
 
 		/**
 		 * @return {string} "All 4 fields filled in, nothing missing", or which are still empty.
-		 * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+		 * @spec openspec/specs/client-letters/spec.md
 		 */
 		checkLine() {
 			if (this.complete) {
@@ -333,7 +333,7 @@ export default {
 		/**
 		 * @return {string} What the preview depends on; a change asks for a new one.
 		 *
-		 * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+		 * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
 		 */
 		previewKey() {
 			return [this.templateId, this.resolvedClientId, this.contactId, this.resolvedTicketId || this.aboutTicketId, this.appointmentId].join('|')
@@ -351,7 +351,7 @@ export default {
 		 * @param {string|null} now The ticket now.
 		 * @param {string|null} before The ticket before.
 		 *
-		 * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+		 * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
 		 */
 		aboutTicketId(now, before) {
 			if (before) this.loadAppointment(useObjectStore())
@@ -439,7 +439,7 @@ export default {
 		 * Without one the letter is made all the same.
 		 *
 		 * @param {object} store The object store.
-		 * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+		 * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
 		 */
 		async loadAppointment(store) {
 			const ticketId = this.resolvedTicketId || this.aboutTicketId || ''
@@ -484,7 +484,7 @@ export default {
 		 *
 		 * @param {{value: string, source: string, filled: boolean}} field The field.
 		 * @return {string} The line.
-		 * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+		 * @spec openspec/specs/client-letters/spec.md
 		 */
 		fieldText(field) {
 			if (!field.filled) {
@@ -497,7 +497,7 @@ export default {
 		 * Ask filinq for the letter as it would be made, and what it filled in.
 		 * A newer request wins over one still on its way.
 		 *
-		 * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+		 * @spec openspec/specs/client-letters/spec.md
 		 */
 		async loadPreview() {
 			if (!this.templateId || !this.resolvedClientId || !this.available) {
@@ -532,7 +532,7 @@ export default {
 		/**
 		 * Download the letter as a PDF only: nothing is filed or logged.
 		 *
-		 * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+		 * @spec openspec/specs/client-letters/spec.md
 		 */
 		async download() {
 			if (!this.canMake) return

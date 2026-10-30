@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
 /**
  * The contacts section's settings, status and full run.
  *
- * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 class ContactSyncSettingsServiceTest extends TestCase {
 	/**

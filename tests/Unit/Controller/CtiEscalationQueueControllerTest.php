@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The wrap-up dialog's queue list.
  *
- * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+ * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
  */
 class CtiEscalationQueueControllerTest extends TestCase {
 	/**

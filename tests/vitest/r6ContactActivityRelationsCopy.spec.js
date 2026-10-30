@@ -16,9 +16,9 @@
  *    item sits in the closed Advanced foldout.
  * 5. A contact added on the client page did not show in its Related card.
  *
- * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md
- * @spec openspec/changes/r6-contact-activity-relations-copy/specs/unify-client-contact/spec.md
- * @spec openspec/changes/r6-contact-activity-relations-copy/specs/walkthrough/spec.md
+ * @spec openspec/specs/client-management/spec.md
+ * @spec openspec/specs/unify-client-contact/spec.md
+ * @spec openspec/specs/walkthrough/spec.md
  */
 
 import { splitDescription } from '@conduction/nextcloud-vue/src/utils/schema.js'

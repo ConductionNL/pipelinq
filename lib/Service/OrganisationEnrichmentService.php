@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Organisation enrichment from the KvK.
  *
- * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 class OrganisationEnrichmentService {
 
@@ -94,7 +94,7 @@ class OrganisationEnrichmentService {
 	 *
 	 * @return array{proposals: array<int, array<string, mixed>>, notFound: array<int, string>} Proposals and unknown names.
 	 *
-	 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	public function propose(array $clientIds): array {
 		$proposals = [];
@@ -139,7 +139,7 @@ class OrganisationEnrichmentService {
 	 *
 	 * @return array{updated: int} How many fields were written.
 	 *
-	 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	public function apply(array $changes): array {
 		$byClient = [];

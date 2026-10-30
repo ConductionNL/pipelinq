@@ -6,7 +6,7 @@
  * the chosen queue with an escalated call (and only then), and the queues
  * are read from GET /api/cti/escalation-queues.
  *
- * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+ * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 

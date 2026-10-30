@@ -36,7 +36,7 @@ use OCP\IUserSession;
 /**
  * Organisation enrichment endpoints.
  *
- * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 class OrganisationEnrichmentController extends Controller {
 	/**
@@ -63,7 +63,7 @@ class OrganisationEnrichmentController extends Controller {
 	 *
 	 * @return JSONResponse `{ proposals, notFound }`.
 	 *
-	 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	#[NoAdminRequired]
 	public function propose(): JSONResponse {
@@ -85,7 +85,7 @@ class OrganisationEnrichmentController extends Controller {
 	 *
 	 * @return JSONResponse `{ updated }`.
 	 *
-	 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	#[NoAdminRequired]
 	public function apply(): JSONResponse {

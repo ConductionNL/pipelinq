@@ -1552,6 +1552,88 @@ source text with an nl catalogue entry, and MUST be translated before it is show
 - **THEN** the button MUST read "Add contact person"
 - **AND** a user with a Dutch interface MUST read "Contactpersoon toevoegen"
 
+### Requirement: Cards on the client page follow a contact added on that page
+When a user adds a contact person on a client's Contacts tab, the client page MUST update without a reload. The Messages card MUST offer the new contact, and the Related card MUST list it with the client's other related records. The contact-first create MUST announce the new object the same way the library's own create does (`cn-walkthrough:object-created` with register `pipelinq` and the schema slug).
+
+#### Scenario: The Messages card after a contact is added
+@e2e exclude Asserted in tests/vitest/r6ContactActivityRelationsCopy.spec.js: the real ContactAwareObjectListWidget create announces the contact, the real page refresh listener answers it, and the real MessagingConversationSection refetches the client's contacts on that refresh.
+- **GIVEN** a client with no contact persons, whose Messages card says no contacts are linked
+- **WHEN** the user adds a contact person on the Contacts tab
+- **THEN** the Messages card MUST fetch the client's contacts again and offer the new contact
+
+#### Scenario: The Related card after a contact is added
+@e2e exclude Asserted in tests/vitest/r6ContactActivityRelationsCopy.spec.js: a new contact sends a refresh on `cn:widget:refresh`, the channel CnRelatedObjectsWidget reloads on. That the contact is in the client's `/used` follows from its `client` reference being in `_relations`.
+- **GIVEN** a client page showing "No relations yet" in its Related card
+- **WHEN** the user adds a contact person on the Contacts tab
+- **THEN** the Related card MUST reload and list the contact
+
+### Requirement: The Messages card empty state reads as plain text
+The Messages card on a client with no contact persons MUST say so without an em-dash, in English and Dutch.
+
+#### Scenario: A client without contacts
+@e2e exclude Copy check; asserted in tests/vitest/r6ContactActivityRelationsCopy.spec.js against the component source and the en and nl catalogues.
+- **GIVEN** a client with no contact persons
+- **WHEN** the user opens the client
+- **THEN** the Messages card MUST read "No contacts are linked to this client yet. Add a contact to send messages."
+
+### Requirement: The organisations list counts open tickets and shows the last contact
+
+The organisations list MUST count, per organisation, its requests and complaints with status new, in progress or awaiting the customer as open tickets. It MUST show the date of the organisation's newest contact moment as its last contact, and "Nog geen contact" when there is none.
+
+#### Scenario: Buurtvereniging Oost
+
+- GIVEN Buurtvereniging Oost has two open requests, two resolved requests and one contact moment on 2 October
+- WHEN the organisations list opens
+- THEN its open tickets read 2
+- AND its last contact reads 2 okt
+
+### Requirement: Selected organisations can be filled in from the KvK
+
+A user with the CRM capability MUST be able to select organisations and get, per organisation the KvK knows, a proposal for each empty field the KvK can fill (KvK number, legal form, place). A different value MUST be proposed unticked and flagged. Only accepted proposals MUST be written. People MUST NOT be looked up.
+
+#### Scenario: an empty KvK number
+
+- GIVEN Bakkerij De Molen has no KvK number
+- WHEN Pieter selects it and chooses "Ontbrekende gegevens aanvullen"
+- THEN the KvK number 00001008 is proposed and ticked
+- AND "5 velden invullen" writes only the ticked fields
+
+#### Scenario: an organisation the KvK does not know
+
+- WHEN the KvK has no company with that exact name
+- THEN the dialog names it as not found and proposes nothing for it
+
+### Requirement: A client shows its customer number and data source
+
+A client MAY carry a customer number and the source of its data. The client page's Identity card MUST show both.
+
+#### Scenario: a resident from the portal and the population register
+
+- GIVEN Sanne de Vries has customer number K-2019-01184 and source "Mijn Zuiddrecht en BRP"
+- WHEN her page opens
+- THEN the Identity card shows both
+
+### Requirement: The client list opens sorted by name
+
+The Clients list SHALL open sorted by client name, ascending, until the user sorts by another column.
+
+#### Scenario: Board PqOrganisaties
+
+- **WHEN** a user opens Organisaties
+- **THEN** the rows run alphabetically by name
+- **AND** the Naam column head shows as the sorted column
+
+### Requirement: The duplicate warning is a bordered notice
+
+The new-client dialog SHALL draw its possible-duplicate warning as a bordered warning notice with a warning icon before
+its title and the links to open that client or save anyway under it.
+
+#### Scenario: Board PqKlantNieuw
+
+- **WHEN** a user types the e-mail address of an existing client in the new-client dialog
+- **THEN** a bordered notice with a warning icon names the existing client
+- **AND** offers "Die klant openen" and "Toch opslaan" under that line
+
 ## Implementation Notes
 
 ### Current Implementation Status

@@ -22,7 +22,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/ticket-leaf-by-master-entity/specs/ticket-leaf/spec.md
+ * @spec openspec/specs/ticket-leaf/spec.md
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Throwable;
  * Both reads go through OpenRegister's object service as the calling user, so
  * a ticket or client the caller may not read is not returned.
  *
- * @spec openspec/changes/ticket-leaf-by-master-entity/specs/ticket-leaf/spec.md
+ * @spec openspec/specs/ticket-leaf/spec.md
  */
 class TicketLeafProvider {
 	/**
@@ -106,7 +106,7 @@ class TicketLeafProvider {
 	 * @return array<string, mixed> `status` plus either `tickets` (a list per reference, every
 	 *   asked reference present) or `error`.
 	 *
-	 * @spec openspec/changes/ticket-leaf-by-master-entity/specs/ticket-leaf/spec.md
+	 * @spec openspec/specs/ticket-leaf/spec.md
 	 */
 	public function openByMasterEntity(array $refs): array {
 		return $this->byMasterEntity(refs: $refs, status: 'open');

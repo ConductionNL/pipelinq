@@ -38,7 +38,7 @@ use OCP\IUserSession;
 /**
  * The user's contacts sync settings.
  *
- * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 class ContactSyncSettingsController extends Controller {
 	/**
@@ -65,7 +65,7 @@ class ContactSyncSettingsController extends Controller {
 	 *
 	 * @return JSONResponse The status.
 	 *
-	 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	#[NoAdminRequired]
 	public function show(): JSONResponse {
@@ -82,7 +82,7 @@ class ContactSyncSettingsController extends Controller {
 	 *
 	 * @return JSONResponse The status after the change.
 	 *
-	 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	#[NoAdminRequired]
 	public function update(): JSONResponse {
@@ -106,7 +106,7 @@ class ContactSyncSettingsController extends Controller {
 	 *
 	 * @return JSONResponse The run: when, how many cards, which failed.
 	 *
-	 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	#[NoAdminRequired]
 	public function run(): JSONResponse {

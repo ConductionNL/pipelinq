@@ -7,7 +7,7 @@
   - addressbook new cards go to, the user's write-back switch, the last full
   - run, and the buttons to run it now or import from Contacts.
   -
-  - @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+  - @spec openspec/specs/contacts-sync/spec.md
   -->
 <template>
 	<NcAppSettingsSection
@@ -118,7 +118,7 @@ export default {
 		 * When the last full run happened and how many cards it wrote, or Never.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+		 * @spec openspec/specs/contacts-sync/spec.md
 		 */
 		lastRunText() {
 			const run = this.status.lastRun
@@ -136,7 +136,7 @@ export default {
 		 * The records whose card the last run could not write.
 		 *
 		 * @return {Array<string>}
-		 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+		 * @spec openspec/specs/contacts-sync/spec.md
 		 */
 		failedNames() {
 			const failed = this.status.lastRun && Array.isArray(this.status.lastRun.failed) ? this.status.lastRun.failed : []
@@ -153,7 +153,7 @@ export default {
 		 * Read the status.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+		 * @spec openspec/specs/contacts-sync/spec.md
 		 */
 		async load() {
 			this.loading = true
@@ -169,7 +169,7 @@ export default {
 
 		/**
 		 * @param {object} data A status response.
-		 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+		 * @spec openspec/specs/contacts-sync/spec.md
 		 */
 		applyStatus(data) {
 			const status = data || {}
@@ -186,7 +186,7 @@ export default {
 		 *
 		 * @param {boolean} value Whether saves go to Nextcloud Contacts.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+		 * @spec openspec/specs/contacts-sync/spec.md
 		 */
 		async setWriteBack(value) {
 			this.saving = true
@@ -204,7 +204,7 @@ export default {
 		 * Write every linked record back now, then read the status again.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+		 * @spec openspec/specs/contacts-sync/spec.md
 		 */
 		async run() {
 			this.running = true

@@ -7,7 +7,7 @@
   - and the organisation lacks or holds differently; a different value starts
   - unticked. Only what is ticked is written.
   -
-  - @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+  - @spec openspec/specs/client-management/spec.md
   -->
 <template>
 	<CnDialog
@@ -154,7 +154,7 @@ export default {
 	computed: {
 		/**
 		 * @return {number} How many proposals hold a value different from the organisation's.
-		 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		differing() {
 			return this.proposals.filter((proposal) => proposal.differs).length
@@ -162,7 +162,7 @@ export default {
 
 		/**
 		 * @return {number} How many proposals are ticked.
-		 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		acceptedCount() {
 			return this.accepted.filter(Boolean).length
@@ -178,7 +178,7 @@ export default {
 		 * Ask for the proposals. An empty field starts ticked, a different value unticked.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		async load() {
 			this.loading = true
@@ -197,7 +197,7 @@ export default {
 		/**
 		 * @param {string} field A client field.
 		 * @return {string} Its label.
-		 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		fieldLabel(field) {
 			return FIELD_LABELS[field] ? this.t('pipelinq', FIELD_LABELS[field]) : field
@@ -207,7 +207,7 @@ export default {
 		 * Write the ticked proposals, then let the list read them again.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		async apply() {
 			this.saving = true
@@ -229,7 +229,7 @@ export default {
 		/**
 		 * The proposals as a CSV file.
 		 *
-		 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		download() {
 			const quote = (value) => '"' + String(value ?? '').replace(/"/g, '""') + '"'

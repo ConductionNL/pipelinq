@@ -43,7 +43,7 @@ export const WIDGET_REFRESH_ON_CREATE = ['contact']
  * @param {(channel: string, payload: object) => void} [send] The event-bus emit (injectable for tests).
  * @return {() => void} Removes the listener.
  * @spec openspec/changes/round3-review-points/specs/lead-product-link/spec.md
- * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+ * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
  */
 export function installPageRefreshOnCreate(target, send = emit) {
 	const onCreated = (event) => {

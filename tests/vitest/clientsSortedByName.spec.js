@@ -6,7 +6,7 @@
  * draws it: the Naam head is the sorted column and the rows run
  * alphabetically.
  *
- * @spec openspec/changes/clients-sorted-by-name/specs/client-management/spec.md#requirement-the-client-list-opens-sorted-by-name
+ * @spec openspec/specs/client-management/spec.md#requirement-the-client-list-opens-sorted-by-name
  */
 
 import fs from 'fs'

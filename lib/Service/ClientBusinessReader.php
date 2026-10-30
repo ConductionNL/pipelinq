@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/client-side-cards-appointments-business-knowledge/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
+ * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Throwable;
 /**
  * The client's leads, contracts, projects and invoices as sentences.
  *
- * @spec openspec/changes/client-side-cards-appointments-business-knowledge/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
+ * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
  */
 class ClientBusinessReader {
 
@@ -76,7 +76,7 @@ class ClientBusinessReader {
 	 *
 	 * @return array<string, mixed> `status`, and on 200 `leadsLine`, `contractsLine`, `projectsLine`, `invoicesLine` and `shillinqUrl`.
 	 *
-	 * @spec openspec/changes/client-side-cards-appointments-business-knowledge/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
+	 * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
 	 */
 	public function businessOf(string $clientId): array {
 		$client = $this->client(clientId: $clientId);

@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The enrichment endpoints check the CRM capability before any lookup or write.
  *
- * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 class OrganisationEnrichmentControllerTest extends TestCase {
 	/**

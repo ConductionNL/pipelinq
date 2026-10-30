@@ -146,7 +146,7 @@ export default {
 		 *
 		 * @param {string} clientId The client's id.
 		 * @return {Promise<string>}
-		 * @spec openspec/changes/werkplek-call-names-the-caller/specs/kcc-werkplek/spec.md#requirement-the-werkplek-in-a-call-names-the-caller
+		 * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-werkplek-in-a-call-names-the-caller
 		 */
 		async clientNameOf(clientId) {
 			try {

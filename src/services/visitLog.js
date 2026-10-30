@@ -100,7 +100,7 @@ export function buildVisitPayloads(input) {
  * @param {object|null} task The crmTask payload, or null for none.
  * @param {object} saved The saved ticket.
  * @return {object|null} The task, linked when the ticket has an id.
- * @spec openspec/changes/task-contact-moment/specs/mobile-experience/spec.md
+ * @spec openspec/specs/mobile-experience/spec.md
  */
 export function linkTaskToContactMoment(task, saved) {
 	if (!task) {
