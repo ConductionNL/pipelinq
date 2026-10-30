@@ -9266,7 +9266,8 @@
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail sidebar, History / Audit trail tab",
 				"readOn": "2026-09-26",
-				"spec": "none"
+				"change": "openspec/changes/ticket-handover-history",
+				"requirement": "The ticket page has a History tab in words (REQ-THH-001)"
 			},
 			"note": "no list of 'requests I passed on'; you open each ticket to see its history",
 			"evidence": {
