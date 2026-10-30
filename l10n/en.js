@@ -9310,7 +9310,11 @@ OC.L10N.register(
         "Closed, template required": "Closed, template required",
         "Labels from the shared list.": "Labels from the shared list.",
         "The word people pick, for example duurzaam. Unique in the list, whatever the case.": "The word people pick, for example duurzaam. Unique in the list, whatever the case.",
-        "When to use this label.": "When to use this label."
+        "When to use this label.": "When to use this label.",
+        "Finish this task": "Finish this task",
+        "What came out of the callback?": "What came out of the callback?",
+        "Log attempt": "Log attempt",
+        "Attempt logged.": "Attempt logged."
     },
     "nplurals=2; plural=(n != 1);"
 )

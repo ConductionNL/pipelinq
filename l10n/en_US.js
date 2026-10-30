@@ -558,7 +558,11 @@ OC.L10N.register(
         "Factureerbaar": "Factureerbaar",
         "Einddatum": "Einddatum",
         "Wilt u deze berichten niet meer ontvangen? Meld u af: %s": "No longer want these messages? Unsubscribe: %s",
-        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s"
+        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s",
+        "Finish this task": "Finish this task",
+        "What came out of the callback?": "What came out of the callback?",
+        "Log attempt": "Log attempt",
+        "Attempt logged.": "Attempt logged."
     },
     "nplurals=2; plural=(n != 1);"
 )
