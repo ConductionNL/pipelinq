@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#9.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
  */
 
@@ -40,7 +40,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
  * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
  */
 class HaalCentraalClientTest extends TestCase {
@@ -96,7 +96,7 @@ class HaalCentraalClientTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-03
 	 */
 	public function testLookupThrowsWhenUnconfigured(): void {
 		// OR leaf throws (absent) → falls back to legacy → OAuth unconfigured → throws.

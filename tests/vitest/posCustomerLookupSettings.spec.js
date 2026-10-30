@@ -8,7 +8,7 @@
  * last 5 transactions) and the two links to the contact, and a second card
  * that says where cashiers see this, with a way to the till.
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

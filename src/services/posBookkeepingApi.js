@@ -7,7 +7,7 @@
 // (cross-app contract #3); pipelinq only raises the journal through the
 // ADR-019 integration registry and mirrors the outcome onto the Z-report.
 //
-// @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+// @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'

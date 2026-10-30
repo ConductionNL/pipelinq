@@ -39,7 +39,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+ * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
 
 declare(strict_types=1);
@@ -95,7 +95,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *  journal raise + outcome projection is inherently branchy; already split
  *  across small single-purpose helpers.
  *
- * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+ * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
 class PosBookkeepingService {
 	/**
@@ -178,7 +178,7 @@ class PosBookkeepingService {
 	 *
 	 * @throws OCSBadRequestException When the reportDate cannot be parsed.
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	public function generateZReport(string $reportDate, ?string $terminalId = null): array {
 		if ($this->isValidDate(value: $reportDate) === false) {
@@ -257,7 +257,7 @@ class PosBookkeepingService {
 	 *   settledAt: string|null
 	 * } The aggregate.
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	public function aggregateTransactions(array $transactions): array {
 		$ids = [];
@@ -344,7 +344,7 @@ class PosBookkeepingService {
 	 *
 	 * @return string The idempotency key.
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	public function computeIdempotencyKey(array $zReport): string {
 		$uuid = (string)($zReport['id'] ?? $zReport['uuid'] ?? '');
@@ -363,7 +363,7 @@ class PosBookkeepingService {
 	 *
 	 * @return bool True when a valid HTTPS webhook URL is configured.
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	public function shouldDispatch(): bool {
 		$url = $this->journalWebhookUrl();
@@ -405,7 +405,7 @@ class PosBookkeepingService {
 	 * @throws OCSForbiddenException When the user is not a POS manager / admin.
 	 * @throws OCSNotFoundException When the Z-report is missing.
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	public function raiseJournalEntry(string $zReportId, string $userId): array {
 		$this->requireManager(userId: $userId);
@@ -432,7 +432,7 @@ class PosBookkeepingService {
 	 *
 	 * @return array<string, mixed> The persisted Z-report after the raise.
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	public function dispatchRaise(array $zReport, ?string $idempotencyKey = null): array {
 		if ($idempotencyKey === null || $idempotencyKey === '') {
@@ -604,7 +604,7 @@ class PosBookkeepingService {
 	 *
 	 * @return array<string, mixed> The CloudEvent payload.
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	public function buildRaisePayload(array $zReport, string $idempotencyKey): array {
 		$zReportId = (string)($zReport['id'] ?? $zReport['uuid'] ?? '');
@@ -644,7 +644,7 @@ class PosBookkeepingService {
 	 *
 	 * @return bool True on successful dispatch, false otherwise.
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	public function emitZReportSubmittedEvent(array $zReport): bool {
 		$payload = [
@@ -901,7 +901,7 @@ class PosBookkeepingService {
 	 *
 	 * @return int The max attempts (>= 1).
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 	 */
 	public function maxAttempts(): int {
 		$raw = trim(
@@ -1042,7 +1042,7 @@ class PosBookkeepingService {
 	 *
 	 * @return string The current timestamp.
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	public function now(): string {
 		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeInterface::ATOM);

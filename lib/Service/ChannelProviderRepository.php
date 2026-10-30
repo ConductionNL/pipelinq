@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
  * - findByVendor(kind, vendor) — find the first active row matching
  *   both `kind` and `vendor` (used by SmsAdapter.providerHint).
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class ChannelProviderRepository {
 	/**
@@ -62,7 +62,7 @@ class ChannelProviderRepository {
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -78,7 +78,7 @@ class ChannelProviderRepository {
 	 *
 	 * @return array<int, array<string, mixed>> Provider rows.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function listActive(string $kind): array {
 		$objectService = $this->getObjectService();

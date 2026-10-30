@@ -7,7 +7,7 @@
  * provider (name, kind and environment, an enable switch) and the settings
  * form of one provider at a time, instead of a full form per provider.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

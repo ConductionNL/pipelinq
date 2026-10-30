@@ -18,9 +18,9 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007
  */
 
 declare(strict_types=1);
@@ -54,7 +54,7 @@ use Throwable;
  * complexity is uniform and shallow, not tangled logic, and the alternative
  * (hiding the guards behind a helper) is the arrangement gate-7 explicitly
  * does not accept, because a helper that returns null is not a guard.
- * @spec                                           openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+ * @spec                                           openspec/specs/loyalty-program/spec.md#REQ-LOY-004
  */
 class LoyaltyController extends Controller {
 	/**
@@ -91,7 +91,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	#[NoAdminRequired]
 	public function getAccount(string $accountId): JSONResponse {
@@ -136,7 +136,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	#[NoAdminRequired]
 	public function getAccountHistory(string $accountId): JSONResponse {
@@ -172,7 +172,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004
 	 */
 	#[NoAdminRequired]
 	public function getRedemptionOptions(string $programmeId, string $accountId): JSONResponse {
@@ -212,7 +212,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004-01
 	 */
 	#[NoAdminRequired]
 	public function initiateRedemption(string $accountId, string $optionId): JSONResponse {
@@ -257,7 +257,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004-03
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004-03
 	 */
 	#[NoAdminRequired]
 	public function lookupRedemptionCode(string $code): JSONResponse {
@@ -362,7 +362,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007
 	 */
 	#[NoAdminRequired]
 	public function lookupGiftCard(): JSONResponse {
@@ -404,7 +404,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007-01
 	 */
 	#[NoAdminRequired]
 	public function redeemGiftCard(): JSONResponse {
@@ -464,7 +464,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006-03
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006-03
 	 */
 	#[NoAdminRequired]
 	public function activateGiftCard(string $giftCardId): JSONResponse {
@@ -608,7 +608,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001-01
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function activateProgramme(string $programmeId): JSONResponse {

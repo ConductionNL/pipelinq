@@ -33,7 +33,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md
+ * @spec openspec/specs/zgw-api-bridge/spec.md
  */
 
 declare(strict_types=1);
@@ -94,7 +94,7 @@ class ZgwRegisterAccess {
 	 *
 	 * @return array<string, mixed>|null Object data (array form) or null when missing.
 	 *
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md
+	 * @spec openspec/specs/zgw-api-bridge/spec.md
 	 */
 	public function find(string $schema, string $id): ?array {
 		$objectService = $this->getObjectService();
@@ -120,7 +120,7 @@ class ZgwRegisterAccess {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md
+	 * @spec openspec/specs/zgw-api-bridge/spec.md
 	 */
 	public function findAll(string $schema, array $filters = []): array {
 		$objectService = $this->getObjectService();
@@ -175,7 +175,7 @@ class ZgwRegisterAccess {
 	 *
 	 * @return array<string, mixed>|null Saved object (or null on failure).
 	 *
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md
+	 * @spec openspec/specs/zgw-api-bridge/spec.md
 	 */
 	public function save(string $schema, array $data, ?string $uuid = null): ?array {
 		$objectService = $this->getObjectService();

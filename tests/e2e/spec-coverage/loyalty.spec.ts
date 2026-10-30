@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 behavioral e2e coverage for the Loyalty programme reporting page
- * (/loyalty/reporting). Maps to openspec/changes/loyalty-program/specs.md.
+ * (/loyalty/reporting). Maps to openspec/changes/archive/2026-06-14-loyalty-program/specs.md.
  *
  * THE ROUTE IN CHANGED, THE CLAIM DID NOT. Loyalty used to be a sidebar leaf
  * under Sales, so both tests reached it with `navClick(page, 'Loyalty', ...)`.
@@ -47,7 +47,7 @@ async function openLoyaltyReporting(page: Page) {
 	await expect(page).toHaveURL(/\/loyalty\/reporting/, { timeout: 10000 })
 }
 
-// @e2e openspec/changes/loyalty-program/specs.md#loyalty-reporting-page
+// @e2e openspec/specs/loyalty-program/spec.md#loyalty-reporting-page
 test('Loyalty: opens from the reports page and shows the reporting surface', async ({
 	page,
 }) => {
@@ -64,7 +64,7 @@ test('Loyalty: opens from the reports page and shows the reporting surface', asy
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/changes/loyalty-program/specs.md#loyalty-reporting-content
+// @e2e openspec/specs/loyalty-program/spec.md#loyalty-reporting-content
 test('Loyalty: reporting content area renders below the heading', async ({
 	page,
 }) => {

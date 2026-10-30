@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the standard
  *  Nextcloud controller collaborators (request, config, logger).
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
  */
 class PosCustomerSettingsController extends Controller {
 	/**
@@ -96,7 +96,7 @@ class PosCustomerSettingsController extends Controller {
 	 *
 	 * @return JSONResponse The settings.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function index(): JSONResponse {
@@ -116,7 +116,7 @@ class PosCustomerSettingsController extends Controller {
 	 *
 	 * @return JSONResponse The updated settings, or 422 on validation error.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function update(): JSONResponse {

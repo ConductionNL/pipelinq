@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-010
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-010
  */
 
 declare(strict_types=1);
@@ -77,7 +77,7 @@ class ForecastExportService {
 	 *
 	 * @return array{snapshots: array<int, array<string, mixed>>, total: int, limit: int, offset: int}
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-010-01, REQ-FRC-010-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-010-01, REQ-FRC-010-05
 	 */
 	public function exportSnapshots(string $periodId, string $level, ?string $ownerId, int $limit, int $offset): array {
 		$filters = ['period_id' => $periodId, 'level' => $level];
@@ -117,7 +117,7 @@ class ForecastExportService {
 	 *
 	 * @return string The CSV body.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-010-02
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-010-02
 	 */
 	public function toCsv(array $snapshots): string {
 		$rows = [];

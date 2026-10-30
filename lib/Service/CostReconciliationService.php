@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges OR +
  * exchange-rate + logger.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class CostReconciliationService {
 	/**
@@ -63,7 +63,7 @@ class CostReconciliationService {
 	 * @param MessagingExchangeRateService $exchangeRate Rate service.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -78,7 +78,7 @@ class CostReconciliationService {
 	 *
 	 * @return array{scanned: int, reconciled: int} Summary.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential per-row guard clauses
 	 *  over the pending-cost scan; extraction adds no clarity.

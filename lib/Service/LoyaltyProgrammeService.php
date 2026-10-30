@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Programme activation + validation service.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001
  */
 class LoyaltyProgrammeService {
 	/**
@@ -67,7 +67,7 @@ class LoyaltyProgrammeService {
 	 *
 	 * @return array<int, string> List of validation errors (empty when valid).
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001-01
 	 */
 	public function validateForActivation(string $programmeId): array {
 		$errors = [];
@@ -107,7 +107,7 @@ class LoyaltyProgrammeService {
 	 * @return array<string, mixed> The activated programme.
 	 *
 	 * @throws RuntimeException When validation fails.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001
 	 */
 	public function activate(string $programmeId, string $activatedBy): array {
 		$programme = $this->getProgramme(programmeId: $programmeId);

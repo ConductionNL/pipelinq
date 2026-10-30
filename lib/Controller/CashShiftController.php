@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-cash-management/tasks.md#4.1
+ * @spec openspec/specs/pos-cash-management/spec.md
  */
 
 declare(strict_types=1);
@@ -56,7 +56,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-cash-management/tasks.md#4.1
+ * @spec openspec/specs/pos-cash-management/spec.md
  */
 class CashShiftController extends Controller {
 	/**
@@ -92,7 +92,7 @@ class CashShiftController extends Controller {
 	 *
 	 * @return JSONResponse The created shift.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#4.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	#[NoAdminRequired]
 	public function open(): JSONResponse {
@@ -127,7 +127,7 @@ class CashShiftController extends Controller {
 	 *
 	 * @return JSONResponse The created drop.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#4.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	#[NoAdminRequired]
 	public function drop(string $id): JSONResponse {
@@ -154,7 +154,7 @@ class CashShiftController extends Controller {
 	 *
 	 * @return JSONResponse The count, diff and updated shift.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#4.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-is-counted-only-with-an-amount
 	 */
 	#[NoAdminRequired]
@@ -194,7 +194,7 @@ class CashShiftController extends Controller {
 	 *
 	 * @return JSONResponse The approved diff.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#4.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	#[NoAdminRequired]
 	public function approve(string $id): JSONResponse {
@@ -223,7 +223,7 @@ class CashShiftController extends Controller {
 	 *
 	 * @return JSONResponse The rejected diff.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#4.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	#[NoAdminRequired]
 	public function reject(string $id): JSONResponse {

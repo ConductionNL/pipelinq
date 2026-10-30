@@ -1969,7 +1969,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ForecastService.php:100",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-forecast-roll-up-and-categories"
+				"spec": "openspec/specs/forecast-roll-up-and-categories",
+				"requirement": "Hierarchical roll-up (REQ-FRC-005)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/use-the-forecast-tool \"As a manager, you can use the forecast tool to keep track of your team's progress\"; \"To review your forecast by team, click the team name\", with \"Forecast Submission: the sum of forecast submissions for your team\". Sales Hub or Service Hub Professional, Enterprise.",
@@ -2004,7 +2005,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ForecastService.php:160",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-forecast-roll-up-and-categories"
+				"spec": "openspec/specs/forecast-roll-up-and-categories",
+				"requirement": "Forecast accuracy scoring (REQ-FRC-007)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/use-the-forecast-tool managers submit forecasts on a submission schedule and \"view all past forecast submission history\"; https://knowledge.hubspot.com/forecast/track-the-accuracy-of-forecasts \"measure the reliability of your forecasts\" against closed revenue. Sales Hub or Service Hub Professional, Enterprise. Note: Was partial; submissions plus forecast accuracy tracking cover commit versus actual.",
@@ -2039,7 +2041,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ForecastDealService.php:268",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-forecast-roll-up-and-categories"
+				"spec": "openspec/specs/forecast-roll-up-and-categories",
+				"requirement": "Forecast category field on deal (REQ-FRC-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/set-up-the-forecast-tool categories \"Pipeline\", \"Best case\" and \"Commit: deals that have a high likelihood of closing\", set per deal; https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite shows \"Forecast Moved Backward\" and \"Close Date Pushed\". Sales Hub Professional, Enterprise. No slip reason field is documented; a custom property would carry the why.",
@@ -2071,7 +2074,8 @@
 				"state": "built",
 				"evidence": "lib/BackgroundJob/ForecastSnapshotJob.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-forecast-roll-up-and-categories"
+				"spec": "openspec/specs/forecast-roll-up-and-categories",
+				"requirement": "Snapshot comparison and trend (REQ-FRC-009)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/use-the-forecast-tool \"Click View submissions over time to view the history of Forecast submissions in Sales analytics\"; https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite \"Deal pipeline waterfall: revenue changes in the deal pipeline between two periods of time\". Sales Hub Professional, Enterprise.",
@@ -2794,7 +2798,8 @@
 				"state": "built",
 				"evidence": "lib/Service/WhatsAppAdapter.php:177",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-whatsapp-sms-channel-adapter"
+				"spec": "openspec/specs/whatsapp-sms-channel-adapter",
+				"requirement": "WhatsApp template message send (REQ-WSA-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/connect-whatsapp-to-the-conversations-inbox \"You can start a WhatsApp conversation with individual contacts in HubSpot from the contact record\" and incoming messages open a thread in the inbox. Marketing Hub or Service Hub Professional, Enterprise, with a WhatsApp Business account. Note: Was partial for the tier; rated by what a buyer can get.",
@@ -2826,7 +2831,8 @@
 				"state": "built",
 				"evidence": "lib/Service/SmsAdapter.php:154",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-whatsapp-sms-channel-adapter"
+				"spec": "openspec/specs/whatsapp-sms-channel-adapter",
+				"requirement": "SMS provider abstraction (REQ-WSA-004)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/sms/set-up-sms-messaging needs the Marketing SMS Add-On on Marketing Hub Professional or Enterprise and lists as \"Eligible countries to contact\" only \"United States\" and \"United States & Canada\"; support SMS in help desk needs Service Hub Professional (https://knowledge.hubspot.com/help-desk/set-up-sms-messaging-for-support-communications). A paid add-on that the docs limit to North American recipients.",
@@ -2995,7 +3001,8 @@
 				"state": "built",
 				"evidence": "lib/Service/TouchpointService.php:164",
 				"owner": "ConductionNL/pipelinq",
-				"change": "marketing-campaigns"
+				"spec": "openspec/specs/marketing-campaigns",
+				"requirement": "A landing-page submission becomes a contact, a lead and a touchpoint"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/campaigns/review-and-manage-campaign-associations-using-crm-cards the Campaigns card on a contact, deal or ticket record shows its campaigns, and \"Influenced contacts refer to contacts that have engaged with assets related to a campaign\" (https://knowledge.hubspot.com/campaigns/campaign-influenced-contacts). Marketing Hub Professional, Enterprise.",
@@ -3921,7 +3928,8 @@
 				"evidence": "lib/Service/Marketing/WeeklyReviewService.php",
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-09-26",
-				"change": "marketing-integrated-campaigns"
+				"spec": "openspec/specs/marketing-integrated-campaigns",
+				"requirement": "The weekly review reads four sources and names the ones with nothing in them"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/dashboard/email-or-export-reports-and-dashboards \"schedule recurring report emails on a daily, weekly, or monthly basis\" for any report or dashboard, such as the deal pipeline waterfall or push rate (all plans); https://knowledge.hubspot.com/prospecting/receive-a-summary-of-your-sales-activity-every-weekday a daily digest for Sales Hub Professional seats. Note: Was partial; a weekly emailed dashboard covers it, set up by the user.",
@@ -4645,7 +4653,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ComplianceService.php:387",
 				"owner": "ConductionNL/pipelinq",
-				"change": "marketing-integrated-campaigns"
+				"spec": "openspec/specs/marketing-integrated-campaigns",
+				"requirement": "A journey refuses a send without consent and names the contact"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/segments/review-segment-predicted-email-recipients-and-engagement \"Prior to sending a marketing email to a segment of contacts, review how many included contacts are eligible to get marketing emails\", with the reasons for ineligible contacts. All products and plans. Note: Was partial; this is the documented pre send check.",
@@ -4677,7 +4686,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Marketing/JourneyService.php:156",
 				"owner": "ConductionNL/pipelinq",
-				"change": "marketing-integrated-campaigns"
+				"spec": "openspec/specs/marketing-integrated-campaigns",
+				"requirement": "A journey is an OpenRegister flow and pipelinq ships no scheduler"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/use-journeys journeys with \"Wait: add a delay\", \"Wait until activity\" and branches (Marketing Hub Enterprise); workflows with delays and if/then branches in Marketing Hub Professional (https://knowledge.hubspot.com/workflows/create-workflows).",
@@ -4712,7 +4722,8 @@
 				"state": "built",
 				"evidence": "lib/Service/LandingPageProvisioningService.php:119",
 				"owner": "ConductionNL/pipelinq",
-				"change": "marketing-campaigns"
+				"spec": "openspec/specs/marketing-campaigns",
+				"requirement": "A campaign creates its landing page in portaliq"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/website-and-landing-pages/create-and-customize-pages \"Create website and landing pages for your site\" with forms added from the forms tool; all products and plans for basic landing pages, more with Content Hub or Marketing Hub Starter and up.",
@@ -6114,7 +6125,8 @@
 				"state": "built",
 				"evidence": "lib/Service/PosPaymentService.php:450",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-pos-payment-provider-adapter"
+				"spec": "openspec/specs/pos-payment-provider-adapter",
+				"requirement": "Payment Initiation (REQ-PAY-003)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/payments/understand-how-to-collect-payments-in-hubspot \"Collect payments from debit and credit cards and bank debit methods (e.g., ACH, SEPA, BACs)\" through payment links, invoices and quotes; HubSpot payments is \"available to companies based in United States, United Kingdom, and Canada\", Stripe as processor elsewhere. Online card payments only, no card terminal at a till is described. Note: Was no; cards are taken online, not at a counter.",
@@ -6287,7 +6299,8 @@
 				"state": "built",
 				"evidence": "lib/Service/CashShiftService.php:151",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-pos-cash-management"
+				"spec": "openspec/specs/pos-cash-management",
+				"requirement": "Declare Opening Float (REQ-CCM-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no knowledge base article on a cash drawer or till count; searched the KB URL list for point of sale, till and cash (read 2026-09-26). Note: Was no without a source.",
@@ -6322,7 +6335,8 @@
 				"state": "built",
 				"evidence": "lib/Service/CashShiftService.php:353",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-pos-cash-management"
+				"spec": "openspec/specs/pos-cash-management",
+				"requirement": "Manager Approval Workflow (REQ-CCM-005)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no till count exists in the docs to sign off; searched the KB URL list for point of sale, till and cash (read 2026-09-26). Note: Was no without a source.",
@@ -6354,7 +6368,8 @@
 				"state": "built",
 				"evidence": "lib/Service/PosBookkeepingService.php:183",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-15-pipelinq-bookkeeping-to-shillinq"
+				"spec": "openspec/specs/pipelinq-bookkeeping-to-shillinq",
+				"requirement": "The system SHALL keep a thin shillinq outcome projection on the Z-report (REQ-PBTS-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no end of day or Z report in the docs; https://knowledge.hubspot.com/payments/manage-payouts lists daily payouts \"minus any fees, refunds, or chargebacks\", which is a processor payout, not a till close (read 2026-09-26). Note: Was no without a source.",
@@ -6389,7 +6404,8 @@
 				"state": "built",
 				"evidence": "lib/Service/PosBookkeepingService.php:437",
 				"owner": "ConductionNL/shillinq",
-				"change": "2026-06-15-pipelinq-bookkeeping-to-shillinq"
+				"spec": "openspec/specs/pipelinq-bookkeeping-to-shillinq",
+				"requirement": "The system SHALL raise the POS-day journal entry in shillinq through the ADR-019 integration registry (REQ-PBTS-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/payments/understand-how-to-collect-payments-in-hubspot payouts are \"the funds deposited into your bank account from your collected payments each day\"; invoices sync to QuickBooks or Xero through the accounting integrations (https://knowledge.hubspot.com/invoices/create-and-manage-invoices). Online takings, not a till's day. Note: Was no; the bookkeeping sync exists for invoices and payments, not for counter takings.",
@@ -6421,7 +6437,8 @@
 				"state": "built",
 				"evidence": "lib/Service/KassakoppelingSignatureService.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-pos-kassakoppeling-audit"
+				"spec": "openspec/specs/pos-kassakoppeling-audit",
+				"requirement": "Cryptographic Signature Generation and Verification (REQ-AUDIT-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no signed till journal or fiscal register in the docs; searched the KB URL list for point of sale, fiscal and till (read 2026-09-26). Note: Was no without a source.",
@@ -6453,7 +6470,8 @@
 				"state": "built",
 				"evidence": "lib/Service/PosCustomerLinkService.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-pos-customer-link"
+				"spec": "openspec/specs/pos-customer-link",
+				"requirement": "Customer Attachment to Transaction (REQ-PCL-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/listing/square-data-sync maps Square \"Customers\" to contacts, \"Items\" to products and \"Payments\" to custom objects; https://ecosystem.hubspot.com/marketplace/listing/lightspeedretailx-data-sync \"this is a customer sync only, it will not sync transactions\". Only via the Square data sync app, and the sale is rung in Square. Note: Was no; a third-party marketplace app links till customers.",
@@ -6488,7 +6506,8 @@
 				"state": "built",
 				"evidence": "lib/Service/LoyaltyEngineService.php:92",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-loyalty-program"
+				"spec": "openspec/specs/loyalty-program",
+				"requirement": "Points Credit on Transaction (REQ-LOY-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/listing/yotpo-loyalty \"syncs all program-related data (point balances, referral links, VIP tiers, etc.) and events (coupons redeemed ...) with HubSpot\"; Zinrelo (https://ecosystem.hubspot.com/marketplace/apps/zinrelo-integration-346498) likewise. The points are kept in the third-party app. Note: Was no; only via the Yotpo Loyalty or Zinrelo marketplace app.",
@@ -6520,7 +6539,8 @@
 				"state": "built",
 				"evidence": "lib/Service/RedemptionService.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-loyalty-program"
+				"spec": "openspec/specs/loyalty-program",
+				"requirement": "Redemption with Points Debit (REQ-LOY-004)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/listing/yotpo-loyalty syncs \"coupons redeemed\" events to HubSpot; Zinrelo offers \"flexible rewards redemption\" (https://ecosystem.hubspot.com/marketplace/apps/zinrelo-integration-346498). Redemption happens in the third-party app and shop, not in HubSpot. Note: Was no; only via a marketplace loyalty app.",
@@ -6552,7 +6572,8 @@
 				"state": "built",
 				"evidence": "lib/BackgroundJob/TierDowngradeJob.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-loyalty-program"
+				"spec": "openspec/specs/loyalty-program",
+				"requirement": "Tier Reclassification (REQ-LOY-003)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/apps/zinrelo-integration-346498 \"reward tiers for VIP customers\"; https://ecosystem.hubspot.com/marketplace/listing/yotpo-loyalty syncs \"VIP tiers\" as contact properties. Tier logic lives in the third-party app. Note: Was no; only via a marketplace loyalty app.",
@@ -6584,7 +6605,8 @@
 				"state": "built",
 				"evidence": "lib/Service/GiftCardService.php:188",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-loyalty-program"
+				"spec": "openspec/specs/loyalty-program",
+				"requirement": "Gift Card Issuance (REQ-LOY-006)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no knowledge base article on selling or redeeming gift cards; searched the KB URL list for gift and the marketplace search for loyalty apps, which name points and tiers but no gift card sale (read 2026-09-26). Note: Was no without a source.",
@@ -6910,7 +6932,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ForecastExportService.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-forecast-roll-up-and-categories"
+				"spec": "openspec/specs/forecast-roll-up-and-categories",
+				"requirement": "API export for board reporting (REQ-FRC-010)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/use-the-forecast-tool \"Export forecasting data ... Click the report you want to export (e.g., Forecast category). In the upper right, click Actions, then select Export unsummarized data\". Sales Hub or Service Hub Professional, Enterprise. Note: Was partial; the forecast export is documented.",
@@ -7470,7 +7493,8 @@
 				"state": "built",
 				"evidence": "lib/Service/BsnAuditService.php:104",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-bsn-validatie-en-brp-lookup"
+				"spec": "openspec/specs/bsn-validatie-en-brp-lookup",
+				"requirement": "Audit-trail voor elke BSN-bevraging (onveranderlijk) (REQ-BSN-005)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for a log of BSN lookups and found no article or app, HubSpot has no BSN lookup to log. Note: Was no without a source; the docs do not state the absence.",
@@ -7502,7 +7526,8 @@
 				"state": "built",
 				"evidence": "lib/Service/BsnAuditService.php:246",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-bsn-validatie-en-brp-lookup"
+				"spec": "openspec/specs/bsn-validatie-en-brp-lookup",
+				"requirement": "Configureerbare retentie en Right-to-be-forgotten (REQ-BSN-008)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BSN pseudonymisation and found no article or app; https://knowledge.hubspot.com/account-security/store-sensitive-data lets Enterprise hubs store \"Highly Sensitive Data (e.g., social security numbers)\" in special properties, which is protected storage, not pseudonymisation. Note: Was no without a source; the docs do not state the absence.",
@@ -7534,7 +7559,8 @@
 				"state": "built",
 				"evidence": "lib/Listener/BrpMutationWebhookListener.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-bsn-validatie-en-brp-lookup"
+				"spec": "openspec/specs/bsn-validatie-en-brp-lookup",
+				"requirement": "Response-cache met TTL van maximaal 24 uur (REQ-BSN-004)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BRP change notifications and found no article or app. Note: Was no without a source; the docs do not state the absence.",
@@ -7567,7 +7593,8 @@
 				"evidence": "lib/BackgroundJob/BrpRetentionJob.php",
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-09-26",
-				"change": "2026-06-14-bsn-validatie-en-brp-lookup"
+				"spec": "openspec/specs/bsn-validatie-en-brp-lookup",
+				"requirement": "Configureerbare retentie en Right-to-be-forgotten (REQ-BSN-008)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for retention of register data and found no article or app, apart from GDPR delete. Note: Was no without a source; the docs do not state the absence.",
@@ -7599,7 +7626,8 @@
 				"state": "built",
 				"evidence": "lib/Service/BsnValidationService.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-bsn-validatie-en-brp-lookup"
+				"spec": "openspec/specs/bsn-validatie-en-brp-lookup",
+				"requirement": "Formele 11-proef validatie (REQ-BSN-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BSN eleven-test validation and found no article or app, property validation rules exist but none for a BSN. Note: Was no without a source; the docs do not state the absence.",
@@ -7631,7 +7659,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Zgw/ZgwApiClient.php:155",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-zgw-api-bridge"
+				"spec": "openspec/specs/zgw-api-bridge",
+				"requirement": "Zaken API (ZRC) resource client (REQ-ZGW-002)"
 			},
 			"note": "Also listed as a pipelinq gap in the 2026-03 research and since built.",
 			"evidence": {
@@ -7664,7 +7693,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Zgw/NrcSubscriptionService.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-zgw-api-bridge"
+				"spec": "openspec/specs/zgw-api-bridge",
+				"requirement": "Notificaties (NRC) subscription lifecycle (REQ-ZGW-007)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for the national notification service (Notificaties API) and found no article or app. Note: Was no without a source; the docs do not state the absence.",
@@ -7728,7 +7758,8 @@
 				"state": "built",
 				"evidence": "lib/Service/BerichtenboxService.php:143",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-burgerportaal-mijnoverheid-bridge"
+				"spec": "openspec/specs/berichtenbox",
+				"requirement": "Outbound Status Push on Zaak Transition (REQ-OUTBOUND-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for MijnOverheid Berichtenbox and found no article or app. Note: Was no without a source; the docs do not state the absence.",
@@ -7760,7 +7791,8 @@
 				"state": "built",
 				"evidence": "lib/Service/BerichtenboxService.php:307",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-burgerportaal-mijnoverheid-bridge"
+				"spec": "openspec/specs/berichtenbox",
+				"requirement": "Fallback to Email for Absent Mailboxes (REQ-MAILBOX-003)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for a Berichtenbox to email fallback and found no article or app, there is no Berichtenbox channel to fall back from. Note: Was no without a source; the docs do not state the absence.",
@@ -8114,7 +8146,8 @@
 				"state": "built",
 				"evidence": "lib/Service/EncryptionService.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-burgerportaal-mijnoverheid-bridge"
+				"spec": "openspec/specs/berichtenbox",
+				"requirement": "Encryption Key Management (REQ-KEYVAULT-015)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://legal.hubspot.com/security \"The physical and virtualized hard drives used by HubSpot product server instances as well as long-term storage solutions like AWS S3 use AES-256 encryption\"; connected app tokens are held by HubSpot in that store.",

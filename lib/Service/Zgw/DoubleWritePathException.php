@@ -24,7 +24,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-008
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-008
  */
 
 declare(strict_types=1);

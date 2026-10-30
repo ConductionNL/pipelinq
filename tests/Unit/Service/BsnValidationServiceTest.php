@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#9.1
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests the 11-proef + masking + SHA-256 hashing helpers.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001
  */
 class BsnValidationServiceTest extends TestCase {
 	/**
@@ -55,7 +55,7 @@ class BsnValidationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-01
 	 */
 	public function testValidBsnPassesElfproef(): void {
 		foreach (['123456782', '111222333'] as $bsn) {
@@ -71,7 +71,7 @@ class BsnValidationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-02
 	 */
 	public function testInvalidBsnFailsElfproef(): void {
 		// 9-digit numerics that fail the 11-proef.
@@ -87,7 +87,7 @@ class BsnValidationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-03
 	 */
 	public function testNonNineDigitInputIsRejected(): void {
 		foreach (['12345678', '1234567890', '12345678a', 'abc'] as $bad) {
@@ -114,7 +114,7 @@ class BsnValidationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-009-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
 	public function testMaskHidesMostDigits(): void {
 		self::assertSame('***4567*', BsnValidationService::mask('123456782'));

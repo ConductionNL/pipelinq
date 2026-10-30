@@ -18,8 +18,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-template-013
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-deeplink-014
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-TEMPLATE-013
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-DEEPLINK-014
  */
 
 declare(strict_types=1);

@@ -31,7 +31,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 
 declare(strict_types=1);
@@ -71,7 +71,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Audit coordinator with
  *   several independent guard-heavy operations; splitting adds indirection.
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 class KassakoppelingAuditService {
 	/**
@@ -122,7 +122,7 @@ class KassakoppelingAuditService {
 	 *
 	 * @throws OCSBadRequestException When validation fails.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function createEntry(array $data): array {
 		$entry = $this->sanitiseInput(data: $data);
@@ -167,7 +167,7 @@ class KassakoppelingAuditService {
 	 *                                          by timestamp, ascending unless
 	 *                                          order is desc.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function listEntries(array $filters = []): array {
 		[$register, $schema] = $this->config();
@@ -230,7 +230,7 @@ class KassakoppelingAuditService {
 	 *
 	 * @throws OCSNotFoundException When the entry is not found.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function getEntry(string $id): array {
 		[$register, $schema] = $this->config();
@@ -263,7 +263,7 @@ class KassakoppelingAuditService {
 	 *
 	 * @throws OCSNotFoundException When the entry is not found.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function verifyEntry(string $id): array {
 		$entry = $this->getEntry(id: $id);
@@ -319,7 +319,7 @@ class KassakoppelingAuditService {
 	 *
 	 * @throws OCSBadRequestException When the date range is malformed.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function exportForBelastingdienst(string $fromDate, string $toDate, string $format = 'xml'): array {
 		$from = $this->parseDate(value: $fromDate, lower: true);
@@ -398,7 +398,7 @@ class KassakoppelingAuditService {
 	 *
 	 * @return array<string, mixed>|null The latest entry, or null.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function getLastEntry(string $registerNumber): ?array {
 		if ($registerNumber === '') {

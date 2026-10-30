@@ -7,7 +7,7 @@
  * bookkeeping status and journal entry id, the button that passes the day on
  * again, and the VAT and payment tables with their amounts on the right.
  *
- * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+ * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
  */
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'

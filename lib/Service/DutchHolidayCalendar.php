@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-FALLBACK-004
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use InvalidArgumentException;
 /**
  * Computes working-day offsets in the Europe/Amsterdam calendar.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-FALLBACK-004
  */
 class DutchHolidayCalendar {
 	/**

@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use Psr\Log\LoggerInterface;
  * shared-secret deployments behind a reverse proxy the secret is
  * the channelProvider.webhookSecret on the provider row.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class TwilioSmsClient implements SmsProviderClientInterface {
 	use MessageDispatchTrait;
@@ -61,7 +61,7 @@ class TwilioSmsClient implements SmsProviderClientInterface {
 	 * @param string $webhookSecret Shared HMAC secret for signature checks.
 	 * @param string|null $sourceId openconnector source id (or null in tests).
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,

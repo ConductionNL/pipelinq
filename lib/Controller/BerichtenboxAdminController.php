@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/tasks.md#3.3
+ * @spec openspec/specs/berichtenbox/spec.md
  */
 
 declare(strict_types=1);

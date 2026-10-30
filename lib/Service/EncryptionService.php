@@ -25,8 +25,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-keyvault-015
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-KEYVAULT-015
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use RuntimeException;
 /**
  * BSN encryption + keyed-hash service for the Berichtenbox bridge.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
  */
 class EncryptionService {
 	/**
@@ -120,7 +120,7 @@ class EncryptionService {
 	 *
 	 * @throws RuntimeException If encryption fails.
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
 	 */
 	public function encrypt(string $plaintext, string $tenantId): string {
 		$key = $this->getEncryptionKey(tenantId: $tenantId);
@@ -155,7 +155,7 @@ class EncryptionService {
 	 *
 	 * @throws RuntimeException If decryption fails or the payload is malformed.
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
 	 */
 	public function decrypt(string $ciphertext, string $tenantId): string {
 		$raw = base64_decode($ciphertext, true);

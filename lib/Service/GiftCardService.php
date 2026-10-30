@@ -19,8 +19,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Cohesive gift-card lifecycle; splitting would fragment a single domain.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
  */
 class GiftCardService {
 	/**
@@ -68,7 +68,7 @@ class GiftCardService {
 	 *
 	 * @return array{card: array<string, mixed>, pin: string} Card + plaintext PIN (returned ONCE).
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006-01
 	 */
 	public function issueGiftCard(
 		?string $programmeId,
@@ -125,7 +125,7 @@ class GiftCardService {
 	 *
 	 * @return ?array<string, mixed>
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006-03
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006-03
 	 */
 	public function activateGiftCard(string $giftCardId, ?string $posTransactionId = null): ?array {
 		$card = $this->getCard(giftCardId: $giftCardId);
@@ -182,8 +182,8 @@ class GiftCardService {
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential validation guards; extraction adds no clarity.
 	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential validation guards; extraction adds no clarity.
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007-01
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007-02
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007-02
 	 */
 	public function redeemGiftCard(
 		string $giftCardId,
@@ -377,7 +377,7 @@ class GiftCardService {
 	 * @param ?string $posTransactionId Optional POS transaction id.
 	 *
 	 * @return array<string, mixed> The updated card.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
 	 */
 	public function refundGiftCard(
 		string $giftCardId,
@@ -422,7 +422,7 @@ class GiftCardService {
 	 * @param string $reason Free-text reason.
 	 *
 	 * @return ?array<string, mixed>
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
 	 */
 	public function blockGiftCard(string $giftCardId, string $reason): ?array {
 		$card = $this->getCard(giftCardId: $giftCardId);
@@ -461,7 +461,7 @@ class GiftCardService {
 	 * @return array{balance: float, status: string, expiryDate: ?string}
 	 *
 	 * @throws RuntimeException On invalid PIN.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
 	 */
 	public function getCardDetails(string $giftCardId, string $pin): array {
 		$card = $this->getCard(giftCardId: $giftCardId);

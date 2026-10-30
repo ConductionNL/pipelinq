@@ -17,8 +17,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-009
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-009
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use OCP\IUserSession;
  * who are not Nextcloud admins, the methods bypass the admin requirement and
  * are gated by the userSession; constructor takes no action.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008
  */
 class LoyaltyReportingController extends Controller {
 	/**
@@ -74,7 +74,7 @@ class LoyaltyReportingController extends Controller {
 	 *
 	 * @return JSONResponse|DataDownloadResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
 	 */
 	#[NoAdminRequired]
 	public function kpis(
@@ -118,7 +118,7 @@ class LoyaltyReportingController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-009-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-009-01
 	 */
 	#[NoAdminRequired]
 	public function liability(string $programmeId): JSONResponse {
@@ -186,9 +186,9 @@ class LoyaltyReportingController extends Controller {
 	 *
 	 * @spec exclude This app has NO canonical loyalty spec to point at. The
 	 *  loyalty requirements only ever existed in a change directory, which was
-	 *  archived to openspec/changes/archive/2026-06-14-loyalty-program — and
+	 *  archived to openspec/specs/loyalty-program/spec.md — and
 	 *  the four @spec tags elsewhere in this file still name the pre-archive
-	 *  path openspec/changes/loyalty-program/specs.md, which no longer exists.
+	 *  path openspec/specs/loyalty-program/spec.md, which no longer exists.
 	 *  Neither expiryForecast nor tierDistribution appears in the archived
 	 *  requirements either, so there is no anchor that would resolve. Writing
 	 *  one here would be authoring the spec this tag is supposed to check

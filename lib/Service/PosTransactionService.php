@@ -952,7 +952,7 @@ class PosTransactionService {
 	 *
 	 * @throws OCSBadRequestException When tenderType is 'onAccount' without a customer.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-005
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-005
 	 */
 	private function assertOnAccountHasCustomer(array $transaction): void {
 		$tender = (string)($transaction['tenderType'] ?? '');

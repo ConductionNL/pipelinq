@@ -18,7 +18,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
  */
 
 declare(strict_types=1);

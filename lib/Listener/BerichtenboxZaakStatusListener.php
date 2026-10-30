@@ -25,8 +25,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/tasks.md#5.1
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
+ * @spec openspec/specs/berichtenbox/spec.md
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
  */
 class BerichtenboxZaakStatusListener implements IEventListener {
 	use EntityAccessorTrait;
@@ -93,7 +93,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
 	public function handle(Event $event): void {
 		if ($this->isCaseUpdate(event: $event) === false) {

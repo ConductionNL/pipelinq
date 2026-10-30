@@ -6,8 +6,8 @@
   - and an optional aanvullende toelichting before a BRP lookup may proceed.
   - Compliance: REQ-BSN-002 (lookup requires doelbinding).
   -
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-002
   -->
 <template>
 	<CnDialog
@@ -87,7 +87,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		reasonOptions() {
 			return [
@@ -118,7 +118,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		bindingOptions() {
 			return [
@@ -142,7 +142,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		valid() {
 			return (
@@ -153,7 +153,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		submit() {
 			if (!this.valid) return

@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.4
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * via {@see pseudonymise()} — the rest of the audit chain (actor / doelbinding /
  * tijdstip) remains traceable.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-005
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005
  */
 class BsnAuditService {
 	use EntityAccessorTrait;
@@ -94,7 +94,7 @@ class BsnAuditService {
 	 *
 	 * @return string The UUID of the written audit record (empty string if writing fails).
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-005-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005-01
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) One audit record maps 1:1 to these compliance fields; a DTO would only shift the list.
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)    $vogScreening is an audit fact recorded verbatim on the record, not a behaviour switch.
@@ -239,7 +239,7 @@ class BsnAuditService {
 	 *
 	 * @return int Number of records pseudonymised.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-008-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
@@ -318,7 +318,7 @@ class BsnAuditService {
 	 *
 	 * @return string Anonymised IP suitable for audit storage.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-009-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
 	public static function anonymiseIp(string $ipAddress): string {
 		if ($ipAddress === '') {

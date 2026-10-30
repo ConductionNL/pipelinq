@@ -8,7 +8,7 @@
   - via ICrypto and never returned in API responses; this view shows
   - ***SET*** for fields that already have a stored value.
   -
-  - @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+  - @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
   -->
 <template>
 	<div class="payment-settings">
@@ -272,7 +272,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		environmentOptions() {
 			return [
@@ -285,7 +285,7 @@ export default {
 		 * The provider whose settings form shows.
 		 *
 		 * @return {object|null} The provider, or null before any loaded.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		selected() {
 			return this.providers.find((p) => p.name === this.selectedName) || null
@@ -301,7 +301,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async refresh() {
 			this.loading = true
@@ -340,7 +340,7 @@ export default {
 		 *
 		 * @param {object} p Raw provider from the API.
 		 * @return {object} Provider with string-safe, reactive fields.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		normalizeProvider(p) {
 			const config = { ...(p.config || {}) }
@@ -366,7 +366,7 @@ export default {
 		 *
 		 * @param {string} name The Pipelinq provider name.
 		 * @return {Array} NcSelect options.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		credentialsFor(name) {
 			const wanted = BROKER_PROVIDERS[name] || [name]
@@ -387,7 +387,7 @@ export default {
 		 * carries no secrets — only names, providers and UUIDs.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async fetchCredentials() {
 			this.loadingCredentials = true
@@ -406,7 +406,7 @@ export default {
 		/**
 		 * @param {object} provider The payment provider being configured.
 		 * @param {object} option The credential field that changed.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		onCredentialChange(provider, option) {
 			provider.credentialId = option ? option.value : ''
@@ -415,7 +415,7 @@ export default {
 		/**
 		 * @param {string} environment The stored environment.
 		 * @return {string} Its label.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		environmentLabel(environment) {
 			const option = this.environmentOptions.find((o) => o.value === environment)
@@ -427,7 +427,7 @@ export default {
 		 *
 		 * @param {object} provider The provider.
 		 * @param {boolean} on Whether it is on.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async onToggle(provider, on) {
 			provider.isActive = on === true
@@ -437,7 +437,7 @@ export default {
 		/**
 		 * @param {string} iso A moment as ISO 8601.
 		 * @return {string} Day, month and time in the reader's language.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		formatMoment(iso) {
 			const date = new Date(iso)
@@ -462,7 +462,7 @@ export default {
 
 		/**
 		 * @param {object} provider The payment provider to save.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async onSave(provider) {
 			this.savingProvider = provider.name
@@ -503,7 +503,7 @@ export default {
 
 		/**
 		 * @param {object} provider The payment provider to probe.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async onTest(provider) {
 			this.testingProvider = provider.name

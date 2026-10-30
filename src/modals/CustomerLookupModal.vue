@@ -6,7 +6,7 @@
   - surfaces decorated rows (name / email / phone + doNotContact privacy
   - badge). Emits @select with the chosen contact UUID, @cancel on close.
   -
-  - @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
+  - @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
   -->
 <template>
 	<CnDialog
@@ -137,7 +137,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
 	 */
 	beforeUnmount() {
 		if (this.debounceHandle) {
