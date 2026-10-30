@@ -3431,7 +3431,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ArticleService.php:185",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/archive/2026-10-09-marketing-article-hub"
+				"spec": "openspec/specs/kennisbank",
+				"requirement": "Search and Discovery"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/use-the-updated-reply-editor-in-help-desk \"To add a document, snippet, meeting link, knowledge base article, quote, or video in your response, click Insert\" inside the ticket reply. Service Hub Professional, Enterprise (the knowledge base itself: https://knowledge.hubspot.com/knowledge-base/create-and-customize-knowledge-base-articles).",
@@ -8237,7 +8238,8 @@
 				"state": "built",
 				"evidence": "lib/Service/DataDeletionService.php:110",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/avg-verzoeken-workflow"
+				"spec": "openspec/specs/avg-verzoeken-workflow",
+				"requirement": "REQ-AVG-018 — Erasure removes the person and keeps the financial records"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/how-do-i-perform-a-gdpr-delete-in-hubspot permanent delete removes the contact \"including email tracking history, call records, form submissions\", while \"anonymized analytics data will remain\"; associated deals and companies are separate records and stay. All products and plans. Note: Was partial; the delete keeps the other records intact.",
@@ -8269,7 +8271,8 @@
 				"state": "built",
 				"evidence": "lib/Service/BudgetService.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-whatsapp-sms-channel-adapter"
+				"spec": "openspec/specs/outbound-messaging",
+				"requirement": "REQ-OM-009 — Every paid provider call stops at the tenant's spend budget"
 			},
 			"evidence": {
 				"kiss": "no rate limiting or budget guard in Kiss.Bff/ (grep for RateLimit finds nothing)",

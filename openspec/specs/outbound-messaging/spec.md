@@ -1,7 +1,9 @@
 # outbound-messaging Specification
 
 ## Purpose
-TBD - created by archiving change outbound-messaging-provider-wiring. Update Purpose after archive.
+
+Sending messages to clients over paid channels (SMS, WhatsApp and other providers): provider administration and testing, the agent's send surface, consent, auditing as contact moments, and the spend budget every paid provider call stops at.
+
 ## Requirements
 ### Requirement: REQ-OM-001 — Messaging provider administration
 
@@ -171,3 +173,22 @@ The `omnichannel-registratie` overlay entry (`openspec/features.overlay.json`) M
 
 `@e2e exclude` metadata/process gate — overlay JSON state, asserted by the change's verify step, no UI runtime surface.
 
+
+### Requirement: REQ-OM-009 — Every paid provider call stops at the tenant's spend budget
+
+Every outbound call to a provider that charges per use (messaging providers such as WhatsApp and SMS gateways, paid social network APIs, and any later paid integration) SHALL ask `BudgetService::canSend()` for that tenant and provider before the call, and SHALL record the realised message and cost through `BudgetService::recordSend()` after it. A budget SHALL have a period, a maximum number of messages and/or a maximum cost, a hard-stop or alert-only mode and an alert threshold. With hard stop on and the maximum reached, the call SHALL be refused before the provider is contacted. Crossing the alert threshold SHALL notify the administrators once per period. `BudgetPeriodResetJob` SHALL start a new period when the old one has passed. A provider without a budget SHALL be allowed.
+
+#### Scenario: A hard-stop budget is reached
+- GIVEN an SMS provider budget of 500 messages a month with hard stop, and 500 sent this month
+- WHEN an agent sends another SMS
+- THEN the send is refused with `budget_exhausted` and the provider is not called
+
+#### Scenario: An alert-only budget crosses its threshold
+- GIVEN a WhatsApp budget of 200 euros a month, alert-only, threshold 80%
+- WHEN a send brings this month's cost to 162 euros
+- THEN the send goes out and the administrators get one notification for this period
+
+#### Scenario: A new month
+- GIVEN last month's SMS budget was exhausted
+- WHEN the reset job runs on the first day of the new month
+- THEN the counters start at zero and sends are allowed again
