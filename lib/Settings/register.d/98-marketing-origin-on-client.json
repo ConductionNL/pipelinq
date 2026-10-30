@@ -1,0 +1,288 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "marketing-campaign-on-client (row mkt-form-campaign-tags). A web form submission reaches the contact and client record: TouchpointService::recordSubmission appends the touchpoint with the client and the landing page, then writes firstTouch once and lastTouch on every submission on the contact and on its client (board PqKlant, Identity: Form, Landing page, Campaign). Both touches are read only in forms; only the intake writes them. touchpoint schema version 1.0.0->1.1.0. No property changes type and none becomes required."
+  },
+  "components": {
+    "schemas": {
+      "touchpoint": {
+        "slug": "touchpoint",
+        "version": "1.1.0",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "title": "Client",
+            "description": "The client of the contact who submitted, when there is one.",
+            "maxLength": 255,
+            "facetable": true
+          },
+          "landingPage": {
+            "type": "string",
+            "title": "Landing page",
+            "description": "The page the form sat on.",
+            "maxLength": 2048
+          }
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "properties": {
+          "firstTouch": {
+            "type": "object",
+            "title": "First touch",
+            "description": "The campaign, source, medium, landing page and form of this record's first web form submission. Written once and kept.",
+            "readOnly": true,
+            "properties": {
+              "campaign": {
+                "type": "string",
+                "title": "Campaign",
+                "description": "The utm_campaign value at first touch.",
+                "maxLength": 255
+              },
+              "source": {
+                "type": "string",
+                "title": "Source",
+                "description": "The utm_source value at first touch.",
+                "maxLength": 255
+              },
+              "medium": {
+                "type": "string",
+                "title": "Medium",
+                "description": "The utm_medium value at first touch.",
+                "maxLength": 255
+              },
+              "term": {
+                "type": "string",
+                "title": "Term",
+                "description": "The utm_term value at first touch.",
+                "maxLength": 255
+              },
+              "content": {
+                "type": "string",
+                "title": "Content",
+                "description": "The utm_content value at first touch.",
+                "maxLength": 255
+              },
+              "campaignId": {
+                "type": "string",
+                "title": "Campaign record",
+                "description": "The campaign the submission was attributed to.",
+                "maxLength": 255
+              },
+              "landingPage": {
+                "type": "string",
+                "title": "Landing page",
+                "description": "The page the form sat on.",
+                "maxLength": 2048
+              },
+              "form": {
+                "type": "string",
+                "title": "Form",
+                "description": "The name of the form that was sent.",
+                "maxLength": 255
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time",
+                "title": "Submitted at",
+                "description": "When the form was sent."
+              }
+            }
+          },
+          "lastTouch": {
+            "type": "object",
+            "title": "Last touch",
+            "description": "The campaign, source, medium, landing page and form of this record's latest web form submission.",
+            "readOnly": true,
+            "properties": {
+              "campaign": {
+                "type": "string",
+                "title": "Campaign",
+                "description": "The utm_campaign value at last touch.",
+                "maxLength": 255
+              },
+              "source": {
+                "type": "string",
+                "title": "Source",
+                "description": "The utm_source value at last touch.",
+                "maxLength": 255
+              },
+              "medium": {
+                "type": "string",
+                "title": "Medium",
+                "description": "The utm_medium value at last touch.",
+                "maxLength": 255
+              },
+              "term": {
+                "type": "string",
+                "title": "Term",
+                "description": "The utm_term value at last touch.",
+                "maxLength": 255
+              },
+              "content": {
+                "type": "string",
+                "title": "Content",
+                "description": "The utm_content value at last touch.",
+                "maxLength": 255
+              },
+              "campaignId": {
+                "type": "string",
+                "title": "Campaign record",
+                "description": "The campaign the submission was attributed to.",
+                "maxLength": 255
+              },
+              "landingPage": {
+                "type": "string",
+                "title": "Landing page",
+                "description": "The page the form sat on.",
+                "maxLength": 2048
+              },
+              "form": {
+                "type": "string",
+                "title": "Form",
+                "description": "The name of the form that was sent.",
+                "maxLength": 255
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time",
+                "title": "Submitted at",
+                "description": "When the form was sent."
+              }
+            }
+          }
+        }
+      },
+      "client": {
+        "slug": "client",
+        "properties": {
+          "firstTouch": {
+            "type": "object",
+            "title": "First touch",
+            "description": "The campaign, source, medium, landing page and form of this record's first web form submission. Written once and kept.",
+            "readOnly": true,
+            "properties": {
+              "campaign": {
+                "type": "string",
+                "title": "Campaign",
+                "description": "The utm_campaign value at first touch.",
+                "maxLength": 255
+              },
+              "source": {
+                "type": "string",
+                "title": "Source",
+                "description": "The utm_source value at first touch.",
+                "maxLength": 255
+              },
+              "medium": {
+                "type": "string",
+                "title": "Medium",
+                "description": "The utm_medium value at first touch.",
+                "maxLength": 255
+              },
+              "term": {
+                "type": "string",
+                "title": "Term",
+                "description": "The utm_term value at first touch.",
+                "maxLength": 255
+              },
+              "content": {
+                "type": "string",
+                "title": "Content",
+                "description": "The utm_content value at first touch.",
+                "maxLength": 255
+              },
+              "campaignId": {
+                "type": "string",
+                "title": "Campaign record",
+                "description": "The campaign the submission was attributed to.",
+                "maxLength": 255
+              },
+              "landingPage": {
+                "type": "string",
+                "title": "Landing page",
+                "description": "The page the form sat on.",
+                "maxLength": 2048
+              },
+              "form": {
+                "type": "string",
+                "title": "Form",
+                "description": "The name of the form that was sent.",
+                "maxLength": 255
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time",
+                "title": "Submitted at",
+                "description": "When the form was sent."
+              }
+            }
+          },
+          "lastTouch": {
+            "type": "object",
+            "title": "Last touch",
+            "description": "The campaign, source, medium, landing page and form of this record's latest web form submission.",
+            "readOnly": true,
+            "properties": {
+              "campaign": {
+                "type": "string",
+                "title": "Campaign",
+                "description": "The utm_campaign value at last touch.",
+                "maxLength": 255
+              },
+              "source": {
+                "type": "string",
+                "title": "Source",
+                "description": "The utm_source value at last touch.",
+                "maxLength": 255
+              },
+              "medium": {
+                "type": "string",
+                "title": "Medium",
+                "description": "The utm_medium value at last touch.",
+                "maxLength": 255
+              },
+              "term": {
+                "type": "string",
+                "title": "Term",
+                "description": "The utm_term value at last touch.",
+                "maxLength": 255
+              },
+              "content": {
+                "type": "string",
+                "title": "Content",
+                "description": "The utm_content value at last touch.",
+                "maxLength": 255
+              },
+              "campaignId": {
+                "type": "string",
+                "title": "Campaign record",
+                "description": "The campaign the submission was attributed to.",
+                "maxLength": 255
+              },
+              "landingPage": {
+                "type": "string",
+                "title": "Landing page",
+                "description": "The page the form sat on.",
+                "maxLength": 2048
+              },
+              "form": {
+                "type": "string",
+                "title": "Form",
+                "description": "The name of the form that was sent.",
+                "maxLength": 255
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time",
+                "title": "Submitted at",
+                "description": "When the form was sent."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -270,4 +270,24 @@ class LandingPageFormSubmittedListenerTest extends TestCase {
 
 		$this->assertSame([], $this->store->writes);
 	}//end testAnUnrelatedEventIsIgnored()
+	/**
+	 * The contact keeps how it found us: the campaign, the source, the
+	 * portal page and the campaign's name as the form.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-contacts-and-clients-show-how-they-found-you-req-moc-001
+	 *
+	 * @return void
+	 */
+	public function testTheContactGetsItsTouchesWithTheLandingPage(): void {
+		$listener = $this->build();
+		$listener->handle($this->submission());
+
+		$contact = array_values($this->store->rows['contact'])[0];
+		$this->assertSame('webinar-ai-voor-gemeenten', $contact['lastTouch']['campaign']);
+		$this->assertSame('linkedin', $contact['lastTouch']['source']);
+		$this->assertSame('open-tilburg/campagne/webinar-ai-voor-gemeenten', $contact['lastTouch']['landingPage']);
+		$this->assertSame('Webinar AI voor gemeenten', $contact['lastTouch']['form']);
+		$this->assertSame($contact['lastTouch'], $contact['firstTouch']);
+		$this->assertSame('open-tilburg/campagne/webinar-ai-voor-gemeenten', array_values($this->store->rows['touchpoint'])[0]['landingPage']);
+	}//end testTheContactGetsItsTouchesWithTheLandingPage()
 }//end class

@@ -25,6 +25,8 @@ This page describes what you can do today and what is planned. The technical des
 
 **Campaigns.** Group mailings, posts and a landing page into one campaign. Everything in it carries one campaign value, so a mailing and a post report as one campaign instead of two. Ask portaliq to publish the landing page with a sign-up form, and every submission becomes a lead that remembers which mailing and which post brought it in. See the [campaigns guide](../user/marketing-campaigns.md).
 
+**How they found you.** Every web form submission is kept as a touchpoint with its campaign, source, medium and landing page. The person's contact and client also keep two summaries: the first submission, which never changes, and the latest one. A resident's client page shows the latest in its Identity card: the form and when it was sent, the landing page, and the campaign with its source. The campaign values come from the page's own link (`utm_campaign`, `utm_source`, `utm_medium`, `utm_term`, `utm_content`); they never change a lead's status or source.
+
 **Attribution.** The campaign report divides value three ways: first touch, last touch and linear. You pick which one you read. A lead whose customer has a paid invoice in shillinq closes on that invoice; a lead without one closes on its own value, and the report says which of the two it used, so booked money and a forecast never get added up as if they were the same thing.
 
 **SMS and WhatsApp.** Send one-to-one messages from a client or contact page, with per-channel consent, approved WhatsApp templates and a spend budget. See [outbound messaging](outbound-messaging.md).

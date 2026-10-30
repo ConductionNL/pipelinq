@@ -9381,7 +9381,15 @@ OC.L10N.register(
         "Finish this task": "Deze taak afronden",
         "What came out of the callback?": "Wat kwam er uit het terugbellen?",
         "Log attempt": "Poging vastleggen",
-        "Attempt logged.": "Poging vastgelegd."
+        "Attempt logged.": "Poging vastgelegd.",
+        "Campaign record": "Campagnerecord",
+        "The campaign the submission was attributed to.": "De campagne waaraan de inzending is toegeschreven.",
+        "The campaign, source, medium, landing page and form of this record's first web form submission. Written once and kept.": "De campagne, bron, medium, landingspagina en het formulier van de eerste webformulierinzending van dit record. Eén keer geschreven en bewaard.",
+        "The campaign, source, medium, landing page and form of this record's latest web form submission.": "De campagne, bron, medium, landingspagina en het formulier van de laatste webformulierinzending van dit record.",
+        "The client of the contact who submitted, when there is one.": "De klant van het contact dat inzond, als die er is.",
+        "The name of the form that was sent.": "De naam van het verstuurde formulier.",
+        "The page the form sat on.": "De pagina waarop het formulier stond.",
+        "When the form was sent.": "Wanneer het formulier is verstuurd."
     },
     "nplurals=2; plural=(n != 1);"
 )

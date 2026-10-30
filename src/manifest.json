@@ -3360,7 +3360,7 @@
 							"op": "eq",
 							"value": "person"
 						},
-						"_note": "PqKlant Identiteit: the client number and where the data comes from, as dossiq's DqContact Identity card.",
+						"_note": "PqKlant Identiteit: the client number and where the data comes from, as dossiq's DqContact Identity card, then how the person found us: the form, landing page and campaign with its source of their latest web form submission (lastTouch, marketing-campaign-on-client).",
 						"content": {
 							"fields": [
 								{
@@ -3371,6 +3371,30 @@
 								{
 									"label": "Source",
 									"path": "source"
+								},
+								{
+									"label": "Form",
+									"parts": [
+										{
+											"path": "lastTouch.form"
+										},
+										{
+											"path": "lastTouch.at",
+											"format": "date"
+										}
+									],
+									"separator": ", "
+								},
+								{
+									"label": "Landing page",
+									"path": "lastTouch.landingPage"
+								},
+								{
+									"label": "Campaign",
+									"parts": [
+										"lastTouch.campaign",
+										"lastTouch.source"
+									]
 								}
 							]
 						}

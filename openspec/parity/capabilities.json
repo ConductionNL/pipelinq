@@ -5048,12 +5048,13 @@
 			"feature": "marketing-campaigns",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "specified",
-				"evidence": "a portaliq landing-page submission becomes a contact, a lead with campaignId and firstTouch/lastTouch, and a touchpoint carrying the campaign (lib/Listener/LandingPageFormSubmittedListener.php:6 \"Turns a visitor's landing-page form submission into a contact, a lead\", registered at lib/AppInfo/Application.php:285; lead fields in lib/Settings/register.d/98-marketing-campaigns.json:392); nothing puts the campaign or landing page on the client record, no page shows touchpoints, and the website enquiry form (lib/Service/EnquiryIntakeService.php) keeps no UTM values",
+				"state": "built",
+				"evidence": "Every web form submission is a touchpoint with clientId and landingPage, and the contact and its client keep firstTouch (once) and lastTouch (every submission): lib/Service/TouchpointService.php recordSubmission(), called from lib/Service/Marketing/SubmittedLeadIntake.php recordTouchpoint() (website forms submit into leads, decision 179) and lib/Listener/LandingPageFormSubmittedListener.php ingest(); schema lib/Settings/register.d/98-marketing-origin-on-client.json. ClientDetail's Identity card shows Form, Landing page and Campaign from lastTouch as PqKlant draws it (src/manifest.json side-identity). Tests: tests/Unit/Service/TouchpointServiceTest.php, tests/Unit/Service/Marketing/SubmittedLeadIntakeTest.php, tests/Unit/Listener/LandingPageFormSubmittedListenerTest.php, tests/vitest/clientHowTheyFoundUs.spec.js. A Touchpoints list on the record is not built: no board draws it.",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "LeadDetail (lead fields), CampaignReportPage; not the client record",
-				"readOn": "2026-09-26",
-				"change": "marketing-campaign-on-client"
+				"reachedOn": "ClientDetail Identity card; LeadDetail (lead fields), CampaignReportPage",
+				"readOn": "2026-10-30",
+				"change": "marketing-campaign-on-client",
+				"requirement": "openspec/changes/marketing-campaign-on-client :: Contacts and clients show how they found you (REQ-MOC-001)"
 			},
 			"note": "kept on the lead and in the attribution log, only for portaliq landing pages. Specified 2026-09-28 in openspec/changes/marketing-campaign-on-client (OpenSpec pass).",
 			"evidence": {
