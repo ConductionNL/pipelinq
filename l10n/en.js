@@ -9360,7 +9360,9 @@ OC.L10N.register(
         "Identified": "Identified",
         "Hand over to the back office": "Hand over to the back office",
         "Log contact on another channel": "Log contact on another channel",
-        "Next steps": "Next steps"
+        "Next steps": "Next steps",
+        "Assign the selected tickets": "Assign the selected tickets",
+        "Every ticket that moves keeps this reason.": "Every ticket that moves keeps this reason."
     },
     "nplurals=2; plural=(n != 1);"
 )

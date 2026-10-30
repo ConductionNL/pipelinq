@@ -9374,7 +9374,9 @@ OC.L10N.register(
         "Identified": "Geïdentificeerd",
         "Hand over to the back office": "Overdragen aan de backoffice",
         "Log contact on another channel": "Contact via een ander kanaal vastleggen",
-        "Next steps": "Volgende stappen"
+        "Next steps": "Volgende stappen",
+        "Assign the selected tickets": "De geselecteerde tickets toewijzen",
+        "Every ticket that moves keeps this reason.": "Elk verplaatst ticket bewaart deze reden."
     },
     "nplurals=2; plural=(n != 1);"
 )

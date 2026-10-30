@@ -559,7 +559,10 @@ OC.L10N.register(
         "Factureerbaar": "Factureerbaar",
         "Einddatum": "Einddatum",
         "Wilt u deze berichten niet meer ontvangen? Meld u af: %s": "No longer want these messages? Unsubscribe: %s",
-        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s"
+        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s",
+        "Assign the selected tickets": "Assign the selected tickets",
+        "Search by name": "Search by name",
+        "Every ticket that moves keeps this reason.": "Every ticket that moves keeps this reason."
     },
     "nplurals=2; plural=(n != 1);"
 )
