@@ -87,7 +87,7 @@ export default {
 		/**
 		 * Whether a call is on: the control reads "In call" and its menu sets the availability.
 		 *
-		 * @spec openspec/changes/werkplek-in-call-tiles-and-header/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
+		 * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
 		 */
 		inCall: {
 			type: Boolean,
@@ -155,7 +155,7 @@ export default {
 		 *
 		 * @param {boolean} next The availability to save.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/werkplek-in-call-tiles-and-header/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
+		 * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
 		 */
 		async save(next) {
 			if (this.saving || next === this.isAvailable) return

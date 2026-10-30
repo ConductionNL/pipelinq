@@ -5,7 +5,7 @@
  * Board PqKassaAudit: an opened audit row is a 360px card beside the list,
  * and its sections are as tall as what they say rather than fixed rows.
  *
- * @spec openspec/changes/pos-audit-record-side-card/specs/pos-audit-record-side-card/spec.md#requirement-an-opened-audit-entry-is-the-side-card-the-board-draws
+ * @spec openspec/specs/pos-audit-record-side-card/spec.md#requirement-an-opened-audit-entry-is-the-side-card-the-board-draws
  */
 
 import fs from 'fs'

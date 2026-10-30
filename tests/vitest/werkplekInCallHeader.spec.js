@@ -8,7 +8,7 @@
  * time is its own chip, and the call marks the workspace identified so the
  * line under the title carries "Geïdentificeerd".
  *
- * @spec openspec/changes/werkplek-in-call-tiles-and-header/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
+ * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

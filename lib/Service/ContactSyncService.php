@@ -308,7 +308,7 @@ class ContactSyncService {
 	 *
 	 * @return array{linked: bool, addressBook: string, updatedAt: string|null} The card's status.
 	 *
-	 * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
+	 * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
 	 */
 	public function cardStatus(string $uid): array {
 		$status = ['linked' => false, 'addressBook' => '', 'updatedAt' => null];

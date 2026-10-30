@@ -27,7 +27,7 @@ use Exception;
 /**
  * A vCard REV value (`20261027T091200Z`, or any ISO 8601 moment) as an ISO 8601 string.
  *
- * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
+ * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
  */
 class VcardRevision {
 	/**
@@ -37,7 +37,7 @@ class VcardRevision {
 	 *
 	 * @return string|null The moment, or null when there is none.
 	 *
-	 * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
+	 * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
 	 */
 	public function toIso(string $rev): ?string {
 		$rev = trim($rev);

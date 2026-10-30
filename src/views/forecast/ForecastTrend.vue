@@ -148,7 +148,7 @@ export default {
 		 * The week's moves table: seller, movement and value, each sortable
 		 * and filterable from its head (PqForecast).
 		 *
-		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
 		 * @return {Array<object>} The columns.
 		 */
 		movementColumns() {
@@ -168,7 +168,7 @@ export default {
 		/**
 		 * The week's moves; the table sorts and filters them from its heads.
 		 *
-		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
 		 * @return {Array<object>} One row per seller.
 		 */
 		movementRows() {
@@ -184,7 +184,7 @@ export default {
 		 * The accuracy table: rep, week 1 commit, actual and accuracy, each
 		 * sortable and filterable from its head (PqForecast).
 		 *
-		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
 		 * @return {Array<object>} The columns.
 		 */
 		accuracyColumns() {
@@ -199,7 +199,7 @@ export default {
 		/**
 		 * The accuracy rows; the table sorts and filters them from its heads.
 		 *
-		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
 		 * @return {Array<object>} One row per rep.
 		 */
 		accuracyTableRows() {

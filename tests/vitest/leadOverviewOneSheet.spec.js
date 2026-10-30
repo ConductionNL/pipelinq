@@ -7,7 +7,7 @@
  * sections, and the products table read as the board draws it: plain line
  * text and sortable heads.
  *
- * @spec openspec/changes/lead-overview-one-sheet/specs/lead-overview-one-sheet/spec.md
+ * @spec openspec/specs/lead-overview-one-sheet/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

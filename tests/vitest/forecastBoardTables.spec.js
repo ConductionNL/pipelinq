@@ -7,7 +7,7 @@
  * own bordered table card. The table sorts and filters the rows it holds
  * itself (CnDataTable `localHeaders`); the page keeps no sort or filter state.
  *
- * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md
+ * @spec openspec/specs/forecast-table-heads/spec.md
  */
 
 import { existsSync, readFileSync } from 'node:fs'

@@ -442,7 +442,7 @@ export default {
 		 * ("j.smit@…, work, preferred").
 		 *
 		 * @return {Array<{key: string, label: string, text: string}>} The rows.
-		 * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-is-the-board
+		 * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-is-the-board
 		 */
 		compactRows() {
 			const line = (value, kind, primary) => [value, kind ? this.kindLabel(kind).toLowerCase() : '', primary ? this.t('pipelinq', 'preferred') : ''].filter(Boolean).join(', ')
@@ -526,7 +526,7 @@ export default {
 	/**
 	 * Puts the add in the card title row when the card asks for it.
 	 *
-	 * @spec openspec/changes/client-side-cards-title-add/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
+	 * @spec openspec/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
 	 */
 	mounted() {
 		if (this.headerAdd) {
@@ -540,7 +540,7 @@ export default {
 		 * number or social profile.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/client-side-cards-title-add/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
+		 * @spec openspec/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
 		 */
 		reportHeader() {
 			this.$emit('header', {

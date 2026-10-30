@@ -6,9 +6,9 @@
  * for the client on the line, the line under the title carries the call's
  * pills, and the in-call cards carry the board's titles.
  *
- * @spec openspec/changes/werkplek-in-call-tiles-and-header/specs/kcc-werkplek/spec.md#requirement-the-in-call-page-offers-the-next-steps-as-tiles
- * @spec openspec/changes/werkplek-in-call-tiles-and-header/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
- * @spec openspec/changes/werkplek-in-call-tiles-and-header/specs/kcc-werkplek/spec.md#requirement-the-in-call-cards-carry-the-boards-titles
+ * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-in-call-page-offers-the-next-steps-as-tiles
+ * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
+ * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-in-call-cards-carry-the-boards-titles
  */
 
 import { readFileSync } from 'node:fs'

@@ -540,7 +540,7 @@ class ActivityTimelineService {
 	 * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
 	 *
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
 	 */
 	public function normalizeActivity(string $sourceType, array $object, string $entityType, string $entityId): ?array {
 		return $this->itemNormalizer->normalize(sourceType: $sourceType, object: $object, entityType: $entityType, entityId: $entityId);

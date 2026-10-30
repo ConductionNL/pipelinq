@@ -738,7 +738,7 @@ export default {
 		 * Open the composer when the contact strip asks for it on this entity.
 		 *
 		 * @param {object} payload `{ entityId }`.
-		 * @spec openspec/changes/client-activity-card/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
+		 * @spec openspec/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
 		 */
 		onComposeRequested(payload) {
 			if (payload && payload.entityId === this.entityId) {

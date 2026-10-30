@@ -451,7 +451,7 @@ export default {
 	/**
 	 * Puts the add in the card title row when the card asks for it, then loads the relationships.
 	 *
-	 * @spec openspec/changes/client-side-cards-title-add/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
+	 * @spec openspec/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
 	 */
 	async mounted() {
 		if (this.headerAdd) {
@@ -465,7 +465,7 @@ export default {
 		 * Report the card's title-row "Add" button, which opens the add dialog.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/client-side-cards-title-add/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
+		 * @spec openspec/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
 		 */
 		reportHeader() {
 			this.$emit('header', {

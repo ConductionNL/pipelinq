@@ -8,7 +8,7 @@
  * `tableFrame: true` (nc-vue feat/pq-c11-object-list-table-frame). The receipt
  * lines read as plain text in the main ink, as the board draws them.
  *
- * @spec openspec/changes/pos-lead-framed-tables/specs/pos-lead-framed-tables/spec.md#requirement-the-pos-and-lead-card-lists-are-framed-tables
+ * @spec openspec/specs/pos-lead-framed-tables/spec.md#requirement-the-pos-and-lead-card-lists-are-framed-tables
  */
 
 import fs from 'fs'

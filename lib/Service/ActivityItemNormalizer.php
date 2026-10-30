@@ -22,7 +22,7 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
- * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
+ * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
  */
 
 declare(strict_types=1);
@@ -64,7 +64,7 @@ class ActivityItemNormalizer {
 	 *
 	 * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
 	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
 	 */
 	public function normalize(string $sourceType, array $object, string $entityType, string $entityId): ?array {
 		$item = $this->normalizeBySource(sourceType: $sourceType, object: $object, entityType: $entityType, entityId: $entityId);
@@ -100,7 +100,7 @@ class ActivityItemNormalizer {
 	 *
 	 * @return array<string,mixed> The activity item.
 	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
 	 */
 	private function normalizeNote(array $note, string $entityType, string $entityId): array {
 		return [
@@ -126,7 +126,7 @@ class ActivityItemNormalizer {
 	 *
 	 * @return array<string,mixed> The activity item.
 	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
 	 */
 	private function normalizeMessage(array $message, string $entityType, string $entityId): array {
 		return [
@@ -157,7 +157,7 @@ class ActivityItemNormalizer {
 	 *
 	 * @return array<string,mixed> The activity item.
 	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-bookings-and-linked-mail
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-bookings-and-linked-mail
 	 */
 	private function normalizeBooking(array $booking, string $entityType, string $entityId): array {
 		$subject = $this->stringOrNull(value: ($booking['subject'] ?? $booking['title'] ?? $booking['serviceName'] ?? null));

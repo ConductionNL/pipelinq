@@ -8,7 +8,7 @@
  * headed sections (details, deals, relationships, channels), and a short side
  * column (open deals, related, the three newest changes).
  *
- * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-is-the-board
+ * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-is-the-board
  */
 
 import { mount } from '@vue/test-utils'

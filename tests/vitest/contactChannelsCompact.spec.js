@@ -7,7 +7,7 @@
  * Kanalen): one label and line per channel, mobile without its kind, the
  * preferred address marked.
  *
- * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-is-the-board
+ * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-is-the-board
  */
 
 import { describe, expect, it } from 'vitest'

@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/lead-page-as-pqlead/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ use OCP\IUserSession;
 /**
  * The lead page's Related summary.
  *
- * @spec openspec/changes/lead-page-as-pqlead/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
  */
 class LeadRelatedSummaryController extends Controller {
 	/**
@@ -75,7 +75,7 @@ class LeadRelatedSummaryController extends Controller {
 	 *
 	 * @return JSONResponse `{ earlier, hours }`, or an error.
 	 *
-	 * @spec openspec/changes/lead-page-as-pqlead/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
+	 * @spec openspec/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {

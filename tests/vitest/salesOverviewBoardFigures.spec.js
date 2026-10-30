@@ -7,7 +7,7 @@
  * figures, the pipeline cover as a multiple, matching prospects, and the
  * stage, source and customer charts as labelled bars.
  *
- * @spec openspec/changes/sales-overview-board/specs/dashboard/spec.md#requirement-the-sales-overview-says-what-its-figures-are-made-of
+ * @spec openspec/specs/dashboard/spec.md#requirement-the-sales-overview-says-what-its-figures-are-made-of
  */
 
 import { readFileSync } from 'node:fs'

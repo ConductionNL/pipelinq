@@ -347,7 +347,7 @@ class CommercialAnalyticsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
+	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
 	 */
 	public function testCommercialOverviewCountsTheDealsBehindItsFigures(): void {
 		$data = $this->fixture();
@@ -371,7 +371,7 @@ class CommercialAnalyticsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-gives-the-pipeline-cover
+	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-gives-the-pipeline-cover
 	 */
 	public function testCommercialOverviewGivesThePipelineCover(): void {
 		$withTarget = $this->buildService(byCollection: $this->fixture(), pipelineTarget: 9000)->getCommercialOverview(period: 'month');

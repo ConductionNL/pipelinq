@@ -742,7 +742,7 @@ class AnalyticsService {
 	 * @return array{revenue: float, wonValue: float, winRate: float|null, avgDealSize: float|null, wonCount: int, lostCount: int}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
-	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
+	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential POS + lead window filters; extraction adds no clarity.
 	 * @SuppressWarnings(PHPMD.NPathComplexity)      Independent guard clauses inflate NPath without real branching depth.
@@ -820,7 +820,7 @@ class AnalyticsService {
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
-	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
+	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
 	 */
 	private function aggregateOpenPipeline(array $leads): array {
 		$weightedForecast = 0.0;
@@ -860,7 +860,7 @@ class AnalyticsService {
 	 *
 	 * @return array{targetRemaining: float|null, pipelineCover: float|null}
 	 *
-	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-gives-the-pipeline-cover
+	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-gives-the-pipeline-cover
 	 */
 	private function pipelineCover(float $openValue, float $wonValue): array {
 		$target = $this->appConfig->getValueInt(Application::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0);
@@ -888,7 +888,7 @@ class AnalyticsService {
 	 *
 	 * @return int|null The share.
 	 *
-	 * @spec openspec/changes/sales-overview-board/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
+	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
 	 */
 	private function wonShareOfOpen(float $wonValue, float $openValue): ?int {
 		if ($openValue <= 0.0) {

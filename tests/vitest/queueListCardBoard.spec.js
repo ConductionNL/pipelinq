@@ -7,8 +7,8 @@
  * column heads, and the third tile counts the tickets within
  * their deadline out of all waiting ones.
  *
- * @spec openspec/changes/queue-list-card-board/specs/queue/spec.md#requirement-the-queue-list-draws-rows-without-column-heads
- * @spec openspec/changes/queue-list-card-board/specs/queue/spec.md#requirement-the-queue-counts-the-tickets-within-their-deadline
+ * @spec openspec/specs/queue/spec.md#requirement-the-queue-list-draws-rows-without-column-heads
+ * @spec openspec/specs/queue/spec.md#requirement-the-queue-counts-the-tickets-within-their-deadline
  */
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
 import fs from 'fs'

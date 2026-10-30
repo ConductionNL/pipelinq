@@ -6,7 +6,7 @@
  * "Contactmomenten" with "2 bij dit ticket, nieuwste eerst" under it and the
  * outlined "Contact vastleggen" beside it.
  *
- * @spec openspec/changes/ticket-contacts-title-row/specs/unify-ticket-supertype/spec.md#requirement-the-contact-moments-tab-has-a-title-row
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-the-contact-moments-tab-has-a-title-row
  */
 
 import { readFileSync } from 'node:fs'

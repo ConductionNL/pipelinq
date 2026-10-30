@@ -17,7 +17,9 @@ retrofit_extensions:
 Provide a chronological activity feed per contact, organization, and pipeline item in Pipelinq. All interactions -- status changes, notes, emails, calls, document uploads, field changes, and linked case events -- appear in one unified timeline. This gives the complete "klantbeeld" (customer view) that relationship managers need to understand the full history of any entity at a glance.
 
 Activity timelines are the single most requested CRM feature and are implemented in nearly all modern CRM platforms -- they answer "what happened with this contact?" without searching through multiple views. Common approaches include audit-log-style timelines, journal-style activity tracking, and chronological task linking.
+
 ## Requirements
+
 ### Requirement: Every entity MUST have a timeline view
 Contacts, organizations, and pipeline items each MUST display a unified activity timeline.
 
@@ -159,7 +161,6 @@ Operations for activity timeline and entity notes components MUST tolerate missi
 - WHEN it executes
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
-
 
 ### Requirement: Activity events MUST cover all entity types
 The current ActivityService only publishes events for leads and requests. All Pipelinq entity types -- clients, contacts, leads, and requests -- MUST generate activity events on create and update.
@@ -437,6 +438,30 @@ Email exchanges with contacts and clients must be logged in the timeline, whethe
 - AND clicking the entry MUST open the linked email in Nextcloud Mail
 
 ---
+
+### Requirement: The timeline lists notes and messages
+
+`GET /api/timeline` SHALL list the notes on the record as kind `note`. Each note shows its text, its time and its author. It SHALL list WhatsApp and SMS messages as kind `message`. A contact's messages are its own. A client's messages are those of its contact persons. `types[]=note` and `types[]=message` SHALL narrow to these kinds.
+
+#### Scenario: an internal note on a client
+- **GIVEN** Fatma Yildiz wrote a note on Sanne de Vries's client record
+- **THEN** the timeline lists it as a `note` with `userName` "Fatma Yildiz"
+
+### Requirement: The timeline names authors by display name
+
+Every item SHALL carry `userName`: its author's display name, or the user id when that user is unknown.
+
+#### Scenario: a contact moment handled by Fatma
+- **GIVEN** a contact moment assigned to user `fatma`
+- **THEN** its `userName` is "Fatma Yildiz"
+
+### Requirement: The timeline lists bookings and linked mail
+
+`GET /api/timeline` SHALL list a client's appointment bookings as kind `calendar`. Each booking is dated the day it was made and titled with its subject, else its service's name, and the appointment's time. It SHALL list the emails linked to the record as kind `email`. It reads them through OpenRegister's published `EmailLinkReaderInterface`. Without that reader, the mail kind SHALL be empty, not an error.
+
+#### Scenario: a site visit booked for Sanne
+- **GIVEN** a "Locatiebezoek" booking for Sanne de Vries on 8 October at 14:00, booked on 5 October
+- **THEN** the timeline lists it on 5 October as "Locatiebezoek, 8 oktober 2026 om 14:00"
 
 ## Current Implementation Status
 
