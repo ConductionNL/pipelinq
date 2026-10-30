@@ -41,8 +41,13 @@ describe('the task finish card', () => {
 		expect(attempt.request).toEqual({ url: '/apps/pipelinq/api/callbacks/@objectId/attempts', body: { result: '{text}' } })
 		expect(nl[finish.label]).toBe('Afronden')
 		expect(finish.variant).toBe('primary')
-		expect(finish.request).toEqual({ url: '/apps/pipelinq/api/callbacks/@objectId/complete', body: { resultText: '{text}' } })
-		expect(finish.visibleWhen).toEqual({ field: 'status', op: 'eq', value: 'in_progress' })
+		// On an open task Finish first starts it (the lifecycle's claim, which
+		// checks the user may update the task), then completes it.
+		expect(finish.visibleWhen).toBeUndefined()
+		expect(finish.requests).toEqual([
+			{ when: { field: 'status', op: 'eq', value: 'open' }, url: '/apps/openregister/api/objects/@objectId/transition', body: { action: 'claim' } },
+			{ url: '/apps/pipelinq/api/callbacks/@objectId/complete', body: { resultText: '{text}' } },
+		])
 		expect(routes).toContain("'url' => '/api/callbacks/{id}/attempts'")
 		expect(routes).toContain("'url' => '/api/callbacks/{id}/complete'")
 		for (const action of content.actions) {

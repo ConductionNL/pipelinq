@@ -5881,7 +5881,7 @@
 						"type": "record-notes",
 						"title": "Finish this task",
 						"icon": "Check",
-						"_note": "Board PqTaak \"Deze taak afronden\": the result is sent with an attempt (on the task's attempt log) or with Finish, through the callback endpoints, which check the user may change the task. Finish shows in progress only, as the header's Finish: the task lifecycle completes from in_progress. Nothing is written while typing.",
+						"_note": "Board PqTaak \"Deze taak afronden\": the result is sent with an attempt (on the task's attempt log) or with Finish, through the callback endpoints, which check the user may change the task. The lifecycle completes from in_progress only, so on an open task Finish first runs the lifecycle's claim transition (OpenRegister checks the user may update the task), then completes it, in one click. Nothing is written while typing.",
 						"visibleWhen": { "field": "status", "op": "in", "value": ["open", "in_progress"] },
 						"content": {
 							"field": "resultText",
@@ -5900,8 +5900,10 @@
 									"label": "Finish",
 									"icon": "Check",
 									"variant": "primary",
-									"visibleWhen": { "field": "status", "op": "eq", "value": "in_progress" },
-									"request": { "url": "/apps/pipelinq/api/callbacks/@objectId/complete", "body": { "resultText": "{text}" } },
+									"requests": [
+										{ "when": { "field": "status", "op": "eq", "value": "open" }, "url": "/apps/openregister/api/objects/@objectId/transition", "body": { "action": "claim" } },
+										{ "url": "/apps/pipelinq/api/callbacks/@objectId/complete", "body": { "resultText": "{text}" } }
+									],
 									"doneText": "Task finished."
 								}
 							]
