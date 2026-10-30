@@ -1206,9 +1206,10 @@ export default {
 	min-width: 0;
 }
 
-/* Side cards head with a muted label, as CnDetailPage's own side column does. */
+/* Side cards head with a muted label, as CnDetailPage's own side column does.
+   The tone carries !important against a theme that colours every heading. */
 .cn-look-board .pos-form__side :deep(.cn-detail-card__title) {
-	color: var(--color-text-maxcontrast);
+	color: var(--color-text-maxcontrast) !important;
 	font-size: var(--cn-board-side-heading-size, 15px);
 	font-weight: 600;
 }
@@ -1305,6 +1306,8 @@ export default {
 	padding-inline: 12px;
 }
 
+/* Nextcloud's server.css pads every dl, dt and dd and pins a dt at 130px,
+   right-aligned and unwrapped; the totals set their own grid. */
 .pos-totals {
 	display: grid;
 	grid-template-columns: max-content 1fr;
@@ -1312,15 +1315,24 @@ export default {
 	row-gap: 4px;
 	align-items: baseline;
 	margin: 0 0 12px;
+	padding: 0;
 }
 
 .pos-totals__row {
 	display: contents;
 }
 
+.pos-totals__row dt,
+.pos-totals__row dd {
+	padding: 0;
+}
+
 .pos-totals__row dt {
+	width: auto;
 	color: var(--color-text-maxcontrast);
 	font-size: 14px;
+	white-space: normal;
+	text-align: start;
 }
 
 .pos-totals__row dd {
@@ -1366,8 +1378,9 @@ export default {
 	height: 40px;
 	border-radius: 50%;
 	background: var(--color-background-dark);
+	color: var(--cn-board-text-soft, var(--color-main-text));
 	font-weight: 700;
-	font-size: 13px;
+	font-size: 16px;
 	flex-shrink: 0;
 }
 

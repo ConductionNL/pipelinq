@@ -263,6 +263,29 @@ describe('the sale as the board draws it (PqKassa, PQB-7)', () => {
 		const title = rule('.cn-look-board .pos-form__side :deep(.cn-detail-card__title)')
 		expect(title).toMatch(/font-size: var\(--cn-board-side-heading-size, 15px\)/)
 		expect(title).toMatch(/font-weight: 600/)
-		expect(title).toMatch(/color: var\(--color-text-maxcontrast\)/)
+		// The theme colours every heading with !important, so the tone needs it too.
+		expect(title).toMatch(/color: var\(--color-text-maxcontrast\) !important/)
+	})
+
+	it('frees the Totals list from Nextcloud\'s own dl rules, so labels and amounts stand on 4px rows', () => {
+		// server.css pads every dt/dd 12px and pins dt at 130px, right-aligned and unwrapped.
+		const source = readFileSync(resolve(__dirname, '../../src/views/pos/PosTransactionForm.vue'), 'utf8')
+		const rule = (selector) => (source.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{([^}]*)\\}')) || [])[1] || ''
+		expect(rule('.pos-totals')).toMatch(/padding: 0;/)
+		const cell = rule('.pos-totals__row dt,\n.pos-totals__row dd')
+		expect(cell).toMatch(/padding: 0;/)
+		const label = rule('.pos-totals__row dt')
+		expect(label).toMatch(/width: auto;/)
+		expect(label).toMatch(/white-space: normal;/)
+		expect(label).toMatch(/text-align: start;/)
+	})
+
+	it('draws the customer initials 16px/700 in the soft ink on the grey disc, as the board draws them', () => {
+		const source = readFileSync(resolve(__dirname, '../../src/views/pos/PosTransactionForm.vue'), 'utf8')
+		const avatar = (source.match(/\n\.pos-form__avatar \{([^}]*)\}/) || [])[1] || ''
+		expect(avatar).toMatch(/font-size: 16px/)
+		expect(avatar).toMatch(/font-weight: 700/)
+		expect(avatar).toMatch(/color: var\(--cn-board-text-soft, var\(--color-main-text\)\)/)
 	})
 })
+

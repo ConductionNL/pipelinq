@@ -64,7 +64,18 @@ describe('the mailing list page as the board', () => {
 	it('keeps History on top of the side column, three changes long', () => {
 		expect(page.config.sideColumnOrder).toBe('declared')
 		expect(page.config.sideColumn[0]).toBe('list-side-history')
-		expect(widget('list-side-history').content.limit).toBe(3)
+		expect(widget('list-side-history').content.maxDisplay).toBe(3)
+	})
+
+	it('draws both History cards as the Dq history: stacked rows, compact, in words', () => {
+		for (const id of ['list-side-history', 'list-history']) {
+			const history = widget(id)
+			expect(history.type).toBe('audit-trail')
+			expect(history.content.layout).toBe('stacked')
+			expect(history.content.density).toBe('compact')
+			expect(history.content.excludeActions).toEqual(['read'])
+			expect(history.content.actionLabels).toEqual({ create: 'Created by {actor}', update: 'Updated' })
+		}
 	})
 
 	it('draws the sign-up form and the subscriber preview as titled cards', () => {
@@ -142,6 +153,12 @@ describe('the PqMailinglijst board look (pl4)', () => {
 		const data = widget('mailing-list-data').content
 		expect(data.columns).toBe(2)
 		expect(data.fixedColumns).toBe(true)
+	})
+
+	it('ends the details card at its content, so Subscribers stands right under it', () => {
+		// A floating grid keeps the size-to-content cell on whole 80px rows.
+		expect(page.config.gridFloat).toBe(false)
+		expect(page.config.layout.find((l) => l.widgetId === 'list-panels').sizeToContent).toBe(true)
 	})
 
 	it('puts no second Subscribers heading above the card', () => {

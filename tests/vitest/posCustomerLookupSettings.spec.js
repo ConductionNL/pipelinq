@@ -93,7 +93,8 @@ describe('the till customer lookup settings', () => {
 		const title = rule('.pos-customer-settings__note :deep(.settings-section__name)')
 		expect(title).toMatch(/font-size: var\(--cn-board-side-heading-size, 15px\)/)
 		expect(title).toMatch(/font-weight: 600/)
-		expect(title).toMatch(/color: var\(--color-text-maxcontrast\)/)
+		// The theme colours every heading with !important, so the tone needs it too.
+		expect(title).toMatch(/color: var\(--color-text-maxcontrast\) !important/)
 		const w = mountSettings()
 		expect(w.findAll('[data-stub="NcSettingsSection"]')[1].classes()).toContain('pos-customer-settings__note')
 	})

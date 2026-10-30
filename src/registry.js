@@ -1078,9 +1078,10 @@ const registry = {
 	},
 	JourneyRunsWidget: {
 		kind: 'widget',
-		component: sectionWidget('JourneyRunsWidget', JourneyRunsSection, ({ objectId }) => ({ journeyId: objectId })),
+		component: sectionWidget('JourneyRunsWidget', JourneyRunsSection, ({ objectId }) => ({ journeyId: objectId, showSubtitle: false })),
 		...PANEL_WIDGET_META,
-		_note: 'JourneyRunsSection as a card of the journey page\'s Overview tab (PqJourney).',
+		chrome: 'card',
+		_note: 'JourneyRunsSection as a card of the journey page\'s Overview tab (PqJourney). `chrome: card` makes the library draw the titled card with the manifest subtitle, so the section leaves its own line out.',
 	},
 	CampaignReportSection: {
 		kind: 'section',

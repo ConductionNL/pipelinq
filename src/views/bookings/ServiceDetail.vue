@@ -60,6 +60,18 @@
 			</NcButton>
 		</template>
 
+		<CnTabs :ariaLabel="t('pipelinq', 'Service')">
+			<template #nav-end>
+				<CnActionsMenu
+					:showRefresh="true"
+					:refreshing="loading"
+					variant="secondary"
+					:title="serviceData.name || t('pipelinq', 'Service')"
+					surface="page:service-detail"
+					testidBase="service-detail"
+					@refresh="refresh" />
+			</template>
+			<CnTab :title="t('pipelinq', 'Overview')">
 		<div class="service-detail__stack">
 			<CnDetailCard :title="t('pipelinq', 'Service details')">
 				<div class="info-grid">
@@ -223,6 +235,11 @@
 				</table>
 			</div>
 		</CnDetailCard>
+			</CnTab>
+			<CnTab :title="t('pipelinq', 'History')" lazy>
+				<CnAuditTrailCard register="pipelinq" schema="appointmentService" :objectId="serviceId" />
+			</CnTab>
+		</CnTabs>
 
 		<DeleteServiceDialog
 			v-if="showDelete"
@@ -262,10 +279,14 @@
 
 <script>
 import {
+	CnActionsMenu,
+	CnAuditTrailCard,
 	CnDetailCard,
 	CnDetailPage,
 	CnFormDialog,
 	CnStatusBadge,
+	CnTab,
+	CnTabs,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -345,10 +366,14 @@ export default {
 		NcButton,
 		Pencil,
 		PencilOutline,
+		CnActionsMenu,
+		CnAuditTrailCard,
 		CnDetailPage,
 		CnDetailCard,
 		CnFormDialog,
 		CnStatusBadge,
+		CnTab,
+		CnTabs,
 		ServiceForm,
 		ServiceStepsEditor,
 		DeleteServiceDialog,
@@ -636,6 +661,16 @@ export default {
 
 	methods: {
 		stepAmount,
+
+		/**
+		 * Read the service again (the tab row's Actions menu, Refresh).
+		 *
+		 * @spec openspec/changes/service-tabs-and-actions/specs/appointment-booking/spec.md#requirement-a-service-reads-in-overview-and-history-tabs
+		 * @return {Promise<void>}
+		 */
+		async refresh() {
+			await this.objectStore.fetchObject('appointmentService', this.serviceId)
+		},
 
 		/**
 		 * The label for a step's stored resource type (`staff` reads Staff).
@@ -931,9 +966,9 @@ export default {
 
 .viewTableContainer {
 	background: var(--color-main-background);
-	border-radius: var(--border-radius);
+	border-radius: 8px;
 	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
+	box-shadow: none;
 	border: 1px solid var(--color-border);
 }
 
