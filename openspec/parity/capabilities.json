@@ -4143,7 +4143,9 @@
 				"state": "specified",
 				"evidence": "openspec/specs/time-entry-mobile carries status not-implemented; no PWA shell or offline buffer in src/",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/time-entry-mobile"
+				"spec": "openspec/specs/time-entry-mobile",
+				"change": "openspec/changes/time-entry-mobile-offline",
+				"requirement": "REQ-002 — PWA shell and offline buffering are the only mobile-specific code"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
