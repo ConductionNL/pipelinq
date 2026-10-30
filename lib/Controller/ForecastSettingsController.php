@@ -70,6 +70,7 @@ class ForecastSettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-003-05
 	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function index(): JSONResponse {
@@ -94,6 +95,9 @@ class ForecastSettingsController extends Controller {
 				'at_risk_days' => $this->appConfig->getValueInt($app, QuotaService::AT_RISK_DAYS_KEY, QuotaService::AT_RISK_DAYS_DEFAULT),
 				'reporting_currency' => $this->exchangeRate->getReportingCurrency(),
 				'exchange_rates' => (object)$this->exchangeRate->getRates(),
+				'rate_overrides' => (object)$this->exchangeRate->overrideStore()->getOverrides(),
+				'rate_sources' => (object)$this->exchangeRate->describeRates(),
+				'max_rate_age_days' => $this->exchangeRate->getMaxRateAgeDays(),
 				'manager_group' => $this->appConfig->getValueString($app, ForecastAccessPolicy::MANAGER_GROUP_KEY, ''),
 				'team_groups' => $this->appConfig->getValueString($app, SnapshotGenerationService::TEAMS_KEY, ''),
 			]
@@ -109,6 +113,7 @@ class ForecastSettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-003-05
 	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Linear sequence of independent per-key
 	 *   `isset` guards — each validates one optional field before persistence; not nested logic.
@@ -193,7 +198,14 @@ class ForecastSettingsController extends Controller {
 				return new JSONResponse(['error' => $e->getMessage()], 400);
 			}
 
+			$dates = $this->exchangeRate->overrideStore()->rateDatesFor(rates: $rates, previousRates: $this->exchangeRate->getRates());
 			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATES_KEY, (string)json_encode($rates));
+			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATE_DATES_KEY, (string)json_encode($dates));
+		}
+
+		$rateError = $this->saveRateSettings(params: $params);
+		if ($rateError !== null) {
+			return new JSONResponse(['error' => $rateError], 400);
 		}
 
 		if (isset($params['manager_group']) === true) {
@@ -206,4 +218,36 @@ class ForecastSettingsController extends Controller {
 
 		return new JSONResponse(['status' => 'saved']);
 	}//end update()
+
+	/**
+	 * Persist the rate overrides and the stale limit when they are submitted.
+	 *
+	 * @param array<string, mixed> $params The request parameters.
+	 *
+	 * @return string|null The validation error, or null when saved or absent.
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
+	 */
+	private function saveRateSettings(array $params): ?string {
+		if (isset($params['max_rate_age_days']) === true) {
+			$days = (int)$params['max_rate_age_days'];
+			if ($days < 1) {
+				return 'max_rate_age_days must be at least 1.';
+			}
+
+			$this->appConfig->setValueInt(Application::APP_ID, ExchangeRateService::MAX_RATE_AGE_KEY, $days);
+		}
+
+		if (isset($params['rate_overrides']) === true) {
+			try {
+				$overrides = $this->exchangeRate->overrideStore()->normaliseOverrides(input: (array)$params['rate_overrides']);
+			} catch (\InvalidArgumentException $e) {
+				return $e->getMessage();
+			}
+
+			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::OVERRIDES_KEY, (string)json_encode($overrides));
+		}
+
+		return null;
+	}//end saveRateSettings()
 }//end class

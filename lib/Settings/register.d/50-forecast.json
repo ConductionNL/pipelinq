@@ -63,7 +63,7 @@
       "forecastSnapshot": {
         "slug": "forecastSnapshot",
         "title": "Forecast Snapshot",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "An immutable point-in-time freeze of a rep/team/division/company forecast for a fiscal period.",
         "description": "Generated automatically every Monday 06:00 (org timezone) and on demand. Captures commit/best_case/pipeline/closed_won amounts in the reporting currency plus the contributing deal ids. Never modified after creation; trend and accuracy analysis read the history. Roll-up levels sum the level below.",
         "@type": "Thing",
@@ -157,6 +157,11 @@
             },
             "description": "Names/UIDs of missing children when partial.",
             "title": "Missing Reps"
+          },
+          "exchange_rates": {
+            "type": "object",
+            "description": "The rate each foreign currency was converted at in this run: currency code to rate, source (override, shillinq, manual, none), shillinq origin, rate date and stale flag.",
+            "title": "Exchange Rates"
           }
         }
       },

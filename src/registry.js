@@ -56,6 +56,7 @@ import CustomerReplySection from './components/CustomerReplySection.vue'
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
 import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LeadContactRoles from './components/LeadContactRoles.vue'
+import LeadExchangeRate from './components/leads/LeadExchangeRate.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
 // --- Articles — the content hub for a mailing and a post (marketing-article-hub).
 //     ArticleDetail is a declarative type:"detail" page; the rendered body, the
@@ -753,6 +754,20 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: 'The contacts on a lead with the role each plays in the deal (PqLead): role relationships, category CRM Rol, from the lead to the contact.',
+	},
+	LeadExchangeRateWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'LeadExchangeRateWidget',
+			LeadExchangeRate,
+			({ objectData }) => ({
+				value: objectData.value ?? 0,
+				currency: objectData.currency || '',
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The deal value in the client\'s currency, the converted value and the rate with its source and date (PqLead, pipeline-live-exchange-rates). The server resolves the rate: override, shillinq, then the hand-kept table.',
 	},
 	TicketDecisionRoutesWidget: {
 		kind: 'widget',
