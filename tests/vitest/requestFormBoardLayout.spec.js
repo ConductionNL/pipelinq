@@ -17,6 +17,8 @@ import { h } from 'vue'
 
 const storeMock = vi.hoisted(() => ({
 	fetchCollection: vi.fn(async () => []),
+	fetchCollectionForOptions: vi.fn(async () => []),
+	fetchObject: vi.fn(async () => null),
 	collections: { pipeline: [] },
 	objects: {},
 }))
@@ -45,6 +47,12 @@ vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnResourceSelect: { name: 'CnResourceSelect', render: () => null },
+	CnSearchSelect: {
+		name: 'CnSearchSelect',
+		props: ['modelValue', 'options', 'loading', 'filterable', 'inputLabel', 'placeholder'],
+		emits: ['search', 'update:modelValue'],
+		render: () => null,
+	},
 }))
 vi.mock('@nextcloud/vue', () => {
 	const field = (name) => ({
@@ -208,3 +216,58 @@ describe('RequestForm board layout', () => {
 		)
 	})
 })
+
+describe('RequestForm board layout: the client search', () => {
+	const SANNE = { id: 'c-1', name: 'Sanne de Vries', type: 'person', address: 'Lindelaan 14' }
+	const OOST = { id: 'c-2', name: 'Buurtvereniging Oost', type: 'organization', address: '' }
+
+	it('draws Client as the search field, not the edit form\'s picker', async () => {
+		const wrapper = await mountForm({ boardLayout: true })
+		const search = wrapper.findComponent({ name: 'CnSearchSelect' })
+		expect(search.exists()).toBe(true)
+		expect(search.props('inputLabel')).toBe('Client')
+		expect(search.props('filterable')).toBe(false)
+		expect(wrapper.findComponent({ name: 'CnResourceSelect' }).exists()).toBe(false)
+	})
+
+	it('lists the matching clients with initials, their kind and their address', async () => {
+		storeMock.fetchCollectionForOptions.mockResolvedValueOnce([SANNE, OOST])
+		const wrapper = await mountForm({ boardLayout: true })
+		wrapper.findComponent({ name: 'CnSearchSelect' }).vm.$emit('search', 'de Vries')
+		await flushPromises()
+		expect(storeMock.fetchCollectionForOptions).toHaveBeenLastCalledWith('client', { _search: 'de Vries', _limit: 20 })
+		expect(wrapper.findComponent({ name: 'CnSearchSelect' }).props('options')).toEqual([
+			{ id: 'c-1', label: 'Sanne de Vries', secondary: 'Resident · Lindelaan 14', avatar: true },
+			{ id: 'c-2', label: 'Buurtvereniging Oost', secondary: 'Organisation', avatar: true },
+		])
+	})
+
+	it('keeps the newest search when an older answer arrives late', async () => {
+		let answerOld
+		storeMock.fetchCollectionForOptions
+			.mockImplementationOnce(() => new Promise((resolve) => { answerOld = resolve }))
+			.mockResolvedValueOnce([OOST])
+		const wrapper = await mountForm({ boardLayout: true })
+		const search = wrapper.findComponent({ name: 'CnSearchSelect' })
+		search.vm.$emit('search', 'de')
+		search.vm.$emit('search', 'Oost')
+		await flushPromises()
+		answerOld([SANNE])
+		await flushPromises()
+		expect(search.props('options').map((o) => o.id)).toEqual(['c-2'])
+	})
+
+	it('puts a picked client on the request', async () => {
+		const wrapper = await mountForm({ boardLayout: true })
+		wrapper.findComponent({ name: 'CnSearchSelect' }).vm.$emit('update:modelValue', 'c-1')
+		expect(wrapper.vm.form.client).toBe('c-1')
+	})
+
+	it('names the client the dialog opened with', async () => {
+		storeMock.fetchObject.mockResolvedValueOnce(SANNE)
+		const wrapper = await mountForm({ boardLayout: true, preLinkedClient: 'c-1' })
+		expect(storeMock.fetchObject).toHaveBeenCalledWith('client', 'c-1')
+		expect(wrapper.findComponent({ name: 'CnSearchSelect' }).props('options')[0].label).toBe('Sanne de Vries')
+	})
+})
+
