@@ -1306,6 +1306,8 @@ export default {
 	padding-inline: 12px;
 }
 
+/* Nextcloud's server.css pads every dl, dt and dd and pins a dt at 130px,
+   right-aligned and unwrapped; the totals set their own grid. */
 .pos-totals {
 	display: grid;
 	grid-template-columns: max-content 1fr;
@@ -1313,15 +1315,24 @@ export default {
 	row-gap: 4px;
 	align-items: baseline;
 	margin: 0 0 12px;
+	padding: 0;
 }
 
 .pos-totals__row {
 	display: contents;
 }
 
+.pos-totals__row dt,
+.pos-totals__row dd {
+	padding: 0;
+}
+
 .pos-totals__row dt {
+	width: auto;
 	color: var(--color-text-maxcontrast);
 	font-size: 14px;
+	white-space: normal;
+	text-align: start;
 }
 
 .pos-totals__row dd {

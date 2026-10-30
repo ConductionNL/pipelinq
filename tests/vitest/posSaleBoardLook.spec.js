@@ -266,4 +266,18 @@ describe('the sale as the board draws it (PqKassa, PQB-7)', () => {
 		// The theme colours every heading with !important, so the tone needs it too.
 		expect(title).toMatch(/color: var\(--color-text-maxcontrast\) !important/)
 	})
+
+	it('frees the Totals list from Nextcloud\'s own dl rules, so labels and amounts stand on 4px rows', () => {
+		// server.css pads every dt/dd 12px and pins dt at 130px, right-aligned and unwrapped.
+		const source = readFileSync(resolve(__dirname, '../../src/views/pos/PosTransactionForm.vue'), 'utf8')
+		const rule = (selector) => (source.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{([^}]*)\\}')) || [])[1] || ''
+		expect(rule('.pos-totals')).toMatch(/padding: 0;/)
+		const cell = rule('.pos-totals__row dt,\n.pos-totals__row dd')
+		expect(cell).toMatch(/padding: 0;/)
+		const label = rule('.pos-totals__row dt')
+		expect(label).toMatch(/width: auto;/)
+		expect(label).toMatch(/white-space: normal;/)
+		expect(label).toMatch(/text-align: start;/)
+	})
 })
+
