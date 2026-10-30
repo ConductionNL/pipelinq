@@ -9146,7 +9146,9 @@
 				"state": "specified",
 				"evidence": "the product schema has no SDG audience, UPL reference, tariff table (leges) or publication date (grep of lib/Settings for sdg, upl, leges, publication); openspec/specs/product-service-catalog says done but the fields are not there",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/product-service-catalog"
+				"spec": "openspec/specs/product-service-catalog",
+				"change": "openspec/changes/product-service-catalogue-public",
+				"requirement": "A service is a product with catalogue fields, published through OpenRegister (REQ-PSC-001)"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
