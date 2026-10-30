@@ -263,6 +263,7 @@ describe('the sale as the board draws it (PqKassa, PQB-7)', () => {
 		const title = rule('.cn-look-board .pos-form__side :deep(.cn-detail-card__title)')
 		expect(title).toMatch(/font-size: var\(--cn-board-side-heading-size, 15px\)/)
 		expect(title).toMatch(/font-weight: 600/)
-		expect(title).toMatch(/color: var\(--color-text-maxcontrast\)/)
+		// The theme colours every heading with !important, so the tone needs it too.
+		expect(title).toMatch(/color: var\(--color-text-maxcontrast\) !important/)
 	})
 })
