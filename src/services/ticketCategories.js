@@ -14,7 +14,7 @@ import { generateUrl } from '@nextcloud/router'
  * list, so the form falls back to its free-text field.
  *
  * @return {Promise<Array<object>>} The category objects.
- * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+ * @spec openspec/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
  */
 export async function fetchTicketCategories() {
 	try {
@@ -36,7 +36,7 @@ export async function fetchTicketCategories() {
  * @param {Array<object>} rows The ticketCategory objects.
  * @param {string} [current] The category the ticket stores now.
  * @return {Array<{value: string, label: string}>} The options.
- * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+ * @spec openspec/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
  */
 export function categoryOptions(rows, current = '') {
 	const options = (Array.isArray(rows) ? rows : [])

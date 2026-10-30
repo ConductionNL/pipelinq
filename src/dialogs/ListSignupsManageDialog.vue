@@ -7,7 +7,7 @@
   - list's own confirmation link. Adding never skips the confirmation: the
   - person is pending until they open the link, as with the public form.
   -
-  - @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-list-s-sign-ups-are-managed-from-the-list
+  - @spec openspec/specs/marketing-lists/spec.md#requirement-a-list-s-sign-ups-are-managed-from-the-list
   -->
 <template>
 	<CnDialog

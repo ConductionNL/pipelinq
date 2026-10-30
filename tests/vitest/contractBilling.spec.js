@@ -7,7 +7,7 @@
  * reference with a copy button and who sent it, the line items as a table,
  * and the fields that record when and by whom a contract went to invoicing.
  *
- * @spec openspec/changes/contract-billing-as-drawn/specs/contract-renewal-tracking/spec.md
+ * @spec openspec/specs/contract-renewal-tracking/spec.md
  */
 
 import { readFileSync } from 'node:fs'

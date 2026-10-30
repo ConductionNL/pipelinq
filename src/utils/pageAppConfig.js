@@ -75,7 +75,7 @@ const CASE_TARGET_KEYS = ['caseRegister', 'caseSchema']
  * @param {object} caseTarget The `case_target` initial state.
  * @return {object} The merged map, a new object.
  *
- * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
+ * @spec openspec/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
  */
 export function pageAppConfig(config, caseTarget) {
 	const merged = { ...(config || {}) }

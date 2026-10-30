@@ -51,7 +51,9 @@ Request management handles the intake and tracking of requests (verzoeken) — s
 | `converted` | (terminal -- no transitions allowed) |
 
 ---
+
 ## Requirements
+
 ### Requirement: Request CRUD [MVP]
 
 The system MUST support creating, reading, updating, and deleting request records. Each request MUST have a `title`. The `status` MUST default to `new` when not explicitly provided. The `channel` field MUST be added to the OpenRegister schema to support persistence.
@@ -866,6 +868,98 @@ The system MUST display all contactmomenten linked to a request on the request d
 - THEN the quick-log form MUST open with the request and client fields pre-filled
 - AND after submission, the contactmomenten section MUST refresh to include the new record
 
+### Requirement: Converting can tell the customer the case number
+
+When a request is converted with `informCustomer`, the request MUST get an answer to the customer that names the new case's number, and its handler when known. The answer MUST be appended to `portalAnswers` like any other answer.
+
+#### Scenario: Sanne hears her request is now a case
+- GIVEN Sanne's request is converted to case 2026-4890 with "Klant informeren in Mijn Zuiddrecht" ticked
+- THEN her request reads "Uw verzoek is nu zaak 2026-4890. U kunt de zaak volgen op uw persoonlijke pagina." in Mijn Zuiddrecht
+
+### Requirement: The conversion options start ticked
+
+The convert-to-case dialog MUST open with "Keep this ticket open until the case is made" and "Inform the customer" both ticked, as board PqTicketOmzetten draws them. The handler MAY untick either before confirming.
+
+#### Scenario: The handler converts without changing anything
+- GIVEN the convert-to-case dialog is open on Sanne's request
+- WHEN the handler picks a case type and confirms
+- THEN the request is converted with keepOpen true and informCustomer true
+
+### Requirement: A request's term can be set from its Termijn card
+
+The Termijn card on a request MUST offer "Termijn instellen" to a user who may update the ticket. It MUST save the chosen date and time as the ticket's `slaDeadline` through OpenRegister, so OpenRegister's object rights decide, and the card MUST show the new term after saving.
+
+#### Scenario: Pieter sets the term of Sanne's request
+- GIVEN request PQ-2026-0417 with term 11 oktober 2026, 17:00
+- WHEN Pieter chooses "Termijn instellen" and saves 14 oktober 2026, 17:00
+- THEN the ticket's slaDeadline is 2026-10-14T17:00
+- AND the Termijn card reads "14 oktober 2026, 17:00"
+
+#### Scenario: A reader cannot set the term
+- GIVEN a user who may read but not update the ticket
+- THEN the Termijn card shows no "Termijn instellen"
+
+### Requirement: A request can be linked to an existing case
+
+While a request has no `caseReference`, the Gekoppelde zaak card MUST offer "Bestaande zaak koppelen". It MUST let the user pick one of the cases the case app lists and save that case as the ticket's `caseReference`. Linking MUST NOT change the ticket's status.
+
+#### Scenario: Pieter links the request to the case that already exists
+- GIVEN request PQ-2026-0417 with no case linked, and case 2026-4890 in dossiq
+- WHEN Pieter chooses "Bestaande zaak koppelen" and picks 2026-4890
+- THEN the ticket's caseReference names case 2026-4890
+- AND the Gekoppelde zaak card shows the case by its title
+- AND the request keeps its status
+
+#### Scenario: Without a case app there is nothing to link
+- GIVEN no case app answers the case search
+- THEN the Gekoppelde zaak card shows "Nog geen zaak gekoppeld." without the link
+
+### Requirement: The Termijn card writes the term as its figure
+
+The Termijn card MUST draw the term as the card's figure, the date and time written out, with Prioriteit and Behandelaar as rows under it.
+
+#### Scenario: Board PqTicket's Termijn card
+- GIVEN request PQ-2026-0417 with term 11 oktober 2026, 17:00
+- THEN the Termijn card's figure reads "11 oktober 2026, 17:00" at 26px
+
+### Requirement: The convert dialog says the case app is available in a green strip
+
+The Convert to a case dialog MUST open with a status strip on the success tint, with a check outline and the sentence "{app} is available and can take over this request as a case." in bold success ink. The facts that go with the case MUST show each label over its value.
+
+#### Scenario: Pieter converts the street party request
+- GIVEN dossiq is installed and ticket PQ-2026-0417 can be converted
+- WHEN Pieter opens Convert to a case
+- THEN the dialog opens with the green strip "dossiq is beschikbaar en kan dit verzoek als zaak overnemen."
+- AND under "Gaat mee naar de zaak" Titel, Aanvrager and Omschrijving each stand over their value
+
+### Requirement: A request's category is picked from the tenant's category list
+
+The request form MUST offer the tenant's active `ticketCategory` objects as a select, show each by its name and store its key in the ticket's `category`. When the tenant has no active category, the form MUST keep a free-text category field. A stored category that is not in the list MUST stay selectable, so saving the form never drops it.
+
+#### Scenario: a tenant with categories
+
+@e2e exclude Asserted in tests/vitest/requestCategoryVocabulary.spec.js; the pixel check against board PqNieuwVerzoek covers the drawn select.
+
+- GIVEN the tenant has the active categories "Vergunningen" (key `vergunningen`) and "Afval" (key `afval`)
+- WHEN the handler opens "Nieuw verzoek" and picks "Vergunningen" under Categorie
+- THEN the ticket is saved with category `vergunningen`
+
+#### Scenario: a tenant without categories
+
+@e2e exclude Asserted in tests/vitest/requestCategoryVocabulary.spec.js.
+
+- GIVEN the tenant has no active category
+- WHEN the handler opens "Nieuw verzoek"
+- THEN Categorie is a text field and what they type is saved as the category
+
+#### Scenario: a ticket with a category outside the list
+
+@e2e exclude Asserted in tests/vitest/requestCategoryVocabulary.spec.js.
+
+- GIVEN a ticket stored with category `oud-onderwerp`, which no active category names
+- WHEN the handler edits the ticket
+- THEN Categorie shows `oud-onderwerp` selected
+- AND saving keeps it
 
 ## UI Layout Reference
 

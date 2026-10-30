@@ -1021,7 +1021,7 @@ class WhatsAppAdapter {
 	 *
 	 * @return array{status: string, error: string, providerId?: string} Outcome.
 	 *
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	private function persistFailureAndAlert(
 		string $contactId,

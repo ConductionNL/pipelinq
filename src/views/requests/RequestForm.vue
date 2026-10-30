@@ -472,7 +472,7 @@ export default {
 		 * The tenant's active categories as select options, the stored one kept.
 		 *
 		 * @return {Array<{value: string, label: string}>}
-		 * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+		 * @spec openspec/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
 		 */
 		categoryChoices() {
 			return categoryOptions(this.ticketCategories, this.form.category)
@@ -482,7 +482,7 @@ export default {
 		 * The option of the stored category, or null.
 		 *
 		 * @return {{value: string, label: string}|null}
-		 * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+		 * @spec openspec/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
 		 */
 		selectedCategory() {
 			return this.categoryChoices.find((option) => option.value === this.form.category) || null
@@ -814,7 +814,7 @@ export default {
 		/**
 		 * Emits the request without its empty fields.
 		 *
-		 * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+		 * @spec openspec/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
 		 */
 		onSave() {
 			this.titleTouched = true

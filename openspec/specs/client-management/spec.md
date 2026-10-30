@@ -1543,10 +1543,12 @@ lists, filters and detail pages MUST show the label, never the stored code.
 
 ### Requirement: Add buttons speak the interface language (REQ-CLM-ADD-LABEL-L10N)
 The Add button text of every object-list widget in the manifest MUST be English
-source text with an nl catalogue entry, and MUST be translated before it is shown.
+source text with an nl catalogue entry. CnObjectListWidget translates it through
+the app's translate function; pipelinq MUST NOT translate it before the manifest
+reaches CnAppRoot.
 
 #### Scenario: The contact person list on the client page
-@e2e exclude Asserted in tests/vitest/readableValues.spec.js on the manifest and translateWidgetAddLabels.
+@e2e exclude Asserted in tests/vitest/readableValues.spec.js on the manifest and the library's CnObjectListWidget.
 - **GIVEN** a user with an English interface opens a client
 - **WHEN** they look at the contact person list
 - **THEN** the button MUST read "Add contact person"
@@ -1633,6 +1635,46 @@ its title and the links to open that client or save anyway under it.
 - **WHEN** a user types the e-mail address of an existing client in the new-client dialog
 - **THEN** a bordered notice with a warning icon names the existing client
 - **AND** offers "Die klant openen" and "Toch opslaan" under that line
+
+### Requirement: The client page shows what the client is related to (REQ-CLM-RELATED-CARD)
+The client detail page MUST show the Related card, as the contact, lead, task,
+ticket, product, booking and contract pages do. The card MUST have a place in the
+page layout that overlaps no other widget.
+
+#### Scenario: A client with linked records
+@e2e exclude Asserted in tests/vitest/clientRelatedAndServiceList.spec.js on the manifest; the card itself is the library's CnRelatedObjectsWidget.
+- **GIVEN** a client that contacts, leads and requests point to
+- **WHEN** a user opens the client
+- **THEN** the page MUST show a Related card beside the Records tab strip
+- **AND** the card MUST list the related records
+
+### Requirement: A contact person added on a client page is created
+"Add contact person" on the Contacts tab of a client page MUST create the
+contact through the contact-first path (`POST /api/contacts-sync/create`), so
+the required `contactsUid` is provisioned, and the new contact MUST be linked
+to that client. A failed create MUST show the reason and MUST NOT report the
+contact as saved. A client or contact list that cannot create through that
+path MUST NOT offer an Add button.
+
+#### Scenario: Add a contact person
+@e2e exclude Asserted in tests/vitest/round5ContactCreateAndTaskLinks.spec.js and live on :8099 (lane R5-PQ-A hand-back).
+- **GIVEN** a user opens a client and the Contacts tab
+- **WHEN** they press "Add contact person", fill in a name and save
+- **THEN** the contact MUST be created with a `contactsUid`
+- **AND** it MUST show in the client's Contacts list
+
+#### Scenario: The create is refused
+@e2e exclude Asserted in tests/vitest/round5ContactCreateAndTaskLinks.spec.js.
+- **GIVEN** the backend refuses the create
+- **WHEN** the user saves the dialog
+- **THEN** the dialog MUST show the backend's message
+- **AND** it MUST NOT report success
+
+#### Scenario: The contacts of a lead
+@e2e exclude Asserted in tests/vitest/round5ContactCreateAndTaskLinks.spec.js on the manifest.
+- **GIVEN** a user opens a lead
+- **WHEN** they look at its Contacts list
+- **THEN** the list MUST NOT offer an Add button
 
 ## Implementation Notes
 

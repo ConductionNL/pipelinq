@@ -9,7 +9,7 @@ law asks for, and looks the person up through POST /api/brp/lookup with
 `verifiedClient`, so the server records on the client when, via what and
 what was checked. The BSN is sent once and not kept.
 
-@spec openspec/changes/brp-verifies-the-client/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
+@spec openspec/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
 -->
 <template>
 	<CnDialog
@@ -80,7 +80,7 @@ import { NcButton } from '@nextcloud/vue'
 /**
  * The BRP identity check for the customer in a call.
  *
- * @spec openspec/changes/brp-verifies-the-client/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
+ * @spec openspec/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
  */
 export default {
 	name: 'BrpClientCheckDialog',

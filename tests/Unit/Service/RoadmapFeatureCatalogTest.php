@@ -113,7 +113,7 @@ class RoadmapFeatureCatalogTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/roadmap-curated-list/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
 	 */
 	public function testCuratedListIsTheBoards(): void {
 		$catalog    = $this->catalog(cached: null);
@@ -141,7 +141,7 @@ class RoadmapFeatureCatalogTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/roadmap-curated-list/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
 	 */
 	public function testNoCuratedFile(): void {
 		$catalog = $this->catalog(cached: null);
@@ -154,7 +154,7 @@ class RoadmapFeatureCatalogTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/roadmap-curated-list/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
 	 */
 	public function testLoadPrefersTheCuratedList(): void {
 		$features = $this->catalog(cached: null)->load();
@@ -169,7 +169,7 @@ class RoadmapFeatureCatalogTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/roadmap-curated-list/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
 	 */
 	public function testStaleListUnderTheBareVersionKeyIsNotServed(): void {
 		$stale      = [['slug' => 'stale', 'title' => 'Stale', 'summary' => '', 'docsUrl' => '']];

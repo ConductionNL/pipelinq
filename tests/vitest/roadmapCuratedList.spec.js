@@ -5,7 +5,7 @@
  * Board PqRoadmap: the page shows the curated feature list in five groups,
  * the group captions in the reader's language.
  *
- * @spec openspec/changes/roadmap-curated-list/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+ * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
  */
 
 import { readFileSync } from 'node:fs'

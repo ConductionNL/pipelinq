@@ -13,7 +13,7 @@
  * the skip is decided on the instance's own list of enabled apps, not on the
  * missing tab, so a tab that vanished with decidiq present still fails.
  *
- * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-the-ticket-page-has-a-decisions-tab-req-tdt-001
+ * @spec openspec/specs/ticket-decisions/spec.md#requirement-the-ticket-page-has-a-decisions-tab-req-tdt-001
  */
 import { expect, test } from '@playwright/test'
 import {

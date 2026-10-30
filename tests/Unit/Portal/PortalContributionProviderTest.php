@@ -505,7 +505,7 @@ final class PortalContributionProviderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-answers-the-customer-on-the-ticket-req-msr-004
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-answers-the-customer-on-the-ticket-req-msr-004
 	 */
 	public function testRequestsAndComplaintsCarryTheCustomerMessage(): void {
 		$manifest = $this->provider->getContribution(self::CLIENT_SUBJECT);

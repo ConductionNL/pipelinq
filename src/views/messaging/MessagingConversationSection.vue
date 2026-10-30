@@ -276,7 +276,7 @@ export default {
 		 * The selected contact, from the page or from the client's contacts.
 		 *
 		 * @return {object|null}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		selectedContact() {
 			if (this.entityType === 'contact') {
@@ -292,7 +292,7 @@ export default {
 		 * Saved reply placeholder values this section holds.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		placeholderValues() {
 			return {
@@ -307,7 +307,7 @@ export default {
 		 * The contact's correspondence language.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		contactLanguage() {
 			const contact = this.selectedContact
@@ -510,7 +510,7 @@ export default {
 
 		/**
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
 		 */
 		async fetchMessages() {
 			if (!this.effectiveContactId) {
@@ -580,7 +580,7 @@ export default {
 		 * Read the client's name for the saved reply placeholders.
 		 *
 		 * @param {string} clientId The client id, or empty.
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		async fetchClient(clientId) {
 			if (!clientId) {
@@ -607,7 +607,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		closeComposer() {
 			this.showComposer = false
@@ -620,7 +620,7 @@ export default {
 		 *
 		 * @param {object} message A channelMessage row.
 		 * @return {boolean}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		canResend(message) {
 			const metadata = (message && message.metadata) || {}
@@ -639,7 +639,7 @@ export default {
 		 * shows the server's reason on the row.
 		 *
 		 * @param {object} message The failed row.
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		async resend(message) {
 			if (this.resending) {
@@ -683,7 +683,7 @@ export default {
 		 *
 		 * @param {string} status The server's status.
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		resendReason(status) {
 			const reasons = {

@@ -59,7 +59,7 @@ describe('the request side cards as the board draws them', () => {
 	})
 
 	/**
-	 * @spec openspec/changes/request-term-and-case-link/specs/request-management/spec.md#requirement-the-termijn-card-writes-the-term-as-its-figure
+	 * @spec openspec/specs/request-management/spec.md#requirement-the-termijn-card-writes-the-term-as-its-figure
 	 */
 	it('writes the term as the card\'s 26px figure', () => {
 		const [when] = card('side-deadline').content.fields
@@ -67,7 +67,7 @@ describe('the request side cards as the board draws them', () => {
 	})
 
 	/**
-	 * @spec openspec/changes/request-term-and-case-link/specs/request-management/spec.md#requirement-a-requests-term-can-be-set-from-its-termijn-card
+	 * @spec openspec/specs/request-management/spec.md#requirement-a-requests-term-can-be-set-from-its-termijn-card
 	 */
 	it('offers Termijn instellen to whoever may update the ticket, patching slaDeadline through OpenRegister', () => {
 		const [action] = card('side-deadline').content.actions
@@ -82,7 +82,7 @@ describe('the request side cards as the board draws them', () => {
 	})
 
 	/**
-	 * @spec openspec/changes/request-term-and-case-link/specs/request-management/spec.md#requirement-a-request-can-be-linked-to-an-existing-case
+	 * @spec openspec/specs/request-management/spec.md#requirement-a-request-can-be-linked-to-an-existing-case
 	 */
 	it('offers Bestaande zaak koppelen while no case is linked and a case app is there, writing caseReference only', () => {
 		const [action] = card('side-case').content.actions

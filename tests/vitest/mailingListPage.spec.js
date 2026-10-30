@@ -9,9 +9,9 @@
  * Subscribers card with its subtitle and Refresh in the header, each row the
  * name above the address, dates in the reader's language.
  *
- * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-the-mailing-list-page-is-the-board
- * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
- * @spec openspec/changes/mailing-list-details-title/specs/marketing-lists/spec.md#requirement-the-list-details-card-carries-its-title
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-the-mailing-list-page-is-the-board
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-the-list-details-card-carries-its-title
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

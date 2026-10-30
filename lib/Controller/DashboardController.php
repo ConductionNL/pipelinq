@@ -87,7 +87,7 @@ class DashboardController extends Controller {
 	 * @spec            openspec/changes/reverse-2026-05-26-be-dashboard-pipeline/tasks.md#task-1
 	 * @spec            openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
 	 * @spec            openspec/changes/simple-tour-and-readable-labels/specs/navigation-ia/spec.md#requirement-the-user-settings-show-the-installed-app-version-req-nia-108
-	 * @spec            openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
+	 * @spec            openspec/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
 	 */
 	public function page(): TemplateResponse {
 		$this->initialState->provideInitialState(

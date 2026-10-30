@@ -98,7 +98,7 @@ class RecipientNameReader {
 	 *
 	 * @return string The full name, or '' when unknown.
 	 *
-	 * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
 	 */
 	public function fullName(string $recipientId): string {
 		$record = $this->recordFor(recipientId: $recipientId);

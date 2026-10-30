@@ -197,7 +197,7 @@ class SemanticHandoffController extends Controller {
 	 *
 	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
-	 * @spec openspec/changes/convert-informs-the-customer/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
+	 * @spec openspec/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
 	 */
 	#[NoAdminRequired]
 	public function convertRequestToCase(string $id = ''): JSONResponse {
@@ -544,7 +544,7 @@ class SemanticHandoffController extends Controller {
 	 *
 	 * @return array<string, mixed> The request with the answer.
 	 *
-	 * @spec openspec/changes/convert-informs-the-customer/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
+	 * @spec openspec/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
 	 */
 	private function withCaseAnswer(array $request, string $caseUuid): array {
 		$case    = ($this->loadAnyObject(id: $caseUuid) ?? []);

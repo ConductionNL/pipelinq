@@ -105,7 +105,7 @@ export async function fetchMailingLists() {
  * @param {string} listId The list.
  * @param {string} email The address.
  * @return {Promise<object>} The response body.
- * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-list-s-sign-ups-are-managed-from-the-list
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-a-list-s-sign-ups-are-managed-from-the-list
  */
 export async function inviteToList(listId, email) {
 	const { data } = await axios.post(generateUrl('/apps/pipelinq/api/lists/{id}/subscribe', { id: listId }), { email })

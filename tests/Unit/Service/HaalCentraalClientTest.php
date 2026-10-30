@@ -193,7 +193,7 @@ class HaalCentraalClientTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/brp-verifies-the-client/specs/brp-lookup/spec.md#requirement-the-lookup-reads-the-person-it-asked-for
+	 * @spec openspec/specs/brp-lookup/spec.md#requirement-the-lookup-reads-the-person-it-asked-for
 	 */
 	public function testLookupReadsThePersonWhoseBsnItAskedFor(): void {
 		$other = $this->sampleRawPerson();
@@ -217,7 +217,7 @@ class HaalCentraalClientTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/brp-verifies-the-client/specs/brp-lookup/spec.md#requirement-the-lookup-reads-the-person-it-asked-for
+	 * @spec openspec/specs/brp-lookup/spec.md#requirement-the-lookup-reads-the-person-it-asked-for
 	 */
 	public function testLookupReadsTheDutchNameShape(): void {
 		$raw = $this->sampleRawPerson();

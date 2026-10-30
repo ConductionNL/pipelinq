@@ -16,8 +16,8 @@
  * pipelinq's real formatter registry and the real merged schema, so the test
  * sees what a reader sees.
  *
- * @spec openspec/changes/round5-client-related-and-service-list/specs/client-management/spec.md
- * @spec openspec/changes/round5-client-related-and-service-list/specs/appointment-booking/spec.md
+ * @spec openspec/specs/client-management/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 import { mount } from '@vue/test-utils'

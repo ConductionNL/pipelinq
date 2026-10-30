@@ -183,7 +183,7 @@ export default {
 		 * "Klant informeren in Mijn Zuiddrecht".
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/convert-informs-the-customer/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
+		 * @spec openspec/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
 		 */
 		informLabel() {
 			return this.portalName
