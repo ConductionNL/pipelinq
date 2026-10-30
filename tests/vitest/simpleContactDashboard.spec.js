@@ -689,7 +689,7 @@ describe('the werkplek in a call (board PqWerkplekKlant)', () => {
 		// "Bron: BRP, opgezocht 10:24, vastgelegd"; the client's own source stays as "Aangemeld via".
 		expect(who().content.fields.find((field) => field.label === 'Source').template).toBe('{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded')
 		// "Opzoeken in de BRP" verifies the identity of the customer in the call.
-		expect(who().content.actions).toEqual([{ type: 'open-modal', target: 'BrpClientCheckDialog', label: 'Look up in the BRP', props: { clientId: '@source.id' } }])
+		expect(who().content.actions).toEqual([{ type: 'open-modal', target: 'BrpClientCheckDialog', label: 'Look up in the BRP', props: { clientId: '@source.id' }, variant: 'tonal' }])
 	})
 })
 

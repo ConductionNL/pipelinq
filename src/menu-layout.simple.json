@@ -2230,8 +2230,9 @@
 						"widgetId": "simple-call-actions",
 						"gridX": 0,
 						"gridY": 33,
-						"gridWidth": 12,
+						"gridWidth": 8,
 						"gridHeight": 2,
+						"track": "main",
 						"showTitle": false,
 						"borderless": true,
 						"sizeToContent": true

@@ -55,6 +55,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive analytics aggregator; splitting would fragment related KPI logic.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregation over many KPI dimensions; complexity is inherent, not accidental.
+ * @SuppressWarnings(PHPMD.TooManyMethods)           One private helper per KPI figure keeps each figure testable on its own.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Reads the stores and the forecast target of every KPI it aggregates.
  */
 class AnalyticsService {
 	/**

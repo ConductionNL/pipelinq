@@ -80,10 +80,11 @@ describe('the bundled dashboard', () => {
 	const dashboard = manifest.pages.find((p) => p.id === 'Dashboard')
 	const widget = (id) => dashboard.config.widgets.find((w) => w.id === id)
 
-	it('reads the gauge target and currency from config, not a literal', () => {
+	it('reads the pipeline cover from the commercial analytics, which takes the target from config', () => {
 		const coverage = widget('pipeline-coverage')
-		expect(coverage.content.target.value).toBe('@config.pipelineTarget')
-		expect(coverage.content.format.currency).toBe('@config.currency')
+		expect(coverage.content.endpointSource.url).toBe('/apps/pipelinq/api/analytics/commercial')
+		expect(coverage.content.valueField).toBe('pipelineCover')
+		expect(coverage.content.target).toBeUndefined()
 	})
 
 	it('counts only won deals as revenue and only open deals as pipeline', () => {
