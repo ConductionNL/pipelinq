@@ -3139,11 +3139,12 @@
 			"feature": "request-management",
 			"featureConfidence": "high",
 			"built": {
-				"state": "building",
-				"evidence": "Decisions tab on TicketDetail: `ticket-panels` (type tabs) in src/manifest.json stacks TicketDecisionRoutesWidget (src/components/tickets/TicketDecisionRoutes.vue: the line, the two routes, Convert to case) and decidiq's decidesk-decisions leaf for the ticket; hidden without decidiq (visibleWhen appInstalled); the simple structure patches the same widget (src/menu-layout.simple.json). Tests: tests/vitest/ticketDecisionsTab.spec.js. Still open: decisions on the case the ticket became (branch feat/ticket-case-decisions, waits for nextcloud-vue#1520), and the live Playwright pass",
+				"state": "built",
+				"evidence": "Decisions tab on TicketDetail: `ticket-panels` (type tabs) in src/manifest.json:4002 stacks TicketDecisionRoutesWidget (src/manifest.json:3965, src/components/tickets/TicketDecisionRoutes.vue: the line, the two routes, Convert to case) and decidiq's decidesk-decisions leaf for the ticket, hidden without decidiq (visibleWhen appInstalled); decisions on the linked case through the same leaf as widget `ticket-case-decisions` (src/manifest.json:3989) with record tokens from nextcloud-vue#1520 (merged 12 Oct, in the 2.164.0 that package-lock.json pins). Tests: tests/vitest/ticketDecisionsTab.spec.js, tests/e2e/ticket-decisions-tab.spec.ts. Change ticket-decisions-tab archived 2026-10-30 with every task ticked.",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-10-12",
-				"change": "ticket-decisions-tab"
+				"readOn": "2026-10-30",
+				"spec": "openspec/specs/ticket-decisions",
+				"requirement": "openspec/specs/ticket-decisions :: The ticket page has a Decisions tab (REQ-TDT-001)"
 			},
 			"note": "Decision 99 (8 Oct): board PqTicketBesluitvorming draws it and no row had it. decidiq owns the decisions, the leaf and the create-proposal action (decidiq openspec/specs/decidesk-contract-decision-hub REQ-DCDH-001, REQ-DCDH-008), all built; nothing new in decidiq. pipelinq places it as a tab and adds the linked case's decisions.",
 			"source": "spec-round-2026-10-08",
@@ -6842,7 +6843,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Export/ExportRunService.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
+				"spec": "openspec/specs/bi-export-board",
+				"requirement": "openspec/specs/bi-export-board :: A job shows its last run and its next run"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/view-a-log-of-your-users-exports-in-your-account export log shows \"when an export occurred, who initiated an export, and which records were exported\" with Processing and Canceled statuses; All products and plans. Covers manual exports; no run log is described for a scheduled report email.",
@@ -9030,14 +9032,16 @@
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "shillinq",
-			"providerHow": "pipelinq emits a stock movement at lib/Service/PosTransactionService.php:692 and Shillinq keeps the count, so no pipelinq page shows a level",
+			"providerHow": "shillinq keeps the count (InventoryStock); pipelinq reads it in lib/Service/ShillinqStockReader.php and shows it on the product's Supply card, and emits a stock movement at lib/Service/PosTransactionService.php:692",
 			"feature": "product-service-catalog",
 			"featureConfidence": "high",
 			"built": {
-				"state": "building",
-				"evidence": "lib/Service/PosTransactionService.php:692 emits the event, no stock page exists here",
+				"state": "built",
+				"evidence": "shillinq keeps the count; pipelinq reads it: lib/Service/ShillinqStockReader.php (register shillinq, schema InventoryStock, as the current user), lib/Controller/ProductStockController.php:79 show() on GET /api/products/{id}/stock (appinfo/routes.php:277), and the Supply card src/components/products/ProductSupplyWidget.vue placed as `product-supply` on ProductDetail (src/manifest.json:6646). Tests: tests/Unit/Service/ShillinqStockReaderTest.php, tests/Unit/Controller/ProductStockControllerTest.php, tests/vitest/productSupplyWidget.spec.js, tests/e2e/product-stock.spec.ts. Change products-stock-on-hand archived 2026-10-30 with every task ticked.",
 				"owner": "ConductionNL/shillinq",
-				"change": "products-stock-on-hand"
+				"spec": "openspec/specs/product-stock",
+				"requirement": "openspec/specs/product-stock :: The product page shows the available stock (REQ-PST-001)",
+				"readOn": "2026-10-30"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base URL list for inventory and stock and found no article; https://knowledge.hubspot.com/properties/hubspots-default-product-properties shows no quantity on hand (read 2026-09-26). Note: Was no without a source.",
@@ -9544,12 +9548,13 @@
 			"feature": "omnichannel-registratie",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/modals/SendMessageModal.vue:83 NcSelect \"v-model=\\\"templateId\\\"\" lets an agent answer on WhatsApp or SMS with an approved template (TemplateApprovalSyncService), opened from the Messages section on ClientDetail and ContactDetail; there are no saved replies for tickets, mail or the portal reply",
+				"state": "built",
+				"evidence": "schema savedReply in lib/Settings/register.d/81-saved-replies.json, page SavedReplies (src/manifest.json:486); src/components/SavedReplyPicker.vue mounted in src/modals/SendMessageModal.vue:159 and src/components/CustomerReplySection.vue:74 (ticket answer), and an email started from a saved reply through src/modals/WriteEmailModal.vue (src/components/ContactChannelsSection.vue:269). Tests: tests/vitest/savedReplyPicker.spec.js, tests/vitest/dossierQuestionSections.spec.js. Change messaging-saved-replies-and-resend archived 2026-10-30 with every task ticked.",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "ClientDetail and ContactDetail, Messages section, Send message",
-				"readOn": "2026-09-26",
-				"change": "messaging-saved-replies-and-resend"
+				"reachedOn": "Saved replies page; Send message on ClientDetail and ContactDetail; the answer section on a request or complaint ticket; Write email on a contact",
+				"readOn": "2026-10-30",
+				"spec": "openspec/specs/messaging-saved-replies",
+				"requirement": "openspec/specs/messaging-saved-replies :: An agent inserts a saved reply where they answer (REQ-MSR-003)"
 			},
 			"note": "templates cover messaging channels only. Specified 2026-09-28 in openspec/changes/messaging-saved-replies-and-resend (OpenSpec pass).",
 			"evidence": {
@@ -10049,12 +10054,13 @@
 			"feature": "omnichannel-registratie",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "a failed WhatsApp or SMS is stored and flagged (lib/Service/WhatsAppAdapter.php:831 persistFailureAndAlert) and shown red on the Messages section (src/views/messaging/MessagingConversationSection.vue:319 \"status === 'failed' || status === 'expired'\"), but there is no resend button; Berichtenbox has a retry API (appinfo/routes.php:556) that no page calls; an email to a client is sent from Nextcloud Mail, whose outbox handles failed sends. Corrections round 8 (2026-09-28), pipelinq#2073: the red failed status never shows, because the Messages section fetches the type 'message' (src/views/messaging/MessagingConversationSection.vue:409), which is no longer registered since the rename to channelMessage (src/config/objectTypes.js:371-376), and the error is swallowed into an empty list (:418-419); the only other trace is a notification to the fixed user id 'admin' (lib/Service/WhatsAppAdapter.php:860-861), at 9a5e95c.",
+				"state": "built",
+				"evidence": "the Messages section fetches channelMessage again and shows Send again on a failed or expired outbound row (src/views/messaging/MessagingConversationSection.vue:131, canResend :625), calling MessagingController::resend() (lib/Controller/MessagingController.php:160, POST /api/messaging/messages/{id}/resend at appinfo/routes.php:581) and MessagingService::resend() (lib/Service/MessagingService.php:320); the failed row keeps its templateParameters (lib/Service/WhatsAppAdapter.php). Tests: tests/Unit/Controller/MessagingControllerResendTest.php, tests/vitest/messagingResend.spec.js. An email to a client is written through Nextcloud Mail (WriteEmailModal), whose outbox handles a failed mail send. Change messaging-saved-replies-and-resend archived 2026-10-30 with every task ticked.",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "ClientDetail and ContactDetail Messages section (status only)",
-				"readOn": "2026-09-26",
-				"change": "messaging-saved-replies-and-resend"
+				"reachedOn": "ClientDetail and ContactDetail, Messages section, Send again on a failed row",
+				"readOn": "2026-10-30",
+				"spec": "openspec/specs/messaging-saved-replies",
+				"requirement": "openspec/specs/messaging-saved-replies :: An agent sends a failed message again (REQ-MSR-006)"
 			},
 			"note": "the failure is visible, the one click resend is not. Specified 2026-09-28 in openspec/changes/messaging-saved-replies-and-resend (OpenSpec pass). Own rating partial to no (corrections round 8, 2026-09-28): the partial rested on the failed status shown in the Messages section, and that section is always empty, pipelinq#2073. The fix is task 1.1 of openspec/changes/messaging-saved-replies-and-resend, the change this row is already specified in.",
 			"evidence": {
