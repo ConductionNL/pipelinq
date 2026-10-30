@@ -8,6 +8,7 @@
  * channel has no measurement, and ends on the leads each channel brought in.
  *
  * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+ * @spec openspec/changes/campaign-report-card/specs/marketing-campaigns/spec.md#requirement-the-campaign-page-draws-its-report-as-a-card
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -138,6 +139,32 @@ describe('the campaign page channel table', () => {
 		)
 
 		expect(source).toMatch(/&\.campaign-report__num\s*\{\s*text-align:\s*end/)
+	})
+
+	it('draws the embedded report as its own board card, the table inset with it', () => {
+		const source = fs.readFileSync(
+			path.join(ROOT, 'src', 'views', 'marketing', 'CampaignReport.vue'),
+			'utf8',
+		)
+		const embedded = source.match(/\.campaign-report--embedded \{([^}]*)\}/)[1]
+		expect(embedded).toContain('padding: 20px 22px;')
+		expect(embedded).toContain('border: 1px solid var(--color-border);')
+		expect(embedded).toContain('border-radius: 12px;')
+		expect(embedded).toContain('background: var(--color-main-background);')
+		expect(source).toMatch(/\.campaign-report__heading \{[^}]*h3 \{\s*margin: 0;\s*font-size: 17px;\s*font-weight: 700;/)
+	})
+
+	it('lets a tile grow to fit its figure instead of clipping it', () => {
+		const source = fs.readFileSync(
+			path.join(ROOT, 'src', 'views', 'marketing', 'CampaignReport.vue'),
+			'utf8',
+		)
+		expect(source).toMatch(/\.campaign-report__tiles li \{\s*flex: 1 1 90px;\s*\}/)
+		expect(source).not.toContain('min-width: 120px;')
+	})
+
+	it('names the attribution model as the board does', () => {
+		expect(NL['Attribution model']).toBe('Toeschrijvingsmodel')
 	})
 
 	it('has a Dutch label for every channel it names', () => {

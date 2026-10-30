@@ -44,6 +44,13 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 			return h('div', { 'data-dialog': this.item[this.nameField] })
 		},
 	},
+	CnStatusBadge: {
+		name: 'CnStatusBadge',
+		props: ['label', 'variant'],
+		render() {
+			return h('span', this.label)
+		},
+	},
 }))
 
 const skills = { skills: [{ id: 's1', title: 'Parking', categories: [] }], loading: false, fetchSkills: vi.fn(), deleteSkill: vi.fn(async () => true), error: null }

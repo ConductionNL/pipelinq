@@ -616,11 +616,16 @@ export default {
 	line-height: 1.2;
 }
 
-.blast-monitor__cancel.button-vue {
+/* The page's class outranks the board look's neutral secondary (0,3,0). */
+.blast-monitor .blast-monitor__cancel.button-vue {
 	min-height: 40px;
-	border: 1px solid var(--color-error-text);
+	border: 1px solid var(--nldesign-component-status-badge-error-color, var(--nl-color-red-text, var(--color-error-text)));
 	background-color: var(--color-main-background);
-	color: var(--color-error-text);
+	color: var(--nldesign-component-status-badge-error-color, var(--nl-color-red-text, var(--color-error-text)));
+}
+
+.blast-monitor .blast-monitor__cancel.button-vue :deep(.button-vue__text) {
+	color: inherit;
 }
 
 .blast-monitor__meta {

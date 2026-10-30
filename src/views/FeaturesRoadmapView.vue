@@ -58,7 +58,8 @@
 			:openbuiltUrl="openbuiltUrl"
 			:llmSkillsUrl="llmSkillsUrl"
 			:suggestUrl="suggestUrl"
-			:categories="categories" />
+			:categories="categories"
+			:board="board" />
 	</div>
 </template>
 
@@ -92,6 +93,8 @@ export default {
 		llmSkillsUrl: { type: String, default: '' },
 		/** Suggest-a-feature CTA override, forwarded to the library page. */
 		suggestUrl: { type: String, default: '' },
+		/** Board look options (`subtitle`, ...), forwarded to the library page. */
+		board: { type: Object, default: null },
 	},
 
 	computed: {

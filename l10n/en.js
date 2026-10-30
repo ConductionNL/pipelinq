@@ -2703,6 +2703,7 @@ OC.L10N.register(
         "None": "None",
         "None, I will set this up myself": "None, I will set this up myself",
         "Normal": "Normal",
+        "Not started": "Not started",
         "Not counted yet. The difference appears once the shift is closed and counted.": "Not counted yet. The difference appears once the shift is closed and counted.",
         "Not compiled yet": "Not compiled yet",
         "Not configured": "Not configured",
@@ -3627,6 +3628,9 @@ OC.L10N.register(
         "Send to": "Send to",
         "Send to billing": "Send to billing",
         "Send to invoicing": "Send to invoicing",
+        "Status changed to {changed.status}": "Status changed to {changed.status}",
+        "Renewal lead created": "Renewal lead created",
+        "Sent to invoicing, {changed.invoiceReference}": "Sent to invoicing, {changed.invoiceReference}",
         "Sender Domain": "Sender Domain",
         "Sender domain": "Sender domain",
         "Sender email": "Sender email",
@@ -4033,6 +4037,7 @@ OC.L10N.register(
         "The deadline follows from the kind of ticket and its service level. A conversation is also saved as a contact moment on this ticket.": "The deadline follows from the kind of ticket and its service level. A conversation is also saved as a contact moment on this ticket.",
         "The ticket is created.": "The ticket is created.",
         "What does the customer ask?": "What does the customer ask?",
+        "What Pipelinq does now and what is coming, {count} features": "What Pipelinq does now and what is coming, {count} features",
         "What is it?": "What is it?",
         "The humaniq `TimeEntry` this line bills. A plain uuid and not a `$ref`: humaniq's register is a different register, and ADR-062 rule 7 gives a target outside this register no `$ref`.": "The humaniq `TimeEntry` this line bills. A plain uuid and not a `$ref`: humaniq's register is a different register, and ADR-062 rule 7 gives a target outside this register no `$ref`.",
         "The id of the credential the OpenRegister broker holds for Matomo. Store the token there, not here: a value that looks like a Matomo token is refused.": "The id of the credential the OpenRegister broker holds for Matomo. Store the token there, not here: a value that looks like a Matomo token is refused.",
@@ -7964,6 +7969,7 @@ OC.L10N.register(
         "Importing creates a contact in Pipelinq and links it to the card, so later changes go both ways. Type at least 2 characters to search your Nextcloud contacts.": "Importing creates a contact in Pipelinq and links it to the card, so later changes go both ways. Type at least 2 characters to search your Nextcloud contacts.",
         "With deals": "With deals",
         "{shown} of {total} organisations · sorted by name": "{shown} of {total} organisations · sorted by name",
+        "Search by name": "Search by name",
         "Search by name, KvK number or place": "Search by name, KvK number or place",
         "click a column heading to sort": "click a column heading to sort",
         "Associations": "Associations",
@@ -9310,7 +9316,11 @@ OC.L10N.register(
         "Closed, template required": "Closed, template required",
         "Labels from the shared list.": "Labels from the shared list.",
         "The word people pick, for example duurzaam. Unique in the list, whatever the case.": "The word people pick, for example duurzaam. Unique in the list, whatever the case.",
-        "When to use this label.": "When to use this label."
+        "When to use this label.": "When to use this label.",
+        "Escalated": "Escalated",
+        "Wrong number": "Wrong number",
+        "No answer": "No answer",
+        "Hung up": "Hung up"
     },
     "nplurals=2; plural=(n != 1);"
 )

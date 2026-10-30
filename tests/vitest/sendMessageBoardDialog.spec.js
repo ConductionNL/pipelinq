@@ -10,6 +10,7 @@
  * send is kept as a contact moment.
  *
  * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+ * @spec openspec/changes/message-unknown-consent-tone/specs/send-message/spec.md#requirement-an-unknown-consent-reads-as-unknown
  */
 
 import { mount } from '@vue/test-utils'
@@ -116,6 +117,22 @@ describe('SendMessageModal as the board dialog', () => {
 		const wrapper = build()
 		await wrapper.findAll('[role="radio"]')[1].trigger('click')
 		expect(wrapper.find('[data-testid="send-message-consent-state"]').text()).toBe('Consent for WhatsApp: opted in')
+		expect(wrapper.find('[data-testid="send-message-consent"]').exists()).toBe(false)
+	})
+
+	it('draws a consented channel in the ok tone', async () => {
+		const wrapper = build()
+		await wrapper.findAll('[role="radio"]')[1].trigger('click')
+		expect(wrapper.find('[data-testid="send-message-consent-state"]').classes()).toContain('send-message__consent-state--ok')
+	})
+
+	it('draws an unknown consent that still allows sending as unknown, not in the ok tone', async () => {
+		const wrapper = build()
+		await wrapper.findAll('[role="radio"]')[0].trigger('click')
+		const state = wrapper.find('[data-testid="send-message-consent-state"]')
+		expect(state.text()).toBe('Consent for SMS: unknown')
+		expect(state.classes()).toContain('send-message__consent-state--warn')
+		expect(state.classes()).not.toContain('send-message__consent-state--ok')
 		expect(wrapper.find('[data-testid="send-message-consent"]').exists()).toBe(false)
 	})
 

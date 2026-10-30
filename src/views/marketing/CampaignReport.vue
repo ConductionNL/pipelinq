@@ -502,8 +502,15 @@ export default {
 }
 
 .campaign-report__heading {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+
 	h3 {
 		margin: 0;
+		font-size: 17px;
+		font-weight: 700;
+		line-height: normal;
 	}
 }
 
@@ -513,16 +520,22 @@ export default {
 	margin: 0;
 }
 
+/* On the campaign page (board PqCampagne) the report is a card of its own:
+   the hairline frame, 20px 22px inside, the tiles and the channel table
+   inset with it. */
 .campaign-report--embedded {
-	padding: 0;
+	padding: 20px 22px;
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	background: var(--color-main-background);
 
 	.campaign-report__header {
 		align-items: center;
+		margin-bottom: 14px;
 	}
 
 	.campaign-report__tiles li {
-		flex: 1 1 0;
-		min-width: 120px;
+		flex: 1 1 90px;
 	}
 }
 
@@ -598,6 +611,7 @@ export default {
 .campaign-report--embedded {
 	.campaign-report__tiles {
 		gap: 16px;
+		margin-bottom: 14px;
 
 		li {
 			padding: 16px 18px;

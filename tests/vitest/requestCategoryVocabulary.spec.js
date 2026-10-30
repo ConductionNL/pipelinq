@@ -44,6 +44,7 @@ vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnResourceSelect: { name: 'CnResourceSelect', render: () => null },
+	CnSearchSelect: { name: 'CnSearchSelect', render: () => null },
 }))
 vi.mock('@nextcloud/vue', () => {
 	const field = (name) => ({

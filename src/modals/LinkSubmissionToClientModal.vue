@@ -10,7 +10,7 @@
   -->
 <template>
 	<CnDialog
-		width="form"
+		width="wizard"
 		:name="t('pipelinq', 'Link to a client')"
 		size="normal"
 		@closing="$emit('close')">
@@ -20,10 +20,14 @@
 				<section class="link-submission__sent">
 					<h3>{{ t('pipelinq', 'The submission, as sent') }}</h3>
 					<dl>
-						<template v-for="row in sentRows" :key="row.label">
+						<div
+							v-for="row in sentRows"
+							:key="row.label"
+							class="link-submission__fact"
+							:class="{ 'link-submission__fact--wide': row.wide }">
 							<dt>{{ row.label }}</dt>
 							<dd>{{ row.value }}</dd>
-						</template>
+						</div>
 					</dl>
 				</section>
 
@@ -126,6 +130,17 @@ import { createWithContact } from '../services/contactSyncApi.js'
 import { linkPlan, runLinkPlan, submittedParty } from '../utils/submissionLink.js'
 
 /**
+ * A submitted page address as people read it: without its scheme or a trailing slash.
+ *
+ * @param {string} page The page address as submitted.
+ * @return {string} The address to show.
+ * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ */
+export function readablePage(page) {
+	return String(page || '').replace(/^https?:\/\//, '').replace(/(.)\/$/, '$1')
+}
+
+/**
  * The OpenRegister object collection URL of a pipelinq schema.
  *
  * @param {string} schema The schema slug.
@@ -195,10 +210,10 @@ export default {
 				[t('pipelinq', 'Email'), this.party.email],
 				[t('pipelinq', 'Phone'), this.party.phone],
 				[t('pipelinq', 'Organisation'), this.party.organisation],
-				[t('pipelinq', 'Page'), this.party.page],
-				[t('pipelinq', 'Message'), this.ticket?.description || ''],
+				[t('pipelinq', 'Page'), readablePage(this.party.page)],
+				[t('pipelinq', 'Message'), this.ticket?.description || '', true],
 			]
-			return rows.filter(([, value]) => value).map(([label, value]) => ({ label, value }))
+			return rows.filter(([, value]) => value).map(([label, value, wide = false]) => ({ label, value, wide }))
 		},
 
 		/** @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
@@ -314,34 +329,81 @@ export default {
 .link-submission {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 20px;
 	padding: 4px 0 8px;
 }
 
 .link-submission h3 {
-	margin: 0 0 4px;
+	margin: 0;
 	font-size: 15px;
-	font-weight: 600;
+	font-weight: 700;
+}
+
+.link-submission__sent {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px 18px;
+	border: 1px solid var(--color-background-dark);
+	border-radius: 10px;
+	background: var(--color-background-hover);
+}
+
+.link-submission__sent h3 {
+	font-size: 13px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--color-text-maxcontrast);
 }
 
 .link-submission__sent dl {
 	display: grid;
-	grid-template-columns: max-content 1fr;
-	gap: 4px 16px;
+	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+	gap: 12px 20px;
 	margin: 0;
+	font-size: 14px;
 }
 
+.link-submission__fact {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.link-submission__fact--wide {
+	grid-column: 1 / -1;
+}
+
+/* Nextcloud's core dt/dd box (130px, end-aligned, padded) would push each label away from its value. */
 .link-submission__sent dt {
+	width: auto;
+	padding: 0;
+	text-align: start;
+	font-size: 13px;
 	color: var(--color-text-maxcontrast);
 }
 
 .link-submission__sent dd {
 	margin: 0;
+	padding: 0;
+	overflow-wrap: anywhere;
 	white-space: pre-line;
 }
 
+.link-submission__choice {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin: 0;
+	padding: 14px 16px;
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+}
+
 .link-submission__hint {
-	margin: 4px 0;
+	margin: 0;
+	font-size: 14px;
 	color: var(--color-text-maxcontrast);
 }
 </style>

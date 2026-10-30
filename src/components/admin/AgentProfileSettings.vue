@@ -12,11 +12,11 @@
 				<div v-if="editingId !== profile.id" class="agent-item__display">
 					<div class="agent-item__info">
 						<span class="agent-name">{{ profile.userId }}</span>
-						<span
+						<CnStatusBadge
 							v-if="profile.isAvailable === false"
-							class="unavailable-tag"
-							>{{ t('pipelinq', 'Unavailable') }}</span
-						>
+							variant="warning"
+							:label="t('pipelinq', 'Unavailable')"
+							class="agent-availability" />
 						<span class="agent-meta">
 							{{
 								getSkillNames(profile).join(', ')
@@ -122,7 +122,7 @@
 </template>
 
 <script>
-import { CnDeleteDialog } from '@conduction/nextcloud-vue'
+import { CnDeleteDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import { useAgentProfilesStore } from '../../store/modules/agentProfiles.js'
@@ -133,6 +133,7 @@ export default {
 	components: {
 		Plus,
 		CnDeleteDialog,
+		CnStatusBadge,
 		NcButton,
 		NcLoadingIcon,
 		NcSettingsSection,
@@ -309,13 +310,8 @@ export default {
 	font-weight: 700;
 }
 
-.unavailable-tag {
-	font-size: 11px;
-	padding: 1px 6px;
-	border-radius: 8px;
-	background: var(--color-error);
-	color: #fff;
-	margin-inline-start: 6px;
+.agent-availability {
+	margin-inline-start: 8px;
 }
 
 .agent-meta {

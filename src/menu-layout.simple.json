@@ -556,7 +556,6 @@
 						"type": "open-modal",
 						"target": "TicketAnswerDialog",
 						"label": "Answer the customer",
-						"icon": "ForumOutline",
 						"visibleWhen": {
 							"field": "ticketType",
 							"op": "neq",
