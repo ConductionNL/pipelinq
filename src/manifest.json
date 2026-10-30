@@ -4788,6 +4788,7 @@
 							"tabs": [
 								{
 									"label": "Overview",
+									"sections": true,
 									"widgetIds": [
 										"lead-stages",
 										"lead-deal",
@@ -4877,6 +4878,7 @@
 						"id": "lead-stages",
 						"type": "stages",
 						"title": "Stages",
+						"showTitle": false,
 						"icon": "ChevronDoubleRight",
 						"_note": "The board's stage strip at the top of the Overview tab: the stages of the lead's own pipeline, read from the pipeline record, with the current one from `stage`.",
 						"content": {
@@ -5008,8 +5010,9 @@
 							"addLabel": "Add product",
 							"addVariant": "tonal",
 							"footerNote": "The value of the lead follows the line totals. Change a line and the value changes with it.",
-							"rowTitle": "plain",
-							"filterable": true
+							"rowTitle": "text",
+							"filterable": true,
+							"sortable": true
 						}
 					},
 					{
