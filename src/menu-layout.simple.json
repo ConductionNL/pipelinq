@@ -703,6 +703,48 @@
 							]
 						},
 						"group": "Finish"
+					},
+					{
+						"id": "lock-record",
+						"group": "Finish",
+						"type": "api-call",
+						"label": "Lock",
+						"icon": "LockOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"confirm": true,
+						"confirmTitle": "Lock this ticket?",
+						"confirmMessage": "Nobody can change it until someone unlocks it.",
+						"successMessage": "Locked.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "@self.frozen",
+									"op": "empty"
+								},
+								{
+									"field": "isFinished",
+									"op": "eq",
+									"value": true
+								}
+							]
+						},
+						"_note": "platform-record-lock REQ-PRL-001. OpenRegister's freeze: it writes @self.frozen (who, when) and an audit entry, and refuses every later write. Shows only on a finished record (isFinished), because a lock on an open one would refuse the SLA engine's own writes."
+					},
+					{
+						"id": "unlock-record",
+						"group": "Finish",
+						"type": "api-call",
+						"label": "Unlock",
+						"icon": "LockOpenVariantOutline",
+						"method": "DELETE",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"successMessage": "Unlocked.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
+						},
+						"_note": "platform-record-lock REQ-PRL-002. DELETE on the freeze address removes it; OpenRegister records the unlock in the audit trail. Needs nextcloud-vue's api-call DELETE."
 					}
 				],
 				"primaryActionByStage": {

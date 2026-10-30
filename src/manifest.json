@@ -2177,8 +2177,8 @@
 						"_note": "platform-record-lock REQ-PRL-001. Silent on a record that is not locked. A marker that names nobody says the shorter sentence.",
 						"content": {
 							"icon": "LockOutline",
-							"lead": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Unlock it to make a change.",
-							"fallbackLead": "Locked. Unlock it to make a change.",
+							"lead": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Nobody can change it. Need a change? Unlock it first; the history shows who locked and unlocked it.",
+							"fallbackLead": "Locked. Nobody can change it. Need a change? Unlock it first.",
 							"text": "{subject.@self.frozen.reason}",
 							"visibleWhen": {
 								"field": "@self.frozen",
@@ -4055,8 +4055,8 @@
 						"_note": "platform-record-lock REQ-PRL-001. Silent on a record that is not locked. A marker that names nobody says the shorter sentence.",
 						"content": {
 							"icon": "LockOutline",
-							"lead": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Unlock it to make a change.",
-							"fallbackLead": "Locked. Unlock it to make a change.",
+							"lead": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Nobody can change it. Need a change? Unlock it first; the history shows who locked and unlocked it.",
+							"fallbackLead": "Locked. Nobody can change it. Need a change? Unlock it first.",
 							"text": "{subject.@self.frozen.reason}",
 							"visibleWhen": {
 								"field": "@self.frozen",
@@ -4933,8 +4933,8 @@
 						"_note": "platform-record-lock REQ-PRL-001. Silent on a record that is not locked. A marker that names nobody says the shorter sentence.",
 						"content": {
 							"icon": "LockOutline",
-							"lead": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Unlock it to make a change.",
-							"fallbackLead": "Locked. Unlock it to make a change.",
+							"lead": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Nobody can change it. Need a change? Unlock it first; the history shows who locked and unlocked it.",
+							"fallbackLead": "Locked. Nobody can change it. Need a change? Unlock it first.",
 							"text": "{subject.@self.frozen.reason}",
 							"visibleWhen": {
 								"field": "@self.frozen",

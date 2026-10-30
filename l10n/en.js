@@ -9377,8 +9377,8 @@ OC.L10N.register(
         "Locked.": "Locked.",
         "Unlocked.": "Unlocked.",
         "Locked": "Locked",
-        "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Unlock it to make a change.": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Unlock it to make a change.",
-        "Locked. Unlock it to make a change.": "Locked. Unlock it to make a change."
+        "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Nobody can change it. Need a change? Unlock it first; the history shows who locked and unlocked it.": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Nobody can change it. Need a change? Unlock it first; the history shows who locked and unlocked it.",
+        "Locked. Nobody can change it. Need a change? Unlock it first.": "Locked. Nobody can change it. Need a change? Unlock it first."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -9391,8 +9391,8 @@ OC.L10N.register(
         "Locked.": "Vergrendeld.",
         "Unlocked.": "Ontgrendeld.",
         "Locked": "Vergrendeld",
-        "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Unlock it to make a change.": "Vergrendeld door {subject.@self.frozen.by} op {subject.@self.frozen.at|date}. Ontgrendel het om iets te wijzigen.",
-        "Locked. Unlock it to make a change.": "Vergrendeld. Ontgrendel het om iets te wijzigen."
+        "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Nobody can change it. Need a change? Unlock it first; the history shows who locked and unlocked it.": "Vergrendeld door {subject.@self.frozen.by} op {subject.@self.frozen.at|date}. Niemand kan het wijzigen. Moet er toch iets veranderen? Ontgrendel het eerst; wie het vergrendelde en ontgrendelde staat in de geschiedenis.",
+        "Locked. Nobody can change it. Need a change? Unlock it first.": "Vergrendeld. Niemand kan het wijzigen. Moet er toch iets veranderen? Ontgrendel het eerst."
     },
     "nplurals=2; plural=(n != 1);"
 )

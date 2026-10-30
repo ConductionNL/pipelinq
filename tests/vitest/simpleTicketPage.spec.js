@@ -124,10 +124,13 @@ describe('the full structure', () => {
 		// client), Make a letter (work-letter-from-filinq-template, shown only
 		// with filinq) and Assign to me (detail-pages-read-at-a-glance), which
 		// sets the assignee and changes no status.
+		// Lock and Unlock (platform-record-lock) follow, one at a time.
 		expect(full.config.headerActions.map((action) => action.id)).toEqual([
 			'link-to-client',
 			'make-letter',
 			'assign-to-me',
+			'lock-record',
+			'unlock-record',
 		])
 		expect(full.config.sideColumn).toBeUndefined()
 	})
@@ -428,8 +431,10 @@ describe('the body', () => {
 			(tab) => tab.widgetIds || [tab.widgetId],
 		)
 		// The strip itself is the page's own, given the board's four tabs.
+		// The band's widgets (the lock notice) stay in the band.
+		const banded = (full.config.band || []).map((entry) => entry.widgetId)
 		const children = full.config.widgets.filter(
-			(widget) => widget.id !== 'ticket-panels',
+			(widget) => widget.id !== 'ticket-panels' && !banded.includes(widget.id),
 		)
 		for (const widget of children) {
 			expect(tabbed, widget.id).toContain(widget.id)
