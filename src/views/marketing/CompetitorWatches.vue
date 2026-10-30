@@ -559,6 +559,8 @@ export default {
 
 		th {
 			padding-block: 10px;
+			border-bottom: 0;
+			background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
 			font-weight: 600;
 			color: var(--color-text-maxcontrast);
 		}
