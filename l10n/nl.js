@@ -9377,7 +9377,11 @@ OC.L10N.register(
         "Next steps": "Volgende stappen",
         "Assign the selected tickets": "De geselecteerde tickets toewijzen",
         "Every ticket that moves keeps this reason.": "Elk verplaatst ticket bewaart deze reden.",
-        "{total} on this ticket, newest first": "{total} bij dit ticket, nieuwste eerst"
+        "{total} on this ticket, newest first": "{total} bij dit ticket, nieuwste eerst",
+        "Finish this task": "Deze taak afronden",
+        "What came out of the callback?": "Wat kwam er uit het terugbellen?",
+        "Log attempt": "Poging vastleggen",
+        "Attempt logged.": "Poging vastgelegd."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -9363,7 +9363,11 @@ OC.L10N.register(
         "Next steps": "Next steps",
         "Assign the selected tickets": "Assign the selected tickets",
         "Every ticket that moves keeps this reason.": "Every ticket that moves keeps this reason.",
-        "{total} on this ticket, newest first": "{total} on this ticket, newest first"
+        "{total} on this ticket, newest first": "{total} on this ticket, newest first",
+        "Finish this task": "Finish this task",
+        "What came out of the callback?": "What came out of the callback?",
+        "Log attempt": "Log attempt",
+        "Attempt logged.": "Attempt logged."
     },
     "nplurals=2; plural=(n != 1);"
 )
