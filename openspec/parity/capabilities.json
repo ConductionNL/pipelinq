@@ -6705,7 +6705,8 @@
 				"state": "built",
 				"evidence": "lib/Service/AnalyticsService.php:465",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/commercial-dashboard"
+				"change": "openspec/changes/reports-compare-periods-and-scheduled-delivery",
+				"requirement": "A report KPI shows the previous period beside the current one (REQ-RPD-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/compare-date-ranges-in-the-custom-report-builder \"use the Date part and Compare by filters to compare multiple time range types side-by-side. For example, you can compare this year to last year\". Marketing, Sales, Service or Data Hub Professional, Enterprise.",
@@ -6758,7 +6759,7 @@
 			"id": "rep-scheduled-export",
 			"area": "reporting",
 			"name": "Have a report land in your inbox on a schedule",
-			"pipelinq": "yes",
+			"pipelinq": "partial",
 			"hubspot-crm": "yes",
 			"pipedrive": "unknown",
 			"espocrm": "partial",
@@ -6769,10 +6770,11 @@
 			"feature": "warehouse-export",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
-				"evidence": "lib/BackgroundJob/ExportSchedulerJob.php",
+				"state": "specified",
+				"evidence": "lib/BackgroundJob/ExportSchedulerJob.php runs due export jobs, but ExportDestinationService::TYPES has only warehouse and file-store destinations (s3, azure_data_lake, gcs, bigquery, snowflake, sftp, postgres); no mail delivery, so nothing lands in an inbox (re-measured 2026-10-30)",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
+				"change": "openspec/changes/reports-compare-periods-and-scheduled-delivery",
+				"requirement": "A scheduled report can be delivered by mail (REQ-RPD-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/dashboard/email-or-export-reports-and-dashboards \"You can also schedule recurring report emails on a daily, weekly, or monthly basis\", sent by email, Slack or Google Chat. All products and plans.",
