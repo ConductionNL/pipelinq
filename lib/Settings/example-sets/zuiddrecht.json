@@ -3383,7 +3383,7 @@
 				"status": "in_progress",
 				"client": "{{object:client-kuiper.id}}",
 				"assignee": "{{cast:pieter.uid}}",
-				"occurredAt": "{{datetime:-1 16:40}}",
+				"occurredAt": "{{datetime:0 08:40}}",
 				"description": "Familie Kuiper niet volledig kunnen helpen. Terugbelafspraak gemaakt.",
 				"duration": "PT3M",
 				"category": "parkeren"
@@ -3423,7 +3423,7 @@
 				"status": "closed",
 				"client": "{{object:client-hoekstra.id}}",
 				"assignee": "{{cast:joris.uid}}",
-				"occurredAt": "{{datetime:-4 10:47}}",
+				"occurredAt": "{{datetime:0 08:05}}",
 				"description": "Ophaaldag voor grofvuil doorgegeven.",
 				"duration": "PT7M",
 				"category": "afval"
@@ -3505,7 +3505,7 @@
 				"status": "closed",
 				"client": "{{object:client-henkvisser.id}}",
 				"assignee": "{{cast:lotte.uid}}",
-				"occurredAt": "{{datetime:-5 11:15}}",
+				"occurredAt": "{{datetime:0 07:40}}",
 				"category": "openbare-ruimte"
 			}
 		},
@@ -3523,7 +3523,7 @@
 				"assigneeGroupId": "{{cast:kcc.gid}}",
 				"clientId": "{{object:client-kuiper.id}}",
 				"callbackPhoneNumber": "06 41 22 90 17",
-				"contactMomentSummary": "Belde gisteren over de parkeervergunning. Wij bellen terug met het antwoord.",
+				"contactMomentSummary": "Belde vanochtend over de parkeervergunning. Wij bellen terug met het antwoord.",
 				"createdBy": "{{cast:pieter.uid}}"
 			}
 		},
