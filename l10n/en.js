@@ -9362,7 +9362,8 @@ OC.L10N.register(
         "Log contact on another channel": "Log contact on another channel",
         "Next steps": "Next steps",
         "Assign the selected tickets": "Assign the selected tickets",
-        "Every ticket that moves keeps this reason.": "Every ticket that moves keeps this reason."
+        "Every ticket that moves keeps this reason.": "Every ticket that moves keeps this reason.",
+        "{total} on this ticket, newest first": "{total} on this ticket, newest first"
     },
     "nplurals=2; plural=(n != 1);"
 )

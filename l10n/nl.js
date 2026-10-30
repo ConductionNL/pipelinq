@@ -9376,7 +9376,8 @@ OC.L10N.register(
         "Log contact on another channel": "Contact via een ander kanaal vastleggen",
         "Next steps": "Volgende stappen",
         "Assign the selected tickets": "De geselecteerde tickets toewijzen",
-        "Every ticket that moves keeps this reason.": "Elk verplaatst ticket bewaart deze reden."
+        "Every ticket that moves keeps this reason.": "Elk verplaatst ticket bewaart deze reden.",
+        "{total} on this ticket, newest first": "{total} bij dit ticket, nieuwste eerst"
     },
     "nplurals=2; plural=(n != 1);"
 )
