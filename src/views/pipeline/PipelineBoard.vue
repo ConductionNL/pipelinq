@@ -946,7 +946,7 @@ export default {
 		 * the pipeline, the type, the chip above the board and the search.
 		 *
 		 * @return {Array<{key: string, label: string}>}
-		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		activeFilterChips() {
 			const chips = []
@@ -971,7 +971,7 @@ export default {
 		 * The Filter button's accessible name, with the count while filters are active.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		filterMenuLabel() {
 			const count = this.activeFilterChips.length
@@ -984,7 +984,7 @@ export default {
 		 * Board look: the view switch's cards segment opens the leads list.
 		 *
 		 * @return {{[mode: string]: {href: string, to: object}}}
-		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		viewModeLinks() {
 			const to = { name: 'Leads' }
@@ -1336,7 +1336,7 @@ export default {
 		 *
 		 * @param {string} id The pipeline's id.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		async selectPipeline(id) {
 			if (!id || id === this.selectedPipelineId) return
@@ -1350,7 +1350,7 @@ export default {
 		 *
 		 * @param {{key: string}} chip The chip.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		async removeActiveFilter(chip) {
 			if (chip.key === 'pipeline') {
@@ -1368,7 +1368,7 @@ export default {
 		 * Clear all: every narrowing back to its default.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		async clearActiveFilters() {
 			this.showFilter = 'all'
@@ -1657,7 +1657,7 @@ export default {
 		 * The leads on the board, as the board shows them, as a CSV file.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/pipeline-board-header/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		downloadLeads() {
 			const rows = this.filteredItems.map((item) => ({

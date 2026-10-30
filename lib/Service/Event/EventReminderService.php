@@ -22,7 +22,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/event-reminder-and-check-in/specs/campaign-events/spec.md
+ * @spec openspec/specs/campaign-events/spec.md
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Sends the reminder of one event.
  *
- * @spec openspec/changes/event-reminder-and-check-in/specs/campaign-events/spec.md
+ * @spec openspec/specs/campaign-events/spec.md
  */
 class EventReminderService
 {
@@ -86,7 +86,7 @@ class EventReminderService
      *
      * @throws RuntimeException `event_not_found` when the caller may not read it, `event_not_saved` when the caller may not change it.
      *
-     * @spec openspec/changes/event-reminder-and-check-in/specs/campaign-events/spec.md
+     * @spec openspec/specs/campaign-events/spec.md
      */
     public function send(string $eventId): array
     {

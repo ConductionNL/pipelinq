@@ -6,7 +6,7 @@
  * A tariff `{label, price, validFrom, note}` without `validFrom` is always in
  * force; one with a later `validFrom` replaces the same label from that day.
  *
- * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 
 /**
@@ -16,7 +16,7 @@
  * @param {Array<object>|undefined} tariffs The product's tariffs.
  * @param {string} today The day, `YYYY-MM-DD`.
  * @return {Array<object>} The tariffs in force.
- * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 export function currentTariffs(tariffs, today) {
 	const byLabel = new Map()
@@ -39,7 +39,7 @@ export function currentTariffs(tariffs, today) {
  * @param {Array<object>|undefined} tariffs The product's tariffs.
  * @param {string} today The day, `YYYY-MM-DD`.
  * @return {string|null} The day, `YYYY-MM-DD`.
- * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 export function nextTariffDate(tariffs, today) {
 	const later = (Array.isArray(tariffs) ? tariffs : [])
@@ -55,7 +55,7 @@ export function nextTariffDate(tariffs, today) {
  *
  * @param {object} product The product.
  * @return {string} The weight, or '' when none is set.
- * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 export function productWeight(product) {
 	let grams = null

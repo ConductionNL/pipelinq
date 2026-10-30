@@ -6,7 +6,7 @@
  * them: "Tarieventabel (leges)" in the Overview stack and "Levering" in the
  * side column. The card title is the widget's `content.title`.
  *
- * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 
 import ProductSupplyWidget from './ProductSupplyWidget.vue'

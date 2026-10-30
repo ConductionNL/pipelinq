@@ -408,7 +408,7 @@ class AnalyticsControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/leads-list-board-line/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
+	 * @spec openspec/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
 	 */
 	public function testCommercialPassesTheListFilter(): void {
 		$user = $this->createMock(originalClassName: IUser::class);

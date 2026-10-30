@@ -1310,6 +1310,86 @@ be written as that user.
 - WHEN the default pipelines are created
 - THEN they are written as that admin
 
+### Requirement: The pipelines list shows each pipeline with its stages
+
+The Pipelines page MUST open as cards, one per pipeline. Each card shows its name, its description, its number of stages, when it was made, and its stages as chips in order.
+
+#### Scenario: Verkoop
+
+- GIVEN pipeline Verkoop with six stages
+- WHEN the Pipelines page opens
+- THEN Verkoop's card reads "6 fases" and shows the chips Nieuw, Benaderd, Gekwalificeerd, Voorstel, Gewonnen and Verloren
+
+### Requirement: The pipeline board header offers Download
+
+The pipeline board header MUST offer Download, which writes the leads the board shows as a CSV file, beside the buildiq square and New lead.
+
+#### Scenario: download the board
+
+- GIVEN the Verkoop pipeline board with 14 open leads
+- WHEN the user chooses Download
+- THEN a CSV with those 14 leads is saved
+
+### Requirement: The pipeline board draws the board toolbar in the board look
+
+In the board look the pipeline board MUST draw the board toolbar: the chips, Filter and the view switch, then the pipeline select, the search, Pipeline settings and Columns, then the hint and the active filters with Clear all.
+
+#### Scenario: the active filters
+
+- GIVEN the Verkoop pipeline board in the board look
+- WHEN the user chooses the My leads chip
+- THEN the active filters read "Pipeline: Verkoop" and "My leads", and Filter shows 2
+
+#### Scenario: clear all
+
+- GIVEN the board with the My leads chip and a search
+- WHEN the user chooses Clear all
+- THEN the board shows every open lead of the pipeline it opens with
+
+### Requirement: The board look draws the kanban's lead cards as the board does
+
+In the board look each lead card MUST show its title, its value, its chance (the lead's own, else its stage's) in the stage's colour, and under a rule the days in its stage and its owner's initials; a stale lead MUST be outlined in the error colour.
+
+#### Scenario: a lead in Benaderd
+
+- GIVEN Zorggroep Merwede in stage Benaderd (30%), € 64.000, owned by Fatma Yildiz, 6 days in the stage
+- WHEN the board shows the Verkoop pipeline in the board look
+- THEN its card reads "€ 64.000", "30% kans", "6 dagen in fase" and "FY"
+
+### Requirement: The board look pipeline header keeps the board's rhythm
+
+In the board look the pipeline board MUST place its title and header buttons on one row, the buttons 40px high and 10px apart, with the count line 6px under that row, and the header MUST start 4px under a 24px content top.
+
+#### Scenario: the pipeline header in the board look
+
+- GIVEN the pipeline board in the board look
+- WHEN the page renders
+- THEN the title sits 28px under the content's top edge
+- AND Download and New lead are 40px high on the title's row
+- AND the count line sits 6px under that row
+
+### Requirement: The board look pipeline toolbar draws chips and a bare settings link
+
+In the board look the view chips MUST stand on the page without a band, and the pipeline settings control MUST be an underlined link without a button ground or margin, named "Pijplijninstellingen" in Dutch.
+
+#### Scenario: the toolbar in the board look
+
+- GIVEN the pipeline board in the board look, in Dutch
+- WHEN the toolbar renders
+- THEN the chips have no ground behind them
+- AND the settings link reads "Pijplijninstellingen" with no ground
+
+### Requirement: The board look stage heading and owner chip follow the board
+
+In the board look a stage heading MUST sit on a normal line with a 12px bold count pill and the stage total line 18px in under it, and a lead card MUST draw its owner as a 26px chip in the light primary.
+
+#### Scenario: a stage column in the board look
+
+- GIVEN the Verkoop pipeline with a stage holding four leads
+- WHEN the board renders the stage
+- THEN its count pill reads 4 in 12px bold
+- AND each card's owner chip is 26px in the light primary
+
 ## UI Reference
 
 ### Kanban Board Layout

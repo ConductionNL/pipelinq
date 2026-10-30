@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+ * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use OCP\IAppConfig;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+ * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
  */
 class AvailabilityCacheInvalidationListener implements IEventListener, DeferredObjectWork {
 
@@ -83,7 +83,7 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
 	 */
 	public function handle(Event $event): void {
 		[$entity, $previous] = $this->entitiesOf(event: $event);
@@ -124,7 +124,7 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
 	 */
 	public function runDeferredWork(array $entry): void {
 		$uuid = (string)($entry['uuid'] ?? '');

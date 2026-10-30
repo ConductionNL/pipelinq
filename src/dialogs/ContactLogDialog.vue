@@ -11,7 +11,7 @@ type interaction under the ticket the page is on, for the picked customer.
 An `open-modal` action carries no object context, so the route names the
 ticket. When the dialog closes after a save the page is asked to reload.
 
-@spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
+@spec openspec/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
 -->
 <template>
 	<CnDialog
@@ -142,7 +142,7 @@ const pad = (n) => String(n).padStart(2, '0')
 /**
  * The contact-log dialog on a ticket.
  *
- * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
+ * @spec openspec/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
  */
 export default {
 	name: 'ContactLogDialog',
@@ -230,7 +230,7 @@ export default {
 		 * results, each once.
 		 *
 		 * @return {Array<{id: string, label: string}>}
-		 * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-the-customer-of-a-contact-moment-can-be-changed-in-the-dialog
+		 * @spec openspec/specs/contact-log-dialog/spec.md#requirement-the-customer-of-a-contact-moment-can-be-changed-in-the-dialog
 		 */
 		clientOptions() {
 			const options = this.client ? [this.client] : []
@@ -256,7 +256,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-the-customer-of-a-contact-moment-can-be-changed-in-the-dialog
+		 * @spec openspec/specs/contact-log-dialog/spec.md#requirement-the-customer-of-a-contact-moment-can-be-changed-in-the-dialog
 		 */
 		async loadTicket() {
 			if (!this.ticketId) {
@@ -280,7 +280,7 @@ export default {
 		 * ticket, for the picked customer.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
+		 * @spec openspec/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
 		 */
 		payload() {
 			const when = new Date(`${this.form.date}T${this.form.time || '00:00'}`)
@@ -307,7 +307,7 @@ export default {
 		 *
 		 * @param {string} term What is typed; empty lists the first customers.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-the-customer-of-a-contact-moment-can-be-changed-in-the-dialog
+		 * @spec openspec/specs/contact-log-dialog/spec.md#requirement-the-customer-of-a-contact-moment-can-be-changed-in-the-dialog
 		 */
 		async searchClients(term) {
 			const params = { _limit: 20 }

@@ -261,7 +261,7 @@ export default {
 		 * pipeline, once it is read.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/leads-list-board-line/specs/leads-list-board-line/spec.md#requirement-the-leads-list-is-the-board
+		 * @spec openspec/specs/leads-list-board-line/spec.md#requirement-the-leads-list-is-the-board
 		 */
 		appConfig() {
 			return this.defaultPipelineId ? { defaultPipeline: this.defaultPipelineId } : {}

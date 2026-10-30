@@ -388,7 +388,7 @@ export default {
 		 * item 2).
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+		 * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async onPageRefresh() {
 			if (this.entityType === 'client') {
@@ -484,7 +484,7 @@ export default {
 		 * Fetch the client's contacts. A refetch keeps the selected contact when it is still linked.
 		 *
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
-		 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+		 * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async fetchLinkedContacts() {
 			this.loadingContacts = true

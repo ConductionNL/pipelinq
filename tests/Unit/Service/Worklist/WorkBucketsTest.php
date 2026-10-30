@@ -31,7 +31,7 @@ use PHPUnit\Framework\TestCase;
  * follow-up, into "Vandaag beantwoorden", "Wacht op mij" or "Wacht op de
  * klant"; board PqMobiel groups the same items by when they are due.
  *
- * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+ * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
  */
 class WorkBucketsTest extends TestCase {
 

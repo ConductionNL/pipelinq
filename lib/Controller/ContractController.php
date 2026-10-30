@@ -197,7 +197,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse The figures.
 	 *
-	 * @spec openspec/changes/contract-figures/specs/contract-renewal-tracking/spec.md#requirement-a-contract-page-reads-its-figures
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-a-contract-page-reads-its-figures
 	 */
 	#[NoAdminRequired]
 	public function figures(string $id): JSONResponse {

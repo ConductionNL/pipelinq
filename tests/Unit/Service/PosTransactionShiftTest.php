@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
 /**
  * A sale confirmed at a till with an open shift is linked to that shift.
  *
- * @spec openspec/changes/pos-sale-in-shift/specs/pos-transaction-core/spec.md
+ * @spec openspec/specs/pos-transaction-core/spec.md
  */
 class PosTransactionShiftTest extends TestCase {
 	/**

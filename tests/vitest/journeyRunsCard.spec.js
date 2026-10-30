@@ -8,7 +8,7 @@
  * registry entry asks for the card (`chrome: "card"`); without it the runs
  * sat in a card with no title (seen on :8080, 30 Oct).
  *
- * @spec openspec/changes/journey-runs-card/specs/marketing-integrated-campaigns/spec.md#requirement-the-journey-runs-card-has-a-title-row
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-journey-runs-card-has-a-title-row
  */
 
 import { shallowMount } from '@vue/test-utils'

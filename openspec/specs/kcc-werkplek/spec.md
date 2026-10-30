@@ -23,6 +23,7 @@ The KCC werkplek is a composite view that orchestrates data from multiple source
 - **BRP/KVK enrichment**: Retrieved via OpenConnector sources for person/business lookup
 - **Kennisartikel**: OpenRegister object in the `pipelinq` register using the `kennisartikel` schema (see kennisbank spec)
 - **Taak/Terugbelverzoek**: OpenRegister object for backoffice routing and callback requests
+
 ## Requirements
 
 ---
@@ -691,6 +692,37 @@ The system MUST allow agents to set their availability status, which affects que
 - AND break duration MUST be tracked for workforce reporting
 
 ---
+
+### Requirement: The ticket list shows the newest ticket first
+
+The ticket list in the simple structure SHALL sort on `occurredAt` descending by default, so a ticket that just came in is on the first page. Its count line SHALL name that order.
+
+#### Scenario: A resident's question reaches the KCC agent
+- **GIVEN** 83 tickets, most of them weeks old
+- **WHEN** a resident asks a question through the portal and a KCC agent opens Vragen en meldingen
+- **THEN** the resident's ticket SHALL be the first row
+- **AND** the count line SHALL read "... · nieuwste eerst"
+
+@e2e exclude A list declaration; the vitest pins the declaration and the library's index page applies sortKey and sortOrder.
+
+### Requirement: Tickets can be imported from the ticket list
+
+The ticket list's Actions menu MUST offer Import, which opens the mass import dialog for tickets.
+
+#### Scenario: importing a counter export
+
+- GIVEN an agent on the ticket list
+- WHEN they open Actions and choose Import
+- THEN the import dialog for tickets opens
+
+### Requirement: The werkplek in a call names the caller
+
+While a call is on, the werkplek MUST be titled "Gesprek met <client name>". It MUST show a card on the client in the call with their name, type and address, source, preference and language.
+
+#### Scenario: Sanne calls
+- GIVEN the werkplek opened for a call with Sanne de Vries
+- THEN the title reads "Gesprek met Sanne de Vries"
+- AND "Wie is het" names Sanne de Vries with a link to her customer page
 
 ## Notes
 

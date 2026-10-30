@@ -233,7 +233,7 @@ export default {
 		 * The escalation queues as the wrap-up's select options.
 		 *
 		 * @return {Array<{value: string, label: string}>}
-		 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+		 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
 		 */
 		queueOptions() {
 			return this.queues.map((queue) => ({ value: queue.id, label: queue.label }))
@@ -343,7 +343,7 @@ export default {
 		 * A wrap-up opened: load the escalation queues it offers, once.
 		 *
 		 * @param {object|null} wrapUp The call being wrapped up.
-		 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+		 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
 		 */
 		async wrapUp(wrapUp) {
 			if (!wrapUp || this.queuesLoaded) {

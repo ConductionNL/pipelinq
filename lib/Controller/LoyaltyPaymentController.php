@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Throwable;
 /**
  * Loyalty points as a payment part.
  *
- * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
  */
 class LoyaltyPaymentController extends Controller {
 	/**
@@ -69,7 +69,7 @@ class LoyaltyPaymentController extends Controller {
 	 *
 	 * @return JSONResponse The points spent, their amount and the balance left.
 	 *
-	 * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
+	 * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
 	 */
 	#[NoAdminRequired]
 	public function pay(string $accountId): JSONResponse {

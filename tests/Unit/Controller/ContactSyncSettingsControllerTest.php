@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The contacts section's endpoints.
  *
- * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 class ContactSyncSettingsControllerTest extends TestCase {
 	/**

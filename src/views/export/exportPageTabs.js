@@ -14,7 +14,7 @@
  *
  * @param {(app: string, text: string) => string} t The translate function.
  * @return {Array<{id: string, label: string, route: string, countFrom: {register: string, schema: string}}>} The tabs.
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-the-bi-export-lists-share-one-tab-strip
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-the-bi-export-lists-share-one-tab-strip
  */
 export function exportPageTabs(t) {
 	return [
@@ -29,7 +29,7 @@ export function exportPageTabs(t) {
  *
  * @param {(app: string, text: string) => string} t The translate function.
  * @return {{format: object, mode: object}} Labels by stored value.
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-reads-its-format-and-mode-in-words
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-reads-its-format-and-mode-in-words
  */
 export function exportJobSecondaryLabels(t) {
 	return {

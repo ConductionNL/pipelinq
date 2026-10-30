@@ -5,7 +5,7 @@
  * How a sale's payment splits into loyalty points, gift cards and the rest
  * (PqKassaAfrekenen).
  *
- * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-a-payment-can-be-split
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-a-payment-can-be-split
  */
 import { describe, expect, it } from 'vitest'
 import { maxPoints, pointsAmount, splitPayment, tenderTypeFor } from '../../src/services/posSplitPayment.js'

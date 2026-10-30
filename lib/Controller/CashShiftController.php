@@ -155,7 +155,7 @@ class CashShiftController extends Controller {
 	 * @return JSONResponse The count, diff and updated shift.
 	 *
 	 * @spec openspec/specs/pos-cash-management/spec.md
-	 * @spec openspec/changes/pl2-pos-header-actions/specs/pos-cash-management/spec.md#requirement-a-shift-is-counted-only-with-an-amount
+	 * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-is-counted-only-with-an-amount
 	 */
 	#[NoAdminRequired]
 	public function count(string $id): JSONResponse {
@@ -256,7 +256,7 @@ class CashShiftController extends Controller {
 	 *
 	 * @return JSONResponse The values per shift.
 	 *
-	 * @spec openspec/changes/pos-shift-summary/specs/pos-cash-management/spec.md#requirement-a-shift-summary-reads-its-drops-and-difference
+	 * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-summary-reads-its-drops-and-difference
 	 */
 	#[NoAdminRequired]
 	public function summary(string $measure): JSONResponse {
@@ -296,7 +296,7 @@ class CashShiftController extends Controller {
 	 *
 	 * @return JSONResponse The summary.
 	 *
-	 * @spec openspec/changes/pos-shift-summary/specs/pos-cash-management/spec.md#requirement-a-shift-page-names-its-sales-and-z-report
+	 * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-page-names-its-sales-and-z-report
 	 */
 	#[NoAdminRequired]
 	public function shiftSummary(string $id): JSONResponse {

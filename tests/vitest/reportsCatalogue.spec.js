@@ -7,7 +7,7 @@
  * board's labels, and the "Missing a report?" note in the aside. The SLA
  * attainment card stays (users keep features): the simple profile appends it.
  *
- * @spec openspec/changes/reports-page-as-board/specs/reports-page-as-board/spec.md#requirement-the-reports-page-is-the-boards-catalogue
+ * @spec openspec/specs/reports-page-as-board/spec.md#requirement-the-reports-page-is-the-boards-catalogue
  */
 
 import fs from 'fs'

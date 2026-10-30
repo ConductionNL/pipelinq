@@ -220,7 +220,7 @@ class PosPaymentService {
 	 *
 	 * @return array<int, array{provider: string, providerLabel: string, type: string, method: string}>
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
 	 */
 	public function listPaymentMethods(): array {
 		$methods = [];
@@ -607,7 +607,7 @@ class PosPaymentService {
 	 * @throws OCSBadRequestException When the transaction is not refundable, or no reason is given.
 	 *
 	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason
 	 */
 	public function refundPayment(string $transactionId, string $reason, string $userId): array {
 		if ($this->isManager(userId: $userId) === false) {

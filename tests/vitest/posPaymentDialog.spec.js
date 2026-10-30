@@ -7,7 +7,7 @@
  * loyalty points, gift cards and the rest, checking out once the parts add
  * up, and selling a gift card onto the sale.
  *
- * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-a-payment-can-be-split
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-a-payment-can-be-split
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

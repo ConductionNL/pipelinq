@@ -7,7 +7,7 @@
  * colleague's choices make, and running it through injected writes so the
  * dialog stays thin and the order is testable.
  *
- * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
  */
 
 /**
@@ -25,7 +25,7 @@ function text(value) {
  *
  * @param {object} ticket The ticket.
  * @return {{name: string, email: string, phone: string, organisation: string, form: string, page: string}} The party.
- * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
  */
 export function submittedParty(ticket) {
 	return {
@@ -70,7 +70,7 @@ function step(choice, create, what) {
  * @param {{mode: string, id?: string}} options.contact New or existing contact.
  * @param {boolean} [options.lead] Also create a lead.
  * @return {{client: object, contact: object, lead: object|null}} The plan.
- * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
  */
 export function linkPlan({ ticket, client, contact, lead = false }) {
 	const party = submittedParty(ticket)
@@ -112,7 +112,7 @@ export function linkPlan({ ticket, client, contact, lead = false }) {
  * @param {() => Promise<string>} api.defaultPipeline The default pipeline's id, '' when there is none.
  * @param {(data: object) => Promise<object>} api.createLead Creates a lead.
  * @return {Promise<{client: string, contact: string, lead: string, leadSkipped?: boolean}>} The ids.
- * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
  */
 export async function runLinkPlan(plan, ticketId, api) {
 	const resolveStep = async (type, entry) => {

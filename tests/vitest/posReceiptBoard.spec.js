@@ -9,7 +9,7 @@
  * short history are the side column.
  *
  * @spec openspec/specs/declarative-view-system/spec.md
- * @spec openspec/changes/pos-receipt-transaction-card/specs/pos-receipt-transaction-card/spec.md#requirement-the-receipts-transaction-card-reads-as-the-board
+ * @spec openspec/specs/pos-receipt-transaction-card/spec.md#requirement-the-receipts-transaction-card-reads-as-the-board
  */
 
 import fs from 'fs'

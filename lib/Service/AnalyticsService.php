@@ -824,7 +824,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array<string, mixed>> The matching leads.
 	 *
-	 * @spec openspec/changes/leads-list-board-line/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
+	 * @spec openspec/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
 	 */
 	private function leadsMatching(array $leads, array $filter): array {
 		$fields = [];

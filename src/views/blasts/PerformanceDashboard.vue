@@ -715,7 +715,7 @@ export default {
 		 * subject line.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/newsletter-results-board/specs/marketing/spec.md
+		 * @spec openspec/specs/marketing/spec.md
 		 */
 		async fetchTemplateSubjects() {
 			const subjects = {}
@@ -896,7 +896,7 @@ export default {
 		 * @param {object} variant Variant-B blast.
 		 * @return {object}
 		 *
-		 * @spec openspec/changes/newsletter-results-board/specs/marketing/spec.md#requirement-the-a-b-tab-names-the-variant-that-clicked-better
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-a-b-tab-names-the-variant-that-clicked-better
 		 */
 		buildAbPair(parent, variant) {
 			const a = variantStats(parent, this.templateSubjects)

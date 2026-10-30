@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  * Board PqBiExport: a job shows its last run (status, when, rows) and its
  * next run, so the list can show and filter them.
  *
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
  */
 class ExportJobRunSummaryTest extends TestCase {
 	/**

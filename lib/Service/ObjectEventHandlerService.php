@@ -150,7 +150,7 @@ class ObjectEventHandlerService {
 	 *
 	 * @return string The display name, or '' when the object has none.
 	 *
-	 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
 	 */
 	private function displayName(string $entityType, array $data): string {
 		$field = self::NAME_FIELDS[$entityType] ?? 'title';

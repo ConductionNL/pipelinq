@@ -6,7 +6,7 @@
  * content width (598, not 695 past the edge), start flush with the content
  * edge, and head the columns in soft ink on the dialog ground.
  *
- * @spec openspec/changes/caller-chooser-board-table/specs/caller-chooser-board-table/spec.md#requirement-the-caller-chooser-table-is-drawn-as-the-board
+ * @spec openspec/specs/caller-chooser-board-table/spec.md#requirement-the-caller-chooser-table-is-drawn-as-the-board
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

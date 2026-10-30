@@ -6,7 +6,7 @@
  * board draws them: a role relationship from the lead to the contact, labelled
  * in the user's language and listed decision maker first.
  *
- * @spec openspec/changes/lead-contact-roles/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 
 import { readdirSync, readFileSync } from 'node:fs'

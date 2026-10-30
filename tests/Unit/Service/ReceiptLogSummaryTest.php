@@ -13,7 +13,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/pos-receipt-card/specs/pos-receipt-engine/spec.md#requirement-a-transaction-page-shows-its-receipt-history
+ * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-a-transaction-page-shows-its-receipt-history
  */
 
 declare(strict_types=1);

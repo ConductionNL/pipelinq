@@ -7,7 +7,7 @@
  * and the "Vandaag" lens filters on it, so a seeded or imported sale reads its
  * own time, not the install time.
  *
- * @spec openspec/changes/pos-transaction-moment/specs/pos-transaction-core/spec.md
+ * @spec openspec/specs/pos-transaction-core/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

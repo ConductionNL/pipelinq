@@ -177,7 +177,7 @@ const displayNames = new Map()
  *
  * @param {string} uid The uid.
  * @return {Promise<string>} The display name, or the uid.
- * @spec openspec/changes/pipeline-board-cards/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 export function cachedUserDisplayName(uid) {
 	const key = String(uid || '')
@@ -196,7 +196,7 @@ export function cachedUserDisplayName(uid) {
  *
  * @param {string} name The name.
  * @return {string} One or two capitals, or ''.
- * @spec openspec/changes/pipeline-board-cards/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 export function initialsOf(name) {
 	const words = String(name || '').trim().split(/[\s._-]+/).filter(Boolean)

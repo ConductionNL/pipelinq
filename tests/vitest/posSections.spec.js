@@ -4,7 +4,7 @@
  *
  * The cash drawer list and the refund totals are manifest configuration.
  *
- * @spec openspec/changes/pl2-pos-sections/specs/pos-cash-management/spec.md#requirement-a-shift-is-opened-from-the-cash-drawer-list
+ * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-is-opened-from-the-cash-drawer-list
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -30,7 +30,7 @@ describe('the cash drawer list', () => {
 })
 
 describe('the refund totals', () => {
-	// @spec openspec/changes/pl2-pos-sections/specs/pos-refund-return/spec.md#requirement-refund-totals-show-what-the-server-booked
+	// @spec openspec/specs/pos-refund-return/spec.md#requirement-refund-totals-show-what-the-server-booked
 	it('read the amounts the server stored', () => {
 		const totals = page('PosRefundDetail').config.widgets.find((w) => w.id === 'pos-refund-totals')
 		expect(totals.type).toBe('facts')
@@ -49,7 +49,7 @@ describe('the replaced code', () => {
 })
 
 describe('a shift by name, with its sales', () => {
-	// @spec openspec/changes/pos-sale-in-shift/specs/pos-transaction-core/spec.md
+	// @spec openspec/specs/pos-transaction-core/spec.md
 	const simple = JSON.parse(readFileSync(resolve(root, 'src/menu-layout.simple.json'), 'utf8'))
 	const template = 'Shift {floatAt|date}, {drawer}'
 

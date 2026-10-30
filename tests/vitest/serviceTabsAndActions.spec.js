@@ -6,7 +6,7 @@
  * the Actions menu at the end of the tab row, as the resource page does for
  * its tabs. Read as text.
  *
- * @spec openspec/changes/service-tabs-and-actions/specs/appointment-booking/spec.md#requirement-a-service-reads-in-overview-and-history-tabs
+ * @spec openspec/specs/appointment-booking/spec.md#requirement-a-service-reads-in-overview-and-history-tabs
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

@@ -378,7 +378,7 @@ export default {
 		 * @param {Array} deliveries Raw delivery objects.
 		 * @return {Array} Trimmed timeline entries.
 		 *
-		 * @spec openspec/changes/send-monitor-event-order/specs/marketing-ui/spec.md#requirement-events-of-the-same-moment-keep-their-order-in-the-send-monitor
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-events-of-the-same-moment-keep-their-order-in-the-send-monitor
 		 */
 		buildTimeline(deliveries) {
 			if (!Array.isArray(deliveries)) {

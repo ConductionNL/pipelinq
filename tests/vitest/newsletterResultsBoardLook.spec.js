@@ -7,7 +7,7 @@
  * PqNieuwsbriefABTest and PqNieuwsbriefToeschrijving draw them, and the
  * site-traffic reads that fill the Toeschrijving tab.
  *
- * @spec openspec/changes/newsletter-results-board-look/specs/marketing/spec.md
+ * @spec openspec/specs/marketing/spec.md
  */
 
 import { readFileSync } from 'node:fs'

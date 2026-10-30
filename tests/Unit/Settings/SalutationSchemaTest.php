@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-person-carries-the-salutation-they-asked-for
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-person-carries-the-salutation-they-asked-for
  */
 
 declare(strict_types=1);

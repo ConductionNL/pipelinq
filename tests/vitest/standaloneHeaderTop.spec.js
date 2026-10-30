@@ -6,7 +6,7 @@
  * 28px under the content top, as the Dq page headers stand (Dq wins); the
  * three views started their header 24px down, so the title read 92.
  *
- * @spec openspec/changes/standalone-header-top/specs/marketing-ui/spec.md#requirement-a-custom-views-page-title-starts-28px-under-the-content-top
+ * @spec openspec/specs/marketing-ui/spec.md#requirement-a-custom-views-page-title-starts-28px-under-the-content-top
  */
 import { readFileSync } from 'fs'
 import { resolve } from 'path'

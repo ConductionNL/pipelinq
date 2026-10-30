@@ -5,7 +5,7 @@
  * How a sale's payment splits at the cash register: loyalty points first,
  * then gift cards, and the rest at the chosen payment method.
  *
- * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-a-payment-can-be-split
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-a-payment-can-be-split
  */
 
 /**

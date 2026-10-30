@@ -8,7 +8,7 @@
  * and only the ticked ones are written. The Clients list offers it as a bulk
  * action.
  *
- * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 import { flushPromises, mount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'

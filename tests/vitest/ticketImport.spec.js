@@ -7,7 +7,7 @@
  * mass import dialog. The menu kept only the page's header actions, which the
  * ticket list has none of, so it was hidden and there was no way in.
  *
- * @spec openspec/changes/ticket-import/specs/kcc-werkplek/spec.md
+ * @spec openspec/specs/kcc-werkplek/spec.md
  */
 
 import fs from 'fs'

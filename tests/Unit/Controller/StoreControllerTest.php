@@ -133,7 +133,7 @@ class StoreControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function testPublishableListsTheLocalObjectsOfAKind(): void {
 		$assembler = $this->createMock(originalClassName: StoreTemplateAssembler::class);
@@ -153,7 +153,7 @@ class StoreControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function testPublishRefusesAUserWhoMayNotPublish(): void {
 		$authorizer = $this->createMock(originalClassName: StoreActionAuthorizer::class);
@@ -172,7 +172,7 @@ class StoreControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function testPublishSendsTheItemWithTheAssembledComponents(): void {
 		$authorizer = $this->createMock(originalClassName: StoreActionAuthorizer::class);
@@ -208,7 +208,7 @@ class StoreControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function testPublishWithARefusedObjectIsABadRequest(): void {
 		$authorizer = $this->createMock(originalClassName: StoreActionAuthorizer::class);
@@ -233,7 +233,7 @@ class StoreControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function testSearchAnnotatesCardsAndReturnsTheLastCheck(): void {
 		$store = $this->createMock(originalClassName: GenericStoreService::class);
@@ -256,7 +256,7 @@ class StoreControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function testAnUnansweredSearchIsNotMarkedChecked(): void {
 		$store = $this->createMock(originalClassName: GenericStoreService::class);
@@ -275,7 +275,7 @@ class StoreControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function testASuccessfulInstallIsRecorded(): void {
 		$store = $this->createMock(originalClassName: GenericStoreService::class);
@@ -298,7 +298,7 @@ class StoreControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function testARefusedInstallIsNotRecorded(): void {
 		$store = $this->createMock(originalClassName: GenericStoreService::class);

@@ -7,7 +7,9 @@
 ## Purpose
 
 Track customer contracts and their renewal lifecycle in Pipelinq: register a `contract` schema linked to existing clients and catalog line items, surface a Contracts tab on the client, and drive renewal pipelines and recurring-revenue metrics (MRR/ARR/churn) without duplicating client identity.
+
 ## Requirements
+
 ### Requirement: Contract Schema Registration
 
 The system MUST register a `contract` schema in the pipelinq register with contractNumber, clientRef (existing `client` object — client identity is never duplicated into the contract), title, lineItems referencing the existing product/service catalog, billingInterval (`monthly`, `quarterly`, `annual`, `one-off`), valuePerInterval, currency, startDate, endDate, autoRenew, noticePeriodDays, lifecycle status (`draft`, `active`, `expiring`, `renewed`, `churned`, `cancelled`), ownerId, renewalLeadRef, and predecessorContractRef. The field names `contractNumber`, `startDate`, `endDate`, `value`, and `status` MUST be readable by the customer-portal contract reader without mapping. The schema MUST additionally declare that it implements the semantic kind `https://openregister.app/ns#Contract` per the ADR-051 declaration dialect (form governed by the hydra `semantic-object-handoff` contract), so downstream apps can discover pipelinq contracts by kind rather than by app id.
@@ -214,3 +216,12 @@ The system MUST provide a "Send to invoicing" action on an `active` contract tha
 - WHEN the handoff is triggered
 - THEN the contract MUST remain unchanged and the failure MUST be reported to the user
 
+### Requirement: A contract page reads its figures
+
+The app SHALL answer a contract's figures to a user who may access the contract: the monthly and annual value, the notice date and the days to the end date, and for the current year the amount sent to invoicing, the number of sends and the number of billing periods that start within the year and the contract's term. Every send to invoicing SHALL be added to the contract's invoice history.
+
+#### Scenario: PqContract CON-2026-0031
+
+- **GIVEN** an annual contract of € 42.000 from 1 January to 31 December 2026, 60 days' notice, sent to invoicing on 2 January 2026
+- **WHEN** the page is read on 7 October 2026
+- **THEN** the tiles read € 3.500 per month from € 42.000 a year, 85 days with notice date 1 November, and € 42.000 invoiced this year, 1 of 1 invoices sent

@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/event-reminder-and-check-in/specs/campaign-events/spec.md
+ * @spec openspec/specs/campaign-events/spec.md
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use RuntimeException;
 /**
  * Sends an event's reminder.
  *
- * @spec openspec/changes/event-reminder-and-check-in/specs/campaign-events/spec.md
+ * @spec openspec/specs/campaign-events/spec.md
  */
 class EventReminderController extends Controller
 {
@@ -72,7 +72,7 @@ class EventReminderController extends Controller
      *
      * @return JSONResponse `{sent, skipped}`, or an error.
      *
-     * @spec openspec/changes/event-reminder-and-check-in/specs/campaign-events/spec.md
+     * @spec openspec/specs/campaign-events/spec.md
      */
     #[NoAdminRequired]
     public function send(string $id): JSONResponse

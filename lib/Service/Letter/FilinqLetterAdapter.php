@@ -266,7 +266,7 @@ class FilinqLetterAdapter
      *
      * @throws RuntimeException When filinq is absent, cannot preview, or the preview fails.
      *
-     * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+     * @spec openspec/specs/client-letters/spec.md
      */
     public function preview(string $templateId, array $dataRefs): array
     {
@@ -360,7 +360,7 @@ class FilinqLetterAdapter
      *
      * @return array{id: string, name: string, description: string}|null The template.
      *
-     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
      */
     private function findTemplateBySlug(string $slug): ?array
     {

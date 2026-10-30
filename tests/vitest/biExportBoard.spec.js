@@ -7,7 +7,7 @@
  * button on the jobs list; a job's format and mode in words under its name
  * ("Parquet · incrementeel").
  *
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md
+ * @spec openspec/specs/bi-export-board/spec.md
  */
 
 import { readFileSync } from 'node:fs'

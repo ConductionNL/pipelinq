@@ -8,7 +8,7 @@
  * sync status, saves the write-back switch, runs a full sync and names the
  * records that failed, and App.vue places it before "Email and calendar".
  *
- * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

@@ -509,7 +509,7 @@ export default {
 		 * or help links.
 		 *
 		 * @return {object} The CnDetailPage actions menu config.
-		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-header-and-fields-follow-the-board
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-header-and-fields-follow-the-board
 		 */
 		headerMenu() {
 			return { showRefresh: false, showHelpLinks: false }
@@ -616,7 +616,7 @@ export default {
 	/**
 	 * Loads the products and, for an existing sale, the sale itself.
 	 *
-	 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+	 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
 	 */
 	async mounted() {
 		this.loading = true
@@ -659,7 +659,7 @@ export default {
 		/**
 		 * Loads the sale being edited with its lines and customer.
 		 *
-		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
 		 */
 		async loadTransaction() {
 			const tx = await this.objectStore.fetchObject('posTransaction', this.transactionId)
@@ -739,7 +739,7 @@ export default {
 		/**
 		 * Add an empty line, open for editing.
 		 *
-		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
 		 */
 		addLine() {
 			const key = this.nextKey()
@@ -766,7 +766,7 @@ export default {
 		 *
 		 * @param {number} index The line's position.
 		 *
-		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
 		 */
 		removeLine(index) {
 			const line = this.lines[index]
@@ -1077,7 +1077,7 @@ export default {
 		 * @param {string} contactId The contact.
 		 * @return {Promise<string>} The name, '' when it cannot be read.
 		 *
-		 * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-the-sale-page-reads-as-the-board
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-page-reads-as-the-board
 		 */
 		async contactName(contactId) {
 			try {

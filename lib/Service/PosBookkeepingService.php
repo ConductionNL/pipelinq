@@ -465,7 +465,7 @@ class PosBookkeepingService {
 	 *
 	 * @return array<string, mixed> The Z-report with the failure stamped.
 	 *
-	 * @spec openspec/changes/zreport-failure-reason/specs/pipelinq-bookkeeping-to-shillinq/spec.md
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md
 	 */
 	private function withFailure(array $zReport, string $reason): array {
 		$zReport['bookkeepingFailureReason'] = $reason;

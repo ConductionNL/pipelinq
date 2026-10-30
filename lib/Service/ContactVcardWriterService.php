@@ -260,7 +260,7 @@ class ContactVcardWriterService {
 	 *
 	 * @return string The name, or '' when the user has none.
 	 *
-	 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function newCardAddressBookName(): string {
 		foreach ($this->contactsManager->getUserAddressBooks() as $book) {

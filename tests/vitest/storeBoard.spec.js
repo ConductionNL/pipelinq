@@ -6,7 +6,7 @@
  * with pipelinq's description, a Connectors lens and the templates that ship
  * with the app.
  *
- * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 
 import { readFileSync } from 'node:fs'

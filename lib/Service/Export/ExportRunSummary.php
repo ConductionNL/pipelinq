@@ -14,7 +14,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ use DateTimeInterface;
  * What an export job keeps of its runs (board PqBiExport): the summary of
  * its last finished run, and when it runs next on its schedule.
  *
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
  */
 class ExportRunSummary {
 	/**
@@ -49,7 +49,7 @@ class ExportRunSummary {
 	 * @return array{lastRunStatus: string, lastRunAt: string|null, lastRunRows: int, lastRunFiles: int,
 	 *     lastRunFilesExpected: int, lastRunError: string|null}
 	 *
-	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
 	 */
 	public function lastRunSummary(array $run): array {
 		$endedAt = ($run['endedAt'] ?? $run['startedAt'] ?? null);
@@ -81,7 +81,7 @@ class ExportRunSummary {
 	 *
 	 * @return string|null The next run as an ISO 8601 moment.
 	 *
-	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
 	 */
 	public function nextRunAt(array $job, DateTimeInterface $now): ?string {
 		if (($job['enabled'] ?? false) !== true) {

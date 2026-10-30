@@ -8,7 +8,7 @@
  * as a bare link, the stage heading on a normal line with its count pill and
  * total line, and the owner's 26px chip in the light primary.
  *
- * @spec openspec/changes/pipeline-board-leftovers/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

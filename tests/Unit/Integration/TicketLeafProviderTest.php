@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for the open tickets a host app reads per master entity.
  *
- * @spec openspec/changes/ticket-leaf-by-master-entity/specs/ticket-leaf/spec.md
+ * @spec openspec/specs/ticket-leaf/spec.md
  */
 class TicketLeafProviderTest extends TestCase {
 	/**

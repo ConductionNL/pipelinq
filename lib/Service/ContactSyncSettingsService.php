@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
 /**
  * The per-user contacts sync settings and their status.
  *
- * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 class ContactSyncSettingsService {
 
@@ -87,7 +87,7 @@ class ContactSyncSettingsService {
 	 *
 	 * @return bool True when write-back is on.
 	 *
-	 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function writesBack(string $userId): bool {
 		return $this->config->getUserValue(
@@ -106,7 +106,7 @@ class ContactSyncSettingsService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function saveWriteBack(string $userId, bool $writeBack): void {
 		$value = '0';
@@ -129,7 +129,7 @@ class ContactSyncSettingsService {
 	 *
 	 * @return array{writeBack: bool, linked: int, addressBook: string, lastRun: array<string, mixed>|null} The status.
 	 *
-	 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function status(string $userId): array {
 		$addressBook = '';
@@ -153,7 +153,7 @@ class ContactSyncSettingsService {
 	 *
 	 * @return array{at: string, updated: int, failed: array<int, array{name: string}>} The run.
 	 *
-	 * @spec openspec/changes/contacts-sync-settings/specs/contacts-sync/spec.md
+	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function run(string $userId, string $now): array {
 		$updated = 0;

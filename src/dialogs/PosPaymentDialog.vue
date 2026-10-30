@@ -8,7 +8,7 @@
   - parts add up. A gift card can be added, its balance checked, or a new
   - one sold onto the sale.
   -
-  - @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-a-payment-can-be-split
+  - @spec openspec/specs/pos-transactions/spec.md#requirement-a-payment-can-be-split
   -->
 <template>
 	<CnDialog

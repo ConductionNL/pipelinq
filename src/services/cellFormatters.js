@@ -185,7 +185,7 @@ export function bookingWhen(value, row) {
  * @param {object} [_property] The schema property (unused).
  * @param {{now?: Date, locale?: string}} [options] Reference date and locale (tests).
  * @return {string} The moment, or '' when the row has no time at all.
- * @spec openspec/changes/pos-transaction-moment/specs/pos-transaction-core/spec.md
+ * @spec openspec/specs/pos-transaction-core/spec.md
  */
 export function transactionMoment(_value, row, _property, options) {
 	return momentInYear(row?.confirmedAt || row?.parkedAt || row?.['@self']?.created, row, _property, options)
@@ -228,7 +228,7 @@ export function momentInYear(value, _row, _property, options) {
  *
  * @param {unknown} value The list of two-letter codes.
  * @return {string} The codes in capitals, or '' for none.
- * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 export function languageCodes(value) {
 	const list = Array.isArray(value) ? value : (value ? [value] : [])
@@ -245,7 +245,7 @@ export function languageCodes(value) {
  * @param {object} [_row] The row (unused).
  * @param {object} [property] The schema property.
  * @return {string} The phrase, or '' for none.
- * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 export function labelList(value, _row, property) {
 	const list = Array.isArray(value) ? value : (value ? [value] : [])
@@ -262,7 +262,7 @@ export function labelList(value, _row, property) {
  *
  * @param {unknown} value The date, `YYYY-MM-DD` or ISO.
  * @return {string} The date, or the value as stored when it is not one.
- * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 export function longDate(value) {
 	if (value === null || value === undefined || value === '') {

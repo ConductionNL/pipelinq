@@ -461,7 +461,7 @@ class LetterControllerTest extends TestCase
      *
      * @return void
      *
-     * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
      */
     public function testTheAppointmentReachesFilinq(): void
     {
@@ -487,7 +487,7 @@ class LetterControllerTest extends TestCase
      *
      * @return void
      *
-     * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
      */
     public function testAnAppointmentOfAnotherClientIs404(): void
     {
@@ -515,7 +515,7 @@ class LetterControllerTest extends TestCase
      *
      * @return void
      *
-     * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
      */
     public function testAnAppointmentOnTheLettersTicketIsAccepted(): void
     {
@@ -536,7 +536,7 @@ class LetterControllerTest extends TestCase
      *
      * @return void
      *
-     * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
      */
     public function testAnUnreadableAppointmentIs404(): void
     {

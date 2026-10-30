@@ -510,7 +510,7 @@ describe('a previewed call (callPreview in the address)', () => {
 	})
 
 	// Board PqGesprekAfronden: "Escalatiewachtrij (optioneel)" lists the queues.
-	// @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+	// @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
 	it('hands the wrap-up the escalation queues to choose from', async () => {
 		window.history.replaceState({}, '', '/?callPreview=0786123341&callPreviewOpen=disposition')
 		api.screenPop.mockResolvedValue({ action: 'open', matches: [SANNE] })

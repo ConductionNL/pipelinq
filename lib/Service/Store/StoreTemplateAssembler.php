@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -89,7 +89,7 @@ class StoreTemplateAssembler {
 	 *
 	 * @return array<int, array{schema: string, id: string, title: string}>
 	 *
-	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function publishable(string $kind): array {
 		$offered = [];
@@ -121,7 +121,7 @@ class StoreTemplateAssembler {
 	 *
 	 * @throws InvalidArgumentException When an object is outside the kind or not on this instance.
 	 *
-	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function components(string $kind, array $chosen): array {
 		$allowed    = (self::KIND_SCHEMAS[$kind] ?? []);

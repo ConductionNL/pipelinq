@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/record-document-pdf/tasks.md#task-1-the-document-endpoints
+ * @spec openspec/changes/archive/2026-10-30-record-document-pdf/tasks.md#task-1-the-document-endpoints
  */
 
 declare(strict_types=1);
@@ -41,9 +41,9 @@ use RuntimeException;
 /**
  * The configured map, the access check before the render, the download, and absence.
  *
- * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
- * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-the-caller-may-act-on-the-record-before-anything-is-made
- * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-the-document-is-offered-only-when-it-can-be-made
+ * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+ * @spec openspec/specs/record-documents/spec.md#requirement-the-caller-may-act-on-the-record-before-anything-is-made
+ * @spec openspec/specs/record-documents/spec.md#requirement-the-document-is-offered-only-when-it-can-be-made
  */
 class RecordDocumentControllerTest extends TestCase
 {
@@ -309,7 +309,7 @@ class RecordDocumentControllerTest extends TestCase
     /**
      * A template named by slug renders by the id it resolves to, with the configured lists of the record.
      *
-     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
      *
      * @return void
      */

@@ -4,7 +4,7 @@
  *
  * The appointment a letter reads: the client's next one that still stands.
  *
- * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
  */
 
 /** Statuses of an appointment that no longer takes place at its time. */
@@ -17,7 +17,7 @@ const GONE = ['cancelled-by-customer', 'cancelled-by-business', 'rescheduled', '
  * @param {string} ticketId The letter's ticket, or ''.
  * @param {Date} now The moment that counts as now.
  * @return {object|null} The appointment, or null when none is ahead.
- * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
  */
 export function nextAppointment(bookings, ticketId, now = new Date()) {
 	const ahead = (Array.isArray(bookings) ? bookings : [])

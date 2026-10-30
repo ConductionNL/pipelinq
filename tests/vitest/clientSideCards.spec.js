@@ -6,7 +6,7 @@
  * resident), Verkoop, contracten en facturering (an organisation) and
  * Kennisbank, as PqKlant and PqOrganisatie draw them.
  *
- * @spec openspec/changes/client-side-cards-appointments-business-knowledge/specs/client-detail/spec.md#requirement-the-client-page-shows-appointments-business-and-the-knowledge-base-beside-it
+ * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-shows-appointments-business-and-the-knowledge-base-beside-it
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
