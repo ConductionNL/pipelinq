@@ -41,7 +41,7 @@
     "source-map-js": "^1.2.2"
   },
   "dependencies": {
-    "@conduction/nextcloud-vue": "^2.164.0",
+    "@conduction/nextcloud-vue": "^2.165.0",
     "@nextcloud/axios": "~2.6.0",
     "@nextcloud/capabilities": "^1.2.1",
     "@nextcloud/dialogs": "^7.4.1",
