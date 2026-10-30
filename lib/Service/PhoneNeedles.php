@@ -40,7 +40,7 @@ final class PhoneNeedles {
 	 *
 	 * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-a-ticket-is-found-by-phone-number-however-it-was-typed-req-chp-002
 	 */
-	public static function for(string $e164): array {
+	public function for(string $e164): array {
 		$digitsOnly = preg_replace('/[^0-9]/', '', $e164) ?? '';
 		$needles = [$e164, $digitsOnly];
 		if (strlen($digitsOnly) >= 9) {

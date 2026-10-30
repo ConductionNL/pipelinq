@@ -1,6 +1,6 @@
 # Tasks: contact-moments-phone-lookup
 
-- [x] 1.1 (`lib/Service/PhoneNeedles.php`, `tests/Unit/Service/PhoneNeedlesTest.php`; `CtiContactMatcherTest` unchanged and green) Extract `needles()` into a public `PhoneNeedles::for()` used by `CtiContactMatcher`
+- [x] 1.1 (`lib/Service/PhoneNeedles.php`, `tests/Unit/Service/PhoneNeedlesTest.php`; `CtiContactMatcherTest` unchanged and green; an instance method, since phpmd refuses static access) Extract `needles()` into a public `PhoneNeedles::for()` used by `CtiContactMatcher`
   - Verify: existing `CtiContactMatcherTest` passes unchanged; new PHPUnit on `PhoneNeedles`
 - [x] 1.2 (`lib/Settings/register.d/99-zzzzz-ticket-phone.json`, `visible: false` and not facetable, since a facet of phone numbers is noise and the filter needs no facet. One `TicketPhoneListener` on creating and updating sets it for every writer instead of one edit per writer: CTI `from_number`/`to_number` by direction, and `reporterPhone`, the number a resident typed on a web form. `tests/Unit/Listener/TicketPhoneListenerTest.php` per source. Import log check waits for the live pass) Add `ticket.phoneE164` (facetable, hidden in forms); set it on CTI, manual contact moment and enquiry-to-ticket writes
   - Verify: PHPUnit per writer; register import logs no `PARTIAL IMPORT`

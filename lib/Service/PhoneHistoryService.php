@@ -168,7 +168,8 @@ class PhoneHistoryService {
 			}//end foreach
 
 			$offset += self::BATCH_SIZE;
-		} while (count($rows) === self::BATCH_SIZE);
+			$fetched = count($rows);
+		} while ($fetched === self::BATCH_SIZE);
 
 		return $counts;
 	}//end backfillTicketPhones()

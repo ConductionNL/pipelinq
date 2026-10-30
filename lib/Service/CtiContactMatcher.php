@@ -98,7 +98,7 @@ class CtiContactMatcher {
 			return ['matches' => [], 'totalMatches' => 0];
 		}
 
-		$needles = PhoneNeedles::for(e164: $e164Number);
+		$needles = (new PhoneNeedles())->for(e164: $e164Number);
 
 		$matches = [];
 		if ($contactSchema !== '') {

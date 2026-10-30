@@ -64,11 +64,16 @@ class TicketPhoneListener implements IEventListener {
 	 * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-a-ticket-is-found-by-phone-number-however-it-was-typed-req-chp-002
 	 */
 	public function handle(Event $event): void {
+		$entity = null;
 		if ($event instanceof ObjectCreatingEvent) {
 			$entity = $event->getObject();
-		} elseif ($event instanceof ObjectUpdatingEvent) {
+		}
+
+		if ($event instanceof ObjectUpdatingEvent) {
 			$entity = $event->getNewObject();
-		} else {
+		}
+
+		if ($entity === null) {
 			return;
 		}
 

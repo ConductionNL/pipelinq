@@ -24,7 +24,7 @@ class PhoneNeedlesTest extends TestCase {
 	 * @return void
 	 */
 	public function testANumberYieldsItsFourFragments(): void {
-		$this->assertSame(['+31612345678', '31612345678', '612345678', '12345678'], PhoneNeedles::for('+31612345678'));
+		$this->assertSame(['+31612345678', '31612345678', '612345678', '12345678'], (new PhoneNeedles())->for('+31612345678'));
 	}//end testANumberYieldsItsFourFragments()
 
 	/**
@@ -33,7 +33,7 @@ class PhoneNeedlesTest extends TestCase {
 	 * @return void
 	 */
 	public function testAShortNumberYieldsNoDuplicates(): void {
-		$this->assertSame(['+3112345', '3112345'], PhoneNeedles::for('+3112345'));
-		$this->assertSame([], PhoneNeedles::for(''));
+		$this->assertSame(['+3112345', '3112345'], (new PhoneNeedles())->for('+3112345'));
+		$this->assertSame([], (new PhoneNeedles())->for(''));
 	}//end testAShortNumberYieldsNoDuplicates()
 }//end class
