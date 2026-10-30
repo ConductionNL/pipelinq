@@ -21,6 +21,7 @@ import AccountCheckOutline from 'vue-material-design-icons/AccountCheckOutline.v
 import AccountClock from 'vue-material-design-icons/AccountClock.vue'
 import AccountClockOutline from 'vue-material-design-icons/AccountClockOutline.vue'
 import AccountCog from 'vue-material-design-icons/AccountCog.vue'
+import AccountCogOutline from 'vue-material-design-icons/AccountCogOutline.vue'
 import AccountDetailsOutline from 'vue-material-design-icons/AccountDetailsOutline.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import AccountGroupOutline from 'vue-material-design-icons/AccountGroupOutline.vue'
@@ -208,6 +209,7 @@ export default {
 	AccountClock,
 	AccountClockOutline,
 	AccountCog,
+	AccountCogOutline,
 	AccountDetailsOutline,
 	AccountGroup,
 	AccountGroupOutline,
