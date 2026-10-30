@@ -9367,7 +9367,10 @@ OC.L10N.register(
         "Finish this task": "Finish this task",
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
-        "Attempt logged.": "Attempt logged."
+        "Attempt logged.": "Attempt logged.",
+        "Unsaved contact moment": "Unsaved contact moment",
+        "You were already working on this.": "You were already working on this.",
+        "Unsaved contact moment, last changed at {time}. Only you can see it; after 7 days without a change it is removed.": "Unsaved contact moment, last changed at {time}. Only you can see it; after 7 days without a change it is removed."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -7874,7 +7874,7 @@
         "Administration settings": "Beheerinstellingen",
         "Set up your Pipelinq installation": "Stel je Pipelinq-installatie in",
         "You have an unsaved contact moment from {time}.": "Je hebt een contactmoment van {time} dat nog niet is opgeslagen.",
-        "Restore draft": "Concept terugzetten",
+        "Restore draft": "Concept herstellen",
         "Discard": "Weggooien",
         "Discontinued": "Uitgefaseerd",
         "Your session has ended. Log in again in a new tab, then press Save here.": "Je sessie is verlopen. Log opnieuw in op een nieuw tabblad en klik daarna hier op Opslaan.",
@@ -9482,6 +9482,9 @@
         "Finish this task": "Deze taak afronden",
         "What came out of the callback?": "Wat kwam er uit het terugbellen?",
         "Log attempt": "Poging vastleggen",
-        "Attempt logged.": "Poging vastgelegd."
+        "Attempt logged.": "Poging vastgelegd.",
+        "Unsaved contact moment": "Niet opgeslagen contactmoment",
+        "You were already working on this.": "Je was hier al mee bezig.",
+        "Unsaved contact moment, last changed at {time}. Only you can see it; after 7 days without a change it is removed.": "Niet opgeslagen contactmoment, laatst gewijzigd om {time}. Alleen jij ziet het; na 7 dagen zonder wijziging verdwijnt het."
     }
 }

@@ -216,38 +216,13 @@
 <script>
 import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcNoteCard, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
 import ClientCreateDialog from '../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../dialogs/ContactCreateDialog.vue'
+import contactMomentDraftMixin from '../mixins/contactMomentDraftMixin.js'
 import linkedPartyCascadeMixin from '../mixins/linkedPartyCascadeMixin.js'
-import {
-	buildContactMoment,
-	buildDraftTicket,
-	CONTACT_MOMENT_TYPE,
-	DRAFT_TYPE,
-	DraftAutosaver,
-	draftChangedAt,
-	draftFormFrom,
-	isDraftFormEmpty,
-	isSessionEnded,
-	pickDraft,
-	refreshRequestToken,
-	refusalText,
-} from '../services/contactMomentDraft.js'
+import { buildContactMoment } from '../services/contactMomentDraft.js'
 import { useObjectStore } from '../store/modules/object.js'
-
-/**
- * An error that carries the HTTP status of a failed write.
- *
- * @param {object|null} error The store's error object.
- * @return {Error} The error.
- */
-function draftError(error) {
-	const failure = new Error(error?.message || '')
-	failure.status = error?.status
-	return failure
-}
 
 export default {
 	name: 'ContactmomentQuickLog',
@@ -262,7 +237,7 @@ export default {
 		NcTextField,
 	},
 
-	mixins: [linkedPartyCascadeMixin],
+	mixins: [linkedPartyCascadeMixin, contactMomentDraftMixin],
 
 	props: {
 		clientId: {
@@ -322,16 +297,6 @@ export default {
 			errorMessage: '',
 			// Fields the agent has left; their errors show from then on.
 			touched: { title: false },
-
-			// The draft ticket kept on the server for this author, client and request.
-			draftId: null,
-			offeredDraft: null,
-			// Set when a save or an autosave was refused because the session
-			// ended; the next Save fetches a fresh request token first.
-			sessionEnded: false,
-			// Off until the restore question is answered, so a draft that is
-			// still being offered is never overwritten by the empty form.
-			draftWatching: false,
 		}
 	},
 
@@ -385,21 +350,6 @@ export default {
 		/**
 		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
 		 */
-		author() {
-			return window.OC?.getCurrentUser?.()?.uid || null
-		},
-
-		/**
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		offeredDraftTime() {
-			const changed = draftChangedAt(this.offeredDraft)
-			return changed ? new Date(changed).toLocaleString() : ''
-		},
-
-		/**
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-		 */
 		draftContext() {
 			return {
 				author: this.author,
@@ -409,45 +359,10 @@ export default {
 		},
 	},
 
-	watch: {
-		form: {
-			deep: true,
-			/**
-			 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-			 */
-			handler() {
-				if (!this.draftWatching || !this.author) {
-					return
-				}
-				this.autosaver.schedule(
-					isDraftFormEmpty(this.form, this.draftContext)
-						? null
-						: buildDraftTicket(this.form),
-				)
-			},
-		},
-	},
-
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
 	 */
 	async created() {
-		this.autosaver = new DraftAutosaver({
-			write: (payload, options) => this.writeDraft(payload, options),
-			remove: (options) => this.removeDraft(options),
-			onError: (error) => {
-				if (isSessionEnded(error)) {
-					this.sessionEnded = true
-				}
-			},
-		})
-		this.onVisibilityChange = () => {
-			if (document.visibilityState === 'hidden') {
-				this.autosaver.flush({ keepalive: true })
-			}
-		}
-		document.addEventListener('visibilitychange', this.onVisibilityChange)
-
 		// Clients and contacts are no longer fetched here: CnResourceSelect
 		// searches them server-side, which is the point — the old preloaded
 		// `_limit: 100` collection made client 101 unselectable with no way to
@@ -476,16 +391,6 @@ export default {
 		await this.loadDraft()
 	},
 
-	/**
-	 * Keep what was typed when the quick log closes without saving.
-	 *
-	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-	 */
-	beforeUnmount() {
-		document.removeEventListener('visibilitychange', this.onVisibilityChange)
-		this.autosaver.flush()
-	},
-
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
@@ -495,18 +400,6 @@ export default {
 
 			this.saving = true
 			this.errorMessage = ''
-			// Nothing may write the draft back while the contact moment is saved,
-			// and a write already on its way must land first: it may be the one
-			// that creates the draft this save is about to finish.
-			this.autosaver.stop()
-			await this.autosaver.settle()
-
-			if (this.sessionEnded) {
-				await refreshRequestToken(
-					(...args) => fetch(...args),
-					generateUrl('/csrftoken'),
-				)
-			}
 
 			// A contactmoment is a `ticket` with ticketType 'interaction'
 			// (unify-ticket-supertype): subject→title, summary→description,
@@ -517,12 +410,8 @@ export default {
 			})
 
 			try {
-				const result = this.draftId
-					? await this.finishDraft(this.draftId, data)
-					: await this.createContactMoment(data)
+				const result = await this.saveContactMoment(data)
 				if (result) {
-					this.sessionEnded = false
-					this.draftId = null
 					showSuccess(t('pipelinq', 'Contactmoment logged successfully'))
 					this.$emit('saved', result)
 				}
@@ -534,245 +423,20 @@ export default {
 		},
 
 		/**
-		 * Save a contact moment that has no draft to finish.
-		 *
-		 * @param {object} data The ticket fields.
-		 * @return {Promise<object>} The saved ticket.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		async createContactMoment(data) {
-			const result = await this.objectStore.saveObject(DRAFT_TYPE, data)
-			if (!result) {
-				throw draftError(this.objectStore.getError(DRAFT_TYPE))
-			}
-			return result
-		},
-
-		/**
-		 * Make the draft the saved contact moment: same object, same id.
-		 *
-		 * OpenRegister's owner action lays the form over the stored draft,
-		 * checks it against the whole ticket schema and moves it out of
-		 * draft. A draft that is gone (removed after seven days, or discarded
-		 * in another tab) is saved as a new contact moment instead.
-		 *
-		 * @param {string} id The draft's id.
-		 * @param {object} data The ticket fields.
-		 * @return {Promise<object>} The saved ticket.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		async finishDraft(id, data) {
-			const response = await fetch(
-				generateUrl(
-					'/apps/openregister/api/objects/pipelinq/'
-						+ DRAFT_TYPE
-						+ '/'
-						+ id
-						+ '/activate',
-				),
-				{
-					method: 'POST',
-					credentials: 'same-origin',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: window.OC?.requestToken || '',
-						'OCS-APIREQUEST': 'true',
-					},
-					body: JSON.stringify({ object: data }),
-				},
-			)
-			if (response.ok) {
-				return await response.json()
-			}
-			if (response.status === 404 || response.status === 409) {
-				this.draftId = null
-				return this.createContactMoment(data)
-			}
-			const body = await response.json().catch(() => null)
-			throw draftError({
-				status: response.status,
-				message: refusalText(body),
-			})
-		},
-
-		/**
 		 * A failed save keeps the form and its draft. An ended session gets
 		 * its own message instead of the raw error.
 		 *
-		 * @param {object|null} error The store's error object.
+		 * @param {Error} error The failure `saveContactMoment` threw.
 		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.4
 		 */
 		keepFormAfterFailure(error) {
-			this.autosaver.resume()
-			if (isSessionEnded(error)) {
-				this.sessionEnded = true
+			if (error?.sessionEnded) {
 				this.errorMessage = ''
 				return
 			}
 			this.errorMessage =
 				error?.message || t('pipelinq', 'Failed to save contactmoment')
 			showError(this.errorMessage)
-		},
-
-		/**
-		 * Find this author's draft for this client and request, and offer it.
-		 *
-		 * `_drafts=true` asks OpenRegister for drafts alone. It answers the
-		 * agent's own, and an administrator's list can hold other people's,
-		 * so the owner is asked for and checked again in `pickDraft`.
-		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		async loadDraft() {
-			if (!this.author) {
-				return
-			}
-			let drafts
-			try {
-				drafts = await this.objectStore.fetchCollection(DRAFT_TYPE, {
-					ticketType: CONTACT_MOMENT_TYPE,
-					_drafts: 'true',
-					'@self[owner]': this.author,
-					_limit: 50,
-				})
-			} catch {
-				drafts = []
-			}
-			const offer = pickDraft(drafts || [], {
-				...this.draftContext,
-				now: new Date(),
-			})
-			if (offer) {
-				this.draftId = offer.id
-				this.offeredDraft = offer
-				return
-			}
-			this.draftWatching = true
-		},
-
-		/**
-		 * Put the draft's fields back in the form.
-		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		restoreDraft() {
-			const kept = draftFormFrom(this.offeredDraft)
-			for (const key of Object.keys(this.form)) {
-				if (kept[key] !== undefined) {
-					this.form[key] = kept[key]
-				}
-			}
-			this.offeredDraft = null
-			this.draftWatching = true
-		},
-
-		/**
-		 * Throw the draft away and start from an empty form.
-		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		async discardDraft() {
-			this.offeredDraft = null
-			await this.dropDraft()
-			this.autosaver.resume()
-			this.draftWatching = true
-		},
-
-		/**
-		 * Remove the server draft, if there is one.
-		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		async dropDraft() {
-			this.autosaver.stop()
-			if (this.draftId) {
-				const id = this.draftId
-				this.draftId = null
-				await this.objectStore.deleteObject(DRAFT_TYPE, id)
-			}
-		},
-
-		/**
-		 * Write the draft: create it once, then overwrite it.
-		 *
-		 * @param {object} payload The draft.
-		 * @param {{keepalive: boolean}} options Keepalive for a closing tab.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-		 */
-		async writeDraft(payload, { keepalive }) {
-			if (keepalive) {
-				await this.sendDraftKeepalive(
-					this.draftId ? 'PUT' : 'POST',
-					this.draftId,
-					payload,
-				)
-				return
-			}
-			const data = this.draftId ? { ...payload, id: this.draftId } : payload
-			const saved = await this.objectStore.saveObject(DRAFT_TYPE, data)
-			if (!saved) {
-				throw draftError(this.objectStore.getError(DRAFT_TYPE))
-			}
-			this.draftId = saved.id || this.draftId
-		},
-
-		/**
-		 * Remove the draft because the form was emptied.
-		 *
-		 * @param {{keepalive: boolean}} options Keepalive for a closing tab.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-		 */
-		async removeDraft({ keepalive }) {
-			if (!this.draftId) {
-				return
-			}
-			const id = this.draftId
-			this.draftId = null
-			if (keepalive) {
-				await this.sendDraftKeepalive('DELETE', id, null)
-				return
-			}
-			await this.objectStore.deleteObject(DRAFT_TYPE, id)
-		},
-
-		/**
-		 * The write a closing tab still delivers.
-		 *
-		 * @param {string} method POST, PUT or DELETE.
-		 * @param {string|null} id The draft's id, when it exists.
-		 * @param {object|null} payload The draft.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-		 */
-		async sendDraftKeepalive(method, id, payload) {
-			const url = generateUrl(
-				'/apps/openregister/api/objects/pipelinq/'
-					+ DRAFT_TYPE
-					+ (id ? '/' + id : ''),
-			)
-			const response = await fetch(url, {
-				method,
-				keepalive: true,
-				credentials: 'same-origin',
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: window.OC?.requestToken || '',
-					'OCS-APIREQUEST': 'true',
-				},
-				body: payload ? JSON.stringify(payload) : undefined,
-			})
-			if (!response.ok) {
-				throw draftError({ status: response.status })
-			}
-			// Hidden is also a switch to another tab, after which this page
-			// keeps typing: remember the id so the next write overwrites.
-			if (method === 'POST') {
-				try {
-					const created = await response.json()
-					this.draftId = created?.id || this.draftId
-				} catch {
-					// The tab closed before the answer was read.
-				}
-			}
 		},
 	},
 }
