@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges OR + two
  * adapters + logger.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WebhookProcessorJob extends TimedJob {
 	/**
@@ -67,7 +67,7 @@ class WebhookProcessorJob extends TimedJob {
 	 * @param SmsAdapter $smsAdapter SMS adapter.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		ITimeFactory $time,

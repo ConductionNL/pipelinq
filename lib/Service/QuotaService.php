@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008
  */
 
 declare(strict_types=1);
@@ -97,7 +97,7 @@ class QuotaService {
 	 *
 	 * @return array<string, mixed>|null The quota data, or null when unset.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008-01
 	 */
 	public function getQuota(string $ownerId, string $periodId, string $level): ?array {
 		$rows = $this->findObjects(
@@ -145,7 +145,7 @@ class QuotaService {
 	 *
 	 * @return float The projected attainment.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008-03
 	 */
 	public function projectedAttainment(float $closedWon, float $commit, float $bestCase): float {
 		return round($closedWon + $commit + (self::BEST_CASE_WEIGHT * $bestCase), 2);
@@ -164,7 +164,7 @@ class QuotaService {
 	 *
 	 * @return bool True when the forecast is at risk.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008-04, REQ-FRC-008-05, REQ-FRC-008-06
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008-04, REQ-FRC-008-05, REQ-FRC-008-06
 	 */
 	public function isAtRisk(float $projected, float $quota, int $daysRemaining): bool {
 		if ($quota <= 0) {
@@ -190,7 +190,7 @@ class QuotaService {
 	 *
 	 * @return array<int, array<string, mixed>> The advisory variance report rows.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008
 	 */
 	public function validateQuotaHierarchy(string $periodId, array $teamMembers): array {
 		$report = [];

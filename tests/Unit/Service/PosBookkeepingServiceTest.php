@@ -24,7 +24,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+ * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
 
 declare(strict_types=1);

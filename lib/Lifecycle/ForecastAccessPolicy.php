@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-011
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011
  */
 
 declare(strict_types=1);
@@ -98,7 +98,7 @@ class ForecastAccessPolicy {
 	 *
 	 * @return bool True when reading is permitted.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-011-01, REQ-FRC-010-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011-01, REQ-FRC-010-03
 	 */
 	public function canRead(string $userId, string $level, ?string $ownerId): bool {
 		if ($userId === '') {
@@ -122,7 +122,7 @@ class ForecastAccessPolicy {
 	 *
 	 * @return bool True when overriding is permitted.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-011-02
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011-02
 	 */
 	public function canOverride(string $userId, string $level): bool {
 		if (in_array($level, ['rep', 'team', 'division'], true) === false) {
@@ -142,7 +142,7 @@ class ForecastAccessPolicy {
 	 *
 	 * @return bool True when setting the quota is permitted.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-011-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011-03
 	 */
 	public function canSetQuota(string $userId, string $level): bool {
 		if (in_array($level, ['rep', 'team', 'division'], true) === false) {

@@ -19,8 +19,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-009
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-009
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *  account/ledger/programme services, logger); splitting them would add
  *  indirection without reducing real coupling.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008
  */
 class LoyaltyReportingService {
 	/**
@@ -146,7 +146,7 @@ class LoyaltyReportingService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
 	 */
 	public function getKpis(string $programmeId, ?string $from = null, ?string $to = null): array {
 		$accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
@@ -225,7 +225,7 @@ class LoyaltyReportingService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-009-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-009-01
 	 */
 	public function getLiabilitySnapshot(string $programmeId): array {
 		$accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);

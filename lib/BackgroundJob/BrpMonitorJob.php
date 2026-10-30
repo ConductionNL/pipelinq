@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#3.4
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * BRP availability + SLA monitor.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-010
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-010
  */
 class BrpMonitorJob extends TimedJob {
 	/**
@@ -91,7 +91,7 @@ class BrpMonitorJob extends TimedJob {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-010
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-010
 	 */
 	protected function run(mixed $argument): void {
 		try {

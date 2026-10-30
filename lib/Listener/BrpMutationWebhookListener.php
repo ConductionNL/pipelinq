@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.6
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Throwable;
  *   3. Cache invalidation through BrpCacheService.
  *   4. Audit-record write through BsnAuditService.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-03
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-03
  */
 class BrpMutationWebhookListener {
 	/**
@@ -87,7 +87,7 @@ class BrpMutationWebhookListener {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::mask() is a
 	 *  pure static log-masking helper with no instance state.
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.6
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 	 */
 	public function handle(string $rawBody, string $signature): array {
 		$secret = $this->appConfig->getValueString(

@@ -22,8 +22,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-retry-012
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RETRY-012
  */
 
 declare(strict_types=1);

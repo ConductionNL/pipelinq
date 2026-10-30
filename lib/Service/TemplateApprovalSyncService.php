@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges provider
  * repository + provider client + notifications + OR.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class TemplateApprovalSyncService {
 	/**
@@ -68,7 +68,7 @@ class TemplateApprovalSyncService {
 	 * @param NotificationService $notificationService Admin notifications.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -85,7 +85,7 @@ class TemplateApprovalSyncService {
 	 *
 	 * @return array{providers: int, templatesUpdated: int, statusChanges: int} Summary.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function syncAll(): array {
 		$providers = array_merge(
@@ -115,7 +115,7 @@ class TemplateApprovalSyncService {
 	 *
 	 * @return array{templatesUpdated: int, statusChanges: int} Summary.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function syncOne(array $channelProvider): array {
 		$providerId = $this->extractId(payload: $channelProvider);

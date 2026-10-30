@@ -21,8 +21,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-003
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-003
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-FALLBACK-004
  */
 
 declare(strict_types=1);

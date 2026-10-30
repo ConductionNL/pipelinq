@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004, REQ-FRC-005
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004, REQ-FRC-005
  */
 
 declare(strict_types=1);
@@ -105,7 +105,7 @@ class SnapshotGenerationService {
 	 *
 	 * @return array<string, mixed> A summary: period_id, counts and any errors.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-01
 	 */
 	public function generate(?DateTimeImmutable $asOf = null): array {
 		$asOf = $asOf ?? new DateTimeImmutable();
@@ -186,7 +186,7 @@ class SnapshotGenerationService {
 	 *
 	 * @return array<int, array<string, mixed>> The snapshot records.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-005-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-005-01
 	 */
 	public function buildSnapshots(string $periodId, string $asOfDate, array $hierarchy, array $dealsByRep): array {
 		$currency = $this->exchangeRate->getReportingCurrency();

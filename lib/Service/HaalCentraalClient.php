@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Throwable;
 /**
  * OAuth2 + mTLS REST client for HaalCentraal Personen.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) OR-first + legacy OAuth2/mTLS paths plus HAL normalisation live in one cohesive client.
@@ -126,8 +126,8 @@ class HaalCentraalClient {
 	 * @throws HaalCentraalException
 	 *
 	 * @spec openspec/specs/brp-lookup/spec.md
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-01
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-03
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)  Sequential guard clauses over the HTTP response; extraction adds no clarity.
 	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Linear OR-first then legacy request/response handling.
@@ -368,7 +368,7 @@ class HaalCentraalClient {
 	 *
 	 * @return DateTimeImmutable|null
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-02
 	 *
 	 * @SuppressWarnings(PHPMD.ErrorControlOperator) The @ mutes fs/OpenSSL warnings on unreadable certs; failures handled via false checks.
 	 */
@@ -400,7 +400,7 @@ class HaalCentraalClient {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
 	 */
 	public function isConfigured(): bool {
 		return $this->appConfig->getValueString(Application::APP_ID, 'brp.client_id', '') !== ''

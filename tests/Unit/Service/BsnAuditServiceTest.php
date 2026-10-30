@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#9.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for BsnAuditService.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-005
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005
  */
 class BsnAuditServiceTest extends TestCase {
 	/**
@@ -41,7 +41,7 @@ class BsnAuditServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-009-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
 	public function testAnonymiseIpv4ZeroesLastOctet(): void {
 		self::assertSame('10.42.18.0', BsnAuditService::anonymiseIp('10.42.18.7'));
@@ -76,7 +76,7 @@ class BsnAuditServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-005-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005-01
 	 */
 	public function testRecordLookupFallsBackWhenStorageMissing(): void {
 		$container = $this->createMock(ContainerInterface::class);

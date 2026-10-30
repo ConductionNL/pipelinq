@@ -13,7 +13,7 @@
   - `cn:page:refresh`; after a raise the card shows the record the endpoint
   - returned until then.
   -
-  - @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+  - @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
   -->
 <template>
 	<CnWidgetWrapper
@@ -172,7 +172,7 @@ export default {
 		/**
 		 * The Z-report, from the detail page.
 		 *
-		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		objectData: {
 			type: Object,
@@ -206,7 +206,7 @@ export default {
 		 * The Z-report: the record the raise returned, else the page's.
 		 *
 		 * @return {object} The Z-report.
-		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		zReport() {
 			return this.raised || this.objectData || {}
@@ -216,7 +216,7 @@ export default {
 		 * The VAT rows: rate, base and VAT.
 		 *
 		 * @return {Array<object>} The rows.
-		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		taxBreakdown() {
 			return Array.isArray(this.zReport.taxBreakdown) ? this.zReport.taxBreakdown : []
@@ -226,7 +226,7 @@ export default {
 		 * The payment rows: method and amount.
 		 *
 		 * @return {Array<object>} The rows.
-		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		paymentBreakdown() {
 			return Array.isArray(this.zReport.paymentMethodBreakdown) ? this.zReport.paymentMethodBreakdown : []
@@ -237,7 +237,7 @@ export default {
 		 * failed when the report stores it.
 		 *
 		 * @return {string} The label.
-		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		bookkeepingStatusLabel() {
 			const key = this.zReport.bookkeepingStatus || 'pending'
@@ -259,7 +259,7 @@ export default {
 		 * days already passed on.
 		 *
 		 * @return {boolean} Whether passing on again is offered.
-		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		canRetry() {
 			const status = this.zReport.bookkeepingStatus || 'pending'
@@ -273,7 +273,7 @@ export default {
 		/**
 		 * Drop the raise's record once the page has re-read the Z-report.
 		 *
-		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		objectData() {
 			this.raised = null
@@ -288,7 +288,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		async performRetry() {
 			this.showRetryConfirm = false

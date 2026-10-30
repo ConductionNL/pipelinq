@@ -17,8 +17,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#3.1
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#3.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -60,8 +60,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregates the full BRP surface (validate,
  *   lookup, webhook ingest, geheimhouding reveal, opt-out) behind one cohesive controller.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-002
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
  */
 class BrpController extends Controller {
 	/**
@@ -130,9 +130,9 @@ class BrpController extends Controller {
 	 *
 	 * @return JSONResponse JSON shape: { persoon?, lookupVerzoek, responseInCache, errorMessage? }.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002-01
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002-02
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-002-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-002-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-03
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)  Single auth-guarded BRP flow: doelbinding,
 	 *   permission, 11-proef, cache/remote, audit-persist — sequential guard clauses that must
@@ -419,7 +419,7 @@ class BrpController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
 	#[NoAdminRequired]
 	public function revealAddress(string $id): JSONResponse {
@@ -504,7 +504,7 @@ class BrpController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-02
 	 */
 	#[NoAdminRequired]
 	public function optOutCreate(): JSONResponse {
@@ -566,7 +566,7 @@ class BrpController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-03
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -621,7 +621,7 @@ class BrpController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-010
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-010
 	 */
 	#[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
 	public function monitor(): JSONResponse {

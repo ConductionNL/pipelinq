@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
  */
 
 declare(strict_types=1);
@@ -82,7 +82,7 @@ class TierDowngradeJob extends TimedJob {
 	 * @return void
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	protected function run($argument): void {
 		$programmes = $this->getActiveProgrammes();

@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-05
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-003-05
  */
 
 declare(strict_types=1);
@@ -68,7 +68,7 @@ class ForecastSettingsController extends Controller {
 	 *
 	 * @return JSONResponse The configuration values.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-003-05
 	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
@@ -107,7 +107,7 @@ class ForecastSettingsController extends Controller {
 	 *
 	 * @return JSONResponse The save result.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-003-05
 	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Linear sequence of independent per-key

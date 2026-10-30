@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Vendor-neutral send/receive
  * surface with failover, persistence and webhook ingestion kept cohesive.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class SmsAdapter {
 	use WritesAsMessagingAccount;
@@ -121,7 +121,7 @@ class SmsAdapter {
 	 * @param LoggerInterface $logger Logger.
 	 * @param PhoneNormaliser $phoneNormaliser Normalises an inbound sender to E.164.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -159,7 +159,7 @@ class SmsAdapter {
 	 *     error?: string
 	 * } Outcome envelope.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-006-outbound-sends-audited-as-contactmomenten
 	 */
 	public function send(array $contact, string $body, ?string $providerHint = null, array $context = []): array {
@@ -413,7 +413,7 @@ class SmsAdapter {
 	 * recorded on the number itself, anything else is logged as a contact
 	 * moment for a person to pick up.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.5
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {

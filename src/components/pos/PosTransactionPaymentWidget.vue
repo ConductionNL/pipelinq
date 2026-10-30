@@ -95,7 +95,7 @@ export default {
 		 *
 		 * @return {object} The transaction.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
 		 */
 		transaction() {
 			return this.objectData || {}
@@ -106,7 +106,7 @@ export default {
 		 *
 		 * @return {string} The transaction id, or '' when unknown.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
 		 */
 		transactionId() {
 			return this.objectId || this.transaction.id || ''
@@ -117,7 +117,7 @@ export default {
 		 *
 		 * @return {string} The status, `draft` when unset.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
 		 */
 		status() {
 			return this.transaction.status || 'draft'

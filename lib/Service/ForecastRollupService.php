@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004, REQ-FRC-005
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004, REQ-FRC-005
  */
 
 declare(strict_types=1);
@@ -64,7 +64,7 @@ class ForecastRollupService {
 	 *
 	 * @return array{totals: array<string, float>, deal_ids: array<int, string>, currency: string}
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-02, REQ-FRC-004-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-02, REQ-FRC-004-03
 	 */
 	public function bucketDeals(array $deals): array {
 		$totals = $this->emptyTotals();
@@ -108,7 +108,7 @@ class ForecastRollupService {
 	 *
 	 * @return array<string, float> The summed parent totals.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-005-01, REQ-FRC-005-02, REQ-FRC-005-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-005-01, REQ-FRC-005-02, REQ-FRC-005-03
 	 */
 	public function sumChildTotals(array $childTotals): array {
 		$parent = $this->emptyTotals();

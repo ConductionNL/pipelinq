@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.3
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  * Tests for ConsentService — opt-out gate, append-only history,
  * keyword detection, and GDPR erasure cascade.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.3
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class ConsentServiceTest extends TestCase {
 	private ContainerInterface $container;

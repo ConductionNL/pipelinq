@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.3
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Cache wrapper around the brpPersoon schema.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004
  */
 class BrpCacheService {
 	/**
@@ -66,8 +66,8 @@ class BrpCacheService {
 	 *
 	 * @return array<string,mixed>|null
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-01
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-02
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
@@ -134,7 +134,7 @@ class BrpCacheService {
 	 *
 	 * @return array<string,mixed> The saved object as array (with assigned UUID).
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-04
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-04
 	 */
 	public function set(array $person, ?int $ttlHours = null): array {
 		[$register, $schema] = $this->config();
@@ -164,7 +164,7 @@ class BrpCacheService {
 	 *
 	 * @return int Number of cache entries invalidated.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-03
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */

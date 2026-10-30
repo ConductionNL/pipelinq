@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Orchestrates the end-to-end loyalty credit flow on a POS-trigger.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) end-to-end POS credit orchestration is inherently branchy; split across small focused methods
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrator necessarily wires account/ledger/rule/tier/event collaborators

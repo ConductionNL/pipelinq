@@ -6,7 +6,7 @@
   - searches, history depth, marketing-consent sync, and the on-account-
   - requires-customer invariant. Persists via /api/admin/pos-customer-settings.
   -
-  - @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+  - @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
   -->
 <template>
 	<div class="pos-customer-settings-cards">
@@ -162,7 +162,7 @@ export default {
 		 * Available search-field options with labels.
 		 *
 		 * @return {Array<object>} The options.
-		 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+		 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 		 */
 		availableFields() {
 			return [
@@ -176,7 +176,7 @@ export default {
 		 * The history depths as select options ("Last 5 transactions").
 		 *
 		 * @return {Array<{value: number, label: string}>} The options.
-		 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+		 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 		 */
 		depthOptions() {
 			return ALL_DEPTHS.map((n) => ({ value: n, label: t('pipelinq', 'Last {n} transactions', { n }) }))
@@ -186,7 +186,7 @@ export default {
 		 * The till, where cashiers see the customer card.
 		 *
 		 * @return {string} The URL.
-		 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+		 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 		 */
 		tillUrl() {
 			return generateUrl('/apps/pipelinq/pos/new')

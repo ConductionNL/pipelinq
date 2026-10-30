@@ -18,9 +18,9 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-010
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * CustomerLoyaltyAccount lifecycle service.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 class LoyaltyAccountService {
 	/**
@@ -67,7 +67,7 @@ class LoyaltyAccountService {
 	 *
 	 * @throws RuntimeException When OR is unavailable or opt-in missing.
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-010-01
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $optIn is the REQ-LOY-010 opt-in
 	 *  acceptance flag, part of the account-creation contract; not a behaviour switch.
@@ -151,7 +151,7 @@ class LoyaltyAccountService {
 	 * @return array<string, mixed> The existing or newly-created account.
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $optIn passes through the REQ-LOY-010 opt-in flag to createAccount(); not a behaviour switch.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function getOrCreateAccount(
 		string $customerId,
@@ -179,7 +179,7 @@ class LoyaltyAccountService {
 	 * @param string $programmeId The programme UUID.
 	 *
 	 * @return array<string, mixed>|null The account, or null.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function findAccountByKlantAndProgramme(string $customerId, string $programmeId): ?array {
 		[$register, $schema] = $this->config();
@@ -218,7 +218,7 @@ class LoyaltyAccountService {
 	 * @param string $reason Free-text reason (logged).
 	 *
 	 * @return array<string, mixed>|null The updated account, or null.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function disableAccount(string $accountId, string $reason): ?array {
 		$account = $this->getAccount(accountId: $accountId);
@@ -288,7 +288,7 @@ class LoyaltyAccountService {
 	 * @param ?string $tierValidTo Scheduled downgrade date.
 	 *
 	 * @return array<string, mixed>|null The updated account.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function setTier(
 		string $accountId,
@@ -321,7 +321,7 @@ class LoyaltyAccountService {
 	 * @param int $offset Pagination offset.
 	 *
 	 * @return array<int, array<string, mixed>> The accounts.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function listAccountsForProgramme(string $programmeId, int $limit = 1000, int $offset = 0): array {
 		[$register, $schema] = $this->config();

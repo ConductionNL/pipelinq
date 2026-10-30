@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-005
+ * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-005
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -56,7 +56,7 @@ use Psr\Log\LoggerInterface;
  * One-shot, re-runnable repair step that migrates in-flight POS journal entries
  * onto the shillinq registry path and projects posted ones onto the Z-report.
  *
- * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-005
+ * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-005
  */
 class MigratePosBookkeepingToShillinq implements IRepairStep {
 	use \OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
@@ -114,7 +114,7 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-005
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-005
 	 */
 	public function run(IOutput $output): void {
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {

@@ -19,8 +19,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#4.1
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#4.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Throwable;
 /**
  * Admin-only configuration for the HaalCentraal client.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
  */
 class BrpAdminController extends Controller {
 	/**

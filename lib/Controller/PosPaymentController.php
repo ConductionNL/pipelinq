@@ -25,7 +25,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
  */
 
 declare(strict_types=1);
@@ -66,7 +66,7 @@ use Throwable;
  *  thin payment controller legitimately needs (service + session + l10n +
  *  request + logger); splitting them would add indirection.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
  */
 class PosPaymentController extends Controller {
 	/**
@@ -99,7 +99,7 @@ class PosPaymentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function index(): JSONResponse {
 		try {
@@ -119,7 +119,7 @@ class PosPaymentController extends Controller {
 	 * @auth admin-only Reads one payment provider's configuration; restricted
 	 *       to server administrators by the framework default.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function show(string $name): JSONResponse {
 		try {
@@ -141,8 +141,8 @@ class PosPaymentController extends Controller {
 	 * @auth admin-only Writes payment-provider credentials for the instance;
 	 *       restricted to server administrators by the framework default.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function update(string $name): JSONResponse {
 		try {
@@ -166,7 +166,7 @@ class PosPaymentController extends Controller {
 	 *       credentials; restricted to server administrators by the framework
 	 *       default.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function test(string $name): JSONResponse {
 		try {
@@ -212,7 +212,7 @@ class PosPaymentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 	 */
 	#[NoAdminRequired]
 	public function initiate(string $id): JSONResponse {
@@ -248,7 +248,7 @@ class PosPaymentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
 	 */
 	#[NoAdminRequired]
 	public function capture(string $id): JSONResponse {
@@ -270,7 +270,7 @@ class PosPaymentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
 	 */
 	#[NoAdminRequired]
 	public function refund(string $id): JSONResponse {
@@ -317,7 +317,7 @@ class PosPaymentController extends Controller {
 	 * The rate-limit ceiling is loose because this is a POS payment provider
 	 * callback.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

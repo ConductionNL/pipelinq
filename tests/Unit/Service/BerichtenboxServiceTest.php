@@ -21,11 +21,11 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-003
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-receipt-005
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-inbound-006
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-retry-012
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-003
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RECEIPT-005
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-INBOUND-006
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RETRY-012
  */
 
 declare(strict_types=1);

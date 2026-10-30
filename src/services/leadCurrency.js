@@ -6,7 +6,7 @@
  * (pipelinq#2040). Pure, so the rules the server enforces can be checked
  * before a save.
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
  */
 
 const CODE = /^[A-Z]{3}$/
@@ -16,7 +16,7 @@ const CODE = /^[A-Z]{3}$/
  *
  * @param {string|null|undefined} value The typed code.
  * @return {string} The code, or '' when empty.
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
  */
 export function normaliseCurrency(value) {
 	return String(value ?? '')
@@ -29,7 +29,7 @@ export function normaliseCurrency(value) {
  *
  * @param {string} value The code.
  * @return {boolean} True for a three-letter code.
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
  */
 export function isCurrencyCode(value) {
 	return CODE.test(normaliseCurrency(value))
@@ -40,7 +40,7 @@ export function isCurrencyCode(value) {
  *
  * @param {object|null|undefined} table Currency code => rate.
  * @return {Array<{currency: string, rate: string}>} Rows, sorted by code.
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
  */
 export function rowsFromRates(table) {
 	return Object.entries(table || {})
@@ -53,7 +53,7 @@ export function rowsFromRates(table) {
  *
  * @param {Array<{currency: string, rate: string|number}>} rows The rows.
  * @return {{rates: object, error: string}} The table, or the first problem found.
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
  */
 export function ratesFromRows(rows) {
 	const rates = {}

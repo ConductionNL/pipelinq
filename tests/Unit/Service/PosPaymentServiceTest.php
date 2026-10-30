@@ -17,8 +17,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.1
- * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.2
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -259,7 +259,7 @@ class PaymentFakeWebhookService {
  * authorization, webhook idempotency, and the failed-init no-mutate path.
  * Adapter-level wire formats live in the per-adapter tests.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.1
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
  */
 class PosPaymentServiceTest extends TestCase {
 	/**

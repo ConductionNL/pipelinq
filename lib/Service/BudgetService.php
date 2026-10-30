@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use Throwable;
  * - resetPeriods() — invoked by BudgetPeriodResetJob; rolls every
  *   budget row whose periodResetAt has passed.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Budget gating spans many period/threshold branches; complexity is inherent.
  */
@@ -71,7 +71,7 @@ class BudgetService {
 	 * @param NotificationService $notificationService Admin notifications.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -91,7 +91,7 @@ class BudgetService {
 	 * @return bool True when allowed (no budget, soft-limit, or
 	 *              hard-limit not yet reached).
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function canSend(string $tenantId, string $providerId, float $estimatedCostEur = 0.0): bool {
 		$budget = $this->loadBudget(tenantId: $tenantId, providerId: $providerId);
@@ -133,7 +133,7 @@ class BudgetService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function recordSend(string $tenantId, string $providerId, float $costEur = 0.0): void {
 		$budget = $this->loadBudget(tenantId: $tenantId, providerId: $providerId);
@@ -182,7 +182,7 @@ class BudgetService {
 	 *
 	 * @return int Number of rows reset.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function resetPeriods(): int {
 		$rows = $this->loadAllBudgets();

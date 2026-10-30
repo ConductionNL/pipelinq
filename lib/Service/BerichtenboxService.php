@@ -23,12 +23,12 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-003
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-receipt-005
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-inbound-006
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-retry-012
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-003
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-FALLBACK-004
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RECEIPT-005
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-INBOUND-006
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RETRY-012
  */
 
 declare(strict_types=1);
@@ -57,7 +57,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *  full outbound/inbound/fallback/retry lifecycle; splitting would just shuffle
  *  the transitions across files.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
  */
 class BerichtenboxService {
 	/**
@@ -97,7 +97,7 @@ class BerichtenboxService {
 	 * @param LoggerInterface $logger NC logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Orchestration root wires every
 	 *  bridge collaborator via constructor injection; a parameter object would only
@@ -138,7 +138,7 @@ class BerichtenboxService {
 	 *
 	 * @throws RuntimeException On validation / persistence failure.
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
 	public function queueOutboundMessage(
 		string $caseId,
@@ -239,7 +239,7 @@ class BerichtenboxService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
 	public function dispatchOne(array $message): void {
 		$tenantId = $this->resolveTenantId();
@@ -379,7 +379,7 @@ class BerichtenboxService {
 	 * @return array The created BerichtenboxReply payload.
 	 *
 	 * @throws RuntimeException If the parent cannot be found.
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
 	public function handleInboundReply(
 		string $parentMessageId,
@@ -454,7 +454,7 @@ class BerichtenboxService {
 	 * @param string $tenantId Tenant id.
 	 *
 	 * @return int Number of rows shredded across all schemas.
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
 	public function cryptoShred(string $bsn, string $tenantId): int {
 		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);

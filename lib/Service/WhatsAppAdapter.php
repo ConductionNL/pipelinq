@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -67,7 +67,7 @@ use Throwable;
  *  splitting the class would scatter one channel-adapter concern without
  *  reducing real coupling.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WhatsAppAdapter {
 	use WritesAsMessagingAccount;
@@ -137,7 +137,7 @@ class WhatsAppAdapter {
 	 * @param LoggerInterface $logger Logger.
 	 * @param PhoneNormaliser $phoneNormaliser Normalises an inbound sender to E.164.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -184,7 +184,7 @@ class WhatsAppAdapter {
 	 *     error?: string
 	 * } Send outcome.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function send(
@@ -726,7 +726,7 @@ class WhatsAppAdapter {
 	 *     error?: string
 	 * } Outcome envelope.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.6
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {
@@ -882,7 +882,7 @@ class WhatsAppAdapter {
 	 *
 	 * @return int Distinct placeholder positions.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function parseTemplatePlaceholders(string $templateBody): int {
 		$matches = [];
@@ -898,7 +898,7 @@ class WhatsAppAdapter {
 	 *
 	 * @return bool True if the most recent inbound is within 24h.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function isWithinSessionWindow(string $contactId): bool {
 		if ($contactId === '') {

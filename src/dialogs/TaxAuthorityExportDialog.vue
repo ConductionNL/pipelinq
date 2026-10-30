@@ -8,7 +8,7 @@
   - TaxAuthorityExportModal, the target of the audit log's export header
   - action. Extracted to its own file per ADR-004 (modal-isolation).
   -
-  - @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
+  - @spec openspec/specs/pos-kassakoppeling-audit/spec.md
   -->
 <template>
 	<CnDialog
@@ -125,7 +125,7 @@ export default {
 		 * Validate the range, then download the export package and close.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
+		 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 		 */
 		async submit() {
 			this.errorMessage = ''
@@ -160,7 +160,7 @@ export default {
 		 * Fetch the export package for the chosen range and format and save it.
 		 *
 		 * @return {Promise<boolean>} Whether the file was saved.
-		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
+		 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 		 */
 		async download() {
 			const params = new URLSearchParams({ from: this.fromDate, to: this.toDate, format: this.format })

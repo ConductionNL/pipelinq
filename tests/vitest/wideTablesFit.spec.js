@@ -9,7 +9,7 @@
  * wrap. No value is dropped, only moved to a second line.
  *
  * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
- * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md#REQ-AUDIT-003
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
  */
 

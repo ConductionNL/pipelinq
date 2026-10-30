@@ -8,7 +8,7 @@
   - GET /api/pos-payments/methods. Emits the choice as { paymentMethod,
   - providerName } for the parent to hand to initiatePayment().
   -
-  - @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+  - @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
   -->
 <template>
 	<div class="payment-method-selector">
@@ -67,7 +67,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		selection() {
 			return this.modelValue || null
@@ -164,7 +164,7 @@ export default {
 
 		/**
 		 * @param {string} value The payment method the user picked.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		onSelect(value) {
 			const combined = value && typeof value === 'object' ? value.value : value

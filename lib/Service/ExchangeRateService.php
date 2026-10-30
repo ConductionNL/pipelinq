@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
  */
 
 declare(strict_types=1);
@@ -87,7 +87,7 @@ class ExchangeRateService {
 	 *
 	 * @return string The reporting currency code.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
 	 */
 	public function getReportingCurrency(): string {
 		foreach ([self::REPORTING_CURRENCY_KEY, self::LEGACY_REPORTING_CURRENCY_KEY] as $key) {
@@ -108,7 +108,7 @@ class ExchangeRateService {
 	 *
 	 * @return float The amount in the reporting currency, rounded to 2 decimals.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
 	 */
 	public function toReportingCurrency(float $amount, ?string $currency): float {
 		$source = strtoupper(trim((string)$currency));
@@ -126,7 +126,7 @@ class ExchangeRateService {
 	 *
 	 * @return array<string, float> Currency code => rate, sorted by code.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
 	 */
 	public function getRates(): array {
 		$raw = $this->appConfig->getValueString(Application::APP_ID, self::RATES_KEY, '');
@@ -155,7 +155,7 @@ class ExchangeRateService {
 	 *
 	 * @throws InvalidArgumentException When a code is not ISO 4217 shaped or a rate is not positive.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
 	 */
 	public function normaliseRates(array $input): array {
 		$rates = [];

@@ -25,7 +25,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 
 declare(strict_types=1);
@@ -74,14 +74,14 @@ use Throwable;
  *  methods (CRUD + adapters + webhook + events + accessors); splitting would
  *  scatter one transactional concern across multiple classes.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
  */
 class PosPaymentService {
 	/**
@@ -199,7 +199,7 @@ class PosPaymentService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function listProviders(): array {
 		$providers = [];
@@ -269,7 +269,7 @@ class PosPaymentService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) toggles whether sensitive
 	 *  fields are present at all (mask vs omit), not a behavioural branch
@@ -319,8 +319,8 @@ class PosPaymentService {
 	 *
 	 * @return array<string, mixed> The updated, masked config.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function updateProvider(string $name, array $data): array {
 		$this->assertKnownProvider(name: $name);
@@ -422,7 +422,7 @@ class PosPaymentService {
 	 * @throws OCSBadRequestException When the provider is unknown.
 	 * @throws OCSNotFoundException When the provider is not configured or inactive.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
 	 */
 	public function getPaymentProvider(string $name): PaymentProviderInterface {
 		$this->assertKnownProvider(name: $name);
@@ -508,7 +508,7 @@ class PosPaymentService {
 	 * @throws OCSNotFoundException When the transaction is not found.
 	 * @throws OCSBadRequestException When provider or amount is invalid.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 	 */
 	public function initiatePayment(string $transactionId, string $providerName, string $paymentMethod): array {
 		$transaction = $this->loadTransaction(id: $transactionId);
@@ -557,7 +557,7 @@ class PosPaymentService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
 	 */
 	public function capturePayment(string $transactionId): array {
 		$transaction = $this->loadTransaction(id: $transactionId);
@@ -606,7 +606,7 @@ class PosPaymentService {
 	 * @throws OCSForbiddenException When the caller is not a POS manager.
 	 * @throws OCSBadRequestException When the transaction is not refundable, or no reason is given.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
 	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason
 	 */
 	public function refundPayment(string $transactionId, string $reason, string $userId): array {
@@ -690,7 +690,7 @@ class PosPaymentService {
 	 *
 	 * @return array<string, mixed> { status: ok|invalid|ignored|unmatched|duplicate, transactionId?, error? }
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function handleWebhook(string $providerName, string $rawPayload, string $signature): array {
 		if (in_array(needle: $providerName, haystack: self::PROVIDERS, strict: true) === false) {
@@ -760,8 +760,8 @@ class PosPaymentService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
 	 */
 	public function handleSettlement(string $providerName, string $sessionId, string $paymentStatus, string $eventId): array {
 		$transaction = $this->findTransactionBySessionId(sessionId: $sessionId);
@@ -866,7 +866,7 @@ class PosPaymentService {
 	 *
 	 * @return array{status: string, message: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function testConnection(string $name): array {
 		$this->assertKnownProvider(name: $name);
@@ -898,7 +898,7 @@ class PosPaymentService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
 	 */
 	public function emitSettledEvent(array $transaction): void {
 		$payload = $this->buildSettledPayload(transaction: $transaction);
@@ -914,7 +914,7 @@ class PosPaymentService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
 	 */
 	public function emitRefundedEvent(array $transaction, string $refundId, string $reason): void {
 		$payload = $this->buildRefundedPayload(transaction: $transaction, refundId: $refundId, reason: $reason);

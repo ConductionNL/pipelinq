@@ -6,7 +6,7 @@
  * The tax authority export is a registered modal the audit log's header
  * action opens, so it downloads the package itself and closes when done.
  *
- * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-005-tax-authority-export
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md#REQ-AUDIT-005
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

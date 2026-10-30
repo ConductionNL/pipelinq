@@ -24,8 +24,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-receipt-005
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-inbound-006
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RECEIPT-005
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-INBOUND-006
  */
 
 declare(strict_types=1);
@@ -142,7 +142,7 @@ class BerichtenboxWebhookController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the created contactmomentId; 422 on
 	 *                      signature failure; 400 on malformed payload.
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-receipt-005
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-RECEIPT-005
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

@@ -27,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 
 declare(strict_types=1);
@@ -68,7 +68,7 @@ use Psr\Log\LoggerInterface;
  *  collaborator surface (request / session / l10n / group manager / logger
  *  + the audit service).
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 class KassakoppelingAuditController extends Controller {
 	/**
@@ -102,7 +102,7 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @return JSONResponse The persisted entry, or an error.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -138,7 +138,7 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @return JSONResponse The entry list, or an error.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -172,7 +172,7 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @return JSONResponse The entry, or an error.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -194,7 +194,7 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @return JSONResponse The verification result, or an error.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	#[NoAdminRequired]
 	public function verify(string $id): JSONResponse {
@@ -228,7 +228,7 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @return DataDownloadResponse|JSONResponse The export, or an error.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function export(): DataDownloadResponse|JSONResponse {
 		$uid = $this->requireUserId();

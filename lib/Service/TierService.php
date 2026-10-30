@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Tier classification and benefits service.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) tier evaluation walks rules, upgrade/downgrade policy, and event emission in one cohesive service
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrates DI container, config, loyalty accounts, events and logging by design
@@ -69,7 +69,7 @@ class TierService {
 	 * @param string $programmeId The programme UUID.
 	 *
 	 * @return array<int, array<string, mixed>> The tier rules.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function getTierRules(string $programmeId): array {
 		[$register, $schema] = $this->config(schemaKey: 'tierRule_schema');
@@ -117,7 +117,7 @@ class TierService {
 	 * @param int $lifetimePoints The metric value.
 	 *
 	 * @return array<string, mixed>|null The matching tier rule.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function calculateTier(string $programmeId, int $lifetimePoints): ?array {
 		$rules = $this->getTierRules(programmeId: $programmeId);
@@ -138,7 +138,7 @@ class TierService {
 	 * @param string $accountId The account UUID.
 	 *
 	 * @return array{from: ?string, to: ?string, changed: bool} Summary.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function updateTierIfNeeded(string $accountId): array {
 		$account = $this->accountService->getAccount(accountId: $accountId);
@@ -213,7 +213,7 @@ class TierService {
 	 * @param array<string, mixed> $newTier The new tier rule.
 	 *
 	 * @return void
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function handleTierUpgrade(string $accountId, array $newTier): void {
 		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
@@ -238,7 +238,7 @@ class TierService {
 	 * @param array<string, mixed> $newTier The new (lower) tier rule.
 	 *
 	 * @return void
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function handleTierDowngrade(string $accountId, array $newTier): void {
 		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
@@ -276,7 +276,7 @@ class TierService {
 	 * @param array<string, mixed> $toTier The new tier.
 	 *
 	 * @return void
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function emitTierChangedEvent(string $accountId, ?string $fromTierId, array $toTier): void {
 		try {

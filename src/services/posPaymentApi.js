@@ -4,7 +4,7 @@
 // Thin frontend API client for the POS payment provider adapter.
 // All endpoints are documented in lib/Controller/PosPaymentController.php.
 //
-// @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+// @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
