@@ -471,6 +471,7 @@ export default {
 	margin: 0;
 	font-size: 17px;
 	font-weight: 700;
+	line-height: normal;
 }
 
 .search-queries__card-subtitle {
@@ -534,8 +535,11 @@ export default {
 	}
 
 	th {
+		border-bottom: 0;
+		background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
 		color: var(--color-text-maxcontrast);
 		font-weight: 600;
+		line-height: 1.2;
 	}
 
 	th:first-child,

@@ -337,6 +337,7 @@ export default {
 	margin: 0;
 	font-size: 15px;
 	font-weight: 700;
+	line-height: normal;
 }
 
 .link-submission__sent {
@@ -346,14 +347,15 @@ export default {
 	padding: 16px 18px;
 	border: 1px solid var(--color-background-dark);
 	border-radius: 10px;
-	background: var(--color-background-hover);
+	background: var(--cn-board-sunken-ground, var(--color-background-hover));
 }
 
 .link-submission__sent h3 {
 	font-size: 13px;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	color: var(--color-text-maxcontrast);
+	/* A theme may colour every h3; the eyebrow stays muted. */
+	color: var(--color-text-maxcontrast) !important;
 }
 
 .link-submission__sent dl {

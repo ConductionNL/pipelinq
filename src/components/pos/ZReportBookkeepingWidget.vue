@@ -361,8 +361,11 @@ export default {
 }
 
 .z-bookkeeping__table th {
+	background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
+	color: var(--color-text-maxcontrast);
+	font-size: 14px;
 	font-weight: 600;
-	border-bottom: 1px solid var(--color-border);
+	line-height: 1.2;
 }
 
 .z-bookkeeping__table tbody tr + tr td {

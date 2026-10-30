@@ -988,6 +988,7 @@
 							},
 							"limit": 3,
 							"presentation": "rows",
+							"ruleAbove": true,
 							"title": "{title}",
 							"meta": {
 								"parts": [
@@ -1022,6 +1023,7 @@
 							},
 							"limit": 3,
 							"presentation": "rows",
+							"ruleAbove": true,
 							"title": "{title}",
 							"meta": {
 								"parts": [
@@ -1132,6 +1134,7 @@
 							},
 							"limit": 2,
 							"presentation": "rows",
+							"ruleAbove": true,
 							"title": "{tradeName}",
 							"meta": {
 								"parts": [

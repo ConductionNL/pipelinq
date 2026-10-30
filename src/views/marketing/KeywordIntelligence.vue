@@ -654,7 +654,12 @@ export default {
 	}
 
 	th {
-		font-weight: bold;
+		border-bottom: 0;
+		background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
+		color: var(--color-text-maxcontrast);
+		font-size: 14px;
+		font-weight: 600;
+		line-height: 1.2;
 	}
 }
 
