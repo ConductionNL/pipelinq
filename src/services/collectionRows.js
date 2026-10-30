@@ -7,7 +7,7 @@
  *
  * @param {Array|object|null} collection The collection.
  * @return {Array<object>} The rows.
- * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+ * @spec openspec/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
  */
 export function collectionRows(collection) {
 	if (Array.isArray(collection)) {

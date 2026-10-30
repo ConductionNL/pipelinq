@@ -7,7 +7,7 @@
  * description under it, quantity, unit price, discount, VAT and line total)
  * and keep their editor: the pencil opens the inputs, the check closes them.
  *
- * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
  */
 
 import { mount } from '@vue/test-utils'

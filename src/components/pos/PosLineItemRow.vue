@@ -180,7 +180,7 @@ export default {
 		 * the line's description.
 		 *
 		 * @return {string} The name.
-		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
 		 */
 		productName() {
 			const product = this.products.find((p) => this.line.product && (p.id === this.line.product || p['@self']?.id === this.line.product))
@@ -192,7 +192,7 @@ export default {
 		 * more than the name.
 		 *
 		 * @return {string} The description, or ''.
-		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
 		 */
 		lineNote() {
 			const description = String(this.line.description || '').trim()
@@ -203,7 +203,7 @@ export default {
 		 * The line total the read row shows.
 		 *
 		 * @return {number} The total.
-		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
 		 */
 		readTotal() {
 			return recalculateLine(this.line, this.priceMode).lineTotal
@@ -276,7 +276,7 @@ export default {
 		 *
 		 * @param {boolean} value Whether the row is open for editing.
 		 *
-		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
 		 */
 		editing(value) {
 			if (value) {
@@ -293,7 +293,7 @@ export default {
 		 *
 		 * @param {number|string} value The number.
 		 * @return {string} The text.
-		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
 		 */
 		formatNumber(value) {
 			return (Number(value) || 0).toLocaleString(getUserLocale(), { maximumFractionDigits: 3 })
@@ -304,7 +304,7 @@ export default {
 		 *
 		 * @param {object} line The line.
 		 * @return {object} The fields.
-		 * @spec openspec/changes/pos-sale-lines-board-table/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
 		 */
 		localFrom(line) {
 			return {

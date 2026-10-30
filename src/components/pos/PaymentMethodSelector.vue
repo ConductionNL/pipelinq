@@ -77,7 +77,7 @@ export default {
 		 * The static tenders, then one option per provider method.
 		 *
 		 * @return {Array<object>} The options.
-		 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+		 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
 		 */
 		combinedOptions() {
 			const opts = STATIC_OPTIONS.filter(
@@ -105,7 +105,7 @@ export default {
 		 * takes the card at the till.
 		 *
 		 * @return {string} The hint, or '' for none.
-		 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+		 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
 		 */
 		selectedHint() {
 			const option = this.combinedOptions.find((o) => o.value === this.selection)
@@ -120,7 +120,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
 	 */
 	async mounted() {
 		try {
@@ -138,7 +138,7 @@ export default {
 		 *
 		 * @param {string} method The method id.
 		 * @return {string} The label.
-		 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+		 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
 		 */
 		methodLabel(method) {
 			const labels = {

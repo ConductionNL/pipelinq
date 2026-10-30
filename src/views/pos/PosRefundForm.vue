@@ -357,7 +357,7 @@ export default {
 		 * help links.
 		 *
 		 * @return {object} The CnDetailPage actions menu config.
-		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-the-refund-header-holds-only-save
+		 * @spec openspec/specs/pos-refund-return/spec.md#requirement-the-refund-header-holds-only-save
 		 */
 		headerMenu() {
 			return { showRefresh: false, showHelpLinks: false }
@@ -489,7 +489,7 @@ export default {
 		/**
 		 * Loads the sales a refund can be made against.
 		 *
-		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 * @spec openspec/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
 		 */
 		async loadTransactions() {
 			try {
@@ -503,7 +503,7 @@ export default {
 		/**
 		 * Loads the refund reasons.
 		 *
-		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 * @spec openspec/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
 		 */
 		async loadReasons() {
 			try {
@@ -537,7 +537,7 @@ export default {
 		/**
 		 * Loads the refund being edited with its lines.
 		 *
-		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 * @spec openspec/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
 		 */
 		async loadRefund() {
 			const r = await this.objectStore.fetchObject('posRefund', this.refundId)
@@ -570,7 +570,7 @@ export default {
 		 *
 		 * @param {string} transactionId The sale being refunded.
 		 *
-		 * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+		 * @spec openspec/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
 		 */
 		async loadOriginalLines(transactionId) {
 			if (!transactionId) {

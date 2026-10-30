@@ -163,7 +163,7 @@ class CashShiftControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pl2-pos-header-actions/specs/pos-cash-management/spec.md#requirement-a-shift-is-counted-only-with-an-amount
+	 * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-is-counted-only-with-an-amount
 	 */
 	public function testCountWithoutAnAmountIsRefused(): void {
 		$this->loginAs(uid: 'clerk');

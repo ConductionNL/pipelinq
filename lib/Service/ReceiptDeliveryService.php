@@ -140,7 +140,7 @@ class ReceiptDeliveryService {
 	 * @throws OCSNotFoundException If the transaction is not in this app's register.
 	 * @throws OCSForbiddenException If the caller may not access the transaction.
 	 *
-	 * @spec openspec/changes/pos-receipt-card/specs/pos-receipt-engine/spec.md#requirement-a-transaction-page-shows-its-receipt-history
+	 * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-a-transaction-page-shows-its-receipt-history
 	 */
 	public function receiptLog(string $transactionId, string $userId): array {
 		$transaction = $this->loadTransactionWithLines(id: $transactionId);

@@ -665,7 +665,7 @@ export default {
 		/**
 		 * Read the service again (the tab row's Actions menu, Refresh).
 		 *
-		 * @spec openspec/changes/service-tabs-and-actions/specs/appointment-booking/spec.md#requirement-a-service-reads-in-overview-and-history-tabs
+		 * @spec openspec/specs/appointment-booking/spec.md#requirement-a-service-reads-in-overview-and-history-tabs
 		 * @return {Promise<void>}
 		 */
 		async refresh() {

@@ -10,7 +10,7 @@
  * action starts the payment again with the provider and method the
  * transaction already holds. The tests read the manifest the page renders.
  *
- * @spec openspec/changes/pl2-pos-facts-widgets/specs/pos-payment-methods/spec.md#requirement-a-failed-payment-can-be-tried-again-from-the-transaction
+ * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-failed-payment-can-be-tried-again-from-the-transaction
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

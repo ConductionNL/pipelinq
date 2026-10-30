@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ use RuntimeException;
 /**
  * Loyalty points as a payment part.
  *
- * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
  */
 class LoyaltyPaymentService {
 	/**
@@ -58,7 +58,7 @@ class LoyaltyPaymentService {
 	 *
 	 * @throws RuntimeException When the account, the point value or the balance does not allow it.
 	 *
-	 * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
+	 * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
 	 */
 	public function payWithPoints(string $accountId, int $points, string $posTransactionId): array {
 		if ($points <= 0 || $posTransactionId === '') {

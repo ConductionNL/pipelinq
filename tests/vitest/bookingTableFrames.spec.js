@@ -7,7 +7,7 @@
  * corners, no shadow. Live drew a raised 12px card in the card (the library
  * table.css shadow, the board look's 12px large radius). Read as text.
  *
- * @spec openspec/changes/booking-table-frames/specs/appointment-booking/spec.md#requirement-a-table-inside-a-booking-card-is-a-flat-frame
+ * @spec openspec/specs/appointment-booking/spec.md#requirement-a-table-inside-a-booking-card-is-a-flat-frame
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

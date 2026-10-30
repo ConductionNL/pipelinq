@@ -9,8 +9,8 @@
  * through the Payment received dialog (PqKassaAfrekenen): the points are
  * spent, the gift cards redeemed and every part booked as a tender.
  *
- * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-the-sale-page-reads-as-the-board
- * @spec openspec/changes/pos-sale-board-look/specs/pos-transactions/spec.md#requirement-a-payment-can-be-split
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-page-reads-as-the-board
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-a-payment-can-be-split
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

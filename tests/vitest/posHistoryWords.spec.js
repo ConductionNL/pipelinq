@@ -8,7 +8,7 @@
  * Pieter Jansen", "Bevestigd", "Afgerekend", "Gesloten en geteld", not the
  * raw "update" with "System" under it.
  *
- * @spec openspec/changes/pos-history-in-words/specs/pos-history-in-words/spec.md#requirement-the-pos-side-history-says-what-happened-in-words
+ * @spec openspec/specs/pos-history-in-words/spec.md#requirement-the-pos-side-history-says-what-happened-in-words
  */
 
 import fs from 'fs'

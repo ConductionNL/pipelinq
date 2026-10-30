@@ -6,7 +6,7 @@
  * primary button per state (PL-ABSTRACT Q9, boards PqKassabon and
  * PqKassadienst), instead of three pipelinq components.
  *
- * @spec openspec/changes/pl2-pos-header-actions/specs/pos-lifecycle-guard-adoption/spec.md#requirement-the-pos-header-shows-one-primary-action-per-state
+ * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#requirement-the-pos-header-shows-one-primary-action-per-state
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

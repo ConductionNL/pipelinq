@@ -112,7 +112,7 @@ class PosReceiptController extends Controller {
 	 *
 	 * @return JSONResponse The receipt log summary.
 	 *
-	 * @spec openspec/changes/pos-receipt-card/specs/pos-receipt-engine/spec.md#requirement-a-transaction-page-shows-its-receipt-history
+	 * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-a-transaction-page-shows-its-receipt-history
 	 */
 	#[NoAdminRequired]
 	public function log(string $id): JSONResponse {

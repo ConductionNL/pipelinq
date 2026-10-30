@@ -5,7 +5,7 @@
  * The cash register audit entry is a declared detail page over the app's own
  * endpoint, under an English address; the old addresses redirect.
  *
- * @spec openspec/changes/pl2-cash-register-audit/specs/pos-kassakoppeling-audit/spec.md#requirement-an-audit-entry-is-a-declared-detail-page-under-an-english-address
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md#requirement-an-audit-entry-is-a-declared-detail-page-under-an-english-address
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
