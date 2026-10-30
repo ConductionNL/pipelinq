@@ -1240,6 +1240,7 @@
 								{
 									"id": "set-term",
 									"type": "open-form",
+									"variant": "tonal",
 									"label": "Set the term",
 									"formTitle": "Set the term",
 									"requires": "update",
