@@ -182,6 +182,14 @@
 						)
 					}}
 				</p>
+				<p class="forecast-rates__hint">
+					{{
+						t(
+							'pipelinq',
+							'When Shillinq holds a rate for a currency, that rate is used and the rate typed here is the fallback.',
+						)
+					}}
+				</p>
 				<div
 					v-for="(row, index) in rateRows"
 					:key="index"
@@ -212,9 +220,81 @@
 						@click="rateRows.splice(index, 1)">
 						{{ t('pipelinq', 'Remove') }}
 					</NcButton>
+					<p
+						v-if="sourceLine(row.currency)"
+						class="forecast-rates__source"
+						data-testid="forecast-rate-source">
+						{{ sourceLine(row.currency) }}
+					</p>
 				</div>
 				<NcButton @click="rateRows.push({ currency: '', rate: '' })">
 					{{ t('pipelinq', 'Add a rate') }}
+				</NcButton>
+				<div class="forecast-field forecast-rates__age">
+					<label for="forecast-max-rate-age">{{
+						t('pipelinq', 'Mark a rate as out of date after (days)')
+					}}</label>
+					<input
+						id="forecast-max-rate-age"
+						v-model.number="form.max_rate_age_days"
+						type="number"
+						min="1" />
+				</div>
+			</fieldset>
+
+			<fieldset class="forecast-rates" data-testid="forecast-rate-overrides">
+				<legend>{{ t('pipelinq', 'Fixed rates') }}</legend>
+				<p class="forecast-rates__hint">
+					{{
+						t(
+							'pipelinq',
+							'A fixed rate wins over Shillinq and over the rates above. Use it for a contract rate, and say why.',
+						)
+					}}
+				</p>
+				<div
+					v-for="(row, index) in overrideRows"
+					:key="index"
+					class="forecast-rates__row">
+					<div class="forecast-field">
+						<label :for="`forecast-override-currency-${index}`">{{
+							t('pipelinq', 'Currency')
+						}}</label>
+						<input
+							:id="`forecast-override-currency-${index}`"
+							v-model="row.currency"
+							type="text"
+							maxlength="3" />
+					</div>
+					<div class="forecast-field">
+						<label :for="`forecast-override-rate-${index}`">{{
+							t('pipelinq', 'Rate')
+						}}</label>
+						<input
+							:id="`forecast-override-rate-${index}`"
+							v-model="row.rate"
+							type="number"
+							min="0"
+							step="any" />
+					</div>
+					<div class="forecast-field">
+						<label :for="`forecast-override-reason-${index}`">{{
+							t('pipelinq', 'Reason')
+						}}</label>
+						<input
+							:id="`forecast-override-reason-${index}`"
+							v-model="row.reason"
+							type="text" />
+					</div>
+					<NcButton
+						:aria-label="t('pipelinq', 'Remove this fixed rate')"
+						@click="overrideRows.splice(index, 1)">
+						{{ t('pipelinq', 'Remove') }}
+					</NcButton>
+				</div>
+				<NcButton
+					@click="overrideRows.push({ currency: '', rate: '', reason: '' })">
+					{{ t('pipelinq', 'Add a fixed rate') }}
 				</NcButton>
 			</fieldset>
 
@@ -243,7 +323,14 @@ import {
 	NcNoteCard,
 	NcSettingsSection,
 } from '@nextcloud/vue'
-import { ratesFromRows, rowsFromRates } from '../../services/leadCurrency.js'
+import {
+	overridesFromRows,
+	rateLine,
+	ratesFromRows,
+	rateSourceLabel,
+	rowsFromOverrides,
+	rowsFromRates,
+} from '../../services/leadCurrency.js'
 
 export default {
 	name: 'ForecastSettings',
@@ -263,6 +350,7 @@ export default {
 			// The rate table as editable rows (pipelinq#2040); it used to be
 			// settable only with occ.
 			rateRows: [],
+			overrideRows: [],
 			form: {
 				commit_threshold: 50000,
 				pipeline_target: 0,
@@ -275,6 +363,9 @@ export default {
 				at_risk_days: 30,
 				reporting_currency: 'EUR',
 				exchange_rates: {},
+				rate_overrides: {},
+				rate_sources: {},
+				max_rate_age_days: 7,
 				manager_group: '',
 				team_groups: '',
 			},
@@ -286,6 +377,25 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Which rate a currency converts at now: source, rate and date.
+		 *
+		 * @param {string} currency The currency of a rate row.
+		 * @return {string} The line, or '' when the server has not resolved it.
+		 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
+		 */
+		sourceLine(currency) {
+			const resolved = this.form.rate_sources?.[String(currency || '').trim().toUpperCase()]
+			if (!resolved) {
+				return ''
+			}
+			const parts = [rateSourceLabel(resolved), rateLine(resolved)].filter(Boolean)
+			if (resolved.stale) {
+				parts.push(t('pipelinq', 'out of date'))
+			}
+			return t('pipelinq', 'Used now: {rate}', { rate: parts.join(', ') })
+		},
+
 		/**
 		 * Load the current forecast configuration.
 		 *
@@ -301,6 +411,7 @@ export default {
 				)
 				this.form = { ...this.form, ...response.data }
 				this.rateRows = rowsFromRates(this.form.exchange_rates)
+				this.overrideRows = rowsFromOverrides(this.form.rate_overrides)
 			} catch {
 				this.message = t(
 					'pipelinq',
@@ -320,9 +431,15 @@ export default {
 		 */
 		async save() {
 			const { rates, error } = ratesFromRows(this.rateRows)
-			if (error) {
+			const fixed = overridesFromRows(this.overrideRows)
+			if (fixed.error === 'reason') {
+				this.message = t('pipelinq', 'Give a reason for every fixed rate.')
+				this.messageType = 'error'
+				return
+			}
+			if (error || fixed.error) {
 				this.message =
-					error === 'code'
+					(error || fixed.error) === 'code'
 						? t(
 								'pipelinq',
 								'Use a three-letter currency code for every rate.',
@@ -334,9 +451,10 @@ export default {
 			this.saving = true
 			this.message = ''
 			try {
+				const { rate_sources: _sources, ...form } = this.form
 				await axios.put(
 					generateUrl('/apps/pipelinq/api/settings/forecast'),
-					{ ...this.form, exchange_rates: rates },
+					{ ...form, exchange_rates: rates, rate_overrides: fixed.overrides },
 				)
 				this.message = t('pipelinq', 'Forecast configuration saved.')
 				this.messageType = 'success'
@@ -410,6 +528,17 @@ export default {
 	flex-wrap: wrap;
 	gap: 16px;
 	align-items: flex-end;
+}
+
+.forecast-rates__source {
+	flex-basis: 100%;
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+}
+
+.forecast-rates__age {
+	max-width: 320px;
 }
 
 .forecast-actions {
