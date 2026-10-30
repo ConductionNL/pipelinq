@@ -9459,6 +9459,17 @@
         "Find more prospects": "Meer prospects vinden",
         "Fit {fitScore}": "Past {fitScore}",
         "{employeeCount} employees": "{employeeCount} medewerkers",
-        "No prospects match your profile yet.": "Nog geen prospects die bij je profiel passen."
+        "No prospects match your profile yet.": "Nog geen prospects die bij je profiel passen.",
+        "Book an appointment": "Afspraak boeken",
+        "To the back office": "Naar backoffice",
+        "Register a complaint": "Klacht registreren",
+        "Another channel": "Ander kanaal",
+        "This contact moment": "Dit contactmoment",
+        "Earlier contact": "Eerder contact",
+        "Phone, incoming": "Telefoon, inkomend",
+        "Identified": "Geïdentificeerd",
+        "Hand over to the back office": "Overdragen aan de backoffice",
+        "Log contact on another channel": "Contact via een ander kanaal vastleggen",
+        "Next steps": "Volgende stappen"
     }
 }

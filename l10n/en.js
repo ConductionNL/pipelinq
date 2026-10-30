@@ -9344,7 +9344,18 @@ OC.L10N.register(
         "Find more prospects": "Find more prospects",
         "Fit {fitScore}": "Fit {fitScore}",
         "{employeeCount} employees": "{employeeCount} employees",
-        "No prospects match your profile yet.": "No prospects match your profile yet."
+        "No prospects match your profile yet.": "No prospects match your profile yet.",
+        "Book an appointment": "Book an appointment",
+        "To the back office": "To the back office",
+        "Register a complaint": "Register a complaint",
+        "Another channel": "Another channel",
+        "This contact moment": "This contact moment",
+        "Earlier contact": "Earlier contact",
+        "Phone, incoming": "Phone, incoming",
+        "Identified": "Identified",
+        "Hand over to the back office": "Hand over to the back office",
+        "Log contact on another channel": "Log contact on another channel",
+        "Next steps": "Next steps"
     },
     "nplurals=2; plural=(n != 1);"
 )

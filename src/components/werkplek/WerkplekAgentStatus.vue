@@ -3,7 +3,36 @@
 <!-- @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1 -->
 <template>
 	<div class="werkplek-agent-status">
+		<!-- In a call the control reads "In gesprek" and opens a menu that still sets the availability (PqWerkplekKlant). -->
+		<NcActions
+			v-if="inCall"
+			class="werkplek-agent-status__call"
+			variant="secondary"
+			:forceMenu="true"
+			:menuName="t('pipelinq', 'In call')"
+			data-testid="werkplek-call-state">
+			<template #icon>
+				<span class="werkplek-agent-status__dot werkplek-agent-status__dot--call" aria-hidden="true" />
+			</template>
+			<NcActionButton
+				type="radio"
+				:modelValue="isAvailable"
+				:disabled="saving"
+				data-testid="werkplek-call-available"
+				@click="save(true)">
+				{{ t('pipelinq', 'Available') }}
+			</NcActionButton>
+			<NcActionButton
+				type="radio"
+				:modelValue="!isAvailable"
+				:disabled="saving"
+				data-testid="werkplek-call-unavailable"
+				@click="save(false)">
+				{{ t('pipelinq', 'Unavailable') }}
+			</NcActionButton>
+		</NcActions>
 		<button
+			v-else
 			type="button"
 			class="werkplek-agent-status__toggle"
 			:class="{
@@ -26,6 +55,7 @@
 import axios from '@nextcloud/axios'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 
 /**
@@ -43,13 +73,23 @@ import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 export default {
 	name: 'WerkplekAgentStatus',
 
-	components: { ChevronDown },
+	components: { ChevronDown, NcActionButton, NcActions },
 
 	props: {
 		/**
 		 * Whether the agent is currently marked available.
 		 */
 		isAvailable: {
+			type: Boolean,
+			default: false,
+		},
+
+		/**
+		 * Whether a call is on: the control reads "In call" and its menu sets the availability.
+		 *
+		 * @spec openspec/changes/werkplek-in-call-tiles-and-header/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
+		 */
+		inCall: {
 			type: Boolean,
 			default: false,
 		},
@@ -105,9 +145,20 @@ export default {
 		 *
 		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1
 		 */
-		async toggle() {
-			if (this.saving) return
-			const next = !this.isAvailable
+		toggle() {
+			return this.save(!this.isAvailable)
+		},
+
+		/**
+		 * Set the availability to `next` (the in-call menu's choice); nothing
+		 * happens while a save runs or when it already holds.
+		 *
+		 * @param {boolean} next The availability to save.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/werkplek-in-call-tiles-and-header/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
+		 */
+		async save(next) {
+			if (this.saving || next === this.isAvailable) return
 			this.saving = true
 			// Optimistic update — emit immediately so the parent reflects the toggle.
 			this.$emit('update:isAvailable', next)
@@ -181,5 +232,20 @@ export default {
 
 .werkplek-agent-status__toggle--available .werkplek-agent-status__dot {
 	background: var(--color-success-text);
+}
+
+/* In a call the same outlined control reads "In gesprek" with an amber dot. */
+.werkplek-agent-status__call :deep(.action-item__menutoggle) {
+	min-height: 40px;
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius-element, 8px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font-weight: 600;
+}
+
+.werkplek-agent-status__dot--call {
+	display: inline-block;
+	background: var(--color-warning);
 }
 </style>

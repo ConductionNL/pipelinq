@@ -2218,6 +2218,17 @@
 						"gridHeight": 4,
 						"track": "side",
 						"sizeToContent": true
+					},
+					{
+						"id": "sca",
+						"widgetId": "simple-call-actions",
+						"gridX": 0,
+						"gridY": 33,
+						"gridWidth": 12,
+						"gridHeight": 2,
+						"showTitle": false,
+						"borderless": true,
+						"sizeToContent": true
 					}
 				],
 				"titleWhen": [
@@ -2228,6 +2239,25 @@
 							"value": true
 						},
 						"title": "Call with {workspace.selectedClientName}"
+					}
+				],
+				"headerPills": [
+					{
+						"label": "Phone, incoming",
+						"when": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						}
+					},
+					{
+						"label": "Identified",
+						"variant": "success",
+						"when": {
+							"workspace": "callIdentified",
+							"op": "eq",
+							"value": true
+						}
 					}
 				],
 				"description": "your queue, callbacks and contact today",
@@ -2263,7 +2293,86 @@
 					}
 				],
 				"showActionsMenu": false,
-				"_inCallNote": "In a call (the header sets @workspace.callActive from client=<id>&call=active or inCallPreview=<number>), the dashboard cards step aside and the client-bound cards float up: the contact form, the open requests, the knowledge base, the tasks and callbacks for the client and the earlier contact (board PqWerkplekKlant)."
+				"layoutWhen": [
+					{
+						"when": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"layout": [
+							{
+								"id": "cq",
+								"widgetId": "simple-call-actions",
+								"gridX": 0,
+								"gridY": 0,
+								"gridWidth": 12,
+								"gridHeight": 2,
+								"showTitle": false,
+								"borderless": true,
+								"sizeToContent": true
+							},
+							{
+								"id": "cw",
+								"widgetId": "simple-call-who",
+								"gridX": 0,
+								"gridY": 2,
+								"gridWidth": 4,
+								"gridHeight": 5,
+								"sizeToContent": true
+							},
+							{
+								"id": "ci",
+								"widgetId": "interaction",
+								"title": "This contact moment",
+								"gridX": 4,
+								"gridY": 2,
+								"gridWidth": 4,
+								"gridHeight": 6,
+								"sizeToContent": true
+							},
+							{
+								"id": "cc",
+								"widgetId": "client-cases",
+								"title": "Open matters",
+								"gridX": 4,
+								"gridY": 8,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							},
+							{
+								"id": "ck",
+								"widgetId": "knowledge",
+								"gridX": 8,
+								"gridY": 2,
+								"gridWidth": 4,
+								"gridHeight": 5,
+								"sizeToContent": true
+							},
+							{
+								"id": "ct",
+								"widgetId": "simple-call-tasks",
+								"gridX": 8,
+								"gridY": 7,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							},
+							{
+								"id": "cm",
+								"widgetId": "client-contacts",
+								"title": "Earlier contact",
+								"gridX": 8,
+								"gridY": 11,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							}
+						]
+					}
+				],
+				"_inCallNote": "In a call (the header sets @workspace.callActive from client=<id>&call=active or inCallPreview=<number>), the dashboard cards step aside and the client-bound cards float up: the contact form, the open requests, the knowledge base, the tasks and callbacks for the client and the earlier contact (board PqWerkplekKlant). `layoutWhen` gives the call its own arrangement in three columns: who is it on the left, the contact form and the open requests in the middle, the knowledge base, the tasks and the earlier contact on the right (nextcloud-vue dashboard-layout-when; before it the key is ignored and the cards close up as before)."
 			},
 			"configAppend": {
 				"widgets": [
@@ -2687,6 +2796,141 @@
 							"workspace": "callActive",
 							"op": "neq",
 							"value": true
+						}
+					},
+					{
+						"id": "simple-call-actions",
+						"type": "action-tiles",
+						"title": "Next steps",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"tiles": [
+								{
+									"id": "new-request",
+									"label": "New request",
+									"icon": "MessageOutline",
+									"action": {
+										"type": "open-modal",
+										"target": "RequestCreateDialog",
+										"props": {
+											"clientId": "@workspace.selectedClient"
+										}
+									}
+								},
+								{
+									"id": "call-back",
+									"label": "Call back",
+									"icon": "PhoneReturnOutline",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Plan a callback",
+										"register": "pipelinq",
+										"schema": "crmTask",
+										"props": {
+											"type": "callbackRequest",
+											"status": "open",
+											"clientId": "@workspace.selectedClient"
+										},
+										"includeFields": [
+											"subject",
+											"deadline",
+											"preferredTimeSlot",
+											"callbackPhoneNumber",
+											"assigneeUserId"
+										]
+									}
+								},
+								{
+									"id": "book-appointment",
+									"label": "Book an appointment",
+									"icon": "CalendarPlus",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Book an appointment",
+										"register": "pipelinq",
+										"schema": "appointmentBooking",
+										"props": {
+											"customerId": "@workspace.selectedClient",
+											"status": "confirmed"
+										},
+										"includeFields": [
+											"serviceId",
+											"startAt",
+											"endAt",
+											"subject"
+										]
+									}
+								},
+								{
+									"id": "back-office",
+									"label": "To the back office",
+									"icon": "Send",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Hand over to the back office",
+										"register": "pipelinq",
+										"schema": "crmTask",
+										"props": {
+											"type": "followUpTask",
+											"status": "open",
+											"clientId": "@workspace.selectedClient"
+										},
+										"includeFields": [
+											"subject",
+											"assigneeGroupId",
+											"assigneeUserId",
+											"priority",
+											"deadline"
+										]
+									}
+								},
+								{
+									"id": "complaint",
+									"label": "Register a complaint",
+									"icon": "AlertCircleOutline",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Register a complaint",
+										"register": "pipelinq",
+										"schema": "ticket",
+										"props": {
+											"ticketType": "complaint",
+											"client": "@workspace.selectedClient",
+											"direction": "inbound"
+										},
+										"includeFields": [
+											"title",
+											"description",
+											"priority"
+										]
+									}
+								},
+								{
+									"id": "other-channel",
+									"label": "Another channel",
+									"icon": "SwapHorizontal",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Log contact on another channel",
+										"register": "pipelinq",
+										"schema": "ticket",
+										"props": {
+											"ticketType": "interaction",
+											"client": "@workspace.selectedClient",
+											"direction": "outbound"
+										},
+										"includeFields": [
+											"title",
+											"channel",
+											"description"
+										]
+									}
+								}
+							]
 						}
 					},
 					{

@@ -48,6 +48,7 @@ import CalendarBlankOutline from 'vue-material-design-icons/CalendarBlankOutline
 import CalendarCheck from 'vue-material-design-icons/CalendarCheck.vue'
 import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
 import CalendarClockOutline from 'vue-material-design-icons/CalendarClockOutline.vue'
+import CalendarPlus from 'vue-material-design-icons/CalendarPlus.vue'
 import CalendarWeek from 'vue-material-design-icons/CalendarWeek.vue'
 import CardAccountDetails from 'vue-material-design-icons/CardAccountDetails.vue'
 import CardAccountDetailsOutline from 'vue-material-design-icons/CardAccountDetailsOutline.vue'
@@ -150,6 +151,7 @@ import Phone from 'vue-material-design-icons/Phone.vue'
 import PhoneInTalk from 'vue-material-design-icons/PhoneInTalk.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
+import PhoneReturnOutline from 'vue-material-design-icons/PhoneReturnOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 import Play from 'vue-material-design-icons/Play.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
@@ -162,6 +164,7 @@ import Repeat from 'vue-material-design-icons/Repeat.vue'
 import RouterWireless from 'vue-material-design-icons/RouterWireless.vue'
 import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
 import SchoolOutline from 'vue-material-design-icons/SchoolOutline.vue'
+import Send from 'vue-material-design-icons/Send.vue'
 import SendCheckOutline from 'vue-material-design-icons/SendCheckOutline.vue'
 import Server from 'vue-material-design-icons/Server.vue'
 import ShieldAccountOutline from 'vue-material-design-icons/ShieldAccountOutline.vue'
@@ -174,6 +177,7 @@ import SourceMerge from 'vue-material-design-icons/SourceMerge.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import StarCircleOutline from 'vue-material-design-icons/StarCircleOutline.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
+import SwapHorizontal from 'vue-material-design-icons/SwapHorizontal.vue'
 import TableColumn from 'vue-material-design-icons/TableColumn.vue'
 import Tag from 'vue-material-design-icons/Tag.vue'
 import TagOutline from 'vue-material-design-icons/TagOutline.vue'
@@ -230,6 +234,7 @@ export default {
 	CalendarCheck,
 	CalendarClock,
 	CalendarClockOutline,
+	CalendarPlus,
 	CalendarWeek,
 	CardAccountDetails,
 	CardAccountDetailsOutline,
@@ -332,6 +337,7 @@ export default {
 	PhoneInTalk,
 	PhoneMessage,
 	PhoneOutline,
+	PhoneReturnOutline,
 	Pipe,
 	Play,
 	Plus,
@@ -345,6 +351,7 @@ export default {
 	ScaleBalance,
 	SchoolOutline,
 	Server,
+	Send,
 	SendCheckOutline,
 	ShieldAccountOutline,
 	ShieldCheck,
@@ -354,6 +361,7 @@ export default {
 	SourceMerge,
 	Star,
 	StoreOutline,
+	SwapHorizontal,
 	TableColumn,
 	Tag,
 	TagOutline,
