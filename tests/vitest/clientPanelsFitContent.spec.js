@@ -23,4 +23,8 @@ describe('ClientDetail tab strip height', () => {
 		const panels = config.layout.find((item) => item.widgetId === 'client-panels')
 		expect(panels.sizeToContent).toBe(true)
 	})
+
+	it('packs the grid, so the fitted cell ends at its content and not on the next 80px row', () => {
+		expect(config.gridFloat).toBe(false)
+	})
 })
