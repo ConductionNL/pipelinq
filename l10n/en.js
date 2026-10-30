@@ -9367,7 +9367,21 @@ OC.L10N.register(
         "Finish this task": "Finish this task",
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
-        "Attempt logged.": "Attempt logged."
+        "Attempt logged.": "Attempt logged.",
+        "A new lead without an owner goes to the colleague with the right skill who had the fewest leads in the last 30 days.": "A new lead without an owner goes to the colleague with the right skill who had the fewest leads in the last 30 days.",
+        "Assign new leads automatically": "Assign new leads automatically",
+        "at most {n} leads per 30 days": "at most {n} leads per 30 days",
+        "Lead assignment paused": "Lead assignment paused",
+        "Lead cap per 30 days": "Lead cap per 30 days",
+        "No cap": "No cap",
+        "Pause lead assignment": "Pause lead assignment",
+        "The most new leads rotation gives this colleague in 30 days. Empty means no cap.": "The most new leads rotation gives this colleague in 30 days. Empty means no cap.",
+        "While on, rotation gives this colleague no new leads, for example during leave.": "While on, rotation gives this colleague no new leads, for example during leave.",
+        "Why rotation gave the lead to its owner, or why nobody was eligible.": "Why rotation gave the lead to its owner, or why nobody was eligible.",
+        "Why this owner": "Why this owner",
+        "Rotation found no eligible colleague": "Rotation found no eligible colleague",
+        "Rotation: fewest leads in 30 days (%1$s), skill %2$s": "Rotation: fewest leads in 30 days (%1$s), skill %2$s",
+        "Rotation: fewest leads in 30 days (%1$s of cap %2$s), skill %3$s": "Rotation: fewest leads in 30 days (%1$s of cap %2$s), skill %3$s"
     },
     "nplurals=2; plural=(n != 1);"
 )

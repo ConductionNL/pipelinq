@@ -9381,7 +9381,21 @@ OC.L10N.register(
         "Finish this task": "Deze taak afronden",
         "What came out of the callback?": "Wat kwam er uit het terugbellen?",
         "Log attempt": "Poging vastleggen",
-        "Attempt logged.": "Poging vastgelegd."
+        "Attempt logged.": "Poging vastgelegd.",
+        "A new lead without an owner goes to the colleague with the right skill who had the fewest leads in the last 30 days.": "Een nieuwe lead zonder eigenaar gaat naar de collega met de juiste vaardigheid die de afgelopen 30 dagen de minste leads kreeg.",
+        "Assign new leads automatically": "Nieuwe leads automatisch toewijzen",
+        "at most {n} leads per 30 days": "hoogstens {n} leads per 30 dagen",
+        "Lead assignment paused": "Leadtoewijzing gepauzeerd",
+        "Lead cap per 30 days": "Maximum leads per 30 dagen",
+        "No cap": "Geen maximum",
+        "Pause lead assignment": "Leadtoewijzing pauzeren",
+        "The most new leads rotation gives this colleague in 30 days. Empty means no cap.": "Het hoogste aantal nieuwe leads dat deze collega in 30 dagen via de verdeling krijgt. Leeg betekent geen maximum.",
+        "While on, rotation gives this colleague no new leads, for example during leave.": "Zolang dit aan staat, krijgt deze collega geen nieuwe leads via de verdeling, bijvoorbeeld tijdens verlof.",
+        "Why rotation gave the lead to its owner, or why nobody was eligible.": "Waarom de verdeling de lead aan deze eigenaar gaf, of waarom niemand in aanmerking kwam.",
+        "Why this owner": "Waarom deze eigenaar",
+        "Rotation found no eligible colleague": "De verdeling vond geen collega die in aanmerking kwam",
+        "Rotation: fewest leads in 30 days (%1$s), skill %2$s": "Verdeling: minste leads in 30 dagen (%1$s), vaardigheid %2$s",
+        "Rotation: fewest leads in 30 days (%1$s of cap %2$s), skill %3$s": "Verdeling: minste leads in 30 dagen (%1$s van maximum %2$s), vaardigheid %3$s"
     },
     "nplurals=2; plural=(n != 1);"
 )

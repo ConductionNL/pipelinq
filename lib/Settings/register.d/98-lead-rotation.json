@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Lead rotation (change pipeline-lead-rotation, task 1.1). An agent profile gets a 30-day lead cap and a pause switch; a lead records why rotation gave it to its owner. No property changes type and none becomes required."
+  },
+  "components": {
+    "schemas": {
+      "agentProfile": {
+        "slug": "agentProfile",
+        "properties": {
+          "leadCapPer30Days": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Lead cap per 30 days",
+            "description": "The most new leads rotation gives this colleague in 30 days. Empty means no cap."
+          },
+          "pauseLeadAssignment": {
+            "type": "boolean",
+            "default": false,
+            "title": "Pause lead assignment",
+            "description": "While on, rotation gives this colleague no new leads, for example during leave."
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "properties": {
+          "assignmentReason": {
+            "type": "string",
+            "maxLength": 500,
+            "readOnly": true,
+            "title": "Why this owner",
+            "description": "Why rotation gave the lead to its owner, or why nobody was eligible."
+          }
+        }
+      }
+    }
+  }
+}

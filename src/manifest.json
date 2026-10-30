@@ -4936,7 +4936,8 @@
 								"source",
 								"category",
 								"assignee",
-								"stageEnteredAt"
+								"stageEnteredAt",
+								"assignmentReason"
 							],
 							"overrides": {
 								"assignee": {
@@ -4951,6 +4952,11 @@
 									"editable": false,
 									"label": "In this stage since",
 									"order": 8
+								},
+								"assignmentReason": {
+									"editable": false,
+									"label": "Why this owner",
+									"order": 9
 								},
 								"qualificationScore": {
 									"label": "Win chance",

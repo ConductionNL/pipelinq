@@ -256,6 +256,8 @@ class SettingsService {
 		// webhook URL; empty or non-HTTPS disables the integration. Replaces the
 		// retired hard-coded pos_eod.shillinq_endpoint POST to /api/JournalEntry.
 		'shillinq_journal_webhook_url' => '',
+		// Automatic lead assignment in turn (pipeline-lead-rotation). Default off.
+		'lead_rotation_enabled' => 'false',
 		// Gates the real shillinq time-intake emit (time-billing-handoff-emit).
 		// Default off: an unconfigured install keeps the deep-link-only handoff
 		// to the detected Shillinq app (IntegrationDetector). The manager group allowed to

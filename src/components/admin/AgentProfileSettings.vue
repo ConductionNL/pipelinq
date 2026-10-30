@@ -8,6 +8,23 @@
 		<NcLoadingIcon v-if="loading" />
 
 		<div v-else class="agent-settings">
+			<div class="agent-rotation" data-testid="lead-rotation-switch">
+				<NcCheckboxRadioSwitch
+					:modelValue="rotationEnabled"
+					:loading="savingRotation"
+					type="switch"
+					@update:modelValue="setRotation">
+					{{ t('pipelinq', 'Assign new leads automatically') }}
+				</NcCheckboxRadioSwitch>
+				<p class="agent-rotation__hint">
+					{{
+						t(
+							'pipelinq',
+							'A new lead without an owner goes to the colleague with the right skill who had the fewest leads in the last 30 days.',
+						)
+					}}
+				</p>
+			</div>
 			<div v-for="profile in profiles" :key="profile.id" class="agent-item">
 				<div v-if="editingId !== profile.id" class="agent-item__display">
 					<div class="agent-item__info">
@@ -16,6 +33,11 @@
 							v-if="profile.isAvailable === false"
 							variant="warning"
 							:label="t('pipelinq', 'Unavailable')"
+							class="agent-availability" />
+						<CnStatusBadge
+							v-if="profile.pauseLeadAssignment === true"
+							variant="warning"
+							:label="t('pipelinq', 'Lead assignment paused')"
 							class="agent-availability" />
 						<span class="agent-meta">
 							{{
@@ -28,6 +50,14 @@
 									n: profile.maxConcurrent || 10,
 								})
 							}}
+							<template v-if="profile.leadCapPer30Days">
+								·
+								{{
+									t('pipelinq', 'at most {n} leads per 30 days', {
+										n: profile.leadCapPer30Days,
+									})
+								}}
+							</template>
 						</span>
 					</div>
 					<div class="agent-item__actions cn-settings-row-actions">
@@ -90,6 +120,27 @@
 							</label>
 						</div>
 					</div>
+					<div class="edit-row">
+						<div class="edit-field">
+							<label for="agent-edit-lead-cap">{{
+								t('pipelinq', 'Lead cap per 30 days')
+							}}</label>
+							<input
+								id="agent-edit-lead-cap"
+								v-model.number="editForm.leadCapPer30Days"
+								type="number"
+								min="1"
+								:placeholder="t('pipelinq', 'No cap')" />
+						</div>
+						<div class="edit-field">
+							<label>
+								<input
+									v-model="editForm.pauseLeadAssignment"
+									type="checkbox" />
+								{{ t('pipelinq', 'Pause lead assignment') }}
+							</label>
+						</div>
+					</div>
 					<div class="edit-actions">
 						<NcButton @click="cancelEdit">
 							{{ t('pipelinq', 'Cancel') }}
@@ -123,9 +174,15 @@
 
 <script>
 import { CnDeleteDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
-import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcSettingsSection,
+} from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import { useAgentProfilesStore } from '../../store/modules/agentProfiles.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 import { useSkillsStore } from '../../store/modules/skills.js'
 
 export default {
@@ -135,6 +192,7 @@ export default {
 		CnDeleteDialog,
 		CnStatusBadge,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcSettingsSection,
 	},
@@ -145,6 +203,7 @@ export default {
 			deleting: null,
 			editingId: null,
 			editForm: {},
+			savingRotation: false,
 		}
 	},
 
@@ -183,6 +242,16 @@ export default {
 		allSkills() {
 			return this.skillsStore.skills
 		},
+
+		/**
+		 * Whether automatic lead assignment is switched on.
+		 *
+		 * @return {boolean} True when on.
+		 * @spec openspec/changes/pipeline-lead-rotation/specs/lead-rotation/spec.md#requirement-new-unassigned-leads-are-assigned-in-turn-req-lrt-001
+		 */
+		rotationEnabled() {
+			return String(useSettingsStore().config?.lead_rotation_enabled) === 'true'
+		},
 	},
 
 	/**
@@ -191,6 +260,9 @@ export default {
 	mounted() {
 		this.profilesStore.fetchProfiles()
 		this.skillsStore.fetchSkills()
+		if (!useSettingsStore().config) {
+			useSettingsStore().fetchSettings()
+		}
 	},
 
 	methods: {
@@ -243,8 +315,28 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-10
 		 */
 		async saveEdit() {
-			await this.profilesStore.saveProfile(this.editForm)
+			const form = { ...this.editForm, pauseLeadAssignment: this.editForm.pauseLeadAssignment === true }
+			const cap = Number(form.leadCapPer30Days)
+			if (!Number.isInteger(cap) || cap < 1) {
+				delete form.leadCapPer30Days
+			}
+			await this.profilesStore.saveProfile(form)
 			this.cancelEdit()
+		},
+
+		/**
+		 * Switch automatic lead assignment on or off.
+		 *
+		 * @param {boolean} enabled The new state.
+		 * @spec openspec/changes/pipeline-lead-rotation/specs/lead-rotation/spec.md#requirement-new-unassigned-leads-are-assigned-in-turn-req-lrt-001
+		 */
+		async setRotation(enabled) {
+			this.savingRotation = true
+			try {
+				await useSettingsStore().saveSettings({ lead_rotation_enabled: enabled ? 'true' : 'false' })
+			} finally {
+				this.savingRotation = false
+			}
 		},
 
 		/**
@@ -291,6 +383,12 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
+}
+
+.agent-rotation__hint {
+	margin: 0 0 8px;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
 }
 
 .agent-item {
