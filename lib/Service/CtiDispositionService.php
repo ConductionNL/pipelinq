@@ -96,7 +96,7 @@ class CtiDispositionService {
 	 * @throws \InvalidArgumentException When $outcome is not in self::OUTCOMES, or $queue is unknown.
 	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
-	 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
 	 */
 	public function processDisposition(
 		string $interactionId,
@@ -151,7 +151,7 @@ class CtiDispositionService {
 	 *
 	 * @return array<int, array{id: string, label: string}> The queues.
 	 *
-	 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
 	 */
 	public function queueChoices(): array {
 		return array_map(
@@ -170,7 +170,7 @@ class CtiDispositionService {
 	 *
 	 * @throws \InvalidArgumentException When the queue is unknown.
 	 *
-	 * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
 	 */
 	private function escalationGroup(string $queue): ?string {
 		if ($queue === '') {

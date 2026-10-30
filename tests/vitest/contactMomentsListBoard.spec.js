@@ -8,7 +8,7 @@
  * with its direction ("Telefoon · inkomend"), the time reads as a day and a
  * time ("vandaag, 09.12"), and long texts wrap instead of being cut off.
  *
- * @spec openspec/changes/contact-moments-list-board/specs/contact-moments-list-board/spec.md
+ * @spec openspec/specs/contact-moments-list-board/spec.md
  */
 
 import fs from 'fs'

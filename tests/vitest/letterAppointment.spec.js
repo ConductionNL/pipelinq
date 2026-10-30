@@ -5,7 +5,7 @@
  * The appointment a letter reads (PqBriefOpstellen's Afspraak field): the
  * client's next one that still stands, the one on the letter's ticket first.
  *
- * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
  */
 
 import { describe, expect, it } from 'vitest'

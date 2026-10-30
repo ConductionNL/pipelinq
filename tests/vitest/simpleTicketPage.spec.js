@@ -576,7 +576,7 @@ describe('the body', () => {
  * Board PqContactmoment: a contact moment (ticketType interaction) is read on
  * the same page with its own cards, and a request keeps its own.
  *
- * @spec openspec/changes/contact-moment-page/specs/ticket-detail-page/spec.md#requirement-a-contact-moment-has-its-own-overview-on-the-ticket-page
+ * @spec openspec/specs/ticket-detail-page/spec.md#requirement-a-contact-moment-has-its-own-overview-on-the-ticket-page
  */
 describe('the contact moment (board PqContactmoment)', () => {
 	const MOMENT = { ticketType: 'interaction', status: 'in_progress', client: 'c-1', parentTicket: 't-0' }

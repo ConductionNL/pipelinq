@@ -30,7 +30,7 @@ use PHPUnit\Framework\TestCase;
  * Board PqGesprekAfronden offers "Vergunningen, tweede lijn"; every seeded
  * queue routes to a group the set creates.
  *
- * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+ * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
  */
 class ZuiddrechtEscalationQueuesTest extends TestCase {
 	/**

@@ -5,7 +5,7 @@
  * PqAanvraagOmzetten: in the simple menu the ticket page offers "Aan een klant
  * koppelen" while the ticket has no client, as the full profile does.
  *
- * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
  */
 import { describe, expect, it } from 'vitest'
 import simple from '../../src/menu-layout.simple.json'

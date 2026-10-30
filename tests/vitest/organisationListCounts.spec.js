@@ -6,7 +6,7 @@
  * complaints that still need work, and its last contact is its newest
  * contact moment.
  *
- * @spec openspec/changes/organisation-list-counts/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

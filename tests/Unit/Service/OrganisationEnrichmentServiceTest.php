@@ -30,7 +30,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Enrichment proposes KvK values for empty fields and writes the accepted ones.
  *
- * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 class OrganisationEnrichmentServiceTest extends TestCase {
 	/**

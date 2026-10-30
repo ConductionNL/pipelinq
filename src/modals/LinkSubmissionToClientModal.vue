@@ -134,7 +134,7 @@ import { linkPlan, runLinkPlan, submittedParty } from '../utils/submissionLink.j
  *
  * @param {string} page The page address as submitted.
  * @return {string} The address to show.
- * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
  */
 export function readablePage(page) {
 	return String(page || '').replace(/^https?:\/\//, '').replace(/(.)\/$/, '$1')
@@ -198,12 +198,12 @@ export default {
 	},
 
 	computed: {
-		/** @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
+		/** @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
 		party() {
 			return submittedParty(this.ticket)
 		},
 
-		/** @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
+		/** @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
 		sentRows() {
 			const rows = [
 				[t('pipelinq', 'Name'), this.party.name],
@@ -216,27 +216,27 @@ export default {
 			return rows.filter(([, value]) => value).map(([label, value, wide = false]) => ({ label, value, wide }))
 		},
 
-		/** @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
+		/** @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
 		plannedClientName() {
 			return this.party.organisation || this.party.name || this.party.email
 		},
 
-		/** @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
+		/** @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
 		plannedContactName() {
 			return this.party.name || this.party.email
 		},
 
-		/** @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
+		/** @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
 		clientSources() {
 			return [{ id: 'client', register: 'pipelinq', schema: 'client', label: t('pipelinq', 'Client'), title: '{name}', secondary: '{email}' }]
 		},
 
-		/** @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
+		/** @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
 		contactSources() {
 			return [{ id: 'contact', register: 'pipelinq', schema: 'contact', label: t('pipelinq', 'Contact person'), title: '{name}', secondary: '{email}' }]
 		},
 
-		/** @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
+		/** @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step */
 		canLink() {
 			if (!this.ticket) {
 				return false
@@ -256,7 +256,7 @@ export default {
 		/**
 		 * Read the ticket and look for a client and a contact that already match.
 		 *
-		 * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
 		 */
 		async load() {
 			try {
@@ -287,7 +287,7 @@ export default {
 		/**
 		 * Run the plan the choices make, then close.
 		 *
-		 * @spec openspec/changes/website-submissions-link-to-client/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
 		 */
 		async link() {
 			this.linking = true

@@ -59,7 +59,7 @@ export async function clickToDial(targetNumber, extension) {
  * @param {string} disposition.notes Free-text notes.
  * @param {string} [disposition.queue] The escalation queue id; sent only with an escalated call.
  * @return {Promise<object>} The saved disposition.
- * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+ * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
  */
 export async function submitDisposition(
 	contactmomentId,
@@ -84,7 +84,7 @@ export async function submitDisposition(
  * The escalation queues an agent can hand an escalated call to.
  *
  * @return {Promise<Array<{id: string, label: string}>>} The queues.
- * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+ * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
  */
 export async function escalationQueues() {
 	const { data } = await axios.get(base('/api/cti/escalation-queues'))

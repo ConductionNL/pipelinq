@@ -266,7 +266,7 @@ class FilinqLetterAdapter
      *
      * @throws RuntimeException When filinq is absent, cannot preview, or the preview fails.
      *
-     * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+     * @spec openspec/specs/client-letters/spec.md
      */
     public function preview(string $templateId, array $dataRefs): array
     {

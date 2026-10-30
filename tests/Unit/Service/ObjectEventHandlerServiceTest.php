@@ -241,7 +241,7 @@ class ObjectEventHandlerServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
 	 */
 	public function testHandleCreatedPassesContactName(): void {
 		$this->schemaMapService->method('resolveEntityType')->willReturn('contact');
@@ -272,7 +272,7 @@ class ObjectEventHandlerServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
 	 */
 	public function testCreatedActivityThroughRealServices(): void {
 		$activityManager = $this->createMock(\OCP\Activity\IManager::class);

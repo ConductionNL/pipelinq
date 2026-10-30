@@ -90,7 +90,7 @@ export function downloadLetter(letter) {
  * @param {string} clientId The client.
  * @param {{templateId: string, contactId?: string, ticketId?: string}} input What the letter is made from.
  * @return {Promise<{html: string, fields: Array<{label: string, value: string, source: string, filled: boolean}>, complete: boolean, warnings: string[]}>}
- * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+ * @spec openspec/specs/client-letters/spec.md
  */
 export async function previewLetter(clientId, input) {
 	const body = { templateId: input.templateId }
@@ -117,7 +117,7 @@ export async function previewLetter(clientId, input) {
  *
  * @param {string} html The previewed document.
  * @return {string} The sanitised body.
- * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+ * @spec openspec/specs/client-letters/spec.md
  */
 export function letterPreviewBody(html) {
 	const doc = new DOMParser().parseFromString(String(html || ''), 'text/html')

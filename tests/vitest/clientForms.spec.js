@@ -268,7 +268,7 @@ describe('New client dialog as board PqKlantNieuw draws it', () => {
 	})
 
 	/**
-	 * @spec openspec/changes/client-duplicate-notice-board/specs/client-management/spec.md#requirement-the-duplicate-warning-is-a-bordered-notice
+	 * @spec openspec/specs/client-management/spec.md#requirement-the-duplicate-warning-is-a-bordered-notice
 	 */
 	it('draws the duplicate warning as the board\'s bordered notice, 12px in, the notes field 89.5px tall', () => {
 		const sfc = readFileSync(resolve(__dirname, '../../src/views/clients/ClientForm.vue'), 'utf8')

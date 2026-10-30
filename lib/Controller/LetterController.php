@@ -211,7 +211,7 @@ class LetterController extends Controller
      *
      * @return JSONResponse The preview, or an error.
      *
-     * @spec openspec/changes/letter-preview-and-fields/specs/client-letters/spec.md
+     * @spec openspec/specs/client-letters/spec.md
      */
     #[NoAdminRequired]
     public function preview(string $id): JSONResponse
@@ -259,7 +259,7 @@ class LetterController extends Controller
      * @return array<string, mixed>|string The records (`client`, `contactId`, `ticketId`, `refs`: filinq's
      *         references), or the not-found message.
      *
-     * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
      */
     private function readRecords(string $clientId): array|string
     {
@@ -352,7 +352,7 @@ class LetterController extends Controller
      *
      * @return bool True when the letter may read it.
      *
-     * @spec openspec/changes/letter-salutation-and-appointment/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
      */
     private function appointmentOf(string $appointmentId, string $clientId, ?string $ticketId): bool
     {

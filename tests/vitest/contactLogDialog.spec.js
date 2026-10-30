@@ -8,7 +8,7 @@
  * with now, the duration, the subject, the notes and the customer. It saves a
  * contact moment under the ticket, for the ticket's customer.
  *
- * @spec openspec/changes/contact-log-dialog/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
+ * @spec openspec/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
  */
 import { flushPromises, mount } from '@vue/test-utils'
 import { readFileSync } from 'fs'

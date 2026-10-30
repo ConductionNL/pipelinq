@@ -5,7 +5,7 @@
  * The client's identity card names the customer number and the source of
  * the customer's data, as the PqKlant board draws them.
  *
- * @spec openspec/changes/client-number-and-source/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 
 import { readFileSync } from 'node:fs'

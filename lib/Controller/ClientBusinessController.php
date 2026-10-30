@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/client-side-cards-appointments-business-knowledge/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
+ * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\IRequest;
 /**
  * The client's business for the side card.
  *
- * @spec openspec/changes/client-side-cards-appointments-business-knowledge/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
+ * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
  */
 class ClientBusinessController extends Controller {
 	/**
@@ -58,7 +58,7 @@ class ClientBusinessController extends Controller {
 	 *
 	 * @return JSONResponse The sentences, or the refusal.
 	 *
-	 * @spec openspec/changes/client-side-cards-appointments-business-knowledge/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
+	 * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
 	 */
 	#[NoAdminRequired]
 	public function index(string $id): JSONResponse {

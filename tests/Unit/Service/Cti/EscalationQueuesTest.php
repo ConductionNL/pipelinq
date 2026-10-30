@@ -35,7 +35,7 @@ use Psr\Log\LoggerInterface;
  * Board PqGesprekAfronden: an escalated call goes to the queue the agent
  * chose ("Vergunningen, tweede lijn"); a queue routes to a Nextcloud group.
  *
- * @spec openspec/changes/cti-escalation-queues/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+ * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
  */
 class EscalationQueuesTest extends TestCase {
 

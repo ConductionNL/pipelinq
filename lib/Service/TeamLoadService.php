@@ -77,7 +77,7 @@ class TeamLoadService {
 	 * @return array<int, array<string, mixed>> The rows.
 	 *
 	 * @spec openspec/changes/skill-routing/tasks.md#task-1.3
-	 * @spec openspec/changes/team-today-names-colleagues/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
+	 * @spec openspec/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
 	 */
 	public function getTeamLoad(): array {
 		$rows = [];
@@ -113,7 +113,7 @@ class TeamLoadService {
 	 *
 	 * @return string The name.
 	 *
-	 * @spec openspec/changes/team-today-names-colleagues/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
+	 * @spec openspec/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
 	 */
 	private function displayName(array $profile, string $userId): string {
 		$name = (string) ($profile['displayName'] ?? '');

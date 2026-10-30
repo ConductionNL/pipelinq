@@ -111,7 +111,7 @@ class KvkApiClient {
 	 *
 	 * @return array<int, array<string, mixed>> The rows; empty when the source answers nothing.
 	 *
-	 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	public function companyByNumber(string $kvkNumber): array {
 		return ($this->getViaOpenRegister(path: 'company', query: ['kvkNumber' => $kvkNumber]) ?? []);
@@ -124,7 +124,7 @@ class KvkApiClient {
 	 *
 	 * @return array<int, array<string, mixed>> The rows; empty when the source answers nothing.
 	 *
-	 * @spec openspec/changes/organisation-enrichment/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	public function searchByName(string $name): array {
 		return ($this->getViaOpenRegister(path: 'search', query: ['q' => $name, 'limit' => 10, 'page' => 1]) ?? []);
