@@ -7921,7 +7921,8 @@
 				"state": "built",
 				"evidence": "appinfo/info.xml",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"change": "openspec/changes/platform-properties",
+				"requirement": "The app runs on the customer's own Nextcloud (REQ-PLAT-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://legal.hubspot.com/terms-of-service defines the \"Subscription Service\" as \"web-based applications ... developed, operated, and maintained by us, accessible via http://hubspot.com\"; https://legal.hubspot.com/security points to \"HubSpot Cloud Infrastructure hosted on AWS\". No self-hosted edition.",
@@ -7953,7 +7954,8 @@
 				"state": "built",
 				"evidence": "LICENSE",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"change": "openspec/changes/platform-properties",
+				"requirement": "The source code is open under the EUPL-1.2 (REQ-PLAT-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://legal.hubspot.com/terms-of-service 2.9: \"You will not (i) directly or indirectly reverse engineer, decompile, disassemble or otherwise attempt to uncover or discover the source code\" of the service.",
@@ -7985,7 +7987,8 @@
 				"state": "built",
 				"evidence": "appinfo/info.xml declares no licensing tier",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"change": "openspec/changes/platform-properties",
+				"requirement": "Users are not counted or licensed per seat (REQ-PLAT-003)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://www.hubspot.com/pricing/sales Starter \"Starts at $7/mo/seat\", Professional \"$90/mo/seat\", Enterprise \"$150/mo/seat\"; \"View-only Seats are available at no additional cost\"; the free CRM covers \"up to 2 users\". Read-only colleagues are free, working colleagues are not. Note: Evidence refreshed: the free tier is now two users, not unlimited.",
@@ -8017,7 +8020,8 @@
 				"state": "built",
 				"evidence": "lib/AppInfo/Application.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"change": "openspec/changes/platform-properties",
+				"requirement": "The app lives in the Nextcloud workspace (REQ-PLAT-004)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/connected-email/use-contact-profiles-with-the-hubspot-sales-office-365-add-in \"Access your CRM contact information directly from your Outlook inbox ... log sales activities ... create tasks and associate companies, deals, and tickets\"; Teams integration at https://knowledge.hubspot.com/integrations/connect-hubspot-and-microsoft-teams. All products and plans. Add-ins bring HubSpot into Microsoft 365 or Gmail; the CRM itself stays a separate web app. Note: Was no; the Outlook add-in and Teams app put the CRM beside mail and calendar.",
@@ -8049,7 +8053,8 @@
 				"state": "built",
 				"evidence": "appinfo/routes.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"change": "openspec/changes/platform-properties",
+				"requirement": "Login is the Nextcloud login (REQ-PLAT-005)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-security/set-up-single-sign-on-sso single sign-on over SAML for users of the account. Marketing, Sales, Service or Data Hub Professional, Enterprise; Google and Microsoft login on every plan.",
@@ -8335,7 +8340,8 @@
 				"evidence": "css/dashboardWidgets.css",
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-09-26",
-				"spec": "none"
+				"change": "openspec/changes/platform-properties",
+				"requirement": "The look comes from the theme, not the code (REQ-PLAT-006)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/branding/edit-your-logo-favicon-and-brand-colors brand kits (logo, favicon, colors, theme, fonts) are \"applied across HubSpot-hosted content and supported tools, such as the content editor, scheduling pages, quotes, and conversation channels\". All products and plans. Outward content only; the app interface keeps HubSpot's look.",
