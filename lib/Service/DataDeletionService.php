@@ -106,6 +106,7 @@ class DataDeletionService {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 *
 	 * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014-openregister-compliance-subsystem-consumption-boundary
+	 * @spec openspec/specs/avg-verzoeken-workflow/spec.md#REQ-AVG-018
 	 */
 	public function pseudonymizeCustomerBookings(string $customerId, bool $dryRun = false): array {
 		$summary = ['bookings' => 0, 'held' => 0];
