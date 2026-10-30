@@ -7,8 +7,12 @@
 		">
 		<NcLoadingIcon v-if="loading" />
 
-		<div v-else class="skill-settings">
-			<div v-for="skill in skills" :key="skill.id" class="skill-item">
+		<div v-else class="skill-settings cn-settings-list">
+			<div
+				v-for="skill in skills"
+				:key="skill.id"
+				class="skill-item"
+				:class="{ 'cn-settings-row': editingId !== skill.id }">
 				<div v-if="editingId !== skill.id" class="skill-item__display">
 					<div class="skill-item__info">
 						<span class="skill-title">{{ skill.title }}</span>
