@@ -37,7 +37,8 @@ describe('the resource overview', () => {
 	})
 
 	it('draws the schedule tables as the board does', () => {
-		expect(rule('.viewTableContainer')).not.toContain('box-shadow')
+		// The library's table.css raises the frame; the board draws it flat.
+		expect(rule('.viewTableContainer')).toContain('box-shadow: none')
 		expect(rule('.viewTable')).toContain('font-size: 14px')
 		expect(rule('.viewTable th')).toContain('background-color: var(--color-main-background)')
 		expect(rule('.viewTable th')).toContain('font-weight: 600')

@@ -779,8 +779,9 @@ export default {
 
 .viewTableContainer {
 	background: var(--color-main-background);
-	border-radius: var(--border-radius-large, 8px);
+	border-radius: 8px;
 	overflow: hidden;
+	box-shadow: none;
 	border: 1px solid var(--color-border);
 }
 
