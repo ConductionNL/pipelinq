@@ -184,6 +184,7 @@ OC.L10N.register(
         "e.g. value (optional)": "e.g. value (optional)",
         "Edit": "Edit",
         "Edit pipeline": "Edit pipeline",
+        "Edit stage": "Edit stage",
         "Edit stages": "Edit stages",
         "Email": "Email",
         "Employees": "Employees",
