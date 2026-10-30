@@ -3807,6 +3807,9 @@
 			"title": "Questions and reports",
 			"_note": "Unified ticket workspace (unify-ticket-supertype). One index over the ticket schema replacing the former Requests/Complaints/Contactmomenten pages; a ticketType quickFilter tab strip narrows to each subtype. Type-specific columns (complaintCategory, outcome) are omitted from the shared table — they surface on the detail page.",
 			"config": {
+				"_savedViewShareNote": "Board PqTicketsSelectie (design-system #826): an open saved view of the tickets list (\"Klachten deze week\") is shared from the toolbar, \"Delen: <view>\" beside Weergave opslaan, through the same share dialog as dossiq (nextcloud-vue saved-view-share-from-toolbar). Only the reader's own stored view gets the button.",
+				"allowSavedViews": true,
+				"savedViewShare": true,
 				"register": "pipelinq",
 				"createModal": "RequestCreateDialog",
 				"schema": "ticket",
