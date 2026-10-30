@@ -1500,6 +1500,8 @@
 					}
 				},
 				"editTitle": "Edit ticket",
+				"editEyebrow": "Edit · {reference}",
+				"editSubtitle": "{reference} · {ticketType}",
 				"editConfirmLabel": "Save changes"
 			},
 			"configPatch": {

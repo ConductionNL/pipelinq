@@ -9367,7 +9367,9 @@ OC.L10N.register(
         "Finish this task": "Finish this task",
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
-        "Attempt logged.": "Attempt logged."
+        "Attempt logged.": "Attempt logged.",
+        "Edit · {reference}": "Edit · {reference}",
+        "{reference} · {ticketType}": "{reference} · {ticketType}"
     },
     "nplurals=2; plural=(n != 1);"
 )

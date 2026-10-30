@@ -9381,7 +9381,9 @@ OC.L10N.register(
         "Finish this task": "Deze taak afronden",
         "What came out of the callback?": "Wat kwam er uit het terugbellen?",
         "Log attempt": "Poging vastleggen",
-        "Attempt logged.": "Poging vastgelegd."
+        "Attempt logged.": "Poging vastgelegd.",
+        "Edit · {reference}": "Bewerken · {reference}",
+        "{reference} · {ticketType}": "{reference} · {ticketType}"
     },
     "nplurals=2; plural=(n != 1);"
 )
