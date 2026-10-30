@@ -6689,6 +6689,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "k1",
@@ -6697,7 +6698,8 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "k2",
@@ -6706,7 +6708,8 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "k3",
@@ -6715,7 +6718,8 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "1",
@@ -6724,7 +6728,8 @@
 						"gridY": 2,
 						"gridWidth": 12,
 						"gridHeight": 18,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					}
 				],
 				"sidebar": {
