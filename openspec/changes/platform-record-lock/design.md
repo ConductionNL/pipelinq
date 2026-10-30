@@ -88,6 +88,12 @@ register, schema and object id, shows a toast and refreshes the page. Lock stays
 a plain `api-call` with `confirm: true` and an optional reason in its payload.
 When nextcloud-vue's api-call learns DELETE, the handler can go.
 
+Built differently (30 Oct 2026): a registered handler on a detail page is
+called with `{ actionId, item, args }`, where `item` is the row of a list and
+`args` are not token-resolved, so the handler never learns the object id. The
+api-call learned DELETE in nextcloud-vue instead (`method: "DELETE"`, the
+payload sent as request data), and Unlock is a plain `api-call`. No handler.
+
 ### D5. Refusing a delete is OpenRegister's rule
 
 A locked record must not be deleted by accident. That rule belongs next to the

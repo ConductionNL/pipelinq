@@ -9381,7 +9381,18 @@ OC.L10N.register(
         "Finish this task": "Deze taak afronden",
         "What came out of the callback?": "Wat kwam er uit het terugbellen?",
         "Log attempt": "Poging vastleggen",
-        "Attempt logged.": "Poging vastgelegd."
+        "Attempt logged.": "Poging vastgelegd.",
+        "Lock": "Vergrendelen",
+        "Unlock": "Ontgrendelen",
+        "Lock this client?": "Deze klant vergrendelen?",
+        "Lock this lead?": "Deze lead vergrendelen?",
+        "Lock this ticket?": "Dit ticket vergrendelen?",
+        "Nobody can change it until someone unlocks it.": "Niemand kan het wijzigen tot iemand het ontgrendelt.",
+        "Locked.": "Vergrendeld.",
+        "Unlocked.": "Ontgrendeld.",
+        "Locked": "Vergrendeld",
+        "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Unlock it to make a change.": "Vergrendeld door {subject.@self.frozen.by} op {subject.@self.frozen.at|date}. Ontgrendel het om iets te wijzigen.",
+        "Locked. Unlock it to make a change.": "Vergrendeld. Ontgrendel het om iets te wijzigen."
     },
     "nplurals=2; plural=(n != 1);"
 )

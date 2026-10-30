@@ -385,6 +385,7 @@ class SlaDeadlineSweepJob extends TimedJob {
 	 *
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 * @spec openspec/specs/klachtenregistratie/spec.md#Background-Job-for-SLA-Monitoring
+	 * @spec openspec/changes/platform-record-lock/specs/record-locking/spec.md#requirement-a-user-can-lock-a-client-a-finished-lead-or-a-finished-ticket-req-prl-001
 	 */
 	private function processEntity(
 		$entity,
@@ -396,6 +397,11 @@ class SlaDeadlineSweepJob extends TimedJob {
 		object $objectService,
 	): bool {
 		try {
+			// A locked (frozen) record refuses every write, so the sweep leaves it alone.
+			if (is_object($entity) === true && method_exists($entity, 'isFrozen') === true && $entity->isFrozen() === true) {
+				return false;
+			}
+
 			$data = $this->extractData(entity: $entity);
 			$uuid = $this->extractUuid(entity: $entity, data: $data);
 
