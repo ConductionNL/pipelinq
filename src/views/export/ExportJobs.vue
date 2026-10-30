@@ -72,7 +72,7 @@ const DESTINATION_TYPES = {
  *
  * @param {object} row The job row.
  * @return {string} The expression, or ''.
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-reads-its-schedule-in-words
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-reads-its-schedule-in-words
  */
 function scheduleSource(row) {
 	const written = typeof row?.scheduleCron === 'string' ? row.scheduleCron : ''
@@ -166,7 +166,7 @@ export default {
 		 * The tab strip over the BI export lists (board PqBiExport).
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-the-bi-export-lists-share-one-tab-strip
+		 * @spec openspec/specs/bi-export-board/spec.md#requirement-the-bi-export-lists-share-one-tab-strip
 		 */
 		pageTabs() {
 			return exportPageTabs(t)

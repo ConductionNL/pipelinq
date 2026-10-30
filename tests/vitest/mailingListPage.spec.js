@@ -143,7 +143,7 @@ describe('the Subscribers table and header line', () => {
 })
 
 /**
- * @spec openspec/changes/mailing-list-subscribers-card-table/specs/marketing-lists/spec.md#requirement-the-subscribers-table-fits-its-card
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-table-fits-its-card
  */
 describe('the PqMailinglijst board look (pl4)', () => {
 	const sfc = fs.readFileSync(path.join(ROOT, 'src/components/marketing/SubscriptionsSection.vue'), 'utf8')

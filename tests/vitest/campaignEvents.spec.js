@@ -5,7 +5,7 @@
  * A campaign's events and their registrations, as the PqEvenement board draws
  * one event.
  *
- * @spec openspec/changes/campaign-events/specs/marketing-campaigns/spec.md
+ * @spec openspec/specs/marketing-campaigns/spec.md
  */
 
 import { readFileSync } from 'node:fs'

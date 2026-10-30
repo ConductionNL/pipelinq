@@ -278,7 +278,7 @@ class SocialMetricsService {
 	 *
 	 * @return array<int, array<string, mixed>> The per-network rows.
 	 *
-	 * @spec openspec/changes/social-network-totals/specs/social-metrics/spec.md#requirement-social-performance-is-summed-per-network-for-a-period
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-social-performance-is-summed-per-network-for-a-period
 	 */
 	public function networkTotals(int $days = 30): array {
 		$since = (new DateTimeImmutable('-' . max(1, $days) . ' days'))->getTimestamp();

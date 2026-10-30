@@ -128,7 +128,7 @@ class CronExpressionHelperTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
 	 */
 	public function testNextRunAfterNightly(): void {
 		$before = $this->cron->nextRunAfter(expression: '0 2 * * *', from: new DateTimeImmutable('2026-10-07 01:30:00'));
@@ -143,7 +143,7 @@ class CronExpressionHelperTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
 	 */
 	public function testNextRunAfterHourlyWeeklyAndShortcut(): void {
 		// Wednesday 7 October 2026, 10:01.
@@ -164,7 +164,7 @@ class CronExpressionHelperTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
 	 */
 	public function testNextRunAfterNone(): void {
 		$from = new DateTimeImmutable('2026-10-07 10:00:00');

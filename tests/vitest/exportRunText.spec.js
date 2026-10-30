@@ -6,7 +6,7 @@
  * year) and the line under the last run's status (rows, files, or why it
  * failed).
  *
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
  */
 
 import { describe, expect, it } from 'vitest'

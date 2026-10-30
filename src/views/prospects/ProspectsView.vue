@@ -256,7 +256,7 @@ export default {
 		 * The lenses above the list, as the board draws them.
 		 *
 		 * @return {Array<{label: string}>}
-		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 * @spec openspec/specs/prospect-discovery/spec.md
 		 */
 		lensTabs() {
 			return [
@@ -270,7 +270,7 @@ export default {
 		 * How many companies each lens holds, within the search and the Filter menu.
 		 *
 		 * @return {number[]}
-		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 * @spec openspec/specs/prospect-discovery/spec.md
 		 */
 		lensCounts() {
 			return this.lensTabs.map((_, index) => this.narrowedProspects.filter((p) => matchesProspectLens(p, index, new Date())).length)
@@ -280,7 +280,7 @@ export default {
 		 * The companies the search and the Filter menu leave.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 * @spec openspec/specs/prospect-discovery/spec.md
 		 */
 		narrowedProspects() {
 			return (this.prospectStore.prospects || []).filter((p) => prospectMatches(p, this.search, this.activeFilters))
@@ -291,7 +291,7 @@ export default {
 		 * the list was refreshed.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 * @spec openspec/specs/prospect-discovery/spec.md
 		 */
 		headerLine() {
 			const parts = [
@@ -451,7 +451,7 @@ export default {
 		 * A lens chip was chosen; choosing the active one again goes back to All.
 		 *
 		 * @param {number|null} value The lens index.
-		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 * @spec openspec/specs/prospect-discovery/spec.md
 		 */
 		selectLens(value) {
 			this.lens = value === null ? 0 : value
@@ -462,7 +462,7 @@ export default {
 		 * The search field: company, SBI code or place.
 		 *
 		 * @param {string} value The search text.
-		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 * @spec openspec/specs/prospect-discovery/spec.md
 		 */
 		onSearch(value) {
 			this.search = typeof value === 'string' ? value : ''
@@ -473,7 +473,7 @@ export default {
 		 * A choice in the Filter menu.
 		 *
 		 * @param {{key: string, values: string[]}} payload The field and its chosen values.
-		 * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+		 * @spec openspec/specs/prospect-discovery/spec.md
 		 */
 		onFilterChange(payload) {
 			if (!payload || !payload.key) return

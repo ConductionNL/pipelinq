@@ -12,7 +12,7 @@
   - Connection audit: the stored follow audit, with Check again.
 
   @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
-  @spec openspec/changes/search-insight-hub/specs/marketing/spec.md
+  @spec openspec/specs/marketing/spec.md
 -->
 <template>
 	<div class="search-queries" :class="lookClass">

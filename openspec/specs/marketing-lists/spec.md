@@ -14,6 +14,7 @@ status: in-progress
 Mailing lists a person can join and leave on their own. A list holds its own sender identity and opt-in mode, a subscription records one person's membership with the ground it rests on, and four signed public endpoints let a recipient subscribe, confirm, unsubscribe and manage preferences without a Nextcloud account.
 
 ## Requirements
+
 ### Requirement: A Mailing List Carries Its Own Sender Identity and Opt-In Mode
 
 A mailing list SHALL carry the sender name, sender address, reply-to address and postal footer used for every mailing sent to it, and an opt-in mode of either `double` or `soft`. New lists SHALL default to `double`. A list SHALL declare whether it accepts public signup; a list that does not SHALL refuse the public subscribe endpoint.
@@ -186,3 +187,16 @@ Every public list endpoint SHALL be reachable without a session, SHALL carry an 
 
 - **WHEN** the public subscribe endpoint is called with a list id that does not exist
 - **THEN** the response SHALL be 404 with the same body a list closed to public signup returns
+
+### Requirement: The Subscribers table fits its card
+
+The mailing list's Subscribers table SHALL fit the width of its card, with its heads drawn as labels and a small filter
+button on the card's ground, and SHALL show the "Subscribers" heading once.
+
+#### Scenario: Board PqMailinglijst
+
+- **WHEN** a user opens a mailing list with six subscribers at a 1440px viewport
+- **THEN** every column, Bevestigd included, sits inside the Subscribers card
+- **AND** the head row is about 42px tall, with no boxed buttons
+- **AND** "Subscribers" appears once, as the card's title
+- **AND** the list details run in two columns

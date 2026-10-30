@@ -233,7 +233,7 @@ class ExportJobService extends AbstractExportService {
 	 * @return array<string, mixed> The updated job.
 	 *
 	 * @throws OCSNotFoundException When the job is absent.
-	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
 	 */
 	public function recordRun(string $jobId, array $run): array {
 		$job = array_merge($this->getJob(id: $jobId), $this->summary->lastRunSummary(run: $run));

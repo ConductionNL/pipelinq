@@ -293,7 +293,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{data[]}`.
 	 *
-	 * @spec openspec/changes/social-network-totals/specs/social-metrics/spec.md#requirement-social-performance-is-summed-per-network-for-a-period
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-social-performance-is-summed-per-network-for-a-period
 	 */
 	#[NoAdminRequired]
 	public function networkPerformance(int $days = 30): JSONResponse {

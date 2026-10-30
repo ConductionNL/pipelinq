@@ -5,7 +5,7 @@
  * The prospects page's lenses, search and Filter menu (PqProspects), over the
  * list the prospects endpoint returns.
  *
- * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+ * @spec openspec/specs/prospect-discovery/spec.md
  */
 
 /** A score above this is a good fit (the score's high band). */
@@ -21,7 +21,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000
  * @param {number} lens The lens index.
  * @param {Date} now The current moment.
  * @return {boolean}
- * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+ * @spec openspec/specs/prospect-discovery/spec.md
  */
 export function matchesProspectLens(prospect, lens, now) {
 	if (lens === 1) {
@@ -46,7 +46,7 @@ export function matchesProspectLens(prospect, lens, now) {
  * @param {string} search The search text.
  * @param {{[field: string]: string[]}} filters The chosen values per field.
  * @return {boolean}
- * @spec openspec/changes/prospects-as-drawn/specs/prospect-discovery/spec.md
+ * @spec openspec/specs/prospect-discovery/spec.md
  */
 export function prospectMatches(prospect, search, filters) {
 	for (const [field, values] of Object.entries(filters || {})) {

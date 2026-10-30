@@ -5,7 +5,7 @@
  * The newsletter results page as boards PqNieuwsbriefPrestaties (Overzicht),
  * PqNieuwsbriefABTest and PqNieuwsbriefToeschrijving draw it.
  *
- * @spec openspec/changes/newsletter-results-board/specs/marketing/spec.md
+ * @spec openspec/specs/marketing/spec.md
  */
 
 import { readFileSync } from 'node:fs'
