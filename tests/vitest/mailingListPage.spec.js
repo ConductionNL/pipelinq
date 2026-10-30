@@ -64,7 +64,18 @@ describe('the mailing list page as the board', () => {
 	it('keeps History on top of the side column, three changes long', () => {
 		expect(page.config.sideColumnOrder).toBe('declared')
 		expect(page.config.sideColumn[0]).toBe('list-side-history')
-		expect(widget('list-side-history').content.limit).toBe(3)
+		expect(widget('list-side-history').content.maxDisplay).toBe(3)
+	})
+
+	it('draws both History cards as the Dq history: stacked rows, compact, in words', () => {
+		for (const id of ['list-side-history', 'list-history']) {
+			const history = widget(id)
+			expect(history.type).toBe('audit-trail')
+			expect(history.content.layout).toBe('stacked')
+			expect(history.content.density).toBe('compact')
+			expect(history.content.excludeActions).toEqual(['read'])
+			expect(history.content.actionLabels).toEqual({ create: 'Created by {actor}', update: 'Updated' })
+		}
 	})
 
 	it('draws the sign-up form and the subscriber preview as titled cards', () => {
