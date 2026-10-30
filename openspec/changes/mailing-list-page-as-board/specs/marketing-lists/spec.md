@@ -39,6 +39,17 @@ person pending until they open it, and take a member who is a known contact off 
 The Subscribers table SHALL sort on every column, turning the order around on a second press, and SHALL filter every
 column on the values its rows hold.
 
+#### Scenario: Sorting and filtering subscribers
+- GIVEN a mailing list with 40 subscribers
+- WHEN the user presses the Subscribed on column header twice
+- THEN the rows are ordered newest first after the second press
+- AND filtering the Status column on "Confirmed" shows only confirmed subscribers
+
 ### Requirement: The header names the confirmed subscribers and who made the list
 
 The mailing list page's header line SHALL read the count of confirmed subscribers, who created the list and when.
+
+#### Scenario: The header line
+- GIVEN a mailing list with 128 confirmed subscribers, created by Sanne de Vries on 3 October 2026
+- WHEN the user opens the mailing list page
+- THEN the header line names the 128 confirmed subscribers, Sanne de Vries and 3 October 2026

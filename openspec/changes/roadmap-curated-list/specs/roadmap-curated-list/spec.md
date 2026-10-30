@@ -1,6 +1,6 @@
 # roadmap-curated-list Delta
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: The page reads the curated feature list
 
