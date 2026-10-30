@@ -6,7 +6,7 @@
  * verhoogd van 60 naar 80", "Joke van Dam staat op de wachtlijst", the side
  * card the newest four.
  *
- * @spec openspec/changes/campaign-events/specs/marketing-campaigns/spec.md
+ * @spec openspec/specs/marketing-campaigns/spec.md
  */
 
 import { readFileSync } from 'node:fs'

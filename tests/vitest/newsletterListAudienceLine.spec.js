@@ -6,7 +6,7 @@
  * "Segment: verenigingen in Zuiddrecht · 412 contacten" or "Mailinglijst:
  * Afvalnieuws · 2.180 abonnees", read through nc-vue's `secondaryRefs`.
  *
- * @spec openspec/changes/newsletter-list-audience-line/specs/marketing/spec.md
+ * @spec openspec/specs/marketing/spec.md
  */
 
 import { readFileSync } from 'node:fs'

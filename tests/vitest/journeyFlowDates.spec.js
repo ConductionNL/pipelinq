@@ -6,7 +6,7 @@
  * The journey's Flow card names the day the journey became a flow, as the
  * PqJourney board writes it ("Op 2 okt omgezet naar een flow").
  *
- * @spec openspec/changes/journey-flow-dates/specs/marketing-integrated-campaigns/spec.md
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md
  */
 
 import { evaluateVisibleWhenLocal } from '@conduction/nextcloud-vue/dist/esm/utils/visibleWhen.js'

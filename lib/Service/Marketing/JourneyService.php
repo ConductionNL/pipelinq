@@ -275,7 +275,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed> The journey, with `activatedAt` set when it went live now.
 	 *
-	 * @spec openspec/changes/journey-flow-dates/specs/marketing-integrated-campaigns/spec.md
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md
 	 */
 	private function stampActivation(array $journey, ?array $before, string $now): array {
 		$wasActive = (($before['status'] ?? '') === 'active');

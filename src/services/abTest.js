@@ -6,7 +6,7 @@
  * one variant, a 2x2 chi-square p-value over two variants, and which variant
  * clicked better.
  *
- * @spec openspec/changes/newsletter-results-board/specs/marketing/spec.md
+ * @spec openspec/specs/marketing/spec.md
  */
 
 /**
@@ -18,7 +18,7 @@
  * @param {object} templateSubjects Subject per template id.
  * @return {{delivered: number, clicked: number, clickRate: number, subject: string}}
  *
- * @spec openspec/changes/newsletter-results-board/specs/marketing/spec.md#requirement-the-a-b-tab-names-the-variant-that-clicked-better
+ * @spec openspec/specs/marketing/spec.md#requirement-the-a-b-tab-names-the-variant-that-clicked-better
  */
 export function variantStats(blast, templateSubjects = {}) {
 	const totals = blast?.totals || {}
@@ -39,7 +39,7 @@ export function variantStats(blast, templateSubjects = {}) {
  * @param {Array<object>} blasts The loaded blasts.
  * @return {Array<string>} Distinct template ids.
  *
- * @spec openspec/changes/newsletter-results-board/specs/marketing/spec.md#requirement-the-a-b-tab-names-the-variant-that-clicked-better
+ * @spec openspec/specs/marketing/spec.md#requirement-the-a-b-tab-names-the-variant-that-clicked-better
  */
 export function abTemplateIds(blasts) {
 	const parents = new Set(blasts.map((b) => b.abVariantOf).filter(Boolean))

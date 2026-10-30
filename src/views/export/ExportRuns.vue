@@ -77,7 +77,7 @@ export default {
 		 * The tab strip over the BI export lists (board PqBiExport).
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-the-bi-export-lists-share-one-tab-strip
+		 * @spec openspec/specs/bi-export-board/spec.md#requirement-the-bi-export-lists-share-one-tab-strip
 		 */
 		pageTabs() {
 			return exportPageTabs(t)

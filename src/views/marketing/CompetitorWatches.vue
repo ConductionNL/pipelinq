@@ -221,7 +221,7 @@ export default {
 		 * up what changed.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/search-insight-hub/specs/marketing/spec.md
+		 * @spec openspec/specs/marketing/spec.md
 		 */
 		latestChange() {
 			const event = this.events[0]

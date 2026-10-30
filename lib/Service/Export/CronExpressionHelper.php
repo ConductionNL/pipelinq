@@ -223,7 +223,7 @@ class CronExpressionHelper {
 	 * @return DateTimeImmutable|null The next firing minute, or null when the
 	 *                                  expression is invalid or never fires in the horizon.
 	 *
-	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
 	 */
 	public function nextRunAfter(string $expression, \DateTimeInterface $from, int $horizonDays=400): ?DateTimeImmutable {
 		$fields = $this->fieldsOf(expression: $expression);

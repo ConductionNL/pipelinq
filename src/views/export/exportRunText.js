@@ -28,7 +28,7 @@ function userLocale() {
  * @param {Date} [now] The reference moment.
  * @param {string} [locale] The locale.
  * @return {string} The moment, or the value as text.
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
  */
 export function exportMoment(value, now = new Date(), locale = userLocale()) {
 	if (value === null || value === undefined || value === '') {
@@ -55,7 +55,7 @@ export function exportMoment(value, now = new Date(), locale = userLocale()) {
  * @param {Date} [now] The reference moment.
  * @param {string} [locale] The locale.
  * @return {string} The line.
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
  */
 export function lastRunLine(job, now = new Date(), locale = userLocale()) {
 	const when = exportMoment(job?.lastRunAt, now, locale)
@@ -95,7 +95,7 @@ const SHORTCUTS = {
  * @param {unknown} value A five-field cron expression or an @-shortcut.
  * @param {string} [locale] The locale, for the weekday.
  * @return {string} The schedule in words, or the value as written.
- * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-reads-its-schedule-in-words
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-reads-its-schedule-in-words
  */
 export function exportSchedule(value, locale = userLocale()) {
 	const written = typeof value === 'string' ? value.trim() : ''

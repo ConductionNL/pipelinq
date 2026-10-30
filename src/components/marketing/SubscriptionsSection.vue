@@ -17,7 +17,7 @@
   - schema and cannot break one field out into four counts on one strip.
   -
   - @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
-  - @spec openspec/changes/mailing-list-subscribers-card-table/specs/marketing-lists/spec.md#requirement-the-subscribers-table-fits-its-card
+  - @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-table-fits-its-card
   -->
 <template>
 	<component

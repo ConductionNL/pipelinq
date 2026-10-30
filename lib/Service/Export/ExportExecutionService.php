@@ -200,7 +200,7 @@ class ExportExecutionService {
 	 *
 	 * @return array<string, mixed> The run, unchanged.
 	 *
-	 * @spec openspec/changes/bi-export-board/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
 	 */
 	private function recordOnJob(string $jobId, array $run): array {
 		try {

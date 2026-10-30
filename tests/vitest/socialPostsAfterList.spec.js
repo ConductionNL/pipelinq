@@ -7,7 +7,7 @@
  * and "Social accounts", each account with its status and the step that
  * fits it, linking to the account.
  *
- * @spec openspec/changes/social-network-totals/specs/social-metrics/spec.md#requirement-social-performance-is-summed-per-network-for-a-period
+ * @spec openspec/specs/social-metrics/spec.md#requirement-social-performance-is-summed-per-network-for-a-period
  */
 
 import fs from 'fs'

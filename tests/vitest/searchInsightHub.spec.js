@@ -6,7 +6,7 @@
  * search queries, the keyword proposals, the competitor watches and the
  * connection audit as titled sections.
  *
- * @spec openspec/changes/search-insight-hub/specs/marketing/spec.md
+ * @spec openspec/specs/marketing/spec.md
  */
 
 import { readFileSync } from 'node:fs'
