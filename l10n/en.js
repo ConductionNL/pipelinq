@@ -9367,7 +9367,14 @@ OC.L10N.register(
         "Finish this task": "Finish this task",
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
-        "Attempt logged.": "Attempt logged."
+        "Attempt logged.": "Attempt logged.",
+        "Lock": "Lock",
+        "Unlock": "Unlock",
+        "The ticket is locked. Nobody can change it until it is unlocked.": "The ticket is locked. Nobody can change it until it is unlocked.",
+        "Could not lock this ticket.": "Could not lock this ticket.",
+        "The ticket is unlocked.": "The ticket is unlocked.",
+        "Only the person who locked this ticket can unlock it.": "Only the person who locked this ticket can unlock it.",
+        "Locked by {user} on {date} at {time}. Nobody can change or delete this ticket. Need to change something anyway? Unlock it first; who locked and unlocked it is in the history.": "Locked by {user} on {date} at {time}. Nobody can change or delete this ticket. Need to change something anyway? Unlock it first; who locked and unlocked it is in the history."
     },
     "nplurals=2; plural=(n != 1);"
 )
