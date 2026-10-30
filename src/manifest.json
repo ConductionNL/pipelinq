@@ -10776,7 +10776,7 @@
 				"viewMode": "list",
 				"showViewToggle": false,
 				"search": false,
-				"_expandableNote": "Board PqPipelines: each pipeline is a row that opens to its stages (nextcloud-vue expandableRows, index-expandable-rows). The first row is open. Closed, the stages are chips coloured by stage kind; open, a table with the order, chance, start stage, closed and result. Edit, Add stage and each stage's pencil (entryAction) open the pipeline's own form, where the stages are edited. The board's drag handle is not drawn: the order is edited in the form.",
+				"_expandableNote": "Board PqPipelines: each pipeline is a row that opens to its stages (nextcloud-vue expandableRows, index-expandable-rows). The first row is open. Closed, the stages are chips coloured by stage kind; open, a table with the order, chance, start stage, closed and result. Every stage-table header sorts and filters, and a stage's drag handle (or the arrow keys on it) moves it: the pipeline is saved with the stages renumbered in `order`. Edit, Add stage and each stage's pencil (entryAction) open the pipeline's own form, where the stages are edited.",
 				"expandableRows": {
 					"title": "title",
 					"badge": { "when": { "field": "isDefault", "op": "eq", "value": true }, "label": "Default" },
@@ -10793,6 +10793,9 @@
 					"meta": ["{stages|count} stages", "created {@self.created|date}"],
 					"table": {
 						"field": "stages",
+						"sortable": true,
+						"filterable": true,
+						"reorder": { "key": "order" },
 						"columns": [
 							{ "label": "Order", "as": "order" },
 							{ "key": "name", "label": "Stage", "strong": true },
@@ -10812,7 +10815,7 @@
 						"action": { "id": "edit", "label": "Add stage" },
 						"entryAction": { "id": "edit", "label": "Edit stage", "icon": "Pencil" }
 					},
-					"buttons": [{ "action": "edit", "label": "Edit" }],
+					"buttons": [{ "action": "edit", "label": "Edit", "icon": "Pencil" }],
 					"open": "first"
 				},
 				"cardLayout": {
