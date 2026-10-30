@@ -126,6 +126,8 @@ return [
         // Customer 360 consolidated summary (klantbeeld-360-activation) — cross-ticketType/status
         // aggregation the declarative layer can't express; per-object read guard on the client in the body.
         ['name' => 'customer360#summary', 'url' => '/api/customer-360/summary', 'verb' => 'GET'],
+        // Client history summary through hermiq, generated on request and never stored (clients-history-summary-and-risk, REQ-CIN-002).
+        ['name' => 'clientHistorySummary#show', 'url' => '/api/clients/{id}/history-summary', 'verb' => 'GET'],
         // The client's cases from dossiq's case leaf, by the client's master entity (PqKlant / PqOrganisatie Zaken).
         ['name' => 'clientCase#index', 'url' => '/api/clients/{id}/cases', 'verb' => 'GET'],
         ['name' => 'clientBusiness#index', 'url' => '/api/clients/{id}/business', 'verb' => 'GET'],
