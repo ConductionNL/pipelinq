@@ -11,9 +11,9 @@
  * @spec openspec/changes/journey-runs-card/specs/marketing-integrated-campaigns/spec.md#requirement-the-journey-runs-card-has-a-title-row
  */
 
+import { shallowMount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { shallowMount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@conduction/nextcloud-vue', () => ({ CnStatusBadge: {} }))
