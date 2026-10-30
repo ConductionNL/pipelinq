@@ -50,19 +50,19 @@ describe('sales overview', () => {
 		for (const id of ['closing-soon', 'recently-won-lost']) {
 			const widget = dashboard.config.widgets.find((w) => w.id === id)
 			expect(widget.type).toBe('record-list')
-			expect(widget.content.trailing).toEqual(['{value|currency}'])
 		}
+		expect(dashboard.config.widgets.find((w) => w.id === 'closing-soon').content.trailing).toEqual(['{value|currency}'])
 	})
 
 	it('says won or lost and who closed it in the meta line, not as a raw pill and a user id', () => {
 		const widget = dashboard.config.widgets.find((w) => w.id === 'recently-won-lost')
-		expect(widget.content.meta).toBe('{status} {expectedCloseDate|date} · {assignee|user}')
+		expect(widget.content.meta).toEqual({ parts: ['{status} {expectedCloseDate|date}', '{assignee|user}'] })
 		expect(widget.content.valueLabels).toEqual({ status: { won: 'Won', lost: 'Lost' } })
-		expect(widget.content.pill).toBeUndefined()
+		expect(widget.content.pill.field).toBeUndefined()
 	})
 
 	it('names the owner of a deal closing soon, not their user id', () => {
 		const widget = dashboard.config.widgets.find((w) => w.id === 'closing-soon')
-		expect(widget.content.meta).toBe('{stage} · {expectedCloseDate|date} · {assignee|user}')
+		expect(widget.content.meta).toEqual({ parts: ['{stage}', '{expectedCloseDate|date}', '{assignee|user}'] })
 	})
 })

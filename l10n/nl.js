@@ -9343,7 +9343,21 @@ OC.L10N.register(
         "Status: No-show": "Status: Niet verschenen",
         "Status: Cancelled by the customer": "Status: Geannuleerd door de klant",
         "Status: Cancelled by us": "Status: Geannuleerd door ons",
-        "Status: Rescheduled": "Status: Verzet"
+        "Status: Rescheduled": "Status: Verzet",
+        "till and won deals": "kassa en gewonnen deals",
+        "{wonCount} won": "{wonCount} gewonnen",
+        "{wonCount} won, {lostCount} lost": "{wonCount} gewonnen, {lostCount} verloren",
+        "of {openPipelineValue|currency} open, {scoredOpenCount} of {openCount} leads scored": "van {openPipelineValue|currency} open, {scoredOpenCount} van {openCount} leads met een score",
+        "per month, from running contracts": "per maand, op basis van lopende contracten",
+        "Won is {wonShareOfOpen}% of open.": "Gewonnen is {wonShareOfOpen}% van open.",
+        "Open pipeline against the target still to come in. Healthy from 3 x.": "Open pijplijn tegenover het doel dat nog binnen moet komen. Gezond vanaf 3 x.",
+        "Set a pipeline target": "Stel een pijplijndoel in",
+        "Matching prospects": "Passende prospects",
+        "From the KVK, scored on your profile": "Uit de KVK, gescoord op je profiel",
+        "Find more prospects": "Meer prospects vinden",
+        "Fit {fitScore}": "Past {fitScore}",
+        "{employeeCount} employees": "{employeeCount} medewerkers",
+        "No prospects match your profile yet.": "Nog geen prospects die bij je profiel passen."
     },
     "nplurals=2; plural=(n != 1);"
 )

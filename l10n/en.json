@@ -9415,6 +9415,20 @@
         "Status: No-show": "Status: No-show",
         "Status: Cancelled by the customer": "Status: Cancelled by the customer",
         "Status: Cancelled by us": "Status: Cancelled by us",
-        "Status: Rescheduled": "Status: Rescheduled"
+        "Status: Rescheduled": "Status: Rescheduled",
+        "till and won deals": "till and won deals",
+        "{wonCount} won": "{wonCount} won",
+        "{wonCount} won, {lostCount} lost": "{wonCount} won, {lostCount} lost",
+        "of {openPipelineValue|currency} open, {scoredOpenCount} of {openCount} leads scored": "of {openPipelineValue|currency} open, {scoredOpenCount} of {openCount} leads scored",
+        "per month, from running contracts": "per month, from running contracts",
+        "Won is {wonShareOfOpen}% of open.": "Won is {wonShareOfOpen}% of open.",
+        "Open pipeline against the target still to come in. Healthy from 3 x.": "Open pipeline against the target still to come in. Healthy from 3 x.",
+        "Set a pipeline target": "Set a pipeline target",
+        "Matching prospects": "Matching prospects",
+        "From the KVK, scored on your profile": "From the KVK, scored on your profile",
+        "Find more prospects": "Find more prospects",
+        "Fit {fitScore}": "Fit {fitScore}",
+        "{employeeCount} employees": "{employeeCount} employees",
+        "No prospects match your profile yet.": "No prospects match your profile yet."
     }
 }
