@@ -22,7 +22,8 @@
   - moved to pipelinq.conduction.nl/compare, which renders the same
   - `src/data/capabilityComparison.json` through the same helpers. What stays
   - here is one link to it, so the comparison is still one click from where a
-  - user used to find it.
+  - user used to find it. The library page draws that link (`compareUrl`), so
+  - it stands as the board draws it in the board look.
   -
   - The manifest `config` keys are declared as props here because
   - CnPageRenderer spreads `pages[].config` onto the dispatched component:
@@ -32,26 +33,6 @@
 
 <template>
 	<div class="features-roadmap">
-		<p class="features-roadmap__compare">
-			<a
-				class="features-roadmap__compare-link"
-				:href="comparisonUrl"
-				target="_blank"
-				rel="noopener noreferrer"
-				aria-describedby="features-roadmap-compare-hint">
-				{{ t('pipelinq', 'How pipelinq compares to other help desks') }}
-			</a>
-			<span
-				id="features-roadmap-compare-hint"
-				class="features-roadmap__compare-hint">
-				{{
-					t('pipelinq', 'Opens {host} in a new tab.', {
-						host: comparisonHost,
-					})
-				}}
-			</span>
-		</p>
-
 		<CnFeaturesAndRoadmapPage
 			:repo="repo"
 			:documentationUrl="documentationUrl"
@@ -59,7 +40,9 @@
 			:llmSkillsUrl="llmSkillsUrl"
 			:suggestUrl="suggestUrl"
 			:categories="categories"
-			:board="board" />
+			:board="board"
+			:compareUrl="comparisonUrl"
+			:compareLabel="compareLabel" />
 	</div>
 </template>
 
@@ -127,17 +110,13 @@ export default {
 		},
 
 		/**
-		 * The host the link opens, named in the hint beside it.
+		 * The compare link's text, in the reader's language.
 		 *
-		 * @return {string} Host name, e.g. `pipelinq.conduction.nl`.
+		 * @return {string}
 		 * @spec openspec/specs/features-roadmap/spec.md#requirement-the-page-must-link-to-the-comparison-on-the-public-site
 		 */
-		comparisonHost() {
-			try {
-				return new URL(this.comparisonUrl).host
-			} catch {
-				return this.comparisonUrl
-			}
+		compareLabel() {
+			return t('pipelinq', 'How pipelinq compares to other help desks')
 		},
 	},
 
@@ -146,23 +125,3 @@ export default {
 	},
 }
 </script>
-
-<style scoped>
-.features-roadmap__compare {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 4px 12px;
-	margin: 0;
-	padding: 12px 12px 0;
-}
-
-.features-roadmap__compare-link {
-	color: var(--color-primary-element);
-	text-decoration: underline;
-}
-
-.features-roadmap__compare-hint {
-	color: var(--color-text-maxcontrast);
-}
-</style>
