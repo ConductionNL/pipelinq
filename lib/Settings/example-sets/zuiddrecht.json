@@ -3254,8 +3254,8 @@
 			"data": {
 				"reference": "PQ-2026-0402",
 				"ticketType": "request",
-				"title": "Aanvraag collectevergunning",
-				"description": "De buurtvereniging wil in november langs de deuren in Oosthaven collecteren voor de speeltuin en vraagt een collectevergunning.",
+				"title": "Aanvraag collectevergunning buurtfeest",
+				"description": "De buurtvereniging wil in november langs de deuren in Oosthaven collecteren voor het buurtfeest en vraagt een collectevergunning.",
 				"client": "{{object:client-buurtoost.id}}",
 				"contactsUid": "{{cast:buurtoost.contactsUid}}",
 				"status": "in_progress",

@@ -52,7 +52,7 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 		);
 		$this->assertSame(
 			expected: [
-				'Aanvraag collectevergunning',
+				'Aanvraag collectevergunning buurtfeest',
 				'Vraag over huur buurthuis',
 				'Melding verlichting Oosthavenweg',
 				'Subsidie voor een straatfeest: welke documenten?',
