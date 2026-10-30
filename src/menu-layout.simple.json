@@ -3874,6 +3874,10 @@
 				"headerFilters": false,
 				"hideTableHeader": true,
 				"footerNote": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
+				"pagerOnOnePage": false,
+				"sidebar": {
+					"enabled": false
+				},
 				"filterStrip": {
 					"field": "channel",
 					"label": "Kind, then channel",
