@@ -3453,9 +3453,7 @@
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": [
-					"PqWerkplekKlant",
-					"PqArtikel",
-					"PqArtikelen"
+					"PqWerkplekKlant"
 				]
 			}
 		},
@@ -7478,8 +7476,7 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": [
 					"PqNieuwVerzoek",
-					"PqWerkplekKlant",
-					"PqBrpMonitor"
+					"PqWerkplekKlant"
 				]
 			}
 		},
