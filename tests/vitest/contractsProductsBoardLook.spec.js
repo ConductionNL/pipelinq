@@ -164,8 +164,29 @@ describe('product pages', () => {
 	it('draws the variants as a table with a status pill', () => {
 		const variants = widget(page(base.pages, 'ProductDetail'), 'product-variants')
 		expect(variants.content.objectRows).toEqual({ path: 'variants' })
-		expect(variants.content.columns.map((c) => c.label)).toEqual(['SKU', 'Name', 'Price', 'Barcode', 'Status'])
-		expect(variants.content.columns[4].tone.map).toEqual({ active: 'success' })
+		expect(variants.content.columns.find((c) => c.label === 'Status').tone.map).toEqual({ active: 'success' })
+	})
+
+	it('draws the price tiers and variants as data tables whose heads sort and filter, as PqProduct draws them', () => {
+		const detail = page(base.pages, 'ProductDetail')
+		for (const id of ['product-tiers', 'product-variants']) {
+			const content = widget(detail, id).content
+			expect(content.tableLook).toBe('data')
+			expect(content.sortable).toBe(true)
+			expect(content.filterable).toBe(true)
+		}
+	})
+
+	it('shows each variant\'s characteristics after its name', () => {
+		const variants = widget(page(base.pages, 'ProductDetail'), 'product-variants')
+		expect(variants.content.columns.map((c) => c.label)).toEqual(['SKU', 'Name', 'Characteristics', 'Price', 'Barcode', 'Status'])
+		expect(variants.content.columns[2].value).toBe('{attributes|values}')
+	})
+
+	it('lays the publication out in three columns: status, publication date, languages, then audience', () => {
+		const publication = widget(page(base.pages, 'ProductDetail'), 'product-publication')
+		expect(publication.content.columns).toBe(3)
+		expect(publication.content.include).toEqual(['status', 'publishedAt', 'languages', 'audience'])
 	})
 
 	it('draws a service in the teal pill, a product in the blue one', () => {
