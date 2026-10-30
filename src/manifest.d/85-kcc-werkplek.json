@@ -123,6 +123,7 @@
 							"clientField": "client",
 							"clientLabelField": "name",
 							"summaryField": "description",
+							"summaryRows": 3,
 							"channelField": "channel",
 							"outcomeField": "outcome",
 							"contactedAtField": "occurredAt",

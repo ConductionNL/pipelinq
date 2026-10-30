@@ -159,6 +159,7 @@ export default {
 	color: var(--color-main-text);
 	cursor: pointer;
 	font: inherit;
+	font-size: 14px;
 	font-weight: 600;
 }
 
