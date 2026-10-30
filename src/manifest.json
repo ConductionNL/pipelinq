@@ -3187,7 +3187,7 @@
 						}
 					}
 				],
-				"_layoutNote": "PqKlant and PqOrganisatie: the contact strip and one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity) stand in the band across the page; the tab strip and the side column start under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab. The band is compact (bandDensity), so the six figures fit one row of 67px tiles as drawn.",
+				"_layoutNote": "PqKlant and PqOrganisatie: the contact strip and one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity) stand in the band across the page; the tab strip and the side column start under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab. The band is compact (bandDensity), so the six figures fit one row of 67px tiles as drawn. The tab strip's cell sizes to the open tab, so a long Overview is not cut off and a short one leaves no gap above the body sections.",
 				"bandDensity": "compact",
 				"band": [
 					{ "widgetId": "client-contact-strip", "span": 12, "chrome": "bare" },
@@ -3206,7 +3206,8 @@
 						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 18,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					}
 				],
 				"bodyWidgets": [
