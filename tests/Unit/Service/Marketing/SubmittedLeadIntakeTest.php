@@ -171,4 +171,32 @@ class SubmittedLeadIntakeTest extends TestCase {
 		$this->assertFalse($intake->recordTouchpoint(leadId: '', lead: self::LEAD));
 		$this->assertSame(0, $this->store->countOf(schemaSlug: 'touchpoint'));
 	}//end testALeadWithoutANonceGetsNoTouchpoint()
+	/**
+	 * The stored lead's contact and client get the touch: the lead's own
+	 * client, the form page, and the form's name without the visitor's.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-contacts-and-clients-show-how-they-found-you-req-moc-001
+	 *
+	 * @return void
+	 */
+	public function testTheLeadsContactAndClientGetTheirTouches(): void {
+		$intake = $this->intake(
+			seed: [
+				'contact' => [['uuid' => 'contact-1', 'name' => 'Jane', 'email' => 'jane.doe@example.com']],
+				'client' => [['uuid' => 'client-1', 'name' => 'Gemeente Tilburg']],
+			]
+		);
+
+		$lead = array_merge(self::LEAD, ['contact' => 'contact-1', 'client' => 'client-1', 'title' => 'Webinar AI voor gemeenten: Jane Doe']);
+		$this->assertTrue($intake->recordTouchpoint(leadId: 'lead-1', lead: $lead));
+
+		$touch = $this->store->find(schemaSlug: 'client', id: 'client-1')['lastTouch'];
+		$this->assertSame('webinar', $touch['campaign']);
+		$this->assertSame('linkedin', $touch['source']);
+		$this->assertSame('page-1', $touch['landingPage']);
+		$this->assertSame('Webinar AI voor gemeenten', $touch['form']);
+		$this->assertSame('2026-10-12T09:15:00+02:00', $touch['at']);
+		$this->assertSame($touch, $this->store->find(schemaSlug: 'contact', id: 'contact-1')['firstTouch']);
+		$this->assertSame('client-1', $this->store->findAll(schemaSlug: 'touchpoint')[0]['clientId']);
+	}//end testTheLeadsContactAndClientGetTheirTouches()
 }//end class

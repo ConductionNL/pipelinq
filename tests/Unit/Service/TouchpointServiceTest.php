@@ -144,4 +144,110 @@ class TouchpointServiceTest extends TestCase {
 		$this->assertSame('direct', $service->channelForMedium(medium: ''));
 		$this->assertSame('beurs', $service->channelForMedium(medium: 'beurs'));
 	}//end testAMediumMapsToTheChannelTheReportGroupsBy()
+	/**
+	 * A first submission gives the contact and its client both touches, with
+	 * the campaign, the landing page, the form and when.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-contacts-and-clients-show-how-they-found-you-req-moc-001
+	 *
+	 * @return void
+	 */
+	public function testAFirstSubmissionSetsBothTouchesOnTheContactAndItsClient(): void {
+		$service = $this->build();
+		$this->store->rows['contact']['contact-1'] = ['uuid' => 'contact-1', 'name' => 'Jane', 'client' => 'client-1'];
+		$this->store->rows['client']['client-1'] = ['uuid' => 'client-1', 'name' => 'Gemeente Zeist'];
+
+		$saved = $service->recordSubmission(
+			touchpoint: [
+				'campaignId' => 'camp-1',
+				'contactId' => 'contact-1',
+				'kind' => 'submit',
+				'utm' => ['campaign' => 'webinar-ai-voor-gemeenten', 'source' => 'linkedin', 'medium' => 'social'],
+				'occurredAt' => '2026-10-02T10:00:00+02:00',
+			],
+			landingPage: 'zuiddrecht/evenementen',
+			form: 'Straatfeest aanvragen'
+		);
+
+		$this->assertSame('client-1', $saved['clientId']);
+		$this->assertSame('zuiddrecht/evenementen', $saved['landingPage']);
+
+		$expected = [
+			'campaign' => 'webinar-ai-voor-gemeenten',
+			'source' => 'linkedin',
+			'medium' => 'social',
+			'term' => '',
+			'content' => '',
+			'campaignId' => 'camp-1',
+			'landingPage' => 'zuiddrecht/evenementen',
+			'form' => 'Straatfeest aanvragen',
+			'at' => '2026-10-02T10:00:00+02:00',
+		];
+		foreach (['contact' => 'contact-1', 'client' => 'client-1'] as $schema => $id) {
+			$record = $this->store->find(schemaSlug: $schema, id: $id);
+			$this->assertSame($expected, $record['firstTouch'], $schema);
+			$this->assertSame($expected, $record['lastTouch'], $schema);
+		}
+
+		$this->assertSame('Gemeente Zeist', $this->store->find(schemaSlug: 'client', id: 'client-1')['name']);
+	}//end testAFirstSubmissionSetsBothTouchesOnTheContactAndItsClient()
+
+	/**
+	 * A later submission changes only the last touch.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-contacts-and-clients-show-how-they-found-you-req-moc-001
+	 *
+	 * @return void
+	 */
+	public function testALaterSubmissionChangesOnlyTheLastTouch(): void {
+		$service = $this->build();
+		$this->store->rows['contact']['contact-1'] = ['uuid' => 'contact-1', 'name' => 'Jane'];
+
+		foreach (['voorjaar' => '2026-03-01T10:00:00+01:00', 'najaar' => '2026-10-01T10:00:00+02:00'] as $campaign => $at) {
+			$service->recordSubmission(
+				touchpoint: ['contactId' => 'contact-1', 'kind' => 'submit', 'utm' => ['campaign' => $campaign], 'occurredAt' => $at]
+			);
+		}
+
+		$contact = $this->store->find(schemaSlug: 'contact', id: 'contact-1');
+		$this->assertSame('voorjaar', $contact['firstTouch']['campaign']);
+		$this->assertSame('najaar', $contact['lastTouch']['campaign']);
+		$this->assertSame(2, $this->store->countOf(schemaSlug: 'touchpoint'));
+	}//end testALaterSubmissionChangesOnlyTheLastTouch()
+
+	/**
+	 * A contact without a client writes only the contact; the lead's own
+	 * client wins over the contact's.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-contacts-and-clients-show-how-they-found-you-req-moc-001
+	 *
+	 * @return void
+	 */
+	public function testTheClientIsTheTouchpointsOwnElseTheContacts(): void {
+		$service = $this->build();
+		$this->store->rows['contact']['contact-1'] = ['uuid' => 'contact-1', 'name' => 'Jane'];
+		$this->store->rows['client']['client-2'] = ['uuid' => 'client-2', 'name' => 'Gemeente Utrecht'];
+
+		$saved = $service->recordSubmission(touchpoint: ['contactId' => 'contact-1', 'kind' => 'submit', 'occurredAt' => '2026-10-01T10:00:00+02:00']);
+		$this->assertArrayNotHasKey('clientId', $saved);
+		$this->assertSame(0, ($this->store->writes['client'] ?? 0));
+
+		$service->recordSubmission(touchpoint: ['contactId' => 'contact-1', 'clientId' => 'client-2', 'kind' => 'submit', 'occurredAt' => '2026-10-02T10:00:00+02:00']);
+		$this->assertSame('2026-10-02T10:00:00+02:00', $this->store->find(schemaSlug: 'client', id: 'client-2')['lastTouch']['at']);
+	}//end testTheClientIsTheTouchpointsOwnElseTheContacts()
+
+	/**
+	 * A refused touchpoint writes no touch.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-contacts-and-clients-show-how-they-found-you-req-moc-001
+	 *
+	 * @return void
+	 */
+	public function testARefusedTouchpointWritesNoTouch(): void {
+		$service = $this->build();
+		$this->store->rows['contact']['contact-1'] = ['uuid' => 'contact-1', 'name' => 'Jane'];
+
+		$this->assertNull($service->recordSubmission(touchpoint: ['contactId' => 'contact-1', 'kind' => 'bounce']));
+		$this->assertArrayNotHasKey('lastTouch', $this->store->find(schemaSlug: 'contact', id: 'contact-1'));
+	}//end testARefusedTouchpointWritesNoTouch()
 }//end class

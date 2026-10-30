@@ -167,14 +167,16 @@ class LandingPageFormSubmittedListener implements IEventListener {
 			);
 		}
 
-		$this->touchpoints->append(
+		$this->touchpoints->recordSubmission(
 			touchpoint: $this->touchpointFor(
 				event: $event,
 				campaignId: $campaignId,
 				contactId: $contactId,
 				leadId: $leadId,
 				nonce: $nonce
-			)
+			),
+			landingPage: $this->landingPageOf(event: $event),
+			form: (string)($campaign['name'] ?? '')
 		);
 
 		if ($leadId !== '') {
@@ -183,6 +185,22 @@ class LandingPageFormSubmittedListener implements IEventListener {
 
 		$event->setHandled(true);
 	}//end ingest()
+
+	/**
+	 * The landing page as the portal and the page's route: `zuiddrecht/evenementen`.
+	 *
+	 * @param LandingPageFormSubmittedEvent $event The submission.
+	 *
+	 * @return string The landing page, or an empty string.
+	 */
+	private function landingPageOf(LandingPageFormSubmittedEvent $event): string {
+		$parts = array_filter(
+			[trim($event->getPortal(), " \t/"), trim($event->getPageRoute(), " \t/")],
+			static fn (string $part): bool => $part !== ''
+		);
+
+		return implode('/', $parts);
+	}//end landingPageOf()
 
 	/**
 	 * The campaign this submission belongs to.

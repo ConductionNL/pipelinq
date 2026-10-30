@@ -9367,7 +9367,15 @@ OC.L10N.register(
         "Finish this task": "Finish this task",
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
-        "Attempt logged.": "Attempt logged."
+        "Attempt logged.": "Attempt logged.",
+        "Campaign record": "Campaign record",
+        "The campaign the submission was attributed to.": "The campaign the submission was attributed to.",
+        "The campaign, source, medium, landing page and form of this record's first web form submission. Written once and kept.": "The campaign, source, medium, landing page and form of this record's first web form submission. Written once and kept.",
+        "The campaign, source, medium, landing page and form of this record's latest web form submission.": "The campaign, source, medium, landing page and form of this record's latest web form submission.",
+        "The client of the contact who submitted, when there is one.": "The client of the contact who submitted, when there is one.",
+        "The name of the form that was sent.": "The name of the form that was sent.",
+        "The page the form sat on.": "The page the form sat on.",
+        "When the form was sent.": "When the form was sent."
     },
     "nplurals=2; plural=(n != 1);"
 )

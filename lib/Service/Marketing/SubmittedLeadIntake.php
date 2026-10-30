@@ -145,6 +145,8 @@ class SubmittedLeadIntake {
 	 * @return bool True when a touchpoint was written.
 	 *
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/marketing-campaigns/spec.md#requirement-a-landing-page-form-submits-into-a-lead-with-its-contact-and-touchpoint
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-contacts-and-clients-show-how-they-found-you-req-moc-001
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-a-website-form-submission-keeps-its-campaign-values-req-moc-003
 	 */
 	public function recordTouchpoint(string $leadId, array $lead): bool {
 		$nonce = trim((string)($lead['nonce'] ?? ''));
@@ -153,22 +155,44 @@ class SubmittedLeadIntake {
 		}
 
 		$utm = $this->utmBlock(utm: ($lead['lastTouch'] ?? []));
-		$saved = $this->touchpoints->append(
+		$page = trim((string)($lead['pageId'] ?? ''));
+		$saved = $this->touchpoints->recordSubmission(
 			touchpoint: [
 				'campaignId' => trim((string)($lead['campaignId'] ?? '')),
 				'contactId' => trim((string)($lead['contact'] ?? '')),
+				'clientId' => trim((string)($lead['client'] ?? '')),
 				'leadId' => $leadId,
 				'kind' => 'submit',
 				'channel' => $this->touchpoints->channelForMedium(medium: $utm['medium']),
 				'utm' => $utm,
-				'sourceRef' => trim((string)($lead['pageId'] ?? '')),
+				'sourceRef' => $page,
 				'occurredAt' => trim((string)($lead['submittedAt'] ?? '')),
 				'nonce' => $nonce,
-			]
+			],
+			landingPage: $page,
+			form: $this->formName(lead: $lead)
 		);
 
 		return ($saved !== null);
 	}//end recordTouchpoint()
+
+	/**
+	 * The form's name: the lead's title without the visitor's name that
+	 * titleFor() added to it.
+	 *
+	 * @param array<string, mixed> $lead The stored lead.
+	 *
+	 * @return string The form's name, may be empty.
+	 */
+	private function formName(array $lead): string {
+		$title = trim((string)($lead['title'] ?? ''));
+		$name  = trim((string)($lead['submitterName'] ?? ''));
+		if ($name !== '' && str_ends_with($title, ': ' . $name) === true) {
+			$title = substr($title, 0, -strlen(': ' . $name));
+		}
+
+		return trim($title);
+	}//end formName()
 
 	/**
 	 * Whether this submission was recorded before.
