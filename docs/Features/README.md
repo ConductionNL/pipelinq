@@ -26,6 +26,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Feature | Summary | Status | Standards | Docs |
 |---------|---------|--------|-----------|------|
 | Client Management | CRUD for persons and organizations, contact persons, Nextcloud Contacts sync | Implemented | GEMMA CRM; TEC 1.4; Schema.org Organization/Person | [client-management.md](client-management.md) |
+| Churn risk and history summary | Risk level with reasons per client, and a written summary of recent history through hermiq | Implemented | GEMMA CRM | [client-risk-and-summary.md](client-risk-and-summary.md) |
 | Lead Management | Sales opportunity tracking through configurable pipeline stages | Implemented | GEMMA CRM; TEC 1.1, 1.3; Schema.org Offer | [lead-management.md](lead-management.md) |
 | Request Management | Service intake and citizen inquiry handling before case conversion | Implemented | GEMMA Callcenter; TEC 3.1–3.4; VNG Verzoeken | [request-management.md](request-management.md) |
 | Pipeline & Kanban | Configurable kanban boards with stage management for leads and requests | Implemented | TEC 1.10; GEMMA CRM | [pipeline-kanban.md](pipeline-kanban.md) |
@@ -71,6 +72,7 @@ The foundational sales and relationship management layer. These features are liv
 | Feature | Docs |
 |---------|------|
 | Client Management | [client-management.md](client-management.md) |
+| Churn risk and history summary | [client-risk-and-summary.md](client-risk-and-summary.md) |
 | Lead Management | [lead-management.md](lead-management.md) |
 | Pipeline & Kanban | [pipeline-kanban.md](pipeline-kanban.md) |
 | Request Management | [request-management.md](request-management.md) |
@@ -139,6 +141,7 @@ Used by `/opsx:archive` to determine the correct feature doc when archiving a ch
 
 ```
 client-management       → client-management.md
+client-insight          → client-risk-and-summary.md
 contacts-sync           → contacts-sync.md
 lead-management         → lead-management.md
 lead-product-link       → lead-product-link.md

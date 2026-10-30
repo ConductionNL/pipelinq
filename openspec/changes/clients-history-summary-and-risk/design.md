@@ -52,8 +52,15 @@ as `RelevanceScorer`, and returns the summary with `recordsRead` and
 
 ### D4. Where it shows
 
-- ClientDetail: a Risk badge in the header with its reasons in a popover, and a
-  History summary card with Summarise.
+- ClientDetail: a Churn risk tile in the row of figures under the contact strip,
+  as boards PqKlant and PqOrganisatie draw it (Afhaakrisico): the level, coloured,
+  with the heaviest reason under it. The board is the canon (decision 130), so
+  this replaces the header badge with a popover. Customer360Controller presents
+  the stored codes in the viewer's language (ClientRiskPresenter).
+- The History summary card with Summarise is not drawn on PqKlant or
+  PqOrganisatie yet. The endpoint is built
+  (`GET /api/clients/{id}/history-summary`, `available` without `generate`, the
+  summary with `generate=true`); the card waits for its board.
 - Clients list: a Risk column (badge) and an At risk quick filter
   (`churnRisk.level` is `high` or `medium`).
 
