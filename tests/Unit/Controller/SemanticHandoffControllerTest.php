@@ -727,7 +727,7 @@ class SemanticHandoffControllerTest extends TestCase {
 	 * With informCustomer the customer is answered with the new case's number,
 	 * the way every answer reaches the portal.
 	 *
-	 * @spec openspec/changes/convert-informs-the-customer/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
+	 * @spec openspec/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
 	 *
 	 * @return void
 	 */

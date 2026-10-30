@@ -8,7 +8,7 @@
  * pipelinq hands it the English source text and does not translate it first.
  * On 2.73.1 the label came back as written.
  *
- * @spec openspec/changes/round4-nextcloud-vue-2-76/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 
 import fs from 'fs'

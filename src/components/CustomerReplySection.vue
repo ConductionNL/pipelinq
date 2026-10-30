@@ -234,7 +234,7 @@ export default {
 		 * Saved reply placeholder values for this ticket.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		placeholderValues() {
 			return {
@@ -248,7 +248,7 @@ export default {
 		 * The customer's correspondence language, contact first.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		language() {
 			const party = this.contact || this.client
@@ -299,7 +299,7 @@ export default {
 		 * Read the ticket's client and contact for the saved reply placeholders.
 		 * A party that cannot be read leaves its placeholder as written.
 		 *
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		async loadParties() {
 			const store = useObjectStore()

@@ -702,7 +702,7 @@ class WhatsAppAdapterTest extends TestCase {
 	 * again can repeat the same template with the same values.
 	 *
 	 * @return void
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	public function testAFailedTemplateSendStoresItsParameters(): void {
 		$this->objectService->saveObject([

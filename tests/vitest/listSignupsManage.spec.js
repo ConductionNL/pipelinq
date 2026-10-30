@@ -6,7 +6,7 @@
  * Manage a list's sign-ups from the list (board PqMailinglijst "Aanmeldingen
  * beheren"): send the list's own confirmation link, or take a known member off.
  *
- * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-list-s-sign-ups-are-managed-from-the-list
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-a-list-s-sign-ups-are-managed-from-the-list
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

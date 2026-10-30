@@ -6,7 +6,7 @@
  * "Who is it" card as the light-blue tonal pill. A facts card's actions
  * take `variant: "tonal"` through the library's CnActionButtons.
  *
- * @spec openspec/changes/brp-verifies-the-client/specs/brp-lookup/spec.md
+ * @spec openspec/specs/brp-lookup/spec.md
  */
 import fs from 'node:fs'
 import path from 'node:path'

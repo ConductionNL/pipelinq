@@ -7,7 +7,7 @@
  * the caller up with what they checked, and the lookup names the client it
  * verifies, so the server records the verified identity on the client.
  *
- * @spec openspec/changes/brp-verifies-the-client/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
+ * @spec openspec/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
  */
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'

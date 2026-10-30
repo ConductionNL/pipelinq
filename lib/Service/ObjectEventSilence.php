@@ -19,7 +19,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ namespace OCA\Pipelinq\Service;
  * hard-depend on a given OpenRegister build. A build without the gate answers
  * "not silent", and the caller then writes nothing.
  *
- * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
 class ObjectEventSilence {
 	/**
@@ -63,7 +63,7 @@ class ObjectEventSilence {
 	 *
 	 * @return bool True when the system scope and the dispatch gate both exist.
 	 *
-	 * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+	 * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
 	 */
 	public function isSupported(): bool {
 		// Private methods count for method_exists() too. The class name is read from
@@ -80,7 +80,7 @@ class ObjectEventSilence {
 	 *
 	 * @phpstan-impure The answer depends on OpenRegister's ambient scope, which changes between calls.
 	 *
-	 * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+	 * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
 	 */
 	public function isActive(): bool {
 		if ($this->isSupported() === false) {

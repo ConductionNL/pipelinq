@@ -103,7 +103,7 @@ export default {
 		 * (board PqRoadmap), or null to leave the features ungrouped.
 		 *
 		 * @return {object|null}
-		 * @spec openspec/changes/roadmap-curated-list/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+		 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
 		 */
 		categories() {
 			return loadState('pipelinq', 'features_roadmap_categories', null)

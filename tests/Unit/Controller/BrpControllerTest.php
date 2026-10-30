@@ -160,7 +160,7 @@ class BrpControllerTest extends TestCase {
 	 * A lookup that verifies a client records on the client when its identity
 	 * was verified, via the BRP, and what the employee checked.
 	 *
-	 * @spec openspec/changes/brp-verifies-the-client/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
+	 * @spec openspec/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
 	 *
 	 * @return void
 	 */

@@ -419,7 +419,7 @@ export default {
 		 * Saved reply placeholder values for an email to this party.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
 		 */
 		emailPlaceholderValues() {
 			const name = (this.entity && this.entity.name) || ''

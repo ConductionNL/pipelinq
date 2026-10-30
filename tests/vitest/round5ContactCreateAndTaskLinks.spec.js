@@ -14,8 +14,8 @@
  *    in OpenRegister's name fallback), so the activity read "Task <uuid>
  *    updated" and the page heading fell back to "Task".
  *
- * @spec openspec/changes/round5-contact-create-and-task-links/specs/client-management/spec.md
- * @spec openspec/changes/round5-contact-create-and-task-links/specs/notifications-activity/spec.md
+ * @spec openspec/specs/client-management/spec.md
+ * @spec openspec/specs/notifications-activity/spec.md
  */
 
 import fs from 'fs'

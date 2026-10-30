@@ -98,7 +98,7 @@ export function enumWord(value) {
  * @param {object} [_row] The row (unused).
  * @param {object} [property] The schema property.
  * @return {string} The label.
- * @spec openspec/changes/round5-client-related-and-service-list/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export function enumLabel(value, _row, property) {
 	if (value === null || value === undefined || value === '') {
@@ -116,7 +116,7 @@ export function enumLabel(value, _row, property) {
  *
  * @param {unknown} value The stored value.
  * @return {string} "Yes", "No", or '' when unset.
- * @spec openspec/changes/round5-client-related-and-service-list/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export function yesNo(value) {
 	if (value === null || value === undefined || value === '') {

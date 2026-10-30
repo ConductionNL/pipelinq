@@ -247,7 +247,7 @@ export default {
 		 * The table's columns: each a label, the value a filter offers and
 		 * the value a sort compares.
 		 *
-		 * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
 		 * @return {Array<{key: string, label: string, text: (row: object) => string, sort: (row: object) => string}>}
 		 */
 		columns() {
@@ -264,7 +264,7 @@ export default {
 		 * The rows the table shows: those every column filter lets through,
 		 * in the chosen order.
 		 *
-		 * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
 		 * @return {Array<object>}
 		 */
 		shownRows() {
@@ -284,7 +284,7 @@ export default {
 		/**
 		 * The card's title and subtitle, when the section is its own card.
 		 *
-		 * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
 		 * @return {object} Props for CnDetailCard, or none.
 		 */
 		cardProps() {
@@ -365,7 +365,7 @@ export default {
 		 * Sort on a column; the same column again turns the order around.
 		 *
 		 * @param {string} key The column.
-		 * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
 		 */
 		sortBy(key) {
 			if (this.sortKey === key) {

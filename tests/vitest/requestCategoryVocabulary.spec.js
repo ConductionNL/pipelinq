@@ -7,7 +7,7 @@
  * ticketCategory list (name shown, key stored), the free-text field kept for
  * a tenant without one, and a stored category outside the list kept.
  *
- * @spec openspec/changes/request-category-from-vocabulary/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
+ * @spec openspec/specs/request-management/spec.md#requirement-a-requests-category-is-picked-from-the-tenants-category-list
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

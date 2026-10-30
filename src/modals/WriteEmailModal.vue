@@ -115,7 +115,7 @@ export default {
 		 * Whether the Nextcloud Mail app is enabled.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
 		 */
 		mailEnabled() {
 			let statuses
@@ -131,7 +131,7 @@ export default {
 		 * The URL Open in Mail opens.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
 		 */
 		url() {
 			return composeUrl(
@@ -150,7 +150,7 @@ export default {
 		/**
 		 * Open the composer (new tab) or the mail program, then close.
 		 *
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
 		 */
 		open() {
 			if (this.mailEnabled) {

@@ -6,7 +6,7 @@
  * Resultaat text area with Poging vastleggen and Afronden, both through the
  * callback endpoints, which check the user may change the task.
  *
- * @spec openspec/changes/task-finish-card/specs/callback-management/spec.md#requirement-a-task-is-finished-from-its-page
+ * @spec openspec/specs/callback-management/spec.md#requirement-a-task-is-finished-from-its-page
  */
 
 import fs from 'fs'

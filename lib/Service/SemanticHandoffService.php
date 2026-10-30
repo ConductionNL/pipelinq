@@ -121,7 +121,7 @@ class SemanticHandoffService {
 	 *
 	 * @return array{register: string, schema: string}|null The slugs, or null.
 	 *
-	 * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
+	 * @spec openspec/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
 	 */
 	public function implementerLocation(string $kindUri): ?array {
 		if ($kindUri === '') {

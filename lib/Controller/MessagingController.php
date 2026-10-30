@@ -154,7 +154,7 @@ class MessagingController extends Controller {
 	 *
 	 * @return JSONResponse The sanitised outcome envelope; 409 on a refusal.
 	 *
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	#[NoAdminRequired]
 	public function resend(string $id = ''): JSONResponse {

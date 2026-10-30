@@ -11,7 +11,7 @@
   - leaf's empty state, in the ticket's words (manifest `labels`). A manifest
   - `markdown` widget would carry the line, but it does not translate its text.
   -
-  - @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-the-ticket-page-has-a-decisions-tab-req-tdt-001
+  - @spec openspec/specs/ticket-decisions/spec.md#requirement-the-ticket-page-has-a-decisions-tab-req-tdt-001
   -->
 <template>
 	<div class="ticket-decision-routes" data-testid="ticket-decision-routes">

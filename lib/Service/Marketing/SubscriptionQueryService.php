@@ -283,7 +283,7 @@ class SubscriptionQueryService {
 	 *
 	 * @return array<string, mixed> The membership, with `name` when known.
 	 *
-	 * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
 	 */
 	private function withName(array $subscription): array {
 		$contactId = (string)($subscription['contactId'] ?? '');

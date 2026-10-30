@@ -793,7 +793,7 @@ class BrpController extends Controller {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/brp-verifies-the-client/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
+	 * @spec openspec/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
 	 */
 	private function stampClientIdentity(string $clientId, string $identityCheck, DateTimeImmutable $verifiedAt): void {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

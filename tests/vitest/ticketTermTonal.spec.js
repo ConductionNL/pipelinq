@@ -6,7 +6,7 @@
  * the light-blue tonal pill. A facts card's actions take
  * `variant: "tonal"` through the library's CnActionButtons.
  *
- * @spec openspec/changes/request-term-and-case-link/specs/request-management/spec.md
+ * @spec openspec/specs/request-management/spec.md
  */
 import fs from 'node:fs'
 import path from 'node:path'
