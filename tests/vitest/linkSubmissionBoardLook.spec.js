@@ -52,7 +52,7 @@ describe('LinkSubmissionToClientModal as board PqAanvraagOmzetten', () => {
 	})
 
 	it('draws the submission as a grey card with an uppercase eyebrow', () => {
-		expect(style).toMatch(/\.link-submission__sent \{[^}]*border-radius: 10px[^}]*background: var\(--color-background-hover/)
+		expect(style).toMatch(/\.link-submission__sent \{[^}]*border-radius: 10px[^}]*background: var\(--cn-board-sunken-ground, var\(--color-background-hover/)
 		expect(style).toMatch(/\.link-submission__sent h3 \{[^}]*text-transform: uppercase/)
 	})
 
