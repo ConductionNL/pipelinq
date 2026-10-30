@@ -67,10 +67,10 @@ class ZuiddrechtStraatfeestAbTestTest extends TestCase {
 	 * @return void
 	 */
 	public function testBothArmsAreLargeEnoughAndBWins(): void {
-		$part = $this->part();
-		$a    = $part['changes'][0]['set']['totals'];
-		$b    = array_column($part['objects'], 'data', 'key')['nieuwsbrief-straatfeest-variant-b']['totals'];
-		$this->assertSame(expected: 'Straatfeestseizoen: wat regel je', actual: $part['changes'][0]['where']['name']);
+		$objects = array_column($this->part()['objects'], 'data', 'key');
+		$a       = $objects['nieuwsbrief-straatfeest']['totals'];
+		$b       = $objects['nieuwsbrief-straatfeest-variant-b']['totals'];
+		$this->assertSame(expected: 'Straatfeestseizoen: wat regel je', actual: $objects['nieuwsbrief-straatfeest']['name']);
 		$this->assertGreaterThanOrEqual(expected: self::MIN_DELIVERED, actual: $a['delivered']);
 		$this->assertGreaterThanOrEqual(expected: self::MIN_DELIVERED, actual: $b['delivered']);
 		$this->assertGreaterThan(expected: ($a['clicked'] / $a['delivered']), actual: ($b['clicked'] / $b['delivered']));
@@ -88,7 +88,7 @@ class ZuiddrechtStraatfeestAbTestTest extends TestCase {
 		$part    = $this->part();
 		$objects = array_column($part['objects'], 'data', 'key');
 		$this->assertSame(expected: 'Straatfeest deze zomer? Dit moet je regelen', actual: $objects['sjabloon-straatfeest-variant-a']['subject']);
-		$this->assertSame(expected: '{{object:sjabloon-straatfeest-variant-a.id}}', actual: $part['changes'][0]['set']['templateId']);
+		$this->assertSame(expected: '{{object:sjabloon-straatfeest-variant-a.id}}', actual: $objects['nieuwsbrief-straatfeest']['templateId']);
 		$this->assertSame(expected: '{{object:sjabloon-straatfeest.id}}', actual: $objects['nieuwsbrief-straatfeest-variant-b']['templateId']);
 
 		$marketing = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.d/40-marketing.json'), true);

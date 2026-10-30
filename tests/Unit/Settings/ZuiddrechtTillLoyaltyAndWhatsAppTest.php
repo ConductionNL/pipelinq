@@ -56,22 +56,24 @@ class ZuiddrechtTillLoyaltyAndWhatsAppTest extends TestCase {
 	}//end fragment()
 
 	/**
-	 * The till asks for the loyalty account of the sale's customer, a contact; a change points Sanne's account at
-	 * that contact, because the account is declared before it.
+	 * The till asks for the loyalty account of the sale's customer, a contact; Sanne's account is declared after
+	 * that contact and names it itself.
 	 *
 	 * @return void
 	 */
 	public function testTheParkedSalesCustomerHasTheLoyaltyAccount(): void {
-		$fragment = $this->fragment();
-		$objects  = array_column($fragment['objects'], null, 'key');
-		$changes  = array_column($fragment['changes'], null, 'key');
-		$sale     = $objects['kassa-geparkeerd-sanne']['data'];
-		$change   = $changes['spaarpas-account-sanne-aan-de-kassa'];
+		$keys    = array_column($this->fragment()['objects'], 'key');
+		$objects = array_column($this->fragment()['objects'], null, 'key');
+		$sale    = $objects['kassa-geparkeerd-sanne']['data'];
+		$account = $objects['spaarpas-account-sanne']['data'];
 
 		$this->assertSame(expected: '{{object:contact-sanne-thuis.id}}', actual: $sale['customer']);
-		$this->assertSame(expected: 'spaarpas-account-sanne', actual: $change['object']);
-		$this->assertSame(expected: ['customerId' => $sale['customer']], actual: $change['set']);
-		$this->assertSame(expected: 340, actual: $objects['spaarpas-account-sanne']['data']['currentBalance']);
+		$this->assertSame(expected: $sale['customer'], actual: $account['customerId']);
+		$this->assertGreaterThan(
+			expected: array_search('contact-sanne-thuis', $keys, true),
+			actual: array_search('spaarpas-account-sanne', $keys, true)
+		);
+		$this->assertSame(expected: 340, actual: $account['currentBalance']);
 	}//end testTheParkedSalesCustomerHasTheLoyaltyAccount()
 
 	/**
