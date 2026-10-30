@@ -19,7 +19,10 @@
   -->
 
 <template>
-	<div class="contactmoment-quicklog" data-testid="contactmoment-quicklog">
+	<div
+		class="contactmoment-quicklog"
+		:class="{ 'cn-board-form': inline }"
+		data-testid="contactmoment-quicklog">
 		<h3 v-if="!inline">
 			{{ t('pipelinq', 'Log contactmoment') }}
 		</h3>
@@ -805,6 +808,26 @@ export default {
 	margin-bottom: 4px;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
+}
+
+/* Board look (PqKlant, PqOrganisatie "Contactmoment registreren"): the
+   inline form's own labels are 14/600 in the main ink, 6px above their
+   field, the fields 14px apart and the buttons 10px apart; nc-vue's
+   `cn-board-form` raises the text fields' labels the same way. */
+.cn-look-board .cn-board-form .form-group {
+	margin-bottom: 14px;
+}
+
+.cn-look-board .cn-board-form .form-group label {
+	margin-bottom: 6px;
+	color: var(--color-main-text);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cn-look-board .cn-board-form .form-actions {
+	gap: 10px;
+	margin-top: 0;
 }
 
 .form-row {
