@@ -195,12 +195,14 @@ class SnapshotGenerationService {
 
 		$snapshots = [];
 		$repTotals = [];
+		$rates = [];
 
 		// Rep level.
 		foreach ($teams as $repIds) {
 			foreach ($repIds as $repId) {
 				$bucket = $this->rollup->bucketDeals($dealsByRep[$repId] ?? []);
 				$repTotals[$repId] = $bucket['totals'];
+				$rates = array_merge($rates, ($bucket['rates'] ?? []));
 				$snapshots[] = $this->snapshotRecord(
 					periodId: $periodId,
 					asOfDate: $asOfDate,
@@ -271,8 +273,32 @@ class SnapshotGenerationService {
 			missing: []
 		);
 
-		return $snapshots;
+		return $this->withRates(snapshots: $snapshots, rates: $rates);
 	}//end buildSnapshots()
+
+	/**
+	 * Attach the rates the run converted at to every snapshot, so the
+	 * forecast can say which rate, from where and of which day.
+	 *
+	 * @param array<int, array<string, mixed>> $snapshots The snapshot records.
+	 * @param array<string, array<string, mixed>> $rates Currency => rate metadata.
+	 *
+	 * @return array<int, array<string, mixed>> The records, with `exchange_rates` when any deal was foreign.
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
+	 */
+	private function withRates(array $snapshots, array $rates): array {
+		if ($rates === []) {
+			return $snapshots;
+		}
+
+		ksort($rates);
+		foreach (array_keys($snapshots) as $index) {
+			$snapshots[$index]['exchange_rates'] = $rates;
+		}
+
+		return $snapshots;
+	}//end withRates()
 
 	/**
 	 * Collect child totals for a set of ids, tracking any missing children.
