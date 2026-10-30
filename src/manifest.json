@@ -4927,6 +4927,7 @@
 							"limit": 25,
 							"emptyText": "No products quoted on this deal yet. Add a line to build the quote.",
 							"addLabel": "Add product",
+							"addVariant": "tonal",
 							"footerNote": "The value of the lead follows the line totals. Change a line and the value changes with it.",
 							"rowTitle": "plain",
 							"filterable": true
@@ -7294,7 +7295,7 @@
 									"id": "diff-approve",
 									"label": "Approve",
 									"type": "api-call",
-									"variant": "secondary",
+									"variant": "tonal",
 									"adminOnly": true,
 									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
 									"payload": {
@@ -7311,7 +7312,7 @@
 									"id": "diff-reject",
 									"label": "Reject",
 									"type": "api-call",
-									"variant": "secondary",
+									"variant": "tonal",
 									"adminOnly": true,
 									"successMessage": "Cash difference rejected. The shift is open for a recount.",
 									"visibleWhen": {
