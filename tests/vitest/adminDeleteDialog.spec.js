@@ -32,6 +32,7 @@ const setResult = vi.fn()
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: stub('NcButton', 'button'),
 	NcLoadingIcon: stub('NcLoadingIcon'),
+	NcCheckboxRadioSwitch: stub('NcCheckboxRadioSwitch'),
 	NcSettingsSection: stub('NcSettingsSection', 'section'),
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
@@ -57,6 +58,7 @@ const skills = { skills: [{ id: 's1', title: 'Parking', categories: [] }], loadi
 const profiles = { profiles: [{ id: 'p1', userId: 'anna', skills: [] }], loading: false, fetchProfiles: vi.fn(), deleteProfile: vi.fn(async () => false), error: 'Not allowed' }
 vi.mock('../../src/store/modules/skills.js', () => ({ useSkillsStore: () => skills }))
 vi.mock('../../src/store/modules/agentProfiles.js', () => ({ useAgentProfilesStore: () => profiles }))
+vi.mock('../../src/store/modules/settings.js', () => ({ useSettingsStore: () => ({ config: {}, fetchSettings: vi.fn(), saveSettings: vi.fn() }) }))
 
 globalThis.t = (app, text, vars = {}) => String(text).replace(/\{(\w+)\}/g, (whole, key) => vars[key] ?? whole)
 

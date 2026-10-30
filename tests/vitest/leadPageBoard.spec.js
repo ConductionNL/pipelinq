@@ -34,12 +34,12 @@ describe('the lead page (board PqLead)', () => {
 		expect(action('make-quote')).not.toHaveProperty('icon')
 	})
 
-	it('draws the eight deal facts in two columns, in the board order', () => {
+	it('draws the eight deal facts in two columns, in the board order, then why the lead has its owner', () => {
 		const deal = widget('lead-deal').content
-		expect(deal.include).toEqual(['value', 'qualificationScore', 'expectedCloseDate', 'priority', 'source', 'category', 'assignee', 'stageEnteredAt'])
+		expect(deal.include).toEqual(['value', 'qualificationScore', 'expectedCloseDate', 'priority', 'source', 'category', 'assignee', 'stageEnteredAt', 'assignmentReason'])
 		expect(deal.columns).toBe(2)
 		expect(deal.fixedColumns).toBe(true)
-		expect(deal.include.map((key) => deal.overrides[key].order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+		expect(deal.include.map((key) => deal.overrides[key].order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
 	})
 
 	it('reads the win chance as a percentage', () => {
