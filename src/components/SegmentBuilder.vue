@@ -338,8 +338,10 @@ export default {
 .segment-builder__count {
 	display: inline-flex;
 	align-items: center;
-	gap: 6px;
-	font-weight: 600;
+	gap: 12px;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.5;
 }
 
 .segment-builder__error {
