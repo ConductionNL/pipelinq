@@ -169,6 +169,8 @@ export default {
 		 * The fields the heads sort and filter on; a kind filters by its label.
 		 *
 		 * @return {object}
+		 *
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
 		 */
 		tableSchema() {
 			const kinds = ['instance', 'mailAccount', 'provider']
@@ -242,6 +244,8 @@ export default {
 		 *
 		 * @param {object} transport The transport.
 		 * @return {string}
+		 *
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
 		 */
 		dkimText(transport) {
 			return transport.dkimVerified ? t('pipelinq', 'DKIM found') : t('pipelinq', 'DKIM missing')

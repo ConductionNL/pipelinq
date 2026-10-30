@@ -523,6 +523,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Puts the add in the card title row when the card asks for it.
+	 *
+	 * @spec openspec/changes/client-side-cards-title-add/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
+	 */
 	mounted() {
 		if (this.headerAdd) {
 			this.reportHeader()

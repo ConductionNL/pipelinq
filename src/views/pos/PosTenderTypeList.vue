@@ -119,6 +119,8 @@ export default {
 		 * The fields the heads sort and filter on.
 		 *
 		 * @return {object}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
 		 */
 		tableSchema() {
 			return {

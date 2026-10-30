@@ -115,6 +115,8 @@ export default {
 		 * Whether the assignments span more than one step of the service.
 		 *
 		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		multiStep() {
 			return new Set(this.assignments.map((a) => a?.stepIndex ?? 0)).size > 1
@@ -154,6 +156,8 @@ export default {
 		 *
 		 * @param {string} iso The ISO timestamp.
 		 * @return {string}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		formatTime(iso) {
 			const time = timeOfDay(iso)
@@ -169,6 +173,8 @@ export default {
 		 *
 		 * @param {string} resourceId The resource id.
 		 * @return {string}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		resourceTypeLabel(resourceId) {
 			const labels = { staff: t('pipelinq', 'Staff'), room: t('pipelinq', 'Room'), equipment: t('pipelinq', 'Equipment') }
@@ -190,6 +196,8 @@ export default {
 		 *
 		 * @param {string} resourceId The resource id.
 		 * @return {string}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		resourceName(resourceId) {
 			if (!resourceId) return '-'
