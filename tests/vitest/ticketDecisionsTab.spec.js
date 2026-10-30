@@ -129,8 +129,8 @@ describe('the ticket page declares a Decisions tab', () => {
 		}
 	})
 
-	it('places every declared widget exactly once, in a cell or in a tab', () => {
-		const placed = page.config.layout.map((cell) => cell.widgetId)
+	it('places every declared widget exactly once, in a cell, in a tab or in the band', () => {
+		const placed = [...page.config.layout, ...(page.config.band || [])].map((cell) => cell.widgetId)
 		const children = panels.content.tabs.flatMap(
 			(tab) => tab.widgetIds || [tab.widgetId],
 		)

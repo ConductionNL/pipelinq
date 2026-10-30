@@ -316,8 +316,14 @@ class SlaDeadlineSweepJob extends TimedJob {
 	 * @param mixed $entity Object entity or array.
 	 *
 	 * @return array<string, mixed> Object data.
+	 * @spec openspec/changes/platform-record-lock/specs/record-locking/spec.md#requirement-a-user-can-lock-a-client-a-finished-lead-or-a-finished-ticket-req-prl-001
 	 */
 	private function extractData($entity): array {
+		// A locked (frozen) record refuses every write, so it offers the sweep nothing to evaluate.
+		if (is_object($entity) === true && method_exists($entity, 'isFrozen') === true && $entity->isFrozen() === true) {
+			return [];
+		}
+
 		if (is_object($entity) === true && method_exists($entity, 'getObject') === true) {
 			return $entity->getObject();
 		}

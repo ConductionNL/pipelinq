@@ -39,8 +39,10 @@ describe('ClientDetail parts both client boards share', () => {
 	})
 
 	it('draws the contact strip and the six figures across the page, above the tabs and the side column', () => {
-		expect(config.band[0]).toEqual({ widgetId: 'client-contact-strip', span: 12, chrome: 'bare' })
-		expect(config.band.slice(1)).toEqual(FIGURES.map((widgetId) => ({ widgetId, span: 2 })))
+		// The lock notice (platform-record-lock) heads the band and is silent on an unlocked client.
+		expect(config.band[0]).toEqual({ widgetId: 'client-locked', span: 12, chrome: 'bare' })
+		expect(config.band[1]).toEqual({ widgetId: 'client-contact-strip', span: 12, chrome: 'bare' })
+		expect(config.band.slice(2)).toEqual(FIGURES.map((widgetId) => ({ widgetId, span: 2 })))
 		expect(widget('client-contact-strip').type).toBe('PartyContactStripWidget')
 		expect(config.layout.map((item) => item.widgetId)).toEqual(['client-panels'])
 		expect(config.layout[0].gridY).toBe(0)

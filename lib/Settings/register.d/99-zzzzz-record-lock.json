@@ -1,0 +1,109 @@
+{
+  "_note": "platform-record-lock. A person locks a client, a finished lead or a finished ticket so nobody changes it by accident. The lock is OpenRegister's freeze (POST and DELETE .../{id}/freeze): x-openregister-archive is the switch OpenRegister reads before it lets anyone freeze an object of a schema, and the freeze refuses every later write and names who froze it. isFinished gates the Lock action on lead and ticket, because a lock on an open ticket would refuse the SLA engine's own writes. A client has no finished state, so it gets no isFinished.",
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          },
+          "x-openregister-calculations": {
+            "isFinished": {
+              "type": "boolean",
+              "materialise": false,
+              "description": "True when the lead is in a final lifecycle state (won, lost). The Lock action on the detail page shows only then (platform-record-lock D3).",
+              "expression": {
+                "or": [
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "won"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "lost"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "ticket": {
+        "slug": "ticket",
+        "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          },
+          "x-openregister-calculations": {
+            "isFinished": {
+              "type": "boolean",
+              "materialise": false,
+              "description": "True when the ticket is in a final lifecycle state (completed, converted, resolved, rejected, closed). The Lock action on the detail page shows only then (platform-record-lock D3).",
+              "expression": {
+                "or": [
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "completed"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "converted"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "resolved"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "rejected"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "closed"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

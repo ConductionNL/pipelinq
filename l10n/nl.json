@@ -9482,6 +9482,17 @@
         "Finish this task": "Deze taak afronden",
         "What came out of the callback?": "Wat kwam er uit het terugbellen?",
         "Log attempt": "Poging vastleggen",
-        "Attempt logged.": "Poging vastgelegd."
+        "Attempt logged.": "Poging vastgelegd.",
+        "Lock": "Vergrendelen",
+        "Unlock": "Ontgrendelen",
+        "Lock this client?": "Deze klant vergrendelen?",
+        "Lock this lead?": "Deze lead vergrendelen?",
+        "Lock this ticket?": "Dit ticket vergrendelen?",
+        "Nobody can change it until someone unlocks it.": "Niemand kan het wijzigen tot iemand het ontgrendelt.",
+        "Locked.": "Vergrendeld.",
+        "Unlocked.": "Ontgrendeld.",
+        "Locked": "Vergrendeld",
+        "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Nobody can change it. Need a change? Unlock it first; the history shows who locked and unlocked it.": "Vergrendeld door {subject.@self.frozen.by} op {subject.@self.frozen.at|date}. Niemand kan het wijzigen. Moet er toch iets veranderen? Ontgrendel het eerst; wie het vergrendelde en ontgrendelde staat in de geschiedenis.",
+        "Locked. Nobody can change it. Need a change? Unlock it first.": "Vergrendeld. Niemand kan het wijzigen. Moet er toch iets veranderen? Ontgrendel het eerst."
     }
 }
