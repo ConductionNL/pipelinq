@@ -84,6 +84,19 @@
 				"required": true,
 				"default": 24,
 				"hint": "Triggers an at-risk warning if no run has succeeded in this many hours."
+			},
+			{
+				"key": "export_failure_threshold",
+				"label": "Switch off an export job after this many failed runs in a row",
+				"type": "number",
+				"min": 1,
+				"max": 10,
+				"integer": true,
+				"required": true,
+				"default": 3,
+				"pattern": "^([1-9]|10)$",
+				"patternMessage": "Enter a number from 1 to 10.",
+				"hint": "The administrators get one notification when a job is switched off. Default 3."
 			}
 		]
 	},

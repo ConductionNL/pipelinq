@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Access\RegisterAccessSync;
+use OCA\Pipelinq\Service\Export\ExportFailureSwitch;
 use OCA\Pipelinq\Service\Matomo\MatomoReportService;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -271,6 +272,8 @@ class SettingsService {
 		'export.default_compression' => 'none',
 		'export.failure_notification_email' => '',
 		'export.at_risk_warning_hours' => '24',
+		// Failed runs in a row after which an export job switches itself off (1 to 10).
+		'export_failure_threshold' => '3',
 		// POS end-of-day Z-report generation + alerting (pos-end-of-day-bookkeeping-post).
 		// The journal raise itself now delegates to shillinq via shillinq_journal_webhook_url
 		// (pipelinq-bookkeeping-to-shillinq); these keys only tune the operational
@@ -461,6 +464,7 @@ class SettingsService {
 	 */
 	public function updateSettings(array $data): array {
 		$this->refuseAMatomoToken(data: $data);
+		$this->refuseAnExportFailureThreshold(data: $data);
 
 		foreach (self::CONFIG_KEYS as $key) {
 			if (isset($data[$key]) === true) {
@@ -491,6 +495,27 @@ class SettingsService {
 
 		return $this->getSettings();
 	}//end updateSettings()
+
+	/**
+	 * Refuse an export failure threshold that is not a whole number from 1 to 10.
+	 *
+	 * @param array $data The settings data being written.
+	 *
+	 * @return void
+	 *
+	 * @throws UnexpectedValueException When the threshold is out of range.
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-administrator-sets-the-threshold-req-efs-004
+	 */
+	private function refuseAnExportFailureThreshold(array $data): void {
+		if (array_key_exists(ExportFailureSwitch::THRESHOLD_KEY, $data) === false
+			|| ExportFailureSwitch::isValidThreshold(value: $data[ExportFailureSwitch::THRESHOLD_KEY]) === true
+		) {
+			return;
+		}
+
+		throw new UnexpectedValueException('Enter a number from 1 to 10.');
+	}//end refuseAnExportFailureThreshold()
 
 	/**
 	 * Refuse a raw Matomo token written into the credential REFERENCE field.

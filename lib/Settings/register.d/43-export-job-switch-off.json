@@ -1,0 +1,32 @@
+{
+  "_note": "exports-switch-off-after-repeated-failure. An export job counts its failed runs in a row (ExportFailureSwitch::countRun, called from ExportJobService::recordRun when a run finishes). At the threshold (app config export_failure_threshold, 1 to 10, default 3) the job is switched off in the same save, with the reason and the moment. Switching the job on again clears all three. Version 1.2.0 adds optional fields only.",
+  "components": {
+    "schemas": {
+      "exportJob": {
+        "slug": "exportJob",
+        "version": "1.2.0",
+        "properties": {
+          "consecutiveFailures": {
+            "type": "integer",
+            "title": "Failed runs in a row",
+            "description": "Failed runs in a row since the last succeeded run. A partial run leaves it as it is.",
+            "minimum": 0,
+            "default": 0
+          },
+          "pausedReason": {
+            "type": "string",
+            "title": "Switched off because",
+            "description": "Why the system switched the job off; empty for a job a person switched off.",
+            "maxLength": 255
+          },
+          "pausedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Switched off at",
+            "description": "When the system switched the job off."
+          }
+        }
+      }
+    }
+  }
+}

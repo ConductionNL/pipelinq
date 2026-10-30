@@ -15,6 +15,7 @@ why and when. A succeeded run SHALL reset the count to zero. A partial run
 SHALL leave the count unchanged.
 
 #### Scenario: A job that fails three nights in a row is switched off
+<!-- @e2e exclude server-side counting, asserted in ExportFailureSwitchTest -->
 
 - GIVEN an enabled export job with the default threshold of 3
 - AND its last two runs failed with "connection refused"
@@ -23,6 +24,7 @@ SHALL leave the count unchanged.
 - AND the job records the reason "Switched off after 3 failed runs in a row" and the time
 
 #### Scenario: A successful run resets the count
+<!-- @e2e exclude server-side counting, asserted in ExportFailureSwitchTest -->
 
 - GIVEN an export job whose last two runs failed
 - WHEN its next run succeeds
@@ -30,6 +32,7 @@ SHALL leave the count unchanged.
 - AND the job stays enabled
 
 #### Scenario: A partial run neither counts nor resets
+<!-- @e2e exclude server-side counting, asserted in ExportFailureSwitchTest -->
 
 - GIVEN an export job whose last two runs failed
 - WHEN its next run ends as partial
@@ -42,6 +45,7 @@ switches an export job off. The notification MUST name the job, the number of
 failed runs and the last error message.
 
 #### Scenario: The notification names the job and the error
+<!-- @e2e exclude notification text and link asserted in NotifierTest, one per administrator in ExportFailureSwitchTest -->
 
 - GIVEN the job "Leads and pipeline value" is switched off after its third failed run
 - WHEN an administrator opens their notifications
@@ -50,6 +54,7 @@ failed runs and the last error message.
 - AND it links to the BI export page
 
 #### Scenario: No repeat while the job is off
+<!-- @e2e exclude scheduler skips a disabled job (ExportSchedulerJob) and no second notification, asserted in ExportFailureSwitchTest -->
 
 - GIVEN a job that was switched off yesterday
 - WHEN the scheduler runs tonight
@@ -84,12 +89,14 @@ an export job is switched off. The value MUST be a whole number from 1 to 10,
 and the default SHALL be 3.
 
 #### Scenario: A stricter threshold
+<!-- @e2e exclude server-side threshold, asserted in ExportFailureSwitchTest -->
 
 - GIVEN an administrator sets the threshold to 1
 - WHEN an enabled job's next run fails
 - THEN the job is switched off after that one run
 
 #### Scenario: An out-of-range value is refused
+<!-- @e2e exclude the refusal is asserted in SettingsServiceExportFailureThresholdTest; the form check is the library's pattern rule -->
 
 - GIVEN the admin settings page
 - WHEN an administrator enters 0 and saves

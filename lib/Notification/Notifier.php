@@ -101,6 +101,10 @@ class Notifier implements INotifier {
 		);
 		$baseUrl = $this->urlGenerator->linkToRouteAbsolute('pipelinq.dashboard.page');
 		$objectPath = '#/' . $notification->getObjectType() . 's/' . $notification->getObjectId();
+		if ($notification->getSubject() === 'export_job_switched_off') {
+			$objectPath = 'export/jobs';
+		}
+
 		$notification->setLink($baseUrl . $objectPath);
 
 		return $notification;
@@ -269,6 +273,26 @@ class Notifier implements INotifier {
 				$notification->setRichSubject(
 					$l->t('Billing handoff failed for {title}'),
 					$richParams
+				);
+				break;
+
+			case 'export_job_switched_off':
+				$name     = (string)($params['name'] ?? '');
+				$failures = (int)($params['failures'] ?? 0);
+				$error    = (string)($params['error'] ?? '');
+				$notification->setParsedSubject(
+					$l->n(
+						'Export job %1$s was switched off after %2$d failed run',
+						'Export job %1$s was switched off after %2$d failed runs in a row',
+						$failures,
+						[$name, $failures]
+					)
+				);
+				$notification->setParsedMessage(
+					$l->t(
+						'Last error: %1$s. Fix the destination, then switch the job on again on the BI export page.',
+						[$error]
+					)
 				);
 				break;
 

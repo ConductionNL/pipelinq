@@ -9381,7 +9381,21 @@ OC.L10N.register(
         "Finish this task": "Deze taak afronden",
         "What came out of the callback?": "Wat kwam er uit het terugbellen?",
         "Log attempt": "Poging vastleggen",
-        "Attempt logged.": "Poging vastgelegd."
+        "Attempt logged.": "Poging vastgelegd.",
+        "_Export job %1$s was switched off after %2$d failed run_::_Export job %1$s was switched off after %2$d failed runs in a row_": ["Exporttaak %1$s is uitgeschakeld na %2$d mislukte uitvoering","Exporttaak %1$s is uitgeschakeld na %2$d mislukte uitvoeringen op rij"],
+        "Last error: %1$s. Fix the destination, then switch the job on again on the BI export page.": "Laatste fout: %1$s. Herstel de bestemming en schakel de taak daarna weer in op de pagina BI-export.",
+        "_Switched off after {count} failed run_::_Switched off after {count} failed runs in a row_": ["Uitgeschakeld na {count} mislukte uitvoering","Uitgeschakeld na {count} mislukte uitvoeringen op rij"],
+        "Switch off an export job after this many failed runs in a row": "Een exporttaak uitschakelen na zoveel mislukte uitvoeringen op rij",
+        "Enter a number from 1 to 10.": "Vul een getal van 1 tot en met 10 in.",
+        "The administrators get one notification when a job is switched off. Default 3.": "De beheerders krijgen één melding als een taak wordt uitgeschakeld. Standaard 3.",
+        "Failed runs in a row": "Mislukte uitvoeringen op rij",
+        "Failed runs in a row since the last succeeded run. A partial run leaves it as it is.": "Mislukte uitvoeringen op rij sinds de laatste geslaagde uitvoering. Een gedeeltelijke uitvoering laat het aantal staan.",
+        "Switched off because": "Uitgeschakeld omdat",
+        "Why the system switched the job off; empty for a job a person switched off.": "Waarom het systeem de taak heeft uitgeschakeld; leeg als een persoon de taak uitschakelde.",
+        "Switched off at": "Uitgeschakeld op",
+        "When the system switched the job off.": "Wanneer het systeem de taak heeft uitgeschakeld.",
+        "Switched off after {count} failed run": "Uitgeschakeld na {count} mislukte uitvoering",
+        "Switched off after {count} failed runs in a row": "Uitgeschakeld na {count} mislukte uitvoeringen op rij"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -7,10 +7,11 @@
  * failed).
  *
  * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+ * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-the-bi-export-page-shows-a-switched-off-job-and-lets-an-administrator-switch-it-back-on-req-efs-003
  */
 
 import { describe, expect, it } from 'vitest'
-import { exportMoment, exportSchedule, lastRunLine } from '../../src/views/export/exportRunText.js'
+import { exportMoment, exportSchedule, lastRunLine, switchedOffReason } from '../../src/views/export/exportRunText.js'
 
 const NOW = new Date(2026, 9, 7, 12, 0, 0)
 const iso = (y, m, d, h, min) => new Date(y, m - 1, d, h, min).toISOString()
@@ -30,6 +31,16 @@ describe('the BI export run texts', () => {
 		expect(lastRunLine({ lastRunStatus: 'partial', lastRunAt: at, lastRunFiles: 2, lastRunFilesExpected: 3 }, NOW, 'nl')).toBe('7 okt, 02:04 · 2 of 3 files')
 		expect(lastRunLine({ lastRunStatus: 'failed', lastRunAt: at, lastRunError: 'verbinding geweigerd' }, NOW, 'nl')).toBe('7 okt, 02:04 · verbinding geweigerd')
 		expect(lastRunLine({}, NOW, 'nl')).toBe('')
+	})
+
+	it('say why the system switched a job off, under its failed last run', () => {
+		const at = iso(2026, 10, 6, 1, 0)
+		const off = { enabled: false, lastRunStatus: 'failed', lastRunAt: at, lastRunError: 'connection refused', consecutiveFailures: 3, pausedAt: at }
+		expect(switchedOffReason(off)).toBe('Switched off after 3 failed runs in a row')
+		expect(lastRunLine(off, NOW, 'nl')).toBe('6 okt, 01:00 · connection refused · Switched off after 3 failed runs in a row')
+		expect(switchedOffReason({ ...off, consecutiveFailures: 1 })).toBe('Switched off after 1 failed run')
+		expect(switchedOffReason({ ...off, enabled: true })).toBe('')
+		expect(switchedOffReason({ ...off, pausedAt: null })).toBe('')
 	})
 
 	it('say a schedule in words, and keep anything else as written', () => {
