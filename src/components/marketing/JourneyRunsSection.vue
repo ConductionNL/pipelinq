@@ -17,7 +17,7 @@
 -->
 <template>
 	<section class="journey-runs" data-testid="journey-runs-section">
-		<p class="journey-runs__subtitle">
+		<p v-if="showSubtitle" class="journey-runs__subtitle">
 			{{ t('pipelinq', 'Every contact reached and every contact refused') }}
 		</p>
 		<NcLoadingIcon v-if="loading" :size="24" />
@@ -111,6 +111,12 @@ export default {
 		journeyId: {
 			type: String,
 			default: '',
+		},
+
+		/** Whether the section draws its own line; a titled card around it draws it instead. */
+		showSubtitle: {
+			type: Boolean,
+			default: true,
 		},
 	},
 

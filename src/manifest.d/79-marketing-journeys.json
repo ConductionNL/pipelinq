@@ -385,6 +385,7 @@
 						"id": "journey-runs",
 						"type": "JourneyRunsWidget",
 						"title": "What this journey did",
+						"subtitle": "Every contact reached and every contact refused",
 						"content": {
 							"title": "What this journey did"
 						}
