@@ -450,6 +450,7 @@
             }
           }
         ],
+        "gridFloat": false,
         "layout": [
           {
             "id": "1",
@@ -457,7 +458,8 @@
             "gridX": 0,
             "gridY": 0,
             "gridWidth": 12,
-            "gridHeight": 8
+            "gridHeight": 8,
+            "sizeToContent": true
           }
         ],
         "sideColumn": [

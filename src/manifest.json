@@ -4030,6 +4030,7 @@
 					}
 				],
 				"_layoutNote": "A declared widgets[] replaces the auto-body, which also used to place them, so every widget needs a cell. The tab strip (overview and decisions) with Related beside it. The tabs' children have no cell of their own: the strip renders them.",
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -4037,7 +4038,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 6
+						"gridHeight": 6,
+						"sizeToContent": true
 					},
 					{
 						"id": "2",
@@ -4045,7 +4047,8 @@
 						"gridX": 8,
 						"gridY": 0,
 						"gridWidth": 4,
-						"gridHeight": 6
+						"gridHeight": 6,
+						"sizeToContent": true
 					}
 				],
 				"_bodyWidgetsNote": "Woo citizen journey J4 (questions-about-a-citizen-dossier): DossierSnapshotSection shows the dossier a resident asked about, before the body; CustomerReplySection is the answer control (customerMessage, the resident's replies) and WooConversionSection converts a question into a dossiq Woo request, after the data. Each renders nothing when it does not apply. Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
@@ -4639,6 +4642,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -4647,6 +4651,7 @@
 						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 18,
+						"sizeToContent": true,
 						"showTitle": false
 					}
 				],
@@ -5455,6 +5460,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -5463,6 +5469,7 @@
 						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 18,
+						"sizeToContent": true,
 						"showTitle": false
 					}
 				],
@@ -6070,6 +6077,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -6077,7 +6085,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 8
+						"gridHeight": 8,
+						"sizeToContent": true
 					}
 				],
 				"lifecycleActions": {
@@ -7719,6 +7728,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -7726,7 +7736,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 12
+						"gridHeight": 12,
+						"sizeToContent": true
 					}
 				],
 				"sidebar": {
@@ -8001,6 +8012,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -8008,7 +8020,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 8
+						"gridHeight": 8,
+						"sizeToContent": true
 					}
 				],
 				"titleField": "reference",
@@ -9251,6 +9264,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -9258,7 +9272,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 12
+						"gridHeight": 12,
+						"sizeToContent": true
 					}
 				],
 				"sidebar": {

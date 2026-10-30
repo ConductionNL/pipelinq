@@ -334,8 +334,9 @@
 				"statusPill": { "field": "status", "colorMap": { "confirmed": "success", "completed": "primary", "no-show": "error", "pending-deposit": "warning", "cancelled-by-customer": "default", "cancelled-by-business": "default", "rescheduled": "default" }, "labels": { "pending-deposit": "Awaiting deposit", "confirmed": "Confirmed", "completed": "Finished", "no-show": "No-show", "cancelled-by-customer": "Cancelled by the customer", "cancelled-by-business": "Cancelled by us", "rescheduled": "Rescheduled" } },
 				"headerMeta": "{startAt|weekday} · {startAt|time} to {endAt|time}",
 				"tabsLabel": "Appointment",
+				"gridFloat": false,
 				"layout": [
-					{ "id": "1", "widgetId": "booking-panels", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 18, "showTitle": false }
+					{ "id": "1", "widgetId": "booking-panels", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 18, "showTitle": false, "sizeToContent": true }
 				],
 				"sideColumn": ["booking-context", "booking-when", "booking-request"],
 				"widgets": [
