@@ -1,4 +1,4 @@
 # Screens
 
 - PqTicketsSelectie https://identity.conduction.nl/screens/board?id=pipelinq/PqTicketsSelectie
-- pending: pipelinq/PqKlantenSelectie (board lane)
+- PqKlantenSelectie https://identity.conduction.nl/screens/board?id=pipelinq/PqKlantenSelectie
