@@ -57,6 +57,7 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 				})),
 			}
 		},
+		emits: ['header'],
 		props: {
 			objectId: { type: [String, Number], default: '' },
 			objectData: { type: Object, default: null },
@@ -67,14 +68,15 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 			if (!objectId) {
 				return null
 			}
-			const inner = h(
-				section,
-				mapProps({
+			const inner = h(section, {
+				...mapProps({
 					objectId,
 					objectData: this.objectData || {},
 					content: this.content || {},
 				}),
-			)
+				// The title row a section reports goes on to the card the detail host draws.
+				onHeader: (header) => this.$emit('header', header),
+			})
 			if (!options.card || this.content?.card === false) {
 				return inner
 			}

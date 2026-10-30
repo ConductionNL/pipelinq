@@ -2653,7 +2653,10 @@
 						"type": "integration",
 						"integrationId": "notes",
 						"title": "Client notes",
-						"icon": "NoteTextOutline"
+						"icon": "NoteTextOutline",
+						"props": {
+							"composer": "button"
+						}
 					},
 					{
 						"id": "client-files",
@@ -3085,24 +3088,24 @@
 					},
 					{
 						"id": "client-channels",
-						"type": "ContactChannelsWidget",
+						"type": "ContactChannelsCard",
 						"title": "Contact channels",
 						"icon": "CardAccountPhoneOutline",
 						"content": {
 							"entityType": "client",
-							"title": "Contact channels",
-							"compact": true
+							"compact": true,
+							"headerAdd": true
 						}
 					},
 					{
 						"id": "client-relationships",
-						"type": "ContactRelationshipsWidget",
+						"type": "ContactRelationshipsCard",
 						"title": "Relationships",
 						"icon": "AccountMultipleOutline",
 						"content": {
 							"entityType": "client",
-							"title": "Relationships",
-							"compact": true
+							"compact": true,
+							"headerAdd": true
 						}
 					},
 					{

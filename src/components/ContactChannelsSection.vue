@@ -33,6 +33,7 @@
 				</div>
 			</dl>
 			<NcActions
+				v-if="!headerAdd"
 				:menuName="t('pipelinq', 'Add channel')"
 				class="contact-channels-section__add--pill cn-button--tonal"
 				data-testid="channels-add">
@@ -362,7 +363,18 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
+		/**
+		 * Report the "Add" menu for the card's title row (`header` event)
+		 * instead of drawing it under the list.
+		 */
+		headerAdd: {
+			type: Boolean,
+			default: false,
+		},
 	},
+
+	emits: ['header'],
 
 	data() {
 		return {
@@ -511,7 +523,36 @@ export default {
 		},
 	},
 
+	mounted() {
+		if (this.headerAdd) {
+			this.reportHeader()
+		}
+	},
+
 	methods: {
+		/**
+		 * Report the card's title-row "Add" menu: e-mail address, phone
+		 * number or social profile.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/client-side-cards-title-add/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
+		 */
+		reportHeader() {
+			this.$emit('header', {
+				actions: [{
+					label: this.t('pipelinq', 'Add'),
+					ariaLabel: this.t('pipelinq', 'Add channel'),
+					icon: 'Plus',
+					variant: 'secondary',
+					items: [
+						{ label: this.t('pipelinq', 'Email address'), run: () => this.openEmailPhoneModal('email', null) },
+						{ label: this.t('pipelinq', 'Phone number'), run: () => this.openEmailPhoneModal('phone', null) },
+						{ label: this.t('pipelinq', 'Social profile'), run: () => this.openSocialModal(null) },
+					],
+				}],
+			})
+		},
+
 		/**
 		 * Fetch the full client/contact object.
 		 *
