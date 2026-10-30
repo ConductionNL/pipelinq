@@ -9367,7 +9367,10 @@ OC.L10N.register(
         "Finish this task": "Finish this task",
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
-        "Attempt logged.": "Attempt logged."
+        "Attempt logged.": "Attempt logged.",
+        "Earlier contacts from this number": "Earlier contacts from this number",
+        "Looking up earlier contacts.": "Looking up earlier contacts.",
+        "No earlier contacts from this number.": "No earlier contacts from this number."
     },
     "nplurals=2; plural=(n != 1);"
 )

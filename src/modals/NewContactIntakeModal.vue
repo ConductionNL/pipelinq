@@ -23,6 +23,23 @@
 				type="warning"
 				class="cti-intake__wide"
 				:text="t('pipelinq', 'No contact found for {number}. Fill in what the caller tells you; the number is already there.', { number: shownNumber })" />
+			<section class="cti-intake__wide cti-intake__history" aria-labelledby="cti-intake-history-title" data-testid="cti-intake-history">
+				<h3 id="cti-intake-history-title" class="cti-intake__label">
+					{{ t('pipelinq', 'Earlier contacts from this number') }}
+				</h3>
+				<p v-if="history.loading" class="cti-intake__hint">
+					{{ t('pipelinq', 'Looking up earlier contacts.') }}
+				</p>
+				<p v-else-if="history.items.length === 0" class="cti-intake__hint" data-testid="cti-intake-history-empty">
+					{{ t('pipelinq', 'No earlier contacts from this number.') }}
+				</p>
+				<ul v-else class="cti-intake__history-list">
+					<li v-for="item in history.items" :key="item.id" class="cti-intake__history-item">
+						<a :href="ticketHref(item.id)">{{ item.title || t('pipelinq', 'Untitled') }}</a>
+						<span class="cti-intake__hint">{{ historyMeta(item) }}</span>
+					</li>
+				</ul>
+			</section>
 			<div class="cti-intake__field">
 				<label for="cti-intake-name" class="cti-intake__label">{{ t('pipelinq', 'Name') }}</label>
 				<NcTextField
@@ -100,6 +117,8 @@
 
 <script>
 import { CnDialog, CnNoteCard } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcTextArea, NcTextField } from '@nextcloud/vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlusOutline.vue'
 import { readablePhone } from '../utils/readablePhone.js'
@@ -124,6 +143,8 @@ export default {
 				organisation: '',
 				notes: '',
 			},
+
+			history: { loading: false, items: [] },
 		}
 	},
 
@@ -153,7 +174,51 @@ export default {
 		},
 	},
 
+	mounted() {
+		this.loadHistory()
+	},
+
 	methods: {
+		/**
+		 * The earlier tickets and contact moments from the caller's number.
+		 *
+		 * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-an-unknown-callers-earlier-contacts-are-shown-req-chp-001
+		 * @return {Promise<void>}
+		 */
+		async loadHistory() {
+			const number = this.e164 || this.prefillPhone
+			if (!number) {
+				return
+			}
+			this.history.loading = true
+			try {
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/tickets/by-phone'), { params: { number } })
+				this.history.items = Array.isArray(data?.results) ? data.results : []
+			} catch {
+				this.history.items = []
+			} finally {
+				this.history.loading = false
+			}
+		},
+
+		/**
+		 * @param {string} id The ticket id.
+		 * @return {string} The ticket page's address.
+		 */
+		ticketHref(id) {
+			return generateUrl('/apps/pipelinq/tickets/{id}', { id })
+		},
+
+		/**
+		 * @param {object} item A ticket from the phone search.
+		 * @return {string} "12 October 2026 · Contact moment".
+		 */
+		historyMeta(item) {
+			const when = item.occurredAt ? new Date(item.occurredAt).toLocaleDateString() : ''
+			const type = item.ticketType === 'interaction' ? t('pipelinq', 'Contact moment') : t('pipelinq', 'Ticket')
+			return [when, type].filter(Boolean).join(' · ')
+		},
+
 		submit() {
 			if (!this.valid) {
 				return
@@ -190,6 +255,27 @@ export default {
 .cti-intake__optional {
 	font-weight: 400;
 	color: var(--color-text-maxcontrast);
+}
+
+.cti-intake__history-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.cti-intake__history-item {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 12px;
+	align-items: baseline;
+}
+
+.cti-intake__history-item a {
+	color: var(--color-primary-element);
+	text-decoration: underline;
 }
 
 .cti-intake__hint {

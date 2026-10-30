@@ -98,7 +98,7 @@ class CtiContactMatcher {
 			return ['matches' => [], 'totalMatches' => 0];
 		}
 
-		$needles = $this->needles(e164: $e164Number);
+		$needles = PhoneNeedles::for(e164: $e164Number);
 
 		$matches = [];
 		if ($contactSchema !== '') {
@@ -121,27 +121,6 @@ class CtiContactMatcher {
 			'totalMatches' => $total,
 		];
 	}//end findByPhoneNumber()
-
-	/**
-	 * Build a list of phone-number fragments to test against stored records.
-	 *
-	 * @param string $e164 Normalised E.164 number.
-	 *
-	 * @return array<int,string>
-	 */
-	private function needles(string $e164): array {
-		$digitsOnly = preg_replace('/[^0-9]/', '', $e164) ?? '';
-		$needles = [$e164, $digitsOnly];
-		if (strlen($digitsOnly) >= 9) {
-			$needles[] = substr($digitsOnly, -9);
-		}
-
-		if (strlen($digitsOnly) >= 8) {
-			$needles[] = substr($digitsOnly, -8);
-		}
-
-		return array_values(array_unique(array_filter($needles)));
-	}//end needles()
 
 	/**
 	 * Search a single schema (contact or client) for any of the needles.
