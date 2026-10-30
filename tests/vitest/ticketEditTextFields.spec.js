@@ -9,7 +9,7 @@
  * columns; `width: 'full'` and `rows` need nc-vue's
  * fix/form-field-full-width-and-rows and are ignored before it.
  *
- * @spec openspec/changes/ticket-edit-text-fields/specs/ticket-detail-page/spec.md#requirement-the-ticket-edit-dialog-draws-its-long-texts-as-multi-line-fields
+ * @spec openspec/specs/ticket-detail-page/spec.md#requirement-the-ticket-edit-dialog-draws-its-long-texts-as-multi-line-fields
  */
 import fs from 'fs'
 import path from 'path'

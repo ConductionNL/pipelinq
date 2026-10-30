@@ -22,7 +22,7 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/specs/activity-timeline/spec.md#requirement-every-entity-must-have-a-timeline-view
- * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
+ * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
  */
 
 declare(strict_types=1);
@@ -178,7 +178,7 @@ class ActivityTimelineReader {
 	 *
 	 * @return array<int,array<string,mixed>> The notes as NotesService reads them.
 	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
 	 */
 	public function notes(string $entityId): array {
 		return $this->notesService->getNotes(objectType: 'openregister', objectId: $entityId);
@@ -194,7 +194,7 @@ class ActivityTimelineReader {
 	 *
 	 * @return array<int,array<string,mixed>> The raw message objects.
 	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
 	 */
 	public function messages(string $entityType, string $entityId, string $registerId): array {
 		$messageSchema = $this->schemaId(key: 'message_schema');
@@ -234,7 +234,7 @@ class ActivityTimelineReader {
 	 *
 	 * @return array<int,array<string,mixed>> The raw booking objects.
 	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-bookings-and-linked-mail
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-bookings-and-linked-mail
 	 */
 	public function bookings(string $entityType, string $entityId, string $registerId): array {
 		$bookingSchema = $this->schemaId(key: 'booking_schema');
@@ -265,7 +265,7 @@ class ActivityTimelineReader {
 	 *
 	 * @return array<int,array<string,mixed>> The linked emails.
 	 *
-	 * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md#requirement-the-timeline-lists-bookings-and-linked-mail
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-bookings-and-linked-mail
 	 */
 	public function linkedEmails(string $entityId): array {
 		if ($this->container->has(self::EMAIL_LINK_READER) === false) {

@@ -6,7 +6,7 @@
  * behandeling nemen" and an eye, with no menu; the list has no search field,
  * no add button and no column filters.
  *
- * @spec openspec/changes/queue-rows-board/specs/queue/spec.md#requirement-the-queue-list-picks-rows-up-in-the-row
+ * @spec openspec/specs/queue/spec.md#requirement-the-queue-list-picks-rows-up-in-the-row
  */
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
 import fs from 'fs'

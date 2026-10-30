@@ -11,7 +11,7 @@ import { mount } from '@vue/test-utils'
  * opens under a rule. The library card draws the title row from the `header`
  * event the section reports through its widget.
  *
- * @spec openspec/changes/client-side-cards-title-add/specs/client-side-cards-title-add/spec.md
+ * @spec openspec/specs/client-side-cards-title-add/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

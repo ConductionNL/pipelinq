@@ -7,7 +7,7 @@
  * section's composer for that client, and a sent message makes the client's
  * Activity card read again.
  *
- * @spec openspec/changes/client-activity-card/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
+ * @spec openspec/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
  */
 
 import { emit, subscribe } from '@nextcloud/event-bus'

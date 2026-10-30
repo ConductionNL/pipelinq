@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/client-activity-card/specs/activity-timeline/spec.md
+ * @spec openspec/specs/activity-timeline/spec.md
  */
 
 declare(strict_types=1);

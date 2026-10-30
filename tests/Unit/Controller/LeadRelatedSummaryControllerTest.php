@@ -36,7 +36,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Who reads a lead's Related summary.
  *
- * @spec openspec/changes/lead-page-as-pqlead/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
  */
 class LeadRelatedSummaryControllerTest extends TestCase {
 	/**

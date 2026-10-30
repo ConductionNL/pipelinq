@@ -7,7 +7,7 @@
  * stages; the Deal card holds eight facts in two columns; the win chance
  * reads as a percentage.
  *
- * @spec openspec/changes/lead-page-as-pqlead/specs/lead-management/spec.md#requirement-the-lead-page-reads-as-the-board
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-page-reads-as-the-board
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

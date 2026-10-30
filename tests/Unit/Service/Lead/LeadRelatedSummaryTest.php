@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
  * Board PqLead "Gerelateerd": "2 eerdere deals, allebei gewonnen", "Uren op
  * deze lead: 14,5".
  *
- * @spec openspec/changes/lead-page-as-pqlead/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
  */
 class LeadRelatedSummaryTest extends TestCase {
 	/**

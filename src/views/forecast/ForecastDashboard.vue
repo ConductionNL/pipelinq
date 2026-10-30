@@ -220,7 +220,7 @@ export default {
 		 * The quarter table's columns: every figure sorts and filters on a
 		 * range, the owner on contains (PqForecast).
 		 *
-		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
 		 * @return {Array<object>} The columns.
 		 */
 		quarterColumns() {
@@ -239,7 +239,7 @@ export default {
 		/**
 		 * The quarter table's rows; the table sorts and filters them from its heads.
 		 *
-		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
 		 * @return {Array<object>} One row per owner.
 		 */
 		quarterRows() {

@@ -8,7 +8,7 @@
  * text and 12px padding, which pushed the labels under the values; the
  * cards undo those rules for their own lists.
  *
- * @spec openspec/changes/contact-person-page-as-board/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-is-the-board
+ * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-is-the-board
  */
 
 import { readFileSync } from 'node:fs'

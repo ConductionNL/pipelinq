@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/lead-page-as-pqlead/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ use OCP\IL10N;
 /**
  * The lead's earlier deals with the same client and the hours on it.
  *
- * @spec openspec/changes/lead-page-as-pqlead/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
  */
 class LeadRelatedSummary {
 
@@ -69,7 +69,7 @@ class LeadRelatedSummary {
 	 *
 	 * @return array{earlier: string, hours: string} The summary.
 	 *
-	 * @spec openspec/changes/lead-page-as-pqlead/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
+	 * @spec openspec/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
 	 */
 	public function forLead(array $lead): array {
 		return [

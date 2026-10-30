@@ -8,7 +8,7 @@
  * the object list `addVariant: "tonal"` (nc-vue feat/board-tonal-card-actions),
  * and the drops card's own button the shared `cn-button--tonal` class.
  *
- * @spec openspec/changes/tonal-card-actions-pos-and-lead/specs/tonal-card-actions-pos-and-lead/spec.md#requirement-card-actions-on-the-shift-and-lead-pages-are-tonal-pills
+ * @spec openspec/specs/tonal-card-actions-pos-and-lead/spec.md#requirement-card-actions-on-the-shift-and-lead-pages-are-tonal-pills
  */
 
 import fs from 'fs'

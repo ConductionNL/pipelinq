@@ -8,7 +8,7 @@
  * and earlier contact on the right. Without a call the page keeps its own
  * dashboard layout.
  *
- * @spec openspec/changes/werkplek-in-call-columns/specs/kcc-werkplek/spec.md#requirement-the-in-call-page-draws-three-columns
+ * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-in-call-page-draws-three-columns
  */
 
 import { readFileSync } from 'node:fs'

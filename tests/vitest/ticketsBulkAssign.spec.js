@@ -5,7 +5,7 @@
  * Board PqTicketsSelectie: "Toewijzen aan" in the bulk band hands the
  * selected tickets to one handler through OpenRegister's assign job.
  *
- * @spec openspec/changes/tickets-bulk-assign/specs/unify-ticket-supertype/spec.md#requirement-the-tickets-list-assigns-a-selection-to-one-handler
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-the-tickets-list-assigns-a-selection-to-one-handler
  */
 
 import { readFileSync } from 'node:fs'

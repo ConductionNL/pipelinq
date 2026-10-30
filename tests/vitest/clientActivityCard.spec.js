@@ -8,7 +8,7 @@
  * library's timeline widget draws it from /api/timeline; pipelinq's own
  * ActivityTimeline is gone.
  *
- * @spec openspec/changes/client-activity-card/specs/client-detail/spec.md#requirement-the-overview-ends-with-the-activity-card
+ * @spec openspec/specs/client-detail/spec.md#requirement-the-overview-ends-with-the-activity-card
  */
 
 import fs from 'fs'
