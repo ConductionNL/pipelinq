@@ -9,3 +9,4 @@
 - PqOrganisaties https://identity.conduction.nl/screens/board?id=pipelinq/PqOrganisaties
 - PqContacten https://identity.conduction.nl/screens/board?id=pipelinq/PqContacten
 - PqContactenImporteren https://identity.conduction.nl/screens/board?id=pipelinq/PqContactenImporteren
+- PqKlantenSelectie https://identity.conduction.nl/screens/board?id=pipelinq/PqKlantenSelectie
