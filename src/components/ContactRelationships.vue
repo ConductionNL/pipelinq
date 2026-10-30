@@ -83,7 +83,7 @@
 			</div>
 		</div>
 
-		<div v-if="!headerAdd" class="contact-relationships__footer">
+		<div class="contact-relationships__footer">
 			<NcButton
 				:variant="compact ? 'tertiary' : 'secondary'"
 				:class="{ 'contact-relationships__add--pill': compact }"
@@ -356,18 +356,7 @@ export default {
 			type: String,
 			default: '',
 		},
-
-		/**
-		 * Report the "Add" button for the card's title row (`header` event)
-		 * instead of drawing it under the list.
-		 */
-		headerAdd: {
-			type: Boolean,
-			default: false,
-		},
 	},
-
-	emits: ['header'],
 
 	data() {
 		return {
@@ -449,38 +438,15 @@ export default {
 	},
 
 	/**
-	 * Puts the add in the card title row when the card asks for it, then loads the relationships.
+	 * Loads the relationships.
 	 *
-	 * @spec openspec/changes/client-side-cards-title-add/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
+	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
 	 */
 	async mounted() {
-		if (this.headerAdd) {
-			this.reportHeader()
-		}
 		await this.fetchRelationships()
 	},
 
 	methods: {
-		/**
-		 * Report the card's title-row "Add" button, which opens the add dialog.
-		 *
-		 * @return {void}
-		 * @spec openspec/changes/client-side-cards-title-add/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
-		 */
-		reportHeader() {
-			this.$emit('header', {
-				actions: [{
-					label: this.t('pipelinq', 'Add'),
-					ariaLabel: this.t('pipelinq', 'Add relationship'),
-					icon: 'Plus',
-					variant: 'secondary',
-					run: () => {
-						this.showAddDialog = true
-					},
-				}],
-			})
-		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
 		 */
