@@ -1,0 +1,82 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "clients-history-summary-and-risk, task 1.1 (REQ-CIN-001). Every client carries a churn risk level with the reasons behind it. ClientRiskService writes it daily and when a contract status or a survey classification changes; nobody types it. It is not marked readOnly in the schema, because OpenRegister then refuses the service's own update; the forms show it read only through the manifest fieldOverrides. The reasons hold signal codes and the record behind each one, never display text, so every viewer reads them in their own language. No property changes type and none becomes required."
+  },
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "properties": {
+          "churnRisk": {
+            "type": "object",
+            "title": "Churn risk",
+            "description": "How likely this client is to leave, and why. Worked out from contracts, survey answers, complaints, missed deadlines and time since the last contact.",
+            "x-notes": "Written by ClientRiskService only. Filter on churnRisk.level for the At risk list.",
+            "properties": {
+              "level": {
+                "type": "string",
+                "title": "Level",
+                "description": "Low, medium or high.",
+                "enum": ["low", "medium", "high"]
+              },
+              "score": {
+                "type": "integer",
+                "title": "Score",
+                "description": "The points of every reason added up.",
+                "minimum": 0
+              },
+              "reasons": {
+                "type": "array",
+                "title": "Reasons",
+                "description": "Why the client has this level, one entry per signal that counts.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "signal": {
+                      "type": "string",
+                      "title": "Signal",
+                      "description": "Which signal this reason comes from.",
+                      "enum": ["contract-expiring", "contract-churned", "detractor", "open-complaints", "sla-breached", "silence"]
+                    },
+                    "points": {
+                      "type": "integer",
+                      "title": "Points",
+                      "description": "How many points this reason adds."
+                    },
+                    "count": {
+                      "type": "integer",
+                      "title": "Count",
+                      "description": "How many records the signal counted, such as open complaints."
+                    },
+                    "objectType": {
+                      "type": "string",
+                      "title": "Record type",
+                      "description": "The kind of record behind this reason."
+                    },
+                    "objectId": {
+                      "type": "string",
+                      "title": "Record",
+                      "description": "The record behind this reason."
+                    },
+                    "since": {
+                      "type": "string",
+                      "title": "Since",
+                      "description": "The date the reason refers to."
+                    }
+                  }
+                }
+              },
+              "computedAt": {
+                "type": "string",
+                "title": "Computed at",
+                "description": "When the level was last worked out."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
