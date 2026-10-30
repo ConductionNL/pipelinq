@@ -204,6 +204,13 @@ export default {
 			return [t('pipelinq', 'Conversation'), readablePhone(this.number)].filter(Boolean).join(' · ')
 		},
 
+		/**
+		 * The outcomes the agent picks from, with their board words.
+		 *
+		 * @return {Array<object>} One option per outcome.
+		 *
+		 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-disposition-outcomes-drive-workflow-req-cti-009
+		 */
 		outcomeOptions() {
 			const labels = outcomeLabels()
 			return OUTCOMES.map((o) => ({
@@ -236,6 +243,11 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Sends the wrap-up when the subject and the outcome are filled in.
+		 *
+		 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-disposition-outcomes-drive-workflow-req-cti-009
+		 */
 		submit() {
 			this.subjectTouched = true
 			if (!this.valid) {
