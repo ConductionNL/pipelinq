@@ -187,4 +187,31 @@ class ForecastExportServiceTest extends TestCase {
 		$this->assertSame('r3', $result['snapshots'][1]['owner_id']);
 		$this->assertSame('2026-02-01', $result['snapshots'][0]['as_of_date']);
 	}//end testExportSnapshotsSortsAscAndPagesWithServerTotal()
+
+	/**
+	 * A snapshot's stored rates reach the forecast view; one without rates gives an empty map.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
+	 */
+	public function testExchangeRatesPassThrough(): void {
+		$usd = ['rate' => 0.9132, 'source' => 'shillinq', 'origin' => 'ecb', 'rateDate' => '2026-10-06', 'stale' => false];
+		$rows = [
+			['owner_id' => 'r1', 'level' => 'rep', 'period_id' => 'p1', 'as_of_date' => '2026-10-05', 'exchange_rates' => ['USD' => $usd]],
+			['owner_id' => 'r2', 'level' => 'rep', 'period_id' => 'p1', 'as_of_date' => '2026-10-06'],
+		];
+
+		$service = new ForecastExportService(
+			appConfig: $this->appConfig,
+			forecastService: $this->createMock(ForecastService::class),
+			reportingService: $this->createMock(ReportingService::class),
+			logger: $this->createMock(LoggerInterface::class),
+			objectService: $this->fakeObjectService($rows),
+		);
+
+		$snapshots = $service->exportSnapshots(periodId: 'p1', level: 'rep', ownerId: null, limit: 10, offset: 0)['snapshots'];
+		$this->assertSame(['USD' => $usd], $snapshots[0]['exchange_rates']);
+		$this->assertSame([], $snapshots[1]['exchange_rates']);
+	}//end testExchangeRatesPassThrough()
 }//end class
