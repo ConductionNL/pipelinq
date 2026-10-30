@@ -2144,8 +2144,7 @@
 						"visibleWhen": {
 							"field": "@self.frozen",
 							"op": "empty"
-						},
-						"_note": "platform-record-lock REQ-PRL-001. OpenRegister's freeze: it writes @self.frozen (who, when) and an audit entry, and refuses every later write. A client has no finished state, so Lock shows on every client."
+						}
 					},
 					{
 						"id": "unlock-record",
@@ -2158,8 +2157,7 @@
 						"visibleWhen": {
 							"field": "@self.frozen",
 							"op": "notEmpty"
-						},
-						"_note": "platform-record-lock REQ-PRL-002. DELETE on the freeze address removes it; OpenRegister records the unlock in the audit trail. Needs nextcloud-vue's api-call DELETE."
+						}
 					}
 				],
 				"quickActions": ["log-contact", "new-request"],
@@ -2174,7 +2172,7 @@
 							"field": "@self.frozen",
 							"op": "notEmpty"
 						},
-						"_note": "platform-record-lock REQ-PRL-001. Silent on a record that is not locked. A marker that names nobody says the shorter sentence.",
+						"_note": "platform-record-lock REQ-PRL-001. Silent on a record that is not locked. A marker that names nobody says the shorter sentence. Lock (lock-record) is OpenRegister's freeze, POST .../freeze; on a lead or ticket it shows only once isFinished, because a lock on an open one would refuse the SLA engine's own writes. Unlock (unlock-record) is DELETE on the same address, which needs nextcloud-vue's api-call DELETE.",
 						"content": {
 							"icon": "LockOutline",
 							"lead": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Nobody can change it. Need a change? Unlock it first; the history shows who locked and unlocked it.",
@@ -4015,8 +4013,7 @@
 									"value": true
 								}
 							]
-						},
-						"_note": "platform-record-lock REQ-PRL-001. OpenRegister's freeze: it writes @self.frozen (who, when) and an audit entry, and refuses every later write. Shows only on a finished record (isFinished), because a lock on an open one would refuse the SLA engine's own writes."
+						}
 					},
 					{
 						"id": "unlock-record",
@@ -4029,8 +4026,7 @@
 						"visibleWhen": {
 							"field": "@self.frozen",
 							"op": "notEmpty"
-						},
-						"_note": "platform-record-lock REQ-PRL-002. DELETE on the freeze address removes it; OpenRegister records the unlock in the audit trail. Needs nextcloud-vue's api-call DELETE."
+						}
 					}
 				],
 				"band": [
@@ -4052,7 +4048,7 @@
 							"field": "@self.frozen",
 							"op": "notEmpty"
 						},
-						"_note": "platform-record-lock REQ-PRL-001. Silent on a record that is not locked. A marker that names nobody says the shorter sentence.",
+						"_note": "platform-record-lock REQ-PRL-001. Silent on a record that is not locked. A marker that names nobody says the shorter sentence. Lock (lock-record) is OpenRegister's freeze, POST .../freeze; on a lead or ticket it shows only once isFinished, because a lock on an open one would refuse the SLA engine's own writes. Unlock (unlock-record) is DELETE on the same address, which needs nextcloud-vue's api-call DELETE.",
 						"content": {
 							"icon": "LockOutline",
 							"lead": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Nobody can change it. Need a change? Unlock it first; the history shows who locked and unlocked it.",
@@ -4930,7 +4926,7 @@
 							"field": "@self.frozen",
 							"op": "notEmpty"
 						},
-						"_note": "platform-record-lock REQ-PRL-001. Silent on a record that is not locked. A marker that names nobody says the shorter sentence.",
+						"_note": "platform-record-lock REQ-PRL-001. Silent on a record that is not locked. A marker that names nobody says the shorter sentence. Lock (lock-record) is OpenRegister's freeze, POST .../freeze; on a lead or ticket it shows only once isFinished, because a lock on an open one would refuse the SLA engine's own writes. Unlock (unlock-record) is DELETE on the same address, which needs nextcloud-vue's api-call DELETE.",
 						"content": {
 							"icon": "LockOutline",
 							"lead": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Nobody can change it. Need a change? Unlock it first; the history shows who locked and unlocked it.",
@@ -5736,8 +5732,7 @@
 									"value": true
 								}
 							]
-						},
-						"_note": "platform-record-lock REQ-PRL-001. OpenRegister's freeze: it writes @self.frozen (who, when) and an audit entry, and refuses every later write. Shows only on a finished record (isFinished), because a lock on an open one would refuse the SLA engine's own writes."
+						}
 					},
 					{
 						"id": "unlock-record",
@@ -5750,8 +5745,7 @@
 						"visibleWhen": {
 							"field": "@self.frozen",
 							"op": "notEmpty"
-						},
-						"_note": "platform-record-lock REQ-PRL-002. DELETE on the freeze address removes it; OpenRegister records the unlock in the audit trail. Needs nextcloud-vue's api-call DELETE."
+						}
 					}
 				],
 				"band": [

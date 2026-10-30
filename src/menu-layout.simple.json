@@ -728,8 +728,7 @@
 									"value": true
 								}
 							]
-						},
-						"_note": "platform-record-lock REQ-PRL-001. OpenRegister's freeze: it writes @self.frozen (who, when) and an audit entry, and refuses every later write. Shows only on a finished record (isFinished), because a lock on an open one would refuse the SLA engine's own writes."
+						}
 					},
 					{
 						"id": "unlock-record",
@@ -743,8 +742,7 @@
 						"visibleWhen": {
 							"field": "@self.frozen",
 							"op": "notEmpty"
-						},
-						"_note": "platform-record-lock REQ-PRL-002. DELETE on the freeze address removes it; OpenRegister records the unlock in the audit trail. Needs nextcloud-vue's api-call DELETE."
+						}
 					}
 				],
 				"primaryActionByStage": {
