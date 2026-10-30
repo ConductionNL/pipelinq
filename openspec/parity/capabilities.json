@@ -2459,7 +2459,9 @@
 				"state": "specified",
 				"evidence": "lib/Settings/pipelinq_register.json:658 declares winProbability on lead and lib/Service/LeadService.php derives it; no page shows it (grep of src for winProbability is empty). The Win chance column on Leads shows qualificationScore, the lead score",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/lead-scoring-win-probability"
+				"spec": "openspec/specs/lead-scoring-win-probability",
+				"change": "openspec/changes/lead-win-probability-recency",
+				"requirement": "Win probability is surfaced on the pipeline list and deal detail"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
