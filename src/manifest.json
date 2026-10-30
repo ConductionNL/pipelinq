@@ -8032,7 +8032,8 @@
 			"type": "index",
 			"title": "Cash register audit log",
 			"splitView": {
-				"enabled": true
+				"enabled": true,
+				"paneWidth": "360px"
 			},
 			"config": {
 				"entitySource": "endpoint",
@@ -8406,7 +8407,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 2
+						"gridHeight": 2,
+						"sizeToContent": true
 					},
 					{
 						"id": "2",
@@ -8414,7 +8416,8 @@
 						"gridX": 0,
 						"gridY": 2,
 						"gridWidth": 6,
-						"gridHeight": 6
+						"gridHeight": 6,
+						"sizeToContent": true
 					},
 					{
 						"id": "3",
@@ -8422,7 +8425,8 @@
 						"gridX": 6,
 						"gridY": 2,
 						"gridWidth": 6,
-						"gridHeight": 6
+						"gridHeight": 6,
+						"sizeToContent": true
 					}
 				]
 			}
