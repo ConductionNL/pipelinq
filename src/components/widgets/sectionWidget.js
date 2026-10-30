@@ -25,7 +25,8 @@ import { computed, h } from 'vue'
  * @param {(ctx: {objectId: string, objectData: object, content: object}) => object} mapProps
  *   The section's props from the page context.
  * @param {{card?: boolean, context?: boolean}} [options] `card` wraps the section in a titled
- *   card (title from `content.title`, through the page's translate), for a widget that sits in the grid on
+ *   card (title from `content.title` and the line beside it from `content.subtitle`, both through the
+ *   page's translate), for a widget that sits in the grid on
  *   its own rather than inside a tab, which already names it; an instance under a heading of its own (a
  *   `sections` widget) sets `content.card: false` to draw the section bare. `context` provides
  *   `cnSectionContext` (`{ object, objectId }`) as a body section gets it, for a
@@ -56,6 +57,7 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 				})),
 			}
 		},
+		emits: ['header'],
 		props: {
 			objectId: { type: [String, Number], default: '' },
 			objectData: { type: Object, default: null },
@@ -66,14 +68,15 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 			if (!objectId) {
 				return null
 			}
-			const inner = h(
-				section,
-				mapProps({
+			const inner = h(section, {
+				...mapProps({
 					objectId,
 					objectData: this.objectData || {},
 					content: this.content || {},
 				}),
-			)
+				// The title row a section reports goes on to the card the detail host draws.
+				onHeader: (header) => this.$emit('header', header),
+			})
 			if (!options.card || this.content?.card === false) {
 				return inner
 			}
@@ -82,9 +85,10 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 				typeof this.cnTranslate === 'function'
 					? this.cnTranslate
 					: (key) => key
+			const subtitle = this.content?.subtitle || ''
 			return h(
 				CnDetailCard,
-				{ title: title ? translate(title) : '' },
+				{ title: title ? translate(title) : '', subtitle: subtitle ? translate(subtitle) : '' },
 				{ default: () => inner },
 			)
 		},

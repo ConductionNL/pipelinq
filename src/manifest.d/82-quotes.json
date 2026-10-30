@@ -447,7 +447,34 @@
 							"excludeActions": [
 								"read"
 							],
-							"layout": "stacked"
+							"layout": "stacked",
+							"density": "compact",
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "sent",
+									"label": "Sent"
+								},
+								{
+									"field": "status",
+									"to": "accepted",
+									"label": "Accepted"
+								},
+								{
+									"field": "status",
+									"to": "rejected",
+									"label": "Rejected"
+								},
+								{
+									"field": "status",
+									"to": "ordered",
+									"label": "Ordered"
+								}
+							]
 						}
 					},
 					{
@@ -519,15 +546,15 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 5
+						"gridHeight": 6
 					},
 					{
 						"id": "2",
 						"widgetId": "quote-lines",
 						"gridX": 0,
-						"gridY": 5,
+						"gridY": 6,
 						"gridWidth": 12,
-						"gridHeight": 6
+						"gridHeight": 7
 					},
 					{
 						"id": "4",

@@ -4,21 +4,29 @@
   -->
 <template>
 	<div class="forecast-dashboard">
-		<div class="forecast-dashboard__header">
-			<CnPageHeader
-				:title="t('pipelinq', 'Forecast')"
-				:description="subtitle" />
-			<NcButton class="forecast-dashboard__download" @click="exportCsv">
-				<template #icon>
-					<Download :size="20" />
-				</template>
-				{{ t('pipelinq', 'Download') }}
-			</NcButton>
-		</div>
+		<CnPageHeader
+			:title="t('pipelinq', 'Forecast')"
+			:description="subtitle">
+			<template #extra>
+				<div class="forecast-dashboard__header-actions">
+					<NcButton
+						class="forecast-dashboard__download"
+						data-testid="forecast-download"
+						@click="exportCsv">
+						<template #icon>
+							<Download :size="20" />
+						</template>
+						{{ t('pipelinq', 'Download') }}
+					</NcButton>
+					<CnBuildiqEditButton />
+				</div>
+			</template>
+		</CnPageHeader>
 		<CnSegmentedControl
 			:modelValue="level"
 			:options="levelOptions"
 			:ariaLabel="t('pipelinq', 'Level')"
+			mode="toggle"
 			size="compact"
 			class="forecast-dashboard__levels"
 			@update:modelValue="setLevel" />
@@ -68,61 +76,57 @@
 					{{ atRiskMessage }}
 				</NcNoteCard>
 				<template v-if="rows.length">
-					<div class="pq-board-table-card forecast-table-card">
-						<table class="forecast-table pq-board-table">
-							<thead>
-								<tr>
-									<th scope="col">{{ t('pipelinq', 'Owner') }}</th>
-									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Commit') }}</th>
-									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Best Case') }}</th>
-									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Pipeline') }}</th>
-									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Closed Won') }}</th>
-									<th scope="col" class="pq-board-table__num">{{ t('pipelinq', 'Quota') }}</th>
-									<th scope="col">{{ t('pipelinq', 'Override') }}</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="row in rows" :key="row.owner_id">
-									<td data-testid="forecast-owner">{{ ownerName(row) }}</td>
-									<td class="pq-board-table__num">
-										{{ formatMoney(row.commit) }}
-										<span
-											v-if="hasOverride(row)"
-											class="forecast-table__was"
-											data-testid="forecast-was">
-											{{ t('pipelinq', 'was {amount}', { amount: formatMoney(row.original_commit) }) }}
-										</span>
-									</td>
-									<td class="pq-board-table__num">{{ formatMoney(row.best_case) }}</td>
-									<td class="pq-board-table__num">{{ formatMoney(row.pipeline) }}</td>
-									<td class="pq-board-table__num">{{ formatMoney(row.closed_won) }}</td>
-									<td class="pq-board-table__num">
-										{{
-											row.quota === null ? '—' : formatMoney(row.quota)
-										}}
-									</td>
-									<td>
-										<span
-											v-if="hasOverride(row)"
-											class="forecast-table__badge"
-											data-testid="forecast-overridden"
-											:title="overrideTitle(row)">
-											{{ t('pipelinq', 'Overridden') }}
-										</span>
-										<NcButton
-											v-else
-											variant="secondary"
-											@click="openOverride(row)">
-											<template #icon>
-												<Pencil :size="20" />
-											</template>
-											{{ t('pipelinq', 'Override') }}
-										</NcButton>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
+					<CnDataTable
+						class="forecast-table"
+						:columns="quarterColumns"
+						:rows="quarterRows"
+						rowKey="id"
+						rowTitle="text"
+						filterable
+						localHeaders>
+						<template #column-name="{ row }">
+							<span data-testid="forecast-owner">{{ row.name }}</span>
+						</template>
+						<template #column-commit="{ row }">
+							{{ formatMoney(row.commit) }}
+							<span
+								v-if="hasOverride(row.source)"
+								class="forecast-table__was"
+								data-testid="forecast-was">
+								{{ t('pipelinq', 'was {amount}', { amount: formatMoney(row.source.original_commit) }) }}
+							</span>
+						</template>
+						<template #column-best_case="{ row }">
+							{{ formatMoney(row.best_case) }}
+						</template>
+						<template #column-pipeline="{ row }">
+							{{ formatMoney(row.pipeline) }}
+						</template>
+						<template #column-closed_won="{ row }">
+							{{ formatMoney(row.closed_won) }}
+						</template>
+						<template #column-quota="{ row }">
+							{{ row.quota === null ? '—' : formatMoney(row.quota) }}
+						</template>
+						<template #column-override="{ row }">
+							<span
+								v-if="hasOverride(row.source)"
+								class="forecast-table__badge"
+								data-testid="forecast-overridden"
+								:title="overrideTitle(row.source)">
+								{{ t('pipelinq', 'Overridden') }}
+							</span>
+							<NcButton
+								v-else
+								variant="secondary"
+								@click="openOverride(row.source)">
+								<template #icon>
+									<Pencil :size="20" />
+								</template>
+								{{ t('pipelinq', 'Override') }}
+							</NcButton>
+						</template>
+					</CnDataTable>
 					<p
 						v-for="row in overriddenRows"
 						:key="'note-' + row.owner_id"
@@ -160,6 +164,8 @@
 
 <script>
 import {
+	CnBuildiqEditButton,
+	CnDataTable,
 	CnDetailCard,
 	CnPageHeader,
 	CnSegmentedControl,
@@ -183,6 +189,8 @@ import { fetchUserDisplayName } from '../../services/userDisplayName.js'
 export default {
 	name: 'ForecastDashboard',
 	components: {
+		CnBuildiqEditButton,
+		CnDataTable,
 		CnDetailCard,
 		CnPageHeader,
 		CnSegmentedControl,
@@ -208,6 +216,45 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The quarter table's columns: every figure sorts and filters on a
+		 * range, the owner on contains (PqForecast).
+		 *
+		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} The columns.
+		 */
+		quarterColumns() {
+			const figure = (key, label) => ({ key, label, type: 'number', sortable: true, class: 'forecast-table__num' })
+			return [
+				{ key: 'name', label: t('pipelinq', 'Owner'), sortable: true },
+				figure('commit', t('pipelinq', 'Commit')),
+				figure('best_case', t('pipelinq', 'Best Case')),
+				figure('pipeline', t('pipelinq', 'Pipeline')),
+				figure('closed_won', t('pipelinq', 'Closed Won')),
+				figure('quota', t('pipelinq', 'Quota')),
+				{ key: 'override', label: t('pipelinq', 'Override'), sortable: false, filterable: false },
+			]
+		},
+
+		/**
+		 * The quarter table's rows; the table sorts and filters them from its heads.
+		 *
+		 * @spec openspec/changes/forecast-table-heads/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} One row per owner.
+		 */
+		quarterRows() {
+			return this.rows.map((row) => ({
+				id: row.owner_id,
+				name: this.ownerName(row),
+				commit: row.commit,
+				best_case: row.best_case,
+				pipeline: row.pipeline,
+				closed_won: row.closed_won,
+				quota: row.quota,
+				source: row,
+			}))
+		},
+
 		levelOptions() {
 			return [
 				{ value: 'rep', label: t('pipelinq', 'Seller') },
@@ -536,12 +583,16 @@ export default {
 	margin-top: 8px;
 }
 
-.forecast-dashboard__header {
+/* PqForecast: Downloaden at the boards' 40px beside the buildiq square. */
+.forecast-dashboard__header-actions {
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
 	flex-wrap: wrap;
-	gap: 12px;
+	align-items: flex-start;
+	gap: 10px;
+}
+
+.forecast-dashboard__download {
+	min-height: var(--cn-board-control-height, 40px);
 }
 
 .forecast-progress {
@@ -578,8 +629,13 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.forecast-table-card {
+.forecast-table {
 	margin-top: 12px;
+}
+
+.forecast-table :deep(.forecast-table__num) {
+	text-align: end;
+	font-variant-numeric: tabular-nums;
 }
 
 /* An overridden commit keeps the seller's figure beside it, small and muted,

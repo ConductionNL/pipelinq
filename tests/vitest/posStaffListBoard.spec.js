@@ -3,8 +3,8 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * The till staff table as the board draws it: the last login as a readable
- * moment, and the PIN rule under the table.
+ * The till staff table as the board draws it: a sort and a filter in every
+ * head, the last login as a readable moment, and the PIN rule under the table.
  *
  * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
  */
@@ -16,6 +16,7 @@ import { h } from 'vue'
 const axiosGet = vi.hoisted(() => vi.fn())
 vi.mock('@nextcloud/axios', () => ({ default: { get: axiosGet } }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (p) => p }))
+vi.mock('@conduction/nextcloud-vue', async () => ({ CnDataTable: (await import('./support/cnDataTableStub.js')).CnDataTableStub }))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: { name: 'NcButton', render() { return h('button', this.$slots.default?.()) } },
 	NcLoadingIcon: { name: 'NcLoadingIcon', render() { return h('span') } },
@@ -36,10 +37,20 @@ describe('the till staff table', () => {
 		const wrapper = mount(PosStaffList, { global: { mocks: { t: globalThis.t } } })
 		await flushPromises()
 
-		const cells = wrapper.findAll('tbody td').map((td) => td.text())
+		const table = wrapper.get('[data-stub="CnDataTable"]')
+		expect(table.attributes('data-filterable')).toBe('true')
+		expect(table.attributes('data-local-headers')).toBe('true')
+		expect(wrapper.findAll('th').map((th) => th.text()).slice(0, 4)).toEqual(['Display name', 'Role', 'Active', 'Last login'])
+
+		const cells = wrapper.findAll('.pos-staff-list__row td').map((td) => td.text())
 		expect(cells[0]).toBe('Fatma Yildiz')
+		expect(cells[1]).toBe('Kassamedewerker')
+		expect(cells[2]).toBe('Yes')
 		expect(cells[3]).not.toContain('2026-10-06T')
 		expect(cells[3]).toMatch(/09[:.]00/)
+		expect(cells[4]).toBe('Edit')
+		await wrapper.get('.pos-staff-list__row button').trigger('click')
+		expect(wrapper.emitted('edit')).toEqual([['s1']])
 		expect(wrapper.text()).toContain('Every staff member signs in at the till with a PIN of 4 to 6 digits.')
 	})
 })

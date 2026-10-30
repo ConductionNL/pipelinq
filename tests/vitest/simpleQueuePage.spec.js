@@ -69,7 +69,7 @@ describe('the queue, simple structure', () => {
 		expect(simple.statRow.map((tile) => tile.id)).toEqual([
 			'queue-unassigned',
 			'queue-longest-waiting',
-			'queue-past-deadline',
+			'queue-within-deadline',
 		])
 		const longest = simple.statRow[1].content
 		expect(longest.display).toBe('countdown')
@@ -90,6 +90,14 @@ describe('the queue, simple structure', () => {
 			'view',
 		])
 		expect(simple.filterStrip.field).toBe('channel')
+		// channel has no enum and each ticket type stores its own spelling, so
+		// the strip names its pills and gathers the spellings under each
+		expect(simple.filterStrip.options).toEqual([
+			{ values: ['phone', 'telefoon'], label: 'Phone' },
+			{ values: ['portal', 'web'], label: 'Portal' },
+			{ values: ['email'], label: 'Email' },
+			{ values: ['balie', 'counter'], label: 'Desk' },
+		])
 		expect(simple.columns.map((column) => column.key)).toEqual([
 			'occurredAt',
 			'title',
@@ -123,13 +131,14 @@ describe('the queue, simple structure', () => {
 			...overlay.configAppend.statRow.flatMap((tile) => [
 				tile.title,
 				tile.content.caption,
-				tile.content.countdown.pastLabel,
+				...(tile.content.countdown ? [tile.content.countdown.pastLabel] : []),
 			]),
 			...overlay.config.sidePanel.map((card) => card.title),
 			overlay.config.sidePanel[1].content.text,
 			overlay.config.sidePanel[1].content.link.label,
 			overlay.config.footerNote,
 			overlay.config.filterStrip.label,
+			...overlay.config.filterStrip.options.map((option) => option.label),
 		]
 		for (const word of words) {
 			expect(en[word], word).toBeTruthy()

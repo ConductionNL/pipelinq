@@ -32,7 +32,7 @@
 				</span>
 			</h3>
 			<NcButton
-				variant="primary"
+				variant="secondary"
 				:disabled="!effectiveContactId"
 				@click="openComposer">
 				{{ t('pipelinq', 'Send message') }}

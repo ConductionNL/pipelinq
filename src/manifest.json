@@ -736,7 +736,8 @@
 							},
 							"valueField": "revenue",
 							"previousField": "previousPeriod.revenue",
-							"goodDirection": "up"
+							"goodDirection": "up",
+							"caption": "till and won deals"
 						}
 					},
 					{
@@ -762,7 +763,8 @@
 							},
 							"valueField": "wonValue",
 							"previousField": "previousPeriod.wonValue",
-							"goodDirection": "up"
+							"goodDirection": "up",
+							"caption": "{wonCount} won"
 						}
 					},
 					{
@@ -787,7 +789,8 @@
 							},
 							"valueField": "winRate",
 							"previousField": "previousPeriod.winRate",
-							"goodDirection": "up"
+							"goodDirection": "up",
+							"caption": "{wonCount} won, {lostCount} lost"
 						}
 					},
 					{
@@ -812,7 +815,8 @@
 							},
 							"valueField": "avgDealSize",
 							"previousField": "previousPeriod.avgDealSize",
-							"goodDirection": "up"
+							"goodDirection": "up",
+							"caption": "{wonCount} won"
 						}
 					},
 					{
@@ -836,7 +840,8 @@
 								}
 							},
 							"valueField": "weightedForecast",
-							"goodDirection": "up"
+							"goodDirection": "up",
+							"caption": "of {openPipelineValue|currency} open, {scoredOpenCount} of {openCount} leads scored"
 						}
 					},
 					{
@@ -863,7 +868,8 @@
 								"filter": {
 									"nature": "RECURRING"
 								}
-							}
+							},
+							"caption": "per month, from running contracts"
 						}
 					},
 					{
@@ -892,7 +898,7 @@
 						"type": "chart",
 						"title": "Open pipeline by stage",
 						"content": {
-							"chartKind": "bar",
+							"chartKind": "bar-list",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
@@ -906,7 +912,7 @@
 									"sort": "desc"
 								}
 							},
-							"horizontal": true
+							"valueFormat": "compact"
 						},
 						"headerLink": {
 							"label": "Board",
@@ -918,7 +924,7 @@
 						"type": "chart",
 						"title": "Revenue by source",
 						"content": {
-							"chartKind": "bar",
+							"chartKind": "bar-list",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
@@ -932,7 +938,7 @@
 									"sort": "desc"
 								}
 							},
-							"horizontal": true
+							"valueFormat": "compact"
 						}
 					},
 					{
@@ -940,7 +946,7 @@
 						"type": "chart",
 						"title": "Largest customers by revenue",
 						"content": {
-							"chartKind": "bar",
+							"chartKind": "bar-list",
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
@@ -959,7 +965,7 @@
 									}
 								}
 							},
-							"horizontal": true
+							"valueFormat": "compact"
 						}
 					},
 					{
@@ -983,7 +989,13 @@
 							"limit": 3,
 							"presentation": "rows",
 							"title": "{title}",
-							"meta": "{stage} · {expectedCloseDate|date} · {assignee|user}",
+							"meta": {
+								"parts": [
+									"{stage}",
+									"{expectedCloseDate|date}",
+									"{assignee|user}"
+								]
+							},
 							"trailing": [
 								"{value|currency}"
 							],
@@ -1011,89 +1023,144 @@
 							"limit": 3,
 							"presentation": "rows",
 							"title": "{title}",
-							"meta": "{status} {expectedCloseDate|date} · {assignee|user}",
+							"meta": {
+								"parts": [
+									"{status} {expectedCloseDate|date}",
+									"{assignee|user}"
+								]
+							},
 							"valueLabels": {
 								"status": {
 									"won": "Won",
 									"lost": "Lost"
 								}
 							},
-							"trailing": [
-								"{value|currency}"
-							],
 							"rowRoute": "LeadDetail",
-							"emptyText": "No deals closed yet."
+							"emptyText": "No deals closed yet.",
+							"pill": {
+								"cases": [
+									{
+										"when": {
+											"field": "status",
+											"op": "eq",
+											"value": "won"
+										},
+										"label": "{value|currency}",
+										"variant": "success"
+									},
+									{
+										"when": {
+											"field": "status",
+											"op": "eq",
+											"value": "lost"
+										},
+										"label": "{value|currency}",
+										"variant": "error"
+									}
+								]
+							}
 						}
 					},
 					{
 						"id": "pipeline-coverage",
-						"type": "gauge",
+						"type": "stat",
 						"title": "Pipeline cover",
 						"content": {
-							"label": "Open pipeline vs target",
-							"labelWithoutTarget": "Open pipeline (no target set)",
+							"label": "Pipeline cover",
 							"route": {
 								"name": "Pipeline"
 							},
 							"format": {
-								"style": "currency",
-								"currency": "@config.currency",
-								"decimals": 0
+								"style": "decimal",
+								"decimals": 1,
+								"suffix": " x"
 							},
-							"source": {
-								"register": "pipelinq",
-								"schema": "lead",
-								"metric": "sum",
-								"field": "value",
-								"filter": {
-									"status": "open"
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/analytics/commercial",
+								"params": {
+									"period": "@workspace.datePreset?"
 								}
 							},
-							"target": {
-								"kind": "static",
-								"value": "@config.pipelineTarget"
-							},
-							"thresholds": {
-								"warn": 60,
-								"danger": 90,
-								"invert": true
-							}
+							"valueField": "pipelineCover",
+							"caption": "Open pipeline against the target still to come in. Healthy from 3 x.",
+							"emptyText": "Set a pipeline target"
 						}
 					},
 					{
 						"id": "won-vs-open",
-						"type": "delta",
+						"type": "stat-grid",
 						"title": "Won against open",
 						"content": {
-							"label": "Won deals",
-							"route": {
-								"name": "Pipeline"
+							"columns": 2,
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/analytics/commercial",
+								"params": {
+									"period": "@workspace.datePreset?"
+								}
 							},
-							"icon": "Trophy",
-							"format": {
-								"style": "number",
-								"decimals": 0
-							},
-							"source": {
-								"register": "pipelinq",
-								"schema": "lead",
-								"metric": "count",
-								"goodDirection": "up",
-								"current": {
-									"filter": {
-										"status": "won",
-										"expectedCloseDate": {
-											"gte": "@workspace.dateFrom?",
-											"lte": "@workspace.dateTo?"
-										}
-									}
+							"cells": [
+								{
+									"label": "Won",
+									"valueField": "wonValue",
+									"format": {
+										"style": "currency",
+										"currency": "@config.currency",
+										"decimals": 0
+									},
+									"caption": "Won is {wonShareOfOpen}% of open."
 								},
-								"previous": {
-									"filter": {
-										"status": "open"
+								{
+									"label": "Open",
+									"valueField": "openPipelineValue",
+									"format": {
+										"style": "currency",
+										"currency": "@config.currency",
+										"decimals": 0
 									}
 								}
-							}
+							]
+						}
+					},
+					{
+						"id": "matching-prospects",
+						"type": "record-list",
+						"title": "Matching prospects",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/prospects",
+								"responsePath": "prospects"
+							},
+							"limit": 2,
+							"presentation": "rows",
+							"title": "{tradeName}",
+							"meta": {
+								"parts": [
+									"{sbiDescription}",
+									"{employeeCount} employees",
+									"{address.city}"
+								]
+							},
+							"pill": {
+								"cases": [
+									{
+										"when": {
+											"field": "fitScore",
+											"op": "gte",
+											"value": 80
+										},
+										"label": "Fit {fitScore}",
+										"variant": "success"
+									}
+								],
+								"label": "Fit {fitScore}",
+								"variant": "warning"
+							},
+							"headerNote": "From the KVK, scored on your profile",
+							"footerLink": {
+								"label": "Find more prospects",
+								"route": "Prospects"
+							},
+							"emptyText": "No prospects match your profile yet."
 						}
 					}
 				],
@@ -1128,39 +1195,47 @@
 						"gridX": 7,
 						"gridY": 4,
 						"gridWidth": 5,
+						"gridHeight": 3
+					},
+					{
+						"id": "c18",
+						"widgetId": "matching-prospects",
+						"gridX": 7,
+						"gridY": 7,
+						"gridWidth": 5,
 						"gridHeight": 4
 					},
 					{
 						"id": "c9",
 						"widgetId": "revenue-by-category",
 						"gridX": 0,
-						"gridY": 8,
+						"gridY": 11,
 						"gridWidth": 4,
-						"gridHeight": 4
+						"gridHeight": 3
 					},
 					{
 						"id": "c10",
 						"widgetId": "top-customers",
 						"gridX": 4,
-						"gridY": 8,
+						"gridY": 11,
 						"gridWidth": 4,
-						"gridHeight": 4
+						"gridHeight": 3
 					},
 					{
 						"id": "c16",
 						"widgetId": "pipeline-coverage",
 						"gridX": 8,
-						"gridY": 8,
+						"gridY": 11,
 						"gridWidth": 4,
-						"gridHeight": 2
+						"gridHeight": 3
 					},
 					{
 						"id": "c17",
 						"widgetId": "won-vs-open",
 						"gridX": 8,
-						"gridY": 10,
+						"gridY": 14,
 						"gridWidth": 4,
-						"gridHeight": 2
+						"gridHeight": 3
 					}
 				],
 				"kpiRow": [
@@ -2578,7 +2653,10 @@
 						"type": "integration",
 						"integrationId": "notes",
 						"title": "Client notes",
-						"icon": "NoteTextOutline"
+						"icon": "NoteTextOutline",
+						"props": {
+							"composer": "button"
+						}
 					},
 					{
 						"id": "client-files",
@@ -3010,24 +3088,24 @@
 					},
 					{
 						"id": "client-channels",
-						"type": "ContactChannelsWidget",
+						"type": "ContactChannelsCard",
 						"title": "Contact channels",
 						"icon": "CardAccountPhoneOutline",
 						"content": {
 							"entityType": "client",
-							"title": "Contact channels",
-							"compact": true
+							"compact": true,
+							"headerAdd": true
 						}
 					},
 					{
 						"id": "client-relationships",
-						"type": "ContactRelationshipsWidget",
+						"type": "ContactRelationshipsCard",
 						"title": "Relationships",
 						"icon": "AccountMultipleOutline",
 						"content": {
 							"entityType": "client",
-							"title": "Relationships",
-							"compact": true
+							"compact": true,
+							"headerAdd": true
 						}
 					},
 					{
@@ -3734,6 +3812,25 @@
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"showViewAction": false,
+				"_bulkActionsNote": "Board PqTicketsSelectie: \"Toewijzen aan\" hands the selected tickets to one handler. The library's CnAssignDialog starts OpenRegister's openregister:assign job on `assignee`: OpenRegister checks each ticket's update rule for the user before it writes, refuses the rest and keeps the reason on every ticket. No pipelinq endpoint or loop.",
+				"bulkActions": [
+					{
+						"id": "assign",
+						"label": "Assign to",
+						"icon": "AccountArrowRightOutline",
+						"handler": "open-modal",
+						"target": "CnAssignDialog",
+						"props": {
+							"config": {
+								"title": "Assign the selected tickets",
+								"assignee": { "kinds": ["user"], "label": "Handler", "placeholder": "Search by name", "field": "assignee" },
+								"note": { "label": "Reason", "hint": "Every ticket that moves keeps this reason." },
+								"confirm": { "label": "Assign", "icon": "AccountArrowRightOutline" },
+								"bulkJob": { "register": "pipelinq", "schema": "ticket" }
+							}
+						}
+					}
+				],
 				"viewModes": ["table", "cards", "board"],
 				"_boardNote": "tickets-board-view (LijstBord). The board's columns are the ticket status; the switch also offers type, channel and handler. A drop runs moveTicketStatus, which checks the move against the ticket lifecycle (requestStatus.js) and writes the status, and ticketStatusTargets fades the columns the lifecycle does not allow. Type and channel are read-only: a drag does not change what a ticket is or how it came in. The enum's legacy and closing statuses show as columns until nextcloud-vue board.states (board-declared-states) is released.",
 				"board": {
@@ -4710,6 +4807,7 @@
 							"tabs": [
 								{
 									"label": "Overview",
+									"sections": true,
 									"widgetIds": [
 										"lead-stages",
 										"lead-deal",
@@ -4799,6 +4897,7 @@
 						"id": "lead-stages",
 						"type": "stages",
 						"title": "Stages",
+						"showTitle": false,
 						"icon": "ChevronDoubleRight",
 						"_note": "The board's stage strip at the top of the Overview tab: the stages of the lead's own pipeline, read from the pipeline record, with the current one from `stage`.",
 						"content": {
@@ -4923,13 +5022,16 @@
 									}
 								}
 							],
+							"tableFrame": true,
 							"allowEdit": true,
 							"limit": 25,
 							"emptyText": "No products quoted on this deal yet. Add a line to build the quote.",
 							"addLabel": "Add product",
+							"addVariant": "tonal",
 							"footerNote": "The value of the lead follows the line totals. Change a line and the value changes with it.",
-							"rowTitle": "plain",
-							"filterable": true
+							"rowTitle": "text",
+							"filterable": true,
+							"sortable": true
 						}
 					},
 					{
@@ -5876,6 +5978,39 @@
 						}
 					},
 					{
+						"id": "task-finish",
+						"type": "record-notes",
+						"title": "Finish this task",
+						"icon": "Check",
+						"_note": "Board PqTaak \"Deze taak afronden\": the result is sent with an attempt (on the task's attempt log) or with Finish, through the callback endpoints, which check the user may change the task. The lifecycle completes from in_progress only, so on an open task Finish first runs the lifecycle's claim transition (OpenRegister checks the user may update the task), then completes it, in one click. Nothing is written while typing.",
+						"visibleWhen": { "field": "status", "op": "in", "value": ["open", "in_progress"] },
+						"content": {
+							"field": "resultText",
+							"label": "Result",
+							"rows": 2,
+							"placeholder": "What came out of the callback?",
+							"autosave": false,
+							"actions": [
+								{
+									"label": "Log attempt",
+									"icon": "Phone",
+									"request": { "url": "/apps/pipelinq/api/callbacks/@objectId/attempts", "body": { "result": "{text}" } },
+									"doneText": "Attempt logged."
+								},
+								{
+									"label": "Finish",
+									"icon": "Check",
+									"variant": "primary",
+									"requests": [
+										{ "when": { "field": "status", "op": "eq", "value": "open" }, "url": "/apps/openregister/api/objects/@objectId/transition", "body": { "action": "claim" } },
+										{ "url": "/apps/pipelinq/api/callbacks/@objectId/complete", "body": { "resultText": "{text}" } }
+									],
+									"doneText": "Task finished."
+								}
+							]
+						}
+					},
+					{
 						"id": "task-files",
 						"type": "integration",
 						"integrationId": "files",
@@ -5901,6 +6036,7 @@
 								{
 									"widgetIds": [
 										"task-data",
+										"task-finish",
 										"task-files"
 									],
 									"label": "Overview"
@@ -6313,6 +6449,9 @@
 						"icon": "Stairs",
 						"content": {
 							"presentation": "table",
+							"tableLook": "data",
+							"sortable": true,
+							"filterable": true,
 							"objectRows": { "path": "priceTiers" },
 							"columns": [
 								{ "label": "Quantity from", "value": "{minQuantity}" },
@@ -6329,11 +6468,15 @@
 						"icon": "ShapeOutline",
 						"content": {
 							"presentation": "table",
+							"tableLook": "data",
+							"sortable": true,
+							"filterable": true,
 							"objectRows": { "path": "variants" },
 							"valueLabels": { "status": { "active": "Active", "inactive": "Inactive" } },
 							"columns": [
 								{ "label": "SKU", "value": "{sku}" },
 								{ "label": "Name", "value": "{name}" },
+								{ "label": "Characteristics", "value": "{attributes|values}" },
 								{ "label": "Price", "value": "{unitPrice|currency}", "align": "end" },
 								{ "label": "Barcode", "value": "{barcode}" },
 								{ "label": "Status", "value": "{status}", "tone": { "field": "status", "map": { "active": "success" }, "default": "default" } }
@@ -6356,7 +6499,7 @@
 						"title": "Publication",
 						"icon": "Earth",
 						"content": {
-							"columns": 2,
+							"columns": 3,
 							"include": [
 								"status",
 								"publishedAt",
@@ -7294,7 +7437,7 @@
 									"id": "diff-approve",
 									"label": "Approve",
 									"type": "api-call",
-									"variant": "secondary",
+									"variant": "tonal",
 									"adminOnly": true,
 									"url": "/apps/pipelinq/api/pos-shifts/@objectId/diff/approve",
 									"payload": {
@@ -7311,7 +7454,7 @@
 									"id": "diff-reject",
 									"label": "Reject",
 									"type": "api-call",
-									"variant": "secondary",
+									"variant": "tonal",
 									"adminOnly": true,
 									"successMessage": "Cash difference rejected. The shift is open for a recount.",
 									"visibleWhen": {
@@ -7398,6 +7541,8 @@
 							],
 							"limit": 25,
 							"allowCreate": false,
+							"tableFrame": true,
+							"rowTitle": "text",
 							"emptyText": "No cash drops recorded on this shift yet.",
 							"footnote": "Drops can only be added to an open shift. An open shift has Close and count shift at the top."
 						}
@@ -7940,7 +8085,8 @@
 			"type": "index",
 			"title": "Cash register audit log",
 			"splitView": {
-				"enabled": true
+				"enabled": true,
+				"paneWidth": "360px"
 			},
 			"config": {
 				"entitySource": "endpoint",
@@ -8314,7 +8460,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 2
+						"gridHeight": 2,
+						"sizeToContent": true
 					},
 					{
 						"id": "2",
@@ -8322,7 +8469,8 @@
 						"gridX": 0,
 						"gridY": 2,
 						"gridWidth": 6,
-						"gridHeight": 6
+						"gridHeight": 6,
+						"sizeToContent": true
 					},
 					{
 						"id": "3",
@@ -8330,7 +8478,8 @@
 						"gridX": 6,
 						"gridY": 2,
 						"gridWidth": 6,
-						"gridHeight": 6
+						"gridHeight": 6,
+						"sizeToContent": true
 					}
 				]
 			}
@@ -8694,6 +8843,8 @@
 							],
 							"limit": 25,
 							"allowCreate": false,
+							"tableFrame": true,
+							"rowTitle": "text",
 							"emptyText": "This transaction has no line items."
 						}
 					},
@@ -9225,6 +9376,7 @@
 						"id": "view",
 						"label": "View",
 						"icon": "EyeOutline",
+						"iconOnly": true,
 						"handler": "navigate",
 						"route": "TicketDetail"
 					}
@@ -9705,6 +9857,7 @@
 						"viewport": "wide",
 						"content": {
 							"ruleAbove": true,
+							"chevron": true,
 							"headerNote": "deadline is today or has passed",
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
@@ -9742,6 +9895,7 @@
 							"badges": [
 								{
 									"field": "priority",
+									"look": "text",
 									"labels": {
 										"urgent": "Urgent priority",
 										"high": "High priority",
@@ -9789,6 +9943,7 @@
 						"viewport": "wide",
 						"content": {
 							"ruleAbove": true,
+							"chevron": true,
 							"headerNote": "the customer has replied",
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
@@ -9826,6 +9981,7 @@
 							"badges": [
 								{
 									"field": "priority",
+									"look": "text",
 									"labels": {
 										"urgent": "Urgent priority",
 										"high": "High priority",
@@ -9873,6 +10029,7 @@
 						"viewport": "wide",
 						"content": {
 							"ruleAbove": true,
+							"chevron": true,
 							"headerNote": "nothing to do until they reply",
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
@@ -9910,6 +10067,7 @@
 							"badges": [
 								{
 									"field": "priority",
+									"look": "text",
 									"labels": {
 										"urgent": "Urgent priority",
 										"high": "High priority",
@@ -10618,7 +10776,7 @@
 				"viewMode": "list",
 				"showViewToggle": false,
 				"search": false,
-				"_expandableNote": "Board PqPipelines: each pipeline is a row that opens to its stages (nextcloud-vue expandableRows, index-expandable-rows). The first row is open. Closed, the stages are chips coloured by stage kind; open, a table with the order, chance, start stage, closed and result. Edit and Add stage open the pipeline's own form, where the stages are edited. The board's drag handle is not drawn: the order is edited in the form.",
+				"_expandableNote": "Board PqPipelines: each pipeline is a row that opens to its stages (nextcloud-vue expandableRows, index-expandable-rows). The first row is open. Closed, the stages are chips coloured by stage kind; open, a table with the order, chance, start stage, closed and result. Every stage-table header sorts and filters, and a stage's drag handle (or the arrow keys on it) moves it: the pipeline is saved with the stages renumbered in `order`. Edit, Add stage and each stage's pencil (entryAction) open the pipeline's own form, where the stages are edited.",
 				"expandableRows": {
 					"title": "title",
 					"badge": { "when": { "field": "isDefault", "op": "eq", "value": true }, "label": "Default" },
@@ -10635,6 +10793,9 @@
 					"meta": ["{stages|count} stages", "created {@self.created|date}"],
 					"table": {
 						"field": "stages",
+						"sortable": true,
+						"filterable": true,
+						"reorder": { "key": "order" },
 						"columns": [
 							{ "label": "Order", "as": "order" },
 							{ "key": "name", "label": "Stage", "strong": true },
@@ -10651,9 +10812,10 @@
 							}
 						],
 						"note": "A closed stage ends the item: won or lost.",
-						"action": { "id": "edit", "label": "Add stage" }
+						"action": { "id": "edit", "label": "Add stage" },
+						"entryAction": { "id": "edit", "label": "Edit stage", "icon": "Pencil" }
 					},
-					"buttons": [{ "action": "edit", "label": "Edit" }],
+					"buttons": [{ "action": "edit", "label": "Edit", "icon": "Pencil" }],
 					"open": "first"
 				},
 				"cardLayout": {
@@ -10854,9 +11016,8 @@
 			"route": "/flows/:id",
 			"type": "flow",
 			"title": "Flow",
-			"config": { "app": "pipelinq", "saveAsVersion": true },
-			"sidebarComponent": "FlowDetailSidebar",
-			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors procest/src/manifest.json:FlowDetail. PqFlow edits the flow in place: a published flow is not locked behind a read-only notice; Save publishes the edits as the next version and runs already started keep theirs (CnFlowBoard saveAsVersion)."
+			"config": { "app": "pipelinq", "saveAsVersion": true, "layout": "canvas", "metaParts": ["trigger", "steps", "version", "saved"] },
+			"_note": "The shared CnFlowDetail canvas over the same single engine, laid out as boards PqFlow and PqFlowRun draw it (config.layout canvas: actions under the title, a floating toolbar and inspector, in a run the run card over the canvas and the legend card at its foot). The inspector replaces the app sidebar, so the page mounts none. metaParts adds when the version was saved to the path line. PqFlow edits the flow in place: a published flow is not locked behind a read-only notice; Save publishes the edits as the next version and runs already started keep theirs (CnFlowBoard saveAsVersion)."
 		}
 	]
 }

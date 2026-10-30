@@ -6,6 +6,7 @@
  * page and the connection audit as a board-look index.
  *
  * @spec openspec/changes/advanced-hub-and-connection-audit-board/specs/board-look/spec.md#requirement-the-connection-audit-reads-as-its-board
+ * @spec openspec/changes/advanced-personal-settings-card/specs/advanced-hub/spec.md#requirement-the-advanced-page-opens-personal-settings
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -45,8 +46,24 @@ describe('the Advanced page', () => {
 	it('puts every card in a declared group, with a target', () => {
 		for (const card of advanced.config.cards) {
 			expect(advanced.config.categories[card.category], card.id).toBeTruthy()
-			expect(card.route || card.href, card.id).toBeTruthy()
+			expect(card.route || card.href || card.action, card.id).toBeTruthy()
 		}
+	})
+
+	it('closes the Administrator group with personal settings, opened in the user settings dialog', () => {
+		const admin = advanced.config.cards.filter((card) => card.category === 'admin')
+		expect(admin.map((card) => card.id)).toEqual(['AdminSettings', 'PersonalSettings'])
+		const personal = admin[1]
+		expect(personal.action).toBe('user-settings')
+		expect(personal.route).toBeUndefined()
+		expect(personal.permission).toBeUndefined()
+		expect(personal.status).toBe('Only for you')
+		expect(nl[personal.label]).toBe('Persoonlijke instellingen')
+		expect(nl[personal.status]).toBe('Alleen voor jou')
+	})
+
+	it('draws the panel badge in the purple tone, as the board does', () => {
+		expect(advanced.config.panel.badge.tone).toBe('purple')
 	})
 
 	it('has Dutch copy for every string', () => {
@@ -58,6 +75,7 @@ describe('the Advanced page', () => {
 				card.label,
 				card.description,
 			]),
+			advanced.config.panel.badge.label,
 		]
 		for (const key of strings) {
 			expect(nl[key], key).toBeTruthy()

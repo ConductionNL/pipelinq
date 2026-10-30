@@ -131,7 +131,7 @@ describe('the dashboard', () => {
 			expect(withoutInCall(byId[widget.id]), widget.id).toEqual(withoutInCall(widget))
 		}
 		expect(simple.widgets).toHaveLength(before.widgets.length + added.length)
-		expect(added).toHaveLength(12)
+		expect(added).toHaveLength(13)
 	})
 
 	it('moves the old cards down by one fixed number of rows and changes nothing else', () => {
@@ -139,7 +139,9 @@ describe('the dashboard', () => {
 		for (const entry of before.layout) {
 			const now = simple.layout.find((item) => item.id === entry.id)
 			expect(now, entry.id).toBeTruthy()
-			expect({ ...now, gridY: entry.gridY }, entry.id).toEqual(entry)
+			// `track` puts a card on the main or side column (gridSideColumn).
+			const { track, ...kept } = now
+			expect({ ...kept, gridY: entry.gridY }, entry.id).toEqual(entry)
 			shifts.add(now.gridY - entry.gridY)
 		}
 		expect([...shifts]).toEqual([16])
@@ -474,6 +476,34 @@ describe('the board PqDashboard', () => {
 		}
 	})
 
+	it('puts every card beside the side column on its track, so the side column is 320 wide', () => {
+		// Rows 0-6 are the attention card, the four counts and the client
+		// picker: full width or four equal tiles, on no track.
+		for (const entry of simple.layout) {
+			const end = entry.gridX + entry.gridWidth
+			let expected
+			if (entry.gridY >= 7) {
+				expect(end <= 8 || entry.gridX >= 8, entry.id).toBe(true)
+				expected = entry.gridX >= 8 ? 'side' : 'main'
+			}
+			expect(entry.track, entry.id).toBe(expected)
+		}
+	})
+
+	it('spaces its cards 20 pixels apart, as the board and the Dq dashboards do', () => {
+		expect(simple.gridMargin).toBe(10)
+	})
+
+	it('writes the availability button at the header buttons\' 14px', () => {
+		const style = read('src', 'components', 'werkplek', 'WerkplekAgentStatus.vue').split('<style')[1]
+		const toggle = style.match(/\.werkplek-agent-status__toggle \{([^}]*)\}/)[1]
+		expect(toggle).toMatch(/font-size: 14px;/)
+	})
+
+	it('draws the log form\'s summary three rows high', () => {
+		expect(byId.interaction.content.summaryRows).toBe(3)
+	})
+
 	it('rules above the first row of every list, as under the card title', () => {
 		for (const id of ['simple-waiting-list', 'simple-callback-list', 'simple-latest-contact']) {
 			expect(byId[id].content.ruleAbove, id).toBe(true)
@@ -659,7 +689,7 @@ describe('the werkplek in a call (board PqWerkplekKlant)', () => {
 		// "Bron: BRP, opgezocht 10:24, vastgelegd"; the client's own source stays as "Aangemeld via".
 		expect(who().content.fields.find((field) => field.label === 'Source').template).toBe('{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded')
 		// "Opzoeken in de BRP" verifies the identity of the customer in the call.
-		expect(who().content.actions).toEqual([{ type: 'open-modal', target: 'BrpClientCheckDialog', label: 'Look up in the BRP', props: { clientId: '@source.id' } }])
+		expect(who().content.actions).toEqual([{ type: 'open-modal', target: 'BrpClientCheckDialog', label: 'Look up in the BRP', props: { clientId: '@source.id' }, variant: 'tonal' }])
 	})
 })
 

@@ -858,6 +858,42 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'ContactChannelsSection as a grid widget.',
 	},
+	// PqKlant / PqOrganisatie side cards: the library draws the card
+	// (`chrome: "card"`) and the section reports its "Add" for the card's
+	// title row (`content.headerAdd`).
+	ContactChannelsCard: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactChannelsCard',
+			ContactChannelsSection,
+			({ objectId, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+				compact: content.compact === true,
+				headerAdd: content.headerAdd === true,
+			}),
+		),
+		chrome: 'card',
+		...PANEL_WIDGET_META,
+		_note: 'ContactChannelsSection in the library card, its add menu in the title row (PqKlant Contactkanalen).',
+	},
+	ContactRelationshipsCard: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactRelationshipsCard',
+			ContactRelationships,
+			({ objectId, objectData, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+				entityName: objectData.name || '',
+				compact: content.compact === true,
+				headerAdd: content.headerAdd === true,
+			}),
+		),
+		chrome: 'card',
+		...PANEL_WIDGET_META,
+		_note: 'ContactRelationships in the library card, its add button in the title row (PqKlant Relaties).',
+	},
 	MessagingConversationWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -1179,9 +1215,10 @@ const registry = {
 			'BookingAssignmentsWidget',
 			BookingAssignments,
 			({ objectId }) => ({ bookingId: objectId }),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
-		_note: 'BookingDetail: the resourceAssignments array-on-object table, with resource names.',
+		_note: 'BookingDetail (PqAfspraak Toegewezen resources): the resourceAssignments array-on-object table in a titled card, with resource names, types, times and a status pill.',
 	},
 	BookingHeaderActions: {
 		kind: 'widget',

@@ -24,7 +24,14 @@ describe('the pipelines list', () => {
 		expect(rows.badge.label).toBe('Default')
 		expect(rows.table.columns.map((c) => c.as || 'text')).toEqual(['order', 'text', 'bar', 'check', 'yesNo', 'pill'])
 		expect(rows.chips.tones.map((t) => t.variant)).toEqual(['success', 'error', 'primary'])
-		expect(rows.buttons).toEqual([{ action: 'edit', label: 'Edit' }])
+		expect(rows.buttons).toEqual([{ action: 'edit', label: 'Edit', icon: 'Pencil' }])
+	})
+
+	it('sorts and filters the stage table on its headers and reorders stages by drag, as the board draws it', () => {
+		const table = page.config.expandableRows.table
+		expect(table.sortable).toBe(true)
+		expect(table.filterable).toBe(true)
+		expect(table.reorder).toEqual({ key: 'order' })
 	})
 
 	it('draws each pipeline with its stage count and its stages as chips', () => {
@@ -43,5 +50,9 @@ describe('the pipelines list', () => {
 			['isClosed', 'error'],
 			['isDefault', 'primary'],
 		])
+	})
+
+	it('ends every stage with the board pencil, named for the stage', () => {
+		expect(page.config.expandableRows.table.entryAction).toEqual({ id: 'edit', label: 'Edit stage', icon: 'Pencil' })
 	})
 })

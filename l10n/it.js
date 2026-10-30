@@ -619,6 +619,7 @@ OC.L10N.register(
         "Edit pipeline": "Modifica pipeline",
         "Edit refund": "Modifica rimborso",
         "Edit relationship": "Modifica relazione",
+        "Edit stage": "Modifica fase",
         "Edit stages": "Modifica fasi",
         "Edit survey": "Modifica sondaggio",
         "Edit task": "Modifica attività",

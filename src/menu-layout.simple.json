@@ -1240,6 +1240,7 @@
 								{
 									"id": "set-term",
 									"type": "open-form",
+									"variant": "tonal",
 									"label": "Set the term",
 									"formTitle": "Set the term",
 									"requires": "update",
@@ -1410,12 +1411,15 @@
 					"title": {
 						"order": 1,
 						"description": "",
-						"section": "The ticket"
+						"section": "The ticket",
+						"width": "full"
 					},
 					"description": {
 						"order": 2,
 						"description": "",
-						"section": "The ticket"
+						"section": "The ticket",
+						"widget": "textarea",
+						"rows": 3
 					},
 					"ticketType": {
 						"order": 3,
@@ -1490,7 +1494,9 @@
 					"customerMessage": {
 						"order": 17,
 						"description": "",
-						"section": "Visible to the customer"
+						"section": "Visible to the customer",
+						"widget": "textarea",
+						"rows": 2
 					}
 				},
 				"editTitle": "Edit ticket",
@@ -1555,7 +1561,8 @@
 								{
 									"widgetId": "ticket-contactmoments",
 									"label": "Contact moments",
-									"countFrom": "widget"
+									"countFrom": "widget",
+									"showTitle": true
 								},
 								{
 									"widgetId": "ticket-related",
@@ -1667,6 +1674,10 @@
 							"emptyText": "No contact moments on this ticket yet.",
 							"allowCreate": true,
 							"addLabel": "Log contact",
+							"_addPlacementNote": "Board PqTicketContactmomenten: Log contact is the outlined phone button in the tab's title row, with the count line under the title.",
+							"addPlacement": "header",
+							"addIcon": "Phone",
+							"headerSubtitle": "{total} on this ticket, newest first",
 							"formIncludeFields": [
 								"channel",
 								"direction",
@@ -2090,6 +2101,7 @@
 						"gridY": 7,
 						"gridWidth": 8,
 						"gridHeight": 5,
+						"track": "main",
 						"showTitle": true,
 						"headerLink": {
 							"label": "Whole queue",
@@ -2104,6 +2116,7 @@
 						"gridY": 12,
 						"gridWidth": 8,
 						"gridHeight": 3,
+						"track": "main",
 						"showTitle": true,
 						"sizeToContent": true
 					},
@@ -2114,6 +2127,7 @@
 						"gridY": 7,
 						"gridWidth": 4,
 						"gridHeight": 5,
+						"track": "side",
 						"showTitle": true,
 						"sizeToContent": true
 					},
@@ -2124,6 +2138,7 @@
 						"gridY": 12,
 						"gridWidth": 4,
 						"gridHeight": 4,
+						"track": "side",
 						"showTitle": true,
 						"sizeToContent": true
 					},
@@ -2143,7 +2158,8 @@
 						"gridX": 0,
 						"gridY": 16,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"track": "main"
 					},
 					{
 						"id": "wi",
@@ -2151,7 +2167,8 @@
 						"gridX": 8,
 						"gridY": 16,
 						"gridWidth": 4,
-						"gridHeight": 8
+						"gridHeight": 8,
+						"track": "side"
 					},
 					{
 						"id": "wt",
@@ -2159,7 +2176,8 @@
 						"gridX": 0,
 						"gridY": 20,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"track": "main"
 					},
 					{
 						"id": "wk",
@@ -2167,7 +2185,8 @@
 						"gridX": 8,
 						"gridY": 24,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"track": "side"
 					},
 					{
 						"id": "wc",
@@ -2175,7 +2194,8 @@
 						"gridX": 0,
 						"gridY": 24,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"track": "main"
 					},
 					{
 						"id": "wm",
@@ -2183,7 +2203,8 @@
 						"gridX": 4,
 						"gridY": 24,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"track": "main"
 					},
 					{
 						"id": "sct",
@@ -2191,7 +2212,8 @@
 						"gridX": 0,
 						"gridY": 29,
 						"gridWidth": 4,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"track": "main"
 					},
 					{
 						"id": "who",
@@ -2200,6 +2222,19 @@
 						"gridY": 29,
 						"gridWidth": 4,
 						"gridHeight": 4,
+						"track": "side",
+						"sizeToContent": true
+					},
+					{
+						"id": "sca",
+						"widgetId": "simple-call-actions",
+						"gridX": 0,
+						"gridY": 33,
+						"gridWidth": 8,
+						"gridHeight": 2,
+						"track": "main",
+						"showTitle": false,
+						"borderless": true,
 						"sizeToContent": true
 					}
 				],
@@ -2211,6 +2246,25 @@
 							"value": true
 						},
 						"title": "Call with {workspace.selectedClientName}"
+					}
+				],
+				"headerPills": [
+					{
+						"label": "Phone, incoming",
+						"when": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						}
+					},
+					{
+						"label": "Identified",
+						"variant": "success",
+						"when": {
+							"workspace": "callIdentified",
+							"op": "eq",
+							"value": true
+						}
 					}
 				],
 				"description": "your queue, callbacks and contact today",
@@ -2228,6 +2282,8 @@
 				"gridSideColumn": {
 					"width": 320
 				},
+				"gridMargin": 10,
+				"_gridMarginNote": "10px: the board spaces these cards 20px apart, as the Dq dashboards do; GridStack's default 12 drew them 24 apart. The cards from row 7 down carry a `track`, so the side column is drawn at gridSideColumn's width (without one every card keeps its twelfth shares, 357px).",
 				"headerActions": [
 					{
 						"id": "log-contact",
@@ -2244,7 +2300,86 @@
 					}
 				],
 				"showActionsMenu": false,
-				"_inCallNote": "In a call (the header sets @workspace.callActive from client=<id>&call=active or inCallPreview=<number>), the dashboard cards step aside and the client-bound cards float up: the contact form, the open requests, the knowledge base, the tasks and callbacks for the client and the earlier contact (board PqWerkplekKlant)."
+				"layoutWhen": [
+					{
+						"when": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"layout": [
+							{
+								"id": "cq",
+								"widgetId": "simple-call-actions",
+								"gridX": 0,
+								"gridY": 0,
+								"gridWidth": 12,
+								"gridHeight": 2,
+								"showTitle": false,
+								"borderless": true,
+								"sizeToContent": true
+							},
+							{
+								"id": "cw",
+								"widgetId": "simple-call-who",
+								"gridX": 0,
+								"gridY": 2,
+								"gridWidth": 4,
+								"gridHeight": 5,
+								"sizeToContent": true
+							},
+							{
+								"id": "ci",
+								"widgetId": "interaction",
+								"title": "This contact moment",
+								"gridX": 4,
+								"gridY": 2,
+								"gridWidth": 4,
+								"gridHeight": 6,
+								"sizeToContent": true
+							},
+							{
+								"id": "cc",
+								"widgetId": "client-cases",
+								"title": "Open matters",
+								"gridX": 4,
+								"gridY": 8,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							},
+							{
+								"id": "ck",
+								"widgetId": "knowledge",
+								"gridX": 8,
+								"gridY": 2,
+								"gridWidth": 4,
+								"gridHeight": 5,
+								"sizeToContent": true
+							},
+							{
+								"id": "ct",
+								"widgetId": "simple-call-tasks",
+								"gridX": 8,
+								"gridY": 7,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							},
+							{
+								"id": "cm",
+								"widgetId": "client-contacts",
+								"title": "Earlier contact",
+								"gridX": 8,
+								"gridY": 11,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							}
+						]
+					}
+				],
+				"_inCallNote": "In a call (the header sets @workspace.callActive from client=<id>&call=active or inCallPreview=<number>), the dashboard cards step aside and the client-bound cards float up: the contact form, the open requests, the knowledge base, the tasks and callbacks for the client and the earlier contact (board PqWerkplekKlant). `layoutWhen` gives the call its own arrangement in three columns: who is it on the left, the contact form and the open requests in the middle, the knowledge base, the tasks and the earlier contact on the right (nextcloud-vue dashboard-layout-when; before it the key is ignored and the cards close up as before)."
 			},
 			"configAppend": {
 				"widgets": [
@@ -2671,6 +2806,141 @@
 						}
 					},
 					{
+						"id": "simple-call-actions",
+						"type": "action-tiles",
+						"title": "Next steps",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"tiles": [
+								{
+									"id": "new-request",
+									"label": "New request",
+									"icon": "MessageOutline",
+									"action": {
+										"type": "open-modal",
+										"target": "RequestCreateDialog",
+										"props": {
+											"clientId": "@workspace.selectedClient"
+										}
+									}
+								},
+								{
+									"id": "call-back",
+									"label": "Call back",
+									"icon": "PhoneReturnOutline",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Plan a callback",
+										"register": "pipelinq",
+										"schema": "crmTask",
+										"props": {
+											"type": "callbackRequest",
+											"status": "open",
+											"clientId": "@workspace.selectedClient"
+										},
+										"includeFields": [
+											"subject",
+											"deadline",
+											"preferredTimeSlot",
+											"callbackPhoneNumber",
+											"assigneeUserId"
+										]
+									}
+								},
+								{
+									"id": "book-appointment",
+									"label": "Book an appointment",
+									"icon": "CalendarPlus",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Book an appointment",
+										"register": "pipelinq",
+										"schema": "appointmentBooking",
+										"props": {
+											"customerId": "@workspace.selectedClient",
+											"status": "confirmed"
+										},
+										"includeFields": [
+											"serviceId",
+											"startAt",
+											"endAt",
+											"subject"
+										]
+									}
+								},
+								{
+									"id": "back-office",
+									"label": "To the back office",
+									"icon": "Send",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Hand over to the back office",
+										"register": "pipelinq",
+										"schema": "crmTask",
+										"props": {
+											"type": "followUpTask",
+											"status": "open",
+											"clientId": "@workspace.selectedClient"
+										},
+										"includeFields": [
+											"subject",
+											"assigneeGroupId",
+											"assigneeUserId",
+											"priority",
+											"deadline"
+										]
+									}
+								},
+								{
+									"id": "complaint",
+									"label": "Register a complaint",
+									"icon": "AlertCircleOutline",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Register a complaint",
+										"register": "pipelinq",
+										"schema": "ticket",
+										"props": {
+											"ticketType": "complaint",
+											"client": "@workspace.selectedClient",
+											"direction": "inbound"
+										},
+										"includeFields": [
+											"title",
+											"description",
+											"priority"
+										]
+									}
+								},
+								{
+									"id": "other-channel",
+									"label": "Another channel",
+									"icon": "SwapHorizontal",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Log contact on another channel",
+										"register": "pipelinq",
+										"schema": "ticket",
+										"props": {
+											"ticketType": "interaction",
+											"client": "@workspace.selectedClient",
+											"direction": "outbound"
+										},
+										"includeFields": [
+											"title",
+											"channel",
+											"description"
+										]
+									}
+								}
+							]
+						}
+					},
+					{
 						"id": "simple-call-tasks",
 						"type": "object-list",
 						"title": "Tasks and callback requests",
@@ -2768,6 +3038,7 @@
 								{
 									"type": "open-modal",
 									"target": "BrpClientCheckDialog",
+									"variant": "tonal",
 									"label": "Look up in the BRP",
 									"props": {
 										"clientId": "@source.id"
@@ -3580,7 +3851,7 @@
 		},
 		{
 			"id": "Queue",
-			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, past the deadline), the type tabs with a channel strip under them, and per row the wait, the title with the customer and channel, the type, the priority, Take on and View. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated.",
+			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, and within the deadline: the waiting tickets minus those past their deadline, out of all waiting ones, through `limitSource` and `limitStyle: \"of\"`, nextcloud-vue stat-limit-of-a-count), the type tabs with a channel strip under them, as DqTeamwachtrij draws its lenses (Dq wins over the board's in-card lenses), rows without column heads (`hideTableHeader`), and per row the wait, the title with the customer and channel, the type, the priority, Take on as a pill and View as an eye beside it with no menu (`rowInlineActions`, nextcloud-vue index-row-inline-actions). No search field, no add button and no column filters: a queue is worked from the top. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated. THE CHANNEL STRIP: channel is a free string and each ticket type stores its own spelling (phone and web on requests and complaints, telefoon and balie on contact moments), so each pill lists its spellings in `values` (nextcloud-vue filter-strip-option-values). Before that library change an option without `value` is skipped and the strip stays away, as it was.",
 			"config": {
 				"headerButtons": [
 					{
@@ -3597,11 +3868,45 @@
 				"selectable": false,
 				"showViewToggle": false,
 				"inlineActionCount": 2,
+				"rowInlineActions": 2,
+				"search": false,
+				"showAdd": false,
+				"headerFilters": false,
+				"hideTableHeader": true,
 				"footerNote": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
 				"filterStrip": {
 					"field": "channel",
 					"label": "Kind, then channel",
-					"showCount": true
+					"showCount": true,
+					"options": [
+						{
+							"values": [
+								"phone",
+								"telefoon"
+							],
+							"label": "Phone"
+						},
+						{
+							"values": [
+								"portal",
+								"web"
+							],
+							"label": "Portal"
+						},
+						{
+							"values": [
+								"email"
+							],
+							"label": "Email"
+						},
+						{
+							"values": [
+								"balie",
+								"counter"
+							],
+							"label": "Desk"
+						}
+					]
 				},
 				"columns": [
 					{
@@ -3729,13 +4034,90 @@
 							},
 							"caption": "the oldest ticket nobody has picked up"
 						}
+					},
+					{
+						"id": "queue-within-deadline",
+						"type": "stat",
+						"title": "Within the deadline",
+						"content": {
+							"label": "Within the deadline",
+							"caption": "take the red ones first",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"kind": "computed",
+								"register": "pipelinq",
+								"schema": "ticket",
+								"formula": "A - B",
+								"parts": {
+									"A": {
+										"filter": {
+											"assignee": {
+												"isnull": true
+											},
+											"status": {
+												"notIn": [
+													"resolved",
+													"completed",
+													"rejected",
+													"converted",
+													"closed"
+												]
+											}
+										}
+									},
+									"B": {
+										"filter": {
+											"assignee": {
+												"isnull": true
+											},
+											"status": {
+												"notIn": [
+													"resolved",
+													"completed",
+													"rejected",
+													"converted",
+													"closed"
+												]
+											},
+											"slaDeadline[lt]": "@now"
+										}
+									}
+								}
+							},
+							"limitSource": {
+								"filter": {
+									"assignee": {
+										"isnull": true
+									},
+									"status": {
+										"notIn": [
+											"resolved",
+											"completed",
+											"rejected",
+											"converted",
+											"closed"
+										]
+									}
+								}
+							},
+							"limitStyle": "of"
+						}
 					}
 				]
+			},
+			"configPatch": {
+				"statRow": {
+					"queue-past-deadline": null
+				}
 			},
 			"configOrder": {
 				"statRow": [
 					"queue-unassigned",
-					"queue-longest-waiting"
+					"queue-longest-waiting",
+					"queue-within-deadline"
 				]
 			}
 		},

@@ -82,7 +82,7 @@ describe('Relationships and Channels in the compact look', () => {
 		expect(sections[3].widget.content.compact).toBe(true)
 	})
 
-	it('passes compact through to both sections', () => {
-		expect(registry.match(/compact: content\.compact === true/g)).toHaveLength(2)
+	it('passes compact through to both sections, as a section and as a titled card', () => {
+		expect(registry.match(/compact: content\.compact === true/g)).toHaveLength(4)
 	})
 })
