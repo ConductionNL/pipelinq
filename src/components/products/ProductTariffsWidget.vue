@@ -70,7 +70,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<object>} The tariffs in force today.
-		 * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+		 * @spec openspec/specs/product-catalog/spec.md
 		 */
 		rows() {
 			return currentTariffs(this.objectData?.tariffs, this.today)
@@ -78,7 +78,7 @@ export default {
 
 		/**
 		 * @return {string} Where the tariffs come from.
-		 * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+		 * @spec openspec/specs/product-catalog/spec.md
 		 */
 		source() {
 			return this.objectData?.tariffSource || ''
@@ -86,7 +86,7 @@ export default {
 
 		/**
 		 * @return {string} The day the next tariffs go live, as a sentence.
-		 * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+		 * @spec openspec/specs/product-catalog/spec.md
 		 */
 		scheduledNote() {
 			const next = nextTariffDate(this.objectData?.tariffs, this.today)
@@ -107,7 +107,7 @@ export default {
 		/**
 		 * @param {unknown} price The tariff's amount.
 		 * @return {string} "Free" for nothing, else the amount.
-		 * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+		 * @spec openspec/specs/product-catalog/spec.md
 		 */
 		amount(price) {
 			if (Number(price) === 0 && price !== null && price !== '') {

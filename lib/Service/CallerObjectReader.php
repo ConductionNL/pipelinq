@@ -99,7 +99,7 @@ class CallerObjectReader
      *
      * @return array<string, mixed>|null The object's data.
      *
-     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
      */
     public function readFromSchema(string $id, string $schema): ?array
     {

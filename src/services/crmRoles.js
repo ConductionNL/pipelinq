@@ -5,7 +5,7 @@
  * The roles a contact plays in a deal. A role is a relationship (category
  * "CRM Rol") from the lead to the contact; `value` is the stored type.
  *
- * @spec openspec/changes/lead-contact-roles/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -23,7 +23,7 @@ export const CRM_ROLES = [
  * The options for a role picker, in board order.
  *
  * @return {Array<{value: string, label: string}>}
- * @spec openspec/changes/lead-contact-roles/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 export function crmRoleOptions() {
 	return CRM_ROLES.map((r) => ({ value: r.value, label: r.label() }))
@@ -34,7 +34,7 @@ export function crmRoleOptions() {
  *
  * @param {string} value The stored relationship type.
  * @return {string}
- * @spec openspec/changes/lead-contact-roles/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 export function crmRoleLabel(value) {
 	const role = CRM_ROLES.find((r) => r.value === value)
@@ -46,7 +46,7 @@ export function crmRoleLabel(value) {
  *
  * @param {Array<{type: string}>} rows The role relationships.
  * @return {Array<{type: string}>} A sorted copy.
- * @spec openspec/changes/lead-contact-roles/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 export function sortByCrmRole(rows) {
 	const order = (type) => CRM_ROLES.find((r) => r.value === type)?.order || 99

@@ -238,7 +238,7 @@ class PortalAssertionVerifier {
 	 * @return string|null
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
-	 * @spec openspec/changes/portal-verifier-has-no-instance-secret-fallback/specs/portal-contribution/spec.md#requirement-a-portal-assertion-is-verified-with-portaliqs-dedicated-secret-only-req-pvs-001
+	 * @spec openspec/specs/portal-contribution/spec.md#requirement-a-portal-assertion-is-verified-with-portaliqs-dedicated-secret-only-req-pvs-001
 	 */
 	private function secret(): ?string {
 		$secret = $this->secretOverride;

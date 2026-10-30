@@ -6,7 +6,7 @@
  * The fee table and the supply card are titled cards on the product page
  * (pl2 PqProduct: both rendered bare, without a card or a title).
  *
- * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 import { mount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'

@@ -233,7 +233,7 @@ class WorklistControllerTest extends TestCase {
 	 * The items endpoint hands the list and lens to the service, refuses an
 	 * unknown list, and downloads as CSV.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 *
 	 * @return void
 	 */

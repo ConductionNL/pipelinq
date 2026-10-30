@@ -326,7 +326,7 @@ class StoreController extends Controller {
 	 *
 	 * @return JSONResponse `{objects: [{schema, id, title}]}`; 403 for a user who may not publish.
 	 *
-	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	#[NoAdminRequired]
 	public function publishable(): JSONResponse {
@@ -352,7 +352,7 @@ class StoreController extends Controller {
 	 *
 	 * @return JSONResponse `{outcome, slug}`; 401 anonymous, 403 not admitted, 400 a refused item.
 	 *
-	 * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	#[NoAdminRequired]
 	public function publish(): JSONResponse {

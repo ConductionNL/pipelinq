@@ -5,14 +5,14 @@
  * Rows as a semicolon CSV (the separator Dutch spreadsheets open), and the
  * browser download of one.
  *
- * @spec openspec/changes/pipeline-board-header/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 
 /**
  * @param {Array<object>} rows The rows.
  * @param {Array<string>} keys The columns, in order; the first line names them.
  * @return {string} The CSV text.
- * @spec openspec/changes/pipeline-board-header/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 export function toCsv(rows, keys) {
 	const cell = (value) => {
@@ -29,7 +29,7 @@ export function toCsv(rows, keys) {
  * @param {Array<object>} rows The rows.
  * @param {Array<string>} keys The columns.
  * @return {void}
- * @spec openspec/changes/pipeline-board-header/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 export function downloadCsv(filename, rows, keys) {
 	const blob = new Blob(['﻿' + toCsv(rows, keys)], { type: 'text/csv;charset=utf-8' })

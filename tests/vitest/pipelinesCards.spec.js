@@ -5,7 +5,7 @@
  * Board PqPipelines: the pipelines list opens as cards, one per pipeline,
  * with its description, its number of stages and its stages as chips.
  *
- * @spec openspec/changes/pipelines-as-cards/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

@@ -5,7 +5,7 @@
  * The pipeline board's stage columns as board PqPipeline draws them: grey
  * panels without a frame, 240px at the least, the title in sentence case.
  *
- * @spec openspec/changes/pipeline-board-header/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

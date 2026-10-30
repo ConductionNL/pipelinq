@@ -7,7 +7,7 @@
  * columns that give way start hidden (`hidden: true`), so the Columns menu
  * still offers them; they are not removed.
  *
- * @spec openspec/changes/list-columns-give-way/specs/index-page/spec.md#requirement-a-board-look-list-starts-with-the-columns-that-fit
+ * @spec openspec/specs/index-page/spec.md#requirement-a-board-look-list-starts-with-the-columns-that-fit
  */
 import fs from 'node:fs'
 import path from 'node:path'

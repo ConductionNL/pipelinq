@@ -335,7 +335,7 @@ class PortalAssertionVerifierTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/portal-verifier-has-no-instance-secret-fallback/specs/portal-contribution/spec.md#requirement-a-portal-assertion-is-verified-with-portaliqs-dedicated-secret-only-req-pvs-001
+	 * @spec openspec/specs/portal-contribution/spec.md#requirement-a-portal-assertion-is-verified-with-portaliqs-dedicated-secret-only-req-pvs-001
 	 */
 	public function testNoFallbackToTheInstanceSecret(): void {
 		foreach (['', 'short'] as $appValue) {

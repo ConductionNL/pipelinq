@@ -207,3 +207,43 @@ the install would report success while having stored nothing.
 - **WHEN** it is installed
 - **THEN** no write MUST be attempted for that component
 - **AND** the result MUST report it as an error
+
+### Requirement: The store knows what this instance installed
+
+After an install that wrote every component, pipelinq MUST record the item's slug and version. A store search MUST mark each card as installed or not. For an installed card it MUST give the installed version, whether the registry's version is newer, and where an item of that kind is used. It MUST also return when the registry last answered.
+
+#### Scenario: an installed item with an update
+
+@e2e exclude Asserted in tests/Unit/Service/Store/StoreInstallLedgerTest.php and tests/Unit/Controller/StoreControllerTest.php; the pixel check against board PqStore covers the drawn page.
+
+- GIVEN Routering voor de servicedesk installed at 2.0.1 and the registry offering 2.1.0
+- WHEN the store page searches
+- THEN that card is installed, with installed version 2.0.1 and an update available
+
+#### Scenario: a refused install is not recorded
+
+@e2e exclude Asserted in tests/Unit/Controller/StoreControllerTest.php.
+
+- GIVEN a store item whose only component is a lead
+- WHEN an administrator installs it
+- THEN nothing is written and the item is not recorded as installed
+
+### Requirement: An administrator publishes a template from local configuration
+
+Pipelinq MUST list the local configuration objects a store item of a kind may carry. It MUST publish an item whose components are copies of the chosen objects without their identity, to the configured registry, and only for a user OpenRegister's `canPublish()` admits. An object outside the kind, or one that is not on this instance, MUST refuse the publish.
+
+#### Scenario: publish the Woo pipeline
+
+@e2e exclude Asserted in tests/Unit/Service/Store/StoreTemplateAssemblerTest.php and tests/Unit/Controller/StoreControllerTest.php; the dialog is covered by nextcloud-vue's CnStorePagePublish test.
+
+- GIVEN the pipeline "Woo-vragen" on this instance and the store's registry is `local`
+- WHEN an administrator publishes "Pipeline voor Woo-vragen" 1.0.0 of kind pipeline with that pipeline chosen
+- THEN the registry holds a commercial-template "Pipeline voor Woo-vragen" whose one component is the pipeline without its id or owner
+
+#### Scenario: someone who may not publish
+
+@e2e exclude Asserted in tests/Unit/Controller/StoreControllerTest.php.
+
+- GIVEN a user who is not an administrator
+- WHEN they publish
+- THEN the answer is 403 and nothing is sent

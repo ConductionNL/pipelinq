@@ -419,7 +419,7 @@ class WorklistService {
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	public function items(string $userId, string $bucket='', string $lens='', string $sort='deadline', string $scope='open'): array {
 		$buckets = new WorkBuckets();
@@ -511,7 +511,7 @@ class WorklistService {
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	public function summary(string $userId): string {
 		$items   = $this->items(userId: $userId)['items'];
@@ -566,7 +566,7 @@ class WorklistService {
 	 *
 	 * @return string The phrase.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	private function counted(string $singular, string $plural, int $count): string {
 		$phrase = $this->l10n->n($singular, $plural, $count);

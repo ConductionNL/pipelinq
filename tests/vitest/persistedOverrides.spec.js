@@ -11,7 +11,7 @@
  * count requests. Each test resets the module cache, because useAppStatus
  * caches its answer for the page lifetime.
  *
- * @spec openspec/changes/round6-nextcloud-vue-2-78/specs/declarative-view-system/spec.md
+ * @spec openspec/specs/declarative-view-system/spec.md
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

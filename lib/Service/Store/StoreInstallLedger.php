@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -85,7 +85,7 @@ class StoreInstallLedger {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function record(string $slug, string $version): void {
 		$installed        = $this->installed();
@@ -108,7 +108,7 @@ class StoreInstallLedger {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function annotate(array $cards): array {
 		$installed = $this->installed();
@@ -138,7 +138,7 @@ class StoreInstallLedger {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function markChecked(DateTimeInterface $when): void {
 		$this->appConfig->setValueString(Application::APP_ID, self::CHECKED_KEY, $when->format(format: DateTimeInterface::ATOM));
@@ -149,7 +149,7 @@ class StoreInstallLedger {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function checkedAt(): string {
 		return $this->appConfig->getValueString(Application::APP_ID, self::CHECKED_KEY, '');

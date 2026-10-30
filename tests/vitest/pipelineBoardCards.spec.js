@@ -6,7 +6,7 @@
  * The kanban's lead cards in the board look (board PqPipeline): the chance
  * in the stage's tint, the days in the stage and the owner's initials.
  *
- * @spec openspec/changes/pipeline-board-cards/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

@@ -29,7 +29,7 @@ use Exception;
 /**
  * Reads a contract's figures from the contract alone.
  *
- * @spec openspec/changes/contract-figures/specs/contract-renewal-tracking/spec.md#requirement-a-contract-page-reads-its-figures
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-a-contract-page-reads-its-figures
  */
 class ContractFiguresService {
 	/**
@@ -57,7 +57,7 @@ class ContractFiguresService {
 	 *
 	 * @return array<string, mixed> The figures.
 	 *
-	 * @spec openspec/changes/contract-figures/specs/contract-renewal-tracking/spec.md#requirement-a-contract-page-reads-its-figures
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-a-contract-page-reads-its-figures
 	 */
 	public function figures(array $contract, DateTimeImmutable $today): array {
 		$interval = (string)($contract['billingInterval'] ?? '');

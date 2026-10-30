@@ -18,7 +18,7 @@
  *
  * @link https://www.conduction.nl
  *
- * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @spec openspec/changes/store-installed-and-updates/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 class StoreInstallLedgerTest extends TestCase {
 
