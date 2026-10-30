@@ -10,7 +10,8 @@
   - Verify: PHPUnit with numbers typed as `06-12345678`, `+31 6 1234 5678`, `0031612345678` all finding one ticket; hydra gates route-auth and route-reachability pass on the diff
 - [x] 1.5 (`tests/vitest/newContactIntakeHistory.spec.js`; the Playwright verify waits for the live pass) Earlier contacts list in `src/modals/NewContactIntakeModal.vue`
   - Verify: Playwright `tests/e2e/phone-history.spec.ts` fires a CTI event from an unknown number with two earlier contact moments and sees both in the intake modal
-- [ ] 1.6 Tickets list phone search with the "Searching by phone number" line
+- [x] 1.6 Tickets list phone search with the "Searching by phone number" line
   - Verify: Playwright searches `06 1234 5678` and finds a ticket stored as `+31612345678`
-- [ ] 1.7 Dutch strings and a section in `docs/Features/telephony.md` (done for 1.5 in en and nl, section in `docs/Features/contactmomenten.md` since there is no telephony.md; the Tickets search strings come with 1.6)
+  - Built as the registry handler `ticketPhoneSearch` (`src/utils/ticketPhoneSearch.js`) named by the Tickets page's `config.searchHandler`; it needs nextcloud-vue's `searchHandler` (change `index-search-handler`, schema 2.170.0) released and the dependency bumped. Vitest `tests/vitest/ticketPhoneSearch.spec.js`; the Playwright run waits for the live pass
+- [ ] 1.7 Dutch strings and a section in `docs/Features/telephony.md` (done for 1.5 in en and nl, section in `docs/Features/contactmomenten.md` since there is no telephony.md; the Tickets search line "Searching by phone number" / "Zoeken op telefoonnummer" added with 1.6)
   - Verify: `npm run test:l10n` exit 0; docs build exit 0

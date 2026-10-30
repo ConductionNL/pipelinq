@@ -1,6 +1,7 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Searching by phone number": "Searching by phone number",
         "email, linked": "email, linked",
         "Link email": "Link email",
         "Compose in Mail": "Compose in Mail",

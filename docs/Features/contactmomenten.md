@@ -56,6 +56,7 @@ For administrators: the draft is the ticket itself, stored in OpenRegister with 
 A caller's number is stored with every contact moment and ticket in one form, the international one (+31612345678). That holds for a call through the telephony link, for a contact moment you log by hand and for a ticket made from a web form, however the number was typed.
 
 - When a caller matches no contact or client, the new contact dialog lists the earlier contact moments and tickets from that number, newest first. Each links to its record. A first-time caller gets the line "No earlier contacts from this number."
+- Type a phone number in the search box of the Tickets list, in any form (06 1234 5678, +31 6 12345678, 06-12345678), and the list shows the tickets with that number. The page says "Searching by phone number" while it does. Other text is searched as usual.
 - You only see the contact moments and tickets you may read.
 - `GET /apps/pipelinq/api/tickets/by-phone?number=06 1234 5678` answers the same search for any number, typed with or without spaces, dashes, a leading 0 or +31.
 

@@ -1,6 +1,7 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Searching by phone number": "Zoeken op telefoonnummer",
         "Core CRM": "Basis-CRM",
         "Customer contact and government": "Klantcontact en overheid",
         "Analysis and insight": "Analyse en inzicht",

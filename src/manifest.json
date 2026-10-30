@@ -3814,6 +3814,7 @@
 				"_sortNote": "Newest contact first. Without a default the list came in creation order, oldest first, so a new ticket sat on the last page (Woo round 3).",
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
+				"searchHandler": "ticketPhoneSearch",
 				"showViewAction": false,
 				"_bulkActionsNote": "Board PqTicketsSelectie: \"Toewijzen aan\" hands the selected tickets to one handler. The library's CnAssignDialog starts OpenRegister's openregister:assign job on `assignee`: OpenRegister checks each ticket's update rule for the user before it writes, refuses the rest and keeps the reason on every ticket. No pipelinq endpoint or loop.",
 				"bulkActions": [
