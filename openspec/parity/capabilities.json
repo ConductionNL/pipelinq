@@ -10098,7 +10098,8 @@
 				"state": "built",
 				"evidence": "lib/Adapter/ExportSinkRegistry.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
+				"change": "openspec/changes/data-portability-full-export",
+				"requirement": "An administrator can download all data in one archive (REQ-DPE-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-management/export-your-content-and-data \"export HubSpot content and data from your account, such as pages, contacts, and files\", All products and plans, but \"there is no way to merge all the data between HubSpot accounts ... recreate certain data in the other account\"; records and files leave, automations must be rebuilt.",
