@@ -219,3 +219,30 @@ describe('the Product cell of a line without a name', () => {
 		expect(nl['Own line']).toBe('Eigen regel')
 	})
 })
+
+describe('the quote page leftovers against PqOfferte', () => {
+	const widget = (id) => detail.config.widgets.find((w) => w.id === id)
+	const cell = (id) => detail.config.layout.find((item) => item.widgetId === id)
+	const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+
+	it('gives the quote card room for all eight fields, so none fold away', () => {
+		expect(widget('quote-facts').content.include).toHaveLength(8)
+		expect(cell('quote-facts')).toMatchObject({ gridY: 0, gridHeight: 6 })
+		expect(cell('quote-lines')).toMatchObject({ gridY: 6, gridHeight: 7 })
+		expect(cell('quote-notes').gridY).toBe(cell('quote-lines').gridY + cell('quote-lines').gridHeight)
+	})
+
+	it('writes the history in words on compact rows', () => {
+		const history = widget('side-history').content
+		expect(history).toMatchObject({
+			layout: 'stacked',
+			density: 'compact',
+			actionLabels: { create: 'Created by {actor}', update: 'Updated' },
+		})
+		expect(history.changeLabels.map((rule) => rule.to)).toEqual(['sent', 'accepted', 'rejected', 'ordered'])
+		expect(nl['Created by {actor}']).toBe('Aangemaakt door {actor}')
+		for (const rule of history.changeLabels) {
+			expect(nl[rule.label]).toBeTruthy()
+		}
+	})
+})
