@@ -2197,7 +2197,7 @@ OC.L10N.register(
         "Links": "Links",
         "Links created": "Koppelingen aangemaakt",
         "List ID": "Lijst-ID",
-        "List details": "Lijstdetails",
+        "List details": "Lijstgegevens",
         "List view": "Lijstweergave",
         "Lists": "Lijsten",
         "Load audit log": "Audit log laden",

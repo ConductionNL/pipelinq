@@ -11,6 +11,7 @@
  *
  * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-the-mailing-list-page-is-the-board
  * @spec openspec/changes/mailing-list-page-as-board/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
+ * @spec openspec/changes/mailing-list-details-title/specs/marketing-lists/spec.md#requirement-the-list-details-card-carries-its-title
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -53,12 +54,20 @@ const part = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/manifest.d/76-marke
 const page = part.pages.find((p) => p.id === 'MailingListDetail')
 const widget = (id) => page.config.widgets.find((w) => w.id === id)
 const registry = fs.readFileSync(path.join(ROOT, 'src/registry.js'), 'utf8')
+const nl = JSON.parse(fs.readFileSync(path.join(ROOT, 'l10n/nl.json'), 'utf8')).translations
 
 describe('the mailing list page as the board', () => {
 	it('shows every list detail, none behind Show all and none edited inline', () => {
 		const data = widget('mailing-list-data').content
 		expect(data.collapsedFields).toBe(data.include.length)
 		expect(data.editable).toBe(false)
+	})
+
+	it('heads the Overview tab with the Lijstgegevens title', () => {
+		const overview = widget('list-panels').content.tabs.find((tab) => tab.label === 'Overview')
+		expect(overview.showTitle).toBe(true)
+		expect(widget('mailing-list-data').title).toBe('List details')
+		expect(nl['List details']).toBe('Lijstgegevens')
 	})
 
 	it('keeps History on top of the side column, three changes long', () => {
