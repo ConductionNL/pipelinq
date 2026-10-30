@@ -279,5 +279,13 @@ describe('the sale as the board draws it (PqKassa, PQB-7)', () => {
 		expect(label).toMatch(/white-space: normal;/)
 		expect(label).toMatch(/text-align: start;/)
 	})
+
+	it('draws the customer initials 16px/700 in the soft ink on the grey disc, as the board draws them', () => {
+		const source = readFileSync(resolve(__dirname, '../../src/views/pos/PosTransactionForm.vue'), 'utf8')
+		const avatar = (source.match(/\n\.pos-form__avatar \{([^}]*)\}/) || [])[1] || ''
+		expect(avatar).toMatch(/font-size: 16px/)
+		expect(avatar).toMatch(/font-weight: 700/)
+		expect(avatar).toMatch(/color: var\(--cn-board-text-soft, var\(--color-main-text\)\)/)
+	})
 })
 

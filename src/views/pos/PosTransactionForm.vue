@@ -1378,8 +1378,9 @@ export default {
 	height: 40px;
 	border-radius: 50%;
 	background: var(--color-background-dark);
+	color: var(--cn-board-text-soft, var(--color-main-text));
 	font-weight: 700;
-	font-size: 13px;
+	font-size: 16px;
 	flex-shrink: 0;
 }
 
