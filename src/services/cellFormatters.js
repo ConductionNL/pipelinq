@@ -185,7 +185,7 @@ export function bookingWhen(value, row) {
  * @param {object} [_property] The schema property (unused).
  * @param {{now?: Date, locale?: string}} [options] Reference date and locale (tests).
  * @return {string} The moment, or '' when the row has no time at all.
- * @spec openspec/changes/pos-transaction-moment/specs/pos-transaction-core/spec.md
+ * @spec openspec/specs/pos-transaction-core/spec.md
  */
 export function transactionMoment(_value, row, _property, options) {
 	return momentInYear(row?.confirmedAt || row?.parkedAt || row?.['@self']?.created, row, _property, options)

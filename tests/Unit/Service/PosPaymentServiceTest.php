@@ -401,7 +401,7 @@ class PosPaymentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
 	 */
 	public function testListPaymentMethodsNamesTheMethodsOfActiveProvidersOnly(): void {
 		$this->configStore['payment_provider.mollie.isActive'] = 'true';
@@ -526,7 +526,7 @@ class PosPaymentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason
 	 */
 	public function testRefundRequiresAReason(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);

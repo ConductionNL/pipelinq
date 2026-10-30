@@ -18,7 +18,6 @@
 - Stock back-in and accounting reversal are emitted fire-and-forget through OpenRegister's `WebhookService`. When no Shillinq / inventory consumer is subscribed the dispatch is a silent no-op — refund completion never fails on a missing downstream subscriber. The frontend "real-time totals" mirror the server formula and are never persisted as authoritative.
 - Frontend routing is manifest-driven (`src/manifest.json` + `src/registry.js`), not vue-router; refund routes are placed before the `/pos/:id` wildcard so `/pos/refunds*` is not shadowed.
 
-
 ## Purpose
 
 Define the requirements for a complete refund and return workflow in Pipelinq POS:
@@ -512,3 +511,27 @@ The refund form SHALL be optimized for mobile devices (small screens, touch-frie
 - THEN the form MUST be responsive and touch-friendly
 - AND all fields and buttons MUST be easily accessible without scrolling
 
+### Requirement: Refund totals show what the server booked
+
+The refund page SHALL show the refund's amount excluding VAT and its VAT as the server stored them on the refund, and the
+method the money went back to, and SHALL NOT recompute them in the browser.
+
+#### Scenario: A booked refund
+
+- GIVEN a refund the server stored with 10.33 excl. VAT and 2.17 VAT
+- THEN the Refund totals card shows those two amounts
+
+### Requirement: A refund reads the sales and lines the store holds
+The refund page SHALL list the refundable sales, the refund reasons and the original sale's lines from the object store's collections, which the store keeps as plain arrays.
+
+#### Scenario: A refund from a sale
+- GIVEN the settled sale POS-2026-1043 with three lines
+- WHEN the cashier opens a new refund from it
+- THEN "Original transaction" shows POS-2026-1043 and the three lines are listed to take back
+
+### Requirement: The refund header holds only Save
+The refund page header SHALL hold only Save, with no More menu.
+
+#### Scenario: Header buttons
+- WHEN the cashier opens a new refund
+- THEN the header shows Save and no More menu

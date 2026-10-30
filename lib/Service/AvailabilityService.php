@@ -414,7 +414,7 @@ class AvailabilityService {
 	 *
 	 * @return int How many rows were deleted.
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
 	 */
 	public function invalidateResource(string $resourceId): int {
 		$register = $this->registerId();
@@ -453,7 +453,7 @@ class AvailabilityService {
 	 *
 	 * @return int How many rows were deleted.
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
 	 */
 	public function invalidateForResourceTypes(array $resourceTypes): int {
 		$schema = $this->schemaId(key: self::RESOURCE_SCHEMA_KEY);

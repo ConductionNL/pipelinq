@@ -5,7 +5,7 @@
  * The object store keeps a collection as a plain array; readers that took
  * `.results` from it read nothing. The refund line loaders read both shapes.
  *
- * @spec openspec/changes/pos-refund-reads-the-store-rows/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
+ * @spec openspec/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
  */
 
 import { describe, expect, it, vi } from 'vitest'

@@ -7,7 +7,7 @@
  * difference card carries the "Afstemming" line under its title with no
  * pill while the difference waits for a manager.
  *
- * @spec openspec/changes/side-figures-and-diff-head/specs/side-figures-and-diff-head/spec.md
+ * @spec openspec/specs/side-figures-and-diff-head/spec.md
  */
 
 import fs from 'fs'

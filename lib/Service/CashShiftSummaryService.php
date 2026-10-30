@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-shift-summary/specs/pos-cash-management/spec.md#requirement-a-shift-summary-reads-its-drops-and-difference
+ * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-summary-reads-its-drops-and-difference
  */
 
 declare(strict_types=1);
@@ -55,7 +55,7 @@ class CashShiftSummaryService {
 	 *
 	 * @return array<string, array<string, mixed>> The summary per shift UUID.
 	 *
-	 * @spec openspec/changes/pos-shift-summary/specs/pos-cash-management/spec.md#requirement-a-shift-summary-reads-its-drops-and-difference
+	 * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-summary-reads-its-drops-and-difference
 	 */
 	public function summarise(array $shiftIds): array {
 		$out = [];
@@ -82,7 +82,7 @@ class CashShiftSummaryService {
 	 *
 	 * @throws OCSNotFoundException If the shift does not exist.
 	 *
-	 * @spec openspec/changes/pos-shift-summary/specs/pos-cash-management/spec.md#requirement-a-shift-page-names-its-sales-and-z-report
+	 * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-page-names-its-sales-and-z-report
 	 */
 	public function shiftSummary(string $shiftId): array {
 		$shift = $this->shifts->fetchShift(id: $shiftId);

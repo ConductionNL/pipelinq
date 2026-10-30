@@ -9,7 +9,7 @@
  * conditional band and a rejection reason, the margin and the drops taken
  * out of the drawer, and the shifts list's drops, difference and outcome.
  *
- * @spec openspec/changes/pos-shift-summary/specs/pos-cash-management/spec.md#requirement-a-shift-summary-reads-its-drops-and-difference
+ * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-summary-reads-its-drops-and-difference
  */
 
 import fs from 'fs'

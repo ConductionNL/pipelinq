@@ -1243,7 +1243,7 @@ class PosTransactionService {
 	 *
 	 * @return string|null The shift's UUID, or null.
 	 *
-	 * @spec openspec/changes/pos-sale-in-shift/specs/pos-transaction-core/spec.md
+	 * @spec openspec/specs/pos-transaction-core/spec.md
 	 */
 	private function findOpenShiftId(array $transaction, string $userId): ?string {
 		$terminalId = (string)($transaction['terminalId'] ?? '');
