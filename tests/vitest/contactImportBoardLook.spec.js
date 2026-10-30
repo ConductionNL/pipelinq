@@ -70,7 +70,7 @@ describe('the contact import dialog, as the board draws it', () => {
 		const pill = style.match(/\.import-result__linked \{([^}]*)\}/)[1]
 		expect(pill).toMatch(/background: var\(--cn-board-success-tint, #e7f3ea\);/)
 		expect(pill).toMatch(/color: var\(--cn-board-success-ink, #1e6b2a\);/)
-		expect(pill).toMatch(/font-size: 12px;/)
+		expect(pill).toMatch(/font-size: 13px;/)
 	})
 
 	it('writes the note as a neutral grey line', async () => {

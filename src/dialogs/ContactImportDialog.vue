@@ -65,7 +65,7 @@
 			</p>
 
 			<p class="import-dialog__note" data-testid="import-dialog-note">
-				<InformationOutline :size="16" class="import-dialog__note-icon" />
+				<InformationOutline :size="18" class="import-dialog__note-icon" />
 				{{ t('pipelinq', 'Importing creates a contact in Pipelinq and links it to the card, so later changes go both ways. Type at least 2 characters to search your Nextcloud contacts.') }}
 			</p>
 		</div>
@@ -308,7 +308,6 @@ export default {
 	flex-direction: column;
 	max-height: 400px;
 	overflow-y: auto;
-	border-top: 1px solid var(--color-border);
 }
 
 .import-result {
@@ -316,7 +315,7 @@ export default {
 	align-items: center;
 	gap: 12px;
 	padding: 10px 0;
-	border-bottom: 1px solid var(--color-border);
+	border-top: 1px solid var(--color-border);
 }
 
 /* A chosen card keeps its outlined Import button; the row carries the choice. */
@@ -348,36 +347,40 @@ export default {
 
 .import-result__name {
 	font-weight: 600;
+	line-height: normal;
 }
 
 .import-result__meta {
 	font-size: 13px;
+	line-height: normal;
 	color: var(--color-text-maxcontrast);
 }
 
 .import-result__linked {
-	padding: 2px 8px;
+	align-self: flex-start;
+	padding: 3px 10px;
 	border-radius: var(--border-radius-pill);
 	background: var(--cn-board-success-tint, #e7f3ea);
 	color: var(--cn-board-success-ink, #1e6b2a);
-	font-size: 12px;
+	font-size: 13px;
 	font-weight: 600;
 }
 
 .import-dialog__note {
 	display: flex;
 	align-items: flex-start;
-	gap: 8px;
+	gap: 10px;
 	margin: 0;
-	padding: 10px 12px;
+	padding: 10px 14px;
 	border-radius: var(--border-radius-large, 8px);
 	background: var(--color-background-hover);
 	color: var(--cn-board-text-soft, #3d4047);
 	font-size: 14px;
+	line-height: 1.45;
 }
 
 .import-dialog__note-icon {
 	flex: none;
-	margin-top: 2px;
+	margin-top: 1px;
 }
 </style>
