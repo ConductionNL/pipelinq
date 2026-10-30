@@ -9381,7 +9381,12 @@ OC.L10N.register(
         "Finish this task": "Deze taak afronden",
         "What came out of the callback?": "Wat kwam er uit het terugbellen?",
         "Log attempt": "Poging vastleggen",
-        "Attempt logged.": "Poging vastgelegd."
+        "Attempt logged.": "Poging vastgelegd.",
+        "A limit is a whole number of 1 or more": "Een limiet is een heel getal van 1 of meer",
+        "Empty means no limit": "Leeg betekent geen limiet",
+        "Limit": "Limiet",
+        "Stage %1$s is full (%2$s of %3$s)": "Fase %1$s is vol (%2$s van %3$s)",
+        "The most items this open stage may hold at a time. Empty means no limit.": "Het hoogste aantal items dat deze open fase tegelijk mag bevatten. Leeg betekent geen limiet."
     },
     "nplurals=2; plural=(n != 1);"
 )

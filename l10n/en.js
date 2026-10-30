@@ -9367,7 +9367,12 @@ OC.L10N.register(
         "Finish this task": "Finish this task",
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
-        "Attempt logged.": "Attempt logged."
+        "Attempt logged.": "Attempt logged.",
+        "A limit is a whole number of 1 or more": "A limit is a whole number of 1 or more",
+        "Empty means no limit": "Empty means no limit",
+        "Limit": "Limit",
+        "Stage %1$s is full (%2$s of %3$s)": "Stage %1$s is full (%2$s of %3$s)",
+        "The most items this open stage may hold at a time. Empty means no limit.": "The most items this open stage may hold at a time. Empty means no limit."
     },
     "nplurals=2; plural=(n != 1);"
 )

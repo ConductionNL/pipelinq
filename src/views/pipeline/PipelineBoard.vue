@@ -293,9 +293,10 @@
 								aria-hidden="true" />
 							{{ stage.name }}
 						</span>
-						<span class="column-count">{{
-							getStageItems(stage.name).length
-						}}</span>
+						<span
+							class="column-count"
+							:class="{ 'column-count--full': isStageFull(stage) }"
+							data-testid="column-count">{{ stageCountLabel(stage) }}</span>
 					</div>
 					<div v-if="hasTotals" class="column-value-wrapper">
 						<button
@@ -610,6 +611,7 @@ import { downloadCsv } from '../../services/csvExport.js'
 import { compareCallFirst } from '../../services/leadScore.js'
 import { formatDate } from '../../services/localeUtils.js'
 import { choosePipeline, findOrphanedLeads } from '../../services/pipelineOrphans.js'
+import { stageLimit } from '../../services/pipelinePayload.js'
 import {
 	formatAge,
 	getAgingClass,
@@ -1776,14 +1778,42 @@ export default {
 			}
 			if (!saved) {
 				Object.assign(item, previous)
+				const refusal = this.objectStore.errors?.[objectType]
 				showError(
-					t('pipelinq', 'Could not move the card to {stage}.', {
-						stage: targetStage.name,
-					}),
+					refusal?.isValidation && refusal.message
+						? refusal.message
+						: t('pipelinq', 'Could not move the card to {stage}.', {
+							stage: targetStage.name,
+						}),
 				)
 				return
 			}
 			await this.refreshItems()
+		},
+
+		/**
+		 * The column header count: the number of items, against the limit when the stage has one.
+		 *
+		 * @param {object} stage The stage.
+		 * @return {string} "3" or "3 / 8".
+		 * @spec openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits/spec.md#requirement-a-stage-can-carry-a-limit-req-psl-001
+		 */
+		stageCountLabel(stage) {
+			const count = this.getStageItems(stage.name).length
+			const max = stageLimit(stage)
+			return max === null ? String(count) : `${count} / ${max}`
+		},
+
+		/**
+		 * Whether a stage with a limit holds as many items as it may, or more.
+		 *
+		 * @param {object} stage The stage.
+		 * @return {boolean} True when full.
+		 * @spec openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits/spec.md#requirement-a-stage-can-carry-a-limit-req-psl-001
+		 */
+		isStageFull(stage) {
+			const max = stageLimit(stage)
+			return max !== null && this.getStageItems(stage.name).length >= max
 		},
 
 		/**
@@ -2131,6 +2161,12 @@ export default {
 	font-size: 13px;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
+}
+
+.column-count.column-count--full {
+	background: var(--color-warning);
+	color: var(--color-warning-text, var(--color-main-text));
+	font-weight: 700;
 }
 
 .column-count {
