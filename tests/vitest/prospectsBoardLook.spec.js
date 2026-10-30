@@ -93,6 +93,10 @@ describe('prospects page', () => {
 		expect(view).not.toMatch(/<dl\b/)
 	})
 
+	it('leads the profile card with its chevron, left of the title (needs nc-vue chevronStart)', () => {
+		expect(view).toMatch(/:collapsible="true"\s+chevronStart/)
+	})
+
 	it('keeps Add as client on every row', () => {
 		expect(view).toMatch(/:data-testid="`prospect-add-\$\{row\.kvkNumber\}`"/)
 	})
