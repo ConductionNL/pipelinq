@@ -72,6 +72,7 @@ vi.mock('@nextcloud/vue', () => ({
 	NcButton: stub('NcButton', 'button'),
 	NcNoteCard: stub('NcNoteCard'),
 	NcSelect: stub('NcSelect'),
+	NcTextArea: stub('NcTextArea'),
 	NcTextField: stub('NcTextField'),
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
