@@ -65,6 +65,7 @@ class ExportJobService extends AbstractExportService {
 	 * @param CronExpressionHelper $cron The cron helper.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ExportRunSummary $summary A job's last and next run.
+	 * @param ExportFailureSwitch $failureSwitch Switches a job off after failed runs in a row.
 	 */
 	public function __construct(
 		ContainerInterface $container,
@@ -75,6 +76,7 @@ class ExportJobService extends AbstractExportService {
 		private CronExpressionHelper $cron,
 		private LoggerInterface $logger,
 		private ExportRunSummary $summary,
+		private ExportFailureSwitch $failureSwitch,
 	) {
 		parent::__construct(
 			container: $container,
@@ -191,6 +193,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-02
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-the-bi-export-page-shows-a-switched-off-job-and-lets-an-administrator-switch-it-back-on-req-efs-003
 	 */
 	public function enableJob(string $id): array {
 		$job = $this->getJob(id: $id);
@@ -200,6 +203,7 @@ class ExportJobService extends AbstractExportService {
 			throw new OCSBadRequestException('Destination is invalid. Test connection first.');
 		}
 
+		$job = $this->failureSwitch->clear(job: $job);
 		$job['enabled'] = true;
 		$job['nextRunAt'] = $this->summary->nextRunAt(job: $job, now: new DateTimeImmutable());
 
@@ -225,7 +229,9 @@ class ExportJobService extends AbstractExportService {
 	}//end disableJob()
 
 	/**
-	 * Keep a finished run on its job: the last run's summary and the next run.
+	 * Keep a finished run on its job: the last run's summary, the failed runs
+	 * in a row and the next run. A job whose failed runs reach the threshold
+	 * is switched off in the same save, and the administrators are told.
 	 *
 	 * @param string $jobId The job UUID.
 	 * @param array<string, mixed> $run The finished run.
@@ -234,12 +240,20 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @throws OCSNotFoundException When the job is absent.
 	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-export-job-switches-off-after-repeated-failed-runs-req-efs-001
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-administrators-are-told-once-when-a-job-is-switched-off-req-efs-002
 	 */
 	public function recordRun(string $jobId, array $run): array {
-		$job = array_merge($this->getJob(id: $jobId), $this->summary->lastRunSummary(run: $run));
+		$before = array_merge($this->getJob(id: $jobId), $this->summary->lastRunSummary(run: $run));
+		$job    = $this->failureSwitch->countRun(job: $before, status: (string)$before['lastRunStatus']);
 		$job['nextRunAt'] = $this->summary->nextRunAt(job: $job, now: new DateTimeImmutable());
 
-		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $jobId);
+		$saved = $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $jobId);
+		if ($this->failureSwitch->switchedOff(before: $before, after: $job) === true) {
+			$this->failureSwitch->notifyAdmins(job: array_merge($job, ['id' => $jobId]));
+		}
+
+		return $saved;
 	}//end recordRun()
 
 	/**

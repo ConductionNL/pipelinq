@@ -75,7 +75,25 @@ export function lastRunLine(job, now = new Date(), locale = userLocale()) {
 		const rows = Number(job.lastRunRows) || 0
 		detail = n('pipelinq', '{count} row', '{count} rows', rows, { count: rows.toLocaleString(locale) })
 	}
-	return detail === '' ? when : t('pipelinq', '{when} · {detail}', { when, detail })
+	const line = detail === '' ? when : t('pipelinq', '{when} · {detail}', { when, detail })
+	const reason = switchedOffReason(job)
+	return reason === '' ? line : t('pipelinq', '{when} · {detail}', { when: line, detail: reason })
+}
+
+/**
+ * Why the system switched a job off, from its failed runs in a row; empty for
+ * a job that is on or that a person switched off.
+ *
+ * @param {object} job The job row.
+ * @return {string} The reason, or ''.
+ * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-the-bi-export-page-shows-a-switched-off-job-and-lets-an-administrator-switch-it-back-on-req-efs-003
+ */
+export function switchedOffReason(job) {
+	if (job?.enabled === true || !job?.pausedAt) {
+		return ''
+	}
+	const count = Number(job.consecutiveFailures) || 0
+	return n('pipelinq', 'Switched off after {count} failed run', 'Switched off after {count} failed runs in a row', count, { count })
 }
 
 /** The @-shortcuts as their five fields. */

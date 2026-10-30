@@ -9367,7 +9367,21 @@ OC.L10N.register(
         "Finish this task": "Finish this task",
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
-        "Attempt logged.": "Attempt logged."
+        "Attempt logged.": "Attempt logged.",
+        "_Export job %1$s was switched off after %2$d failed run_::_Export job %1$s was switched off after %2$d failed runs in a row_": ["Export job %1$s was switched off after %2$d failed run","Export job %1$s was switched off after %2$d failed runs in a row"],
+        "Last error: %1$s. Fix the destination, then switch the job on again on the BI export page.": "Last error: %1$s. Fix the destination, then switch the job on again on the BI export page.",
+        "_Switched off after {count} failed run_::_Switched off after {count} failed runs in a row_": ["Switched off after {count} failed run","Switched off after {count} failed runs in a row"],
+        "Switch off an export job after this many failed runs in a row": "Switch off an export job after this many failed runs in a row",
+        "Enter a number from 1 to 10.": "Enter a number from 1 to 10.",
+        "The administrators get one notification when a job is switched off. Default 3.": "The administrators get one notification when a job is switched off. Default 3.",
+        "Failed runs in a row": "Failed runs in a row",
+        "Failed runs in a row since the last succeeded run. A partial run leaves it as it is.": "Failed runs in a row since the last succeeded run. A partial run leaves it as it is.",
+        "Switched off because": "Switched off because",
+        "Why the system switched the job off; empty for a job a person switched off.": "Why the system switched the job off; empty for a job a person switched off.",
+        "Switched off at": "Switched off at",
+        "When the system switched the job off.": "When the system switched the job off.",
+        "Switched off after {count} failed run": "Switched off after {count} failed run",
+        "Switched off after {count} failed runs in a row": "Switched off after {count} failed runs in a row"
     },
     "nplurals=2; plural=(n != 1);"
 )

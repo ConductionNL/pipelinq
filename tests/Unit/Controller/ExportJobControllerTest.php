@@ -43,6 +43,7 @@ use OCA\Pipelinq\Service\Export\CronExpressionHelper;
 use OCA\Pipelinq\Service\Export\ExportAccessPolicy;
 use OCA\Pipelinq\Service\Export\ExportDataService;
 use OCA\Pipelinq\Service\Export\ExportDestinationService;
+use OCA\Pipelinq\Service\Export\ExportFailureSwitch;
 use OCA\Pipelinq\Service\Export\ExportJobService;
 use OCA\Pipelinq\Service\Export\ExportRunSummary;
 use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
@@ -283,6 +284,7 @@ class ExportJobControllerTest extends TestCase {
 			cron: new CronExpressionHelper(),
 			logger: $this->createMock(LoggerInterface::class),
 			summary: new ExportRunSummary(cron: new CronExpressionHelper()),
+			failureSwitch: $this->createMock(ExportFailureSwitch::class),
 		);
 
 		$request = $this->createMock(IRequest::class);

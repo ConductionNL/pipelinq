@@ -8521,12 +8521,13 @@
 			"feature": "crm-workflow-automation",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "some integrations tell people when they fail: lib/Notification/Notifier.php:239 'forecast_snapshot_partial_failure', :250 'wip_sync_failed', :261 'billing_handoff_failed', :289 'social_relink_needed', with lib/BackgroundJob/BillingHandoffRetryJob.php:95 re-notifying admins while a batch stays failed; failed export runs show on ExportRuns with a retry (appinfo/routes.php:440). Nothing switches an automation off after repeated failure (grep for circuit breaker, consecutive, auto disable finds only POS PIN lockout)",
-				"owner": "ConductionNL/openregister",
-				"reachedOn": "Nextcloud notifications; ExportRuns, ExportRunDetail",
-				"readOn": "2026-09-26",
-				"change": "exports-switch-off-after-repeated-failure"
+				"state": "built",
+				"evidence": "A BI export job that keeps failing switches itself off and the admins are told once: lib/Service/Export/ExportFailureSwitch.php counts failed runs in a row on the job (consecutiveFailures, pausedReason, pausedAt in lib/Settings/register.d/43-export-job-switch-off.json), called from ExportJobService::recordRun when a run finishes; at export_failure_threshold (admin settings, 1 to 10, default 3) the job is switched off in the same save and every admin gets export_job_switched_off (lib/Notification/Notifier.php) linking to /export/jobs; enableJob clears the state; the Last run cell on ExportJobs reads 'Switched off after 3 failed runs in a row' (src/views/export/exportRunText.js switchedOffReason). Tests: tests/Unit/Service/Export/ExportFailureSwitchTest.php, tests/Unit/Service/SettingsServiceExportFailureThresholdTest.php, tests/Unit/Notification/NotifierTest.php, tests/vitest/exportRunText.spec.js. Earlier integration alerts stay: Notifier.php 'forecast_snapshot_partial_failure', 'wip_sync_failed', 'billing_handoff_failed', 'social_relink_needed'. Flows stay OpenRegister's (deferred there).",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "Nextcloud notifications; BI export (ExportJobs), admin settings BI Export Configuration",
+				"readOn": "2026-10-30",
+				"change": "exports-switch-off-after-repeated-failure",
+				"requirement": "openspec/changes/exports-switch-off-after-repeated-failure :: An export job switches off after repeated failed runs (REQ-EFS-001)"
 			},
 			"note": "alerts for a few integrations, no automatic switch off; flow failures are OpenRegister's and were not checked. Decided no 2026-09-28 (OpenSpec pass): Pipelinq stopped owning an automation engine (archived migrate-automation-to-flow-leaf); automations run on the OpenRegister flow engine, so alerting on and switching off a failing flow is that engine's job. The pipelinq integration alerts already cited stay built. Owner corrected to ConductionNL/openregister. Corrections round 9 (2026-09-28): built.state decided-no to none, deferred by openregister: the owner-moves pass recorded defer in openregister openspec/parity/gap-decisions.json (one competitor yes, outside pipelinq's core area, and no OpenRegister change covers alerting on or switching off a failing flow).",
 			"evidence": {
