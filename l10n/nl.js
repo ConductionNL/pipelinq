@@ -9390,6 +9390,7 @@ OC.L10N.register(
         "Could not load the exchange rate.": "De wisselkoers kon niet worden geladen.",
         "Deal value in the client's currency": "Dealwaarde in de valuta van de klant",
         "ECB via Shillinq": "ECB via Shillinq",
+        "ECB daily rate": "Dagkoers van de ECB",
         "Fixed rates": "Vaste koersen",
         "Give a reason for every fixed rate.": "Geef bij elke vaste koers een reden.",
         "Mark a rate as out of date after (days)": "Koers als verouderd markeren na (dagen)",

@@ -97,6 +97,8 @@ export function rateSourceLabel(resolved) {
 			return t('pipelinq', 'Bank feed via Shillinq')
 		}
 		return t('pipelinq', 'Typed in Shillinq')
+	case 'ecb':
+		return t('pipelinq', 'ECB daily rate')
 	case 'manual':
 		return t('pipelinq', 'Typed in Forecast settings')
 	case 'none':
