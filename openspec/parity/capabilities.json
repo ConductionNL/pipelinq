@@ -4447,7 +4447,8 @@
 				"state": "built",
 				"evidence": "lib/Service/TemplateRenderer.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/marketing-ui"
+				"change": "openspec/changes/marketing-mail-templates",
+				"requirement": "A template holds a reusable mail (REQ-MMT-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/save-marketing-emails-as-templates \"If you want to use the layout of a regular marketing email ... multiple times, you can save it as a template\". Marketing Hub Professional, Enterprise; sales email templates are on all plans.",
