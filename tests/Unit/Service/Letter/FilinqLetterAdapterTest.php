@@ -534,7 +534,7 @@ class FilinqLetterAdapterTest extends TestCase
     /**
      * A template named by its slug is found in pipelinq's namespace through filinq's slug resolver.
      *
-     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
      *
      * @return void
      */

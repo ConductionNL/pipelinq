@@ -225,7 +225,7 @@ class CommercialAnalyticsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/leads-list-board-line/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
+	 * @spec openspec/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
 	 */
 	public function testOpenPipelineFollowsALeadFilter(): void {
 		$data = $this->fixture();

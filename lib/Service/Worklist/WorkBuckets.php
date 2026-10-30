@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+ * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ use DateTimeImmutable;
  * ("answer-today", "waiting-on-me", "waiting-on-customer") and the due group
  * ("late", "today", "week", "later", "none").
  *
- * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+ * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
  */
 class WorkBuckets {
 
@@ -70,7 +70,7 @@ class WorkBuckets {
 	 *
 	 * @return array<string, mixed> The decorated row.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	public function decorate(array $row, DateTimeImmutable $now): array {
 		$kind   = (string)($row['kind'] ?? '');
@@ -105,7 +105,7 @@ class WorkBuckets {
 	 *
 	 * @return bool True when the item belongs in the lens.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	public function inLens(string $kind, string $lens): bool {
 		if ($lens === 'tickets') {
@@ -132,7 +132,7 @@ class WorkBuckets {
 	 *
 	 * @return callable(array<string, mixed>, array<string, mixed>): int The comparator.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	public function comparator(string $sort): callable {
 		$byDue = static fn (array $a, array $b): int => [($a['dueAt'] === null), (string)$a['dueAt']] <=> [($b['dueAt'] === null), (string)$b['dueAt']];

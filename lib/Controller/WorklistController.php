@@ -117,7 +117,7 @@ class WorklistController extends Controller {
 	 *
 	 * @return JSONResponse|DataDownloadResponse The items, the file, or an error envelope.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	#[NoAdminRequired]
 	public function items(): JSONResponse|DataDownloadResponse {
@@ -161,7 +161,7 @@ class WorklistController extends Controller {
 	 *
 	 * @return JSONResponse The sentence, or an error envelope.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	#[NoAdminRequired]
 	public function summary(): JSONResponse {

@@ -6,7 +6,7 @@
  * The pipeline board's toolbar in the board look (board PqPipeline): the
  * active filters it names, what removing one does, and Clear all.
  *
- * @spec openspec/changes/pipeline-board-toolbar/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

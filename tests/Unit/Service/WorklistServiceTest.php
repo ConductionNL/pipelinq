@@ -625,7 +625,7 @@ class WorklistServiceTest extends TestCase {
 	 * My work's lists hold every kind of work: a ticket, a lead and a
 	 * follow-up task, each sorted into its list and filtered by the lens.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 *
 	 * @return void
 	 */
@@ -653,7 +653,7 @@ class WorklistServiceTest extends TestCase {
 	/**
 	 * The header sentence counts the work by kind and what is due today.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 *
 	 * @return void
 	 */
@@ -673,7 +673,7 @@ class WorklistServiceTest extends TestCase {
 	/**
 	 * Above twenty the count stays in digits.
 	 *
-	 * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 *
 	 * @return void
 	 */

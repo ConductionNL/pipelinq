@@ -22,7 +22,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+ * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use RuntimeException;
 /**
  * A configured record's document, and whether it can be made.
  *
- * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+ * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
  */
 class RecordDocumentController extends Controller
 {
@@ -91,7 +91,7 @@ class RecordDocumentController extends Controller
      *
      * @return JSONResponse `{available, reason?, template?}`.
      *
-     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-the-document-is-offered-only-when-it-can-be-made
+     * @spec openspec/specs/record-documents/spec.md#requirement-the-document-is-offered-only-when-it-can-be-made
      */
     #[NoAdminRequired]
     public function template(string $schema): JSONResponse
@@ -139,8 +139,8 @@ class RecordDocumentController extends Controller
      *
      * @return DataDownloadResponse|JSONResponse The PDF, or an error.
      *
-     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
-     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-the-caller-may-act-on-the-record-before-anything-is-made
+     * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     * @spec openspec/specs/record-documents/spec.md#requirement-the-caller-may-act-on-the-record-before-anything-is-made
      */
     #[NoAdminRequired]
     #[NoCSRFRequired]
@@ -243,7 +243,7 @@ class RecordDocumentController extends Controller
      *
      * @return list<array<string, mixed>> The list references.
      *
-     * @spec openspec/changes/record-document-pdf/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
      */
     private function listRefs(array $lists, string $register, string $id): array
     {

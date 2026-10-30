@@ -18,7 +18,7 @@
  *
  * @link https://www.conduction.nl
  *
- * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @spec openspec/changes/store-publish-templates/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 class StoreTemplateAssemblerTest extends TestCase {
 

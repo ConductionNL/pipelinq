@@ -8,7 +8,7 @@
  * beside the heading and a note under the cards; then "Ook in Pipelinq" and
  * "Meer" as list cards. Live drew 31 link cards under seven captions.
  *
- * @spec openspec/changes/modules-page-as-board/specs/modules-page-as-board/spec.md#requirement-the-modules-page-draws-module-cards-and-list-cards
+ * @spec openspec/specs/modules-page-as-board/spec.md#requirement-the-modules-page-draws-module-cards-and-list-cards
  */
 
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'

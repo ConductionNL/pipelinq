@@ -236,7 +236,7 @@ export default {
 		 * The card's stage, from the pipeline's stages.
 		 *
 		 * @return {object|null}
-		 * @spec openspec/changes/pipeline-board-cards/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		cardStage() {
 			const name = this.item[this.columnProperty] ?? this.item.stage
@@ -247,7 +247,7 @@ export default {
 		 * The win chance the card shows: the lead's own, else its stage's.
 		 *
 		 * @return {number|null}
-		 * @spec openspec/changes/pipeline-board-cards/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		chance() {
 			if (this.entityType !== 'lead') return null
@@ -261,7 +261,7 @@ export default {
 
 		/**
 		 * @return {string} The stage's colour, or ''.
-		 * @spec openspec/changes/pipeline-board-cards/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		stageColor() {
 			return this.cardStage?.color || ''
@@ -269,7 +269,7 @@ export default {
 
 		/**
 		 * @return {string} The owner's initials (board look).
-		 * @spec openspec/changes/pipeline-board-cards/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		ownerInitials() {
 			return initialsOf(this.ownerName || this.item.assignee || '')
@@ -466,7 +466,7 @@ export default {
 		 *
 		 * @param {string} uid The assignee's uid.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/pipeline-board-cards/specs/pipeline/spec.md
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		async loadOwnerName(uid) {
 			this.ownerName = ''

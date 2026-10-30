@@ -7,7 +7,7 @@
  * publication card reads its languages and audience, and a light item's
  * weight reads in grams.
  *
- * @spec openspec/changes/product-catalogue-fields/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 
 import { readFileSync } from 'node:fs'

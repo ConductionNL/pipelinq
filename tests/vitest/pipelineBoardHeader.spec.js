@@ -5,7 +5,7 @@
  * The pipeline board's header as board PqPipeline draws it: the board look,
  * Download (the leads on the board as CSV), the buildiq square and New lead.
  *
- * @spec openspec/changes/pipeline-board-header/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

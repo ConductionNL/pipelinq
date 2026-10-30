@@ -7,7 +7,7 @@
  * field steps with "(optioneel)" labels, "Deze stap overslaan" and the note
  * that each field is saved as you continue.
  *
- * @spec openspec/changes/setup-wizard-seven-steps/specs/first-time-setup/spec.md
+ * @spec openspec/specs/first-time-setup/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

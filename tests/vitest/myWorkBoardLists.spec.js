@@ -6,7 +6,7 @@
  * header, the kind pills in the board's tones (Opvolging violet, Lead
  * teal) and "Show completed" as a checkbox in the lens bar.
  *
- * @spec openspec/changes/my-work-one-list-of-my-items/specs/my-work/spec.md
+ * @spec openspec/specs/my-work/spec.md
  */
 
 import fs from 'fs'
