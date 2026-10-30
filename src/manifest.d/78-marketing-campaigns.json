@@ -196,6 +196,14 @@
 										"running": "Running",
 										"finished": "Finished",
 										"cancelled": "Cancelled"
+									},
+									"pill": {
+										"variantMap": {
+											"running": "success",
+											"planned": "info",
+											"finished": "default",
+											"cancelled": "error"
+										}
 									}
 								},
 								"utmCampaign": {
@@ -211,13 +219,16 @@
 									"label": "UTM medium"
 								},
 								"startsAt": {
-									"order": 5
+									"order": 5,
+									"format": "date-long"
 								},
 								"endsAt": {
-									"order": 6
+									"order": 6,
+									"format": "date-long"
 								},
 								"budgetEur": {
-									"order": 7
+									"order": 7,
+									"formatter": "wholeCurrency"
 								}
 							}
 						}
