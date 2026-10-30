@@ -94,9 +94,26 @@ describe('forecast page', () => {
 		expect(dashboard).toMatch(/value: 'rep', label: t\('pipelinq', 'Seller'\)/)
 	})
 
+	it('draws the level as the boards\' group of pressed buttons, compact (PqForecast 21-24)', () => {
+		// The boards draw a role=group of buttons with aria-pressed, as the Dq
+		// period groups (CnSegmentedControl mode toggle), not a radio group.
+		const control = dashboard.match(/<CnSegmentedControl[\s\S]*?\/>/)[0]
+		expect(control).toMatch(/mode="toggle"/)
+		expect(control).toMatch(/size="compact"/)
+		expect(control).toMatch(/:ariaLabel="t\('pipelinq', 'Level'\)"/)
+	})
+
 	it('draws the quarter card and the trend of the level shown', () => {
 		expect(dashboard).toMatch(/:title="quarterTitle"/)
 		expect(dashboard).toMatch(/<ForecastTrend embedded :level="childLevel"/)
+	})
+
+	it('draws Download and the buildiq square in the page header, at the board\'s 40px', () => {
+		// PqForecast: Downloaden 40px tall beside the orange square, as the
+		// other custom pages (WeeklyReview) carry it in CnPageHeader's extra slot.
+		expect(dashboard).toMatch(/<template #extra>\s*<div class="forecast-dashboard__header-actions">\s*<NcButton[^>]*data-testid="forecast-download"[\s\S]*?<CnBuildiqEditButton \/>/)
+		const style = dashboard.split('<style')[1]
+		expect(style).toMatch(/\.forecast-dashboard__download \{[^}]*min-height: var\(--cn-board-control-height, 40px\);/)
 	})
 
 	it('puts Export CSV in the quarter card\'s header, in the slot CnDetailCard draws', () => {
@@ -105,10 +122,11 @@ describe('forecast page', () => {
 	})
 
 	it('names each owner, and marks an overridden commit with a pill, the seller\'s figure and a note', () => {
-		expect(dashboard).toMatch(/data-testid="forecast-owner">\{\{ ownerName\(row\) \}\}/)
+		expect(dashboard).toMatch(/data-testid="forecast-owner">\{\{ row\.name \}\}/)
+		expect(dashboard).toMatch(/name: this\.ownerName\(row\)/)
 		expect(dashboard).toMatch(/fetchUserDisplayName/)
-		expect(dashboard).toMatch(/v-if="hasOverride\(row\)"[\s\S]*?data-testid="forecast-overridden"/)
-		expect(dashboard).toMatch(/v-else[\s\S]*?@click="openOverride\(row\)"/)
+		expect(dashboard).toMatch(/v-if="hasOverride\(row\.source\)"[\s\S]*?data-testid="forecast-overridden"/)
+		expect(dashboard).toMatch(/v-else[\s\S]*?@click="openOverride\(row\.source\)"/)
 		expect(dashboard).toMatch(/'was \{amount\}'/)
 		expect(dashboard).toMatch(/data-testid="forecast-override-note"/)
 	})
@@ -127,7 +145,7 @@ describe('forecast page', () => {
 	it('lists the week\'s commit moves per seller as a table with pills', () => {
 		const trend = view('ForecastTrend')
 		expect(trend).toMatch(/data-testid="forecast-movements"/)
-		expect(trend).toMatch(/forecast-trend__move--' \+ move\.direction/)
+		expect(trend).toMatch(/forecast-trend__move--' \+ row\.direction/)
 	})
 
 	it('says what the chart and the accuracy cover', () => {
