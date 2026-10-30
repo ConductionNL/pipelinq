@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * ClientDetail as PqKlant and PqOrganisatie draw it: one row of six figures
+ * ClientDetail as PqKlant and PqOrganisatie draw it: one row of seven figures
  * (label and value only), the tab strip under it in the boards' order and
  * words, sales in its own tab instead of the side column.
  */
@@ -18,7 +18,7 @@ const config = manifest.pages.find((page) => page.id === 'ClientDetail').config
 const widget = (id) => config.widgets.find((entry) => entry.id === id)
 
 describe('ClientDetail as the boards draw it', () => {
-	it('lays the six figures out in one row above the tabs', () => {
+	it('lays the seven figures out in one row above the tabs', () => {
 		const row = config.band.filter((entry) => entry.span === 2).map((entry) => entry.widgetId)
 		expect(row).toEqual([
 			'client-summary-open-tickets',
@@ -27,6 +27,7 @@ describe('ClientDetail as the boards draw it', () => {
 			'client-summary-sla-at-risk',
 			'client-summary-open-leads',
 			'client-summary-last-activity',
+			'client-summary-churn-risk',
 		])
 		expect(config.layout.find((item) => item.widgetId === 'client-panels').gridY).toBe(0)
 	})
@@ -37,6 +38,24 @@ describe('ClientDetail as the boards draw it', () => {
 		expect(labels.every((content) => content.caption === undefined)).toBe(true)
 		expect(labels.map((content) => nl[content.label])).toEqual(['Openstaande zaken', 'Nieuwe verzoeken', 'Termijn verstreken', 'Termijn in gevaar', 'Open leads', 'Laatste activiteit'])
 		expect(widget('client-summary-last-activity').content.format).toEqual({ style: 'date' })
+	})
+
+	it('draws the churn risk as the boards do: the level coloured by the stored level, its heaviest reason under it', () => {
+		const content = widget('client-summary-churn-risk').content
+		expect(nl[content.label]).toBe('Afhaakrisico')
+		expect(content.source).toMatchObject({ kind: 'endpoint', path: 'churnRisk.label', params: { clientId: '@objectId' } })
+		expect(content.caption).toBe('{churnRisk.caption}')
+		expect(content.overrides.map((rule) => [rule.when.field, rule.when.value, rule.variant])).toEqual([
+			['churnRisk.level', 'high', 'error'],
+			['churnRisk.level', 'medium', 'warning'],
+			['churnRisk.level', 'low', 'success'],
+		])
+	})
+
+	it('lists the clients at risk on the Clients page', () => {
+		const clients = manifest.pages.find((page) => page.id === 'Clients').config
+		expect(clients.columns.find((column) => column.key === 'churnRisk.level')).toMatchObject({ widget: 'badge' })
+		expect(clients.quickFilters.find((entry) => entry.label === 'At risk').filter).toEqual({ 'churnRisk.level': ['high', 'medium'] })
 	})
 
 	it('orders the tabs as the boards do, contact persons for an organisation and sales for a resident', () => {

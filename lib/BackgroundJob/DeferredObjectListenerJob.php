@@ -23,6 +23,7 @@ use OCA\OpenRegister\BackgroundJob\ActorForwardedJob;
 use OCA\OpenRegister\Service\Deferral\DeferredListenerContext;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
+use OCA\Pipelinq\Listener\ClientRiskTriggerListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeferredObjectWork;
@@ -77,6 +78,7 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 	 */
 	private const HANDLERS = [
 		AvailabilityCacheInvalidationListener::HANDLER_KEY => AvailabilityCacheInvalidationListener::class,
+		ClientRiskTriggerListener::HANDLER_KEY => ClientRiskTriggerListener::class,
 		DealCreatedListener::HANDLER_KEY => DealCreatedListener::class,
 		DealUpdatedListener::HANDLER_KEY => DealUpdatedListener::class,
 		ExpenseApprovalListener::HANDLER_KEY => ExpenseApprovalListener::class,

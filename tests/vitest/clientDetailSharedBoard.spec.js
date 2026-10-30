@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * The parts boards PqKlant and PqOrganisatie share on ClientDetail: Log
- * contact and New request as header buttons, the contact strip and the six
+ * contact and New request as header buttons, the contact strip and the seven
  * figures in a band across the page (the side column starts at the tabs),
  * the type pill in teal, and the contact channels and relations compact in
  * the side column.
@@ -28,6 +28,7 @@ const FIGURES = [
 	'client-summary-sla-at-risk',
 	'client-summary-open-leads',
 	'client-summary-last-activity',
+	'client-summary-churn-risk',
 ]
 
 describe('ClientDetail parts both client boards share', () => {
@@ -38,7 +39,7 @@ describe('ClientDetail parts both client boards share', () => {
 		expect(ids).toContain('new-request')
 	})
 
-	it('draws the contact strip and the six figures across the page, above the tabs and the side column', () => {
+	it('draws the contact strip and the seven figures across the page, above the tabs and the side column', () => {
 		expect(config.band[0]).toEqual({ widgetId: 'client-contact-strip', span: 12, chrome: 'bare' })
 		expect(config.band.slice(1)).toEqual(FIGURES.map((widgetId) => ({ widgetId, span: 2 })))
 		expect(widget('client-contact-strip').type).toBe('PartyContactStripWidget')

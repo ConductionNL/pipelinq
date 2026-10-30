@@ -53,6 +53,7 @@ use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
+use OCA\Pipelinq\Listener\ClientRiskTriggerListener;
 use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
@@ -350,6 +351,17 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
 			listener: SurveyDispatchListener::class
+		);
+
+		// Churn risk (clients-history-summary-and-risk): a contract status
+		// change or a new detractor answer recomputes its client at once.
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: ClientRiskTriggerListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: ClientRiskTriggerListener::class
 		);
 
 		// MDM: OpenRegister now materialises the golden record on save via its
