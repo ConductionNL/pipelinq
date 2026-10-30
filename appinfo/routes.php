@@ -436,6 +436,9 @@ return [
         ['name' => 'forecastSettings#index',  'url' => '/api/settings/forecast', 'verb' => 'GET'],
         ['name' => 'forecastSettings#update', 'url' => '/api/settings/forecast', 'verb' => 'PUT'],
 
+        // Deal value conversion for LeadDetail: rate, source and date (pipeline-live-exchange-rates).
+        ['name' => 'exchangeRate#convert', 'url' => '/api/exchange-rates/convert', 'verb' => 'GET'],
+
         // Admin / DPO (Nextcloud admin only; no #[PublicPage] — admin-default).
         ['name' => 'portalAdmin#getConfig',    'url' => '/portal/api/admin/tenant-config', 'verb' => 'GET'],
         ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],

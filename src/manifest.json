@@ -4864,6 +4864,7 @@
 										"lead-stages",
 										"lead-deal",
 										"lead-lines",
+										"lead-exchange-rate",
 										"lead-contacts",
 										"lead-flow-runs"
 									]
@@ -5025,6 +5026,16 @@
 							},
 							"hideEmpty": true,
 							"fixedColumns": true
+						}
+					},
+					{
+						"id": "lead-exchange-rate",
+						"type": "LeadExchangeRateWidget",
+						"title": "Currency",
+						"icon": "CurrencyEur",
+						"_note": "Board PqLead: the deal value in the client's currency, the converted value and the rate line (1 USD = 0.9132 EUR, rate of 6 Oct) with its source and a stale flag. A deal in the reporting currency shows one line saying nothing is converted (pipeline-live-exchange-rates).",
+						"content": {
+							"title": "Currency"
 						}
 					},
 					{

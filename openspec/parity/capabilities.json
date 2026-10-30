@@ -1854,14 +1854,16 @@
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "read in lib/Service/LeadClientResolver.php:148, which matches a lead title to an existing client",
+			"providerHow": "read in src/views/leads/LeadForm.vue:103, whose client field lists the existing clients without a search term and links the chosen one to the new lead",
 			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/LeadClientResolver.php:148",
+				"evidence": "src/views/leads/LeadForm.vue:103 (client picker, CnResourceSelect preload over the client schema; optional since decision 207)",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/lead-management"
+				"spec": "openspec/specs/lead-management",
+				"requirement": "Linked party selection on the create form [MVP]",
+				"readOn": "2026-10-30"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/associate-records on a contact or company record, in the Deals card, \"Click the Create new tab\" to create a deal already associated with that client. All products and plans.",
@@ -3064,14 +3066,17 @@
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "read in lib/Service/EnquiryIntakeService.php:134 and lib/Controller/EnquiryController.php",
+			"providerHow": "read in lib/Controller/WebFormController.php:104 and lib/Service/WebForm/WebFormIntakeService.php",
 			"feature": "public-intake-forms",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/EnquiryIntakeService.php:134",
+				"evidence": "lib/Controller/WebFormController.php:104 (public POST /api/enquiry and /api/web-forms/{key}/submit, appinfo/routes.php:233-234) -> lib/Service/WebForm/WebFormIntakeService.php creates the object the webForm names",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-09-19-website-enquiry-intake"
+				"change": "website-forms-submit-into-tickets",
+				"spec": "openspec/changes/website-forms-submit-into-tickets",
+				"requirement": "A public pipelinq form names its destination and is checked when published",
+				"readOn": "2026-10-30"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forms/create-forms \"select the Support template to create tickets from form submissions. This will connect the form to your conversations inbox or help desk\"; forms embed on HubSpot pages \"or external site\". Forms on all plans; tickets from forms through help desk.",
@@ -3632,15 +3637,16 @@
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "read in lib/Service/ScheduledTaskService.php:443 and lib/BackgroundJob/TaskEscalationJob.php",
+			"providerHow": "read in lib/Service/ScheduledTaskService.php:555, run by lib/BackgroundJob/ScheduledTaskJob.php (appinfo/info.xml:109)",
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/BackgroundJob/TaskEscalationJob.php",
+				"evidence": "lib/Service/ScheduledTaskService.php:555 processScheduledTasks (notifyTaskAssignee :714, notifyTaskExpired :750 to the assignee and the task_expiry.escalation_group members), run by lib/BackgroundJob/ScheduledTaskJob.php (appinfo/info.xml:109)",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26",
-				"spec": "openspec/specs/task-background-jobs"
+				"readOn": "2026-10-30",
+				"spec": "openspec/specs/task-background-jobs",
+				"requirement": "Deadline Escalation Notifications"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/how-to-set-up-user-notifications-in-hubspot \"Tasks: receive notifications when you're assigned a task, when a task assigned to you is due\"; https://knowledge.hubspot.com/tasks/task-reminders-and-daily-digest reminder emails and \"a summary of your tasks due each weekday\". All products and plans.",
@@ -8443,7 +8449,7 @@
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "nothing in lib/ or src/ matches live chat or a chatbot; the only web intake is the form at lib/Service/EnquiryIntakeService.php:134",
+			"providerHow": "nothing in lib/ or src/ matches live chat or a chatbot; the only web intake is the form submit at lib/Controller/WebFormController.php:104",
 			"feature": "omnichannel-registratie",
 			"featureConfidence": "medium",
 			"built": {

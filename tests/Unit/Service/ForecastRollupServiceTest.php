@@ -81,6 +81,40 @@ class ForecastRollupServiceTest extends TestCase {
 	}//end testBucketDealsByCategory()
 
 	/**
+	 * A foreign deal reports the rate it converted at, with source and date;
+	 * reporting-currency deals add no rate.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
+	 */
+	public function testBucketDealsCarriesTheRateMetadata(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => [
+				ExchangeRateService::REPORTING_CURRENCY_KEY => 'EUR',
+				ExchangeRateService::RATES_KEY => '{"USD":0.9}',
+				ExchangeRateService::RATE_DATES_KEY => '{"USD":"2026-10-06"}',
+			][$key] ?? $default
+		);
+		$service = new ForecastRollupService(exchangeRate: new ExchangeRateService(appConfig: $appConfig));
+
+		$result = $service->bucketDeals(
+			[
+				['forecast_category' => 'commit', 'value' => 10000, 'currency' => 'USD', 'uuid' => 'a'],
+				['forecast_category' => 'commit', 'value' => 1000, 'currency' => 'EUR', 'uuid' => 'b'],
+			]
+		);
+
+		$this->assertSame(10000.0, $result['totals']['commit_amount']);
+		$this->assertSame(['USD'], array_keys($result['rates']));
+		$this->assertSame(0.9, $result['rates']['USD']['rate']);
+		$this->assertSame('manual', $result['rates']['USD']['source']);
+		$this->assertSame('2026-10-06', $result['rates']['USD']['rateDate']);
+		$this->assertArrayHasKey('stale', $result['rates']['USD']);
+	}//end testBucketDealsCarriesTheRateMetadata()
+
+	/**
 	 * Team totals are the sum of rep totals across all four amounts.
 	 *
 	 * @return void
