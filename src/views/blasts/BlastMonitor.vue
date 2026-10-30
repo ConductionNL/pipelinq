@@ -756,6 +756,8 @@ export default {
 		margin: 0 0 8px;
 		color: var(--color-main-text);
 		font-size: 17px;
+		font-weight: 700;
+		line-height: normal;
 	}
 }
 
