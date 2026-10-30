@@ -37,3 +37,9 @@ address book holds it and when it last changed, and SHALL offer to write the con
 
 Overview SHALL list each relationship as its type and the other party, and each channel as a label and one line, with a
 pill to add one; the Relationships and Channels tabs keep the full lists with edit and remove.
+
+#### Scenario: A contact person with relationships and channels
+- GIVEN a contact person who works at Acme B.V. and has an e-mail address and a phone number
+- WHEN the user opens the Overview
+- THEN it lists "Works at Acme B.V." and each channel as a label and one line, with a pill to add one
+- AND the Relationships and Channels tabs list them in full with edit and remove
