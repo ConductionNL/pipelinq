@@ -1410,12 +1410,15 @@
 					"title": {
 						"order": 1,
 						"description": "",
-						"section": "The ticket"
+						"section": "The ticket",
+						"width": "full"
 					},
 					"description": {
 						"order": 2,
 						"description": "",
-						"section": "The ticket"
+						"section": "The ticket",
+						"widget": "textarea",
+						"rows": 3
 					},
 					"ticketType": {
 						"order": 3,
@@ -1490,7 +1493,9 @@
 					"customerMessage": {
 						"order": 17,
 						"description": "",
-						"section": "Visible to the customer"
+						"section": "Visible to the customer",
+						"widget": "textarea",
+						"rows": 2
 					}
 				},
 				"editTitle": "Edit ticket",

@@ -1,0 +1,2 @@
+- [x] TicketDetail fieldOverrides: description and customerMessage `widget: textarea` with rows 3 and 2, title `width: full`
+- [x] vitest ticketEditTextFields
