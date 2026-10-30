@@ -173,7 +173,9 @@ export default {
 		},
 
 		/**
-		 * The header buttons in the board's order: Download, Actions, New export job.
+		 * The header buttons in the board's order: Download and New export job
+		 * beside the title, Actions at the end of the tab strip with the list
+		 * actions the header takes out of the toolbar.
 		 *
 		 * @return {Array<object>}
 		 * @spec exclude presentational header buttons of the export job list
@@ -181,7 +183,11 @@ export default {
 		headerButtons() {
 			return [
 				{ action: 'export', label: t('pipelinq', 'Download'), icon: 'Download' },
-				{ action: 'actions-menu' },
+				{
+					action: 'actions-menu',
+					placement: 'tabs',
+					items: ['refresh', 'separator', 'copy-selected', 'delete-selected'],
+				},
 				{
 					action: 'add',
 					variant: 'primary',
