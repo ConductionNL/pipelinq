@@ -9462,6 +9462,7 @@
         "Could not load the exchange rate.": "Could not load the exchange rate.",
         "Deal value in the client's currency": "Deal value in the client's currency",
         "ECB via Shillinq": "ECB via Shillinq",
+        "ECB daily rate": "ECB daily rate",
         "Fixed rates": "Fixed rates",
         "Give a reason for every fixed rate.": "Give a reason for every fixed rate.",
         "Mark a rate as out of date after (days)": "Mark a rate as out of date after (days)",
