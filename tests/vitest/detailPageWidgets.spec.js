@@ -114,6 +114,7 @@ describe('lead detail', () => {
 			'lead-stages',
 			'lead-deal',
 			'lead-lines',
+			'lead-exchange-rate',
 			'lead-contacts',
 			'lead-flow-runs',
 		])

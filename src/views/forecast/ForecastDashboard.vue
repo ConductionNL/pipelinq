@@ -134,6 +134,19 @@
 						data-testid="forecast-override-note">
 						{{ t('pipelinq', '{name}: the seller gave {original}, {reason}', { name: ownerName(row), original: formatMoney(row.original_commit), reason: row.commit_override_reason }) }}
 					</p>
+					<p
+						v-for="rate in exchangeRates"
+						:key="'rate-' + rate.currency"
+						class="forecast-table__note"
+						data-testid="forecast-rate-line">
+						{{ rateLine(rate) || rateSourceLabel(rate) }}
+						<template v-if="rateLine(rate)">
+							({{ rateSourceLabel(rate) }})
+						</template>
+						<strong v-if="rate.stale" class="forecast-table__stale">
+							{{ t('pipelinq', 'Rate is out of date') }}
+						</strong>
+					</p>
 				</template>
 				<NcEmptyContent
 					v-else
@@ -184,6 +197,7 @@ import {
 	latestPerOwner,
 	projectedAttainment,
 } from '../../services/forecastMath.js'
+import { rateLine, rateSourceLabel } from '../../services/leadCurrency.js'
 import { fetchUserDisplayName } from '../../services/userDisplayName.js'
 
 export default {
@@ -322,6 +336,22 @@ export default {
 		},
 
 		/**
+		 * The rates the shown snapshots converted foreign deals at, one per currency.
+		 *
+		 * @return {Array<object>} Rates with currency and reporting currency, sorted by code.
+		 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-a-stale-rate-is-shown-as-stale-req-dxr-002
+		 */
+		exchangeRates() {
+			const byCode = {}
+			for (const row of this.rows) {
+				for (const [currency, rate] of Object.entries(row.exchange_rates || {})) {
+					byCode[currency] = { ...rate, currency, reportingCurrency: row.currency }
+				}
+			}
+			return Object.values(byCode).sort((a, b) => a.currency.localeCompare(b.currency))
+		},
+
+		/**
 		 * The four KPI tiles: quota, won, committed and what is still to get.
 		 *
 		 * @return {Array<object>}
@@ -430,6 +460,9 @@ export default {
 	},
 
 	methods: {
+		rateLine,
+		rateSourceLabel,
+
 		sum(key) {
 			return this.rows.reduce((acc, row) => acc + Number(row[key] || 0), 0)
 		},
@@ -662,5 +695,9 @@ export default {
 	margin: 12px 0 0;
 	font-size: 13px;
 	color: var(--color-text-maxcontrast);
+}
+
+.forecast-table__stale {
+	color: var(--color-warning-text);
 }
 </style>

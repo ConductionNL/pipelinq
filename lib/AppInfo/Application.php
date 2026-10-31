@@ -61,6 +61,7 @@ use OCA\Pipelinq\Listener\FormsSubmissionListener;
 use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
 use OCA\Pipelinq\Listener\LeadStageCreatingListener;
 use OCA\Pipelinq\Listener\SubmittedLeadListener;
+use OCA\Pipelinq\Listener\StageLimitGuard;
 use OCA\Pipelinq\Listener\WebFormBindingListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\QuestionAnsweredListener;
@@ -261,6 +262,16 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatingEvent::class,
 			listener: WebFormBindingListener::class
+		);
+		// A pipeline stage with a limit refuses one item more, from any screen
+		// (pipeline-stage-limit).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: StageLimitGuard::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: StageLimitGuard::class
 		);
 		// A Nextcloud Forms answer creates the object its binding names (Q6).
 		// Forms is optional; a `::class` string does not autoload, and the guard

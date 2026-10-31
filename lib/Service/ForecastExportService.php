@@ -171,9 +171,28 @@ class ForecastExportService {
 			'quota' => $quota,
 			'currency' => (string)($row['currency'] ?? 'EUR'),
 			'partial' => (bool)($row['partial'] ?? false),
+			'exchange_rates' => $this->exchangeRates(row: $row),
 			'calculation_audit' => $this->buildAudit(row: $row, periodId: $periodId, level: $level),
 		];
 	}//end presentSnapshot()
+
+	/**
+	 * The rates a snapshot converted at, as stored by the generation run.
+	 *
+	 * @param array<string, mixed> $row The raw snapshot.
+	 *
+	 * @return array<string, array<string, mixed>> Currency => rate metadata; empty when every deal was in the reporting currency.
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
+	 */
+	private function exchangeRates(array $row): array {
+		$rates = $row['exchange_rates'] ?? [];
+		if (is_array($rates) === false) {
+			return [];
+		}
+
+		return array_filter($rates, static fn (mixed $rate): bool => is_array($rate));
+	}//end exchangeRates()
 
 	/**
 	 * Build the calculation audit (per-child override-applied commit).

@@ -20,7 +20,7 @@ const widget = (id) => config.widgets.find((w) => w.id === id)
 describe('the lead overview (board PqLead)', () => {
 	it('draws the overview as one sheet of sections', () => {
 		const overview = widget('lead-panels').content.tabs[0]
-		expect(overview.widgetIds).toEqual(['lead-stages', 'lead-deal', 'lead-lines', 'lead-contacts', 'lead-flow-runs'])
+		expect(overview.widgetIds).toEqual(['lead-stages', 'lead-deal', 'lead-lines', 'lead-exchange-rate', 'lead-contacts', 'lead-flow-runs'])
 		expect(overview.sections).toBe(true)
 	})
 
