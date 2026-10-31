@@ -11,7 +11,8 @@
  * The draft is the contact moment itself, a ticket in OpenRegister's status
  * `draft` (decisions 180 and 216). So the test also checks that the draft
  * stays out of the client's ordinary ticket list while it is one, and that
- * the saved contact moment is the same object, now active.
+ * the saved contact moment is the same object, now active. The seeded client
+ * and its contact moments are deleted again afterwards.
  *
  * @e2e contact-moment-drafts::the-tab-closes-halfway-through
  * @e2e contact-moment-drafts::saving-removes-the-draft
@@ -93,8 +94,28 @@ async function contactMomentsFor(
 	return (res.body.results as Ticket[]) ?? []
 }
 
+/** The client this test seeded, removed again with its contact moments. */
+let seededClient: string | null = null
+
 test.describe('contact moment draft', () => {
 	test.setTimeout(120000)
+
+	test.afterEach(async ({ context }) => {
+		if (seededClient === null) {
+			return
+		}
+		const page = await context.newPage()
+		await page.goto('/index.php/settings/user', { timeout: 120000 })
+		const tickets = [
+			...(await contactMomentsFor(page, seededClient, '')),
+			...(await contactMomentsFor(page, seededClient, 'true')),
+		]
+		for (const ticket of tickets) {
+			await api(page, 'DELETE', `${OBJECTS}/ticket/${ticket.id}`)
+		}
+		await api(page, 'DELETE', `${OBJECTS}/client/${seededClient}`)
+		seededClient = null
+	})
 
 	test('a draft survives a closed page and is gone after saving', async ({
 		page,
@@ -104,10 +125,12 @@ test.describe('contact moment draft', () => {
 		const created = await api(page, 'POST', `${OBJECTS}/client`, {
 			name: `Jansen ${STAMP}`,
 			type: 'person',
+			contactsUid: `e2e-draft-${STAMP}`,
 		})
 		expect(created.status).toBeLessThan(400)
 		const clientId = (created.body.id
 			?? (created.body['@self'] as Record<string, string>)?.id) as string
+		seededClient = clientId
 
 		await gotoAppRoute(page, `/clients/${clientId}`)
 		const quickLog = page.getByTestId('contactmoment-quicklog')
