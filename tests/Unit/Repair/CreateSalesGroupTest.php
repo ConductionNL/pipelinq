@@ -135,9 +135,10 @@ class CreateSalesGroupTest extends TestCase {
 		}
 
 		// The control: the five rules the cloud check named really address a group.
+		// A fragment may restate a rule's recipients, so a rule can appear twice.
 		$this->assertEqualsCanonicalizing(
 			['newContact', 'newLead', 'leadWon', 'newEnquiry', 'newTicket'],
-			($addressed['sales'] ?? [])
+			array_values(array_unique(($addressed['sales'] ?? [])))
 		);
 		$this->assertSame([CreateSalesGroup::GROUP_ID], array_keys($addressed));
 	}//end testEveryAddressedGroupIsCreated()

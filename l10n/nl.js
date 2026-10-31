@@ -9405,7 +9405,12 @@ OC.L10N.register(
         "Typed in Forecast settings": "Ingevoerd in de prognose-instellingen",
         "Typed in Shillinq": "Ingevoerd in Shillinq",
         "Used now: {rate}": "Nu gebruikt: {rate}",
-        "When Shillinq holds a rate for a currency, that rate is used and the rate typed here is the fallback.": "Heeft Shillinq een koers voor een valuta, dan wordt die gebruikt. De koers hier is dan de terugval."
+        "When Shillinq holds a rate for a currency, that rate is used and the rate typed here is the fallback.": "Heeft Shillinq een koers voor een valuta, dan wordt die gebruikt. De koers hier is dan de terugval.",
+        "A limit is a whole number of 1 or more": "Een limiet is een heel getal van 1 of meer",
+        "Empty means no limit": "Leeg betekent geen limiet",
+        "Limit": "Limiet",
+        "Stage %1$s is full (%2$s of %3$s)": "Fase %1$s is vol (%2$s van %3$s)",
+        "The most items this open stage may hold at a time. Empty means no limit.": "Het hoogste aantal items dat deze open fase tegelijk mag bevatten. Leeg betekent geen limiet."
     },
     "nplurals=2; plural=(n != 1);"
 )

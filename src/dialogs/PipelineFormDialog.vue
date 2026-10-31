@@ -272,6 +272,23 @@
 												v === '' ? null : Number(v))
 									" />
 
+								<NcTextField
+									v-if="!stage.isClosed"
+									:modelValue="String(stage.maxItems ?? '')"
+									:label="t('pipelinq', 'Limit')"
+									type="number"
+									min="1"
+									:error="!!stageErrors[index]?.maxItems"
+									:helperText="
+										stageErrors[index]?.maxItems
+										|| t('pipelinq', 'Empty means no limit')
+									"
+									class="stage-limit-field"
+									data-testid="stage-limit"
+									@update:modelValue="
+										(v) => (stage.maxItems = v === '' ? null : Number(v))
+									" />
+
 								<div class="stage-color-field">
 									<label :for="'stage-color-' + index">{{
 										t('pipelinq', 'Color')
@@ -454,6 +471,14 @@ export default {
 						'pipelinq',
 						'Probability must be between 0 and 100',
 					)
+				}
+				if (
+					!stage.isClosed
+					&& stage.maxItems != null
+					&& stage.maxItems !== ''
+					&& (!Number.isInteger(Number(stage.maxItems)) || Number(stage.maxItems) < 1)
+				) {
+					errors.maxItems = t('pipelinq', 'A limit is a whole number of 1 or more')
 				}
 				return Object.keys(errors).length > 0 ? errors : null
 			})
@@ -787,7 +812,8 @@ export default {
 	flex: 2;
 }
 
-.stage-probability-field {
+.stage-probability-field,
+.stage-limit-field {
 	flex: 1;
 	max-width: 120px;
 }

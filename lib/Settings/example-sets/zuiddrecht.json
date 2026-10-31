@@ -296,7 +296,14 @@
 			"data": {
 				"title": "Verkoop",
 				"description": "De verkoop van diensten en producten aan bedrijven en instellingen in Zuiddrecht.",
-				"isDefault": false,
+				"isDefault": true,
+				"propertyMappings": [
+					{
+						"schemaSlug": "lead",
+						"columnProperty": "stage",
+						"totalsProperty": "value"
+					}
+				],
 				"stages": [
 					{
 						"name": "Nieuw",

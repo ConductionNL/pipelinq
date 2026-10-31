@@ -123,6 +123,20 @@ describe('moveItemToStage', () => {
 		)
 	})
 
+	it('shows the server refusal of a full stage and puts the card back', async () => {
+		const store = {
+			fetchObject: vi.fn().mockResolvedValue({ id: 'lead-1', stage: 'New' }),
+			saveObject: vi.fn().mockResolvedValue(null),
+			errors: { lead: { isValidation: true, message: 'Stage Proposal is full (8 of 8)' } },
+		}
+		const { ctx, item } = board(store)
+
+		await moveItemToStage.call(ctx, item, { name: 'Proposal', order: 2 })
+
+		expect(item.stage).toBe('New')
+		expect(dialogs.showError).toHaveBeenCalledWith('Stage Proposal is full (8 of 8)')
+	})
+
 	it('does not save when the object cannot be re-read', async () => {
 		const store = {
 			fetchObject: vi.fn().mockResolvedValue(null),

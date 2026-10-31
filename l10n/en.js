@@ -9391,7 +9391,12 @@ OC.L10N.register(
         "Typed in Forecast settings": "Typed in Forecast settings",
         "Typed in Shillinq": "Typed in Shillinq",
         "Used now: {rate}": "Used now: {rate}",
-        "When Shillinq holds a rate for a currency, that rate is used and the rate typed here is the fallback.": "When Shillinq holds a rate for a currency, that rate is used and the rate typed here is the fallback."
+        "When Shillinq holds a rate for a currency, that rate is used and the rate typed here is the fallback.": "When Shillinq holds a rate for a currency, that rate is used and the rate typed here is the fallback.",
+        "A limit is a whole number of 1 or more": "A limit is a whole number of 1 or more",
+        "Empty means no limit": "Empty means no limit",
+        "Limit": "Limit",
+        "Stage %1$s is full (%2$s of %3$s)": "Stage %1$s is full (%2$s of %3$s)",
+        "The most items this open stage may hold at a time. Empty means no limit.": "The most items this open stage may hold at a time. Empty means no limit."
     },
     "nplurals=2; plural=(n != 1);"
 )
