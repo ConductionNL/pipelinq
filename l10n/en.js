@@ -9395,7 +9395,10 @@ OC.L10N.register(
         "Empty means no limit": "Empty means no limit",
         "Limit": "Limit",
         "Stage %1$s is full (%2$s of %3$s)": "Stage %1$s is full (%2$s of %3$s)",
-        "The most items this open stage may hold at a time. Empty means no limit.": "The most items this open stage may hold at a time. Empty means no limit."
+        "The most items this open stage may hold at a time. Empty means no limit.": "The most items this open stage may hold at a time. Empty means no limit.",
+        "Earlier contacts from this number": "Earlier contacts from this number",
+        "Looking up earlier contacts.": "Looking up earlier contacts.",
+        "No earlier contacts from this number.": "No earlier contacts from this number."
     },
     "nplurals=2; plural=(n != 1);"
 )

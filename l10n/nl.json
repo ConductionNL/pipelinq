@@ -9510,6 +9510,9 @@
         "Empty means no limit": "Leeg betekent geen limiet",
         "Limit": "Limiet",
         "Stage %1$s is full (%2$s of %3$s)": "Fase %1$s is vol (%2$s van %3$s)",
-        "The most items this open stage may hold at a time. Empty means no limit.": "Het hoogste aantal items dat deze open fase tegelijk mag bevatten. Leeg betekent geen limiet."
+        "The most items this open stage may hold at a time. Empty means no limit.": "Het hoogste aantal items dat deze open fase tegelijk mag bevatten. Leeg betekent geen limiet.",
+        "Earlier contacts from this number": "Eerdere contacten vanaf dit nummer",
+        "Looking up earlier contacts.": "Eerdere contacten opzoeken.",
+        "No earlier contacts from this number.": "Geen eerdere contacten vanaf dit nummer."
     }
 }
