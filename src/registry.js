@@ -301,6 +301,7 @@ import { sectionWidget } from './components/widgets/sectionWidget.js'
 //     agent-availability toggle. ---
 import { createWithContact } from './services/contactSyncApi.js'
 import { moveTicketStatus, ticketStatusTargets } from './utils/ticketBoardMoves.js'
+import { ticketPhoneSearch } from './utils/ticketPhoneSearch.js'
 
 /*
  * Grid metadata required for every kind:"widget" entry by the ADR-036
@@ -1465,6 +1466,11 @@ const registry = {
 		kind: 'handler',
 		handler: ticketStatusTargets,
 		_note: 'The Tickets board view\'s `board.moveTargetsHandler`: the statuses the lifecycle allows from the ticket\'s own.',
+	},
+	ticketPhoneSearch: {
+		kind: 'handler',
+		handler: ticketPhoneSearch,
+		_note: 'The Tickets list\'s `searchHandler`: a phone number is searched as a phoneE164 filter, normalised by GET /api/tickets/by-phone, with the line Searching by phone number.',
 	},
 }
 

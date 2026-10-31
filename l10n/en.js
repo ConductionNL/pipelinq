@@ -1,6 +1,7 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Searching by phone number": "Searching by phone number",
         "email, linked": "email, linked",
         "Link email": "Link email",
         "Compose in Mail": "Compose in Mail",
@@ -9368,6 +9369,9 @@ OC.L10N.register(
         "What came out of the callback?": "What came out of the callback?",
         "Log attempt": "Log attempt",
         "Attempt logged.": "Attempt logged.",
+        "Earlier contacts from this number": "Earlier contacts from this number",
+        "Looking up earlier contacts.": "Looking up earlier contacts.",
+        "No earlier contacts from this number.": "No earlier contacts from this number.",
         "{pair}, date unknown": "{pair}, date unknown",
         "{pair}, rate of {date}": "{pair}, rate of {date}",
         "A fixed rate wins over Shillinq and over the rates above. Use it for a contract rate, and say why.": "A fixed rate wins over Shillinq and over the rates above. Use it for a contract rate, and say why.",

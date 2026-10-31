@@ -1,6 +1,7 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Searching by phone number": "Zoeken op telefoonnummer",
         "Core CRM": "Basis-CRM",
         "Customer contact and government": "Klantcontact en overheid",
         "Analysis and insight": "Analyse en inzicht",
@@ -9382,6 +9383,9 @@ OC.L10N.register(
         "What came out of the callback?": "Wat kwam er uit het terugbellen?",
         "Log attempt": "Poging vastleggen",
         "Attempt logged.": "Poging vastgelegd.",
+        "Earlier contacts from this number": "Eerdere contacten vanaf dit nummer",
+        "Looking up earlier contacts.": "Eerdere contacten opzoeken.",
+        "No earlier contacts from this number.": "Geen eerdere contacten vanaf dit nummer.",
         "{pair}, date unknown": "{pair}, datum onbekend",
         "{pair}, rate of {date}": "{pair}, koers van {date}",
         "A fixed rate wins over Shillinq and over the rates above. Use it for a contract rate, and say why.": "Een vaste koers gaat voor Shillinq en voor de koersen hierboven. Gebruik hem voor een contractkoers en zeg waarom.",

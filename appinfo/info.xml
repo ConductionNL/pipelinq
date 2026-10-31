@@ -201,6 +201,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <!-- After the backfill: a lead on a deleted pipeline goes to the default pipeline (review F1). -->
             <step>OCA\Pipelinq\Repair\RelinkOrphanedLeads</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
+            <step>OCA\Pipelinq\Repair\BackfillTicketPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
             <!--
                 After InitializeSettings, which imports 97-task-name.json: the
