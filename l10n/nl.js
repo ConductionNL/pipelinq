@@ -9412,7 +9412,9 @@ OC.L10N.register(
         "The most items this open stage may hold at a time. Empty means no limit.": "Het hoogste aantal items dat deze open fase tegelijk mag bevatten. Leeg betekent geen limiet.",
         "for {assigneeUserId|user}": "voor {assigneeUserId|user}",
         "No open matters for this client.": "Geen openstaande zaken voor deze klant.",
-        "No earlier contact with this client.": "Geen eerder contact met deze klant."
+        "No earlier contact with this client.": "Geen eerder contact met deze klant.",
+        "Edit · {reference}": "Bewerken · {reference}",
+        "{reference} · {ticketType}": "{reference} · {ticketType}"
     },
     "nplurals=2; plural=(n != 1);"
 )

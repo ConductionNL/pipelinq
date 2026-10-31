@@ -9398,7 +9398,9 @@ OC.L10N.register(
         "The most items this open stage may hold at a time. Empty means no limit.": "The most items this open stage may hold at a time. Empty means no limit.",
         "for {assigneeUserId|user}": "for {assigneeUserId|user}",
         "No open matters for this client.": "No open matters for this client.",
-        "No earlier contact with this client.": "No earlier contact with this client."
+        "No earlier contact with this client.": "No earlier contact with this client.",
+        "Edit · {reference}": "Edit · {reference}",
+        "{reference} · {ticketType}": "{reference} · {ticketType}"
     },
     "nplurals=2; plural=(n != 1);"
 )
