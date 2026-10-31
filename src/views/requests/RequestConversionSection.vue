@@ -28,9 +28,19 @@
 			v-if="showConvertButton"
 			variant="primary"
 			:disabled="busy"
-			@click="convertToCase">
+			@click="openDialog">
 			{{ t('pipelinq', 'Convert to case') }}
 		</NcButton>
+		<ConvertToCaseDialog
+			v-if="dialogOpen"
+			:ticket="ticket"
+			:requester="requester"
+			:requesterAddress="requesterAddress"
+			:busy="busy"
+			:caseTypeSource="availability.caseTypeSource || null"
+			:portalName="availability.portalName || ''"
+			@close="dialogOpen = false"
+			@confirm="convertToCase" />
 
 		<template v-if="isConverted">
 			<NcNoteCard type="success" class="request-conversion-section__notice">
@@ -56,17 +66,21 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import ConvertToCaseDialog from '../../dialogs/ConvertToCaseDialog.vue'
+import { useObjectStore } from '../../store/modules/object.js'
 
 const DEFAULT_AVAILABILITY = {
 	available: false,
 	status: '',
 	canConvert: false,
 	caseReference: '',
+	caseTypeSource: null,
 }
 
 export default {
 	name: 'RequestConversionSection',
 	components: {
+		ConvertToCaseDialog,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -91,6 +105,10 @@ export default {
 			loading: false,
 			busy: false,
 			availability: { ...DEFAULT_AVAILABILITY },
+			dialogOpen: false,
+			ticket: {},
+			requester: '',
+			requesterAddress: '',
 		}
 	},
 
@@ -146,6 +164,27 @@ export default {
 
 	methods: {
 		/**
+		 * Open the confirmation, with the ticket and its customer read for it.
+		 *
+		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+		 */
+		async openDialog() {
+			this.dialogOpen = true
+			const store = useObjectStore()
+			try {
+				this.ticket = (await store.fetchObject('ticket', this.resolvedId)) || {}
+				const clientId = this.ticket.client
+				if (typeof clientId === 'string' && clientId !== '') {
+					const client = await store.fetchObject('client', clientId)
+					this.requester = client?.name || ''
+					this.requesterAddress = typeof client?.address === 'string' ? client.address.split(',')[0].trim() : ''
+				}
+			} catch {
+				this.ticket = {}
+			}
+		},
+
+		/**
 		 * Fetch the current conversion availability for this request.
 		 *
 		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
@@ -168,6 +207,7 @@ export default {
 					status: data.status || '',
 					canConvert: !!data.canConvert,
 					caseReference: data.caseReference || '',
+					caseTypeSource: data.caseTypeSource || null,
 				}
 			} catch {
 				this.availability = { ...DEFAULT_AVAILABILITY }
@@ -179,9 +219,11 @@ export default {
 		/**
 		 * Convert the request into a case via the semantic handoff endpoint.
 		 *
+		 * @param {{caseType?: string, keepOpen?: boolean, informCustomer?: boolean}} [choice] What the dialog asked: the case type, whether the request stays open and whether the customer is told.
+		 *
 		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 		 */
-		async convertToCase() {
+		async convertToCase(choice = {}) {
 			if (!this.resolvedId || this.busy) {
 				return
 			}
@@ -192,7 +234,11 @@ export default {
 						'/apps/pipelinq/api/handoff/request/{id}/convert-to-case',
 						{ id: this.resolvedId },
 					),
-					{},
+					{
+						...(choice && choice.caseType ? { caseType: choice.caseType } : {}),
+						keepOpen: Boolean(choice && choice.keepOpen),
+						informCustomer: Boolean(choice && choice.informCustomer),
+					},
 				)
 				this.availability = {
 					...this.availability,
@@ -200,6 +246,7 @@ export default {
 					canConvert: false,
 					caseReference: data.caseReference || '',
 				}
+				this.dialogOpen = false
 				showSuccess(t('pipelinq', 'Request converted to case.'))
 				this.$emit('converted', { caseReference: data.caseReference || '' })
 			} catch (err) {

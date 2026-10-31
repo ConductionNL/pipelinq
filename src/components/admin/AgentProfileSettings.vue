@@ -12,11 +12,11 @@
 				<div v-if="editingId !== profile.id" class="agent-item__display">
 					<div class="agent-item__info">
 						<span class="agent-name">{{ profile.userId }}</span>
-						<span
+						<CnStatusBadge
 							v-if="profile.isAvailable === false"
-							class="unavailable-tag"
-							>{{ t('pipelinq', 'Unavailable') }}</span
-						>
+							variant="warning"
+							:label="t('pipelinq', 'Unavailable')"
+							class="agent-availability" />
 						<span class="agent-meta">
 							{{
 								getSkillNames(profile).join(', ')
@@ -30,7 +30,7 @@
 							}}
 						</span>
 					</div>
-					<div class="agent-item__actions">
+					<div class="agent-item__actions cn-settings-row-actions">
 						<NcButton @click="startEdit(profile)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
@@ -103,21 +103,37 @@
 
 			<div class="agent-add">
 				<NcButton @click="addProfile">
-					{{ t('pipelinq', '+ Add Agent Profile') }}
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'Add agent profile') }}
 				</NcButton>
 			</div>
 		</div>
+		<CnDeleteDialog
+			v-if="deleting"
+			ref="deleteDialog"
+			:item="deleting"
+			nameField="userId"
+			:dialogTitle="t('pipelinq', 'Delete agent profile')"
+			@confirm="confirmDelete"
+			@close="deleting = null" />
 	</NcSettingsSection>
 </template>
 
 <script>
+import { CnDeleteDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import { useAgentProfilesStore } from '../../store/modules/agentProfiles.js'
 import { useSkillsStore } from '../../store/modules/skills.js'
 
 export default {
 	name: 'AgentProfileSettings',
 	components: {
+		Plus,
+		CnDeleteDialog,
+		CnStatusBadge,
 		NcButton,
 		NcLoadingIcon,
 		NcSettingsSection,
@@ -125,6 +141,8 @@ export default {
 
 	data() {
 		return {
+			// The row the delete dialog asks about.
+			deleting: null,
 			editingId: null,
 			editForm: {},
 		}
@@ -244,19 +262,25 @@ export default {
 		},
 
 		/**
-		 * @param {object} profile The agent profile to delete.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-4
+		 * Ask before deleting a row.
+		 *
+		 * @param {object} profile The row to delete.
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
 		 */
-		async deleteProfile(profile) {
-			if (
-				confirm(
-					t('pipelinq', 'Delete agent profile for "{userId}"?', {
-						userId: profile.userId,
-					}),
-				)
-			) {
-				await this.profilesStore.deleteProfile(profile.id)
-			}
+		deleteProfile(profile) {
+			this.deleting = profile
+		},
+
+		/**
+		 * Delete the row the dialog asked about, and tell the dialog how it went.
+		 *
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
+		 */
+		async confirmDelete() {
+			const deleted = await this.profilesStore.deleteProfile(this.deleting.id)
+			this.$refs.deleteDialog?.setResult(deleted
+				? { success: true }
+				: { error: this.profilesStore.error || t('pipelinq', 'Deleting failed.') })
 		},
 	},
 }
@@ -286,13 +310,8 @@ export default {
 	font-weight: 700;
 }
 
-.unavailable-tag {
-	font-size: 11px;
-	padding: 1px 6px;
-	border-radius: 8px;
-	background: var(--color-error);
-	color: #fff;
-	margin-inline-start: 6px;
+.agent-availability {
+	margin-inline-start: 8px;
 }
 
 .agent-meta {

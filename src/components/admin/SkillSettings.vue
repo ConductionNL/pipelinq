@@ -22,7 +22,7 @@
 							}}
 						</span>
 					</div>
-					<div class="skill-item__actions">
+					<div class="skill-item__actions cn-settings-row-actions">
 						<NcButton @click="startEdit(skill)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
@@ -78,20 +78,35 @@
 
 			<div class="skill-add">
 				<NcButton @click="addSkill">
-					{{ t('pipelinq', '+ Add Skill') }}
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'Add skill') }}
 				</NcButton>
 			</div>
 		</div>
+		<CnDeleteDialog
+			v-if="deleting"
+			ref="deleteDialog"
+			:item="deleting"
+			nameField="title"
+			:dialogTitle="t('pipelinq', 'Delete skill')"
+			@confirm="confirmDelete"
+			@close="deleting = null" />
 	</NcSettingsSection>
 </template>
 
 <script>
+import { CnDeleteDialog } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import { useSkillsStore } from '../../store/modules/skills.js'
 
 export default {
 	name: 'SkillSettings',
 	components: {
+		Plus,
+		CnDeleteDialog,
 		NcButton,
 		NcLoadingIcon,
 		NcSettingsSection,
@@ -99,6 +114,8 @@ export default {
 
 	data() {
 		return {
+			// The row the delete dialog asks about.
+			deleting: null,
 			editingId: null,
 			editForm: {},
 		}
@@ -182,17 +199,25 @@ export default {
 		},
 
 		/**
-		 * @param {object} skill The skill to delete.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-24
+		 * Ask before deleting a row.
+		 *
+		 * @param {object} skill The row to delete.
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
 		 */
-		async deleteSkill(skill) {
-			if (
-				confirm(
-					t('pipelinq', 'Delete skill "{title}"?', { title: skill.title }),
-				)
-			) {
-				await this.skillsStore.deleteSkill(skill.id)
-			}
+		deleteSkill(skill) {
+			this.deleting = skill
+		},
+
+		/**
+		 * Delete the row the dialog asked about, and tell the dialog how it went.
+		 *
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
+		 */
+		async confirmDelete() {
+			const deleted = await this.skillsStore.deleteSkill(this.deleting.id)
+			this.$refs.deleteDialog?.setResult(deleted
+				? { success: true }
+				: { error: this.skillsStore.error || t('pipelinq', 'Deleting failed.') })
 		},
 	},
 }

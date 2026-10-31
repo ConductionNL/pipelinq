@@ -12,46 +12,41 @@
 	per-row destination (ConductionNL/nextcloud-vue#91 Wave 2 gap).
 -->
 <template>
-	<CnDataTable
-		:rows="items"
-		:columns="columns"
-		:loading="!loaded"
-		:loadingText="t('pipelinq', 'Loading…')"
-		hideHeader
-		borderless
-		:emptyText="emptyText"
-		:rowClass="rowClass"
-		:rowClickRoute="itemRoute">
-		<template #column-entityType="{ row }">
-			<span class="entity-badge" :class="'badge--' + row.entityType">
-				{{ row.entityType === 'lead' ? 'LEAD' : 'REQ' }}
-			</span>
-		</template>
-		<template #column-dueDate="{ row }">
-			<span
-				v-if="row.dueDate"
-				class="my-work-due"
-				:class="{ overdue: row.isOverdue }">
-				{{ formatDate(row.dueDate) }}
-			</span>
-		</template>
-		<template #footer>
-			<NcButton
-				v-if="total > items.length"
-				variant="tertiary"
-				class="view-all-link"
-				:to="{ name: 'MyWork' }">
-				{{ t('pipelinq', 'View all ({count})', { count: total }) }}
-			</NcButton>
-		</template>
-	</CnDataTable>
+	<div class="my-work cn-board-ruled-rows">
+		<p v-if="!loaded" class="my-work__note">
+			{{ t('pipelinq', 'Loading…') }}
+		</p>
+		<p v-else-if="items.length === 0" class="my-work__note">
+			{{ emptyText }}
+		</p>
+		<ul v-else class="my-work__list">
+			<li v-for="item in items" :key="item.entityType + item.id">
+				<router-link class="my-work__row" :to="itemRoute(item)">
+					<span class="my-work__icon" :class="'my-work__icon--' + item.entityType" aria-hidden="true">
+						<CashMultiple v-if="item.entityType === 'lead'" :size="18" />
+						<FileOutline v-else :size="18" />
+					</span>
+					<span class="my-work__text">
+						<strong class="my-work__title">{{ item.title }}</strong>
+						<span class="my-work__meta">{{ metaLine(item) }}</span>
+					</span>
+					<CnStatusBadge
+						v-if="duePill(item)"
+						:label="duePill(item).label"
+						:variant="duePill(item).variant" />
+				</router-link>
+			</li>
+		</ul>
+	</div>
 </template>
 
 <script>
-import { CnDataTable } from '@conduction/nextcloud-vue'
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton } from '@nextcloud/vue'
+import CashMultiple from 'vue-material-design-icons/CashMultiple.vue'
+import FileOutline from 'vue-material-design-icons/FileOutline.vue'
 import { formatDate } from '../../../services/localeUtils.js'
+import { dueState } from '../../../utils/dueState.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
 const WIDGET_LIMIT = 5
@@ -73,8 +68,9 @@ const LEGACY_ROUTE_MAP = {
 export default {
 	name: 'MyWorkWidget',
 	components: {
-		CnDataTable,
-		NcButton,
+		CashMultiple,
+		CnStatusBadge,
+		FileOutline,
 	},
 
 	mixins: [dashboardRefreshMixin],
@@ -83,12 +79,6 @@ export default {
 			loaded: false,
 			items: [],
 			total: 0,
-			columns: [
-				{ key: 'entityType' },
-				{ key: 'title', cellClass: 'cn-cell--strong' },
-				{ key: 'stageOrStatus', cellClass: 'cn-cell--muted' },
-				{ key: 'dueDate', cellClass: 'cn-cell--end' },
-			],
 		}
 	},
 
@@ -114,16 +104,51 @@ export default {
 	},
 
 	methods: {
-		formatDate,
 		/**
-		 * Row emphasis for overdue items (CnDataTable rowClass hook).
+		 * The line under the title: the kind, then how the due date stands
+		 * ("Request · 1 day late", "Lead · closes 30 Oct").
 		 *
-		 * @param {object} row - Work item row.
-		 * @return {string} CSS class for the row.
+		 * @param {object} item - Work item row.
+		 * @return {string} The line.
 		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 		 */
-		rowClass(row) {
-			return row.isOverdue ? 'my-work-row--overdue' : ''
+		metaLine(item) {
+			const kind = item.entityType === 'lead' ? this.t('pipelinq', 'Lead') : this.t('pipelinq', 'Request')
+			const due = dueState(item.dueDate)
+			if (due.state === null) {
+				return item.stageOrStatus ? kind + ' · ' + item.stageOrStatus : kind
+			}
+			if (due.state === 'overdue') {
+				return kind + ' · ' + this.n('pipelinq', '%n day late', '%n days late', due.daysLate)
+			}
+			if (due.state === 'today') {
+				return kind + ' · ' + this.t('pipelinq', 'today')
+			}
+			const date = formatDate(item.dueDate)
+			return kind + ' · ' + (item.entityType === 'lead'
+				? this.t('pipelinq', 'closes {date}', { date })
+				: this.t('pipelinq', 'due {date}', { date }))
+		},
+
+		/**
+		 * The due pill: Late, Today or This week; none for later or no date.
+		 *
+		 * @param {object} item - Work item row.
+		 * @return {{label: string, variant: string}|null} The pill.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
+		 */
+		duePill(item) {
+			const state = item.isOverdue ? 'overdue' : dueState(item.dueDate).state
+			if (state === 'overdue') {
+				return { label: this.t('pipelinq', 'Late'), variant: 'error' }
+			}
+			if (state === 'today') {
+				return { label: this.t('pipelinq', 'Today'), variant: 'primary' }
+			}
+			if (state === 'week') {
+				return { label: this.t('pipelinq', 'This week'), variant: 'warning' }
+			}
+			return null
 		},
 
 		/**
@@ -181,44 +206,71 @@ export default {
 </script>
 
 <style scoped>
-:deep(.my-work-row--overdue) {
-	background: rgba(233, 50, 45, 0.04);
+.my-work {
+	padding: 0 var(--cn-board-dashboard-card-inset, 22px) 8px;
 }
 
-.entity-badge {
-	display: inline-block;
-	padding: 1px 6px;
-	border-radius: 4px;
-	font-size: 10px;
-	font-weight: 700;
-	letter-spacing: 0.5px;
-	flex-shrink: 0;
+.my-work__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
 }
 
-.badge--lead {
-	background: #dbeafe;
-	color: #1d4ed8;
-	border: 1px solid #93c5fd;
+.my-work__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 12px;
+	align-items: center;
+	padding: 12px 0;
+	border-top: 1px solid var(--color-border);
+	color: var(--color-main-text);
+	text-decoration: none;
 }
 
-.badge--request {
-	background: #ffedd5;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+/* A row is a link, but only its hover says so: no underline on any text run,
+   however the host styles its links. */
+.my-work__row,
+.my-work__row :is(strong, span) {
+	text-decoration: none !important;
 }
 
-.my-work-due {
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	white-space: nowrap;
+.my-work__icon {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border-radius: var(--border-radius-large, 8px);
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
 }
 
-.my-work-due.overdue {
-	color: var(--color-error);
+.my-work__icon--lead {
+	background: var(--color-warning-light, var(--color-background-dark));
+	color: var(--color-warning-text);
+}
+
+.my-work__text {
+	display: flex;
+	flex: 1 1 220px;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.my-work__title {
+	font-size: 15px;
 	font-weight: 600;
 }
 
-.view-all-link {
-	margin-top: 4px;
+.my-work__meta,
+.my-work__note {
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+}
+
+.my-work__note {
+	margin: 0;
 }
 </style>

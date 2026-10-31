@@ -46,5 +46,5 @@ delivery metrics.
 
 - **GIVEN** recent blasts exist
 - **WHEN** the Overview tab is opened
-- **THEN** the table SHALL show name, segment, status, sent, delivered, open rate %, click rate %, and unsubscribed, with sortable columns
+- **THEN** the table SHALL show name, segment, status, sent, open rate %, click rate %, and unsubscribed, with sortable columns
 

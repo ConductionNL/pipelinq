@@ -1,0 +1,246 @@
+{
+	"leadManagement": {
+		"name": "Lead Management",
+		"description": "Tune lead staleness detection for kanban badges and the lead list filter.",
+		"valuesPath": "config",
+		"fields": [
+			{
+				"key": "lead_stale_threshold_days",
+				"label": "Stale after (days)",
+				"type": "number",
+				"min": 1,
+				"integer": true,
+				"required": true,
+				"default": 14,
+				"placeholder": "14",
+				"hint": "Number of days a lead can stay untouched before it is flagged as stale. Default: 14."
+			}
+		]
+	},
+	"shillinq": {
+		"name": "Shillinq integration",
+		"description": "Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.",
+		"valuesPath": "config",
+		"fields": [
+			{
+				"key": "shillinq_time_intake_enabled",
+				"label": "Send approved hours to Shillinq as draft invoices",
+				"type": "switch",
+				"trueValue": "true",
+				"falseValue": "false"
+			},
+			{
+				"key": "billing_handoff_manager_group",
+				"label": "Billing handoff manager group",
+				"placeholder": "billing-managers",
+				"hint": "Nextcloud group allowed to trigger 'Send to billing'. Leave empty to restrict it to Nextcloud administrators."
+			}
+		]
+	},
+	"exportConfiguration": {
+		"name": "BI Export Configuration",
+		"description": "Defaults for the BI export and data-warehouse sink: retention, compression and failure alerts.",
+		"valuesPath": "config",
+		"columns": 2,
+		"fields": [
+			{
+				"key": "export.retention_days",
+				"label": "Retention (days to keep runs)",
+				"type": "number",
+				"min": 1,
+				"integer": true,
+				"required": true,
+				"default": 365,
+				"hint": "How long export-run audit records are kept. Default 365 days."
+			},
+			{
+				"key": "export.default_compression",
+				"label": "Default compression",
+				"type": "select",
+				"required": true,
+				"default": "none",
+				"options": [
+					"none",
+					"gzip",
+					"snappy",
+					"zstd"
+				],
+				"hint": "Used when a destination does not specify its own compression."
+			},
+			{
+				"key": "export.failure_notification_email",
+				"label": "Failure notification email",
+				"placeholder": "alerts@example.com",
+				"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+				"patternMessage": "Enter an email address, such as alerts@example.com.",
+				"hint": "Address to notify when an export run fails. Leave empty to disable."
+			},
+			{
+				"key": "export.at_risk_warning_hours",
+				"label": "At-risk warning (hours without a successful run)",
+				"type": "number",
+				"min": 1,
+				"integer": true,
+				"required": true,
+				"default": 24,
+				"hint": "Triggers an at-risk warning if no run has succeeded in this many hours."
+			}
+		]
+	},
+	"marketingIntel": {
+		"name": "Marketing intelligence",
+		"description": "Where the keyword, Matomo and competitor reads leave the instance, and how relevance is scored. Every outbound read goes through an OpenConnector source, so this section holds source ids and never a key.",
+		"valuesPath": "config",
+		"saveLabel": "Save market insight settings",
+		"fields": [
+			{
+				"key": "search.crawl_source",
+				"label": "Crawl source for our own pages",
+				"placeholder": "own-site",
+				"hint": "The OpenConnector source that reaches your own website. The content gap check reads the title and headings of the pages that already appear in search. Leave it empty and that check does not run, which the Keywords page says rather than reporting no gaps."
+			},
+			{
+				"key": "search.striking_min_impressions",
+				"label": "Impressions before a query counts",
+				"type": "number",
+				"min": 0,
+				"integer": true,
+				"placeholder": "100",
+				"hint": "How many impressions a query needs over the window before any keyword finding names it. Lower it for a small site."
+			},
+			{
+				"key": "matomoHeading",
+				"label": "Matomo",
+				"type": "heading"
+			},
+			{
+				"key": "matomo.base_url",
+				"label": "Matomo address",
+				"placeholder": "https://matomo.example.org",
+				"hint": "Used for links out of the reports. The reads go through the source below."
+			},
+			{
+				"key": "matomo.site_id",
+				"label": "Matomo site id",
+				"placeholder": "1"
+			},
+			{
+				"key": "matomo.source_id",
+				"label": "Matomo connector source",
+				"placeholder": "matomo",
+				"hint": "The OpenConnector source that reaches your Matomo instance."
+			},
+			{
+				"key": "matomo.credential_ref",
+				"label": "Matomo credential id",
+				"placeholder": "b7f4a9c1-2d3e-4f56-8a90-1b2c3d4e5f60",
+				"hint": "The id of the credential the OpenRegister broker holds for Matomo. Store the token there, not here: a value that looks like a Matomo token is refused."
+			},
+			{
+				"key": "competitorsHeading",
+				"label": "Competitors",
+				"type": "heading"
+			},
+			{
+				"key": "competitor.egress_source",
+				"label": "Egress source for competitor reads",
+				"placeholder": "outbound-web",
+				"hint": "The OpenConnector source feeds, sitemaps, page watches and public timelines are read through. A competitor on their own domain can carry a source of its own instead."
+			},
+			{
+				"key": "competitor.user_agent",
+				"label": "User agent for competitor reads",
+				"placeholder": "Pipelinq competitor watch",
+				"hint": "How these reads identify themselves to the sites they read."
+			},
+			{
+				"key": "competitor.relevance",
+				"label": "Let hermiq score how relevant an item is",
+				"type": "switch",
+				"trueValue": "true",
+				"falseValue": "false",
+				"hint": "Off by default: it sends a competitor's headline to the model you configured in hermiq. When it is off, or hermiq cannot answer, an item is stored without a score and shown as not scored."
+			},
+			{
+				"key": "competitor.relevance_context",
+				"label": "What counts as relevant here",
+				"type": "textarea",
+				"placeholder": "Tenders at municipalities, open source in the public sector.",
+				"hint": "Put in front of the model verbatim, in your own words."
+			}
+		]
+	},
+	"provisionData": {
+		"name": "Provision data",
+		"description": "Create or repair the Pipelinq register, schemas, default pipelines and skills. Run it after you enable OpenRegister, or to repair a partial install. Running it twice creates no duplicates.",
+		"fields": [
+			{
+				"key": "provision",
+				"label": "Provision data",
+				"type": "action",
+				"url": "/apps/pipelinq/api/setup/action/provision-register",
+				"okPath": "success",
+				"successText": "Data provisioned.",
+				"failureText": "Provisioning failed."
+			}
+		]
+	},
+	"brpMonitor": {
+		"name": "BRP monitor",
+		"description": "Lookups in the persons registry over the last 24 hours, and the mTLS client certificate.",
+		"url": "/apps/pipelinq/api/brp/monitor",
+		"fields": [
+			{
+				"key": "lookups",
+				"type": "status",
+				"text": "Last 24 hours: {report.totalLookups} lookups, {report.cacheHits} from the cache, {report.errorCount} errors, {report.avgResponseMs} ms average response time.",
+				"visibleWhen": {
+					"key": "report",
+					"empty": false
+				}
+			},
+			{
+				"key": "period",
+				"type": "status",
+				"text": "Reporting period {report.windowStart} to {report.windowEnd}, generated on {report.generatedAt}.",
+				"visibleWhen": {
+					"key": "report",
+					"empty": false
+				}
+			},
+			{
+				"key": "noLookups",
+				"type": "status",
+				"text": "No BRP lookups have been reported yet.",
+				"visibleWhen": {
+					"key": "report",
+					"empty": true
+				}
+			},
+			{
+				"key": "cert.status",
+				"type": "status",
+				"textMap": {
+					"ok": "The mTLS certificate is valid until {cert.expiry}, {cert.daysLeft} days from now.",
+					"warning": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.",
+					"critical": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.",
+					"*": ""
+				},
+				"toneMap": {
+					"ok": "success",
+					"warning": "warning",
+					"critical": "error"
+				}
+			},
+			{
+				"key": "noCertificate",
+				"type": "status",
+				"text": "No mTLS certificate is configured.",
+				"visibleWhen": {
+					"key": "cert",
+					"empty": true
+				}
+			}
+		]
+	}
+}

@@ -12,9 +12,14 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@conduction/nextcloud-vue', () => ({
+	CnActionsMenu: {},
+	CnAuditTrailCard: {},
 	CnDetailCard: {},
 	CnDetailPage: {},
 	CnFormDialog: {},
+	CnStatusBadge: {},
+	CnTab: {},
+	CnTabs: {},
 	useObjectSubscription: vi.fn(),
 }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))

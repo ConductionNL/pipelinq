@@ -1,0 +1,13 @@
+{
+	"$comment": "Pipelinq's setup wizard counts as answered on an instance with the Zuiddrecht set, so Pieter opens his start page, not the wizard. The reporting currency is the one required step (SetupController::status() marks setup complete once it is set); setup_dismissed_version records that the wizard was closed at manifest setup.version 1, so the optional steps (till, integrations) do not open it again. A later setup.version opens it once more, as for any instance.",
+	"appConfig": [
+		{
+			"key": "currency",
+			"value": "EUR"
+		},
+		{
+			"key": "setup_dismissed_version",
+			"value": "1"
+		}
+	]
+}

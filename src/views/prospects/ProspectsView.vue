@@ -1,173 +1,166 @@
 <template>
-	<div class="prospects-view">
-		<div class="prospects-view__header">
-			<h2>{{ t('pipelinq', 'Prospects') }}</h2>
+	<CnIndexPage
+		class="prospects-view"
+		:title="t('pipelinq', 'Prospects')"
+		:description="headerLine"
+		:showTitle="true"
+		:showTitleIcon="false"
+		:objects="pagedProspects"
+		:columns="columns"
+		:activeFilters="activeFilters"
+		:filterMenu="true"
+		:loading="prospectStore.loading"
+		:pagination="pagination"
+		:countText="countText"
+		:footerNote="
+			t(
+				'pipelinq',
+				'Existing clients are not listed. A company you add becomes an organisation in Relations and leaves this list.',
+			)
+		"
+		:headerButtons="headerButtons"
+		:headerActions="headerActions"
+		:showAdd="false"
+		:showFormDialog="false"
+		:showViewAction="false"
+		:showEditAction="false"
+		:showCopyAction="false"
+		:showDeleteAction="false"
+		:showMassImport="false"
+		:showMassCopy="false"
+		:showMassDelete="false"
+		:sortKey="sortKey"
+		:sortOrder="sortAsc ? 'asc' : 'desc'"
+		rowKey="kvkNumber"
+		rowTitle="plain"
+		:searchPlaceholder="t('pipelinq', 'Search by company, SBI code or place')"
+		@sort="onSort"
+		@search="onSearch"
+		@filterChange="onFilterChange"
+		@pageChanged="page = $event">
+		<template #below-header>
+			<CnDetailCard
+				:title="t('pipelinq', 'Ideal customer profile')"
+				:collapsible="true"
+				chevronStart
+				class="prospects-view__icp"
+				data-testid="prospects-icp">
+				<template #actions>
+					<a
+						:href="profileUrl"
+						class="prospects-view__edit"
+						data-testid="prospects-edit-profile"
+						@click.stop>
+						<Pencil :size="16" />
+						{{ t('pipelinq', 'Edit profile') }}
+					</a>
+				</template>
+				<div v-if="icpFacts.length" class="prospects-view__facts">
+					<div
+						v-for="fact in icpFacts"
+						:key="fact.key"
+						class="prospects-view__fact">
+						<span class="prospects-view__fact-label">{{ fact.label }}</span>
+						<span class="prospects-view__fact-value">{{ fact.value }}</span>
+					</div>
+				</div>
+				<p v-else class="prospects-view__unset">
+					{{
+						t(
+							'pipelinq',
+							'No profile is set yet. An administrator sets it in the Pipelinq settings.',
+						)
+					}}
+				</p>
+			</CnDetailCard>
+		</template>
+		<template #toolbar-start>
+			<CnQuickFilterBar
+				inline
+				:tabs="lensTabs"
+				:counts="lensCounts"
+				:activeIndex="lens"
+				data-testid="prospects-lenses"
+				@update:activeIndex="(value) => selectLens(value)" />
+		</template>
+		<template #column-fitScore="{ row }">
+			<span class="prospects-view__score" :class="scoreClass(row.fitScore)">{{
+				row.fitScore
+			}}</span>
+		</template>
+		<template #column-tradeName="{ row }">
+			<span :data-testid="`prospect-row-${row.kvkNumber}`">
+				<strong>{{ row.tradeName }}</strong>
+				<span v-if="row.legalForm" class="prospects-view__sub">{{
+					row.legalForm
+				}}</span>
+			</span>
+		</template>
+		<template #column-sbiDescription="{ row }">
+			{{ row.sbiDescription || '—' }}
+			<span v-if="row.sbiCode" class="prospects-view__sub"
+				>SBI {{ row.sbiCode }}</span
+			>
+		</template>
+		<template #row-actions="{ row }">
 			<NcButton
 				variant="secondary"
-				:disabled="prospectStore.loading"
-				:aria-label="t('pipelinq', 'Refresh prospects')"
-				@click="refresh">
-				<template #icon>
-					<Refresh
-						:size="20"
-						:class="{ 'icon-spinning': prospectStore.loading }" />
-				</template>
-				{{ t('pipelinq', 'Refresh') }}
+				:disabled="addingKvk === row.kvkNumber"
+				:data-testid="`prospect-add-${row.kvkNumber}`"
+				@click="addAsClient(row)">
+				{{ t('pipelinq', 'Add as client') }}
 			</NcButton>
-		</div>
-
-		<NcLoadingIcon v-if="prospectStore.loading" :size="32" />
-
-		<!-- No ICP configured -->
-		<NcEmptyContent
-			v-else-if="prospectStore.error && prospectStore.error.includes('ICP')"
-			:name="t('pipelinq', 'No Ideal Customer Profile configured')"
-			:description="
-				t(
-					'pipelinq',
-					'Configure your Ideal Customer Profile in admin settings to discover prospects.',
-				)
-			">
-			<template #icon>
-				<Magnify :size="20" />
-			</template>
-		</NcEmptyContent>
-
-		<!-- Error -->
-		<NcEmptyContent
-			v-else-if="prospectStore.error"
-			:name="t('pipelinq', 'Could not load prospects')"
-			:description="prospectStore.error">
-			<template #icon>
-				<AlertCircle :size="20" />
-			</template>
-		</NcEmptyContent>
-
-		<!-- Empty -->
-		<NcEmptyContent
-			v-else-if="sortedProspects.length === 0"
-			:name="t('pipelinq', 'No prospects found')"
-			:description="
-				t(
-					'pipelinq',
-					'No companies currently match your Ideal Customer Profile.',
-				)
-			">
-			<template #icon>
-				<Magnify :size="20" />
-			</template>
-		</NcEmptyContent>
-
-		<!-- Scored prospect table -->
-		<template v-else>
-			<table class="prospects-view__table">
-				<thead>
-					<tr>
-						<th
-							scope="col"
-							class="sortable"
-							:aria-sort="ariaSort('fitScore')">
-							<button type="button" @click="setSort('fitScore')">
-								{{ t('pipelinq', 'Score')
-								}}<span aria-hidden="true">{{
-									sortIndicator('fitScore')
-								}}</span>
-							</button>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							:aria-sort="ariaSort('tradeName')">
-							<button type="button" @click="setSort('tradeName')">
-								{{ t('pipelinq', 'Company')
-								}}<span aria-hidden="true">{{
-									sortIndicator('tradeName')
-								}}</span>
-							</button>
-						</th>
-						<th scope="col">{{ t('pipelinq', 'Industry') }}</th>
-						<th
-							scope="col"
-							class="sortable"
-							:aria-sort="ariaSort('employeeCount')">
-							<button type="button" @click="setSort('employeeCount')">
-								{{ t('pipelinq', 'Employees')
-								}}<span aria-hidden="true">{{
-									sortIndicator('employeeCount')
-								}}</span>
-							</button>
-						</th>
-						<th scope="col">{{ t('pipelinq', 'Location') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Actions') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="p in pagedProspects"
-						:key="p.kvkNumber"
-						:data-testid="`prospect-row-${p.kvkNumber}`">
-						<td>
-							<span
-								class="prospects-view__score"
-								:class="scoreClass(p.fitScore)"
-								>{{ p.fitScore }}%</span
-							>
-						</td>
-						<td>{{ p.tradeName }}</td>
-						<td>{{ p.sbiDescription || '—' }}</td>
-						<td>{{ p.employeeCount || '—' }}</td>
-						<td>
-							{{ p.address && p.address.city ? p.address.city : '—' }}
-						</td>
-						<td>
-							<NcButton
-								variant="secondary"
-								:disabled="addingKvk === p.kvkNumber"
-								:data-testid="`prospect-add-${p.kvkNumber}`"
-								@click="addAsClient(p)">
-								{{ t('pipelinq', 'Add as client') }}
-							</NcButton>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<CnPagination
-				:currentPage="currentPage"
-				:totalPages="totalPages"
-				:totalItems="sortedProspects.length"
-				:currentPageSize="pageSize"
-				@pageChanged="page = $event"
-				@pageSizeChanged="onPageSizeChanged" />
 		</template>
-	</div>
+		<template #empty>
+			<NcEmptyContent
+				:name="
+					prospectStore.icp && icpFacts.length === 0
+						? t('pipelinq', 'No prospects yet')
+						: prospectStore.error
+							? t('pipelinq', 'Could not load prospects')
+							: t('pipelinq', 'No prospects found')
+				"
+				:description="emptyDescription">
+				<template #icon>
+					<Magnify :size="20" />
+				</template>
+			</NcEmptyContent>
+		</template>
+	</CnIndexPage>
 </template>
 
 <script>
-// Full-page expansion of ProspectWidget (refactor-pipelinq-ia-alignment): a
-// scored-prospect list with sortable columns and a per-row "Convert to lead"
-// action, backed by the shared prospect Pinia store.
+// The prospects page as the PqProspects board draws it: the scored companies
+// from the KVK register in the shared index page, with the ideal customer
+// profile they are matched on above the list and Add as client per row.
 //
 // @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
-import { CnPagination } from '@conduction/nextcloud-vue'
+import { CnDetailCard, CnIndexPage, CnQuickFilterBar } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
-import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcEmptyContent } from '@nextcloud/vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
 import { createWithContact } from '../../services/contactSyncApi.js'
+import { icpFacts } from '../../services/icpFacts.js'
+import { matchesProspectLens, prospectMatches } from '../../services/prospectLenses.js'
 import { useProspectStore } from '../../store/modules/prospect.js'
 
 export default {
 	name: 'ProspectsView',
 	components: {
-		CnPagination,
+		CnDetailCard,
+		CnIndexPage,
+		CnQuickFilterBar,
 		NcButton,
 		NcEmptyContent,
-		NcLoadingIcon,
-		Refresh,
 		Magnify,
-		AlertCircle,
+		Pencil,
 	},
+
+	// The page config the renderer hands a custom page would otherwise fall
+	// through onto CnIndexPage.
+	inheritAttrs: false,
 
 	/**
 	 * Expose the prospect Pinia store to the component.
@@ -186,10 +179,205 @@ export default {
 			addingKvk: null,
 			page: 1,
 			pageSize: 20,
+			/** The lens above the list: 0 every company, 1 good fit, 2 new this week. */
+			lens: 0,
+			search: '',
+			/** The Filter menu's choices: { field: [values] }. */
+			activeFilters: {},
 		}
 	},
 
 	computed: {
+		/**
+		 * The list's columns, in the board's order.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 */
+		columns() {
+			return [
+				{ key: 'fitScore', label: t('pipelinq', 'Score'), sortable: true },
+				{
+					key: 'tradeName',
+					label: t('pipelinq', 'Company'),
+					sortable: true,
+				},
+				{ key: 'sbiDescription', label: t('pipelinq', 'Industry (SBI)') },
+				{
+					key: 'employeeCount',
+					label: t('pipelinq', 'Employees'),
+					sortable: true,
+				},
+				{
+					key: 'address.city',
+					label: t('pipelinq', 'Location'),
+					// The places in the list, for the Filter menu.
+					enum: [...new Set((this.prospectStore.prospects || []).map((p) => p.address?.city).filter(Boolean))].sort(),
+				},
+				{ key: 'kvkNumber', label: t('pipelinq', 'KVK') },
+			]
+		},
+
+		/**
+		 * Download and Refresh prospects, as the board draws them.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 */
+		headerButtons() {
+			return [
+				{ action: 'export', label: t('pipelinq', 'Download') },
+				{
+					action: 'refresh-prospects',
+					variant: 'primary',
+					icon: 'Refresh',
+					label: t('pipelinq', 'Refresh prospects'),
+				},
+			]
+		},
+
+		/**
+		 * Refresh prospects bypasses the cached list.
+		 *
+		 * @return {Array<object>}
+		 * @spec exclude trivial store passthrough — no business logic
+		 */
+		headerActions() {
+			return [
+				{
+					id: 'refresh-prospects',
+					label: t('pipelinq', 'Refresh prospects'),
+					icon: 'Refresh',
+					handler: () => this.refresh(),
+				},
+			]
+		},
+
+		/**
+		 * The lenses above the list, as the board draws them.
+		 *
+		 * @return {Array<{label: string}>}
+		 * @spec openspec/specs/prospect-discovery/spec.md
+		 */
+		lensTabs() {
+			return [
+				{ label: t('pipelinq', 'All') },
+				{ label: t('pipelinq', 'Good fit') },
+				{ label: t('pipelinq', 'New this week') },
+			]
+		},
+
+		/**
+		 * How many companies each lens holds, within the search and the Filter menu.
+		 *
+		 * @return {number[]}
+		 * @spec openspec/specs/prospect-discovery/spec.md
+		 */
+		lensCounts() {
+			return this.lensTabs.map((_, index) => this.narrowedProspects.filter((p) => matchesProspectLens(p, index, new Date())).length)
+		},
+
+		/**
+		 * The companies the search and the Filter menu leave.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/prospect-discovery/spec.md
+		 */
+		narrowedProspects() {
+			return (this.prospectStore.prospects || []).filter((p) => prospectMatches(p, this.search, this.activeFilters))
+		},
+
+		/**
+		 * The line under the title: how many companies, best first, and when
+		 * the list was refreshed.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/prospect-discovery/spec.md
+		 */
+		headerLine() {
+			const parts = [
+				t('pipelinq', '{shown} of {total} companies from the KVK register that fit your profile', {
+					shown: this.sortedProspects.length,
+					total: (this.prospectStore.prospects || []).length,
+				}),
+				t('pipelinq', 'best first'),
+			]
+			const at = this.prospectStore.cachedAt ? new Date(this.prospectStore.cachedAt) : null
+			if (at && !Number.isNaN(at.getTime())) {
+				const time = at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+				parts.push(at.toDateString() === new Date().toDateString()
+					? t('pipelinq', 'refreshed today at {time}', { time })
+					: t('pipelinq', 'refreshed on {date}', { date: at.toLocaleDateString() }))
+			}
+			return parts.join(' · ')
+		},
+
+		/**
+		 * The count line: how many companies match, best first.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 */
+		countText() {
+			return t(
+				'pipelinq',
+				'{shown} of {total} companies from the KVK register that fit your profile · best first',
+			)
+		},
+
+		/**
+		 * The page state the index page draws its footer from.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 */
+		pagination() {
+			return {
+				currentPage: this.currentPage,
+				totalPages: this.totalPages,
+				totalItems: this.sortedProspects.length,
+				pageSize: this.pageSize,
+			}
+		},
+
+		/**
+		 * The profile's criteria as label and value, empty ones left out.
+		 *
+		 * @return {Array<{key: string, label: string, value: string}>}
+		 * @spec openspec/specs/prospect-discovery/spec.md
+		 */
+		icpFacts() {
+			return icpFacts(this.prospectStore.icp, (text) => t('pipelinq', text))
+		},
+
+		/**
+		 * Where an administrator edits the profile.
+		 *
+		 * @return {string}
+		 * @spec exclude a fixed settings link — no business logic
+		 */
+		profileUrl() {
+			return generateUrl('/settings/admin/pipelinq')
+		},
+
+		/**
+		 * The line under the empty state: why there is nothing to show.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/prospect-discovery/spec.md
+		 */
+		emptyDescription() {
+			if (!this.prospectStore.error) {
+				return t(
+					'pipelinq',
+					'No companies currently match your Ideal Customer Profile.',
+				)
+			}
+			return this.prospectStore.error.includes('Ideal Customer Profile')
+				? t('pipelinq', 'Set an ideal customer profile first.')
+				: this.prospectStore.error
+		},
+
 		/**
 		 * Prospects sorted by the active sort column/direction.
 		 *
@@ -197,7 +385,7 @@ export default {
 		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		sortedProspects() {
-			const list = [...(this.prospectStore.prospects || [])]
+			const list = this.narrowedProspects.filter((p) => matchesProspectLens(p, this.lens, new Date()))
 			const key = this.sortKey
 			const dir = this.sortAsc ? 1 : -1
 			return list.sort((a, b) => {
@@ -261,54 +449,58 @@ export default {
 		},
 
 		/**
-		 * Toggle/select the active sort column.
+		 * A lens chip was chosen; choosing the active one again goes back to All.
 		 *
-		 * @param {string} key - The column key.
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @param {number|null} value The lens index.
+		 * @spec openspec/specs/prospect-discovery/spec.md
 		 */
-		setSort(key) {
-			if (this.sortKey === key) {
-				this.sortAsc = !this.sortAsc
+		selectLens(value) {
+			this.lens = value === null ? 0 : value
+			this.page = 1
+		},
+
+		/**
+		 * The search field: company, SBI code or place.
+		 *
+		 * @param {string} value The search text.
+		 * @spec openspec/specs/prospect-discovery/spec.md
+		 */
+		onSearch(value) {
+			this.search = typeof value === 'string' ? value : ''
+			this.page = 1
+		},
+
+		/**
+		 * A choice in the Filter menu.
+		 *
+		 * @param {{key: string, values: string[]}} payload The field and its chosen values.
+		 * @spec openspec/specs/prospect-discovery/spec.md
+		 */
+		onFilterChange(payload) {
+			if (!payload || !payload.key) return
+			const next = { ...this.activeFilters }
+			if (Array.isArray(payload.values) && payload.values.length > 0) {
+				next[payload.key] = payload.values
 			} else {
-				this.sortKey = key
-				this.sortAsc = false
+				delete next[payload.key]
 			}
+			this.activeFilters = next
 			this.page = 1
 		},
 
 		/**
-		 * Apply a new page size and go back to the first page.
+		 * Sort the whole list by the column the index page reports.
 		 *
-		 * @param {number} size - The new page size.
+		 * @param {{key?: string, order?: string, keys?: Array<{key: string, order: string}>}} event The sort event.
 		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
-		onPageSizeChanged(size) {
-			this.pageSize = size
-			this.page = 1
-		},
-
-		/**
-		 * The `aria-sort` value for a column header.
-		 *
-		 * @param {string} key - The column key.
-		 * @return {string} `ascending`, `descending` or `none`.
-		 * @spec exclude presentational sort-state helper — no business logic
-		 */
-		ariaSort(key) {
-			if (this.sortKey !== key) return 'none'
-			return this.sortAsc ? 'ascending' : 'descending'
-		},
-
-		/**
-		 * The sort arrow for a column header.
-		 *
-		 * @param {string} key - The column key.
-		 * @return {string} The indicator glyph.
-		 * @spec exclude presentational sort-arrow helper — no business logic
-		 */
-		sortIndicator(key) {
-			if (this.sortKey !== key) return ''
-			return this.sortAsc ? ' ▲' : ' ▼'
+		onSort(event) {
+			const first = event?.keys?.[0] || event || {}
+			if (first.key) {
+				this.sortKey = first.key
+				this.sortAsc = first.order === 'asc'
+				this.page = 1
+			}
 		},
 
 		/**
@@ -379,39 +571,51 @@ export default {
 </script>
 
 <style scoped>
-.prospects-view {
-	padding: 16px;
-}
-
-.prospects-view__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
+.prospects-view__icp {
 	margin-bottom: 16px;
 }
 
-.prospects-view__table {
-	width: 100%;
-	border-collapse: collapse;
+.prospects-view__facts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 28px;
 }
 
-.prospects-view__table th,
-.prospects-view__table td {
-	padding: 8px 12px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
+.prospects-view__fact {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 }
 
-.prospects-view__table th.sortable button {
-	all: unset;
-	cursor: pointer;
-	user-select: none;
-	font-weight: inherit;
+.prospects-view__fact-label {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
 }
 
-.prospects-view__table th.sortable button:focus-visible {
-	outline: 2px solid var(--color-main-text);
-	outline-offset: 2px;
+.prospects-view__fact-value {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.prospects-view__edit {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--color-primary-element);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: underline;
+}
+
+.prospects-view__unset {
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+}
+
+.prospects-view__sub {
+	display: block;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
 }
 
 .prospects-view__score {
@@ -430,23 +634,5 @@ export default {
 
 .score--low {
 	color: var(--color-text-maxcontrast);
-}
-
-.icon-spinning {
-	animation: rotate 1s linear infinite;
-}
-@keyframes rotate {
-	from {
-		transform: rotate(0);
-	}
-	to {
-		transform: rotate(360deg);
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.icon-spinning {
-		animation: none;
-	}
 }
 </style>

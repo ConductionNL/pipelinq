@@ -15,12 +15,11 @@
   - @spec openspec/specs/marketing-lists/spec.md#requirement-unsubscribe-is-first-party-and-takes-one-click
   -->
 <template>
-	<NcModal
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Manage subscriptions')"
-		size="normal"
-		@close="$emit('close')">
+		@closing="$emit('close')">
 		<div class="subscription-manage">
-			<h2>{{ t('pipelinq', 'Manage subscriptions') }}</h2>
 
 			<NcNoteCard v-if="message" :type="messageType">
 				{{ message }}
@@ -48,8 +47,11 @@
 					</NcButton>
 				</li>
 			</ul>
-
-			<div class="subscription-manage__actions">
+			<p v-if="preferenceUrl" class="subscription-manage__link">
+				{{ preferenceUrl }}
+			</p>
+		</div>
+		<template #actions>
 				<NcButton
 					variant="error"
 					:disabled="busy || subscriptions.length === 0"
@@ -67,17 +69,13 @@
 					@click="copyPreferenceLink">
 					{{ t('pipelinq', 'Copy preference link') }}
 				</NcButton>
-			</div>
-
-			<p v-if="preferenceUrl" class="subscription-manage__link">
-				{{ preferenceUrl }}
-			</p>
-		</div>
-	</NcModal>
+		</template>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import {
 	fetchPreferenceLink,
 	unsubscribeContact,
@@ -90,7 +88,7 @@ export default {
 	components: {
 		NcButton,
 		NcLoadingIcon,
-		NcModal,
+		CnDialog,
 		NcNoteCard,
 	},
 

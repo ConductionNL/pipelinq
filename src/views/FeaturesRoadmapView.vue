@@ -57,12 +57,15 @@
 			:documentationUrl="documentationUrl"
 			:openbuiltUrl="openbuiltUrl"
 			:llmSkillsUrl="llmSkillsUrl"
-			:suggestUrl="suggestUrl" />
+			:suggestUrl="suggestUrl"
+			:categories="categories"
+			:board="board" />
 	</div>
 </template>
 
 <script>
 import { CnFeaturesAndRoadmapPage } from '@conduction/nextcloud-vue'
+import { loadState } from '@nextcloud/initial-state'
 import { getLanguage, translate as t } from '@nextcloud/l10n'
 
 /**
@@ -90,9 +93,22 @@ export default {
 		llmSkillsUrl: { type: String, default: '' },
 		/** Suggest-a-feature CTA override, forwarded to the library page. */
 		suggestUrl: { type: String, default: '' },
+		/** Board look options (`subtitle`, ...), forwarded to the library page. */
+		board: { type: Object, default: null },
 	},
 
 	computed: {
+		/**
+		 * The curated list's groups, key to caption, in the page's order
+		 * (board PqRoadmap), or null to leave the features ungrouped.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+		 */
+		categories() {
+			return loadState('pipelinq', 'features_roadmap_categories', null)
+		},
+
 		/**
 		 * The comparison page on the public site, in the reader's language.
 		 *

@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
- * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-the-team-keeps-saved-replies-req-msr-002
+ * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-the-team-keeps-saved-replies-req-msr-002
  */
 
 declare(strict_types=1);

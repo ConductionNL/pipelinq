@@ -23,6 +23,7 @@ The KCC werkplek is a composite view that orchestrates data from multiple source
 - **BRP/KVK enrichment**: Retrieved via OpenConnector sources for person/business lookup
 - **Kennisartikel**: OpenRegister object in the `pipelinq` register using the `kennisartikel` schema (see kennisbank spec)
 - **Taak/Terugbelverzoek**: OpenRegister object for backoffice routing and callback requests
+
 ## Requirements
 
 ---
@@ -691,6 +692,82 @@ The system MUST allow agents to set their availability status, which affects que
 - AND break duration MUST be tracked for workforce reporting
 
 ---
+
+### Requirement: The ticket list shows the newest ticket first
+
+The ticket list in the simple structure SHALL sort on `occurredAt` descending by default, so a ticket that just came in is on the first page. Its count line SHALL name that order.
+
+#### Scenario: A resident's question reaches the KCC agent
+- **GIVEN** 83 tickets, most of them weeks old
+- **WHEN** a resident asks a question through the portal and a KCC agent opens Vragen en meldingen
+- **THEN** the resident's ticket SHALL be the first row
+- **AND** the count line SHALL read "... · nieuwste eerst"
+
+@e2e exclude A list declaration; the vitest pins the declaration and the library's index page applies sortKey and sortOrder.
+
+### Requirement: Tickets can be imported from the ticket list
+
+The ticket list's Actions menu MUST offer Import, which opens the mass import dialog for tickets.
+
+#### Scenario: importing a counter export
+
+- GIVEN an agent on the ticket list
+- WHEN they open Actions and choose Import
+- THEN the import dialog for tickets opens
+
+### Requirement: The werkplek in a call names the caller
+
+While a call is on, the werkplek MUST be titled "Gesprek met <client name>". It MUST show a card on the client in the call with their name, type and address, source, preference and language.
+
+#### Scenario: Sanne calls
+- GIVEN the werkplek opened for a call with Sanne de Vries
+- THEN the title reads "Gesprek met Sanne de Vries"
+- AND "Wie is het" names Sanne de Vries with a link to her customer page
+
+### Requirement: The in-call page draws three columns
+
+While a call is on, the contact centre page SHALL draw who is it in the left column, the contact form and the client's
+requests in the middle column, and the knowledge base, the client's tasks and callback requests and the earlier contact
+in the right column. Without a call the page SHALL keep its own layout.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call from a known client
+- **THEN** "Wie is het" heads the left column, the contact form heads the middle column and the knowledge base heads the
+  right column
+
+### Requirement: The in-call page offers the next steps as tiles
+
+While a call is on, the contact centre page SHALL draw a row of six tiles above the in-call cards: new request, call
+back, book an appointment, to the back office, register a complaint and another channel. Each tile SHALL open its form
+or dialog with the client on the line filled in.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call from a known client and clicks "Terugbellen"
+- **THEN** the callback form opens with the client filled in
+
+### Requirement: The in-call header marks the call
+
+While a call is on, the header SHALL show "In gesprek" as a menu that sets the agent's availability, the call's running
+time as a separate chip, and the pills "Telefoon, inkomend" and "Geïdentificeerd" at the start of the line under the
+title. Ending the call SHALL remove the menu state, the chip and the pills.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call from a known client
+- **THEN** the header reads "In gesprek" with a timer chip beside it
+- **AND** the line under the title opens with "Telefoon, inkomend" and "Geïdentificeerd"
+
+### Requirement: The in-call cards carry the board's titles
+
+While a call is on, the contact form SHALL be titled "Dit contactmoment", the client's requests "Openstaande zaken" and
+the earlier contact moments "Eerder contact". Without a call the cards SHALL keep their dashboard titles.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call
+- **THEN** the middle column opens with "Dit contactmoment" above "Openstaande zaken"
 
 ## Notes
 

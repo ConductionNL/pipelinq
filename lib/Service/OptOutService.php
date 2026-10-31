@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.5
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Opt-out lookup + recording service.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006
  *
  * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash() is a pure,
  *  side-effect-free hashing utility shared across BSN-handling services; injecting
@@ -64,7 +64,7 @@ class OptOutService {
 	 *
 	 * @return bool True when an unexpired OptOutVlag exists.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
 	public function hasOptOut(string $rawBsn): bool {
 		return $this->getOptOut(rawBsn: $rawBsn) !== null;
@@ -77,7 +77,7 @@ class OptOutService {
 	 *
 	 * @return array<string,mixed>|null Returns the array representation when active, else null.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
 	public function getOptOut(string $rawBsn): ?array {
 		try {
@@ -120,7 +120,7 @@ class OptOutService {
 	 *
 	 * @return bool True when an OptOutVlag was newly created / refreshed.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
 	public function recordFromBrpResponse(string $rawBsn, string $indicationSecret): bool {
 		if ($indicationSecret !== '1') {
@@ -166,7 +166,7 @@ class OptOutService {
 	 *
 	 * @return bool True on success.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-02
 	 */
 	public function recordLocalOptOut(string $rawBsn, string $actor, ?string $note = null): bool {
 		try {

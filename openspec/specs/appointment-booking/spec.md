@@ -689,3 +689,81 @@ step's resource type as their label.
 - **WHEN** a user opens the service page
 - **THEN** the Policies card MUST read "Free" under Cancellation policy
 - **AND** the composition table MUST read "Staff" under Resource type
+
+### Requirement: The server expires cached availability when a resource or service changes
+
+When a resource is created, changed or deleted, the server SHALL delete every cached availability row of that resource.
+When a service is created, changed or deleted, the server SHALL delete the cached availability of every resource whose
+type is one of the service's required resource types before or after the change, or of every resource when the service
+names none. This SHALL hold for every writer (the pages, the API, an import, a sync) and SHALL run after the write, outside
+the request. The pages SHALL NOT delete cache rows themselves.
+
+#### Scenario: Working hours change through the API
+
+- GIVEN a resource with cached availability for the next week
+- WHEN its working hours are changed through the OpenRegister API
+- THEN the cached days of that resource are deleted and the next slot search computes them again
+
+#### Scenario: A service needs another resource type
+
+- GIVEN a service that needed rooms and now needs rooms and advisers
+- WHEN the service is saved
+- THEN the cached availability of every room and every adviser is deleted
+
+### Requirement: The booking context names the service and the customer
+
+The booking page SHALL show the booking's service and customer by name (the customer a contact or a client), its deposit
+with when it was paid, and a link to the booking it was rescheduled from when there is one.
+
+#### Scenario: A rescheduled booking
+
+- GIVEN a booking rescheduled from an earlier one
+- THEN the Service and customer card names the service and the customer and links to the earlier booking
+
+### Requirement: A walk-in ticket records its desk and when the customer left
+
+A walk-in ticket MAY name the desk the customer is called to. The Left action MUST set the status to abandoned and record the moment in `leftAt`.
+
+#### Scenario: a customer leaves the queue
+
+- GIVEN Joke Smit is waiting in the walk-in queue
+- WHEN the employee chooses Left on her row at 09:55
+- THEN her ticket is abandoned with `leftAt` 09:55
+
+### Requirement: A table inside a booking card is a flat frame
+
+The resource and service pages SHALL draw a table inside a card in a frame with a hairline border, 8px corners and no shadow.
+
+#### Scenario: A resource's working hours
+
+- **GIVEN** the resource Fatma Yildiz
+- **WHEN** an admin opens it
+- **THEN** Werktijden and Vakanties show their tables in flat 8px frames inside their cards
+
+### Requirement: A service reads in Overview and History tabs
+
+The service page SHALL show the service's details, rules and steps in an Overview tab and its audit trail in a History tab, with the Actions menu at the end of the tab row.
+
+#### Scenario: Reading what changed on a service
+
+- **GIVEN** the service Aanvraag paspoort
+- **WHEN** an admin opens it and picks Geschiedenis
+- **THEN** the page shows who changed the service and when, and the Acties menu stays at the end of the tab row
+
+### Requirement: The services list reads as words (REQ-APT-LIST-READABLE)
+The services list MUST show the same words as the service page. The Status
+column MUST show the label from the schema's `x-enum-labels` ("Active", not
+"active") and keep its colour. The Online column MUST read "Yes" or "No".
+
+#### Scenario: An active service that customers can book online
+@e2e exclude Asserted in tests/vitest/clientRelatedAndServiceList.spec.js through the library's CnCellRenderer with pipelinq's formatters.
+- **GIVEN** a service with status `active` and `bookableOnline` true
+- **WHEN** a user opens the services list
+- **THEN** the Status column MUST read "Active" in a green badge
+- **AND** the Online column MUST read "Yes"
+
+#### Scenario: A service that is not bookable online
+@e2e exclude Asserted in tests/vitest/clientRelatedAndServiceList.spec.js.
+- **GIVEN** a service with `bookableOnline` false
+- **WHEN** a user opens the services list
+- **THEN** the Online column MUST read "No"

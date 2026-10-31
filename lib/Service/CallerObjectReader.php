@@ -86,8 +86,24 @@ class CallerObjectReader
      */
     public function read(string $id, string $schemaKey): ?array
     {
+        return $this->readFromSchema(id: $id, schema: $this->appConfig->getValueString(Application::APP_ID, $schemaKey, ''));
+
+    }//end read()
+
+
+    /**
+     * One object's data from a schema named by id or slug, or null.
+     *
+     * @param string $id     The object id.
+     * @param string $schema The schema id or slug.
+     *
+     * @return array<string, mixed>|null The object's data.
+     *
+     * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     */
+    public function readFromSchema(string $id, string $schema): ?array
+    {
         $register = $this->register();
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
         if ($register === '' || $schema === '' || $id === '') {
             return null;
         }
@@ -109,7 +125,7 @@ class CallerObjectReader
 
         return self::data(object: $object);
 
-    }//end read()
+    }//end readFromSchema()
 
 
     /**

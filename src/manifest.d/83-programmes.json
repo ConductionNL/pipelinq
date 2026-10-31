@@ -1,0 +1,798 @@
+{
+	"pages": [
+		{
+			"id": "Programmes",
+			"route": "/programmes",
+			"type": "index",
+			"title": "Projects",
+			"config": {
+				"_note": "PqProject (round 12): the delivery programmes above the cases (deliveryProgramme). The board calls them projects; the slug stays deliveryProgramme (see 62-programme-portfolio).",
+				"register": "pipelinq",
+				"schema": "deliveryProgramme",
+				"showTitle": true,
+				"showTitleIcon": false,
+				"countText": "{shown} of {total} projects",
+				"rowTitle": "plain",
+				"columns": [
+					{
+						"key": "name",
+						"label": "Project",
+						"secondary": "{orgUnit}"
+					},
+					{
+						"key": "client",
+						"label": "Client",
+						"labelField": "name"
+					},
+					{
+						"key": "owner",
+						"label": "Owner",
+						"widget": "avatar",
+						"widgetProps": {
+							"user": true,
+							"size": 28
+						}
+					},
+					{
+						"key": "startDate",
+						"label": "Start"
+					},
+					{
+						"key": "endDate",
+						"label": "End"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"planned": "default",
+								"active": "success",
+								"onHold": "warning",
+								"closed": "default"
+							}
+						}
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Active",
+						"filter": {
+							"status": "active"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Planned",
+						"filter": {
+							"status": "planned"
+						},
+						"showCount": true
+					}
+				],
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "EyeOutline",
+						"handler": "navigate",
+						"route": "ProgrammeDetail"
+					}
+				]
+			}
+		},
+		{
+			"id": "ProgrammeDetail",
+			"route": "/programmes/:id",
+			"type": "detail",
+			"title": "Project",
+			"config": {
+				"_note": "PqProject (round 12): a delivery programme as the board's project page. KPI tiles above one tab strip; the client, team and term beside it. Progress is the server's own figure (GET /api/programmes/{id}/progress), which names why it cannot be computed when it cannot.",
+				"register": "pipelinq",
+				"schema": "deliveryProgramme",
+				"breadcrumb": {
+					"label": "Projects",
+					"route": "Programmes",
+					"separator": "/"
+				},
+				"statusPill": {
+					"field": "status",
+					"colorMap": {
+						"planned": "default",
+						"active": "success",
+						"onHold": "warning",
+						"closed": "default"
+					},
+					"labels": {
+						"planned": "Planned",
+						"active": "Active",
+						"onHold": "On hold",
+						"closed": "Closed"
+					}
+				},
+				"headerMeta": "{orgUnit} · {startDate|date} to {endDate|date}",
+				"actionsMenu": {
+					"label": "More"
+				},
+				"widgets": [
+					{
+						"id": "prog-kpi-progress",
+						"type": "stat",
+						"title": "Progress",
+						"content": {
+							"label": "Progress",
+							"format": {
+								"style": "percent",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/programmes/@objectId/progress"
+							},
+							"valueField": "progress",
+							"caption": "{reason}"
+						}
+					},
+					{
+						"id": "prog-kpi-tasks",
+						"type": "stat",
+						"title": "Tasks",
+						"content": {
+							"label": "Open tasks",
+							"caption": "not closed yet",
+							"source": {
+								"register": "pipelinq",
+								"schema": "programmeTask",
+								"metric": "count",
+								"filter": {
+									"programme": "@objectId",
+									"status": [
+										"open",
+										"inProgress"
+									]
+								}
+							}
+						}
+					},
+					{
+						"id": "prog-kpi-team",
+						"type": "stat",
+						"title": "Team",
+						"content": {
+							"label": "Team",
+							"caption": "people on this project",
+							"source": {
+								"register": "pipelinq",
+								"schema": "programmeTeamMember",
+								"metric": "count",
+								"filter": {
+									"programme": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "prog-kpi-term",
+						"type": "facts",
+						"title": "Ends",
+						"content": {
+							"fields": [
+								{
+									"as": "title",
+									"path": "endDate",
+									"format": "date-long"
+								},
+								{
+									"as": "line",
+									"parts": [
+										{
+											"path": "startDate",
+											"label": "started",
+											"format": "date"
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"id": "prog-plan",
+						"type": "facts",
+						"title": "Plan",
+						"icon": "ClipboardTextOutline",
+						"content": {
+							"columns": 3,
+							"fields": [
+								{
+									"label": "Project",
+									"path": "name"
+								},
+								{
+									"label": "Client",
+									"path": "client",
+									"resolve": {
+										"register": "pipelinq",
+										"schema": "client",
+										"labelField": "name"
+									}
+								},
+								{
+									"label": "Org unit",
+									"path": "orgUnit"
+								},
+								{
+									"label": "Start date",
+									"path": "startDate",
+									"format": "date-long"
+								},
+								{
+									"label": "End date",
+									"path": "endDate",
+									"format": "date-long"
+								},
+								{
+									"label": "Status",
+									"path": "status",
+									"map": {
+										"planned": "Planned",
+										"active": "Active",
+										"onHold": "On hold",
+										"closed": "Closed"
+									}
+								},
+								{
+									"label": "Owner",
+									"path": "owner",
+									"format": "user"
+								},
+								{
+									"label": "Progress mode",
+									"path": "progressMode",
+									"map": {
+										"manual": "Set by hand",
+										"fromTasks": "From finished tasks",
+										"fromEffort": "From booked effort"
+									}
+								},
+								{
+									"as": "text",
+									"path": "description"
+								}
+							]
+						}
+					},
+					{
+						"id": "prog-tasks",
+						"type": "object-list",
+						"title": "Tasks in this cycle",
+						"icon": "ClipboardCheckOutline",
+						"content": {
+							"register": "pipelinq",
+							"schema": "programmeTask",
+							"filter": {
+								"programme": "@objectId"
+							},
+							"sort": {
+								"field": "dueDate",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Task"
+								},
+								{
+									"key": "assignee",
+									"label": "Assigned to",
+									"formatter": "userDisplayName"
+								},
+								{
+									"key": "cycle",
+									"label": "Cycle",
+									"widget": "fkResolve",
+									"widgetProps": {
+										"register": "pipelinq",
+										"schema": "programmeCycle",
+										"labelField": "name"
+									}
+								},
+								{
+									"key": "status",
+									"label": "Status",
+									"widget": "badge",
+									"widgetProps": {
+										"colorMap": {
+											"open": "default",
+											"inProgress": "purple",
+											"closed": "success"
+										}
+									},
+									"formatter": "enumLabel"
+								}
+							],
+							"allowCreate": true,
+							"allowEdit": true,
+							"addLabel": "Add task",
+							"limit": 25,
+							"emptyText": "No tasks on this project yet.",
+							"footerNote": "Unfinished tasks move to the next cycle when you close this one."
+						}
+					},
+					{
+						"id": "prog-cycles",
+						"type": "object-list",
+						"title": "Cycles",
+						"icon": "Sync",
+						"content": {
+							"register": "pipelinq",
+							"schema": "programmeCycle",
+							"filter": {
+								"programme": "@objectId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Cycle"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								},
+								{
+									"key": "status",
+									"label": "Status",
+									"widget": "badge",
+									"widgetProps": {
+										"colorMap": {
+											"open": "purple",
+											"closed": "default"
+										}
+									},
+									"formatter": "enumLabel"
+								}
+							],
+							"allowCreate": true,
+							"limit": 25,
+							"emptyText": "No cycles yet."
+						}
+					},
+					{
+						"id": "prog-work",
+						"type": "object-list",
+						"title": "Linked work in other apps",
+						"icon": "LinkVariant",
+						"content": {
+							"register": "pipelinq",
+							"schema": "programmeWorkItem",
+							"filter": {
+								"programme": "@objectId"
+							},
+							"columns": [
+								{
+									"key": "domainObjectType",
+									"label": "Kind"
+								},
+								{
+									"key": "title",
+									"label": "Title"
+								},
+								{
+									"key": "domainObjectRef",
+									"label": "Reference"
+								}
+							],
+							"limit": 25,
+							"emptyText": "No work linked yet. The project only points at records; each app keeps its own."
+						}
+					},
+					{
+						"id": "prog-team",
+						"type": "object-list",
+						"title": "Team",
+						"icon": "AccountGroup",
+						"content": {
+							"register": "pipelinq",
+							"schema": "programmeTeamMember",
+							"filter": {
+								"programme": "@objectId"
+							},
+							"columns": [
+								{
+									"key": "user",
+									"label": "Person",
+									"formatter": "userDisplayName"
+								},
+								{
+									"key": "role",
+									"label": "Role"
+								}
+							],
+							"allowCreate": true,
+							"addLabel": "Add person",
+							"limit": 25,
+							"emptyText": "Nobody on the team yet."
+						}
+					},
+					{
+						"id": "prog-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History"
+					},
+					{
+						"id": "prog-panels",
+						"type": "tabs",
+						"title": "Project parts",
+						"icon": "ViewDashboard",
+						"_note": "The board's tab strip (PqProject): Overview stacks the plan, the tasks, the cycles and the linked work; the other tabs hold one list each, History last.",
+						"content": {
+							"ariaLabel": "Project parts",
+							"tabs": [
+								{
+									"label": "Overview",
+									"widgetIds": [
+										"prog-plan",
+										"prog-tasks",
+										"prog-cycles",
+										"prog-work"
+									]
+								},
+								{
+									"label": "Tasks",
+									"widgetId": "prog-tasks-tab",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "programmeTask",
+										"filter": {
+											"programme": "@objectId"
+										}
+									}
+								},
+								{
+									"label": "Team",
+									"widgetId": "prog-team",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "programmeTeamMember",
+										"filter": {
+											"programme": "@objectId"
+										}
+									}
+								},
+								{
+									"label": "Cycles",
+									"widgetId": "prog-cycles-tab",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "programmeCycle",
+										"filter": {
+											"programme": "@objectId"
+										}
+									}
+								},
+								{
+									"label": "Linked work",
+									"widgetId": "prog-work-tab",
+									"countFrom": {
+										"register": "pipelinq",
+										"schema": "programmeWorkItem",
+										"filter": {
+											"programme": "@objectId"
+										}
+									}
+								},
+								{
+									"label": "History",
+									"widgetId": "prog-history"
+								}
+							]
+						}
+					},
+					{
+						"id": "side-client",
+						"type": "facts",
+						"title": "Client",
+						"icon": "OfficeBuildingOutline",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "client",
+								"id": "@object.client"
+							},
+							"fields": [
+								{
+									"as": "lead",
+									"initialsPath": "name",
+									"title": "name",
+									"subtitle": [
+										{
+											"path": "type",
+											"map": {
+												"organization": "Organisation",
+												"person": "Resident"
+											}
+										}
+									]
+								}
+							],
+							"link": {
+								"label": "Client page",
+								"route": {
+									"name": "ClientDetail",
+									"params": {
+										"id": "@object.client"
+									}
+								}
+							},
+							"emptyText": "No client on this project"
+						}
+					},
+					{
+						"id": "side-team",
+						"type": "record-list",
+						"title": "Team",
+						"icon": "AccountGroup",
+						"content": {
+							"register": "pipelinq",
+							"schema": "programmeTeamMember",
+							"filter": {
+								"programme": "@objectId"
+							},
+							"limit": 6,
+							"presentation": "rows",
+							"title": "{user|user}",
+							"meta": "{role}",
+							"emptyText": "Nobody on the team yet."
+						}
+					},
+					{
+						"id": "side-term",
+						"type": "facts",
+						"title": "Project term",
+						"icon": "CalendarRange",
+						"content": {
+							"fields": [
+								{
+									"label": "Ends",
+									"path": "endDate",
+									"format": "date-long"
+								},
+								{
+									"label": "Started",
+									"path": "startDate",
+									"format": "date-long"
+								}
+							]
+						}
+					},
+					{
+						"id": "prog-tasks-tab",
+						"type": "object-list",
+						"title": "Tasks",
+						"icon": "ClipboardCheckOutline",
+						"content": {
+							"register": "pipelinq",
+							"schema": "programmeTask",
+							"filter": {
+								"programme": "@objectId"
+							},
+							"sort": {
+								"field": "dueDate",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Task"
+								},
+								{
+									"key": "assignee",
+									"label": "Assigned to",
+									"formatter": "userDisplayName"
+								},
+								{
+									"key": "cycle",
+									"label": "Cycle",
+									"widget": "fkResolve",
+									"widgetProps": {
+										"register": "pipelinq",
+										"schema": "programmeCycle",
+										"labelField": "name"
+									}
+								},
+								{
+									"key": "status",
+									"label": "Status",
+									"widget": "badge",
+									"widgetProps": {
+										"colorMap": {
+											"open": "default",
+											"inProgress": "purple",
+											"closed": "success"
+										}
+									},
+									"formatter": "enumLabel"
+								}
+							],
+							"allowCreate": true,
+							"allowEdit": true,
+							"addLabel": "Add task",
+							"limit": 25,
+							"emptyText": "No tasks on this project yet.",
+							"footerNote": "Unfinished tasks move to the next cycle when you close this one."
+						}
+					},
+					{
+						"id": "prog-cycles-tab",
+						"type": "object-list",
+						"title": "Cycles",
+						"icon": "Sync",
+						"content": {
+							"register": "pipelinq",
+							"schema": "programmeCycle",
+							"filter": {
+								"programme": "@objectId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Cycle"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								},
+								{
+									"key": "status",
+									"label": "Status",
+									"widget": "badge",
+									"widgetProps": {
+										"colorMap": {
+											"open": "purple",
+											"closed": "default"
+										}
+									},
+									"formatter": "enumLabel"
+								}
+							],
+							"allowCreate": true,
+							"limit": 25,
+							"emptyText": "No cycles yet."
+						}
+					},
+					{
+						"id": "prog-work-tab",
+						"type": "object-list",
+						"title": "Linked work in other apps",
+						"icon": "LinkVariant",
+						"content": {
+							"register": "pipelinq",
+							"schema": "programmeWorkItem",
+							"filter": {
+								"programme": "@objectId"
+							},
+							"columns": [
+								{
+									"key": "domainObjectType",
+									"label": "Kind"
+								},
+								{
+									"key": "title",
+									"label": "Title"
+								},
+								{
+									"key": "domainObjectRef",
+									"label": "Reference"
+								}
+							],
+							"limit": 25,
+							"emptyText": "No work linked yet. The project only points at records; each app keeps its own."
+						}
+					},
+					{
+						"id": "side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"content": {
+							"limit": 4
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "k1",
+						"widgetId": "prog-kpi-progress",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "k2",
+						"widgetId": "prog-kpi-tasks",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "k3",
+						"widgetId": "prog-kpi-team",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "k4",
+						"widgetId": "prog-kpi-term",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": "1",
+						"widgetId": "prog-panels",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 18,
+						"showTitle": false
+					}
+				],
+				"sideColumn": [
+					"side-client",
+					"side-team",
+					"side-term",
+					"side-history"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"follow": false,
+				"identifierField": "id"
+			}
+		}
+	]
+}

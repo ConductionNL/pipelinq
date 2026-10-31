@@ -15,7 +15,7 @@
  */
 
 import { CnDetailCard } from '@conduction/nextcloud-vue'
-import { h } from 'vue'
+import { computed, h } from 'vue'
 
 /**
  * Build a grid widget around a section component.
@@ -24,9 +24,13 @@ import { h } from 'vue'
  * @param {object} section The section component to render.
  * @param {(ctx: {objectId: string, objectData: object, content: object}) => object} mapProps
  *   The section's props from the page context.
- * @param {{card?: boolean}} [options] `card` wraps the section in a titled
- *   card (title from `content.title`), for a widget that sits in the grid on
- *   its own rather than inside a tab, which already names it.
+ * @param {{card?: boolean, context?: boolean}} [options] `card` wraps the section in a titled
+ *   card (title from `content.title` and the line beside it from `content.subtitle`, both through the
+ *   page's translate), for a widget that sits in the grid on
+ *   its own rather than inside a tab, which already names it; an instance under a heading of its own (a
+ *   `sections` widget) sets `content.card: false` to draw the section bare. `context` provides
+ *   `cnSectionContext` (`{ object, objectId }`) as a body section gets it, for a
+ *   section that reads the page's record from there.
  * @return {object} A Vue component.
  *
  * @spec openspec/changes/detail-pages-read-at-a-glance/specs/client-management/spec.md
@@ -37,6 +41,23 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 		// The host also passes register, schema, store and the content keys;
 		// none of them belong on the section's root element.
 		inheritAttrs: false,
+		inject: {
+			// The page's translate, so a card title declared in the manifest
+			// (English source) reads in the user's language.
+			cnTranslate: { default: null },
+		},
+		provide() {
+			if (!options.context) {
+				return {}
+			}
+			return {
+				cnSectionContext: computed(() => ({
+					object: this.objectData,
+					objectId: String(this.objectId || this.objectData?.id || ''),
+				})),
+			}
+		},
+		emits: ['header'],
 		props: {
 			objectId: { type: [String, Number], default: '' },
 			objectData: { type: Object, default: null },
@@ -47,20 +68,27 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 			if (!objectId) {
 				return null
 			}
-			const inner = h(
-				section,
-				mapProps({
+			const inner = h(section, {
+				...mapProps({
 					objectId,
 					objectData: this.objectData || {},
 					content: this.content || {},
 				}),
-			)
-			if (!options.card) {
+				// The title row a section reports goes on to the card the detail host draws.
+				onHeader: (header) => this.$emit('header', header),
+			})
+			if (!options.card || this.content?.card === false) {
 				return inner
 			}
+			const title = this.content?.title || ''
+			const translate =
+				typeof this.cnTranslate === 'function'
+					? this.cnTranslate
+					: (key) => key
+			const subtitle = this.content?.subtitle || ''
 			return h(
 				CnDetailCard,
-				{ title: this.content?.title || '' },
+				{ title: title ? translate(title) : '', subtitle: subtitle ? translate(subtitle) : '' },
 				{ default: () => inner },
 			)
 		},

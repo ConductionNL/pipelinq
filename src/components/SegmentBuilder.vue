@@ -15,24 +15,6 @@
 			<h3 class="segment-builder__title">
 				{{ t('pipelinq', 'Rules') }}
 			</h3>
-			<div class="segment-builder__estimate" role="status" aria-live="polite">
-				<template v-if="status === 'checking'">
-					<NcLoadingIcon :size="16" />
-					{{ t('pipelinq', 'Checking rules…') }}
-				</template>
-				<span v-else-if="status === 'valid'" class="segment-builder__count">
-					{{ t('pipelinq', 'Estimated members:') }}
-					<strong>{{ estimatedSize }}</strong>
-				</span>
-				<span v-else-if="status === 'incomplete'">
-					{{
-						t(
-							'pipelinq',
-							'Complete every condition to see the estimate.',
-						)
-					}}
-				</span>
-			</div>
 		</div>
 
 		<SegmentRuleNode
@@ -41,6 +23,29 @@
 			:fieldOptions="fieldOptions"
 			:errors="errors"
 			@update:node="onTreeUpdate" />
+
+		<div class="segment-builder__estimate" role="status" aria-live="polite">
+			<template v-if="status === 'checking'">
+				<NcLoadingIcon :size="16" />
+				{{ t('pipelinq', 'Checking rules…') }}
+			</template>
+			<template v-else-if="status === 'valid'">
+				<span class="segment-builder__count">
+					<AccountGroup :size="18" />
+					{{ t('pipelinq', 'Estimated members:') }}
+					<strong>{{ estimatedSize }}</strong>
+				</span>
+				<span>{{ t('pipelinq', 'Updates as the data changes. A segment is a living rule, not a fixed list.') }}</span>
+			</template>
+			<span v-else-if="status === 'incomplete'">
+				{{
+					t(
+						'pipelinq',
+						'Complete every condition to see the estimate.',
+					)
+				}}
+			</span>
+		</div>
 
 		<NcNoteCard v-if="generalError" type="error" class="segment-builder__error">
 			{{ generalError }}
@@ -52,6 +57,7 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import SegmentRuleNode from './SegmentRuleNode.vue'
 
 const PREVIEW_DEBOUNCE_MS = 400
@@ -112,6 +118,7 @@ function tally(node) {
 export default {
 	name: 'SegmentBuilder',
 	components: {
+		AccountGroup,
 		NcLoadingIcon,
 		NcNoteCard,
 		SegmentRuleNode,
@@ -319,14 +326,22 @@ export default {
 }
 
 .segment-builder__estimate {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	color: var(--color-text-maxcontrast);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 12px 14px;
+	border-radius: var(--border-radius-large);
+	background: var(--color-primary-element-light, var(--color-background-hover));
+	color: var(--color-primary-element-light-text, var(--color-main-text));
 }
 
-.segment-builder__count strong {
-	color: var(--color-main-text);
+.segment-builder__count {
+	display: inline-flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.5;
 }
 
 .segment-builder__error {

@@ -22,6 +22,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 use OCA\OpenRegister\BackgroundJob\ActorForwardedJob;
 use OCA\OpenRegister\Service\Deferral\DeferredListenerContext;
 use OCA\OpenRegister\Service\OrganisationService;
+use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeferredObjectWork;
@@ -75,6 +76,7 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 	 * @var array<string, class-string<DeferredObjectWork>>
 	 */
 	private const HANDLERS = [
+		AvailabilityCacheInvalidationListener::HANDLER_KEY => AvailabilityCacheInvalidationListener::class,
 		DealCreatedListener::HANDLER_KEY => DealCreatedListener::class,
 		DealUpdatedListener::HANDLER_KEY => DealUpdatedListener::class,
 		ExpenseApprovalListener::HANDLER_KEY => ExpenseApprovalListener::class,

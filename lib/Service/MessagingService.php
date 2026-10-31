@@ -250,7 +250,7 @@ class MessagingService {
 	 *
 	 * @return array<string, mixed>|null The row, or null when absent or not readable.
 	 *
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	public function loadMessage(string $messageId): ?array {
 		$objectService = $this->objectService();
@@ -282,7 +282,7 @@ class MessagingService {
 	 *
 	 * @return string|null `inbound`, `not-failed`, `already-resent` or null.
 	 *
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	public function resendRefusal(array $message): ?string {
 		if (($message['direction'] ?? '') !== 'outbound') {
@@ -315,7 +315,7 @@ class MessagingService {
 	 *
 	 * @return array{status: string, messageId?: string, reason?: string} Sanitised outcome.
 	 *
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	public function resend(array $message, array $contact, string $actor): array {
 		$channel = (string)($message['channel'] ?? '');

@@ -22,8 +22,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-002
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-optin-011
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-002
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OPTIN-011
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Mailbox lookup with TTL cache.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-002
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-002
  */
 class MailboxResolver {
 	/**

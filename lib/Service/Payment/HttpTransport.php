@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ namespace OCA\Pipelinq\Service\Payment;
 /**
  * HTTP transport seam — used by the payment adapters to talk to providers.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 interface HttpTransport {
 	/**
@@ -46,7 +46,7 @@ interface HttpTransport {
 	 *
 	 * @return array{status: int, body: array<string, mixed>, raw: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
 	 */
 	public function request(string $method, string $url, array $headers = [], ?string $body = null): array;
 }//end interface

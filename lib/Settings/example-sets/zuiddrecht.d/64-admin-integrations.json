@@ -1,0 +1,325 @@
+{
+	"$comment": "pipelinq's admin settings in the Zuiddrecht set, integrations, marketing and portal tabs, as PqBeheerKoppelingen, PqBeheerMarketing and PqBeheerPortaal draw them: the Asterisk telephony link, the WhatsApp and SMS senders with their monthly budgets, and the service account their webhooks write as; the crawl source, Matomo and Search Console settings and the two mail transports; the three portal tenants, Mijn Zuiddrecht as the default one, with three portal accounts from the cast and their latest audit events. No secret is in the set: the telephony webhook secret, provider keys and the Matomo token live on their OpenConnector sources and the credential broker, and settings only name them. A tenant's live or concept state has no field, so it is not here.",
+	"serviceAccounts": [
+		{
+			"key": "berichten",
+			"uid": "pipelinq-berichten",
+			"displayName": "Pipelinq berichten",
+			"groups": [
+				"pipelinq-messaging-service"
+			]
+		}
+	],
+	"appConfig": [
+		{
+			"key": "messaging_service_account",
+			"value": "pipelinq-berichten"
+		},
+		{
+			"key": "search.crawl_source",
+			"value": "own-site"
+		},
+		{
+			"key": "search.striking_min_impressions",
+			"value": "100"
+		},
+		{
+			"key": "matomo.base_url",
+			"value": "https://statistiek.zuiddrecht.example"
+		},
+		{
+			"key": "matomo.site_id",
+			"value": "1"
+		},
+		{
+			"key": "matomo.source_id",
+			"value": "matomo"
+		},
+		{
+			"key": "matomo.credential_ref",
+			"value": "b7f4a9c1-2d3e-4f5a-8b6c-7d8e9f0a1b2c"
+		},
+		{
+			"key": "blast.traffic_portal",
+			"value": "mijn-zuiddrecht"
+		},
+		{
+			"key": "search.gsc.properties",
+			"value": "sc-domain:zuiddrecht.example"
+		},
+		{
+			"key": "search.gsc.last_import_at",
+			"value": "{{datetime:-1 06:10}}"
+		}
+	],
+	"objects": [
+		{
+			"key": "cti-asterisk",
+			"register": "pipelinq",
+			"schema": "ctiAdapterConfig",
+			"data": {
+				"platform": "asterisk",
+				"api_base_url": "https://pbx.zuiddrecht.example/ari",
+				"auth_method": "webhook-secret",
+				"credentials_ref": "asterisk-zuiddrecht",
+				"screen_pop_enabled": true,
+				"screen_pop_delay_ms": 500,
+				"click_to_dial_enabled": true,
+				"default_outbound_caller_id": "+31786123400",
+				"default_country_code": "NL"
+			}
+		},
+		{
+			"key": "kanaal-whatsapp-zuiddrecht",
+			"register": "pipelinq",
+			"schema": "channelProvider",
+			"data": {
+				"kind": "whatsapp-cloud-api",
+				"vendor": "meta",
+				"displayName": "WhatsApp Zuiddrecht",
+				"sourceId": "meta-whatsapp",
+				"phoneNumber": "+31786123400",
+				"active": true,
+				"sandbox": false,
+				"priority": 1
+			}
+		},
+		{
+			"key": "kanaal-sms-zuiddrecht",
+			"register": "pipelinq",
+			"schema": "channelProvider",
+			"data": {
+				"kind": "sms",
+				"vendor": "cm-com",
+				"displayName": "SMS Zuiddrecht",
+				"sourceId": "cm-sms",
+				"phoneNumber": "Zuiddrecht",
+				"active": true,
+				"sandbox": false,
+				"priority": 2
+			}
+		},
+		{
+			"key": "kanaal-sms-test",
+			"register": "pipelinq",
+			"schema": "channelProvider",
+			"data": {
+				"kind": "sms",
+				"vendor": "twilio",
+				"displayName": "Sms-testaccount",
+				"sourceId": "twilio-sms",
+				"phoneNumber": "+31970102030",
+				"active": true,
+				"sandbox": true,
+				"priority": 9
+			}
+		},
+		{
+			"key": "budget-whatsapp",
+			"register": "pipelinq",
+			"schema": "messageSendBudget",
+			"data": {
+				"tenantId": "default",
+				"providerId": "{{object:kanaal-whatsapp-zuiddrecht.id}}",
+				"period": "monthly",
+				"maxMessages": 5000,
+				"maxCostEur": 400,
+				"alertThresholdPct": 0.8,
+				"hardStop": false,
+				"currentPeriodMessages": 3212
+			}
+		},
+		{
+			"key": "budget-sms",
+			"register": "pipelinq",
+			"schema": "messageSendBudget",
+			"data": {
+				"tenantId": "default",
+				"providerId": "{{object:kanaal-sms-zuiddrecht.id}}",
+				"period": "monthly",
+				"maxMessages": 2000,
+				"maxCostEur": 150,
+				"alertThresholdPct": 0.9,
+				"hardStop": false,
+				"currentPeriodMessages": 1904
+			}
+		},
+		{
+			"key": "verzending-nieuwsbrief",
+			"register": "pipelinq",
+			"schema": "mailTransport",
+			"data": {
+				"kind": "instance",
+				"displayName": "Nieuwsbrief",
+				"senderDomain": "nieuwsbrief.zuiddrecht.example",
+				"dkimVerified": true,
+				"dmarcStatus": "found",
+				"deliverabilityCheckedAt": "{{datetime:-1 06:00}}",
+				"active": true,
+				"default": true
+			}
+		},
+		{
+			"key": "verzending-transactioneel",
+			"register": "pipelinq",
+			"schema": "mailTransport",
+			"data": {
+				"kind": "instance",
+				"displayName": "Transactioneel",
+				"senderDomain": "zuiddrecht.example",
+				"dkimVerified": false,
+				"dmarcStatus": "missing",
+				"deliverabilityCheckedAt": "{{datetime:-1 06:00}}",
+				"active": true,
+				"default": false
+			}
+		},
+		{
+			"key": "portaal-mijn-zuiddrecht",
+			"register": "pipelinq",
+			"schema": "portalTenantConfig",
+			"data": {
+				"tenantId": "default",
+				"displayName": "Mijn Zuiddrecht",
+				"brandPrimaryColor": "#c8102e",
+				"customDomain": "mijn.zuiddrecht.example",
+				"enabledFeatures": [
+					"requests",
+					"appointments",
+					"invoices",
+					"documents"
+				],
+				"b2bEnabled": true,
+				"b2cEnabled": true,
+				"selfSignupAllowed": true,
+				"supportEmail": "kcc@zuiddrecht.example"
+			}
+		},
+		{
+			"key": "portaal-mijn-westervliet",
+			"register": "pipelinq",
+			"schema": "portalTenantConfig",
+			"data": {
+				"tenantId": "westervliet",
+				"displayName": "Mijn Westervliet",
+				"brandPrimaryColor": "#00707a",
+				"customDomain": "mijn.westervliet.example",
+				"enabledFeatures": [
+					"requests",
+					"appointments"
+				],
+				"b2bEnabled": false,
+				"b2cEnabled": true
+			}
+		},
+		{
+			"key": "portaal-ondernemersloket-oosterhaven",
+			"register": "pipelinq",
+			"schema": "portalTenantConfig",
+			"data": {
+				"tenantId": "oosterhaven",
+				"displayName": "Ondernemersloket Oosterhaven",
+				"brandPrimaryColor": "#4a3f8f",
+				"customDomain": "loket.oosterhaven.example",
+				"enabledFeatures": [
+					"requests",
+					"invoices",
+					"contracts"
+				],
+				"b2bEnabled": true,
+				"b2cEnabled": false
+			}
+		},
+		{
+			"key": "portaalaccount-henk",
+			"register": "pipelinq",
+			"schema": "crmPortalAccount",
+			"data": {
+				"email": "{{cast:henk.email}}",
+				"tenantId": "default",
+				"displayName": "{{cast:henk.displayName}}",
+				"accountType": "b2c",
+				"locale": "nl",
+				"status": "active",
+				"lastLoginAt": "{{datetime:-1 19:04}}"
+			}
+		},
+		{
+			"key": "portaalaccount-vandam",
+			"register": "pipelinq",
+			"schema": "crmPortalAccount",
+			"data": {
+				"email": "{{cast:vandam.email}}",
+				"tenantId": "default",
+				"displayName": "{{cast:vandam.name}}",
+				"accountType": "b2b",
+				"locale": "nl",
+				"status": "active",
+				"linkedOrganisationId": "{{object:client-vandam.id}}",
+				"lastLoginAt": "{{datetime:0 08:41}}"
+			}
+		},
+		{
+			"key": "portaalaccount-fatima",
+			"register": "pipelinq",
+			"schema": "crmPortalAccount",
+			"data": {
+				"email": "{{cast:fatima.email}}",
+				"tenantId": "default",
+				"displayName": "{{cast:fatima.displayName}}",
+				"accountType": "b2c",
+				"locale": "nl",
+				"status": "active",
+				"lastLoginAt": "{{datetime:-2 12:15}}"
+			}
+		},
+		{
+			"key": "portaalactie-vandam-inlog",
+			"register": "pipelinq",
+			"schema": "portalAuditEvent",
+			"data": {
+				"accountId": "{{object:portaalaccount-vandam.id}}",
+				"tenantId": "default",
+				"eventType": "login-success",
+				"outcome": "success",
+				"occurredAt": "{{datetime:0 08:41}}"
+			}
+		},
+		{
+			"key": "portaalactie-henk-inlog-mislukt",
+			"register": "pipelinq",
+			"schema": "portalAuditEvent",
+			"data": {
+				"accountId": "{{object:portaalaccount-henk.id}}",
+				"tenantId": "default",
+				"eventType": "login-failure",
+				"outcome": "denied",
+				"occurredAt": "{{datetime:-1 19:02}}"
+			}
+		},
+		{
+			"key": "portaalactie-henk-inlog",
+			"register": "pipelinq",
+			"schema": "portalAuditEvent",
+			"data": {
+				"accountId": "{{object:portaalaccount-henk.id}}",
+				"tenantId": "default",
+				"eventType": "login-success",
+				"outcome": "success",
+				"occurredAt": "{{datetime:-1 19:04}}"
+			}
+		},
+		{
+			"key": "portaalactie-fatima-export",
+			"register": "pipelinq",
+			"schema": "portalAuditEvent",
+			"data": {
+				"accountId": "{{object:portaalaccount-fatima.id}}",
+				"tenantId": "default",
+				"eventType": "data-export-requested",
+				"outcome": "success",
+				"occurredAt": "{{datetime:-2 12:20}}"
+			}
+		}
+	]
+}

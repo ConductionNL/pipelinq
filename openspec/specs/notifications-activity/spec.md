@@ -15,7 +15,9 @@ Deliver real-time notifications and a team-visible activity timeline for CRM eve
 **Competitor context:** EspoCRM provides granular notification settings per entity type with in-app, email, and webhook channels. Krayin CRM uses Laravel events for notification dispatch with configurable workflows. Twenty CRM has basic in-app notifications without per-category settings. This spec positions Pipelinq to leverage Nextcloud's mature notification and activity infrastructure (OCP APIs) while adding CRM-specific event intelligence.
 
 ---
+
 ## Requirements
+
 ### Requirement: CRM Notifications [V1]
 
 Users MUST receive Nextcloud notifications when CRM actions directly affect them. Notifications are dispatched via `NotificationService.php` using Nextcloud's `OCP\Notification\IManager`.
@@ -459,6 +461,44 @@ transactional email templates beyond the OR `email` channel's subject-as-body.
 - WHEN the gate runs against pipelinq
 - THEN gate-18 MUST be PASS (no legacy notification dialect tokens)
 - AND each WARN site (`NotificationService`, `Avg\AvgNotificationService`, `Notifier.php`) MUST carry a `@spec` pointer to this change documenting the OR-non-expressible behaviour that retains it, so the WARN is a reviewed retention rather than un-triaged debt
+
+### Requirement: Each object type publishes its own created activity
+Pipelinq MUST publish a created activity only for the object types that have one: a lead publishes `lead_created` and a request publishes `request_created`, each carrying the object's own name. Any other object type, a contact among them, MUST NOT publish a pipelinq created activity. A contact's name MUST be read from its `name` field.
+
+#### Scenario: A contact is created
+@e2e exclude The activity is rendered by Nextcloud's Activity app, not a pipelinq page. Asserted in tests/Unit/Service/ObjectEventHandlerServiceTest.php (testCreatedActivityThroughRealServices, through the real handler, dispatcher and ActivityService) and tests/Unit/Service/ActivityServiceTest.php (testPublishCreatedForContactPublishesNothing).
+- **GIVEN** a user adds a contact person to a client
+- **WHEN** the contact is saved
+- **THEN** pipelinq MUST NOT publish a "Lead created" activity
+- **AND** the only created activity for it MUST be the one OpenRegister writes, which names the contact
+
+#### Scenario: A lead is created
+@e2e exclude Asserted in tests/Unit/Service/ObjectEventHandlerServiceTest.php (testCreatedActivityThroughRealServices).
+- **GIVEN** a user creates a lead titled "Tender"
+- **WHEN** the lead is saved
+- **THEN** pipelinq MUST publish `lead_created` with the title "Tender"
+
+### Requirement: A task notification opens the task in pipelinq
+Every schema that sends a notification and has a pipelinq detail page MUST
+declare a manifest deep link to that page, so OpenRegister links the
+notification there and not to its generic object view.
+
+#### Scenario: Task changed
+@e2e exclude Asserted in tests/vitest/round5ContactCreateAndTaskLinks.spec.js and live on :8099.
+- **GIVEN** a task assigned to a user is changed
+- **WHEN** the user opens the "Task changed" notification
+- **THEN** the link MUST be `/apps/pipelinq/tasks/<uuid>`
+
+### Requirement: A task is named after its subject
+A task's object name MUST be its subject, so the activity stream and the task
+page heading name the task and not its uuid or its type.
+
+#### Scenario: Task activity and heading
+@e2e exclude Asserted in tests/vitest/round5ContactCreateAndTaskLinks.spec.js and live on :8099.
+- **GIVEN** a task with the subject "Call back about the permit"
+- **WHEN** the task is saved
+- **THEN** the activity MUST read "Task Call back about the permit updated"
+- **AND** the task page heading MUST read "Call back about the permit"
 
 ## Current Implementation Status
 

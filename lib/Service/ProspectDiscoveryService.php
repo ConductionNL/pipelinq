@@ -73,7 +73,28 @@ class ProspectDiscoveryService {
 	}//end __construct()
 
 	/**
-	 * Discover prospects based on configured ICP.
+	 * Discover prospects based on configured ICP, with the profile they were
+	 * matched on under `icp`. The profile carries the criteria only, never the
+	 * KVK API key, and comes along when no profile is set yet as well, so the
+	 * prospects page can show what it searches for.
+	 *
+	 * @param bool $refresh Whether to bypass cache.
+	 * @param int  $limit   How many of the best-scored prospects to return; 0 returns all of them.
+	 *
+	 * @return array The discovery results.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $refresh is a simple cache bypass toggle
+	 * @spec                                        openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
+	 */
+	public function discover(bool $refresh = false, int $limit = 10): array {
+		$result        = $this->collect(refresh: $refresh, limit: $limit);
+		$result['icp'] = $this->icpConfig->getCriteria();
+
+		return $result;
+	}//end discover()
+
+	/**
+	 * Collect, score and cache the prospects for the configured ICP.
 	 *
 	 * @param bool $refresh Whether to bypass cache.
 	 * @param int  $limit   How many of the best-scored prospects to return; 0 returns all of them.
@@ -85,7 +106,7 @@ class ProspectDiscoveryService {
 	 * @SuppressWarnings(PHPMD.NPathComplexity)      — orchestration method with multiple sources
 	 * @spec                                         openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
-	public function discover(bool $refresh = false, int $limit = 10): array {
+	private function collect(bool $refresh, int $limit): array {
 		if ($this->icpConfig->isConfigured() === false) {
 			return [
 				'error' => 'no_icp_configured',
@@ -170,7 +191,7 @@ class ProspectDiscoveryService {
 		$this->setInCache(key: $cacheKey, data: $result);
 
 		return $this->limitResult(result: $result, limit: $limit);
-	}//end discover()
+	}//end collect()
 
 	/**
 	 * Cut a discovery result down to its best-scored prospects.

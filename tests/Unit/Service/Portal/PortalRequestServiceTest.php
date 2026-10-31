@@ -195,6 +195,8 @@ class PortalRequestServiceTest extends TestCase {
 		$this->assertSame('new', $stored['status']);
 		$this->assertSame('contact-a', $stored['contact']);
 		$this->assertSame(['f1'], $stored['attachmentIds']);
+		$this->assertSame($result['requestId'], $result['reference'], 'Without a case reference the answer names the ticket by its id');
+		$this->assertSame($stored['occurredAt'], $result['receivedAt']);
 	}//end testSubmitCreatesRequestTicket()
 
 	/**

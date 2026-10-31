@@ -35,6 +35,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -52,6 +53,7 @@ class KccWerkplekController extends Controller {
 	 * @param KccWerkplekService $werkplekService Workspace state service.
 	 * @param IUserSession $userSession Active user session.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IL10N|null $l10n Words the header line in the user's language.
 	 *
 	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
 	 */
@@ -60,6 +62,7 @@ class KccWerkplekController extends Controller {
 		private KccWerkplekService $werkplekService,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
+		private ?IL10N $l10n = null,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -89,6 +92,7 @@ class KccWerkplekController extends Controller {
 
 		try {
 			$payload = $this->werkplekService->getWorkspaceState($user->getUID());
+			$payload['availabilityLine'] = $this->availabilityLine(available: (bool) ($payload['agentProfile']['isAvailable'] ?? false));
 			return new JSONResponse($payload);
 		} catch (\Throwable $e) {
 			$this->logger->error(
@@ -101,6 +105,28 @@ class KccWerkplekController extends Controller {
 			);
 		}//end try
 	}//end stateAction()
+
+	/**
+	 * The dashboard header's line about the agent's availability
+	 * ("you are available for calls and the queue").
+	 *
+	 * @param bool $available Whether the agent is available.
+	 *
+	 * @return string The line, or '' without a translator.
+	 *
+	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 */
+	private function availabilityLine(bool $available): string {
+		if ($this->l10n === null) {
+			return '';
+		}
+
+		if ($available === true) {
+			return $this->l10n->t('you are available for calls and the queue');
+		}
+
+		return $this->l10n->t('you are not taking calls or the queue');
+	}//end availabilityLine()
 
 	/**
 	 * PUT /api/kcc-werkplek/availability.

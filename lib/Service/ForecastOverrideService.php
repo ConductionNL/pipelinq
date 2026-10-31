@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006
  */
 
 declare(strict_types=1);
@@ -78,7 +78,7 @@ class ForecastOverrideService {
 	 *
 	 * @return string|null An error message, or null when valid.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-01
 	 */
 	public function validatePayload(array $payload): ?string {
 		if (trim((string)($payload['period_id'] ?? '')) === '') {
@@ -120,7 +120,7 @@ class ForecastOverrideService {
 	 *
 	 * @return array<string, mixed> The created override data.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-01
 	 */
 	public function createOverride(array $payload, string $managerId): array {
 		$periodId = (string)$payload['period_id'];

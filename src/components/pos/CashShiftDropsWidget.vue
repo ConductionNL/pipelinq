@@ -35,7 +35,7 @@
 						: t('pipelinq', 'Drops can only be added to an open shift.')
 				">
 				<NcButton
-					variant="secondary"
+					class="cn-button--tonal"
 					:disabled="busy || !canDrop"
 					@click="showDrop = true">
 					<template #icon>
@@ -121,7 +121,7 @@ export default {
 		 *
 		 * @return {string} The shift id, or '' when unknown.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 * @spec openspec/specs/pos-cash-management/spec.md#REQ-CCM-002
 		 */
 		shiftId() {
 			return this.objectId || this.objectData?.id || ''
@@ -132,7 +132,7 @@ export default {
 		 *
 		 * @return {boolean} Whether to offer Add drop.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 * @spec openspec/specs/pos-cash-management/spec.md#REQ-CCM-002
 		 */
 		canDrop() {
 			return (
@@ -146,7 +146,7 @@ export default {
 		 *
 		 * @return {object} The object-list content.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 * @spec openspec/specs/pos-cash-management/spec.md#REQ-CCM-002
 		 */
 		listContent() {
 			return { ...this.content, allowCreate: false }
@@ -160,7 +160,7 @@ export default {
 		 * @param {object} payload The drop payload (amount, reason).
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 * @spec openspec/specs/pos-cash-management/spec.md#REQ-CCM-002
 		 */
 		async recordDrop(payload) {
 			this.busy = true

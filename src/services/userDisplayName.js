@@ -116,3 +116,94 @@ export function createUserDisplayNameFormatter(lookup = fetchUserDisplayName) {
 		return PENDING_LABEL
 	}
 }
+
+let assignableUsers = null
+
+/**
+ * The uids a record can be assigned to, from core autocomplete. One request
+ * serves every caller; a failed request answers an empty list and is retried
+ * on the next call.
+ *
+ * @param {number} [limit] How many users to ask for.
+ * @return {Promise<Array<string>>} The uids.
+ * @spec openspec/specs/lead-management/spec.md
+ */
+export function listAssignableUserIds(limit = 200) {
+	if (assignableUsers === null) {
+		assignableUsers = Promise.all([
+			import('@nextcloud/axios'),
+			import('@nextcloud/router'),
+		])
+			.then(([{ default: axios }, { generateOcsUrl }]) =>
+				axios.get(generateOcsUrl('core/autocomplete/get'), {
+					headers: { 'OCS-APIRequest': 'true', Accept: 'application/json' },
+					params: {
+						search: '',
+						itemType: ' ',
+						itemId: ' ',
+						'shareTypes[]': 0,
+						limit,
+					},
+				}),
+			)
+			.then((response) => {
+				const list = response?.data?.ocs?.data
+				return (Array.isArray(list) ? list : [])
+					.map((entry) => (entry && entry.id ? String(entry.id) : ''))
+					.filter(Boolean)
+			})
+			.catch(() => {
+				assignableUsers = null
+				return []
+			})
+	}
+	return assignableUsers
+}
+
+/**
+ * Forget the assignable users, so the next call asks the server again.
+ *
+ * @spec openspec/specs/lead-management/spec.md
+ * @return {void}
+ */
+export function resetAssignableUsers() {
+	assignableUsers = null
+}
+
+const displayNames = new Map()
+
+/**
+ * A user's display name, asked once per uid for the page's lifetime.
+ *
+ * @param {string} uid The uid.
+ * @return {Promise<string>} The display name, or the uid.
+ * @spec openspec/specs/pipeline/spec.md
+ */
+export function cachedUserDisplayName(uid) {
+	const key = String(uid || '')
+	if (key === '') {
+		return Promise.resolve('')
+	}
+	if (!displayNames.has(key)) {
+		displayNames.set(key, fetchUserDisplayName(key).catch(() => key))
+	}
+	return displayNames.get(key)
+}
+
+/**
+ * The initials of a name: the first letters of its first and last word
+ * ("Pieter Jansen" PJ), or the first letter of a single word.
+ *
+ * @param {string} name The name.
+ * @return {string} One or two capitals, or ''.
+ * @spec openspec/specs/pipeline/spec.md
+ */
+export function initialsOf(name) {
+	const words = String(name || '').trim().split(/[\s._-]+/).filter(Boolean)
+	if (words.length === 0) {
+		return ''
+	}
+	const first = words[0].charAt(0)
+	const last = words.length > 1 ? words[words.length - 1].charAt(0) : ''
+	return (first + last).toUpperCase()
+}

@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Throwable;
  *   is currently available.
  * - getRate(currency) — current rate or null.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class MessagingExchangeRateService {
 	/**
@@ -67,7 +67,7 @@ class MessagingExchangeRateService {
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -86,7 +86,7 @@ class MessagingExchangeRateService {
 	 *
 	 * @return float|null EUR amount or null.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function toEur(float $amount, string $currency): ?float {
 		$currency = strtoupper(trim($currency));

@@ -11,7 +11,8 @@
 		:title="t('pipelinq', 'Knowledge base')"
 		:space="defaultSpace"
 		:limit="5"
-		:showSearch="true" />
+		:showSearch="true"
+		bare />
 </template>
 
 <script>

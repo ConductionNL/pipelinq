@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 behavioral e2e coverage for the Forecast report page (/forecast).
- * Maps to openspec/changes/forecast-roll-up-and-categories/specs.md.
+ * Maps to openspec/changes/archive/2026-06-14-forecast-roll-up-and-categories/specs.md.
  *
  * THE ROUTE IN CHANGED, THE CLAIM DID NOT. Forecast used to be a sidebar leaf
  * under Sales, so both tests reached it with `navClick(page, 'Forecast', ...)`.
@@ -55,7 +55,7 @@ async function openForecast(page: Page) {
 	await expect(page).toHaveURL(/\/forecast/, { timeout: 10000 })
 }
 
-// @e2e openspec/changes/forecast-roll-up-and-categories/specs.md#forecast-page
+// @e2e openspec/specs/forecast-roll-up-and-categories/spec.md#forecast-page
 test('Forecast: opens from the reports page and shows the forecast surface', async ({
 	page,
 }) => {
@@ -72,7 +72,7 @@ test('Forecast: opens from the reports page and shows the forecast surface', asy
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/changes/forecast-roll-up-and-categories/specs.md#forecast-export
+// @e2e openspec/specs/forecast-roll-up-and-categories/spec.md#forecast-export
 test('Forecast: exposes the Export CSV action', async ({ page }) => {
 	await openForecast(page)
 

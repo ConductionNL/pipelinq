@@ -1,0 +1,29 @@
+{
+  "_note": "clients-preferred-name. The name a person asks to be called by (roepnaam). Held on the contact person and on a client that is a person, synced both ways with the Nextcloud contact as the vCard NICKNAME, and used where pipelinq addresses the person. Nothing derives it from the full name: a preferred name is something a person states. The vCard property is NICKNAME; a client that is an organisation carries none.",
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "properties": {
+          "preferredName": {
+            "type": "string",
+            "title": "Preferred name",
+            "description": "The name this person likes to be called, such as Jan for Johannes.",
+            "maxLength": 255
+          }
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "properties": {
+          "preferredName": {
+            "type": "string",
+            "title": "Preferred name",
+            "description": "The name this person likes to be called, such as Jan for Johannes.",
+            "maxLength": 255
+          }
+        }
+      }
+    }
+  }
+}

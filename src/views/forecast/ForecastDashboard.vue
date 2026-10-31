@@ -4,131 +4,165 @@
   -->
 <template>
 	<div class="forecast-dashboard">
-		<div class="forecast-dashboard__header">
-			<h2>{{ t('pipelinq', 'Forecast') }}</h2>
-			<div class="forecast-dashboard__controls">
-				<NcSelect
-					v-model="selectedLevel"
-					:inputLabel="t('pipelinq', 'Level')"
-					:options="levelOptions"
-					label="label"
-					:clearable="false"
-					@update:modelValue="loadSnapshots" />
-				<NcButton variant="secondary" @click="exportCsv">
-					{{ t('pipelinq', 'Export CSV') }}
-				</NcButton>
-			</div>
-		</div>
-
-		<NcNoteCard v-if="atRisk" type="warning" class="forecast-dashboard__atrisk">
-			{{ atRiskMessage }}
-		</NcNoteCard>
-
+		<CnPageHeader
+			:title="t('pipelinq', 'Forecast')"
+			:description="subtitle">
+			<template #extra>
+				<div class="forecast-dashboard__header-actions">
+					<NcButton
+						class="forecast-dashboard__download"
+						data-testid="forecast-download"
+						@click="exportCsv">
+						<template #icon>
+							<Download :size="20" />
+						</template>
+						{{ t('pipelinq', 'Download') }}
+					</NcButton>
+					<CnBuildiqEditButton />
+				</div>
+			</template>
+		</CnPageHeader>
+		<CnSegmentedControl
+			:modelValue="level"
+			:options="levelOptions"
+			:ariaLabel="t('pipelinq', 'Level')"
+			mode="toggle"
+			size="compact"
+			class="forecast-dashboard__levels"
+			@update:modelValue="setLevel" />
 		<NcLoadingIcon v-if="loading" :size="32" />
-
 		<template v-else>
-			<div class="forecast-summary">
-				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{
-						t('pipelinq', 'Quota')
+			<div class="forecast-tiles">
+				<CnDetailCard
+					v-for="tile in tiles"
+					:key="tile.id"
+					class="forecast-tile">
+					<span class="forecast-tile__label">{{ tile.label }}</span>
+					<strong
+						class="forecast-tile__value"
+						:class="{ 'forecast-tile__value--gap': tile.warn }"
+						>{{ tile.value }}</strong
+					>
+					<span v-if="tile.caption" class="forecast-tile__caption">{{
+						tile.caption
 					}}</span>
-					<span class="forecast-summary__value">{{
-						formatMoney(summary.quota)
-					}}</span>
-				</div>
-				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{
-						t('pipelinq', 'Closed Won')
-					}}</span>
-					<span class="forecast-summary__value">{{
-						formatMoney(summary.closedWon)
-					}}</span>
-				</div>
-				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{
-						t('pipelinq', 'Committed')
-					}}</span>
-					<span class="forecast-summary__value">{{
-						formatMoney(summary.commit)
-					}}</span>
-				</div>
-				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{
-						t('pipelinq', 'Gap to close')
-					}}</span>
-					<span class="forecast-summary__value">{{
-						formatMoney(summary.gap)
-					}}</span>
-				</div>
+				</CnDetailCard>
 			</div>
-
-			<div class="forecast-progress" :aria-label="progressLabel">
-				<div class="forecast-progress__bar">
-					<div
-						class="forecast-progress__seg forecast-progress__seg--closed"
-						:style="{ width: pct(summary.closedWon) + '%' }" />
-					<div
-						class="forecast-progress__seg forecast-progress__seg--commit"
-						:style="{ width: pct(summary.commit) + '%' }" />
+			<CnDetailCard :title="quarterTitle" class="forecast-quarter">
+				<template #actions>
+					<NcButton
+						class="cn-button--tonal"
+						variant="secondary"
+						data-testid="forecast-export-csv"
+						@click="exportCsv">
+						<template #icon>
+							<Download :size="16" />
+						</template>
+						{{ t('pipelinq', 'Export CSV') }}
+					</NcButton>
+				</template>
+				<div class="forecast-progress" :aria-label="progressLabel">
+					<div class="forecast-progress__bar">
+						<div
+							class="forecast-progress__seg forecast-progress__seg--closed"
+							:style="{ width: pct(summary.closedWon) + '%' }" />
+						<div
+							class="forecast-progress__seg forecast-progress__seg--commit"
+							:style="{ width: pct(summary.commit) + '%' }" />
+					</div>
+					<span class="forecast-progress__label">{{ progressLabel }}</span>
 				</div>
-				<span class="forecast-progress__label">{{ progressLabel }}</span>
-			</div>
-
-			<table v-if="rows.length" class="forecast-table">
-				<thead>
-					<tr>
-						<th scope="col">{{ t('pipelinq', 'Owner') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Commit') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Best Case') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Pipeline') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Closed Won') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Quota') }}</th>
-						<th scope="col" />
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="row in rows" :key="row.owner_id">
-						<td>{{ row.owner_id }}</td>
-						<td>
+				<NcNoteCard v-if="atRisk" type="warning">
+					{{ atRiskMessage }}
+				</NcNoteCard>
+				<template v-if="rows.length">
+					<CnDataTable
+						class="forecast-table"
+						:columns="quarterColumns"
+						:rows="quarterRows"
+						rowKey="id"
+						rowTitle="text"
+						filterable
+						localHeaders>
+						<template #column-name="{ row }">
+							<span data-testid="forecast-owner">{{ row.name }}</span>
+						</template>
+						<template #column-commit="{ row }">
+							{{ formatMoney(row.commit) }}
 							<span
-								:class="{
-									'forecast-table__overridden': hasOverride(row),
-								}">
-								{{ formatMoney(row.commit) }}
+								v-if="hasOverride(row.source)"
+								class="forecast-table__was"
+								data-testid="forecast-was">
+								{{ t('pipelinq', 'was {amount}', { amount: formatMoney(row.source.original_commit) }) }}
 							</span>
-							<span
-								v-if="hasOverride(row)"
-								class="forecast-table__badge"
-								:title="overrideTitle(row)">
-								▼ {{ t('pipelinq', 'override') }}
-							</span>
-						</td>
-						<td>{{ formatMoney(row.best_case) }}</td>
-						<td>{{ formatMoney(row.pipeline) }}</td>
-						<td>{{ formatMoney(row.closed_won) }}</td>
-						<td>
+						</template>
+						<template #column-best_case="{ row }">
+							{{ formatMoney(row.best_case) }}
+						</template>
+						<template #column-pipeline="{ row }">
+							{{ formatMoney(row.pipeline) }}
+						</template>
+						<template #column-closed_won="{ row }">
+							{{ formatMoney(row.closed_won) }}
+						</template>
+						<template #column-quota="{ row }">
 							{{ row.quota === null ? '—' : formatMoney(row.quota) }}
-						</td>
-						<td>
-							<NcButton variant="tertiary" @click="openOverride(row)">
+						</template>
+						<template #column-override="{ row }">
+							<span
+								v-if="hasOverride(row.source)"
+								class="forecast-table__badge"
+								data-testid="forecast-overridden"
+								:title="overrideTitle(row.source)">
+								{{ t('pipelinq', 'Overridden') }}
+							</span>
+							<NcButton
+								v-else
+								variant="secondary"
+								@click="openOverride(row.source)">
+								<template #icon>
+									<Pencil :size="20" />
+								</template>
 								{{ t('pipelinq', 'Override') }}
 							</NcButton>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-
-			<NcEmptyContent
-				v-else
-				:name="t('pipelinq', 'No snapshots yet')"
-				:description="
-					t(
-						'pipelinq',
-						'Forecast snapshots are generated every Monday. Check back after the next run.',
-					)
-				" />
+						</template>
+					</CnDataTable>
+					<p
+						v-for="row in overriddenRows"
+						:key="'note-' + row.owner_id"
+						class="forecast-table__note"
+						data-testid="forecast-override-note">
+						{{ t('pipelinq', '{name}: the seller gave {original}, {reason}', { name: ownerName(row), original: formatMoney(row.original_commit), reason: row.commit_override_reason }) }}
+					</p>
+					<p
+						v-for="rate in exchangeRates"
+						:key="'rate-' + rate.currency"
+						class="forecast-table__note"
+						data-testid="forecast-rate-line">
+						{{ rateLine(rate) || rateSourceLabel(rate) }}
+						<template v-if="rateLine(rate)">
+							({{ rateSourceLabel(rate) }})
+						</template>
+						<strong v-if="rate.stale" class="forecast-table__stale">
+							{{ t('pipelinq', 'Rate is out of date') }}
+						</strong>
+					</p>
+				</template>
+				<NcEmptyContent
+					v-else
+					:name="t('pipelinq', 'No snapshots yet')"
+					:description="
+						t(
+							'pipelinq',
+							'Forecast snapshots are generated every Monday. Check back after the next run.',
+						)
+					" />
+			</CnDetailCard>
+			<h2 class="forecast-dashboard__section">
+				{{ t('pipelinq', 'Trend and accuracy of the forecast') }}
+			</h2>
+			<ForecastTrend embedded :level="childLevel" />
 		</template>
-
 		<ForecastOverrideModal
 			v-if="overrideTarget"
 			:periodId="periodId"
@@ -143,55 +177,224 @@
 
 <script>
 import {
-	NcButton,
-	NcEmptyContent,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcSelect,
-} from '@nextcloud/vue'
+	CnBuildiqEditButton,
+	CnDataTable,
+	CnDetailCard,
+	CnPageHeader,
+	CnSegmentedControl,
+} from '@conduction/nextcloud-vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import Download from 'vue-material-design-icons/Download.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ForecastOverrideModal from '../../modals/ForecastOverrideModal.vue'
+import ForecastTrend from './ForecastTrend.vue'
 import { formatEur } from '../../services/commercialFormat.js'
 import { csvExportUrl, fetchSnapshots } from '../../services/forecastApi.js'
 import {
 	attainmentPercent,
 	gapToQuota,
 	isAtRisk,
+	latestPerOwner,
 	projectedAttainment,
 } from '../../services/forecastMath.js'
+import { rateLine, rateSourceLabel } from '../../services/leadCurrency.js'
+import { fetchUserDisplayName } from '../../services/userDisplayName.js'
 
 export default {
 	name: 'ForecastDashboard',
 	components: {
+		CnBuildiqEditButton,
+		CnDataTable,
+		CnDetailCard,
+		CnPageHeader,
+		CnSegmentedControl,
+		Download,
+		ForecastTrend,
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
-		NcSelect,
+		Pencil,
 		ForecastOverrideModal,
 	},
 
 	data() {
 		return {
 			loading: false,
-			selectedLevel: { id: 'team', label: t('pipelinq', 'Team') },
+			level: 'team',
 			rows: [],
+			names: {},
 			overrideTarget: null,
 			daysRemaining: 30,
 		}
 	},
 
 	computed: {
-		levelOptions() {
+		/**
+		 * The quarter table's columns: every figure sorts and filters on a
+		 * range, the owner on contains (PqForecast).
+		 *
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} The columns.
+		 */
+		quarterColumns() {
+			const figure = (key, label) => ({ key, label, type: 'number', sortable: true, class: 'forecast-table__num' })
 			return [
-				{ id: 'company', label: t('pipelinq', 'Company') },
-				{ id: 'division', label: t('pipelinq', 'Division') },
-				{ id: 'team', label: t('pipelinq', 'Team') },
-				{ id: 'rep', label: t('pipelinq', 'Rep') },
+				{ key: 'name', label: t('pipelinq', 'Owner'), sortable: true },
+				figure('commit', t('pipelinq', 'Commit')),
+				figure('best_case', t('pipelinq', 'Best Case')),
+				figure('pipeline', t('pipelinq', 'Pipeline')),
+				figure('closed_won', t('pipelinq', 'Closed Won')),
+				figure('quota', t('pipelinq', 'Quota')),
+				{ key: 'override', label: t('pipelinq', 'Override'), sortable: false, filterable: false },
 			]
 		},
 
-		level() {
-			return this.selectedLevel?.id || 'team'
+		/**
+		 * The quarter table's rows; the table sorts and filters them from its heads.
+		 *
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} One row per owner.
+		 */
+		quarterRows() {
+			return this.rows.map((row) => ({
+				id: row.owner_id,
+				name: this.ownerName(row),
+				commit: row.commit,
+				best_case: row.best_case,
+				pipeline: row.pipeline,
+				closed_won: row.closed_won,
+				quota: row.quota,
+				source: row,
+			}))
+		},
+
+		levelOptions() {
+			return [
+				{ value: 'rep', label: t('pipelinq', 'Seller') },
+				{ value: 'team', label: t('pipelinq', 'Team') },
+				{ value: 'division', label: t('pipelinq', 'Division') },
+				{ value: 'company', label: t('pipelinq', 'Company') },
+			]
+		},
+
+		/**
+		 * The quarter the forecast covers, as the card title.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		quarterTitle() {
+			const now = new Date()
+			return t('pipelinq', 'Quarter {quarter} of {year}', {
+				quarter: Math.floor(now.getMonth() / 3) + 1,
+				year: now.getFullYear(),
+			})
+		},
+
+		/**
+		 * The line under the title: the quarter and the level shown.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		subtitle() {
+			const option = this.levelOptions.find((o) => o.value === this.level)
+			const level = t('pipelinq', 'level {level}', { level: option ? option.label.toLowerCase() : this.level })
+			const snapshot = this.snapshotDate
+				? t('pipelinq', 'snapshot of {date}', { date: this.snapshotDate })
+				: ''
+			return [this.quarterTitle, snapshot, level].filter(Boolean).join(' · ')
+		},
+
+		/**
+		 * The day the shown snapshots were taken, written out ("maandag 5 oktober").
+		 *
+		 * @return {string} The date, or '' without snapshots.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		snapshotDate() {
+			const dates = this.rows.map((row) => String(row.as_of_date || '')).filter(Boolean).sort()
+			if (dates.length === 0) {
+				return ''
+			}
+			const date = new Date(dates[dates.length - 1] + 'T12:00:00')
+			if (Number.isNaN(date.getTime())) {
+				return ''
+			}
+			return new Intl.DateTimeFormat(undefined, { weekday: 'long', day: 'numeric', month: 'long' }).format(date)
+		},
+
+		/**
+		 * The rows whose commit a lead overrode, for the notes under the table.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		overriddenRows() {
+			return this.rows.filter((row) => this.hasOverride(row))
+		},
+
+		/**
+		 * The rates the shown snapshots converted foreign deals at, one per currency.
+		 *
+		 * @return {Array<object>} Rates with currency and reporting currency, sorted by code.
+		 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-a-stale-rate-is-shown-as-stale-req-dxr-002
+		 */
+		exchangeRates() {
+			const byCode = {}
+			for (const row of this.rows) {
+				for (const [currency, rate] of Object.entries(row.exchange_rates || {})) {
+					byCode[currency] = { ...rate, currency, reportingCurrency: row.currency }
+				}
+			}
+			return Object.values(byCode).sort((a, b) => a.currency.localeCompare(b.currency))
+		},
+
+		/**
+		 * The four KPI tiles: quota, won, committed and what is still to get.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		tiles() {
+			const gapPercent =
+				this.summary.quota > 0
+					? 100
+						- attainmentPercent(
+							this.summary.projected,
+							this.summary.quota,
+						)
+					: 0
+			return [
+				{
+					id: 'quota',
+					label: t('pipelinq', 'Quota'),
+					value: this.formatMoney(this.summary.quota),
+				},
+				{
+					id: 'won',
+					label: t('pipelinq', 'Won'),
+					value: this.formatMoney(this.summary.closedWon),
+				},
+				{
+					id: 'commit',
+					label: t('pipelinq', 'Committed'),
+					value: this.formatMoney(this.summary.commit),
+				},
+				{
+					id: 'gap',
+					label: t('pipelinq', 'Still to get'),
+					value: this.formatMoney(this.summary.gap),
+					warn: this.summary.gap > 0,
+					caption:
+						gapPercent > 0
+							? t('pipelinq', '{percent}% below quota', {
+									percent: gapPercent,
+								})
+							: '',
+				},
+			]
 		},
 
 		childLevel() {
@@ -257,6 +460,9 @@ export default {
 	},
 
 	methods: {
+		rateLine,
+		rateSourceLabel,
+
 		sum(key) {
 			return this.rows.reduce((acc, row) => acc + Number(row[key] || 0), 0)
 		},
@@ -267,6 +473,31 @@ export default {
 
 		hasOverride(row) {
 			return !!row.commit_override_reason
+		},
+
+		/**
+		 * The owner's display name once it is known, else the user id.
+		 *
+		 * @param {object} row A snapshot row.
+		 * @return {string} The name.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		ownerName(row) {
+			return this.names[row.owner_id] || row.owner_id
+		},
+
+		/**
+		 * Look up the display names of the rows' owners.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		async loadNames() {
+			const ids = [...new Set(this.rows.map((row) => row.owner_id).filter(Boolean))]
+			const names = await Promise.all(ids.map((id) => fetchUserDisplayName(id).catch(() => id)))
+			const found = {}
+			ids.forEach((id, index) => { found[id] = names[index] || id })
+			this.names = found
 		},
 
 		overrideTitle(row) {
@@ -298,12 +529,25 @@ export default {
 					periodId: this.periodId,
 					level: this.childLevel,
 				})
-				this.rows = data.snapshots || []
+				this.rows = latestPerOwner(data.snapshots || [])
+				await this.loadNames()
 			} catch {
 				this.rows = []
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Show another level and read its snapshots.
+		 *
+		 * @param {string} level The level chosen.
+		 * @spec exclude forecast snapshots have no owning requirement, see
+		 *   ForecastSettings::load for the same gap
+		 */
+		setLevel(level) {
+			this.level = level
+			this.loadSnapshots()
 		},
 
 		openOverride(row) {
@@ -327,49 +571,61 @@ export default {
 
 <style scoped>
 .forecast-dashboard {
-	padding: 20px;
-	max-width: 1200px;
-	margin: 0 auto;
+	/* The title at 96, as the Dq page headers (28px under the content top). */
+	padding: 28px 28px 24px;
 }
 
-.forecast-dashboard__header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 12px;
-}
-
-.forecast-dashboard__controls {
-	display: flex;
-	gap: 12px;
-	align-items: flex-end;
-}
-
-.forecast-dashboard__atrisk {
-	margin: 16px 0;
-}
-
-.forecast-summary {
-	display: flex;
-	gap: 24px;
-	flex-wrap: wrap;
+.forecast-tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 16px;
 	margin: 20px 0;
 }
 
-.forecast-summary__metric {
-	display: flex;
-	flex-direction: column;
-}
-
-.forecast-summary__label {
+.forecast-tile__label {
+	display: block;
 	color: var(--color-text-maxcontrast);
-	font-size: 0.85em;
+	font-size: 14px;
 }
 
-.forecast-summary__value {
-	font-size: 1.4em;
-	font-weight: 600;
+.forecast-tile__value {
+	display: block;
+	font-size: 28px;
+	font-weight: 700;
+	margin-top: 4px;
+}
+
+.forecast-tile__value--gap {
+	color: var(--color-text-error, var(--color-error));
+}
+
+.forecast-tile__caption {
+	display: block;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+	margin-top: 4px;
+}
+
+.forecast-dashboard__section {
+	font-size: 20px;
+	font-weight: 700;
+	margin: 32px 0 16px;
+}
+
+.forecast-dashboard__levels {
+	margin-top: 8px;
+}
+
+/* PqForecast: Downloaden at the boards' 40px beside the buildiq square. */
+.forecast-dashboard__header-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 10px;
+}
+
+.forecast-dashboard__download {
+	min-height: var(--cn-board-control-height, 40px);
 }
 
 .forecast-progress {
@@ -407,27 +663,41 @@ export default {
 }
 
 .forecast-table {
-	width: 100%;
-	border-collapse: collapse;
 	margin-top: 12px;
 }
 
-.forecast-table th,
-.forecast-table td {
-	text-align: start;
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--color-border);
+.forecast-table :deep(.forecast-table__num) {
+	text-align: end;
+	font-variant-numeric: tabular-nums;
 }
 
-.forecast-table__overridden {
-	color: var(--color-error);
-	font-weight: 600;
+/* An overridden commit keeps the seller's figure beside it, small and muted,
+   and the row says so with a pill where the Override button stood (PqForecast). */
+.forecast-table__was {
+	margin-inline-start: 4px;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
 }
 
 .forecast-table__badge {
-	margin-inline-start: 6px;
-	font-size: 0.8em;
-	color: var(--color-error);
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 10px;
+	border-radius: var(--border-radius-pill, 999px);
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text, var(--color-primary-element));
+	font-size: 12px;
+	font-weight: 600;
 	cursor: help;
+}
+
+.forecast-table__note {
+	margin: 12px 0 0;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+}
+
+.forecast-table__stale {
+	color: var(--color-warning-text);
 }
 </style>

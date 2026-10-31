@@ -17,8 +17,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-009
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-009
  */
 
 declare(strict_types=1);
@@ -31,6 +31,7 @@ use OCA\Pipelinq\Service\LoyaltyReportingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -42,7 +43,7 @@ use OCP\IUserSession;
  * who are not Nextcloud admins, the methods bypass the admin requirement and
  * are gated by the userSession; constructor takes no action.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008
  */
 class LoyaltyReportingController extends Controller {
 	/**
@@ -68,13 +69,21 @@ class LoyaltyReportingController extends Controller {
 	 * @param string $programmeId The programme UUID.
 	 * @param ?string $from ISO-8601 date lower bound.
 	 * @param ?string $to ISO-8601 date upper bound.
+	 * @param ?int $days Without `from`: the last this many days, ending today.
+	 * @param string $format `csv` downloads the KPIs as a CSV file.
 	 *
-	 * @return JSONResponse
+	 * @return JSONResponse|DataDownloadResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
 	 */
 	#[NoAdminRequired]
-	public function kpis(string $programmeId, ?string $from = null, ?string $to = null): JSONResponse {
+	public function kpis(
+		string $programmeId,
+		?string $from = null,
+		?string $to = null,
+		?int $days = null,
+		string $format = 'json',
+	): JSONResponse|DataDownloadResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
@@ -86,9 +95,20 @@ class LoyaltyReportingController extends Controller {
 			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
-		return new JSONResponse(
-			$this->reportingService->getKpis(programmeId: $programmeId, from: $from, to: $to)
-		);
+		if (($from === null || $from === '') && $days !== null && $days > 0) {
+			['from' => $from, 'to' => $to] = $this->reportingService->lastDaysWindow(days: $days);
+		}
+
+		$kpis = $this->reportingService->getKpis(programmeId: $programmeId, from: $from, to: $to);
+		if (strtolower($format) === 'csv') {
+			return new DataDownloadResponse(
+				data: $this->reportingService->kpisToCsv(kpis: $kpis),
+				filename: 'loyalty-kpis.csv',
+				contentType: 'text/csv; charset=UTF-8'
+			);
+		}
+
+		return new JSONResponse($kpis);
 	}//end kpis()
 
 	/**
@@ -98,7 +118,7 @@ class LoyaltyReportingController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-009-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-009-01
 	 */
 	#[NoAdminRequired]
 	public function liability(string $programmeId): JSONResponse {
@@ -120,8 +140,9 @@ class LoyaltyReportingController extends Controller {
 	 * GET tier distribution.
 	 *
 	 * @param string $programmeId The programme UUID.
+	 * @param string $format `csv` downloads the tiers as a CSV file.
 	 *
-	 * @return JSONResponse
+	 * @return JSONResponse|DataDownloadResponse
 	 *
 	 * @spec exclude Same reason as expiryForecast() below: this app has no
 	 *  canonical loyalty spec. The requirements lived only in a change
@@ -131,7 +152,7 @@ class LoyaltyReportingController extends Controller {
 	 *  `ls openspec/specs/ | grep -i loyal` returns nothing.
 	 */
 	#[NoAdminRequired]
-	public function tierDistribution(string $programmeId): JSONResponse {
+	public function tierDistribution(string $programmeId, string $format = 'json'): JSONResponse|DataDownloadResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
@@ -143,7 +164,16 @@ class LoyaltyReportingController extends Controller {
 			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
-		return new JSONResponse(['tiers' => $this->reportingService->getTierReport(programmeId: $programmeId)]);
+		$tiers = $this->reportingService->getTierReport(programmeId: $programmeId);
+		if (strtolower($format) === 'csv') {
+			return new DataDownloadResponse(
+				data: $this->reportingService->tiersToCsv(tiers: $tiers),
+				filename: 'loyalty-tiers.csv',
+				contentType: 'text/csv; charset=UTF-8'
+			);
+		}
+
+		return new JSONResponse(['tiers' => $tiers]);
 	}//end tierDistribution()
 
 	/**
@@ -156,9 +186,9 @@ class LoyaltyReportingController extends Controller {
 	 *
 	 * @spec exclude This app has NO canonical loyalty spec to point at. The
 	 *  loyalty requirements only ever existed in a change directory, which was
-	 *  archived to openspec/changes/archive/2026-06-14-loyalty-program — and
+	 *  archived to openspec/specs/loyalty-program/spec.md — and
 	 *  the four @spec tags elsewhere in this file still name the pre-archive
-	 *  path openspec/changes/loyalty-program/specs.md, which no longer exists.
+	 *  path openspec/specs/loyalty-program/spec.md, which no longer exists.
 	 *  Neither expiryForecast nor tierDistribution appears in the archived
 	 *  requirements either, so there is no anchor that would resolve. Writing
 	 *  one here would be authoring the spec this tag is supposed to check

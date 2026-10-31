@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SemanticHandoffService;
@@ -38,6 +40,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -87,6 +90,12 @@ class SemanticHandoffController extends Controller {
 	private const HANDOFF_SEND_TO_INVOICING = 'send-to-invoicing';
 
 	/**
+	 * The statuses of a running contract, which may be sent to invoicing: an
+	 * expiring contract still runs until its end date (PqContract).
+	 */
+	private const INVOICEABLE_STATUSES = ['active', 'expiring'];
+
+	/**
 	 * Built-in slug of the unified ticket schema (app-config overridable).
 	 */
 	private const TICKET_SCHEMA_SLUG = 'ticket';
@@ -102,6 +111,7 @@ class SemanticHandoffController extends Controller {
 	 * @param IUserSession $userSession User session.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner authorization.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IL10N $l10n Writes the answer that tells the customer the case number.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -112,6 +122,7 @@ class SemanticHandoffController extends Controller {
 		private IUserSession $userSession,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private LoggerInterface $logger,
+		private IL10N $l10n,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -154,6 +165,19 @@ class SemanticHandoffController extends Controller {
 				'status' => $status,
 				'canConvert' => ($available === true && $status === 'in_progress'),
 				'caseReference' => (string)($request['caseReference'] ?? ''),
+				'caseTypeSource' => [
+					'register' => $this->appConfig->getValueString(
+						app: Application::APP_ID,
+						key: 'handoff_case_type_register',
+						default: 'dossiq'
+					),
+					'schema' => $this->appConfig->getValueString(
+						app: Application::APP_ID,
+						key: 'handoff_case_type_schema',
+						default: 'caseType'
+					),
+				],
+				'portalName' => $this->appConfig->getValueString(app: Application::APP_ID, key: 'portal_name', default: ''),
 			]
 		);
 	}//end requestAvailability()
@@ -161,12 +185,19 @@ class SemanticHandoffController extends Controller {
 	/**
 	 * Convert an in-progress request ticket into a case via OR's handoff engine.
 	 *
+	 * Body params: `caseType` (optional case-type UUID, carried to the case
+	 * through the handoff mapping), `keepOpen` (true keeps the request's
+	 * status; by default it becomes `converted`) and `informCustomer` (true
+	 * answers the customer on the portal with the case number and, once
+	 * known, who handles it).
+	 *
 	 * @param string $id Request-ticket UUID.
 	 *
 	 * @return JSONResponse The conversion outcome.
 	 *
 	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
 	 */
 	#[NoAdminRequired]
 	public function convertRequestToCase(string $id = ''): JSONResponse {
@@ -199,6 +230,13 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'not-available'], Http::STATUS_CONFLICT);
 		}
 
+		$caseTypeError = $this->recordRequestedCaseType(id: $id, request: $request);
+		if ($caseTypeError !== null) {
+			return $caseTypeError;
+		}
+
+		$keepOpen = filter_var($this->request->getParam('keepOpen', false), FILTER_VALIDATE_BOOLEAN);
+
 		$result = $this->handoffService->handoff(
 			register: $this->registerSlug(),
 			schema: $this->ticketSchema(),
@@ -213,11 +251,60 @@ class SemanticHandoffController extends Controller {
 			);
 		}
 
+		return $this->closeConvertedRequest(id: $id, request: $request, result: $result, keepOpen: $keepOpen);
+	}//end convertRequestToCase()
+
+	/**
+	 * Store the case type the person chose on the request, where the handoff
+	 * mapping reads it (`caseType` <- `requestedCaseType`).
+	 *
+	 * @param string               $id      Request-ticket UUID.
+	 * @param array<string, mixed> $request The request, updated in place.
+	 *
+	 * @return JSONResponse|null An error response, or null when there is none.
+	 */
+	private function recordRequestedCaseType(string $id, array &$request): ?JSONResponse {
+		$caseType = trim((string)$this->request->getParam('caseType', ''));
+		if ($caseType === '') {
+			return null;
+		}
+
+		if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $caseType) !== 1) {
+			return new JSONResponse(['status' => 'invalid-case-type'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$request['ticketType'] = TicketService::TYPE_REQUEST;
+		$request['requestedCaseType'] = $caseType;
+		if ($this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request) === false) {
+			return new JSONResponse(['status' => 'handoff-failed', 'reason' => 'case-type-not-saved'], Http::STATUS_BAD_GATEWAY);
+		}
+
+		return null;
+	}//end recordRequestedCaseType()
+
+	/**
+	 * Write the case reference back on a converted request and answer.
+	 *
+	 * @param string               $id       Request-ticket UUID.
+	 * @param array<string, mixed> $request  The request.
+	 * @param array<string, mixed> $result   The handoff result.
+	 * @param bool                 $keepOpen Whether the request stays open.
+	 *
+	 * @return JSONResponse The conversion outcome.
+	 */
+	private function closeConvertedRequest(string $id, array $request, array $result, bool $keepOpen): JSONResponse {
 		// Keep the discriminator pinned on the round-tripped payload so the
 		// write can never silently untype the ticket.
 		$request['ticketType'] = TicketService::TYPE_REQUEST;
-		$request['status'] = 'converted';
+		if ($keepOpen === false) {
+			$request['status'] = 'converted';
+		}
+
 		$request['caseReference'] = (string)$result['targetUuid'];
+		if (filter_var($this->request->getParam('informCustomer', false), FILTER_VALIDATE_BOOLEAN) === true) {
+			$request = $this->withCaseAnswer(request: $request, caseUuid: (string)$result['targetUuid']);
+		}
+
 		$saved = $this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request);
 		if ($saved === false) {
 			// The case was created + linked by the engine; only the local
@@ -235,7 +322,7 @@ class SemanticHandoffController extends Controller {
 				'correlationId' => (string)$result['correlationId'],
 			]
 		);
-	}//end convertRequestToCase()
+	}//end closeConvertedRequest()
 
 	/**
 	 * Whether the "Send to invoicing" action is available for a contract.
@@ -269,7 +356,7 @@ class SemanticHandoffController extends Controller {
 			[
 				'available' => $available,
 				'status' => $status,
-				'canSend' => ($available === true && $status === 'active'),
+				'canSend' => ($available === true && in_array($status, self::INVOICEABLE_STATUSES, true) === true),
 			]
 		);
 	}//end contractAvailability()
@@ -301,9 +388,9 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
-		if ((string)($contract['status'] ?? '') !== 'active') {
+		if (in_array((string)($contract['status'] ?? ''), self::INVOICEABLE_STATUSES, true) === false) {
 			return new JSONResponse(
-				['status' => 'invalid-status', 'message' => 'Send to invoicing is only available on an active contract.'],
+				['status' => 'invalid-status', 'message' => 'Send to invoicing is only available on a running contract (active or expiring).'],
 				Http::STATUS_CONFLICT
 			);
 		}
@@ -326,7 +413,23 @@ class SemanticHandoffController extends Controller {
 			);
 		}
 
+		$sentAt = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 		$contract['invoiceReference'] = (string)$result['targetUuid'];
+		$contract['invoicedAt'] = $sentAt;
+		$contract['invoicedBy'] = $user->getUID();
+		// Every send is kept, so this year's invoicing can be read back.
+		$history = $contract['invoiceHistory'] ?? [];
+		if (is_array($history) === false) {
+			$history = [];
+		}
+
+		$history[] = [
+			'reference' => (string)$result['targetUuid'],
+			'sentAt' => $sentAt,
+			'sentBy' => $user->getUID(),
+			'amount' => (float)($contract['valuePerInterval'] ?? $contract['value'] ?? 0),
+		];
+		$contract['invoiceHistory'] = array_values($history);
 		$this->saveObject(
 			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
 			id: $id,
@@ -429,6 +532,71 @@ class SemanticHandoffController extends Controller {
 
 		return $this->toArray(value: $entity);
 	}//end loadObject()
+
+	/**
+	 * The request with an answer to the customer that names the new case:
+	 * its number and, when the case has one, its handler. The answer goes
+	 * where every answer goes (`customerMessage`, appended to
+	 * `portalAnswers`), so the portal shows it as it shows an answer.
+	 *
+	 * @param array<string, mixed> $request  The request ticket.
+	 * @param string               $caseUuid The case the handoff created.
+	 *
+	 * @return array<string, mixed> The request with the answer.
+	 *
+	 * @spec openspec/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
+	 */
+	private function withCaseAnswer(array $request, string $caseUuid): array {
+		$case    = ($this->loadAnyObject(id: $caseUuid) ?? []);
+		$number  = (string)($case['identifier'] ?? ($case['caseNumber'] ?? ($case['reference'] ?? '')));
+		$handler = (string)($case['assigneeName'] ?? ($case['handlerName'] ?? ''));
+
+		$message = $this->l10n->t('Your request is now a case. You can follow it on your personal page.');
+		if ($number !== '') {
+			$message = $this->l10n->t('Your request is now case %1$s. You can follow it on your personal page.', [$number]);
+		}
+
+		if ($handler !== '') {
+			$message .= ' ' . $this->l10n->t('%1$s handles the case.', [$handler]);
+		}
+
+		$answers = $request['portalAnswers'] ?? [];
+		if (is_array($answers) === false) {
+			$answers = [];
+		}
+
+		$answers[] = ['message' => $message, 'createdAt' => gmdate('Y-m-d\TH:i:s\Z')];
+		$request['customerMessage'] = $message;
+		$request['portalAnswers']   = array_values($answers);
+		return $request;
+	}//end withCaseAnswer()
+
+	/**
+	 * An object by its UUID in whatever register holds it (the case the
+	 * handoff made lives in the case app's register), or null.
+	 *
+	 * @param string $id The UUID.
+	 *
+	 * @return array<string, mixed>|null The object.
+	 */
+	private function loadAnyObject(string $id): ?array {
+		$objectService = $this->objectService();
+		if ($objectService === null || $id === '') {
+			return null;
+		}
+
+		try {
+			$entity = $objectService->find(id: $id);
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $entity);
+	}//end loadAnyObject()
 
 	/**
 	 * Save an object payload back to the pipelinq register.

@@ -5,13 +5,14 @@
         "slug": "ticket",
         "title": "Ticket",
         "icon": "TicketOutline",
-        "version": "1.4.0",
+        "version": "1.7.0",
         "summary": "Unified inbound customer matter — request, complaint or contactmoment",
         "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
         "x-schema-org": "schema:Thing",
         "x-schema-org-by-type": {
           "request": "schema:Demand",
           "complaint": "schema:Message",
+          "melding": "schema:Message",
           "contactmoment": "schema:CommunicateAction"
         },
         "linkedTypes": [
@@ -38,6 +39,11 @@
                   "condition": "ticketType == 'complaint'",
                   "retention": "P100Y",
                   "reason": "Complaint-type tickets carried no retention policy before the ticket merge; exempted here so the merge does not start auto-disposing them. Klacht retention is a separate DPO decision."
+                },
+                {
+                  "condition": "ticketType == 'melding'",
+                  "retention": "P100Y",
+                  "reason": "Meldingen follow requests and complaints: no retention term until the DPO sets one, so the contactmoment default below never disposes them."
                 },
                 {
                   "condition": "outcome == 'handled'",
@@ -152,6 +158,9 @@
               },
               "requester": {
                 "semanticRef": "client"
+              },
+              "caseType": {
+                "from": "requestedCaseType"
               }
             }
           }
@@ -187,8 +196,14 @@
           "ticketType": {
             "type": "string",
             "title": "Ticket Type",
-            "description": "Discriminator: request (demand/case), complaint (klacht) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice.",
-            "enum": ["request", "complaint", "interaction"],
+            "description": "Discriminator: request (demand/case), complaint (klacht), melding (a report about the public space, such as loose paving or a broken street light) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice.",
+            "enum": ["request", "complaint", "melding", "interaction"],
+            "x-enum-labels": {
+              "request": "Request",
+              "complaint": "Complaint",
+              "melding": "Public-space report",
+              "interaction": "Contact moment"
+            },
             "facetable": true
           },
           "title": {
@@ -197,6 +212,13 @@
             "description": "Ticket headline. For a contactmoment this is the interaction subject.",
             "maxLength": 255,
             "minLength": 1
+          },
+          "reference": {
+            "type": "string",
+            "title": "Reference",
+            "description": "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.",
+            "maxLength": 32,
+            "facetable": false
           },
           "description": {
             "type": "string",
@@ -229,6 +251,16 @@
             "title": "Status",
             "description": "Unified lifecycle status across all ticket types.",
             "enum": ["new", "in_progress", "awaiting_customer", "resolved", "completed", "rejected", "converted", "closed"],
+            "x-enum-labels": {
+              "new": "New",
+              "in_progress": "In progress",
+              "awaiting_customer": "Waiting for customer",
+              "resolved": "Resolved",
+              "completed": "Completed",
+              "rejected": "Rejected",
+              "converted": "Converted",
+              "closed": "Closed"
+            },
             "default": "new",
             "facetable": true
           },
@@ -237,6 +269,12 @@
             "title": "Priority",
             "description": "Ticket priority (request/complaint).",
             "enum": ["low", "normal", "high", "urgent"],
+            "x-enum-labels": {
+              "low": "Low",
+              "normal": "Normal",
+              "high": "High",
+              "urgent": "Urgent"
+            },
             "default": "normal",
             "facetable": true
           },
@@ -303,6 +341,11 @@
             "description": "Ordinal of the current pipeline stage (request only).",
             "visible": false
           },
+          "requestedCaseType": {
+            "type": "string",
+            "title": "Requested case type",
+            "description": "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType."
+          },
           "caseReference": {
             "type": "string",
             "title": "Case Reference",
@@ -323,7 +366,7 @@
           "slaDeadline": {
             "type": "string",
             "title": "SLA Deadline",
-            "description": "Service-level resolution deadline (complaint only).",
+            "description": "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.",
             "format": "date-time"
           },
           "resolvedAt": {

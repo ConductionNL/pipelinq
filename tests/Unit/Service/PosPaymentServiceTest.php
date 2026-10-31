@@ -17,8 +17,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.1
- * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.2
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -259,7 +259,7 @@ class PaymentFakeWebhookService {
  * authorization, webhook idempotency, and the failed-init no-mutate path.
  * Adapter-level wire formats live in the per-adapter tests.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.1
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
  */
 class PosPaymentServiceTest extends TestCase {
 	/**
@@ -396,6 +396,44 @@ class PosPaymentServiceTest extends TestCase {
 	}//end testListProvidersReturnsFourMaskedProviders()
 
 	/**
+	 * A cashier's methods list: only active providers, their configured
+	 * methods else the defaults, and names only, no config or secret.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+	 */
+	public function testListPaymentMethodsNamesTheMethodsOfActiveProvidersOnly(): void {
+		$this->configStore['payment_provider.mollie.isActive'] = 'true';
+		$this->configStore['payment_provider.mollie.webhookSecret'] = 'ENC:whsec';
+		$this->configStore['payment_provider.ccv.isActive'] = '1';
+		$this->configStore['payment_provider.ccv.config'] = json_encode(['methods' => ['card', '', 42, 'maestro']]);
+		$this->configStore['payment_provider.stripe.isActive'] = 'false';
+
+		$methods = $this->buildService()->listPaymentMethods();
+
+		$this->assertSame(
+			expected: [
+				['provider' => 'mollie', 'providerLabel' => 'Mollie', 'type' => 'online', 'method' => 'ideal'],
+				['provider' => 'mollie', 'providerLabel' => 'Mollie', 'type' => 'online', 'method' => 'bancontact'],
+				['provider' => 'mollie', 'providerLabel' => 'Mollie', 'type' => 'online', 'method' => 'creditcard'],
+				['provider' => 'ccv', 'providerLabel' => 'CCV', 'type' => 'terminal', 'method' => 'card'],
+				['provider' => 'ccv', 'providerLabel' => 'CCV', 'type' => 'terminal', 'method' => 'maestro'],
+			],
+			actual: $methods
+		);
+	}//end testListPaymentMethodsNamesTheMethodsOfActiveProvidersOnly()
+
+	/**
+	 * No active provider: no provider methods.
+	 *
+	 * @return void
+	 */
+	public function testListPaymentMethodsIsEmptyWithoutActiveProviders(): void {
+		$this->assertSame(expected: [], actual: $this->buildService()->listPaymentMethods());
+	}//end testListPaymentMethodsIsEmptyWithoutActiveProviders()
+
+	/**
 	 * The PSP key is not stored, even when a client insists on sending one.
 	 *
 	 * This test used to assert the OPPOSITE — that `apiKey` was encrypted to
@@ -482,6 +520,23 @@ class PosPaymentServiceTest extends TestCase {
 		$this->expectException(OCSForbiddenException::class);
 		$service->refundPayment(transactionId: 'tx-1', reason: 'why', userId: 'someuser');
 	}//end testRefundRequiresManager()
+
+	/**
+	 * A reversal without a reason is refused before the provider is asked.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason
+	 */
+	public function testRefundRequiresAReason(): void {
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$object->expects($this->never())->method('find');
+		$service = $this->buildService(object: $object, opts: ['isManager' => true]);
+
+		$this->expectException(exception: OCSBadRequestException::class);
+		$this->expectExceptionMessage(message: 'A reason is required to reverse a payment');
+		$service->refundPayment(transactionId: 'tx-1', reason: '  ', userId: 'manager');
+	}//end testRefundRequiresAReason()
 
 	public function testRefundRejectsUnsettledTransaction(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);

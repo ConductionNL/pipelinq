@@ -2,11 +2,22 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <template>
-	<div class="pipeline-board" data-walkthrough-id="pipeline-board">
+	<div class="pipeline-board" :class="lookClass" data-walkthrough-id="pipeline-board">
 		<CnPageHeader
 			:title="t('pipelinq', 'Pipeline')"
 			:description="headerCountLine">
 			<template #extra>
+				<NcButton
+					variant="secondary"
+					:disabled="filteredItems.length === 0"
+					data-testid="pipeline-download"
+					@click="downloadLeads">
+					<template #icon>
+						<Download :size="18" />
+					</template>
+					{{ t('pipelinq', 'Download') }}
+				</NcButton>
+				<CnBuildiqEditButton />
 				<NcButton
 					variant="primary"
 					data-testid="pipeline-new-lead"
@@ -22,13 +33,132 @@
 			v-if="showLeadCreate"
 			@close="showLeadCreate = false"
 			@created="onLeadCreated" />
+		<!-- Board look (PqPipeline): row 1 the chips, Filter and the view
+		     switch; row 2 the pipeline, the search, the pipeline's settings
+		     and the column choice; row 3 the hint and the active filters. -->
+		<CnActionsBar
+			v-if="isBoard"
+			layout="board"
+			class="pipeline-board__toolbar"
+			data-testid="pipeline-toolbar"
+			:viewMode="viewMode === 'list' ? 'table' : 'board'"
+			:availableViewModes="['table', 'board']"
+			:viewSwitch="['table', 'cards', 'board', 'map']"
+			:viewModeLinks="viewModeLinks"
+			:disabledViewModes="['map']"
+			:activeFilterChips="activeFilterChips"
+			:showAdd="false"
+			:showActionsMenu="false"
+			:showCount="false"
+			:showBuildiqButton="false"
+			:selectable="false"
+			:showMassImport="false"
+			:showMassExport="false"
+			:showMassCopy="false"
+			:showMassDelete="false"
+			@viewModeChange="(mode) => (viewMode = mode === 'table' ? 'list' : 'kanban')"
+			@removeFilter="removeActiveFilter"
+			@clearFilters="clearActiveFilters">
+			<template #filters>
+				<CnQuickFilterBar
+					class="pipeline-board__chips"
+					:tabs="chipTabs"
+					:counts="chipCounts"
+					:activeIndex="chipIndex"
+					@update:activeIndex="
+						(value) => (chipIndex = value === null ? 0 : value)
+					" />
+			</template>
+			<template #filter-menu>
+				<NcActions
+					class="cn-actions-bar__filter-menu"
+					:class="{ 'cn-actions-bar__filter-menu--counted': activeFilterChips.length > 0 }"
+					:style="activeFilterChips.length > 0 ? { '--cn-filter-menu-count': `&quot;${activeFilterChips.length}&quot;` } : null"
+					:aria-label="filterMenuLabel"
+					variant="secondary"
+					:forceMenu="true"
+					:menuName="t('pipelinq', 'Filter')"
+					data-testid="pipeline-filter-menu">
+					<template #icon>
+						<Tune :size="16" />
+					</template>
+					<template v-if="hasMultipleSchemas">
+						<NcActionCaption :name="t('pipelinq', 'Type')" />
+						<NcActionButton
+							v-for="option in showFilterOptions"
+							:key="option.id"
+							type="radio"
+							:modelValue="(showFilter?.id || showFilter) === option.id"
+							@click="showFilter = option.id">
+							{{ option.label }}
+						</NcActionButton>
+					</template>
+					<NcActionCaption :name="t('pipelinq', 'Order')" />
+					<NcActionCheckbox
+						:modelValue="scoreOrder"
+						@update:modelValue="(value) => (scoreOrder = value)">
+						{{ t('pipelinq', 'Highest score first') }}
+					</NcActionCheckbox>
+				</NcActions>
+			</template>
+			<template #after-search>
+				<label class="cn-index-page__board-control" data-testid="pipeline-select">
+					<span class="cn-index-page__board-control-label">{{ t('pipelinq', 'Pipeline:') }}</span>
+					<select
+						class="cn-index-page__board-select cn-index-page__board-select--strong"
+						:value="selectedPipelineId"
+						@change="selectPipeline($event.target.value)">
+						<option
+							v-for="option in pipelineSelectOptions"
+							:key="option.value"
+							:value="option.value">
+							{{ option.label }}
+						</option>
+					</select>
+				</label>
+				<div class="cn-actions-bar__search pipeline-board__search">
+					<Magnify :size="18" class="cn-actions-bar__search-icon" />
+					<input
+						type="search"
+						class="cn-actions-bar__search-input"
+						:placeholder="t('pipelinq', 'Search the pipeline')"
+						:aria-label="t('pipelinq', 'Search the pipeline')"
+						:value="searchQuery"
+						@input="searchQuery = $event.target.value">
+				</div>
+				<button
+					type="button"
+					class="pipeline-board__settings-link"
+					data-testid="pipeline-settings-link"
+					:disabled="!selectedPipeline"
+					@click="showPipelineForm = true">
+					<Cog :size="16" />
+					{{ t('pipelinq', 'Pipeline settings') }}
+				</button>
+				<label class="cn-index-page__board-control" data-testid="pipeline-columns">
+					<span class="cn-index-page__board-control-label">{{ t('pipelinq', 'Columns:') }}</span>
+					<select class="cn-index-page__board-select cn-index-page__board-select--strong" value="stage">
+						<option value="stage">
+							{{ t('pipelinq', 'stage') }}
+						</option>
+					</select>
+				</label>
+				<span class="pipeline-board__toolbar-break" aria-hidden="true" />
+				<span v-if="viewMode === 'kanban'" class="cn-index-page__board-hint">
+					{{ t('pipelinq', 'One column per stage. Drag a lead to change its stage.') }}
+				</span>
+			</template>
+		</CnActionsBar>
 		<CnQuickFilterBar
+			v-if="!isBoard"
 			class="pipeline-board__chips"
 			:tabs="chipTabs"
 			:counts="chipCounts"
 			:activeIndex="chipIndex"
-			@update:activeIndex="(value) => (chipIndex = value === null ? 0 : value)" />
-		<div class="pipeline-board__header">
+			@update:activeIndex="
+				(value) => (chipIndex = value === null ? 0 : value)
+			" />
+		<div v-if="!isBoard" class="pipeline-board__header">
 			<div class="pipeline-board__controls">
 				<NcSelect
 					v-model="selectedPipelineId"
@@ -155,10 +285,18 @@
 					class="kanban-column__header"
 					:style="stage.color ? { borderTopColor: stage.color } : {}">
 					<div class="column-header-top">
-						<span class="column-title">{{ stage.name }}</span>
-						<span class="column-count">{{
-							getStageItems(stage.name).length
-						}}</span>
+						<span class="column-title">
+							<span
+								v-if="isBoard"
+								class="column-dot"
+								:style="stage.color ? { background: stage.color } : null"
+								aria-hidden="true" />
+							{{ stage.name }}
+						</span>
+						<span
+							class="column-count"
+							:class="{ 'column-count--full': isStageFull(stage) }"
+							data-testid="column-count">{{ stageCountLabel(stage) }}</span>
 					</div>
 					<div v-if="hasTotals" class="column-value-wrapper">
 						<button
@@ -176,6 +314,9 @@
 							{{ selectedPipeline.totalsLabel || '' }}
 							{{ getStageTotalValue(stage.name).toLocaleString() }}
 						</button>
+						<span
+							v-if="isBoard && stage.probability !== undefined && stage.probability !== null"
+							class="column-probability">· {{ stage.probability }}%</span>
 						<div
 							v-if="expandedBreakdownStage === stage.name"
 							class="stage-breakdown"
@@ -265,6 +406,7 @@
 							:entityType="item._schemaSlug"
 							:stages="sortedStages"
 							:columnProperty="getColumnProperty(item)"
+							:boardLook="isBoard"
 							@open="openItem"
 							@refresh="refreshItems" />
 					</template>
@@ -337,90 +479,23 @@
 				<thead>
 					<tr>
 						<th
+							v-for="column in listColumns"
+							:key="column.key"
 							scope="col"
 							class="sortable"
-							@click="toggleSort('title')">
-							{{ t('pipelinq', 'Title') }}
-							<span v-if="sortBy === 'title'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('schemaSlug')">
-							{{ t('pipelinq', 'Type') }}
-							<span
-								v-if="sortBy === 'schemaSlug'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('stage')">
-							{{ t('pipelinq', 'Stage') }}
-							<span v-if="sortBy === 'stage'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('assignee')">
-							{{ t('pipelinq', 'Assignee') }}
-							<span
-								v-if="sortBy === 'assignee'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('value')">
-							{{ t('pipelinq', 'Value') }}
-							<span v-if="sortBy === 'value'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('dueDate')">
-							{{ t('pipelinq', 'Due Date') }}
-							<span
-								v-if="sortBy === 'dueDate'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('priority')">
-							{{ t('pipelinq', 'Priority') }}
-							<span
-								v-if="sortBy === 'priority'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('score')">
-							{{ t('pipelinq', 'Score') }}
-							<span v-if="sortBy === 'score'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th scope="col" class="sortable" @click="toggleSort('age')">
-							{{ t('pipelinq', 'Age') }}
-							<span v-if="sortBy === 'age'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
+							:aria-sort="ariaSortOf(column.key)">
+							<button
+								type="button"
+								class="sort-button"
+								@click="toggleSort(column.key)">
+								{{ column.label }}
+								<span
+									v-if="sortBy === column.key"
+									class="sort-indicator"
+									aria-hidden="true"
+									>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
+								>
+							</button>
 						</th>
 					</tr>
 				</thead>
@@ -498,10 +573,21 @@
 </template>
 
 <script>
-import { CnPageHeader, CnQuickFilterBar, openRowTarget } from '@conduction/nextcloud-vue'
+import {
+	CnActionsBar,
+	CnBuildiqEditButton,
+	CnPageHeader,
+	CnQuickFilterBar,
+	openRowTarget,
+	useLook,
+} from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
+	NcActionButton,
+	NcActionCaption,
+	NcActionCheckbox,
+	NcActions,
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcLoadingIcon,
@@ -511,16 +597,21 @@ import {
 } from '@nextcloud/vue'
 import Draggable from 'vuedraggable'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import Download from 'vue-material-design-icons/Download.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Tune from 'vue-material-design-icons/Tune.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import LeadScoreBadge from '../../components/leadScore/LeadScoreBadge.vue'
 import LeadCreateDialog from '../../dialogs/LeadCreateDialog.vue'
 import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import PipelineCard from './PipelineCard.vue'
+import { downloadCsv } from '../../services/csvExport.js'
 import { compareCallFirst } from '../../services/leadScore.js'
 import { formatDate } from '../../services/localeUtils.js'
 import { choosePipeline, findOrphanedLeads } from '../../services/pipelineOrphans.js'
+import { stageLimit } from '../../services/pipelinePayload.js'
 import {
 	formatAge,
 	getAgingClass,
@@ -554,6 +645,15 @@ const DRAG_OPTIONS = {
 export default {
 	name: 'PipelineBoard',
 	components: {
+		CnActionsBar,
+		CnBuildiqEditButton,
+		Download,
+		Magnify,
+		NcActionButton,
+		NcActionCaption,
+		NcActionCheckbox,
+		NcActions,
+		Tune,
 		LeadCreateDialog,
 		Plus,
 		CnPageHeader,
@@ -571,6 +671,11 @@ export default {
 		ViewColumn,
 		FormatListBulleted,
 		Cog,
+	},
+
+	setup() {
+		const { isBoard, lookClass } = useLook()
+		return { isBoard, lookClass }
 	},
 
 	data() {
@@ -813,6 +918,7 @@ export default {
 		 * open lead, my leads, leads closing this month and stale leads.
 		 *
 		 * @return {Array<{label: string}>}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		chipTabs() {
 			return [
@@ -827,23 +933,102 @@ export default {
 		 * The number on each chip, counted over the leads the pipeline holds.
 		 *
 		 * @return {number[]}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		chipCounts() {
-			return this.chipTabs.map((_, index) =>
-				this.allItems.filter((item) => this.matchesChip(item, index)).length,
+			return this.chipTabs.map(
+				(_, index) =>
+					this.allItems.filter((item) => this.matchesChip(item, index))
+						.length,
 			)
+		},
+
+		/**
+		 * Board look: what narrows the board, as the toolbar's active chips:
+		 * the pipeline, the type, the chip above the board and the search.
+		 *
+		 * @return {Array<{key: string, label: string}>}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		activeFilterChips() {
+			const chips = []
+			if (this.selectedPipeline) {
+				chips.push({ key: 'pipeline', label: this.t('pipelinq', 'Pipeline: {name}', { name: this.selectedPipeline.title }) })
+			}
+			const type = this.showFilter?.id || this.showFilter || 'all'
+			if (type !== 'all') {
+				const option = this.showFilterOptions.find((o) => o.id === type)
+				chips.push({ key: 'type', label: this.t('pipelinq', 'Type: {name}', { name: option ? option.label : type }) })
+			}
+			if (this.chipIndex > 0 && this.chipTabs[this.chipIndex]) {
+				chips.push({ key: 'chip', label: this.chipTabs[this.chipIndex].label })
+			}
+			if (this.searchQuery.trim()) {
+				chips.push({ key: 'search', label: this.t('pipelinq', 'Search: {text}', { text: this.searchQuery.trim() }) })
+			}
+			return chips
+		},
+
+		/**
+		 * The Filter button's accessible name, with the count while filters are active.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		filterMenuLabel() {
+			const count = this.activeFilterChips.length
+			return count > 0
+				? this.n('pipelinq', 'Filter, %n active', 'Filter, %n active', count)
+				: this.t('pipelinq', 'Filter')
+		},
+
+		/**
+		 * Board look: the view switch's cards segment opens the leads list.
+		 *
+		 * @return {{[mode: string]: {href: string, to: object}}}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		viewModeLinks() {
+			const to = { name: 'Leads' }
+			const href = this.$router ? this.$router.resolve(to).href : ''
+			return href ? { cards: { href, to } } : {}
 		},
 
 		/**
 		 * The line under the title: how many leads show, out of how many.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		headerCountLine() {
-			return this.t('pipelinq', '{shown} of {total} open leads · board per stage', {
-				shown: this.filteredItems.length,
-				total: this.allItems.length,
-			})
+			return this.t(
+				'pipelinq',
+				'{shown} of {total} open leads · board per stage',
+				{
+					shown: this.filteredItems.length,
+					total: this.allItems.length,
+				},
+			)
+		},
+
+		/**
+		 * The list view's sortable columns, in order.
+		 *
+		 * @return {Array<{key: string, label: string}>}
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 */
+		listColumns() {
+			return [
+				{ key: 'title', label: this.t('pipelinq', 'Title') },
+				{ key: 'schemaSlug', label: this.t('pipelinq', 'Type') },
+				{ key: 'stage', label: this.t('pipelinq', 'Stage') },
+				{ key: 'assignee', label: this.t('pipelinq', 'Assignee') },
+				{ key: 'value', label: this.t('pipelinq', 'Value') },
+				{ key: 'dueDate', label: this.t('pipelinq', 'Due Date') },
+				{ key: 'priority', label: this.t('pipelinq', 'Priority') },
+				{ key: 'score', label: this.t('pipelinq', 'Score') },
+				{ key: 'age', label: this.t('pipelinq', 'Age') },
+			]
 		},
 
 		/**
@@ -1148,6 +1333,52 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-18
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
 		 */
+		/**
+		 * The board look's pipeline select chose a pipeline.
+		 *
+		 * @param {string} id The pipeline's id.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		async selectPipeline(id) {
+			if (!id || id === this.selectedPipelineId) return
+			this.selectedPipelineId = id
+			await this.onPipelineChange()
+		},
+
+		/**
+		 * An active chip's remove button: the pipeline goes back to the one
+		 * the board opens with, the others back to their default.
+		 *
+		 * @param {{key: string}} chip The chip.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		async removeActiveFilter(chip) {
+			if (chip.key === 'pipeline') {
+				await this.selectPipeline(choosePipeline(this.pipelines, this.allLeads))
+			} else if (chip.key === 'type') {
+				this.showFilter = 'all'
+			} else if (chip.key === 'chip') {
+				this.chipIndex = 0
+			} else if (chip.key === 'search') {
+				this.searchQuery = ''
+			}
+		},
+
+		/**
+		 * Clear all: every narrowing back to its default.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		async clearActiveFilters() {
+			this.showFilter = 'all'
+			this.chipIndex = 0
+			this.searchQuery = ''
+			await this.selectPipeline(choosePipeline(this.pipelines, this.allLeads))
+		},
+
 		async onPipelineChange() {
 			this.searchQuery = ''
 			await this.fetchPipelineItems()
@@ -1425,6 +1656,24 @@ export default {
 		},
 
 		/**
+		 * The leads on the board, as the board shows them, as a CSV file.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		downloadLeads() {
+			const rows = this.filteredItems.map((item) => ({
+				title: item.title || '',
+				stage: item.stage || '',
+				value: item.value ?? '',
+				probability: item.probability ?? '',
+				assignee: item.assignee || '',
+				expectedCloseDate: item.expectedCloseDate || '',
+			}))
+			downloadCsv('pipeline.csv', rows, ['title', 'stage', 'value', 'probability', 'assignee', 'expectedCloseDate'])
+		},
+
+		/**
 		 * The drag ended, dropped or cancelled.
 		 *
 		 * @spec exclude drag bookkeeping — no business logic
@@ -1529,14 +1778,42 @@ export default {
 			}
 			if (!saved) {
 				Object.assign(item, previous)
+				const refusal = this.objectStore.errors?.[objectType]
 				showError(
-					t('pipelinq', 'Could not move the card to {stage}.', {
-						stage: targetStage.name,
-					}),
+					refusal?.isValidation && refusal.message
+						? refusal.message
+						: t('pipelinq', 'Could not move the card to {stage}.', {
+							stage: targetStage.name,
+						}),
 				)
 				return
 			}
 			await this.refreshItems()
+		},
+
+		/**
+		 * The column header count: the number of items, against the limit when the stage has one.
+		 *
+		 * @param {object} stage The stage.
+		 * @return {string} "3" or "3 / 8".
+		 * @spec openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits/spec.md#requirement-a-stage-can-carry-a-limit-req-psl-001
+		 */
+		stageCountLabel(stage) {
+			const count = this.getStageItems(stage.name).length
+			const max = stageLimit(stage)
+			return max === null ? String(count) : `${count} / ${max}`
+		},
+
+		/**
+		 * Whether a stage with a limit holds as many items as it may, or more.
+		 *
+		 * @param {object} stage The stage.
+		 * @return {boolean} True when full.
+		 * @spec openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits/spec.md#requirement-a-stage-can-carry-a-limit-req-psl-001
+		 */
+		isStageFull(stage) {
+			const max = stageLimit(stage)
+			return max !== null && this.getStageItems(stage.name).length >= max
 		},
 
 		/**
@@ -1546,6 +1823,20 @@ export default {
 		toggleClosedStage(stageName) {
 			this.expandedClosed =
 				this.expandedClosed === stageName ? null : stageName
+		},
+
+		/**
+		 * The list header's sort state for assistive technology.
+		 *
+		 * @param {string} column The list-view column key.
+		 * @return {string} `ascending`, `descending` or `none`.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 */
+		ariaSortOf(column) {
+			if (this.sortBy !== column) {
+				return 'none'
+			}
+			return this.sortDir === 'asc' ? 'ascending' : 'descending'
 		},
 
 		/**
@@ -1586,6 +1877,7 @@ export default {
 		 * @param {object} item The lead.
 		 * @param {number} index The chip index.
 		 * @return {boolean}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		matchesChip(item, index) {
 			if (index === 1) {
@@ -1593,11 +1885,15 @@ export default {
 				return Boolean(uid) && item.assignee === uid
 			}
 			if (index === 2) {
-				const close = item.expectedCloseDate ? new Date(item.expectedCloseDate) : null
+				const close = item.expectedCloseDate
+					? new Date(item.expectedCloseDate)
+					: null
 				const now = new Date()
-				return Boolean(close)
+				return (
+					Boolean(close)
 					&& close.getFullYear() === now.getFullYear()
 					&& close.getMonth() === now.getMonth()
+				)
 			}
 			if (index === 3) {
 				return this.isItemStale(item)
@@ -1665,6 +1961,111 @@ export default {
 
 .pipeline-board__chips {
 	margin-bottom: 16px;
+}
+
+.pipeline-board__toolbar {
+	margin-bottom: 20px;
+	flex-shrink: 0;
+}
+
+.pipeline-board__toolbar .pipeline-board__chips {
+	margin-bottom: 0;
+}
+
+.pipeline-board__toolbar .pipeline-board__search {
+	flex: 1 1 260px;
+	max-width: 360px;
+}
+
+.pipeline-board__settings-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-primary-element);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.pipeline-board__settings-link:disabled {
+	color: var(--color-text-maxcontrast);
+	cursor: default;
+}
+
+/* Row 3 under the pipeline and the search: the hint, then the active filters on the right. */
+.pipeline-board__toolbar-break {
+	flex: 0 0 100%;
+	height: 0;
+}
+
+/* Board look (PqPipeline): the content starts 24px down and the header 4px
+   under that, so the title sits at 96. The title and the 40px buttons share
+   the first row, 10px apart; the count line takes the row 6px under it and
+   the header ends 8px lower, 20px above the chips. The header's own text
+   is CnPageHeader's markup, which this scoped block reaches only through
+   :deep. */
+.cn-look-board.pipeline-board {
+	padding-top: 24px;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) repeat(3, auto);
+	align-items: start;
+	row-gap: 6px;
+	column-gap: 10px;
+	padding: 4px 0 8px;
+	margin-bottom: 20px;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__text) {
+	display: contents;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__title) {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__description) {
+	grid-column: 1 / -1;
+	grid-row: 2;
+	margin: 0;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header > .button-vue {
+	grid-row: 1;
+	height: var(--cn-board-control-height, 40px) !important;
+	min-height: var(--cn-board-control-height, 40px) !important;
+	padding: 0 14px !important;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header > .button-vue--primary {
+	padding: 0 16px !important;
+}
+
+/* The chips stand on the page, without the quick filter bar's band. */
+.cn-look-board .pipeline-board__toolbar .pipeline-board__chips {
+	padding: 0;
+	background: transparent;
+}
+
+/* The settings link is a bare underlined link. Nextcloud gives every
+   `button:not(.button-vue)` a margin and a ground, and a theme sets the
+   ground with `!important`, so these are `!important` too. */
+.cn-look-board .pipeline-board__toolbar button.pipeline-board__settings-link {
+	--nldesign-component-button-background-color: transparent;
+	min-height: 0;
+	margin: 0 !important;
+	border: 0 !important;
+	border-radius: 0 !important;
+	background: transparent !important;
 }
 
 .pipeline-board__header {
@@ -1760,6 +2161,12 @@ export default {
 	font-size: 13px;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
+}
+
+.column-count.column-count--full {
+	background: var(--color-warning);
+	color: var(--color-warning-text, var(--color-main-text));
+	font-weight: 700;
 }
 
 .column-count {
@@ -1898,6 +2305,86 @@ export default {
 	min-height: 80px;
 }
 
+/* Board look (PqPipeline): 240px columns on the grey ground, 16px apart, no
+   border, the stage's dot before its name, the cards 12px apart. */
+.cn-look-board .pipeline-board__columns {
+	gap: 16px;
+}
+
+.cn-look-board .kanban-column {
+	width: 240px;
+	min-width: 240px;
+	max-width: 240px;
+	gap: 12px;
+	padding: 12px;
+	border: 0;
+	border-radius: 12px;
+	background: var(--color-background-dark);
+}
+
+.cn-look-board .kanban-column__header {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 0 2px;
+	border: 0;
+	border-radius: 0;
+	line-height: normal;
+}
+
+.cn-look-board .column-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 15px;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+.cn-look-board .column-dot {
+	width: 10px;
+	height: 10px;
+	flex: none;
+	border-radius: 50%;
+	background: var(--color-primary-element);
+}
+
+.cn-look-board .column-count {
+	min-width: 0;
+	height: auto;
+	padding: 1px 8px;
+	background: var(--color-main-background);
+	color: var(--cn-board-text-soft, var(--color-main-text));
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.cn-look-board .column-value-wrapper {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+	margin-top: 0;
+	padding-inline-start: 18px;
+	font-size: 13px;
+}
+
+.cn-look-board .column-value {
+	width: auto;
+	margin-top: 0;
+	color: var(--color-main-text);
+	font-weight: 700;
+}
+
+.cn-look-board .column-probability {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.cn-look-board .kanban-column__body {
+	gap: 12px;
+	padding: 0;
+}
+
 .kanban-closed {
 	display: flex;
 	gap: 8px;
@@ -1999,12 +2486,24 @@ export default {
 	user-select: none;
 }
 
-.list-table th.sortable {
+.list-table .sort-button {
+	display: inline-flex;
+	align-items: center;
+	padding: 0;
+	border: none;
+	background: none;
+	font: inherit;
+	color: inherit;
 	cursor: pointer;
 }
 
-.list-table th.sortable:hover {
+.list-table .sort-button:hover {
 	color: var(--color-main-text);
+}
+
+.list-table .sort-button:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .sort-indicator {

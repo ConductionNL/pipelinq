@@ -1,0 +1,358 @@
+{
+	"pages": [
+		{
+			"id": "CampaignEvents",
+			"_note": "campaign-events (PqEvenement). The events every campaign holds, newest first. Reached from a campaign's Events card; not a menu entry, because the board keeps Marketing to campaigns and newsletters.",
+			"route": "/campaign-events",
+			"type": "index",
+			"title": "Campaign events",
+			"config": {
+				"register": "pipelinq",
+				"schema": "campaignEvent",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"addLabel": "New event",
+				"sortKey": "startAt",
+				"sortOrder": "desc",
+				"countText": "{shown} of {total} events · newest first",
+				"viewModes": ["table", "cards", "calendar"],
+				"calendar": { "dateField": "startAt", "endDateField": "endAt", "titleField": "title" },
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "Registration open", "filter": { "signupStatus": "open" } },
+					{ "label": "Fully booked", "filter": { "signupStatus": "full" } }
+				],
+				"columns": ["title", "campaign", "startAt", "venue", "capacity", "signupStatus"],
+				"actions": [
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "CampaignEventDetail" }
+				]
+			}
+		},
+		{
+			"id": "CampaignEventDetail",
+			"_note": "campaign-events (PqEvenement). One event: four counts over its registrations (registered against the places, waiting list, from the newsletter, new in pipelinq), the registrations as a list, and the form, the place and the history beside it. The registrations are their own schema, so the counts and the list are queries on eventRegistration filtered on this event, not numbers kept on the event.",
+			"route": "/campaign-events/:id",
+			"type": "detail",
+			"title": "Campaign event",
+			"config": {
+				"register": "pipelinq",
+				"schema": "campaignEvent",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showTypeEyebrow": true,
+				"follow": false,
+				"sidebar": { "enabled": false },
+				"breadcrumb": { "label": "Campaigns", "route": "Campaigns", "separator": "/" },
+				"headerMeta": "{startAt|fulldate}, {startAt|time} to {endAt|time} · {venue}",
+				"typePill": { "text": "Campaign event", "variant": "purple" },
+				"statusPill": {
+					"field": "signupStatus",
+					"labels": { "draft": "Draft", "open": "Registration open", "full": "Fully booked", "closed": "Registration closed", "cancelled": "Cancelled" },
+					"colorMap": { "open": "success", "full": "warning", "draft": "info", "closed": "default", "cancelled": "error" }
+				},
+				"actionsMenu": { "label": "More" },
+				"quickActions": ["send-reminder", "check-in"],
+				"_headerActionsNote": "PqEvenement: Herinnering versturen mails everyone with a confirmed place (POST /api/campaign-events/{id}/reminder, which stamps reminderSentAt as the caller first); Inchecken bij de deur opens the event's check-in list, where each confirmed registration is checked in with one press.",
+				"headerActions": [
+					{
+						"id": "send-reminder",
+						"type": "api-call",
+						"label": "Send reminder",
+						"icon": "Send",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/campaign-events/@objectId/reminder",
+						"confirm": true,
+						"successMessage": "The reminder is on its way to everyone with a confirmed place.",
+						"errorMessage": "The reminder could not be sent.",
+						"visibleWhen": { "field": "signupStatus", "op": "in", "value": ["open", "full", "closed"] }
+					},
+					{
+						"id": "check-in",
+						"type": "navigate",
+						"label": "Check in at the door",
+						"icon": "Check",
+						"target": "/campaign-events/@objectId/check-in"
+					}
+				],
+				"widgets": [
+					{
+						"id": "event-kpi-registered",
+						"type": "stat",
+						"content": {
+							"label": "Registered",
+							"caption": "of @object.capacity places",
+							"source": { "register": "pipelinq", "schema": "eventRegistration", "metric": "count", "filter": { "event": "@objectId", "status": "confirmed" } }
+						}
+					},
+					{
+						"id": "event-kpi-waitlist",
+						"type": "stat",
+						"content": {
+							"label": "Waiting list",
+							"caption": "moves up when someone cancels",
+							"source": { "register": "pipelinq", "schema": "eventRegistration", "metric": "count", "filter": { "event": "@objectId", "status": "waitlist" } }
+						}
+					},
+					{
+						"id": "event-kpi-newsletter",
+						"type": "stat",
+						"content": {
+							"label": "From the newsletter",
+							"caption": "the rest came through the website and posts",
+							"source": { "register": "pipelinq", "schema": "eventRegistration", "metric": "count", "filter": { "event": "@objectId", "source": "newsletter" } }
+						}
+					},
+					{
+						"id": "event-kpi-new",
+						"type": "stat",
+						"content": {
+							"label": "New in pipelinq",
+							"caption": "registrations without an existing record became a contact",
+							"source": { "register": "pipelinq", "schema": "eventRegistration", "metric": "count", "filter": { "event": "@objectId", "newContact": true } }
+						}
+					},
+					{
+						"id": "event-panels",
+						"type": "tabs",
+						"title": "Campaign event",
+						"content": {
+							"ariaLabel": "Campaign event",
+							"tabs": [
+								{ "label": "Overview", "widgetIds": ["event-data", "event-registrations-recent"] },
+								{ "label": "Registrations", "widgetId": "event-registrations", "countFrom": { "register": "pipelinq", "schema": "eventRegistration", "filter": { "event": "@objectId" } } },
+								{ "label": "Registration form", "widgetId": "event-form" },
+								{ "label": "Results", "widgetIds": ["event-result-came", "event-result-missed", "event-result-attendees"] },
+								{ "label": "History", "widgetId": "event-history" }
+							]
+						}
+					},
+					{
+						"id": "event-data",
+						"type": "data",
+						"title": "Event details",
+						"content": {
+							"columns": 2,
+							"include": ["title", "reference", "campaign", "startAt", "endAt", "venue", "room", "capacity", "signupStatus", "description"]
+						}
+					},
+					{
+						"id": "event-registrations-recent",
+						"type": "object-table",
+						"title": "Latest registrations",
+						"content": {
+							"register": "pipelinq",
+							"schema": "eventRegistration",
+							"filter": { "event": "@objectId" },
+							"sort": { "field": "registeredAt", "dir": "desc" },
+							"limit": 5,
+							"emptyText": "No registrations yet.",
+							"columns": [
+								{ "key": "name", "label": "Name", "cellClass": "cn-cell--strong" },
+								{ "key": "address", "label": "Address" },
+								{ "key": "source", "label": "Registered via" },
+								{ "key": "registeredAt", "label": "Registered on", "formatter": "date" },
+								{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "waitlist": "warning", "cancelled": "default" } } }
+							]
+						}
+					},
+					{
+						"id": "event-registrations",
+						"type": "index-list",
+						"title": "Registrations",
+						"_note": "PqEvenement's Aanmeldingen tab: the registrations list with its own toolbar (status lenses with counts, Filter, the view switch, a search on name or street, the pager), as the Registrations list page has it, narrowed to this event. The party size and the waiting list position stay on the cards and the list page.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "eventRegistration",
+							"filter": { "event": "@objectId" },
+							"sortKey": "registeredAt",
+							"sortOrder": "asc",
+							"viewModes": ["table", "cards", "board"],
+							"board": { "statusField": "status" },
+							"quickFilters": [
+								{ "label": "All", "filter": {}, "default": true, "showCount": true },
+								{ "label": "Confirmed", "filter": { "status": "confirmed" }, "showCount": true },
+								{ "label": "Waiting list", "filter": { "status": "waitlist" }, "showCount": true },
+								{ "label": "Cancelled", "filter": { "status": "cancelled" }, "showCount": true }
+							],
+							"searchPlaceholder": "Search a name or street",
+							"filterMenu": true,
+							"filterLabels": { "address": { "label": "Street" } },
+							"selectable": true,
+							"columns": [
+								"name",
+								"address",
+								"source",
+								"registeredAt",
+								{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "waitlist": "warning", "cancelled": "default" } } }
+							],
+							"emptyText": "No registrations yet.",
+							"countValues": { "allRegistrations": { "metric": "count", "unfiltered": true } },
+							"footerNote": "{allRegistrations} registrations in total",
+							"_toolbarNote": "Board PqEvenement draws no add button and no Actions menu in the tab: a registration comes in through the form, and the tab strip carries the page's Acties.",
+							"showAdd": false,
+							"showActionsMenu": false
+						}
+					},
+					{
+						"id": "event-result-came",
+						"type": "stat",
+						"content": {
+							"label": "Came",
+							"caption": "checked in at the door",
+							"source": { "register": "pipelinq", "schema": "eventRegistration", "metric": "count", "filter": { "event": "@objectId", "status": "confirmed", "checkedInAt": "IS NOT NULL" } }
+						}
+					},
+					{
+						"id": "event-result-missed",
+						"type": "stat",
+						"content": {
+							"label": "Did not come",
+							"caption": "had a place and did not check in",
+							"source": { "register": "pipelinq", "schema": "eventRegistration", "metric": "count", "filter": { "event": "@objectId", "status": "confirmed", "checkedInAt": "IS NULL" } }
+						}
+					},
+					{
+						"id": "event-result-attendees",
+						"type": "record-list",
+						"title": "Checked in",
+						"content": {
+							"register": "pipelinq",
+							"schema": "eventRegistration",
+							"filter": { "event": "@objectId", "checkedInAt": "IS NOT NULL" },
+							"sort": { "field": "checkedInAt", "dir": "asc" },
+							"limit": 50,
+							"presentation": "rows",
+							"title": "{name}",
+							"meta": "{address} · {checkedInAt|time}",
+							"emptyText": "Nobody has been checked in yet."
+						}
+					},
+					{
+						"id": "event-history",
+						"type": "timeline",
+						"title": "History",
+						"content": { "auditTrail": true, "order": "desc", "excludeActions": ["read"], "actionLabels": { "create": [{ "when": { "field": "campaign", "op": "notEmpty" }, "text": "Event created in campaign {object.campaign}" }, { "text": "Event created" }] }, "resolve": { "campaign": { "schema": "campaign" } }, "changeLabels": [{ "field": "capacity", "label": "Places raised from {changed.capacity.old} to {changed.capacity.new}" }], "related": [{ "schema": "eventRegistration", "field": "event", "dateField": "registeredAt", "label": "{name} is on the waiting list", "when": { "field": "status", "value": "waitlist" } }, { "schema": "blast", "field": "event", "dateField": "sentAt", "label": "{name} sent with the invitation", "when": { "field": "status", "value": "sent" } }] }
+					},
+					{
+						"id": "event-form",
+						"type": "facts",
+						"title": "Registration form",
+						"_note": "PqEvenement: the portaliq form people register with, the page it is on (a link) and when it closes, with the line that every sign-up arrives here as a registration.",
+						"content": {
+							"fields": [
+								{ "label": "Form", "path": "formTitle" },
+								{ "label": "On page", "path": "pageUrl", "format": "url" },
+								{ "label": "Closes", "template": "{signupClosesAt:date-long}" }
+							],
+							"actions": [
+								{
+									"id": "edit-form",
+									"label": "Edit form",
+									"icon": "PencilOutline",
+									"type": "navigate",
+									"target": "/index.php/apps/portaliq/form-bindings/@source.formBinding"
+								}
+							],
+							"footnote": "Built with portaliq; every sign-up arrives here as a registration.",
+							"emptyText": "No registration form yet."
+						}
+					},
+					{
+						"id": "event-location",
+						"type": "data",
+						"title": "Location",
+						"content": {
+							"columns": 1,
+							"include": ["room", "capacity", "hosts", "reminderAt"],
+							"overrides": { "hosts": { "formatter": "userDisplayName" } }
+						}
+					},
+					{
+						"id": "event-side-history",
+						"type": "timeline",
+						"title": "History",
+						"content": { "auditTrail": true, "order": "desc", "limit": 4, "excludeActions": ["read"], "actionLabels": { "create": [{ "when": { "field": "campaign", "op": "notEmpty" }, "text": "Event created in campaign {object.campaign}" }, { "text": "Event created" }] }, "resolve": { "campaign": { "schema": "campaign" } }, "changeLabels": [{ "field": "capacity", "label": "Places raised from {changed.capacity.old} to {changed.capacity.new}" }], "related": [{ "schema": "eventRegistration", "field": "event", "dateField": "registeredAt", "label": "{name} is on the waiting list", "when": { "field": "status", "value": "waitlist" } }, { "schema": "blast", "field": "event", "dateField": "sentAt", "label": "{name} sent with the invitation", "when": { "field": "status", "value": "sent" } }] }
+					}
+				],
+				"_bandNote": "PqEvenement: the four counts stand in a row across the page, above the tabs and the side column.",
+				"band": [
+					{ "widgetId": "event-kpi-registered", "span": 3 },
+					{ "widgetId": "event-kpi-waitlist", "span": 3 },
+					{ "widgetId": "event-kpi-newsletter", "span": 3 },
+					{ "widgetId": "event-kpi-new", "span": 3 }
+				],
+				"layout": [
+					{ "id": "5", "widgetId": "event-panels", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6, "showTitle": false, "sizeToContent": true }
+				],
+				"sideColumn": ["event-form", "event-location", "event-side-history"]
+			}
+		},
+		{
+			"id": "EventRegistrations",
+			"_note": "campaign-events (PqEvenement). Every registration over all events, with the lenses the event's Registrations tab draws (confirmed, waiting list, cancelled) and a board by status, for the colleague who works the waiting list.",
+			"route": "/event-registrations",
+			"type": "index",
+			"title": "Registrations",
+			"config": {
+				"register": "pipelinq",
+				"schema": "eventRegistration",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"sortKey": "registeredAt",
+				"sortOrder": "desc",
+				"viewModes": ["table", "cards", "board"],
+				"board": { "statusField": "status" },
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "Confirmed", "filter": { "status": "confirmed" } },
+					{ "label": "Waiting list", "filter": { "status": "waitlist" } },
+					{ "label": "Cancelled", "filter": { "status": "cancelled" } }
+				],
+				"columns": ["name", "event", "address", "source", "registeredAt", "status"]
+			}
+		},
+		{
+			"id": "EventCheckIn",
+			"_note": "event-reminder-and-check-in (PqEvenement: Inchecken bij de deur). The confirmed registrations of one event, for the colleague at the door: who is not in yet first, and one press checks someone in (checkedInAt is stamped with the moment). The Results tab of the event counts from it.",
+			"route": "/campaign-events/:id/check-in",
+			"type": "index",
+			"title": "Check in at the door",
+			"config": {
+				"register": "pipelinq",
+				"schema": "eventRegistration",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"filter": { "event": ":id", "status": "confirmed" },
+				"sortKey": "name",
+				"sortOrder": "asc",
+				"quickFilters": [
+					{ "label": "Not in yet", "filter": { "checkedInAt": "IS NULL" }, "default": true },
+					{ "label": "Checked in", "filter": { "checkedInAt": "IS NOT NULL" } },
+					{ "label": "All", "filter": {} }
+				],
+				"searchPlaceholder": "Search a name or street",
+				"columns": ["name", "address", "partySize", "checkedInAt"],
+				"actions": [
+					{
+						"id": "check-in",
+						"type": "api-call",
+						"label": "Check in",
+						"icon": "Check",
+						"method": "PATCH",
+						"url": "/apps/openregister/api/objects/pipelinq/eventRegistration/@objectId",
+						"payload": { "checkedInAt": "@now" },
+						"successMessage": "Checked in.",
+						"visibleWhen": { "field": "checkedInAt", "op": "empty" }
+					},
+					{
+						"id": "undo-check-in",
+						"type": "api-call",
+						"label": "Undo check-in",
+						"icon": "Undo",
+						"method": "PATCH",
+						"url": "/apps/openregister/api/objects/pipelinq/eventRegistration/@objectId",
+						"payload": { "checkedInAt": null },
+						"successMessage": "Check-in undone.",
+						"visibleWhen": { "field": "checkedInAt", "op": "notEmpty" }
+					}
+				]
+			}
+		}
+	]
+}

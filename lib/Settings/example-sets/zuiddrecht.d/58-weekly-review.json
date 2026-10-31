@@ -1,0 +1,45 @@
+{
+	"$comment": "pipelinq's weekly review in the Zuiddrecht set: the week of 28 September as Navi composed it on Monday 5 October at 07:00, as PqWeekoverzicht draws it.",
+	"objects": [
+		{
+			"key": "weekoverzicht-28-sep",
+			"register": "pipelinq",
+			"schema": "weeklyReview",
+			"data": {
+				"weekStarting": "{{date:-9}}",
+				"sources": [
+					"nieuwsbrieven",
+					"berichten",
+					"zoekverkeer"
+				],
+				"degraded": [
+					"Search Console voor 4 en 5 oktober"
+				],
+				"summary": "De Afvalvrije week leverde in acht dagen 212 aanvragen voor een compostbak op, de meeste via de nieuwsbrief. Zoekverkeer op \"afvalpas kwijt\" steeg weer. Het LinkedIn-account moet opnieuw gekoppeld worden voor het volgende bericht.",
+				"highlights": [
+					"Klikken in de nieuwsbrief 38% hoger dan de week ervoor, 902 klikken",
+					"Leads van de campagnepagina: 208",
+					"Interactie op Mastodon gedaald van 6,4% naar 5,5%"
+				],
+				"highlightDirections": [
+					"up",
+					"up",
+					"down"
+				],
+				"suggestions": [
+					"Stuur een herinnering aan inwoners die openden maar geen compostbak bestelden",
+					"Zet het bericht over de parkeervergunning op 08:00, als de meeste inwoners lezen",
+					"LinkedIn voor vrijdag opnieuw koppelen"
+				],
+				"topicIdeas": [
+					"Afvalpas kwijt, wat nu",
+					"Composteren in een kleine tuin",
+					"Parkeren voor bezoekers"
+				],
+				"generatedAt": "{{datetime:-2 07:00}}",
+				"agentAuthored": true,
+				"agentAuthoredBy": "Navi"
+			}
+		}
+	]
+}

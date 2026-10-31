@@ -23,6 +23,12 @@
 					"label": "Bookings",
 					"icon": "Calendar",
 					"route": "Bookings"
+				},
+				{
+					"id": "WalkInQueue",
+					"label": "Walk-in queue",
+					"icon": "AccountClockOutline",
+					"route": "WalkInQueue"
 				}
 			]
 		}
@@ -33,8 +39,12 @@
 			"_note": "Service catalogue as a declarative type:index page (pipelinq-views-to-declarative-r2). price→the service's own currency (reporting currency when unset; objectCurrency formatter), durationMinutes→duration format, status→badge with its x-enum-labels label (enumLabel formatter), bookableOnline→Yes/No (yesNo formatter; the library's check mark was too pale to see). 'New service' navigates to the bespoke ServiceDetail create form (id:'new'); row open navigates to ServiceDetail. ServiceDetail stays custom (multiStep sub-table editor + policy cards + cache-invalidation hook).",
 			"route": "/services",
 			"type": "index",
-			"title": "Services",
+			"title": "Services and resources",
 			"config": {
+				"pageTabs": [
+					{ "label": "Services", "route": "Services", "countFrom": { "register": "pipelinq", "schema": "appointmentService", "filter": {} } },
+					{ "label": "Resources", "route": "Resources", "countFrom": { "register": "pipelinq", "schema": "appointmentResource", "filter": {} } }
+				],
 				"register": "pipelinq",
 				"schema": "appointmentService",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -48,21 +58,147 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"selectable": false,
+				"selectable": true,
 				"rowRoute": "ServiceDetail",
 				"columns": [
-					"name",
-					{ "key": "durationMinutes", "label": "Duration", "format": { "style": "duration", "unit": "minutes" } },
-					{ "key": "price", "label": "Price", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } },
-					{ "key": "bookableOnline", "label": "Online", "type": "boolean", "formatter": "yesNo" },
-					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "active": "success", "draft": "default", "archived": "default" } } }
+					{
+						"key": "name",
+						"label": "Service",
+						"secondary": "{description}"
+					},
+					{
+						"key": "durationMinutes",
+						"label": "Duration",
+						"format": {
+							"style": "number",
+							"suffix": " min"
+						}
+					},
+					{
+						"key": "bufferBeforeMinutes",
+						"label": "Buffer before / after",
+						"format": {
+							"style": "number",
+							"suffix": " min"
+						}
+					},
+					{
+						"key": "price",
+						"label": "Price",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 2
+						}
+					},
+					{
+						"key": "bookableOnline",
+						"label": "Online",
+						"type": "boolean",
+						"formatter": "yesNo"
+					},
+					{
+						"key": "requiredResourceTypes",
+						"label": "Booked on",
+						"sortable": false,
+						"widget": "badge",
+						"formatter": "enumLabel"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumLabel",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"active": "success",
+								"draft": "default",
+								"archived": "default"
+							}
+						}
+					}
 				],
 				"headerActions": [
-					{ "id": "create", "label": "New service", "icon": "Plus", "handler": "navigate", "route": "ServiceDetail", "params": { "id": "new" } }
+					{
+						"id": "create",
+						"label": "New service",
+						"icon": "Plus",
+						"handler": "navigate",
+						"route": "ServiceDetail",
+						"params": {
+							"id": "new"
+						}
+					}
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "ServiceDetail" }
-				]
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "EyeOutline",
+						"handler": "navigate",
+						"route": "ServiceDetail"
+					}
+				],
+				"showTitle": true,
+				"showTitleIcon": false,
+				"rowTitle": "plain",
+				"countText": "{shown} of {total} services · what residents can book, and on whom or what it is booked",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "actions-menu",
+						"label": "Actions",
+						"items": ["refresh", "documentation"]
+					},
+					{
+						"action": "create",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New service"
+					}
+				],
+				"searchPlaceholder": "Filter by service name",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Online to book",
+						"filter": {
+							"bookableOnline": true
+						},
+						"showCount": true
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Archived",
+						"filter": {
+							"status": "archived"
+						},
+						"showCount": true
+					}
+				],
+				"viewSwitch": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"footerNote": "A service is booked on the resources with the requested kind and skills. A changed duration clears the saved free times.",
+				"_boardNote": "Board look (PqServices, round 12): count line, quick filters with counts, the name with its description under it, the buffer and what a service is booked on.",
+				"filterMenu": true
 			}
 		},
 		{
@@ -71,7 +207,7 @@
 			"type": "custom",
 			"title": "Service",
 			"component": "ServiceDetailView",
-			"_note": "Uses CnDetailPage/CnDetailCard, but a type:detail page cannot carry the SIDE EFFECT this one owes: every save calls invalidateAvailability, because changing a service's duration or required skills invalidates the cached booking-availability windows computed from it. Stale windows would offer slots that can no longer be honoured. It also derives display-only labels (formatDuration, formatCurrency, requiredSkillsLabel) that are not schema properties.",
+			"_note": "Uses CnDetailPage/CnDetailCard. The cached availability is expired on the server (AvailabilityCacheInvalidationListener). It derives display-only labels (formatDuration, formatCurrency, requiredSkillsLabel) that are not schema properties.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "appointmentService"
@@ -84,6 +220,10 @@
 			"type": "index",
 			"title": "Resources",
 			"config": {
+				"pageTabs": [
+					{ "label": "Services", "route": "Services", "countFrom": { "register": "pipelinq", "schema": "appointmentService", "filter": {} } },
+					{ "label": "Resources", "route": "Resources", "countFrom": { "register": "pipelinq", "schema": "appointmentResource", "filter": {} } }
+				],
 				"register": "pipelinq",
 				"schema": "appointmentResource",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -119,7 +259,7 @@
 			"type": "custom",
 			"title": "Resource",
 			"component": "ResourceDetailView",
-			"_note": "Same reason as ServiceDetail: a type:detail page cannot own the post-save invalidateAvailability side effect, and a resource's skills or working hours changing must expire the cached availability windows or the booking flow will offer slots this resource can no longer serve. It additionally holds a live useObjectSubscription so a concurrently edited resource updates in place, which declarative detail pages do not do.",
+			"_note": "The cached availability is expired on the server (AvailabilityCacheInvalidationListener). It holds a live useObjectSubscription so a concurrently edited resource updates in place.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "appointmentResource"
@@ -130,11 +270,12 @@
 			"_note": "Customer appointment ledger as a declarative type:index page (pipelinq-views-to-declarative-r1). View-only — admins create bookings through the public portal flow, never from this list — so the row click is the only action and navigates to the bespoke BookingDetail (reschedule/cancel/act), which stays custom.",
 			"route": "/bookings",
 			"type": "index",
-			"title": "Bookings",
+			"title": "Appointments",
 			"config": {
 				"register": "pipelinq",
 				"schema": "appointmentBooking",
 				"documentationUrl": "https://pipelinq.conduction.nl",
+				"_boardNote": "PqAfspraken: the count line, the period chips with their counts, a selectable table that reads when, with whom, about what, where and with which handler, and a footer that says how appointments come in. The chips read the booking's own fields: the period from startAt, Mine from the handler (assignee), Unconfirmed from the awaiting-deposit status. 'This week' is the coming seven days, the window the filter tokens can name.",
 				"showAdd": false,
 				"showFormDialog": false,
 				"showViewAction": false,
@@ -142,16 +283,31 @@
 				"showCopyAction": false,
 				"showDeleteAction": false,
 				"showMassImport": false,
-				"showMassExport": false,
+				"showMassExport": true,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"selectable": false,
+				"selectable": true,
+				"filterMenu": true,
+				"sortKey": "startAt",
+				"sortOrder": "asc",
+				"countText": "{shown} of {total} appointments · sorted by time",
+				"searchPlaceholder": "Filter by customer or service",
+				"headerButtons": [ { "action": "export", "label": "Download" } ],
+				"rowTitle": "plain",
+				"footerNote": "Customers book appointments in the portal. Open one to reschedule or cancel it.",
+				"quickFilters": [
+					{ "label": "Today", "activeLabel": "Period: today", "filter": { "startAt[gte]": "@today", "startAt[lt]": "@today+1d" }, "showCount": true },
+					{ "label": "This week", "activeLabel": "Period: this week", "filter": { "startAt[gte]": "@today", "startAt[lt]": "@today+7d" }, "default": true, "showCount": true },
+					{ "label": "Mine", "activeLabel": "Handler: me", "filter": { "assignee": "@me" }, "showCount": true },
+					{ "label": "Unconfirmed", "activeLabel": "Status: unconfirmed", "filter": { "status": "pending-deposit" }, "showCount": true }
+				],
 				"columns": [
-					"customerId",
-					"serviceId",
-					{ "key": "startAt", "label": "Datum/tijd", "format": "date-time" },
-					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "completed": "primary", "no-show": "error", "pending-deposit": "warning", "cancelled-by-customer": "default", "cancelled-by-business": "default", "rescheduled": "default" } } },
-					"source"
+					{ "key": "startAt", "label": "When", "formatter": "bookingWhen", "secondary": "{startAt|weekday:today}", "cellClass": "cn-cell--strong" },
+					{ "key": "customerId", "label": "With whom", "formatter": "bookingCustomerName" },
+					{ "key": "subject", "label": "About", "secondary": "{source}", "cellClass": "cn-cell--strong" },
+					{ "key": "location", "label": "Location or desk" },
+					{ "key": "assignee", "label": "Handler", "formatter": "userDisplayName", "widget": "avatar", "widgetProps": { "user": true, "size": 28, "tone": "neutral" } },
+					{ "key": "status", "label": "Status", "formatter": "enumLabel", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "completed": "primary", "no-show": "error", "pending-deposit": "warning", "cancelled-by-customer": "default", "cancelled-by-business": "default", "rescheduled": "default" } } }
 				],
 				"actions": [
 					{ "id": "view", "label": "Open", "icon": "Eye", "handler": "navigate", "route": "BookingDetail" }
@@ -160,49 +316,73 @@
 		},
 		{
 			"id": "BookingDetail",
-			"_note": "Booking record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The booking's flat identity fields (status / source / startAt / endAt / depositAmount / notes / …) auto-render in the body via CnObjectDataWidget. What the auto-body cannot express is split over grid widgets built from BookingDetailSection parts (booking-and-service-pages): the Service/Customer name context and the resourceAssignments table. The Timeline tab is the library `timeline` widget: dated fields plus the audit trail. Notes are the notes leaf; the audit table is dropped, OpenRegister's activity is in the actions menu. KEPT-AS-NOTE: lifecycleActions is NOT wired even though booking HAS an x-openregister-lifecycle — the real transitions POST to bespoke /api/bookings/{id}/{action} endpoints in BookingService with side-effects (confirmation/reminder emails, no-show fees) and TIME-WINDOW gating, and Reschedule CREATES A NEW booking UUID and navigates to it; OR's /transition would only flip status and bypass those side-effects. So the six admin actions are the page's actionsComponent (BookingHeaderActions), beside Edit in the header. Missing primitive: a declarative action that POSTs to a host-app endpoint (not OR /transition) with time-window gating + a 'returns a new object id, navigate to it' reload mode.",
+			"_note": "Booking record as a declarative type:detail page. The admin actions are the page's actionsComponent (BookingHeaderActions), not lifecycleActions: the real transitions POST to bespoke /api/bookings/{id}/{action} endpoints in BookingService with side-effects (confirmation and reminder mails, no-show fees) and time-window gating, and Reschedule creates a new booking and navigates to it; OpenRegister's /transition would only flip the status. Missing primitive: a declarative action that POSTs to a host-app endpoint with time-window gating and a navigate-to-the-new-object reload mode.",
 			"route": "/bookings/:id",
 			"type": "detail",
-			"title": "Booking",
+			"title": "Appointment",
 			"actionsComponent": "BookingHeaderActions",
 			"config": {
 				"register": "pipelinq",
 				"schema": "appointmentBooking",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"excludeFields": ["resourceAssignments", "statusHistory"],
-				"_note": "Booking archetype (bespoke-detail-pages). An appointment booking is a scheduled service slot, so the body opens with the booking fields (status, source, startAt/endAt, customerId, serviceId, depositAmount, confirmation/reminder timestamps, cancellationReason) 8-wide beside a right column holding the deposit KPI stat above the related graph (service, resource, customer, previousBookingId reschedule chain), with Documents full-width for any signed intake / deposit receipt. IMPORTANT: no calendar body widget or tab — although a booking is time-bound, the booking schema declares NO calendar linkedType, and per the hard rule comms/scheduling leaves only appear when the schema declares them; the real schedule, the resourceAssignments/statusHistory arrays-on-object and the computed Timeline stay in the PRESERVED BookingDetailSection bodyWidget (after-data); the six TIME-WINDOW-gated admin actions are the page's actionsComponent, whose registry note explains why lifecycleActions cannot be wired (bespoke endpoints, side-effects, reschedule mints a new UUID).",
+				"_note": "Appointment page on the shared relation frame, as the PqAfspraak board draws it: the pills (Appointment and the status), the breadcrumb back to Appointments, the meta line with how it was booked, and the admin actions as a row of buttons under the title (BookingHeaderActions; the PqAfspraakVerplaatsen dialogs open from Reschedule and Cancel). One tab strip fills the body: Overview stacks the appointment data, the recent changes and the assigned resources; then Resources, Notes, Documents, Related and History. The customer and the when-and-where card are the side column. The deposit is a field of the data card, where the board shows it, instead of a stat card of its own.",
+				"titleField": "subject",
+				"follow": false,
+				"breadcrumb": { "label": "Appointments", "route": "Bookings" },
+				"typePill": { "field": "serviceId", "variant": "info", "resolve": { "register": "pipelinq", "schema": "appointmentService", "labelField": "name" } },
+				"statusPill": { "field": "status", "colorMap": { "confirmed": "success", "completed": "primary", "no-show": "error", "pending-deposit": "warning", "cancelled-by-customer": "default", "cancelled-by-business": "default", "rescheduled": "default" }, "labels": { "pending-deposit": "Awaiting deposit", "confirmed": "Confirmed", "completed": "Finished", "no-show": "No-show", "cancelled-by-customer": "Cancelled by the customer", "cancelled-by-business": "Cancelled by us", "rescheduled": "Rescheduled" } },
+				"headerMeta": "{startAt|weekday} · {startAt|time} to {endAt|time}",
+				"tabsLabel": "Appointment",
+				"layout": [
+					{ "id": "1", "widgetId": "booking-panels", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 18, "showTitle": false }
+				],
+				"sideColumn": ["booking-context", "booking-when", "booking-request"],
 				"widgets": [
-					{ "id": "booking-deposit", "type": "stat", "title": "Deposit", "icon": "Cash", "content": { "label": "Deposit", "format": { "style": "currency", "currency": "@config.currency", "decimals": 2 }, "source": { "register": "pipelinq", "schema": "appointmentBooking", "metric": "sum", "field": "depositAmount", "filter": { "id": "@objectId" } } } },
-					{ "id": "booking-data", "type": "data", "title": "Booking", "icon": "Calendar", "content": { "title": "Booking", "columns": 2, "include": ["status", "source", "startAt", "endAt", "customerId", "serviceId", "depositAmount", "confirmationSentAt", "reminderSentAt", "cancellationReason", "notes", "internalNotes"], "overrides": { "customerId": { "label": "Customer", "formatter": "bookingCustomerName" }, "serviceId": { "label": "Service", "formatter": "bookingServiceName" }, "status": { "editable": false }, "startAt": { "editable": false }, "endAt": { "editable": false }, "confirmationSentAt": { "editable": false }, "reminderSentAt": { "editable": false }, "notes": { "label": "Note for the customer" }, "internalNotes": { "label": "Internal note (earlier)", "editable": false } } } },
-					{ "id": "booking-context", "type": "BookingContextWidget", "title": "Service and customer", "icon": "AccountClockOutline", "content": { "title": "Service and customer" } },
-					{ "id": "booking-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
 					{
-						"id": "booking-tabs",
+						"id": "booking-panels",
 						"type": "tabs",
-						"title": "Booking",
-						"icon": "ViewDashboard",
-						"_note": "The working surface of a booking, one tab at a time (pipelinq review E7). Timeline: the library `timeline` widget (nextcloud-vue 2.65): the booking's dated fields plus its audit trail, so every status change shows as a dated change with who made it (review E6). Notes: the notes leaf, as on LeadDetail, instead of the hand-written notes editor. The audit table is gone: OpenRegister's activity is in the actions menu (E6). Children stay out of `layout`.",
+						"title": "Appointment",
+						"icon": "CalendarClock",
+						"_note": "One strip. Overview stacks the data card, the recent changes (the library timeline: the dated fields, the status history and the audit trail) and the assigned resources. Children stay out of `layout`, or the tabs widget and the grid would each render them once.",
 						"content": {
-							"ariaLabel": "Booking",
+							"ariaLabel": "Appointment",
 							"tabs": [
-								{ "widgetId": "booking-timeline", "label": "Timeline" },
+								{ "widgetIds": ["booking-data", "booking-timeline", "booking-assignments"], "label": "Overview" },
 								{ "widgetId": "booking-assignments", "label": "Resources" },
 								{ "widgetId": "booking-notes", "label": "Notes" },
-								{ "widgetId": "booking-files", "label": "Documents" }
+								{ "widgetId": "booking-files", "label": "Documents" },
+								{ "widgetId": "booking-related", "label": "Related" },
+								{ "widgetId": "booking-history", "label": "History" }
 							]
 						}
 					},
-					{ "id": "booking-timeline", "type": "timeline", "title": "Timeline", "icon": "Timeline", "content": { "fields": [ { "field": "@self.created", "label": "Booking created" }, { "field": "depositPaidAt", "label": "Deposit cleared" }, { "field": "confirmationSentAt", "label": "Confirmation mail sent" }, { "field": "reminderSentAt", "label": "Reminder sent" }, { "field": "startAt", "label": "Starts" }, { "field": "endAt", "label": "Ends" }, { "field": "cancelledAt", "label": "Cancelled" }, { "field": "noShowFeeChargedAt", "label": "No-show fee charged" } ], "lists": [ { "field": "statusHistory", "dateField": "changedAt", "labelField": "status", "detailField": "reason" } ], "auditTrail": true, "order": "asc" } },
-					{ "id": "booking-assignments", "type": "BookingAssignmentsWidget", "title": "Resource assignments", "icon": "AccountGroup", "content": {} },
+					{ "id": "booking-data", "type": "data", "title": "Appointment details", "icon": "Calendar", "content": { "title": "Appointment details", "columns": 2, "fixedColumns": true, "include": ["serviceId", "customerId", "startAt", "endAt", "source", "depositAmount", "cancellationReason", "noShowFeeChargedAt", "confirmationSentAt", "reminderSentAt", "notes", "internalNotes"], "overrides": { "cancellationReason": { "order": 7 },  "customerId": { "order": 2, "label": "Customer", "formatter": "bookingCustomerName" }, "serviceId": { "order": 1, "label": "Service", "formatter": "bookingServiceName" }, "startAt": { "order": 3, "label": "Starts", "editable": false }, "endAt": { "order": 4, "label": "Ends", "editable": false }, "source": { "order": 5, "label": "Booked via", "formatter": "enumLabel" }, "depositAmount": { "order": 6, "label": "Deposit", "formatter": "objectCurrency" }, "noShowFeeChargedAt": { "order": 8, "label": "No-show fee charged", "editable": false }, "confirmationSentAt": { "order": 9, "label": "Confirmation sent", "editable": false }, "reminderSentAt": { "order": 10, "label": "Reminder sent", "editable": false }, "notes": { "order": 11, "gridColumn": 2, "label": "Note for the customer" }, "internalNotes": { "order": 12, "gridColumn": 2, "label": "Internal note", "editable": false } } } },
+					{ "id": "booking-timeline", "type": "timeline", "title": "Recent changes", "icon": "Timeline", "content": { "fields": [ { "field": "@self.created", "label": "Booking created" }, { "field": "depositPaidAt", "label": "Deposit cleared" }, { "field": "confirmationSentAt", "label": "Confirmation mail sent" }, { "field": "reminderSentAt", "label": "Reminder sent" }, { "field": "startAt", "label": "Starts" }, { "field": "endAt", "label": "Ends" }, { "field": "cancelledAt", "label": "Cancelled" }, { "field": "noShowFeeChargedAt", "label": "No-show fee charged" } ], "lists": [ { "field": "statusHistory", "dateField": "changedAt", "labelField": "status", "detailField": "reason", "valueLabels": { "pending-deposit": "Status: Awaiting deposit", "confirmed": "Status: Confirmed", "completed": "Status: Finished", "no-show": "Status: No-show", "cancelled-by-customer": "Status: Cancelled by the customer", "cancelled-by-business": "Status: Cancelled by us", "rescheduled": "Status: Rescheduled" } } ], "auditTrail": false, "order": "desc" } },
+					{ "id": "booking-assignments", "type": "BookingAssignmentsWidget", "title": "Assigned resources", "icon": "AccountGroup", "content": { "title": "Assigned resources", "subtitle": "Who and what is booked, from the Resources tab" } },
 					{ "id": "booking-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" },
-					{ "id": "booking-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" }
-				],
-				"layout": [
-					{ "id": "2", "widgetId": "booking-data",    "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
-					{ "id": "1", "widgetId": "booking-deposit", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "5", "widgetId": "booking-context", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "3", "widgetId": "booking-related", "gridX": 8, "gridY": 6, "gridWidth": 4, "gridHeight": 3 },
-					{ "id": "4", "widgetId": "booking-tabs",    "gridX": 0, "gridY": 6, "gridWidth": 8, "gridHeight": 10 }
+					{ "id": "booking-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
+					{ "id": "booking-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "booking-history", "type": "audit-trail", "title": "History", "icon": "History" },
+					{ "id": "booking-context", "type": "BookingCustomerWidget", "title": "Customer", "icon": "AccountBoxOutline", "content": {} },
+					{ "id": "booking-when", "type": "BookingWhenWidget", "title": "When and where", "icon": "MapMarkerCheck", "content": {} },
+					{
+						"id": "booking-request",
+						"type": "record-list",
+						"title": "Linked request",
+						"icon": "LinkVariant",
+						"_note": "PqAfspraak's Gekoppeld verzoek: the ticket the booking names in `ticket`, read by its id (`_ids`), opening its own page. A booking without one says so.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": { "_ids": ["@object.ticket"] },
+							"limit": 1,
+							"title": "{title}",
+							"meta": "{reference} · {status} · {assignee|user}",
+							"rowRoute": "TicketDetail",
+							"emptyText": "Not linked to a request"
+						}
+					}
 				],
 				"sidebar": {
 					"enabled": true,

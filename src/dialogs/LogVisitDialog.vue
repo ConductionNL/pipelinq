@@ -10,7 +10,8 @@
   - @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="confirm"
 		:name="t('pipelinq', 'Log a visit')"
 		size="small"
 		@closing="$emit('close')">
@@ -40,7 +41,7 @@
 			</p>
 		</form>
 		<template #actions>
-			<NcButton variant="tertiary" @click="$emit('close')">
+			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
@@ -50,17 +51,18 @@
 				{{ t('pipelinq', 'Save visit') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'LogVisitDialog',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 	},
 
 	props: {

@@ -8,7 +8,7 @@
   - via ICrypto and never returned in API responses; this view shows
   - ***SET*** for fields that already have a stored value.
   -
-  - @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+  - @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
   -->
 <template>
 	<div class="payment-settings">
@@ -22,63 +22,128 @@
 			:description="
 				t(
 					'pipelinq',
-					'Who processes the money: the payment service providers used for in-store and online payments (Mollie, CCV, Adyen, Stripe). Credentials are stored encrypted. Distinct from POS tender types below, which are how a customer can pay at the till.',
+					'Who processes the money: the payment providers for payments in the shop and online. Keys are stored encrypted.',
 				)
 			">
 			<div v-if="loading" class="payment-settings__loading">
 				<NcLoadingIcon :size="24" />
 				<span>{{ t('pipelinq', 'Loading providers…') }}</span>
 			</div>
-			<div v-else class="payment-settings__cards">
-				<div
-					v-for="provider in providers"
-					:key="provider.name"
-					class="payment-settings__card">
-					<header class="payment-settings__card-header">
-						<h3>{{ provider.displayName }}</h3>
-						<span class="payment-settings__type">{{
-							providerTypeLabel(provider.type)
-						}}</span>
-					</header>
+			<template v-else>
+				<!-- One compact row per provider: who it is, how it takes money,
+				     which environment, and whether it is on. The switch saves at
+				     once; the provider's settings open below, one at a time. -->
+				<ul class="payment-settings__providers">
+					<li
+						v-for="provider in providers"
+						:key="provider.name"
+						class="payment-settings__provider"
+						:class="{ 'payment-settings__provider--selected': provider.name === selectedName }"
+						data-testid="payment-provider-row">
+						<button
+							type="button"
+							class="payment-settings__provider-select"
+							data-testid="payment-provider-select"
+							:aria-pressed="provider.name === selectedName ? 'true' : 'false'"
+							@click="selectedName = provider.name">
+							<strong>{{ provider.displayName }}</strong>
+							<span class="payment-settings__provider-meta">
+								{{ providerTypeLabel(provider.type) }} · {{ environmentLabel(provider.environment) }}
+							</span>
+						</button>
+						<NcCheckboxRadioSwitch
+							:modelValue="provider.isActive"
+							type="switch"
+							:aria-label="t('pipelinq', 'Enable {provider}', { provider: provider.displayName })"
+							:disabled="savingProvider === provider.name"
+							@update:modelValue="(on) => onToggle(provider, on)">
+							<span class="hidden-visually">
+								{{ t('pipelinq', 'Enable {provider}', { provider: provider.displayName }) }}
+							</span>
+						</NcCheckboxRadioSwitch>
+					</li>
+				</ul>
 
-					<NcCheckboxRadioSwitch v-model="provider.isActive" type="switch">
-						{{ t('pipelinq', 'Enable this provider') }}
+				<div
+					v-if="selected"
+					:key="selected.name"
+					class="payment-settings__form"
+					data-testid="payment-provider-form">
+					<h3>{{ selected.displayName }}</h3>
+
+					<div class="payment-settings__fields">
+						<NcSelect
+							v-model="selected.environment"
+							:options="environmentOptions"
+							:inputLabel="t('pipelinq', 'Environment')"
+							label="label"
+							:reduce="(o) => o.value" />
+
+						<!--
+							Pipelinq holds no key that moves the money: it picks a
+							credential from the broker, and OpenRegister injects the
+							secret server-side on every call.
+						-->
+						<NcSelect
+							v-model="selected.credential"
+							:options="credentialsFor(selected.name)"
+							:inputLabel="t('pipelinq', 'API credential')"
+							:loading="loadingCredentials"
+							:placeholder="t('pipelinq', 'Select a credential')"
+							label="label"
+							@update:modelValue="
+								(v) => onCredentialChange(selected, v)
+							" />
+
+						<NcTextField
+							v-if="selected.name === 'ccv'"
+							v-model="selected.config.terminalId"
+							:label="t('pipelinq', 'Terminal ID')"
+							:placeholder="t('pipelinq', 'register-01')" />
+
+						<NcTextField
+							v-if="selected.name === 'adyen'"
+							v-model="selected.config.merchantAccount"
+							:label="t('pipelinq', 'Merchant account')"
+							:placeholder="t('pipelinq', 'PipelinqPOS')" />
+
+						<!--
+							The webhook secret stays app-held: it verifies an HMAC on an
+							inbound webhook, which the broker cannot do for us.
+						-->
+						<NcTextField
+							:modelValue="
+								selected.webhookSecret === MASK
+									? ''
+									: selected.webhookSecret
+							"
+							:label="t('pipelinq', 'Webhook secret')"
+							:placeholder="
+								selected.webhookSecret === MASK
+									? t('pipelinq', '(saved — leave empty to keep)')
+									: ''
+							"
+							type="password"
+							@update:modelValue="
+								(v) => onSecretChange(selected, 'webhookSecret', v)
+							" />
+					</div>
+
+					<NcCheckboxRadioSwitch v-model="selected.testMode">
+						{{ t('pipelinq', 'Test mode (do not charge live)') }}
 					</NcCheckboxRadioSwitch>
 
-					<NcSelect
-						v-model="provider.environment"
-						:options="environmentOptions"
-						:inputLabel="t('pipelinq', 'Environment')"
-						label="label"
-						:reduce="(o) => o.value" />
-
-					<!--
-						The API-key field is gone. Pipelinq no longer holds the key that moves
-						the money: it picks a credential from the broker, and OpenRegister
-						injects the secret server-side on every call.
-					-->
-					<NcSelect
-						v-model="provider.credential"
-						:options="credentialsFor(provider.name)"
-						:inputLabel="t('pipelinq', 'API credential')"
-						:loading="loadingCredentials"
-						:placeholder="t('pipelinq', 'Select a credential')"
-						label="label"
-						@update:modelValue="
-							(v) => onCredentialChange(provider, v)
-						" />
-
-					<p class="payment-settings__hint">
+					<p class="payment-settings__hint" role="status">
 						<template
 							v-if="
 								!loadingCredentials
-								&& !credentialsFor(provider.name).length
+								&& !credentialsFor(selected.name).length
 							">
 							{{
 								t(
 									'pipelinq',
 									'No {provider} credential yet. Add one under Personal settings → Additional settings, then reopen this page.',
-									{ provider: displayName(provider.name) },
+									{ provider: selected.displayName },
 								)
 							}}
 						</template>
@@ -92,61 +157,26 @@
 						</template>
 					</p>
 
-					<!--
-						The webhook secret STAYS app-held. It verifies an HMAC on an INBOUND
-						webhook — a local verify operation, not an outbound request header — so
-						a constrained HTTP proxy cannot carry it.
-					-->
-					<NcTextField
-						:modelValue="
-							provider.webhookSecret === MASK
-								? ''
-								: provider.webhookSecret
-						"
-						:label="t('pipelinq', 'Webhook secret')"
-						:placeholder="
-							provider.webhookSecret === MASK
-								? t('pipelinq', '(saved — leave empty to keep)')
-								: ''
-						"
-						type="password"
-						@update:modelValue="
-							(v) => onSecretChange(provider, 'webhookSecret', v)
-						" />
-
-					<NcTextField
-						v-if="provider.name === 'ccv'"
-						v-model="provider.config.terminalId"
-						:label="t('pipelinq', 'Terminal ID')"
-						:placeholder="t('pipelinq', 'register-01')" />
-
-					<NcTextField
-						v-if="provider.name === 'adyen'"
-						v-model="provider.config.merchantAccount"
-						:label="t('pipelinq', 'Merchant account')"
-						:placeholder="t('pipelinq', 'PipelinqPOS')" />
-
-					<NcCheckboxRadioSwitch v-model="provider.testMode" type="switch">
-						{{ t('pipelinq', 'Test mode (do not charge live)') }}
-					</NcCheckboxRadioSwitch>
-
 					<div class="payment-settings__actions">
 						<NcButton
 							variant="secondary"
-							:disabled="testingProvider === provider.name"
-							@click="onTest(provider)">
+							:disabled="testingProvider === selected.name"
+							@click="onTest(selected)">
+							<template #icon>
+								<Refresh :size="20" />
+							</template>
 							{{
-								testingProvider === provider.name
+								testingProvider === selected.name
 									? t('pipelinq', 'Testing…')
 									: t('pipelinq', 'Test connection')
 							}}
 						</NcButton>
 						<NcButton
 							variant="primary"
-							:disabled="savingProvider === provider.name"
-							@click="onSave(provider)">
+							:disabled="savingProvider === selected.name"
+							@click="onSave(selected)">
 							{{
-								savingProvider === provider.name
+								savingProvider === selected.name
 									? t('pipelinq', 'Saving…')
 									: t('pipelinq', 'Save')
 							}}
@@ -154,27 +184,25 @@
 					</div>
 
 					<p
-						v-if="provider.testResult && provider.testResult.status"
+						v-if="selected.testResult && selected.testResult.status"
 						class="payment-settings__test-result"
 						:class="{
 							'payment-settings__test-result--ok':
-								provider.testResult.status === 'ok',
+								selected.testResult.status === 'ok',
 							'payment-settings__test-result--error':
-								provider.testResult.status === 'error',
+								selected.testResult.status === 'error',
 						}">
-						{{ provider.testResult.message }}
-						<span
-							v-if="provider.lastTestedAt"
-							class="payment-settings__timestamp">
-							{{
-								t('pipelinq', 'Last tested at {time}', {
-									time: provider.lastTestedAt,
-								})
-							}}
-						</span>
+						{{ selected.testResult.message }}
 					</p>
+					<span v-if="selected.lastTestedAt" class="payment-settings__timestamp">
+						{{
+							t('pipelinq', 'Last tested at {time}', {
+								time: formatMoment(selected.lastTestedAt),
+							})
+						}}
+					</span>
 				</div>
-			</div>
+			</template>
 		</NcSettingsSection>
 	</div>
 </template>
@@ -191,6 +219,7 @@ import {
 	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import {
 	listProviders,
 	testConnection,
@@ -222,6 +251,7 @@ export default {
 		NcSelect,
 		NcSettingsSection,
 		NcTextField,
+		Refresh,
 	},
 
 	data() {
@@ -234,19 +264,31 @@ export default {
 			// never the keys behind them.
 			credentials: [],
 			loadingCredentials: false,
+			// The provider whose settings show below the list.
+			selectedName: '',
 			MASK,
 		}
 	},
 
 	computed: {
 		/**
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		environmentOptions() {
 			return [
 				{ value: 'sandbox', label: t('pipelinq', 'Sandbox') },
 				{ value: 'live', label: t('pipelinq', 'Production') },
 			]
+		},
+
+		/**
+		 * The provider whose settings form shows.
+		 *
+		 * @return {object|null} The provider, or null before any loaded.
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
+		selected() {
+			return this.providers.find((p) => p.name === this.selectedName) || null
 		},
 	},
 
@@ -259,7 +301,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async refresh() {
 			this.loading = true
@@ -272,6 +314,10 @@ export default {
 						this.credentialsFor(provider.name).find(
 							(o) => o.value === provider.credentialId,
 						) || null
+				}
+				if (!this.providers.some((p) => p.name === this.selectedName)) {
+					const first = this.providers.find((p) => p.isActive) || this.providers[0]
+					this.selectedName = first ? first.name : ''
 				}
 			} catch (e) {
 				showError(
@@ -294,7 +340,7 @@ export default {
 		 *
 		 * @param {object} p Raw provider from the API.
 		 * @return {object} Provider with string-safe, reactive fields.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		normalizeProvider(p) {
 			const config = { ...(p.config || {}) }
@@ -320,7 +366,7 @@ export default {
 		 *
 		 * @param {string} name The Pipelinq provider name.
 		 * @return {Array} NcSelect options.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		credentialsFor(name) {
 			const wanted = BROKER_PROVIDERS[name] || [name]
@@ -341,7 +387,7 @@ export default {
 		 * carries no secrets — only names, providers and UUIDs.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async fetchCredentials() {
 			this.loadingCredentials = true
@@ -360,10 +406,45 @@ export default {
 		/**
 		 * @param {object} provider The payment provider being configured.
 		 * @param {object} option The credential field that changed.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		onCredentialChange(provider, option) {
 			provider.credentialId = option ? option.value : ''
+		},
+
+		/**
+		 * @param {string} environment The stored environment.
+		 * @return {string} Its label.
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
+		environmentLabel(environment) {
+			const option = this.environmentOptions.find((o) => o.value === environment)
+			return option ? option.label : environment || ''
+		},
+
+		/**
+		 * Switch a provider on or off from its row, and save it at once.
+		 *
+		 * @param {object} provider The provider.
+		 * @param {boolean} on Whether it is on.
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
+		async onToggle(provider, on) {
+			provider.isActive = on === true
+			await this.onSave(provider)
+		},
+
+		/**
+		 * @param {string} iso A moment as ISO 8601.
+		 * @return {string} Day, month and time in the reader's language.
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
+		formatMoment(iso) {
+			const date = new Date(iso)
+			if (Number.isNaN(date.getTime())) {
+				return String(iso)
+			}
+			return date.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 		},
 
 		providerTypeLabel(type) {
@@ -381,7 +462,7 @@ export default {
 
 		/**
 		 * @param {object} provider The payment provider to save.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async onSave(provider) {
 			this.savingProvider = provider.name
@@ -422,7 +503,7 @@ export default {
 
 		/**
 		 * @param {object} provider The payment provider to probe.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async onTest(provider) {
 			this.testingProvider = provider.name
@@ -473,45 +554,79 @@ export default {
 	padding: 24px;
 }
 
-.payment-settings__cards {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-	gap: 16px;
+.payment-settings__providers {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
 }
 
-.payment-settings__card {
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-	padding: 16px;
+.payment-settings__provider {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.payment-settings__provider-select {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 2px;
+	min-width: 0;
+	margin: 0;
+	padding: 4px 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-main-text);
+	font-size: 15px;
+	text-align: start;
+	cursor: pointer;
+}
+
+.payment-settings__provider--selected .payment-settings__provider-select strong {
+	color: var(--color-primary-element);
+}
+
+.payment-settings__provider-meta {
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+}
+
+.payment-settings__form {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	background-color: var(--color-main-background);
+	margin-top: 16px;
 }
 
-.payment-settings__card-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.payment-settings__card-header h3 {
+.payment-settings__form h3 {
 	margin: 0;
-	font-size: 1.1em;
+	font-size: 15px;
+	font-weight: 600;
 }
 
-.payment-settings__type {
-	font-size: 0.85em;
-	color: var(--color-text-maxcontrast);
-	background-color: var(--color-background-hover);
-	padding: 2px 8px;
-	border-radius: var(--border-radius);
+.payment-settings__fields {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 12px 16px;
+}
+
+.payment-settings__hint {
+	margin: 0;
+	padding: 10px 12px;
+	border-radius: var(--border-radius-large);
+	background: var(--color-background-hover);
+	font-size: 14px;
 }
 
 .payment-settings__actions {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 8px;
-	justify-content: flex-end;
 }
 
 .payment-settings__test-result {
@@ -532,9 +647,7 @@ export default {
 }
 
 .payment-settings__timestamp {
-	display: block;
-	font-size: 0.8em;
-	margin-top: 4px;
-	opacity: 0.85;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
 }
 </style>

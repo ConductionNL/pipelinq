@@ -38,11 +38,24 @@ return [
 
         // Contacts sync (camelCase slug matches ContactSyncController class name)
         ['name' => 'contactSync#search', 'url' => '/api/contacts-sync/search', 'verb' => 'GET'],
+        ['name' => 'contactSync#status', 'url' => '/api/contacts-sync/status', 'verb' => 'GET'],
         ['name' => 'contactSync#import', 'url' => '/api/contacts-sync/import', 'verb' => 'POST'],
         ['name' => 'contactSync#writeBack', 'url' => '/api/contacts-sync/write-back', 'verb' => 'POST'],
+        // The contacts section of the user settings (contacts-sync-settings).
+        ['name' => 'contactSyncSettings#show', 'url' => '/api/contacts-sync/settings', 'verb' => 'GET'],
+        ['name' => 'contactSyncSettings#update', 'url' => '/api/contacts-sync/settings', 'verb' => 'PUT'],
+        ['name' => 'contactSyncSettings#run', 'url' => '/api/contacts-sync/run', 'verb' => 'POST'],
+        // Organisation enrichment from the KvK (organisation-enrichment).
+        ['name' => 'organisationEnrichment#propose', 'url' => '/api/organisations/enrich/proposals', 'verb' => 'POST'],
+        ['name' => 'organisationEnrichment#apply', 'url' => '/api/organisations/enrich/apply', 'verb' => 'POST'],
         // Contact-FIRST create — provisions the NC contact and saves the object
         // with the required contactsUid (client-contact unification).
         ['name' => 'contactSync#create', 'url' => '/api/contacts-sync/create', 'verb' => 'POST'],
+        // A mail client's side pane (contact-moments-mail-add-in): sender lookup,
+        // add as contact, log this mail. Called with an app password.
+        ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
+        ['name' => 'mailAddIn#contact', 'url' => '/api/mail-add-in/contact', 'verb' => 'POST'],
+        ['name' => 'mailAddIn#log', 'url' => '/api/mail-add-in/log', 'verb' => 'POST'],
 
         // Email matching (leaf-first email-calendar-sync) — per-user settings + trigger + status.
         // The matching job links Nextcloud Mail messages to CRM entities via the OR `email` leaf.
@@ -50,6 +63,7 @@ return [
         ['name' => 'emailSync#saveSettings', 'url' => '/api/sync/email/settings', 'verb' => 'POST'],
         ['name' => 'emailSync#trigger', 'url' => '/api/sync/email/trigger', 'verb' => 'POST'],
         ['name' => 'emailSync#getStatus', 'url' => '/api/sync/email/status', 'verb' => 'GET'],
+        ['name' => 'emailSync#getAccounts', 'url' => '/api/sync/email/accounts', 'verb' => 'GET'],
 
         // Entity notes
         ['name' => 'notes#list', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'GET'],
@@ -91,6 +105,10 @@ return [
         // My-work worklist — canonical server-side union of the current user's
         // leads + requests (replaces the MyWorkWidget/MyWork client-side union).
         ['name' => 'worklist#mine', 'url' => '/api/worklist/mine', 'verb' => 'GET'],
+        ['name' => 'worklist#items', 'url' => '/api/worklist/items', 'verb' => 'GET'],
+        ['name' => 'leadRelatedSummary#show', 'url' => '/api/leads/{id}/related-summary', 'verb' => 'GET'],
+        ['name' => 'worklist#summary', 'url' => '/api/worklist/summary', 'verb' => 'GET'],
+        ['name' => 'firstTicket#show', 'url' => '/api/worklist/first', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
         ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
@@ -108,9 +126,17 @@ return [
         // Customer 360 consolidated summary (klantbeeld-360-activation) — cross-ticketType/status
         // aggregation the declarative layer can't express; per-object read guard on the client in the body.
         ['name' => 'customer360#summary', 'url' => '/api/customer-360/summary', 'verb' => 'GET'],
+        // The client's cases from dossiq's case leaf, by the client's master entity (PqKlant / PqOrganisatie Zaken).
+        ['name' => 'clientCase#index', 'url' => '/api/clients/{id}/cases', 'verb' => 'GET'],
+        ['name' => 'clientBusiness#index', 'url' => '/api/clients/{id}/business', 'verb' => 'GET'],
         // Letters from a filinq template (work-letter-from-filinq-template).
+        // An event's reminder to everyone with a confirmed place (event-reminder-and-check-in).
+        ['name' => 'eventReminder#send', 'url' => '/api/campaign-events/{id}/reminder', 'verb' => 'POST'],
         ['name' => 'letter#templates', 'url' => '/api/letters/templates', 'verb' => 'GET'],
+        ['name' => 'record_document#template', 'url' => '/api/records/{schema}/document-template', 'verb' => 'GET'],
+        ['name' => 'record_document#document', 'url' => '/api/records/{schema}/{id}/document', 'verb' => 'GET'],
         ['name' => 'letter#create', 'url' => '/api/clients/{id}/letters', 'verb' => 'POST'],
+        ['name' => 'letter#preview', 'url' => '/api/clients/{id}/letters/preview', 'verb' => 'POST'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
         // see openspec/changes/migrate-forms-to-forms-leaf.
 
@@ -120,6 +146,9 @@ return [
         // The contact moments leaf a host app renders on its own object
         // (contact-moments-on-pipelinq-schema, REQ-CMD-003). `hostId` is the
         // host's uuid and stays opaque to pipelinq.
+        // A host app's link to one party's tickets, by master entity (tickets-list-by-party).
+        ['name' => 'ticketParty#tickets', 'url' => '/tickets/party/{ref}', 'verb' => 'GET'],
+        ['name' => 'staffProfile#show', 'url' => '/api/staff/{userId}/profile', 'verb' => 'GET'],
         ['name' => 'contactMomentLeaf#index',  'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'GET'],
         ['name' => 'contactMomentLeaf#create', 'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'POST'],
         // Filing an EXISTING contact moment onto a further case, and taking it
@@ -174,8 +203,10 @@ return [
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
         ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],
         ['name' => 'cti#screenPop',        'url' => '/api/cti/screen-pop',                 'verb' => 'POST'],
+        ['name' => 'incomingCall#show',    'url' => '/api/cti/incoming-call',              'verb' => 'GET'],
         ['name' => 'cti#clickToDial',      'url' => '/api/cti/click-to-dial',              'verb' => 'POST'],
         ['name' => 'cti#disposition',      'url' => '/api/cti/contactmoment/{id}/disposition', 'verb' => 'POST'],
+        ['name' => 'ctiEscalationQueue#index', 'url' => '/api/cti/escalation-queues',      'verb' => 'GET'],
         ['name' => 'cti#attachRecording',  'url' => '/api/cti/contactmoment/{id}/recording',   'verb' => 'POST'],
         ['name' => 'cti#getConfig',        'url' => '/api/cti/config',                     'verb' => 'GET'],
         ['name' => 'cti#updateConfig',     'url' => '/api/cti/config',                     'verb' => 'PUT'],
@@ -193,13 +224,14 @@ return [
         // Health check endpoint.
         ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
 
-        // Public website enquiry intake (website-enquiry-intake). Anonymous and
-        // cross-origin: the conduction.nl forms post here. It exists instead of
-        // letting the browser POST straight at OpenRegister's object API
-        // because OpenRegister cannot scope which PROPERTIES a public create
-        // may set, so a direct create would let a visitor write `status` and
-        // `handledBy`. See EnquiryIntakeService's class docblock.
-        ['name' => 'enquiry#submit', 'url' => '/api/enquiry', 'verb' => 'POST'],
+        // Public website forms (website-forms-submit-into-tickets, decision 179).
+        // Anonymous and cross-origin: a submit creates the object its published
+        // webForm names (a ticket, a lead, ...), in the request. /api/enquiry is
+        // the address conduction-website already posts to, its `source` being the
+        // form's key; the submit no longer becomes an enquiry. Only the fields the
+        // form maps reach the object. See WebFormIntakeService's class docblock.
+        ['name' => 'webForm#submitBySource', 'url' => '/api/enquiry', 'verb' => 'POST'],
+        ['name' => 'webForm#submit', 'url' => '/api/web-forms/{key}/submit', 'verb' => 'POST', 'requirements' => ['key' => '[a-z0-9][a-z0-9-]{0,99}']],
 
         // Schedules API — pending MUST appear before {id} so the slug does not catch "pending".
         ['name' => 'schedules#index',   'url' => '/api/schedules',         'verb' => 'GET'],
@@ -216,6 +248,7 @@ return [
 
         // Skill-based routing suggestions — must precede SPA catch-all.
         ['name' => 'routing#getSuggestions', 'url' => '/api/routing/suggestions', 'verb' => 'GET'],
+        ['name' => 'teamLoad#index',         'url' => '/api/routing/team-load',   'verb' => 'GET'],
 
         // POS transaction lifecycle (camelCase slug matches PosTransactionController class name).
         // CRUD is handled by OpenRegister's generic object API; these are the lifecycle actions.
@@ -247,6 +280,7 @@ return [
         // receiptTemplate / receiptPrintLog CRUD is handled by OpenRegister's generic
         // object API; these are the render/email/thermal-print actions on a transaction.
         ['name' => 'posReceipt#preview', 'url' => '/api/pos-transactions/{id}/receipt/preview', 'verb' => 'GET'],
+        ['name' => 'posReceipt#log',     'url' => '/api/pos-transactions/{id}/receipt/log',     'verb' => 'GET'],
         ['name' => 'posReceipt#email',   'url' => '/api/pos-transactions/{id}/receipt/email',   'verb' => 'POST'],
         ['name' => 'posReceipt#print',   'url' => '/api/pos-transactions/{id}/receipt/print',   'verb' => 'POST'],
 
@@ -265,6 +299,8 @@ return [
         ['name' => 'cashShift#count',   'url' => '/api/pos-shifts/{id}/count',        'verb' => 'POST'],
         ['name' => 'cashShift#approve', 'url' => '/api/pos-shifts/{id}/diff/approve', 'verb' => 'POST'],
         ['name' => 'cashShift#reject',  'url' => '/api/pos-shifts/{id}/diff/reject',  'verb' => 'POST'],
+        ['name' => 'cashShift#summary', 'url' => '/api/pos-shifts/summary/{measure}', 'verb' => 'GET'],
+        ['name' => 'cashShift#shiftSummary', 'url' => '/api/pos-shifts/{id}/summary', 'verb' => 'GET'],
 
         // POS staff + role permissions (pos-staff-pin-permissions). Static auth
         // route precedes the {id} wildcard routes for the same resource.
@@ -291,6 +327,7 @@ return [
         // - /api/pos-payment-webhook/{provider} is the public, signature-validated webhook
         //   inbound from Mollie / CCV / Adyen / Stripe (REQ-PAY-006).
         // Specific routes precede any wildcard {path} catch-all (ADR-016).
+        ['name' => 'posPayment#methods',  'url' => '/api/pos-payments/methods',       'verb' => 'GET'],
         ['name' => 'posPayment#initiate', 'url' => '/api/pos-payments/{id}/initiate', 'verb' => 'POST'],
         ['name' => 'posPayment#capture',  'url' => '/api/pos-payments/{id}/capture',  'verb' => 'POST'],
         ['name' => 'posPayment#refund',   'url' => '/api/pos-payments/{id}/refund',   'verb' => 'POST'],
@@ -397,10 +434,14 @@ return [
         ['name' => 'forecastSettings#index',  'url' => '/api/settings/forecast', 'verb' => 'GET'],
         ['name' => 'forecastSettings#update', 'url' => '/api/settings/forecast', 'verb' => 'PUT'],
 
+        // Deal value conversion for LeadDetail: rate, source and date (pipeline-live-exchange-rates).
+        ['name' => 'exchangeRate#convert', 'url' => '/api/exchange-rates/convert', 'verb' => 'GET'],
+
         // Admin / DPO (Nextcloud admin only; no #[PublicPage] — admin-default).
         ['name' => 'portalAdmin#getConfig',    'url' => '/portal/api/admin/tenant-config', 'verb' => 'GET'],
         ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
+        ['name' => 'portalAdmin#tenants',      'url' => '/portal/api/admin/tenants',       'verb' => 'GET'],
         ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
         ['name' => 'portalAdmin#getServiceAccount',  'url' => '/portal/api/admin/service-account', 'verb' => 'GET'],
         ['name' => 'portalAdmin#saveServiceAccount', 'url' => '/portal/api/admin/service-account', 'verb' => 'PUT'],
@@ -462,6 +503,7 @@ return [
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
         ['name' => 'loyalty#getAccountHistory',  'url' => '/api/loyalty/accounts/{accountId}/history',  'verb' => 'GET'],
         ['name' => 'loyalty#getRedemptionOptions',    'url' => '/api/loyalty/redemption/options/{programmeId}/{accountId}', 'verb' => 'GET'],
+        ['name' => 'loyaltyPayment#pay',               'url' => '/api/loyalty/accounts/{accountId}/pay',                   'verb' => 'POST'],
         ['name' => 'loyalty#initiateRedemption',      'url' => '/api/loyalty/redemption/initiate/{accountId}/{optionId}',   'verb' => 'POST'],
         ['name' => 'loyalty#lookupRedemptionCode',    'url' => '/api/loyalty/redemption/{code}/validate',                   'verb' => 'POST'],
         ['name' => 'loyalty#useRedemptionCode',       'url' => '/api/loyalty/redemption/{code}/use',                        'verb' => 'POST'],
@@ -563,6 +605,7 @@ return [
         ['name' => 'ticketWooRequest#availability',   'url' => '/api/tickets/{id}/woo-request/availability', 'verb' => 'GET'],
         ['name' => 'ticketWooRequest#convert',        'url' => '/api/tickets/{id}/woo-request',              'verb' => 'POST'],
         // "Assign to me" on TicketDetail and the Queue (detail-pages-read-at-a-glance).
+        ['name' => 'ticketAssign#assignOldest',       'url' => '/api/tickets/assign-oldest',                 'verb' => 'POST'],
         ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
         // What the resident reads of a ticket, for the preview on TicketDetail (portal-resident-view-preview).
         ['name' => 'residentView#show',               'url' => '/api/tickets/{id}/resident-view',            'verb' => 'GET'],
@@ -590,6 +633,7 @@ return [
         ['name' => 'segment#preview',       'url' => '/api/segments/preview',          'verb' => 'POST'],
         ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
         ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
+        ['name' => 'segment#compliance',    'url' => '/api/segments/{id}/compliance',  'verb' => 'GET'],
         ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
         ['name' => 'segment#update',        'url' => '/api/segments/{id}',             'verb' => 'PATCH'],
 
@@ -627,6 +671,8 @@ return [
         ['name' => 'article#publish',    'url' => '/api/articles/{id}/publish',   'verb' => 'POST'],
         ['name' => 'article#archive',    'url' => '/api/articles/{id}/archive',   'verb' => 'POST'],
         ['name' => 'article#transition', 'url' => '/api/articles/{id}/transition', 'verb' => 'POST'],
+        // Shared label list: a rename also rewrites the items that carry the label.
+        ['name' => 'label#rename', 'url' => '/api/labels/{id}/rename', 'verb' => 'POST'],
         ['name' => 'article#usages',     'url' => '/api/articles/{id}/usages',    'verb' => 'GET'],
         ['name' => 'article#show',       'url' => '/api/articles/{id}',           'verb' => 'GET'],
         ['name' => 'article#update',     'url' => '/api/articles/{id}',           'verb' => 'PATCH'],
@@ -645,6 +691,7 @@ return [
         ['name' => 'socialAccount#sync',    'url' => '/api/social-accounts/{id}/sync',    'verb' => 'POST'],
         ['name' => 'socialAccount#show',    'url' => '/api/social-accounts/{id}',         'verb' => 'GET'],
 
+        ['name' => 'socialPost#networkPerformance', 'url' => '/api/social-performance/networks', 'verb' => 'GET'],
         ['name' => 'socialPost#performance',  'url' => '/api/social-performance',              'verb' => 'GET'],
         ['name' => 'socialPost#index',        'url' => '/api/social-posts',                    'verb' => 'GET'],
         ['name' => 'socialPost#create',       'url' => '/api/social-posts',                    'verb' => 'POST'],
@@ -696,6 +743,7 @@ return [
         ['name' => 'journey#create',  'url' => '/api/journeys',              'verb' => 'POST'],
         ['name' => 'journey#compile', 'url' => '/api/journeys/{id}/compile', 'verb' => 'POST'],
         ['name' => 'journey#runs',    'url' => '/api/journeys/{id}/runs',    'verb' => 'GET'],
+        ['name' => 'journey#setStatus', 'url' => '/api/journeys/{id}/status', 'verb' => 'POST'],
         ['name' => 'journey#show',    'url' => '/api/journeys/{id}',         'verb' => 'GET'],
         ['name' => 'journey#update',  'url' => '/api/journeys/{id}',         'verb' => 'PATCH'],
 
@@ -761,6 +809,7 @@ return [
         // reads go through OpenRegister directly via useObjectStore (ADR-022).
         ['name' => 'contract#create',         'url' => '/api/contracts', 'verb' => 'POST'],
         ['name' => 'contract#transition',     'url' => '/api/contracts/{id}/transition', 'verb' => 'POST'],
+        ['name' => 'contract#figures',        'url' => '/api/contracts/{id}/figures', 'verb' => 'GET'],
         ['name' => 'contract#summary',        'url' => '/api/contracts/metrics/summary', 'verb' => 'GET'],
         ['name' => 'contract#renewalMetrics', 'url' => '/api/contracts/metrics/renewal', 'verb' => 'GET'],
 
@@ -774,6 +823,8 @@ return [
         ['name' => 'store#install',      'url' => '/api/store/items/{slug}/install',  'verb' => 'POST', 'requirements' => ['slug' => '[a-z0-9][a-z0-9-]*[a-z0-9]']],
         ['name' => 'store#getSettings',  'url' => '/api/store/settings',              'verb' => 'GET'],
         ['name' => 'store#saveSettings', 'url' => '/api/store/settings',              'verb' => 'PUT'],
+        ['name' => 'store#publishable',  'url' => '/api/store/publishable',           'verb' => 'GET'],
+        ['name' => 'store#publish',      'url' => '/api/store/publish',               'verb' => 'POST'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

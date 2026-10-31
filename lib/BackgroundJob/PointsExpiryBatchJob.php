@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-005
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-005
  */
 
 declare(strict_types=1);
@@ -90,7 +90,7 @@ class PointsExpiryBatchJob extends TimedJob {
 	 * @return void
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-005
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-005
 	 */
 	protected function run($argument): void {
 		$programmes = $this->getActiveProgrammes();

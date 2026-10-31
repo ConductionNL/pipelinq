@@ -1,0 +1,1228 @@
+{
+	"$comment": "pipelinq's social media in the Zuiddrecht set: the four social accounts, the posts besides the Afvalvrije week one, and their publications with the last 30 days' metrics, as PqSocial draws them.",
+	"objects": [
+		{
+			"key": "sociaal-account-mastodon",
+			"register": "pipelinq",
+			"schema": "socialAccount",
+			"data": {
+				"network": "mastodon",
+				"kind": "organisation",
+				"handle": "@zuiddrecht@social.overheid.example",
+				"displayName": "Gemeente Zuiddrecht",
+				"status": "active",
+				"publishMode": "api",
+				"ownerUserId": "{{cast:pieter.uid}}",
+				"active": true,
+				"profileUrl": "https://social.overheid.example/@zuiddrecht",
+				"followerCount": 2140,
+				"followerCountAt": "{{datetime:0 08:00}}",
+				"connectedAt": "{{datetime:-200 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-account-bluesky",
+			"register": "pipelinq",
+			"schema": "socialAccount",
+			"data": {
+				"network": "bluesky",
+				"kind": "organisation",
+				"handle": "@zuiddrecht.example",
+				"displayName": "Gemeente Zuiddrecht",
+				"status": "active",
+				"publishMode": "api",
+				"ownerUserId": "{{cast:pieter.uid}}",
+				"active": true,
+				"profileUrl": "https://bsky.app/profile/zuiddrecht.example",
+				"followerCount": 1310,
+				"followerCountAt": "{{datetime:0 08:00}}",
+				"connectedAt": "{{datetime:-200 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-account-linkedin",
+			"register": "pipelinq",
+			"schema": "socialAccount",
+			"data": {
+				"network": "linkedin",
+				"kind": "organisation",
+				"handle": "Gemeente Zuiddrecht",
+				"displayName": "Gemeente Zuiddrecht",
+				"status": "relink_needed",
+				"publishMode": "api",
+				"ownerUserId": "{{cast:pieter.uid}}",
+				"active": false,
+				"profileUrl": "https://www.linkedin.example/company/gemeente-zuiddrecht",
+				"followerCount": 3050,
+				"followerCountAt": "{{datetime:0 08:00}}",
+				"connectedAt": "{{datetime:-200 10:00}}",
+				"statusReason": "Token verlopen, koppel het account opnieuw."
+			}
+		},
+		{
+			"key": "sociaal-account-instagram",
+			"register": "pipelinq",
+			"schema": "socialAccount",
+			"data": {
+				"network": "instagram",
+				"kind": "organisation",
+				"handle": "niet gekoppeld",
+				"displayName": "Gemeente Zuiddrecht",
+				"status": "not_configured",
+				"publishMode": "share",
+				"ownerUserId": "{{cast:pieter.uid}}",
+				"active": false
+			}
+		},
+		{
+			"key": "sociaal-parkeervergunning-online",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Parkeervergunning nu online aanvragen",
+				"body": "Vanaf nu vraagt u uw parkeervergunning online aan via Mijn Zuiddrecht.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}"
+				],
+				"status": "scheduled",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:2 09:00}}"
+			}
+		},
+		{
+			"key": "sociaal-koningsdag-vrijmarkt",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Koningsdag vrijmarkt: aanmelden vanaf 1 maart",
+				"body": "Wilt u op Koningsdag een plek op de vrijmarkt? Aanmelden kan vanaf 1 maart.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}",
+					"{{object:sociaal-account-linkedin.id}}"
+				],
+				"status": "approval",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false
+			}
+		},
+		{
+			"key": "sociaal-ondernemersavond-dank",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Ondernemersavond: dank voor uw komst",
+				"body": "Dank aan alle ondernemers die gisteren naar de ondernemersavond kwamen.",
+				"accountIds": [
+					"{{object:sociaal-account-linkedin.id}}"
+				],
+				"status": "failed",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-12 20:00}}",
+				"failureReason": "LinkedIn: token verlopen, koppel het account opnieuw"
+			}
+		},
+		{
+			"key": "sociaal-ondernemersavond-dank-linkedin",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-ondernemersavond-dank.id}}",
+				"accountId": "{{object:sociaal-account-linkedin.id}}",
+				"network": "linkedin",
+				"status": "failed",
+				"attempts": 3,
+				"failureCode": "relink_needed",
+				"failureReason": "Token verlopen"
+			}
+		},
+		{
+			"key": "sociaal-afvalkalender-2027",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "De afvalkalender 2027 komt eraan",
+				"campaignId": "{{object:campagne-afvalvrije-week.id}}",
+				"body": "Half oktober staat de afvalkalender voor 2027 in Mijn Zuiddrecht.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}"
+				],
+				"status": "scheduled",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:7 09:00}}"
+			}
+		},
+		{
+			"key": "sociaal-warmtenet-informatieavond",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Informatieavond warmtenet Oost",
+				"body": "Woont u in Oost? Kom op 12 november naar de informatieavond over het warmtenet.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}",
+					"{{object:sociaal-account-linkedin.id}}"
+				],
+				"status": "scheduled",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:4 12:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p01",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Wegwerkzaamheden Lindelaan",
+				"body": "Wegwerkzaamheden Lindelaan. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}",
+					"{{object:sociaal-account-linkedin.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-1 10:00}}",
+				"publishedAt": "{{datetime:-1 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p02",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Nieuwe openingstijden van de balie",
+				"body": "Nieuwe openingstijden van de balie. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-2 10:00}}",
+				"publishedAt": "{{datetime:-2 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p03",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Gratis energiecoach aan huis",
+				"body": "Gratis energiecoach aan huis. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}",
+					"{{object:sociaal-account-linkedin.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-3 10:00}}",
+				"publishedAt": "{{datetime:-3 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p04",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Subsidieronde buurtinitiatieven open",
+				"body": "Subsidieronde buurtinitiatieven open. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}",
+					"{{object:sociaal-account-linkedin.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-4 10:00}}",
+				"publishedAt": "{{datetime:-4 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p05",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Straatfeest? Zo regelt u het",
+				"body": "Straatfeest? Zo regelt u het. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-5 10:00}}",
+				"publishedAt": "{{datetime:-5 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p06",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Herfstvakantie in de bibliotheek",
+				"body": "Herfstvakantie in de bibliotheek. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-6 10:00}}",
+				"publishedAt": "{{datetime:-6 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p07",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Snoeiwerk in het Kerkpark",
+				"body": "Snoeiwerk in het Kerkpark. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-7 10:00}}",
+				"publishedAt": "{{datetime:-7 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p08",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Raadsvergadering live te volgen",
+				"body": "Raadsvergadering live te volgen. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-8 10:00}}",
+				"publishedAt": "{{datetime:-8 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p09",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Afval scheiden: de nieuwe containers",
+				"campaignId": "{{object:campagne-afvalvrije-week.id}}",
+				"body": "Afval scheiden: de nieuwe containers. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-9 10:00}}",
+				"publishedAt": "{{datetime:-9 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p10",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Woo-verzoeken in 2026",
+				"body": "Woo-verzoeken in 2026. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-bluesky.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-10 10:00}}",
+				"publishedAt": "{{datetime:-10 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p11",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Werken bij de gemeente: vacatures",
+				"body": "Werken bij de gemeente: vacatures. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}",
+					"{{object:sociaal-account-linkedin.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-11 10:00}}",
+				"publishedAt": "{{datetime:-11 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p12",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Fietspad Lindelaan: de verlichting",
+				"body": "Fietspad Lindelaan: de verlichting. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-42 10:00}}",
+				"publishedAt": "{{datetime:-42 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p13",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Ondernemersontbijt in oktober",
+				"body": "Ondernemersontbijt in oktober. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-linkedin.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-13 10:00}}",
+				"publishedAt": "{{datetime:-13 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p14",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Burendag in Oost",
+				"body": "Burendag in Oost. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-44 10:00}}",
+				"publishedAt": "{{datetime:-44 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p15",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Zwemmen in het nieuwe bad",
+				"body": "Zwemmen in het nieuwe bad. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-45 10:00}}",
+				"publishedAt": "{{datetime:-45 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p16",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Gladheid: zo strooien we",
+				"body": "Gladheid: zo strooien we. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-46 10:00}}",
+				"publishedAt": "{{datetime:-46 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p17",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Stem mee over het Marktplein",
+				"body": "Stem mee over het Marktplein. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-linkedin.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-17 10:00}}",
+				"publishedAt": "{{datetime:-17 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-p18",
+			"register": "pipelinq",
+			"schema": "socialPost",
+			"data": {
+				"title": "Onderhoud bruggen Oosthaven",
+				"body": "Onderhoud bruggen Oosthaven. Lees meer op zuiddrecht.example.",
+				"accountIds": [
+					"{{object:sociaal-account-mastodon.id}}"
+				],
+				"status": "published",
+				"createdBy": "{{cast:pieter.uid}}",
+				"agentAuthored": false,
+				"scheduledFor": "{{datetime:-48 10:00}}",
+				"publishedAt": "{{datetime:-48 10:00}}"
+			}
+		},
+		{
+			"key": "sociaal-afvalvrije-week-linkedin",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-afvalvrije-week.id}}",
+				"accountId": "{{object:sociaal-account-linkedin.id}}",
+				"network": "linkedin",
+				"status": "failed",
+				"attempts": 1,
+				"failureCode": "relink_needed",
+				"failureReason": "Token verlopen, koppel het account opnieuw"
+			}
+		},
+		{
+			"key": "sociaal-p01-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p01.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-1 10:00}}",
+				"metrics": {
+					"views": 819,
+					"likes": 35,
+					"comments": 4,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p02-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p02.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-2 10:00}}",
+				"metrics": {
+					"views": 819,
+					"likes": 35,
+					"comments": 4,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p03-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p03.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-3 10:00}}",
+				"metrics": {
+					"views": 819,
+					"likes": 35,
+					"comments": 3,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p04-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p04.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-4 10:00}}",
+				"metrics": {
+					"views": 819,
+					"likes": 35,
+					"comments": 3,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p05-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p05.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-5 10:00}}",
+				"metrics": {
+					"views": 818,
+					"likes": 34,
+					"comments": 3,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p06-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p06.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-6 10:00}}",
+				"metrics": {
+					"views": 818,
+					"likes": 34,
+					"comments": 3,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p07-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p07.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-7 10:00}}",
+				"metrics": {
+					"views": 818,
+					"likes": 34,
+					"comments": 3,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p08-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p08.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-8 10:00}}",
+				"metrics": {
+					"views": 818,
+					"likes": 34,
+					"comments": 3,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p09-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p09.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-9 10:00}}",
+				"metrics": {
+					"views": 818,
+					"likes": 34,
+					"comments": 3,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p10-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p10.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-10 10:00}}",
+				"metrics": {
+					"views": 818,
+					"likes": 34,
+					"comments": 3,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p11-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p11.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-11 10:00}}",
+				"metrics": {
+					"views": 818,
+					"likes": 34,
+					"comments": 3,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-afvalvrije-week-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-afvalvrije-week.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-9 10:00}}",
+				"metrics": {
+					"views": 818,
+					"likes": 34,
+					"comments": 3,
+					"shares": 8
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p01-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p01.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-1 10:00}}",
+				"metrics": {
+					"views": 559,
+					"likes": 27,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p02-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p02.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-2 10:00}}",
+				"metrics": {
+					"views": 559,
+					"likes": 27,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p03-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p03.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-3 10:00}}",
+				"metrics": {
+					"views": 558,
+					"likes": 26,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p04-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p04.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-4 10:00}}",
+				"metrics": {
+					"views": 558,
+					"likes": 26,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p05-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p05.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-5 10:00}}",
+				"metrics": {
+					"views": 558,
+					"likes": 26,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p06-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p06.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-6 10:00}}",
+				"metrics": {
+					"views": 558,
+					"likes": 26,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p07-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p07.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-7 10:00}}",
+				"metrics": {
+					"views": 558,
+					"likes": 26,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p08-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p08.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-8 10:00}}",
+				"metrics": {
+					"views": 558,
+					"likes": 26,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p09-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p09.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-9 10:00}}",
+				"metrics": {
+					"views": 558,
+					"likes": 26,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p10-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p10.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-10 10:00}}",
+				"metrics": {
+					"views": 558,
+					"likes": 26,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-afvalvrije-week-bluesky",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-afvalvrije-week.id}}",
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"status": "published",
+				"publishedAt": "{{datetime:-9 10:00}}",
+				"metrics": {
+					"views": 558,
+					"likes": 26,
+					"comments": 1,
+					"shares": 4
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p01-linkedin",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p01.id}}",
+				"accountId": "{{object:sociaal-account-linkedin.id}}",
+				"network": "linkedin",
+				"status": "published",
+				"publishedAt": "{{datetime:-1 10:00}}",
+				"metrics": {
+					"views": 817,
+					"likes": 22,
+					"comments": 2,
+					"shares": 4
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p03-linkedin",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p03.id}}",
+				"accountId": "{{object:sociaal-account-linkedin.id}}",
+				"network": "linkedin",
+				"status": "published",
+				"publishedAt": "{{datetime:-3 10:00}}",
+				"metrics": {
+					"views": 817,
+					"likes": 22,
+					"comments": 2,
+					"shares": 4
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p04-linkedin",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p04.id}}",
+				"accountId": "{{object:sociaal-account-linkedin.id}}",
+				"network": "linkedin",
+				"status": "published",
+				"publishedAt": "{{datetime:-4 10:00}}",
+				"metrics": {
+					"views": 817,
+					"likes": 22,
+					"comments": 2,
+					"shares": 4
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p11-linkedin",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p11.id}}",
+				"accountId": "{{object:sociaal-account-linkedin.id}}",
+				"network": "linkedin",
+				"status": "published",
+				"publishedAt": "{{datetime:-11 10:00}}",
+				"metrics": {
+					"views": 817,
+					"likes": 22,
+					"comments": 1,
+					"shares": 4
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p13-linkedin",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p13.id}}",
+				"accountId": "{{object:sociaal-account-linkedin.id}}",
+				"network": "linkedin",
+				"status": "published",
+				"publishedAt": "{{datetime:-13 10:00}}",
+				"metrics": {
+					"views": 816,
+					"likes": 22,
+					"comments": 1,
+					"shares": 3
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p17-linkedin",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p17.id}}",
+				"accountId": "{{object:sociaal-account-linkedin.id}}",
+				"network": "linkedin",
+				"status": "published",
+				"publishedAt": "{{datetime:-17 10:00}}",
+				"metrics": {
+					"views": 816,
+					"likes": 21,
+					"comments": 1,
+					"shares": 3
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p12-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p12.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-42 10:00}}",
+				"metrics": {
+					"views": 540,
+					"likes": 21,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p14-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p14.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-44 10:00}}",
+				"metrics": {
+					"views": 540,
+					"likes": 21,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p15-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p15.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-45 10:00}}",
+				"metrics": {
+					"views": 540,
+					"likes": 21,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p16-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p16.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-46 10:00}}",
+				"metrics": {
+					"views": 540,
+					"likes": 21,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		},
+		{
+			"key": "sociaal-p18-mastodon",
+			"register": "pipelinq",
+			"schema": "socialPublication",
+			"data": {
+				"postId": "{{object:sociaal-p18.id}}",
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"status": "published",
+				"publishedAt": "{{datetime:-48 10:00}}",
+				"metrics": {
+					"views": 540,
+					"likes": 21,
+					"comments": 2,
+					"shares": 5
+				},
+				"metricsAt": "{{datetime:0 08:00}}",
+				"attempts": 1,
+				"failureCode": ""
+			}
+		}
+	]
+}

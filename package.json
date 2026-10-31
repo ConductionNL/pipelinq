@@ -34,10 +34,14 @@
   ],
   "prettier": "@nextcloud/prettier-config",
   "overrides": {
-    "@nextcloud/axios": "$@nextcloud/axios"
+    "@nextcloud/axios": "$@nextcloud/axios",
+    "dompurify": "$dompurify",
+    "follow-redirects": "^1.16.1",
+    "pbkdf2": "^3.1.7",
+    "source-map-js": "^1.2.2"
   },
   "dependencies": {
-    "@conduction/nextcloud-vue": "^2.80.0",
+    "@conduction/nextcloud-vue": "^2.165.0",
     "@nextcloud/axios": "~2.6.0",
     "@nextcloud/capabilities": "^1.2.1",
     "@nextcloud/dialogs": "^7.4.1",
@@ -49,7 +53,7 @@
     "@vueuse/core": "^14.3.0",
     "axe-core": "^4.13.0",
     "dexie": "^4.4.6",
-    "dompurify": "^3.4.15",
+    "dompurify": "^3.4.17",
     "gridstack": "^13.3.0",
     "marked": "^18.0.13",
     "node-polyfill-webpack-plugin": "4.1.0",
@@ -94,8 +98,8 @@
     "stylelint-config-recommended-vue": "^1.6.1",
     "terser-webpack-plugin": "^5.6.0",
     "typescript": "^5.9.3",
-    "vite": "^8.2.2",
-    "vitest": "^5.0.2",
+    "vite": "^8.2.4",
+    "vitest": "^5.0.3",
     "vue-eslint-parser": "^10.3.0",
     "vue-loader": "^17.4.2",
     "webpack": "^5.111.1",

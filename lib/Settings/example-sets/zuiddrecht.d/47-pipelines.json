@@ -1,0 +1,90 @@
+{
+	"$comment": "pipelinq's request boards in the Zuiddrecht set, as PqPipelines draws them: Vragen en meldingen, the default board for residents' requests, and Evenementen en vergunningen for event permit requests that need advice from other departments. Both board requests with the stage as column; Verkoop stays in the main file.",
+	"objects": [
+		{
+			"key": "pipeline-vragen-en-meldingen",
+			"register": "pipelinq",
+			"schema": "pipeline",
+			"data": {
+				"title": "Vragen en meldingen",
+				"description": "Verzoeken en meldingen van inwoners, van de eerste vraag tot een antwoord, een afwijzing of een zaak.",
+				"isDefault": true,
+				"propertyMappings": [
+					{
+						"schemaSlug": "request",
+						"columnProperty": "stage"
+					}
+				],
+				"stages": [
+					{
+						"name": "Nieuw",
+						"order": 1,
+						"isDefault": true
+					},
+					{
+						"name": "In behandeling",
+						"order": 2
+					},
+					{
+						"name": "Afgerond",
+						"order": 3,
+						"isClosed": true,
+						"isWon": true
+					},
+					{
+						"name": "Afgewezen",
+						"order": 4,
+						"isClosed": true
+					},
+					{
+						"name": "Omgezet naar een zaak",
+						"order": 5,
+						"isClosed": true
+					}
+				]
+			}
+		},
+		{
+			"key": "pipeline-evenementen-en-vergunningen",
+			"register": "pipelinq",
+			"schema": "pipeline",
+			"data": {
+				"title": "Evenementen en vergunningen",
+				"description": "Aanvragen voor een evenementenvergunning die advies van andere afdelingen nodig hebben voor een besluit.",
+				"isDefault": false,
+				"propertyMappings": [
+					{
+						"schemaSlug": "request",
+						"columnProperty": "stage"
+					}
+				],
+				"stages": [
+					{
+						"name": "Ontvangen",
+						"order": 1,
+						"isDefault": true
+					},
+					{
+						"name": "Controle",
+						"order": 2
+					},
+					{
+						"name": "Advies gevraagd",
+						"order": 3
+					},
+					{
+						"name": "Besloten",
+						"order": 4,
+						"isClosed": true,
+						"isWon": true
+					},
+					{
+						"name": "Ingetrokken",
+						"order": 5,
+						"isClosed": true
+					}
+				]
+			}
+		}
+	]
+}

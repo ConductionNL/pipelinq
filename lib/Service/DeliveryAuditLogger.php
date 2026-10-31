@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-AUDIT-009
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Append-only audit logger.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-AUDIT-009
  */
 class DeliveryAuditLogger {
 	/**
@@ -274,7 +274,7 @@ class DeliveryAuditLogger {
 	 *
 	 * @return DateTimeImmutable
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-AUDIT-009
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface is a native immutable factory; no DI alternative.
 	 */

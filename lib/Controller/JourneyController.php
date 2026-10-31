@@ -168,6 +168,35 @@ class JourneyController extends Controller {
 	}//end compile()
 
 	/**
+	 * Pause an active journey or resume a paused one.
+	 *
+	 * @param string $id     Journey UUID or slug.
+	 * @param string $status `active` or `paused`.
+	 *
+	 * @return JSONResponse The journey with its flow status, 400 for another status, 404 when unknown.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 */
+	#[NoAdminRequired]
+	public function setStatus(string $id, string $status = ''): JSONResponse {
+		$denied = $this->guard();
+		if ($denied !== null) {
+			return $denied;
+		}
+
+		if (in_array($status, ['active', 'paused'], true) === false) {
+			return new JSONResponse(['error' => 'invalid_status'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$journey = $this->journeys->setStatus(journeyId: $id, status: $status, runAs: $this->uid());
+		if ($journey === null) {
+			return new JSONResponse(['error' => 'not_found'], Http::STATUS_NOT_FOUND);
+		}
+
+		return new JSONResponse($journey);
+	}//end setStatus()
+
+	/**
 	 * What this journey did, and who it refused.
 	 *
 	 * @param string $id Journey UUID or slug.

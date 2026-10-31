@@ -88,7 +88,7 @@ class PosBookkeepingController extends Controller {
 	 *
 	 * @return JSONResponse The persisted Z-report envelope, or an error.
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	#[NoAdminRequired]
 	public function post(): JSONResponse {

@@ -37,6 +37,13 @@ use OCP\ICacheFactory;
  */
 class RoadmapFeatureCatalog {
 	/**
+	 * The curated feature list the page shows (board PqRoadmap).
+	 *
+	 * @var string
+	 */
+	public const CURATED_PATH = __DIR__ . '/../Settings/roadmap.json';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppManager   $appManager   Reads the app version for the cache key.
@@ -51,7 +58,7 @@ class RoadmapFeatureCatalog {
 	/**
 	 * Build the Features & Roadmap list from openspec/specs at runtime so the
 	 * surface stays current with the specs without depending on a committed
-	 * docs/features.json (which can drift). Cached per app version — the specs
+	 * docs/features.json (which can drift). Cached per app version and curated file — the specs
 	 * only change when the app updates — with the committed docs/features.json
 	 * as a fallback for deploys that ship without openspec/.
 	 *
@@ -62,14 +69,21 @@ class RoadmapFeatureCatalog {
 	public function load(): array {
 		$version = (string)$this->appManager->getAppVersion('pipelinq');
 		$cache = $this->cacheFactory->createLocal('pipelinq_features');
-		$cacheKey = 'v' . $version;
+		// The curated file can change without a version bump (a deploy from a
+		// branch), so its content is part of the key.
+		$curatedHash = 'specs';
+		if (is_file(self::CURATED_PATH) === true) {
+			$curatedHash = (string)md5_file(self::CURATED_PATH);
+		}
+
+		$cacheKey = 'v' . $version . ':' . $curatedHash;
 
 		$cached = $cache->get($cacheKey);
 		if (is_array($cached) === true) {
 			return $cached;
 		}
 
-		$features = $this->extractFeaturesFromSpecs(specsDir: __DIR__ . '/../../openspec/specs');
+		$features = ($this->curatedFeatures(path: self::CURATED_PATH) ?? $this->extractFeaturesFromSpecs(specsDir: __DIR__ . '/../../openspec/specs'));
 		if ($features === []) {
 			$path = __DIR__ . '/../../docs/features.json';
 			if (is_file($path) === true) {
@@ -83,6 +97,82 @@ class RoadmapFeatureCatalog {
 		$cache->set($cacheKey, $features, 86400);
 		return $features;
 	}//end load()
+
+	/**
+	 * The curated feature list: what a user gets, grouped and with a status,
+	 * each linked to the spec it is built from when it names one. Null when
+	 * the file is absent or unreadable, so the caller falls back to the specs.
+	 *
+	 * @param string $path The curated file.
+	 *
+	 * @return array<int, array<string, string>>|null The features, in the file's order.
+	 *
+	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 */
+	public function curatedFeatures(string $path): ?array {
+		$document = $this->readCurated(path: $path);
+		if ($document === null || is_array($document['features'] ?? null) === false) {
+			return null;
+		}
+
+		$features = [];
+		foreach ($document['features'] as $entry) {
+			if (is_array($entry) === false || is_string($entry['slug'] ?? null) === false) {
+				continue;
+			}
+
+			$feature = ['slug' => $entry['slug'], 'docsUrl' => ''];
+			foreach (['category', 'status', 'title', 'title_nl', 'summary', 'summary_nl'] as $field) {
+				$feature[$field] = (string)($entry[$field] ?? '');
+			}
+
+			if (is_string($entry['spec'] ?? null) === true && $entry['spec'] !== '') {
+				$feature['docsUrl'] = 'openspec/specs/' . $entry['spec'] . '/spec.md';
+			}
+
+			$features[] = $feature;
+		}
+
+		return $features;
+	}//end curatedFeatures()
+
+	/**
+	 * The curated list's groups, key to caption, in the order the page shows them.
+	 *
+	 * @param string $path The curated file.
+	 *
+	 * @return array<string, string> The captions; empty without a curated file.
+	 *
+	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 */
+	public function categories(string $path=self::CURATED_PATH): array {
+		$document = $this->readCurated(path: $path);
+		if ($document === null || is_array($document['categories'] ?? null) === false) {
+			return [];
+		}
+
+		return array_map(static fn (mixed $caption): string => (string)$caption, $document['categories']);
+	}//end categories()
+
+	/**
+	 * The curated file, decoded, or null.
+	 *
+	 * @param string $path The curated file.
+	 *
+	 * @return array<string, mixed>|null The document.
+	 */
+	private function readCurated(string $path): ?array {
+		if (is_file($path) === false) {
+			return null;
+		}
+
+		$decoded = json_decode((string)file_get_contents($path), associative: true);
+		if (is_array($decoded) === false) {
+			return null;
+		}
+
+		return $decoded;
+	}//end readCurated()
 
 	/**
 	 * Parse `status: done` capability specs into feature entries. Mirrors the

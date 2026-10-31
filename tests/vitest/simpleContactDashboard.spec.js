@@ -16,8 +16,6 @@
  */
 
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
-import { buildQueryString } from '@conduction/nextcloud-vue/src/utils/headers.js'
-import { resolveFilterTokens } from '@conduction/nextcloud-vue/src/utils/resolveFilterTokens.js'
 import {
 	compareVisibleWhen,
 	readVisibleWhenValue,
@@ -41,7 +39,6 @@ const fragments = fs
 	.map((name) => readJson('src', 'manifest.d', name))
 const fullFile = readJson('src', 'menu-layout.json')
 const simpleFile = readJson('src', 'menu-layout.simple.json')
-const iconsSource = read('src', 'icons.js')
 const en = readJson('l10n', 'en.json').translations
 const nl = readJson('l10n', 'nl.json').translations
 
@@ -76,7 +73,7 @@ function propertiesOf(schema) {
 	}
 	return merged
 }
-const SCHEMAS = { ticket: propertiesOf('ticket'), crmTask: propertiesOf('crmTask') }
+const SCHEMAS = { ticket: propertiesOf('ticket'), crmTask: propertiesOf('crmTask'), client: propertiesOf('client') }
 
 /**
  * A source filter as the query a list reads: `{ a: { lt: x } }` is `a[lt]=x`.
@@ -127,11 +124,14 @@ describe('the dashboard', () => {
 	)
 
 	it('keeps every widget it had, unchanged', () => {
+		// The in-call state (board PqWerkplekKlant) hides a widget by a
+		// workspace flag; nothing else about a kept widget may change.
+		const withoutInCall = ({ visibleWhen, ...rest }) => rest
 		for (const widget of before.widgets) {
-			expect(byId[widget.id], widget.id).toEqual(widget)
+			expect(withoutInCall(byId[widget.id]), widget.id).toEqual(withoutInCall(widget))
 		}
 		expect(simple.widgets).toHaveLength(before.widgets.length + added.length)
-		expect(added).toHaveLength(12)
+		expect(added).toHaveLength(13)
 	})
 
 	it('moves the old cards down by one fixed number of rows and changes nothing else', () => {
@@ -139,10 +139,12 @@ describe('the dashboard', () => {
 		for (const entry of before.layout) {
 			const now = simple.layout.find((item) => item.id === entry.id)
 			expect(now, entry.id).toBeTruthy()
-			expect({ ...now, gridY: entry.gridY }, entry.id).toEqual(entry)
+			// `track` puts a card on the main or side column (gridSideColumn).
+			const { track, ...kept } = now
+			expect({ ...kept, gridY: entry.gridY }, entry.id).toEqual(entry)
 			shifts.add(now.gridY - entry.gridY)
 		}
-		expect([...shifts]).toEqual([18])
+		expect([...shifts]).toEqual([16])
 	})
 
 	it('puts every card in the grid once, and no two cards in one cell', () => {
@@ -166,30 +168,32 @@ describe('the dashboard', () => {
 		)
 	})
 
-	it('opens with the greeting on the ground, the attention card and four numbers in a row', () => {
+	it('opens with the page header, the attention card and four numbers in a row', () => {
 		const top = simple.layout
-			.filter((entry) => entry.gridY < 9)
+			.filter((entry) => entry.gridY < 7)
 			.sort((a, b) => a.gridY - b.gridY || a.gridX - b.gridX)
 			.map((entry) => byId[entry.widgetId].type)
 		expect(top).toEqual([
-			'header',
-			'custom',
 			'banner',
 			'stat',
 			'stat',
 			'stat',
 			'stat',
-			'custom',
+			'workspace-filter',
 		])
-		// PqDashboard has one header: the page header is hidden and the
-		// greeting row carries the kicker date and the heading on the ground.
-		expect(simple.showHeader).toBe(false)
-		expect(byId['simple-greeting'].content).toMatchObject({
-			ground: true,
-			showDate: true,
-		})
+		// PqDashboard: the page header carries the title, then "Klantcontact ·
+		// <date> · <availability line>" and the actions; availability is the
+		// page's own actions component, first in the row, so no grid cell
+		// repeats it.
+		expect(simple.showHeader).toBe(true)
+		expect(simple.greeting).toEqual({ label: 'Contact centre' })
+		expect(simple.descriptionSource).toEqual({ url: '/apps/pipelinq/api/kcc-werkplek/state', path: 'availabilityLine' })
+		expect(simple.actionsPlacement).toBe('start')
+		expect(page(builtSimple, 'KccWerkplek').title).toBe('My customer contact')
+		expect(byId['simple-greeting']).toBeUndefined()
+		expect(byId['simple-availability']).toBeUndefined()
 		const stats = simple.layout.filter(
-			(entry) => byId[entry.widgetId].type === 'stat' && entry.gridY === 4,
+			(entry) => byId[entry.widgetId].type === 'stat' && entry.gridY === 2,
 		)
 		expect(stats.map((entry) => entry.gridWidth)).toEqual([3, 3, 3, 3])
 	})
@@ -198,62 +202,64 @@ describe('the dashboard', () => {
 		const at = (id) => simple.layout.find((entry) => entry.widgetId === id)
 		expect(at('simple-waiting-list')).toMatchObject({
 			gridX: 0,
-			gridY: 9,
+			gridY: 7,
 			gridWidth: 8,
 		})
 		expect(at('simple-per-channel')).toMatchObject({
 			gridX: 0,
-			gridY: 14,
+			gridY: 12,
 			gridWidth: 8,
 		})
 		expect(at('simple-callback-list')).toMatchObject({
 			gridX: 8,
-			gridY: 9,
+			gridY: 7,
 			gridWidth: 4,
 		})
 		expect(at('simple-latest-contact')).toMatchObject({
 			gridX: 8,
-			gridY: 14,
+			gridY: 12,
 			gridWidth: 4,
 		})
-		// The cards the page had start at row 18. The board puts the Start a
-		// contact card (row 7) above the lists (amended 10 Oct 2026). Rows are
+		// The cards the page had start at row 16. The board puts the Start a
+		// contact card (row 5) above the lists (amended 10 Oct 2026). Rows are
 		// the heights the grid settles on once the cards size to their content.
 		for (const id of ['simple-per-channel', 'simple-latest-contact']) {
-			expect(at(id).gridY + at(id).gridHeight, id).toBeLessThanOrEqual(18)
+			expect(at(id).gridY + at(id).gridHeight, id).toBeLessThanOrEqual(16)
 		}
+		// The grid does not float, so every card closes up behind the one above.
+		expect(simple.gridFloat).toBe(false)
 	})
 
-	it('offers one primary action on the attention card: the late tickets', () => {
+	it('offers one primary action on the attention card: answer the first ticket', () => {
 		const card = byId['simple-first-today'].content
 		expect(
 			card.actions.filter((action) => action.primary === true),
 		).toHaveLength(1)
 		expect(card.actions[0].primary).toBe(true)
-		expect(card.actions[0].route.query).toEqual(card.visibleWhen.source.filter)
+		expect(card.actions[0].route).toEqual({ name: 'TicketDetail', params: { id: '@subject.id' } })
 	})
 
 	it('shows the type of a waiting ticket as a pill with the labels the ticket page uses', () => {
-		const column = byId['simple-waiting-list'].content.columns.find(
-			(item) => item.key === 'ticketType',
+		const pill = byId['simple-waiting-list'].content.pill
+		expect(pill.field).toBe('ticketType')
+		expect(Object.keys(pill.labels).sort()).toEqual(
+			[...SCHEMAS.ticket.ticketType.enum].sort(),
 		)
-		expect(column.enum).toEqual(SCHEMAS.ticket.ticketType.enum)
-		expect(column.enumLabels).toEqual(
+		expect(pill.labels).toEqual(
 			page(builtSimple, 'TicketDetail').config.typePill.labels,
 		)
-		for (const label of Object.values(column.enumLabels)) {
+		for (const label of Object.values(pill.labels)) {
 			expect(en[label], `en "${label}"`).toBeTruthy()
 			expect(nl[label], `nl "${label}"`).toBeTruthy()
 		}
 	})
 
-	it('links Waiting for me to the whole list with the filter it counts by', () => {
-		const list = byId['simple-waiting-list'].content
-		expect(pageIds.has(list.viewAllRoute)).toBe(true)
-		expect(list.viewAllQuery).toEqual(list.filter)
-		expect(list.viewAllQuery).toEqual(
-			byId['simple-waiting-for-me'].content.source.filter,
+	it('links Waiting for me to the whole queue', () => {
+		const entry = simple.layout.find(
+			(item) => item.widgetId === 'simple-waiting-list',
 		)
+		expect(entry.headerLink.label).toBe('Whole queue')
+		expect(pageIds.has(entry.headerLink.route)).toBe(true)
 	})
 
 	it('counts only on fields the schema has', () => {
@@ -289,8 +295,9 @@ describe('the dashboard', () => {
 				}
 			}
 		}
-		// The banner, four stats, three lists and the bar.
-		expect(sources).toBe(9)
+		// Four stats, three lists, the bar, the in-call task list and the in-call
+		// "Who is it" card; the banner reads an endpoint.
+		expect(sources).toBe(10)
 	})
 
 	it('links every number to the list with the same filter', () => {
@@ -305,9 +312,6 @@ describe('the dashboard', () => {
 			expect(target.config.schema, widget.id).toBe(source.schema)
 		}
 		const banner = byId['simple-first-today'].content
-		expect(banner.actions[0].route.query).toEqual(
-			asQuery(banner.visibleWhen.source.filter),
-		)
 		for (const action of banner.actions) {
 			const name =
 				typeof action.route === 'string' ? action.route : action.route.name
@@ -329,8 +333,31 @@ describe('the dashboard', () => {
 		})
 	})
 
+	it('words the first ticket as the board does: who asks about what, and through which channel', async () => {
+		const card = byId['simple-first-today'].content
+		expect(card.title).toBe('Question from {subject.clientName} about {subject.title}')
+		expect(card.fallbackTitle).toBe('{subject.title}')
+		expect(card.reason).toBe('Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.')
+		expect(nl[card.title]).toBe('Vraag van {subject.clientName} over {subject.title}')
+		const { CELL_FORMATTERS } = await import('../../src/services/cellFormatters.js')
+		expect(CELL_FORMATTERS.enumWord('phone').toLowerCase()).toBe(CELL_FORMATTERS.enumWord('phone'))
+		expect(CELL_FORMATTERS.enumWord('')).toBe('')
+	})
+
+	it('marks each latest contact with the small board dot and offers the example client', () => {
+		expect(byId['simple-latest-contact'].content.dot).toEqual({ color: 'var(--color-primary-element)', size: 10 })
+		expect(byId['simple-client-in-focus'].content.link).toEqual({ label: 'See an example', value: '@config.example_client?' })
+	})
+
+	it('opens with no client in focus, so the search is empty and the client cards ask for one', () => {
+		// Without a default the object picker puts the first client in focus.
+		expect(byId['simple-client-in-focus'].content.default).toBe('')
+	})
+
 	it('opens a row on a page that exists', () => {
-		for (const widget of added.filter((item) => item.type === 'object-list')) {
+		const lists = added.filter((item) => item.type === 'record-list')
+		expect(lists).toHaveLength(3)
+		for (const widget of lists) {
 			expect(pageIds.has(widget.content.rowRoute), widget.id).toBe(true)
 		}
 	})
@@ -340,7 +367,8 @@ describe('the dashboard', () => {
 			const label = widget.content.label
 			expect(label.length, label).toBeLessThanOrEqual(22)
 			expect(nl[label].length, nl[label]).toBeLessThanOrEqual(22)
-			expect(iconsSource, widget.id).toContain(`\n\t${widget.content.icon},\n`)
+			// The board draws the four numbers without an icon.
+			expect(widget.content.icon, widget.id).toBeUndefined()
 		}
 	})
 })
@@ -363,26 +391,10 @@ describe('the attention card asks a question OpenRegister can answer', () => {
 		return [...own, ...Object.values(value).flatMap(visibleWhenSources)]
 	}
 
-	it('builds its count request with a flat operator key and no JSON in the address', () => {
-		const source = page(builtSimple, 'KccWerkplek').config.widgets.find(
-			(widget) => widget.id === 'simple-first-today',
-		).content.visibleWhen.source
-		// The two calls the library's own visibleWhen reader makes.
-		const filter = resolveFilterTokens(source.filter, {})
-		const query = buildQueryString({ ...filter, _limit: 1 })
-		const address = decodeURIComponent(query)
-		expect(address).toMatch(/slaDeadline\[lt\]=\d{4}-\d{2}-\d{2}(&|$)/)
-		expect(address).toContain('status=in_progress')
-		expect(address).not.toContain('{')
-		expect(address).not.toContain('@today')
-	})
-
 	it('holds no nested operator in any visibleWhen source, on any page of the simple structure', () => {
 		const sources = builtSimple.pages.flatMap((item) =>
 			visibleWhenSources(item.config || {}),
 		)
-		// The control: there is at least the one this file is about.
-		expect(sources.length).toBeGreaterThan(0)
 		for (const source of sources) {
 			for (const [key, value] of Object.entries(source.filter || {})) {
 				expect(
@@ -406,61 +418,120 @@ describe('the attention card asks a question OpenRegister can answer', () => {
 		// nextcloud-vue 2.60.0 collapses a banner whose `text` is empty,
 		// whatever its condition says. The title is what the card shows.
 		expect(card().text).toBeTruthy()
-		expect(card().text).toBe(card().title)
+		// The text is the ticket's own title, which the title falls back to.
+		expect(card().text).toBe(card().fallbackTitle)
 		expect(card().layout).toBe('attention')
 	})
 
 	it.each([
-		[1, true],
-		[0, false],
-	])('is met with %i late ticket(s): %s', async (total, met) => {
+		[{ found: true, id: 'T1', title: 'Afvalpas werkt niet bij de container', clientName: 'M. de Graaf', waitingDays: 3 }, true],
+		[{ found: false }, false],
+	])('names the first ticket the endpoint answers (%o): %s', async (answer, met) => {
 		const asked = []
 		vi.stubGlobal(
 			'fetch',
 			vi.fn(async (url) => {
 				asked.push(String(url))
-				return {
-					ok: true,
-					status: 200,
-					json: async () => ({
-						results: total > 0 ? [{ id: 'T1' }] : [],
-						total,
-						page: 1,
-						pages: 1,
-						limit: 1,
-					}),
-				}
+				return { ok: true, status: 200, json: async () => answer }
 			}),
 		)
 		const cond = card().visibleWhen
+		const sink = {}
 		// The library's own reader and comparison, as the dashboard runs them.
-		const actual = await readVisibleWhenValue(cond, {})
-		expect(actual).toBe(total)
+		const actual = await readVisibleWhenValue(cond, {}, sink)
 		expect(compareVisibleWhen(actual, cond.op, cond.value, {})).toBe(met)
 		expect(asked).toHaveLength(1)
-		expect(asked[0]).toContain('/apps/openregister/api/objects/pipelinq/ticket?')
-		expect(decodeURIComponent(asked[0])).not.toContain('{')
+		expect(asked[0]).toContain('/apps/pipelinq/api/worklist/first')
+		expect(sink.row).toEqual(answer)
 	})
 
 	it('shows dates in the lists as dates, not as stored text', () => {
 		const widgets = page(builtSimple, 'KccWerkplek').config.widgets.filter(
 			(widget) =>
-				widget.id.startsWith('simple-') && widget.type === 'object-list',
+				widget.id.startsWith('simple-') && widget.type === 'record-list',
 		)
 		let dates = 0
 		for (const widget of widgets) {
-			for (const column of widget.content.columns) {
-				if (
-					SCHEMAS[widget.content.schema][column.key].format === 'date-time'
-				) {
+			const text = JSON.stringify(widget.content)
+			for (const [, field, format] of text.matchAll(/\{([\w.]+)(?:\|(\w+))?\}/g)) {
+				const property = SCHEMAS[widget.content.schema][field]
+				if (property?.format === 'date-time') {
 					dates += 1
-					expect(column.format, `${widget.id}: ${column.key}`).toBe(
-						'date-time',
-					)
+					expect(format, `${widget.id}: ${field}`).toBeTruthy()
 				}
 			}
 		}
 		expect(dates).toBe(3)
+	})
+})
+
+describe('the board PqDashboard', () => {
+	const simple = page(builtSimple, 'KccWerkplek').config
+	const byId = Object.fromEntries(simple.widgets.map((widget) => [widget.id, widget]))
+
+	it('draws the side column at the board\'s 320 pixels beside the main column', () => {
+		expect(simple.gridSideColumn).toEqual({ width: 320 })
+		for (const id of ['simple-callback-list', 'simple-latest-contact']) {
+			expect(simple.layout.find((entry) => entry.widgetId === id).gridX, id).toBe(8)
+		}
+	})
+
+	it('puts every card beside the side column on its track, so the side column is 320 wide', () => {
+		// Rows 0-6 are the attention card, the four counts and the client
+		// picker: full width or four equal tiles, on no track.
+		for (const entry of simple.layout) {
+			const end = entry.gridX + entry.gridWidth
+			let expected
+			if (entry.gridY >= 7) {
+				expect(end <= 8 || entry.gridX >= 8, entry.id).toBe(true)
+				expected = entry.gridX >= 8 ? 'side' : 'main'
+			}
+			expect(entry.track, entry.id).toBe(expected)
+		}
+	})
+
+	it('spaces its cards 20 pixels apart, as the board and the Dq dashboards do', () => {
+		expect(simple.gridMargin).toBe(10)
+	})
+
+	it('writes the availability button at the header buttons\' 14px', () => {
+		const style = read('src', 'components', 'werkplek', 'WerkplekAgentStatus.vue').split('<style')[1]
+		const toggle = style.match(/\.werkplek-agent-status__toggle \{([^}]*)\}/)[1]
+		expect(toggle).toMatch(/font-size: 14px;/)
+	})
+
+	it('draws the log form\'s summary three rows high', () => {
+		expect(byId.interaction.content.summaryRows).toBe(3)
+	})
+
+	it('rules above the first row of every list, as under the card title', () => {
+		for (const id of ['simple-waiting-list', 'simple-callback-list', 'simple-latest-contact']) {
+			expect(byId[id].content.ruleAbove, id).toBe(true)
+		}
+	})
+
+	it('lists a callback by the client, with what to call about and when it is due', () => {
+		const list = byId['simple-callback-list'].content
+		expect(list.extend).toEqual(['clientId'])
+		expect(SCHEMAS.crmTask.clientId.$ref).toBe('client')
+		expect(list.title).toEqual(['{clientId.name}', '{subject}'])
+		expect(list.meta).toBe('{subject}')
+		expect(list.trailing).toBe('{deadline|soon}')
+	})
+
+	it('says how long ago the latest contact was', () => {
+		expect(byId['simple-latest-contact'].content.meta).toBe('{occurredAt|ago}')
+	})
+
+	it('names every channel the seeded contact moments use', () => {
+		const labels = byId['simple-per-channel'].content.labels
+		for (const channel of ['telefoon', 'phone', 'email', 'balie', 'web', 'portal', 'chat', 'brief', 'sms', 'whatsapp']) {
+			expect(labels[channel], channel).toBeTruthy()
+		}
+	})
+
+	it('names the client search for what it does', () => {
+		expect(byId['simple-client-in-focus'].content.objectSource.ariaLabel).toBe('Client search')
 	})
 })
 
@@ -472,17 +543,22 @@ describe('the tickets list', () => {
 	it('keeps every view it had, with the same filter, and counts them', () => {
 		for (const old of before.quickFilters) {
 			// The board's list leaves contact moments out of All (they have their
-			// own view), so All carries that one filter; every other view is untouched.
-			const expected =
-				old.label === 'All'
-					? { ...old, filter: { 'ticketType[ne]': 'interaction' } }
-					: old
+			// own view), so All carries that one filter and stays the view the
+			// list opens on. Waiting for customer is the agent's own, as the
+			// dashboard number that links here counts it. Every other view is
+			// untouched.
+			const changed = {
+				'All': { default: true, filter: { 'ticketType[ne]': 'interaction' } },
+				'All open': { default: false },
+				'Waiting for customer': { filter: { assignee: '@me', status: 'awaiting_customer' } },
+			}
+			const expected = { ...old, ...(changed[old.label] || {}) }
 			expect(view(old.label), old.label).toEqual({
 				...expected,
 				showCount: true,
 			})
 		}
-		expect(simple.quickFilters).toHaveLength(before.quickFilters.length + 3)
+		expect(simple.quickFilters).toHaveLength(before.quickFilters.length + 2)
 		expect(simple.quickFilters.every((item) => item.showCount)).toBe(true)
 	})
 
@@ -495,6 +571,10 @@ describe('the tickets list', () => {
 			'Waiting for customer',
 			'Requests',
 			'Complaints',
+			'All open',
+			'Mine',
+			'Unassigned',
+			'Past the deadline',
 			'Contactmomenten',
 		])
 		expect(simple.quickFilters.filter((item) => item.default)).toHaveLength(1)
@@ -568,7 +648,12 @@ describe('the words', () => {
 				for (const [name, inner] of Object.entries(value)) {
 					collect(inner, key === 'labels' ? 'label' : name)
 				}
-			} else if (typeof value === 'string' && TEXT.includes(key)) {
+			} else if (
+				typeof value === 'string'
+				&& TEXT.includes(key)
+				// A row template that is one field ("{title}") holds no words.
+				&& !/^\{[^}]+\}$/.test(value)
+			) {
 				words.add(value)
 			}
 		}
@@ -588,14 +673,34 @@ describe('the words', () => {
 	})
 })
 
-describe('the hidden page header loses nothing', () => {
+describe('the werkplek in a call (board PqWerkplekKlant)', () => {
+	const page = () => simpleFile.pages.find((item) => item.id === 'KccWerkplek')
+	const who = () => page().configAppend.widgets.find((widget) => widget.id === 'simple-call-who')
+
+	it('names the caller in the title while the call is on', () => {
+		expect(page().config.titleWhen).toEqual([{ when: { workspace: 'callActive', op: 'eq', value: true }, title: 'Call with {workspace.selectedClientName}' }])
+	})
+
+	it('says who is calling: the customer in the call, what was checked, the source, preference and language', () => {
+		expect(who().type).toBe('facts')
+		expect(who().visibleWhen).toEqual({ workspace: 'callActive', op: 'eq', value: true })
+		expect(who().content.source).toEqual({ register: 'pipelinq', schema: 'client', id: '@workspace.selectedClient' })
+		expect(who().content.fields.map((field) => field.path || field.as || field.label)).toEqual(['name', 'line', 'identityCheck', 'Source', 'source', 'preferredChannel', 'language'])
+		// "Bron: BRP, opgezocht 10:24, vastgelegd"; the client's own source stays as "Aangemeld via".
+		expect(who().content.fields.find((field) => field.label === 'Source').template).toBe('{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded')
+		// "Opzoeken in de BRP" verifies the identity of the customer in the call.
+		expect(who().content.actions).toEqual([{ type: 'open-modal', target: 'BrpClientCheckDialog', label: 'Look up in the BRP', props: { clientId: '@source.id' }, variant: 'tonal' }])
+	})
+})
+
+describe('the page header loses nothing', () => {
 	const simple = page(builtSimple, 'KccWerkplek')
 	const full = page(builtFull, 'KccWerkplek')
 	const layoutOf = (widgetId) =>
 		simple.config.layout.find((entry) => entry.widgetId === widgetId)
 
-	it('hides the header in the simple structure only', () => {
-		expect(simple.config.showHeader).toBe(false)
+	it('shows the header in the simple structure, and hides the widget actions there only', () => {
+		expect(simple.config.showHeader).toBe(true)
 		expect(simple.config.showWidgetActions).toBe(false)
 		expect(full.config.showHeader).toBeUndefined()
 		expect(full.config.showWidgetActions).toBeUndefined()
@@ -613,20 +718,24 @@ describe('the hidden page header loses nothing', () => {
 		expect(fullFile.nav?.primaryAction).toBeUndefined()
 	})
 
-	it('keeps the availability switch in the greeting row and the client in focus above the cards that use it', () => {
-		expect(simple.slots['widget-simple-availability']).toBe(
-			full.actionsComponent,
+	it('keeps the availability switch in the header and the client in focus above the cards that use it', () => {
+		expect(simple.actionsComponent).toBe(full.actionsComponent)
+		// The card is the library's start card (workspace-filter), not a slot:
+		// it writes the same workspace key the full page's picker writes.
+		const startCard = simple.config.widgets.find(
+			(widget) => widget.id === 'simple-client-in-focus',
 		)
-		// The card wraps the same client picker the full page shows beside its title.
-		expect(simple.slots['widget-simple-client-in-focus']).toBe(
-			'WerkplekContactStart',
-		)
+		expect(startCard.type).toBe('workspace-filter')
+		expect(startCard.content.layout).toBe('start')
+		expect(startCard.content.writes).toBe('@workspace.selectedClient')
+		expect(simple.slots['widget-simple-client-in-focus']).toBeUndefined()
 		expect(full.slots['title-meta']).toBe('WerkplekClientSelect')
-		expect(layoutOf('simple-availability')).toMatchObject({
-			gridY: 0,
-			borderless: true,
-		})
+		// The start card picks the client, so the header carries no second picker.
+		expect(simple.slots['title-meta']).toBeUndefined()
 		const client = layoutOf('simple-client-in-focus')
+		// At 1100 wide the description wraps to three lines: a fixed two-row
+		// cell cut the client picker in half behind a scrollbar.
+		expect(client.sizeToContent).toBe(true)
 		const clientBound = full.config.widgets
 			.filter((widget) =>
 				JSON.stringify(widget.content || {}).includes(

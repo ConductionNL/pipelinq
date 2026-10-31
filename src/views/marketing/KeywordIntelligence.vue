@@ -14,8 +14,8 @@
   @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 -->
 <template>
-	<div class="keyword-intel">
-		<header class="keyword-intel__header">
+	<div class="keyword-intel" :class="{ 'keyword-intel--embedded': embedded }">
+		<header v-if="!embedded" class="keyword-intel__header">
 			<h2>{{ t('pipelinq', 'Keywords') }}</h2>
 			<NcSelect
 				v-model="window"
@@ -41,7 +41,7 @@
 		</NcEmptyContent>
 
 		<template v-else>
-			<p class="keyword-intel__meta" data-testid="keyword-intel-window">
+			<p v-if="!embedded" class="keyword-intel__meta" data-testid="keyword-intel-window">
 				{{
 					t(
 						'pipelinq',
@@ -56,6 +56,7 @@
 			</p>
 
 			<section
+				v-if="!embedded"
 				class="keyword-intel__section"
 				data-testid="keyword-intel-buckets">
 				<h3>{{ t('pipelinq', 'Where we rank') }}</h3>
@@ -210,7 +211,7 @@
 									)
 								}}
 							</p>
-							<div class="keyword-intel__scroll">
+							<div v-if="!embedded" class="keyword-intel__scroll">
 								<table class="keyword-intel__table">
 									<thead>
 										<tr>
@@ -391,6 +392,23 @@ export default {
 		NcSelect,
 	},
 
+	props: {
+		/**
+		 * Drawn as a section of the search insight page: no own header or
+		 * period picker, and no ranking buckets (board PqZoekinzicht).
+		 */
+		embedded: {
+			type: Boolean,
+			default: false,
+		},
+
+		/** The period in days when embedded; the host's period picker sets it. */
+		days: {
+			type: Number,
+			default: 0,
+		},
+	},
+
 	data() {
 		return {
 			loading: true,
@@ -456,6 +474,12 @@ export default {
 		},
 	},
 
+	watch: {
+		days() {
+			this.fetchProposals()
+		},
+	},
+
 	created() {
 		this.window = this.windowOptions[0]
 	},
@@ -482,7 +506,7 @@ export default {
 		async fetchProposals() {
 			this.loading = true
 			this.error = ''
-			const days = this.window?.days || 28
+			const days = this.days || this.window?.days || 28
 			const today = new Date()
 			const start = new Date(today.getTime() - days * DAY)
 			try {
@@ -630,7 +654,12 @@ export default {
 	}
 
 	th {
-		font-weight: bold;
+		border-bottom: 0;
+		background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
+		color: var(--color-text-maxcontrast);
+		font-size: 14px;
+		font-weight: 600;
+		line-height: 1.2;
 	}
 }
 
@@ -698,5 +727,20 @@ export default {
 .keyword-intel__error {
 	color: var(--color-error);
 	margin-top: 12px;
+}
+/* On the search insight page the sections read as board PqZoekinzicht's
+   sub-headings, flush with the card. */
+.keyword-intel--embedded {
+	padding: 0;
+
+	.keyword-intel__section {
+		margin-bottom: 20px;
+	}
+
+	h3 {
+		margin: 0 0 10px;
+		font-size: 15px;
+		font-weight: 700;
+	}
 }
 </style>

@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Throwable;
  * - isOptOutKeyword(body) — pure, case-insensitive STOP / STOPALL /
  *   UITSCHRIJVEN detection.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Consent lifecycle (opt-in/opt-out/erasure/keyword detection) is one cohesive responsibility.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) The store's reads, writes, erasure, and the migration and replay into
@@ -90,7 +90,7 @@ class ConsentService {
 	 * @param IntegriqConsentClient $integriq Asks and records through integriq after the cutover.
 	 * @param ContactAddressLookup $addresses The contact's phone or email for integriq.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -120,7 +120,7 @@ class ConsentService {
 	 *
 	 * @return bool True if sending is allowed.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 */
 	public function canSend(string $contactId, string $channel, string $address = '', ?string $inReplyTo = null): bool {
@@ -271,7 +271,7 @@ class ConsentService {
 	 *
 	 * @return array<string, mixed>|null Saved row or null on failure.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
 	 */
 	public function recordOptIn(
@@ -319,7 +319,7 @@ class ConsentService {
 	 *
 	 * @return array<string, mixed>|null Saved row or null on failure.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
 	 */
 	public function recordOptOut(
@@ -362,7 +362,7 @@ class ConsentService {
 	 *
 	 * @return bool True for STOP / STOPALL / UITSCHRIJVEN (case-insensitive).
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function isOptOutKeyword(string $body): bool {
 		$normalised = strtolower(trim($body));
@@ -376,7 +376,7 @@ class ConsentService {
 	 *
 	 * @return bool True for JA / YES / START (case-insensitive).
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function isOptInKeyword(string $body): bool {
 		$normalised = strtolower(trim($body));
@@ -393,7 +393,7 @@ class ConsentService {
 	 *
 	 * @return int Rows deleted.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function deleteForContact(string $contactId): int {
 		if ($contactId === '') {

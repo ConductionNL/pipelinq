@@ -1,0 +1,434 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Website forms that submit into the object they name (decision 179, change website-forms-submit-into-tickets). A webForm names its own destination (a ticket, a lead, a contact or any other pipelinq object), with no fixed default (decision 181, Q4). Publishing one is checked against the destination schema by OpenRegister's FormDestinationValidator and refused on any finding (Q9). The ticket gains the reporter fields a website visitor types, so a website ticket can be answered. Three seed forms keep conduction-website's three existing forms working; an admin may point each at another destination."
+  },
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "webForm"
+        ]
+      }
+    },
+    "schemas": {
+      "webForm": {
+        "slug": "webForm",
+        "title": "Website form",
+        "icon": "FormatListChecks",
+        "version": "1.0.0",
+        "summary": "A public form and the object a submit creates",
+        "description": "A form on a website or in Nextcloud Forms, and the pipelinq object each submit creates. The form names its destination and maps its fields onto that object's properties. Only mapped fields reach the object, so the mapping is the list of what a visitor may set. A published form is checked against the destination when it is saved: a form that could never produce a valid object is refused. There is no in-between store: a submit creates the destination in the request, or is refused.",
+        "required": [
+          "title",
+          "key"
+        ],
+        "authorization": {
+          "create": [],
+          "read": [
+            "authenticated"
+          ],
+          "update": [],
+          "delete": []
+        },
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "The form's name, as admins see it.",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The name a website sends with each submit, for example website-support. Lowercase letters, digits and dashes.",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,99}$",
+            "maxLength": 100,
+            "facetable": true
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Only a published form takes submits. Publishing checks the form against its destination.",
+            "enum": [
+              "draft",
+              "published",
+              "unpublished"
+            ],
+            "default": "draft",
+            "facetable": true,
+            "x-enum-labels": {
+              "draft": "Draft",
+              "published": "Published",
+              "unpublished": "Unpublished"
+            }
+          },
+          "destination": {
+            "type": "object",
+            "title": "Destination",
+            "description": "The object a submit creates: its register and schema, for example pipelinq and ticket.",
+            "properties": {
+              "register": {
+                "type": "string",
+                "title": "Register",
+                "description": "The register slug, for example pipelinq."
+              },
+              "schema": {
+                "type": "string",
+                "title": "Schema",
+                "description": "The schema slug, for example ticket."
+              }
+            }
+          },
+          "writes": {
+            "type": "array",
+            "title": "Several objects",
+            "description": "For a form that creates several objects at once, such as a contact and a lead. All are created, or none.",
+            "items": {
+              "type": "object"
+            }
+          },
+          "mapping": {
+            "type": "object",
+            "title": "Field mapping",
+            "description": "Which form field fills which property of the destination, and the values every submit sets, such as the channel.",
+            "properties": {
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                },
+                "title": "Fields",
+                "description": "Each form field and the property it fills."
+              },
+              "fixed": {
+                "type": "object",
+                "title": "Fixed values",
+                "description": "The values every submit sets, such as the channel."
+              }
+            }
+          },
+          "fieldFallbacks": {
+            "type": "object",
+            "title": "Field fallbacks",
+            "description": "When a visitor leaves a field blank, the first filled field from this list is used. For example, a title from the organisation or the name.",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "requireAnyOf": {
+            "type": "array",
+            "title": "Required, one of",
+            "description": "The visitor must fill at least one of these fields, for example a message or an email address.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audience": {
+            "type": "string",
+            "title": "Audience",
+            "description": "Who may submit: anyone, or only signed-in users.",
+            "enum": [
+              "public",
+              "authenticated"
+            ],
+            "default": "public"
+          },
+          "formsFormId": {
+            "type": "integer",
+            "title": "Nextcloud Forms form",
+            "description": "The Nextcloud Forms form whose answers this form takes. Its questions are checked against the destination when you save.",
+            "minimum": 1
+          }
+        }
+      },
+      "ticket": {
+        "slug": "ticket",
+        "properties": {
+          "reporterName": {
+            "type": "string",
+            "title": "Reporter name",
+            "description": "The name the reporter typed, when nobody knows them yet.",
+            "maxLength": 255
+          },
+          "reporterEmail": {
+            "type": "string",
+            "title": "Reporter email",
+            "description": "The email address the reporter typed. Often the only way to answer them.",
+            "format": "email",
+            "maxLength": 255
+          },
+          "reporterPhone": {
+            "type": "string",
+            "title": "Reporter phone",
+            "description": "The phone number the reporter typed, if the form asked for one.",
+            "maxLength": 64
+          },
+          "reporterOrganisation": {
+            "type": "string",
+            "title": "Reporter organisation",
+            "description": "The organisation the reporter named.",
+            "maxLength": 255
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "The form the ticket came from, for example website-support.",
+            "maxLength": 100,
+            "facetable": true
+          },
+          "sourceUrl": {
+            "type": "string",
+            "title": "Source page",
+            "description": "The page the form was on when it was sent.",
+            "maxLength": 2048
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "web-form-website-support"
+        },
+        "title": "Support form on the website",
+        "key": "website-support",
+        "status": "published",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "ticket"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            {
+              "field": "message",
+              "property": "description",
+              "type": "textarea",
+              "maxLength": 20000
+            },
+            {
+              "field": "contactName",
+              "property": "reporterName",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "contactEmail",
+              "property": "reporterEmail",
+              "type": "email",
+              "maxLength": 255
+            },
+            {
+              "field": "contactPhone",
+              "property": "reporterPhone",
+              "type": "tel",
+              "maxLength": 64
+            },
+            {
+              "field": "organisation",
+              "property": "reporterOrganisation",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "pageUrl",
+              "property": "sourceUrl",
+              "type": "text",
+              "maxLength": 2048
+            }
+          ],
+          "fixed": {
+            "ticketType": "request",
+            "channel": "website",
+            "status": "new",
+            "source": "website-support"
+          }
+        },
+        "fieldFallbacks": {
+          "title": [
+            "organisation",
+            "contactName",
+            "contactEmail"
+          ]
+        },
+        "requireAnyOf": [
+          "message",
+          "contactEmail"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "web-form-website-partner"
+        },
+        "title": "Partner form on the website",
+        "key": "website-partner",
+        "status": "published",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "ticket"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            {
+              "field": "message",
+              "property": "description",
+              "type": "textarea",
+              "maxLength": 20000
+            },
+            {
+              "field": "contactName",
+              "property": "reporterName",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "contactEmail",
+              "property": "reporterEmail",
+              "type": "email",
+              "maxLength": 255
+            },
+            {
+              "field": "contactPhone",
+              "property": "reporterPhone",
+              "type": "tel",
+              "maxLength": 64
+            },
+            {
+              "field": "organisation",
+              "property": "reporterOrganisation",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "pageUrl",
+              "property": "sourceUrl",
+              "type": "text",
+              "maxLength": 2048
+            }
+          ],
+          "fixed": {
+            "ticketType": "request",
+            "channel": "website",
+            "status": "new",
+            "source": "website-partner"
+          }
+        },
+        "fieldFallbacks": {
+          "title": [
+            "organisation",
+            "contactName",
+            "contactEmail"
+          ]
+        },
+        "requireAnyOf": [
+          "message",
+          "contactEmail"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "web-form-website-contact"
+        },
+        "title": "Contact form on the website",
+        "key": "website-contact",
+        "status": "published",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "ticket"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            {
+              "field": "message",
+              "property": "description",
+              "type": "textarea",
+              "maxLength": 20000
+            },
+            {
+              "field": "contactName",
+              "property": "reporterName",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "contactEmail",
+              "property": "reporterEmail",
+              "type": "email",
+              "maxLength": 255
+            },
+            {
+              "field": "contactPhone",
+              "property": "reporterPhone",
+              "type": "tel",
+              "maxLength": 64
+            },
+            {
+              "field": "organisation",
+              "property": "reporterOrganisation",
+              "type": "text",
+              "maxLength": 255
+            },
+            {
+              "field": "pageUrl",
+              "property": "sourceUrl",
+              "type": "text",
+              "maxLength": 2048
+            }
+          ],
+          "fixed": {
+            "ticketType": "request",
+            "channel": "website",
+            "status": "new",
+            "source": "website-contact"
+          }
+        },
+        "fieldFallbacks": {
+          "title": [
+            "organisation",
+            "contactName",
+            "contactEmail"
+          ]
+        },
+        "requireAnyOf": [
+          "message",
+          "contactEmail"
+        ]
+      }
+    ]
+  }
+}

@@ -13,9 +13,9 @@
   - @spec openspec/changes/pos-staff-pin-permissions/tasks.md#7.1
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'POS terminal — staff sign-in')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="pin-login">
@@ -92,18 +92,19 @@
 				}}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import { usePosSessionStore } from '../store/modules/posSessionStore.js'
 
 export default {
 	name: 'PinLoginModal',
-	components: { NcButton, NcDialog, NcSelect, NcTextField },
+	components: { NcButton, CnDialog, NcSelect, NcTextField },
 	emits: ['close', 'loginSuccess'],
 	data() {
 		return {

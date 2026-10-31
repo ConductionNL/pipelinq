@@ -57,13 +57,13 @@ class SettingsLoadService {
 		'partyKind',
 		'partyKindAcceptance',
 		'partyLink',
-		// Anonymous website intake (website-enquiry). An enquiry is what a
-		// visitor sends before a client exists, so it deliberately does NOT
-		// reuse `lead`: lead requires `client` and `pipeline`, and neither is
-		// knowable at intake. Without this slug the `enquiry_schema` app-config
-		// key is never written on import and EnquiryIntakeService cannot
-		// resolve the schema, which is the same failure the posTenderType
-		// comment below records.
+		// Website forms (website-forms-submit-into-tickets, decision 179): a
+		// published webForm names the object a submit creates. WebFormFinder
+		// reads `webForm_schema`; without this slug it is never written.
+		'webForm',
+		// Retired holding schema (decision 179). Kept until
+		// `occ pipelinq:enquiry:drain` reports zero pending: the drain reads
+		// `enquiry_schema` to find what is still held.
 		'enquiry',
 		// Unified inbound-matter supertype (unify-ticket-supertype). It replaced
 		// the retired `request`, `complaint` and `contactmoment` schemas; a
@@ -234,6 +234,9 @@ class SettingsLoadService {
 		'forecastOverride',
 		'forecastSnapshot',
 		'salesQuota',
+		// Campaign events: the reminder and check-in read these two keys.
+		'campaignEvent',
+		'eventRegistration',
 	];
 
 	/**

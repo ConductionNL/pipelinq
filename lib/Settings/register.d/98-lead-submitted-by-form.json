@@ -1,0 +1,74 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "A lead that a form created (decision 179, change website-forms-submit-into-tickets, tasks 2.1 and 2.2). A form submit now creates the lead in the visitor's own request, so the lead carries what the visitor typed (submitterName, submitterEmail, submitterOrganisation) and what the page knew (nonce, submittedAt, pageId, referrer). pipelinq's lead listener turns those into the contact, the client and the submit touchpoint. pipeline and client carry the serverSet marker: a form never sends them, the listeners fill them (pipeline always, client when the visitor named an organisation), so OpenRegister's destination validator does not ask a form for them. No property changes type and none becomes required."
+  },
+  "components": {
+    "schemas": {
+      "lead": {
+        "slug": "lead",
+        "properties": {
+          "submitterName": {
+            "type": "string",
+            "title": "Submitter name",
+            "description": "The name the visitor typed in the form.",
+            "maxLength": 255
+          },
+          "submitterEmail": {
+            "type": "string",
+            "format": "email",
+            "title": "Submitter email",
+            "description": "The email address the visitor typed. We match the contact on it.",
+            "maxLength": 255
+          },
+          "submitterOrganisation": {
+            "type": "string",
+            "title": "Submitter organisation",
+            "description": "The organisation the visitor named. We match the client on it.",
+            "maxLength": 255
+          },
+          "referrer": {
+            "type": "string",
+            "title": "Referrer",
+            "description": "The page the visitor came from, when the browser told us.",
+            "maxLength": 2048,
+            "readOnly": true
+          },
+          "pageId": {
+            "type": "string",
+            "title": "Form page",
+            "description": "The page whose form created this lead.",
+            "maxLength": 255,
+            "readOnly": true
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Submitted at",
+            "description": "When the visitor sent the form.",
+            "readOnly": true
+          },
+          "nonce": {
+            "type": "string",
+            "title": "Submission id",
+            "description": "The page's own id for this submission. A second lead with the same id is the same submission.",
+            "maxLength": 64,
+            "readOnly": true,
+            "x-notes": "Written by the hosting page as a server value, never by an answer. SubmittedLeadIntake keys the submit touchpoint on it."
+          },
+          "pipeline": {
+            "x-openregister": {
+              "serverSet": true
+            }
+          },
+          "client": {
+            "x-openregister": {
+              "serverSet": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

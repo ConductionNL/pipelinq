@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 class PosTransactionCompletedListener implements IEventListener {
 	use EntityAccessorTrait;
@@ -70,7 +70,7 @@ class PosTransactionCompletedListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002-01
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatedEvent) === false

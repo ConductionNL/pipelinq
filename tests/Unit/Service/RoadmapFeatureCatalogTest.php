@@ -98,8 +98,97 @@ class RoadmapFeatureCatalogTest extends TestCase {
 	public function testLoadReadsAndCachesPerVersion(): void {
 		$cache = null;
 		$catalog = $this->catalog(cached: null, cache: $cache);
-		$cache->expects($this->once())->method('set')->with('v1.2.3', $this->isType('array'), 86400);
+		$cache->expects($this->once())->method('set')->with(
+			'v1.2.3:'.md5_file(RoadmapFeatureCatalog::CURATED_PATH),
+			$this->isType(type: 'array'),
+			86400
+		);
 
 		$this->assertNotEmpty($catalog->load());
 	}//end testLoadReadsAndCachesPerVersion()
+
+	/**
+	 * The curated list is the board's: 36 features in five groups, each with a
+	 * known status, Dutch texts, and a link to a spec that exists.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 */
+	public function testCuratedListIsTheBoards(): void {
+		$catalog    = $this->catalog(cached: null);
+		$features   = $catalog->curatedFeatures(path: __DIR__.'/../../../lib/Settings/roadmap.json');
+		$categories = $catalog->categories(path: __DIR__.'/../../../lib/Settings/roadmap.json');
+
+		$this->assertCount(expectedCount: 36, haystack: $features);
+		$this->assertSame(
+			expected: ['core-crm', 'customer-contact', 'insight', 'automation', 'infrastructure'],
+			actual: array_keys($categories)
+		);
+		foreach ($features as $feature) {
+			$this->assertArrayHasKey(key: $feature['category'], array: $categories, message: $feature['slug']);
+			$this->assertContains(needle: $feature['status'], haystack: ['available', 'beta', 'planned'], message: $feature['slug']);
+			$this->assertNotSame(expected: '', actual: $feature['title_nl'], message: $feature['slug']);
+			$this->assertStringNotContainsString(needle: "\u{2014}", haystack: $feature['title'].$feature['summary'], message: $feature['slug']);
+			if ($feature['docsUrl'] !== '') {
+				$this->assertFileExists(filename: __DIR__.'/../../../'.$feature['docsUrl'], message: $feature['slug']);
+			}
+		}
+	}//end testCuratedListIsTheBoards()
+
+	/**
+	 * Without a curated file there is no curated list, and no categories.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 */
+	public function testNoCuratedFile(): void {
+		$catalog = $this->catalog(cached: null);
+		$this->assertNull(actual: $catalog->curatedFeatures(path: '/nonexistent/roadmap.json'));
+		$this->assertSame(expected: [], actual: $catalog->categories(path: '/nonexistent/roadmap.json'));
+	}//end testNoCuratedFile()
+
+	/**
+	 * The page gets the curated list, not the raw specs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 */
+	public function testLoadPrefersTheCuratedList(): void {
+		$features = $this->catalog(cached: null)->load();
+		$this->assertCount(expectedCount: 36, haystack: $features);
+		$this->assertSame(expected: 'client-management', actual: $features[0]['slug']);
+		$this->assertSame(expected: 'core-crm', actual: $features[0]['category']);
+	}//end testLoadPrefersTheCuratedList()
+
+	/**
+	 * A list cached before the curated file changed (same app version) is
+	 * not served: the cache key follows the curated file's content.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+	 */
+	public function testStaleListUnderTheBareVersionKeyIsNotServed(): void {
+		$stale      = [['slug' => 'stale', 'title' => 'Stale', 'summary' => '', 'docsUrl' => '']];
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
+		$appManager->method('getAppVersion')->willReturn('1.2.3');
+		$cache = $this->createMock(originalClassName: ICache::class);
+		$cache->method('get')->willReturnCallback(
+			static function (string $key) use ($stale): ?array {
+				if ($key === 'v1.2.3') {
+					return $stale;
+				}
+
+				return null;
+			}
+		);
+		$factory = $this->createMock(originalClassName: ICacheFactory::class);
+		$factory->method('createLocal')->willReturn($cache);
+
+		$features = (new RoadmapFeatureCatalog(appManager: $appManager, cacheFactory: $factory))->load();
+		$this->assertCount(expectedCount: 36, haystack: $features);
+	}//end testStaleListUnderTheBareVersionKeyIsNotServed()
 }//end class

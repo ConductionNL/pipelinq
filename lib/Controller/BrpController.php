@@ -17,8 +17,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#3.1
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#3.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -60,8 +60,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregates the full BRP surface (validate,
  *   lookup, webhook ingest, geheimhouding reveal, opt-out) behind one cohesive controller.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-002
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
  */
 class BrpController extends Controller {
 	/**
@@ -130,9 +130,9 @@ class BrpController extends Controller {
 	 *
 	 * @return JSONResponse JSON shape: { persoon?, lookupVerzoek, responseInCache, errorMessage? }.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002-01
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002-02
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-002-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-002-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-03
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)  Single auth-guarded BRP flow: doelbinding,
 	 *   permission, 11-proef, cache/remote, audit-persist — sequential guard clauses that must
@@ -173,6 +173,8 @@ class BrpController extends Controller {
 		$requestId = (string)$this->request->getParam('linkedRequest', '');
 		$contactId = (string)$this->request->getParam('gekoppeldContact', '');
 		$vogScreening = (bool)$this->request->getParam('vogScreening', false);
+		$verifiedClient = (string)$this->request->getParam('verifiedClient', '');
+		$identityCheck = trim((string)$this->request->getParam('identityCheck', ''));
 
 		// 1) Doelbinding presence (REQ-BSN-002-01).
 		if ($verzoekreden === '' || $purposeBinding === '') {
@@ -365,6 +367,11 @@ class BrpController extends Controller {
 			);
 		}
 
+		// 7b) Record on the client that its identity was verified against the BRP.
+		if ($person !== null && $verifiedClient !== '') {
+			$this->stampClientIdentity(clientId: $verifiedClient, identityCheck: $identityCheck, verifiedAt: $now);
+		}
+
 		// 8) Response shaping. Strip raw BSN-like fields; never echo BSN.
 		if ($person !== null) {
 			unset($person['bsn']);
@@ -412,7 +419,7 @@ class BrpController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
 	#[NoAdminRequired]
 	public function revealAddress(string $id): JSONResponse {
@@ -497,7 +504,7 @@ class BrpController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-02
 	 */
 	#[NoAdminRequired]
 	public function optOutCreate(): JSONResponse {
@@ -559,7 +566,7 @@ class BrpController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-03
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -614,7 +621,7 @@ class BrpController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-010
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-010
 	 */
 	#[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
 	public function monitor(): JSONResponse {
@@ -775,6 +782,50 @@ class BrpController extends Controller {
 			return $person;
 		}//end try
 	}//end saveBrpPersoon()
+
+	/**
+	 * Record on a client that its identity was verified in the BRP: when, via
+	 * what, and what the employee checked with the customer.
+	 *
+	 * @param string            $clientId      Client UUID.
+	 * @param string            $identityCheck What the employee checked ('' keeps the earlier one).
+	 * @param DateTimeImmutable $verifiedAt    When the lookup ran.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/brp-lookup/spec.md#requirement-a-brp-lookup-can-verify-a-clients-identity
+	 */
+	private function stampClientIdentity(string $clientId, string $identityCheck, DateTimeImmutable $verifiedAt): void {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		if ($register === '' || $schema === '') {
+			return;
+		}
+
+		try {
+			$existing = $this->getObjectService()->find(id: $clientId, register: $register, schema: $schema);
+			$client = [];
+			if (is_array($existing) === true) {
+				$client = $existing;
+			} else if (is_object($existing) === true && method_exists($existing, 'jsonSerialize') === true) {
+				$client = (array)$existing->jsonSerialize();
+			}
+
+			if ($client === []) {
+				return;
+			}
+
+			$client['identityVerifiedAt'] = $verifiedAt->format(DATE_ATOM);
+			$client['identityVerifiedVia'] = 'BRP';
+			if ($identityCheck !== '') {
+				$client['identityCheck'] = $identityCheck;
+			}
+
+			$this->getObjectService()->saveObject(object: $client, extend: [], register: $register, schema: $schema, uuid: $clientId);
+		} catch (Throwable $e) {
+			$this->logger->error('client identity stamp failed', ['clientId' => $clientId, 'error' => $e->getMessage()]);
+		}//end try
+	}//end stampClientIdentity()
 
 	/**
 	 * Stamp the Pipelinq contact with verifiedBSN/brpPersoonId/geheimhouding.

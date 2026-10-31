@@ -17,7 +17,9 @@ retrofit_extensions:
 Provide a chronological activity feed per contact, organization, and pipeline item in Pipelinq. All interactions -- status changes, notes, emails, calls, document uploads, field changes, and linked case events -- appear in one unified timeline. This gives the complete "klantbeeld" (customer view) that relationship managers need to understand the full history of any entity at a glance.
 
 Activity timelines are the single most requested CRM feature and are implemented in nearly all modern CRM platforms -- they answer "what happened with this contact?" without searching through multiple views. Common approaches include audit-log-style timelines, journal-style activity tracking, and chronological task linking.
+
 ## Requirements
+
 ### Requirement: Every entity MUST have a timeline view
 Contacts, organizations, and pipeline items each MUST display a unified activity timeline.
 
@@ -160,8 +162,6 @@ Operations for activity timeline and entity notes components MUST tolerate missi
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
 
-## Requirements
-
 ### Requirement: Activity events MUST cover all entity types
 The current ActivityService only publishes events for leads and requests. All Pipelinq entity types -- clients, contacts, leads, and requests -- MUST generate activity events on create and update.
 
@@ -178,6 +178,8 @@ The current ActivityService only publishes events for leads and requests. All Pi
 - AND the `ObjectUpdateDiffService` MUST track field changes for client and contact entities, not only assignee/stage/status
 
 ### Requirement: Timeline entries MUST be stored as OpenRegister objects
+
+Timeline entries MUST be stored as OpenRegister objects.
 Timeline entries must be queryable per entity, unlike Nextcloud Activity events which are stored in a global stream without per-object query support.
 
 #### Scenario: Timeline entry persisted on note addition
@@ -202,6 +204,8 @@ Timeline entries must be queryable per entity, unlike Nextcloud Activity events 
 - AND the timeline object MUST reference the same register configured in Pipelinq settings
 
 ### Requirement: Timeline API MUST support filtering by type, date range, and actor
+
+Timeline API MUST support filtering by type, date range, and actor.
 The per-entity timeline endpoint must accept query parameters for precise filtering.
 
 #### Scenario: Filter timeline by multiple activity types
@@ -221,6 +225,8 @@ The per-entity timeline endpoint must accept query parameters for precise filter
 - THEN only entries where the actor is "sales1" MUST be returned
 
 ### Requirement: Timeline UI MUST display entries grouped by date
+
+Timeline UI MUST display entries grouped by date.
 The timeline view in entity detail pages must visually group entries by calendar date with clear date separators.
 
 #### Scenario: Timeline renders date groups
@@ -248,6 +254,8 @@ The timeline view in entity detail pages must visually group entries by calendar
 - AND hovering over the relative time MUST show the full ISO 8601 timestamp in a tooltip
 
 ### Requirement: Cross-entity timeline aggregation MUST link related entities
+
+Cross-entity timeline aggregation MUST link related entities.
 Activities on related entities (client, contacts, leads, requests) must be visible across their linked timelines.
 
 #### Scenario: Client timeline aggregates contact and lead activities
@@ -267,6 +275,8 @@ Activities on related entities (client, contacts, leads, requests) must be visib
 - AND clicking a related entry MUST navigate to the source entity's detail page
 
 ### Requirement: Activity notifications MUST be configurable per type
+
+Activity notifications MUST be configurable per type.
 Users must be able to enable or disable notifications for each activity type independently, extending the existing AssignmentSetting, StageStatusSetting, and NoteSetting pattern.
 
 #### Scenario: User disables call activity notifications
@@ -282,6 +292,8 @@ Users must be able to enable or disable notifications for each activity type ind
 - AND email/push notifications MUST default to "enabled" only for assignment and stage_status types
 
 ### Requirement: Scheduled activities MUST support follow-up reminders
+
+Scheduled activities MUST support follow-up reminders.
 Users must be able to schedule follow-up activities with due dates that trigger reminders.
 
 #### Scenario: Schedule a follow-up call
@@ -310,6 +322,8 @@ Users must be able to schedule follow-up activities with due dates that trigger 
 - AND a new timeline entry MUST be created recording the completion: `activityType`: "call", with reference to the scheduled entry
 
 ### Requirement: Activity templates MUST allow quick entry of common interactions
+
+Activity templates MUST allow quick entry of common interactions.
 Pre-defined templates reduce data entry for frequently logged activity types.
 
 #### Scenario: Use a call template
@@ -332,6 +346,8 @@ Pre-defined templates reduce data entry for frequently logged activity types.
 - AND the template MUST enforce that "summary" and "resolution" fields are filled before saving
 
 ### Requirement: Timeline MUST support activity search with full-text matching
+
+Timeline MUST support activity search with full-text matching.
 Users must be able to search across all timeline content for an entity.
 
 #### Scenario: Search finds matches in note content
@@ -348,6 +364,8 @@ Users must be able to search across all timeline content for an entity.
 - AND a button MUST allow clearing the search to return to the full timeline
 
 ### Requirement: Activity export MUST support CSV and JSON formats
+
+Activity export MUST support CSV and JSON formats.
 Timeline data must be exportable for reporting and compliance purposes.
 
 #### Scenario: Export contact timeline as CSV
@@ -364,6 +382,8 @@ Timeline data must be exportable for reporting and compliance purposes.
 - AND each entry MUST include all fields: id, entityType, entityId, activityType, actor, timestamp, content, metadata
 
 ### Requirement: Activity reporting MUST provide agent productivity metrics
+
+Activity reporting MUST provide agent productivity metrics.
 Managers must be able to view aggregated activity statistics per user for performance tracking.
 
 #### Scenario: View agent activity summary
@@ -381,6 +401,8 @@ Managers must be able to view aggregated activity statistics per user for perfor
 - AND stages with zero activities in the last 7 days MUST be highlighted as potentially stale
 
 ### Requirement: Nextcloud Activity integration MUST remain the notification backbone
+
+Nextcloud Activity integration MUST remain the notification backbone.
 The existing Nextcloud Activity integration via `OCP\Activity\IManager` must continue to serve as the global notification and activity stream engine, while per-entity timelines use OpenRegister storage.
 
 #### Scenario: Dual-write to Nextcloud Activity and OpenRegister
@@ -396,6 +418,8 @@ The existing Nextcloud Activity integration via `OCP\Activity\IManager` must con
 - AND the filter MUST include all activity types: assignment, stage_status, notes, calls, meetings, documents, and field_changes
 
 ### Requirement: Email activity type MUST capture inbound and outbound email interactions
+
+Email activity type MUST capture inbound and outbound email interactions.
 Email exchanges with contacts and clients must be logged in the timeline, whether manually or via integration.
 
 #### Scenario: Manually log an outbound email
@@ -415,7 +439,31 @@ Email exchanges with contacts and clients must be logged in the timeline, whethe
 
 ---
 
-### Current Implementation Status
+### Requirement: The timeline lists notes and messages
+
+`GET /api/timeline` SHALL list the notes on the record as kind `note`. Each note shows its text, its time and its author. It SHALL list WhatsApp and SMS messages as kind `message`. A contact's messages are its own. A client's messages are those of its contact persons. `types[]=note` and `types[]=message` SHALL narrow to these kinds.
+
+#### Scenario: an internal note on a client
+- **GIVEN** Fatma Yildiz wrote a note on Sanne de Vries's client record
+- **THEN** the timeline lists it as a `note` with `userName` "Fatma Yildiz"
+
+### Requirement: The timeline names authors by display name
+
+Every item SHALL carry `userName`: its author's display name, or the user id when that user is unknown.
+
+#### Scenario: a contact moment handled by Fatma
+- **GIVEN** a contact moment assigned to user `fatma`
+- **THEN** its `userName` is "Fatma Yildiz"
+
+### Requirement: The timeline lists bookings and linked mail
+
+`GET /api/timeline` SHALL list a client's appointment bookings as kind `calendar`. Each booking is dated the day it was made and titled with its subject, else its service's name, and the appointment's time. It SHALL list the emails linked to the record as kind `email`. It reads them through OpenRegister's published `EmailLinkReaderInterface`. Without that reader, the mail kind SHALL be empty, not an error.
+
+#### Scenario: a site visit booked for Sanne
+- **GIVEN** a "Locatiebezoek" booking for Sanne de Vries on 8 October at 14:00, booked on 5 October
+- **THEN** the timeline lists it on 5 October as "Locatiebezoek, 8 oktober 2026 om 14:00"
+
+## Current Implementation Status
 
 **Partially implemented.** The app has Nextcloud Activity integration for CRM events, but not a dedicated per-entity unified timeline.
 
@@ -445,14 +493,14 @@ NOT implemented:
 - No agent productivity reporting.
 - No email activity type.
 
-### Standards & References
+## Standards & References
 - Nextcloud Activity API (`OCP\Activity\IManager`, `IProvider`, `IFilter`, `ISetting`) -- currently used for event publishing and notification delivery
 - OpenRegister audit log -- provides basic versioned change history per object, used by `CnDetailPage` sidebar
 - Schema.org `Action` / `InteractionCounter` -- could model timeline events
 - VNG Klantinteracties `Contactmoment` -- relevant for government-facing timeline entries
 - Pipelinq `NoteEventService::TYPE_MAP` -- defines entity type mapping: pipelinq_client, pipelinq_contact, pipelinq_lead, pipelinq_request
 
-### Specificity Assessment
+## Specificity Assessment
 - The spec is well-structured with clear scenarios and event types.
 - **Resolved**: Timeline entries SHOULD be stored as OpenRegister objects for per-entity queryability, while Nextcloud Activity remains the global notification backbone (dual-write pattern).
 - **Resolved**: API contract defined as `GET /api/timeline/{entityType}/{entityId}` with query params `types`, `from`, `to`, `actor`, `page`, `limit`.

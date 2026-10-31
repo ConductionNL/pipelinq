@@ -10,14 +10,14 @@
   - @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
+		width="form"
 		:name="
 			isEditing
 				? t('pipelinq', 'Edit campaign')
 				: t('pipelinq', 'New campaign')
 		"
-		:open="true"
 		size="normal"
 		:closeOnClickOutside="false"
 		@closing="close()">
@@ -116,7 +116,7 @@
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" @click="close()">
+			<NcButton @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
@@ -130,17 +130,17 @@
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcDateTimePickerNative,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
@@ -167,7 +167,7 @@ export default {
 	components: {
 		NcButton,
 		NcDateTimePickerNative,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,

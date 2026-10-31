@@ -292,6 +292,7 @@ class BlastControllerTest extends TestCase {
 				connectorRegister: FakeSlugResolver::connectorRegister(),
 				logger: $logger,
 				addressRenderer: new PhysicalAddressRenderer(),
+				recipientNames: new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($container, $appConfig, new \Psr\Log\NullLogger()),
 			),
 			logger: $logger,
 			container: $container,

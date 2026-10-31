@@ -48,6 +48,25 @@ export function pipelineStagesPayload(stages) {
 		if (!isBlank(s.color)) {
 			out.color = s.color
 		}
+		const max = Number(s.maxItems)
+		if (!s.isClosed && !isBlank(s.maxItems) && Number.isInteger(max) && max > 0) {
+			out.maxItems = max
+		}
 		return out
 	})
+}
+
+/**
+ * The limit of an open stage, or null when it has none.
+ *
+ * @param {object} stage A pipeline stage.
+ * @return {number|null} The limit.
+ * @spec openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits/spec.md#requirement-a-stage-can-carry-a-limit-req-psl-001
+ */
+export function stageLimit(stage) {
+	const max = Number(stage?.maxItems)
+	if (stage?.isClosed || !Number.isInteger(max) || max < 1) {
+		return null
+	}
+	return max
 }

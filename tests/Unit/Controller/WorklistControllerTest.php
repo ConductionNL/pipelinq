@@ -228,4 +228,37 @@ class WorklistControllerTest extends TestCase {
 		$this->assertSame('Worklist unavailable', $payload['message']);
 		$this->assertStringNotContainsString('boom', $payload['message']);
 	}
+
+	/**
+	 * The items endpoint hands the list and lens to the service, refuses an
+	 * unknown list, and downloads as CSV.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testItemsForwardsListAndLensAndDownloads(): void {
+		$this->authenticateAs('pieter');
+		$params = ['bucket' => 'answer-today', 'lens' => 'leads', 'sort' => 'priority', 'done' => 'true', 'format' => ''];
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $key, mixed $default = null) use (&$params): mixed {
+				return ($params[$key] ?? $default);
+			}
+		);
+		$item = ['kind' => 'lead', 'id' => 'l1', 'title' => 'Catering', 'priority' => 'normal', 'dueAt' => '2026-10-09', 'bucket' => 'answer-today'];
+		$this->service->expects($this->exactly(2))->method('items')
+			->with('pieter', 'answer-today', 'leads', 'priority', 'all')
+			->willReturn(['items' => [$item], 'total' => 1]);
+
+		$json = $this->buildController()->items();
+		self::assertSame(200, $json->getStatus());
+		self::assertSame(1, $json->getData()['total']);
+
+		$params['format'] = 'csv';
+		$file = $this->buildController()->items();
+		self::assertStringContainsString("lead,Catering,normal,2026-10-09,answer-today", $file->render());
+
+		$params['bucket'] = 'nope';
+		self::assertSame(400, $this->buildController()->items()->getStatus());
+	}//end testItemsForwardsListAndLensAndDownloads()
 }

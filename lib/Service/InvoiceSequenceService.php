@@ -46,14 +46,14 @@ class InvoiceSequenceService {
 	 *
 	 * @var string
 	 */
-	private const COUNTER_KEY = 'receipt_invoice_counter';
+	protected const COUNTER_KEY = 'receipt_invoice_counter';
 
 	/**
 	 * App-config key holding the year the counter belongs to.
 	 *
 	 * @var string
 	 */
-	private const COUNTER_YEAR_KEY = 'receipt_invoice_counter_year';
+	protected const COUNTER_YEAR_KEY = 'receipt_invoice_counter_year';
 
 	/**
 	 * Maximum number of transaction retries on a serialization conflict.
@@ -99,7 +99,7 @@ class InvoiceSequenceService {
 			try {
 				$next = $this->compareAndIncrement(year: $year);
 				if ($next > 0) {
-					return sprintf('%04d-%06d', $year, $next);
+					return $this->format(year: $year, number: $next);
 				}
 			} catch (\Throwable $e) {
 				$this->logger->warning(
@@ -111,6 +111,18 @@ class InvoiceSequenceService {
 
 		throw new RuntimeException('Could not allocate a unique invoice number.');
 	}//end next()
+
+	/**
+	 * Write a claimed counter value as the number handed out.
+	 *
+	 * @param int $year The calendar year.
+	 * @param int $number The claimed counter value.
+	 *
+	 * @return string The number, e.g. "2026-000042".
+	 */
+	protected function format(int $year, int $number): string {
+		return sprintf('%04d-%06d', $year, $number);
+	}//end format()
 
 	/**
 	 * Atomically claim the next counter value via a compare-and-set UPDATE.
@@ -130,8 +142,8 @@ class InvoiceSequenceService {
 	 * @spec openspec/specs/pos-receipt-engine/spec.md
 	 */
 	private function compareAndIncrement(int $year): int {
-		$storedYear = $this->appConfig->getValueInt(Application::APP_ID, self::COUNTER_YEAR_KEY, 0);
-		$current = $this->appConfig->getValueInt(Application::APP_ID, self::COUNTER_KEY, 0);
+		$storedYear = $this->appConfig->getValueInt(Application::APP_ID, static::COUNTER_YEAR_KEY, 0);
+		$current = $this->appConfig->getValueInt(Application::APP_ID, static::COUNTER_KEY, 0);
 
 		// New year (or first ever use): reset the sequence. The stored counter
 		// is zeroed so the compare-and-set below (expected: 0) matches and the
@@ -139,8 +151,8 @@ class InvoiceSequenceService {
 		// when the value already matches, so a concurrent caller that already
 		// reset is harmless.
 		if ($storedYear !== $year) {
-			$this->appConfig->setValueInt(Application::APP_ID, self::COUNTER_YEAR_KEY, $year);
-			$this->appConfig->setValueInt(Application::APP_ID, self::COUNTER_KEY, 0);
+			$this->appConfig->setValueInt(Application::APP_ID, static::COUNTER_YEAR_KEY, $year);
+			$this->appConfig->setValueInt(Application::APP_ID, static::COUNTER_KEY, 0);
 			$current = 0;
 		}
 
@@ -176,7 +188,7 @@ class InvoiceSequenceService {
 		$qb->update('appconfig')
 			->set('configvalue', $qb->createNamedParameter((string)$next))
 			->where($qb->expr()->eq('appid', $qb->createNamedParameter(Application::APP_ID)))
-			->andWhere($qb->expr()->eq('configkey', $qb->createNamedParameter(self::COUNTER_KEY)))
+			->andWhere($qb->expr()->eq('configkey', $qb->createNamedParameter(static::COUNTER_KEY)))
 			->andWhere($qb->expr()->eq('configvalue', $qb->createNamedParameter((string)$expected)));
 
 		return $qb->executeStatement();
@@ -192,12 +204,12 @@ class InvoiceSequenceService {
 	 * @return int 1 if this call set the value to 1, else 0.
 	 */
 	protected function seedCounter(): int {
-		$existing = $this->appConfig->getValueInt(Application::APP_ID, self::COUNTER_KEY, 0);
+		$existing = $this->appConfig->getValueInt(Application::APP_ID, static::COUNTER_KEY, 0);
 		if ($existing !== 0) {
 			return 0;
 		}
 
-		$this->appConfig->setValueInt(Application::APP_ID, self::COUNTER_KEY, 1);
+		$this->appConfig->setValueInt(Application::APP_ID, static::COUNTER_KEY, 1);
 
 		return 1;
 	}//end seedCounter()

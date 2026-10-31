@@ -32,7 +32,7 @@
 				</span>
 			</h3>
 			<NcButton
-				variant="primary"
+				variant="secondary"
 				:disabled="!effectiveContactId"
 				@click="openComposer">
 				{{ t('pipelinq', 'Send message') }}
@@ -87,7 +87,7 @@
 					{{
 						preflight && preflight.whatsappSessionOpen
 							? t('pipelinq', 'Open (24h window)')
-							: t('pipelinq', 'Closed — template required')
+							: t('pipelinq', 'Closed, template required')
 					}}
 				</strong>
 			</span>
@@ -155,6 +155,9 @@
 			v-if="showComposer"
 			:contactId="effectiveContactId"
 			:clientId="effectiveClientId"
+			:clientName="(clientRecord && clientRecord.name) || ''"
+			:recipientName="(selectedContact && selectedContact.name) || ''"
+			:recipientPhone="(selectedContact && selectedContact.phone) || ''"
 			:preflight="preflightForModal"
 			:initialChannel="composerChannel"
 			:placeholderValues="placeholderValues"
@@ -166,12 +169,15 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
+import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import SendMessageModal from '../../modals/SendMessageModal.vue'
 import { PAGE_REFRESH_CHANNEL } from '../../services/pageRefreshOnCreate.js'
 import { useObjectStore } from '../../store/modules/object.js'
+
+/** Event-bus channel: open the composer for an entity (`{ entityId }`), sent by the client page's contact strip. */
+const COMPOSE_CHANNEL = 'pipelinq:messaging:compose'
 
 const EMPTY_PREFLIGHT = {
 	channels: { sms: false, whatsapp: false },
@@ -270,7 +276,7 @@ export default {
 		 * The selected contact, from the page or from the client's contacts.
 		 *
 		 * @return {object|null}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		selectedContact() {
 			if (this.entityType === 'contact') {
@@ -286,7 +292,7 @@ export default {
 		 * Saved reply placeholder values this section holds.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		placeholderValues() {
 			return {
@@ -301,7 +307,7 @@ export default {
 		 * The contact's correspondence language.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		contactLanguage() {
 			const contact = this.selectedContact
@@ -356,6 +362,7 @@ export default {
 	 */
 	async mounted() {
 		subscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
+		subscribe(COMPOSE_CHANNEL, this.onComposeRequested)
 		if (this.entityType === 'contact') {
 			await this.resolveContactClient()
 			await Promise.all([
@@ -370,6 +377,7 @@ export default {
 
 	beforeUnmount() {
 		unsubscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
+		unsubscribe(COMPOSE_CHANNEL, this.onComposeRequested)
 	},
 
 	methods: {
@@ -380,7 +388,7 @@ export default {
 		 * item 2).
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+		 * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async onPageRefresh() {
 			if (this.entityType === 'client') {
@@ -476,7 +484,7 @@ export default {
 		 * Fetch the client's contacts. A refetch keeps the selected contact when it is still linked.
 		 *
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
-		 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+		 * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async fetchLinkedContacts() {
 			this.loadingContacts = true
@@ -502,7 +510,7 @@ export default {
 
 		/**
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
 		 */
 		async fetchMessages() {
 			if (!this.effectiveContactId) {
@@ -572,7 +580,7 @@ export default {
 		 * Read the client's name for the saved reply placeholders.
 		 *
 		 * @param {string} clientId The client id, or empty.
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		async fetchClient(clientId) {
 			if (!clientId) {
@@ -599,7 +607,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		closeComposer() {
 			this.showComposer = false
@@ -612,7 +620,7 @@ export default {
 		 *
 		 * @param {object} message A channelMessage row.
 		 * @return {boolean}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		canResend(message) {
 			const metadata = (message && message.metadata) || {}
@@ -631,7 +639,7 @@ export default {
 		 * shows the server's reason on the row.
 		 *
 		 * @param {object} message The failed row.
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		async resend(message) {
 			if (this.resending) {
@@ -675,7 +683,7 @@ export default {
 		 *
 		 * @param {string} status The server's status.
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		resendReason(status) {
 			const reasons = {
@@ -723,6 +731,19 @@ export default {
 			this.fetchMessages()
 			this.fetchConversations()
 			this.fetchPreflight()
+			emit('cn:timeline:changed', { objectId: this.entityId, source: 'messaging' })
+		},
+
+		/**
+		 * Open the composer when the contact strip asks for it on this entity.
+		 *
+		 * @param {object} payload `{ entityId }`.
+		 * @spec openspec/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
+		 */
+		onComposeRequested(payload) {
+			if (payload && payload.entityId === this.entityId) {
+				this.openComposer()
+			}
 		},
 	},
 }

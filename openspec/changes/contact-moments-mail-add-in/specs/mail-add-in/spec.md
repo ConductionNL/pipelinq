@@ -51,3 +51,27 @@ the first 1,000 characters of the mail.
 - GIVEN the pane shows contact Anna
 - WHEN the colleague presses Log this mail
 - THEN ContactDetail of Anna lists a contact moment with channel email and the mail's subject
+
+### Requirement: The pane's calls carry their own credentials (REQ-MAI-004)
+
+The lookup, contact and log calls SHALL be accepted only with an `Authorization`
+header (the app password of the login flow), because they skip the CSRF token.
+A call on a browser session alone SHALL be refused and SHALL change nothing. A
+record the colleague may not read SHALL be left out of a lookup, and a write
+that names such a record SHALL answer not found. Add as contact SHALL ask the
+right the Contacts page asks.
+
+#### Scenario: Another site cannot ride a colleague's session
+
+- GIVEN a colleague is signed in to Nextcloud in their browser
+- WHEN a page on another site posts to the log call without an `Authorization` header
+- THEN the call answers 403 and no contact moment exists
+- @e2e exclude a header-level refusal; covered by PHPUnit `MailAddInControllerTest::testACallWithoutItsOwnCredentialsDoesNothing`
+
+#### Scenario: A record the colleague may not read takes no contact moment
+
+- GIVEN a contact the colleague may not read
+- WHEN the pane logs a mail on that contact
+- THEN the call answers 404 and no contact moment exists
+- @e2e exclude needs a second account with narrower rights; covered by PHPUnit `OpenMailServiceTest::testNothingIsLoggedOnARecordTheCallerMayNotRead`
+

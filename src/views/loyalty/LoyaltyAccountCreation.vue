@@ -100,7 +100,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-010
 		 */
 		programmeOptions() {
 			return this.programmes.map((p) => ({
@@ -115,7 +115,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-010
 		 */
 		canSubmit() {
 			return this.optInAccepted && this.customerId && this.selectedProgramme
@@ -139,7 +139,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-010
 		 */
 		async loadProgrammes() {
 			try {
@@ -161,7 +161,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-010
 		 */
 		async enroll() {
 			if (!this.canSubmit) {

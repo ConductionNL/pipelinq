@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-010, REQ-FRC-011
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-010, REQ-FRC-011
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
@@ -92,7 +92,7 @@ class ForecastController extends Controller {
 	 *
 	 * @return Response The snapshot export.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-010-01, REQ-FRC-010-02
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-010-01, REQ-FRC-010-02
 	 */
 	#[NoAdminRequired]
 	public function snapshots(
@@ -145,7 +145,7 @@ class ForecastController extends Controller {
 	 *
 	 * @return JSONResponse The created override or an error.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006-01, REQ-FRC-011-02
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-01, REQ-FRC-011-02
 	 */
 	#[NoAdminRequired]
 	public function createOverride(): JSONResponse {
@@ -191,7 +191,7 @@ class ForecastController extends Controller {
 	 *
 	 * @return JSONResponse The deletion result.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006-06
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-06
 	 */
 	#[NoAdminRequired]
 	public function deleteOverride(string $id): JSONResponse {

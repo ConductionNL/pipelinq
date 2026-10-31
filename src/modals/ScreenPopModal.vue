@@ -8,21 +8,13 @@
   - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.1
   -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Incoming call — choose contact')"
-		:open="true"
-		size="normal"
+	<CnDialog
+		:name="t('pipelinq', 'Incoming call: choose contact')"
+		:subtitle="t('pipelinq', 'Multiple contacts match {number}. Select one to open, or create a new contact.', { number: shownNumber })"
+		width="form"
+		data-testid="screen-pop-dialog"
 		@closing="$emit('close')">
 		<div class="screen-pop">
-			<p class="screen-pop__intro">
-				{{
-					t(
-						'pipelinq',
-						'Multiple contacts match {number}. Select one to open, or create a new contact.',
-						{ number: e164 || rawNumber },
-					)
-				}}
-			</p>
 			<table class="screen-pop__table" data-testid="screen-pop-matches">
 				<thead>
 					<tr>
@@ -34,13 +26,27 @@
 				</thead>
 				<tbody>
 					<tr v-for="match in matches" :key="match.id || match.uuid">
-						<td>{{ displayName(match) }}</td>
-						<td>{{ match.clientName || match.organisation || '—' }}</td>
-						<td>{{ match._matchType || 'contact' }}</td>
+						<td>
+							<template v-if="preferredName(match)">
+								<strong
+									class="screen-pop__preferred"
+									data-testid="screen-pop-preferred-name"
+									>{{ preferredName(match) }}</strong
+								>
+								<span
+									class="screen-pop__full-name"
+									data-testid="screen-pop-full-name"
+									>{{ displayName(match) }}</span
+								>
+							</template>
+							<template v-else>
+								{{ displayName(match) }}
+							</template>
+						</td>
+						<td class="screen-pop__muted">{{ clientLine(match) }}</td>
+						<td>{{ kindOf(match) }}</td>
 						<td class="screen-pop__actions">
-							<NcButton
-								variant="primary"
-								@click="$emit('select', match)">
+							<NcButton @click="$emit('select', match)">
 								{{ t('pipelinq', 'Select') }}
 							</NcButton>
 						</td>
@@ -52,19 +58,25 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton variant="secondary" @click="$emit('intake')">
+			<NcButton variant="primary" data-testid="screen-pop-new" @click="$emit('intake')">
+				<template #icon>
+					<AccountPlus :size="20" />
+				</template>
 				{{ t('pipelinq', 'New contact') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
+import AccountPlus from 'vue-material-design-icons/AccountPlusOutline.vue'
+import { readablePhone } from '../utils/readablePhone.js'
 
 export default {
 	name: 'ScreenPopModal',
-	components: { NcButton, NcDialog },
+	components: { AccountPlus, CnDialog, NcButton },
 	props: {
 		matches: { type: Array, required: true },
 		e164: { type: String, default: '' },
@@ -72,7 +84,60 @@ export default {
 	},
 
 	emits: ['close', 'select', 'intake'],
+	computed: {
+		/** @return {string} The number as people read it. */
+		shownNumber() {
+			return readablePhone(this.rawNumber || this.e164)
+		},
+	},
+
 	methods: {
+		/**
+		 * The client column: the client a contact belongs to, else where a
+		 * client lives or what a contact does there.
+		 *
+		 * @param {object} match A matched contact or client.
+		 * @return {string} The line.
+		 */
+		clientLine(match) {
+			return match.clientName || match.organisation || match.role || match.address || '—'
+		},
+
+		/**
+		 * Person or organisation, as the client record says; a contact person otherwise.
+		 *
+		 * @param {object} match A matched contact or client.
+		 * @return {string} The kind.
+		 */
+		kindOf(match) {
+			const type = String(match.type || '').toLowerCase()
+			if (type === 'organization' || type === 'organisation') {
+				return t('pipelinq', 'Organisation')
+			}
+			if (type === 'person') {
+				return t('pipelinq', 'Person')
+			}
+			return match._matchType === 'client' ? t('pipelinq', 'Client') : t('pipelinq', 'Contact person')
+		},
+
+		/**
+		 * The name the caller asked to be called by, which the agent says
+		 * first. Empty when they stated none, or when it equals the full name.
+		 *
+		 * @param {object} match A matched contact or client.
+		 * @return {string} The preferred name, or ''.
+		 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-the-preferred-name-is-used-where-a-person-is-addressed-req-cpn-002
+		 */
+		preferredName(match) {
+			const preferred =
+				typeof match.preferredName === 'string'
+					? match.preferredName.trim()
+					: ''
+			return preferred !== '' && preferred !== this.displayName(match)
+				? preferred
+				: ''
+		},
+
 		displayName(match) {
 			return (
 				match.displayName
@@ -86,13 +151,12 @@ export default {
 </script>
 
 <style scoped>
-.screen-pop__intro {
-	margin-bottom: 12px;
-	color: var(--color-text-maxcontrast);
-}
-
+/* Board PqInkomendGesprek: the matches fill the dialog's content width, the
+   name column first and the button column last flush with the content edge,
+   the head in soft ink on the dialog ground. */
 .screen-pop__table {
 	width: 100%;
+	table-layout: fixed;
 	border-collapse: collapse;
 }
 
@@ -100,10 +164,62 @@ export default {
 .screen-pop__table td {
 	padding: 8px 12px;
 	text-align: start;
+	white-space: normal;
+	overflow-wrap: break-word;
 	border-bottom: 1px solid var(--color-border);
+	font-size: 14px;
+	line-height: 1.2;
+}
+
+.screen-pop__table th:first-child,
+.screen-pop__table td:first-child {
+	width: 30%;
+	padding-inline-start: 0;
+}
+
+.screen-pop__table th:nth-child(2),
+.screen-pop__table td:nth-child(2) {
+	width: 28%;
+}
+
+.screen-pop__table th:nth-child(3),
+.screen-pop__table td:nth-child(3) {
+	width: 22%;
+}
+
+.screen-pop__table th:last-child,
+.screen-pop__table td:last-child {
+	width: 20%;
+	padding-inline-end: 0;
+}
+
+.screen-pop__table td:first-child {
+	font-weight: 600;
 }
 
 .screen-pop__actions {
 	text-align: end;
+}
+
+.screen-pop__preferred,
+.screen-pop__full-name {
+	display: block;
+}
+
+.screen-pop__full-name,
+.screen-pop__muted {
+	color: var(--color-text-maxcontrast);
+}
+
+.screen-pop__full-name {
+	font-weight: 400;
+}
+
+.screen-pop__table th {
+	padding-block: 6px 13px;
+	background: transparent;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+	font-weight: 600;
 }
 </style>

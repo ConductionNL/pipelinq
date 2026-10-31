@@ -79,7 +79,7 @@
 					{{ formatEur(Math.abs(validation.variance)) }}
 				</div>
 				<div v-else>
-					{{ t('pipelinq', 'Payment balanced — ready to settle.') }}
+					{{ t('pipelinq', 'Payment balanced, ready to settle.') }}
 				</div>
 			</div>
 

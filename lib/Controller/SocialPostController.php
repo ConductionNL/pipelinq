@@ -287,6 +287,24 @@ class SocialPostController extends Controller {
 	}//end performance()
 
 	/**
+	 * GET /api/social-performance/networks — the period's numbers per network.
+	 *
+	 * @param int $days The period in days, ending now.
+	 *
+	 * @return JSONResponse `{data[]}`.
+	 *
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-social-performance-is-summed-per-network-for-a-period
+	 */
+	#[NoAdminRequired]
+	public function networkPerformance(int $days = 30): JSONResponse {
+		if ($this->requireCrmUser() === null) {
+			return $this->refuse();
+		}
+
+		return new JSONResponse(['data' => $this->metrics->networkTotals(days: max(1, min(365, $days)))]);
+	}//end networkPerformance()
+
+	/**
 	 * Turn a service answer into a response.
 	 *
 	 * @param array<string, mixed> $result The service's answer.

@@ -229,4 +229,51 @@ class ContactVcardPropertyBuilderTest extends TestCase {
 
 		$this->assertArrayNotHasKey('X-SOCIALPROFILE', $result);
 	}//end testBuildPropertiesOmitsSocialProfileKeyWhenAbsent()
+
+	/**
+	 * The preferred name is written as NICKNAME for a contact and a person client.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	public function testBuildPropertiesWritesThePreferredNameAsNickname(): void {
+		$contact = $this->builder->buildProperties(['name' => 'Johannes Jansen', 'preferredName' => ' Jan '], 'contact');
+		$person = $this->builder->buildProperties(['name' => 'Johanna de Wit', 'type' => 'person', 'preferredName' => 'Hanneke'], 'client');
+
+		$this->assertSame('Jan', $contact['NICKNAME']);
+		$this->assertSame('Johannes Jansen', $contact['FN']);
+		$this->assertSame('Hanneke', $person['NICKNAME']);
+	}//end testBuildPropertiesWritesThePreferredNameAsNickname()
+
+	/**
+	 * An emptied preferred name clears the nickname: the key is written, empty.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	public function testBuildPropertiesClearsTheNicknameWhenThePreferredNameIsEmptied(): void {
+		foreach (['', null, '   '] as $emptied) {
+			$result = $this->builder->buildProperties(['name' => 'Johannes Jansen', 'preferredName' => $emptied], 'contact');
+
+			$this->assertArrayHasKey('NICKNAME', $result);
+			$this->assertSame('', $result['NICKNAME']);
+		}
+	}//end testBuildPropertiesClearsTheNicknameWhenThePreferredNameIsEmptied()
+
+	/**
+	 * An object without the field, and an organisation, leave the nickname alone.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	public function testBuildPropertiesLeavesTheNicknameAloneWithoutThePersonField(): void {
+		$without = $this->builder->buildProperties(['name' => 'Johannes Jansen'], 'contact');
+		$organisation = $this->builder->buildProperties(['name' => 'Test Corp', 'type' => 'organization', 'preferredName' => 'TC'], 'client');
+
+		$this->assertArrayNotHasKey('NICKNAME', $without);
+		$this->assertArrayNotHasKey('NICKNAME', $organisation);
+	}//end testBuildPropertiesLeavesTheNicknameAloneWithoutThePersonField()
 }//end class

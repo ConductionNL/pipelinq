@@ -95,6 +95,25 @@ class EmailSyncController extends Controller {
 	}//end getSettings()
 
 	/**
+	 * List the current user's own Nextcloud Mail accounts the matcher can read.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/email-calendar-sync/spec.md
+	 */
+	public function getAccounts(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		return new JSONResponse(['accounts' => $this->emailMatchService->listAccounts(userId: $user->getUID())]);
+
+	}//end getAccounts()
+
+	/**
 	 * Persist the current user's matching settings.
 	 *
 	 * @return JSONResponse
@@ -116,6 +135,10 @@ class EmailSyncController extends Controller {
 
 		$account = (int)$accountParam;
 		if ($account < 0) {
+			return new JSONResponse(['error' => $this->l10n->t('Invalid account')], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($account > 0 && $this->emailMatchService->ownsAccount(userId: $user->getUID(), accountId: $account) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Invalid account')], Http::STATUS_BAD_REQUEST);
 		}
 

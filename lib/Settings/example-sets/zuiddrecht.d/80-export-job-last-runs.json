@@ -1,0 +1,67 @@
+{
+	"$comment": "The last and next run of each BI export job as PqBiExport draws them (exportJob 1.1.0, pq-b5): a real run writes these fields, a seeded job has to carry them. They agree with the exportRun records of part 67, dated from the day the set is viewed as the board's 7 October is.",
+	"changes": [
+		{
+			"key": "laatste-run-tickets",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"where": {
+				"name": "Tickets voor het KCC-dashboard"
+			},
+			"set": {
+				"lastRunStatus": "succeeded",
+				"lastRunAt": "{{datetime:0 02:04}}",
+				"lastRunRows": 12480,
+				"lastRunFiles": 1,
+				"nextRunAt": "{{datetime:1 02:00}}"
+			}
+		},
+		{
+			"key": "laatste-run-contactmomenten",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"where": {
+				"name": "Contactmomenten per kanaal"
+			},
+			"set": {
+				"lastRunStatus": "succeeded",
+				"lastRunAt": "{{datetime:0 10:01}}",
+				"lastRunRows": 214,
+				"lastRunFiles": 1,
+				"nextRunAt": "{{datetime:0 11:00}}"
+			}
+		},
+		{
+			"key": "laatste-run-afspraken",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"where": {
+				"name": "Afspraken en niet verschenen"
+			},
+			"set": {
+				"lastRunStatus": "partial",
+				"lastRunAt": "{{datetime:-2 03:12}}",
+				"lastRunFiles": 2,
+				"lastRunError": "2 van de 3 bestanden geschreven",
+				"nextRunAt": "{{datetime:5 03:00}}",
+				"lastRunFilesExpected": 3
+			}
+		},
+		{
+			"key": "laatste-run-leads",
+			"register": "pipelinq",
+			"schema": "exportJob",
+			"where": {
+				"name": "Leads en waarde in de pijplijn"
+			},
+			"set": {
+				"lastRunStatus": "failed",
+				"lastRunAt": "{{datetime:-1 01:00}}",
+				"lastRunRows": 0,
+				"lastRunFiles": 0,
+				"lastRunError": "verbinding geweigerd",
+				"nextRunAt": null
+			}
+		}
+	]
+}

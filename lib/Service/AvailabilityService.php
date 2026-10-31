@@ -54,6 +54,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive availability engine; splitting would fragment slot/cache logic.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Slot computation over many working-hour/booking/calendar dimensions is inherently complex.
+ * @SuppressWarnings(PHPMD.TooManyMethods)          The engine owns its cache, so it also expires it per day, per resource and per resource type.
  *
  * @spec openspec/specs/appointment-booking/spec.md
  * @spec openspec/specs/appointment-booking/spec.md
@@ -400,6 +401,116 @@ class AvailabilityService {
 			);
 		}
 	}//end invalidateCache()
+
+	/**
+	 * Delete every availability-cache row of a resource, whatever its date.
+	 *
+	 * Runs on the server for every writer of the resource (the UI, the API, an
+	 * import): its hours, vacations or type changed, so no cached day is still
+	 * true. A row that cannot be deleted is logged; the hourly refresh job
+	 * converges it.
+	 *
+	 * @param string $resourceId Resource UUID.
+	 *
+	 * @return int How many rows were deleted.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 */
+	public function invalidateResource(string $resourceId): int {
+		$register = $this->registerId();
+		$schema = $this->schemaId(key: self::AVAILABILITY_CACHE_SCHEMA_KEY);
+		if ($resourceId === '' || $register === '' || $schema === '') {
+			return 0;
+		}
+
+		$deleted = 0;
+		foreach ($this->findRows(schema: $schema, filters: ['resourceId' => $resourceId]) as $row) {
+			$uuid = $this->idOf(object: $row);
+			if ($uuid === '') {
+				continue;
+			}
+
+			try {
+				$this->getObjectService()->deleteObject(uuid: $uuid, register: $register, schema: $schema);
+				$deleted++;
+			} catch (\Throwable $e) {
+				$this->logger->warning(
+					'Pipelinq: availability cache row could not be deleted',
+					['resource' => $resourceId, 'row' => $uuid, 'exception' => $e->getMessage()]
+				);
+			}
+		}
+
+		return $deleted;
+	}//end invalidateResource()
+
+	/**
+	 * Delete the cached availability of every resource a service can run on:
+	 * the resources whose `type` is one of the service's required resource
+	 * types, or every resource when the service names none.
+	 *
+	 * @param array<int, string> $resourceTypes The service's `requiredResourceTypes`.
+	 *
+	 * @return int How many rows were deleted.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 */
+	public function invalidateForResourceTypes(array $resourceTypes): int {
+		$schema = $this->schemaId(key: self::RESOURCE_SCHEMA_KEY);
+		if ($schema === '') {
+			return 0;
+		}
+
+		$types = array_values(array_filter($resourceTypes, static fn ($type): bool => is_string($type) === true && $type !== ''));
+		$deleted = 0;
+		foreach ($this->findRows(schema: $schema, filters: []) as $resource) {
+			if ($types !== [] && in_array(needle: ($resource['type'] ?? null), haystack: $types, strict: true) === false) {
+				continue;
+			}
+
+			$deleted += $this->invalidateResource(resourceId: $this->idOf(object: $resource));
+		}
+
+		return $deleted;
+	}//end invalidateForResourceTypes()
+
+	/**
+	 * The objects of a pipelinq schema that match simple equality filters,
+	 * as arrays. A failed read is logged and answers none.
+	 *
+	 * @param string $schema The schema id.
+	 * @param array<string, string> $filters Equality filters.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function findRows(string $schema, array $filters): array {
+		$register = $this->registerId();
+		if ($register === '' || $schema === '') {
+			return [];
+		}
+
+		try {
+			$rows = $this->getObjectService()->findAll(
+				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: availability lookup failed',
+				['schema' => $schema, 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
+
+		$out = [];
+		foreach (($rows ?? []) as $row) {
+			$data = $this->toArray(object: $row);
+			if ($data !== null) {
+				$out[] = $data;
+			}
+		}
+
+		return $out;
+	}//end findRows()
 
 	/**
 	 * Read the cached free-block list, regenerating + persisting when missing.

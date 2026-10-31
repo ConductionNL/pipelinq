@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\SemanticHandoffService;
 use OCA\Pipelinq\Service\Settings\MenuStructure;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -37,6 +38,11 @@ use OCP\IRequest;
  */
 class DashboardController extends Controller {
 	/**
+	 * The semantic kind a case answers to, whichever app implements it.
+	 */
+	private const KIND_CASE = 'https://openregister.app/ns#Case';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
@@ -44,6 +50,7 @@ class DashboardController extends Controller {
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param MenuStructure $menuStructure How the stored structure settings read.
 	 * @param IAppManager $appManager Reads the installed app version.
+	 * @param SemanticHandoffService $handoffService Finds where the installed case app keeps its cases.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -51,6 +58,7 @@ class DashboardController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly MenuStructure $menuStructure,
 		private readonly IAppManager $appManager,
+		private readonly SemanticHandoffService $handoffService,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -67,6 +75,11 @@ class DashboardController extends Controller {
 	 * know the version it is released as (`appVersionDefine` in
 	 * @conduction/nextcloud-vue/webpack).
 	 *
+	 * Where cases live travels as `case_target`: the register and schema of
+	 * whichever installed app implements the case kind, or an empty map when
+	 * none does. The ticket page reads them as `@config.caseRegister` and
+	 * `@config.caseSchema` to show the decisions on the case a ticket became.
+	 *
 	 * @return TemplateResponse The template response.
 	 *
 	 * @NoAdminRequired
@@ -74,6 +87,7 @@ class DashboardController extends Controller {
 	 * @spec            openspec/changes/reverse-2026-05-26-be-dashboard-pipeline/tasks.md#task-1
 	 * @spec            openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
 	 * @spec            openspec/changes/simple-tour-and-readable-labels/specs/navigation-ia/spec.md#requirement-the-user-settings-show-the-installed-app-version-req-nia-108
+	 * @spec            openspec/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
 	 */
 	public function page(): TemplateResponse {
 		$this->initialState->provideInitialState(
@@ -93,6 +107,14 @@ class DashboardController extends Controller {
 			'version',
 			$this->appManager->getAppVersion(appId: Application::APP_ID)
 		);
+
+		$caseTarget = [];
+		$location = $this->handoffService->implementerLocation(kindUri: self::KIND_CASE);
+		if ($location !== null) {
+			$caseTarget = ['caseRegister' => $location['register'], 'caseSchema' => $location['schema']];
+		}
+
+		$this->initialState->provideInitialState('case_target', $caseTarget);
 
 		return new TemplateResponse(Application::APP_ID, 'index');
 	}//end page()

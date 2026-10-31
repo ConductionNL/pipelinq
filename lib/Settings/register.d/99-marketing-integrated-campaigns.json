@@ -77,21 +77,25 @@
 									"leadStageChanged",
 									"contractRenewalWindow",
 									"listConfirmed",
-									"shillinqSignal"
+									"shillinqSignal",
+									"addressChanged",
+									"ticketClosed"
 								],
 								"title": "Trigger kind",
-								"description": "A stage change, a contract renewal window, a list confirmation or a bookkeeping signal.",
+								"description": "A stage change, a contract renewal window, a list confirmation, a bookkeeping signal, a new address or a closed ticket.",
 								"x-enum-labels": {
 									"leadStageChanged": "A lead moved stage",
 									"contractRenewalWindow": "A contract is up for renewal",
 									"listConfirmed": "Someone confirmed a subscription",
-									"shillinqSignal": "A bookkeeping signal changed"
+									"shillinqSignal": "A bookkeeping signal changed",
+									"addressChanged": "A resident or business got a new address",
+									"ticketClosed": "A ticket was closed"
 								}
 							},
 							"cron": {
 								"type": "string",
 								"title": "Schedule",
-								"description": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other three kinds.",
+								"description": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other kinds.",
 								"example": "0 7 * * *"
 							}
 						}
@@ -332,7 +336,7 @@
 				"slug": "weeklyReview",
 				"title": "Weekly review",
 				"icon": "CalendarWeek",
-				"version": "1.0.0",
+				"version": "1.1.0",
 				"summary": "One page of what moved last week, what to try, and three topic ideas.",
 				"description": "Pipelinq composes the numbers from mailings, social publications, search queries and competitor watch events. The agentAuthored pair is the ADR-088 mark storage: nothing writes it yet, because pipelinq ships no MCP tool provider and the seeded agent template grants read-only tools. The review takes no action: it has no send and no publish path.",
 				"x-schema-org": "schema:Report",
@@ -381,6 +385,21 @@
 						"title": "Highlights",
 						"description": "The few numbers worth reading first.",
 						"example": "Webinar AI voor gemeenten reached 120 people"
+					},
+					"highlightDirections": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"enum": [
+								"up",
+								"down",
+								"flat"
+							]
+						},
+						"default": [],
+						"title": "Highlight directions",
+						"description": "Whether each highlight's figure rose, fell or held against the week before, one entry per highlight in the same order.",
+						"example": "up"
 					},
 					"suggestions": {
 						"type": "array",

@@ -1,0 +1,566 @@
+{
+	"$comment": "pipelinq's bookings in the Zuiddrecht set: this week's appointments at the desks, a meeting room and on location, as PqAfspraken, PqAfspraak and PqAfspraakVerplaatsen draw them. Sanne's site visit on the Parkstraat lives here, not in the main file, because it names Joris Bakker's resource from 41-appointments.json and the service car below. The extra desks, the meeting room and the car are the resources the rows are booked on. 'Gesprek met een medewerker' is the general service for the rows that name no specific product; the row text is the booking's subject.",
+	"objects": [
+		{
+			"key": "resource-balie-3",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Balie 3, stadskantoor",
+				"type": "room",
+				"skills": [],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"workingHours": [
+					{
+						"day": "monday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "tuesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "wednesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "thursday",
+						"openTime": "08:30",
+						"closeTime": "20:00"
+					},
+					{
+						"day": "friday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					}
+				]
+			}
+		},
+		{
+			"key": "resource-balie-4",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Balie 4, stadskantoor",
+				"type": "room",
+				"skills": [],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"workingHours": [
+					{
+						"day": "monday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "tuesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "wednesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "thursday",
+						"openTime": "08:30",
+						"closeTime": "20:00"
+					},
+					{
+						"day": "friday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					}
+				]
+			}
+		},
+		{
+			"key": "resource-vergaderruimte-1-12",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Vergaderruimte 1.12",
+				"type": "room",
+				"skills": [],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"workingHours": [
+					{
+						"day": "monday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "tuesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "wednesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "thursday",
+						"openTime": "08:30",
+						"closeTime": "20:00"
+					},
+					{
+						"day": "friday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					}
+				]
+			}
+		},
+		{
+			"key": "resource-dienstauto-2",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Dienstauto 2",
+				"type": "equipment",
+				"skills": [],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"workingHours": [
+					{
+						"day": "monday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "tuesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "wednesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "thursday",
+						"openTime": "08:30",
+						"closeTime": "20:00"
+					},
+					{
+						"day": "friday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					}
+				]
+			}
+		},
+		{
+			"key": "dienst-gesprek-medewerker",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Gesprek met een medewerker",
+				"description": "Een afspraak aan de balie of in een spreekkamer over een vraag, een aanvraag of een klacht.",
+				"durationMinutes": 30,
+				"bufferBeforeMinutes": 0,
+				"bufferAfterMinutes": 0,
+				"bookableOnline": true,
+				"requiredResourceTypes": [
+					"staff",
+					"room"
+				],
+				"requiresDeposit": false,
+				"cancellationPolicy": "free",
+				"currency": "EUR",
+				"status": "active"
+			}
+		},
+		{
+			"key": "booking-locatiebezoek-parkstraat",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-sanne.id}}",
+				"serviceId": "{{object:service-locatiebezoek.id}}",
+				"startAt": "{{datetime:1 14:00}}",
+				"endAt": "{{datetime:1 15:00}}",
+				"status": "confirmed",
+				"statusHistory": [
+					{
+						"status": "confirmed",
+						"reason": "Geboekt voor donderdag 14:00",
+						"changedAt": "{{datetime:-2 11:18}}",
+						"changedBy": "{{cast:pieter.uid}}"
+					},
+					{
+						"status": "confirmed",
+						"reason": "Bevestiging verstuurd naar Mijn Zuiddrecht en per e-mail",
+						"changedAt": "{{datetime:-2 11:20}}"
+					},
+					{
+						"status": "confirmed",
+						"reason": "Joris Bakker toegevoegd als tweede behandelaar",
+						"changedAt": "{{datetime:-1 09:02}}",
+						"changedBy": "{{cast:pieter.uid}}"
+					}
+				],
+				"notes": "We zien elkaar bij Parkstraat 24 en lopen het stuk tussen nummer 12 en 40 dat u wilt afsluiten voor het straatfeest. Neem een schets van de kramen en het podium mee.",
+				"internalNotes": "Controleer de calamiteitenroute en waar de brandweer langs kan.",
+				"source": "phone",
+				"confirmationSentAt": "{{datetime:-2 11:20}}",
+				"subject": "Locatiebezoek Parkstraat",
+				"location": "Parkstraat 24",
+				"assignee": "{{cast:pieter.uid}}",
+				"depositAmount": 25,
+				"resourceAssignments": [
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-joris-bakker.id}}",
+						"startAt": "{{datetime:1 14:00}}",
+						"endAt": "{{datetime:1 15:00}}"
+					},
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-dienstauto-2.id}}",
+						"startAt": "{{datetime:1 13:40}}",
+						"endAt": "{{datetime:1 15:20}}"
+					}
+				],
+				"ticket": "{{object:ticket-sanne-straatfeest.id}}"
+			}
+		},
+		{
+			"key": "booking-sanne-verhuizing",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-sanne.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:-2 08:45}}",
+				"endAt": "{{datetime:-2 09:00}}",
+				"status": "no-show",
+				"statusHistory": [
+					{
+						"status": "confirmed",
+						"reason": "Geboekt via Mijn Zuiddrecht",
+						"changedAt": "{{datetime:-9 19:40}}",
+						"changedBy": "{{object:client-sanne.id}}"
+					},
+					{
+						"status": "no-show",
+						"reason": "Niet verschenen",
+						"changedAt": "{{datetime:-2 09:15}}",
+						"changedBy": "{{cast:fatmayildiz.uid}}"
+					}
+				],
+				"source": "portal",
+				"subject": "Verhuizing doorgeven",
+				"location": "Balie 2, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"resourceAssignments": [
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-balie-2.id}}",
+						"startAt": "{{datetime:-2 08:45}}",
+						"endAt": "{{datetime:-2 09:00}}"
+					},
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-fatma-yildiz.id}}",
+						"startAt": "{{datetime:-2 08:45}}",
+						"endAt": "{{datetime:-2 09:00}}"
+					}
+				]
+			}
+		},
+		{
+			"key": "booking-degraaf-paspoort-ophalen",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-degraaf.id}}",
+				"serviceId": "{{object:dienst-document-ophalen.id}}",
+				"startAt": "{{datetime:0 09:00}}",
+				"endAt": "{{datetime:0 09:15}}",
+				"status": "completed",
+				"statusHistory": [
+					{
+						"status": "confirmed",
+						"reason": "Geboekt via Mijn Zuiddrecht",
+						"changedAt": "{{datetime:-6 20:05}}"
+					},
+					{
+						"status": "completed",
+						"reason": "Paspoort meegegeven",
+						"changedAt": "{{datetime:0 09:11}}",
+						"changedBy": "{{cast:fatmayildiz.uid}}"
+					}
+				],
+				"source": "portal",
+				"subject": "Paspoort ophalen",
+				"location": "Balie 2, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"resourceAssignments": [
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-balie-2.id}}",
+						"startAt": "{{datetime:0 09:00}}",
+						"endAt": "{{datetime:0 09:15}}"
+					},
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-fatma-yildiz.id}}",
+						"startAt": "{{datetime:0 09:00}}",
+						"endAt": "{{datetime:0 09:15}}"
+					}
+				]
+			}
+		},
+		{
+			"key": "booking-kuiper-tweede-auto",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-kuiper.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:0 10:30}}",
+				"endAt": "{{datetime:0 11:00}}",
+				"status": "confirmed",
+				"statusHistory": [
+					{
+						"status": "confirmed",
+						"reason": "Telefonisch geboekt",
+						"changedAt": "{{datetime:-3 14:20}}",
+						"changedBy": "{{cast:pieter.uid}}"
+					}
+				],
+				"source": "phone",
+				"subject": "Parkeervergunning tweede auto",
+				"location": "Balie 4, stadskantoor",
+				"assignee": "{{cast:pieter.uid}}",
+				"resourceAssignments": [
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-balie-4.id}}",
+						"startAt": "{{datetime:0 10:30}}",
+						"endAt": "{{datetime:0 11:00}}"
+					},
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-pieter-jansen.id}}",
+						"startAt": "{{datetime:0 10:30}}",
+						"endAt": "{{datetime:0 11:00}}"
+					}
+				]
+			}
+		},
+		{
+			"key": "booking-jpeters-klacht",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-jpeters.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:0 13:00}}",
+				"endAt": "{{datetime:0 13:30}}",
+				"status": "confirmed",
+				"statusHistory": [
+					{
+						"status": "confirmed",
+						"reason": "Telefonisch geboekt",
+						"changedAt": "{{datetime:-1 10:05}}",
+						"changedBy": "{{cast:pieter.uid}}"
+					}
+				],
+				"source": "phone",
+				"subject": "Gesprek over de klacht",
+				"location": "Vergaderruimte 1.12",
+				"assignee": "{{cast:pieter.uid}}",
+				"resourceAssignments": [
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-vergaderruimte-1-12.id}}",
+						"startAt": "{{datetime:0 13:00}}",
+						"endAt": "{{datetime:0 13:30}}"
+					},
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-pieter-jansen.id}}",
+						"startAt": "{{datetime:0 13:00}}",
+						"endAt": "{{datetime:0 13:30}}"
+					}
+				]
+			}
+		},
+		{
+			"key": "booking-buurtoost-subsidie",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-buurtoost.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:1 09:30}}",
+				"endAt": "{{datetime:1 10:00}}",
+				"status": "pending-deposit",
+				"statusHistory": [
+					{
+						"status": "pending-deposit",
+						"reason": "Geboekt via Mijn Zuiddrecht",
+						"changedAt": "{{datetime:-1 21:12}}",
+						"changedBy": "{{cast:fatmayildiz.uid}}"
+					}
+				],
+				"source": "portal",
+				"subject": "Subsidie straatfeest",
+				"location": "Balie 1, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"resourceAssignments": [
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-balie-1.id}}",
+						"startAt": "{{datetime:1 09:30}}",
+						"endAt": "{{datetime:1 10:00}}"
+					},
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-fatma-yildiz.id}}",
+						"startAt": "{{datetime:1 09:30}}",
+						"endAt": "{{datetime:1 10:00}}"
+					}
+				],
+				"depositAmount": 25
+			}
+		},
+		{
+			"key": "booking-ryilmaz-rijbewijs",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-ryilmaz.id}}",
+				"serviceId": "{{object:dienst-rijbewijs-verlengen.id}}",
+				"startAt": "{{datetime:2 11:00}}",
+				"endAt": "{{datetime:2 11:15}}",
+				"status": "confirmed",
+				"statusHistory": [
+					{
+						"status": "confirmed",
+						"reason": "Geboekt via Mijn Zuiddrecht",
+						"changedAt": "{{datetime:-4 08:30}}",
+						"changedBy": "{{cast:joris.uid}}"
+					}
+				],
+				"source": "portal",
+				"subject": "Rijbewijs ophalen",
+				"location": "Balie 2, stadskantoor",
+				"assignee": "{{cast:joris.uid}}",
+				"resourceAssignments": [
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-balie-2.id}}",
+						"startAt": "{{datetime:2 11:00}}",
+						"endAt": "{{datetime:2 11:15}}"
+					},
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-joris-bakker.id}}",
+						"startAt": "{{datetime:2 11:00}}",
+						"endAt": "{{datetime:2 11:15}}"
+					}
+				]
+			}
+		},
+		{
+			"key": "booking-abakker-geluidsoverlast-eerder",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-abakker.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:-5 15:30}}",
+				"endAt": "{{datetime:-5 16:00}}",
+				"status": "cancelled-by-customer",
+				"statusHistory": [
+					{
+						"status": "confirmed",
+						"reason": "Telefonisch geboekt",
+						"changedAt": "{{datetime:-8 11:00}}",
+						"changedBy": "{{cast:joris.uid}}"
+					},
+					{
+						"status": "cancelled-by-customer",
+						"reason": "Verzet naar vrijdag",
+						"changedAt": "{{datetime:-6 10:12}}",
+						"changedBy": "{{cast:joris.uid}}"
+					}
+				],
+				"source": "phone",
+				"subject": "Klacht geluidsoverlast vervolg",
+				"location": "Balie 3, stadskantoor",
+				"assignee": "{{cast:joris.uid}}",
+				"resourceAssignments": [
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-balie-3.id}}",
+						"startAt": "{{datetime:-5 15:30}}",
+						"endAt": "{{datetime:-5 16:00}}"
+					},
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-joris-bakker.id}}",
+						"startAt": "{{datetime:-5 15:30}}",
+						"endAt": "{{datetime:-5 16:00}}"
+					}
+				],
+				"cancellationReason": "Verzet naar vrijdag op verzoek van de inwoner",
+				"cancelledAt": "{{datetime:-6 10:12}}",
+				"cancelledBy": "{{object:client-abakker.id}}"
+			}
+		},
+		{
+			"key": "booking-abakker-geluidsoverlast",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-abakker.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:2 15:30}}",
+				"endAt": "{{datetime:2 16:00}}",
+				"status": "rescheduled",
+				"statusHistory": [
+					{
+						"status": "rescheduled",
+						"reason": "Verzet van vrijdag 2 oktober",
+						"changedAt": "{{datetime:-6 10:12}}",
+						"changedBy": "{{cast:joris.uid}}"
+					}
+				],
+				"source": "phone",
+				"subject": "Klacht geluidsoverlast vervolg",
+				"location": "Balie 3, stadskantoor",
+				"assignee": "{{cast:joris.uid}}",
+				"resourceAssignments": [
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-balie-3.id}}",
+						"startAt": "{{datetime:2 15:30}}",
+						"endAt": "{{datetime:2 16:00}}"
+					},
+					{
+						"stepIndex": 0,
+						"resourceId": "{{object:resource-joris-bakker.id}}",
+						"startAt": "{{datetime:2 15:30}}",
+						"endAt": "{{datetime:2 16:00}}"
+					}
+				],
+				"previousBookingId": "{{object:booking-abakker-geluidsoverlast-eerder.id}}"
+			}
+		}
+	]
+}

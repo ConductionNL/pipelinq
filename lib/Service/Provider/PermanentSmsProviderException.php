@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.3
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use RuntimeException;
 /**
  * Permanent provider failure — caller MUST not fail over.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.3
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class PermanentSmsProviderException extends RuntimeException {
 }//end class

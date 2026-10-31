@@ -36,6 +36,33 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "itemLabel",
+          "slug": "itemlabel-nieuwsbrief"
+        },
+        "name": "nieuwsbrief",
+        "description": "Wil de nieuwsbrief ontvangen."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "itemLabel",
+          "slug": "itemlabel-vip"
+        },
+        "name": "vip",
+        "description": "Krijgt persoonlijke aandacht van het team."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "itemLabel",
+          "slug": "itemlabel-terugbellen"
+        },
+        "name": "terugbellen",
+        "description": "Wacht op een telefoontje van ons."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "savedReply",
           "slug": "savedreply-openingstijden"
         },
@@ -2783,6 +2810,96 @@
         "payloadHash": "Voorbeeld Payloadhash 3",
         "retentionUntil": "2026-03-03T09:00:00+00:00",
         "reason": "Voorbeeld Reason 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "webform-voorbeeld-klachtformulier-1"
+        },
+        "title": "Voorbeeld formulier 1",
+        "key": "voorbeeld-klachtformulier",
+        "status": "draft",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "ticket"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          ],
+          "fixed": {}
+        },
+        "requireAnyOf": [
+          "title"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "webform-voorbeeld-offerteformulier-2"
+        },
+        "title": "Voorbeeld formulier 2",
+        "key": "voorbeeld-offerteformulier",
+        "status": "draft",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "lead"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          ],
+          "fixed": {}
+        },
+        "requireAnyOf": [
+          "title"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "webform-voorbeeld-nieuwsbrief-3"
+        },
+        "title": "Voorbeeld formulier 3",
+        "key": "voorbeeld-nieuwsbrief",
+        "status": "draft",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "contact"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "name",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          ],
+          "fixed": {}
+        },
+        "requireAnyOf": [
+          "title"
+        ]
       },
       {
         "@self": {

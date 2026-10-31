@@ -11,6 +11,8 @@ export const useProspectStore = defineStore('prospect', {
 		displayed: 0,
 		cachedAt: null,
 		icpHash: null,
+		// The profile the prospects are matched on; also set when none is configured.
+		icp: null,
 		loading: false,
 		error: null,
 	}),
@@ -37,10 +39,13 @@ export const useProspectStore = defineStore('prospect', {
 				})
 
 				const data = await response.json()
+				this.icp = data.icp || null
 
 				if (!response.ok) {
 					this.error =
 						data.message || data.error || 'Failed to fetch prospects'
+					this.prospects = []
+					this.total = 0
 					return null
 				}
 

@@ -37,8 +37,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
  */
 
 declare(strict_types=1);
@@ -54,7 +54,7 @@ use Throwable;
 /**
  * Base transport for all ZGW component calls.
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
  */
 class ZgwApiClient {
 	/**
@@ -96,7 +96,7 @@ class ZgwApiClient {
 	 * @return string Compact JWT.
 	 *
 	 * @throws ZgwException When the vault reference cannot be resolved.
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
 	 */
 	public function mintJwt(array $client, int $expiresIn = 3600): string {
 		$secret = $this->resolveClientSecret(reference: (string)($client['secretVaultRef'] ?? ''));
@@ -150,7 +150,7 @@ class ZgwApiClient {
 	 * @throws ZgwResourceNotFoundException
 	 * @throws ZgwException
 	 *
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
 	 */
 	public function callComponent(
 		string $componentUrl,

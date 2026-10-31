@@ -11,8 +11,8 @@
  *
  * Money correctness matters for products: the unitPrice and taxRate feed the POS
  * money math, so this asserts the EXACT numeric values round-trip (49.95 in,
- * 49.95 stored; edited to 59.95). The standalone ProductDetail edit/delete PAGE
- * exists (src/views/products/ProductDetail.vue + ProductForm.vue) but is not
+ * 49.95 stored; edited to 59.95). The ProductDetail edit/delete page
+ * exists (a manifest type:detail page with the schema edit dialog) but is not
  * reachable from a manifest list row in the current shell (row-click toggles the
  * list filter sidebar, not the /products/:id route — verified live 2026-06-10),
  * so the edit is applied through the same object API the app's saveObject() uses
@@ -234,7 +234,7 @@ test.describe('Products — full CRUD with persistence', () => {
 	 * UI-SHELL GAP (left skipped on purpose; NOT the register binding bug, which is
 	 * fixed — the data round-trip above now passes end-to-end).
 	 *
-	 * src/views/products/ProductDetail.vue ships an Edit form (ProductForm.vue) and
+	 * The ProductDetail page ships an Edit dialog and
 	 * a Delete confirmation, and a ProductDetail route exists at /products/:id, but
 	 * the manifest Products index does not wire a list-row click to that route:
 	 * clicking a row toggles the index filter/columns sidebar instead of navigating

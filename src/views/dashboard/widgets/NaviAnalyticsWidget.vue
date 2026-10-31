@@ -19,25 +19,7 @@
 -->
 <template>
 	<div class="navi-widget">
-		<div class="navi-widget__history" aria-live="polite">
-			<div v-if="messages.length === 0" class="navi-widget__welcome">
-				<p>
-					{{
-						t(
-							'pipelinq',
-							'Ask Navi a question about your leads, requests or pipeline.',
-						)
-					}}
-				</p>
-				<p class="navi-widget__hint">
-					{{
-						t(
-							'pipelinq',
-							'Try: "How many leads are open?" or "Show requests by category".',
-						)
-					}}
-				</p>
-			</div>
+		<div v-if="messages.length || loading || error" class="navi-widget__history" aria-live="polite">
 			<div
 				v-for="(msg, idx) in messages"
 				:key="idx"
@@ -92,18 +74,24 @@
 			</div>
 		</div>
 		<form class="navi-widget__form" @submit.prevent="submitQuery">
-			<NcTextField
+			<label :for="inputId" class="navi-widget__label">
+				{{ t('pipelinq', 'Ask a question about these figures') }}
+			</label>
+			<input
+				:id="inputId"
 				v-model="query"
-				:label="t('pipelinq', 'Ask Navi a question')"
-				:placeholder="
-					t('pipelinq', 'e.g. How many leads were won this month?')
-				"
-				class="navi-widget__input" />
+				type="text"
+				class="navi-widget__input"
+				:placeholder="t('pipelinq', 'Which category took longest to resolve this month?')">
 			<NcButton
-				variant="primary"
+				variant="tertiary"
 				type="submit"
+				class="navi-widget__ask cn-button--tonal"
 				:disabled="loading || !query.trim()">
-				{{ t('pipelinq', 'Send') }}
+				<template #icon>
+					<CreationOutline :size="16" />
+				</template>
+				{{ t('pipelinq', 'Ask') }}
 			</NcButton>
 		</form>
 	</div>
@@ -113,7 +101,8 @@
 import { CnChartWidget, CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcTextField } from '@nextcloud/vue'
+import { NcButton } from '@nextcloud/vue'
+import CreationOutline from 'vue-material-design-icons/CreationOutline.vue'
 
 /**
  * NaviAnalyticsWidget — conversational analytics chat panel.
@@ -125,7 +114,7 @@ export default {
 	name: 'NaviAnalyticsWidget',
 	components: {
 		NcButton,
-		NcTextField,
+		CreationOutline,
 		CnChartWidget,
 		CnDataTable,
 	},
@@ -137,6 +126,7 @@ export default {
 			messages: [],
 			loading: false,
 			error: null,
+			inputId: 'navi-question-' + Math.random().toString(36).slice(2, 8),
 		}
 	},
 
@@ -266,10 +256,39 @@ export default {
 .navi-widget {
 	display: flex;
 	flex-direction: column;
-	height: 100%;
 	gap: 8px;
-	padding: 8px;
+	padding: 0 var(--cn-board-dashboard-card-inset, 22px) 20px;
+}
+
+.navi-widget__form {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.navi-widget__label {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.navi-widget__input {
 	box-sizing: border-box;
+	width: 100%;
+	height: 40px;
+	margin: 0;
+	padding: 0 12px;
+	border: 1px solid var(--color-border-maxcontrast);
+	border-radius: var(--border-radius-large, 8px);
+	font-size: 15px;
+	/* Nextcloud's input rule sets its own height with a stronger selector;
+	   a min-height still lifts the field to 40px. */
+	min-height: 40px;
+}
+
+.navi-widget__ask {
+	align-self: flex-start;
+	margin-top: 2px;
 }
 
 .navi-widget__history {
@@ -279,17 +298,6 @@ export default {
 	flex-direction: column;
 	gap: 8px;
 	padding: 4px;
-}
-
-.navi-widget__welcome {
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
-	padding: 12px;
-}
-
-.navi-widget__hint {
-	margin-top: 4px;
-	font-style: italic;
 }
 
 .navi-widget__message {
@@ -346,15 +354,5 @@ export default {
 
 .navi-widget__error {
 	color: var(--color-error);
-}
-
-.navi-widget__form {
-	display: flex;
-	gap: 6px;
-	align-items: flex-end;
-}
-
-.navi-widget__input {
-	flex: 1;
 }
 </style>

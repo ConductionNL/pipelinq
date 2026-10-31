@@ -49,9 +49,13 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "segment",
-				"columnOverrides": { "createdBy": { "formatter": "userDisplayName" } },
+				"columnOverrides": {
+					"createdBy": {
+						"formatter": "userDisplayName"
+					}
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"selectable": false,
+				"selectable": true,
 				"addLabel": "New segment",
 				"showViewAction": false,
 				"showEditAction": true,
@@ -61,12 +65,82 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"includeColumns": [
+				"countText": "{shown} of {total} segments",
+				"searchPlaceholder": "Filter by name",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"board": {
+					"statusField": "entityType"
+				},
+				"footerNote": "A segment is a living rule, not a fixed list: it is worked out again every time it is used.",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New segment"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Contacts",
+						"filter": {
+							"entityType": "contact"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Customers",
+						"filter": {
+							"entityType": "customer"
+						},
+						"showCount": true
+					}
+				],
+				"columns": [
 					"name",
-					"entityType",
-					"estimatedSize",
-					"updatedAt"
-				]
+					{
+						"key": "entityType",
+						"label": "Audience",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"contact": "info",
+								"customer": "teal"
+							}
+						}
+					},
+					{
+						"key": "estimatedSize",
+						"label": "Estimated members"
+					},
+					{
+						"key": "updatedAt",
+						"label": "Updated",
+						"formatter": "date"
+					}
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
@@ -81,9 +155,13 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "campaignTemplate",
-				"columnOverrides": { "createdBy": { "formatter": "userDisplayName" } },
+				"columnOverrides": {
+					"createdBy": {
+						"formatter": "userDisplayName"
+					}
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"selectable": false,
+				"selectable": true,
 				"addLabel": "New template",
 				"showViewAction": false,
 				"showEditAction": true,
@@ -93,40 +171,373 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"includeColumns": ["name", "channel", "subject", "senderEmail"]
+				"countText": "{shown} of {total} templates",
+				"searchPlaceholder": "Filter by name or subject",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"board": {
+					"statusField": "channel"
+				},
+				"footerNote": "A template holds the subject, the content, the sender and the address in the footer. Newsletters and journeys start from it.",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New template"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Email",
+						"filter": {
+							"channel": "email"
+						},
+						"showCount": true
+					},
+					{
+						"label": "SMS",
+						"filter": {
+							"channel": "sms"
+						},
+						"showCount": true
+					}
+				],
+				"columns": [
+					"name",
+					{
+						"key": "channel",
+						"label": "Channel",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"email": "info",
+								"sms": "teal"
+							}
+						},
+						"enum": [
+							"email",
+							"sms"
+						],
+						"enumLabels": {
+							"email": "Email",
+							"sms": "SMS"
+						}
+					},
+					"subject",
+					{
+						"key": "senderEmail",
+						"label": "Sender e-mail address"
+					}
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
 			"id": "Blasts",
-			"_note": "Marketing blast list as a declarative type:index page (pipelinq-declarative-pages-round1). A row click and the built-in View open the live monitor (BlastMonitor, via rowRoute); Add opens BlastWizardDialog in the form-dialog slot: a multi-step wizard with a compliance gate (conditional advancing, an optional A/B split, template validation and a consent preflight that holds the create back pending the marketer's decision), which no declarative form expresses. Selection is off: there are no bulk actions.",
+			"_note": "Marketing blast list as a declarative type:index page (pipelinq-declarative-pages-round1). A row click and the built-in View open the live monitor (BlastMonitor, via rowRoute); Add opens BlastWizardDialog in the form-dialog slot: a multi-step wizard with a compliance gate (conditional advancing, an optional A/B split, template validation and a consent preflight that holds the create back pending the marketer's decision), which no declarative form expresses. Rows can be selected, as board PqNieuwsbrieven draws, and a selection downloaded.",
 			"route": "/blasts",
 			"type": "index",
-			"title": "Blasts",
+			"title": "Newsletters",
 			"slots": {
 				"form-dialog": "BlastWizardDialog"
 			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "blast",
-				"columnOverrides": { "createdBy": { "formatter": "userDisplayName" } },
+				"columnOverrides": {
+					"createdBy": {
+						"formatter": "userDisplayName"
+					}
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"selectable": false,
+				"selectable": true,
 				"rowRoute": "BlastMonitor",
-				"addLabel": "New blast",
+				"addLabel": "New newsletter",
 				"showEditAction": false,
 				"showCopyAction": false,
 				"showDeleteAction": false,
 				"showMassImport": false,
-				"showMassExport": false,
+				"showMassExport": true,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"includeColumns": [
-					"name",
-					"channel",
-					"status",
-					"scheduledFor",
-					"sentAt"
-				]
+				"countText": "{shown} of {total} newsletters · open and click rate from our own measurements · newest first",
+				"sortKey": "scheduledFor",
+				"sortOrder": "desc",
+				"searchPlaceholder": "Search this list",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"board": {
+					"statusField": "status"
+				},
+				"rowTitle": "plain",
+				"footerNote": "A newsletter only goes to people with consent for e-mail. Every template has an unsubscribe link and the sender's address.",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New newsletter"
+					}
+				],
+				"statRow": [
+					{
+						"id": "blasts-sent-month",
+						"type": "stat",
+						"title": "Sent this month",
+						"content": {
+							"label": "Sent this month",
+							"source": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"metric": "count",
+								"filter": {
+									"status": "sent",
+									"sentAt": {
+										"gte": "@monthStart"
+									}
+								}
+							},
+							"caption": "{count} messages",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"metric": "sum",
+								"field": "totals.sent",
+								"filter": {
+									"status": "sent",
+									"sentAt": {
+										"gte": "@monthStart"
+									}
+								}
+							}
+						}
+					},
+					{
+						"id": "blasts-open-rate",
+						"type": "stat",
+						"title": "Average opened",
+						"content": {
+							"label": "Average opened",
+							"source": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"kind": "ratio",
+								"numerator": {
+									"metric": "sum",
+									"field": "totals.opened"
+								},
+								"denominator": {
+									"metric": "sum",
+									"field": "totals.delivered"
+								}
+							},
+							"caption": "of the delivered messages",
+							"format": {
+								"style": "percent",
+								"decimals": 0
+							}
+						}
+					},
+					{
+						"id": "blasts-unsubscribed",
+						"type": "stat",
+						"title": "Unsubscribed",
+						"content": {
+							"label": "Unsubscribed",
+							"source": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"metric": "sum",
+								"field": "totals.unsubscribed"
+							},
+							"caption": "via the link in the footer"
+						}
+					},
+					{
+						"id": "blasts-blocked-consent",
+						"type": "stat",
+						"title": "Blocked by consent",
+						"content": {
+							"label": "Blocked by consent",
+							"caption": "no lawful basis, not sent",
+							"variant": "error",
+							"source": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"metric": "sum",
+								"field": "skippedNoConsent"
+							}
+						}
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Lined up",
+						"filter": {
+							"status": "scheduled"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Sent",
+						"filter": {
+							"status": "sent"
+						},
+						"showCount": true
+					}
+				],
+				"columns": [
+					{
+						"key": "name",
+						"label": "Newsletter",
+						"secondary": [
+							"Segment: {segment.name|lowerfirst} · {segment.estimatedSize|number} contacts",
+							"Mailing list: {list.name} · {list.subscribers|number} subscribers"
+						],
+						"secondaryRefs": {
+							"segment": {
+								"field": "segmentId",
+								"register": "pipelinq",
+								"schema": "segment"
+							},
+							"list": {
+								"field": "listId",
+								"register": "pipelinq",
+								"schema": "mailingList",
+								"counts": {
+									"subscribers": {
+										"register": "pipelinq",
+										"schema": "subscription",
+										"where": {
+											"listId": "@self.id",
+											"state": "confirmed"
+										}
+									}
+								}
+							}
+						}
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"sent": "success",
+								"scheduled": "info",
+								"sending": "purple",
+								"draft": "default",
+								"paused": "warning",
+								"failed": "error",
+								"cancelled": "default"
+							}
+						},
+						"enum": [
+							"draft",
+							"scheduled",
+							"sending",
+							"sent",
+							"paused",
+							"failed",
+							"cancelled"
+						],
+						"enumLabels": {
+							"draft": "Draft",
+							"scheduled": "Lined up",
+							"sending": "Sending",
+							"sent": "Sent",
+							"paused": "Paused",
+							"failed": "Failed",
+							"cancelled": "Cancelled"
+						}
+					},
+					{
+						"key": "sentAt",
+						"label": "Sent or scheduled",
+						"formatter": "datetime"
+					},
+					{
+						"key": "totals.opened",
+						"label": "Opened",
+						"sortable": false,
+						"formatter": "share",
+						"formatterOptions": {
+							"over": "totals.delivered"
+						},
+						"cellClass": "cn-cell--strong"
+					},
+					{
+						"key": "totals.clicked",
+						"label": "Clicked",
+						"sortable": false,
+						"formatter": "share",
+						"formatterOptions": {
+							"over": "totals.delivered"
+						},
+						"cellClass": "cn-cell--strong"
+					},
+					{
+						"key": "totals.unsubscribed",
+						"label": "Unsubscribed",
+						"sortable": false
+					},
+					{
+						"key": "skippedNoConsent",
+						"label": "Note",
+						"sortable": false,
+						"filterable": false,
+						"formatter": "blastNote"
+					}
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{

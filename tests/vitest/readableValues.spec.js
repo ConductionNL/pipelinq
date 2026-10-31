@@ -43,6 +43,9 @@ function readJson(...parts) {
 function merge(base, override) {
 	const isObject = (v) => v && typeof v === 'object' && !Array.isArray(v)
 	for (const [key, value] of Object.entries(override)) {
+		if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+			continue
+		}
 		if (isObject(value) && isObject(base[key])) {
 			merge(base[key], value)
 		} else {
@@ -220,7 +223,7 @@ describe('object-list Add buttons', () => {
 		expect(nl['Add contact person']).toBe('Contactpersoon toevoegen')
 	})
 
-	// @spec openspec/changes/round4-nextcloud-vue-2-76/specs/client-management/spec.md
+	// @spec openspec/specs/client-management/spec.md
 	it('are not translated a second time by pipelinq', () => {
 		const main = fs.readFileSync(path.join(ROOT, 'src', 'main.js'), 'utf8')
 		expect(main).not.toContain('translateWidgetAddLabels')

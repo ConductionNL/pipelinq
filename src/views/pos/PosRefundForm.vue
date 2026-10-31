@@ -1,117 +1,208 @@
 <!--
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
--->
+  -
+  - A refund against a cash register transaction (PqKassaRetour): the
+  - transaction, reason and notes, the items to take back with their
+  - quantity, reason and restock, and beside them the refund total, what
+  - happens after saving and the original receipt.
+  -->
 <template>
-	<div class="pos-refund-form">
-		<div class="pos-refund-form__header">
-			<NcButton :to="{ name: 'PosRefunds' }">
-				{{ t('pipelinq', 'Back to list') }}
+	<CnDetailPage
+		:title="isEdit ? t('pipelinq', 'Edit refund') : t('pipelinq', 'New refund')"
+		:object="headerRecord"
+		:typePill="statusPill"
+		:breadcrumb="breadcrumb"
+		:headerMeta="headerMeta"
+		:loading="loading"
+		:actionsMenu="headerMenu"
+		class="pos-refund-form">
+		<template #actions>
+			<NcButton
+				variant="primary"
+				class="pos-refund-form__save"
+				:disabled="saving"
+				@click="save">
+				<template #icon>
+					<Check :size="16" />
+				</template>
+				{{ t('pipelinq', 'Save') }}
 			</NcButton>
-			<h2>
-				{{
-					isEdit
-						? t('pipelinq', 'Edit refund')
-						: t('pipelinq', 'New refund')
-				}}
-			</h2>
-		</div>
-
-		<NcLoadingIcon v-if="loading" :size="32" />
-
-		<template v-else>
-			<div class="pos-refund-form__fields">
-				<NcSelect
-					:modelValue="selectedTransaction"
-					:options="transactionOptions"
-					:inputLabel="t('pipelinq', 'Original transaction')"
-					:placeholder="t('pipelinq', 'Choose a transaction…')"
-					label="label"
-					:clearable="false"
-					:disabled="lockedTransaction"
-					@update:modelValue="onTransactionSelect" />
-				<NcSelect
-					:modelValue="selectedReason"
-					:options="reasonOptions"
-					:inputLabel="t('pipelinq', 'Refund reason')"
-					:placeholder="t('pipelinq', 'Choose a reason…')"
-					label="label"
-					:clearable="false"
-					@update:modelValue="onReasonSelect" />
-				<NcTextField
-					v-model="refund.notes"
-					:label="t('pipelinq', 'Notes')" />
-			</div>
-
-			<div v-if="originalLines.length" class="pos-refund-form__select-all">
-				<NcButton variant="secondary" @click="selectAll">
-					{{ t('pipelinq', 'Return all items') }}
-				</NcButton>
-			</div>
-
-			<table v-if="originalLines.length" class="pos-refund-form__lines">
-				<thead>
-					<tr>
-						<th scope="col" />
-						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Original qty') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Returned qty') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Restock') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Refund total') }}</th>
-						<th scope="col" />
-					</tr>
-				</thead>
-				<tbody>
-					<PosRefundLineRow
-						v-for="(candidate, index) in candidates"
-						:key="candidate.originalLine"
-						:line="candidate"
-						:originalLine="originalLineFor(candidate.originalLine)"
-						:reasons="activeReasons"
-						@update:line="updateCandidate(index, $event)"
-						@remove="removeCandidate(index)" />
-				</tbody>
-			</table>
-
-			<p v-else class="pos-refund-form__empty">
-				{{
-					t(
-						'pipelinq',
-						'Select an original transaction to choose items to refund.',
-					)
-				}}
-			</p>
-
-			<PosRefundTotalsPanel :lines="selectedLines" />
-
-			<div class="pos-refund-form__actions">
-				<NcButton variant="primary" :disabled="saving" @click="save">
-					{{ t('pipelinq', 'Save') }}
-				</NcButton>
-			</div>
 		</template>
-	</div>
+
+		<div class="pos-refund-form__layout">
+			<div class="pos-refund-form__main">
+				<CnDetailCard :title="t('pipelinq', 'Refund')">
+					<div class="pos-refund-form__fields">
+						<NcSelect
+							:modelValue="selectedTransaction"
+							:options="transactionOptions"
+							:inputLabel="t('pipelinq', 'Original transaction')"
+							:placeholder="t('pipelinq', 'Choose a transaction…')"
+							label="label"
+							:clearable="false"
+							:disabled="lockedTransaction"
+							@update:modelValue="onTransactionSelect" />
+						<NcSelect
+							:modelValue="selectedReason"
+							:options="reasonOptions"
+							:inputLabel="t('pipelinq', 'Reason for the refund')"
+							:placeholder="t('pipelinq', 'Choose a reason…')"
+							label="label"
+							:clearable="false"
+							@update:modelValue="onReasonSelect" />
+					</div>
+					<NcTextArea
+						v-model="refund.notes"
+						class="pos-refund-form__notes"
+						:label="t('pipelinq', 'Notes (optional)')"
+						resize="vertical"
+						rows="2" />
+				</CnDetailCard>
+
+				<CnDetailCard :title="t('pipelinq', 'Items to take back')">
+					<template v-if="candidates.length">
+						<NcCheckboxRadioSwitch
+							class="pos-refund-form__all"
+							:modelValue="allSelected"
+							@update:modelValue="toggleAll">
+							{{ t('pipelinq', 'Take back all items') }}
+						</NcCheckboxRadioSwitch>
+						<CnDataTable
+							class="pos-refund-form__lines"
+							:columns="lineColumns"
+							:rows="lineRows"
+							rowKey="originalLine">
+							<template #column-selected="{ row }">
+								<NcCheckboxRadioSwitch
+									:modelValue="row.selected"
+									:aria-label="t('pipelinq', 'Take back {item}', { item: row.description })"
+									@update:modelValue="setSelected(row.index, $event)" />
+							</template>
+							<template #column-unitPrice="{ row }">
+								{{ formatEur(row.unitPrice) }}
+							</template>
+							<template #column-returnedQuantity="{ row }">
+								<NcInputField
+									v-if="row.selected"
+									class="pos-refund-form__qty"
+									:modelValue="String(row.returnedQuantity)"
+									type="number"
+									:label="t('pipelinq', 'Returned quantity')"
+									:labelVisible="false"
+									:error="!row.valid"
+									min="0.001"
+									:max="String(row.quantity)"
+									step="0.001"
+									@update:modelValue="setQuantity(row.index, $event)" />
+								<template v-else>
+									0
+								</template>
+							</template>
+							<template #column-returnReason="{ row }">
+								<NcSelect
+									v-if="row.selected"
+									:ariaLabelCombobox="t('pipelinq', 'Return reason')"
+									:modelValue="reasonOptions.find((o) => o.id === row.returnReason) || null"
+									:options="reasonOptions"
+									:labelOutside="true"
+									label="label"
+									:clearable="false"
+									@update:modelValue="setLine(row.index, { returnReason: $event ? $event.id : null })" />
+							</template>
+							<template #column-restock="{ row }">
+								<NcCheckboxRadioSwitch
+									:modelValue="row.restock"
+									:disabled="!row.selected"
+									:aria-label="t('pipelinq', 'Back in stock')"
+									@update:modelValue="setLine(row.index, { restock: $event })" />
+							</template>
+						</CnDataTable>
+						<p class="pos-refund-form__hint">
+							{{ t('pipelinq', 'The returned quantity may not exceed the original quantity. Choose at least one item to take back.') }}
+						</p>
+					</template>
+					<p v-else class="pos-refund-form__empty">
+						{{ t('pipelinq', 'Select an original transaction to choose items to refund.') }}
+					</p>
+				</CnDetailCard>
+			</div>
+
+			<div class="pos-refund-form__side">
+				<CnDetailCard :title="t('pipelinq', 'Total refund')">
+					<CnDetailGrid layout="horizontal" :accent="false" :items="totalItems" />
+				</CnDetailCard>
+
+				<CnDetailCard :title="t('pipelinq', 'After saving')">
+					<p class="pos-refund-form__text">
+						{{ t('pipelinq', 'The refund waits for confirmation. A manager confirms or rejects it.') }}
+					</p>
+					<div class="pos-refund-form__outcomes">
+						<span class="pos-refund-form__outcome">
+							<Check :size="14" />
+							{{ t('pipelinq', 'Confirm') }}
+						</span>
+						<span class="pos-refund-form__outcome">
+							<Close :size="14" />
+							{{ t('pipelinq', 'Reject') }}
+						</span>
+					</div>
+					<p class="pos-refund-form__note">
+						{{ t('pipelinq', 'Confirming pays the refund back, puts the restocked items back in stock and writes a signed audit entry.') }}
+					</p>
+				</CnDetailCard>
+
+				<CnDetailCard v-if="transaction" :title="t('pipelinq', 'Original receipt')">
+					<CnDetailGrid layout="horizontal" :accent="false" :items="receiptItems">
+						<template #item-0="{ item }">
+							<router-link :to="{ name: 'PosTransactionDetail', params: { id: transaction.id } }">
+								{{ item.value }}
+							</router-link>
+						</template>
+					</CnDetailGrid>
+				</CnDetailCard>
+			</div>
+		</div>
+	</CnDetailPage>
 </template>
 
 <script>
+import { CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
-import PosRefundLineRow from '../../components/pos/PosRefundLineRow.vue'
-import PosRefundTotalsPanel from '../../components/pos/PosRefundTotalsPanel.vue'
-import { refundLineAmounts } from '../../services/posTotals.js'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcInputField,
+	NcSelect,
+	NcTextArea,
+} from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
+import Close from 'vue-material-design-icons/Close.vue'
+import { collectionRows } from '../../services/collectionRows.js'
+import { formatDate } from '../../services/localeUtils.js'
+import { computeRefundTotals, formatEur, refundLineAmounts } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
+
+const TENDER_LABELS = {
+	cash: 'Cash',
+	card: 'Card',
+	onAccount: 'On account',
+}
 
 export default {
 	name: 'PosRefundForm',
 	components: {
+		Check,
+		Close,
+		CnDataTable,
+		CnDetailCard,
+		CnDetailGrid,
+		CnDetailPage,
 		NcButton,
-		NcTextField,
+		NcCheckboxRadioSwitch,
+		NcInputField,
 		NcSelect,
-		NcLoadingIcon,
-		PosRefundLineRow,
-		PosRefundTotalsPanel,
+		NcTextArea,
 	},
 
 	props: {
@@ -134,6 +225,7 @@ export default {
 			originalLines: [],
 			reasons: [],
 			candidates: [],
+			clientName: '',
 			loading: false,
 			saving: false,
 		}
@@ -181,14 +273,24 @@ export default {
 		},
 
 		/**
-		 * Transaction picker options (only refundable: confirmed / settled).
+		 * The chosen original transaction.
+		 *
+		 * @return {object|null} The transaction.
+		 */
+		transaction() {
+			return this.transactions.find((tx) => tx.id === this.refund.originalTransaction) || null
+		},
+
+		/**
+		 * Transaction picker options (only refundable: confirmed / settled),
+		 * read as "reference · day · total".
 		 *
 		 * @return {Array<object>} The options.
 		 */
 		transactionOptions() {
 			return this.transactions
 				.filter((tx) => ['confirmed', 'settled'].includes(tx.status))
-				.map((tx) => ({ id: tx.id, label: tx.reference || tx.id }))
+				.map((tx) => ({ id: tx.id, label: this.transactionLabel(tx) }))
 		},
 
 		/**
@@ -197,53 +299,146 @@ export default {
 		 * @return {object|null} The option.
 		 */
 		selectedTransaction() {
-			return (
-				this.transactionOptions.find(
-					(o) => o.id === this.refund.originalTransaction,
-				) || null
-			)
+			return this.transactionOptions.find((o) => o.id === this.refund.originalTransaction) || null
 		},
 
-		/**
-		 * Active refundReason objects for the pickers.
-		 *
-		 * @return {Array<object>} The reasons.
-		 */
 		activeReasons() {
 			return this.reasons.filter((r) => r.isActive !== false)
 		},
 
-		/**
-		 * Overall reason picker options.
-		 *
-		 * @return {Array<object>} The options.
-		 */
 		reasonOptions() {
-			return this.activeReasons.map((r) => ({
-				id: r.id,
-				label: r.label || r.code,
-			}))
+			return this.activeReasons.map((r) => ({ id: r.id, label: r.label || r.code }))
 		},
 
-		/**
-		 * The selected overall reason option.
-		 *
-		 * @return {object|null} The option.
-		 */
 		selectedReason() {
-			return (
-				this.reasonOptions.find((o) => o.id === this.refund.refundReason)
-				|| null
-			)
+			return this.reasonOptions.find((o) => o.id === this.refund.refundReason) || null
 		},
 
 		/**
-		 * Candidate lines that are selected for the refund (for the totals panel).
+		 * The record the header reads: the refund with the reference of the
+		 * transaction it comes from and the customer's name.
 		 *
-		 * @return {Array<object>} The selected lines with computed amounts.
+		 * @return {object} The header record.
+		 */
+		headerRecord() {
+			return {
+				...this.refund,
+				fromReference: this.transaction?.reference || '',
+				clientName: this.clientName,
+			}
+		},
+
+		/**
+		 * The pill beside the breadcrumb: Draft until the refund is saved,
+		 * then where it stands.
+		 *
+		 * @return {object} The pill.
+		 */
+		statusPill() {
+			if (!this.isEdit) {
+				return { text: t('pipelinq', 'Draft') }
+			}
+			return {
+				field: 'status',
+				labels: {
+					pending: t('pipelinq', 'Awaiting confirmation'),
+					confirmed: t('pipelinq', 'Confirmed'),
+					rejected: t('pipelinq', 'Rejected'),
+				},
+			}
+		},
+
+		breadcrumb() {
+			return { label: 'Refunds', route: 'PosRefunds', separator: '/' }
+		},
+
+		/**
+		 * The refund's header holds only Save: no More menu with refresh or
+		 * help links.
+		 *
+		 * @return {object} The CnDetailPage actions menu config.
+		 * @spec openspec/specs/pos-refund-return/spec.md#requirement-the-refund-header-holds-only-save
+		 */
+		headerMenu() {
+			return { showRefresh: false, showHelpLinks: false }
+		},
+
+		headerMeta() {
+			return t('pipelinq', 'from {fromReference} · {clientName}')
+		},
+
+		lineColumns() {
+			return [
+				{ key: 'selected', label: t('pipelinq', 'Take back') },
+				{ key: 'description', label: t('pipelinq', 'Description') },
+				{ key: 'quantity', label: t('pipelinq', 'Original quantity'), class: 'num', cellClass: 'num' },
+				{ key: 'unitPrice', label: t('pipelinq', 'Unit price'), class: 'num', cellClass: 'num' },
+				{ key: 'returnedQuantity', label: t('pipelinq', 'Quantity returned'), class: 'num', cellClass: 'num' },
+				{ key: 'returnReason', label: t('pipelinq', 'Reason') },
+				{ key: 'restock', label: t('pipelinq', 'Back in stock') },
+			]
+		},
+
+		/**
+		 * One row per line of the original transaction, with what is taken
+		 * back of it.
+		 *
+		 * @return {Array<object>} The rows.
+		 */
+		lineRows() {
+			return this.candidates.map((candidate, index) => {
+				const original = this.originalLineFor(candidate.originalLine)
+				return {
+					...candidate,
+					index,
+					description: original.description,
+					quantity: original.quantity,
+					unitPrice: original.unitPrice,
+				}
+			})
+		},
+
+		allSelected() {
+			return this.candidates.length > 0 && this.candidates.every((c) => c.selected)
+		},
+
+		/**
+		 * The selected lines with their refund amounts.
+		 *
+		 * @return {Array<object>} The lines.
 		 */
 		selectedLines() {
-			return this.candidates.filter((c) => c.selected)
+			return this.candidates
+				.filter((c) => c.selected)
+				.map((c) => ({ ...c, ...refundLineAmounts(this.originalLineFor(c.originalLine), c.returnedQuantity) }))
+		},
+
+		totalItems() {
+			const totals = computeRefundTotals(this.selectedLines)
+			const rates = [...new Set(this.selectedLines.map((c) => this.originalLineFor(c.originalLine).taxRate).filter((r) => r !== undefined && r !== null && r !== ''))]
+			const items = [
+				{ label: t('pipelinq', 'Excl. VAT'), value: formatEur(totals.refundAmount) },
+				{ label: rates.length === 1 ? t('pipelinq', 'VAT {rate}%', { rate: rates[0] }) : t('pipelinq', 'VAT'), value: formatEur(totals.totalTax) },
+				{ label: t('pipelinq', 'Total refund'), value: formatEur(totals.total) },
+			]
+			const tender = this.transaction?.tenderType
+			if (tender) {
+				items.push({
+					label: t('pipelinq', 'Refunded to'),
+					value: t('pipelinq', '{method}, the original payment method', { method: t('pipelinq', TENDER_LABELS[tender] || tender) }),
+				})
+			}
+			return items
+		},
+
+		receiptItems() {
+			const tx = this.transaction || {}
+			return [
+				{ label: t('pipelinq', 'Reference number'), value: tx.reference || tx.id },
+				{ label: t('pipelinq', 'Date'), value: this.formatDateTime(tx.confirmedAt || tx['@self']?.created) },
+				{ label: t('pipelinq', 'Total'), value: formatEur(tx.total) },
+				{ label: t('pipelinq', 'Cashier'), value: tx.cashier || '—' },
+			]
 		},
 	},
 
@@ -258,57 +453,100 @@ export default {
 				this.refund.originalTransaction = this.routeTransactionId
 				await this.loadOriginalLines(this.routeTransactionId)
 			}
+			await this.loadClientName()
 		} finally {
 			this.loading = false
 		}
 	},
 
 	methods: {
+		formatEur,
+
 		/**
-		 * Load candidate transactions for the picker.
+		 * A transaction as the picker reads it: "POS-2026-1043 · 7 okt · € 96,41".
+		 *
+		 * @param {object} tx The transaction.
+		 * @return {string} The label.
+		 */
+		transactionLabel(tx) {
+			const day = formatDate(tx.confirmedAt || tx['@self']?.created).replace('.', '')
+			return [tx.reference || tx.id, day, formatEur(tx.total)].filter((part) => part !== '').join(' · ')
+		},
+
+		/**
+		 * A moment as "7 okt 2026, 11:43".
+		 *
+		 * @param {string} value An ISO date-time.
+		 * @return {string} The text, or a dash.
+		 */
+		formatDateTime(value) {
+			if (!value) {
+				return '—'
+			}
+			return formatDate(value, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', '')
+		},
+
+		/**
+		 * Loads the sales a refund can be made against.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
 		 */
 		async loadTransactions() {
 			try {
-				await this.objectStore.fetchCollection('posTransaction', {
-					_limit: 500,
-				})
-				this.transactions =
-					this.objectStore.getCollection('posTransaction')?.results || []
+				await this.objectStore.fetchCollection('posTransaction', { _limit: 500 })
+				this.transactions = collectionRows(this.objectStore.getCollection('posTransaction'))
 			} catch {
 				this.transactions = []
 			}
 		},
 
 		/**
-		 * Load the refund reasons.
+		 * Loads the refund reasons.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
 		 */
 		async loadReasons() {
 			try {
-				await this.objectStore.fetchCollection('refundReason', {
-					_limit: 100,
-				})
-				this.reasons =
-					this.objectStore.getCollection('refundReason')?.results || []
+				await this.objectStore.fetchCollection('refundReason', { _limit: 100 })
+				this.reasons = collectionRows(this.objectStore.getCollection('refundReason'))
 			} catch {
 				this.reasons = []
 			}
 		},
 
 		/**
-		 * Load an existing refund and its lines (edit mode).
+		 * The name of the customer of the chosen transaction, for the header.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadClientName() {
+			const tx = this.transaction
+			this.clientName = ''
+			const id = tx?.customer || tx?.client
+			if (!id) {
+				return
+			}
+			try {
+				const record = await this.objectStore.fetchObject(tx.customer ? 'contact' : 'client', id)
+				this.clientName = record?.name || [record?.firstName, record?.lastName].filter(Boolean).join(' ') || ''
+			} catch {
+				this.clientName = ''
+			}
+		},
+
+		/**
+		 * Loads the refund being edited with its lines.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
 		 */
 		async loadRefund() {
 			const r = await this.objectStore.fetchObject('posRefund', this.refundId)
 			this.refund = { ...r }
 			await this.loadOriginalLines(this.refund.originalTransaction)
 
-			await this.objectStore.fetchCollection('posRefundLine', {
-				refund: this.refundId,
-				_limit: 500,
-			})
-			const existing = (
-				this.objectStore.getCollection('posRefundLine')?.results || []
-			).filter((l) => l.refund === this.refundId)
+			await this.objectStore.fetchCollection('posRefundLine', { refund: this.refundId, _limit: 500 })
+			const existing = collectionRows(this.objectStore.getCollection('posRefundLine'))
+				.filter((l) => l.refund === this.refundId)
 
 			this.candidates = this.originalLines.map((original) => {
 				const match = existing.find((e) => e.originalLine === original.id)
@@ -320,8 +558,6 @@ export default {
 						returnedQuantity: match.returnedQuantity,
 						returnReason: match.returnReason,
 						restock: match.restock ?? true,
-						taxAmount: match.taxAmount || 0,
-						lineTotal: match.lineTotal || 0,
 						valid: true,
 					}
 				}
@@ -330,9 +566,11 @@ export default {
 		},
 
 		/**
-		 * Load the original transaction's lines and build candidate rows.
+		 * Loads the lines of the sale being refunded.
 		 *
-		 * @param {string} transactionId The transaction id.
+		 * @param {string} transactionId The sale being refunded.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#requirement-a-refund-reads-the-sales-and-lines-the-store-holds
 		 */
 		async loadOriginalLines(transactionId) {
 			if (!transactionId) {
@@ -340,24 +578,13 @@ export default {
 				this.candidates = []
 				return
 			}
-			await this.objectStore.fetchCollection('posTransactionLine', {
-				transaction: transactionId,
-				_limit: 500,
-			})
-			this.originalLines = (
-				this.objectStore.getCollection('posTransactionLine')?.results || []
-			)
+			await this.objectStore.fetchCollection('posTransactionLine', { transaction: transactionId, _limit: 500 })
+			this.originalLines = collectionRows(this.objectStore.getCollection('posTransactionLine'))
 				.filter((l) => l.transaction === transactionId)
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 			this.candidates = this.originalLines.map((o) => this.blankCandidate(o))
 		},
 
-		/**
-		 * Build a blank (unselected) candidate for an original line.
-		 *
-		 * @param {object} original The original line.
-		 * @return {object} The candidate.
-		 */
 		blankCandidate(original) {
 			return {
 				originalLine: original.id,
@@ -365,100 +592,75 @@ export default {
 				returnedQuantity: original.quantity ?? 1,
 				returnReason: this.refund.refundReason || null,
 				restock: true,
-				taxAmount: 0,
-				lineTotal: 0,
 				valid: true,
 			}
 		},
 
-		/**
-		 * Resolve the original line object for a candidate.
-		 *
-		 * @param {string} id The original line id.
-		 * @return {object} The original line.
-		 */
 		originalLineFor(id) {
 			return this.originalLines.find((o) => o.id === id) || {}
 		},
 
 		/**
-		 * Replace a candidate after an edit.
+		 * Change one line of the take-back list.
 		 *
-		 * @param {number} index The candidate index.
-		 * @param {object} line The updated candidate.
+		 * @param {number} index The line.
+		 * @param {object} changes The fields that change.
 		 */
-		updateCandidate(index, line) {
-			const current = this.candidates[index]
-			this.candidates[index] = { ...current, ...line }
+		setLine(index, changes) {
+			this.candidates.splice(index, 1, { ...this.candidates[index], ...changes })
+		},
+
+		setSelected(index, selected) {
+			const candidate = this.candidates[index]
+			this.setLine(index, {
+				selected,
+				returnReason: candidate.returnReason || this.refund.refundReason || null,
+			})
 		},
 
 		/**
-		 * Remove (deselect) a candidate.
+		 * Set the returned quantity of a line, marked invalid above the
+		 * original quantity or at zero.
 		 *
-		 * @param {number} index The candidate index.
+		 * @param {number} index The line.
+		 * @param {string} value The typed quantity.
 		 */
-		removeCandidate(index) {
-			const current = this.candidates[index]
-			this.candidates[index] = { ...current, selected: false }
+		setQuantity(index, value) {
+			const max = Number(this.originalLineFor(this.candidates[index].originalLine).quantity) || 0
+			const quantity = Number(value)
+			this.setLine(index, { returnedQuantity: value, valid: quantity > 0 && quantity <= max })
 		},
 
-		/**
-		 * Select all lines with full original quantity.
-		 */
-		selectAll() {
+		toggleAll(selected) {
 			this.candidates = this.candidates.map((c) => {
 				const original = this.originalLineFor(c.originalLine)
-				const amounts = refundLineAmounts(original, original.quantity)
 				return {
 					...c,
-					selected: true,
+					selected,
 					returnedQuantity: original.quantity,
 					returnReason: c.returnReason || this.refund.refundReason || null,
-					taxAmount: amounts.taxAmount,
-					lineTotal: amounts.lineTotal,
 					valid: true,
 				}
 			})
 		},
 
-		/**
-		 * Apply a transaction selection.
-		 *
-		 * @param {object|null} option The chosen transaction.
-		 */
 		async onTransactionSelect(option) {
 			this.refund.originalTransaction = option ? option.id : null
-			const tx = this.transactions.find(
-				(t) => t.id === this.refund.originalTransaction,
-			)
+			const tx = this.transaction
 			if (tx) {
-				this.refund.paymentMethod =
-					tx.paymentMethod || this.refund.paymentMethod
-				this.refund.paymentReference =
-					tx.paymentReference || this.refund.paymentReference
+				this.refund.paymentMethod = tx.paymentMethod || this.refund.paymentMethod
+				this.refund.paymentReference = tx.paymentReference || this.refund.paymentReference
 			}
 			await this.loadOriginalLines(this.refund.originalTransaction)
+			await this.loadClientName()
 		},
 
-		/**
-		 * Apply an overall reason selection.
-		 *
-		 * @param {object|null} option The chosen reason.
-		 */
 		onReasonSelect(option) {
 			this.refund.refundReason = option ? option.id : null
 		},
 
-		/**
-		 * Persist the refund header and its selected lines.
-		 *
-		 * Amounts are recomputed server-side on confirm; the client persists the
-		 * editable header + line selections only.
-		 *
-		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-003
-		 */
 		async save() {
-			const selected = this.candidates.filter((c) => c.selected)
+			const selected = this.selectedLines
 			if (selected.length === 0) {
 				showError(t('pipelinq', 'Select at least one item to return'))
 				return
@@ -468,12 +670,7 @@ export default {
 				return
 			}
 			if (selected.some((c) => c.valid === false)) {
-				showError(
-					t(
-						'pipelinq',
-						'Returned quantity may not exceed the original quantity',
-					),
-				)
+				showError(t('pipelinq', 'Returned quantity may not exceed the original quantity'))
 				return
 			}
 
@@ -482,14 +679,9 @@ export default {
 				const header = {
 					...this.refund,
 					status: this.refund.status || 'pending',
-					cashier:
-						this.refund.cashier
-						|| (window.OC?.getCurrentUser?.()?.uid ?? ''),
+					cashier: this.refund.cashier || (window.OC?.getCurrentUser?.()?.uid ?? ''),
 				}
-				const savedRefund = await this.objectStore.saveObject(
-					'posRefund',
-					header,
-				)
+				const savedRefund = await this.objectStore.saveObject('posRefund', header)
 				if (!savedRefund) {
 					showError(t('pipelinq', 'Failed to save refund.'))
 					return
@@ -497,21 +689,14 @@ export default {
 				const refundId = savedRefund.id || this.refundId
 
 				for (const candidate of selected) {
-					const original = this.originalLineFor(candidate.originalLine)
-					const amounts = refundLineAmounts(
-						original,
-						candidate.returnedQuantity,
-					)
 					const payload = {
 						refund: refundId,
 						originalLine: candidate.originalLine,
 						returnedQuantity: Number(candidate.returnedQuantity) || 0,
-						returnReason:
-							candidate.returnReason || this.refund.refundReason,
-
+						returnReason: candidate.returnReason || this.refund.refundReason,
 						restock: candidate.restock ?? true,
-						taxAmount: amounts.taxAmount,
-						lineTotal: amounts.lineTotal,
+						taxAmount: candidate.taxAmount,
+						lineTotal: candidate.lineTotal,
 					}
 					if (candidate.id) {
 						payload.id = candidate.id
@@ -520,10 +705,7 @@ export default {
 				}
 
 				showSuccess(t('pipelinq', 'Refund saved.'))
-				this.$router.push({
-					name: 'PosRefundDetail',
-					params: { id: refundId },
-				})
+				this.$router.push({ name: 'PosRefundDetail', params: { id: refundId } })
 			} catch {
 				showError(t('pipelinq', 'Failed to save refund.'))
 			} finally {
@@ -535,52 +717,91 @@ export default {
 </script>
 
 <style scoped>
-.pos-refund-form {
-	padding: 20px;
-	max-width: 1100px;
+.pos-refund-form__layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 296px;
+	gap: 20px;
+	align-items: start;
 }
 
-.pos-refund-form__header {
+.pos-refund-form__main,
+.pos-refund-form__side {
 	display: flex;
-	align-items: center;
-	gap: 16px;
-	margin-bottom: 20px;
+	flex-direction: column;
+	gap: 20px;
+	min-width: 0;
+}
+
+/* Side cards head with a muted label, as CnDetailPage's own side column does.
+   The tone carries !important against a theme that colours every heading. */
+.cn-look-board .pos-refund-form__side :deep(.cn-detail-card__title) {
+	color: var(--color-text-maxcontrast) !important;
+	font-size: var(--cn-board-side-heading-size, 15px);
+	font-weight: 600;
 }
 
 .pos-refund-form__fields {
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 16px;
-	margin-bottom: 24px;
-}
-
-.pos-refund-form__select-all {
 	margin-bottom: 12px;
 }
 
-.pos-refund-form__lines {
-	width: 100%;
-	border-collapse: collapse;
-	margin-bottom: 12px;
+.pos-refund-form__save.pos-refund-form__save {
+	order: 1;
+	min-height: 34px;
+	height: 34px;
+	padding-inline: 12px;
 }
 
-.pos-refund-form__lines th {
-	text-align: start;
+.pos-refund-form__notes :deep(textarea) {
+	height: 58px;
+	min-height: 58px;
+}
+
+.pos-refund-form__qty {
+	max-width: 80px;
+	margin-inline-start: auto;
+}
+
+.pos-refund-form__hint,
+.pos-refund-form__note {
+	margin: 12px 0 0;
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
-	padding: 4px 8px;
-	border-bottom: 1px solid var(--color-border);
+}
+
+.pos-refund-form__text {
+	margin: 0;
 }
 
 .pos-refund-form__empty {
+	margin: 0;
 	color: var(--color-text-maxcontrast);
-	font-style: italic;
-	margin: 16px 0;
 }
 
-.pos-refund-form__actions {
+.pos-refund-form__outcomes {
 	display: flex;
-	justify-content: flex-end;
-	margin-top: 24px;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+.pos-refund-form__outcome {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 34px;
+	padding: 0 12px;
+	border-radius: 17px;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	font-weight: 600;
+	font-size: 13px;
+}
+
+@media (max-width: 1024px) {
+	.pos-refund-form__layout {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 </style>

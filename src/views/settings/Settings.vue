@@ -1,76 +1,35 @@
 <template>
-	<div>
-		<!-- Page Title -->
-		<NcSettingsSection
-			:name="t('pipelinq', 'Pipelinq Settings')"
-			:description="t('pipelinq', 'Configure your Pipelinq installation')"
-			docUrl="https://pipelinq.conduction.nl/docs/intro" />
-
-		<!-- Version Information -->
-		<CnVersionInfoCard
-			appName="Pipelinq"
-			:appVersion="appVersion"
-			:isUpToDate="true"
-			:showUpdateButton="true"
-			:title="t('pipelinq', 'Version Information')"
-			:description="
-				t('pipelinq', 'Information about the current Pipelinq installation')
-			">
-			<template #actions>
-				<NcButton
-					variant="primary"
-					:disabled="reimporting"
-					@click="reimport">
-					<template #icon>
-						<NcLoadingIcon v-if="reimporting" :size="20" />
-						<Refresh v-else :size="20" />
-					</template>
-					{{
-						reimporting
-							? t('pipelinq', 'Importing…')
-							: t('pipelinq', 'Re-import configuration')
-					}}
-				</NcButton>
-			</template>
-			<template #footer>
-				<div class="cn-support-info">
-					<h4>{{ t('pipelinq', 'Support') }}</h4>
-					<p>
-						{{ t('pipelinq', 'For support, contact us at') }}
-						<a href="mailto:support@conduction.nl"
-							>support@conduction.nl</a
-						>
-					</p>
-					<p>
-						{{
-							t(
-								'pipelinq',
-								'For a Service Level Agreement (SLA), contact',
-							)
-						}}
-						<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
-					</p>
-				</div>
-			</template>
-		</CnVersionInfoCard>
-
-		<!-- Provisioning is an admin action, never a wizard step
-		     (pipelinq-setup-wizard-review). -->
-		<ProvisionDataSection v-if="isAdmin" />
-
-		<!-- Reopen the first-time setup (pipelinq-audit-admin-forms-pos, A1). -->
-		<SetupWizardSection v-if="isAdmin" />
-
-		<!-- Shillinq and XWiki, detected rather than typed. -->
-		<DetectedIntegrations v-if="isAdmin" />
-
-		<!-- The VAT rate per VAT class (pipelinq-forms-review). -->
-		<VatRatesSettings v-if="isAdmin" :config="config" />
-
-		<!-- Menu structure: simple (default) or full, and the modules
-		     (simple-structure-profile). -->
-		<MenuStructureSettings v-if="isAdmin" />
-
+	<!-- Boards PqBeheer, PqBeheerKoppelingen, PqBeheerKassa,
+	     PqBeheerMarketing and PqBeheerPortaal: the library admin shell draws
+	     the title, the path and the Documentatie button, then a tab strip.
+	     Algemeen holds the version card and the sections in the board's
+	     order; each other tab holds one part of the page. `lazyTabs` mounts
+	     only the open tab, so the page no longer fires every section's reads
+	     at once. -->
+	<CnAdminSettingsShell
+		appId="pipelinq"
+		appName="Pipelinq"
+		look="board"
+		:title="pageTitle"
+		:breadcrumbs="breadcrumbs"
+		:breadcrumbNote="breadcrumbNote"
+		docUrl="https://pipelinq.conduction.nl/docs/intro"
+		:appVersion="appVersion"
+		:versionTitle="t('pipelinq', 'Version Information')"
+		:versionDescription="
+			t('pipelinq', 'Information about the current Pipelinq installation')
+		"
+		:versionCardWide="false"
+		:showSupport="false"
+		:reimportUrl="reimportUrl"
+		:showSetup="isAdmin"
+		:setupSteps="setupSteps"
+		:tabs="adminTabs"
+		tabsVariant="underline"
+		lazyTabs
+		@tabChange="onTabChange"
+		@reimported="onReimported"
+		@reimportError="onReimportError">
 		<!-- Register & Schema Mapping -->
 		<CnRegisterMapping
 			:name="t('pipelinq', 'Register Configuration')"
@@ -85,30 +44,16 @@
 			:saving="saving"
 			@save="save" />
 
-		<!-- Pipeline Management -->
-		<PipelineManager v-if="isConfigured" />
-
-		<!-- Product Categories -->
-		<ProductCategoryManager v-if="isConfigured" />
-
-		<!-- Skill Management -->
-		<SkillSettings v-if="isConfigured" />
-
-		<!-- Agent Profile Management -->
-		<AgentProfileSettings v-if="isConfigured" />
-
-		<!-- Forecast Configuration -->
-		<ForecastSettings v-if="isConfigured" />
-
 		<!-- Lead Sources -->
 		<TagManager
 			v-if="isConfigured"
 			:title="t('pipelinq', 'Lead Sources')"
 			:tags="leadSourceTags"
 			:loading="leadSourcesLoading"
-			:addLabel="t('pipelinq', '+ Add Source')"
+			:addLabel="t('pipelinq', 'Add source')"
 			:addPlaceholder="t('pipelinq', 'Enter source name…')"
 			:usageCheck="checkLeadSourceUsage"
+			:tagLabel="leadSourceLabel"
 			@add="addLeadSource"
 			@remove="removeLeadSource"
 			@rename="renameLeadSource" />
@@ -119,231 +64,51 @@
 			:title="t('pipelinq', 'Request Channels')"
 			:tags="requestChannelTags"
 			:loading="requestChannelsLoading"
-			:addLabel="t('pipelinq', '+ Add Channel')"
+			:addLabel="t('pipelinq', 'Add channel')"
 			:addPlaceholder="t('pipelinq', 'Enter channel name…')"
 			:usageCheck="checkRequestChannelUsage"
 			@add="addRequestChannel"
 			@remove="removeRequestChannel"
 			@rename="renameRequestChannel" />
 
-		<!-- Prospect Discovery Settings -->
-		<ProspectSettings v-if="isConfigured" />
-
-		<!-- BI Export Configuration -->
-		<ExportConfigurationSettings
+		<CnSettingsFieldsSection
 			v-if="isAdmin"
-			:config="config"
-			@saved="onExportConfigSaved" />
+			v-bind="sections.leadManagement"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
 
-		<!-- Lead Management — stale threshold (REQ-LM-002).
-		     Persisted via IAppConfig under key `lead_stale_threshold_days`. -->
-		<NcSettingsSection
+		<!-- Product Categories -->
+		<ProductCategoryManager v-if="isConfigured" />
+
+		<!-- Menu structure: simple (default) or full, and the modules
+		     (simple-structure-profile). -->
+		<MenuStructureSettings v-if="isAdmin" class="cn-settings-section--wide" />
+
+		<!-- Skill Management -->
+		<SkillSettings v-if="isConfigured" />
+
+		<!-- Agent Profile Management -->
+		<AgentProfileSettings v-if="isConfigured" />
+
+		<!-- Pipeline Management -->
+		<PipelineManager v-if="isConfigured" />
+
+		<!-- Forecast Configuration -->
+		<ForecastSettings v-if="isConfigured" />
+
+		<!-- Provisioning is an admin action, never a wizard step
+		     (pipelinq-setup-wizard-review). -->
+		<CnSettingsFieldsSection
 			v-if="isAdmin"
-			:name="t('pipelinq', 'Lead Management')"
-			:description="
-				t(
-					'pipelinq',
-					'Tune lead staleness detection for kanban badges and the lead list filter.',
-				)
-			">
-			<NcTextField
-				v-model="staleThresholdInput"
-				type="number"
-				:label="t('pipelinq', 'Stale after (days)')"
-				placeholder="14"
-				:helperText="
-					t(
-						'pipelinq',
-						'Number of days a lead can stay untouched before it is flagged as stale. Default: 14.',
-					)
-				" />
-			<NcButton
-				variant="primary"
-				:disabled="savingStale"
-				@click="saveStaleThreshold">
-				<template #icon>
-					<NcLoadingIcon v-if="savingStale" :size="16" />
-				</template>
-				{{ t('pipelinq', 'Save lead settings') }}
-			</NcButton>
-			<NcNoteCard v-if="staleMessage" :type="staleMessageType">
-				{{ staleMessage }}
-			</NcNoteCard>
-		</NcSettingsSection>
+			v-bind="sections.provisionData"
+			appId="pipelinq" />
 
-		<!-- Mailing list signup embed (marketing-lists-and-double-opt-in) -->
-		<MailingListEmbedSettings v-if="isConfigured" />
 
-		<!-- Shillinq integration. Nobody types a webhook URL: the hand-offs
-		     follow the detected Shillinq app (pipelinq-audit-admin-forms-pos).
-		     Without Shillinq, DetectedIntegrations says it is not installed. -->
-		<NcSettingsSection
-			v-if="isAdmin && shillinqInstalled"
-			:name="t('pipelinq', 'Shillinq integration')"
-			:description="
-				t(
-					'pipelinq',
-					'Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.',
-				)
-			">
-			<!-- Real time-intake emit (time-billing-handoff-emit). Default off — an
-			     unconfigured install keeps the deep-link-only handoff unchanged. -->
-			<NcCheckboxRadioSwitch v-model="shillinqTimeIntakeEnabled" type="switch">
-				{{
-					t(
-						'pipelinq',
-						'Send approved hours to Shillinq as draft invoices',
-					)
-				}}
-			</NcCheckboxRadioSwitch>
-			<NcTextField
-				v-model="config.billing_handoff_manager_group"
-				:label="t('pipelinq', 'Billing handoff manager group')"
-				placeholder="billing-managers"
-				:helperText="
-					t(
-						'pipelinq',
-						'Nextcloud group allowed to trigger \'Send to billing\'. Leave empty to restrict it to Nextcloud administrators.',
-					)
-				" />
-			<NcButton
-				variant="primary"
-				:disabled="savingShillinq"
-				@click="saveShillinq">
-				<template #icon>
-					<NcLoadingIcon v-if="savingShillinq" :size="16" />
-				</template>
-				{{ t('pipelinq', 'Save Shillinq Configuration') }}
-			</NcButton>
-			<NcNoteCard v-if="shillinqMessage" :type="shillinqMessageType">
-				{{ shillinqMessage }}
-			</NcNoteCard>
-		</NcSettingsSection>
-
-		<!-- xWiki Integration (xwiki-integration) -->
-		<NcSettingsSection
+		<!-- BRP lookups and the mTLS certificate (bsn-validatie-en-brp-lookup). -->
+		<CnSettingsFieldsSection
 			v-if="isAdmin"
-			:name="t('pipelinq', 'xWiki integration')"
-			:description="
-				t(
-					'pipelinq',
-					'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. Pipelinq finds xWiki through the xWiki app or through OpenRegister.',
-				)
-			">
-			<NcNoteCard
-				v-if="xwikiStatus"
-				:type="xwikiStatus.available ? 'success' : 'warning'">
-				<span v-if="xwikiStatus.available">
-					{{
-						t('pipelinq', 'xWiki reachable at {url}', {
-							url: xwikiStatus.baseUrl,
-						})
-					}}
-					<template v-if="xwikiStatus.version">
-						({{
-							t('pipelinq', 'version {ver}', {
-								ver: xwikiStatus.version,
-							})
-						}})
-					</template>
-				</span>
-				<span v-else>
-					{{
-						t(
-							'pipelinq',
-							'xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq.',
-						)
-					}}
-				</span>
-			</NcNoteCard>
-			<NcNoteCard v-if="!xwikiAppInstalled" type="warning">
-				{{
-					t(
-						'pipelinq',
-						'The optional xWiki Nextcloud app is not installed. Pipelinq searches xWiki through OpenRegister instead.',
-					)
-				}}
-			</NcNoteCard>
-			<NcTextField
-				v-model="config.xwiki_default_space"
-				:label="t('pipelinq', 'Default xWiki space')"
-				placeholder="Kennisbank"
-				:helperText="
-					t(
-						'pipelinq',
-						'Space name pre-selected by the dashboard widget. Leave empty to search across all spaces.',
-					)
-				" />
-			<NcTextField
-				v-model="config.xwiki_cache_ttl"
-				type="number"
-				:label="t('pipelinq', 'Cache TTL (seconds)')"
-				placeholder="300"
-				:helperText="
-					t(
-						'pipelinq',
-						'How long search and page results are cached server-side. Default: 300.',
-					)
-				" />
-			<div class="xwiki-actions">
-				<NcButton
-					variant="primary"
-					:disabled="savingXwiki"
-					@click="saveXwiki">
-					<template #icon>
-						<NcLoadingIcon v-if="savingXwiki" :size="16" />
-					</template>
-					{{ t('pipelinq', 'Save xWiki settings') }}
-				</NcButton>
-				<NcButton
-					variant="secondary"
-					:disabled="testingXwiki"
-					@click="testXwiki">
-					<template #icon>
-						<NcLoadingIcon v-if="testingXwiki" :size="16" />
-					</template>
-					{{ t('pipelinq', 'Test connection') }}
-				</NcButton>
-			</div>
-			<NcNoteCard v-if="xwikiMessage" :type="xwikiMessageType">
-				{{ xwikiMessage }}
-			</NcNoteCard>
-		</NcSettingsSection>
-
-		<!-- Channels & telephony. Configuration, not an operator surface, so it
-		     lives here rather than in the app nav (nav-ia-cleanup). -->
-		<MessagingSettings v-if="isAdmin && isConfigured" />
-		<DeliverabilitySettings v-if="isAdmin && isConfigured" />
-		<CtiPage v-if="isAdmin && isConfigured" />
-
-		<!-- Customer portal tenant config, accounts and audit trail
-		     (pipelinq#2041). Admin only, like the endpoints it calls. -->
-		<PortalSettings v-if="isAdmin && isConfigured" />
-
-		<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
-		     who processes the money) and `PosTenderTypeList` (tender types — how
-		     the customer pays at the register) read as duplicates but are two
-		     different things; the labels are what confused them. -->
-		<PaymentSettingsForm v-if="isAdmin && isConfigured" />
-		<PosTenderTypeManager v-if="isAdmin && isConfigured" />
-		<PosStaffManager v-if="isAdmin && isConfigured" />
-		<PosRoleManager v-if="isAdmin && isConfigured" />
-
-		<!-- Marketing traffic (marketing-campaign-attribution): campaign
-		     parameters on blast links, the Portaliq portal, Search Console. -->
-		<MarketingTrafficSettings
-			v-if="isAdmin"
-			:config="config"
-			@saved="onMarketingTrafficSaved" />
-
-		<!-- Marketing intelligence (marketing-search-intelligence): the
-		     sources the keyword, Matomo and competitor reads leave through,
-		     and the relevance switch. No secret is entered here: the Matomo
-		     token lives in the credential broker. -->
-		<MarketingIntelSettings
-			v-if="isAdmin"
-			:config="config"
-			@saved="onMarketingTrafficSaved" />
+			v-bind="sections.brpMonitor"
+			appId="pipelinq" />
 
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
@@ -351,33 +116,271 @@
 				{{ message }}
 			</NcNoteCard>
 		</div>
-	</div>
+		<!-- The support lines, as the last card across the page. -->
+		<NcSettingsSection
+			class="cn-settings-section--wide"
+			:name="t('pipelinq', 'Support')">
+			<p>
+				{{ t('pipelinq', 'For support, contact us at') }}
+				<a href="mailto:support@conduction.nl">support@conduction.nl</a>
+			</p>
+			<p>
+				{{
+					t(
+						'pipelinq',
+						'For a Service Level Agreement (SLA), contact us at',
+					)
+				}}
+				<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
+			</p>
+		</NcSettingsSection>
+
+		<template #tab-connections>
+			<!-- Telephony and channels: configuration, not an operator surface
+			     (nav-ia-cleanup). -->
+			<CtiSettings
+				v-if="isAdmin && isConfigured"
+				class="cn-settings-section--wide" />
+
+			<MessagingSettings v-if="isAdmin && isConfigured" />
+
+			<!-- xWiki Integration (xwiki-integration) -->
+			<NcSettingsSection
+				v-if="isAdmin"
+				:name="t('pipelinq', 'xWiki integration')"
+				:description="
+					t(
+						'pipelinq',
+						'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. Pipelinq finds xWiki through the xWiki app or through OpenRegister.',
+					)
+				">
+				<NcNoteCard
+					v-if="xwikiStatus"
+					:type="xwikiStatus.available ? 'success' : 'warning'">
+					<span v-if="xwikiStatus.available">
+						{{
+							t('pipelinq', 'xWiki reachable at {url}', {
+								url: xwikiStatus.baseUrl,
+							})
+						}}
+						<template v-if="xwikiStatus.version">
+							({{
+								t('pipelinq', 'version {ver}', {
+									ver: xwikiStatus.version,
+								})
+							}})
+						</template>
+					</span>
+					<span v-else>
+						{{
+							t(
+								'pipelinq',
+								'xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq.',
+							)
+						}}
+					</span>
+				</NcNoteCard>
+				<NcNoteCard v-if="!xwikiAppInstalled" type="warning">
+					{{
+						t(
+							'pipelinq',
+							'The optional xWiki Nextcloud app is not installed. Pipelinq searches xWiki through OpenRegister instead.',
+						)
+					}}
+				</NcNoteCard>
+				<NcTextField
+					v-model="config.xwiki_default_space"
+					:label="t('pipelinq', 'Default xWiki space')"
+					placeholder="Kennisbank"
+					:helperText="
+						t(
+							'pipelinq',
+							'Space name pre-selected by the dashboard widget. Leave empty to search across all spaces.',
+						)
+					" />
+				<NcTextField
+					v-model="config.xwiki_cache_ttl"
+					type="number"
+					:label="t('pipelinq', 'Cache TTL (seconds)')"
+					placeholder="300"
+					:helperText="
+						t(
+							'pipelinq',
+							'How long search and page results are cached server-side. Default: 300.',
+						)
+					" />
+				<div class="xwiki-actions">
+					<NcButton
+						variant="primary"
+						:disabled="savingXwiki"
+						@click="saveXwiki">
+						<template #icon>
+							<NcLoadingIcon v-if="savingXwiki" :size="16" />
+						</template>
+						{{ t('pipelinq', 'Save xWiki settings') }}
+					</NcButton>
+					<NcButton
+						variant="secondary"
+						:disabled="testingXwiki"
+						@click="testXwiki">
+						<template #icon>
+							<NcLoadingIcon v-if="testingXwiki" :size="16" />
+						</template>
+						{{ t('pipelinq', 'Test connection') }}
+					</NcButton>
+				</div>
+				<NcNoteCard v-if="xwikiMessage" :type="xwikiMessageType">
+					{{ xwikiMessage }}
+				</NcNoteCard>
+			</NcSettingsSection>
+
+			<!-- Shillinq integration. Nobody types a webhook URL: the hand-offs
+			     follow the detected Shillinq app (pipelinq-audit-admin-forms-pos).
+			     Without Shillinq, DetectedIntegrations says it is not installed. -->
+			<CnSettingsFieldsSection
+				v-if="isAdmin && shillinqInstalled"
+				v-bind="sections.shillinq"
+				appId="pipelinq"
+				@saved="onSectionSaved" />
+
+			<!-- Shillinq and XWiki, detected rather than typed. -->
+			<DetectedIntegrations v-if="isAdmin" />
+
+			<!-- The CTI webhook log: not on the board, kept after its sections. -->
+			<CtiEventLog v-if="isAdmin && isConfigured" />
+		</template>
+
+		<template #tab-integrations>
+			<!-- Board PqIntegrations: the connections this app declares, as
+			     integriq checks them. Until the library draws them here, the
+			     tab opens the in-app list scoped to this app. -->
+			<CnConnectionsPanel
+				app="pipelinq"
+				appName="Pipelinq"
+				:addUrl="integriqUrl"
+				:kinds="connectionKinds"
+				data-testid="pipelinq-connections" />
+		</template>
+
+		<template #tab-pos>
+			<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
+			     who processes the money) and `PosTenderTypeList` (tender types — how
+			     the customer pays at the register) read as duplicates but are two
+			     different things; the labels are what confused them. -->
+			<PaymentSettingsForm v-if="isAdmin && isConfigured" />
+			<PosTenderTypeManager v-if="isAdmin && isConfigured" />
+			<VatRatesSettings v-if="isAdmin" :config="config" />
+			<PosRoleManager v-if="isAdmin && isConfigured" />
+			<PosStaffManager v-if="isAdmin && isConfigured" />
+
+			<!-- The till's customer lookup is a page of its own in the app. -->
+			<NcSettingsSection
+				v-if="isAdmin && isConfigured"
+				class="cn-settings-section--wide"
+				:name="t('pipelinq', 'Customer lookup at the till')"
+				:description="
+					t(
+						'pipelinq',
+						'Search fields, how far back the purchase history goes and consents for the till.',
+					)
+				">
+				<a :href="posCustomerLookupUrl" class="pos-lookup-link">
+					{{ t('pipelinq', 'Open customer lookup at the till') }}
+				</a>
+			</NcSettingsSection>
+		</template>
+
+		<!-- Board PqKassaKlantzoeken: the till's customer lookup settings. -->
+		<template #tab-pos-lookup>
+			<PosCustomerSettings v-if="isAdmin && isConfigured" />
+		</template>
+
+		<template #tab-marketing>
+			<!-- Marketing intelligence (marketing-search-intelligence): the
+			     sources the keyword, Matomo and competitor reads leave through,
+			     and the relevance switch. No secret is entered here: the Matomo
+			     token lives in the credential broker. -->
+			<CnSettingsFieldsSection
+				v-if="isAdmin"
+				v-bind="sections.marketingIntel"
+				appId="pipelinq"
+				@saved="onSectionSaved" />
+
+			<!-- Marketing traffic (marketing-campaign-attribution): campaign
+			     parameters on blast links, the Portaliq portal, Search Console. -->
+			<MarketingTrafficSettings
+				v-if="isAdmin"
+				:config="config"
+				@saved="onMarketingTrafficSaved" />
+
+			<!-- Mail transports and their SPF/DKIM/DMARC check (marketing-mail-transports). -->
+			<DeliverabilitySettings v-if="isAdmin && isConfigured" />
+
+			<!-- Mailing list signup embed (marketing-lists-and-double-opt-in) -->
+			<MailingListEmbedSettings v-if="isConfigured" />
+
+			<!-- Prospect Discovery Settings -->
+			<ProspectSettings v-if="isConfigured" />
+
+			<!-- BI Export Configuration -->
+			<CnSettingsFieldsSection
+				v-if="isAdmin"
+				v-bind="sections.exportConfiguration"
+				appId="pipelinq"
+				@saved="onSectionSaved" />
+
+			<!-- The shared label list (shared-label-list): articles, leads and
+			     clients pick from it. A rename rewrites the items that carry
+			     the label; a delete leaves them as they are. -->
+			<CnChipListManager
+				v-if="isAdmin && isConfigured"
+				register="pipelinq"
+				schema="itemLabel"
+				:title="t('pipelinq', 'Labels')"
+				:description="t('pipelinq', 'The labels people can pick for articles, leads and clients.')"
+				:addLabel="t('pipelinq', 'New label')"
+				:placeholder="t('pipelinq', 'Enter a name')"
+				:submitLabel="t('pipelinq', 'Add')"
+				:note="t('pipelinq', 'Double-click a label to rename it. A deleted label stays on the items that already use it.')"
+				:renameUrl="labelRenameUrl" />
+		</template>
+
+		<template #tab-portal>
+			<!-- Customer portal tenant config, accounts and audit trail
+			     (pipelinq#2041). Admin only, like the endpoints it calls. -->
+			<PortalSettings v-if="isAdmin && isConfigured" />
+		</template>
+	</CnAdminSettingsShell>
 </template>
 
 <script>
-import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
+import {
+	CnAdminSettingsShell,
+	CnChipListManager,
+	CnConnectionsPanel,
+	CnRegisterMapping,
+	CnSettingsFieldsSection,
+} from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
-	NcCheckboxRadioSwitch,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
-import CtiPage from './CtiPage.vue'
+import PosCustomerSettings from '../admin/PosCustomerSettings.vue'
+import CtiEventLog from './CtiEventLog.vue'
+import CtiSettings from './CtiSettings.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
 import DeliverabilitySettings from './DeliverabilitySettings.vue'
 import DetectedIntegrations from './DetectedIntegrations.vue'
-import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
-import MarketingIntelSettings from './MarketingIntelSettings.vue'
 import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
 import MenuStructureSettings from './MenuStructureSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
@@ -390,15 +393,17 @@ import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
-import ProvisionDataSection from './ProvisionDataSection.vue'
-import SetupWizardSection from './SetupWizardSection.vue'
 import TagManager from './TagManager.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
+import manifest from '../../manifest.json'
+import { INTEGRIQ_CONNECTIONS_PATH } from '../../services/connectionRegistry.js'
+import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
+import adminSections from './adminSections.json'
 
 /**
  * Whether the server detected the Shillinq app (IntegrationDetector).
@@ -411,26 +416,107 @@ function shillinqDetected() {
 	return detected?.shillinq?.installed === true
 }
 
+/**
+ * The admin page's tabs (boards PqBeheer, PqBeheerKoppelingen,
+ * PqBeheerKassa, PqBeheerMarketing, PqBeheerPortaal): the strip label, the
+ * page title and the line after the path while the tab is open. The strings
+ * are catalogue keys, translated where they are read.
+ */
+/** The kind and icon of each connection Pipelinq declares, by key. */
+const SOCIAL = { kind: 'Social network', icon: 'ShareVariant' }
+const CONNECTION_KINDS = {
+	cti: { kind: 'Telephony', icon: 'Headset' },
+	'social-mastodon': SOCIAL,
+	'social-bluesky': SOCIAL,
+	'social-linkedin': SOCIAL,
+	'social-x': SOCIAL,
+	'social-facebook': SOCIAL,
+	'social-instagram': SOCIAL,
+	'social-threads': SOCIAL,
+	berichtenbox: { kind: 'Messages', icon: 'EmailOutline' },
+	'mail-provider': { kind: 'Mail', icon: 'EmailFastOutline' },
+}
+
+const ADMIN_TABS = [
+	{
+		id: 'general',
+		label: 'General',
+		title: 'Pipelinq settings',
+		note: 'Set up your Pipelinq installation',
+	},
+	{
+		id: 'connections',
+		label: 'Connections',
+		title: 'Pipelinq settings',
+		note: 'The connections: telephony, messages, xWiki and Shillinq',
+	},
+	{
+		id: 'integrations',
+		label: 'Integrations',
+		title: 'Pipelinq settings: integrations',
+		note: 'Applies to the whole organisation; integriq checks every connection',
+	},
+	{
+		id: 'pos',
+		label: 'Point of sale',
+		title: 'Pipelinq settings: point of sale',
+		note: 'Only when the module is on',
+	},
+	{
+		id: 'pos-lookup',
+		label: 'Customer lookup at the till',
+		title: 'Pipelinq settings: customer lookup at the till',
+		note: 'Administration setting for the point of sale module',
+	},
+	{
+		id: 'marketing',
+		label: 'Marketing and data',
+		title: 'Pipelinq settings: marketing and data',
+		note: 'Marketing, prospects and export',
+	},
+	{
+		id: 'portal',
+		label: 'Customer portal',
+		title: 'Customer portal',
+		note: 'Each portal has its own domain, look and tabs',
+	},
+]
+
+/**
+ * The tab the address names (`?tab=<id>`, written by the admin shell), or
+ * Algemeen.
+ *
+ * @return {string} A tab id.
+ * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+ */
+function openTabFromAddress() {
+	const id = new URLSearchParams(window.location.search).get('tab')
+	return ADMIN_TABS.some((tab) => tab.id === id) ? id : ADMIN_TABS[0].id
+}
+
 export default {
 	name: 'PipelinqAdminSettings',
 	components: {
+		CnConnectionsPanel,
 		MessagingSettings,
 		DeliverabilitySettings,
-		CtiPage,
+		CtiEventLog,
+		CtiSettings,
 		PaymentSettingsForm,
 		PosTenderTypeManager,
 		PosStaffManager,
 		PosRoleManager,
 		PortalSettings,
+		PosCustomerSettings,
+		CnAdminSettingsShell,
+		CnChipListManager,
 		CnRegisterMapping,
-		CnVersionInfoCard,
+		CnSettingsFieldsSection,
 		NcButton,
-		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSettingsSection,
 		NcTextField,
-		Refresh,
 		PipelineManager,
 		ProductCategoryManager,
 		ProspectSettings,
@@ -438,14 +524,10 @@ export default {
 		SkillSettings,
 		AgentProfileSettings,
 		ForecastSettings,
-		ExportConfigurationSettings,
 		MailingListEmbedSettings,
-		MarketingIntelSettings,
 		MarketingTrafficSettings,
 		MenuStructureSettings,
 		DetectedIntegrations,
-		ProvisionDataSection,
-		SetupWizardSection,
 		VatRatesSettings,
 	},
 
@@ -453,22 +535,19 @@ export default {
 		return {
 			config: {},
 			appVersion: loadState('pipelinq', 'version', 'Unknown'),
-			reimporting: false,
+			// The open tab, read from the address the shell writes it to.
+			activeTab: openTabFromAddress(),
+			reimportUrl: generateUrl('/apps/pipelinq/api/settings/reimport'),
+			// The declared settings sections, and the first-time setup the
+			// shell's "Run setup wizard" opens again.
+			sections: adminSections,
+			setupSteps: (manifest.setup && manifest.setup.steps) || [],
 			saving: false,
 			message: '',
 			messageType: 'success',
 			isAdmin: false,
-			// Shillinq ledger integration.
-			savingShillinq: false,
-			shillinqMessage: '',
-			shillinqMessageType: 'success',
 			// Shillinq is detected, never configured (pipelinq-audit-admin-forms-pos).
 			shillinqInstalled: shillinqDetected(),
-			// Lead management — stale threshold (REQ-LM-002).
-			staleThresholdInput: 14,
-			savingStale: false,
-			staleMessage: '',
-			staleMessageType: 'success',
 			// xWiki integration (xwiki-integration).
 			savingXwiki: false,
 			testingXwiki: false,
@@ -480,6 +559,114 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The tab strip: Algemeen, then one tab per part of the page.
+		 *
+		 * @return {Array<{id: string, label: string}>}
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		adminTabs() {
+			return ADMIN_TABS.map((tab) => ({
+				id: tab.id,
+				label: t('pipelinq', tab.label),
+			}))
+		},
+
+		/**
+		 * The open tab's entry, Algemeen when the address names none.
+		 *
+		 * @return {{id: string, label: string, title: string, note: string}}
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		openTab() {
+			return (
+				ADMIN_TABS.find((tab) => tab.id === this.activeTab) || ADMIN_TABS[0]
+			)
+		},
+
+		/**
+		 * The page title: the board names the open part after a colon.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		pageTitle() {
+			return t('pipelinq', this.openTab.title)
+		},
+
+		/**
+		 * The path under the title: the server's administration settings,
+		 * the app, then the open tab when it is not Algemeen.
+		 *
+		 * @return {Array<{label: string, href?: string}>}
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		breadcrumbs() {
+			const crumbs = [
+				{
+					label: t('pipelinq', 'Administration settings'),
+					href: generateUrl('/settings/admin'),
+				},
+				{ label: 'Pipelinq' },
+			]
+			if (this.openTab !== ADMIN_TABS[0]) {
+				crumbs.push({ label: t('pipelinq', this.openTab.label) })
+			}
+			return crumbs
+		},
+
+		/**
+		 * The line after the path, saying what the open tab holds.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		breadcrumbNote() {
+			return t('pipelinq', this.openTab.note)
+		},
+
+		/**
+		 * Where Add integration and Open integriq go: integriq's connections, scoped to this app.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		integriqUrl() {
+			return generateUrl(INTEGRIQ_CONNECTIONS_PATH)
+		},
+
+		/**
+		 * The kind and icon of each connection lib/Settings/connections.json
+		 * declares, which integriq's declaration shape cannot carry.
+		 *
+		 * @return {object} By connection key.
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		connectionKinds() {
+			return CONNECTION_KINDS
+		},
+
+		/**
+		 * The tab that holds the till's customer lookup settings.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		posCustomerLookupUrl() {
+			return '?tab=pos-lookup'
+		},
+
+		/**
+		 * Where the Labels card sends a rename, so the items follow it.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+		 */
+		labelRenameUrl() {
+			// The card fills {id}; generateUrl would escape the braces.
+			return `${generateUrl('/apps/pipelinq/api/labels')}/{id}/rename`
+		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-87
 		 */
@@ -510,26 +697,6 @@ export default {
 
 		isConfigured() {
 			return !!this.config.register
-		},
-
-		/**
-		 * The real time-intake emit flag (time-billing-handoff-emit), converted
-		 * between the backend's string 'true'/'false' config value and a
-		 * checkbox boolean.
-		 *
-		 * @spec openspec/specs/time-approval-workflow/spec.md
-		 */
-		shillinqTimeIntakeEnabled: {
-			get() {
-				return this.config.shillinq_time_intake_enabled === 'true'
-			},
-
-			set(value) {
-				this.config = {
-					...this.config,
-					shillinq_time_intake_enabled: value ? 'true' : 'false',
-				}
-			},
 		},
 
 		/**
@@ -590,11 +757,6 @@ export default {
 		if (data) {
 			this.config = data.config || {}
 			this.isAdmin = this.settingsStore.isAdmin
-			// Seed the stale-threshold input from the persisted config
-			// (REQ-LM-002). Falls back to 14 days when unset.
-			const parsed = parseInt(this.config.lead_stale_threshold_days, 10)
-			this.staleThresholdInput =
-				Number.isFinite(parsed) && parsed > 0 ? parsed : 14
 		}
 
 		if (this.isConfigured) {
@@ -611,48 +773,49 @@ export default {
 
 	methods: {
 		/**
+		 * Follow the shell's tab strip, so the title and the path name the
+		 * open tab.
+		 *
+		 * @param {string} id The id of the opened tab.
+		 * @spec openspec/changes/admin-settings-tabs/specs/admin-settings/spec.md#requirement-the-admin-page-splits-into-tabs
+		 */
+		onTabChange(id) {
+			this.activeTab = id
+		},
+
+		/**
+		 * @param {string} name A stored lead source name.
+		 * @return {string} Its label, or the name as an admin typed it.
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		leadSourceLabel(name) {
+			return leadSourceLabel(name)
+		},
+
+		/**
+		 * The shell re-imported the configuration: take the config it returns,
+		 * so the sections show what the import wrote.
+		 *
+		 * @param {object} data The re-import response.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
 		 */
-		async reimport() {
-			this.reimporting = true
-			this.message = ''
+		onReimported(data) {
+			if (data && data.config) {
+				this.config = data.config
+			}
+		},
 
-			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/settings/reimport'),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					},
-				)
-
-				const data = await response.json()
-
-				// The import ran even when a schema was rejected, so the
-				// config it returns is current either way.
-				if (data.config) {
-					this.config = data.config
-				}
-				if (data.success) {
-					this.message = t(
-						'pipelinq',
-						'Configuration re-imported successfully',
-					)
-					this.messageType = 'success'
-				} else {
-					// The server names the rejected schemas in its message.
-					this.message = data.message || t('pipelinq', 'Re-import failed')
-					this.messageType = 'error'
-				}
-			} catch (error) {
-				this.message = error.message || t('pipelinq', 'Re-import failed')
-				this.messageType = 'error'
-			} finally {
-				this.reimporting = false
+		/**
+		 * The import runs even when a schema is rejected, and the shell then
+		 * reports the server's message as an error. Read the config again, so
+		 * the sections show what the import did write.
+		 *
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
+		 */
+		async onReimportError() {
+			const data = await this.settingsStore.fetchSettings()
+			if (data && data.config) {
+				this.config = data.config
 			}
 		},
 
@@ -665,6 +828,17 @@ export default {
 		 */
 		onMarketingTrafficSaved(updated) {
 			this.config = updated || this.config
+		},
+
+		/**
+		 * Keep the page's config in step with what a declared section saved,
+		 * so the register mapping does not write an older value back.
+		 *
+		 * @param {object} sent What the section sent, by setting key.
+		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-admin-forms-are-declared-sections
+		 */
+		onSectionSaved(sent) {
+			this.config = { ...this.config, ...(sent || {}) }
 		},
 
 		/**
@@ -754,83 +928,6 @@ export default {
 			return this.countObjectsWithField('ticket', 'channel', channelName, {
 				ticketType: 'request',
 			})
-		},
-
-		/**
-		 * Persist the Shillinq hand-off options through the standard settings endpoint.
-		 *
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
-		 */
-		async saveShillinq() {
-			this.savingShillinq = true
-			this.shillinqMessage = ''
-			try {
-				const result = await this.settingsStore.saveSettings({
-					...this.config,
-				})
-				if (result) {
-					this.config = this.settingsStore.config || result
-				}
-				this.shillinqMessage = t('pipelinq', 'Shillinq configuration saved.')
-				this.shillinqMessageType = 'success'
-			} catch (e) {
-				this.shillinqMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save Shillinq configuration.')
-				this.shillinqMessageType = 'error'
-			} finally {
-				this.savingShillinq = false
-			}
-		},
-
-		/**
-		 * Reflect a saved export-configuration payload back into local state.
-		 *
-		 * @param {object} updated The updated config returned by the section.
-		 * @spec openspec/changes/bi-export-and-data-warehouse-sink/tasks.md#task-14.1
-		 */
-		onExportConfigSaved(updated) {
-			if (updated && typeof updated === 'object') {
-				this.config = { ...this.config, ...updated }
-			}
-		},
-
-		/**
-		 * Persist the lead stale threshold through the standard settings endpoint.
-		 *
-		 * @spec openspec/specs/lead-management/spec.md
-		 */
-		async saveStaleThreshold() {
-			this.savingStale = true
-			this.staleMessage = ''
-			const days = parseInt(this.staleThresholdInput, 10)
-			if (!Number.isFinite(days) || days <= 0) {
-				this.staleMessage = t(
-					'pipelinq',
-					'Stale threshold must be a positive number of days.',
-				)
-				this.staleMessageType = 'error'
-				this.savingStale = false
-				return
-			}
-			try {
-				const result = await this.settingsStore.saveSettings({
-					...this.config,
-					lead_stale_threshold_days: String(days),
-				})
-				if (result) {
-					this.config = this.settingsStore.config || result
-				}
-				this.staleMessage = t('pipelinq', 'Lead settings saved.')
-				this.staleMessageType = 'success'
-			} catch (e) {
-				this.staleMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save lead settings.')
-				this.staleMessageType = 'error'
-			} finally {
-				this.savingStale = false
-			}
 		},
 
 		/**
@@ -948,5 +1045,10 @@ export default {
 <style scoped>
 .actions-section {
 	margin-top: 16px;
+}
+
+.pos-lookup-link {
+	color: var(--color-primary-element);
+	text-decoration: underline;
 }
 </style>

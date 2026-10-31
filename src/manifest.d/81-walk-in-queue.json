@@ -1,0 +1,94 @@
+{
+	"pages": [
+		{
+			"id": "WalkInQueue",
+			"_note": "The walk-in queue as the PqInloop board draws it: today's walk-in tickets, oldest first, with the waiting, being-helped and helped-today counts above them. Call next calls whoever has waited longest; a row's Call, Help and Left write the ticket's status (createWalkInHandlers in services/walkInQueue.js), because a walk-in ticket is a plain OpenRegister object and the change is the whole action. Not yet: the board's Desks side card (which employee is at which desk) has no record behind it; a desk is not a resource type today.",
+			"route": "/walk-in",
+			"type": "index",
+			"title": "Walk-in queue",
+			"config": {
+				"register": "pipelinq",
+				"schema": "walkInTicket",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"selectable": false,
+				"filter": { "arrivedAt[gte]": "@today" },
+				"sortKey": "arrivedAt",
+				"sortOrder": "asc",
+				"countText": "Desks · today",
+				"tableTitle": "In the queue",
+				"search": false,
+				"footerNote": "Call next calls the customer who has waited longest. A customer without a name shows as Anonymous customer.",
+				"emptyText": "Nobody has walked in yet today.",
+				"inlineActionCount": 2,
+				"showViewToggle": false,
+				"headerButtons": [ { "action": "call-next", "label": "Call next", "variant": "primary", "icon": "BellRingOutline" } ],
+				"headerActions": [
+					{ "id": "call-next", "label": "Call next", "icon": "BellRingOutline", "variant": "primary", "handler": "walkInCallNext" }
+				],
+				"statRow": [
+					{
+						"id": "walk-in-waiting",
+						"type": "stat",
+						"title": "Waiting",
+						"content": {
+							"label": "Waiting",
+							"caption": "in the queue now",
+							"format": { "style": "number", "decimals": 0 },
+							"source": { "register": "pipelinq", "schema": "walkInTicket", "metric": "count", "filter": { "status": "waiting", "arrivedAt": { "gte": "@today" } } }
+						}
+					},
+					{
+						"id": "walk-in-called",
+						"type": "stat",
+						"title": "Being helped",
+						"content": {
+							"label": "Being helped",
+							"caption": "called to a desk",
+							"format": { "style": "number", "decimals": 0 },
+							"source": { "register": "pipelinq", "schema": "walkInTicket", "metric": "count", "filter": { "status": "called", "arrivedAt": { "gte": "@today" } } }
+						}
+					},
+					{
+						"id": "walk-in-served",
+						"type": "stat",
+						"title": "Helped today",
+						"content": {
+							"label": "Helped today",
+							"caption": "today",
+							"format": { "style": "number", "decimals": 0 },
+							"source": { "register": "pipelinq", "schema": "walkInTicket", "metric": "count", "filter": { "status": "served", "arrivedAt": { "gte": "@today" } } }
+						}
+					}
+				],
+				"columns": [
+					{ "key": "displayName", "label": "Customer", "cellClass": "cn-cell--strong" },
+					{ "key": "serviceId", "label": "Service", "formatter": "bookingServiceName" },
+					{ "key": "arrivedAt", "label": "Arrived", "widget": "date", "widgetProps": { "timeOnly": true, "showTime": true } },
+					{ "key": "estimatedReadyAt", "label": "Ready at", "widget": "date", "widgetProps": { "timeOnly": true, "showTime": true } },
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumLabel",
+						"widget": "badge",
+						"widgetProps": { "colorMap": { "waiting": "warning", "called": "primary", "served": "success", "abandoned": "default" } }
+					}
+				],
+				"actions": [
+					{ "id": "call", "label": "Call in", "icon": "BellRingOutline", "handler": "walkInCall", "visibleWhen": { "field": "status", "op": "eq", "value": "waiting" } },
+					{ "id": "serve", "label": "Help", "icon": "Check", "handler": "walkInServe", "visibleWhen": { "field": "status", "op": "eq", "value": "called" } },
+					{ "id": "abandon", "label": "Left", "handler": "walkInAbandon", "visibleWhen": { "field": "status", "op": "in", "value": ["waiting", "called"] } }
+				]
+			}
+		}
+	]
+}

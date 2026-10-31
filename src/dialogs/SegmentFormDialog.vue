@@ -7,14 +7,14 @@
   - and then calls the slot's `refresh` so the list shows the result.
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
 		:name="
 			isEditing ? t('pipelinq', 'Edit segment') : t('pipelinq', 'New segment')
 		"
-		:open="true"
-		size="large"
-		:closeOnClickOutside="false"
+		:eyebrow="t('pipelinq', 'Marketing · segments')"
+		:subtitle="t('pipelinq', 'Who belongs to it follows from the rules, every time the segment is used')"
+		width="wizard"
 		@closing="close()">
 		<div class="segment-form">
 			<NcLoadingIcon v-if="loading" :size="32" class="segment-form__loading" />
@@ -24,16 +24,21 @@
 
 			<template v-else>
 				<section class="segment-form__details">
-					<NcTextField
-						v-model="model.name"
-						:label="t('pipelinq', 'Segment name')"
-						:placeholder="t('pipelinq', 'Inactive Leads')"
-						required
-						class="segment-form__name" />
+					<div class="segment-form__field">
+						<label for="segment-form-name" class="segment-form__label">{{ t('pipelinq', 'Segment name') }}</label>
+						<NcTextField
+							id="segment-form-name"
+							v-model="model.name"
+							:label="t('pipelinq', 'Segment name')"
+							labelOutside
+							:placeholder="t('pipelinq', 'Inactive Leads')"
+							required
+							class="segment-form__name" />
+					</div>
 					<!-- The reason sits on a wrapper: a disabled select gets no
 					     mouse events, so a `title` on it would never show. -->
 					<div
-						class="segment-form__audience"
+						class="segment-form__field segment-form__audience"
 						:class="{ 'segment-form__audience--locked': isEditing }"
 						:title="
 							isEditing
@@ -43,10 +48,13 @@
 									)
 								: null
 						">
+						<label for="segment-form-audience" class="segment-form__label">{{ t('pipelinq', 'Audience') }}</label>
 						<NcSelect
 							v-model="entityTypeOption"
+							inputId="segment-form-audience"
 							:options="entityTypeOptions"
 							:inputLabel="t('pipelinq', 'Audience')"
+							labelOutside
 							label="label"
 							:clearable="false"
 							:searchable="false"
@@ -55,12 +63,16 @@
 							{{ audienceHint }}
 						</p>
 					</div>
-					<NcTextArea
-						v-model="model.description"
-						:label="t('pipelinq', 'Description')"
-						resize="vertical"
-						rows="2"
-						class="segment-form__description" />
+					<div class="segment-form__field segment-form__description">
+						<label for="segment-form-description" class="segment-form__label">{{ t('pipelinq', 'Description') }}</label>
+						<NcTextArea
+							id="segment-form-description"
+							v-model="model.description"
+							:label="t('pipelinq', 'Description')"
+							labelOutside
+							resize="vertical"
+							rows="2" />
+					</div>
 				</section>
 
 				<section class="segment-form__rules">
@@ -85,12 +97,13 @@
 			<span v-if="saveHint" class="segment-form__save-hint">
 				{{ saveHint }}
 			</span>
-			<NcButton variant="tertiary" @click="close()">
+			<NcButton variant="secondary" @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="primary" :disabled="!canSave" @click="save">
-				<template v-if="saving" #icon>
-					<NcLoadingIcon :size="20" />
+				<template #icon>
+					<NcLoadingIcon v-if="saving" :size="20" />
+					<Check v-else :size="20" />
 				</template>
 				{{
 					isEditing
@@ -99,22 +112,23 @@
 				}}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
 	NcTextArea,
 	NcTextField,
 } from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import SegmentBuilder from '../components/SegmentBuilder.vue'
 import { fieldOptionsFor } from '../services/segmentFieldOptions.js'
 
@@ -133,8 +147,9 @@ function blankModel() {
 export default {
 	name: 'SegmentFormDialog',
 	components: {
+		Check,
+		CnDialog,
 		NcButton,
-		NcDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
@@ -436,9 +451,17 @@ export default {
 	grid-column: 1 / -1;
 }
 
-/* Lines the select up with the name field beside it. */
-.segment-form__audience {
-	margin-top: 6px;
+/* The label above the field, as board PqSegmentBouwer draws it. */
+.segment-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.segment-form__label {
+	font-size: 14px;
+	font-weight: 600;
 }
 
 .segment-form__audience :deep(.v-select.select) {

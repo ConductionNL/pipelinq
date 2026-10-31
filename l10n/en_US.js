@@ -184,6 +184,7 @@ OC.L10N.register(
         "e.g. value (optional)": "e.g. value (optional)",
         "Edit": "Edit",
         "Edit pipeline": "Edit pipeline",
+        "Edit stage": "Edit stage",
         "Edit stages": "Edit stages",
         "Email": "Email",
         "Employees": "Employees",
@@ -558,7 +559,15 @@ OC.L10N.register(
         "Factureerbaar": "Factureerbaar",
         "Einddatum": "Einddatum",
         "Wilt u deze berichten niet meer ontvangen? Meld u af: %s": "No longer want these messages? Unsubscribe: %s",
-        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s"
+        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s",
+        "Assign the selected tickets": "Assign the selected tickets",
+        "Search by name": "Search by name",
+        "Every ticket that moves keeps this reason.": "Every ticket that moves keeps this reason.",
+        "{total} on this ticket, newest first": "{total} on this ticket, newest first",
+        "Finish this task": "Finish this task",
+        "What came out of the callback?": "What came out of the callback?",
+        "Log attempt": "Log attempt",
+        "Attempt logged.": "Attempt logged."
     },
     "nplurals=2; plural=(n != 1);"
 )

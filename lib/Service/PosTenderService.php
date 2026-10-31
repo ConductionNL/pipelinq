@@ -152,9 +152,10 @@ class PosTenderService {
 		try {
 			$results = $this->getObjectService()->findAll(
 				config: [
-					'filters' => [],
-					'register' => $register,
-					'schema' => $schema,
+					'filters' => [
+						'register' => $register,
+						'schema' => $schema,
+					],
 				]
 			);
 		} catch (Throwable $e) {

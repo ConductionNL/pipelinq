@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ namespace OCA\Pipelinq\Service;
  *   returns ['costEur' => float, 'metadata' => array<string, mixed>]
  *   describing what to merge onto the message row.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class CostCaptureService {
 	/**
@@ -44,7 +44,7 @@ class CostCaptureService {
 	 * @param MessagingExchangeRateService $exchangeRate Currency conversion.
 	 * @param CostEstimationService $estimator Static price table.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private MessagingExchangeRateService $exchangeRate,
@@ -69,7 +69,7 @@ class CostCaptureService {
 	 * @return array{costEur: float, metadata: array<string, mixed>} Cost
 	 *                                                               + metadata bundle to merge onto the message row.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function capture(
 		array $payload,

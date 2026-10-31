@@ -31,7 +31,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 
 declare(strict_types=1);
@@ -71,7 +71,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Audit coordinator with
  *   several independent guard-heavy operations; splitting adds indirection.
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 class KassakoppelingAuditService {
 	/**
@@ -122,7 +122,7 @@ class KassakoppelingAuditService {
 	 *
 	 * @throws OCSBadRequestException When validation fails.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function createEntry(array $data): array {
 		$entry = $this->sanitiseInput(data: $data);
@@ -155,15 +155,19 @@ class KassakoppelingAuditService {
 	 * List audit entries with optional filters.
 	 *
 	 * Supported filter keys: registerNumber, operatorId, action, from
-	 * (timestamp >=), to (timestamp <=). Unsupported keys are silently
+	 * (timestamp >=), to (timestamp <=), verified (true, false or pending),
+	 * exported (true or false), search (register, operator or transaction)
+	 * and order (desc lists newest first). Each listed entry carries
+	 * `verification`: true, false or pending. Unsupported keys are silently
 	 * ignored — the API contract is whitelisted, not generic.
 	 *
 	 * @param array<string, mixed> $filters Optional filters.
 	 *
 	 * @return array<int, array<string, mixed>> The matching entries ordered
-	 *                                          by timestamp ascending.
+	 *                                          by timestamp, ascending unless
+	 *                                          order is desc.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function listEntries(array $filters = []): array {
 		[$register, $schema] = $this->config();
@@ -187,15 +191,30 @@ class KassakoppelingAuditService {
 
 		$rows = [];
 		foreach (($results ?? []) as $result) {
-			$rows[] = $this->toArray(object: $result);
+			$row = $this->toArray(object: $result);
+			$row['verification'] = match ($row['verified'] ?? null) {
+				true => 'true',
+				false => 'false',
+				default => 'pending',
+			};
+			$rows[] = $row;
 		}
 
-		$filtered = $this->applyFilters(entries: $rows, filters: $filters);
+		$filtered = array_values(
+			array_filter(
+				$this->applyFilters(entries: $rows, filters: $filters),
+				fn (array $entry): bool => $this->matchesState(entry: $entry, filters: $filters)
+			)
+		);
 
+		$direction = 1;
+		if (($filters['order'] ?? '') === 'desc') {
+			$direction = -1;
+		}
 		usort(
 			$filtered,
-			function (array $left, array $right): int {
-				return strcmp((string)($left['timestamp'] ?? ''), (string)($right['timestamp'] ?? ''));
+			function (array $left, array $right) use ($direction): int {
+				return $direction * strcmp((string)($left['timestamp'] ?? ''), (string)($right['timestamp'] ?? ''));
 			}
 		);
 
@@ -211,7 +230,7 @@ class KassakoppelingAuditService {
 	 *
 	 * @throws OCSNotFoundException When the entry is not found.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function getEntry(string $id): array {
 		[$register, $schema] = $this->config();
@@ -244,7 +263,7 @@ class KassakoppelingAuditService {
 	 *
 	 * @throws OCSNotFoundException When the entry is not found.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function verifyEntry(string $id): array {
 		$entry = $this->getEntry(id: $id);
@@ -300,7 +319,7 @@ class KassakoppelingAuditService {
 	 *
 	 * @throws OCSBadRequestException When the date range is malformed.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function exportForBelastingdienst(string $fromDate, string $toDate, string $format = 'xml'): array {
 		$from = $this->parseDate(value: $fromDate, lower: true);
@@ -379,7 +398,7 @@ class KassakoppelingAuditService {
 	 *
 	 * @return array<string, mixed>|null The latest entry, or null.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function getLastEntry(string $registerNumber): ?array {
 		if ($registerNumber === '') {
@@ -541,6 +560,55 @@ class KassakoppelingAuditService {
 
 		return $kept;
 	}//end applyFilters()
+
+	/**
+	 * Whether an entry matches the verification, export and search filters.
+	 *
+	 * @param array<string, mixed> $entry   The entry.
+	 * @param array<string, mixed> $filters The filters.
+	 *
+	 * @return bool True when the entry is kept.
+	 */
+	private function matchesState(array $entry, array $filters): bool {
+		$verified = (string)($filters['verified'] ?? '');
+		if ($verified !== '' && $verified !== $entry['verification']) {
+			return false;
+		}
+
+		$exported   = (string)($filters['exported'] ?? '');
+		$isExported = 'false';
+		if (($entry['exportedAt'] ?? null) !== null && $entry['exportedAt'] !== '') {
+			$isExported = 'true';
+		}
+
+		if ($exported !== '' && $exported !== $isExported) {
+			return false;
+		}
+
+		return $this->matchesSearch(entry: $entry, search: (string)($filters['search'] ?? ''));
+	}//end matchesState()
+
+	/**
+	 * Whether an entry's register, operator or transaction holds the search.
+	 *
+	 * @param array<string, mixed> $entry  The entry.
+	 * @param string               $search The search, empty for every entry.
+	 *
+	 * @return bool True when the entry is kept.
+	 */
+	private function matchesSearch(array $entry, string $search): bool {
+		if ($search === '') {
+			return true;
+		}
+
+		foreach (['registerNumber', 'operatorId', 'transactionUuid'] as $field) {
+			if (stripos((string)($entry[$field] ?? ''), $search) !== false) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end matchesSearch()
 
 	/**
 	 * Parse an ISO 8601 date or date-time into a UTC DateTimeImmutable.

@@ -43,20 +43,29 @@ See [ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) for the full Lead entity de
 
 ### Requirement: Lead CRUD [MVP]
 
-The system MUST support creating, reading, updating, and deleting lead records. Each lead MUST have a `title`, a `pipeline` and a `client`. All leads are stored as OpenRegister objects in the `pipelinq` register using the `lead` schema.
+The system MUST support creating, reading, updating, and deleting lead records. Each lead MUST have a `title` and a `pipeline`. A `client` is optional: a lead MAY exist with no client linked (decision 207, 12 October 2026). All leads are stored as OpenRegister objects in the `pipelinq` register using the `lead` schema.
 
-A lead does not exist on its own: it is always work being done on a pipeline, for a client. `contact` stays optional because not every deal has a named person yet, and products are optional and many, carried as `leadProduct` lines rather than on the lead itself.
+A lead is always work being done on a pipeline. `client` and `contact` are optional, because a deal can start before anyone knows who the customer is: a website visitor who names no organisation, or a tip a salesperson logs on the way out of a meeting. Products are optional and many, carried as `leadProduct` lines rather than on the lead itself.
 
-`pipeline` and `client` are enforced by the schema, not only by the form. OpenRegister validates `required` on EVERY save, so a lead that predates the constraint cannot be edited until it has both — which is why the constraint ships together with the backfill that supplies them.
+`pipeline` is enforced by the schema, not only by the form. OpenRegister validates `required` on EVERY save, so a lead without a pipeline cannot be edited at all; a repair step gives every stored lead a pipeline and a stage. That repair step MUST NOT link or create a client for a lead that has none.
 
 #### Scenario 1: Create a minimal lead
 
 - GIVEN a user with CRM access
-- WHEN they submit a new lead form with title "Website redesign project", a pipeline and a client
+- WHEN they submit a new lead form with title "Website redesign project" and a pipeline
 - THEN the system MUST create an OpenRegister object with `@type` set to `schema:Demand`
 - AND the lead MUST have `priority` defaulted to `normal`
 - AND if a default pipeline exists, the lead MUST be placed on the first non-closed stage of that pipeline
 - AND the audit trail MUST record the creation event with the creating user's identity
+
+#### Scenario 1b: Create a lead without a client
+
+- GIVEN the New Lead form with a title and a pipeline, and no client selected
+- THEN the client field MUST NOT be marked as required and MUST say it may stay empty
+- WHEN the user saves
+- THEN the lead MUST be stored with no `client`
+- AND no client MUST be created or linked for it, at the save or on a later upgrade
+- AND wherever a list shows a lead's client, that cell MUST read as empty for this lead
 
 #### Scenario 2: Create a lead with full sales fields
 
@@ -113,7 +122,7 @@ The lead and request create forms MUST let a user pick the client and the contac
 
 The client field MUST offer existing clients without requiring a search term, and MUST offer to create a new client when the typed name matches none. Creating MUST open the full client create form rather than saving the typed name alone: the `client` schema marks `contactsUid` REQUIRED and that identity is provisioned server-side from the Nextcloud addressbook, so a name on its own cannot satisfy the schema.
 
-The contact field MUST be scoped to the selected client, and MUST be unavailable until a client is selected. Changing the client MUST clear a contact that no longer belongs under it.
+The contact field MUST be scoped to the selected client. Changing the client MUST clear a contact that no longer belongs under it. On the request form the contact field MUST be unavailable until a client is selected. On the lead form the client is optional, so the contact field MUST be available without one and MUST then offer every contact.
 
 #### Scenario 1: Browse clients without typing
 
@@ -133,16 +142,16 @@ The contact field MUST be scoped to the selected client, and MUST be unavailable
 #### Scenario 3: Contact is scoped to the client
 
 - GIVEN the New Lead form with no client selected
-- THEN the contact field MUST be disabled and MUST say a client is needed first
+- THEN the contact field MUST be available
 - WHEN a client is selected
-- THEN the contact field MUST become available
-- AND it MUST offer only contacts belonging to that client
+- THEN the contact field MUST offer only contacts belonging to that client
 - AND selecting a different client MUST clear a contact that belonged to the previous one
 
 #### Scenario 4: The same behaviour on requests
 
 - GIVEN the New Request form
-- THEN the client and contact fields MUST behave as above
+- THEN the client field MUST behave as above
+- AND the contact field MUST be disabled until a client is selected, and MUST say a client is needed first
 
 ### Requirement: Lead Validation [MVP]
 
@@ -285,7 +294,7 @@ The system MUST provide a detail view for each lead that displays all properties
 - THEN the client name MUST be a clickable link navigating to the client detail view
 - AND the client's email and phone MUST be displayed
 - AND the contact person's name, email, and role MUST be displayed
-- AND if no client is linked, the system MUST show "No client linked" with an "Add client" action
+- AND if no client is linked, the Deal block MUST show the client field as empty, and selecting that field MUST let the user link a client
 
 #### Scenario 24: View lead detail -- assignee section
 
@@ -1208,6 +1217,40 @@ SHALL format in the reporting currency.
 - WHEN the salesperson opens it
 - THEN one block titled "Deal" shows the value, stage, win chance, close date and owner
 - AND the deal value KPI reads "€250,000"
+
+### Requirement: A lead shows its contacts with their role
+
+The lead overview MUST list the contacts that have a role on the deal, with the role label and the note, decision maker first. A user MUST be able to add a role, which is stored as a relationship from the lead to the contact with category `CRM Rol`.
+
+#### Scenario: the roles on a lead
+
+- GIVEN lead "Woonportaal voor huurders" has M. Hendriks as decision maker and Peter Lam as gatekeeper
+- WHEN the lead opens
+- THEN "Contacts and their role" lists M. Hendriks with "Decision maker" before Peter Lam with "Gatekeeper"
+- AND "Add contact role" stores a relationship with `fromType` lead
+
+### Requirement: The lead page reads as the board
+
+The lead page MUST name the owner by display name in its header line. It MUST offer Log contact first. In the qualified and proposal stages, the "what now" card's button MUST make a quote for the lead. The Deal card MUST show the eight deal facts in two columns, and the win chance MUST read as a percentage.
+
+#### Scenario: Woonportaal voor huurders
+- GIVEN the qualified lead "Woonportaal voor huurders" owned by Pieter Jansen
+- THEN the header reads "... eigenaar Pieter Jansen", the what-now card offers "Offerte maken", and Winkans reads "62%"
+
+### Requirement: The Related card names earlier deals and hours
+
+`GET /api/leads/{id}/related-summary` MUST answer `earlier`, which counts the client's other closed deals and says how they ended ("2 earlier deals, both won"), and `hours`, the hours written on the lead. Each MUST be empty when there is nothing to say. Only a caller who may read the lead MUST get an answer. The lead page's Related card MUST start with "Prospect data from the KVK", the earlier deals and the hours, above the related objects.
+
+#### Scenario: A client with earlier deals
+- GIVEN a lead whose client has two other closed deals, both won, and 6 hours written on the lead
+- WHEN a user who may read the lead opens its page
+- THEN the Related card starts with "Prospect data from the KVK", then "2 earlier deals, both won" and the 6 hours, above the related objects
+
+#### Scenario: Nothing to say, or no access
+- GIVEN a lead whose client has no other closed deals and no hours written
+- WHEN `GET /api/leads/{id}/related-summary` is called by a user who may read the lead
+- THEN `earlier` and `hours` are empty
+- AND a caller who may not read the lead gets no answer
 
 ## UI Reference
 

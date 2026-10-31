@@ -20,7 +20,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.1
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use OCA\Pipelinq\Service\Payment\HttpTransport;
 /**
  * Stub HTTP transport for adapter tests.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.1
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
  */
 class StubHttpTransport implements HttpTransport {
 	/**

@@ -6,6 +6,19 @@
 			v-else-if="relationships.length === 0"
 			:description="t('pipelinq', 'No relationships yet.')" />
 
+		<dl
+			v-else-if="compact"
+			class="contact-relationships__compact"
+			data-testid="relationships-compact">
+			<div
+				v-for="rel in relationships"
+				:key="rel.id"
+				class="contact-relationships__compact-row">
+				<dt>{{ rel.type }}</dt>
+				<dd>{{ getEntityName(rel.toContact) }}</dd>
+			</div>
+		</dl>
+
 		<div v-else>
 			<div
 				v-for="group in groupedRelationships"
@@ -70,8 +83,15 @@
 			</div>
 		</div>
 
-		<div class="contact-relationships__footer">
-			<NcButton variant="secondary" @click="showAddDialog = true">
+		<div v-if="!headerAdd" class="contact-relationships__footer">
+			<NcButton
+				:variant="compact ? 'tertiary' : 'secondary'"
+				:class="{ 'contact-relationships__add--pill': compact }"
+				data-testid="relationships-add"
+				@click="showAddDialog = true">
+				<template v-if="compact" #icon>
+					<Plus :size="16" />
+				</template>
 				{{ t('pipelinq', 'Add relationship') }}
 			</NcButton>
 		</div>
@@ -201,6 +221,7 @@
 import { openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import RemoveRelationshipDialog from '../dialogs/RemoveRelationshipDialog.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -305,6 +326,7 @@ export default {
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcSelect,
+		Plus,
 		RemoveRelationshipDialog,
 	},
 
@@ -320,11 +342,32 @@ export default {
 			validator: (value) => ['contact', 'client'].includes(value),
 		},
 
+		/**
+		 * One line per relationship (its type, then the other party) and a
+		 * pill to add one, for the Overview of a contact page. The full table
+		 * with edit and remove is the Relationships tab.
+		 */
+		compact: {
+			type: Boolean,
+			default: false,
+		},
+
 		entityName: {
 			type: String,
 			default: '',
 		},
+
+		/**
+		 * Report the "Add" button for the card's title row (`header` event)
+		 * instead of drawing it under the list.
+		 */
+		headerAdd: {
+			type: Boolean,
+			default: false,
+		},
 	},
+
+	emits: ['header'],
 
 	data() {
 		return {
@@ -405,11 +448,39 @@ export default {
 		},
 	},
 
+	/**
+	 * Puts the add in the card title row when the card asks for it, then loads the relationships.
+	 *
+	 * @spec openspec/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
+	 */
 	async mounted() {
+		if (this.headerAdd) {
+			this.reportHeader()
+		}
 		await this.fetchRelationships()
 	},
 
 	methods: {
+		/**
+		 * Report the card's title-row "Add" button, which opens the add dialog.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/client-side-cards-title-add/spec.md#requirement-the-side-cards-add-sits-in-the-card-title-row
+		 */
+		reportHeader() {
+			this.$emit('header', {
+				actions: [{
+					label: this.t('pipelinq', 'Add'),
+					ariaLabel: this.t('pipelinq', 'Add relationship'),
+					icon: 'Plus',
+					variant: 'secondary',
+					run: () => {
+						this.showAddDialog = true
+					},
+				}],
+			})
+		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
 		 */
@@ -735,6 +806,42 @@ export default {
 </script>
 
 <style scoped>
+.contact-relationships__compact {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	font-size: 14px;
+}
+
+.contact-relationships__compact-row {
+	display: grid;
+	grid-template-columns: 110px minmax(0, 1fr);
+	gap: 12px;
+}
+
+/* Nextcloud's global dt rule (130px, right-aligned, padded) would overlap the value. */
+.contact-relationships__compact-row dt {
+	width: auto;
+	padding: 0;
+	white-space: normal;
+	text-align: start;
+	color: var(--color-text-maxcontrast);
+}
+
+.contact-relationships__compact-row dd {
+	margin: 0;
+	padding: 0;
+}
+
+.contact-relationships__add--pill {
+	border-radius: var(--border-radius-pill, 17px) !important;
+	background: var(--color-primary-element-light) !important;
+	color: var(--color-primary-element-light-text) !important;
+	font-weight: 600;
+}
+
 .contact-relationships__empty {
 	color: var(--color-text-maxcontrast);
 	padding: 12px 0;

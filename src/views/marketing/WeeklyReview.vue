@@ -17,16 +17,25 @@
 -->
 <template>
 	<div class="weekly-review">
-		<header class="weekly-review__header">
-			<h2>{{ t('pipelinq', 'Weekly review') }}</h2>
-			<NcButton
-				variant="secondary"
-				data-testid="weekly-review-refresh"
-				:disabled="loading"
-				@click="regenerate">
-				{{ t('pipelinq', 'Compose again') }}
-			</NcButton>
-		</header>
+		<CnPageHeader
+			:title="t('pipelinq', 'Weekly review')"
+			:description="subtitle">
+			<template #extra>
+				<div class="weekly-review__header-actions">
+					<NcButton
+						variant="secondary"
+						data-testid="weekly-review-refresh"
+						:disabled="loading"
+						@click="regenerate">
+						<template #icon>
+							<Refresh :size="18" />
+						</template>
+						{{ t('pipelinq', 'Compose again') }}
+					</NcButton>
+					<CnBuildiqEditButton />
+				</div>
+			</template>
+		</CnPageHeader>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
 
@@ -45,48 +54,33 @@
 			</template>
 		</NcEmptyContent>
 
-		<section v-else data-testid="weekly-review-body">
-			<p class="weekly-review__week">
-				{{ t('pipelinq', 'Week of {week}', { week: review.weekStarting }) }}
-			</p>
+		<div v-else class="weekly-review__body" data-testid="weekly-review-body">
+			<section class="weekly-review__card">
+				<h3 class="weekly-review__week">
+					{{ t('pipelinq', 'Week of {week}', { week: weekLabel }) }}
+				</h3>
+				<p class="weekly-review__summary">{{ review.summary }}</p>
+				<p
+					v-if="agentAuthored"
+					class="weekly-review__agent"
+					data-testid="weekly-review-agent-mark">
+					{{
+						generatedLabel
+							? t('pipelinq', 'An agent wrote this summary: {agent}, on {when}', {
+								agent: review.agentAuthoredBy,
+								when: generatedLabel,
+							})
+							: t('pipelinq', 'An agent wrote this summary: {agent}', {
+								agent: review.agentAuthoredBy,
+							})
+					}}
+				</p>
+			</section>
 
-			<p
-				v-if="agentAuthored"
-				class="weekly-review__agent"
-				data-testid="weekly-review-agent-mark">
-				{{
-					t('pipelinq', 'An agent wrote this summary: {agent}', {
-						agent: review.agentAuthoredBy,
-					})
-				}}
-			</p>
-
-			<p class="weekly-review__summary">{{ review.summary }}</p>
-
-			<h3>{{ t('pipelinq', 'What moved') }}</h3>
-			<ul data-testid="weekly-review-highlights">
-				<li v-for="(line, index) in review.highlights" :key="`h${index}`">
-					{{ line }}
-				</li>
-			</ul>
-
-			<h3>{{ t('pipelinq', 'What to try') }}</h3>
-			<ul data-testid="weekly-review-suggestions">
-				<li v-for="(line, index) in review.suggestions" :key="`s${index}`">
-					{{ line }}
-				</li>
-			</ul>
-
-			<h3>{{ t('pipelinq', 'Topic ideas') }}</h3>
-			<ul data-testid="weekly-review-ideas">
-				<li v-for="(line, index) in review.topicIdeas" :key="`i${index}`">
-					{{ line }}
-				</li>
-			</ul>
-
-			<p
+			<NcNoteCard
 				v-if="degraded.length > 0"
-				class="weekly-review__degraded"
+				class="weekly-review__notice"
+				type="warning"
 				data-testid="weekly-review-degraded">
 				{{
 					t(
@@ -95,17 +89,72 @@
 						{ sources: degraded.join(', ') },
 					)
 				}}
-			</p>
-		</section>
+			</NcNoteCard>
+
+			<div class="weekly-review__pair">
+				<section class="weekly-review__card">
+					<h3>{{ t('pipelinq', 'What moved') }}</h3>
+					<ul class="weekly-review__lines" data-testid="weekly-review-highlights">
+						<li
+							v-for="(line, index) in highlights"
+							:key="`h${index}`"
+							class="weekly-review__highlight">
+							<ArrowUp
+								v-if="line.direction === 'up'"
+								class="weekly-review__direction weekly-review__direction--up"
+								:size="16"
+								:title="t('pipelinq', 'Higher than the week before')" />
+							<ArrowDown
+								v-else-if="line.direction === 'down'"
+								class="weekly-review__direction weekly-review__direction--down"
+								:size="16"
+								:title="t('pipelinq', 'Lower than the week before')" />
+							<span>{{ line.text }}</span>
+						</li>
+						<li v-if="highlights.length === 0" class="weekly-review__none">
+							{{ t('pipelinq', 'Nothing moved that the sources can show.') }}
+						</li>
+					</ul>
+				</section>
+				<section class="weekly-review__card">
+					<h3>{{ t('pipelinq', 'What to try') }}</h3>
+					<ul class="weekly-review__lines" data-testid="weekly-review-suggestions">
+						<li v-for="(line, index) in review.suggestions" :key="`s${index}`">
+							{{ line }}
+						</li>
+						<li v-if="!review.suggestions || review.suggestions.length === 0" class="weekly-review__none">
+							{{ t('pipelinq', 'No suggestions this week.') }}
+						</li>
+					</ul>
+				</section>
+			</div>
+
+			<section class="weekly-review__card">
+				<h3>{{ t('pipelinq', 'Ideas for topics') }}</h3>
+				<ul class="weekly-review__ideas" data-testid="weekly-review-ideas">
+					<li v-for="(line, index) in review.topicIdeas" :key="`i${index}`">
+						<CnStatusBadge :label="line" variant="info" size="small" />
+					</li>
+				</ul>
+				<p v-if="!review.topicIdeas || review.topicIdeas.length === 0" class="weekly-review__none">
+					{{ t('pipelinq', 'No topic ideas this week.') }}
+				</p>
+			</section>
+		</div>
 
 		<p v-if="error" class="weekly-review__error" role="alert">{{ error }}</p>
 	</div>
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import { CnBuildiqEditButton, CnPageHeader, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { getCanonicalLocale } from '@nextcloud/l10n'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import ArrowDown from 'vue-material-design-icons/ArrowDown.vue'
+import ArrowUp from 'vue-material-design-icons/ArrowUp.vue'
 import CalendarWeek from 'vue-material-design-icons/CalendarWeek.vue'
-import { degradedSources, isAgentAuthored } from '../../services/journeyLabels.js'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import { degradedSources, highlightLines, isAgentAuthored } from '../../services/journeyLabels.js'
 import {
 	fetchWeeklyReview,
 	generateWeeklyReview,
@@ -114,10 +163,17 @@ import {
 export default {
 	name: 'WeeklyReviewView',
 	components: {
+		ArrowDown,
+		ArrowUp,
 		CalendarWeek,
+		CnBuildiqEditButton,
+		CnPageHeader,
+		CnStatusBadge,
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
+		NcNoteCard,
+		Refresh,
 	},
 
 	data() {
@@ -130,6 +186,41 @@ export default {
 
 	computed: {
 		/**
+		 * The line under the title: today's date and what the review covers.
+		 *
+		 * @return {string}
+		 * @spec exclude presentational subtitle of the weekly review
+		 */
+		subtitle() {
+			const today = new Intl.DateTimeFormat(getCanonicalLocale() || undefined, {
+				weekday: 'long',
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric',
+			}).format(new Date())
+			const lead = today.charAt(0).toUpperCase() + today.slice(1)
+			return `${lead} · ${this.t('pipelinq', 'newsletters, posts and search traffic of last week')}`
+		},
+
+		/**
+		 * The first day of the reviewed week as day and month ("28 september").
+		 *
+		 * @return {string}
+		 * @spec exclude presentational week label of the weekly review
+		 */
+		weekLabel() {
+			const raw = this.review?.weekStarting
+			const date = raw ? new Date(raw) : null
+			if (date === null || Number.isNaN(date.getTime())) {
+				return raw || ''
+			}
+			return new Intl.DateTimeFormat(getCanonicalLocale() || undefined, {
+				day: 'numeric',
+				month: 'long',
+			}).format(date)
+		},
+
+		/**
 		 * @return {boolean} Whether an agent wrote the summary (ADR-088).
 		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-narrative-mark-has-storage-and-a-renderer-and-no-writer-yet
 		 */
@@ -138,11 +229,41 @@ export default {
 		},
 
 		/**
+		 * When the review was written, as the agent line names it
+		 * ("maandag 5 oktober om 07:00"); '' without a valid generatedAt.
+		 *
+		 * @return {string} The moment in words.
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+		 */
+		generatedLabel() {
+			const date = this.review?.generatedAt ? new Date(this.review.generatedAt) : null
+			if (date === null || Number.isNaN(date.getTime())) {
+				return ''
+			}
+			return new Intl.DateTimeFormat(getCanonicalLocale() || undefined, {
+				weekday: 'long',
+				day: 'numeric',
+				month: 'long',
+				hour: '2-digit',
+				minute: '2-digit',
+				hourCycle: 'h23',
+			}).format(date)
+		},
+
+		/**
 		 * @return {Array<string>} The sources this instance could not read.
 		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 		 */
 		degraded() {
 			return degradedSources(this.review)
+		},
+
+		/**
+		 * @return {Array<{text: string, direction: string}>} The highlight lines with their direction.
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+		 */
+		highlights() {
+			return highlightLines(this.review)
 		},
 	},
 
@@ -193,29 +314,108 @@ export default {
 .weekly-review {
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
-	padding: 1rem;
-	max-width: 46rem;
+	gap: 20px;
+	/* The title at 96, as the Dq page headers (28px under the content top). */
+	padding: 28px 28px 24px;
 }
 
-.weekly-review__header {
+.weekly-review__header-actions {
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.5rem;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 10px;
 }
 
-.weekly-review__week,
-.weekly-review__agent,
-.weekly-review__degraded {
+.weekly-review__none {
 	color: var(--color-text-maxcontrast);
 }
 
+.weekly-review__body {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.weekly-review__card {
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	padding: 20px 22px;
+}
+
+.weekly-review__card h3 {
+	margin: 0 0 12px;
+	font-size: 1.1rem;
+	font-weight: 700;
+	line-height: normal;
+}
+
+.weekly-review__notice.notecard {
+	margin: 0;
+	border-inline-start: 0;
+	border-radius: 8px;
+	background: var(--cn-board-notice-bg, var(--color-warning-light, #fff4e5));
+	color: var(--cn-board-notice-ink, var(--color-warning-text));
+}
+
+.weekly-review__pair {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	gap: 20px;
+	align-items: start;
+}
+
 .weekly-review__summary {
-	margin-block: 0.5rem;
+	font-size: 1.15rem;
+	line-height: 1.6;
+	margin: 0 0 12px;
+}
+
+.weekly-review__agent {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.85rem;
+	margin: 0;
+}
+
+.weekly-review__lines {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.weekly-review__lines li {
+	border-top: 1px solid var(--color-border);
+	padding: 10px 0;
+}
+
+.weekly-review__ideas {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
 }
 
 .weekly-review__error {
+	color: var(--color-error-text, var(--color-error));
+}
+
+.weekly-review__highlight {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.weekly-review__direction {
+	flex: none;
+}
+
+.weekly-review__direction--up {
+	color: var(--color-success-text, var(--color-success));
+}
+
+.weekly-review__direction--down {
 	color: var(--color-error-text, var(--color-error));
 }
 </style>

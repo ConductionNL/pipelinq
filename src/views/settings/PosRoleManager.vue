@@ -13,32 +13,45 @@
   - instead of routing to a detail page and the form opens in a dialog.
   -->
 <template>
-	<NcSettingsSection
-		:name="t('pipelinq', 'POS roles')"
+	<CnSettingsSection
+		:name="t('pipelinq', 'Till roles')"
 		:description="
 			t(
 				'pipelinq',
-				'Permission sets a cashier can hold at the register — voiding, refunds, opening the cash drawer.',
+				'Rights a till employee can have: cancelling, refunding, opening the cash drawer.',
 			)
 		">
+		<!-- Adding one is the section's title-row button, as the board draws it. -->
+		<template #actions>
+			<NcButton class="cn-button--tonal" variant="secondary" @click="openNew">
+				<template #icon>
+					<Plus :size="16" />
+				</template>
+				{{ t('pipelinq', 'New role') }}
+			</NcButton>
+		</template>
 		<PosRoleList :key="reloadKey" @edit="openRole" @create="openNew" />
 
 		<PosRoleFormDialog
 			v-if="dialogOpen"
 			:roleId="editingId"
 			@done="closeDialog" />
-	</NcSettingsSection>
+	</CnSettingsSection>
 </template>
 
 <script>
-import { NcSettingsSection } from '@nextcloud/vue'
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import PosRoleFormDialog from '../../dialogs/PosRoleFormDialog.vue'
 import PosRoleList from '../pos/PosRoleList.vue'
 
 export default {
 	name: 'PosRoleManager',
 	components: {
-		NcSettingsSection,
+		CnSettingsSection,
+		NcButton,
+		Plus,
 		PosRoleList,
 		PosRoleFormDialog,
 	},

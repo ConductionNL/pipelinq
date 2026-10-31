@@ -4,7 +4,7 @@
 // Thin frontend API client for the POS payment provider adapter.
 // All endpoints are documented in lib/Controller/PosPaymentController.php.
 //
-// @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+// @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
@@ -19,6 +19,18 @@ const base = (path) => generateUrl('/apps/pipelinq' + path)
 export async function listProviders() {
 	const { data } = await axios.get(base('/api/payment-providers'))
 	return data && data.providers ? data.providers : []
+}
+
+/**
+ * The payment methods a cashier can choose: one entry per method of every
+ * active provider. Readable by any signed-in user.
+ *
+ * @return {Promise<Array<{provider: string, providerLabel: string, type: string, method: string}>>} The methods.
+ * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+ */
+export async function listPaymentMethods() {
+	const { data } = await axios.get(base('/api/pos-payments/methods'))
+	return data && Array.isArray(data.methods) ? data.methods : []
 }
 
 /**
@@ -110,6 +122,7 @@ export async function refundPayment(transactionId, reason) {
 
 export default {
 	listProviders,
+	listPaymentMethods,
 	getProvider,
 	updateProvider,
 	testConnection,

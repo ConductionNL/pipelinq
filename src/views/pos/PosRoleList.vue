@@ -7,43 +7,51 @@
   - @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.1
   -->
 <template>
-	<div>
-		<CnIndexPage
-			:title="t('pipelinq', 'POS roles')"
-			:description="
-				t(
-					'pipelinq',
-					'Permission matrix for cashiers, supervisors and managers',
-				)
-			"
-			:schema="schema"
-			:objects="objects"
-			:pagination="pagination"
-			:loading="loading"
-			:refreshing="refreshing"
-			:sortKey="sortKey"
-			:sortOrder="sortOrder"
-			:selectable="true"
-			:includeColumns="visibleColumns"
-			:emptyTitle="t('pipelinq', 'No POS roles defined yet')"
-			:emptyActionLabel="t('pipelinq', 'New role')"
-			@add="createNew"
-			@emptyAction="createNew"
-			@refresh="onRefresh"
-			@sort="onSort"
-			@view="openRole"
-			@pageChanged="onPageChange" />
+	<div class="pos-role-list">
+		<!-- A table of the rights, as the board draws it (one row per role); the
+		     host section (PosRoleManager) adds a role from its title row. -->
+		<NcLoadingIcon v-if="loading && !objects.length" :size="32" />
+		<table v-else-if="objects.length" class="pos-role-list__table">
+			<thead>
+				<tr>
+					<th scope="col">{{ t('pipelinq', 'Role') }}</th>
+					<th scope="col">{{ t('pipelinq', 'May cancel') }}</th>
+					<th scope="col">{{ t('pipelinq', 'May refund') }}</th>
+					<th scope="col">{{ t('pipelinq', 'May open the drawer') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Maximum discount') }}</th>
+					<th scope="col"><span class="hidden-visually">{{ t('pipelinq', 'Actions') }}</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="role in objects" :key="role.id" data-testid="pos-role">
+					<td>{{ role.name }}</td>
+					<td>{{ yesNo(role.canVoid) }}</td>
+					<td>{{ yesNo(role.canRefund) }}</td>
+					<td>{{ yesNo(role.canNoSale) }}</td>
+					<td>{{ (Number(role.maxDiscountPercent) || 0) + '%' }}</td>
+					<td>
+						<NcButton @click="openRole(role)">
+							{{ t('pipelinq', 'Edit') }}
+						</NcButton>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<p v-else class="pos-role-list__empty">
+			{{ t('pipelinq', 'No POS roles defined yet') }}
+		</p>
 	</div>
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { useListView } from '@conduction/nextcloud-vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { inject } from 'vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'PosRoleList',
-	components: { CnIndexPage },
+	components: { NcButton, NcLoadingIcon },
 	emits: ['create', 'edit'],
 
 	setup() {
@@ -52,38 +60,16 @@ export default {
 		return useListView('posRole', { sidebarState, objectStore })
 	},
 
-	data() {
-		return {
-			refreshing: false,
-		}
-	},
-
-	computed: {
-		visibleColumns() {
-			return [
-				'name',
-				'canVoid',
-				'maxDiscountPercent',
-				'canRefund',
-				'canNoSale',
-			]
-		},
-	},
-
 	methods: {
 		/**
-		 * Refresh handler for the Actions-menu Refresh item. Drives the
-		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 * A right as the table reads it.
 		 *
-		 * @spec exclude presentational refresh-button spinner wiring — no business logic
+		 * @param {boolean} value Whether the role has the right.
+		 * @return {string} "Yes" or "No".
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.1
 		 */
-		async onRefresh() {
-			this.refreshing = true
-			try {
-				await this.refresh()
-			} finally {
-				this.refreshing = false
-			}
+		yesNo(value) {
+			return value === true ? t('pipelinq', 'Yes') : t('pipelinq', 'No')
 		},
 
 		/**
@@ -112,3 +98,16 @@ export default {
 	},
 }
 </script>
+
+<style scoped>
+/* Cells take the board look's settings-table rhythm; the table only spans
+   the card. */
+.pos-role-list__table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.pos-role-list__empty {
+	color: var(--color-text-maxcontrast);
+}
+</style>

@@ -19,9 +19,9 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-003
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-003
  */
 
 declare(strict_types=1);
@@ -54,7 +54,7 @@ use Psr\Log\LoggerInterface;
  *  Nextcloud controller collaborators (request, session, l10n, logger) plus
  *  the single service it delegates to.
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
  */
 class PosCustomerController extends Controller {
 	/**
@@ -85,7 +85,7 @@ class PosCustomerController extends Controller {
 	 *
 	 * @return JSONResponse The list of decorated customers.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
 	 */
 	#[NoAdminRequired]
 	public function search(): JSONResponse {
@@ -115,8 +115,8 @@ class PosCustomerController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-004
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-004
 	 */
 	#[NoAdminRequired]
 	public function attach(string $id): JSONResponse {
@@ -154,7 +154,7 @@ class PosCustomerController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
 	 */
 	#[NoAdminRequired]
 	public function detach(string $id): JSONResponse {
@@ -180,7 +180,7 @@ class PosCustomerController extends Controller {
 	 *
 	 * @return JSONResponse The history rows.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-003
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-003
 	 */
 	#[NoAdminRequired]
 	public function history(string $id): JSONResponse {

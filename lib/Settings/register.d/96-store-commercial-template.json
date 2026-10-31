@@ -1,0 +1,96 @@
+{
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "commercial-template"
+        ]
+      }
+    },
+    "schemas": {
+      "commercial-template": {
+        "slug": "commercial-template",
+        "title": "Store item",
+        "version": "1.0.0",
+        "description": "One installable item of a pipelinq store: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector, with the configuration objects installing it writes. Read by the store plane (ADR-080), here or on a remote registry.",
+        "required": [
+          "slug",
+          "title",
+          "kind",
+          "version"
+        ],
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug",
+            "description": "Stable identifier; install and the installed ledger key on it.",
+            "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "enum": [
+              "pipeline",
+              "queue-routing",
+              "catalogue",
+              "pos-setup",
+              "loyalty-programme",
+              "connector"
+            ],
+            "facetable": true,
+            "x-enum-labels": {
+              "pipeline": "Pipeline template",
+              "queue-routing": "Queue routing",
+              "catalogue": "Catalogue",
+              "pos-setup": "POS setup",
+              "loyalty-programme": "Loyalty programme",
+              "connector": "Connector"
+            }
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "The item's current version; a newer one than the installed version is an update."
+          },
+          "publisher": {
+            "type": "string",
+            "title": "Publisher"
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon",
+            "description": "A registered icon name for the card."
+          },
+          "components": {
+            "type": "array",
+            "title": "Components",
+            "description": "The configuration objects installing the item writes: each a schema slug and an object.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

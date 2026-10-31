@@ -48,6 +48,11 @@ class GenericStoreService {
 	public const OUTCOME_INVALID = 'store_invalid_response';
 
 	/**
+	 * Outcome: the descriptor or payload cannot be published.
+	 */
+	public const OUTCOME_NOT_PUBLISHABLE = 'not_publishable';
+
+	/**
 	 * Whether a remote registry is configured for this store.
 	 *
 	 * @param StoreDescriptor $descriptor The calling app's store parameters.
@@ -82,4 +87,16 @@ class GenericStoreService {
 	public function resolve(StoreDescriptor $descriptor, string $slug): ?array {
 		return null;
 	}//end resolve()
+
+	/**
+	 * Publish one object of the descriptor's schema to the configured registry.
+	 *
+	 * @param StoreDescriptor      $descriptor The calling app's store parameters.
+	 * @param array<string, mixed> $payload    The object to publish; carries `slug`.
+	 *
+	 * @return array{outcome: string, slug: string}
+	 */
+	public function publish(StoreDescriptor $descriptor, array $payload): array {
+		return ['outcome' => self::OUTCOME_NOT_CONFIGURED, 'slug' => ''];
+	}//end publish()
 }//end class

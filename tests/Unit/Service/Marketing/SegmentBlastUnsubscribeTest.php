@@ -114,6 +114,7 @@ class SegmentBlastUnsubscribeTest extends TestCase {
 			FakeSlugResolver::connectorRegister(),
 			$logger,
 			new PhysicalAddressRenderer(),
+			new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($container, $appConfig, new \Psr\Log\NullLogger()),
 		);
 		$blast = new BlastService($container, $appConfig, $segments, $mailTransport, $logger);
 

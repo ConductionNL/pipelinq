@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
  * Tests for SmsAdapter — priority failover, provider hint, consent
  * gate, inbound webhook signature verification.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class SmsAdapterTest extends TestCase {
 	private ContainerInterface $container;

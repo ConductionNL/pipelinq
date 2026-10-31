@@ -17,8 +17,8 @@
   @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 -->
 <template>
-	<div class="competitors">
-		<header class="competitors__header">
+	<div class="competitors" :class="{ 'competitors--embedded': embedded }">
+		<header v-if="!embedded" class="competitors__header">
 			<h2>{{ t('pipelinq', 'Competitors') }}</h2>
 		</header>
 
@@ -29,7 +29,7 @@
 				v-if="!configured"
 				type="warning"
 				data-testid="competitors-unconfigured">
-				{{ reason }}
+				{{ reason ? t('pipelinq', reason) : '' }}
 				{{
 					t(
 						'pipelinq',
@@ -58,7 +58,7 @@
 				v-else
 				class="competitors__section"
 				data-testid="competitors-watches">
-				<h3>{{ t('pipelinq', 'Watches') }}</h3>
+				<h3 v-if="!embedded">{{ t('pipelinq', 'Watches') }}</h3>
 				<div class="competitors__scroll">
 					<table class="competitors__table">
 						<thead>
@@ -78,20 +78,24 @@
 								<td>{{ competitorName(watch) }}</td>
 								<td>
 									<span class="competitors__kind">{{
-										watch.kind
+										kindLabel(watch.kind)
 									}}</span>
-									<span class="competitors__target">{{
+									<span v-if="!embedded" class="competitors__target">{{
 										watch.target
 									}}</span>
 								</td>
-								<td>{{ watch.schedule }}</td>
+								<td>{{ scheduleLabel(watch.schedule) }}</td>
 								<td>
-									{{ watch.lastRunAt || t('pipelinq', 'Never') }}
+									{{
+										watch.lastRunAt
+											? formatWhen(watch.lastRunAt)
+											: t('pipelinq', 'Never')
+									}}
 								</td>
 								<td>
-									<span :class="outcomeClass(watch)">
-										{{ outcomeLabel(watch) }}
-									</span>
+									<CnStatusBadge
+										:variant="outcomeVariant(watch)"
+										:label="outcomeLabel(watch)" />
 									<span
 										v-if="watch.lastReason"
 										class="competitors__reason">
@@ -100,7 +104,7 @@
 								</td>
 								<td>
 									<NcButton
-										variant="tertiary"
+										variant="secondary"
 										:disabled="running === idOf(watch)"
 										@click="run(watch)">
 										{{ t('pipelinq', 'Run now') }}
@@ -112,7 +116,18 @@
 				</div>
 			</section>
 
-			<section class="competitors__section" data-testid="competitors-events">
+			<p
+				v-if="embedded"
+				class="competitors__changed"
+				data-testid="competitors-changed">
+				<span class="competitors__changed-label">{{ t('pipelinq', 'What changed') }}</span>
+				<span>{{ latestChange }}</span>
+			</p>
+
+			<section
+				v-else
+				class="competitors__section"
+				data-testid="competitors-events">
 				<h3>{{ t('pipelinq', 'What changed') }}</h3>
 				<p v-if="!events.length" class="competitors__none">
 					{{
@@ -138,8 +153,8 @@
 						</div>
 						<p class="competitors__event-meta">
 							<span>{{ competitorNameById(event.competitorId) }}</span>
-							<span>{{ event.kind }}</span>
-							<span>{{ event.seenAt }}</span>
+							<span>{{ kindLabel(event.kind) }}</span>
+							<span>{{ formatWhen(event.seenAt) }}</span>
 						</p>
 						<p
 							v-if="event.diffSummary"
@@ -156,19 +171,35 @@
 </template>
 
 <script>
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import AccountGroupOutline from 'vue-material-design-icons/AccountGroupOutline.vue'
+import { formatDate } from '../../services/localeUtils.js'
+import {
+	enumLabel,
+	WATCH_KIND_LABELS,
+	WATCH_SCHEDULE_LABELS,
+} from '../../utils/enumLabels.js'
 
 export default {
 	name: 'CompetitorWatches',
 	components: {
 		AccountGroupOutline,
+		CnStatusBadge,
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
+	},
+
+	props: {
+		/** Drawn as a section of the search insight page: no own header (board PqZoekinzicht). */
+		embedded: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	data() {
@@ -182,6 +213,31 @@ export default {
 			events: [],
 			running: '',
 		}
+	},
+
+	computed: {
+		/**
+		 * The newest event in one sentence, as the search insight page sums
+		 * up what changed.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/marketing/spec.md
+		 */
+		latestChange() {
+			const event = this.events[0]
+			if (!event) {
+				return this.t('pipelinq', 'Nothing has been seen yet.')
+			}
+			const params = {
+				competitor: this.competitorNameById(event.competitorId),
+				title: event.title || event.url,
+				score: event.relevanceScore,
+			}
+			if (event.relevanceScore === undefined || event.relevanceScore === null || event.relevanceScore === '') {
+				return this.t('pipelinq', '{competitor} published "{title}"', params)
+			}
+			return this.t('pipelinq', '{competitor} published "{title}", relevance {score}', params)
+		},
 	},
 
 	mounted() {
@@ -273,6 +329,46 @@ export default {
 		},
 
 		/**
+		 * @param {string} kind A stored watch kind.
+		 * @return {string} Its label, or the value as stored when unknown.
+		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 */
+		kindLabel(kind) {
+			return enumLabel(WATCH_KIND_LABELS, kind, (text) =>
+				this.t('pipelinq', text),
+			)
+		},
+
+		/**
+		 * @param {string} schedule A stored watch schedule.
+		 * @return {string} Its label, or the value as stored when unknown.
+		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 */
+		scheduleLabel(schedule) {
+			return enumLabel(WATCH_SCHEDULE_LABELS, schedule, (text) =>
+				this.t('pipelinq', text),
+			)
+		},
+
+		/**
+		 * @param {string} value An ISO timestamp.
+		 * @return {string} Its date and time in the reader's locale, or the value as stored when unreadable.
+		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 */
+		formatWhen(value) {
+			if (!value || Number.isNaN(new Date(value).getTime())) {
+				return value || ''
+			}
+			return formatDate(value, {
+				day: 'numeric',
+				month: 'short',
+				year: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+			})
+		},
+
+		/**
 		 * What the last run did, in words rather than a code.
 		 *
 		 * @param {object} watch A watch.
@@ -292,14 +388,14 @@ export default {
 
 		/**
 		 * @param {object} watch A watch.
-		 * @return {string} The class marking a failed outcome.
+		 * @return {string} The status pill variant: success when read, error when it failed.
 		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
-		outcomeClass(watch) {
-			if (!watch?.lastOutcome || watch.lastOutcome === 'ok') {
-				return 'competitors__outcome'
+		outcomeVariant(watch) {
+			if (!watch?.lastOutcome) {
+				return 'default'
 			}
-			return 'competitors__outcome competitors__outcome--failed'
+			return watch.lastOutcome === 'ok' ? 'success' : 'error'
 		},
 
 		/**
@@ -350,6 +446,7 @@ export default {
 	th,
 	td {
 		padding: 8px 12px;
+		white-space: normal;
 		border-bottom: 1px solid var(--color-border);
 		text-align: start;
 		vertical-align: top;
@@ -374,9 +471,6 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.competitors__outcome--failed {
-	color: var(--color-error);
-}
 
 .competitors__none {
 	color: var(--color-text-maxcontrast);
@@ -425,5 +519,55 @@ export default {
 .competitors__error {
 	color: var(--color-error);
 	margin-top: 12px;
+}
+
+.competitors__changed {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	margin: 14px 0 0;
+	font-size: 14px;
+}
+
+.competitors__changed-label {
+	color: var(--color-text-maxcontrast);
+}
+
+/* On the search insight page the watches are one bordered card table, as
+   board PqZoekinzicht draws it. */
+.competitors--embedded {
+	padding: 0;
+
+	.competitors__section {
+		margin-bottom: 0;
+	}
+
+	.competitors__scroll {
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+	}
+
+	.competitors__table {
+		font-size: 14px;
+		line-height: 1.2;
+
+		th,
+		td {
+			padding: 12px 18px;
+			vertical-align: middle;
+		}
+
+		th {
+			padding-block: 10px;
+			border-bottom: 0;
+			background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
+			font-weight: 600;
+			color: var(--color-text-maxcontrast);
+		}
+
+		tbody tr:last-child td {
+			border-bottom: 0;
+		}
+	}
 }
 </style>

@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Cti\EscalationQueues;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -36,7 +37,7 @@ use Psr\Log\LoggerInterface;
  * Reads the agent's selected outcome and creates the necessary follow-up
  * artefacts:
  *   - callback  → task of type `terugbelverzoek` (callback-management integration)
- *   - escalated → task of type `opvolgtaak` in the configured queue
+ *   - escalated → task of type `opvolgtaak` for the chosen escalation queue's group
  *   - resolved / wrong-number / no-answer / abandoned → contactmoment closed only
  *
  * The contactmoment is a `ticket` with `ticketType: contactmoment`
@@ -69,12 +70,14 @@ class CtiDispositionService {
 	 * @param ContainerInterface $container Container for OR lookups.
 	 * @param IAppConfig $appConfig App config.
 	 * @param TicketService $ticketService Unified ticket resolver.
+	 * @param EscalationQueues $queues The escalation queues.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private TicketService $ticketService,
+		private EscalationQueues $queues,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -86,21 +89,29 @@ class CtiDispositionService {
 	 * @param string $subject Disposition subject (free text).
 	 * @param string $outcome One of self::OUTCOMES.
 	 * @param string $notes Free-text notes from the agent.
+	 * @param string $queue The escalation queue id the agent chose; '' for the first queue.
 	 *
 	 * @return array{outcome: string, interactionId: string, taskId: string|null}
 	 *
-	 * @throws \InvalidArgumentException When $outcome is not in self::OUTCOMES.
+	 * @throws \InvalidArgumentException When $outcome is not in self::OUTCOMES, or $queue is unknown.
 	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
 	 */
 	public function processDisposition(
 		string $interactionId,
 		string $subject,
 		string $outcome,
 		string $notes,
+		string $queue='',
 	): array {
 		if (in_array($outcome, self::OUTCOMES, true) === false) {
 			throw new InvalidArgumentException('Unknown disposition outcome: ' . $outcome);
+		}
+
+		$groupId = null;
+		if ($outcome === 'escalated') {
+			$groupId = $this->escalationGroup(queue: $queue);
 		}
 
 		$this->updateContactmoment(
@@ -124,11 +135,7 @@ class CtiDispositionService {
 				subject: $subject,
 				notes: $notes,
 				interactionId: $interactionId,
-				queueName: $this->appConfig->getValueString(
-					Application::APP_ID,
-					'cti_escalation_queue',
-					''
-				),
+				groupId: $groupId,
 			);
 		}
 
@@ -138,6 +145,50 @@ class CtiDispositionService {
 			'taskId' => $taskId,
 		];
 	}//end processDisposition()
+
+	/**
+	 * The escalation queues by id and label, for the wrap-up dialog.
+	 *
+	 * @return array<int, array{id: string, label: string}> The queues.
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+	 */
+	public function queueChoices(): array {
+		return array_map(
+			static fn (array $queue): array => ['id' => $queue['id'], 'label' => $queue['label']],
+			$this->queues->all()
+		);
+	}//end queueChoices()
+
+	/**
+	 * The group of the chosen escalation queue: the first queue when none was
+	 * chosen, null when no queue is configured.
+	 *
+	 * @param string $queue The chosen queue id, or ''.
+	 *
+	 * @return string|null The group id.
+	 *
+	 * @throws \InvalidArgumentException When the queue is unknown.
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+	 */
+	private function escalationGroup(string $queue): ?string {
+		if ($queue === '') {
+			$first = ($this->queues->all()[0] ?? null);
+			if ($first === null) {
+				return null;
+			}
+
+			return $first['groupId'];
+		}
+
+		$found = $this->queues->find(id: $queue);
+		if ($found === null) {
+			throw new InvalidArgumentException('Unknown escalation queue: ' . $queue);
+		}
+
+		return $found['groupId'];
+	}//end escalationGroup()
 
 	/**
 	 * Write the disposition back onto the contactmoment ticket.
@@ -182,7 +233,7 @@ class CtiDispositionService {
 	 * @param string $subject Task subject.
 	 * @param string $notes Task notes.
 	 * @param string $interactionId Linked contactmoment UUID.
-	 * @param string|null $queueName Optional queue (for escalation).
+	 * @param string|null $groupId The group the task is assigned to (escalation).
 	 *
 	 * @return string|null The created task UUID or null when creation failed.
 	 *
@@ -196,7 +247,7 @@ class CtiDispositionService {
 		string $subject,
 		string $notes,
 		string $interactionId,
-		?string $queueName = null,
+		?string $groupId = null,
 	): ?string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$taskSchema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
@@ -224,7 +275,7 @@ class CtiDispositionService {
 						'subject' => $subject,
 						'description' => $notes,
 						'status' => 'open',
-						'queueName' => $queueName,
+						'assigneeGroupId' => $groupId,
 						'interaction' => $interactionId,
 					],
 					static fn ($value): bool => ($value !== null && $value !== '')

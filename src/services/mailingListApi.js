@@ -97,3 +97,17 @@ export async function fetchMailingLists() {
 	const { data } = await axios.get(generateUrl('/apps/pipelinq/api/mailing-lists'))
 	return data.data || []
 }
+
+/**
+ * Send a mailing list's own confirmation link to an address, as the public
+ * sign-up form does; the person is pending until they open it.
+ *
+ * @param {string} listId The list.
+ * @param {string} email The address.
+ * @return {Promise<object>} The response body.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-a-list-s-sign-ups-are-managed-from-the-list
+ */
+export async function inviteToList(listId, email) {
+	const { data } = await axios.post(generateUrl('/apps/pipelinq/api/lists/{id}/subscribe', { id: listId }), { email })
+	return data
+}

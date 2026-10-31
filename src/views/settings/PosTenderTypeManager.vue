@@ -13,26 +13,39 @@
   - next to each other under names that say which is which.
   -->
 <template>
-	<NcSettingsSection
-		:name="t('pipelinq', 'POS tender types')"
+	<CnSettingsSection
+		:name="t('pipelinq', 'Payment methods at the till')"
 		:description="
 			t(
 				'pipelinq',
-				'How a customer can pay at the till — cash, pin, voucher — and the GL account each one posts to. Distinct from the payment providers above, which process the money.',
+				'How a customer can pay at the till, and the ledger account each payment method posts to.',
 			)
 		">
-		<PosTenderTypeList />
-	</NcSettingsSection>
+		<!-- Adding one is the section's title-row button, as the board draws it. -->
+		<template #actions>
+			<NcButton class="cn-button--tonal" variant="secondary" @click="$refs.list.createNew()">
+				<template #icon>
+					<Plus :size="16" />
+				</template>
+				{{ t('pipelinq', 'New tender type') }}
+			</NcButton>
+		</template>
+		<PosTenderTypeList ref="list" />
+	</CnSettingsSection>
 </template>
 
 <script>
-import { NcSettingsSection } from '@nextcloud/vue'
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import PosTenderTypeList from '../pos/PosTenderTypeList.vue'
 
 export default {
 	name: 'PosTenderTypeManager',
 	components: {
-		NcSettingsSection,
+		CnSettingsSection,
+		NcButton,
+		Plus,
 		PosTenderTypeList,
 	},
 }

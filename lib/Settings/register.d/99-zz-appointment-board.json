@@ -1,0 +1,57 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "The appointments list and page as the PqAfspraken and PqAfspraak boards draw them. A booking gains what the boards show and the schema lacked: a subject (what the appointment is about, the row title and the page name), a location (the desk, room or address) and a handler (the employee who sees the customer, a Nextcloud user, so the list can narrow to Mine). All three are optional, so every existing booking stays valid. The status and source values get labels, so the list reads Bevestigd and Telefonisch geboekt instead of the stored codes. Named 99-zz so it merges after 45-appointment-booking, which declares the schema."
+	},
+	"components": {
+		"schemas": {
+			"appointmentBooking": {
+				"slug": "appointmentBooking",
+				"configuration": {
+					"objectNameField": "subject"
+				},
+				"properties": {
+					"subject": {
+						"type": "string",
+						"title": "Subject",
+						"description": "What the appointment is about, in a few words.",
+						"maxLength": 255
+					},
+					"location": {
+						"type": "string",
+						"title": "Location",
+						"description": "Where the appointment takes place: a desk, a room or an address.",
+						"maxLength": 255
+					},
+					"assignee": {
+						"type": "string",
+						"format": "user",
+						"title": "Handler",
+						"description": "The employee who sees the customer."
+					},
+					"status": {
+						"x-enum-labels": {
+							"pending-deposit": "Awaiting deposit",
+							"confirmed": "Confirmed",
+							"completed": "Finished",
+							"no-show": "No-show",
+							"cancelled-by-customer": "Cancelled by the customer",
+							"cancelled-by-business": "Cancelled by us",
+							"rescheduled": "Rescheduled"
+						}
+					},
+					"source": {
+						"x-enum-labels": {
+							"portal": "Booked via the portal",
+							"admin": "Booked by an employee",
+							"phone": "Booked by phone",
+							"walk-in": "Walk-in",
+							"import": "Imported"
+						}
+					}
+				}
+			}
+		}
+	}
+}

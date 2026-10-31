@@ -109,6 +109,59 @@ class SemanticHandoffService {
 	}//end hasImplementer()
 
 	/**
+	 * Where the installed implementer of a semantic kind keeps its objects.
+	 *
+	 * The register and schema slugs are read from OpenRegister at run time, so
+	 * no other app's id or slug is written into pipelinq: whichever installed
+	 * app implements the kind answers. Null when nothing implements it, when
+	 * the schema sits in no register, or when either slug is empty, so a
+	 * caller shows nothing instead of pointing at a place that does not exist.
+	 *
+	 * @param string $kindUri Canonical kind URI (e.g. https://openregister.app/ns#Case).
+	 *
+	 * @return array{register: string, schema: string}|null The slugs, or null.
+	 *
+	 * @spec openspec/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
+	 */
+	public function implementerLocation(string $kindUri): ?array {
+		if ($kindUri === '') {
+			return null;
+		}
+
+		$resolver = $this->resolveService(fqcn: self::RESOLVER_CLASS, method: 'resolveSchemaByImplements');
+		if ($resolver === null || method_exists($resolver, 'findRegisterForSchema') === false) {
+			return null;
+		}
+
+		try {
+			$schema = $resolver->resolveSchemaByImplements($kindUri);
+			if (is_object($schema) === false) {
+				return null;
+			}
+
+			$register = $resolver->findRegisterForSchema($schema);
+			if (is_object($register) === false) {
+				return null;
+			}
+
+			$schemaSlug = (string)$schema->getSlug();
+			$registerSlug = (string)$register->getSlug();
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'SemanticHandoffService.implementerLocation: resolver threw',
+				['kind' => $kindUri, 'error' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		if ($schemaSlug === '' || $registerSlug === '') {
+			return null;
+		}
+
+		return ['register' => $registerSlug, 'schema' => $schemaSlug];
+	}//end implementerLocation()
+
+	/**
 	 * Execute a declared handoff via OpenRegister's engine.
 	 *
 	 * Kind-addressed: the target app is resolved by OR from the entry's

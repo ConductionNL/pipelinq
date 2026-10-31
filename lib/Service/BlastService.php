@@ -187,6 +187,10 @@ class BlastService {
 		$suppressed = ($audience['suppressed'] ?? []);
 		$compliantMembers = $audience['members'];
 
+		if ($isDraft === false) {
+			$this->recordSkips(blastId: $blastId, noConsent: count($missingConsent), suppressed: count($suppressed));
+		}
+
 		if ($compliantMembers === []) {
 			$this->logger->info(
 				'BlastService.sendBlast: no compliant recipients — keeping draft',
@@ -1623,6 +1627,35 @@ class BlastService {
 			return 0;
 		}
 	}//end countDeliveries()
+
+	/**
+	 * Store on the Blast how many contacts a real send left out: without
+	 * consent for the channel, and on the suppression list. The newsletters
+	 * list sums them as "Blocked by consent", so the refusal is visible after
+	 * the send and not only in its response.
+	 *
+	 * @param string $blastId Blast UUID or slug.
+	 * @param int $noConsent Contacts without consent.
+	 * @param int $suppressed Contacts on the suppression list.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/marketing-analytics/spec.md#requirement-overview-metrics-table
+	 */
+	private function recordSkips(string $blastId, int $noConsent, int $suppressed): void {
+		$blast = $this->loadBlast(blastId: $blastId);
+		if ($blast === null) {
+			return;
+		}
+
+		$blast['skippedNoConsent'] = $noConsent;
+		$blast['skippedSuppressed'] = $suppressed;
+		$this->saveObject(
+			payload: $blast,
+			schemaSlug: $this->getBlastSchemaSlug(),
+			id: $this->extractId(payload: $blast),
+		);
+	}//end recordSkips()
 
 	/**
 	 * Update only the `status` field on a Blast.

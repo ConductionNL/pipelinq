@@ -38,7 +38,11 @@ use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
 use OCA\Pipelinq\Service\LoyaltyReportingService;
 use OCA\Pipelinq\Service\PointsLedgerService;
+use OCA\Pipelinq\Service\ReportingService;
+use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Service\TierService;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -126,6 +130,7 @@ class LoyaltyReportingControllerTest extends TestCase {
 		array $accounts,
 		array $programme = [],
 		?AggregationRunner $runner = null,
+		array $tierRules = [],
 	): LoyaltyReportingService {
 		$accountService = $this->createMock(LoyaltyAccountService::class);
 		$accountService->method('listAccountsForProgramme')->willReturn($accounts);
@@ -141,6 +146,12 @@ class LoyaltyReportingControllerTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			objectService: $this->createMock(ObjectServiceInterface::class),
 			aggregationRunner: ($runner ?? $this->createMock(AggregationRunner::class)),
+			tierService: $this->createConfiguredMock(TierService::class, ['getTierRules' => $tierRules]),
+			reportingService: new ReportingService(
+				$this->appConfig(),
+				$this->createMock(LoggerInterface::class),
+				$this->createMock(TicketService::class)
+			),
 		);
 	}//end realReportingService()
 
@@ -342,6 +353,61 @@ class LoyaltyReportingControllerTest extends TestCase {
 	}//end testTierDistributionFallsBackToRealCounts()
 
 	/**
+	 * The tier report names each tier after its rule and lists every tier of
+	 * the programme in rule order, also a tier nobody holds yet.
+	 *
+	 * @return void
+	 */
+	public function testTierDistributionNamesTheTiersInRuleOrder(): void {
+		$runner = new LoyaltyGroupedCountRunnerFake(
+			[
+				['key' => 't-zilver', 'value' => 4],
+				['key' => 't-brons', 'value' => 10],
+			]
+		);
+		$service = $this->realReportingService(
+			accounts: [],
+			runner: $runner,
+			tierRules: [
+				['@self' => ['id' => 't-brons'], 'name' => 'Brons', 'sequence' => 1],
+				['@self' => ['id' => 't-zilver'], 'name' => 'Zilver', 'sequence' => 2],
+				['@self' => ['id' => 't-goud'], 'name' => 'Goud', 'sequence' => 3],
+			]
+		);
+
+		$response = $this->buildController($service)->tierDistribution(programmeId: 'prog-1');
+
+		$this->assertSame(
+			[
+				['tierId' => 't-brons', 'accountCount' => 10, 'name' => 'Brons'],
+				['tierId' => 't-zilver', 'accountCount' => 4, 'name' => 'Zilver'],
+				['tierId' => 't-goud', 'accountCount' => 0, 'name' => 'Goud'],
+			],
+			$response->getData()['tiers']
+		);
+	}//end testTierDistributionNamesTheTiersInRuleOrder()
+
+	/**
+	 * With `format=csv` the tier report downloads as a CSV file of tier and
+	 * account count.
+	 *
+	 * @return void
+	 */
+	public function testTierDistributionDownloadsAsCsv(): void {
+		$runner = new LoyaltyGroupedCountRunnerFake([['key' => 't-brons', 'value' => 3]]);
+		$service = $this->realReportingService(
+			accounts: [],
+			runner: $runner,
+			tierRules: [['@self' => ['id' => 't-brons'], 'name' => 'Brons', 'sequence' => 1]]
+		);
+
+		$response = $this->buildController($service)->tierDistribution(programmeId: 'prog-1', format: 'csv');
+
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertSame("\xEF\xBB\xBF\"tier\";\"accounts\"\n\"Brons\";\"3\"\n", $response->render());
+	}//end testTierDistributionDownloadsAsCsv()
+
+	/**
 	 * A programme with no accounts answers 200 with an empty `tiers` list.
 	 *
 	 * @return void
@@ -511,6 +577,60 @@ class LoyaltyReportingControllerTest extends TestCase {
 		$this->assertSame(0.0, $data['breakagePercent']);
 		$this->assertSame(0.0, $data['redemptionRate']);
 	}//end testKpisReturnsTheFullEnvelopeOverSeededAccounts()
+
+	/**
+	 * `days` reads the KPIs over the last that many days, ending today.
+	 *
+	 * @return void
+	 */
+	public function testKpisReadsTheLastDaysWindow(): void {
+		$service = $this->realReportingService(accounts: []);
+
+		$response = $this->buildController($service)->kpis(programmeId: 'prog-1', days: 90);
+
+		$today = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+		$this->assertSame(
+			['from' => $today->modify('-90 days')->format('Y-m-d'), 'to' => $today->format('Y-m-d')],
+			$response->getData()['period']
+		);
+	}//end testKpisReadsTheLastDaysWindow()
+
+	/**
+	 * An explicit `from` wins over `days`.
+	 *
+	 * @return void
+	 */
+	public function testKpisPrefersAnExplicitWindowOverDays(): void {
+		$service = $this->realReportingService(accounts: []);
+
+		$response = $this->buildController($service)->kpis(programmeId: 'prog-1', from: '2026-01-01', to: '2026-03-31', days: 30);
+
+		$this->assertSame(['from' => '2026-01-01', 'to' => '2026-03-31'], $response->getData()['period']);
+	}//end testKpisPrefersAnExplicitWindowOverDays()
+
+	/**
+	 * With `format=csv` the KPIs download as a CSV file of metric and value.
+	 *
+	 * @return void
+	 */
+	public function testKpisDownloadAsCsv(): void {
+		$service = $this->realReportingService(
+			accounts: [
+				['@self' => ['id' => 'acc-1'], 'programmeId' => 'prog-1', 'currentBalance' => 100, 'status' => 'active'],
+			],
+			programme: ['pointValue' => 0.05]
+		);
+
+		$response = $this->buildController($service)->kpis(programmeId: 'prog-1', format: 'csv');
+
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$csv = $response->render();
+		$this->assertStringStartsWith("\xEF\xBB\xBF\"metric\";\"value\"\n", $csv);
+		$this->assertStringContainsString("\"activeAccounts\";\"1\"\n", $csv);
+		$this->assertStringContainsString("\"outstandingPoints\";\"100\"\n", $csv);
+		$this->assertStringContainsString("\"estimatedLiability\";\"5\"\n", $csv);
+		$this->assertStringNotContainsString('tierDistribution', $csv);
+	}//end testKpisDownloadAsCsv()
 
 	/**
 	 * An anonymous caller is refused with 401 and no KPIs are computed.

@@ -1,0 +1,264 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "The Advanced page (board PqGeavanceerdHub): one page of link cards for everything that sets the app up and the overviews read now and then, grouped as the Advanced foldout in the navigation groups them. A `links` page (CnLinkCardsPage), so it is configuration only. The library leaves out a card whose route does not resolve."
+	},
+	"menu": [],
+	"pages": [
+		{
+			"id": "Advanced",
+			"route": "/advanced",
+			"type": "links",
+			"title": "Advanced",
+			"config": {
+				"description": "Everything to set up pipelinq, and the overviews you read now and then",
+				"categories": {
+					"reports": "Reports and automation",
+					"setup": "Set up the app",
+					"about": "About the app",
+					"admin": "Administrator"
+				},
+				"cards": [
+					{
+						"id": "Reports",
+						"label": "Reports",
+						"description": "Contact, channels, staff, forecast, loyalty and SLA on one page.",
+						"icon": "ChartBar",
+						"category": "reports",
+						"route": "Reports",
+						"status": "{runtime.menu.reports} reports"
+					},
+					{
+						"id": "Flows",
+						"label": "Flows",
+						"description": "Automation that runs on its own once it is set up.",
+						"icon": "Sitemap",
+						"category": "reports",
+						"route": "Flows",
+						"status": {
+							"text": "{on} active, {off} paused",
+							"tone": "success"
+						},
+						"statusValues": {
+							"on": {
+								"url": "/apps/openregister/api/flows",
+								"params": {
+									"app": "pipelinq"
+								},
+								"path": "results",
+								"where": {
+									"enabled": true
+								}
+							},
+							"off": {
+								"url": "/apps/openregister/api/flows",
+								"params": {
+									"app": "pipelinq"
+								},
+								"path": "results",
+								"where": {
+									"enabled": false
+								}
+							}
+						}
+					},
+					{
+						"id": "Pipelines",
+						"label": "Pipelines",
+						"description": "The stages a lead or request goes through.",
+						"icon": "ViewColumnOutline",
+						"category": "setup",
+						"route": "Pipelines",
+						"status": "{count} pipelines, {stages} stages",
+						"statusValues": {
+							"count": {
+								"register": "pipelinq",
+								"schema": "pipeline"
+							},
+							"stages": {
+								"url": "/apps/openregister/api/objects/pipelinq/pipeline",
+								"params": {
+									"_limit": 100
+								},
+								"path": "results",
+								"sumOf": "stages"
+							}
+						}
+					},
+					{
+						"id": "Services",
+						"label": "Services and resources",
+						"description": "What residents can book, and who or what it is booked on.",
+						"icon": "ViewGridOutline",
+						"category": "setup",
+						"route": "Services",
+						"status": "{services} services, {resources} resources",
+						"statusValues": {
+							"services": {
+								"register": "pipelinq",
+								"schema": "appointmentService"
+							},
+							"resources": {
+								"register": "pipelinq",
+								"schema": "appointmentResource"
+							}
+						}
+					},
+					{
+						"id": "Integrations",
+						"label": "Integrations",
+						"description": "Telephony, social networks, Berichtenbox and bulk mail, on the Nextcloud admin page.",
+						"icon": "PowerPlugOutline",
+						"category": "setup",
+						"route": "Integrations",
+						"query": {
+							"app": "pipelinq"
+						},
+						"permission": "admin",
+						"visibleIf": {
+							"appInstalled": "integriq"
+						},
+						"status": {
+							"text": "{count} connection has an error",
+							"plural": "{count} connections have an error",
+							"tone": "error",
+							"zero": "All connections work"
+						},
+						"statusValues": {
+							"count": {
+								"register": "integriq",
+								"schema": "app_connection",
+								"filter": {
+									"status": "error"
+								}
+							}
+						}
+					},
+					{
+						"id": "ExportJobs",
+						"label": "BI export",
+						"description": "Scheduled exports to a data warehouse or BI tool.",
+						"icon": "DatabaseExportOutline",
+						"category": "setup",
+						"route": "ExportJobs",
+						"status": {
+							"text": "Last night {count} job failed",
+							"plural": "Last night {count} jobs failed",
+							"tone": "warning",
+							"zero": "No failed jobs last night"
+						},
+						"statusValues": {
+							"count": {
+								"register": "pipelinq",
+								"schema": "exportRun",
+								"filter": {
+									"status": "failed",
+									"startedAt": {
+										"gte": "@today"
+									}
+								}
+							}
+						}
+					},
+					{
+						"id": "Modules",
+						"label": "Modules",
+						"description": "Sales, marketing, point of sale and more. An administrator switches them on for everyone on the admin page.",
+						"icon": "PackageVariant",
+						"category": "setup",
+						"route": "Modules",
+						"status": "{runtime.menu.modulesOnCount} of {runtime.menu.modulesCount} modules on"
+					},
+					{
+						"id": "Store",
+						"label": "Store",
+						"description": "Apps and extensions that work with pipelinq.",
+						"icon": "StoreOutline",
+						"category": "about",
+						"route": "Store",
+						"status": "See what you can add"
+					},
+					{
+						"id": "FeaturesRoadmap",
+						"label": "Features and roadmap",
+						"description": "What pipelinq does now and what is coming.",
+						"icon": "MapMarkerPath",
+						"category": "about",
+						"route": "FeaturesRoadmap",
+						"status": "See what is planned"
+					},
+					{
+						"id": "Documentation",
+						"label": "Documentation",
+						"description": "How pipelinq works, step by step, for employees and administrators.",
+						"icon": "BookOpenVariantOutline",
+						"category": "about",
+						"href": "https://pipelinq.conduction.nl/docs/intro",
+						"status": "Opens in a new tab"
+					},
+					{
+						"id": "AdminSettings",
+						"label": "Administration settings",
+						"description": "Menu structure, telephony, mail routes and payment providers, on the Nextcloud admin page.",
+						"icon": "ShieldAccountOutline",
+						"category": "admin",
+						"href": "/index.php/settings/admin/pipelinq",
+						"permission": "admin",
+						"status": "Opens in a new tab"
+					},
+					{
+						"id": "PersonalSettings",
+						"label": "Personal settings",
+						"description": "Your notifications per kind of event, your skills for routing and your default view.",
+						"icon": "AccountCogOutline",
+						"category": "admin",
+						"action": "user-settings",
+						"status": "Only for you"
+					}
+				],
+				"panel": {
+					"label": "For administrators",
+					"badge": {
+						"label": "Administrators only",
+						"icon": "ShieldAccountOutline",
+						"tone": "purple"
+					},
+					"text": "Pipelinq opens with the simple menu. Extended brings every item back. Both menus open the same pages, so links and bookmarks keep working. The choice applies to everyone and therefore lives on the Nextcloud admin page, not in the app.",
+					"link": {
+						"label": "Change the menu structure in the admin settings",
+						"href": "/index.php/settings/admin/pipelinq"
+					},
+					"title": "Menu structure",
+					"subtitle": "This is how it is set now. Only an administrator can change it, in the admin settings.",
+					"facts": [
+						{
+							"label": "Menu",
+							"value": "Simple",
+							"note": "Nine menu items for customer contact. Everything else is one step away, on the Modules page or in the settings.",
+							"visibleIf": {
+								"menu.profile": "simple"
+							}
+						},
+						{
+							"label": "Menu",
+							"value": "Extended",
+							"note": "Every page in the menu.",
+							"visibleIf": {
+								"menu.profile": "full"
+							}
+						},
+						{
+							"label": "Modules in the menu",
+							"value": "{runtime.menu.modulesOn}",
+							"note": "Off: {runtime.menu.modulesOff}. A module that is off stays reachable through the Modules page.",
+							"visibleIf": {
+								"menu.profile": "simple"
+							}
+						}
+					]
+				}
+			}
+		}
+	]
+}

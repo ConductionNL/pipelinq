@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * validation, session-window enforcement, inbound signature
  * verification, placeholder contact creation.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WhatsAppAdapterTest extends TestCase {
 	private ContainerInterface $container;
@@ -702,7 +702,7 @@ class WhatsAppAdapterTest extends TestCase {
 	 * again can repeat the same template with the same values.
 	 *
 	 * @return void
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	public function testAFailedTemplateSendStoresItsParameters(): void {
 		$this->objectService->saveObject([

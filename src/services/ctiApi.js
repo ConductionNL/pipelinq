@@ -22,6 +22,19 @@ export async function screenPop(fromNumber) {
 }
 
 /**
+ * Ask which inbound call is open on the signed-in agent's own line.
+ *
+ * @return {Promise<{enabled: boolean, delayMs: number, call: object|null}>}
+ *   `enabled` is false when no telephony platform is configured or the screen
+ *   pop is switched off; `call` is null when nobody is calling.
+ * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+ */
+export async function incomingCall() {
+	const { data } = await axios.get(base('/api/cti/incoming-call'))
+	return data
+}
+
+/**
  * Ask the PBX to place a call from the agent's extension to a number.
  *
  * @param {string} targetNumber The number to dial.
@@ -44,21 +57,38 @@ export async function clickToDial(targetNumber, extension) {
  * @param {string} disposition.subject Short subject line for the interaction.
  * @param {string} disposition.outcome Outcome code (resolved, transferred, …).
  * @param {string} disposition.notes Free-text notes.
+ * @param {string} [disposition.queue] The escalation queue id; sent only with an escalated call.
  * @return {Promise<object>} The saved disposition.
+ * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
  */
 export async function submitDisposition(
 	contactmomentId,
-	{ subject, outcome, notes },
+	{ subject, outcome, notes, queue = '' },
 ) {
+	const body = { subject, outcome, notes }
+	if (outcome === 'escalated' && queue) {
+		body.queue = queue
+	}
 	const { data } = await axios.post(
 		base(
 			'/api/cti/contactmoment/'
 				+ encodeURIComponent(contactmomentId)
 				+ '/disposition',
 		),
-		{ subject, outcome, notes },
+		body,
 	)
 	return data
+}
+
+/**
+ * The escalation queues an agent can hand an escalated call to.
+ *
+ * @return {Promise<Array<{id: string, label: string}>>} The queues.
+ * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+ */
+export async function escalationQueues() {
+	const { data } = await axios.get(base('/api/cti/escalation-queues'))
+	return Array.isArray(data && data.queues) ? data.queues : []
 }
 
 /**
@@ -126,8 +156,10 @@ export async function getEventLog(filters = {}) {
 
 export default {
 	screenPop,
+	incomingCall,
 	clickToDial,
 	submitDisposition,
+	escalationQueues,
 	attachRecording,
 	getConfig,
 	updateConfig,

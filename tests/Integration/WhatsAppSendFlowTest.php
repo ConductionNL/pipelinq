@@ -19,7 +19,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Integration tests for the WhatsApp send flow.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WhatsAppSendFlowTest extends TestCase {
 	private ContainerInterface $container;
