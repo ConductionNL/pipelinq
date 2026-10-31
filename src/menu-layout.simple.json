@@ -2226,6 +2226,24 @@
 						"sizeToContent": true
 					},
 					{
+						"id": "scm",
+						"widgetId": "simple-call-matters",
+						"gridX": 4,
+						"gridY": 29,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"track": "main"
+					},
+					{
+						"id": "sce",
+						"widgetId": "simple-call-earlier",
+						"gridX": 8,
+						"gridY": 33,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"track": "side"
+					},
+					{
 						"id": "sca",
 						"widgetId": "simple-call-actions",
 						"gridX": 0,
@@ -2296,6 +2314,11 @@
 						"schema": "ticket",
 						"props": {
 							"ticketType": "interaction"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					}
 				],
@@ -2340,7 +2363,7 @@
 							},
 							{
 								"id": "cc",
-								"widgetId": "client-cases",
+								"widgetId": "simple-call-matters",
 								"title": "Open matters",
 								"gridX": 4,
 								"gridY": 8,
@@ -2368,7 +2391,7 @@
 							},
 							{
 								"id": "cm",
-								"widgetId": "client-contacts",
+								"widgetId": "simple-call-earlier",
 								"title": "Earlier contact",
 								"gridX": 8,
 								"gridY": 11,
@@ -2942,7 +2965,7 @@
 					},
 					{
 						"id": "simple-call-tasks",
-						"type": "object-list",
+						"type": "record-list",
 						"title": "Tasks and callback requests",
 						"visibleWhen": {
 							"workspace": "callActive",
@@ -2954,29 +2977,179 @@
 							"schema": "crmTask",
 							"filter": {
 								"clientId": "@workspace.selectedClient",
-								"status": [
-									"open",
-									"in_progress"
-								]
+								"status": {
+									"in": [
+										"open",
+										"in_progress"
+									]
+								}
 							},
 							"sort": {
 								"field": "deadline",
 								"dir": "asc"
 							},
 							"limit": 6,
-							"rowRoute": "TaskDetail",
-							"columns": [
-								{
-									"key": "subject",
-									"label": "Task"
+							"presentation": "rows",
+							"ruleAbove": true,
+							"title": "{subject}",
+							"meta": {
+								"parts": [
+									"{type}",
+									"for {assigneeUserId|user}",
+									"{deadline|soon}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"labels": {
+									"open": "Open",
+									"in_progress": "In progress"
 								},
-								{
-									"key": "deadline",
-									"label": "Time limit",
-									"formatter": "relativeDate"
+								"colorMap": {
+									"open": "info",
+									"in_progress": "info"
 								}
-							],
+							},
+							"valueLabels": {
+								"type": {
+									"callbackRequest": "Call back",
+									"followUpTask": "Follow-up task",
+									"informationRequest": "Information request"
+								}
+							},
+							"rowRoute": "TaskDetail",
 							"emptyText": "No open tasks for this client."
+						}
+					},
+					{
+						"id": "simple-call-matters",
+						"type": "record-list",
+						"title": "Open matters",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@workspace.selectedClient",
+								"ticketType": {
+									"in": [
+										"request",
+										"complaint"
+									]
+								}
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 4,
+							"presentation": "rows",
+							"ruleAbove": true,
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{reference}",
+									"{ticketType|lowerfirst}",
+									"{assignee|user}"
+								]
+							},
+							"pill": {
+								"cases": [
+									{
+										"when": {
+											"field": "status",
+											"op": "in",
+											"value": [
+												"resolved",
+												"completed",
+												"closed",
+												"rejected",
+												"converted"
+											]
+										},
+										"label": "Done"
+									},
+									{
+										"when": {
+											"field": "slaDeadline",
+											"op": "notEmpty"
+										},
+										"label": "By {slaDeadline|date}",
+										"variant": "warning"
+									}
+								]
+							},
+							"valueLabels": {
+								"ticketType": {
+									"request": "Request",
+									"complaint": "Complaint"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No open matters for this client."
+						}
+					},
+					{
+						"id": "simple-call-earlier",
+						"type": "record-list",
+						"title": "Earlier contact",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@workspace.selectedClient",
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 3,
+							"presentation": "rows",
+							"ruleAbove": true,
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{occurredAt|datetime}",
+									"{channel}",
+									"{direction}"
+								]
+							},
+							"valueLabels": {
+								"channel": {
+									"telefoon": "Phone",
+									"email": "Email",
+									"balie": "Counter",
+									"chat": "Chat",
+									"social": "Social media",
+									"brief": "Letter",
+									"portal": "Mijn Zuiddrecht"
+								},
+								"direction": {
+									"inbound": "inbound",
+									"outbound": "outbound",
+									"internal": "internal"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No earlier contact with this client.",
+							"headerLink": {
+								"label": "All {total}",
+								"route": "Tickets",
+								"query": {
+									"client": "@workspace.selectedClient",
+									"ticketType": "interaction"
+								}
+							}
 						}
 					},
 					{
@@ -3039,6 +3212,7 @@
 									"type": "open-modal",
 									"target": "BrpClientCheckDialog",
 									"variant": "tonal",
+									"icon": "CardAccountDetailsOutline",
 									"label": "Look up in the BRP",
 									"props": {
 										"clientId": "@source.id"

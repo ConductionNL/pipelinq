@@ -9510,6 +9510,9 @@
         "Empty means no limit": "Leeg betekent geen limiet",
         "Limit": "Limiet",
         "Stage %1$s is full (%2$s of %3$s)": "Fase %1$s is vol (%2$s van %3$s)",
-        "The most items this open stage may hold at a time. Empty means no limit.": "Het hoogste aantal items dat deze open fase tegelijk mag bevatten. Leeg betekent geen limiet."
+        "The most items this open stage may hold at a time. Empty means no limit.": "Het hoogste aantal items dat deze open fase tegelijk mag bevatten. Leeg betekent geen limiet.",
+        "for {assigneeUserId|user}": "voor {assigneeUserId|user}",
+        "No open matters for this client.": "Geen openstaande zaken voor deze klant.",
+        "No earlier contact with this client.": "Geen eerder contact met deze klant."
     }
 }
