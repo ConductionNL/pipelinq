@@ -101,3 +101,37 @@ describe('the send monitor\'s recent events', () => {
 		expect(timeline.map((event) => event.id)).toEqual(['new', 'old'])
 	})
 })
+
+describe('the send monitor header as board PqVerzendmonitor', () => {
+	// The board draws "Terug naar blasts" as a 14px text link with a 16px
+	// arrow, 20px above a header band padded 4px over and 8px under, with the
+	// status line 6px under the title in 14px text: the title sits at y 133.
+	const ruleOf = (selector) => {
+		const match = source.match(new RegExp(`\\n${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} \\{([^}]*)\\}`))
+		return match ? match[1] : ''
+	}
+
+	it('draws the back link as a text link, not a button', async () => {
+		const wrapper = await mountMonitor()
+		const back = wrapper.find('.blast-monitor__back')
+		expect(back.element.tagName).toBe('A')
+		expect(back.text()).toBe('Back to blasts')
+		wrapper.unmount()
+	})
+
+	it('sets the back link at 14px semibold with a 16px arrow', () => {
+		expect(ruleOf('.blast-monitor__back')).toMatch(/font-size: 14px;[\s\S]*font-weight: 600;/)
+		expect(source).toMatch(/<ArrowLeft :size="16" \/>/)
+	})
+
+	it('spaces the page 20px and pads the header band 4px over, 8px under', () => {
+		expect(ruleOf('.blast-monitor')).toContain('gap: 20px;')
+		expect(ruleOf('.blast-monitor__header')).toContain('padding: 4px 0 8px;')
+	})
+
+	it('puts the status line 6px under the title in 14px text', () => {
+		expect(ruleOf('.blast-monitor__heading')).toMatch(/flex-direction: column;[\s\S]*gap: 6px;/)
+		expect(ruleOf('.blast-monitor__header h1')).toContain('margin: 0;')
+		expect(ruleOf('.blast-monitor__meta')).toMatch(/font-size: 14px;[\s\S]*line-height: normal;/)
+	})
+})
