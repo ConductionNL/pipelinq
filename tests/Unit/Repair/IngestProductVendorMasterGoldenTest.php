@@ -38,6 +38,7 @@ use Throwable;
  * then run once more without it.
  *
  * @covers \OCA\Pipelinq\Repair\IngestProductVendorMaster
+ * @uses   \OCA\Pipelinq\Repair\Support\SourceRecordLink
  *
  * @spec openspec/specs/product-vendor-master/spec.md
  */

@@ -48,6 +48,7 @@ namespace OCA\Pipelinq\Repair;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Repair\Support\SourceRecordLink;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -316,11 +317,12 @@ class IngestProductVendorMaster implements IRepairStep {
 				$this->writeSourceRecord(
 					objectService: $objectService,
 					registerId: $registerId,
-					nativeId: (string)($shillinqProduct['id'] ?? ''),
-					entityType: 'product',
-					sourceSystem: 'shillinq-products',
-					currentMasterEntity: (string)($productId ?? ''),
-					rawAttributes: $shillinqProduct,
+					link: new SourceRecordLink(
+						entityType: 'product',
+						nativeId: (string)($shillinqProduct['id'] ?? ''),
+						masterEntity: (string)($productId ?? ''),
+						rawAttributes: $shillinqProduct,
+					),
 				);
 
 				return (string)$productId;
@@ -346,11 +348,12 @@ class IngestProductVendorMaster implements IRepairStep {
 			$this->writeSourceRecord(
 				objectService: $objectService,
 				registerId: $registerId,
-				nativeId: (string)($shillinqProduct['id'] ?? ''),
-				entityType: 'product',
-				sourceSystem: 'shillinq-products',
-				currentMasterEntity: (string)($productId ?? ''),
-				rawAttributes: $shillinqProduct,
+				link: new SourceRecordLink(
+					entityType: 'product',
+					nativeId: (string)($shillinqProduct['id'] ?? ''),
+					masterEntity: (string)($productId ?? ''),
+					rawAttributes: $shillinqProduct,
+				),
 			);
 
 			return (string)$productId;
@@ -431,11 +434,12 @@ class IngestProductVendorMaster implements IRepairStep {
 			$this->writeSourceRecord(
 				objectService: $objectService,
 				registerId: $registerId,
-				nativeId: (string)($shillinqVendor['id'] ?? ''),
-				entityType: 'vendor',
-				sourceSystem: 'shillinq-vendors',
-				currentMasterEntity: $contactsUid,
-				rawAttributes: $shillinqVendor,
+				link: new SourceRecordLink(
+					entityType: 'vendor',
+					nativeId: (string)($shillinqVendor['id'] ?? ''),
+					masterEntity: $contactsUid,
+					rawAttributes: $shillinqVendor,
+				),
 			);
 
 			return [$contactsUid, $apPayload];
@@ -672,25 +676,13 @@ class IngestProductVendorMaster implements IRepairStep {
 	/**
 	 * Write an MDM sourceRecord for provenance tracking.
 	 *
-	 * @param mixed $objectService The OpenRegister ObjectService.
-	 * @param string $registerId The register ID.
-	 * @param string $nativeId The source-system native ID.
-	 * @param string $entityType 'product' or 'vendor'.
-	 * @param string $sourceSystem 'shillinq-products' or 'shillinq-vendors'.
-	 * @param string $currentMasterEntity The pipelinq master UUID.
-	 * @param array<string,mixed> $rawAttributes The unmodified shillinq payload.
+	 * @param mixed            $objectService The OpenRegister ObjectService.
+	 * @param string           $registerId    The register ID.
+	 * @param SourceRecordLink $link          The ingested record and its master entity.
 	 *
 	 * @return void
 	 */
-	private function writeSourceRecord(
-		mixed $objectService,
-		string $registerId,
-		string $nativeId,
-		string $entityType,
-		string $sourceSystem,
-		string $currentMasterEntity,
-		array $rawAttributes,
-	): void {
+	private function writeSourceRecord(mixed $objectService, string $registerId, SourceRecordLink $link): void {
 		$sourceRecordSchemaId = $this->appConfig->getValueString(
 			Application::APP_ID,
 			'sourceRecord_schema',
@@ -705,32 +697,13 @@ class IngestProductVendorMaster implements IRepairStep {
 		$now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
 		try {
-			$objectService->saveObject(
-				$registerId,
-				$sourceRecordSchemaId,
-				[
-					'sourceRecordId' => "{$sourceSystem}:{$nativeId}",
-					'sourceSystem' => $sourceSystem,
-					'nativeId' => $nativeId,
-					'entityType' => $entityType,
-					'currentMasterEntity' => $currentMasterEntity,
-					'rawAttributes' => $rawAttributes,
-					'mappedAttributes' => [],
-					'firstSeen' => $now,
-					'lastSeen' => $now,
-					'lastChange' => $now,
-					'linkageMethod' => 'migration',
-					'linkageConfidence' => 1.0,
-					'confidence' => 1.0,
-				],
-				null
-			);
+			$objectService->saveObject($registerId, $sourceRecordSchemaId, $link->toRecord(now: $now), null);
 		} catch (\Throwable $e) {
 			// Provenance write failure is non-fatal.
 			$this->logger->warning(
 				'PVM ingest: sourceRecord write failed',
 				[
-					'nativeId' => $nativeId,
+					'nativeId' => $link->nativeId,
 					'exception' => $e->getMessage(),
 				]
 			);
