@@ -31,6 +31,10 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BrpCacheService;
+use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
+use OCA\Pipelinq\Service\BsnAudit\LookupReason;
+use OCA\Pipelinq\Service\BsnAudit\LookupResult;
+use OCA\Pipelinq\Service\BsnAudit\LookupSubject;
 use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCA\Pipelinq\Service\HaalCentraalClient;
@@ -201,14 +205,16 @@ class BrpController extends Controller {
 
 			$this->audit->recordLookup(
 				actor: $actor,
-				rawBsn: $rawBsn,
-				verzoekreden: $verzoekreden,
-				purposeBinding: $purposeBinding,
-				outcome: 'refused-unauthorised',
-				action: 'brp-lookup-refused',
-				responseCode: 403,
-				linkedRequest: $linkedRequest,
-				vogScreening: $vogScreening,
+				lookup: new LookupAudit(
+					subject: new LookupSubject(rawBsn: $rawBsn),
+					reason: new LookupReason(
+						verzoekreden: $verzoekreden,
+						purposeBinding: $purposeBinding,
+						linkedRequest: $linkedRequest,
+						vogScreening: $vogScreening,
+					),
+					result: new LookupResult(outcome: 'refused-unauthorised', action: 'brp-lookup-refused', responseCode: 403),
+				),
 			);
 			return new JSONResponse(
 				[
@@ -347,15 +353,17 @@ class BrpController extends Controller {
 		// 6) Audit-record (always).
 		$this->audit->recordLookup(
 			actor: $actor,
-			rawBsn: $rawBsn,
-			verzoekreden: $verzoekreden,
-			purposeBinding: $purposeBinding,
-			outcome: $outcome,
-			responseCode: $responseCode,
-			haalcentraalCorrelationId: $correlationId,
-			linkedRequest: $gekoppeldRequestRef,
-			actorRole: $actorRole,
-			vogScreening: $vogScreening,
+			lookup: new LookupAudit(
+				subject: new LookupSubject(rawBsn: $rawBsn),
+				reason: new LookupReason(
+					verzoekreden: $verzoekreden,
+					purposeBinding: $purposeBinding,
+					linkedRequest: $gekoppeldRequestRef,
+					vogScreening: $vogScreening,
+				),
+				result: new LookupResult(outcome: $outcome, responseCode: $responseCode, correlationId: $correlationId),
+				actorRole: $actorRole,
+			),
 		);
 
 		// 7) Update contact (REQ-BSN-008).
@@ -459,15 +467,17 @@ class BrpController extends Controller {
 		// no data subject at all.
 		$auditId = $this->audit->recordLookup(
 			actor: $actor,
-			rawBsn: '',
-			verzoekreden: 'Adres onthuld op behandelaarsverantwoording',
-			purposeBinding: 'Wet BRP art. 3.3 (uitzondering geheimhouding)',
-			outcome: 'address-revealed',
-			action: 'brp-address-revealed',
-			responseCode: 200,
-			linkedRequest: null,
-			actorRole: $this->resolveActorRole(actor: $actor),
-			bsnHash: (string)($person['bsnHash'] ?? ''),
+			lookup: new LookupAudit(
+				subject: new LookupSubject(rawBsn: '', bsnHash: (string)($person['bsnHash'] ?? '')),
+				reason: new LookupReason(
+					verzoekreden: 'Adres onthuld op behandelaarsverantwoording',
+					purposeBinding: 'Wet BRP art. 3.3 (uitzondering geheimhouding)',
+					linkedRequest: null,
+					vogScreening: false,
+				),
+				result: new LookupResult(outcome: 'address-revealed', action: 'brp-address-revealed', responseCode: 200),
+				actorRole: $this->resolveActorRole(actor: $actor),
+			),
 		);
 
 		// 🔴 NO AUDIT RECORD, NO REVEAL.
