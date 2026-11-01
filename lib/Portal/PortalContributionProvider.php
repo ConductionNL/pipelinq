@@ -254,187 +254,16 @@ class PortalContributionProvider {
 		return [
 			'label' => self::GROUP_CONTACT,
 			'collections' => [
-				[
-					'id' => 'clientRequests',
-					'register' => self::REGISTER,
-					'schema' => 'ticket',
-					// Narrowing filter on the supertype discriminator: only the
-					// subject's REQUEST tickets. Merged before the scope filter, so
-					// it can only subset the subject's own rows, never widen them.
-					'filter' => ['ticketType' => 'request'],
-					'scopeField' => 'client',
-					'scopeClaim' => 'clientId',
-					'label' => 'Verzoeken van uw organisatie',
-					'listable' => true,
-					// Read-side field projection (the DATA authority): only these
-					// client-safe fields (+ identifiers) leave the server. The
-					// back-office `assignee`, `pipeline`, `stage`, `contact` and
-					// `priority` fields are dropped here — columns alone are
-					// presentation-only and would NOT stop them being returned.
-					// `ticket` is a supertype, so it also carries the complaint and
-					// contactmoment properties; this whitelist is what keeps them
-					// out of the request surface.
-					// `customerMessage` is the handler's message to the customer
-					// (pipelinq#2074); the internal `notes` stay behind.
-					'fields' => [
-						'title',
-						'category',
-						'status',
-						'description',
-						'occurredAt',
-						'customerMessage',
-					],
-					// Contribution-manifest-v3 UI (ADR-063), presentation-only:
-					// a column set, a detail layout, and a newest-first sort,
-					// over the projected fields above.
-					'columns' => [
-						['field' => 'title', 'label' => 'Onderwerp'],
-						['field' => 'category', 'label' => 'Categorie'],
-						['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::STATUS_LABELS],
-						['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
-					],
-					'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
-					'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
-				],
-				[
-					'id' => 'clientComplaints',
-					'register' => self::REGISTER,
-					'schema' => 'ticket',
-					// Only the subject's COMPLAINT tickets (see clientRequests).
-					'filter' => ['ticketType' => 'complaint'],
-					'scopeField' => 'client',
-					'scopeClaim' => 'clientId',
-					'label' => 'Klachten van uw organisatie',
-					'listable' => true,
-					// This collection was UNPROJECTED while it read the narrow
-					// `complaint` schema. `ticket` is a supertype whose property set
-					// is a strict superset of it, so leaving it unprojected would
-					// newly hand the client the contactmoment CTI internals
-					// (recording URL, disposition notes, caller numbers), the
-					// internal `notes` and the back-office assignee/pipeline/stage
-					// fields. The whitelist below restores the pre-unification
-					// surface: complaint facts only.
-					'fields' => [
-						'title',
-						'complaintCategory',
-						'status',
-						'description',
-						'occurredAt',
-						'customerMessage',
-					],
-				],
-				[
-					'id' => 'clientContracts',
-					'register' => self::REGISTER,
-					'schema' => 'salesContract',
-					'scopeField' => 'clientRef',
-					'scopeClaim' => 'clientId',
-					'label' => 'Contracten',
-					'listable' => true,
-				],
-				[
-					'id' => 'clientContactmoments',
-					'register' => self::REGISTER,
-					'schema' => 'ticket',
-					// Only the subject's CONTACTMOMENT tickets (see clientRequests).
-					'filter' => ['ticketType' => 'interaction'],
-					'scopeField' => 'client',
-					'scopeClaim' => 'clientId',
-					'label' => 'Contactmomenten',
-					'listable' => true,
-					// Client-safe interaction facts only. The internal `notes`, raw
-					// `channelMetadata`, `duration`, `assignee` identity, the
-					// `parentTicket` backlink and the CTI call internals (recording
-					// URL, disposition notes) all stay server-side.
-					'fields' => [
-						'title',
-						'channel',
-						'outcome',
-						'occurredAt',
-					],
-				],
+				$this->clientRequestsCollection(),
+				$this->clientComplaintsCollection(),
+				$this->clientContractsCollection(),
+				$this->clientContactmomentsCollection(),
 				$this->questionsCollection(),
 				...$this->ownTicketCollections(),
 			],
 			'actions' => [
-				[
-					'id' => 'createRequest',
-					'type' => 'create',
-					'label' => 'Een verzoek indienen namens uw organisatie',
-					'register' => self::REGISTER,
-					'schema' => 'ticket',
-					// Stamped server-side over the whitelisted client payload, so a
-					// client can never file a complaint or contactmoment through the
-					// request form. `ticketType` is required on the schema and is
-					// deliberately NOT a whitelisted field.
-					'defaults' => ['ticketType' => 'request'],
-					// The owner stamp: portaliq writes the subject's own
-					// `clientId` claim into `client`, the field `clientRequests`
-					// is scoped on. Without it the ticket was saved with no
-					// client and never showed in the resident's own list; a
-					// subject without the claim is now refused instead.
-					'scopeField' => 'client',
-					'scopeClaim' => 'clientId',
-					'fields' => [
-						'title',
-						'description',
-						'category',
-					],
-					// Contribution-manifest-v3 form config. `fieldConfigs` may only
-					// describe whitelisted fields; the category dropdown is a
-					// static enum here (a scoped `collection` provider would be
-					// used for a live-OR-backed picker).
-					'fieldConfigs' => [
-						'title' => [
-							'label' => 'Onderwerp',
-							'required' => true,
-							'size' => 'large',
-							'placeholder' => 'Waar gaat uw verzoek over?',
-						],
-						'description' => [
-							'label' => 'Omschrijving',
-							'required' => true,
-							'size' => 'full',
-							'placeholder' => 'Beschrijf uw verzoek zo volledig mogelijk',
-						],
-						'category' => ['label' => 'Categorie'],
-					],
-					'optionsProviders' => [
-						'category' => [
-							'type' => 'static',
-							'options' => [
-								['value' => 'Support', 'label' => 'Support'],
-								['value' => 'Facturatie', 'label' => 'Facturatie'],
-								['value' => 'Technisch', 'label' => 'Technisch'],
-								['value' => 'Accountbeheer', 'label' => 'Accountbeheer'],
-								['value' => 'Sales', 'label' => 'Sales'],
-								['value' => 'Integratie', 'label' => 'Integratie'],
-							],
-						],
-					],
-					'submitLabel' => 'Verzoek indienen',
-					'successMessage' => 'Uw verzoek is ingediend',
-				],
-				[
-					'id' => 'createComplaint',
-					'type' => 'create',
-					'label' => 'Een klacht indienen namens uw organisatie',
-					'register' => self::REGISTER,
-					'schema' => 'ticket',
-					// Stamped server-side (see createRequest).
-					'defaults' => ['ticketType' => 'complaint'],
-					// The owner stamp `clientComplaints` reads (see createRequest).
-					'scopeField' => 'client',
-					'scopeClaim' => 'clientId',
-					// The complaint's classification is `complaintCategory` on the
-					// unified ticket — the supertype's plain `category` is the
-					// REQUEST's free-text category and is not part of this intake.
-					'fields' => [
-						'title',
-						'description',
-						'complaintCategory',
-					],
-				],
+				$this->createRequestAction(),
+				$this->createComplaintAction(),
 				...$this->questionActions(),
 				...$this->ownTicketActions(),
 			],
@@ -445,48 +274,7 @@ class PortalContributionProvider {
 			// refuse that write. The organisation's pages follow, unchanged.
 			'pages' => [
 				...$this->ownTicketPages(),
-				[
-					'id' => 'organisationRequests',
-					'label' => 'Verzoeken van uw organisatie',
-					'group' => self::GROUP_ORGANISATION,
-					'icon' => 'OfficeBuilding',
-					'blocks' => [
-						[
-							'type' => 'richText',
-							'markdown' => 'Dien een verzoek in namens uw organisatie of bekijk de status van haar lopende verzoeken.',
-						],
-						['type' => 'action', 'action' => 'createRequest'],
-						['type' => 'collection', 'collection' => 'clientRequests'],
-					],
-				],
-				[
-					'id' => 'organisationComplaints',
-					'label' => 'Klachten van uw organisatie',
-					'group' => self::GROUP_ORGANISATION,
-					'icon' => 'AlertCircle',
-					'blocks' => [
-						['type' => 'action', 'action' => 'createComplaint'],
-						['type' => 'collection', 'collection' => 'clientComplaints'],
-					],
-				],
-				[
-					'id' => 'contracts',
-					'label' => 'Contracten',
-					'group' => self::GROUP_ORGANISATION,
-					'icon' => 'FileDocument',
-					'blocks' => [
-						['type' => 'collection', 'collection' => 'clientContracts'],
-					],
-				],
-				[
-					'id' => 'contactmoments',
-					'label' => 'Contactmomenten',
-					'group' => self::GROUP_ORGANISATION,
-					'icon' => 'Phone',
-					'blocks' => [
-						['type' => 'collection', 'collection' => 'clientContactmoments'],
-					],
-				],
+				...$this->organisationPages(),
 				$this->questionsPage(),
 			],
 			// A declared rule key, not a change rule: pipelinq writes the
@@ -496,6 +284,276 @@ class PortalContributionProvider {
 			'notifications' => [self::RULE_QUESTION_ANSWERED],
 		];
 	}//end clientContribution()
+
+	/**
+	 * The organisation's requests, scoped to its client id.
+	 * @return array<string, mixed>
+	 */
+	private function clientRequestsCollection(): array {
+		return [
+			'id' => 'clientRequests',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// Narrowing filter on the supertype discriminator: only the
+			// subject's REQUEST tickets. Merged before the scope filter, so
+			// it can only subset the subject's own rows, never widen them.
+			'filter' => ['ticketType' => 'request'],
+			'scopeField' => 'client',
+			'scopeClaim' => 'clientId',
+			'label' => 'Verzoeken van uw organisatie',
+			'listable' => true,
+			// Read-side field projection (the DATA authority): only these
+			// client-safe fields (+ identifiers) leave the server. The
+			// back-office `assignee`, `pipeline`, `stage`, `contact` and
+			// `priority` fields are dropped here — columns alone are
+			// presentation-only and would NOT stop them being returned.
+			// `ticket` is a supertype, so it also carries the complaint and
+			// contactmoment properties; this whitelist is what keeps them
+			// out of the request surface.
+			// `customerMessage` is the handler's message to the customer
+			// (pipelinq#2074); the internal `notes` stay behind.
+			'fields' => [
+				'title',
+				'category',
+				'status',
+				'description',
+				'occurredAt',
+				'customerMessage',
+			],
+			// Contribution-manifest-v3 UI (ADR-063), presentation-only:
+			// a column set, a detail layout, and a newest-first sort,
+			// over the projected fields above.
+			'columns' => [
+				['field' => 'title', 'label' => 'Onderwerp'],
+				['field' => 'category', 'label' => 'Categorie'],
+				['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::STATUS_LABELS],
+				['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
+			],
+			'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
+			'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
+		];
+	}//end clientRequestsCollection()
+
+	/**
+	 * The organisation's complaints, scoped to its client id.
+	 * @return array<string, mixed>
+	 */
+	private function clientComplaintsCollection(): array {
+		return [
+			'id' => 'clientComplaints',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// Only the subject's COMPLAINT tickets (see clientRequests).
+			'filter' => ['ticketType' => 'complaint'],
+			'scopeField' => 'client',
+			'scopeClaim' => 'clientId',
+			'label' => 'Klachten van uw organisatie',
+			'listable' => true,
+			// This collection was UNPROJECTED while it read the narrow
+			// `complaint` schema. `ticket` is a supertype whose property set
+			// is a strict superset of it, so leaving it unprojected would
+			// newly hand the client the contactmoment CTI internals
+			// (recording URL, disposition notes, caller numbers), the
+			// internal `notes` and the back-office assignee/pipeline/stage
+			// fields. The whitelist below restores the pre-unification
+			// surface: complaint facts only.
+			'fields' => [
+				'title',
+				'complaintCategory',
+				'status',
+				'description',
+				'occurredAt',
+				'customerMessage',
+			],
+		];
+	}//end clientComplaintsCollection()
+
+	/**
+	 * The organisation's sales contracts, scoped to its client id.
+	 * @return array<string, mixed>
+	 */
+	private function clientContractsCollection(): array {
+		return [
+			'id' => 'clientContracts',
+			'register' => self::REGISTER,
+			'schema' => 'salesContract',
+			'scopeField' => 'clientRef',
+			'scopeClaim' => 'clientId',
+			'label' => 'Contracten',
+			'listable' => true,
+		];
+	}//end clientContractsCollection()
+
+	/**
+	 * The organisation's contactmomenten, field-projected so back-office internals never reach the client.
+	 * @return array<string, mixed>
+	 */
+	private function clientContactmomentsCollection(): array {
+		return [
+			'id' => 'clientContactmoments',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// Only the subject's CONTACTMOMENT tickets (see clientRequests).
+			'filter' => ['ticketType' => 'interaction'],
+			'scopeField' => 'client',
+			'scopeClaim' => 'clientId',
+			'label' => 'Contactmomenten',
+			'listable' => true,
+			// Client-safe interaction facts only. The internal `notes`, raw
+			// `channelMetadata`, `duration`, `assignee` identity, the
+			// `parentTicket` backlink and the CTI call internals (recording
+			// URL, disposition notes) all stay server-side.
+			'fields' => [
+				'title',
+				'channel',
+				'outcome',
+				'occurredAt',
+			],
+		];
+	}//end clientContactmomentsCollection()
+
+	/**
+	 * Submitting a request for the organisation, with whitelisted intake fields only.
+	 * @return array<string, mixed>
+	 */
+	private function createRequestAction(): array {
+		return [
+			'id' => 'createRequest',
+			'type' => 'create',
+			'label' => 'Een verzoek indienen namens uw organisatie',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// Stamped server-side over the whitelisted client payload, so a
+			// client can never file a complaint or contactmoment through the
+			// request form. `ticketType` is required on the schema and is
+			// deliberately NOT a whitelisted field.
+			'defaults' => ['ticketType' => 'request'],
+			// The owner stamp: portaliq writes the subject's own
+			// `clientId` claim into `client`, the field `clientRequests`
+			// is scoped on. Without it the ticket was saved with no
+			// client and never showed in the resident's own list; a
+			// subject without the claim is now refused instead.
+			'scopeField' => 'client',
+			'scopeClaim' => 'clientId',
+			'fields' => [
+				'title',
+				'description',
+				'category',
+			],
+			// Contribution-manifest-v3 form config. `fieldConfigs` may only
+			// describe whitelisted fields; the category dropdown is a
+			// static enum here (a scoped `collection` provider would be
+			// used for a live-OR-backed picker).
+			'fieldConfigs' => [
+				'title' => [
+					'label' => 'Onderwerp',
+					'required' => true,
+					'size' => 'large',
+					'placeholder' => 'Waar gaat uw verzoek over?',
+				],
+				'description' => [
+					'label' => 'Omschrijving',
+					'required' => true,
+					'size' => 'full',
+					'placeholder' => 'Beschrijf uw verzoek zo volledig mogelijk',
+				],
+				'category' => ['label' => 'Categorie'],
+			],
+			'optionsProviders' => [
+				'category' => [
+					'type' => 'static',
+					'options' => [
+						['value' => 'Support', 'label' => 'Support'],
+						['value' => 'Facturatie', 'label' => 'Facturatie'],
+						['value' => 'Technisch', 'label' => 'Technisch'],
+						['value' => 'Accountbeheer', 'label' => 'Accountbeheer'],
+						['value' => 'Sales', 'label' => 'Sales'],
+						['value' => 'Integratie', 'label' => 'Integratie'],
+					],
+				],
+			],
+			'submitLabel' => 'Verzoek indienen',
+			'successMessage' => 'Uw verzoek is ingediend',
+		];
+	}//end createRequestAction()
+
+	/**
+	 * Submitting a complaint for the organisation, with whitelisted intake fields only.
+	 * @return array<string, mixed>
+	 */
+	private function createComplaintAction(): array {
+		return [
+			'id' => 'createComplaint',
+			'type' => 'create',
+			'label' => 'Een klacht indienen namens uw organisatie',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// Stamped server-side (see createRequest).
+			'defaults' => ['ticketType' => 'complaint'],
+			// The owner stamp `clientComplaints` reads (see createRequest).
+			'scopeField' => 'client',
+			'scopeClaim' => 'clientId',
+			// The complaint's classification is `complaintCategory` on the
+			// unified ticket — the supertype's plain `category` is the
+			// REQUEST's free-text category and is not part of this intake.
+			'fields' => [
+				'title',
+				'description',
+				'complaintCategory',
+			],
+		];
+	}//end createComplaintAction()
+
+	/**
+	 * The organisation's own pages: requests, complaints, contracts and contactmomenten.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function organisationPages(): array {
+		return [
+			[
+				'id' => 'organisationRequests',
+				'label' => 'Verzoeken van uw organisatie',
+				'group' => self::GROUP_ORGANISATION,
+				'icon' => 'OfficeBuilding',
+				'blocks' => [
+					[
+						'type' => 'richText',
+						'markdown' => 'Dien een verzoek in namens uw organisatie of bekijk de status van haar lopende verzoeken.',
+					],
+					['type' => 'action', 'action' => 'createRequest'],
+					['type' => 'collection', 'collection' => 'clientRequests'],
+				],
+			],
+			[
+				'id' => 'organisationComplaints',
+				'label' => 'Klachten van uw organisatie',
+				'group' => self::GROUP_ORGANISATION,
+				'icon' => 'AlertCircle',
+				'blocks' => [
+					['type' => 'action', 'action' => 'createComplaint'],
+					['type' => 'collection', 'collection' => 'clientComplaints'],
+				],
+			],
+			[
+				'id' => 'contracts',
+				'label' => 'Contracten',
+				'group' => self::GROUP_ORGANISATION,
+				'icon' => 'FileDocument',
+				'blocks' => [
+					['type' => 'collection', 'collection' => 'clientContracts'],
+				],
+			],
+			[
+				'id' => 'contactmoments',
+				'label' => 'Contactmomenten',
+				'group' => self::GROUP_ORGANISATION,
+				'icon' => 'Phone',
+				'blocks' => [
+					['type' => 'collection', 'collection' => 'clientContactmoments'],
+				],
+			],
+		];
+	}//end organisationPages()
 
 	/**
 	 * Manifest for the `customer` audience (B2C).
