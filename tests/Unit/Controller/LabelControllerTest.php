@@ -35,6 +35,7 @@ use RuntimeException;
 
 /**
  * @covers \OCA\Pipelinq\Controller\LabelController
+ * @uses \OCA\Pipelinq\Service\Labels\LabelRenameException
  */
 class LabelControllerTest extends TestCase {
 
