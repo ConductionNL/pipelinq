@@ -317,12 +317,7 @@ class IngestProductVendorMaster implements IRepairStep {
 				$this->writeSourceRecord(
 					objectService: $objectService,
 					registerId: $registerId,
-					link: new SourceRecordLink(
-						entityType: 'product',
-						nativeId: (string)($shillinqProduct['id'] ?? ''),
-						masterEntity: (string)($productId ?? ''),
-						rawAttributes: $shillinqProduct,
-					),
+					link: new SourceRecordLink(entityType: 'product', masterEntity: (string)($productId ?? ''), rawAttributes: $shillinqProduct),
 				);
 
 				return (string)$productId;
@@ -348,12 +343,7 @@ class IngestProductVendorMaster implements IRepairStep {
 			$this->writeSourceRecord(
 				objectService: $objectService,
 				registerId: $registerId,
-				link: new SourceRecordLink(
-					entityType: 'product',
-					nativeId: (string)($shillinqProduct['id'] ?? ''),
-					masterEntity: (string)($productId ?? ''),
-					rawAttributes: $shillinqProduct,
-				),
+				link: new SourceRecordLink(entityType: 'product', masterEntity: (string)($productId ?? ''), rawAttributes: $shillinqProduct),
 			);
 
 			return (string)$productId;
@@ -434,12 +424,7 @@ class IngestProductVendorMaster implements IRepairStep {
 			$this->writeSourceRecord(
 				objectService: $objectService,
 				registerId: $registerId,
-				link: new SourceRecordLink(
-					entityType: 'vendor',
-					nativeId: (string)($shillinqVendor['id'] ?? ''),
-					masterEntity: $contactsUid,
-					rawAttributes: $shillinqVendor,
-				),
+				link: new SourceRecordLink(entityType: 'vendor', masterEntity: $contactsUid, rawAttributes: $shillinqVendor),
 			);
 
 			return [$contactsUid, $apPayload];

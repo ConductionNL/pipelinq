@@ -34,10 +34,16 @@ namespace OCA\Pipelinq\Repair\Support;
  */
 class SourceRecordLink {
 	/**
+	 * The source-system native ID: the payload's `id`, as text.
+	 *
+	 * @var string
+	 */
+	public readonly string $nativeId;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string               $entityType    'product' or 'vendor'.
-	 * @param string               $nativeId      The source-system native ID.
 	 * @param string               $masterEntity  The pipelinq master UUID.
 	 * @param array<string, mixed> $rawAttributes The unmodified shillinq payload.
 	 *
@@ -45,10 +51,10 @@ class SourceRecordLink {
 	 */
 	public function __construct(
 		public readonly string $entityType,
-		public readonly string $nativeId,
 		public readonly string $masterEntity,
 		public readonly array $rawAttributes,
 	) {
+		$this->nativeId = (string)($rawAttributes['id'] ?? '');
 	}//end __construct()
 
 	/**
