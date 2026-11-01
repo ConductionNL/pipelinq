@@ -28,6 +28,8 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
+use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
 use OCA\Pipelinq\Service\BerichtenboxService;
 use OCA\Pipelinq\Service\DeliveryAuditLogger;
 use OCA\Pipelinq\Service\DutchHolidayCalendar;
@@ -54,6 +56,8 @@ use Throwable;
  * @covers \OCA\Pipelinq\Service\BerichtenboxService
  * @uses   \OCA\Pipelinq\Service\TemplateRenderer
  * @uses   \OCA\Pipelinq\Service\DutchHolidayCalendar
+ * @covers \OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage
+ * @covers \OCA\Pipelinq\Service\Berichtenbox\MessageOptions
  *
  * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
  */
@@ -190,7 +194,13 @@ class BerichtenboxQueueGoldenTest extends TestCase {
 		);
 
 		try {
-			$outcome = ['result' => $service->queueOutboundMessage(...$scenario['args'])];
+			$args    = $scenario['args'];
+			$outcome = [
+				'result' => $service->queueOutboundMessage(
+					message: new CaseStatusMessage(caseId: $args['caseId'], interactionId: $args['interactionId'], status: $args['status'], bsn: $args['bsn']),
+					options: new MessageOptions(templateOverride: ($args['templateOverride'] ?? null), extraVariables: ($args['extraVariables'] ?? []), attachments: ($args['attachments'] ?? []))
+				),
+			];
 		} catch (Throwable $e) {
 			$outcome = ['threw' => get_class($e), 'message' => $e->getMessage()];
 		}

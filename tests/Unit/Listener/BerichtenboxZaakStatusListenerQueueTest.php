@@ -40,6 +40,8 @@ use ReflectionMethod;
  * call is recorded as one flat map of named values.
  *
  * @covers \OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener
+ * @uses   \OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage
+ * @uses   \OCA\Pipelinq\Service\Berichtenbox\MessageOptions
  */
 class BerichtenboxZaakStatusListenerQueueTest extends TestCase {
 	/**
