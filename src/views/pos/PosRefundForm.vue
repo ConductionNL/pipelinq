@@ -70,6 +70,7 @@
 						</NcCheckboxRadioSwitch>
 						<CnDataTable
 							class="pos-refund-form__lines"
+							framed
 							:columns="lineColumns"
 							:rows="lineRows"
 							rowKey="originalLine">
