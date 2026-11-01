@@ -1,0 +1,1815 @@
+{
+    "template: failover through every miss": {
+        "result": {
+            "status": "sent",
+            "messageId": "row-2",
+            "externalMessageId": "wamid-eps",
+            "providerId": "p5",
+            "vendor": "eps-v"
+        },
+        "calls": [
+            {
+                "ConsentService::canSendBusinessInitiated": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "find": {
+                    "id": "tpl-1",
+                    "register": "pipelinq",
+                    "schema": "messageTemplate"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p2"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendTemplate": {
+                    "channelProvider": {
+                        "uuid": "p2",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "beta"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "templateName": "order_ready",
+                    "language": "en",
+                    "parameters": [
+                        "Ann",
+                        "12"
+                    ]
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: transient — failing over",
+                    "context": {
+                        "providerId": "p2",
+                        "message": "5xx from beta"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p3"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendTemplate": {
+                    "channelProvider": {
+                        "uuid": "p3",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "gamma"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "templateName": "order_ready",
+                    "language": "en",
+                    "parameters": [
+                        "Ann",
+                        "12"
+                    ]
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: unexpected — failing over",
+                    "context": {
+                        "providerId": "p3",
+                        "message": "socket from gamma"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p4"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendTemplate": {
+                    "channelProvider": {
+                        "uuid": "p4",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "delta"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "templateName": "order_ready",
+                    "language": "en",
+                    "parameters": [
+                        "Ann",
+                        "12"
+                    ]
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: unexpected — failing over",
+                    "context": {
+                        "providerId": "p4",
+                        "message": "type from delta"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p5"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendTemplate": {
+                    "channelProvider": {
+                        "uuid": "p5",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "eps"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "templateName": "order_ready",
+                    "language": "en",
+                    "parameters": [
+                        "Ann",
+                        "12"
+                    ]
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p5",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p5",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "[template:order_ready]",
+                        "providerId": "p5",
+                        "externalMessageId": "wamid-eps",
+                        "templateId": "tpl-1",
+                        "templateParameters": [
+                            "Ann",
+                            "12"
+                        ],
+                        "deliveryStatus": "queued",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "BudgetService::recordSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p5"
+                }
+            },
+            {
+                "ContactmomentService::recordOutboundMessage": {
+                    "channel": "chat",
+                    "subject": "Outbound WhatsApp",
+                    "summary": "[template:order_ready]",
+                    "channelMetadata": {
+                        "platform": "whatsapp",
+                        "direction": "outbound",
+                        "messageId": "row-2",
+                        "conversationId": "row-1",
+                        "contactId": "contact-1"
+                    }
+                }
+            }
+        ]
+    },
+    "free-form: failover through every miss": {
+        "result": {
+            "status": "sent",
+            "messageId": "row-2",
+            "externalMessageId": "wamid-eps",
+            "providerId": "p5",
+            "vendor": "eps-v"
+        },
+        "calls": [
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111",
+                    "inReplyTo": "in-1"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p2"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendFreeForm": {
+                    "channelProvider": {
+                        "uuid": "p2",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "beta"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: transient — failing over",
+                    "context": {
+                        "providerId": "p2",
+                        "message": "5xx from beta"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p3"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendFreeForm": {
+                    "channelProvider": {
+                        "uuid": "p3",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "gamma"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: unexpected — failing over",
+                    "context": {
+                        "providerId": "p3",
+                        "message": "socket from gamma"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p4"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendFreeForm": {
+                    "channelProvider": {
+                        "uuid": "p4",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "delta"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: unexpected — failing over",
+                    "context": {
+                        "providerId": "p4",
+                        "message": "type from delta"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p5"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendFreeForm": {
+                    "channelProvider": {
+                        "uuid": "p5",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "eps"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p5",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p5",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p5",
+                        "externalMessageId": "wamid-eps",
+                        "templateId": "",
+                        "templateParameters": [],
+                        "deliveryStatus": "queued",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "BudgetService::recordSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p5"
+                }
+            },
+            {
+                "ContactmomentService::recordOutboundMessage": {
+                    "channel": "chat",
+                    "subject": "Outbound WhatsApp",
+                    "summary": "Hello there",
+                    "channelMetadata": {
+                        "platform": "whatsapp",
+                        "direction": "outbound",
+                        "messageId": "row-2",
+                        "conversationId": "row-1",
+                        "contactId": "contact-1"
+                    }
+                }
+            }
+        ]
+    },
+    "template: pinned provider first": {
+        "result": {
+            "status": "sent",
+            "messageId": "row-2",
+            "externalMessageId": "wamid-b",
+            "providerId": "p2",
+            "vendor": "b-v"
+        },
+        "calls": [
+            {
+                "ConsentService::canSendBusinessInitiated": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "find": {
+                    "id": "tpl-1",
+                    "register": "pipelinq",
+                    "schema": "messageTemplate"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p2"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendTemplate": {
+                    "channelProvider": {
+                        "uuid": "p2",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "b"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "templateName": "order_ready",
+                    "language": "en",
+                    "parameters": [
+                        "Ann",
+                        "12"
+                    ]
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p2",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p2",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "[template:order_ready]",
+                        "providerId": "p2",
+                        "externalMessageId": "wamid-b",
+                        "templateId": "tpl-1",
+                        "templateParameters": [
+                            "Ann",
+                            "12"
+                        ],
+                        "deliveryStatus": "queued",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "BudgetService::recordSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p2"
+                }
+            },
+            {
+                "ContactmomentService::recordOutboundMessage": {
+                    "channel": "chat",
+                    "subject": "Outbound WhatsApp",
+                    "summary": "[template:order_ready]",
+                    "channelMetadata": {
+                        "platform": "whatsapp",
+                        "direction": "outbound",
+                        "messageId": "row-2",
+                        "conversationId": "row-1",
+                        "contactId": "contact-1"
+                    }
+                }
+            }
+        ]
+    },
+    "template: all transient": {
+        "result": {
+            "status": "failed",
+            "error": "all WhatsApp providers returned transient errors",
+            "providerId": ""
+        },
+        "calls": [
+            {
+                "ConsentService::canSendBusinessInitiated": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "find": {
+                    "id": "tpl-1",
+                    "register": "pipelinq",
+                    "schema": "messageTemplate"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendTemplate": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "a"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "templateName": "order_ready",
+                    "language": "en",
+                    "parameters": [
+                        "Ann",
+                        "12"
+                    ]
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: transient — failing over",
+                    "context": {
+                        "providerId": "p1",
+                        "message": "5xx from a"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p2"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendTemplate": {
+                    "channelProvider": {
+                        "uuid": "p2",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "b"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "templateName": "order_ready",
+                    "language": "en",
+                    "parameters": [
+                        "Ann",
+                        "12"
+                    ]
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: unexpected — failing over",
+                    "context": {
+                        "providerId": "p2",
+                        "message": "socket from b"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "[template:order_ready]",
+                        "providerId": "",
+                        "templateId": "tpl-1",
+                        "templateParameters": [
+                            "Ann",
+                            "12"
+                        ],
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "all WhatsApp providers returned transient errors"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_whatsapp_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "error": "all WhatsApp providers returned transient errors"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "free-form: all transient": {
+        "result": {
+            "status": "failed",
+            "error": "all WhatsApp providers returned transient errors",
+            "providerId": ""
+        },
+        "calls": [
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111",
+                    "inReplyTo": "in-1"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendFreeForm": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "a"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: transient — failing over",
+                    "context": {
+                        "providerId": "p1",
+                        "message": "5xx from a"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "",
+                        "templateId": "",
+                        "templateParameters": [],
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "all WhatsApp providers returned transient errors"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_whatsapp_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "error": "all WhatsApp providers returned transient errors"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "template: permanent stops failover": {
+        "result": {
+            "status": "failed",
+            "error": "4xx from a",
+            "providerId": "p1"
+        },
+        "calls": [
+            {
+                "ConsentService::canSendBusinessInitiated": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "find": {
+                    "id": "tpl-1",
+                    "register": "pipelinq",
+                    "schema": "messageTemplate"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendTemplate": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "a"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "templateName": "order_ready",
+                    "language": "en",
+                    "parameters": [
+                        "Ann",
+                        "12"
+                    ]
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: permanent provider failure",
+                    "context": {
+                        "providerId": "p1",
+                        "message": "4xx from a"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p1",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "[template:order_ready]",
+                        "providerId": "p1",
+                        "templateId": "tpl-1",
+                        "templateParameters": [
+                            "Ann",
+                            "12"
+                        ],
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "4xx from a"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_whatsapp_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "error": "4xx from a"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "free-form: permanent stops failover": {
+        "result": {
+            "status": "failed",
+            "error": "4xx from a",
+            "providerId": "p1"
+        },
+        "calls": [
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111",
+                    "inReplyTo": "in-1"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendFreeForm": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "a"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: permanent provider failure",
+                    "context": {
+                        "providerId": "p1",
+                        "message": "4xx from a"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p1",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p1",
+                        "templateId": "",
+                        "templateParameters": [],
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "4xx from a"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_whatsapp_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "error": "4xx from a"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "permanent, notification fails": {
+        "result": {
+            "status": "failed",
+            "error": "4xx from a",
+            "providerId": "p1"
+        },
+        "calls": [
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111",
+                    "inReplyTo": "in-1"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendFreeForm": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "a"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.send: permanent provider failure",
+                    "context": {
+                        "providerId": "p1",
+                        "message": "4xx from a"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p1",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p1",
+                        "templateId": "",
+                        "templateParameters": [],
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "4xx from a"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_whatsapp_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "error": "4xx from a"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.persistFailureAndAlert: notification failed",
+                    "context": {
+                        "exception": "notify down"
+                    }
+                }
+            }
+        ]
+    },
+    "all budgets spent": {
+        "result": {
+            "status": "failed",
+            "error": "all WhatsApp providers returned transient errors",
+            "providerId": ""
+        },
+        "calls": [
+            {
+                "ConsentService::canSendBusinessInitiated": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "find": {
+                    "id": "tpl-1",
+                    "register": "pipelinq",
+                    "schema": "messageTemplate"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p2"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "[template:order_ready]",
+                        "providerId": "",
+                        "templateId": "tpl-1",
+                        "templateParameters": [
+                            "Ann",
+                            "12"
+                        ],
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "all WhatsApp providers returned transient errors"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_whatsapp_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "error": "all WhatsApp providers returned transient errors"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "success, no audit service": {
+        "result": {
+            "status": "sent",
+            "messageId": "row-2",
+            "externalMessageId": "wamid-a",
+            "providerId": "p1",
+            "vendor": "a-v"
+        },
+        "calls": [
+            {
+                "ConsentService::canSendBusinessInitiated": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "find": {
+                    "id": "tpl-1",
+                    "register": "pipelinq",
+                    "schema": "messageTemplate"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendTemplate": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "a"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "templateName": "order_ready",
+                    "language": "en",
+                    "parameters": [
+                        "Ann",
+                        "12"
+                    ]
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p1",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "[template:order_ready]",
+                        "providerId": "p1",
+                        "externalMessageId": "wamid-a",
+                        "templateId": "tpl-1",
+                        "templateParameters": [
+                            "Ann",
+                            "12"
+                        ],
+                        "deliveryStatus": "queued",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "BudgetService::recordSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            }
+        ]
+    },
+    "success, save fails": {
+        "result": {
+            "status": "sent",
+            "messageId": "",
+            "externalMessageId": "wamid-a",
+            "providerId": "p1",
+            "vendor": "a-v"
+        },
+        "calls": [
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111",
+                    "inReplyTo": "in-1"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "WhatsAppProviderClient::sendFreeForm": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "whatsapp-cloud-api",
+                        "vendor": "a"
+                    },
+                    "phoneNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p1",
+                            "channel": "whatsapp",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "channel": "whatsapp",
+                        "status": "open"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "whatsapp",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p1",
+                        "externalMessageId": "wamid-a",
+                        "templateId": "",
+                        "templateParameters": [],
+                        "deliveryStatus": "queued",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "WhatsAppAdapter.persistMessage: save failed",
+                    "context": {
+                        "exception": "save down"
+                    }
+                }
+            },
+            {
+                "BudgetService::recordSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "ContactmomentService::recordOutboundMessage": {
+                    "channel": "chat",
+                    "subject": "Outbound WhatsApp",
+                    "summary": "Hello there",
+                    "channelMetadata": {
+                        "platform": "whatsapp",
+                        "direction": "outbound",
+                        "messageId": "",
+                        "conversationId": "",
+                        "contactId": "contact-1"
+                    }
+                }
+            }
+        ]
+    },
+    "no providers": {
+        "result": {
+            "status": "noProviderAvailable"
+        },
+        "calls": [
+            {
+                "ConsentService::canSendBusinessInitiated": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "find": {
+                    "id": "tpl-1",
+                    "register": "pipelinq",
+                    "schema": "messageTemplate"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-cloud-api"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "whatsapp-bsp"
+                }
+            }
+        ]
+    },
+    "consent refused": {
+        "result": {
+            "status": "consentMissing"
+        },
+        "calls": [
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "channel": "whatsapp",
+                            "direction": "inbound",
+                            "register": "pipelinq",
+                            "schema": "channelMessage"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "whatsapp",
+                    "address": "+31611111111",
+                    "inReplyTo": "in-1"
+                }
+            }
+        ]
+    }
+}
