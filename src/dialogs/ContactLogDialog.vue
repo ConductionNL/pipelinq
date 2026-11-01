@@ -326,11 +326,21 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Keeps the draft when the customer changes.
+		 *
+		 * @spec openspec/changes/contact-log-dialog-keeps-draft/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
+		 */
 		client() {
 			this.scheduleDraft()
 		},
 	},
 
+	/**
+	 * Loads the ticket and the clients to pick from, then restores the draft.
+	 *
+	 * @spec openspec/changes/contact-log-dialog-keeps-draft/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
+	 */
 	async created() {
 		await Promise.all([this.loadTicket(), this.searchClients('')])
 		this.openedClientId = this.client?.id || null
@@ -466,6 +476,8 @@ export default {
 		 * Save the contact moment and close.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/contact-log-dialog-keeps-draft/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
 		 */
 		async save() {
 			if (this.busy || this.form.title.trim() === '') {
