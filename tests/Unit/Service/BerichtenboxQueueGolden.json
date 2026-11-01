@@ -489,6 +489,92 @@
             }
         ]
     },
+    "override with an id and a uuid": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "S",
+            "body": "B",
+            "templateId": "o-id",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "S",
+                        "body": "B",
+                        "templateId": "o-id",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "B"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(B)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
     "no interaction": {
         "result": {
             "uuid": "uuid-1",

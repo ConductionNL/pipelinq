@@ -106,6 +106,7 @@ class BerichtenboxQueueGoldenTest extends TestCase {
 			'registry template with uuid only'  => ['args' => $args, 'templates' => [['uuid' => 'tpl-uuid', 'subject' => 'S', 'body' => 'B {{caseId}}']]],
 			'registry template without ids'     => ['args' => $args, 'templates' => [['subject' => 'S', 'body' => 'B']]],
 			'override skips the registry'       => ['args' => [...$args, 'templateOverride' => ['subject' => 'O {{status}}', 'body' => 'Override {{caseId}}']], 'templates' => [$template]],
+			'override with an id and a uuid'    => ['args' => [...$args, 'templateOverride' => ['id' => 'o-id', 'uuid' => 'o-uuid', 'subject' => 'S', 'body' => 'B']]],
 			'no interaction'                    => ['args' => [...$args, 'interactionId' => null]],
 			'extra variables override defaults' => ['args' => [...$args, 'extraVariables' => ['gemeente' => 'Utrecht', 'messageId' => 'm-given', 'deadline' => '2026-12-01', 'extra' => 'x']], 'templates' => [$template]],
 			'attachments'                       => ['args' => [...$args, 'attachments' => [['filename' => 'a.pdf', 'mime' => 'application/pdf', 'sizeBytes' => 10, 'openregisterFileRef' => 'f-1']]]],
