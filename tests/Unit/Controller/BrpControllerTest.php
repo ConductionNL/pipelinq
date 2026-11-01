@@ -38,6 +38,7 @@ use OCA\Pipelinq\Controller\BrpController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BrpCacheService;
+use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCA\Pipelinq\Service\HaalCentraalClient;
@@ -837,29 +838,16 @@ class BrpControllerTest extends TestCase {
 	private function capturingAudit(array &$recorded): BsnAuditService {
 		$audit = $this->createMock(BsnAuditService::class);
 		$audit->method('recordLookup')->willReturnCallback(
-			static function (
-				string $actor,
-				string $rawBsn,
-				string $verzoekreden,
-				string $purposeBinding,
-				string $outcome,
-				string $action = 'brp-lookup-executed',
-				?int $responseCode = null,
-				?string $haalcentraalCorrelationId = null,
-				?string $linkedRequest = null,
-				?string $actorRole = null,
-				bool $vogScreening = false,
-				?string $bsnHash = null,
-			) use (&$recorded): string {
+			static function (string $actor, LookupAudit $lookup) use (&$recorded): string {
 				$recorded[] = [
 					'actor' => $actor,
-					'rawBsn' => $rawBsn,
-					'verzoekreden' => $verzoekreden,
-					'purposeBinding' => $purposeBinding,
-					'outcome' => $outcome,
-					'action' => $action,
-					'actorRole' => $actorRole,
-					'bsnHash' => $bsnHash,
+					'rawBsn' => $lookup->subject->rawBsn,
+					'verzoekreden' => $lookup->reason->verzoekreden,
+					'purposeBinding' => $lookup->reason->purposeBinding,
+					'outcome' => $lookup->result->outcome,
+					'action' => $lookup->result->action,
+					'actorRole' => $lookup->actorRole,
+					'bsnHash' => $lookup->subject->bsnHash,
 				];
 				return 'audit-1';
 			}
