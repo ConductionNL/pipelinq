@@ -9400,7 +9400,10 @@ OC.L10N.register(
         "No open matters for this client.": "No open matters for this client.",
         "No earlier contact with this client.": "No earlier contact with this client.",
         "Edit · {reference}": "Edit · {reference}",
-        "{reference} · {ticketType}": "{reference} · {ticketType}"
+        "{reference} · {ticketType}": "{reference} · {ticketType}",
+        "Unsaved contact moment": "Unsaved contact moment",
+        "You were already working on this.": "You were already working on this.",
+        "Unsaved contact moment, last changed at {time}. Only you can see it; after 7 days without a change it is removed.": "Unsaved contact moment, last changed at {time}. Only you can see it; after 7 days without a change it is removed."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -11,7 +11,12 @@ type interaction under the ticket the page is on, for the picked customer.
 An `open-modal` action carries no object context, so the route names the
 ticket. When the dialog closes after a save the page is asked to reload.
 
+What the agent types is kept as a private draft (contactMomentDraftMixin, the
+same draft as the client page's quick log), offered again when the dialog
+opens on the same ticket.
+
 @spec openspec/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
+@spec openspec/changes/contact-log-dialog-keeps-draft/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
 -->
 <template>
 	<CnDialog
@@ -22,6 +27,28 @@ ticket. When the dialog closes after a save the page is asked to reload.
 		data-testid="contact-log-dialog"
 		@closing="close">
 		<form class="contact-log" @submit.prevent="save">
+			<section
+				v-if="offeredDraft"
+				class="contact-log__draft"
+				:aria-label="t('pipelinq', 'Unsaved contact moment')"
+				data-testid="contact-log-draft-offer">
+				<AlertOutline class="contact-log__draft-icon" :size="18" />
+				<span class="contact-log__draft-text">
+					<strong>{{ t('pipelinq', 'You were already working on this.') }}</strong>
+					{{ t('pipelinq', 'Unsaved contact moment, last changed at {time}. Only you can see it; after 7 days without a change it is removed.', { time: offeredDraftClock }) }}
+				</span>
+				<span class="contact-log__draft-actions">
+					<NcButton variant="primary" data-testid="contact-log-draft-restore" @click="restoreDraft">
+						{{ t('pipelinq', 'Restore draft') }}
+					</NcButton>
+					<NcButton data-testid="contact-log-draft-discard" @click="discardDraft">
+						{{ t('pipelinq', 'Discard') }}
+					</NcButton>
+				</span>
+			</section>
+			<p v-if="sessionEnded" class="contact-log__error" role="alert" data-testid="contact-log-session-ended">
+				{{ t('pipelinq', 'Your session has ended. Log in again in a new tab, then press Save here.') }}
+			</p>
 			<p v-if="ticket" class="contact-log__parent contact-log__parent--block" data-testid="contact-log-parent">
 				<LinkVariant class="contact-log__parent-icon" :size="16" />
 				{{ t('pipelinq', 'Belongs to ticket') }}
@@ -126,8 +153,11 @@ import { CnDialog } from '@conduction/nextcloud-vue'
 import { emit } from '@nextcloud/event-bus'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcSelect } from '@nextcloud/vue'
+import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
+import contactMomentDraftMixin from '../mixins/contactMomentDraftMixin.js'
+import { draftChangedAt } from '../services/contactMomentDraft.js'
 import { initialsOf } from '../services/userDisplayName.js'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -146,7 +176,8 @@ const pad = (n) => String(n).padStart(2, '0')
  */
 export default {
 	name: 'ContactLogDialog',
-	components: { CnDialog, ContentSave, LinkVariant, NcButton, NcSelect },
+	components: { AlertOutline, CnDialog, ContentSave, LinkVariant, NcButton, NcSelect },
+	mixins: [contactMomentDraftMixin],
 	emits: ['close'],
 
 	data() {
@@ -155,6 +186,8 @@ export default {
 		const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`
 		return {
 			ticket: null,
+			// The customer the dialog opened on, filled in for the agent.
+			openedClientId: null,
 			client: null,
 			clientResults: [],
 			clientsLoading: false,
@@ -167,6 +200,55 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Where the dialog opened: on this ticket, for its customer.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 */
+		draftContext() {
+			return { author: this.author, clientId: this.openedClientId, requestId: this.ticketId || null }
+		},
+
+		/**
+		 * A draft is offered on its ticket whatever customer it names: the
+		 * dialog lets the agent change the customer.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 */
+		draftPickContext() {
+			return { author: this.author, requestId: this.ticketId || null }
+		},
+
+		/**
+		 * The channel and direction the dialog opens on.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 */
+		draftDefaults() {
+			return { channel: 'telefoon', direction: 'inbound' }
+		},
+
+		/**
+		 * When the offered draft last changed, as the board writes it: the
+		 * time of day, with the date when it was not today.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 */
+		offeredDraftClock() {
+			const changed = new Date(draftChangedAt(this.offeredDraft))
+			if (Number.isNaN(changed.getTime())) {
+				return ''
+			}
+			const clock = `${pad(changed.getHours())}:${pad(changed.getMinutes())}`
+			return changed.toDateString() === new Date().toDateString()
+				? clock
+				: `${changed.toLocaleDateString()} ${clock}`
+		},
+
 		/**
 		 * The ticket the page is on.
 		 *
@@ -243,13 +325,68 @@ export default {
 		},
 	},
 
+	watch: {
+		client() {
+			this.scheduleDraft()
+		},
+	},
+
 	async created() {
 		await Promise.all([this.loadTicket(), this.searchClients('')])
+		this.openedClientId = this.client?.id || null
+		await this.loadDraft()
 	},
 
 	methods: {
 		t,
 		initialsOf,
+
+		/**
+		 * The form's fields as the ticket names them, for the draft.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 */
+		draftableForm() {
+			return {
+				title: this.form.title,
+				channel: this.form.channel,
+				direction: this.form.direction,
+				duration: this.form.duration,
+				notes: this.form.notes,
+				client: this.client?.id || null,
+				parentTicket: this.ticketId || null,
+			}
+		},
+
+		/**
+		 * Put a restored draft back: its fields, and its customer when it
+		 * names another one.
+		 *
+		 * @param {object} kept The fields the draft holds.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 */
+		async applyDraftForm(kept) {
+			for (const key of ['title', 'channel', 'direction', 'duration', 'notes']) {
+				if (typeof kept[key] === 'string') {
+					this.form[key] = kept[key]
+				}
+			}
+			if (typeof kept.client === 'string' && kept.client !== '' && kept.client !== this.client?.id) {
+				const known = this.clientResults.find((option) => option.id === kept.client)
+				if (known) {
+					this.client = known
+					return
+				}
+				try {
+					const client = await useObjectStore().fetchObject('client', kept.client)
+					this.client = { id: kept.client, label: client?.name || kept.client }
+				} catch {
+					this.client = { id: kept.client, label: kept.client }
+				}
+			}
+		},
 
 		/**
 		 * Read the ticket and its customer's name.
@@ -337,11 +474,11 @@ export default {
 			this.busy = true
 			this.error = ''
 			try {
-				await useObjectStore().saveObject('ticket', this.payload())
+				await this.saveContactMoment(this.payload())
 				emit('cn:page:refresh', {})
 				this.$emit('close')
-			} catch {
-				this.error = t('pipelinq', 'The contact moment is not saved. Try again.')
+			} catch (error) {
+				this.error = error?.sessionEnded ? '' : t('pipelinq', 'The contact moment is not saved. Try again.')
 			} finally {
 				this.busy = false
 			}
@@ -459,6 +596,33 @@ export default {
 	background: var(--color-background-hover);
 	font-size: 12px;
 	font-weight: 700;
+}
+
+.contact-log__draft {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px 14px;
+	padding: 12px 14px;
+	border-radius: 10px;
+	background: var(--cn-board-notice-bg, var(--nl-color-orange-light, #fff4de));
+	color: var(--cn-board-notice-ink, var(--color-warning-text, #7a4f00));
+	font-size: 14px;
+}
+
+.contact-log__draft-icon {
+	display: inline-flex;
+	flex: none;
+}
+
+.contact-log__draft-text {
+	flex: 1 1 260px;
+	line-height: 1.5;
+}
+
+.contact-log__draft-actions {
+	display: flex;
+	gap: 8px;
 }
 
 .contact-log__error {
