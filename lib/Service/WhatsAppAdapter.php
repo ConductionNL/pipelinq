@@ -218,19 +218,19 @@ class WhatsAppAdapter {
 		}
 
 		$language = (string)$this->appConfig->getValueString(Application::APP_ID, 'whatsapp.default_language', 'nl');
-		$context = $this->resolveSendContext(
+		$resolved = $this->resolveSendContext(
 			templateId: $templateId,
 			parameters: $parameters,
 			language: $language,
 			contactId: $contactId
 		);
-		if ($context['error'] !== null) {
-			return $context['error'];
+		if ($resolved['error'] !== null) {
+			return $resolved['error'];
 		}
 
-		$template = $context['template'];
-		$templateName = $context['templateName'];
-		$language = $context['language'];
+		$template = $resolved['template'];
+		$templateName = $resolved['templateName'];
+		$language = $resolved['language'];
 
 		$tenantId = $this->getTenantId();
 		$ordered = $this->orderedProvidersForSend(templateProviderId: (string)($template['providerId'] ?? ''));
