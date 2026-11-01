@@ -1588,7 +1588,9 @@
 				"state": "built",
 				"evidence": "lib/Service/RegisterResolverService.php",
 				"owner": "ConductionNL/openregister",
-				"spec": "none"
+				"spec": "openregister:openspec/specs/runtime-schema-api",
+				"requirement": "openregister:openspec/specs/runtime-schema-api :: Runtime schema update invalidates cache and reloads affected engines; openregister:openspec/specs/register-resolver-service :: The system MUST expose `resolveSchema` with the same shape",
+				"note": "An admin adds a property to the client schema in OpenRegister at runtime (PUT/PATCH /api/schemas/{id}, no code or restart); pipelinq resolves that schema through RegisterResolverService, so the new field arrives with the client record."
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/create-and-edit-properties \"There are default properties included for each object, but you can create custom properties to store unique data for your business\", in Settings > Properties without code. All products and plans. Note: Was partial; custom properties are on every plan.",
