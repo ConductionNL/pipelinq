@@ -43,6 +43,8 @@ use Throwable;
  * LOYALTY_CREDIT_GOLDEN_RECORD=1 to rewrite it, then run once more without it.
  *
  * @covers \OCA\Pipelinq\Service\LoyaltyEngineService
+ * @covers \OCA\Pipelinq\Service\Loyalty\PointsCreditRun
+ * @covers \OCA\Pipelinq\Service\Loyalty\PointsGrant
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
