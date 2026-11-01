@@ -17,8 +17,9 @@
   - Verify: PHPUnit with a hermiq stub, without hermiq, and with a viewer who may read only some tickets (those stay out of the input)
 - [ ] 2.2 Route `GET /api/clients/{id}/history-summary` with `#[NoAdminRequired]` and an object authorisation check
   - Verify: hydra gates route-auth, no-admin-idor and route-reachability pass on the diff
-- [ ] 2.3 History summary card on ClientDetail, hidden without hermiq
-  - Verify: Playwright with a hermiq stub shows the summary with records read and time
+- [ ] 2.3 History summary card on ClientDetail; without hermiq it shows the not available line instead of Summarise
+  - Board: the card is drawn on PqKlant and PqOrganisatie (design-system #903, merged), so this task no longer waits for a board
+  - Verify: Playwright with a hermiq stub shows the summary with records read and time; without hermiq the card shows the not available line and no Summarise button
 
 ## 3. Docs
 
