@@ -1697,6 +1697,8 @@
 							"register": "pipelinq",
 							"schema": "client",
 							"filter": {},
+							"sortable": true,
+							"filterable": true,
 							"sort": {
 								"field": "name",
 								"dir": "asc"
