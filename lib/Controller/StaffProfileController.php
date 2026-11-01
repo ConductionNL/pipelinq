@@ -24,10 +24,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCP\Accounts\IAccount;
 use OCP\Accounts\IAccountManager;
 use OCP\Accounts\PropertyDoesNotExistException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\BruteForceProtection;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -43,6 +45,14 @@ use OCP\Share\IManager as IShareManager;
  * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
  */
 class StaffProfileController extends Controller {
+	/**
+	 * The answered fields and the profile properties they come from.
+	 */
+	private const FIELDS = [
+		'function'   => IAccountManager::PROPERTY_HEADLINE,
+		'department' => IAccountManager::PROPERTY_ORGANISATION,
+	];
+
 	/**
 	 * Constructor.
 	 *
@@ -72,7 +82,8 @@ class StaffProfileController extends Controller {
 	 * off, or the visitor may not find it under the instance's user search
 	 * settings, the same rules as the Nextcloud profile page. A field is only
 	 * returned when the profile shows it to the visitor and its scope is not
-	 * private; otherwise it reads as empty.
+	 * private; otherwise it reads as empty. Every unknown answer is throttled,
+	 * as the Nextcloud profile page throttles a lookup of an unknown account.
 	 *
 	 * @param string $userId The colleague's Nextcloud user id.
 	 *
@@ -81,6 +92,7 @@ class StaffProfileController extends Controller {
 	 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
 	 */
 	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'staffProfile')]
 	public function show(string $userId): JSONResponse {
 		$visitor = $this->userSession->getUser();
 		if ($visitor === null) {
@@ -92,14 +104,7 @@ class StaffProfileController extends Controller {
 			return $this->notFound();
 		}
 
-		$account = $this->accountManager->getAccount(user: $user);
-
-		return new JSONResponse(
-			data: [
-				'function'   => $this->visibleValue(account: $account, name: IAccountManager::PROPERTY_HEADLINE, target: $user, visitor: $visitor),
-				'department' => $this->visibleValue(account: $account, name: IAccountManager::PROPERTY_ORGANISATION, target: $user, visitor: $visitor),
-			]
-		);
+		return new JSONResponse(data: $this->visibleFields(target: $user, visitor: $visitor));
 	}//end show()
 
 	/**
@@ -123,30 +128,47 @@ class StaffProfileController extends Controller {
 	}//end mayView()
 
 	/**
-	 * The answer for an account the visitor may not see.
+	 * The answer for an account the visitor may not see, throttled.
 	 *
 	 * @return JSONResponse The 404.
 	 */
 	private function notFound(): JSONResponse {
-		return new JSONResponse(data: ['message' => 'User not found'], statusCode: Http::STATUS_NOT_FOUND);
+		$response = new JSONResponse(data: ['message' => 'User not found'], statusCode: Http::STATUS_NOT_FOUND);
+		$response->throttle();
+		return $response;
 	}//end notFound()
 
 	/**
-	 * A profile property's value when the profile shows it to the visitor and
-	 * its scope is not private, else ''.
+	 * Each field as the target's profile shows it to the visitor: its public
+	 * value when the profile shows that field to the visitor, else ''.
 	 *
-	 * @param \OCP\Accounts\IAccount $account The account.
-	 * @param string $name The property name.
 	 * @param IUser $target The colleague.
 	 * @param IUser $visitor The signed-in user.
 	 *
-	 * @return string The value, or ''.
+	 * @return array<string, string> The value of each field.
 	 */
-	private function visibleValue(\OCP\Accounts\IAccount $account, string $name, IUser $target, IUser $visitor): string {
-		if ($this->profileManager->isProfileFieldVisible(profileField: $name, targetUser: $target, visitingUser: $visitor) === false) {
-			return '';
+	private function visibleFields(IUser $target, IUser $visitor): array {
+		$account = $this->accountManager->getAccount(user: $target);
+		$fields  = [];
+		foreach (self::FIELDS as $field => $name) {
+			$fields[$field] = '';
+			if ($this->profileManager->isProfileFieldVisible(profileField: $name, targetUser: $target, visitingUser: $visitor) === true) {
+				$fields[$field] = $this->publicValue(account: $account, name: $name);
+			}
 		}
 
+		return $fields;
+	}//end visibleFields()
+
+	/**
+	 * A profile property's value when its scope is not private, else ''.
+	 *
+	 * @param IAccount $account The account.
+	 * @param string $name The property name.
+	 *
+	 * @return string The value, or ''.
+	 */
+	private function publicValue(IAccount $account, string $name): string {
 		try {
 			$property = $account->getProperty(property: $name);
 		} catch (PropertyDoesNotExistException) {
@@ -158,5 +180,5 @@ class StaffProfileController extends Controller {
 		}
 
 		return trim($property->getValue());
-	}//end visibleValue()
+	}//end publicValue()
 }//end class

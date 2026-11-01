@@ -27,6 +27,7 @@ use OCP\Accounts\IAccount;
 use OCP\Accounts\IAccountManager;
 use OCP\Accounts\IAccountProperty;
 use OCP\Accounts\PropertyDoesNotExistException;
+use OCP\AppFramework\Http\Attribute\BruteForceProtection;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -94,6 +95,21 @@ class StaffProfileControllerTest extends TestCase {
 	}//end visitor()
 
 	/**
+	 * A request whose every parameter names fatma, so a visitor read from the
+	 * request instead of the session would pass as fatma herself.
+	 *
+	 * @return IRequest The request.
+	 */
+	private function forgedRequest(): IRequest {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')->willReturn('fatma');
+		$request->method('getParams')->willReturn(
+			['userId' => 'fatma', 'visitor' => 'fatma', 'visitorId' => 'fatma', 'uid' => 'fatma', 'user' => 'fatma']
+		);
+		return $request;
+	}//end forgedRequest()
+
+	/**
 	 * The controller over one known user, fatma, with the given properties.
 	 *
 	 * By default the visitor is ruud, fatma's profile is on, every field is
@@ -154,7 +170,7 @@ class StaffProfileControllerTest extends TestCase {
 		);
 
 		return new StaffProfileController(
-			request: $this->createMock(originalClassName: IRequest::class),
+			request: $this->forgedRequest(),
 			userManager: $users,
 			accountManager: $accounts,
 			userSession: $session,
@@ -176,7 +192,7 @@ class StaffProfileControllerTest extends TestCase {
 	}//end filled()
 
 	/**
-	 * Assert the response is the unknown-user answer.
+	 * Assert the response is the unknown-user answer, throttled.
 	 *
 	 * @param \OCP\AppFramework\Http\JSONResponse $response The response.
 	 *
@@ -187,6 +203,7 @@ class StaffProfileControllerTest extends TestCase {
 		$this->assertSame(expected: 404, actual: $response->getStatus());
 		$this->assertSame(expected: $unknown->getStatus(), actual: $response->getStatus());
 		$this->assertSame(expected: $unknown->getData(), actual: $response->getData());
+		$this->assertTrue(condition: $response->isThrottled());
 	}//end assertUnknown()
 
 	/**
@@ -225,8 +242,25 @@ class StaffProfileControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testUnknownUserIsNotFound(): void {
-		$this->assertSame(expected: 404, actual: $this->controller(properties: [])->show(userId: 'nobody')->getStatus());
+		$response = $this->controller(properties: [])->show(userId: 'nobody');
+
+		$this->assertSame(expected: 404, actual: $response->getStatus());
+		$this->assertTrue(condition: $response->isThrottled());
 	}//end testUnknownUserIsNotFound()
+
+	/**
+	 * The lookup is brute-force protected under its own action, so the
+	 * throttled unknown answers slow down a caller who guesses user ids.
+	 *
+	 * @return void
+	 */
+	public function testTheLookupIsBruteForceProtected(): void {
+		$attributes = (new \ReflectionMethod(objectOrMethod: StaffProfileController::class, method: 'show'))
+			->getAttributes(name: BruteForceProtection::class);
+
+		$this->assertCount(expectedCount: 1, haystack: $attributes);
+		$this->assertSame(expected: 'staffProfile', actual: $attributes[0]->newInstance()->getAction());
+	}//end testTheLookupIsBruteForceProtected()
 	/**
 	 * A visitor who may see the profile gets both fields, as before.
 	 *
@@ -237,6 +271,7 @@ class StaffProfileControllerTest extends TestCase {
 
 		$this->assertSame(expected: 200, actual: $response->getStatus());
 		$this->assertSame(expected: ['function' => 'Woo-adviseur', 'department' => 'Woo en informatie'], actual: $response->getData());
+		$this->assertFalse(condition: $response->isThrottled());
 	}//end testAVisitorWhoMaySeeTheProfileGetsBothFields()
 
 	/**
@@ -311,4 +346,16 @@ class StaffProfileControllerTest extends TestCase {
 
 		$this->assertSame(expected: 200, actual: $response->getStatus());
 	}//end testOwnProfileIsAlwaysFound()
+
+	/**
+	 * A visitor named in the request is ignored: the signed-in user, whom the
+	 * profile does not admit, gets the unknown answer.
+	 *
+	 * @return void
+	 */
+	public function testAForgedRequestVisitorIsIgnored(): void {
+		$controller = $this->controller(properties: $this->filled(), options: ['visitor' => 'mallory', 'discoverable' => false]);
+
+		$this->assertUnknown(response: $controller->show(userId: 'fatma'));
+	}//end testAForgedRequestVisitorIsIgnored()
 }//end class
