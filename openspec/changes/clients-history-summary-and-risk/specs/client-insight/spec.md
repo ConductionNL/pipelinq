@@ -31,10 +31,12 @@ when a contract status or a survey classification changes.
 
 ### Requirement: A client's history can be summarised on request (REQ-CIN-002)
 
-ClientDetail SHALL offer Summarise when hermiq is available. The summary SHALL be
-written from the records of the last 90 days that the viewer may read, SHALL
-say how many records it read and when it was written, and SHALL NOT be stored.
-Without hermiq the card SHALL NOT be shown.
+ClientDetail SHALL show a History summary card and SHALL offer Summarise when
+hermiq is available. The summary SHALL be written from the records of the last
+90 days that the viewer may read, SHALL say how many records it read and when it
+was written, and SHALL NOT be stored. Without hermiq the card SHALL still be
+shown, without the Summarise button, with a line saying that summarising is not
+available.
 
 #### Scenario: An account manager prepares a call
 
@@ -48,3 +50,10 @@ Without hermiq the card SHALL NOT be shown.
 - GIVEN a complaint ticket on the client that the viewer is not allowed to read
 - WHEN the viewer presses Summarise
 - THEN the summary does not mention that complaint
+
+#### Scenario: Without hermiq the card says summarising is not available
+
+- GIVEN a Nextcloud where hermiq is not installed
+- WHEN an account manager opens ClientDetail
+- THEN the History summary card is shown without a Summarise button
+- AND it says that summarising is not available

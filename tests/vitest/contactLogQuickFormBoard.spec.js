@@ -95,7 +95,8 @@ describe('the contact moment quick log', () => {
 			['Save', 'primary'],
 		])
 		const css = readFileSync(resolve(__dirname, '../../src/components/ContactmomentQuickLog.vue'), 'utf8').split('<style')[1]
-		const actions = css.slice(css.indexOf('.form-actions {'), css.indexOf('}', css.indexOf('.form-actions {')))
+		const start = css.indexOf('\n.form-actions {')
+		const actions = css.slice(start, css.indexOf('}', start))
 		expect(actions).toMatch(/justify-content: flex-end;/)
 	})
 })

@@ -21,7 +21,7 @@
   - @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
   -->
 <template>
-	<section class="messaging-conversation">
+	<section class="messaging-conversation cn-board-form">
 		<header class="messaging-conversation__head">
 			<h3>
 				{{ t('pipelinq', 'Messages') }}
@@ -767,6 +767,15 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+}
+
+/* Board look (PqKlant, PqOrganisatie "Berichten"): the title is a card
+   title, 17/700 on its normal line, and `cn-board-form` draws the contact
+   picker's label above a 40px field and "Send message" 40px. */
+.cn-look-board .messaging-conversation h3 {
+	font-size: 17px;
+	font-weight: 700;
+	line-height: normal;
 }
 
 .messaging-conversation__badge {
