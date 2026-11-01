@@ -45,6 +45,8 @@ use Throwable;
  *
  * @covers \OCA\Pipelinq\Controller\MessagingController
  * @covers \OCA\Pipelinq\Util\ReadsTypedRequestParameters
+ * @uses   \OCA\Pipelinq\Service\Messaging\MessageContent
+ * @uses   \OCA\Pipelinq\Service\Messaging\MessageRoute
  *
  * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004-server-side-send-endpoint
  */
