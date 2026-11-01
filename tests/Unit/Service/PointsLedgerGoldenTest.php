@@ -82,6 +82,55 @@ class PointsLedgerGoldenTest extends TestCase {
 	}//end testGolden()
 
 	/**
+	 * A credit stamps the account's last activity with the ledger entry's own timestamp.
+	 *
+	 * @return void
+	 */
+	public function testCreditStampsLastActivityWithTheEntryTimestamp(): void {
+		$raw = [];
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => match ($key) {
+				'register' => 'reg-1',
+				'pointsLedgerEntry_schema' => 'schema-ledger',
+				default => $default,
+			}
+		);
+
+		$accountService = $this->createMock(LoyaltyAccountService::class);
+		$accountService->method('getAccount')->willReturn(['uuid' => 'acc-1', 'customerId' => 'cust-1', 'currentBalance' => 100, 'lifetimePoints' => 500]);
+		$accountService->method('updateBalances')->willReturnCallback(
+			function (...$args) use (&$raw): ?array {
+				$raw['lastActivityDate'] = $this->named(class: LoyaltyAccountService::class, method: 'updateBalances', args: $args)['lastActivityDate'];
+				return ['uuid' => 'acc-1'];
+			}
+		);
+
+		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects->method('saveObject')->willReturnCallback(
+			function (...$args) use (&$raw) {
+				$object = $this->named(class: ObjectServiceInterface::class, method: 'saveObject', args: $args)['object'];
+				$raw['timestamp'] = $object['timestamp'];
+				$entity = $this->createMock(ObjectEntityInterface::class);
+				$entity->method('jsonSerialize')->willReturn($object + ['uuid' => 'entry-1']);
+				return $entity;
+			}
+		);
+
+		$service = new PointsLedgerService(
+			appConfig: $appConfig,
+			accountService: $accountService,
+			logger: $this->createMock(LoggerInterface::class),
+			objectService: $objects,
+			aggregationRunner: $this->createMock(AggregationRunner::class),
+		);
+		$service->creditPoints(accountId: 'acc-1', amount: 40, ruleId: 'rule-1', sourceDocument: [], processedBy: 'alice');
+
+		$this->assertIsString($raw['timestamp'] ?? null);
+		$this->assertSame($raw['timestamp'], ($raw['lastActivityDate'] ?? null));
+	}//end testCreditStampsLastActivityWithTheEntryTimestamp()
+
+	/**
 	 * The scenarios: a public method, its arguments, and how the world answers.
 	 *
 	 * @return array<string, array<string, mixed>>
