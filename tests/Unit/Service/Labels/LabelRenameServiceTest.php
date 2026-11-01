@@ -37,6 +37,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * @covers \OCA\Pipelinq\Service\Labels\LabelRenameService
+ * @uses \OCA\Pipelinq\Service\Labels\LabelRenameException
  */
 class LabelRenameServiceTest extends TestCase {
 
