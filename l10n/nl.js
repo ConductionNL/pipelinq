@@ -9139,6 +9139,7 @@ OC.L10N.register(
         "{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first": "{shown} van {total} open leads · {pipeline|currency:EUR} in de pijplijn, {weighted|currency:EUR} gewogen · winkans eerst",
         "{name}, client": "{name}, klant",
         "Request {reference}": "Verzoek {reference}",
+        "Appointment: {subject}, {startAt|longdate}": "Afspraak: {subject}, {startAt|longdate}",
         "Contact Ref": "Contactpersoon",
         "The contact person at the client the contract was made with. Optional; the contact page lists the contracts that name it.": "De contactpersoon bij de klant met wie het contract is gesloten. Optioneel; de pagina van de contactpersoon toont de contracten die hem noemen.",
         "Contract {contractNumber}": "Contract {contractNumber}",

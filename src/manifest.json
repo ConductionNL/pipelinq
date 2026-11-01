@@ -1697,6 +1697,8 @@
 							"register": "pipelinq",
 							"schema": "client",
 							"filter": {},
+							"sortable": true,
+							"filterable": true,
 							"sort": {
 								"field": "name",
 								"dir": "asc"
@@ -4253,6 +4255,9 @@
 			"title": "Questions and reports",
 			"_note": "Unified ticket workspace (unify-ticket-supertype). One index over the ticket schema replacing the former Requests/Complaints/Contactmomenten pages; a ticketType quickFilter tab strip narrows to each subtype. Type-specific columns (complaintCategory, outcome) are omitted from the shared table — they surface on the detail page.",
 			"config": {
+				"_savedViewShareNote": "Board PqTicketsSelectie (design-system #826): an open saved view of the tickets list (\"Klachten deze week\") is shared from the toolbar, \"Delen: <view>\" beside Weergave opslaan, through the same share dialog as dossiq (nextcloud-vue saved-view-share-from-toolbar). Only the reader's own stored view gets the button.",
+				"allowSavedViews": true,
+				"savedViewShare": true,
 				"register": "pipelinq",
 				"createModal": "RequestCreateDialog",
 				"schema": "ticket",
@@ -4407,7 +4412,26 @@
 						"id": "ticket-related",
 						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
+						"icon": "LinkVariant",
+						"_note": "Board PqTicket: the side card links the appointments that belong to the ticket; every relation stays on the Related tab and behind Show all.",
+						"content": {
+							"layout": "links",
+							"extraSources": [
+								{
+									"key": "appointments",
+									"label": "Appointments",
+									"endpoint": "/apps/openregister/api/objects/pipelinq/appointmentBooking?ticket=@objectId",
+									"path": "results",
+									"itemLabel": "Appointment: {subject}, {startAt|longdate}",
+									"rowRoute": {
+										"name": "BookingDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								}
+							]
+						}
 					},
 					{
 						"id": "ticket-decision-routes",
