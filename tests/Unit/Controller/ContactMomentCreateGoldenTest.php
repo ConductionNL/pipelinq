@@ -38,6 +38,7 @@ use Throwable;
  * without it.
  *
  * @covers \OCA\Pipelinq\Controller\ContactMomentLeafController
+ * @covers \OCA\Pipelinq\Util\ReadsTypedRequestParameters
  *
  * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
