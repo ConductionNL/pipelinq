@@ -4057,6 +4057,7 @@
 				"filterStrip": {
 					"field": "channel",
 					"label": "Kind, then channel",
+					"allLabel": "All",
 					"showCount": true,
 					"options": [
 						{
