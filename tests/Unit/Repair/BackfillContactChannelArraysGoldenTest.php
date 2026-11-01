@@ -42,6 +42,7 @@ use RuntimeException;
  * to rewrite it, then run once more without it.
  *
  * @covers \OCA\Pipelinq\Repair\BackfillContactChannelArrays
+ * @covers \OCA\Pipelinq\Repair\Support\SchemaWriteTarget
  *
  * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
  */
