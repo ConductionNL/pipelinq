@@ -1674,6 +1674,8 @@
 								"field": "occurredAt",
 								"dir": "desc"
 							},
+							"sortable": true,
+							"filterable": true,
 							"columns": [
 								{
 									"key": "title",
