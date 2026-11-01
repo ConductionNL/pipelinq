@@ -509,7 +509,7 @@ class IntegriqConsentClient {
 	}//end askChunk()
 
 	/**
-	 * Integriq's answer for one address, or null when it gave none.
+	 * Integriq's answer for one address, or null when it gave none or its `send` is not a boolean.
 	 *
 	 * @param object $event   The dispatched event.
 	 * @param string $address The address as given.
@@ -526,7 +526,7 @@ class IntegriqConsentClient {
 		}
 
 		$answer = $event->getDecision($address);
-		if (is_array($answer) === false || array_key_exists('send', $answer) === false) {
+		if (is_array($answer) === false || is_bool($answer['send'] ?? null) === false) {
 			return null;
 		}
 
