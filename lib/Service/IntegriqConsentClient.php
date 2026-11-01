@@ -30,6 +30,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
+use OCA\Pipelinq\Service\Consent\ConsentQuestion;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -246,17 +248,15 @@ class IntegriqConsentClient {
 			)
 		);
 
+		$question = new ConsentQuestion(
+			ask: new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent),
+			correlationId: $correlationId,
+			inReplyTo: $inReplyTo,
+			probe: $probe,
+		);
 		$decisions = [];
 		foreach (array_chunk($recipients, self::CHUNK) as $chunk) {
-			$decisions += $this->decideChunk(
-				channel: $channel,
-				category: $category,
-				requiresConsent: $requiresConsent,
-				chunk: $chunk,
-				correlationId: $correlationId,
-				inReplyTo: $inReplyTo,
-				probe: $probe
-			);
+			$decisions += $this->decideChunk(question: $question, chunk: $chunk);
 		}
 
 		return $decisions;
@@ -475,37 +475,15 @@ class IntegriqConsentClient {
 	/**
 	 * Ask integriq for one chunk.
 	 *
-	 * @param string                         $channel         The channel.
-	 * @param string                         $category        The category.
-	 * @param bool                           $requiresConsent Whether consent is required.
-	 * @param array<int,array<string,mixed>> $chunk           The recipients.
-	 * @param string                         $correlationId   The correlation id.
-	 * @param string|null                    $inReplyTo       The inbound message, for a reply.
-	 * @param bool                           $probe           True to ask without a log row.
+	 * @param ConsentQuestion                $question The question.
+	 * @param array<int,array<string,mixed>> $chunk    The recipients.
 	 *
 	 * @return array<string,array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null}> By address.
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
 	 */
-	private function decideChunk(
-		string $channel,
-		string $category,
-		bool $requiresConsent,
-		array $chunk,
-		string $correlationId,
-		?string $inReplyTo,
-		bool $probe,
-	): array {
-		[$event, $why] = $this->askChunk(
-			channel: $channel,
-			category: $category,
-			requiresConsent: $requiresConsent,
-			chunk: $chunk,
-			correlationId: $correlationId,
-			inReplyTo: $inReplyTo,
-			probe: $probe
-		);
+	private function decideChunk(ConsentQuestion $question, array $chunk): array {
+		[$event, $why] = $this->askChunk(question: $question, chunk: $chunk);
 
+		$ask = $question->ask;
 		$decisions = [];
 		foreach ($chunk as $recipient) {
 			$address = (string)($recipient['address'] ?? '');
@@ -520,11 +498,11 @@ class IntegriqConsentClient {
 					$reason = 'integriq did not answer for this recipient';
 				}
 
-				$decisions[$address] = $this->unavailable(channel: $channel, category: $category, why: $reason);
+				$decisions[$address] = $this->unavailable(channel: $ask->channel, category: $ask->category, why: $reason);
 				continue;
 			}
 
-			$decisions[$address] = $this->readAnswer(answer: $answer, category: $category);
+			$decisions[$address] = $this->readAnswer(answer: $answer, category: $ask->category);
 		}//end foreach
 
 		return $decisions;
@@ -533,27 +511,12 @@ class IntegriqConsentClient {
 	/**
 	 * Dispatch the decision event for one chunk.
 	 *
-	 * @param string                         $channel         The channel.
-	 * @param string                         $category        The category.
-	 * @param bool                           $requiresConsent Whether consent is required.
-	 * @param array<int,array<string,mixed>> $chunk           The recipients.
-	 * @param string                         $correlationId   The correlation id.
-	 * @param string|null                    $inReplyTo       The inbound message, for a reply.
-	 * @param bool                           $probe           True to ask without a log row.
+	 * @param ConsentQuestion                $question The question.
+	 * @param array<int,array<string,mixed>> $chunk    The recipients.
 	 *
 	 * @return array{0:Event|null,1:string} The dispatched event, or null and why not.
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
 	 */
-	private function askChunk(
-		string $channel,
-		string $category,
-		bool $requiresConsent,
-		array $chunk,
-		string $correlationId,
-		?string $inReplyTo,
-		bool $probe,
-	): array {
+	private function askChunk(ConsentQuestion $question, array $chunk): array {
 		$eventClass = $this->eventClass(relative: $this->decisionEvent);
 		if ($eventClass === null) {
 			return [null, 'integriq or its decision event is not installed'];
@@ -561,7 +524,18 @@ class IntegriqConsentClient {
 
 		try {
 			// The ninth argument, probe, is ignored by an integriq that predates it.
-			$event = new $eventClass('pipelinq', $channel, $category, $chunk, $correlationId, $this->baseUrl(), $requiresConsent, $inReplyTo, $probe);
+			$ask = $question->ask;
+			$event = new $eventClass(
+				'pipelinq',
+				$ask->channel,
+				$ask->category,
+				$chunk,
+				$question->correlationId,
+				$this->baseUrl(),
+				$ask->requiresConsent,
+				$question->inReplyTo,
+				$question->probe
+			);
 			if (($event instanceof Event) === false) {
 				return [null, 'the decision event is not an event'];
 			}
