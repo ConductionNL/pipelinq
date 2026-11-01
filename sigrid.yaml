@@ -1,0 +1,13 @@
+# Sigrid analysis scope.
+#
+# Documented at https://docs.sigrid-says.com/reference/analysis-scope-configuration.html
+# Sigrid's default excludes (node_modules, vendor, build output, docs, migrations,
+# mocks and stubs) still apply on top of this file, and technologies and
+# components are left to Sigrid's automatic detection. This file only leaves
+# vendored tooling and third-party code out of the analysis.
+exclude:
+  # Developer tooling for Claude Code under .claude/: skills, agents and their
+  # configuration, partly copied from upstream (the skill-creator skill carries
+  # its own Apache-2.0 licence and update script). Not part of the shipped app;
+  # the skills stay in the repository for developers.
+  - ".*/[.]claude/.*"
