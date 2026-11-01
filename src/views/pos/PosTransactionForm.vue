@@ -543,6 +543,12 @@ export default {
 			return breakdown.map((entry) => ({ key: String(entry.rate), label: t('pipelinq', 'VAT {rate}% (base {base})', { rate: entry.rate, base: formatEur(entry.base) }), tax: entry.tax }))
 		},
 
+		/**
+		 * The payments table columns, sortable from their heads.
+		 *
+		 * @return {Array<object>} The CnDataTable column config.
+		 * @spec openspec/changes/card-table-heads-sort-filter/specs/dashboard-widgets/spec.md#requirement-card-tables-sort-and-filter-from-their-heads
+		 */
 		paymentColumns() {
 			return [
 				{ key: 'label', label: t('pipelinq', 'Tender'), sortable: true },
@@ -565,6 +571,12 @@ export default {
 			return this.history.slice(0, 5)
 		},
 
+		/**
+		 * The purchase history columns, sortable from their heads.
+		 *
+		 * @return {Array<object>} The CnDataTable column config.
+		 * @spec openspec/changes/card-table-heads-sort-filter/specs/dashboard-widgets/spec.md#requirement-card-tables-sort-and-filter-from-their-heads
+		 */
 		historyColumns() {
 			return [
 				{ key: 'createdAt', label: t('pipelinq', 'Date'), sortable: true },
