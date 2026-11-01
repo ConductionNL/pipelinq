@@ -226,7 +226,9 @@
                         "messageId": "row-2",
                         "conversationId": "row-1",
                         "contactId": "contact-1"
-                    }
+                    },
+                    "clientId": "cl-1",
+                    "agent": "ann"
                 }
             }
         ]
@@ -459,7 +461,9 @@
                         "messageId": "row-2",
                         "conversationId": "row-1",
                         "contactId": "contact-1"
-                    }
+                    },
+                    "clientId": "cl-1",
+                    "agent": "ann"
                 }
             }
         ]
@@ -1746,7 +1750,8 @@
                         "messageId": "",
                         "conversationId": "",
                         "contactId": "contact-1"
-                    }
+                    },
+                    "agent": "7"
                 }
             }
         ]
