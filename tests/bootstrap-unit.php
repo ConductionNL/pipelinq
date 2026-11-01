@@ -269,6 +269,9 @@ if (class_exists(\OCA\OpenRegister\Service\Lifecycle\TransitionEngine::class) ==
 	}
 }
 
+// Integriq event and OpenRegister helper stubs, shared with the other bootstraps.
+require_once __DIR__ . '/bootstrap-cross-app-stubs.php';
+
 // Portal test helpers.
 if (file_exists(__DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php') === true) {
 	require_once __DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php';
