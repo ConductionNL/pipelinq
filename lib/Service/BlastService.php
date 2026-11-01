@@ -37,6 +37,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Marketing\BlastSendRun;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -156,125 +157,165 @@ class BlastService {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)   $isDraft selects the documented
 	 *  dry-run preview mode; it is the method's defined contract, not a toggle to split.
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)  Sequential compliance/audience/AB
-	 *  guard clauses; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)       Same flat guard sequence; path count is a
-	 *  product of independent conditions, not nesting.
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Single linear send pipeline kept
-	 *  together for readability; the steps share local state.
 	 */
 	public function sendBlast(string $blastId, bool $isDraft = false): array {
 		$blast = $this->loadBlast(blastId: $blastId);
+		$refusal = $this->sendRefusal(blast: $blast);
+		if ($refusal !== null) {
+			return $this->emptySummary(status: $refusal);
+		}
+
+		$channel = (string)($blast['channel'] ?? 'email');
+		$run = new BlastSendRun(
+			blastId: $blastId,
+			channel: $channel,
+			isDraft: $isDraft,
+			audience: $this->resolveAudience(segmentId: (string)($blast['segmentId'] ?? ''), listId: (string)($blast['listId'] ?? ''), channel: $channel)
+		);
+		if ($isDraft === false) {
+			$this->recordSkips(blastId: $blastId, noConsent: $run->noConsent(), suppressed: $run->suppressed());
+		}
+
+		if ($run->audience['members'] === []) {
+			return $this->noRecipientSummary(run: $run);
+		}
+
+		return $this->queueAudience(run: $run, abSplit: $this->extractAbSplitPercent(blast: $blast));
+	}//end sendBlast()
+
+	/**
+	 * Slice the compliant audience over the A/B variants and queue it.
+	 *
+	 * A draft dry-run counts the whole sliced audience without persisting or
+	 * creating a variant; a real send counts only the deliveries that were stored.
+	 *
+	 * @param BlastSendRun $run     The send, with its compliant audience.
+	 * @param int|null     $abSplit Percentage routed to variant B, or null without a split.
+	 *
+	 * @return array<string, mixed> The send summary.
+	 */
+	private function queueAudience(BlastSendRun $run, ?int $abSplit): array {
+		$variantBlastId = null;
+		if ($abSplit !== null && $run->isDraft === false) {
+			$variantBlastId = $this->createAbVariant(parentBlastId: $run->blastId, variantData: ['suffix' => '-B']);
+		}
+
+		$rows = $this->sliceMembersForAb(
+			members: $run->audience['members'],
+			abSplitPercent: $abSplit,
+			parentBlastId: $run->blastId,
+			variantBlastId: $variantBlastId
+		);
+		if ($run->isDraft === false) {
+			$rows = $this->queueDeliveries(run: $run, rows: $rows);
+			$this->markSending(blastId: $run->blastId, variantBlastId: $variantBlastId);
+		}
+
+		$status = $this->summaryStatusFor(isDraft: $run->isDraft);
+		return $this->sendSummary(run: $run, outcome: ['rows' => $rows, 'variantBlastId' => $variantBlastId, 'status' => $status]);
+	}//end queueAudience()
+
+	/**
+	 * Why a blast may not be sent, or null when it may.
+	 *
+	 * @param array<string, mixed>|null $blast The loaded blast, or null when absent.
+	 *
+	 * @return string|null `not-found`, `not-draft-<status>`, `no-audience` or null.
+	 */
+	private function sendRefusal(?array $blast): ?string {
 		if ($blast === null) {
-			return $this->emptySummary(status: 'not-found');
+			return 'not-found';
 		}
 
 		$status = (string)($blast['status'] ?? 'draft');
 		if ($status !== 'draft') {
-			return $this->emptySummary(status: 'not-draft-' . $status);
+			return 'not-draft-' . $status;
 		}
 
-		$segmentId = (string)($blast['segmentId'] ?? '');
-		$listId = (string)($blast['listId'] ?? '');
-		if ($segmentId === '' && $listId === '') {
-			return $this->emptySummary(status: 'no-audience');
+		if ((string)($blast['segmentId'] ?? '') === '' && (string)($blast['listId'] ?? '') === '') {
+			return 'no-audience';
 		}
 
-		$channel = (string)($blast['channel'] ?? 'email');
+		return null;
+	}//end sendRefusal()
 
-		$audience = $this->resolveAudience(segmentId: $segmentId, listId: $listId, channel: $channel);
-		$missingConsent = $audience['missingConsent'];
-		$suppressed = ($audience['suppressed'] ?? []);
-		$compliantMembers = $audience['members'];
-
-		if ($isDraft === false) {
-			$this->recordSkips(blastId: $blastId, noConsent: count($missingConsent), suppressed: count($suppressed));
-		}
-
-		if ($compliantMembers === []) {
-			$this->logger->info(
-				'BlastService.sendBlast: no compliant recipients — keeping draft',
-				['blastId' => $blastId, 'channel' => $channel, 'missingCount' => count($missingConsent)]
-			);
-			return [
-				'queued' => 0,
-				'skippedNoConsent' => count($missingConsent),
-				'skippedSuppressed' => count($suppressed),
-				'variantA' => 0,
-				'variantB' => 0,
-				'variantBlastId' => null,
-				'status' => 'skipped-no-consent',
-			];
-		}
-
-		$abSplit = $this->extractAbSplitPercent(blast: $blast);
-		$variantBlastId = null;
-		if ($abSplit !== null && $isDraft === false) {
-			$variantBlastId = $this->createAbVariant(
-				parentBlastId: $blastId,
-				variantData: ['suffix' => '-B'],
-			);
-		}
-
-		$sliced = $this->sliceMembersForAb(
-			members: $compliantMembers,
-			abSplitPercent: $abSplit,
-			parentBlastId: $blastId,
-			variantBlastId: $variantBlastId,
+	/**
+	 * The summary when nobody in the audience may be sent to; the blast stays a draft.
+	 *
+	 * @param BlastSendRun $run The send.
+	 *
+	 * @return array<string, mixed> The send summary.
+	 */
+	private function noRecipientSummary(BlastSendRun $run): array {
+		$this->logger->info(
+			'BlastService.sendBlast: no compliant recipients — keeping draft',
+			['blastId' => $run->blastId, 'channel' => $run->channel, 'missingCount' => $run->noConsent()]
 		);
 
-		$variantACount = 0;
-		$variantBCount = 0;
+		return $this->sendSummary(run: $run, outcome: ['rows' => [], 'variantBlastId' => null, 'status' => 'skipped-no-consent']);
+	}//end noRecipientSummary()
 
-		// A draft dry-run counts the whole sliced audience without persisting;
-		// a real send persists each delivery first and counts only the rows
-		// that were stored (a failed persist is skipped).
-		$countableRows = $sliced;
-		if ($isDraft === false) {
-			$countableRows = [];
-			foreach ($sliced as $row) {
-				$persisted = $this->persistQueuedDelivery(
-					blastId: $row['blastId'],
-					member: $row['member'],
-					channel: $channel,
-				);
-				if ($persisted === false) {
-					continue;
-				}
-
-				$countableRows[] = $row;
+	/**
+	 * Persist one queued delivery per sliced row; return the rows that were stored.
+	 *
+	 * @param BlastSendRun                     $run  The send.
+	 * @param array<int, array<string, mixed>> $rows Rows from sliceMembersForAb().
+	 *
+	 * @return array<int, array<string, mixed>> The stored rows; a failed persist is skipped.
+	 */
+	private function queueDeliveries(BlastSendRun $run, array $rows): array {
+		$stored = [];
+		foreach ($rows as $row) {
+			if ($this->persistQueuedDelivery(blastId: $row['blastId'], member: $row['member'], channel: $run->channel) === true) {
+				$stored[] = $row;
 			}
-
-			$this->updateBlastStatus(blastId: $blastId, newStatus: 'sending');
-			if ($variantBlastId !== null) {
-				$this->updateBlastStatus(blastId: $variantBlastId, newStatus: 'sending');
-			}
-
-			$this->updateBlastTotals(blastId: $blastId);
-			if ($variantBlastId !== null) {
-				$this->updateBlastTotals(blastId: $variantBlastId);
-			}
-		}//end if
-
-		foreach ($countableRows as $row) {
-			if ($row['variant'] === 'B') {
-				$variantBCount++;
-				continue;
-			}
-
-			$variantACount++;
 		}
 
+		return $stored;
+	}//end queueDeliveries()
+
+	/**
+	 * Move the blast and its A/B variant to `sending` and recount their totals.
+	 *
+	 * @param string      $blastId        Blast UUID or slug.
+	 * @param string|null $variantBlastId The variant-B blast, or null without a split.
+	 *
+	 * @return void
+	 */
+	private function markSending(string $blastId, ?string $variantBlastId): void {
+		$this->updateBlastStatus(blastId: $blastId, newStatus: 'sending');
+		if ($variantBlastId !== null) {
+			$this->updateBlastStatus(blastId: $variantBlastId, newStatus: 'sending');
+		}
+
+		$this->updateBlastTotals(blastId: $blastId);
+		if ($variantBlastId !== null) {
+			$this->updateBlastTotals(blastId: $variantBlastId);
+		}
+	}//end markSending()
+
+	/**
+	 * The send summary: queued per variant, the skips, the variant blast and the status.
+	 *
+	 * @param BlastSendRun         $run     The send, with its skip counts.
+	 * @param array<string, mixed> $outcome `rows` counted per variant, `variantBlastId` and `status`.
+	 *
+	 * @return array<string, mixed> The send summary.
+	 */
+	private function sendSummary(BlastSendRun $run, array $outcome): array {
+		$variantB = count(array_filter($outcome['rows'], static fn (array $row): bool => $row['variant'] === 'B'));
+		$variantA = (count($outcome['rows']) - $variantB);
+
 		return [
-			'queued' => ($variantACount + $variantBCount),
-			'skippedNoConsent' => count($missingConsent),
-			'skippedSuppressed' => count($suppressed),
-			'variantA' => $variantACount,
-			'variantB' => $variantBCount,
-			'variantBlastId' => $variantBlastId,
-			'status' => $this->summaryStatusFor(isDraft: $isDraft),
+			'queued' => ($variantA + $variantB),
+			'skippedNoConsent' => $run->noConsent(),
+			'skippedSuppressed' => $run->suppressed(),
+			'variantA' => $variantA,
+			'variantB' => $variantB,
+			'variantBlastId' => $outcome['variantBlastId'],
+			'status' => $outcome['status'],
 		];
-	}//end sendBlast()
+	}//end sendSummary()
 
 	/**
 	 * Return the summary `status` for a sendBlast call.

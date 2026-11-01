@@ -1,0 +1,2317 @@
+{
+    "not found": {
+        "summary": {
+            "queued": 0,
+            "skippedNoConsent": 0,
+            "skippedSuppressed": 0,
+            "variantA": 0,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "not-found"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            }
+        ]
+    },
+    "not a draft": {
+        "summary": {
+            "queued": 0,
+            "skippedNoConsent": 0,
+            "skippedSuppressed": 0,
+            "variantA": 0,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "not-draft-sent"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            }
+        ]
+    },
+    "no status, no audience": {
+        "summary": {
+            "queued": 0,
+            "skippedNoConsent": 0,
+            "skippedSuppressed": 0,
+            "variantA": 0,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "no-audience"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            }
+        ]
+    },
+    "list audience, default channel": {
+        "summary": {
+            "queued": 6,
+            "skippedNoConsent": 2,
+            "skippedSuppressed": 1,
+            "variantA": 6,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "queued"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "",
+                    "listId": "list-1",
+                    "channel": "email"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "listId": "list-1",
+                        "status": "draft",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-1",
+                        "email": "ab1@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-2",
+                        "email": "ab2@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-3",
+                        "email": "ab3@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-4",
+                        "email": "ab4@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-5",
+                        "email": "ab5@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-6",
+                        "email": "ab6@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "listId": "list-1",
+                        "status": "sending",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "b-1"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "listId": "list-1",
+                        "status": "sending",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>",
+                        "totals": {
+                            "queued": 6,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            }
+        ]
+    },
+    "segment and list": {
+        "summary": {
+            "queued": 6,
+            "skippedNoConsent": 2,
+            "skippedSuppressed": 1,
+            "variantA": 6,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "queued"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "list-2",
+                    "channel": "email"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "listId": "list-2",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-1",
+                        "email": "ab1@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-2",
+                        "email": "ab2@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-3",
+                        "email": "ab3@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-4",
+                        "email": "ab4@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-5",
+                        "email": "ab5@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-6",
+                        "email": "ab6@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "listId": "list-2",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "b-1"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "listId": "list-2",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>",
+                        "totals": {
+                            "queued": 6,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            }
+        ]
+    },
+    "nobody compliant": {
+        "summary": {
+            "queued": 0,
+            "skippedNoConsent": 1,
+            "skippedSuppressed": 2,
+            "variantA": 0,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "skipped-no-consent"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "email"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "skippedNoConsent": 1,
+                        "skippedSuppressed": 2
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "log": "info",
+                "message": "BlastService.sendBlast: no compliant recipients — keeping draft",
+                "context": {
+                    "blastId": "b-1",
+                    "channel": "email",
+                    "missingCount": 1
+                }
+            }
+        ]
+    },
+    "nobody compliant, draft": {
+        "summary": {
+            "queued": 0,
+            "skippedNoConsent": 1,
+            "skippedSuppressed": 0,
+            "variantA": 0,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "skipped-no-consent"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "email"
+                }
+            },
+            {
+                "log": "info",
+                "message": "BlastService.sendBlast: no compliant recipients — keeping draft",
+                "context": {
+                    "blastId": "b-1",
+                    "channel": "email",
+                    "missingCount": 1
+                }
+            }
+        ]
+    },
+    "draft preview with a split": {
+        "summary": {
+            "queued": 6,
+            "skippedNoConsent": 2,
+            "skippedSuppressed": 1,
+            "variantA": 2,
+            "variantB": 4,
+            "variantBlastId": null,
+            "status": "draft-preview"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "email"
+                }
+            }
+        ]
+    },
+    "a/b split at 50": {
+        "summary": {
+            "queued": 6,
+            "skippedNoConsent": 2,
+            "skippedSuppressed": 1,
+            "variantA": 2,
+            "variantB": 4,
+            "variantBlastId": "saved-1-0",
+            "status": "queued"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "email"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "abSplitPercent": "50",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "name": "Q4-B",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "abVariantOf": "b-1",
+                        "connectorSourceId": "",
+                        "transportId": "",
+                        "totals": {
+                            "queued": 0,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        },
+                        "createdBy": "",
+                        "createdAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-1",
+                        "email": "ab1@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "saved-1-0",
+                        "contactId": "ab-2",
+                        "email": "ab2@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-3",
+                        "email": "ab3@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "saved-1-0",
+                        "contactId": "ab-4",
+                        "email": "ab4@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "saved-1-0",
+                        "contactId": "ab-5",
+                        "email": "ab5@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "saved-1-0",
+                        "contactId": "ab-6",
+                        "email": "ab6@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abSplitPercent": "50",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "saved-1-0",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "name": "Q4-B",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abVariantOf": "b-1",
+                        "connectorSourceId": "",
+                        "transportId": "",
+                        "totals": {
+                            "queued": 0,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        },
+                        "createdBy": "",
+                        "createdAt": "<now>",
+                        "uuid": "saved-1-0",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "saved-1-0"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "b-1"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abSplitPercent": "50",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>",
+                        "totals": {
+                            "queued": 2,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "saved-1-0",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "saved-1-0"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "name": "Q4-B",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abVariantOf": "b-1",
+                        "connectorSourceId": "",
+                        "transportId": "",
+                        "totals": {
+                            "queued": 4,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        },
+                        "createdBy": "",
+                        "createdAt": "<now>",
+                        "uuid": "saved-1-0",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "saved-1-0"
+                }
+            }
+        ]
+    },
+    "a/b split at 0": {
+        "summary": {
+            "queued": 6,
+            "skippedNoConsent": 2,
+            "skippedSuppressed": 1,
+            "variantA": 6,
+            "variantB": 0,
+            "variantBlastId": "saved-1-0",
+            "status": "queued"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "email"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "abSplitPercent": 0,
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "name": "Q4-B",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "abVariantOf": "b-1",
+                        "connectorSourceId": "",
+                        "transportId": "",
+                        "totals": {
+                            "queued": 0,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        },
+                        "createdBy": "",
+                        "createdAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-1",
+                        "email": "ab1@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-2",
+                        "email": "ab2@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-3",
+                        "email": "ab3@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-4",
+                        "email": "ab4@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-5",
+                        "email": "ab5@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-6",
+                        "email": "ab6@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abSplitPercent": 0,
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "saved-1-0",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "name": "Q4-B",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abVariantOf": "b-1",
+                        "connectorSourceId": "",
+                        "transportId": "",
+                        "totals": {
+                            "queued": 0,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        },
+                        "createdBy": "",
+                        "createdAt": "<now>",
+                        "uuid": "saved-1-0",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "saved-1-0"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "b-1"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abSplitPercent": 0,
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>",
+                        "totals": {
+                            "queued": 6,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "saved-1-0",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "saved-1-0"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "name": "Q4-B",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abVariantOf": "b-1",
+                        "connectorSourceId": "",
+                        "transportId": "",
+                        "totals": {
+                            "queued": 0,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        },
+                        "createdBy": "",
+                        "createdAt": "<now>",
+                        "uuid": "saved-1-0",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "saved-1-0"
+                }
+            }
+        ]
+    },
+    "split out of range": {
+        "summary": {
+            "queued": 6,
+            "skippedNoConsent": 2,
+            "skippedSuppressed": 1,
+            "variantA": 6,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "queued"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "email"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "abSplitPercent": 150,
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-1",
+                        "email": "ab1@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-2",
+                        "email": "ab2@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-3",
+                        "email": "ab3@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-4",
+                        "email": "ab4@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-5",
+                        "email": "ab5@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-6",
+                        "email": "ab6@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abSplitPercent": 150,
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "b-1"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abSplitPercent": 150,
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>",
+                        "totals": {
+                            "queued": 6,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            }
+        ]
+    },
+    "split not numeric": {
+        "summary": {
+            "queued": 6,
+            "skippedNoConsent": 2,
+            "skippedSuppressed": 1,
+            "variantA": 6,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "queued"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "email"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "abSplitPercent": "half",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-1",
+                        "email": "ab1@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-2",
+                        "email": "ab2@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-3",
+                        "email": "ab3@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-4",
+                        "email": "ab4@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-5",
+                        "email": "ab5@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-6",
+                        "email": "ab6@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abSplitPercent": "half",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "b-1"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abSplitPercent": "half",
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>",
+                        "totals": {
+                            "queued": 6,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            }
+        ]
+    },
+    "one delivery fails to save": {
+        "summary": {
+            "queued": 2,
+            "skippedNoConsent": 0,
+            "skippedSuppressed": 0,
+            "variantA": 2,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "queued"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "email"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "skippedNoConsent": 0,
+                        "skippedSuppressed": 0
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-1",
+                        "email": "ab1@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-2",
+                        "email": "ab2@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "c-fail",
+                        "email": "f@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "log": "warning",
+                "message": "BlastService.saveObject: save failed",
+                "context": {
+                    "schema": "blastDelivery",
+                    "exception": "save failed"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "skippedNoConsent": 0,
+                        "skippedSuppressed": 0,
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "b-1"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "skippedNoConsent": 0,
+                        "skippedSuppressed": 0,
+                        "sentAt": "<now>",
+                        "totals": {
+                            "queued": 2,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            }
+        ]
+    },
+    "sms with unsubscribe links": {
+        "summary": {
+            "queued": 2,
+            "skippedNoConsent": 0,
+            "skippedSuppressed": 0,
+            "variantA": 2,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "queued"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "sms"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "sms",
+                        "status": "draft",
+                        "sentAt": "earlier",
+                        "skippedNoConsent": 0,
+                        "skippedSuppressed": 0
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "c-1",
+                        "email": "",
+                        "status": "queued",
+                        "unsubscribeUrl": "https://u/1",
+                        "phone": "+31611"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "c-2",
+                        "email": "",
+                        "status": "queued",
+                        "phone": ""
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "sms",
+                        "status": "sending",
+                        "sentAt": "earlier",
+                        "skippedNoConsent": 0,
+                        "skippedSuppressed": 0
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "b-1"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "sms",
+                        "status": "sending",
+                        "sentAt": "earlier",
+                        "skippedNoConsent": 0,
+                        "skippedSuppressed": 0,
+                        "totals": {
+                            "queued": 2,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            }
+        ]
+    },
+    "variant cannot be saved": {
+        "summary": {
+            "queued": 6,
+            "skippedNoConsent": 2,
+            "skippedSuppressed": 1,
+            "variantA": 2,
+            "variantB": 4,
+            "variantBlastId": "",
+            "status": "queued"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "email"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "fail-variant",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "abSplitPercent": 50,
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "name": "fail-variant-B",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "abVariantOf": "b-1",
+                        "connectorSourceId": "",
+                        "transportId": "",
+                        "totals": {
+                            "queued": 0,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        },
+                        "createdBy": "",
+                        "createdAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": null
+                }
+            },
+            {
+                "log": "warning",
+                "message": "BlastService.saveObject: save failed",
+                "context": {
+                    "schema": "blast",
+                    "exception": "save failed"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-1",
+                        "email": "ab1@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-2",
+                        "email": "ab2@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-3",
+                        "email": "ab3@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-4",
+                        "email": "ab4@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-5",
+                        "email": "ab5@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "blastId": "b-1",
+                        "contactId": "ab-6",
+                        "email": "ab6@example.test",
+                        "status": "queued"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blastDelivery",
+                    "uuid": null
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "fail-variant",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abSplitPercent": 50,
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "b-1"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "fail-variant",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "abSplitPercent": 50,
+                        "skippedNoConsent": 2,
+                        "skippedSuppressed": 1,
+                        "sentAt": "<now>",
+                        "totals": {
+                            "queued": 6,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            }
+        ]
+    },
+    "members without a contact id": {
+        "summary": {
+            "queued": 0,
+            "skippedNoConsent": 0,
+            "skippedSuppressed": 0,
+            "variantA": 0,
+            "variantB": 0,
+            "variantBlastId": null,
+            "status": "queued"
+        },
+        "trace": [
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "audience": {
+                    "segmentId": "seg-1",
+                    "listId": "",
+                    "channel": "email"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "draft",
+                        "skippedNoConsent": 0,
+                        "skippedSuppressed": 0
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "skippedNoConsent": 0,
+                        "skippedSuppressed": 0,
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            },
+            {
+                "find": {
+                    "id": "b-1",
+                    "register": "pipelinq",
+                    "schema": "blast"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "blastDelivery",
+                        "blastId": "b-1"
+                    }
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "uuid": "b-1",
+                        "name": "Q4",
+                        "segmentId": "seg-1",
+                        "templateId": "t-1",
+                        "channel": "email",
+                        "status": "sending",
+                        "skippedNoConsent": 0,
+                        "skippedSuppressed": 0,
+                        "sentAt": "<now>",
+                        "totals": {
+                            "queued": 0,
+                            "sent": 0,
+                            "delivered": 0,
+                            "bounced": 0,
+                            "opened": 0,
+                            "clicked": 0,
+                            "unsubscribed": 0,
+                            "complained": 0
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "uuid": "b-1"
+                }
+            }
+        ]
+    }
+}
