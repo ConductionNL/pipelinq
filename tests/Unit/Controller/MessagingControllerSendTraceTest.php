@@ -26,6 +26,7 @@ use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\MessagingService;
+use OCA\Pipelinq\Tests\Unit\Support\NextcloudDispatch;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -115,8 +116,12 @@ class MessagingControllerSendTraceTest extends TestCase {
 	 */
 	private function trace(array $request): array {
 		$httpRequest = $this->createMock(IRequest::class);
-		$httpRequest->method('getParam')->willReturn('forged-user');
-		$httpRequest->method('getParams')->willReturn(['userId' => 'forged-user', 'actor' => 'forged-user', 'agent' => 'forged-user']);
+		$forged = ['userId' => 'forged-user', 'actor' => 'forged-user', 'agent' => 'forged-user'];
+		$params = $request + $forged;
+		$httpRequest->method('getParam')->willReturnCallback(
+			static fn (string $key, mixed $default = null): mixed => (isset($params[$key]) === true ? $params[$key] : $default)
+		);
+		$httpRequest->method('getParams')->willReturn($params);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('agent-session');
@@ -147,7 +152,7 @@ class MessagingControllerSendTraceTest extends TestCase {
 			$policy,
 			$this->createMock(LoggerInterface::class),
 		);
-		$controller->send(...$request);
+		NextcloudDispatch::call(controller: $controller, method: 'send', params: $params);
 
 		$this->assertCount(1, $calls);
 		return $calls[0];

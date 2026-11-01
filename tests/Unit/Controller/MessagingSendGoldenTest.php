@@ -44,6 +44,7 @@ use Throwable;
  * to rewrite it, then run once more without it.
  *
  * @covers \OCA\Pipelinq\Controller\MessagingController
+ * @covers \OCA\Pipelinq\Util\ReadsTypedRequestParameters
  *
  * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004-server-side-send-endpoint
  */
