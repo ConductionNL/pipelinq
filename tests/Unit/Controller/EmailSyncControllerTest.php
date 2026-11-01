@@ -250,40 +250,6 @@ class EmailSyncControllerTest extends TestCase {
 	}//end testSaveSettings400OnForeignAccount()
 
 	/**
-	 * GET /api/sync/email/accounts — 200 lists only the user's own accounts.
-	 *
-	 * @return void
-	 */
-	public function testGetAccounts200(): void {
-		$this->authenticateAs(uid: 'alice');
-		$accounts = [['id' => 3, 'email' => 'alice@example.org', 'name' => 'Alice']];
-		$this->service->expects($this->once())
-			->method('listAccounts')
-			->with('alice')
-			->willReturn($accounts);
-
-		$resp = $this->buildController()->getAccounts();
-
-		$this->assertSame(expected: Http::STATUS_OK, actual: $resp->getStatus());
-		$this->assertSame(expected: ['accounts' => $accounts], actual: $resp->getData());
-
-	}//end testGetAccounts200()
-
-	/**
-	 * GET /api/sync/email/accounts — 401 when unauthenticated.
-	 *
-	 * @return void
-	 */
-	public function testGetAccounts401(): void {
-		$this->userSession->method('getUser')->willReturn(null);
-
-		$resp = $this->buildController()->getAccounts();
-
-		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $resp->getStatus());
-
-	}//end testGetAccounts401()
-
-	/**
 	 * POST /api/sync/email/trigger — 200 returns the run summary.
 	 *
 	 * @return void
