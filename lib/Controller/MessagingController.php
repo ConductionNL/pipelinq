@@ -32,6 +32,8 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
+use OCA\Pipelinq\Service\Messaging\MessageContent;
+use OCA\Pipelinq\Service\Messaging\MessageRoute;
 use OCA\Pipelinq\Service\MessagingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -128,15 +130,9 @@ class MessagingController extends Controller {
 		}
 
 		$outcome = $this->messagingService->send(
-			contact: $contact,
-			channel: $channel,
-			body: $body,
-			templateId: $templateId,
-			parameters: $parameters,
-			providerHint: $providerHint,
-			actor: $user->getUID(),
-			clientId: $clientId,
-			inReplyTo: $inReplyTo
+			route: new MessageRoute(contact: $contact, providerHint: $providerHint, clientId: $clientId, inReplyTo: $inReplyTo),
+			content: new MessageContent(channel: $channel, body: $body, templateId: $templateId, parameters: $parameters),
+			actor: $user->getUID()
 		);
 
 		return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string)$outcome['status']));
