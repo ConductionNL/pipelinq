@@ -53,6 +53,22 @@ class IntegriqConsentMalformedAnswerTest extends TestCase {
 	}//end malformedSends()
 
 	/**
+	 * Every exempt category against every malformed `send`.
+	 *
+	 * @return array<string, array{0: string, 1: mixed}>
+	 */
+	public static function exemptCategoriesWithMalformedSends(): array {
+		$cases = [];
+		foreach (['besluit', 'statutory', 'account', 'security'] as $category) {
+			foreach (self::malformedSends() as $label => [$send]) {
+				$cases[$category.', '.$label] = [$category, $send];
+			}
+		}
+
+		return $cases;
+	}//end exemptCategoriesWithMalformedSends()
+
+	/**
 	 * A non-exempt message is refused as unavailable, with no link, and logged.
 	 *
 	 * @param mixed $send The malformed value.
@@ -76,17 +92,38 @@ class IntegriqConsentMalformedAnswerTest extends TestCase {
 	}//end testAMalformedSendIsRefusedAsUnavailable()
 
 	/**
-	 * An exempt message goes out without a link, as when integriq gives no answer.
+	 * A `reply` in the contact's own conversation is not exempt, so it is refused too.
 	 *
 	 * @param mixed $send The malformed value.
 	 *
 	 * @return void
 	 */
 	#[DataProvider('malformedSends')]
-	public function testAMalformedSendLetsAnExemptMessageGoWithoutALink(mixed $send): void {
+	public function testAMalformedSendRefusesAReply(mixed $send): void {
 		$warnings = [];
 		$decision = $this->client(send: $send, warnings: $warnings)->decideOne(
-			ask: new ConsentAsk(channel: 'email', category: 'security', requiresConsent: false),
+			ask: new ConsentAsk(channel: 'whatsapp', category: 'reply', requiresConsent: false),
+			recipient: ['address' => '+31612345678', 'inReplyTo' => 'wamid.inbound-1']
+		);
+
+		self::assertSame([false, IntegriqConsentClient::CODE_UNAVAILABLE, null], [$decision['send'], $decision['code'], $decision['unsubscribe']]);
+		self::assertCount(1, $warnings);
+		self::assertSame(['whatsapp', 'reply'], [$warnings[0]['channel'], $warnings[0]['category']]);
+	}//end testAMalformedSendRefusesAReply()
+
+	/**
+	 * An exempt message goes out without a link, as when integriq gives no answer.
+	 *
+	 * @param string $category The exempt category.
+	 * @param mixed  $send     The malformed value.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('exemptCategoriesWithMalformedSends')]
+	public function testAMalformedSendLetsAnExemptMessageGoWithoutALink(string $category, mixed $send): void {
+		$warnings = [];
+		$decision = $this->client(send: $send, warnings: $warnings)->decideOne(
+			ask: new ConsentAsk(channel: 'email', category: $category, requiresConsent: false),
 			recipient: ['address' => 'a@example.nl']
 		);
 
