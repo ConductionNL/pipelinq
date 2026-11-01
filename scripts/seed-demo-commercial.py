@@ -30,6 +30,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta
 
@@ -70,11 +71,41 @@ STAGES = [
 # Deterministic per-month multiplier so the year has shape.
 SEASONALITY = [0.85, 0.9, 1.05, 1.15, 1.0, 0.8, 0.95, 1.2, 1.1, 1.0, 1.25, 1.3]
 
+# Wipe order: children before the objects they reference.
+WIPE_ORDER = ['posTransactionLine', 'posTransaction', 'lead', 'product', 'productCategory', 'client']
+
+BASKETS = [
+    ['DEMO-P1', 'DEMO-P6'],
+    ['DEMO-P2', 'DEMO-P4'],
+    ['DEMO-P8', 'DEMO-P9'],
+    ['DEMO-P3', 'DEMO-P5', 'DEMO-P6'],
+    ['DEMO-P7'],
+    ['DEMO-P2', 'DEMO-P8'],
+]
+
+PRODUCT_BY_SKU = {p[0]: p for p in PRODUCTS}
+
+# The dev container drops or 5xx-es the odd request under bursty load, so
+# transient failures are retried after these delays. 4xx are real payload
+# errors and abort.
+RETRY_DELAYS = (2, 5, 10, 0)
+TRANSPORT_ERRORS = (urllib.error.URLError, ConnectionError, TimeoutError, OSError)
+
+# One HTTP call against the register's object API.
+Call = namedtuple('Call', 'method path body')
+
+# What the lead and POS builders share: client ids in CLIENTS order, product
+# ids by SKU, and the moment the seed runs.
+Story = namedtuple('Story', 'clients products today now')
+
+
+def basic_token(user, password):
+    return base64.b64encode(f'{user}:{password}'.encode()).decode()
+
 
 class Api:
-    def __init__(self, base, user, password):
+    def __init__(self, base, token):
         self.base = base.rstrip('/')
-        token = base64.b64encode(f'{user}:{password}'.encode()).decode()
         self.headers = {
             'Authorization': f'Basic {token}',
             'Content-Type': 'application/json',
@@ -82,38 +113,42 @@ class Api:
             'Accept': 'application/json',
         }
 
-    def request(self, method, path, body=None, params=''):
-        url = f'{self.base}/index.php/apps/openregister/api/objects/{REGISTER}/{path}{params}'
-        data = json.dumps(body).encode() if body is not None else None
-        # The dev container drops or 5xx-es the odd request under bursty
-        # load; retry transient failures with backoff. 4xx are real
-        # payload errors and abort.
-        for delay in (2, 5, 10, 0):
-            req = urllib.request.Request(url, data=data, headers=self.headers, method=method)
+    def url(self, path):
+        return f'{self.base}/index.php/apps/openregister/api/objects/{REGISTER}/{path}'
+
+    def send(self, call):
+        for delay in RETRY_DELAYS:
             try:
-                with urllib.request.urlopen(req, timeout=120) as response:
-                    return json.loads(response.read() or b'{}')
-            except urllib.error.HTTPError as e:
-                detail = e.read().decode(errors='replace')[:300]
-                if e.code >= 500 and delay:
-                    time.sleep(delay)
-                    continue
-                raise SystemExit(f'{method} {url} -> HTTP {e.code}: {detail}')
-            except (urllib.error.URLError, ConnectionError, TimeoutError, OSError) as e:
-                if delay:
-                    time.sleep(delay)
-                    continue
-                raise SystemExit(f'{method} {url} -> {type(e).__name__}: {e}')
+                return self._open(call)
+            except TRANSPORT_ERRORS as error:
+                message, retryable = self._failure(call, error)
+            if not (retryable and delay):
+                raise SystemExit(message)
+            time.sleep(delay)
+
+    def _open(self, call):
+        data = json.dumps(call.body).encode() if call.body is not None else None
+        req = urllib.request.Request(self.url(call.path), data=data, headers=self.headers, method=call.method)
+        with urllib.request.urlopen(req, timeout=120) as response:
+            return json.loads(response.read() or b'{}')
+
+    def _failure(self, call, error):
+        """The abort message for a failed attempt, and whether to retry it."""
+        where = f'{call.method} {self.url(call.path)}'
+        if isinstance(error, urllib.error.HTTPError):
+            detail = error.read().decode(errors='replace')[:300]
+            return f'{where} -> HTTP {error.code}: {detail}', error.code >= 500
+        return f'{where} -> {type(error).__name__}: {error}', True
 
     def list(self, schema):
-        rows = self.request('GET', schema, params='?_limit=5000')
+        rows = self.send(Call('GET', f'{schema}?_limit=5000', None))
         return rows.get('results') or rows.get('objects') or []
 
     def create(self, schema, obj):
-        return self.request('POST', schema, body=obj)
+        return self.send(Call('POST', schema, obj))
 
     def delete(self, schema, object_id):
-        return self.request('DELETE', f'{schema}/{object_id}')
+        return self.send(Call('DELETE', f'{schema}/{object_id}', None))
 
 
 def object_id(row):
@@ -131,51 +166,42 @@ def iso(dt):
     return dt.replace(microsecond=0).isoformat()
 
 
+def delete_twice(api, target):
+    """Delete (schema, id), with one retry; True when a delete went through."""
+    for _attempt in range(2):
+        try:
+            api.delete(*target)
+            return True
+        except SystemExit:
+            continue
+    return False
+
+
+def wipe_schema(api, schema):
+    """Delete the demo rows of one schema; returns (deleted, failed)."""
+    demo = list(filter(is_demo, api.list(schema)))
+    ids = list(filter(None, map(object_id, demo)))
+    deleted = [oid for oid in ids if delete_twice(api, (schema, oid))]
+    if demo:
+        print(f'  wiped {len(demo):4d} × {schema}')
+    return len(deleted), len(ids) - len(deleted)
+
+
 def wipe(api):
-    total = 0
-    failed = 0
-    for schema in ['posTransactionLine', 'posTransaction', 'lead', 'product', 'productCategory', 'client']:
-        demo = [o for o in api.list(schema) if is_demo(o)]
-        for obj in demo:
-            oid = object_id(obj)
-            if not oid:
-                continue
-            try:
-                api.delete(schema, oid)
-                total += 1
-            except SystemExit:
-                try:
-                    api.delete(schema, oid)
-                    total += 1
-                except SystemExit:
-                    failed += 1
-        if demo:
-            print(f'  wiped {len(demo):4d} × {schema}')
+    results = [wipe_schema(api, schema) for schema in WIPE_ORDER]
+    total = sum(deleted for deleted, _failed in results)
+    failed = sum(failed for _deleted, failed in results)
     print(f'Wipe done ({total} objects' + (f', {failed} failed' if failed else '') + ').')
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Seed pipelinq commercial demo data.')
-    parser.add_argument('--url', default='http://localhost:8080')
-    parser.add_argument('--user', default='admin')
-    parser.add_argument('--password', default='admin')
-    parser.add_argument('--wipe', action='store_true', help='Delete previously seeded demo objects first')
-    args = parser.parse_args()
+def create_all(api, batch):
+    """Create the rows of a (schema, rows) batch, four at a time, in order."""
+    schema, rows = batch
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        return list(pool.map(lambda obj: api.create(schema, obj), rows))
 
-    api = Api(args.url, args.user, args.password)
 
-    if args.wipe:
-        wipe(api)
-
-    existing = [o for o in api.list('lead') if str(o.get('title', '')).startswith(PREFIX)]
-    if existing:
-        print(f'Demo data already present ({len(existing)} DEMO leads). Use --wipe to reseed.')
-        sys.exit(0)
-
-    today = date.today()
-    now = datetime.now()
-
-    # ---- Clients (create first so leads/POS can reference their ids). ----
+def seed_clients(api):
     print(f'Seeding {len(CLIENTS):4d} × client ...')
     client_ids = {}
     for cid, name, industry in CLIENTS:
@@ -185,8 +211,11 @@ def main():
             'notes': cid,
         })
         client_ids[cid] = object_id(created)
+    return [client_ids[c[0]] for c in CLIENTS]
 
-    # ---- Product categories (product.category is a UUID reference). ----
+
+def seed_categories(api):
+    """Product categories first: product.category is a UUID reference."""
     category_names = sorted({c[2] for c in PRODUCTS})
     print(f'Seeding {len(category_names):4d} × productCategory ...')
     category_ids = {}
@@ -195,8 +224,10 @@ def main():
             'name': cat, 'description': f'{PREFIX}{cat} demo category', 'order': order,
         })
         category_ids[cat] = object_id(created)
+    return category_ids
 
-    # ---- Products. ----
+
+def seed_products(api, category_ids):
     print(f'Seeding {len(PRODUCTS):4d} × product ...')
     product_ids = {}
     for sku, name, category, price in PRODUCTS:
@@ -207,130 +238,164 @@ def main():
             'status': 'active',
         })
         product_ids[sku] = object_id(created)
+    return product_ids
 
-    client_list = [c[0] for c in CLIENTS]
 
-    # ---- Leads spread across the trailing year. ----
+def client_at(story, position):
+    return story.clients[position % len(story.clients)]
+
+
+def closing_month(story, month_back):
+    """The anchor day (about month_back months ago) and its seasonality."""
+    anchor = story.today - timedelta(days=30 * month_back)
+    return anchor, SEASONALITY[(11 - month_back) % 12]
+
+
+def won_lead(story, month_back):
+    anchor, season = closing_month(story, month_back)
+    close = iso(datetime(anchor.year, anchor.month, 12))
+    return {
+        'title': f'{PREFIX}Deal {anchor.strftime("%Y-%m")} — platform rollout',
+        'client': client_at(story, month_back),
+        'value': round((18000 + 1500 * (12 - month_back)) * season), 'probability': 100, 'status': 'won',
+        'stage': 'Gewonnen', 'stageOrder': 5,
+        'expectedCloseDate': close, 'stageEnteredAt': close,
+        'source': 'Demo', 'priority': 'normal',
+    }
+
+
+def lost_lead(story, month_back):
+    anchor, season = closing_month(story, month_back)
+    close = iso(datetime(anchor.year, anchor.month, 24))
+    return {
+        'title': f'{PREFIX}Deal {anchor.strftime("%Y-%m")} — declined',
+        'client': client_at(story, month_back + 3),
+        'value': round(9000 * season), 'probability': 0, 'status': 'lost',
+        'stage': 'Verloren', 'stageOrder': 6,
+        'expectedCloseDate': close, 'stageEnteredAt': close,
+        'source': 'Demo', 'priority': 'low',
+    }
+
+
+def quick_win(story, i):
+    close = iso(story.now - timedelta(days=5 + i * 6))
+    return {
+        'title': f'{PREFIX}Quick win #{i + 1}',
+        'client': client_at(story, i + 1),
+        'value': round(12000 + i * 4000), 'probability': 100, 'status': 'won',
+        'stage': 'Gewonnen', 'stageOrder': 5,
+        'expectedCloseDate': close, 'stageEnteredAt': close,
+        'source': 'Demo', 'priority': 'high',
+    }
+
+
+def open_lead(story, slot):
+    """Open opportunity j of stage idx, closing in the future."""
+    idx, j = slot
+    stage, order, prob = STAGES[idx]
+    return {
+        'title': f'{PREFIX}{stage} opportunity {j + 1}',
+        'client': client_at(story, idx * 3 + j),
+        'value': round((20000 + 5000 * idx + 3000 * j)), 'probability': prob, 'status': 'open',
+        'stage': stage, 'stageOrder': order,
+        'expectedCloseDate': iso(story.now + timedelta(days=15 + 20 * idx + j * 5)),
+        'stageEnteredAt': iso(story.now - timedelta(days=10 + j * 4)),
+        'source': 'Demo', 'priority': 'normal',
+    }
+
+
+def build_leads(story):
+    """Won and lost deals over the trailing year, recent quick wins, then the open pipeline."""
     leads = []
-    # Won + lost (closed) deals, two per month, value scaled by seasonality.
     for month_back in range(12):
-        first = (today.replace(day=1) - timedelta(days=1))
-        # Anchor each batch ~ (month_back) months ago, on the 12th + 24th.
-        anchor = today - timedelta(days=30 * month_back)
-        season = SEASONALITY[(11 - month_back) % 12]
-        won_value = round((18000 + 1500 * (12 - month_back)) * season)
-        lost_value = round(9000 * season)
-        won_close = datetime(anchor.year, anchor.month, min(12, 28))
-        lost_close = datetime(anchor.year, anchor.month, min(24, 28))
-        leads.append({
-            'title': f'{PREFIX}Deal {anchor.strftime("%Y-%m")} — platform rollout',
-            'client': client_ids[client_list[month_back % len(client_list)]],
-            'value': won_value, 'probability': 100, 'status': 'won',
-            'stage': 'Gewonnen', 'stageOrder': 5,
-            'expectedCloseDate': iso(won_close), 'stageEnteredAt': iso(won_close),
-            'source': 'Demo', 'priority': 'normal',
-        })
-        leads.append({
-            'title': f'{PREFIX}Deal {anchor.strftime("%Y-%m")} — declined',
-            'client': client_ids[client_list[(month_back + 3) % len(client_list)]],
-            'value': lost_value, 'probability': 0, 'status': 'lost',
-            'stage': 'Verloren', 'stageOrder': 6,
-            'expectedCloseDate': iso(lost_close), 'stageEnteredAt': iso(lost_close),
-            'source': 'Demo', 'priority': 'low',
-        })
-    # A handful of extra won deals in the most recent two months for a strong trend.
-    for i in range(3):
-        close = now - timedelta(days=5 + i * 6)
-        leads.append({
-            'title': f'{PREFIX}Quick win #{i + 1}',
-            'client': client_ids[client_list[(i + 1) % len(client_list)]],
-            'value': round(12000 + i * 4000), 'probability': 100, 'status': 'won',
-            'stage': 'Gewonnen', 'stageOrder': 5,
-            'expectedCloseDate': iso(close), 'stageEnteredAt': iso(close),
-            'source': 'Demo', 'priority': 'high',
-        })
+        leads += [won_lead(story, month_back), lost_lead(story, month_back)]
+    leads += [quick_win(story, i) for i in range(3)]
+    leads += [open_lead(story, (idx, j)) for idx in range(len(STAGES)) for j in range(3)]
+    return leads
 
-    # Open pipeline: several leads per stage with future close dates.
-    for idx, (stage, order, prob) in enumerate(STAGES):
-        for j in range(3):
-            value = round((20000 + 5000 * idx + 3000 * j))
-            close = now + timedelta(days=15 + 20 * idx + j * 5)
-            entered = now - timedelta(days=10 + j * 4)
-            leads.append({
-                'title': f'{PREFIX}{stage} opportunity {j + 1}',
-                'client': client_ids[client_list[(idx * 3 + j) % len(client_list)]],
-                'value': value, 'probability': prob, 'status': 'open',
-                'stage': stage, 'stageOrder': order,
-                'expectedCloseDate': iso(close), 'stageEnteredAt': iso(entered),
-                'source': 'Demo', 'priority': 'normal',
-            })
 
-    print(f'Seeding {len(leads):4d} × lead ...')
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        list(pool.map(lambda obj: api.create('lead', obj), leads))
+def basket_line(story, item):
+    """Line n of a basket: item is (n, sku, week)."""
+    n, sku, week = item
+    _sku, description, _category, price = PRODUCT_BY_SKU[sku]
+    qty = 1 + (week + n) % 3
+    return {
+        'product': story.products[sku],
+        'description': description,
+        'quantity': qty, 'unitPrice': price, 'lineTotal': round(price * qty, 2),
+        'taxRate': 21, 'sortOrder': n + 1,
+    }
 
-    # ---- POS transactions settled across the year, with product lines. ----
-    pos = []
-    lines_by_ref = {}
-    basket_rotation = [
-        ['DEMO-P1', 'DEMO-P6'],
-        ['DEMO-P2', 'DEMO-P4'],
-        ['DEMO-P8', 'DEMO-P9'],
-        ['DEMO-P3', 'DEMO-P5', 'DEMO-P6'],
-        ['DEMO-P7'],
-        ['DEMO-P2', 'DEMO-P8'],
-    ]
-    for week in range(40):
-        settled = now - timedelta(days=7 * week + 2)
-        ref = f'{PREFIX}POS-{settled.strftime("%Y%m%d")}-{week:02d}'
-        basket = basket_rotation[week % len(basket_rotation)]
-        lines = []
-        subtotal = 0.0
-        for n, sku in enumerate(basket):
-            price = next(p[3] for p in PRODUCTS if p[0] == sku)
-            qty = 1 + (week + n) % 3
-            line_total = round(price * qty, 2)
-            subtotal += line_total
-            lines.append({
-                'product': product_ids[sku],
-                'description': next(p[1] for p in PRODUCTS if p[0] == sku),
-                'quantity': qty, 'unitPrice': price, 'lineTotal': line_total,
-                'taxRate': 21, 'sortOrder': n + 1,
-            })
-        tax = round(subtotal * 0.21, 2)
-        pos.append({
-            'reference': ref, 'cashier': 'admin', 'status': 'settled',
-            'client': client_ids[client_list[week % len(client_list)]],
-            'tenderType': 'card', 'subtotal': round(subtotal, 2), 'totalTax': tax,
-            'total': round(subtotal + tax, 2), 'priceMode': 'excl',
-            'settledAt': iso(settled), 'confirmedAt': iso(settled),
-        })
-        lines_by_ref[ref] = lines
 
+def pos_transaction(story, week):
+    """The settled transaction of a week and its product lines."""
+    settled = story.now - timedelta(days=7 * week + 2)
+    basket = BASKETS[week % len(BASKETS)]
+    lines = [basket_line(story, (n, sku, week)) for n, sku in enumerate(basket)]
+    subtotal = sum((line['lineTotal'] for line in lines), 0.0)
+    tax = round(subtotal * 0.21, 2)
+    return {
+        'reference': f'{PREFIX}POS-{settled.strftime("%Y%m%d")}-{week:02d}', 'cashier': 'admin', 'status': 'settled',
+        'client': client_at(story, week),
+        'tenderType': 'card', 'subtotal': round(subtotal, 2), 'totalTax': tax,
+        'total': round(subtotal + tax, 2), 'priceMode': 'excl',
+        'settledAt': iso(settled), 'confirmedAt': iso(settled),
+    }, lines
+
+
+def linked_lines(pos, created):
+    """The lines of each created transaction, pointing at it; a transaction without an id drops its lines."""
+    linked = []
+    for (_txn, lines), txn_id in zip(pos, map(object_id, created)):
+        if txn_id:
+            linked += [{**line, 'transaction': txn_id} for line in lines]
+    return linked
+
+
+def seed_pos(api, story):
+    """POS transactions settled across the year, then the lines of those that got an id."""
+    pos = [pos_transaction(story, week) for week in range(40)]
     print(f'Seeding {len(pos):4d} × posTransaction ...')
-    pos_id_by_ref = {}
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        def make(txn):
-            created = api.create('posTransaction', txn)
-            return txn['reference'], object_id(created)
-        for ref, oid in pool.map(make, pos):
-            pos_id_by_ref[ref] = oid
-
-    pos_lines = []
-    for ref, lines in lines_by_ref.items():
-        txn_id = pos_id_by_ref.get(ref)
-        if not txn_id:
-            continue
-        for line in lines:
-            pos_lines.append({**line, 'transaction': txn_id})
-
+    created = create_all(api, ('posTransaction', [txn for txn, _lines in pos]))
+    pos_lines = linked_lines(pos, created)
     print(f'Seeding {len(pos_lines):4d} × posTransactionLine ...')
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        list(pool.map(lambda obj: api.create('posTransactionLine', obj), pos_lines))
+    create_all(api, ('posTransactionLine', pos_lines))
+    return len(pos) + len(pos_lines)
 
-    total = len(CLIENTS) + len(PRODUCTS) + len(leads) + len(pos) + len(pos_lines)
+
+def seed(api):
+    today = date.today()
+    now = datetime.now()
+    clients = seed_clients(api)
+    products = seed_products(api, seed_categories(api))
+    story = Story(clients, products, today, now)
+    leads = build_leads(story)
+    print(f'Seeding {len(leads):4d} × lead ...')
+    create_all(api, ('lead', leads))
+    total = len(CLIENTS) + len(PRODUCTS) + len(leads) + seed_pos(api, story)
     print(f'Done — {total} objects seeded into register "{REGISTER}". '
           f'Open the Commercial dashboard.')
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Seed pipelinq commercial demo data.')
+    parser.add_argument('--url', default='http://localhost:8080')
+    parser.add_argument('--user', default='admin')
+    parser.add_argument('--password', default='admin')
+    parser.add_argument('--wipe', action='store_true', help='Delete previously seeded demo objects first')
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    api = Api(args.url, basic_token(args.user, args.password))
+    if args.wipe:
+        wipe(api)
+    existing = [o for o in api.list('lead') if str(o.get('title', '')).startswith(PREFIX)]
+    if existing:
+        print(f'Demo data already present ({len(existing)} DEMO leads). Use --wipe to reseed.')
+        sys.exit(0)
+    seed(api)
 
 
 if __name__ == '__main__':
