@@ -173,7 +173,7 @@ class BlastService {
 			audience: $this->resolveAudience(segmentId: (string)($blast['segmentId'] ?? ''), listId: (string)($blast['listId'] ?? ''), channel: $channel)
 		);
 		if ($isDraft === false) {
-			$this->recordSkips(blastId: $blastId, noConsent: $run->noConsent(), suppressed: $run->suppressed());
+			$this->recordSkips(run: $run);
 		}
 
 		if ($run->audience['members'] === []) {
@@ -266,7 +266,7 @@ class BlastService {
 	private function queueDeliveries(BlastSendRun $run, array $rows): array {
 		$stored = [];
 		foreach ($rows as $row) {
-			if ($this->persistQueuedDelivery(blastId: $row['blastId'], member: $row['member'], channel: $run->channel) === true) {
+			if ($this->persistQueuedDelivery(run: $run, row: $row) === true) {
 				$stored[] = $row;
 			}
 		}
@@ -1302,15 +1302,15 @@ class BlastService {
 	/**
 	 * Persist a queued BlastDelivery row.
 	 *
-	 * @param string $blastId Target Blast id.
-	 * @param array<string, string> $member Recipient projection.
-	 * @param string $channel Channel.
+	 * @param BlastSendRun         $run The send, for its channel.
+	 * @param array<string, mixed> $row A row from sliceMembersForAb(): target `blastId` and `member`.
 	 *
 	 * @return bool True when the row was persisted.
 	 */
-	private function persistQueuedDelivery(string $blastId, array $member, string $channel): bool {
+	private function persistQueuedDelivery(BlastSendRun $run, array $row): bool {
+		$member = $row['member'];
 		$payload = [
-			'blastId' => $blastId,
+			'blastId' => $row['blastId'],
 			'contactId' => (string)($member['contactId'] ?? ''),
 			'email' => (string)($member['email'] ?? ''),
 			'status' => 'queued',
@@ -1320,7 +1320,7 @@ class BlastService {
 			$payload['unsubscribeUrl'] = $unsubscribeUrl;
 		}
 
-		if ($channel === 'sms') {
+		if ($run->channel === 'sms') {
 			$payload['phone'] = (string)($member['phone'] ?? '');
 		}
 
@@ -1675,22 +1675,20 @@ class BlastService {
 	 * list sums them as "Blocked by consent", so the refusal is visible after
 	 * the send and not only in its response.
 	 *
-	 * @param string $blastId Blast UUID or slug.
-	 * @param int $noConsent Contacts without consent.
-	 * @param int $suppressed Contacts on the suppression list.
+	 * @param BlastSendRun $run The send, with its skip counts.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/marketing-analytics/spec.md#requirement-overview-metrics-table
 	 */
-	private function recordSkips(string $blastId, int $noConsent, int $suppressed): void {
-		$blast = $this->loadBlast(blastId: $blastId);
+	private function recordSkips(BlastSendRun $run): void {
+		$blast = $this->loadBlast(blastId: $run->blastId);
 		if ($blast === null) {
 			return;
 		}
 
-		$blast['skippedNoConsent'] = $noConsent;
-		$blast['skippedSuppressed'] = $suppressed;
+		$blast['skippedNoConsent'] = $run->noConsent();
+		$blast['skippedSuppressed'] = $run->suppressed();
 		$this->saveObject(
 			payload: $blast,
 			schemaSlug: $this->getBlastSchemaSlug(),
