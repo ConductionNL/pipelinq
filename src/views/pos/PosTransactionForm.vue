@@ -151,6 +151,8 @@
 					<CnDataTable
 						v-if="recentHistory.length"
 						framed
+						filterable
+						localHeaders
 						:columns="historyColumns"
 						:rows="recentHistory"
 						rowKey="id">
@@ -193,6 +195,8 @@
 					<CnDataTable
 						class="pos-form__payments"
 						framed
+						filterable
+						localHeaders
 						:columns="paymentColumns"
 						:rows="paymentRows"
 						rowKey="key">
@@ -541,8 +545,8 @@ export default {
 
 		paymentColumns() {
 			return [
-				{ key: 'label', label: t('pipelinq', 'Tender') },
-				{ key: 'amount', label: t('pipelinq', 'Amount'), class: 'num', cellClass: 'num' },
+				{ key: 'label', label: t('pipelinq', 'Tender'), sortable: true },
+				{ key: 'amount', label: t('pipelinq', 'Amount'), class: 'num', cellClass: 'num', sortable: true },
 			]
 		},
 
@@ -563,11 +567,11 @@ export default {
 
 		historyColumns() {
 			return [
-				{ key: 'createdAt', label: t('pipelinq', 'Date') },
-				{ key: 'reference', label: t('pipelinq', 'Reference number') },
-				{ key: 'itemCount', label: t('pipelinq', 'Items'), class: 'num', cellClass: 'num' },
-				{ key: 'total', label: t('pipelinq', 'Total'), class: 'num', cellClass: 'num' },
-				{ key: 'tenderType', label: t('pipelinq', 'Tender') },
+				{ key: 'createdAt', label: t('pipelinq', 'Date'), sortable: true },
+				{ key: 'reference', label: t('pipelinq', 'Reference number'), sortable: true },
+				{ key: 'itemCount', label: t('pipelinq', 'Items'), class: 'num', cellClass: 'num', sortable: true },
+				{ key: 'total', label: t('pipelinq', 'Total'), class: 'num', cellClass: 'num', sortable: true },
+				{ key: 'tenderType', label: t('pipelinq', 'Tender'), sortable: true },
 			]
 		},
 
