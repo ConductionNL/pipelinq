@@ -17,12 +17,15 @@
 			<p>{{ t('pipelinq', 'No product categories configured yet.') }}</p>
 		</div>
 
-		<div v-else class="category-manager__list">
+		<div v-else class="category-manager__list cn-settings-list">
 			<div
 				v-for="cat in sortedCategories"
 				:key="cat.id"
 				class="category-item"
-				:class="{ 'category-item--editing': editingId === cat.id }">
+				:class="{
+					'category-item--editing': editingId === cat.id,
+					'cn-settings-row': editingId !== cat.id,
+				}">
 				<template v-if="editingId === cat.id">
 					<div class="category-item__edit">
 						<input
