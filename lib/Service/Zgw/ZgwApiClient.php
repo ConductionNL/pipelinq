@@ -64,6 +64,15 @@ class ZgwApiClient {
 	private const DEFAULT_TIMEOUT = 30;
 
 	/**
+	 * Headers every component call carries after the Authorization header.
+	 */
+	private const DEFAULT_HEADERS = [
+		'Accept' => 'application/json',
+		'Accept-Crs' => 'EPSG:4326',
+		'Content-Crs' => 'EPSG:4326',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IClientService $clientService Nextcloud HTTP client factory.
@@ -161,29 +170,43 @@ class ZgwApiClient {
 		array $extraHeaders = [],
 		array $query = [],
 	): array {
-		$expiresIn = (int)($client['tokenLifespanSeconds'] ?? 3600);
-		$jwt = $this->mintJwt(client: $client, expiresIn: $expiresIn);
+		$jwt = $this->mintJwt(client: $client, expiresIn: (int)($client['tokenLifespanSeconds'] ?? 3600));
+		$url = self::withQuery(url: rtrim($componentUrl, '/') . '/' . ltrim($path, '/'), query: $query);
+		$options = $this->requestOptions(headers: array_merge(['Authorization' => 'Bearer ' . $jwt], self::DEFAULT_HEADERS, $extraHeaders), body: $body);
 
-		$url = rtrim($componentUrl, '/') . '/' . ltrim($path, '/');
-		if ($query !== []) {
-			$separator = '?';
-			if (str_contains($url, '?') === true) {
-				$separator = '&';
-			}
+		return $this->send(method: $method, request: ['url' => $url, 'options' => $options]);
+	}//end callComponent()
 
-			$url .= $separator . http_build_query($query);
+	/**
+	 * Append query parameters to a URL that may already carry some.
+	 *
+	 * @param string                    $url   The URL.
+	 * @param array<string, string|int> $query The query parameters.
+	 *
+	 * @return string The URL with the query.
+	 */
+	private static function withQuery(string $url, array $query): string {
+		if ($query === []) {
+			return $url;
 		}
 
-		$headers = array_merge(
-			[
-				'Authorization' => 'Bearer ' . $jwt,
-				'Accept' => 'application/json',
-				'Accept-Crs' => 'EPSG:4326',
-				'Content-Crs' => 'EPSG:4326',
-			],
-			$extraHeaders
-		);
+		$separator = '?';
+		if (str_contains($url, '?') === true) {
+			$separator = '&';
+		}
 
+		return $url . $separator . http_build_query($query);
+	}//end withQuery()
+
+	/**
+	 * The HTTP client options: headers, timeout and an optional JSON body.
+	 *
+	 * @param array<string, string>     $headers The headers.
+	 * @param array<string, mixed>|null $body    The body, or null for none.
+	 *
+	 * @return array<string, mixed> The options.
+	 */
+	private function requestOptions(array $headers, ?array $body): array {
 		$options = [
 			'headers' => $headers,
 			'timeout' => $this->getTimeout(),
@@ -194,6 +217,24 @@ class ZgwApiClient {
 			$options['body'] = json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 		}
 
+		return $options;
+	}//end requestOptions()
+
+	/**
+	 * Send the request and decode the answer, translating every transport error into a domain error.
+	 *
+	 * @param string                                           $method  HTTP method.
+	 * @param array{url: string, options: array<string, mixed>} $request The URL and client options.
+	 *
+	 * @return array{status:int, body:array<string,mixed>, headers:array<string,string>}
+	 *
+	 * @throws ClockSkewException
+	 * @throws ZgwResourceNotFoundException
+	 * @throws ZgwException
+	 */
+	private function send(string $method, array $request): array {
+		$url = $request['url'];
+		$options = $request['options'];
 		$nextcloudClient = $this->clientService->newClient();
 
 		try {
@@ -211,7 +252,6 @@ class ZgwApiClient {
 			throw new ZgwException('ZGW: transport error', 0, $e);
 		}
 
-		$status = (int)$response->getStatusCode();
 		$rawBody = (string)$response->getBody();
 		$decoded = [];
 		if ($rawBody !== '') {
@@ -222,10 +262,8 @@ class ZgwApiClient {
 			$decoded = ['raw' => $rawBody];
 		}
 
-		$headerMap = self::normaliseHeaders(headers: $response->getHeaders());
-
-		return ['status' => $status, 'body' => $decoded, 'headers' => $headerMap];
-	}//end callComponent()
+		return ['status' => (int)$response->getStatusCode(), 'body' => $decoded, 'headers' => self::normaliseHeaders(headers: $response->getHeaders())];
+	}//end send()
 
 	/**
 	 * Resolve a vault reference (`vault://...`) to a raw secret string.
