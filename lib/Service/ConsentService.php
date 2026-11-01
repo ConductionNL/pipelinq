@@ -445,24 +445,25 @@ class ConsentService {
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
 	 */
 	public function changeRequestFor(array $row, string $address): array {
-		$state = (string)($row['state'] ?? '');
-		$request = [
-			'address' => $address,
-			'state' => $state,
-			'scope' => 'channel',
-			'channel' => (string)($row['channel'] ?? ''),
-			'contactRef' => (string)($row['contactId'] ?? ''),
-			'source' => (string)($row['source'] ?? ''),
-			'evidence' => ['text' => (string)($row['evidence'] ?? ''), 'recordedAt' => (string)($row['recordedAt'] ?? '')],
-			// The record UUID alone: unique across pipelinq's schemas, and it fits
-			// integriq's 64-character legacy_uuid column.
-			'legacyRef' => $this->extractId(payload: $row),
-		];
-		if ($state === 'opted-in') {
-			$request['lawfulBasis'] = (string)($row['legalBasis'] ?? 'consent');
-		}
+		$wish = new ConsentWish(
+			state: (string)($row['state'] ?? ''),
+			source: (string)($row['source'] ?? ''),
+			evidence: (string)($row['evidence'] ?? ''),
+			legalBasis: (string)($row['legalBasis'] ?? 'consent'),
+		);
+		$request = $wish->changeRequest(
+			subject: new ConsentSubject(contactId: (string)($row['contactId'] ?? ''), channel: (string)($row['channel'] ?? ''), address: $address)
+		);
+		$request['evidence']['recordedAt'] = (string)($row['recordedAt'] ?? '');
 
-		return $request;
+		// The lawful basis stays after the legacy ref.
+		$basis = array_intersect_key($request, ['lawfulBasis' => true]);
+		unset($request['lawfulBasis']);
+		// The record UUID alone: unique across pipelinq's schemas, and it fits
+		// integriq's 64-character legacy_uuid column.
+		$request['legacyRef'] = $this->extractId(payload: $row);
+
+		return ($request + $basis);
 	}//end changeRequestFor()
 
 	/**

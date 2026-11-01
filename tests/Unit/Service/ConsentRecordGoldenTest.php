@@ -87,6 +87,11 @@ class ConsentRecordGoldenTest extends TestCase {
 			['uuid' => 'seed-before', 'contactId' => 'contact-1', 'channel' => 'sms', 'state' => 'opted-in', 'source' => 'webform', 'evidence' => 'old', 'recordedAt' => '2001-01-01T00:00:00.000000Z', 'legalBasis' => 'consent'],
 			['uuid' => 'seed-other', 'contactId' => 'contact-2', 'channel' => 'sms', 'state' => 'opted-out', 'source' => 'keyword-stop', 'evidence' => 'x', 'recordedAt' => '2030-01-03T00:00:00.000000Z', 'legalBasis' => 'consent'],
 		];
+		$sparse = [
+			['uuid' => 'seed-no-basis', 'contactId' => 'contact-1', 'channel' => 'sms', 'state' => 'opted-in', 'source' => 'webform', 'evidence' => 'form', 'recordedAt' => '2030-01-01T00:00:00.000000Z'],
+			['uuid' => 'seed-empty-basis', 'contactId' => 'contact-1', 'channel' => 'sms', 'state' => 'opted-in', 'source' => 'webform', 'evidence' => 'form', 'recordedAt' => '2030-01-02T00:00:00.000000Z', 'legalBasis' => ''],
+			['uuid' => 'seed-bare', 'contactId' => 'contact-1', 'channel' => 'sms', 'state' => 'opted-out', 'recordedAt' => '2030-01-03T00:00:00.000000Z'],
+		];
 		return [
 			'before cutover: opt-in with a basis'          => ['call' => 'recordOptIn', 'args' => [...$in, 'legalBasis' => 'legitimate-interest']],
 			'before cutover: opt-out, default basis'       => ['call' => 'recordOptOut', 'args' => $out],
@@ -112,6 +117,11 @@ class ConsentRecordGoldenTest extends TestCase {
 			'cutover: pending rows replay first'           => ['call' => 'recordOptIn', 'args' => $in, 'cutover' => true, 'stored' => $pending],
 			'cutover: no contact skips the replay'         => ['call' => 'recordOptOut', 'args' => [...$out, 'contactId' => '', 'address' => '+31600000005'], 'cutover' => true, 'stored' => $pending],
 			'cutover: replay unanswered, then fallback'    => ['call' => 'recordOptOut', 'args' => $out, 'cutover' => true, 'stored' => $pending, 'changeMode' => FakeIntegriq::MODE_UNHANDLED],
+			'cutover: sparse pending rows replay'         => ['call' => 'recordOptOut', 'args' => $out, 'cutover' => true, 'stored' => $sparse],
+			'change request: opt-in row'                  => ['call' => 'changeRequestFor', 'args' => ['row' => $pending[1], 'address' => '+31611111111']],
+			'change request: opt-out row'                 => ['call' => 'changeRequestFor', 'args' => ['row' => $pending[0], 'address' => '']],
+			'change request: opt-in without a basis'      => ['call' => 'changeRequestFor', 'args' => ['row' => $sparse[0], 'address' => 'a@example.nl']],
+			'change request: empty row'                   => ['call' => 'changeRequestFor', 'args' => ['row' => ['id' => 'only-id'], 'address' => 'x']],
 			'cutover: wish already in integriq'            => ['call' => 'recordOptOut', 'args' => [...$out, 'channel' => 'sms'], 'cutover' => true, 'rows' => [['address' => '+31612345678', 'state' => 'opted-in', 'scope' => 'channel', 'channel' => 'sms', 'contactRef' => 'contact-1']]],
 		];
 	}//end scenarios()
