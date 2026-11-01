@@ -4407,7 +4407,26 @@
 						"id": "ticket-related",
 						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
+						"icon": "LinkVariant",
+						"_note": "Board PqTicket: the side card links the appointments that belong to the ticket; every relation stays on the Related tab and behind Show all.",
+						"content": {
+							"layout": "links",
+							"extraSources": [
+								{
+									"key": "appointments",
+									"label": "Appointments",
+									"endpoint": "/apps/openregister/api/objects/pipelinq/appointmentBooking?ticket=@objectId",
+									"path": "results",
+									"itemLabel": "Appointment: {subject}, {startAt|longdate}",
+									"rowRoute": {
+										"name": "BookingDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								}
+							]
+						}
 					},
 					{
 						"id": "ticket-decision-routes",
