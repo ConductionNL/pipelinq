@@ -7315,6 +7315,7 @@ OC.L10N.register(
         "The menu could not be saved. Try again.": "The menu could not be saved. Try again.",
         "Take on": "Take on",
         "Answer the customer": "Answer the customer",
+        "You do not change the status here: it moves through the ticket's steps, Answer the customer, Complete or Reject, so every change is checked.": "You do not change the status here: it moves through the ticket's steps, Answer the customer, Complete or Reject, so every change is checked.",
         "Log contact": "Log contact",
         "Back to in progress": "Back to in progress",
         "Close the ticket": "Close the ticket",
