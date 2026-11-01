@@ -272,6 +272,7 @@
 						"type": "object-table",
 						"title": "Distribution over tiers",
 						"content": {
+							"framed": true,
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/tiers",
 								"responsePath": "tiers"

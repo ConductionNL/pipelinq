@@ -3091,24 +3091,467 @@
 					},
 					{
 						"id": "client-channels",
-						"type": "ContactChannelsCard",
+						"type": "field-groups",
 						"title": "Contact channels",
 						"icon": "CardAccountPhoneOutline",
+						"_note": "PqKlant / PqOrganisatie Contactkanalen: the client's emails, phones and social profiles as label and value pairs, one Add menu in the title row. Each list saves as one PATCH of its own field; the plain email and phone follow the primary entry, and the change goes on to Nextcloud Contacts.",
 						"content": {
-							"entityType": "client",
-							"compact": true,
-							"headerAdd": true
+							"add": {
+								"label": "Add",
+								"ariaLabel": "Add channel",
+								"placement": "title"
+							},
+							"afterSave": {
+								"url": "/apps/pipelinq/api/contacts-sync/write-back",
+								"body": {
+									"objectType": "client",
+									"objectId": "@objectId"
+								},
+								"failureText": "Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details."
+							},
+							"groups": [
+								{
+									"field": "emails",
+									"row": {
+										"label": [
+											"Email",
+											{
+												"path": "kind",
+												"map": {
+													"work": "work",
+													"private": "private",
+													"other": "other"
+												}
+											}
+										],
+										"title": "value",
+										"meta": [
+											{
+												"path": "primary",
+												"map": {
+													"true": "preferred",
+													"false": ""
+												}
+											}
+										],
+										"href": {
+											"path": "value",
+											"scheme": "mailto"
+										}
+									},
+									"add": {
+										"label": "Email address",
+										"exclusive": [
+											"primary"
+										],
+										"defaults": {
+											"verified": false
+										},
+										"fields": [
+											{
+												"key": "value",
+												"label": "Email address",
+												"required": true,
+												"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+												"patternMessage": "Invalid email format"
+											},
+											{
+												"key": "kind",
+												"label": "Kind",
+												"type": "select",
+												"default": "work",
+												"options": [
+													{
+														"value": "work",
+														"label": "Work"
+													},
+													{
+														"value": "private",
+														"label": "Private"
+													},
+													{
+														"value": "other",
+														"label": "Other"
+													}
+												]
+											},
+											{
+												"key": "primary",
+												"label": "Primary",
+												"type": "checkbox"
+											}
+										]
+									},
+									"edit": true,
+									"remove": {
+										"label": "Remove"
+									},
+									"mirror": {
+										"field": "email",
+										"path": "value",
+										"prefer": "primary"
+									}
+								},
+								{
+									"field": "phones",
+									"row": {
+										"label": [
+											"Phone",
+											{
+												"path": "kind",
+												"map": {
+													"work": "work",
+													"private": "private",
+													"mobile": "mobile",
+													"whatsapp": "WhatsApp",
+													"other": "other"
+												}
+											}
+										],
+										"title": "value",
+										"meta": [
+											{
+												"path": "primary",
+												"map": {
+													"true": "preferred",
+													"false": ""
+												}
+											}
+										],
+										"href": {
+											"path": "value",
+											"scheme": "tel"
+										}
+									},
+									"add": {
+										"label": "Phone number",
+										"exclusive": [
+											"primary"
+										],
+										"defaults": {
+											"verified": false
+										},
+										"fields": [
+											{
+												"key": "value",
+												"label": "Phone number",
+												"required": true,
+												"pattern": "^[+]?[\\d\\s\\-().]{7,20}$",
+												"patternMessage": "Invalid phone format"
+											},
+											{
+												"key": "kind",
+												"label": "Kind",
+												"type": "select",
+												"default": "mobile",
+												"options": [
+													{
+														"value": "work",
+														"label": "Work"
+													},
+													{
+														"value": "private",
+														"label": "Private"
+													},
+													{
+														"value": "mobile",
+														"label": "Mobile"
+													},
+													{
+														"value": "whatsapp",
+														"label": "WhatsApp"
+													},
+													{
+														"value": "other",
+														"label": "Other"
+													}
+												]
+											},
+											{
+												"key": "primary",
+												"label": "Primary",
+												"type": "checkbox"
+											}
+										]
+									},
+									"edit": true,
+									"remove": {
+										"label": "Remove"
+									},
+									"mirror": {
+										"field": "phone",
+										"path": "value",
+										"prefer": "primary"
+									}
+								},
+								{
+									"field": "socialProfiles",
+									"row": {
+										"label": [
+											{
+												"path": "network",
+												"map": {
+													"linkedin": "LinkedIn",
+													"x": "X",
+													"mastodon": "Mastodon",
+													"bluesky": "Bluesky",
+													"facebook": "Facebook",
+													"instagram": "Instagram",
+													"threads": "Threads",
+													"tiktok": "TikTok",
+													"youtube": "YouTube",
+													"other": "Other"
+												}
+											}
+										],
+										"title": "handle",
+										"titleFallback": "url",
+										"href": "url"
+									},
+									"add": {
+										"label": "Social profile",
+										"requireOneOf": [
+											"handle",
+											"url"
+										],
+										"requireOneOfMessage": "A handle or a profile URL is required",
+										"defaults": {
+											"verified": false
+										},
+										"fields": [
+											{
+												"key": "network",
+												"label": "Network",
+												"type": "select",
+												"default": "linkedin",
+												"options": [
+													{
+														"value": "linkedin",
+														"label": "LinkedIn"
+													},
+													{
+														"value": "x",
+														"label": "X"
+													},
+													{
+														"value": "mastodon",
+														"label": "Mastodon"
+													},
+													{
+														"value": "bluesky",
+														"label": "Bluesky"
+													},
+													{
+														"value": "facebook",
+														"label": "Facebook"
+													},
+													{
+														"value": "instagram",
+														"label": "Instagram"
+													},
+													{
+														"value": "threads",
+														"label": "Threads"
+													},
+													{
+														"value": "tiktok",
+														"label": "TikTok"
+													},
+													{
+														"value": "youtube",
+														"label": "YouTube"
+													},
+													{
+														"value": "other",
+														"label": "Other"
+													}
+												]
+											},
+											{
+												"key": "handle",
+												"label": "Handle"
+											},
+											{
+												"key": "url",
+												"label": "Profile URL",
+												"pattern": "^https?://.+\\..+",
+												"patternMessage": "Invalid URL format"
+											}
+										]
+									},
+									"edit": true,
+									"remove": {
+										"label": "Remove"
+									},
+									"emptyLabel": "Social",
+									"emptyText": "None yet"
+								}
+							]
 						}
 					},
 					{
 						"id": "client-relationships",
-						"type": "ContactRelationshipsCard",
+						"type": "object-links",
 						"title": "Relationships",
 						"icon": "AccountMultipleOutline",
+						"_note": "PqKlant / PqOrganisatie Relaties: the relationship objects from this client, the type in words and the other party as a link; Add writes the relationship and its inverse, Remove deletes both. The types and their inverses are the ones the contact page's relationships tab offers.",
 						"content": {
-							"entityType": "client",
-							"compact": true,
-							"headerAdd": true
+							"register": "pipelinq",
+							"schema": "relationship",
+							"from": "fromContact",
+							"to": "toContact",
+							"fromType": "fromType",
+							"toType": "toType",
+							"selfType": "client",
+							"typeField": "type",
+							"inverseField": "inverseType",
+							"groupField": "category",
+							"pair": true,
+							"types": [
+								{
+									"value": "partner",
+									"label": "Partner of",
+									"inverse": "partner",
+									"group": "Familie",
+									"groupLabel": "Family"
+								},
+								{
+									"value": "ouder",
+									"label": "Parent of",
+									"inverse": "kind",
+									"group": "Familie",
+									"groupLabel": "Family"
+								},
+								{
+									"value": "kind",
+									"label": "Child of",
+									"inverse": "ouder",
+									"group": "Familie",
+									"groupLabel": "Family"
+								},
+								{
+									"value": "broer/zus",
+									"label": "Sibling of",
+									"inverse": "broer/zus",
+									"group": "Familie",
+									"groupLabel": "Family"
+								},
+								{
+									"value": "werkgever",
+									"label": "Employer of",
+									"inverse": "werknemer",
+									"group": "Professioneel",
+									"groupLabel": "Professional"
+								},
+								{
+									"value": "werknemer",
+									"label": "Employee of",
+									"inverse": "werkgever",
+									"group": "Professioneel",
+									"groupLabel": "Professional"
+								},
+								{
+									"value": "collega",
+									"label": "Colleague of",
+									"inverse": "collega",
+									"group": "Professioneel",
+									"groupLabel": "Professional"
+								},
+								{
+									"value": "contactpersoon",
+									"label": "Contact person of",
+									"inverse": "organisatie",
+									"group": "Professioneel",
+									"groupLabel": "Professional"
+								},
+								{
+									"value": "organisatie",
+									"label": "Organisation of",
+									"inverse": "contactpersoon",
+									"group": "Professioneel",
+									"groupLabel": "Professional"
+								},
+								{
+									"value": "moederorganisatie",
+									"label": "Parent organisation of",
+									"inverse": "dochterorganisatie",
+									"group": "Organisatie",
+									"groupLabel": "Organisation"
+								},
+								{
+									"value": "dochterorganisatie",
+									"label": "Subsidiary of",
+									"inverse": "moederorganisatie",
+									"group": "Organisatie",
+									"groupLabel": "Organisation"
+								},
+								{
+									"value": "mentor",
+									"label": "Mentor of",
+									"inverse": "mentee",
+									"group": "Professioneel",
+									"groupLabel": "Professional"
+								},
+								{
+									"value": "mentee",
+									"label": "Mentee of",
+									"inverse": "mentor",
+									"group": "Professioneel",
+									"groupLabel": "Professional"
+								}
+							],
+							"targets": [
+								{
+									"type": "contact",
+									"register": "pipelinq",
+									"schema": "contact",
+									"titleField": "name",
+									"label": "contact",
+									"route": "ContactDetail"
+								},
+								{
+									"type": "client",
+									"register": "pipelinq",
+									"schema": "client",
+									"titleField": "name",
+									"label": "client",
+									"route": "ClientDetail"
+								}
+							],
+							"fields": [
+								{
+									"key": "notes",
+									"label": "Notes",
+									"type": "textarea"
+								},
+								{
+									"key": "startDate",
+									"label": "Start date",
+									"type": "date"
+								},
+								{
+									"key": "endDate",
+									"label": "End date",
+									"type": "date"
+								}
+							],
+							"defaults": {
+								"provenance": "declared",
+								"strength": "medium"
+							},
+							"add": {
+								"label": "Add",
+								"ariaLabel": "Add relationship",
+								"placement": "title",
+								"dialogTitle": "Add relationship"
+							},
+							"remove": {
+								"label": "Remove"
+							},
+							"targetLabel": "Related entity",
+							"typeLabel": "Relationship type",
+							"duplicateText": "This relationship already exists",
+							"emptyText": "No relationships yet."
 						}
 					},
 					{
@@ -3187,7 +3630,9 @@
 						}
 					}
 				],
-				"_layoutNote": "PqKlant and PqOrganisatie: the contact strip and one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity) stand in the band across the page; the tab strip and the side column start under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab.",
+				"_layoutNote": "PqKlant and PqOrganisatie: the contact strip and one row of six figures as label and value (open matters, new requests, term passed, term at risk, open leads, last activity) stand in the band across the page; the tab strip and the side column start under it. The sales figures moved from the side column into the Sales tab, the files into the Documents tab. The band is compact (bandDensity), so the six figures fit one row of 67px tiles as drawn. The tab strip's cell sizes to the open tab, so a long Overview is not cut off and a short one leaves no gap above the body sections.",
+				"gridFloat": false,
+				"bandDensity": "compact",
 				"band": [
 					{ "widgetId": "client-contact-strip", "span": 12, "chrome": "bare" },
 					{ "widgetId": "client-summary-open-tickets", "span": 2 },
@@ -3205,7 +3650,8 @@
 						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 18,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					}
 				],
 				"bodyWidgets": [
@@ -4030,6 +4476,7 @@
 					}
 				],
 				"_layoutNote": "A declared widgets[] replaces the auto-body, which also used to place them, so every widget needs a cell. The tab strip (overview and decisions) with Related beside it. The tabs' children have no cell of their own: the strip renders them.",
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -4037,7 +4484,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 6
+						"gridHeight": 6,
+						"sizeToContent": true
 					},
 					{
 						"id": "2",
@@ -4045,7 +4493,8 @@
 						"gridX": 8,
 						"gridY": 0,
 						"gridWidth": 4,
-						"gridHeight": 6
+						"gridHeight": 6,
+						"sizeToContent": true
 					}
 				],
 				"_bodyWidgetsNote": "Woo citizen journey J4 (questions-about-a-citizen-dossier): DossierSnapshotSection shows the dossier a resident asked about, before the body; CustomerReplySection is the answer control (customerMessage, the resident's replies) and WooConversionSection converts a question into a dossiq Woo request, after the data. Each renders nothing when it does not apply. Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
@@ -4639,6 +5088,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -4647,6 +5097,7 @@
 						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 18,
+						"sizeToContent": true,
 						"showTitle": false
 					}
 				],
@@ -5466,6 +5917,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -5474,6 +5926,7 @@
 						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 18,
+						"sizeToContent": true,
 						"showTitle": false
 					}
 				],
@@ -6081,6 +6534,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -6088,7 +6542,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 8
+						"gridHeight": 8,
+						"sizeToContent": true
 					}
 				],
 				"lifecycleActions": {
@@ -6700,6 +7155,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "k1",
@@ -6708,7 +7164,8 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "k2",
@@ -6717,7 +7174,8 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "k3",
@@ -6726,7 +7184,8 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "1",
@@ -6735,7 +7194,8 @@
 						"gridY": 2,
 						"gridWidth": 12,
 						"gridHeight": 18,
-						"showTitle": false
+						"showTitle": false,
+						"sizeToContent": true
 					}
 				],
 				"sidebar": {
@@ -7730,6 +8190,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -7737,7 +8198,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 12
+						"gridHeight": 12,
+						"sizeToContent": true
 					}
 				],
 				"sidebar": {
@@ -8012,6 +8474,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -8019,7 +8482,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 8
+						"gridHeight": 8,
+						"sizeToContent": true
 					}
 				],
 				"titleField": "reference",
@@ -9262,6 +9726,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "1",
@@ -9269,7 +9734,8 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 12
+						"gridHeight": 12,
+						"sizeToContent": true
 					}
 				],
 				"sidebar": {

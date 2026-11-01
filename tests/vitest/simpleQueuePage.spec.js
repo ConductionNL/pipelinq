@@ -90,6 +90,9 @@ describe('the queue, simple structure', () => {
 			'view',
 		])
 		expect(simple.filterStrip.field).toBe('channel')
+		// The first pill reads "Alle", as the type lenses above it and board
+		// PqWachtrij write it, not the library's own "Alles".
+		expect(simple.filterStrip.allLabel).toBe('All')
 		// channel has no enum and each ticket type stores its own spelling, so
 		// the strip names its pills and gathers the spellings under each
 		expect(simple.filterStrip.options).toEqual([
@@ -138,6 +141,7 @@ describe('the queue, simple structure', () => {
 			overlay.config.sidePanel[1].content.link.label,
 			overlay.config.footerNote,
 			overlay.config.filterStrip.label,
+			overlay.config.filterStrip.allLabel,
 			...overlay.config.filterStrip.options.map((option) => option.label),
 		]
 		for (const word of words) {

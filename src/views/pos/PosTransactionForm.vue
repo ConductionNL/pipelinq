@@ -150,6 +150,7 @@
 					:subtitle="t('pipelinq', '{name}, latest {count} transactions', { name: selectedCustomer.name, count: recentHistory.length })">
 					<CnDataTable
 						v-if="recentHistory.length"
+						framed
 						:columns="historyColumns"
 						:rows="recentHistory"
 						rowKey="id">
@@ -191,6 +192,7 @@
 					</dl>
 					<CnDataTable
 						class="pos-form__payments"
+						framed
 						:columns="paymentColumns"
 						:rows="paymentRows"
 						rowKey="key">

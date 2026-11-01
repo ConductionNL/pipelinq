@@ -65,8 +65,8 @@ describe('ClientDetail parts both client boards share', () => {
 	it('lists the contact channels and relations compactly in the side column', () => {
 		expect(config.sideColumn).toContain('client-channels')
 		expect(config.sideColumn).toContain('client-relationships')
-		expect(widget('client-channels').content.compact).toBe(true)
-		expect(widget('client-relationships').content.compact).toBe(true)
+		expect(widget('client-channels').type).toBe('field-groups')
+		expect(widget('client-relationships').type).toBe('object-links')
 	})
 })
 

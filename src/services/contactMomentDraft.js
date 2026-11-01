@@ -42,6 +42,7 @@ export const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 export const DRAFT_FIELDS = [
 	'title',
 	'channel',
+	'direction',
 	'outcome',
 	'client',
 	'contact',
@@ -57,22 +58,27 @@ export const DRAFT_FIELDS = [
  * The client and the request the quick log was opened on are filled in for
  * the agent, so on their own they are not worth a draft.
  *
+ * A value equal to its preset in `context.defaults` (a channel the form opens
+ * on, say) is not worth a draft either.
+ *
  * @param {object} form The quick log form.
- * @param {{clientId: (string|null), requestId: (string|null)}} context Where the quick log was opened.
+ * @param {{clientId: (string|null), requestId: (string|null), defaults: (object|undefined)}} context Where the quick log was opened, and its presets.
  * @return {boolean} True when there is nothing to keep.
  * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+ * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-4
  */
 export function isDraftFormEmpty(form, context = {}) {
 	if (!form) {
 		return true
 	}
+	const defaults = context.defaults || {}
 	for (const key of ['title', 'description', 'duration', 'notes']) {
 		if (typeof form[key] === 'string' && form[key].trim() !== '') {
 			return false
 		}
 	}
-	for (const key of ['channel', 'outcome', 'contact']) {
-		if (form[key]) {
+	for (const key of ['channel', 'direction', 'outcome', 'contact']) {
+		if (form[key] && form[key] !== defaults[key]) {
 			return false
 		}
 	}
@@ -179,11 +185,14 @@ export function draftFormFrom(draft) {
  * request. Only the agent's own drafts count (an administrator's list can
  * hold other people's), only contact moments, and only one changed within
  * seven days. OpenRegister removes the older ones, so nothing is deleted here.
+ * A context without `clientId` matches on the request alone: the ticket's
+ * contact dialog lets the agent change the customer.
  *
  * @param {Array<object>} drafts The draft tickets OpenRegister returned.
- * @param {{author: string, clientId: (string|null), requestId: (string|null), now: Date}} context Who and where.
+ * @param {{author: string, clientId: (string|null|undefined), requestId: (string|null), now: Date}} context Who and where.
  * @return {object|null} The newest matching draft, or null.
  * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+ * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-4
  */
 export function pickDraft(drafts, context) {
 	const now = (context.now || new Date()).getTime()
@@ -203,7 +212,7 @@ export function pickDraft(drafts, context) {
 			continue
 		}
 		if (
-			(draft.client || null) === (context.clientId || null)
+			(context.clientId === undefined || (draft.client || null) === (context.clientId || null))
 			&& (draft.parentTicket || null) === (context.requestId || null)
 		) {
 			matching.push(draft)

@@ -7,8 +7,12 @@
 		">
 		<NcLoadingIcon v-if="loading" />
 
-		<div v-else class="agent-settings">
-			<div v-for="profile in profiles" :key="profile.id" class="agent-item">
+		<div v-else class="agent-settings cn-settings-list">
+			<div
+				v-for="profile in profiles"
+				:key="profile.id"
+				class="agent-item"
+				:class="{ 'cn-settings-row': editingId !== profile.id }">
 				<div v-if="editingId !== profile.id" class="agent-item__display">
 					<div class="agent-item__info">
 						<span class="agent-name">{{ profile.userId }}</span>

@@ -131,7 +131,7 @@ describe('the dashboard', () => {
 			expect(withoutInCall(byId[widget.id]), widget.id).toEqual(withoutInCall(widget))
 		}
 		expect(simple.widgets).toHaveLength(before.widgets.length + added.length)
-		expect(added).toHaveLength(13)
+		expect(added).toHaveLength(15)
 	})
 
 	it('moves the old cards down by one fixed number of rows and changes nothing else', () => {
@@ -295,9 +295,10 @@ describe('the dashboard', () => {
 				}
 			}
 		}
-		// Four stats, three lists, the bar, the in-call task list and the in-call
-		// "Who is it" card; the banner reads an endpoint.
-		expect(sources).toBe(10)
+		// Four stats, three lists, the bar, the in-call open matters, tasks and
+		// earlier contact, and the in-call "Who is it" card; the banner reads an
+		// endpoint.
+		expect(sources).toBe(12)
 	})
 
 	it('links every number to the list with the same filter', () => {
@@ -356,7 +357,7 @@ describe('the dashboard', () => {
 
 	it('opens a row on a page that exists', () => {
 		const lists = added.filter((item) => item.type === 'record-list')
-		expect(lists).toHaveLength(3)
+		expect(lists).toHaveLength(6)
 		for (const widget of lists) {
 			expect(pageIds.has(widget.content.rowRoute), widget.id).toBe(true)
 		}
@@ -461,7 +462,7 @@ describe('the attention card asks a question OpenRegister can answer', () => {
 				}
 			}
 		}
-		expect(dates).toBe(3)
+		expect(dates).toBe(6)
 	})
 })
 
@@ -689,7 +690,7 @@ describe('the werkplek in a call (board PqWerkplekKlant)', () => {
 		// "Bron: BRP, opgezocht 10:24, vastgelegd"; the client's own source stays as "Aangemeld via".
 		expect(who().content.fields.find((field) => field.label === 'Source').template).toBe('{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded')
 		// "Opzoeken in de BRP" verifies the identity of the customer in the call.
-		expect(who().content.actions).toEqual([{ type: 'open-modal', target: 'BrpClientCheckDialog', label: 'Look up in the BRP', props: { clientId: '@source.id' }, variant: 'tonal' }])
+		expect(who().content.actions).toEqual([{ type: 'open-modal', target: 'BrpClientCheckDialog', label: 'Look up in the BRP', props: { clientId: '@source.id' }, variant: 'tonal', icon: 'CardAccountDetailsOutline' }])
 	})
 })
 
