@@ -40,6 +40,8 @@ use Throwable;
  * to rewrite it, then run once more without it.
  *
  * @covers \OCA\Pipelinq\Service\PointsLedgerService
+ * @uses   \OCA\Pipelinq\Service\Loyalty\LedgerMovement
+ * @uses   \OCA\Pipelinq\Service\Loyalty\LedgerOrigin
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
