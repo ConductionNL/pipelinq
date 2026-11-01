@@ -62,13 +62,13 @@ def main():
         before = open(php_path, encoding='utf-8').read()
 
         # Property 1 + 2: resolver classification.
-        r7 = resolver.resolve(tmp, 'openspec/changes/retrofit-widgets/tasks.md', 'task-7')
+        r7 = resolver.resolve(tmp, ('openspec/changes/retrofit-widgets/tasks.md', 'task-7'))
         assert r7['category'] == 'REPOINT_ANCHOR', r7
         assert r7['new_target'] == (
             'openspec/specs/widget-registry/spec.md'
             '#requirement-the-system-must-register-widgets-by-slug'), r7['new_target']
 
-        r8 = resolver.resolve(tmp, 'openspec/changes/retrofit-widgets/tasks.md', 'task-8')
+        r8 = resolver.resolve(tmp, ('openspec/changes/retrofit-widgets/tasks.md', 'task-8'))
         assert r8['category'] == 'DANGLING', r8   # ghost-capability has no canonical spec
 
         # Apply the repointer.
