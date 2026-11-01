@@ -59,6 +59,13 @@ if (class_exists('OCA\\Integriq\\Event\\ConsentDecisionGoldenNotAnEvent') === fa
  * @covers \OCA\Pipelinq\Service\IntegriqConsentClient
  * @covers \OCA\Pipelinq\Service\ConsentService
  * @covers \OCA\Pipelinq\Service\IntegriqMarketingConsent
+ * @uses   \OCA\Pipelinq\Controller\MessagingController
+ * @uses   \OCA\Pipelinq\Service\Consent\ConsentAsk
+ * @uses   \OCA\Pipelinq\Service\Consent\ConsentQuestion
+ * @uses   \OCA\Pipelinq\Service\Consent\ConsentSubject
+ * @uses   \OCA\Pipelinq\Service\Consent\ConsentWish
+ * @uses   \OCA\Pipelinq\Service\ContactAddressLookup
+ * @uses   \OCA\Pipelinq\Support\FleetAppId
  *
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md
  */
