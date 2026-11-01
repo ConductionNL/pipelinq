@@ -1,0 +1,1520 @@
+
+=== lint ===
+No syntax errors detected in ./tests/bootstrap.php
+No syntax errors detected in ./tests/Stubs/BackgroundJob/ActorForwardedJob.php
+No syntax errors detected in ./tests/Stubs/Contract/RegisterSlugResolverInterface.php
+No syntax errors detected in ./tests/Stubs/Contract/RegisterSlugResolution.php
+No syntax errors detected in ./tests/Stubs/Contract/ObjectServiceInterface.php
+No syntax errors detected in ./tests/Stubs/Contract/ObjectEntityInterface.php
+No syntax errors detected in ./tests/Stubs/Event/ObjectsMergedEvent.php
+No syntax errors detected in ./tests/Stubs/Event/ObjectCreatingEvent.php
+No syntax errors detected in ./tests/Stubs/Event/ObjectDeletedEvent.php
+No syntax errors detected in ./tests/Stubs/Event/ObjectUpdatingEvent.php
+No syntax errors detected in ./tests/Stubs/Event/SchemaUpdatedEvent.php
+No syntax errors detected in ./tests/Stubs/Event/ObjectCreatedEvent.php
+No syntax errors detected in ./tests/Stubs/Event/ObjectUpdatedEvent.php
+No syntax errors detected in ./tests/Stubs/Lifecycle/LifecycleGuardInterface.php
+No syntax errors detected in ./tests/Stubs/Lifecycle/GuardResult.php
+No syntax errors detected in ./tests/Stubs/Mcp/IMcpToolProvider.php
+No syntax errors detected in ./tests/Stubs/Mcp/Attribute/McpTool.php
+No syntax errors detected in ./tests/Stubs/Mcp/IMcpScannableServices.php
+No syntax errors detected in ./tests/Stubs/Service/WebhookService.php
+No syntax errors detected in ./tests/Stubs/Service/Flow/IFlowNode.php
+No syntax errors detected in ./tests/Stubs/Service/Flow/RegisterFlowNodesEvent.php
+No syntax errors detected in ./tests/Stubs/Service/Flow/IFlowNodeConfigKeys.php
+No syntax errors detected in ./tests/Stubs/Service/Integration/Providers/MessageDispatchProvider.php
+No syntax errors detected in ./tests/Stubs/Service/Aggregation/AggregationRunner.php
+No syntax errors detected in ./tests/Stubs/Service/Aggregation/AggregationQuery.php
+No syntax errors detected in ./tests/Stubs/Service/Lifecycle/TransitionEngine.php
+No syntax errors detected in ./tests/Stubs/Service/Gdpr/Identity/IdentityVerifyResult.php
+No syntax errors detected in ./tests/Stubs/Service/Gdpr/Identity/IdentityVerifyProvider.php
+No syntax errors detected in ./tests/Stubs/Service/Gdpr/Regulator/RegulatorEscalateProvider.php
+No syntax errors detected in ./tests/Stubs/Service/Gdpr/Regulator/RegulatorEscalateResult.php
+No syntax errors detected in ./tests/Stubs/Service/Gdpr/Evidence/EvidenceItem.php
+No syntax errors detected in ./tests/Stubs/Service/Gdpr/Evidence/EvidenceSourceProvider.php
+No syntax errors detected in ./tests/Stubs/Service/Gdpr/Evidence/EvidenceSourceRegistry.php
+No syntax errors detected in ./tests/Stubs/Service/Credential/CredentialRelinkRequiredException.php
+No syntax errors detected in ./tests/Stubs/Service/Credential/CredentialAccessDeniedException.php
+No syntax errors detected in ./tests/Stubs/Service/Credential/ProviderCatalogue.php
+No syntax errors detected in ./tests/Stubs/Service/Credential/CredentialBrokerService.php
+No syntax errors detected in ./tests/Stubs/Service/LanguageService.php
+No syntax errors detected in ./tests/Stubs/Service/Deferral/ListenerDeferralService.php
+No syntax errors detected in ./tests/Stubs/Service/Deferral/DeferredListenerContext.php
+No syntax errors detected in ./tests/Stubs/Service/ConfigurationService.php
+No syntax errors detected in ./tests/Stubs/Service/ObjectService.php
+No syntax errors detected in ./tests/Stubs/Service/Notification/UnsubscribeHeaders.php
+No syntax errors detected in ./tests/Stubs/Portaliq/Event/LandingPageRequestedEvent.php
+No syntax errors detected in ./tests/Stubs/DBAL/ParameterType.php
+No syntax errors detected in ./tests/Stubs/DBAL/Types/Types.php
+No syntax errors detected in ./tests/Stubs/DBAL/ArrayParameterType.php
+No syntax errors detected in ./tests/Stubs/AppHost/Service/StoreDescriptor.php
+No syntax errors detected in ./tests/Stubs/AppHost/Service/GenericStoreService.php
+No syntax errors detected in ./tests/Stubs/Mail/Service/AccountService.php
+No syntax errors detected in ./tests/Stubs/Mail/Service/OutboxService.php
+No syntax errors detected in ./tests/Stubs/Mail/Db/LocalMessage.php
+No syntax errors detected in ./tests/Stubs/Mail/Account.php
+No syntax errors detected in ./tests/Stubs/Db/SchemaMapper.php
+No syntax errors detected in ./tests/Stubs/Db/Schema.php
+No syntax errors detected in ./tests/Stubs/Db/ObjectEntity.php
+No syntax errors detected in ./tests/Stubs/OC/Security/CSRF/CsrfToken.php
+No syntax errors detected in ./tests/Stubs/OC/Security/CSRF/CsrfTokenManager.php
+No syntax errors detected in ./tests/Stubs/Integriq/Event/OutboundSendDecisionRequestedEvent.php
+No syntax errors detected in ./tests/Stubs/Integriq/Event/ConnectionStatusReportedEvent.php
+No syntax errors detected in ./tests/Stubs/Integriq/Event/OptOutChangeRequestedEvent.php
+No syntax errors detected in ./tests/Stubs/Exception/NotAuthorizedException.php
+No syntax errors detected in ./tests/Integration/ExpenseApSyncTest.php
+No syntax errors detected in ./tests/Integration/Job/ExportWorkerJobTest.php
+No syntax errors detected in ./tests/Integration/BlastWorkflowTest.php
+No syntax errors detected in ./tests/Integration/WhatsAppSendFlowTest.php
+No syntax errors detected in ./tests/Integration/OutboundMessagingContractTest.php
+No syntax errors detected in ./tests/Integration/EmailFallbackIntegrationTest.php
+No syntax errors detected in ./tests/Integration/OutboundMessagingLiveGateTest.php
+No syntax errors detected in ./tests/Integration/BerichtenboxIntegrationTest.php
+No syntax errors detected in ./tests/Integration/AppointmentBookingRegisterTest.php
+No syntax errors detected in ./tests/Integration/SchemaDefaultsWithinEnumTest.php
+No syntax errors detected in ./tests/unit/Controller/SettingsControllerTest.php
+No syntax errors detected in ./tests/bootstrap-unit.php
+No syntax errors detected in ./tests/bootstrap-bare.php
+No syntax errors detected in ./tests/Unit/BackgroundJob/ReplayConsentToIntegriqJobTest.php
+No syntax errors detected in ./tests/Unit/BackgroundJob/AvailabilityCacheRefreshJobTest.php
+No syntax errors detected in ./tests/Unit/BackgroundJob/CallbackOverdueJobTest.php
+No syntax errors detected in ./tests/Unit/BackgroundJob/WalkInQueueRebalanceJobTest.php
+No syntax errors detected in ./tests/Unit/BackgroundJob/ReminderDispatchJobTest.php
+No syntax errors detected in ./tests/Unit/BackgroundJob/EmailMatchJobTest.php
+No syntax errors detected in ./tests/Unit/BackgroundJob/EmailSyncJobTest.php
+No syntax errors detected in ./tests/Unit/BackgroundJob/AppointmentDepositTimeoutJobTest.php
+No syntax errors detected in ./tests/Unit/BackgroundJob/BlastSendJobTest.php
+No syntax errors detected in ./tests/Unit/BackgroundJob/BillingHandoffRetryJobTest.php
+No syntax errors detected in ./tests/Unit/Controller/BrpControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/MessagingControllerResendTest.php
+No syntax errors detected in ./tests/Unit/Controller/ProductCatalogControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalDocumentControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/CashShiftControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/MessagingAdminControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ContractControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/BlastTrackingControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SatisfactionControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/CampaignControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ContactmomentControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ProspectSettingsControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalAdminControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ListPublicControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ForecastControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SetupControllerCurrencyTest.php
+No syntax errors detected in ./tests/Unit/Controller/NaviControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ForecastSettingsControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/DashboardControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/LoyaltyReportingControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SettingsControllerWriteTest.php
+No syntax errors detected in ./tests/Unit/Controller/WorklistControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ActivityTimelineControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/RapportageControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ResidentViewControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ExportRunControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/JourneyControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/StoreControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/LeadSourceControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SetupControllerDemoDataTest.php
+No syntax errors detected in ./tests/Unit/Controller/PosCustomerControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SocialAccountControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ProgrammeControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/Customer360ControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/BookingAdminControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/CtiControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ReportingControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalPageControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SocialPostControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/MarketingIntelligenceControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/XWikiControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ZgwNotificationControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PreferencesControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/MessagingControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ExportJobControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SegmentControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ProspectControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SettingsControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/LetterControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/KassakoppelingAuditControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/RequestChannelControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalTenantControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PartyLeafControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/LoyaltyControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/AppointmentPaymentWebhookControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/EmailSyncControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SlaAttainmentControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/RoutingControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PosStaffReportControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ProductStockControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/AnalyticsControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalAuthControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SetupControllerStatusContractTest.php
+No syntax errors detected in ./tests/Unit/Controller/MailAddInControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/WeeklyReviewControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/CallbackControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PosTenderControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/IncomingCallControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SemanticHandoffControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PartyKindControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/TicketWooRequestControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalDataControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/OpenDealsControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ArticleControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PosPaymentControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/TemplateControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/BlastWebhookControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PublicSurveyControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PosBookkeepingControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/BlastControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalPasswordResetFlowTest.php
+No syntax errors detected in ./tests/Unit/Controller/SchedulesControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/BerichtenboxWebhookControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/KccWerkplekControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalAccountControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalQuestionControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/MailingListAccessTest.php
+No syntax errors detected in ./tests/Unit/Controller/WebFormControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/SetupControllerDismissTest.php
+No syntax errors detected in ./tests/Unit/Controller/MessagingWebhookControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PortalRequestControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/TicketAssignControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/NotesControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/ContactSyncControllerTest.php
+No syntax errors detected in ./tests/Unit/Controller/PosReceiptControllerTest.php
+No syntax errors detected in ./tests/Unit/Repair/WidenContactMomentCaseReferenceTest.php
+No syntax errors detected in ./tests/Unit/Repair/NormalisePartyFormFieldsTest.php
+No syntax errors detected in ./tests/Unit/Repair/BackfillLeadRelationsTest.php
+No syntax errors detected in ./tests/Unit/Repair/RepairStepRegistrationTest.php
+No syntax errors detected in ./tests/Unit/Repair/RenameCollidingSchemaSlugsTest.php
+No syntax errors detected in ./tests/Unit/Repair/IngestProductVendorMasterTest.php
+No syntax errors detected in ./tests/Unit/Repair/MigrateAvgVerzoekenToOrDsarTest.php
+No syntax errors detected in ./tests/Unit/Repair/CreateSalesGroupTest.php
+No syntax errors detected in ./tests/Unit/Repair/RenameLoyaltyAccountSchemaSlugTest.php
+No syntax errors detected in ./tests/Unit/Repair/SeedTrustConfigurationRowsTest.php
+No syntax errors detected in ./tests/Unit/Repair/LeadSourceDefaultsTest.php
+No syntax errors detected in ./tests/Unit/Repair/RenameTimeEntrySchemaSlugTest.php
+No syntax errors detected in ./tests/Unit/Repair/SeedPartyKindsTest.php
+No syntax errors detected in ./tests/Unit/Repair/RenameDutchPipelinqValuesTest.php
+No syntax errors detected in ./tests/Unit/Repair/DrainMdmSyncQueueTest.php
+No syntax errors detected in ./tests/Unit/Repair/MigrateConsentToIntegriqTest.php
+No syntax errors detected in ./tests/Unit/Repair/NameFormDestinationsTest.php
+No syntax errors detected in ./tests/Unit/Repair/RenameDutchColumnsTest.php
+No syntax errors detected in ./tests/Unit/Repair/SeedWeeklyReviewAgentTemplateTest.php
+No syntax errors detected in ./tests/Unit/Repair/BackfillContactChannelArraysTest.php
+No syntax errors detected in ./tests/Unit/Repair/MigrateContactMomentDirectionTest.php
+No syntax errors detected in ./tests/Unit/Stubs/ObjectServiceRawRowsTest.php
+No syntax errors detected in ./tests/Unit/Flow/ProvisionContactIdentityNodeTest.php
+No syntax errors detected in ./tests/Unit/Flow/CompetitorWatchRunNodeTest.php
+No syntax errors detected in ./tests/Unit/Integration/PartyLeafProviderTest.php
+No syntax errors detected in ./tests/Unit/Integration/ContactMomentLeafProviderTest.php
+No syntax errors detected in ./tests/Unit/AppInfo/SettingsRouteContractTest.php
+No syntax errors detected in ./tests/Unit/AppInfo/OpenRegisterAutoloaderTest.php
+No syntax errors detected in ./tests/Unit/Lifecycle/PosTransactionGuardsTest.php
+No syntax errors detected in ./tests/Unit/Lifecycle/ForecastAccessPolicyTest.php
+No syntax errors detected in ./tests/Unit/Lifecycle/PosAccessPolicyTest.php
+No syntax errors detected in ./tests/Unit/Lifecycle/PosTransactionConfirmGuardPhase0Test.php
+No syntax errors detected in ./tests/Unit/Dossiq/CaseTypeContributionProviderTest.php
+No syntax errors detected in ./tests/Unit/Mcp/PipelinqScannableServicesTest.php
+No syntax errors detected in ./tests/Unit/Mcp/McpAnswerTest.php
+No syntax errors detected in ./tests/Unit/Util/EntityAccessorTraitTest.php
+No syntax errors detected in ./tests/Unit/Service/HolidayCalendarServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/LeadStagePlacerTest.php
+No syntax errors detected in ./tests/Unit/Service/BlastServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/EmailSyncServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/WebhookProcessorServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/RoadmapFeatureCatalogTest.php
+No syntax errors detected in ./tests/Unit/Service/SmsAdapterTest.php
+No syntax errors detected in ./tests/Unit/Service/DemoSeedServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/RegisterSlugBlankOverrideTest.php
+No syntax errors detected in ./tests/Unit/Service/IntegriqConsentClientTest.php
+No syntax errors detected in ./tests/Unit/Service/KvkApiClientTest.php
+No syntax errors detected in ./tests/Unit/Service/WhatsAppAdapterTest.php
+No syntax errors detected in ./tests/Unit/Service/TouchpointServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/CampaignLinkDecoratorTest.php
+No syntax errors detected in ./tests/Unit/Service/VatRatesTest.php
+No syntax errors detected in ./tests/Unit/Service/XWikiServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/AvailabilityServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/PartyIndicatorSchemaKeysTest.php
+No syntax errors detected in ./tests/Unit/Service/FakeAggregationRunner.php
+No syntax errors detected in ./tests/Unit/Service/ConsentServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/HaalCentraalClientTest.php
+No syntax errors detected in ./tests/Unit/Service/PosRefundServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/EmailFallbackSenderTest.php
+No syntax errors detected in ./tests/Unit/Service/ContactMomentFilingServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SurveyDispatchServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ShillinqApServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/MailboxResolverTest.php
+No syntax errors detected in ./tests/Unit/Service/ForecastOverrideServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/RegisterFragmentSlugTest.php
+No syntax errors detected in ./tests/Unit/Service/PartyIndicatorServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SurveyResponseServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ArticleServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/BerichtenboxServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/DossierQuestionServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/IcpConfigServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ShillinqStockReaderTest.php
+No syntax errors detected in ./tests/Unit/Service/ComplianceServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/AppointmentPaymentProviderTest.php
+No syntax errors detected in ./tests/Unit/Service/LeadServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ComplianceIntegriqTest.php
+No syntax errors detected in ./tests/Unit/Service/WebsiteEnquiryFragmentTest.php
+No syntax errors detected in ./tests/Unit/Service/SocialAdvocacyServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/CashShiftServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SlaSeedPauseStatusTest.php
+No syntax errors detected in ./tests/Unit/Service/ConfigFileLoaderServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Competitor/ConnectorEgressTest.php
+No syntax errors detected in ./tests/Unit/Service/Competitor/SearchWatchReaderTest.php
+No syntax errors detected in ./tests/Unit/Service/Competitor/FeedWatchReaderTest.php
+No syntax errors detected in ./tests/Unit/Service/Competitor/PageWatchReaderTest.php
+No syntax errors detected in ./tests/Unit/Service/Competitor/SitemapWatchReaderTest.php
+No syntax errors detected in ./tests/Unit/Service/Competitor/RelevanceScorerTest.php
+No syntax errors detected in ./tests/Unit/Service/Competitor/CompetitorWatchServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SurveyOptOutServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/WalkInQueueServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/CampaignServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ProgrammePortfolioServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ContactImportServiceGuardTest.php
+No syntax errors detected in ./tests/Unit/Service/ForecastDealServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/AnalyticsServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/KassakoppelingSignatureServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ForecastExportServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/QuotaServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/PosTenderServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SettingsLoadServicePosSchemasTest.php
+No syntax errors detected in ./tests/Unit/Service/SocialMetricsServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SettingsServiceMatomoReferenceTest.php
+No syntax errors detected in ./tests/Unit/Service/Mdm/InMemoryMdmObjectRepository.php
+No syntax errors detected in ./tests/Unit/Service/Lifecycle/SchemaLifecycleGraphTest.php
+No syntax errors detected in ./tests/Unit/Service/PosStaffServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ScheduledTaskServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/TrafficEventEmitterTest.php
+No syntax errors detected in ./tests/Unit/Service/MessagingLeafDispatchTest.php
+No syntax errors detected in ./tests/Unit/Service/SettingsServiceSecretsTest.php
+No syntax errors detected in ./tests/Unit/Service/SlaEngineServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/BsnValidationServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ContactDataBuilderTest.php
+No syntax errors detected in ./tests/Unit/Service/SemanticHandoffServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/QueryPushdownBatch3Test.php
+No syntax errors detected in ./tests/Unit/Service/ListTokenServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Zgw/AcClientTest.php
+No syntax errors detected in ./tests/Unit/Service/Zgw/NrcNotificationListenerTest.php
+No syntax errors detected in ./tests/Unit/Service/Zgw/ZgwApiClientTest.php
+No syntax errors detected in ./tests/Unit/Service/Zgw/ZrcClientTest.php
+No syntax errors detected in ./tests/Unit/Service/Zgw/ZtcClientTest.php
+No syntax errors detected in ./tests/Unit/Service/Zgw/ZgwCoexistenceValidatorTest.php
+No syntax errors detected in ./tests/Unit/Service/CampaignReportServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ProductCatalogServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/EncryptionServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/NotificationServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/OptOutServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SocialAccountServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ProspectDiscoveryServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Customer360SummaryServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SocialPostServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/PipelinqEvidenceSourceProviderTest.php
+No syntax errors detected in ./tests/Unit/Service/ForecastRollupServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ConnectionReportServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/PosPaymentServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/IntegrationDetectorTest.php
+No syntax errors detected in ./tests/Unit/Service/ActivityServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/AttributionServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/HeldObjectDrainTest.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/FormsQuestionReaderTest.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/WebFormBindingCheckTest.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/WebFormFinderTest.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/WebFormIntakeServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/Fakes/ObjectServiceContract.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/Fakes/FakeObjectStore.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/Fakes/FakeValidator.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/Fakes/FakeContainer.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/Fakes/FakeRefusal.php
+No syntax errors detected in ./tests/Unit/Service/WebForm/Fakes/FakeFormSubmitService.php
+No syntax errors detected in ./tests/Unit/Service/SurveyInvitationSenderTest.php
+No syntax errors detected in ./tests/Unit/Service/CampaignPerformanceServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/RoutingServiceWorkloadTest.php
+No syntax errors detected in ./tests/Unit/Service/ContactVcardWriterServiceUpdateTest.php
+No syntax errors detected in ./tests/Unit/Service/FiscalPeriodServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ConnectorRegisterResolutionTest.php
+No syntax errors detected in ./tests/Unit/Service/ContractServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/PartyOrganisationTreeServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/WorklistServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/OrphanedLeadRepairServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/DataDeletionServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Social/SocialAdapterRegistryTest.php
+No syntax errors detected in ./tests/Unit/Service/Social/SocialAdapterRequestShapeTest.php
+No syntax errors detected in ./tests/Unit/Service/Social/ConnectionAuditServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Social/InMemoryObjectStore.php
+No syntax errors detected in ./tests/Unit/Service/Social/SocialBrokerGatewayTest.php
+No syntax errors detected in ./tests/Unit/Service/KassakoppelingAuditServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/AppointmentEmailOptOutTest.php
+No syntax errors detected in ./tests/Unit/Service/UpdateNotificationRulesTest.php
+No syntax errors detected in ./tests/Unit/Service/LoyaltyRegisterFragmentTest.php
+No syntax errors detected in ./tests/Unit/Service/RegisterFragmentMergeTest.php
+No syntax errors detected in ./tests/Unit/Service/Matomo/MatomoReportServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SchemaMapServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/LeadCurrencySchemaTest.php
+No syntax errors detected in ./tests/Unit/Service/ObjectEventHandlerServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/GiftCardServiceConfigGuardTest.php
+No syntax errors detected in ./tests/Unit/Service/InvoiceSequenceServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/PosTransactionServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SchemaConfigKeysAreWrittenTest.php
+No syntax errors detected in ./tests/Unit/Service/PosBookkeepingServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/PosRoleServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/NotesServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ObjectUpdateDiffServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/IcpConfigReaderTest.php
+No syntax errors detected in ./tests/Unit/Service/TierServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Search/KeywordAnalysisServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Search/HtmlTextExtractorTest.php
+No syntax errors detected in ./tests/Unit/Service/Search/SiteContentCrawlerTest.php
+No syntax errors detected in ./tests/Unit/Service/Search/ExpectedCtrCurveTest.php
+No syntax errors detected in ./tests/Unit/Service/TicketServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/CorrespondenceLanguageServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SystemTagServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/EmailMatchServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/BsnAuditServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ObjectEventDispatcherTest.php
+No syntax errors detected in ./tests/Unit/Service/MailAddIn/OpenMailServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/NaviServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/OpenCorporatesResultMapperTest.php
+No syntax errors detected in ./tests/Unit/Service/KvkResultMapperTest.php
+No syntax errors detected in ./tests/Unit/Service/ShillinqInvoiceReaderTest.php
+No syntax errors detected in ./tests/Unit/Service/ProspectScoringServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/QueryPushdownBatch2Test.php
+No syntax errors detected in ./tests/Unit/Service/ForecastServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ChannelProviderRepositoryTest.php
+No syntax errors detected in ./tests/Unit/Service/BudgetServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ReceiptCompanyAddressTest.php
+No syntax errors detected in ./tests/Unit/Service/RoutingServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ContactVcardPropertyBuilderTest.php
+No syntax errors detected in ./tests/Unit/Service/WooRequestConversionServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/LandingPageProvisioningServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/AppointmentDepositServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SearchConsole/SearchConsoleImportServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SearchConsole/GoogleServiceAccountAuthTest.php
+No syntax errors detected in ./tests/Unit/Service/SearchConsole/SearchQueryReportServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ComplaintSlaServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/MessagingServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/DefaultPipelineServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/OpenCorporatesApiClientTest.php
+No syntax errors detected in ./tests/Unit/Service/Export/ExportUploadServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Export/CronExpressionHelperTest.php
+No syntax errors detected in ./tests/Unit/Service/Export/SchemaEvolutionServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Export/ExportDestinationServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Export/ExportDataServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SettingsServiceTunableTest.php
+No syntax errors detected in ./tests/Unit/Service/NoteEventServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Payment/CcvAdapterTest.php
+No syntax errors detected in ./tests/Unit/Service/Payment/StubHttpTransport.php
+No syntax errors detected in ./tests/Unit/Service/Payment/AdyenAdapterTest.php
+No syntax errors detected in ./tests/Unit/Service/Payment/MollieAdapterTest.php
+No syntax errors detected in ./tests/Unit/Service/Payment/BrokerHttpTransportTest.php
+No syntax errors detected in ./tests/Unit/Service/Payment/StripeAdapterTest.php
+No syntax errors detected in ./tests/Unit/Service/CtiAdapterWebhookTest.php
+No syntax errors detected in ./tests/Unit/Service/CampaignAttributionServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/EligibilityServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/NaviConversationStoreTest.php
+No syntax errors detected in ./tests/Unit/Service/SettingsLoadServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/RegisterResolverServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/TimeBillingHandoffServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/LogiusConnectorTest.php
+No syntax errors detected in ./tests/Unit/Service/RapportageServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/BusinessHoursCalculatorTest.php
+No syntax errors detected in ./tests/Unit/Service/ContactVcardWriterServiceGuardTest.php
+No syntax errors detected in ./tests/Unit/Service/SettingsMapBuilderTest.php
+No syntax errors detected in ./tests/Unit/Service/AppointmentCalendarLeafProviderTest.php
+No syntax errors detected in ./tests/Unit/Service/Demo/DemoMarketingSeederTest.php
+No syntax errors detected in ./tests/Unit/Service/Demo/DemoRegisterImporterTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/JourneyStepRunnerTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/JourneyServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/SegmentBlastUnsubscribeTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/MailTransportServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/Transport/InstanceMailerTransportTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/Transport/ConnectorSourceTransportTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/Transport/MailAccountTransportTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/StandardAudiencesTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/RecipientNameReaderTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/WeeklyReviewServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/CampaignFormDestinationTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/SubmittedLeadIntakeTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/FormDestinationBackfillTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/PhysicalAddressRendererTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/DeliverabilityCheckServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/MailBlockRendererTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/SegmentSignalServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Marketing/JourneyFlowCompilerTest.php
+No syntax errors detected in ./tests/Unit/Service/CtiAdapterRegistryTest.php
+No syntax errors detected in ./tests/Unit/Service/SystemServiceAccountTest.php
+No syntax errors detected in ./tests/Unit/Service/ProductVendorProviderServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ContactmomentServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SubscriptionServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/DutchHolidayCalendarTest.php
+No syntax errors detected in ./tests/Unit/Service/SystemTagCrudServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ExchangeRateServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SlaAttainmentServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ReceiptServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/CtiContactMatcherTest.php
+No syntax errors detected in ./tests/Unit/Service/PosCustomerLinkServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/CallbackServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/MessagingOptOutWiringTest.php
+No syntax errors detected in ./tests/Unit/Service/LoyaltyProgrammeServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/PosStockMovedEventTest.php
+No syntax errors detected in ./tests/Unit/Service/AppointmentEmailServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/PointsRuleEngineTest.php
+No syntax errors detected in ./tests/Unit/Service/PhoneNormaliserTest.php
+No syntax errors detected in ./tests/Unit/Service/CommercialAnalyticsServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ReportingServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/PipelineStageDataTest.php
+No syntax errors detected in ./tests/Unit/Service/PartyKindRegistryServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ContactLinkedUidsServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SegmentServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SnapshotGenerationServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/BookingServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/ShillinqWipServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/DefaultSkillServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/PortalScopeResolverTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/MainRegisterReaderTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/PortalInvoiceServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/FakeMainRegisterReader.php
+No syntax errors detected in ./tests/Unit/Service/Portal/DocumentSigningServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/ContrastRatioCalculatorTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/PortalRequestGuardTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/PortalTokenServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/PortalSessionManagerTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/InstalledAppConfig.php
+No syntax errors detected in ./tests/Unit/Service/Portal/PortalSchemaKeyResolutionTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/PortalDelegationServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/PortalServiceAccountTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/PortalAuthServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/FakePortalObjectRepository.php
+No syntax errors detected in ./tests/Unit/Service/Portal/QuestionDetailServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/PortalRequestServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Portal/QuestionAnsweredNoticeTest.php
+No syntax errors detected in ./tests/Unit/Service/TemplateRendererTest.php
+No syntax errors detected in ./tests/Unit/Service/TrackingLinkServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/SettingsServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/MessagingServiceAccountTest.php
+No syntax errors detected in ./tests/Unit/Service/ClientManagementIntegrationTest.php
+No syntax errors detected in ./tests/Unit/Service/Cti/IncomingCallFinderTest.php
+No syntax errors detected in ./tests/Unit/Service/RecurringRevenueServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/DeliveryAuditLoggerTest.php
+No syntax errors detected in ./tests/Unit/Service/SlaEngineDispatchTest.php
+No syntax errors detected in ./tests/Unit/Service/RenewalEngineServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/DetractorFollowUpServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/TaskNameBackfillServiceTest.php
+No syntax errors detected in ./tests/Unit/Service/Letter/FilinqLetterAdapterTest.php
+No syntax errors detected in ./tests/Unit/Service/PosTransactionServicePhase0Test.php
+No syntax errors detected in ./tests/Unit/Service/Settings/MenuStructureTest.php
+No syntax errors detected in ./tests/Unit/Activity/ProviderSubjectHandlerTest.php
+No syntax errors detected in ./tests/Unit/Activity/ProviderTest.php
+No syntax errors detected in ./tests/Unit/Activity/FilterTest.php
+No syntax errors detected in ./tests/Unit/Activity/Setting/DealSettingTest.php
+No syntax errors detected in ./tests/Unit/Activity/Setting/AssignmentSettingTest.php
+No syntax errors detected in ./tests/Unit/Activity/Setting/NoteSettingTest.php
+No syntax errors detected in ./tests/Unit/Activity/Setting/StageStatusSettingTest.php
+No syntax errors detected in ./tests/Unit/Listener/ExpenseApprovalListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/LeadStageCreatingListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/ContactErasedOnSoftDeleteTest.php
+No syntax errors detected in ./tests/Unit/Listener/ObjectsMergedSyncListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/SlaObjectUpdatedListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/WebFormBindingListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/TaskCreatedByCreatingListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/DeferredJobDrain.php
+No syntax errors detected in ./tests/Unit/Listener/SubmittedLeadListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/LandingPageFormSubmittedListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/FormsSubmissionListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/BrpMutationWebhookListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/Fixtures/FormSubmittedEvent.php
+No syntax errors detected in ./tests/Unit/Listener/RecordingDeferralService.php
+No syntax errors detected in ./tests/Unit/Listener/SurveyDispatchListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/ObjectEventListenerTest.php
+No syntax errors detected in ./tests/Unit/Listener/PosTransactionCompletedListenerTest.php
+No syntax errors detected in ./tests/Unit/SetupCheck/MessagingServiceAccountCheckTest.php
+No syntax errors detected in ./tests/Unit/SetupCheck/PortalServiceAccountCheckTest.php
+No syntax errors detected in ./tests/Unit/Support/FakeSlugResolver.php
+No syntax errors detected in ./tests/Unit/Support/RegisterSlugPinTest.php
+No syntax errors detected in ./tests/Unit/Support/FakeMessagingAccount.php
+No syntax errors detected in ./tests/Unit/Support/FakeIntegriq.php
+No syntax errors detected in ./tests/Unit/Support/InMemoryListObjectStore.php
+No syntax errors detected in ./tests/Unit/Support/InMemoryObjectService.php
+No syntax errors detected in ./tests/Unit/Support/RecordingMessage.php
+No syntax errors detected in ./tests/Unit/Command/EnquiryDrainCommandTest.php
+No syntax errors detected in ./tests/Unit/Command/ReferencesAuditCommandTest.php
+No syntax errors detected in ./tests/Unit/AppointmentBookingI18nTest.php
+No syntax errors detected in ./tests/Unit/Dashboard/DealsOverviewWidgetTest.php
+No syntax errors detected in ./tests/Unit/Dashboard/FindClientWidgetTest.php
+No syntax errors detected in ./tests/Unit/Dashboard/MyLeadsWidgetTest.php
+No syntax errors detected in ./tests/Unit/Dashboard/RecentActivitiesWidgetTest.php
+No syntax errors detected in ./tests/Unit/Portal/PortalContributionProviderTest.php
+No syntax errors detected in ./tests/Unit/Portal/PortalAssertionVerifierTest.php
+No syntax errors detected in ./tests/Unit/Notification/NotifierTest.php
+No syntax errors detected in ./tests/Unit/Settings/SavedReplySchemaTest.php
+No syntax errors detected in ./tests/Unit/Settings/RelationshipProvenanceTest.php
+No syntax errors detected in ./tests/Unit/Settings/PreferredNameSchemaTest.php
+No syntax errors detected in ./tests/Unit/Settings/DossierQuestionSchemaTest.php
+No syntax errors detected in ./tests/Unit/Settings/RegisterCarriesNoExampleDataTest.php
+No syntax errors detected in ./tests/Unit/Settings/AdminSettingsTest.php
+No syntax errors detected in ./tests/Unit/Settings/PlainFormHelpTest.php
+No syntax errors detected in ./tests/Unit/Settings/RegisterAnnotationsTest.php
+No syntax errors detected in ./tests/Unit/Settings/LeadClientOptionalSchemaTest.php
+No syntax errors detected in ./tests/Unit/Settings/ConnectionsDeclarationTest.php
+No syntax errors detected in ./tests/Unit/Settings/SettingsSectionTest.php
+No syntax errors detected in ./tests/Unit/Settings/ReviewRound3RegisterTest.php
+No syntax errors detected in ./tests/Unit/Settings/CompetitorWatchFlowTest.php
+No syntax errors detected in ./templates/settings/admin.php
+No syntax errors detected in ./templates/portal.php
+No syntax errors detected in ./templates/index.php
+No syntax errors detected in ./scripts/coverage-guard.php
+No syntax errors detected in ./appinfo/routes.php
+No syntax errors detected in ./appinfo/register_command.php
+No syntax errors detected in ./lib/BackgroundJob/BlastSendJob.php
+No syntax errors detected in ./lib/BackgroundJob/ExportWorkerJob.php
+No syntax errors detected in ./lib/BackgroundJob/BudgetPeriodResetJob.php
+No syntax errors detected in ./lib/BackgroundJob/WalkInQueueRebalanceJob.php
+No syntax errors detected in ./lib/BackgroundJob/BillingHandoffRetryJob.php
+No syntax errors detected in ./lib/BackgroundJob/TenderPostedRetryJob.php
+No syntax errors detected in ./lib/BackgroundJob/ExportSchedulerJob.php
+No syntax errors detected in ./lib/BackgroundJob/ForecastSnapshotJob.php
+No syntax errors detected in ./lib/BackgroundJob/SocialPublishJob.php
+No syntax errors detected in ./lib/BackgroundJob/AvailabilityCacheRefreshJob.php
+No syntax errors detected in ./lib/BackgroundJob/BrpHealthCheckJob.php
+No syntax errors detected in ./lib/BackgroundJob/ReminderDispatchJob.php
+No syntax errors detected in ./lib/BackgroundJob/CostReconciliationJob.php
+No syntax errors detected in ./lib/BackgroundJob/CtiEventLogCleanupJob.php
+No syntax errors detected in ./lib/BackgroundJob/SlaDeadlineSweepJob.php
+No syntax errors detected in ./lib/BackgroundJob/DeferredObjectListenerJob.php
+No syntax errors detected in ./lib/BackgroundJob/EmailMatchJob.php
+No syntax errors detected in ./lib/BackgroundJob/WebhookProcessorJob.php
+No syntax errors detected in ./lib/BackgroundJob/SocialMetricsPullJob.php
+No syntax errors detected in ./lib/BackgroundJob/FallbackEmailJob.php
+No syntax errors detected in ./lib/BackgroundJob/RenewalWindowJob.php
+No syntax errors detected in ./lib/BackgroundJob/SurveyInvitationDispatchJob.php
+No syntax errors detected in ./lib/BackgroundJob/PosRetryBackoffJob.php
+No syntax errors detected in ./lib/BackgroundJob/EmailSyncJob.php
+No syntax errors detected in ./lib/BackgroundJob/PortalCleanupJob.php
+No syntax errors detected in ./lib/BackgroundJob/ReplayConsentToIntegriqJob.php
+No syntax errors detected in ./lib/BackgroundJob/DispatchQueuedMessagesJob.php
+No syntax errors detected in ./lib/BackgroundJob/PointsExpiryBatchJob.php
+No syntax errors detected in ./lib/BackgroundJob/SearchConsoleImportJob.php
+No syntax errors detected in ./lib/BackgroundJob/BrpRetentionJob.php
+No syntax errors detected in ./lib/BackgroundJob/GenerateZReportJob.php
+No syntax errors detected in ./lib/BackgroundJob/BrpMonitorJob.php
+No syntax errors detected in ./lib/BackgroundJob/TemplateApprovalSyncJob.php
+No syntax errors detected in ./lib/BackgroundJob/CallbackOverdueJob.php
+No syntax errors detected in ./lib/BackgroundJob/AppointmentDepositTimeoutJob.php
+No syntax errors detected in ./lib/BackgroundJob/ScheduledTaskJob.php
+No syntax errors detected in ./lib/BackgroundJob/TaskEscalationJob.php
+No syntax errors detected in ./lib/BackgroundJob/TierDowngradeJob.php
+No syntax errors detected in ./lib/Controller/HealthController.php
+No syntax errors detected in ./lib/Controller/JourneyController.php
+No syntax errors detected in ./lib/Controller/BillingHandoffController.php
+No syntax errors detected in ./lib/Controller/BrpAdminController.php
+No syntax errors detected in ./lib/Controller/TicketWooRequestController.php
+No syntax errors detected in ./lib/Controller/PosPaymentController.php
+No syntax errors detected in ./lib/Controller/LoyaltyReportingController.php
+No syntax errors detected in ./lib/Controller/BookingAdminController.php
+No syntax errors detected in ./lib/Controller/SubscriptionController.php
+No syntax errors detected in ./lib/Controller/CallbackController.php
+No syntax errors detected in ./lib/Controller/SettingsController.php
+No syntax errors detected in ./lib/Controller/PosTenderController.php
+No syntax errors detected in ./lib/Controller/KccWerkplekController.php
+No syntax errors detected in ./lib/Controller/SlaPolicyController.php
+No syntax errors detected in ./lib/Controller/KassakoppelingAuditController.php
+No syntax errors detected in ./lib/Controller/AppointmentPaymentWebhookController.php
+No syntax errors detected in ./lib/Controller/PosStaffController.php
+No syntax errors detected in ./lib/Controller/PortalAuditController.php
+No syntax errors detected in ./lib/Controller/RequestChannelController.php
+No syntax errors detected in ./lib/Controller/DashboardController.php
+No syntax errors detected in ./lib/Controller/PortalDelegationController.php
+No syntax errors detected in ./lib/Controller/ContactSyncController.php
+No syntax errors detected in ./lib/Controller/PartyLeafController.php
+No syntax errors detected in ./lib/Controller/SchedulesController.php
+No syntax errors detected in ./lib/Controller/ActivityTimelineController.php
+No syntax errors detected in ./lib/Controller/SocialAdvocacyController.php
+No syntax errors detected in ./lib/Controller/PortalPageController.php
+No syntax errors detected in ./lib/Controller/ShillinqApController.php
+No syntax errors detected in ./lib/Controller/SocialPostController.php
+No syntax errors detected in ./lib/Controller/WeeklyReviewController.php
+No syntax errors detected in ./lib/Controller/PartyKindController.php
+No syntax errors detected in ./lib/Controller/ForecastController.php
+No syntax errors detected in ./lib/Controller/PortalAdminController.php
+No syntax errors detected in ./lib/Controller/IncomingCallController.php
+No syntax errors detected in ./lib/Controller/ZgwNotificationController.php
+No syntax errors detected in ./lib/Controller/BlastWebhookController.php
+No syntax errors detected in ./lib/Controller/PosStaffReportController.php
+No syntax errors detected in ./lib/Controller/MessagingController.php
+No syntax errors detected in ./lib/Controller/ReportingController.php
+No syntax errors detected in ./lib/Controller/PreferencesController.php
+No syntax errors detected in ./lib/Controller/PortalAuthController.php
+No syntax errors detected in ./lib/Controller/ProgrammeController.php
+No syntax errors detected in ./lib/Controller/LeadSourceController.php
+No syntax errors detected in ./lib/Controller/RapportageController.php
+No syntax errors detected in ./lib/Controller/SocialAccountController.php
+No syntax errors detected in ./lib/Controller/AnalyticsController.php
+No syntax errors detected in ./lib/Controller/ArticleController.php
+No syntax errors detected in ./lib/Controller/PosRefundController.php
+No syntax errors detected in ./lib/Controller/MessagingWebhookController.php
+No syntax errors detected in ./lib/Controller/ProspectController.php
+No syntax errors detected in ./lib/Controller/PortalDataController.php
+No syntax errors detected in ./lib/Controller/ExportRunController.php
+No syntax errors detected in ./lib/Controller/MailAddInController.php
+No syntax errors detected in ./lib/Controller/WorklistController.php
+No syntax errors detected in ./lib/Controller/ResidentViewController.php
+No syntax errors detected in ./lib/Controller/SlaAttainmentController.php
+No syntax errors detected in ./lib/Controller/PortalDocumentController.php
+No syntax errors detected in ./lib/Controller/ContactmomentController.php
+No syntax errors detected in ./lib/Controller/CompetitorWatchController.php
+No syntax errors detected in ./lib/Controller/XWikiController.php
+No syntax errors detected in ./lib/Controller/MarketingConnectorController.php
+No syntax errors detected in ./lib/Controller/CashShiftController.php
+No syntax errors detected in ./lib/Controller/BerichtenboxAdminController.php
+No syntax errors detected in ./lib/Controller/PosTransactionController.php
+No syntax errors detected in ./lib/Controller/PosBookkeepingController.php
+No syntax errors detected in ./lib/Controller/NaviController.php
+No syntax errors detected in ./lib/Controller/BrpController.php
+No syntax errors detected in ./lib/Controller/LetterController.php
+No syntax errors detected in ./lib/Controller/PublicSurveyController.php
+No syntax errors detected in ./lib/Controller/PosCustomerController.php
+No syntax errors detected in ./lib/Controller/WebFormController.php
+No syntax errors detected in ./lib/Controller/MailTransportController.php
+No syntax errors detected in ./lib/Controller/CtiController.php
+No syntax errors detected in ./lib/Controller/NotesController.php
+No syntax errors detected in ./lib/Controller/BerichtenboxWebhookController.php
+No syntax errors detected in ./lib/Controller/SatisfactionController.php
+No syntax errors detected in ./lib/Controller/PosCustomerSettingsController.php
+No syntax errors detected in ./lib/Controller/EmailSyncController.php
+No syntax errors detected in ./lib/Controller/PosRoleController.php
+No syntax errors detected in ./lib/Controller/MessagingAdminController.php
+No syntax errors detected in ./lib/Controller/SegmentController.php
+No syntax errors detected in ./lib/Controller/RoutingController.php
+No syntax errors detected in ./lib/Controller/PortalApiController.php
+No syntax errors detected in ./lib/Controller/BlastTrackingController.php
+No syntax errors detected in ./lib/Controller/TicketAssignController.php
+No syntax errors detected in ./lib/Controller/SemanticHandoffController.php
+No syntax errors detected in ./lib/Controller/SearchConsoleController.php
+No syntax errors detected in ./lib/Controller/CampaignController.php
+No syntax errors detected in ./lib/Controller/MetricsController.php
+No syntax errors detected in ./lib/Controller/EntityActivityController.php
+No syntax errors detected in ./lib/Controller/ProductCatalogController.php
+No syntax errors detected in ./lib/Controller/ContractController.php
+No syntax errors detected in ./lib/Controller/PortalQuestionController.php
+No syntax errors detected in ./lib/Controller/SetupController.php
+No syntax errors detected in ./lib/Controller/PosReceiptController.php
+No syntax errors detected in ./lib/Controller/PortalRequestController.php
+No syntax errors detected in ./lib/Controller/CorrespondenceLanguageController.php
+No syntax errors detected in ./lib/Controller/PortalController.php
+No syntax errors detected in ./lib/Controller/OpenDealsController.php
+No syntax errors detected in ./lib/Controller/LoyaltyController.php
+No syntax errors detected in ./lib/Controller/ProductStockController.php
+No syntax errors detected in ./lib/Controller/TemplateController.php
+No syntax errors detected in ./lib/Controller/KeywordIntelligenceController.php
+No syntax errors detected in ./lib/Controller/MailingListController.php
+No syntax errors detected in ./lib/Controller/TimeEntryWipController.php
+No syntax errors detected in ./lib/Controller/ContactMomentLeafController.php
+No syntax errors detected in ./lib/Controller/ListPublicController.php
+No syntax errors detected in ./lib/Controller/StoreController.php
+No syntax errors detected in ./lib/Controller/ExportJobController.php
+No syntax errors detected in ./lib/Controller/BlastController.php
+No syntax errors detected in ./lib/Controller/Customer360Controller.php
+No syntax errors detected in ./lib/Controller/PortalTenantController.php
+No syntax errors detected in ./lib/Controller/ProspectSettingsController.php
+No syntax errors detected in ./lib/Controller/PortalAccountController.php
+No syntax errors detected in ./lib/Controller/ForecastSettingsController.php
+No syntax errors detected in ./lib/Repair/InitializeSettings.php
+No syntax errors detected in ./lib/Repair/RenameDutchPipelinqValues.php
+No syntax errors detected in ./lib/Repair/UnifyClientContactIdentity.php
+No syntax errors detected in ./lib/Repair/NormaliseTicketTitle.php
+No syntax errors detected in ./lib/Repair/NameFormDestinations.php
+No syntax errors detected in ./lib/Repair/CreatePortalServiceGroup.php
+No syntax errors detected in ./lib/Repair/IngestProductVendorMaster.php
+No syntax errors detected in ./lib/Repair/MigrateConsentToIntegriq.php
+No syntax errors detected in ./lib/Repair/RelinkOrphanedLeads.php
+No syntax errors detected in ./lib/Repair/InitSlaStatus.php
+No syntax errors detected in ./lib/Repair/SeedPartyKinds.php
+No syntax errors detected in ./lib/Repair/MigrateContactMomentDirection.php
+No syntax errors detected in ./lib/Repair/RenameDutchColumns.php
+No syntax errors detected in ./lib/Repair/CreateMessagingServiceGroup.php
+No syntax errors detected in ./lib/Repair/CreateSalesGroup.php
+No syntax errors detected in ./lib/Repair/RemoveLegacyPspKeys.php
+No syntax errors detected in ./lib/Repair/SeedWeeklyReviewAgentTemplate.php
+No syntax errors detected in ./lib/Repair/NormaliseCtiPhoneNumbers.php
+No syntax errors detected in ./lib/Repair/BackfillContactChannelArrays.php
+No syntax errors detected in ./lib/Repair/NormalisePartyFormFields.php
+No syntax errors detected in ./lib/Repair/RenameLoyaltyAccountSchemaSlug.php
+No syntax errors detected in ./lib/Repair/BackfillLeadRelations.php
+No syntax errors detected in ./lib/Repair/SeedTrustConfigurationRows.php
+No syntax errors detected in ./lib/Repair/CreateServiceGroup.php
+No syntax errors detected in ./lib/Repair/BackfillTaskNames.php
+No syntax errors detected in ./lib/Repair/DrainMdmSyncQueue.php
+No syntax errors detected in ./lib/Repair/MigrateAvgVerzoekenToOrDsar.php
+No syntax errors detected in ./lib/Repair/Support/RunsUnderSystemIdentity.php
+No syntax errors detected in ./lib/Repair/RemoveRetiredAvgJobs.php
+No syntax errors detected in ./lib/Repair/WidenContactMomentCaseReference.php
+No syntax errors detected in ./lib/Repair/MigratePosBookkeepingToShillinq.php
+No syntax errors detected in ./lib/Repair/RenameCollidingSchemaSlugs.php
+No syntax errors detected in ./lib/Repair/RenameTimeEntrySchemaSlug.php
+No syntax errors detected in ./lib/Event/LandingPageFormSubmittedEvent.php
+No syntax errors detected in ./lib/Event/PortalRequestSubmittedEvent.php
+No syntax errors detected in ./lib/Event/ExpenseApprovedEvent.php
+No syntax errors detected in ./lib/Event/PosStockMovedEvent.php
+No syntax errors detected in ./lib/Event/TimeEntryApprovedEvent.php
+No syntax errors detected in ./lib/Event/TenderPostedEvent.php
+No syntax errors detected in ./lib/Flow/ProvisionContactIdentityNode.php
+No syntax errors detected in ./lib/Flow/CompetitorWatchRunNode.php
+No syntax errors detected in ./lib/Flow/PipelinqFlowNodeListener.php
+No syntax errors detected in ./lib/Flow/JourneyActionNode.php
+No syntax errors detected in ./lib/Integration/ContactMomentLeafProvider.php
+No syntax errors detected in ./lib/Integration/PartyLeafProvider.php
+No syntax errors detected in ./lib/AppInfo/OpenRegisterAutoloader.php
+No syntax errors detected in ./lib/AppInfo/Application.php
+No syntax errors detected in ./lib/Lifecycle/BillingHandoffAccessPolicy.php
+No syntax errors detected in ./lib/Lifecycle/PosTransactionConfirmGuard.php
+No syntax errors detected in ./lib/Lifecycle/PosRefundManagerGuard.php
+No syntax errors detected in ./lib/Lifecycle/PosTransactionAccessGuard.php
+No syntax errors detected in ./lib/Lifecycle/ForecastAccessPolicy.php
+No syntax errors detected in ./lib/Lifecycle/PosAccessPolicy.php
+No syntax errors detected in ./lib/Lifecycle/ObjectOwnerAccessPolicy.php
+No syntax errors detected in ./lib/Lifecycle/PosTransactionRefundGuard.php
+No syntax errors detected in ./lib/Dossiq/CaseTypeContributionProvider.php
+No syntax errors detected in ./lib/Mcp/McpAnswer.php
+No syntax errors detected in ./lib/Mcp/PipelinqScannableServices.php
+No syntax errors detected in ./lib/Util/EntityAccessorTrait.php
+No syntax errors detected in ./lib/Util/ContrastRatioCalculator.php
+No syntax errors detected in ./lib/Service/ForecastDealService.php
+No syntax errors detected in ./lib/Service/PointsLedgerService.php
+No syntax errors detected in ./lib/Service/NotesService.php
+No syntax errors detected in ./lib/Service/HolidayCalendarService.php
+No syntax errors detected in ./lib/Service/OpenCorporatesApiClient.php
+No syntax errors detected in ./lib/Service/LoyaltyEngineService.php
+No syntax errors detected in ./lib/Service/WhatsAppAdapter.php
+No syntax errors detected in ./lib/Service/RenewalEngineService.php
+No syntax errors detected in ./lib/Service/ReceiptService.php
+No syntax errors detected in ./lib/Service/ClientManagementIntegration.php
+No syntax errors detected in ./lib/Service/InvoiceSequenceService.php
+No syntax errors detected in ./lib/Service/ProgrammeEstimationService.php
+No syntax errors detected in ./lib/Service/SurveyDispatchService.php
+No syntax errors detected in ./lib/Service/TrackingLinkService.php
+No syntax errors detected in ./lib/Service/ObjectUpdateDiffService.php
+No syntax errors detected in ./lib/Service/OptOutService.php
+No syntax errors detected in ./lib/Service/CampaignReportService.php
+No syntax errors detected in ./lib/Service/PosTransactionService.php
+No syntax errors detected in ./lib/Service/EmailMatchService.php
+No syntax errors detected in ./lib/Service/NaviService.php
+No syntax errors detected in ./lib/Service/KassakoppelingAuditService.php
+No syntax errors detected in ./lib/Service/LogiusConnector.php
+No syntax errors detected in ./lib/Service/SurveyInvitationFigures.php
+No syntax errors detected in ./lib/Service/IntegriqConsentClient.php
+No syntax errors detected in ./lib/Service/KccWerkplekService.php
+No syntax errors detected in ./lib/Service/SchemaMapService.php
+No syntax errors detected in ./lib/Service/ListTokenService.php
+No syntax errors detected in ./lib/Service/PhoneNormaliser.php
+No syntax errors detected in ./lib/Service/SocialMetricsService.php
+No syntax errors detected in ./lib/Service/EmailFallbackSender.php
+No syntax errors detected in ./lib/Service/TicketService.php
+No syntax errors detected in ./lib/Service/AppointmentPaymentProvider.php
+No syntax errors detected in ./lib/Service/DossierQuestionService.php
+No syntax errors detected in ./lib/Service/TaskNameBackfillService.php
+No syntax errors detected in ./lib/Service/QuotaService.php
+No syntax errors detected in ./lib/Service/HaalCentraalClient.php
+No syntax errors detected in ./lib/Service/ForecastService.php
+No syntax errors detected in ./lib/Service/LedgerSyncNotifier.php
+No syntax errors detected in ./lib/Service/SemanticHandoffService.php
+No syntax errors detected in ./lib/Service/TenderTypeNotFoundException.php
+No syntax errors detected in ./lib/Service/ScheduledTaskService.php
+No syntax errors detected in ./lib/Service/SlaEngineService.php
+No syntax errors detected in ./lib/Service/PipelineStageData.php
+No syntax errors detected in ./lib/Service/Competitor/SearchWatchReader.php
+No syntax errors detected in ./lib/Service/Competitor/RelevanceScorer.php
+No syntax errors detected in ./lib/Service/Competitor/FeedWatchReader.php
+No syntax errors detected in ./lib/Service/Competitor/WatchOutcome.php
+No syntax errors detected in ./lib/Service/Competitor/CompetitorWatchService.php
+No syntax errors detected in ./lib/Service/Competitor/FediverseWatchReader.php
+No syntax errors detected in ./lib/Service/Competitor/PageWatchReader.php
+No syntax errors detected in ./lib/Service/Competitor/WatchEventStore.php
+No syntax errors detected in ./lib/Service/Competitor/SitemapWatchReader.php
+No syntax errors detected in ./lib/Service/AvailabilityService.php
+No syntax errors detected in ./lib/Service/CorrespondenceLanguageService.php
+No syntax errors detected in ./lib/Service/ContractService.php
+No syntax errors detected in ./lib/Service/ConsentService.php
+No syntax errors detected in ./lib/Service/SocialPostService.php
+No syntax errors detected in ./lib/Service/AnalyticsService.php
+No syntax errors detected in ./lib/Service/Provider/MessageDispatchTrait.php
+No syntax errors detected in ./lib/Service/Provider/TwilioSmsClient.php
+No syntax errors detected in ./lib/Service/Provider/TransientSmsProviderException.php
+No syntax errors detected in ./lib/Service/Provider/PermanentSmsProviderException.php
+No syntax errors detected in ./lib/Service/Provider/CmComSmsClient.php
+No syntax errors detected in ./lib/Service/Provider/SmsProviderClientInterface.php
+No syntax errors detected in ./lib/Service/Provider/MessageBirdSmsClient.php
+No syntax errors detected in ./lib/Service/PosCustomerLinkService.php
+No syntax errors detected in ./lib/Service/AppointmentDepositService.php
+No syntax errors detected in ./lib/Service/CostCaptureService.php
+No syntax errors detected in ./lib/Service/RapportageService.php
+No syntax errors detected in ./lib/Service/Egress/EgressResult.php
+No syntax errors detected in ./lib/Service/Egress/ConnectorEgress.php
+No syntax errors detected in ./lib/Service/DeliveryAuditLogger.php
+No syntax errors detected in ./lib/Service/PosStaffService.php
+No syntax errors detected in ./lib/Service/IntegrationDetector.php
+No syntax errors detected in ./lib/Service/CostReconciliationService.php
+No syntax errors detected in ./lib/Service/KvkApiClient.php
+No syntax errors detected in ./lib/Service/ContactVcardWriterService.php
+No syntax errors detected in ./lib/Service/Mdm/MdmObjectRepository.php
+No syntax errors detected in ./lib/Service/Mdm/OpenRegisterSyncService.php
+No syntax errors detected in ./lib/Service/LoyaltyReportingService.php
+No syntax errors detected in ./lib/Service/OrphanedLeadPlacer.php
+No syntax errors detected in ./lib/Service/DefaultSkillService.php
+No syntax errors detected in ./lib/Service/Lifecycle/SchemaLifecycleGraph.php
+No syntax errors detected in ./lib/Service/TouchpointService.php
+No syntax errors detected in ./lib/Service/BsnValidationService.php
+No syntax errors detected in ./lib/Service/CtiContactMatcher.php
+No syntax errors detected in ./lib/Service/MessagingServiceAccount.php
+No syntax errors detected in ./lib/Service/ChannelProviderRepository.php
+No syntax errors detected in ./lib/Service/PosStaffReportService.php
+No syntax errors detected in ./lib/Service/ServiceAccountUnavailableException.php
+No syntax errors detected in ./lib/Service/ObjectEventSilence.php
+No syntax errors detected in ./lib/Service/ContactVcardService.php
+No syntax errors detected in ./lib/Service/AttributionService.php
+No syntax errors detected in ./lib/Service/TaskService.php
+No syntax errors detected in ./lib/Service/ObjectEventHandlerService.php
+No syntax errors detected in ./lib/Service/AppointmentCalendarLeafProvider.php
+No syntax errors detected in ./lib/Service/TemplateApprovalSyncService.php
+No syntax errors detected in ./lib/Service/Gdpr/PipelinqBsnIdentityVerifyProvider.php
+No syntax errors detected in ./lib/Service/Gdpr/PipelinqApRegulatorEscalateProvider.php
+No syntax errors detected in ./lib/Service/SocialAdvocacyService.php
+No syntax errors detected in ./lib/Service/KassakoppelingSignatureService.php
+No syntax errors detected in ./lib/Service/Zgw/ZgwRegisterAccess.php
+No syntax errors detected in ./lib/Service/Zgw/AcClient.php
+No syntax errors detected in ./lib/Service/Zgw/ZgwApiClient.php
+No syntax errors detected in ./lib/Service/Zgw/ClockSkewException.php
+No syntax errors detected in ./lib/Service/Zgw/BesluittypeNotInCatalogusException.php
+No syntax errors detected in ./lib/Service/Zgw/NrcSubscriptionService.php
+No syntax errors detected in ./lib/Service/Zgw/ZgwResourceNotFoundException.php
+No syntax errors detected in ./lib/Service/Zgw/OptimisticLockException.php
+No syntax errors detected in ./lib/Service/Zgw/InsufficientScopeException.php
+No syntax errors detected in ./lib/Service/Zgw/ZtcClient.php
+No syntax errors detected in ./lib/Service/Zgw/ZaaktypeNotInCatalogusException.php
+No syntax errors detected in ./lib/Service/Zgw/DoubleWritePathException.php
+No syntax errors detected in ./lib/Service/Zgw/ZrcClient.php
+No syntax errors detected in ./lib/Service/Zgw/ZgwCoexistenceValidator.php
+No syntax errors detected in ./lib/Service/Zgw/ZgwException.php
+No syntax errors detected in ./lib/Service/Zgw/NrcSubscriptionFailedException.php
+No syntax errors detected in ./lib/Service/ShillinqInvoiceReader.php
+No syntax errors detected in ./lib/Service/ConsentMigrationService.php
+No syntax errors detected in ./lib/Service/TimeBillingHandoffService.php
+No syntax errors detected in ./lib/Service/DetractorFollowUpService.php
+No syntax errors detected in ./lib/Service/SatisfactionAggregationService.php
+No syntax errors detected in ./lib/Service/ProductVendorProviderService.php
+No syntax errors detected in ./lib/Service/LoyaltyProgrammeService.php
+No syntax errors detected in ./lib/Service/MailboxResolver.php
+No syntax errors detected in ./lib/Service/HaalCentraalException.php
+No syntax errors detected in ./lib/Service/NaviConversationStore.php
+No syntax errors detected in ./lib/Service/RegisterResolverService.php
+No syntax errors detected in ./lib/Service/WalkInQueueService.php
+No syntax errors detected in ./lib/Service/FiscalPeriodService.php
+No syntax errors detected in ./lib/Service/CallerObjectReader.php
+No syntax errors detected in ./lib/Service/WebForm/FormsQuestionReader.php
+No syntax errors detected in ./lib/Service/WebForm/WebFormSubmitException.php
+No syntax errors detected in ./lib/Service/WebForm/WebFormIntakeService.php
+No syntax errors detected in ./lib/Service/WebForm/WebFormBindingCheck.php
+No syntax errors detected in ./lib/Service/WebForm/HeldObjectDrain.php
+No syntax errors detected in ./lib/Service/WebForm/WebFormFinder.php
+No syntax errors detected in ./lib/Service/ShillinqApService.php
+No syntax errors detected in ./lib/Service/ForecastExportService.php
+No syntax errors detected in ./lib/Service/NotificationService.php
+No syntax errors detected in ./lib/Service/SlaAttainmentService.php
+No syntax errors detected in ./lib/Service/ActivityTimelineService.php
+No syntax errors detected in ./lib/Service/BusinessHoursCalculator.php
+No syntax errors detected in ./lib/Service/PartyOrganisationTreeService.php
+No syntax errors detected in ./lib/Service/SurveyOptOutService.php
+No syntax errors detected in ./lib/Service/CallbackService.php
+No syntax errors detected in ./lib/Service/EncryptionService.php
+No syntax errors detected in ./lib/Service/ContactMomentFilingService.php
+No syntax errors detected in ./lib/Service/WhatsAppProviderClient.php
+No syntax errors detected in ./lib/Service/BsnAuditService.php
+No syntax errors detected in ./lib/Service/LoyaltyAccountService.php
+No syntax errors detected in ./lib/Service/ReceiptDeliveryService.php
+No syntax errors detected in ./lib/Service/SystemServiceAccount.php
+No syntax errors detected in ./lib/Service/BookingService.php
+No syntax errors detected in ./lib/Service/PosBookkeepingService.php
+No syntax errors detected in ./lib/Service/EligibilityService.php
+No syntax errors detected in ./lib/Service/SmsProviderFactory.php
+No syntax errors detected in ./lib/Service/ConnectionReportService.php
+No syntax errors detected in ./lib/Service/WipSyncNotifier.php
+No syntax errors detected in ./lib/Service/SocialAccountService.php
+No syntax errors detected in ./lib/Service/CampaignPerformanceService.php
+No syntax errors detected in ./lib/Service/ProspectDiscoveryService.php
+No syntax errors detected in ./lib/Service/Social/SocialNetworkAdapter.php
+No syntax errors detected in ./lib/Service/Social/AbstractSocialAdapter.php
+No syntax errors detected in ./lib/Service/Social/LinkedInAdapter.php
+No syntax errors detected in ./lib/Service/Social/SocialPublishOutcome.php
+No syntax errors detected in ./lib/Service/Social/SocialAdapterRegistry.php
+No syntax errors detected in ./lib/Service/Social/SocialGatewayResult.php
+No syntax errors detected in ./lib/Service/Social/InstagramBusinessAdapter.php
+No syntax errors detected in ./lib/Service/Social/FacebookPageAdapter.php
+No syntax errors detected in ./lib/Service/Social/SocialPublicationStore.php
+No syntax errors detected in ./lib/Service/Social/ConnectionAuditService.php
+No syntax errors detected in ./lib/Service/Social/BrokerCredentialReader.php
+No syntax errors detected in ./lib/Service/Social/SocialPublishRequest.php
+No syntax errors detected in ./lib/Service/Social/SocialAdapterCall.php
+No syntax errors detected in ./lib/Service/Social/BlueskyAdapter.php
+No syntax errors detected in ./lib/Service/Social/MastodonAdapter.php
+No syntax errors detected in ./lib/Service/Social/XAdapter.php
+No syntax errors detected in ./lib/Service/Social/ThreadsAdapter.php
+No syntax errors detected in ./lib/Service/Social/SocialBrokerGateway.php
+No syntax errors detected in ./lib/Service/BrpCacheService.php
+No syntax errors detected in ./lib/Service/WorklistService.php
+No syntax errors detected in ./lib/Service/ObjectEventDispatcher.php
+No syntax errors detected in ./lib/Service/ComplaintSlaService.php
+No syntax errors detected in ./lib/Service/GiftCardService.php
+No syntax errors detected in ./lib/Service/PointsRuleEngine.php
+No syntax errors detected in ./lib/Service/EmailSyncService.php
+No syntax errors detected in ./lib/Service/Matomo/MatomoReportService.php
+No syntax errors detected in ./lib/Service/EntityActivityService.php
+No syntax errors detected in ./lib/Service/WritesAsMessagingAccount.php
+No syntax errors detected in ./lib/Service/ProductCatalogService.php
+No syntax errors detected in ./lib/Service/ContactAddressLookup.php
+No syntax errors detected in ./lib/Service/ApSyncNotifier.php
+No syntax errors detected in ./lib/Service/CampaignLinkDecorator.php
+No syntax errors detected in ./lib/Service/ExchangeRateService.php
+No syntax errors detected in ./lib/Service/Search/KeywordTargetService.php
+No syntax errors detected in ./lib/Service/Search/KeywordAnalysisService.php
+No syntax errors detected in ./lib/Service/Search/HtmlTextExtractor.php
+No syntax errors detected in ./lib/Service/Search/ExpectedCtrCurve.php
+No syntax errors detected in ./lib/Service/Search/SiteContentCrawler.php
+No syntax errors detected in ./lib/Service/ProgrammePortfolioService.php
+No syntax errors detected in ./lib/Service/OpenCorporatesResultMapper.php
+No syntax errors detected in ./lib/Service/MailAddIn/OpenMailService.php
+No syntax errors detected in ./lib/Service/LandingPageProvisioningService.php
+No syntax errors detected in ./lib/Service/ServiceAccount.php
+No syntax errors detected in ./lib/Service/WooRequestConversionService.php
+No syntax errors detected in ./lib/Service/ForecastOverrideService.php
+No syntax errors detected in ./lib/Service/InvalidTenderException.php
+No syntax errors detected in ./lib/Service/ContactSyncService.php
+No syntax errors detected in ./lib/Service/VatRates.php
+No syntax errors detected in ./lib/Service/SurveyInvitationSender.php
+No syntax errors detected in ./lib/Service/XWikiService.php
+No syntax errors detected in ./lib/Service/SettingsService.php
+No syntax errors detected in ./lib/Service/CtiService.php
+No syntax errors detected in ./lib/Service/SearchConsole/SearchQueryReportService.php
+No syntax errors detected in ./lib/Service/SearchConsole/GoogleServiceAccountAuth.php
+No syntax errors detected in ./lib/Service/SearchConsole/SearchConsoleImportService.php
+No syntax errors detected in ./lib/Service/SearchConsole/SearchQueryDailyStore.php
+No syntax errors detected in ./lib/Service/BudgetService.php
+No syntax errors detected in ./lib/Service/MailingListService.php
+No syntax errors detected in ./lib/Service/BlastService.php
+No syntax errors detected in ./lib/Service/PartyIndicatorService.php
+No syntax errors detected in ./lib/Service/BillingHandoffNotifier.php
+No syntax errors detected in ./lib/Service/ContactImportService.php
+No syntax errors detected in ./lib/Service/ShillinqWipService.php
+No syntax errors detected in ./lib/Service/ConnectorSourceRegister.php
+No syntax errors detected in ./lib/Service/ComplianceService.php
+No syntax errors detected in ./lib/Service/Export/SchemaEvolutionService.php
+No syntax errors detected in ./lib/Service/Export/AbstractExportService.php
+No syntax errors detected in ./lib/Service/Export/ExportAccessPolicy.php
+No syntax errors detected in ./lib/Service/Export/ExportJobService.php
+No syntax errors detected in ./lib/Service/Export/ExportExecutionService.php
+No syntax errors detected in ./lib/Service/Export/ExportUploadService.php
+No syntax errors detected in ./lib/Service/Export/CronExpressionHelper.php
+No syntax errors detected in ./lib/Service/Export/ExportRunService.php
+No syntax errors detected in ./lib/Service/Export/ExportDestinationService.php
+No syntax errors detected in ./lib/Service/Export/ExportDataService.php
+No syntax errors detected in ./lib/Service/WebhookProcessorService.php
+No syntax errors detected in ./lib/Service/AppointmentEmailService.php
+No syntax errors detected in ./lib/Service/Payment/MollieAdapter.php
+No syntax errors detected in ./lib/Service/Payment/PaymentProviderInterface.php
+No syntax errors detected in ./lib/Service/Payment/StripeAdapter.php
+No syntax errors detected in ./lib/Service/Payment/AdyenAdapter.php
+No syntax errors detected in ./lib/Service/Payment/BrokerHttpTransport.php
+No syntax errors detected in ./lib/Service/Payment/AbstractPaymentAdapter.php
+No syntax errors detected in ./lib/Service/Payment/HttpTransport.php
+No syntax errors detected in ./lib/Service/Payment/CcvAdapter.php
+No syntax errors detected in ./lib/Service/Payment/CurlHttpTransport.php
+No syntax errors detected in ./lib/Service/CampaignService.php
+No syntax errors detected in ./lib/Service/DemoSeedService.php
+No syntax errors detected in ./lib/Service/Demo/DemoSocialSeeder.php
+No syntax errors detected in ./lib/Service/Demo/DemoJourneySeeder.php
+No syntax errors detected in ./lib/Service/Demo/DemoMarketingSeeder.php
+No syntax errors detected in ./lib/Service/Demo/DemoSearchSeeder.php
+No syntax errors detected in ./lib/Service/Demo/DemoRegisterImporter.php
+No syntax errors detected in ./lib/Service/Demo/DemoSeedValues.php
+No syntax errors detected in ./lib/Service/Demo/DemoUserFields.php
+No syntax errors detected in ./lib/Service/ReportingService.php
+No syntax errors detected in ./lib/Service/Marketing/PreferenceCentreService.php
+No syntax errors detected in ./lib/Service/Marketing/MailBlockRenderer.php
+No syntax errors detected in ./lib/Service/Marketing/DeliverabilityCheckService.php
+No syntax errors detected in ./lib/Service/Marketing/JourneyStepRunner.php
+No syntax errors detected in ./lib/Service/Marketing/RecipientNameReader.php
+No syntax errors detected in ./lib/Service/Marketing/PhysicalAddressRenderer.php
+No syntax errors detected in ./lib/Service/Marketing/SubmittedLeadIntake.php
+No syntax errors detected in ./lib/Service/Marketing/Transport/RenderedMail.php
+No syntax errors detected in ./lib/Service/Marketing/Transport/TransportInterface.php
+No syntax errors detected in ./lib/Service/Marketing/Transport/MailAccountTransport.php
+No syntax errors detected in ./lib/Service/Marketing/Transport/SendResult.php
+No syntax errors detected in ./lib/Service/Marketing/Transport/ConnectorSourceTransport.php
+No syntax errors detected in ./lib/Service/Marketing/Transport/InstanceMailerTransport.php
+No syntax errors detected in ./lib/Service/Marketing/FormDestinationBackfill.php
+No syntax errors detected in ./lib/Service/Marketing/ShillinqInvoiceProjection.php
+No syntax errors detected in ./lib/Service/Marketing/BookkeepingSignals.php
+No syntax errors detected in ./lib/Service/Marketing/ListObjectStore.php
+No syntax errors detected in ./lib/Service/Marketing/JourneyFlowCompiler.php
+No syntax errors detected in ./lib/Service/Marketing/SubscriptionQueryService.php
+No syntax errors detected in ./lib/Service/Marketing/CampaignFormDestination.php
+No syntax errors detected in ./lib/Service/Marketing/WeeklyReviewService.php
+No syntax errors detected in ./lib/Service/Marketing/WeeklyReviewNumbers.php
+No syntax errors detected in ./lib/Service/Marketing/MailTransportService.php
+No syntax errors detected in ./lib/Service/Marketing/SegmentSignalService.php
+No syntax errors detected in ./lib/Service/Marketing/JourneyService.php
+No syntax errors detected in ./lib/Service/CtiDispositionService.php
+No syntax errors detected in ./lib/Service/UnsubscribeMail.php
+No syntax errors detected in ./lib/Service/PosTenderService.php
+No syntax errors detected in ./lib/Service/IntegriqMarketingConsent.php
+No syntax errors detected in ./lib/Service/TemplateRenderer.php
+No syntax errors detected in ./lib/Service/KvkResultMapper.php
+No syntax errors detected in ./lib/Service/RoadmapFeatureCatalog.php
+No syntax errors detected in ./lib/Service/ConfigFileLoaderService.php
+No syntax errors detected in ./lib/Service/Customer360SummaryService.php
+No syntax errors detected in ./lib/Service/PartyLinkService.php
+No syntax errors detected in ./lib/Service/ContactmomentService.php
+No syntax errors detected in ./lib/Service/SnapshotGenerationService.php
+No syntax errors detected in ./lib/Service/IcpConfigReader.php
+No syntax errors detected in ./lib/Service/PosRefundService.php
+No syntax errors detected in ./lib/Service/ForecastRollupService.php
+No syntax errors detected in ./lib/Service/SmsAdapter.php
+No syntax errors detected in ./lib/Service/SurveyResponseService.php
+No syntax errors detected in ./lib/Service/SegmentService.php
+No syntax errors detected in ./lib/Service/ContactDataBuilder.php
+No syntax errors detected in ./lib/Service/OrphanedLeadRepairService.php
+No syntax errors detected in ./lib/Service/SettingsMapBuilder.php
+No syntax errors detected in ./lib/Service/External/Berichtenbox/LogBerichtenboxAdapter.php
+No syntax errors detected in ./lib/Service/External/Berichtenbox/BerichtenboxAdapterInterface.php
+No syntax errors detected in ./lib/Service/External/Berichtenbox/BerichtenboxResult.php
+No syntax errors detected in ./lib/Service/TrafficEventEmitter.php
+No syntax errors detected in ./lib/Service/SystemTagService.php
+No syntax errors detected in ./lib/Service/BerichtenboxService.php
+No syntax errors detected in ./lib/Service/TierService.php
+No syntax errors detected in ./lib/Service/MessagingExchangeRateService.php
+No syntax errors detected in ./lib/Service/LeadService.php
+No syntax errors detected in ./lib/Service/SettingsLoadService.php
+No syntax errors detected in ./lib/Service/PosRoleService.php
+No syntax errors detected in ./lib/Service/PartyKindRegistryService.php
+No syntax errors detected in ./lib/Service/SystemTagCrudService.php
+No syntax errors detected in ./lib/Service/RoutingService.php
+No syntax errors detected in ./lib/Service/LeadStagePlacer.php
+No syntax errors detected in ./lib/Service/ActivityService.php
+No syntax errors detected in ./lib/Service/RedemptionService.php
+No syntax errors detected in ./lib/Service/BelastingdienstExportService.php
+No syntax errors detected in ./lib/Service/Portal/PasswordResetService.php
+No syntax errors detected in ./lib/Service/Portal/PortalTenantService.php
+No syntax errors detected in ./lib/Service/Portal/PortalAccountService.php
+No syntax errors detected in ./lib/Service/Portal/PortalRequestService.php
+No syntax errors detected in ./lib/Service/Portal/PortalDelegationService.php
+No syntax errors detected in ./lib/Service/Portal/PortalOrderService.php
+No syntax errors detected in ./lib/Service/Portal/PortalProfileService.php
+No syntax errors detected in ./lib/Service/Portal/PortalMailService.php
+No syntax errors detected in ./lib/Service/Portal/PortalContractService.php
+No syntax errors detected in ./lib/Service/Portal/PortalSessionManager.php
+No syntax errors detected in ./lib/Service/Portal/PortalObjectRepository.php
+No syntax errors detected in ./lib/Service/Portal/MainRegisterReader.php
+No syntax errors detected in ./lib/Service/Portal/PortalExportService.php
+No syntax errors detected in ./lib/Service/Portal/PortalServiceAccount.php
+No syntax errors detected in ./lib/Service/Portal/QuestionDetailService.php
+No syntax errors detected in ./lib/Service/Portal/PortalInvoiceService.php
+No syntax errors detected in ./lib/Service/Portal/PortalAuditService.php
+No syntax errors detected in ./lib/Service/Portal/DocumentSigningService.php
+No syntax errors detected in ./lib/Service/Portal/PortalScopeResolver.php
+No syntax errors detected in ./lib/Service/Portal/AbstractPortalReadFacade.php
+No syntax errors detected in ./lib/Service/Portal/PortalRequestGuard.php
+No syntax errors detected in ./lib/Service/Portal/PortalTokenService.php
+No syntax errors detected in ./lib/Service/Portal/PortalCleanupService.php
+No syntax errors detected in ./lib/Service/Portal/PortalMfaService.php
+No syntax errors detected in ./lib/Service/Portal/QuestionAnsweredNotice.php
+No syntax errors detected in ./lib/Service/Portal/PortalException.php
+No syntax errors detected in ./lib/Service/Portal/PortalAuthService.php
+No syntax errors detected in ./lib/Service/CostEstimationService.php
+No syntax errors detected in ./lib/Service/IcpConfigService.php
+No syntax errors detected in ./lib/Service/ContactLinkedUidsService.php
+No syntax errors detected in ./lib/Service/PipelinqEvidenceSourceProvider.php
+No syntax errors detected in ./lib/Service/CampaignAttributionService.php
+No syntax errors detected in ./lib/Service/MessagingService.php
+No syntax errors detected in ./lib/Service/DataDeletionService.php
+No syntax errors detected in ./lib/Service/SubscriptionService.php
+No syntax errors detected in ./lib/Service/Cti/AdapterRegistry.php
+No syntax errors detected in ./lib/Service/Cti/CtiAdapterInterface.php
+No syntax errors detected in ./lib/Service/Cti/IncomingCallFinder.php
+No syntax errors detected in ./lib/Service/Cti/Adapter/AsteriskAdapter.php
+No syntax errors detected in ./lib/Service/Cti/Adapter/CallVoipAdapter.php
+No syntax errors detected in ./lib/Service/Cti/Adapter/RingCentralAdapter.php
+No syntax errors detected in ./lib/Service/Cti/Result/ScreenPopResult.php
+No syntax errors detected in ./lib/Service/Cti/Result/CtiWebhookResult.php
+No syntax errors detected in ./lib/Service/Cti/Result/OriginateResult.php
+No syntax errors detected in ./lib/Service/Cti/Result/CtiCallResult.php
+No syntax errors detected in ./lib/Service/Cti/PresenceSubscribingInterface.php
+No syntax errors detected in ./lib/Service/NoteEventService.php
+No syntax errors detected in ./lib/Service/ShillinqStockReader.php
+No syntax errors detected in ./lib/Service/ArticleService.php
+No syntax errors detected in ./lib/Service/ContactVcardPropertyBuilder.php
+No syntax errors detected in ./lib/Service/ProspectScoringService.php
+No syntax errors detected in ./lib/Service/PosPaymentService.php
+No syntax errors detected in ./lib/Service/RecurringRevenueService.php
+No syntax errors detected in ./lib/Service/Letter/LetterLog.php
+No syntax errors detected in ./lib/Service/Letter/FilinqLetterAdapter.php
+No syntax errors detected in ./lib/Service/CashShiftService.php
+No syntax errors detected in ./lib/Service/DutchHolidayCalendar.php
+No syntax errors detected in ./lib/Service/DefaultPipelineService.php
+No syntax errors detected in ./lib/Service/Settings/MenuStructure.php
+No syntax errors detected in ./lib/Service/Settings/SchemaSlugMap.php
+No syntax errors detected in ./lib/Activity/Provider.php
+No syntax errors detected in ./lib/Activity/ProviderSubjectHandler.php
+No syntax errors detected in ./lib/Activity/Filter.php
+No syntax errors detected in ./lib/Activity/Setting/StageStatusSetting.php
+No syntax errors detected in ./lib/Activity/Setting/AssignmentSetting.php
+No syntax errors detected in ./lib/Activity/Setting/DealSetting.php
+No syntax errors detected in ./lib/Activity/Setting/NoteSetting.php
+No syntax errors detected in ./lib/Adapter/SnowflakeExportAdapter.php
+No syntax errors detected in ./lib/Adapter/ExportSinkInterface.php
+No syntax errors detected in ./lib/Adapter/AbstractOpenConnectorSink.php
+No syntax errors detected in ./lib/Adapter/AzureDataLakeExportAdapter.php
+No syntax errors detected in ./lib/Adapter/GcsExportAdapter.php
+No syntax errors detected in ./lib/Adapter/S3ExportAdapter.php
+No syntax errors detected in ./lib/Adapter/ExportSinkRegistry.php
+No syntax errors detected in ./lib/Adapter/BigQueryExportAdapter.php
+No syntax errors detected in ./lib/Adapter/PostgresExportAdapter.php
+No syntax errors detected in ./lib/Adapter/SftpExportAdapter.php
+No syntax errors detected in ./lib/Listener/QuestionAnsweredListener.php
+No syntax errors detected in ./lib/Listener/WebFormBindingListener.php
+No syntax errors detected in ./lib/Listener/SchemaChangeListener.php
+No syntax errors detected in ./lib/Listener/ContactErasedListener.php
+No syntax errors detected in ./lib/Listener/BrpMutationWebhookListener.php
+No syntax errors detected in ./lib/Listener/DeferredObjectWork.php
+No syntax errors detected in ./lib/Listener/SubmittedLeadListener.php
+No syntax errors detected in ./lib/Listener/ExpenseApprovalListener.php
+No syntax errors detected in ./lib/Listener/LandingPageFormSubmittedListener.php
+No syntax errors detected in ./lib/Listener/DeferredWorkGuard.php
+No syntax errors detected in ./lib/Listener/SlaObjectUpdatedListener.php
+No syntax errors detected in ./lib/Listener/SurveyDispatchListener.php
+No syntax errors detected in ./lib/Listener/FormsSubmissionListener.php
+No syntax errors detected in ./lib/Listener/TaskCreatedByCreatingListener.php
+No syntax errors detected in ./lib/Listener/LeadStageCreatingListener.php
+No syntax errors detected in ./lib/Listener/PosTransactionCompletedListener.php
+No syntax errors detected in ./lib/Listener/NrcNotificationListener.php
+No syntax errors detected in ./lib/Listener/SlaObjectCreatedListener.php
+No syntax errors detected in ./lib/Listener/TimeApprovalListener.php
+No syntax errors detected in ./lib/Listener/ObjectEventListener.php
+No syntax errors detected in ./lib/Listener/DealUpdatedListener.php
+No syntax errors detected in ./lib/Listener/BerichtenboxZaakStatusListener.php
+No syntax errors detected in ./lib/Listener/DealCreatedListener.php
+No syntax errors detected in ./lib/Listener/ObjectsMergedSyncListener.php
+No syntax errors detected in ./lib/SetupCheck/ServiceAccountCheck.php
+No syntax errors detected in ./lib/SetupCheck/PortalServiceAccountCheck.php
+No syntax errors detected in ./lib/SetupCheck/MessagingServiceAccountCheck.php
+No syntax errors detected in ./lib/Support/FleetAppId.php
+No syntax errors detected in ./lib/Command/PortalCleanupCommand.php
+No syntax errors detected in ./lib/Command/CompetitorWatchRunCommand.php
+No syntax errors detected in ./lib/Command/ConsentMigrateCommand.php
+No syntax errors detected in ./lib/Command/EnquiryDrainCommand.php
+No syntax errors detected in ./lib/Command/SearchConsoleImportCommand.php
+No syntax errors detected in ./lib/Command/SeedDemoDataCommand.php
+No syntax errors detected in ./lib/Command/ConnectionAuditCommand.php
+No syntax errors detected in ./lib/Command/ReferencesAuditCommand.php
+No syntax errors detected in ./lib/Sections/SettingsSection.php
+No syntax errors detected in ./lib/Dashboard/CreateLeadWidget.php
+No syntax errors detected in ./lib/Dashboard/StartRequestWidget.php
+No syntax errors detected in ./lib/Dashboard/MyLeadsWidget.php
+No syntax errors detected in ./lib/Dashboard/RecentActivitiesWidget.php
+No syntax errors detected in ./lib/Dashboard/FindClientWidget.php
+No syntax errors detected in ./lib/Dashboard/DealsOverviewWidget.php
+No syntax errors detected in ./lib/Portal/PortalAssertionVerifier.php
+No syntax errors detected in ./lib/Portal/PortalContributionProvider.php
+No syntax errors detected in ./lib/Notification/Notifier.php
+No syntax errors detected in ./lib/Settings/AdminSettings.php
+No syntax errors detected in ./.php-cs-fixer.dist.php
+No syntax errors detected in ./phpstan-bootstrap.php
+
+=== phpcs ===
+..................[33mW[0m[33mW[0m[33mW[0m....................[33mW[0m...[33mW[0m......[33mW[0m......[33mW[0m 60 / 74 (81%)
+.....[33mW[0m...[33mW[0m[33mW[0m[33mW[0m..                                               74 / 74 (100%)
+
+
+
+[1mFILE: ...nlinde/zuiddrecht-demo/jwt-pipelinq/lib/AppInfo/OpenRegisterAutoloader.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 4 WARNINGS AFFECTING 4 LINES[0m
+--------------------------------------------------------------------------------
+  47 | [33mWARNING[0m | Class OpenRegisterAutoloader is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 107 | [33mWARNING[0m | Public method OpenRegisterAutoloader::register() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 153 | [33mWARNING[0m | Public method OpenRegisterAutoloader::unregister() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 172 | [33mWARNING[0m | Public method OpenRegisterAutoloader::classFile() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/zuiddrecht-demo/jwt-pipelinq/lib/Mcp/McpAnswer.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 4 WARNINGS AFFECTING 4 LINES[0m
+--------------------------------------------------------------------------------
+  45 | [33mWARNING[0m | Class McpAnswer is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  64 | [33mWARNING[0m | Public method McpAnswer::error() is missing @spec PHPDoc tag
+     |         | — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+  87 | [33mWARNING[0m | Public method McpAnswer::fromException() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 112 | [33mWARNING[0m | Public method McpAnswer::toArray() is missing @spec PHPDoc tag
+     |         | — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...nde/zuiddrecht-demo/jwt-pipelinq/lib/Flow/ProvisionContactIdentityNode.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 62 | [33mWARNING[0m | Class ProvisionContactIdentityNode is missing @spec PHPDoc tag
+    |         | — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...enlinde/zuiddrecht-demo/jwt-pipelinq/lib/Service/SurveyDispatchService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 390 | [33mWARNING[0m | Public method SurveyDispatchService::read() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 441 | [33mWARNING[0m | Public method SurveyDispatchService::write() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...inde/zuiddrecht-demo/jwt-pipelinq/lib/Service/DetractorFollowUpService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 155 | [33mWARNING[0m | Public method DetractorFollowUpService::assigneeFor() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/rubenlinde/zuiddrecht-demo/jwt-pipelinq/lib/Service/PartyLinkService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 121 | [33mWARNING[0m | Public method PartyLinkService::end() is missing @spec PHPDoc
+     |         | tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../zuiddrecht-demo/jwt-pipelinq/lib/Service/PartyOrganisationTreeService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+ 126 | [33mWARNING[0m | Public method PartyOrganisationTreeService::pathUnder() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 163 | [33mWARNING[0m | Public method PartyOrganisationTreeService::isOnPath() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 349 | [33mWARNING[0m | Public method PartyOrganisationTreeService::descendantsOf() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...zuiddrecht-demo/jwt-pipelinq/lib/Service/CorrespondenceLanguageService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 183 | [33mWARNING[0m | Public method CorrespondenceLanguageService::instanceDefault()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...nde/zuiddrecht-demo/jwt-pipelinq/lib/Service/ProgrammePortfolioService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 4 WARNINGS AFFECTING 4 LINES[0m
+--------------------------------------------------------------------------------
+ 320 | [33mWARNING[0m | Public method ProgrammePortfolioService::workItemsOf() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 352 | [33mWARNING[0m | Public method ProgrammePortfolioService::tasksOf() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 413 | [33mWARNING[0m | Public method ProgrammePortfolioService::read() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 468 | [33mWARNING[0m | Public method ProgrammePortfolioService::write() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...de/zuiddrecht-demo/jwt-pipelinq/lib/Service/ProgrammeEstimationService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 125 | [33mWARNING[0m | Public method ProgrammeEstimationService::weightOf() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...inde/zuiddrecht-demo/jwt-pipelinq/lib/Service/PartyKindRegistryService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 153 | [33mWARNING[0m | Public method PartyKindRegistryService::acceptanceFor() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 310 | [33mWARNING[0m | Public method PartyKindRegistryService::linksOn() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...enlinde/zuiddrecht-demo/jwt-pipelinq/lib/Service/SurveyResponseService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 152 | [33mWARNING[0m | Public method SurveyResponseService::invitationFor() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+Time: 2.15 secs; Memory: 8MB
+
+=== phpmd ===
+
+=== psalm ===
+Target PHP version: 8.3 (inferred from composer.json).
+Scanning files...
+Analyzing files...
+
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  60 / 659 (9%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 120 / 659 (18%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 180 / 659 (27%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 240 / 659 (36%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 300 / 659 (45%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 360 / 659 (54%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 420 / 659 (63%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 480 / 659 (72%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 540 / 659 (81%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 600 / 659 (91%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+------------------------------
+[42;2m                              [0m
+[42;30;2m       No errors found!       [0m
+[42;2m                              [0m
+------------------------------
+1414 other issues found.
+You can display them with [30;48;5;195m--show-info=true[0m
+------------------------------
+Psalm can automatically fix 1 of these issues.
+Run Psalm again with 
+[30;48;5;195m--alter --issues=MissingClosureReturnType --dry-run[0m
+to see what it can fix.
+------------------------------
+
+Checks took 75.35 seconds and used 304.259MB of memory
+Psalm was able to infer types for 95.8567% of the codebase
+
+=== phpstan ===
+Note: Using configuration file /home/rubenlinde/zuiddrecht-demo/jwt-pipelinq/phpstan.neon.
+   0/659 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0%
+ 340/659 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░]  51%
+ 659/659 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
+
+
+ [OK] No errors                                                                 
+
+
+=== test:all ===
+PHPUnit 10.5.63 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.6
+Configuration: /home/rubenlinde/zuiddrecht-demo/jwt-pipelinq/phpunit.xml
+
+.............................................................   61 / 3704 (  1%)
+.............................................................  122 / 3704 (  3%)
+.............................................................  183 / 3704 (  4%)
+.............................................................  244 / 3704 (  6%)
+.............................................................  305 / 3704 (  8%)
+.............................................................  366 / 3704 (  9%)
+.............................................................  427 / 3704 ( 11%)
+.............................................................  488 / 3704 ( 13%)
+.............................................................  549 / 3704 ( 14%)
+.............................................................  610 / 3704 ( 16%)
+.............................................................  671 / 3704 ( 18%)
+.............................................................  732 / 3704 ( 19%)
+.............................................................  793 / 3704 ( 21%)
+.............................................................  854 / 3704 ( 23%)
+.............................................[36;1mS[0m...............  915 / 3704 ( 24%)
+.............................................................  976 / 3704 ( 26%)
+............................................................. 1037 / 3704 ( 27%)
+............................................................. 1098 / 3704 ( 29%)
+............................................................. 1159 / 3704 ( 31%)
+............................................................. 1220 / 3704 ( 32%)
+............................................................. 1281 / 3704 ( 34%)
+.....................................................[36;1mS[0m....... 1342 / 3704 ( 36%)
+............................................................. 1403 / 3704 ( 37%)
+............................................................. 1464 / 3704 ( 39%)
+............................................................. 1525 / 3704 ( 41%)
+............................................................. 1586 / 3704 ( 42%)
+............................................................. 1647 / 3704 ( 44%)
+............................................................. 1708 / 3704 ( 46%)
+............................................................. 1769 / 3704 ( 47%)
+.....................................[33;1mW[0m.[33;1mW[0m.[33;1mW[0m................... 1830 / 3704 ( 49%)
+............................................................. 1891 / 3704 ( 51%)
+............................................................. 1952 / 3704 ( 52%)
+............................................................. 2013 / 3704 ( 54%)
+............................................................. 2074 / 3704 ( 55%)
+............................................................. 2135 / 3704 ( 57%)
+............................................................. 2196 / 3704 ( 59%)
+............................................................. 2257 / 3704 ( 60%)
+............................................................. 2318 / 3704 ( 62%)
+............................................................. 2379 / 3704 ( 64%)
+............................................................. 2440 / 3704 ( 65%)
+............................................................. 2501 / 3704 ( 67%)
+............................................................. 2562 / 3704 ( 69%)
+............................................................. 2623 / 3704 ( 70%)
+............................................................. 2684 / 3704 ( 72%)
+............................................................. 2745 / 3704 ( 74%)
+............................................................. 2806 / 3704 ( 75%)
+............................................................. 2867 / 3704 ( 77%)
+............................................................. 2928 / 3704 ( 79%)
+............................................................. 2989 / 3704 ( 80%)
+............................................................. 3050 / 3704 ( 82%)
+............................................................. 3111 / 3704 ( 83%)
+.......................................[36;1mS[0m[36;1mS[0m[36;1mS[0m[36;1mS[0m[36;1mS[0m................. 3172 / 3704 ( 85%)
+............................................................. 3233 / 3704 ( 87%)
+............................................................. 3294 / 3704 ( 88%)
+............................................................. 3355 / 3704 ( 90%)
+............................................................. 3416 / 3704 ( 92%)
+............................................................. 3477 / 3704 ( 93%)
+............................................................. 3538 / 3704 ( 95%)
+............................................................. 3599 / 3704 ( 97%)
+............................................................. 3660 / 3704 ( 98%)
+......................................[36;1mS[0m[36;1mS[0m....                  3704 / 3704 (100%)
+
+Time: 00:36.284, Memory: 116.50 MB
+
+[30;43mOK, but there were issues![0m
+[30;43mTests: 3704[0m[30;43m, Assertions: 17939[0m[30;43m, Warnings: 2[0m[30;43m, Skipped: 9[0m[30;43m.[0m
+
+ALL CHECKS PASSED
+check:strict exit 0
