@@ -59,6 +59,24 @@ class CronExpressionHelper {
 	];
 
 	/**
+	 * Preview texts per shape and locale; {time} is the HH:MM of the schedule.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private const DESCRIPTIONS = [
+		'hourly' => ['en' => 'Every hour', 'nl' => 'Elk uur'],
+		'daily' => ['en' => 'Every day at {time}', 'nl' => 'Elke dag om {time}'],
+		'weekly' => ['en' => 'Every Sunday at {time}', 'nl' => 'Elke zondag om {time}'],
+	];
+
+	/**
+	 * Day-of-week field values with a fixed-time preview (0 and 7 are Sunday).
+	 *
+	 * @var array<int|string, string>
+	 */
+	private const DAY_OF_WEEK_SHAPES = ['*' => 'daily', '0' => 'weekly', '7' => 'weekly'];
+
+	/**
 	 * Inclusive value bounds per cron field (minute, hour, dom, month, dow).
 	 *
 	 * @var array<int, array{0: int, 1: int}>
@@ -136,54 +154,45 @@ class CronExpressionHelper {
 	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	public function describe(string $expression, string $locale = 'en'): string {
-		if ($this->isValid(expression: $expression) === false) {
+		$fields = $this->fieldsOf(expression: $expression);
+		if ($fields === null) {
 			return '';
 		}
 
-		$isDutch = ($locale === 'nl');
-		$normalized = $this->normalize(expression: $expression);
-		$fields = preg_split('/\s+/', $normalized);
-		if ($fields === false || count($fields) !== 5) {
-			return $normalized;
+		$shape = $this->shapeOf(fields: $fields);
+		if ($shape === null) {
+			return $this->normalize(expression: $expression);
 		}
 
-		[$minute, $hour, $dom, $month, $dow] = $fields;
-
-		// Every hour: "0 * * * *".
-		if ($minute === '0' && $hour === '*' && $dom === '*' && $month === '*' && $dow === '*') {
-			if ($isDutch === true) {
-				return 'Elk uur';
-			}
-
-			return 'Every hour';
-		}
-
-		// Fixed minute + hour, every day: "M H * * *".
-		if (ctype_digit($minute) === true && ctype_digit($hour) === true
-			&& $dom === '*' && $month === '*' && $dow === '*'
-		) {
-			$time = sprintf('%02d:%02d', (int)$hour, (int)$minute);
-			if ($isDutch === true) {
-				return "Elke dag om {$time}";
-			}
-
-			return "Every day at {$time}";
-		}
-
-		// Weekly on Sunday: "M H * * 0".
-		if (ctype_digit($minute) === true && ctype_digit($hour) === true
-			&& $dom === '*' && $month === '*' && ($dow === '0' || $dow === '7')
-		) {
-			$time = sprintf('%02d:%02d', (int)$hour, (int)$minute);
-			if ($isDutch === true) {
-				return "Elke zondag om {$time}";
-			}
-
-			return "Every Sunday at {$time}";
-		}
-
-		return $normalized;
+		$texts = self::DESCRIPTIONS[$shape];
+		$time = sprintf('%02d:%02d', (int)$fields[1], (int)$fields[0]);
+		return str_replace('{time}', $time, ($texts[$locale] ?? $texts['en']));
 	}//end describe()
+
+	/**
+	 * The preview shape of a 5-field expression: hourly, daily or weekly on
+	 * Sunday at a fixed time, or null for any other schedule.
+	 *
+	 * @param array<int, string> $fields Minute, hour, day of month, month, day of week.
+	 *
+	 * @return string|null A key of DESCRIPTIONS.
+	 */
+	private function shapeOf(array $fields): ?string {
+		[$minute, $hour, $dom, $month, $dow] = $fields;
+		if ($dom !== '*' || $month !== '*') {
+			return null;
+		}
+
+		if ($minute === '0' && $hour === '*' && $dow === '*') {
+			return 'hourly';
+		}
+
+		if (ctype_digit($minute) === false || ctype_digit($hour) === false) {
+			return null;
+		}
+
+		return (self::DAY_OF_WEEK_SHAPES[$dow] ?? null);
+	}//end shapeOf()
 
 	/**
 	 * Whether a cron expression matches a given minute.
@@ -358,44 +367,63 @@ class CronExpressionHelper {
 	 * @return bool True when the value matches.
 	 */
 	private function partMatches(string $part, int $value, array $bounds): bool {
-		$step = 1;
-		if (str_contains($part, '/') === true) {
-			[$range, $stepText] = explode('/', $part, 2);
-			if (ctype_digit($stepText) === false || (int)$stepText < 1) {
-				return false;
-			}
-
-			$step = (int)$stepText;
-			$part = $range;
-		}
-
-		$low = $bounds[0];
-		$high = $bounds[1];
-		if ($part !== '*') {
-			if (str_contains($part, '-') === true) {
-				[$lowText, $highText] = explode('-', $part, 2);
-				if (ctype_digit($lowText) === false || ctype_digit($highText) === false) {
-					return false;
-				}
-
-				$low = (int)$lowText;
-				$high = (int)$highText;
-			} else {
-				if (ctype_digit($part) === false) {
-					return false;
-				}
-
-				$low = (int)$part;
-				$high = (int)$part;
-			}
-		}
-
-		if ($value < $low || $value > $high) {
+		$split = $this->splitStep(part: $part);
+		if ($split === null) {
 			return false;
 		}
 
-		return ((($value - $low) % $step) === 0);
+		$range = $this->rangeOf(range: $split[0], bounds: $bounds);
+		if ($range === null || $value < $range[0] || $value > $range[1]) {
+			return false;
+		}
+
+		return ((($value - $range[0]) % $split[1]) === 0);
 	}//end partMatches()
+
+	/**
+	 * Split a field part into its range and its step (1 without a step suffix).
+	 *
+	 * @param string $part The field part.
+	 *
+	 * @return array{0: string, 1: int}|null Null when the step is not a positive integer.
+	 */
+	private function splitStep(string $part): ?array {
+		if (str_contains($part, '/') === false) {
+			return [$part, 1];
+		}
+
+		[$range, $stepText] = explode('/', $part, 2);
+		if (ctype_digit($stepText) === false || (int)$stepText < 1) {
+			return null;
+		}
+
+		return [$range, (int)$stepText];
+	}//end splitStep()
+
+	/**
+	 * The inclusive low and high value of a range: a wildcard, `a-b` or one integer.
+	 *
+	 * @param string $range The range text, without a step suffix.
+	 * @param array{0: int, 1: int} $bounds The field bounds a wildcard spans.
+	 *
+	 * @return array{0: int, 1: int}|null Null when the range is not numeric.
+	 */
+	private function rangeOf(string $range, array $bounds): ?array {
+		if ($range === '*') {
+			return $bounds;
+		}
+
+		$ends = explode('-', $range, 2);
+		if (count($ends) === 1) {
+			$ends[] = $range;
+		}
+
+		if (ctype_digit($ends[0]) === false || ctype_digit($ends[1]) === false) {
+			return null;
+		}
+
+		return [(int)$ends[0], (int)$ends[1]];
+	}//end rangeOf()
 
 	/**
 	 * Validate one cron field against inclusive bounds.
@@ -431,37 +459,12 @@ class CronExpressionHelper {
 	 * @return bool True when valid.
 	 */
 	private function isFieldPartValid(string $part, array $bounds): bool {
-		$step = 1;
-		if (str_contains($part, '/') === true) {
-			[$range, $stepText] = explode('/', $part, 2);
-			if (ctype_digit($stepText) === false || (int)$stepText < 1) {
-				return false;
-			}
-
-			$step = (int)$stepText;
-			$part = $range;
-		}
-
-		if ($part === '*') {
-			return $step >= 1;
-		}
-
-		if (str_contains($part, '-') === true) {
-			[$lowText, $highText] = explode('-', $part, 2);
-			if (ctype_digit($lowText) === false || ctype_digit($highText) === false) {
-				return false;
-			}
-
-			$low = (int)$lowText;
-			$high = (int)$highText;
-			return $low >= $bounds[0] && $high <= $bounds[1] && $low <= $high;
-		}
-
-		if (ctype_digit($part) === false) {
+		$split = $this->splitStep(part: $part);
+		if ($split === null) {
 			return false;
 		}
 
-		$value = (int)$part;
-		return $value >= $bounds[0] && $value <= $bounds[1];
+		$range = $this->rangeOf(range: $split[0], bounds: $bounds);
+		return $range !== null && $range[0] >= $bounds[0] && $range[1] <= $bounds[1] && $range[0] <= $range[1];
 	}//end isFieldPartValid()
 }//end class
