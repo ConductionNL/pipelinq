@@ -86,7 +86,7 @@ class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * `appliesTo` names. Since unify-ticket-supertype both subtypes live on the
 	 * single `ticket` schema and are told apart by the `ticketType`
 	 * discriminator, so the schema's entity type (`ticket`) is never itself an
-	 * SLA type. Mirrors SlaDeadlineSweepJob::TICKET_TYPE_LABELS.
+	 * SLA type. Mirrors SlaSweepSource::TICKET_TYPE_LABELS.
 	 *
 	 * No register declares a callback schema, so `callback` is not tracked.
 	 *
