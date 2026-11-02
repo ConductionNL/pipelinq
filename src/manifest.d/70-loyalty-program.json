@@ -320,7 +320,8 @@
 							}
 						],
 						"content": {
-							"plain": true,
+							"dividers": false,
+							"gap": 14,
 							"sections": [
 								{
 									"widgetId": "loyalty-tier-bars"
