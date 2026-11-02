@@ -11,11 +11,11 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import manifest from '../../src/manifest.json'
-import simple from '../../src/menu-layout.simple.json'
+import blasts from '../../src/manifest.d/75-marketing-blasts.json'
 import campaigns from '../../src/manifest.d/78-marketing-campaigns.json'
 import bookings from '../../src/manifest.d/80-appointment-booking-admin.json'
-import blasts from '../../src/manifest.d/75-marketing-blasts.json'
+import manifest from '../../src/manifest.json'
+import simple from '../../src/menu-layout.simple.json'
 
 const page = (source, id) => source.pages.find((p) => p.id === id)
 const simpleConfig = (id) => (page(simple, id) || {}).config || {}
