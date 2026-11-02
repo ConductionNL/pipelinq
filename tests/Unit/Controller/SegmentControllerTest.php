@@ -819,4 +819,108 @@ class SegmentControllerTest extends TestCase {
 			actual: $data
 		);
 	}//end testComplianceNamesTheMembersWithoutConsent()
+
+	/**
+	 * Build a controller whose access policy answers isPrivileged() with the
+	 * given value and records every uid it was asked about.
+	 *
+	 * @param bool          $privileged The policy's answer.
+	 * @param array<string> $askedUids  Receives each uid passed to isPrivileged().
+	 *
+	 * @return SegmentController
+	 */
+	private function controllerWithPolicy(bool $privileged, array &$askedUids): SegmentController {
+		$policy = $this->createMock(originalClassName: ObjectOwnerAccessPolicy::class);
+		$policy->method('isPrivileged')->willReturnCallback(
+			static function (string $uid) use ($privileged, &$askedUids): bool {
+				$askedUids[] = $uid;
+				return $privileged;
+			}
+		);
+
+		return new SegmentController(
+			request: $this->request,
+			segmentService: $this->segmentService,
+			userSession: $this->userSession,
+			policy: $policy,
+			complianceService: $this->createMock(originalClassName: ComplianceService::class)
+		);
+	}//end controllerWithPolicy()
+
+	/**
+	 * POST /api/segments refuses a signed-in caller who is not a CRM user,
+	 * with the same 403 the sibling endpoints give, before any service call.
+	 *
+	 * @return void
+	 */
+	public function testCreateRefusesANonPrivilegedCaller(): void {
+		$this->authenticate(uid: 'mallory');
+		$this->segmentService->expects($this->never())->method('createSegment');
+		$this->segmentService->expects($this->never())->method('estimateSize');
+		$asked = [];
+		$controller = $this->controllerWithPolicy(privileged: false, askedUids: $asked);
+
+		$response = $controller->create();
+		$sibling = $controller->index();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+		$this->assertSame(expected: $sibling->getStatus(), actual: $response->getStatus());
+		$this->assertSame(expected: $sibling->getData(), actual: $response->getData());
+		$this->assertSame(expected: ['mallory', 'mallory'], actual: $asked);
+	}//end testCreateRefusesANonPrivilegedCaller()
+
+	/**
+	 * A userId or owner sent in the request does not change whose privilege
+	 * create() checks: only the session user is asked about.
+	 *
+	 * @return void
+	 */
+	public function testCreateIgnoresAUserIdSentInTheRequest(): void {
+		$this->authenticate(uid: 'mallory');
+		$forged = ['userId' => 'admin', 'owner' => 'admin', 'uid' => 'admin', 'createdBy' => 'admin', 'name' => 'All contacts'];
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $key, $default = null) use ($forged) {
+				return ($forged[$key] ?? $default);
+			}
+		);
+		$this->request->method('getParams')->willReturn($forged);
+		$this->segmentService->expects($this->never())->method('createSegment');
+		$asked = [];
+		$controller = $this->controllerWithPolicy(privileged: false, askedUids: $asked);
+
+		$response = $controller->create();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+		$this->assertSame(expected: ['mallory'], actual: $asked);
+	}//end testCreateIgnoresAUserIdSentInTheRequest()
+
+	/**
+	 * A privileged caller still creates the segment and gets the 201 envelope.
+	 *
+	 * @return void
+	 */
+	public function testCreateStillWorksForAPrivilegedCaller(): void {
+		$this->authenticate(uid: 'alice');
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $key, $default = null) {
+				$body = ['name' => 'Dutch contacts', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE];
+				return ($body[$key] ?? $default);
+			}
+		);
+		$this->segmentService->expects($this->once())
+			->method('createSegment')
+			->with(
+				['name' => 'Dutch contacts', 'description' => '', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE],
+				'alice'
+			)
+			->willReturn(['segment' => ['id' => 'seg-9'], 'estimatedSize' => 4]);
+		$asked = [];
+		$controller = $this->controllerWithPolicy(privileged: true, askedUids: $asked);
+
+		$response = $controller->create();
+
+		$this->assertSame(expected: Http::STATUS_CREATED, actual: $response->getStatus());
+		$this->assertSame(expected: ['segment' => ['id' => 'seg-9'], 'estimatedSize' => 4], actual: $response->getData());
+		$this->assertSame(expected: ['alice'], actual: $asked);
+	}//end testCreateStillWorksForAPrivilegedCaller()
 }//end class
