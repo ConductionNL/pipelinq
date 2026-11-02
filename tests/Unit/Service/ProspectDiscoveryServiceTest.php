@@ -19,11 +19,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\Pipelinq\Service\ExistingClientNames;
 use OCA\Pipelinq\Service\IcpConfigService;
 use OCA\Pipelinq\Service\KvkApiClient;
 use OCA\Pipelinq\Service\OpenCorporatesApiClient;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
+use OCA\Pipelinq\Service\ProspectRanking;
 use OCA\Pipelinq\Service\ProspectScoringService;
+use OCA\Pipelinq\Service\ProspectSources;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
@@ -77,16 +80,61 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn([]);
 
-		$this->service = new ProspectDiscoveryService($this->icpConfig,
-			$kvkClient,
-			$ocClient,
-			$scoring,
-			$settings,
-			$logger,
-			$container,
-			$appManager,
+		$this->service = $this->build(
+			icpConfig: $this->icpConfig,
+			kvkClient: $kvkClient,
+			ocClient: $ocClient,
+			scoring: $scoring,
+			settings: $settings,
+			logger: $logger,
+			container: $container,
+			appManager: $appManager,
 		);
 	}//end setUp()
+
+	/**
+	 * The service's collaborators, built from the parts the tests script.
+	 *
+	 * @param IcpConfigService        $icpConfig  The ICP config.
+	 * @param KvkApiClient            $kvkClient  The KVK client.
+	 * @param OpenCorporatesApiClient $ocClient   The OpenCorporates client.
+	 * @param ProspectScoringService  $scoring    The scoring service.
+	 * @param SettingsService         $settings   The settings.
+	 * @param LoggerInterface         $logger     The logger.
+	 * @param ContainerInterface      $container  The container.
+	 * @param IAppManager             $appManager The app manager.
+	 *
+	 * @return array<int, object>
+	 */
+	private function parts(
+		IcpConfigService $icpConfig,
+		KvkApiClient $kvkClient,
+		OpenCorporatesApiClient $ocClient,
+		ProspectScoringService $scoring,
+		SettingsService $settings,
+		LoggerInterface $logger,
+		ContainerInterface $container,
+		IAppManager $appManager,
+	): array {
+		$clients = new ExistingClientNames(settings: $settings, container: $container, appManager: $appManager, logger: $logger);
+		return [
+			$icpConfig,
+			new ProspectSources(icpConfig: $icpConfig, kvkClient: $kvkClient, ocClient: $ocClient, logger: $logger),
+			new ProspectRanking(scoring: $scoring, clients: $clients),
+			$settings,
+		];
+	}//end parts()
+
+	/**
+	 * Build the service from the parts the tests script.
+	 *
+	 * @param object ...$args The parts, in the order parts() takes them.
+	 *
+	 * @return ProspectDiscoveryService
+	 */
+	private function build(object ...$args): ProspectDiscoveryService {
+		return new ProspectDiscoveryService(...$this->parts(...$args));
+	}//end build()
 
 	/**
 	 * Test discover returns error when ICP not configured.
@@ -167,15 +215,15 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 
-		$service = new ProspectDiscoveryService(
-			$icpConfig,
-			$kvkClient,
-			$this->createMock(OpenCorporatesApiClient::class),
-			new ProspectScoringService(),
-			$settings,
-			$this->createMock(LoggerInterface::class),
-			$container,
-			$appManager,
+		$service = $this->build(
+			icpConfig: $icpConfig,
+			kvkClient: $kvkClient,
+			ocClient: $this->createMock(originalClassName: OpenCorporatesApiClient::class),
+			scoring: new ProspectScoringService(),
+			settings: $settings,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			container: $container,
+			appManager: $appManager,
 		);
 
 		$result = $service->discover(refresh: true);
@@ -209,15 +257,15 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getConfigValue')->willReturn('');
 
-		$service = new ProspectDiscoveryService(
-			$icpConfig,
-			$kvkClient,
-			$this->createMock(OpenCorporatesApiClient::class),
-			new ProspectScoringService(),
-			$settings,
-			$this->createMock(LoggerInterface::class),
-			$this->createMock(ContainerInterface::class),
-			$this->createMock(IAppManager::class),
+		$service = $this->build(
+			icpConfig: $icpConfig,
+			kvkClient: $kvkClient,
+			ocClient: $this->createMock(originalClassName: OpenCorporatesApiClient::class),
+			scoring: new ProspectScoringService(),
+			settings: $settings,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			container: $this->createMock(originalClassName: ContainerInterface::class),
+			appManager: $this->createMock(originalClassName: IAppManager::class),
 		);
 
 		$top = $service->discover(refresh: true);
@@ -284,16 +332,16 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 
 		// An in-memory cache, so the test does not depend on APCu being enabled for the CLI.
-		$service = new class(
-			$icpConfig,
-			$kvkClient,
-			$this->createMock(OpenCorporatesApiClient::class),
-			new ProspectScoringService(),
-			$settings,
-			$this->createMock(LoggerInterface::class),
-			$container,
-			$appManager,
-		) extends ProspectDiscoveryService {
+		$service = new class(...$this->parts(
+			icpConfig: $icpConfig,
+			kvkClient: $kvkClient,
+			ocClient: $this->createMock(originalClassName: OpenCorporatesApiClient::class),
+			scoring: new ProspectScoringService(),
+			settings: $settings,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			container: $container,
+			appManager: $appManager,
+		)) extends ProspectDiscoveryService {
 			/**
 			 * The cached entries by key.
 			 *
