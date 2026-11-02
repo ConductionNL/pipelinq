@@ -68,15 +68,15 @@ class SnapshotBuildGoldenTest extends TestCase {
 		$flags = (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
 		if (getenv('SNAPSHOT_BUILD_GOLDEN_RECORD') !== false) {
 			file_put_contents(self::GOLDEN, json_encode($actual, $flags) . "\n");
-			$this->markTestSkipped('recorded');
+			$this->markTestSkipped(message: 'recorded');
 		}
 
 		$expected = json_decode((string)file_get_contents(self::GOLDEN), true);
 		foreach ($expected as $name => $want) {
-			$this->assertSame($want, json_decode((string)json_encode(($actual[$name] ?? null), $flags), true), $name);
+			$this->assertSame(expected: $want, actual: json_decode((string)json_encode(($actual[$name] ?? null), $flags), true), message: $name);
 		}
 
-		$this->assertSame(array_keys($expected), array_keys($actual));
+		$this->assertSame(expected: array_keys($expected), actual: array_keys($actual));
 	}//end testGolden()
 
 	/**
@@ -100,15 +100,88 @@ class SnapshotBuildGoldenTest extends TestCase {
 		$teams = ['team-east' => ['rep.a', 'rep.b'], 'team-west' => ['rep.c']];
 		$quotas = ['rep.a' => 900000.0, 'rep.b' => 100000.0, 'team-east' => 0.0, 'team-west' => 5000.0, 'division-north' => 2000000.0, 'company' => 10.0];
 		return [
-			'teams only, open period'              => ['args' => ['Q2-2026', '2026-05-20', ['teams' => $teams, 'divisions' => []], $deals], 'quotas' => $quotas],
-			'divisions, a team missing'            => ['args' => ['Q2-2026', '2026-06-29', ['teams' => $teams, 'divisions' => ['division-north' => ['team-east', 'team-gone'], 'division-south' => ['team-west']]], $deals], 'quotas' => $quotas],
-			'closed period, no quotas'             => ['args' => ['Q2-2026', '2026-07-15', ['teams' => $teams, 'divisions' => ['division-north' => ['team-east', 'team-west']]], $deals], 'quotas' => []],
-			'a rep without deals, numeric team id' => ['args' => ['Q3-2026', '2026-07-01', ['teams' => [7 => ['rep.a', 'rep.z']], 'divisions' => [9 => [7]]], ['rep.a' => $deals['rep.a']]], 'quotas' => ['rep.z' => 1.0, '7' => 1.0]],
-			'nobody'                               => ['args' => ['Q2-2026', '2026-05-20', [], []], 'quotas' => $quotas],
-			'a team in no division'                => ['args' => ['Q2-2026', '2026-05-20', ['teams' => $teams, 'divisions' => ['division-north' => ['team-west']]], $deals], 'quotas' => $quotas],
-			'foreign rep first, then local reps'   => ['args' => ['Q2-2026', '2026-05-20', ['teams' => ['t' => ['rep.c', 'rep.a', 'rep.b']]], $deals], 'quotas' => []],
-			'reporting currency is USD'            => ['args' => ['Q2-2026', '2026-05-20', ['teams' => ['t' => ['rep.a', 'rep.c']]], $deals], 'quotas' => [], 'currency' => 'USD'],
-			'unknown period'                       => ['args' => ['nonsense', '2026-05-20', ['teams' => ['t' => ['rep.b']]], $deals], 'quotas' => $quotas],
+			'teams only, open period' => [
+				'args' => [
+					'Q2-2026',
+					'2026-05-20',
+					['teams' => $teams, 'divisions' => []],
+					$deals,
+				],
+				'quotas' => $quotas,
+			],
+			'divisions, a team missing' => [
+				'args' => [
+					'Q2-2026',
+					'2026-06-29',
+					['teams' => $teams, 'divisions' => ['division-north' => ['team-east', 'team-gone'], 'division-south' => ['team-west']]],
+					$deals,
+				],
+				'quotas' => $quotas,
+			],
+			'closed period, no quotas' => [
+				'args' => [
+					'Q2-2026',
+					'2026-07-15',
+					['teams' => $teams, 'divisions' => ['division-north' => ['team-east', 'team-west']]],
+					$deals,
+				],
+				'quotas' => [],
+			],
+			'a rep without deals, numeric team id' => [
+				'args' => [
+					'Q3-2026',
+					'2026-07-01',
+					['teams' => [7 => ['rep.a', 'rep.z']], 'divisions' => [9 => [7]]],
+					['rep.a' => $deals['rep.a']],
+				],
+				'quotas' => ['rep.z' => 1.0, '7' => 1.0],
+			],
+			'nobody' => [
+				'args' => [
+					'Q2-2026',
+					'2026-05-20',
+					[],
+					[],
+				],
+				'quotas' => $quotas,
+			],
+			'a team in no division' => [
+				'args' => [
+					'Q2-2026',
+					'2026-05-20',
+					['teams' => $teams, 'divisions' => ['division-north' => ['team-west']]],
+					$deals,
+				],
+				'quotas' => $quotas,
+			],
+			'foreign rep first, then local reps' => [
+				'args' => [
+					'Q2-2026',
+					'2026-05-20',
+					['teams' => ['t' => ['rep.c', 'rep.a', 'rep.b']]],
+					$deals,
+				],
+				'quotas' => [],
+			],
+			'reporting currency is USD' => [
+				'args' => [
+					'Q2-2026',
+					'2026-05-20',
+					['teams' => ['t' => ['rep.a', 'rep.c']]],
+					$deals,
+				],
+				'quotas' => [],
+				'currency' => 'USD',
+			],
+			'unknown period' => [
+				'args' => [
+					'nonsense',
+					'2026-05-20',
+					['teams' => ['t' => ['rep.b']]],
+					$deals,
+				],
+				'quotas' => $quotas,
+			],
 		];
 	}//end scenarios()
 
@@ -121,7 +194,7 @@ class SnapshotBuildGoldenTest extends TestCase {
 	 */
 	private function runScenario(array $scenario): array {
 		$this->calls = [];
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$currency = ($scenario['currency'] ?? 'EUR');
 		$appConfig->method('getValueString')->willReturnCallback(
 			static function (string $app, string $key, string $default = '') use ($currency): string {
@@ -135,7 +208,7 @@ class SnapshotBuildGoldenTest extends TestCase {
 		$exchange = new ExchangeRateService(appConfig: $appConfig);
 
 		$quotas = $scenario['quotas'];
-		$quota = $this->createMock(QuotaService::class);
+		$quota = $this->createMock(originalClassName: QuotaService::class);
 		$quota->method('getQuotaAmount')->willReturnCallback(
 			$this->recorder(method: 'getQuotaAmount', answer: static fn (array $a): ?float => ($quotas[$a['ownerId']] ?? null))
 		);
@@ -148,14 +221,14 @@ class SnapshotBuildGoldenTest extends TestCase {
 
 		$service = new SnapshotGenerationService(
 			appConfig: $appConfig,
-			groupManager: $this->createMock(IGroupManager::class),
+			groupManager: $this->createMock(originalClassName: IGroupManager::class),
 			rollup: new ForecastRollupService(exchangeRate: $exchange),
 			exchangeRate: $exchange,
 			period: new FiscalPeriodService(),
 			quotaService: $quota,
-			notifier: $this->createMock(NotificationService::class),
-			logger: $this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			notifier: $this->createMock(originalClassName: NotificationService::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			objectService: $this->createMock(originalClassName: ObjectServiceInterface::class),
 		);
 
 		return ['snapshots' => $service->buildSnapshots(...$scenario['args']), 'quotaCalls' => $this->calls];
