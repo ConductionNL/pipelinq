@@ -47,6 +47,7 @@ use RuntimeException;
  * file, then run once more without it.
  *
  * @covers \OCA\Pipelinq\Service\ContactVcardService
+ * @covers \OCA\Pipelinq\Service\ContactObjectReader
  *
  * @spec openspec/specs/contacts-sync/spec.md
  */
