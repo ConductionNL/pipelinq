@@ -1,0 +1,2681 @@
+{
+    "remove": {
+        "result": {
+            "returned": {
+                "success": true,
+                "removed": {
+                    "journeys": 5,
+                    "contracts": 2,
+                    "tasks": 3,
+                    "contactmomenten": 0,
+                    "complaints": 3,
+                    "requests": 8,
+                    "leads": 6,
+                    "products": 3,
+                    "pipelines": 2,
+                    "contacts": 4,
+                    "clients": 5
+                },
+                "retained": {
+                    "contracts": 0,
+                    "tasks": 0,
+                    "contactmomenten": 0,
+                    "complaints": 0,
+                    "requests": 0,
+                    "leads": 0,
+                    "products": 0,
+                    "pipelines": 0,
+                    "contacts": 0,
+                    "clients": 0
+                }
+            }
+        },
+        "events": [
+            {
+                "call": "marketing.remove",
+                "args": {
+                    "sections": [
+                        "_comment",
+                        "_coverageNote",
+                        "clients",
+                        "contacts",
+                        "pipelines",
+                        "products",
+                        "leads",
+                        "requests",
+                        "complaints",
+                        "contactmomenten",
+                        "contracts",
+                        "tasks",
+                        "_journeysNote",
+                        "journeys",
+                        "_socialNote",
+                        "social",
+                        "_searchNote",
+                        "search"
+                    ]
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contract_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contracts-0",
+                    "register": "reg",
+                    "schema": "contract_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contracts-1",
+                    "register": "reg",
+                    "schema": "contract_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "task_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "tasks-0",
+                    "register": "reg",
+                    "schema": "task_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "tasks-1",
+                    "register": "reg",
+                    "schema": "task_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "tasks-2",
+                    "register": "reg",
+                    "schema": "task_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "complaints-0",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "complaints-1",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "complaints-2",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-0",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-1",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-2",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-3",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-4",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-5",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-6",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-7",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "lead_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-0",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-1",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-2",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-3",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-4",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-5",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "product_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "products-0",
+                    "register": "reg",
+                    "schema": "product_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "products-1",
+                    "register": "reg",
+                    "schema": "product_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "products-2",
+                    "register": "reg",
+                    "schema": "product_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "pipeline_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "pipelines-0",
+                    "register": "reg",
+                    "schema": "pipeline_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "pipelines-1",
+                    "register": "reg",
+                    "schema": "pipeline_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contact_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contacts-0",
+                    "register": "reg",
+                    "schema": "contact_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contacts-1",
+                    "register": "reg",
+                    "schema": "contact_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contacts-2",
+                    "register": "reg",
+                    "schema": "contact_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contacts-3",
+                    "register": "reg",
+                    "schema": "contact_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-0",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-1",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-2",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-3",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-4",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            }
+        ]
+    },
+    "remove, delete fails": {
+        "result": {
+            "threw": "RuntimeException",
+            "message": "database gone"
+        },
+        "events": [
+            {
+                "call": "marketing.remove",
+                "args": {
+                    "sections": [
+                        "_comment",
+                        "_coverageNote",
+                        "clients",
+                        "contacts",
+                        "pipelines",
+                        "products",
+                        "leads",
+                        "requests",
+                        "complaints",
+                        "contactmomenten",
+                        "contracts",
+                        "tasks",
+                        "_journeysNote",
+                        "journeys",
+                        "_socialNote",
+                        "social",
+                        "_searchNote",
+                        "search"
+                    ]
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contract_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "fails",
+                    "register": "reg",
+                    "schema": "contract_schema-id"
+                }
+            }
+        ]
+    },
+    "remove, no register": {
+        "result": {
+            "returned": {
+                "success": false,
+                "message": "Pipelinq register or schemas are not provisioned — nothing to remove.",
+                "removed": [],
+                "retained": []
+            }
+        },
+        "events": []
+    },
+    "seed fresh": {
+        "result": {
+            "returned": {
+                "success": true,
+                "created": {
+                    "clients": 5,
+                    "contacts": 4,
+                    "pipelines": 2,
+                    "products": 3,
+                    "leads": 6,
+                    "requests": 8,
+                    "complaints": 3,
+                    "contactmomenten": 12,
+                    "tasks": 3,
+                    "contracts": 2,
+                    "journeys": 5
+                },
+                "skipped": {
+                    "clients": 0,
+                    "contacts": 0,
+                    "pipelines": 0,
+                    "products": 0,
+                    "leads": 0,
+                    "requests": 0,
+                    "complaints": 0,
+                    "contactmomenten": 0,
+                    "tasks": 0,
+                    "contracts": 0,
+                    "journeys": 0
+                },
+                "relinked": {
+                    "clients": 0,
+                    "contacts": 0,
+                    "pipelines": 0,
+                    "products": 0,
+                    "leads": 0,
+                    "requests": 0,
+                    "complaints": 0,
+                    "contactmomenten": 0,
+                    "tasks": 0,
+                    "contracts": 0
+                }
+            }
+        },
+        "events": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "provisionContact",
+                "args": {
+                    "name": "[Demo] Bakkerij De Gouden Korst",
+                    "objectType": "client"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Bakkerij De Gouden Korst",
+                        "type": "organization",
+                        "email": "info@goudenkorst.example",
+                        "phone": "+31201234567",
+                        "address": "Nieuwstraat 12, 1012 AB Amsterdam",
+                        "website": "https://goudenkorst.example",
+                        "industry": [
+                            "Retail"
+                        ],
+                        "notes": "Demo organisation seeded by pipelinq:demo:seed.",
+                        "contactsUid": "nc-37cd3ea96c9ca6ec7f6ae37f163f7234"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "client_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "provisionContact",
+                "args": {
+                    "name": "[Demo] Gemeente Zonnedael",
+                    "objectType": "client"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Gemeente Zonnedael",
+                        "type": "organization",
+                        "email": "kcc@zonnedael.example",
+                        "phone": "+31702345678",
+                        "address": "Raadhuisplein 1, 2513 AA Den Haag",
+                        "industry": [
+                            "Government"
+                        ],
+                        "notes": "Demo organisation seeded by pipelinq:demo:seed.",
+                        "contactsUid": "nc-8aa00084325fb5834981c546a02166b8"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "client_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "provisionContact",
+                "args": {
+                    "name": "[Demo] Anna Jansen",
+                    "objectType": "client"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Anna Jansen",
+                        "type": "person",
+                        "email": "anna.jansen@example.com",
+                        "phone": "+31612345678",
+                        "address": "Dorpsstraat 8, 3511 BB Utrecht",
+                        "notes": "Demo person seeded by pipelinq:demo:seed.",
+                        "emails": [
+                            {
+                                "kind": "work",
+                                "value": "anna.jansen@example.com",
+                                "primary": true,
+                                "verified": false
+                            }
+                        ],
+                        "phones": [
+                            {
+                                "kind": "mobile",
+                                "value": "+31612345678",
+                                "primary": true,
+                                "verified": false
+                            }
+                        ],
+                        "socialProfiles": [
+                            {
+                                "network": "linkedin",
+                                "handle": "anna-jansen",
+                                "url": "https://www.linkedin.com/in/anna-jansen-demo",
+                                "verified": false,
+                                "followedByUs": true,
+                                "followsUs": false
+                            }
+                        ],
+                        "preferredChannel": "linkedin",
+                        "timezone": "Europe/Amsterdam",
+                        "language": "nl",
+                        "contactsUid": "nc-62b55d84e67dc63eef1a67a79937ea18"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "client_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "provisionContact",
+                "args": {
+                    "name": "[Demo] Pieter de Vries",
+                    "objectType": "client"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Pieter de Vries",
+                        "type": "person",
+                        "email": "p.devries@example.com",
+                        "phone": "+31687654321",
+                        "address": "Kerkweg 21, 6511 CC Nijmegen",
+                        "notes": "Demo person seeded by pipelinq:demo:seed.",
+                        "emails": [
+                            {
+                                "kind": "work",
+                                "value": "p.devries@example.com",
+                                "primary": true,
+                                "verified": false
+                            }
+                        ],
+                        "phones": [
+                            {
+                                "kind": "mobile",
+                                "value": "+31687654321",
+                                "primary": true,
+                                "verified": false
+                            }
+                        ],
+                        "socialProfiles": [
+                            {
+                                "network": "mastodon",
+                                "handle": "@pdevries@mastodon.social",
+                                "url": "https://mastodon.social/@pdevries",
+                                "verified": false,
+                                "followedByUs": false,
+                                "followsUs": true
+                            }
+                        ],
+                        "preferredChannel": "email",
+                        "timezone": "Europe/Amsterdam",
+                        "language": "nl",
+                        "contactsUid": "nc-4a997294536367249d99a8c50b30e9c5"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "client_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "provisionContact",
+                "args": {
+                    "name": "[Demo] Samira El Harrak",
+                    "objectType": "client"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Samira El Harrak",
+                        "type": "person",
+                        "email": "s.elharrak@example.com",
+                        "phone": "+31699887766",
+                        "address": "Havenkade 3, 3011 DD Rotterdam",
+                        "notes": "Demo person seeded by pipelinq:demo:seed.",
+                        "contactsUid": "nc-d8e9f88a309f528f89b2c3889a206766"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "client_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contact_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "provisionContact",
+                "args": {
+                    "name": "[Demo] Joris Bakker",
+                    "objectType": "contact"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Joris Bakker",
+                        "email": "joris.bakker@goudenkorst.example",
+                        "phone": "+31201234568",
+                        "role": "Eigenaar",
+                        "emails": [
+                            {
+                                "kind": "work",
+                                "value": "joris.bakker@goudenkorst.example",
+                                "primary": true,
+                                "verified": false
+                            }
+                        ],
+                        "phones": [
+                            {
+                                "kind": "work",
+                                "value": "+31201234568",
+                                "primary": true,
+                                "verified": false
+                            },
+                            {
+                                "kind": "mobile",
+                                "value": "+31612340001",
+                                "primary": false,
+                                "verified": false
+                            }
+                        ],
+                        "socialProfiles": [
+                            {
+                                "network": "linkedin",
+                                "handle": "joris-bakker",
+                                "url": "https://www.linkedin.com/in/joris-bakker-demo",
+                                "verified": false,
+                                "followedByUs": true,
+                                "followsUs": true
+                            }
+                        ],
+                        "preferredChannel": "whatsapp",
+                        "timezone": "Europe/Amsterdam",
+                        "language": "nl",
+                        "client": "saved-3",
+                        "contactsUid": "nc-c12985cf1aafa2a85c1bf89bc42aac2e"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "contact_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "provisionContact",
+                "args": {
+                    "name": "[Demo] Ilse Mulder",
+                    "objectType": "contact"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Ilse Mulder",
+                        "email": "ilse.mulder@goudenkorst.example",
+                        "phone": "+31201234569",
+                        "role": "Bedrijfsleider",
+                        "emails": [
+                            {
+                                "kind": "work",
+                                "value": "ilse.mulder@goudenkorst.example",
+                                "primary": true,
+                                "verified": false
+                            }
+                        ],
+                        "phones": [
+                            {
+                                "kind": "work",
+                                "value": "+31201234569",
+                                "primary": true,
+                                "verified": false
+                            }
+                        ],
+                        "preferredChannel": "email",
+                        "timezone": "Europe/Amsterdam",
+                        "language": "nl",
+                        "client": "saved-3",
+                        "contactsUid": "nc-e1ed9c0b724005c0f6d0851e937b4cd5"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "contact_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "provisionContact",
+                "args": {
+                    "name": "[Demo] Karim Ait Bella",
+                    "objectType": "contact"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Karim Ait Bella",
+                        "email": "k.aitbella@zonnedael.example",
+                        "phone": "+31702345679",
+                        "role": "Teamleider KCC",
+                        "client": "saved-5",
+                        "contactsUid": "nc-3404c2e8ba61022333614a8ea928c32e"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "contact_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "provisionContact",
+                "args": {
+                    "name": "[Demo] Wendy Prins",
+                    "objectType": "contact"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Wendy Prins",
+                        "email": "w.prins@zonnedael.example",
+                        "phone": "+31702345680",
+                        "role": "Inkoop",
+                        "client": "saved-5",
+                        "contactsUid": "nc-23b9e5c89616a4c3a8986696c36d213f"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "contact_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "pipeline_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "title": "[Demo] Sales pipeline",
+                        "description": "Demo pipeline: standard commercial stages.",
+                        "isDefault": true,
+                        "propertyMappings": [
+                            {
+                                "schemaSlug": "lead",
+                                "columnProperty": "stage",
+                                "totalsProperty": "value"
+                            }
+                        ],
+                        "stages": [
+                            {
+                                "name": "New",
+                                "order": 1,
+                                "probability": 10,
+                                "isDefault": true
+                            },
+                            {
+                                "name": "Contacted",
+                                "order": 2,
+                                "probability": 30
+                            },
+                            {
+                                "name": "Qualified",
+                                "order": 3,
+                                "probability": 50
+                            },
+                            {
+                                "name": "Proposal",
+                                "order": 4,
+                                "probability": 70
+                            },
+                            {
+                                "name": "Won",
+                                "order": 5,
+                                "probability": 100,
+                                "isClosed": true,
+                                "isWon": true
+                            },
+                            {
+                                "name": "Lost",
+                                "order": 6,
+                                "probability": 0,
+                                "isClosed": true
+                            }
+                        ]
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "pipeline_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "title": "[Demo] Service pipeline",
+                        "description": "Demo pipeline: service-desk handling stages.",
+                        "propertyMappings": [
+                            {
+                                "schemaSlug": "request",
+                                "columnProperty": "stage"
+                            }
+                        ],
+                        "stages": [
+                            {
+                                "name": "New",
+                                "order": 1,
+                                "isDefault": true
+                            },
+                            {
+                                "name": "In Progress",
+                                "order": 2
+                            },
+                            {
+                                "name": "Completed",
+                                "order": 3,
+                                "isClosed": true,
+                                "isWon": true
+                            },
+                            {
+                                "name": "Rejected",
+                                "order": 4,
+                                "isClosed": true
+                            },
+                            {
+                                "name": "Converted to Case",
+                                "order": 5,
+                                "isClosed": true
+                            }
+                        ]
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "pipeline_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "product_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Koffie zwart",
+                        "description": "Demo product: black coffee.",
+                        "sku": "DEMO-KOF-001",
+                        "unitPrice": 2.5,
+                        "type": "product",
+                        "status": "active",
+                        "unit": "stuk",
+                        "vatClass": "low",
+                        "taxRate": 9,
+                        "barcode": "8714100000017"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "product_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Broodje gezond",
+                        "description": "Demo product: sandwich.",
+                        "sku": "DEMO-BRD-002",
+                        "unitPrice": 4.75,
+                        "type": "product",
+                        "status": "active",
+                        "unit": "stuk",
+                        "vatClass": "low",
+                        "taxRate": 9,
+                        "barcode": "8714100000024"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "product_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Adviesuur",
+                        "description": "Demo service: one hour of consultancy.",
+                        "sku": "DEMO-ADV-003",
+                        "unitPrice": 95,
+                        "type": "service",
+                        "status": "active",
+                        "unit": "uur",
+                        "vatClass": "high",
+                        "taxRate": 21
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "product_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "lead_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "title": "[Demo] Webshop vernieuwing Gouden Korst",
+                        "source": "website",
+                        "value": 12500,
+                        "probability": 20,
+                        "expectedCloseDate": "@days:45",
+                        "priority": "normal",
+                        "stage": "New",
+                        "stageOrder": 1,
+                        "status": "open",
+                        "description": "Demo lead: replace the bakery webshop.",
+                        "client": "saved-3",
+                        "pipeline": "saved-22"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "title": "[Demo] Koffieabonnement kantoor",
+                        "source": "referral",
+                        "value": 3600,
+                        "probability": 40,
+                        "expectedCloseDate": "@days:30",
+                        "priority": "low",
+                        "stage": "Contacted",
+                        "stageOrder": 2,
+                        "stageEnteredAt": "@datetime:-3",
+                        "status": "open",
+                        "description": "Demo lead: office coffee subscription.",
+                        "client": "saved-7",
+                        "pipeline": "saved-22"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "title": "[Demo] Intranet migratie Zonnedael",
+                        "source": "tender",
+                        "value": 48000,
+                        "probability": 55,
+                        "expectedCloseDate": "@days:60",
+                        "priority": "high",
+                        "stage": "Qualified",
+                        "stageOrder": 3,
+                        "stageEnteredAt": "@datetime:-31",
+                        "status": "open",
+                        "description": "Demo lead: municipal intranet migration.",
+                        "client": "saved-5",
+                        "pipeline": "saved-22"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "title": "[Demo] Catering jaarcontract",
+                        "source": "phone",
+                        "value": 8900,
+                        "probability": 70,
+                        "expectedCloseDate": "@days:14",
+                        "priority": "normal",
+                        "stage": "Proposal",
+                        "stageOrder": 4,
+                        "status": "open",
+                        "description": "Demo lead: yearly catering contract proposal.",
+                        "client": "saved-9",
+                        "pipeline": "saved-22"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "title": "[Demo] Onderhoudscontract gewonnen",
+                        "source": "email",
+                        "value": 5200,
+                        "probability": 100,
+                        "expectedCloseDate": "@days:-7",
+                        "priority": "normal",
+                        "stage": "Won",
+                        "stageOrder": 5,
+                        "status": "won",
+                        "description": "Demo lead: won maintenance contract.",
+                        "client": "saved-11",
+                        "pipeline": "saved-22"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "title": "[Demo] Kassasysteem upgrade verloren",
+                        "source": "website",
+                        "value": 6700,
+                        "probability": 0,
+                        "expectedCloseDate": "@days:-14",
+                        "priority": "low",
+                        "stage": "Lost",
+                        "stageOrder": 6,
+                        "status": "lost",
+                        "description": "Demo lead: lost POS upgrade to competitor.",
+                        "client": "saved-3",
+                        "pipeline": "saved-22"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "title": "[Demo] Parkeervergunning aanvragen",
+                        "description": "Demo request: resident parking permit application.",
+                        "status": "new",
+                        "priority": "normal",
+                        "category": "vergunningen",
+                        "channel": "web",
+                        "stage": "New",
+                        "stageOrder": 0,
+                        "occurredAt": "@datetime:-1",
+                        "ticketType": "request",
+                        "client": "saved-7",
+                        "pipeline": "saved-23"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "title": "[Demo] Offerte onderhoudscontract",
+                        "description": "Demo request: quotation for a maintenance contract.",
+                        "status": "new",
+                        "priority": "high",
+                        "category": "sales",
+                        "channel": "email",
+                        "stage": "New",
+                        "stageOrder": 0,
+                        "occurredAt": "@datetime:-2",
+                        "ticketType": "request",
+                        "client": "saved-3",
+                        "pipeline": "saved-23"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "title": "[Demo] Verhuizing doorgeven",
+                        "description": "Demo request: report a change of address.",
+                        "status": "in_progress",
+                        "priority": "normal",
+                        "category": "burgerzaken",
+                        "channel": "phone",
+                        "stage": "In Progress",
+                        "stageOrder": 1,
+                        "occurredAt": "@datetime:-4",
+                        "ticketType": "request",
+                        "client": "saved-9",
+                        "pipeline": "saved-23"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "title": "[Demo] Melding kapotte lantaarnpaal",
+                        "description": "Demo request: broken street light on Raadhuisplein.",
+                        "status": "in_progress",
+                        "priority": "urgent",
+                        "category": "openbare-ruimte",
+                        "channel": "phone",
+                        "stage": "In Progress",
+                        "stageOrder": 1,
+                        "occurredAt": "@datetime:-3",
+                        "ticketType": "request",
+                        "client": "saved-5",
+                        "pipeline": "saved-23"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "title": "[Demo] Subsidieaanvraag buurtfeest",
+                        "description": "Demo request: subsidy application for a neighbourhood festival.",
+                        "status": "completed",
+                        "priority": "normal",
+                        "category": "subsidies",
+                        "channel": "web",
+                        "stage": "Completed",
+                        "stageOrder": 2,
+                        "occurredAt": "@datetime:-12",
+                        "ticketType": "request",
+                        "client": "saved-11",
+                        "pipeline": "saved-23"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "title": "[Demo] Klacht over afhandeling",
+                        "description": "Demo request: complaint about earlier case handling.",
+                        "status": "completed",
+                        "priority": "high",
+                        "category": "klachten",
+                        "channel": "email",
+                        "stage": "Completed",
+                        "stageOrder": 2,
+                        "occurredAt": "@datetime:-15",
+                        "ticketType": "request",
+                        "client": "saved-7",
+                        "pipeline": "saved-23"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "title": "[Demo] Verzoek kapvergunning afgewezen",
+                        "description": "Demo request: rejected tree-felling permit.",
+                        "status": "rejected",
+                        "priority": "low",
+                        "category": "vergunningen",
+                        "channel": "balie",
+                        "stage": "Rejected",
+                        "stageOrder": 3,
+                        "occurredAt": "@datetime:-20",
+                        "ticketType": "request",
+                        "client": "saved-9",
+                        "pipeline": "saved-23"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "title": "[Demo] Bezwaar omgezet naar zaak",
+                        "description": "Demo request: objection converted to a formal case.",
+                        "status": "converted",
+                        "priority": "normal",
+                        "category": "bezwaar",
+                        "channel": "post",
+                        "stage": "Converted to Case",
+                        "stageOrder": 4,
+                        "occurredAt": "@datetime:-25",
+                        "ticketType": "request",
+                        "client": "saved-5",
+                        "pipeline": "saved-23"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "complaint",
+                    "payload": {
+                        "title": "[Demo] Klacht over afvalinzameling",
+                        "description": "Demo complaint: bin was not emptied on the scheduled day.",
+                        "status": "new",
+                        "priority": "high",
+                        "channel": "telefoon",
+                        "category": "klachten",
+                        "occurredAt": "@datetime:-4",
+                        "ticketType": "complaint",
+                        "client": "saved-7"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "complaint",
+                    "payload": {
+                        "title": "[Demo] Klacht over wachttijd balie",
+                        "description": "Demo complaint: waiting time at the counter exceeded 45 minutes.",
+                        "status": "in_progress",
+                        "priority": "normal",
+                        "channel": "balie",
+                        "category": "klachten",
+                        "occurredAt": "@datetime:-9",
+                        "ticketType": "complaint",
+                        "client": "saved-9"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "complaint",
+                    "payload": {
+                        "title": "[Demo] Klacht over onjuiste factuur",
+                        "description": "Demo complaint: invoice charged the wrong VAT rate.",
+                        "status": "resolved",
+                        "priority": "low",
+                        "channel": "email",
+                        "category": "klachten",
+                        "occurredAt": "@datetime:-20",
+                        "ticketType": "complaint",
+                        "client": "saved-3"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "handled",
+                        "duration": "00:06",
+                        "title": "[Demo] Telefonische vraag parkeervergunning",
+                        "description": "Demo contactmoment: caller asked about permit processing time.",
+                        "occurredAt": "@datetime:-1",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "saved-7",
+                        "parentTicket": "ticket-36"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "email",
+                        "outcome": "followUpAction",
+                        "title": "[Demo] E-mail offerteaanvraag ontvangen",
+                        "description": "Demo contactmoment: quotation request received by email.",
+                        "occurredAt": "@datetime:-2",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "saved-3",
+                        "parentTicket": "ticket-37"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "handled",
+                        "duration": "00:09",
+                        "title": "[Demo] Verhuizing telefonisch doorgegeven",
+                        "description": "Demo contactmoment: change of address reported by phone.",
+                        "occurredAt": "@datetime:-4",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "saved-9",
+                        "parentTicket": "ticket-38"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "balie",
+                        "outcome": "followUpAction",
+                        "title": "[Demo] Melding lantaarnpaal aan balie",
+                        "description": "Demo contactmoment: street light reported at the desk.",
+                        "occurredAt": "@datetime:-3",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "saved-5",
+                        "parentTicket": "ticket-39"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "chat",
+                        "outcome": "handled",
+                        "title": "[Demo] Chat over subsidievoorwaarden",
+                        "description": "Demo contactmoment: chat about subsidy conditions.",
+                        "occurredAt": "@datetime:-11",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "saved-11",
+                        "parentTicket": "ticket-40"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "resolved",
+                        "duration": "00:18",
+                        "title": "[Demo] Klacht besproken en opgelost",
+                        "description": "Demo contactmoment: complaint discussed and resolved.",
+                        "occurredAt": "@datetime:-14",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "saved-7",
+                        "parentTicket": "ticket-41"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "outbound",
+                        "channel": "brief",
+                        "outcome": "handled",
+                        "title": "[Demo] Brief met afwijzing verstuurd",
+                        "description": "Demo contactmoment: rejection letter sent.",
+                        "occurredAt": "@datetime:-19",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "saved-9",
+                        "parentTicket": "ticket-42"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "referred",
+                        "duration": "00:12",
+                        "title": "[Demo] Doorverwezen naar zaakafhandeling",
+                        "description": "Demo contactmoment: referred to case handling.",
+                        "occurredAt": "@datetime:-24",
+                        "status": "closed",
+                        "ticketType": "interaction",
+                        "client": "saved-5",
+                        "parentTicket": "ticket-43"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "social",
+                        "outcome": "handled",
+                        "title": "[Demo] Social media vraag openingstijden",
+                        "description": "Demo contactmoment: opening hours question via social media.",
+                        "occurredAt": "@datetime:-6",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "saved-3"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "callbackRequest",
+                        "duration": "00:03",
+                        "title": "[Demo] Terugbelverzoek ingepland",
+                        "description": "Demo contactmoment: callback scheduled for tomorrow.",
+                        "occurredAt": "@datetime:-1",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "saved-11"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "chat",
+                        "outcome": "transferred",
+                        "title": "[Demo] Chatgesprek doorverbonden",
+                        "description": "Demo contactmoment: chat transferred to second line.",
+                        "occurredAt": "@datetime:-8",
+                        "status": "closed",
+                        "ticketType": "interaction",
+                        "client": "saved-7"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "outbound",
+                        "channel": "email",
+                        "outcome": "followUpAction",
+                        "title": "[Demo] E-mail met vervolgafspraak",
+                        "description": "Demo contactmoment: follow-up appointment confirmed by email.",
+                        "occurredAt": "@datetime:-5",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "saved-5"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "task_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Terugbellen over parkeervergunning",
+                        "type": "callbackRequest",
+                        "status": "open",
+                        "priority": "high",
+                        "deadline": "@datetime:1",
+                        "description": "Demo task: call the applicant back about the parking permit.",
+                        "callbackPhoneNumber": "+31612345678"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "task_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Offerte webshop opvolgen",
+                        "type": "followUpTask",
+                        "status": "in_progress",
+                        "priority": "normal",
+                        "deadline": "@datetime:3",
+                        "description": "Demo task: follow up on the webshop quotation."
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "task_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Informatievraag afvalkalender",
+                        "type": "informationRequest",
+                        "status": "completed",
+                        "priority": "low",
+                        "deadline": "@datetime:-2",
+                        "description": "Demo task: answer the waste-calendar question."
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "task_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contract_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "contractNumber": "DEMO-C-0001",
+                        "title": "[Demo] Support & onderhoud webshop",
+                        "billingInterval": "monthly",
+                        "valuePerInterval": 450,
+                        "currency": "EUR",
+                        "startDate": "@days:-300",
+                        "endDate": "@days:45",
+                        "autoRenew": true,
+                        "noticePeriodDays": 30,
+                        "status": "expiring",
+                        "clientRef": "saved-3"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "contract_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "contractNumber": "DEMO-C-0002",
+                        "title": "[Demo] Hosting en beheer KCC",
+                        "billingInterval": "annual",
+                        "valuePerInterval": 12000,
+                        "currency": "EUR",
+                        "startDate": "@days:-120",
+                        "endDate": "@days:245",
+                        "autoRenew": false,
+                        "noticePeriodDays": 60,
+                        "status": "active",
+                        "clientRef": "saved-5"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "contract_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "marketing.seed",
+                "args": {
+                    "uuids": {
+                        "clients:bakkerij": "saved-3",
+                        "clients:gemeente": "saved-5",
+                        "clients:jansen": "saved-7",
+                        "clients:devries": "saved-9",
+                        "clients:elharrak": "saved-11",
+                        "contacts:contact-bakker": "saved-14",
+                        "contacts:contact-mulder": "saved-16",
+                        "contacts:contact-kcc": "saved-18",
+                        "contacts:contact-inkoop": "saved-20",
+                        "pipelines:pipeline-sales": "saved-22",
+                        "pipelines:pipeline-service": "saved-23",
+                        "products:product-koffie": "saved-25",
+                        "products:product-broodje": "saved-26",
+                        "products:product-advies": "saved-27",
+                        "leads:lead-website": "saved-29",
+                        "leads:lead-koffie": "saved-30",
+                        "leads:lead-intranet": "saved-31",
+                        "leads:lead-catering": "saved-32",
+                        "leads:lead-won": "saved-33",
+                        "leads:lead-lost": "saved-34",
+                        "requests:req-parkeer": "ticket-36",
+                        "requests:req-offerte": "ticket-37",
+                        "requests:req-verhuizing": "ticket-38",
+                        "requests:req-kapot": "ticket-39",
+                        "requests:req-subsidie": "ticket-40",
+                        "requests:req-klacht": "ticket-41",
+                        "requests:req-afgewezen": "ticket-42",
+                        "requests:req-zaak": "ticket-43",
+                        "complaints:klacht-afval": "ticket-45",
+                        "complaints:klacht-wachttijd": "ticket-46",
+                        "complaints:klacht-factuur": "ticket-47",
+                        "contactmomenten:cm-1": "ticket-49",
+                        "contactmomenten:cm-2": "ticket-50",
+                        "contactmomenten:cm-3": "ticket-51",
+                        "contactmomenten:cm-4": "ticket-52",
+                        "contactmomenten:cm-5": "ticket-53",
+                        "contactmomenten:cm-6": "ticket-54",
+                        "contactmomenten:cm-7": "ticket-55",
+                        "contactmomenten:cm-8": "ticket-56",
+                        "contactmomenten:cm-9": "ticket-57",
+                        "contactmomenten:cm-10": "ticket-58",
+                        "contactmomenten:cm-11": "ticket-59",
+                        "contactmomenten:cm-12": "ticket-60",
+                        "tasks:task-terugbel": "saved-62",
+                        "tasks:task-opvolg": "saved-63",
+                        "tasks:task-info": "saved-64",
+                        "contracts:contract-support": "saved-66",
+                        "contracts:contract-hosting": "saved-67"
+                    }
+                }
+            }
+        ]
+    },
+    "seed over existing": {
+        "result": {
+            "returned": {
+                "success": true,
+                "created": {
+                    "clients": 0,
+                    "contacts": 0,
+                    "pipelines": 0,
+                    "products": 0,
+                    "leads": 0,
+                    "requests": 0,
+                    "complaints": 0,
+                    "contactmomenten": 12,
+                    "tasks": 0,
+                    "contracts": 0,
+                    "journeys": 5
+                },
+                "skipped": {
+                    "clients": 5,
+                    "contacts": 4,
+                    "pipelines": 2,
+                    "products": 3,
+                    "leads": 6,
+                    "requests": 8,
+                    "complaints": 3,
+                    "contactmomenten": 0,
+                    "tasks": 3,
+                    "contracts": 2,
+                    "journeys": 0
+                },
+                "relinked": {
+                    "clients": 0,
+                    "contacts": 0,
+                    "pipelines": 0,
+                    "products": 0,
+                    "leads": 6,
+                    "requests": 8,
+                    "complaints": 0,
+                    "contactmomenten": 0,
+                    "tasks": 0,
+                    "contracts": 0
+                }
+            }
+        },
+        "events": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contact_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "pipeline_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "product_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "lead_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "id": "leads-0",
+                        "title": "[Demo] Webshop vernieuwing Gouden Korst",
+                        "ticketType": null,
+                        "pipeline": "pipelines-0",
+                        "note": "kept"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": "leads-0"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "id": "leads-1",
+                        "title": "[Demo] Koffieabonnement kantoor",
+                        "ticketType": null,
+                        "pipeline": "pipelines-0",
+                        "note": "kept"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": "leads-1"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "id": "leads-2",
+                        "title": "[Demo] Intranet migratie Zonnedael",
+                        "ticketType": null,
+                        "pipeline": "pipelines-0",
+                        "note": "kept"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": "leads-2"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "id": "leads-3",
+                        "title": "[Demo] Catering jaarcontract",
+                        "ticketType": null,
+                        "pipeline": "pipelines-0",
+                        "note": "kept"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": "leads-3"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "id": "leads-4",
+                        "title": "[Demo] Onderhoudscontract gewonnen",
+                        "ticketType": null,
+                        "pipeline": "pipelines-0",
+                        "note": "kept"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": "leads-4"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "id": "leads-5",
+                        "title": "[Demo] Kassasysteem upgrade verloren",
+                        "ticketType": null,
+                        "pipeline": "pipelines-0",
+                        "note": "kept"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": "leads-5"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-0",
+                        "title": "[Demo] Parkeervergunning aanvragen",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-0"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-1",
+                        "title": "[Demo] Offerte onderhoudscontract",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-1"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-2",
+                        "title": "[Demo] Verhuizing doorgeven",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-2"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-3",
+                        "title": "[Demo] Melding kapotte lantaarnpaal",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-3"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-4",
+                        "title": "[Demo] Subsidieaanvraag buurtfeest",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-4"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-5",
+                        "title": "[Demo] Klacht over afhandeling",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-5"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-6",
+                        "title": "[Demo] Verzoek kapvergunning afgewezen",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-6"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-7",
+                        "title": "[Demo] Bezwaar omgezet naar zaak",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-7"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "handled",
+                        "duration": "00:06",
+                        "title": "[Demo] Telefonische vraag parkeervergunning",
+                        "description": "Demo contactmoment: caller asked about permit processing time.",
+                        "occurredAt": "@datetime:-1",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-2",
+                        "parentTicket": "requests-0"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "email",
+                        "outcome": "followUpAction",
+                        "title": "[Demo] E-mail offerteaanvraag ontvangen",
+                        "description": "Demo contactmoment: quotation request received by email.",
+                        "occurredAt": "@datetime:-2",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "clients-0",
+                        "parentTicket": "requests-1"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "handled",
+                        "duration": "00:09",
+                        "title": "[Demo] Verhuizing telefonisch doorgegeven",
+                        "description": "Demo contactmoment: change of address reported by phone.",
+                        "occurredAt": "@datetime:-4",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-3",
+                        "parentTicket": "requests-2"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "balie",
+                        "outcome": "followUpAction",
+                        "title": "[Demo] Melding lantaarnpaal aan balie",
+                        "description": "Demo contactmoment: street light reported at the desk.",
+                        "occurredAt": "@datetime:-3",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "clients-1",
+                        "parentTicket": "requests-3"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "chat",
+                        "outcome": "handled",
+                        "title": "[Demo] Chat over subsidievoorwaarden",
+                        "description": "Demo contactmoment: chat about subsidy conditions.",
+                        "occurredAt": "@datetime:-11",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-4",
+                        "parentTicket": "requests-4"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "resolved",
+                        "duration": "00:18",
+                        "title": "[Demo] Klacht besproken en opgelost",
+                        "description": "Demo contactmoment: complaint discussed and resolved.",
+                        "occurredAt": "@datetime:-14",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-2",
+                        "parentTicket": "requests-5"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "outbound",
+                        "channel": "brief",
+                        "outcome": "handled",
+                        "title": "[Demo] Brief met afwijzing verstuurd",
+                        "description": "Demo contactmoment: rejection letter sent.",
+                        "occurredAt": "@datetime:-19",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-3",
+                        "parentTicket": "requests-6"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "referred",
+                        "duration": "00:12",
+                        "title": "[Demo] Doorverwezen naar zaakafhandeling",
+                        "description": "Demo contactmoment: referred to case handling.",
+                        "occurredAt": "@datetime:-24",
+                        "status": "closed",
+                        "ticketType": "interaction",
+                        "client": "clients-1",
+                        "parentTicket": "requests-7"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "social",
+                        "outcome": "handled",
+                        "title": "[Demo] Social media vraag openingstijden",
+                        "description": "Demo contactmoment: opening hours question via social media.",
+                        "occurredAt": "@datetime:-6",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-0"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "callbackRequest",
+                        "duration": "00:03",
+                        "title": "[Demo] Terugbelverzoek ingepland",
+                        "description": "Demo contactmoment: callback scheduled for tomorrow.",
+                        "occurredAt": "@datetime:-1",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "clients-4"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "chat",
+                        "outcome": "transferred",
+                        "title": "[Demo] Chatgesprek doorverbonden",
+                        "description": "Demo contactmoment: chat transferred to second line.",
+                        "occurredAt": "@datetime:-8",
+                        "status": "closed",
+                        "ticketType": "interaction",
+                        "client": "clients-2"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "outbound",
+                        "channel": "email",
+                        "outcome": "followUpAction",
+                        "title": "[Demo] E-mail met vervolgafspraak",
+                        "description": "Demo contactmoment: follow-up appointment confirmed by email.",
+                        "occurredAt": "@datetime:-5",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "clients-1"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "task_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contract_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "marketing.seed",
+                "args": {
+                    "uuids": {
+                        "clients:bakkerij": "clients-0",
+                        "clients:gemeente": "clients-1",
+                        "clients:jansen": "clients-2",
+                        "clients:devries": "clients-3",
+                        "clients:elharrak": "clients-4",
+                        "contacts:contact-bakker": "contacts-0",
+                        "contacts:contact-mulder": "contacts-1",
+                        "contacts:contact-kcc": "contacts-2",
+                        "contacts:contact-inkoop": "contacts-3",
+                        "pipelines:pipeline-sales": "pipelines-0",
+                        "pipelines:pipeline-service": "pipelines-1",
+                        "products:product-koffie": "products-0",
+                        "products:product-broodje": "products-1",
+                        "products:product-advies": "products-2",
+                        "leads:lead-website": "leads-0",
+                        "leads:lead-koffie": "leads-1",
+                        "leads:lead-intranet": "leads-2",
+                        "leads:lead-catering": "leads-3",
+                        "leads:lead-won": "leads-4",
+                        "leads:lead-lost": "leads-5",
+                        "requests:req-parkeer": "requests-0",
+                        "requests:req-offerte": "requests-1",
+                        "requests:req-verhuizing": "requests-2",
+                        "requests:req-kapot": "requests-3",
+                        "requests:req-subsidie": "requests-4",
+                        "requests:req-klacht": "requests-5",
+                        "requests:req-afgewezen": "requests-6",
+                        "requests:req-zaak": "requests-7",
+                        "complaints:klacht-afval": "complaints-0",
+                        "complaints:klacht-wachttijd": "complaints-1",
+                        "complaints:klacht-factuur": "complaints-2",
+                        "contactmomenten:cm-1": "ticket-23",
+                        "contactmomenten:cm-2": "ticket-24",
+                        "contactmomenten:cm-3": "ticket-25",
+                        "contactmomenten:cm-4": "ticket-26",
+                        "contactmomenten:cm-5": "ticket-27",
+                        "contactmomenten:cm-6": "ticket-28",
+                        "contactmomenten:cm-7": "ticket-29",
+                        "contactmomenten:cm-8": "ticket-30",
+                        "contactmomenten:cm-9": "ticket-31",
+                        "contactmomenten:cm-10": "ticket-32",
+                        "contactmomenten:cm-11": "ticket-33",
+                        "contactmomenten:cm-12": "ticket-34",
+                        "tasks:task-terugbel": "tasks-0",
+                        "tasks:task-opvolg": "tasks-1",
+                        "tasks:task-info": "tasks-2",
+                        "contracts:contract-support": "contracts-0",
+                        "contracts:contract-hosting": "contracts-1"
+                    }
+                }
+            }
+        ]
+    },
+    "seed, contacts unavailable": {
+        "result": {
+            "returned": {
+                "success": false,
+                "message": "Nextcloud Contacts is unavailable — cannot provision demo client identities.",
+                "created": {
+                    "clients": 0
+                },
+                "skipped": {
+                    "clients": 0
+                }
+            }
+        },
+        "events": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "provisionContact",
+                "args": {
+                    "name": "[Demo] Bakkerij De Gouden Korst",
+                    "objectType": "client"
+                }
+            }
+        ]
+    },
+    "seed, no object service": {
+        "result": {
+            "returned": {
+                "success": false,
+                "message": "Pipelinq register or schemas are not provisioned — run the provisioning step first.",
+                "created": [],
+                "skipped": []
+            }
+        },
+        "events": [
+            {
+                "call": "log.error",
+                "args": {
+                    "message": "Pipelinq demo seed: OpenRegister ObjectService unavailable"
+                }
+            }
+        ]
+    },
+    "seed, no register": {
+        "result": {
+            "returned": {
+                "success": false,
+                "message": "Pipelinq register or schemas are not provisioned — run the provisioning step first.",
+                "created": [],
+                "skipped": []
+            }
+        },
+        "events": []
+    },
+    "seed, no ticket schema": {
+        "result": {
+            "returned": {
+                "success": false,
+                "message": "Pipelinq register or schemas are not provisioned — run the provisioning step first.",
+                "created": [],
+                "skipped": []
+            }
+        },
+        "events": []
+    }
+}
