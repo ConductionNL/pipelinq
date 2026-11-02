@@ -155,6 +155,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "campaignTemplate",
+				"sortKey": "name",
+				"sortOrder": "asc",
 				"columnOverrides": {
 					"createdBy": {
 						"formatter": "userDisplayName"

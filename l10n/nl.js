@@ -7221,6 +7221,7 @@ OC.L10N.register(
         "The menu could not be saved. Try again.": "Het menu is niet opgeslagen. Probeer het opnieuw.",
         "Take on": "In behandeling nemen",
         "Answer the customer": "De klant beantwoorden",
+        "You do not change the status here: it moves through the ticket's steps, Answer the customer, Complete or Reject, so every change is checked.": "De status wijzig je hier niet: die verandert via de stappen van het ticket, De klant beantwoorden, Afronden of Afwijzen, zodat elke wijziging wordt gecontroleerd.",
         "Log contact": "Contact vastleggen",
         "Back to in progress": "Terug naar in behandeling",
         "Close the ticket": "Afsluiten",
