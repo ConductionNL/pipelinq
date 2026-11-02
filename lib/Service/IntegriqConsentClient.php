@@ -212,33 +212,24 @@ class IntegriqConsentClient {
 	 * Ask whether each recipient may be sent this message.
 	 *
 	 * One event per chunk of 500. Every recipient gets an answer: integriq's,
-	 * or the fail-closed one when integriq could not give it.
+	 * or the fail-closed one when integriq could not give it. An empty
+	 * correlation id is generated.
 	 *
-	 * @param string                         $channel         `email`, `sms` or `whatsapp`.
-	 * @param string                         $category        The message category.
-	 * @param bool                           $requiresConsent True for marketing and business-initiated WhatsApp.
-	 * @param array<int,array<string,mixed>> $recipients      Each `{address, contactRef?, listRef?, caseRef?}`.
-	 * @param string                         $correlationId   Ties integriq's log to pipelinq's; generated when empty.
-	 * @param string|null                    $inReplyTo       The inbound message a `reply` answers.
-	 * @param bool                           $probe           True to only show a state: integriq answers without logging.
+	 * @param ConsentQuestion                $question   The kind of message, correlation id, reply and probe flag.
+	 * @param array<int,array<string,mixed>> $recipients Each `{address, contactRef?, listRef?, caseRef?}`.
 	 *
 	 * @return array<string,array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null}> By address as given.
 	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent and probe are integriq's contract fields.
-	 *
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 */
-	public function decide(
-		string $channel,
-		string $category,
-		bool $requiresConsent,
-		array $recipients,
-		string $correlationId = '',
-		?string $inReplyTo = null,
-		bool $probe = false,
-	): array {
-		if ($correlationId === '') {
-			$correlationId = 'pipelinq-'.bin2hex(random_bytes(8));
+	public function decide(ConsentQuestion $question, array $recipients): array {
+		if ($question->correlationId === '') {
+			$question = new ConsentQuestion(
+				ask: $question->ask,
+				correlationId: 'pipelinq-'.bin2hex(random_bytes(8)),
+				inReplyTo: $question->inReplyTo,
+				probe: $question->probe,
+			);
 		}
 
 		$recipients = array_values(
@@ -248,12 +239,6 @@ class IntegriqConsentClient {
 			)
 		);
 
-		$question = new ConsentQuestion(
-			ask: new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent),
-			correlationId: $correlationId,
-			inReplyTo: $inReplyTo,
-			probe: $probe,
-		);
 		$decisions = [];
 		foreach (array_chunk($recipients, self::CHUNK) as $chunk) {
 			$decisions += $this->decideChunk(question: $question, chunk: $chunk);
@@ -269,91 +254,66 @@ class IntegriqConsentClient {
 	 * and integriq writes nothing to its decision log. An older integriq ignores the
 	 * flag and logs the ask, which is the safe way to fail.
 	 *
-	 * @param string $channel         The channel.
-	 * @param string $category        The category.
-	 * @param bool   $requiresConsent Whether consent is required.
-	 * @param string $address         The address.
-	 * @param string $contactRef      The pipelinq contact UUID, or empty.
+	 * @param ConsentAsk          $ask       The channel, category and whether consent is required.
+	 * @param array<string,mixed> $recipient `{address, contactRef?}`; the contact ref is the pipelinq contact UUID.
 	 *
 	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
 	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
-	 *
 	 * @spec openspec/changes/latest-state-probe/specs/consent-in-integriq/spec.md#requirement-lateststate-asks-integriq-as-a-probe-req-cii-007
 	 */
-	public function probeOne(
-		string $channel,
-		string $category,
-		bool $requiresConsent,
-		string $address,
-		string $contactRef = '',
-	): array {
-		if (trim($address) === '') {
-			return $this->unavailable(channel: $channel, category: $category, why: 'the contact has no address on this channel');
-		}
-
-		$recipient = array_filter(
-			['address' => $address, 'contactRef' => $contactRef],
-			static fn (string $value): bool => $value !== ''
+	public function probeOne(ConsentAsk $ask, array $recipient): array {
+		return $this->askOne(
+			question: new ConsentQuestion(ask: $ask, correlationId: '', inReplyTo: null, probe: true),
+			recipient: ['address' => (string)($recipient['address'] ?? ''), 'contactRef' => (string)($recipient['contactRef'] ?? '')]
 		);
-
-		$decisions = $this->decide(
-			channel: $channel,
-			category: $category,
-			requiresConsent: $requiresConsent,
-			recipients: [$recipient],
-			probe: true
-		);
-
-		return ($decisions[$address] ?? $this->unavailable(channel: $channel, category: $category, why: 'no answer for this recipient'));
 	}//end probeOne()
 
 	/**
 	 * Ask for one recipient.
 	 *
-	 * @param string      $channel         The channel.
-	 * @param string      $category        The category.
-	 * @param bool        $requiresConsent Whether consent is required.
-	 * @param string      $address         The address as it will be used.
-	 * @param string      $contactRef      The pipelinq contact UUID, or empty.
-	 * @param string|null $inReplyTo       The inbound message a `reply` answers.
-	 * @param string      $listRef         The list, for a list send.
+	 * @param ConsentAsk          $ask       The channel, category and whether consent is required.
+	 * @param array<string,mixed> $recipient `{address, contactRef?, listRef?, inReplyTo?}`: the address as it will
+	 *                                       be used, the pipelinq contact UUID, the list for a list send, and the
+	 *                                       inbound message a `reply` answers.
 	 *
 	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
 	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
-	 *
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 */
-	public function decideOne(
-		string $channel,
-		string $category,
-		bool $requiresConsent,
-		string $address,
-		string $contactRef = '',
-		?string $inReplyTo = null,
-		string $listRef = '',
-	): array {
+	public function decideOne(ConsentAsk $ask, array $recipient): array {
+		return $this->askOne(
+			question: new ConsentQuestion(ask: $ask, correlationId: '', inReplyTo: ($recipient['inReplyTo'] ?? null), probe: false),
+			recipient: [
+				'address' => (string)($recipient['address'] ?? ''),
+				'contactRef' => (string)($recipient['contactRef'] ?? ''),
+				'listRef' => (string)($recipient['listRef'] ?? ''),
+			]
+		);
+	}//end decideOne()
+
+	/**
+	 * Put one question about one recipient; fail closed when there is no address or no answer.
+	 *
+	 * @param ConsentQuestion      $question  The question.
+	 * @param array<string,string> $recipient The address and refs; empty refs are left out.
+	 *
+	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
+	 */
+	private function askOne(ConsentQuestion $question, array $recipient): array {
+		$ask = $question->ask;
+		$address = $recipient['address'];
 		if (trim($address) === '') {
 			// No address to ask about: integriq cannot answer, so fail closed.
-			return $this->unavailable(channel: $channel, category: $category, why: 'the contact has no address on this channel');
+			return $this->unavailable(channel: $ask->channel, category: $ask->category, why: 'the contact has no address on this channel');
 		}
 
-		$recipient = array_filter(
-			['address' => $address, 'contactRef' => $contactRef, 'listRef' => $listRef],
-			static fn (string $value): bool => $value !== ''
-		);
-
 		$decisions = $this->decide(
-			channel: $channel,
-			category: $category,
-			requiresConsent: $requiresConsent,
-			recipients: [$recipient],
-			inReplyTo: $inReplyTo
+			question: $question,
+			recipients: [array_filter($recipient, static fn (string $value): bool => $value !== '')]
 		);
 
-		return ($decisions[$address] ?? $this->unavailable(channel: $channel, category: $category, why: 'no answer for this recipient'));
-	}//end decideOne()
+		return ($decisions[$address] ?? $this->unavailable(channel: $ask->channel, category: $ask->category, why: 'no answer for this recipient'));
+	}//end askOne()
 
 	/**
 	 * Hand integriq one wish: an opt-out, a consent or a contact erasure.

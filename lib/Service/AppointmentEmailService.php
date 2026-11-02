@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -487,11 +488,11 @@ class AppointmentEmailService {
 	private function askIntegriq(array $context): array {
 		$this->lastRefusal = null;
 		$decision = $this->integriq->decideOne(
-			channel: 'email',
-			category: IntegriqConsentClient::CATEGORY_REMINDER,
-			requiresConsent: false,
-			address: (string)$context['recipientEmail'],
-			contactRef: (string)($context['booking']['customerId'] ?? ''),
+			ask: new ConsentAsk(channel: 'email', category: IntegriqConsentClient::CATEGORY_REMINDER, requiresConsent: false),
+			recipient: [
+				'address' => (string)$context['recipientEmail'],
+				'contactRef' => (string)($context['booking']['customerId'] ?? ''),
+			],
 		);
 		if ($decision['send'] === true) {
 			return $decision;

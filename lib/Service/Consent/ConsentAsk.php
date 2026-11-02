@@ -47,4 +47,15 @@ class ConsentAsk {
 		public readonly bool $requiresConsent,
 	) {
 	}//end __construct()
+
+	/**
+	 * The question for a plain send: a generated correlation id, no reply, no probe.
+	 *
+	 * @return ConsentQuestion The question.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	public function question(): ConsentQuestion {
+		return new ConsentQuestion(ask: $this, correlationId: '', inReplyTo: null, probe: false);
+	}//end question()
 }//end class

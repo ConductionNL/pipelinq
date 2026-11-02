@@ -135,13 +135,10 @@ class ConsentService {
 				$category = IntegriqConsentClient::CATEGORY_REPLY;
 			}
 
-			return $this->ask(
-				contactId: $contactId,
-				channel: $channel,
-				category: $category,
-				requiresConsent: false,
-				address: $address,
-				inReplyTo: $inReplyTo
+			$subject = new ConsentSubject(contactId: $contactId, channel: $channel, address: $address);
+			return $this->integriq->decideOne(
+				ask: $subject->askFor(category: $category, requiresConsent: false),
+				recipient: $this->recipientFor(subject: $subject, inReplyTo: $inReplyTo)
 			)['send'];
 		}
 
@@ -182,12 +179,10 @@ class ConsentService {
 		}
 
 		if ($this->integriq->isCutover() === true) {
-			return $this->ask(
-				contactId: $contactId,
-				channel: $channel,
-				category: IntegriqConsentClient::CATEGORY_SERVICE,
-				requiresConsent: true,
-				address: $address
+			$subject = new ConsentSubject(contactId: $contactId, channel: $channel, address: $address);
+			return $this->integriq->decideOne(
+				ask: $subject->askFor(category: IntegriqConsentClient::CATEGORY_SERVICE, requiresConsent: true),
+				recipient: $this->recipientFor(subject: $subject, inReplyTo: null)
 			)['send'];
 		}
 
@@ -229,12 +224,10 @@ class ConsentService {
 		if ($this->integriq->isCutover() === true) {
 			// Showing a state is not a send: ask as a probe, so integriq's
 			// seven-year decision log only holds real sends.
+			$subject = new ConsentSubject(contactId: $contactId, channel: $channel, address: '');
 			$decision = $this->integriq->probeOne(
-				channel: $channel,
-				category: IntegriqConsentClient::CATEGORY_SERVICE,
-				requiresConsent: true,
-				address: $this->addresses->addressFor(contactId: $contactId, channel: $channel),
-				contactRef: $contactId
+				ask: $subject->askFor(category: IntegriqConsentClient::CATEGORY_SERVICE, requiresConsent: true),
+				recipient: $this->recipientFor(subject: $subject, inReplyTo: null)
 			);
 			if ($decision['code'] === IntegriqConsentClient::CODE_OPTED_OUT) {
 				return 'opted-out';
@@ -514,40 +507,21 @@ class ConsentService {
 	}//end replayPending()
 
 	/**
-	 * Ask integriq about one contact on one channel.
+	 * The recipient integriq is asked about: the subject's address, looked up when empty.
 	 *
-	 * @param string      $contactId       Contact UUID.
-	 * @param string      $channel         The channel.
-	 * @param string      $category        The category.
-	 * @param bool        $requiresConsent Whether consent is required.
-	 * @param string      $address         The address; looked up when empty.
-	 * @param string|null $inReplyTo       The inbound message, for a reply.
+	 * @param ConsentSubject $subject   The contact, channel and address.
+	 * @param string|null    $inReplyTo The inbound message, for a reply.
 	 *
-	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
+	 * @return array{address:string,contactRef:string,inReplyTo:string|null} The recipient.
 	 */
-	private function ask(
-		string $contactId,
-		string $channel,
-		string $category,
-		bool $requiresConsent,
-		string $address = '',
-		?string $inReplyTo = null,
-	): array {
+	private function recipientFor(ConsentSubject $subject, ?string $inReplyTo): array {
+		$address = $subject->address;
 		if ($address === '') {
-			$address = $this->addresses->addressFor(contactId: $contactId, channel: $channel);
+			$address = $this->addresses->addressFor(contactId: $subject->contactId, channel: $subject->channel);
 		}
 
-		return $this->integriq->decideOne(
-			channel: $channel,
-			category: $category,
-			requiresConsent: $requiresConsent,
-			address: $address,
-			contactRef: $contactId,
-			inReplyTo: $inReplyTo,
-		);
-	}//end ask()
+		return ['address' => $address, 'contactRef' => $subject->contactId, 'inReplyTo' => $inReplyTo];
+	}//end recipientFor()
 
 	/**
 	 * Record one wish: in integriq after the cutover, otherwise or when integriq did not store it in pipelinq.
