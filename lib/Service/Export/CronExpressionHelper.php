@@ -367,44 +367,63 @@ class CronExpressionHelper {
 	 * @return bool True when the value matches.
 	 */
 	private function partMatches(string $part, int $value, array $bounds): bool {
-		$step = 1;
-		if (str_contains($part, '/') === true) {
-			[$range, $stepText] = explode('/', $part, 2);
-			if (ctype_digit($stepText) === false || (int)$stepText < 1) {
-				return false;
-			}
-
-			$step = (int)$stepText;
-			$part = $range;
-		}
-
-		$low = $bounds[0];
-		$high = $bounds[1];
-		if ($part !== '*') {
-			if (str_contains($part, '-') === true) {
-				[$lowText, $highText] = explode('-', $part, 2);
-				if (ctype_digit($lowText) === false || ctype_digit($highText) === false) {
-					return false;
-				}
-
-				$low = (int)$lowText;
-				$high = (int)$highText;
-			} else {
-				if (ctype_digit($part) === false) {
-					return false;
-				}
-
-				$low = (int)$part;
-				$high = (int)$part;
-			}
-		}
-
-		if ($value < $low || $value > $high) {
+		$split = $this->splitStep(part: $part);
+		if ($split === null) {
 			return false;
 		}
 
-		return ((($value - $low) % $step) === 0);
+		$range = $this->rangeOf(range: $split[0], bounds: $bounds);
+		if ($range === null || $value < $range[0] || $value > $range[1]) {
+			return false;
+		}
+
+		return ((($value - $range[0]) % $split[1]) === 0);
 	}//end partMatches()
+
+	/**
+	 * Split a field part into its range and its step (1 without a step suffix).
+	 *
+	 * @param string $part The field part.
+	 *
+	 * @return array{0: string, 1: int}|null Null when the step is not a positive integer.
+	 */
+	private function splitStep(string $part): ?array {
+		if (str_contains($part, '/') === false) {
+			return [$part, 1];
+		}
+
+		[$range, $stepText] = explode('/', $part, 2);
+		if (ctype_digit($stepText) === false || (int)$stepText < 1) {
+			return null;
+		}
+
+		return [$range, (int)$stepText];
+	}//end splitStep()
+
+	/**
+	 * The inclusive low and high value of a range: a wildcard, `a-b` or one integer.
+	 *
+	 * @param string $range The range text, without a step suffix.
+	 * @param array{0: int, 1: int} $bounds The field bounds a wildcard spans.
+	 *
+	 * @return array{0: int, 1: int}|null Null when the range is not numeric.
+	 */
+	private function rangeOf(string $range, array $bounds): ?array {
+		if ($range === '*') {
+			return $bounds;
+		}
+
+		$ends = explode('-', $range, 2);
+		if (count($ends) === 1) {
+			$ends[] = $range;
+		}
+
+		if (ctype_digit($ends[0]) === false || ctype_digit($ends[1]) === false) {
+			return null;
+		}
+
+		return [(int)$ends[0], (int)$ends[1]];
+	}//end rangeOf()
 
 	/**
 	 * Validate one cron field against inclusive bounds.
@@ -440,37 +459,12 @@ class CronExpressionHelper {
 	 * @return bool True when valid.
 	 */
 	private function isFieldPartValid(string $part, array $bounds): bool {
-		$step = 1;
-		if (str_contains($part, '/') === true) {
-			[$range, $stepText] = explode('/', $part, 2);
-			if (ctype_digit($stepText) === false || (int)$stepText < 1) {
-				return false;
-			}
-
-			$step = (int)$stepText;
-			$part = $range;
-		}
-
-		if ($part === '*') {
-			return $step >= 1;
-		}
-
-		if (str_contains($part, '-') === true) {
-			[$lowText, $highText] = explode('-', $part, 2);
-			if (ctype_digit($lowText) === false || ctype_digit($highText) === false) {
-				return false;
-			}
-
-			$low = (int)$lowText;
-			$high = (int)$highText;
-			return $low >= $bounds[0] && $high <= $bounds[1] && $low <= $high;
-		}
-
-		if (ctype_digit($part) === false) {
+		$split = $this->splitStep(part: $part);
+		if ($split === null) {
 			return false;
 		}
 
-		$value = (int)$part;
-		return $value >= $bounds[0] && $value <= $bounds[1];
+		$range = $this->rangeOf(range: $split[0], bounds: $bounds);
+		return $range !== null && $range[0] >= $bounds[0] && $range[1] <= $bounds[1] && $range[0] <= $range[1];
 	}//end isFieldPartValid()
 }//end class
