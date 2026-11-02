@@ -14,12 +14,18 @@ The client page's side column SHALL show, after Relations, a resident's coming a
 - THEN the Appointments card reads "Locatiebezoek Parkstraat, <day>, 14:00" with "Confirmed · with Pieter Jansen" under it
 
 ### Requirement: The client page says what the client does business on
-GET /api/clients/{id}/business SHALL read the client with the caller's rights and answer sentences for its open leads, running contracts, projects in planninq and invoices in shillinq, leaving out the sentence of an app that is not installed, and the address of shillinq when it is.
+GET /api/clients/{id}/business SHALL read the client with the caller's rights and answer sentences for its open leads, running contracts, projects in planninq and invoices in shillinq, leaving out the sentence of an app that is not installed, and the address of shillinq when it is. The invoice sentence SHALL read shillinq's invoices with the caller's rights. A caller who may not read shillinq's invoices gets no invoice sentence.
 
 #### Scenario: A resident with a planned project and no invoices
 - GIVEN a resident with one planned project and no invoices in shillinq
 - WHEN the business card loads
 - THEN it reads "1 project: <title>, planned. No invoices for this resident." with a link Further in Shillinq
+
+#### Scenario: A reader without the right to read invoices
+@e2e exclude needs a second account without shillinq roles, which the shared e2e instance does not have; ClientBusinessInvoiceRightsTest asserts it in PHPUnit through the controller
+- GIVEN a resident with two invoices in shillinq, and a reader who may not read shillinq's invoices
+- WHEN the business card loads for that reader
+- THEN it has no invoice sentence
 
 ### Requirement: The knowledge base card suggests articles for the client's latest subject
 The Knowledge base card SHALL show, under the empty search, the two best knowledge base articles for the subject of the client's most recent open ticket or contact moment, and nothing when there is no such subject or no match.
