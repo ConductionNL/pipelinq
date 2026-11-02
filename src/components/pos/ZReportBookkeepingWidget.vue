@@ -345,6 +345,8 @@ export default {
 	font-weight: 700;
 }
 
+/* As board PqZRapport draws its card tables: 14px on the normal line, rows
+   12px with 18px outer insets and a rule under every row. */
 .z-bookkeeping__table {
 	width: 100%;
 	border: 1px solid var(--color-border);
@@ -352,15 +354,17 @@ export default {
 	border-collapse: separate;
 	border-spacing: 0;
 	overflow: hidden;
+	font-size: 14px;
+	line-height: normal;
 }
 
 .z-bookkeeping__table th,
 .z-bookkeeping__table td {
-	padding: 10px 18px;
 	text-align: start;
 }
 
 .z-bookkeeping__table th {
+	padding: 10px 12px;
 	background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
 	color: var(--color-text-maxcontrast);
 	font-size: 14px;
@@ -368,8 +372,17 @@ export default {
 	line-height: 1.2;
 }
 
-.z-bookkeeping__table tbody tr + tr td {
-	border-top: 1px solid var(--color-border);
+.z-bookkeeping__table td {
+	padding: 12px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.z-bookkeeping__table :is(th, td):first-child {
+	padding-inline-start: 18px;
+}
+
+.z-bookkeeping__table :is(th, td):last-child {
+	padding-inline-end: 18px;
 }
 
 .z-bookkeeping__table .z-bookkeeping__amount {

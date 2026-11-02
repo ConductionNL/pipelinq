@@ -58,14 +58,14 @@ describe('the four sections', () => {
 })
 
 describe('the sections as board PqZoekinzicht draws them (pl3 10, 11, 13-24)', () => {
-	it('draws the table heads on white with the sorted label in the muted ink', () => {
-		expect(hub).toMatch(/--cn-board-table-head-bg: var\(--color-main-background\)/)
+	it('draws the table heads on the board head ground with the sorted label in the muted ink', () => {
+		expect(hub).not.toMatch(/--cn-board-table-head-bg: var\(--color-main-background\)/)
 		expect(hub).toMatch(/th\[aria-sort\] \.cn-table-header__sort\)[\s\S]*?color: inherit/)
 	})
 
-	it('draws the competitor watches as one bordered table without a sub-heading when embedded', () => {
+	it('draws the competitor watches as one framed table without a sub-heading when embedded', () => {
 		expect(competitors).toMatch(/<h3 v-if="!embedded">\{\{ t\('pipelinq', 'Watches'\) \}\}<\/h3>/)
-		expect(competitors).toMatch(/\.competitors--embedded[\s\S]*?\.competitors__scroll[\s\S]*?border: 1px solid var\(--color-border\)/)
+		expect(competitors).toMatch(/<CnDataTable[^>]*\bframed\b/)
 	})
 
 	it('shows the outcome as a status pill and Run now as a secondary button', () => {

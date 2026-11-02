@@ -38,6 +38,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
+use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -122,17 +124,8 @@ class BerichtenboxService {
 	/**
 	 * Queue an outbound message for a zaak status transition.
 	 *
-	 * @param string $caseId External zaak id.
-	 * @param string|null $interactionId Linked Contactmoment id (optional).
-	 * @param string $status New zaak status.
-	 * @param string $bsn Burger's plaintext BSN (validated upstream).
-	 * @param array|null $templateOverride Optional explicit BerichtenboxTemplate
-	 *                                     payload (skips registry lookup).
-	 * @param array $extraVariables Additional template variables
-	 *                              (e.g. gemeente, deadline).
-	 * @param array $attachments Attachment array per BBK 1.7
-	 *                           (filename / mime / sizeBytes
-	 *                           / openregisterFileRef).
+	 * @param CaseStatusMessage $message The case, its contact moment, the new status and the BSN.
+	 * @param MessageOptions    $options An explicit template, extra variables and attachments.
 	 *
 	 * @return array The persisted BerichtenboxMessage object.
 	 *
@@ -140,67 +133,61 @@ class BerichtenboxService {
 	 *
 	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
-	public function queueOutboundMessage(
-		string $caseId,
-		?string $interactionId,
-		string $status,
-		string $bsn,
-		?array $templateOverride = null,
-		array $extraVariables = [],
-		array $attachments = [],
-	): array {
-		$tenantId = $this->resolveTenantId();
-		$template = ($templateOverride ?? $this->findTemplate(
-			caseType: (string)($extraVariables['caseType'] ?? ''),
-			status: $status,
-			language: (string)($extraVariables['language'] ?? 'nl')
-		));
-		$template = ($template ?? $this->fallbackTemplate());
-
-		$variables = array_merge(
-			[
-				'caseId' => $caseId,
-				'status' => $status,
-				'gemeente' => $this->appConfig->getValueString(
-					Application::APP_ID,
-					'tenant_display_name',
-					'Gemeente'
-				),
-				'deadline' => '',
-				'messageId' => $this->logius->newUuidV4(),
-			],
-			$extraVariables
+	public function queueOutboundMessage(CaseStatusMessage $message, MessageOptions $options = new MessageOptions()): array {
+		$tenantId  = $this->resolveTenantId();
+		$template  = $this->templateFor(message: $message, options: $options);
+		$variables = $options->variablesOver(
+			defaults: $message->variables(
+				gemeente: $this->appConfig->getValueString(Application::APP_ID, 'tenant_display_name', 'Gemeente'),
+				messageId: $this->logius->newUuidV4()
+			)
 		);
 
-		$rendered = $this->templateRenderer->render($template, $variables);
-
+		$rendered    = $this->templateRenderer->render($template, $variables);
 		$messageUuid = $variables['messageId'];
-		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);
+		$bsnHash     = $this->encryption->hashBsn($message->bsn, $tenantId);
 
-		$payload = [
-			'uuid' => $messageUuid,
-			'bsn' => $this->encryption->encrypt($bsn, $tenantId),
-			'bsnHash' => $bsnHash,
-			'interactionId' => ($interactionId ?? ''),
-			'caseId' => $caseId,
-			'subject' => $rendered['subject'],
-			'body' => $rendered['body'],
-			'templateId' => (string)($template['id'] ?? $template['uuid'] ?? 'inline'),
-			'attachments' => $attachments,
-			'deliveryStatus' => 'queued',
-			'retryCount' => 0,
-			'mailboxAvailable' => null,
-		];
-
-		$saved = $this->saveMessage(payload: $payload);
+		$saved = $this->saveMessage(
+			payload: [
+				'uuid' => $messageUuid,
+				'bsn' => $this->encryption->encrypt($message->bsn, $tenantId),
+				'bsnHash' => $bsnHash,
+				'interactionId' => ($message->interactionId ?? ''),
+				'caseId' => $message->caseId,
+				'subject' => $rendered['subject'],
+				'body' => $rendered['body'],
+				'templateId' => (string)($template['id'] ?? $template['uuid'] ?? 'inline'),
+				'attachments' => $options->attachments,
+				'deliveryStatus' => 'queued',
+				'retryCount' => 0,
+				'mailboxAvailable' => null,
+			]
+		);
 		$this->auditLogger->logQueued(
 			messageId: $messageUuid,
 			payloadHash: $this->auditLogger->hashPayload($rendered['body']),
-			retentionUntil: $this->auditLogger->calculateRetentionUntil((string)($extraVariables['caseType'] ?? ''))
+			retentionUntil: $this->auditLogger->calculateRetentionUntil($options->caseType())
 		);
 
 		return $saved;
 	}//end queueOutboundMessage()
+
+	/**
+	 * The explicit template, else the registry's template for the case type,
+	 * status and language, else the fallback template.
+	 *
+	 * @param CaseStatusMessage $message The message.
+	 * @param MessageOptions    $options Its options.
+	 *
+	 * @return array The template.
+	 */
+	private function templateFor(CaseStatusMessage $message, MessageOptions $options): array {
+		return ($options->templateOverride ?? $this->findTemplate(
+			caseType: $options->caseType(),
+			status: $message->status,
+			language: $options->language()
+		) ?? $this->fallbackTemplate());
+	}//end templateFor()
 
 	/**
 	 * Dispatch all queued messages whose nextRetryAt is past (or unset).
