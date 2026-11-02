@@ -91,15 +91,15 @@ class SocialAdapterRegistryTest extends TestCase {
 		return new SocialAdapterRegistry(
 			gateway: $gateway,
 			independent: new IndependentNetworkAdapters(
-				mastodon: new MastodonAdapter($gateway),
-				bluesky: new BlueskyAdapter($gateway),
-				linkedin: new LinkedInAdapter($gateway),
-				xNetwork: new XAdapter($gateway),
+				mastodon: new MastodonAdapter(gateway: $gateway),
+				bluesky: new BlueskyAdapter(gateway: $gateway),
+				linkedin: new LinkedInAdapter(gateway: $gateway),
+				xNetwork: new XAdapter(gateway: $gateway),
 			),
 			meta: new MetaNetworkAdapters(
-				facebook: new FacebookPageAdapter($gateway),
-				instagram: new InstagramBusinessAdapter($gateway),
-				threads: new ThreadsAdapter($gateway),
+				facebook: new FacebookPageAdapter(gateway: $gateway),
+				instagram: new InstagramBusinessAdapter(gateway: $gateway),
+				threads: new ThreadsAdapter(gateway: $gateway),
 			),
 		);
 	}
