@@ -935,13 +935,13 @@
             }
         ]
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / empty array": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / empty array": {
         "array": []
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / false": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / false": {
         "array": []
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / getObject array": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / getObject array": {
         "array": [
             {
                 "key": "g",
@@ -951,13 +951,13 @@
             }
         ]
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / getObject string": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / getObject string": {
         "array": []
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / int": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / int": {
         "array": []
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / jsonSerialize array": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / jsonSerialize array": {
         "array": [
             {
                 "key": "id",
@@ -986,7 +986,7 @@
             }
         ]
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / jsonSerialize array, getObject array": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / jsonSerialize array, getObject array": {
         "array": [
             {
                 "key": "j",
@@ -996,13 +996,13 @@
             }
         ]
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / jsonSerialize null": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / jsonSerialize null": {
         "array": []
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / jsonSerialize string": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / jsonSerialize string": {
         "array": []
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / jsonSerialize string, getObject array": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / jsonSerialize string, getObject array": {
         "array": [
             {
                 "key": "g",
@@ -1012,7 +1012,7 @@
             }
         ]
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / list": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / list": {
         "array": [
             {
                 "key": 0,
@@ -1028,7 +1028,7 @@
             }
         ]
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / nested array with object": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / nested array with object": {
         "array": [
             {
                 "key": "a",
@@ -1051,19 +1051,19 @@
             }
         ]
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / null": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / null": {
         "array": []
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / stdClass with properties": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / stdClass with properties": {
         "array": []
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / string": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / string": {
         "array": []
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / toArray method array": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / toArray method array": {
         "array": []
     },
-    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / toArray method string": {
+    "OCA\\Pipelinq\\Service\\CampaignSiteTraffic / toArray method string": {
         "array": []
     },
     "OCA\\Pipelinq\\Service\\ChannelProviderRepository / empty array": {
