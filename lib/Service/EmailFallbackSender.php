@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
@@ -141,14 +142,14 @@ class EmailFallbackSender {
 		// (default service). A refusal is logged; the Berichtenbox status is
 		// left as it is by the caller.
 		$this->lastRefusal = null;
-		$category = $this->categoryOf(message: $message);
+		$ask = new ConsentAsk(channel: 'email', category: $this->categoryOf(message: $message), requiresConsent: false);
 
-		$decision = $this->integriq->decideOne(channel: 'email', category: $category, requiresConsent: false, address: $toEmail);
+		$decision = $this->integriq->decideOne(ask: $ask, recipient: ['address' => $toEmail]);
 		if ($decision['send'] === false) {
 			$this->lastRefusal = ['code' => $decision['code'], 'reason' => $decision['reason']];
 			$this->logger->warning(
 				'Berichtenbox fallback email not sent: integriq refused it.',
-				['messageId' => (string)($message['uuid'] ?? ''), 'code' => $decision['code'], 'category' => $category]
+				['messageId' => (string)($message['uuid'] ?? ''), 'code' => $decision['code'], 'category' => $ask->category]
 			);
 			return false;
 		}

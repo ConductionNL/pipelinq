@@ -1,0 +1,1369 @@
+{
+    "fallback template": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "Status update voor zaak ",
+            "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+            "templateId": "fallback",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "paspoort",
+                            "status": "afgehandeld",
+                            "language": "nl"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "Status update voor zaak ",
+                        "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+                        "templateId": "fallback",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": "paspoort"
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>)",
+                    "retentionUntil": "2040-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "template from the registry": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "Zaak Z-1: afgehandeld",
+            "body": "Beste, Gemeente Amsterdam meldt afgehandeld voor Z-1 () uuid-1",
+            "templateId": "tpl-uuid",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "paspoort",
+                            "status": "afgehandeld",
+                            "language": "en"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "Zaak Z-1: afgehandeld",
+                        "body": "Beste, Gemeente Amsterdam meldt afgehandeld voor Z-1 () uuid-1",
+                        "templateId": "tpl-uuid",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "Beste, Gemeente Amsterdam meldt afgehandeld voor Z-1 () uuid-1"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": "paspoort"
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(Beste, Gemeente Amsterdam meldt afgehandeld voor Z-1 () uuid-1)",
+                    "retentionUntil": "2040-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "registry template with uuid only": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "S",
+            "body": "B Z-1",
+            "templateId": "tpl-uuid",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "",
+                            "status": "afgehandeld",
+                            "language": "nl"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "S",
+                        "body": "B Z-1",
+                        "templateId": "tpl-uuid",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "B Z-1"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(B Z-1)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "registry template without ids": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "S",
+            "body": "B",
+            "templateId": "inline",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "",
+                            "status": "afgehandeld",
+                            "language": "nl"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "S",
+                        "body": "B",
+                        "templateId": "inline",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "B"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(B)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "override skips the registry": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "O afgehandeld",
+            "body": "Override Z-1",
+            "templateId": "inline",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "O afgehandeld",
+                        "body": "Override Z-1",
+                        "templateId": "inline",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "Override Z-1"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(Override Z-1)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "override with an id and a uuid": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "S",
+            "body": "B",
+            "templateId": "o-id",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "S",
+                        "body": "B",
+                        "templateId": "o-id",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "B"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(B)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "no interaction": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "",
+            "caseId": "Z-1",
+            "subject": "Status update voor zaak ",
+            "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+            "templateId": "fallback",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "",
+                            "status": "afgehandeld",
+                            "language": "nl"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "",
+                        "caseId": "Z-1",
+                        "subject": "Status update voor zaak ",
+                        "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+                        "templateId": "fallback",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "extra variables override defaults": {
+        "result": {
+            "uuid": "m-given",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "Zaak Z-1: afgehandeld",
+            "body": "Beste, Utrecht meldt afgehandeld voor Z-1 (2026-12-01) m-given",
+            "templateId": "tpl-uuid",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "m-given",
+                "name": "m-given",
+                "register": null,
+                "schema": null
+            },
+            "id": "m-given"
+        },
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "",
+                            "status": "afgehandeld",
+                            "language": "nl"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "m-given",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "Zaak Z-1: afgehandeld",
+                        "body": "Beste, Utrecht meldt afgehandeld voor Z-1 (2026-12-01) m-given",
+                        "templateId": "tpl-uuid",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "m-given"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "Beste, Utrecht meldt afgehandeld voor Z-1 (2026-12-01) m-given"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "m-given",
+                    "payloadHash": "sha(Beste, Utrecht meldt afgehandeld voor Z-1 (2026-12-01) m-given)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "attachments": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "Status update voor zaak ",
+            "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+            "templateId": "fallback",
+            "attachments": [
+                {
+                    "filename": "a.pdf",
+                    "mime": "application/pdf",
+                    "sizeBytes": 10,
+                    "openregisterFileRef": "f-1"
+                }
+            ],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "",
+                            "status": "afgehandeld",
+                            "language": "nl"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "Status update voor zaak ",
+                        "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+                        "templateId": "fallback",
+                        "attachments": [
+                            {
+                                "filename": "a.pdf",
+                                "mime": "application/pdf",
+                                "sizeBytes": 10,
+                                "openregisterFileRef": "f-1"
+                            }
+                        ],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "no tenant configured": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|default)",
+            "bsnHash": "hash(123456782|default)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "Status update voor zaak ",
+            "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+            "templateId": "fallback",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "",
+                            "status": "afgehandeld",
+                            "language": "nl"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "default"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "default"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|default)",
+                        "bsnHash": "hash(123456782|default)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "Status update voor zaak ",
+                        "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+                        "templateId": "fallback",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "no display name configured": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "Zaak Z-1: afgehandeld",
+            "body": "Beste, Gemeente meldt afgehandeld voor Z-1 () uuid-1",
+            "templateId": "tpl-uuid",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "",
+                            "status": "afgehandeld",
+                            "language": "nl"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "Zaak Z-1: afgehandeld",
+                        "body": "Beste, Gemeente meldt afgehandeld voor Z-1 () uuid-1",
+                        "templateId": "tpl-uuid",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "Beste, Gemeente meldt afgehandeld voor Z-1 () uuid-1"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(Beste, Gemeente meldt afgehandeld voor Z-1 () uuid-1)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "no template schema": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "Status update voor zaak ",
+            "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+            "templateId": "fallback",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "Status update voor zaak ",
+                        "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+                        "templateId": "fallback",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "no register": {
+        "threw": "RuntimeException",
+        "message": "BerichtenboxMessage register or schema not configured.",
+        "calls": [
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            }
+        ]
+    },
+    "registry lookup throws": {
+        "result": {
+            "uuid": "uuid-1",
+            "bsn": "enc(123456782|tenant-a)",
+            "bsnHash": "hash(123456782|tenant-a)",
+            "interactionId": "cm-1",
+            "caseId": "Z-1",
+            "subject": "Status update voor zaak ",
+            "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+            "templateId": "fallback",
+            "attachments": [],
+            "deliveryStatus": "queued",
+            "retryCount": 0,
+            "mailboxAvailable": null,
+            "stored": true,
+            "@self": {
+                "id": "uuid-1",
+                "name": "uuid-1",
+                "register": null,
+                "schema": null
+            },
+            "id": "uuid-1"
+        },
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "",
+                            "status": "afgehandeld",
+                            "language": "nl"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "Status update voor zaak ",
+                        "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+                        "templateId": "fallback",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            },
+            {
+                "call": "hashPayload",
+                "args": {
+                    "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>"
+                }
+            },
+            {
+                "call": "calculateRetentionUntil",
+                "args": {
+                    "caseType": ""
+                }
+            },
+            {
+                "call": "logQueued",
+                "args": {
+                    "messageId": "uuid-1",
+                    "payloadHash": "sha(<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>)",
+                    "retentionUntil": "2036-01-01T00:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "save throws": {
+        "threw": "RuntimeException",
+        "message": "save failed",
+        "calls": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg-1",
+                            "schema": "sch-tpl",
+                            "caseType": "",
+                            "status": "afgehandeld",
+                            "language": "nl"
+                        },
+                        "limit": 1
+                    }
+                }
+            },
+            {
+                "call": "newUuidV4",
+                "args": []
+            },
+            {
+                "call": "hashBsn",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "encrypt",
+                "args": {
+                    "plaintext": "123456782",
+                    "tenantId": "tenant-a"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "uuid-1",
+                        "bsn": "enc(123456782|tenant-a)",
+                        "bsnHash": "hash(123456782|tenant-a)",
+                        "interactionId": "cm-1",
+                        "caseId": "Z-1",
+                        "subject": "Status update voor zaak ",
+                        "body": "<p>Geachte burger,</p><p>De status van uw zaak  is nu: <strong>afgehandeld</strong>.</p><p>Met vriendelijke groet,<br/>Gemeente Amsterdam</p>",
+                        "templateId": "fallback",
+                        "attachments": [],
+                        "deliveryStatus": "queued",
+                        "retryCount": 0,
+                        "mailboxAvailable": null
+                    },
+                    "register": "reg-1",
+                    "schema": "sch-msg",
+                    "uuid": "uuid-1"
+                }
+            }
+        ]
+    }
+}

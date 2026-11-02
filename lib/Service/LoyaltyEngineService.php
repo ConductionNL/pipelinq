@@ -30,6 +30,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Loyalty\PointsCreditRun;
+use OCA\Pipelinq\Service\Loyalty\PointsGrant;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
@@ -236,13 +238,8 @@ class LoyaltyEngineService {
 		}
 
 		return $this->creditAndFinalize(
-			programmeId: $programmeId,
-			accountId: $accountId,
-			rule: $rule,
-			toAward: $toAward,
-			context: $context,
-			transaction: $transaction,
-			multiplier: $multiplier
+			run: new PointsCreditRun(programmeId: $programmeId, accountId: $accountId, transaction: $transaction, context: $context),
+			grant: new PointsGrant(rule: $rule, points: $toAward, multiplier: $multiplier)
 		);
 	}//end awardPointsForActiveAccount()
 
@@ -325,54 +322,37 @@ class LoyaltyEngineService {
 	/**
 	 * Credit the ledger, re-evaluate tier, emit the event, and build the result.
 	 *
-	 * @param string $programmeId The programme UUID.
-	 * @param string $accountId The account UUID.
-	 * @param array<string, mixed> $rule The matched PointsRule.
-	 * @param int $toAward Points to credit.
-	 * @param array<string, mixed> $context The rule-evaluation context.
-	 * @param array<string, mixed> $transaction The transaction context.
-	 * @param float $multiplier The applied tier multiplier.
+	 * @param PointsCreditRun $run   The transaction, programme and account.
+	 * @param PointsGrant     $grant The rule, points and multiplier to credit.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function creditAndFinalize(
-		string $programmeId,
-		string $accountId,
-		array $rule,
-		int $toAward,
-		array $context,
-		array $transaction,
-		float $multiplier,
-	): array {
+	private function creditAndFinalize(PointsCreditRun $run, PointsGrant $grant): array {
 		$ledgerEntry = $this->ledgerService->creditPoints(
-			accountId: $accountId,
-			amount: $toAward,
-			ruleId: $this->extractUuid(object: $rule),
-			sourceDocument: [
-				'transactionId' => $transaction['posTransactionId'] ?? null,
-				'amount' => $context['amount'],
-				'channel' => $context['channel'],
-			],
-			processedBy: (string)($transaction['posTerminalId'] ?? 'system')
+			accountId: $run->accountId,
+			amount: $grant->points,
+			ruleId: $this->extractUuid(object: $grant->rule),
+			sourceDocument: $run->sourceDocument(),
+			processedBy: $run->processedBy()
 		);
 
 		// Re-evaluate tier.
-		$tierResult = $this->tierService->updateTierIfNeeded(accountId: $accountId);
+		$tierResult = $this->tierService->updateTierIfNeeded(accountId: $run->accountId);
 
 		$this->emitCreditedEvent(
-			accountId: $accountId,
-			programmeId: $programmeId,
+			accountId: $run->accountId,
+			programmeId: $run->programmeId,
 			ledgerEntry: $ledgerEntry
 		);
 
 		return [
-			'programmeId' => $programmeId,
-			'accountId' => $accountId,
+			'programmeId' => $run->programmeId,
+			'accountId' => $run->accountId,
 			'status' => 'credited',
-			'points' => $toAward,
-			'ruleId' => $this->extractUuid(object: $rule),
+			'points' => $grant->points,
+			'ruleId' => $this->extractUuid(object: $grant->rule),
 			'tierChanged' => $tierResult['changed'],
-			'multiplier' => $multiplier,
+			'multiplier' => $grant->multiplier,
 		];
 	}//end creditAndFinalize()
 

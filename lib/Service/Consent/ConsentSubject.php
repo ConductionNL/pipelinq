@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Consent;
 
 /**
- * The contact, channel and address one consent wish is recorded for.
+ * The contact, channel and address one consent wish is recorded for, or one send is asked about.
  *
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
  */
@@ -47,4 +47,18 @@ class ConsentSubject {
 		public readonly string $address,
 	) {
 	}//end __construct()
+
+	/**
+	 * The question for a message of one category on this subject's channel.
+	 *
+	 * @param string $category        The message category.
+	 * @param bool   $requiresConsent Whether the send needs recorded consent.
+	 *
+	 * @return ConsentAsk The ask.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	public function askFor(string $category, bool $requiresConsent): ConsentAsk {
+		return new ConsentAsk(channel: $this->channel, category: $category, requiresConsent: $requiresConsent);
+	}//end askFor()
 }//end class

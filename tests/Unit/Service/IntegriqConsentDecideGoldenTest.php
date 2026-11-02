@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
+use OCA\Pipelinq\Service\Consent\ConsentQuestion;
 use OCA\Pipelinq\Service\IntegriqConsentClient;
 use OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq;
 use OCP\IAppConfig;
@@ -135,7 +137,7 @@ class IntegriqConsentDecideGoldenTest extends TestCase {
 			logger: $logger,
 			decisionEvent: ($scenario['event'] ?? IntegriqConsentClient::DECISION_EVENT),
 		);
-		$result = $client->{$scenario['call']}(...$scenario['args']);
+		$result = $this->call(client: $client, scenario: $scenario);
 
 		$questions = [];
 		foreach ($integriq->decisionEvents as $event) {
@@ -159,6 +161,31 @@ class IntegriqConsentDecideGoldenTest extends TestCase {
 
 		return ['result' => $result, 'questions' => $questions, 'warnings' => $this->warnings];
 	}//end runScenario()
+
+	/**
+	 * Call the scenario's method, its arguments put in the client's value objects.
+	 *
+	 * @param IntegriqConsentClient $client   The client.
+	 * @param array<string, mixed>  $scenario The scenario.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function call(IntegriqConsentClient $client, array $scenario): array {
+		$args = $scenario['args'];
+		$ask = new ConsentAsk(channel: $args['channel'], category: $args['category'], requiresConsent: $args['requiresConsent']);
+		if ($scenario['call'] === 'decide') {
+			$question = new ConsentQuestion(
+				ask: $ask,
+				correlationId: ($args['correlationId'] ?? ''),
+				inReplyTo: ($args['inReplyTo'] ?? null),
+				probe: ($args['probe'] ?? false),
+			);
+			return $client->decide(question: $question, recipients: $args['recipients']);
+		}
+
+		$recipient = array_diff_key($args, ['channel' => true, 'category' => true, 'requiresConsent' => true]);
+		return $client->{$scenario['call']}(ask: $ask, recipient: $recipient);
+	}//end call()
 
 	/**
 	 * Distinct recipients, for a send larger than one chunk.
