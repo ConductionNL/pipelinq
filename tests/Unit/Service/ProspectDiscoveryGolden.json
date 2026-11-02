@@ -1,0 +1,1523 @@
+{
+    "cached list": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "8",
+                    "tradeName": "Cached One",
+                    "isActive": true
+                },
+                {
+                    "kvkNumber": "6",
+                    "tradeName": "Cached Two",
+                    "isActive": true
+                }
+            ],
+            "total": 2,
+            "cachedAt": "then",
+            "icpHash": "hash1",
+            "displayed": 2,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            }
+        ]
+    },
+    "cached list refreshed": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 2,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 2,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "3",
+                        "4"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 2,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "container fails": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "5",
+                    "tradeName": "Delta Group",
+                    "isActive": true,
+                    "score": 5
+                },
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "2",
+                    "tradeName": "Existing Client",
+                    "isActive": true,
+                    "score": 2
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 4,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 4,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "log.warning",
+                "args": {
+                    "message": "Failed to fetch existing clients for exclusion",
+                    "context": {
+                        "error": "no ObjectService"
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "5",
+                                "tradeName": "Delta Group",
+                                "isActive": true,
+                                "score": 5
+                            },
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "2",
+                                "tradeName": "Existing Client",
+                                "isActive": true,
+                                "score": 2
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 4,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "inactive kept": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "3",
+                    "tradeName": "Gamma",
+                    "isActive": false,
+                    "score": 3
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 3,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 3,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": false
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": false
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "3",
+                        "4"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": false
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "3",
+                                "tradeName": "Gamma",
+                                "isActive": false,
+                                "score": 3
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 3,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "kvk fails": {
+        "result": {
+            "prospects": [],
+            "total": 0,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 0,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "log.error",
+                "args": {
+                    "message": "KVK API search failed",
+                    "context": {
+                        "error": "kvk down"
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [],
+                        "total": 0,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "kvk only": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 2,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 2,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "3",
+                        "4"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 2,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "limit two": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 2,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 2,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "3",
+                        "4"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 2,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "limit zero": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 2,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 2,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "3",
+                        "4"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 2,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "no inactive setting": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 2,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 2,
+            "icp": {
+                "sbi": [
+                    "62"
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ]
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "3",
+                        "4"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ]
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 2,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "no register": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "5",
+                    "tradeName": "Delta Group",
+                    "isActive": true,
+                    "score": 5
+                },
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "2",
+                    "tradeName": "Existing Client",
+                    "isActive": true,
+                    "score": 2
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 4,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 4,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "5",
+                                "tradeName": "Delta Group",
+                                "isActive": true,
+                                "score": 5
+                            },
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "2",
+                                "tradeName": "Existing Client",
+                                "isActive": true,
+                                "score": 2
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 4,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "not configured": {
+        "result": {
+            "error": "no_icp_configured",
+            "message": "Configure your Ideal Customer Profile in admin settings first",
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": []
+    },
+    "opencorporates fails": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 2,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 2,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "oc.search",
+                "args": {
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "log.warning",
+                "args": {
+                    "message": "OpenCorporates search failed",
+                    "context": {
+                        "error": "oc down"
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "3",
+                        "4"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 2,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "opencorporates merged": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "9",
+                    "tradeName": "Omega",
+                    "isActive": true,
+                    "score": 9
+                },
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 3,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 3,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "oc.search",
+                "args": {
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "3",
+                        "4",
+                        "9"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "9",
+                                "tradeName": "Omega",
+                                "isActive": true,
+                                "score": 9
+                            },
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 3,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "opencorporates not bool": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 2,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 2,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client"
+                        },
+                        "limit": 1000
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "3",
+                        "4"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 2,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    },
+    "openregister missing": {
+        "result": {
+            "prospects": [
+                {
+                    "kvkNumber": "5",
+                    "tradeName": "Delta Group",
+                    "isActive": true,
+                    "score": 5
+                },
+                {
+                    "kvkNumber": "4",
+                    "tradeName": "",
+                    "isActive": true,
+                    "score": 4
+                },
+                {
+                    "kvkNumber": "2",
+                    "tradeName": "Existing Client",
+                    "isActive": true,
+                    "score": 2
+                },
+                {
+                    "kvkNumber": "1",
+                    "tradeName": "Alpha BV",
+                    "isActive": true,
+                    "score": 1
+                }
+            ],
+            "total": 4,
+            "cachedAt": "<now>",
+            "icpHash": "hash1",
+            "displayed": 4,
+            "icp": {
+                "sbi": [
+                    "62"
+                ],
+                "excludeInactive": true
+            }
+        },
+        "events": [
+            {
+                "call": "cache.get",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1"
+                }
+            },
+            {
+                "call": "kvk.search",
+                "args": {
+                    "apiKey": "secret-key",
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "scoreAll",
+                "args": {
+                    "kvkNumbers": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5"
+                    ],
+                    "criteria": {
+                        "sbi": [
+                            "62"
+                        ],
+                        "excludeInactive": true
+                    }
+                }
+            },
+            {
+                "call": "cache.set",
+                "args": {
+                    "key": "pipelinq_prospects_v2_hash1",
+                    "data": {
+                        "prospects": [
+                            {
+                                "kvkNumber": "5",
+                                "tradeName": "Delta Group",
+                                "isActive": true,
+                                "score": 5
+                            },
+                            {
+                                "kvkNumber": "4",
+                                "tradeName": "",
+                                "isActive": true,
+                                "score": 4
+                            },
+                            {
+                                "kvkNumber": "2",
+                                "tradeName": "Existing Client",
+                                "isActive": true,
+                                "score": 2
+                            },
+                            {
+                                "kvkNumber": "1",
+                                "tradeName": "Alpha BV",
+                                "isActive": true,
+                                "score": 1
+                            }
+                        ],
+                        "total": 4,
+                        "cachedAt": "<now>",
+                        "icpHash": "hash1"
+                    }
+                }
+            }
+        ]
+    }
+}

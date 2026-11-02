@@ -19,11 +19,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\Pipelinq\Service\ExistingClientNames;
 use OCA\Pipelinq\Service\IcpConfigService;
 use OCA\Pipelinq\Service\KvkApiClient;
 use OCA\Pipelinq\Service\OpenCorporatesApiClient;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
+use OCA\Pipelinq\Service\ProspectRanking;
 use OCA\Pipelinq\Service\ProspectScoringService;
+use OCA\Pipelinq\Service\ProspectSources;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
@@ -77,7 +80,7 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn([]);
 
-		$this->service = new ProspectDiscoveryService($this->icpConfig,
+		$this->service = $this->build($this->icpConfig,
 			$kvkClient,
 			$ocClient,
 			$scoring,
@@ -87,6 +90,50 @@ class ProspectDiscoveryServiceTest extends TestCase {
 			$appManager,
 		);
 	}//end setUp()
+
+	/**
+	 * The service's collaborators, built from the parts the tests script.
+	 *
+	 * @param IcpConfigService        $icpConfig  The ICP config.
+	 * @param KvkApiClient            $kvkClient  The KVK client.
+	 * @param OpenCorporatesApiClient $ocClient   The OpenCorporates client.
+	 * @param ProspectScoringService  $scoring    The scoring service.
+	 * @param SettingsService         $settings   The settings.
+	 * @param LoggerInterface         $logger     The logger.
+	 * @param ContainerInterface      $container  The container.
+	 * @param IAppManager             $appManager The app manager.
+	 *
+	 * @return array<int, object>
+	 */
+	private function parts(
+		IcpConfigService $icpConfig,
+		KvkApiClient $kvkClient,
+		OpenCorporatesApiClient $ocClient,
+		ProspectScoringService $scoring,
+		SettingsService $settings,
+		LoggerInterface $logger,
+		ContainerInterface $container,
+		IAppManager $appManager,
+	): array {
+		$clients = new ExistingClientNames(settings: $settings, container: $container, appManager: $appManager, logger: $logger);
+		return [
+			$icpConfig,
+			new ProspectSources(icpConfig: $icpConfig, kvkClient: $kvkClient, ocClient: $ocClient, logger: $logger),
+			new ProspectRanking(scoring: $scoring, clients: $clients),
+			$settings,
+		];
+	}//end parts()
+
+	/**
+	 * Build the service from the parts the tests script.
+	 *
+	 * @param object ...$args The parts, in the order parts() takes them.
+	 *
+	 * @return ProspectDiscoveryService
+	 */
+	private function build(object ...$args): ProspectDiscoveryService {
+		return new ProspectDiscoveryService(...$this->parts(...$args));
+	}//end build()
 
 	/**
 	 * Test discover returns error when ICP not configured.
@@ -167,7 +214,7 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 
-		$service = new ProspectDiscoveryService(
+		$service = $this->build(
 			$icpConfig,
 			$kvkClient,
 			$this->createMock(OpenCorporatesApiClient::class),
@@ -209,7 +256,7 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getConfigValue')->willReturn('');
 
-		$service = new ProspectDiscoveryService(
+		$service = $this->build(
 			$icpConfig,
 			$kvkClient,
 			$this->createMock(OpenCorporatesApiClient::class),
@@ -284,7 +331,7 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 
 		// An in-memory cache, so the test does not depend on APCu being enabled for the CLI.
-		$service = new class(
+		$service = new class(...$this->parts(
 			$icpConfig,
 			$kvkClient,
 			$this->createMock(OpenCorporatesApiClient::class),
@@ -293,7 +340,7 @@ class ProspectDiscoveryServiceTest extends TestCase {
 			$this->createMock(LoggerInterface::class),
 			$container,
 			$appManager,
-		) extends ProspectDiscoveryService {
+		)) extends ProspectDiscoveryService {
 			/**
 			 * The cached entries by key.
 			 *
