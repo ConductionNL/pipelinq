@@ -50,6 +50,7 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Pipelinq\Service\Social\MastodonAdapter
  * @uses   \OCA\Pipelinq\Service\Social\ThreadsAdapter
  * @uses   \OCA\Pipelinq\Service\Social\XAdapter
+ * @uses   \OCA\Pipelinq\Service\Social\AbstractSocialAdapter
  */
 class SocialAdapterRegistryGoldenTest extends TestCase {
 
