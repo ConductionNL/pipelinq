@@ -1,0 +1,1532 @@
+{
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / jsonSerialize string, getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\BlastSendJob / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / jsonSerialize string, getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\WebhookProcessorJob / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / jsonSerialize string, getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\AttributionService / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / jsonSerialize string, getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\CampaignPerformanceService / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / jsonSerialize string, getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ChannelProviderRepository / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / getObject array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / jsonSerialize string, getObject array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Egress\\ConnectorEgress / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / jsonSerialize string, getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\Marketing\\ListObjectStore / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / getObject array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / jsonSerialize string, getObject array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SearchConsole\\SearchQueryReportService / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / jsonSerialize string, getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\SegmentService / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / getObject array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / jsonSerialize string, getObject array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqStockReader / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / jsonSerialize string, getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TemplateApprovalSyncService / toArray method string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / empty array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / false": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / getObject string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / int": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / jsonSerialize array": {
+        "array": [
+            {
+                "key": "id",
+                "value": {
+                    "string": "x"
+                }
+            },
+            {
+                "key": "n",
+                "value": {
+                    "array": [
+                        {
+                            "key": "k",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / jsonSerialize array, getObject array": {
+        "array": [
+            {
+                "key": "j",
+                "value": {
+                    "integer": 1
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / jsonSerialize null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / jsonSerialize string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / jsonSerialize string, getObject array": {
+        "array": [
+            {
+                "key": "g",
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / list": {
+        "array": [
+            {
+                "key": 0,
+                "value": {
+                    "integer": 1
+                }
+            },
+            {
+                "key": 1,
+                "value": {
+                    "integer": 2
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / nested array with object": {
+        "array": [
+            {
+                "key": "a",
+                "value": {
+                    "array": [
+                        {
+                            "key": "b",
+                            "value": {
+                                "integer": 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "key": "o",
+                "value": {
+                    "object": "stdClass"
+                }
+            }
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / null": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / stdClass with properties": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / string": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / toArray method array": {
+        "array": []
+    },
+    "OCA\\Pipelinq\\Service\\TrackingLinkService / toArray method string": {
+        "array": []
+    }
+}
