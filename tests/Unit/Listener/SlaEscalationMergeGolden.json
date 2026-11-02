@@ -1,0 +1,128 @@
+{
+    "new events": {
+        "targets": [
+            {
+                "name": "response",
+                "breachEventIds": [
+                    "e0",
+                    "e1",
+                    "e2"
+                ]
+            },
+            {
+                "name": "resolve",
+                "breachEventIds": [
+                    "e1",
+                    "e2"
+                ]
+            },
+            {
+                "name": "other",
+                "breachEventIds": [
+                    "e9",
+                    "e1",
+                    "e2"
+                ]
+            }
+        ],
+        "currentEscalationLevel": 2
+    },
+    "no level yet": {
+        "targets": [
+            {
+                "name": "response",
+                "breachEventIds": [
+                    "e0",
+                    "e1",
+                    "e3"
+                ]
+            },
+            {
+                "name": "resolve",
+                "breachEventIds": [
+                    "e3"
+                ]
+            },
+            {
+                "name": "other",
+                "breachEventIds": [
+                    "e9",
+                    "e3"
+                ]
+            }
+        ],
+        "currentEscalationLevel": 1
+    },
+    "no new events": {
+        "targets": [
+            {
+                "name": "response",
+                "breachEventIds": [
+                    "e0",
+                    "e0",
+                    "e1"
+                ]
+            },
+            {
+                "name": "resolve"
+            },
+            {
+                "name": "other",
+                "breachEventIds": "e9"
+            }
+        ],
+        "currentEscalationLevel": 1
+    },
+    "no targets": {
+        "targets": [],
+        "currentEscalationLevel": 1
+    },
+    "paused": {
+        "targets": [
+            {
+                "name": "response",
+                "breachEventIds": [
+                    "e0",
+                    "e0",
+                    "e1"
+                ]
+            },
+            {
+                "name": "resolve"
+            },
+            {
+                "name": "other",
+                "breachEventIds": "e9"
+            }
+        ],
+        "pausedAt": "2026-01-01"
+    },
+    "repeated event ids": {
+        "targets": [
+            {
+                "name": "response",
+                "breachEventIds": [
+                    "e0",
+                    "e1",
+                    "e2"
+                ]
+            },
+            {
+                "name": "resolve",
+                "breachEventIds": [
+                    "e2",
+                    "e0"
+                ]
+            },
+            {
+                "name": "other",
+                "breachEventIds": [
+                    "e9",
+                    "e2",
+                    "e0"
+                ]
+            }
+        ],
+        "currentEscalationLevel": 1
+    }
+}
