@@ -39,6 +39,7 @@ use Throwable;
  *
  * @covers \OCA\Pipelinq\Repair\IngestProductVendorMaster
  * @covers \OCA\Pipelinq\Repair\Support\SourceRecordLink
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  *
  * @spec openspec/specs/product-vendor-master/spec.md
  */
