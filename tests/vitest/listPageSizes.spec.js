@@ -4,8 +4,8 @@
  *
  * The list boards' page sizes and row shape: PqCampagnes and PqContacten
  * show 5 rows a page, PqAfspraken and PqOrganisaties 8, PqSjablonen lists
- * its templates by name, and PqKassadiensten draws a row actions button on
- * every shift.
+ * its templates by name, PqKassadiensten draws a row actions button on
+ * every shift, and PqOrganisaties fits its table in the card.
  *
  * @spec openspec/specs/declarative-view-system/spec.md
  */
@@ -40,5 +40,10 @@ describe('list page sizes', () => {
 		const config = page(manifest, 'CashShifts').config
 		expect(config.actions).toEqual([{ id: 'view', label: 'View', icon: 'EyeOutline', handler: 'navigate', route: 'CashShiftDetail' }])
 		expect(simpleConfig('CashShifts').actions).toBeUndefined()
+	})
+
+	it('draws the organisations with the columns DqOrganisaties draws, so the table fits its card', () => {
+		const preset = simpleConfig('Clients').queryPresets.find((p) => p.id === 'organisations')
+		expect(preset.columns.map((c) => c.key)).toEqual(['name', 'kvkNumber', 'legalForm', 'place', 'openCases', 'openTickets', 'lastContact'])
 	})
 })

@@ -7,7 +7,9 @@
 An index page whose board draws a page of rows SHALL set that page size with
 `pagination.limit`: 5 for Campaigns and Contacts, 8 for Bookings and Clients.
 The Templates list SHALL sort by name. Every cash shift row SHALL carry a row
-actions button whose View action opens the shift.
+actions button whose View action opens the shift. The organisations list
+SHALL show the columns the dossiq organisations list shows: Name, KvK
+number, Legal form, Place, Open cases, Open tickets and Last contact.
 
 #### Scenario: Campaigns show five a page
 

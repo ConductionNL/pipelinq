@@ -4400,10 +4400,6 @@
 								"label": "Legal form"
 							},
 							{
-								"key": "industry",
-								"label": "Industry"
-							},
-							{
 								"key": "place",
 								"label": "Place"
 							},
@@ -4444,10 +4440,6 @@
 									}
 								},
 								"widget": "badge"
-							},
-							{
-								"key": "phone",
-								"label": "Phone"
 							},
 							{
 								"key": "lastContact",
