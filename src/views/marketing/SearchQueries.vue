@@ -235,6 +235,12 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The search query columns: every one sorts and filters from its head.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
 		columns() {
 			const number = (key, label) => ({
 				key,
@@ -365,6 +371,7 @@ export default {
 		 *
 		 * @param {boolean} refresh Re-run the audit before reading.
 		 * @return {Promise<boolean>} Whether the audit answered.
+		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		async fetchAudit(refresh = false) {
 			try {
