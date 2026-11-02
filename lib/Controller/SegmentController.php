@@ -134,6 +134,10 @@ class SegmentController extends Controller {
 			return $this->unauthorized();
 		}
 
+		if ($this->policy->isPrivileged(uid: $user) === false) {
+			return $this->forbidden();
+		}
+
 		$payload = $this->collectSegmentBody();
 		$result = $this->segmentService->createSegment(payload: $payload, createdByUid: $user);
 		return $this->renderCreate(result: $result);

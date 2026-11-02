@@ -193,7 +193,9 @@ class ClientBusinessReader {
 	}//end projectsLine()
 
 	/**
-	 * "No invoices for this resident." or "2 invoices, 1 open."; '' without shillinq.
+	 * "No invoices for this resident." or "2 invoices, 1 open.", counting the
+	 * invoices the reader may see; '' without shillinq or without the right
+	 * to read its invoices.
 	 *
 	 * @param string $customerRef The client's customer in shillinq.
 	 * @param bool   $person      Whether the client is a resident.
@@ -201,13 +203,14 @@ class ClientBusinessReader {
 	 * @return string The sentence.
 	 */
 	private function invoicesLine(string $customerRef, bool $person): string {
-		if ($this->invoices->isAvailable() === false) {
+		$reader = $this->invoices->withCallerRights();
+		if ($reader->isAvailable() === false || $reader->callerMayRead() === false) {
 			return '';
 		}
 
 		$invoices = [];
 		if ($customerRef !== '') {
-			$invoices = $this->invoices->invoicesFor(customerRef: $customerRef);
+			$invoices = $reader->invoicesFor(customerRef: $customerRef);
 		}
 
 		if ($invoices === []) {

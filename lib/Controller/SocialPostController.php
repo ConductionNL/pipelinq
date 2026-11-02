@@ -297,7 +297,8 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function networkPerformance(int $days = 30): JSONResponse {
-		if ($this->requireCrmUser() === null) {
+		$uid = $this->requireCrmUser();
+		if ($uid === null) {
 			return $this->refuse();
 		}
 

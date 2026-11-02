@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Repair;
 
 use OCA\Pipelinq\Repair\MigrateConsentToIntegriq;
 use OCA\Pipelinq\Service\ComplianceService;
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCA\Pipelinq\Service\ConsentMigrationService;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\ContactAddressLookup;
@@ -121,7 +122,7 @@ class MigrateConsentToIntegriqTest extends TestCase {
 
 		// integriq's own SMS to that number is refused now.
 		$client = FakeIntegriq::client($this->appConfig, $this->integriq);
-		self::assertFalse($client->decideOne(channel: 'sms', category: 'service', requiresConsent: false, address: '+31612345678')['send']);
+		self::assertFalse($client->decideOne(ask: new ConsentAsk(channel: 'sms', category: 'service', requiresConsent: false), recipient: ['address' => '+31612345678'])['send']);
 	}//end testAStopFromBeforeTheMigrationIsHonouredElsewhere()
 
 	public function testAListConsentIsMigratedAsAListConsent(): void {

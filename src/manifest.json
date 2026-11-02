@@ -876,6 +876,7 @@
 						"id": "revenue-over-time",
 						"type": "chart",
 						"title": "Revenue per month",
+						"subtitle": "Won deals",
 						"content": {
 							"chartKind": "bar",
 							"dataSource": {
@@ -923,6 +924,7 @@
 						"id": "revenue-by-category",
 						"type": "chart",
 						"title": "Revenue by source",
+						"subtitle": "Won deals",
 						"content": {
 							"chartKind": "bar-list",
 							"dataSource": {
@@ -945,6 +947,7 @@
 						"id": "top-customers",
 						"type": "chart",
 						"title": "Largest customers by revenue",
+						"subtitle": "Won deals",
 						"content": {
 							"chartKind": "bar-list",
 							"dataSource": {
@@ -1182,7 +1185,8 @@
 						"gridX": 7,
 						"gridY": 0,
 						"gridWidth": 5,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"sizeToContent": true
 					},
 					{
 						"id": "c11",
@@ -1190,7 +1194,8 @@
 						"gridX": 0,
 						"gridY": 4,
 						"gridWidth": 7,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"sizeToContent": true
 					},
 					{
 						"id": "c12",
@@ -1198,7 +1203,8 @@
 						"gridX": 7,
 						"gridY": 4,
 						"gridWidth": 5,
-						"gridHeight": 3
+						"gridHeight": 3,
+						"sizeToContent": true
 					},
 					{
 						"id": "c18",
@@ -1206,7 +1212,8 @@
 						"gridX": 7,
 						"gridY": 7,
 						"gridWidth": 5,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"sizeToContent": true
 					},
 					{
 						"id": "c9",
@@ -1214,7 +1221,8 @@
 						"gridX": 0,
 						"gridY": 11,
 						"gridWidth": 4,
-						"gridHeight": 3
+						"gridHeight": 3,
+						"sizeToContent": true
 					},
 					{
 						"id": "c10",
@@ -1222,7 +1230,8 @@
 						"gridX": 4,
 						"gridY": 11,
 						"gridWidth": 4,
-						"gridHeight": 3
+						"gridHeight": 3,
+						"sizeToContent": true
 					},
 					{
 						"id": "c16",
@@ -1230,7 +1239,8 @@
 						"gridX": 8,
 						"gridY": 11,
 						"gridWidth": 4,
-						"gridHeight": 3
+						"gridHeight": 3,
+						"sizeToContent": true
 					},
 					{
 						"id": "c17",
@@ -1238,7 +1248,8 @@
 						"gridX": 8,
 						"gridY": 14,
 						"gridWidth": 4,
-						"gridHeight": 3
+						"gridHeight": 3,
+						"sizeToContent": true
 					}
 				],
 				"kpiRow": [
@@ -1251,6 +1262,7 @@
 				],
 				"showWidgetActions": false,
 				"showActionsMenu": false,
+				"gridFloat": false,
 				"_boardNote": "Board look (PqVerkoopoverzicht, round 12): the period as one segmented control, six KPI tiles in an auto-fit row above the grid, then revenue per month beside the open pipeline by stage, the deals closing soon beside the recently won and lost ones, and revenue by source, the largest customers, pipeline coverage and won against open on the last row. No widget carries its own date chip or Actions menu."
 			},
 			"slots": {}
@@ -1697,6 +1709,8 @@
 							"register": "pipelinq",
 							"schema": "client",
 							"filter": {},
+							"sortable": true,
+							"filterable": true,
 							"sort": {
 								"field": "name",
 								"dir": "asc"
@@ -4253,6 +4267,9 @@
 			"title": "Questions and reports",
 			"_note": "Unified ticket workspace (unify-ticket-supertype). One index over the ticket schema replacing the former Requests/Complaints/Contactmomenten pages; a ticketType quickFilter tab strip narrows to each subtype. Type-specific columns (complaintCategory, outcome) are omitted from the shared table — they surface on the detail page.",
 			"config": {
+				"_savedViewShareNote": "Board PqTicketsSelectie (design-system #826): an open saved view of the tickets list (\"Klachten deze week\") is shared from the toolbar, \"Delen: <view>\" beside Weergave opslaan, through the same share dialog as dossiq (nextcloud-vue saved-view-share-from-toolbar). Only the reader's own stored view gets the button.",
+				"allowSavedViews": true,
+				"savedViewShare": true,
 				"register": "pipelinq",
 				"createModal": "RequestCreateDialog",
 				"schema": "ticket",
@@ -4407,7 +4424,26 @@
 						"id": "ticket-related",
 						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
+						"icon": "LinkVariant",
+						"_note": "Board PqTicket: the side card links the appointments that belong to the ticket; every relation stays on the Related tab and behind Show all.",
+						"content": {
+							"layout": "links",
+							"extraSources": [
+								{
+									"key": "appointments",
+									"label": "Appointments",
+									"endpoint": "/apps/openregister/api/objects/pipelinq/appointmentBooking?ticket=@objectId",
+									"path": "results",
+									"itemLabel": "Appointment: {subject}, {startAt|longdate}",
+									"rowRoute": {
+										"name": "BookingDetail",
+										"params": {
+											"id": "{id}"
+										}
+									}
+								}
+							]
+						}
 					},
 					{
 						"id": "ticket-decision-routes",
