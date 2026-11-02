@@ -48,6 +48,7 @@ use RuntimeException;
  *
  * @covers \OCA\Pipelinq\Service\Competitor\CompetitorWatchService
  * @covers \OCA\Pipelinq\Service\Competitor\WatchEventStore
+ * @covers \OCA\Pipelinq\Service\Competitor\WatchReaders
  * @uses   \OCA\Pipelinq\Service\Competitor\WatchOutcome
  * @uses   \OCA\Pipelinq\Service\Marketing\ListObjectStore
  *
