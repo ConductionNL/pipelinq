@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -125,16 +126,9 @@ class BackfillContactChannelArrays implements IRepairStep {
 				continue;
 			}
 
-			$rows = $this->readAll(objectService: $objectService, register: $register, schema: $schema);
-			foreach ($rows as $row) {
-				$outcome = $this->backfillRecord(
-					objectService: $objectService,
-					register: $register,
-					schema: $schema,
-					row: $row,
-					actingAdmin: $actingAdmin
-				);
-				$totals[$outcome]++;
+			$target = new SchemaWriteTarget(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin);
+			foreach ($this->readAll(target: $target) as $row) {
+				$totals[$this->backfillRecord(target: $target, row: $row)]++;
 			}
 		}
 
@@ -151,15 +145,12 @@ class BackfillContactChannelArrays implements IRepairStep {
 	/**
 	 * Compute and persist the patch for one client/contact row.
 	 *
-	 * @param object $objectService OpenRegister ObjectService.
-	 * @param string $register Register id.
-	 * @param string $schema Schema id.
-	 * @param array<string,mixed> $row The stored row.
-	 * @param IUser|null $actingAdmin User to save as (repair steps have no session).
+	 * @param SchemaWriteTarget   $target Where to save, and as whom.
+	 * @param array<string,mixed> $row    The stored row.
 	 *
 	 * @return string One of 'fixed', 'skipped' or 'stuck'.
 	 */
-	private function backfillRecord(object $objectService, string $register, string $schema, array $row, ?IUser $actingAdmin): string {
+	private function backfillRecord(SchemaWriteTarget $target, array $row): string {
 		$uuid = (string)($row['id'] ?? '');
 		if ($uuid === '') {
 			return 'skipped';
@@ -174,15 +165,7 @@ class BackfillContactChannelArrays implements IRepairStep {
 			return 'skipped';
 		}
 
-		return $this->savePatch(
-			objectService: $objectService,
-			register: $register,
-			schema: $schema,
-			row: $row,
-			patch: $patch,
-			uuid: $uuid,
-			actingAdmin: $actingAdmin,
-		);
+		return $this->savePatch(target: $target, record: array_merge($row, $patch));
 	}//end backfillRecord()
 
 	/**
@@ -215,44 +198,32 @@ class BackfillContactChannelArrays implements IRepairStep {
 	}//end channelPatchFor()
 
 	/**
-	 * Save the merged patch, translating the outcome into the run() tally.
+	 * Save the patched row, translating the outcome into the run() tally.
 	 *
-	 * @param object $objectService OpenRegister ObjectService.
-	 * @param string $register Register id.
-	 * @param string $schema Schema id.
-	 * @param array<string,mixed> $row The stored row.
-	 * @param array<string,mixed> $patch The fields to merge onto it.
-	 * @param string $uuid The row's id.
-	 * @param IUser|null $actingAdmin User to save as.
+	 * @param SchemaWriteTarget   $target Where to save, and as whom.
+	 * @param array<string,mixed> $record The stored row with the patch merged onto it.
 	 *
 	 * @return string 'fixed' on success, 'stuck' on failure.
 	 */
-	private function savePatch(
-		object $objectService,
-		string $register,
-		string $schema,
-		array $row,
-		array $patch,
-		string $uuid,
-		?IUser $actingAdmin,
-	): string {
+	private function savePatch(SchemaWriteTarget $target, array $record): string {
+		$uuid = (string)$record['id'];
 		try {
-			$objectService->saveObject(
-				object: array_merge($row, $patch),
+			$target->objectService->saveObject(
+				object: $record,
 				extend: [],
-				register: $register,
-				schema: $schema,
+				register: $target->register,
+				schema: $target->schema,
 				uuid: $uuid,
 				_rbac: false,
 				_multitenancy: false,
-				currentUser: $actingAdmin,
+				currentUser: $target->actingAdmin,
 			);
 
 			return 'fixed';
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'BackfillContactChannelArrays: failed to save record',
-				['uuid' => $uuid, 'schema' => $schema, 'error' => $e->getMessage()]
+				['uuid' => $uuid, 'schema' => $target->schema, 'error' => $e->getMessage()]
 			);
 
 			return 'stuck';
@@ -281,19 +252,17 @@ class BackfillContactChannelArrays implements IRepairStep {
 	 * 'Anonymous' may see and the backfill would quietly cover a fraction
 	 * of the rows.
 	 *
-	 * @param object $objectService OpenRegister ObjectService.
-	 * @param string $register Register id.
-	 * @param string $schema Schema id.
+	 * @param SchemaWriteTarget $target The schema to read.
 	 *
 	 * @return array<int,array<string,mixed>> The rows.
 	 */
-	private function readAll(object $objectService, string $register, string $schema): array {
+	private function readAll(SchemaWriteTarget $target): array {
 		try {
-			$rows = $objectService->findAll(
+			$rows = $target->objectService->findAll(
 				config: [
 					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
+						'register' => $target->register,
+						'schema' => $target->schema,
 					],
 					'limit' => self::BATCH_LIMIT,
 				],
@@ -303,7 +272,7 @@ class BackfillContactChannelArrays implements IRepairStep {
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'BackfillContactChannelArrays: findAll failed',
-				['schema' => $schema, 'error' => $e->getMessage()]
+				['schema' => $target->schema, 'error' => $e->getMessage()]
 			);
 
 			return [];
