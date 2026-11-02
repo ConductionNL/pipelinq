@@ -42,6 +42,7 @@ use Throwable;
  * @covers \OCA\Pipelinq\Service\PointsLedgerService
  * @uses   \OCA\Pipelinq\Service\Loyalty\LedgerMovement
  * @uses   \OCA\Pipelinq\Service\Loyalty\LedgerOrigin
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
