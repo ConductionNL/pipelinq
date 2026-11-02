@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Repair\IngestProductVendorMaster;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
@@ -215,29 +216,42 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			}
 
 			/**
-			 * @param mixed ...$args The arguments, in the order the step passes them.
+			 * Records the arguments as passed, by name when the step names them.
 			 *
-			 * @return array<string, mixed>
+			 * @param mixed ...$args The arguments the step passes.
+			 *
+			 * @return ObjectEntity The saved object, as OpenRegister returns it.
 			 */
-			public function saveObject(mixed ...$args): array {
+			public function saveObject(mixed ...$args): ObjectEntity {
 				$this->test->trace[] = ['saveObject' => $args];
-				if (($this->scenario['throwOn'] ?? null) === ($args[1] ?? null)) {
-					throw new RuntimeException('save failed for ' . $args[1]);
+				$schema = ($args['schema'] ?? $args[1] ?? null);
+				if (($this->scenario['throwOn'] ?? null) === $schema) {
+					throw new RuntimeException('save failed for ' . $schema);
 				}
 
 				$this->saves++;
-				$object = is_array($args[2] ?? null) === true ? $args[2] : [];
-				if (($this->scenario['createdNoId'] ?? false) === true) {
-					return $object;
+				$object = ($args['object'] ?? $args[2] ?? null);
+				if (is_array($object) === false) {
+					$object = [];
 				}
 
-				$id = ($args[3] ?? ('new-' . $this->saves));
+				$entity = new ObjectEntity();
+				$entity->setRegister((string)($args['register'] ?? $args[0] ?? ''));
+				$entity->setSchema((string)$schema);
+				if (($this->scenario['createdNoId'] ?? false) === true) {
+					$entity->setObject($object);
+					return $entity;
+				}
+
+				$id = ($args['uuid'] ?? $args[3] ?? ('new-' . $this->saves));
 				$saved = ['id' => $id] + $object;
 				if (($this->scenario['createdProductId'] ?? null) === 'same') {
 					$saved['productId'] = $id;
 				}
 
-				return $saved;
+				$entity->setUuid((string)$id);
+				$entity->setObject($saved);
+				return $entity;
 			}
 		};
 	}//end objectDouble()
