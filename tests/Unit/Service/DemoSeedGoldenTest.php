@@ -161,8 +161,20 @@ class DemoSeedGoldenTest extends TestCase {
 			}
 
 			foreach (($shipped[$section] ?? []) as $i => $definition) {
-				$value = (string) ($definition['data'][$lookupField] ?? $definition['data']['subject'] ?? '');
-				$rows[] = ['id' => $section . '-' . $i, $lookupField => $value, 'ticketType' => $ticketType, 'pipeline' => 'stale-pipeline', 'note' => 'kept'];
+				$value    = (string) ($definition['data'][$lookupField] ?? $definition['data']['subject'] ?? '');
+				$pipeline = 'stale-pipeline';
+				if ($section === 'leads' && $i % 2 === 0) {
+					$pipeline = 'pipelines-0';
+				}
+
+				$rows[] = [
+					'id'          => $section . '-' . $i,
+					$lookupField  => $value,
+					'ticketType'  => $ticketType,
+					'pipeline'    => $pipeline,
+					'note'        => 'kept',
+					'@self'       => ['id' => $section . '-' . $i],
+				];
 			}
 		}
 

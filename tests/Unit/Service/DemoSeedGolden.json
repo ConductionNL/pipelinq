@@ -1979,7 +1979,7 @@
                     "contacts": 0,
                     "pipelines": 0,
                     "products": 0,
-                    "leads": 6,
+                    "leads": 3,
                     "requests": 8,
                     "complaints": 0,
                     "contactmomenten": 0,
@@ -2053,22 +2053,6 @@
                 "call": "saveObject",
                 "args": {
                     "object": {
-                        "id": "leads-0",
-                        "title": "[Demo] Webshop vernieuwing Gouden Korst",
-                        "ticketType": null,
-                        "pipeline": "pipelines-0",
-                        "note": "kept"
-                    },
-                    "extend": [],
-                    "register": "reg",
-                    "schema": "lead_schema-id",
-                    "uuid": "leads-0"
-                }
-            },
-            {
-                "call": "saveObject",
-                "args": {
-                    "object": {
                         "id": "leads-1",
                         "title": "[Demo] Koffieabonnement kantoor",
                         "ticketType": null,
@@ -2085,22 +2069,6 @@
                 "call": "saveObject",
                 "args": {
                     "object": {
-                        "id": "leads-2",
-                        "title": "[Demo] Intranet migratie Zonnedael",
-                        "ticketType": null,
-                        "pipeline": "pipelines-0",
-                        "note": "kept"
-                    },
-                    "extend": [],
-                    "register": "reg",
-                    "schema": "lead_schema-id",
-                    "uuid": "leads-2"
-                }
-            },
-            {
-                "call": "saveObject",
-                "args": {
-                    "object": {
                         "id": "leads-3",
                         "title": "[Demo] Catering jaarcontract",
                         "ticketType": null,
@@ -2111,22 +2079,6 @@
                     "register": "reg",
                     "schema": "lead_schema-id",
                     "uuid": "leads-3"
-                }
-            },
-            {
-                "call": "saveObject",
-                "args": {
-                    "object": {
-                        "id": "leads-4",
-                        "title": "[Demo] Onderhoudscontract gewonnen",
-                        "ticketType": null,
-                        "pipeline": "pipelines-0",
-                        "note": "kept"
-                    },
-                    "extend": [],
-                    "register": "reg",
-                    "schema": "lead_schema-id",
-                    "uuid": "leads-4"
                 }
             },
             {
@@ -2581,18 +2533,18 @@
                         "complaints:klacht-afval": "complaints-0",
                         "complaints:klacht-wachttijd": "complaints-1",
                         "complaints:klacht-factuur": "complaints-2",
-                        "contactmomenten:cm-1": "ticket-23",
-                        "contactmomenten:cm-2": "ticket-24",
-                        "contactmomenten:cm-3": "ticket-25",
-                        "contactmomenten:cm-4": "ticket-26",
-                        "contactmomenten:cm-5": "ticket-27",
-                        "contactmomenten:cm-6": "ticket-28",
-                        "contactmomenten:cm-7": "ticket-29",
-                        "contactmomenten:cm-8": "ticket-30",
-                        "contactmomenten:cm-9": "ticket-31",
-                        "contactmomenten:cm-10": "ticket-32",
-                        "contactmomenten:cm-11": "ticket-33",
-                        "contactmomenten:cm-12": "ticket-34",
+                        "contactmomenten:cm-1": "ticket-20",
+                        "contactmomenten:cm-2": "ticket-21",
+                        "contactmomenten:cm-3": "ticket-22",
+                        "contactmomenten:cm-4": "ticket-23",
+                        "contactmomenten:cm-5": "ticket-24",
+                        "contactmomenten:cm-6": "ticket-25",
+                        "contactmomenten:cm-7": "ticket-26",
+                        "contactmomenten:cm-8": "ticket-27",
+                        "contactmomenten:cm-9": "ticket-28",
+                        "contactmomenten:cm-10": "ticket-29",
+                        "contactmomenten:cm-11": "ticket-30",
+                        "contactmomenten:cm-12": "ticket-31",
                         "tasks:task-terugbel": "tasks-0",
                         "tasks:task-opvolg": "tasks-1",
                         "tasks:task-info": "tasks-2",
