@@ -22,6 +22,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
+use OCA\Pipelinq\Service\BsnAudit\LookupReason;
+use OCA\Pipelinq\Service\BsnAudit\LookupResult;
+use OCA\Pipelinq\Service\BsnAudit\LookupSubject;
 use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCP\IAppConfig;
@@ -95,10 +99,11 @@ class BsnAuditServiceTest extends TestCase {
 		);
 		$uuid = $service->recordLookup(
 			actor: 'demo:tester',
-			rawBsn: '123456782',
-			verzoekreden: 'unit-test',
-			purposeBinding: 'unit-test',
-			outcome: 'succeeded',
+			lookup: new LookupAudit(
+				subject: new LookupSubject(rawBsn: '123456782'),
+				reason: new LookupReason(verzoekreden: 'unit-test', purposeBinding: 'unit-test', linkedRequest: null, vogScreening: false),
+				result: new LookupResult(outcome: 'succeeded'),
+			),
 		);
 		self::assertSame('', $uuid);
 	}//end testRecordLookupFallsBackWhenStorageMissing()

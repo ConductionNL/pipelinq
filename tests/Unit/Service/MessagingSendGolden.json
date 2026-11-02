@@ -1,0 +1,433 @@
+{
+    "sms: client from the contact": {
+        "outcome": {
+            "status": "sent",
+            "messageId": "m-new"
+        },
+        "calls": [
+            {
+                "adapter": "sms",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hallo",
+                    "context": {
+                        "agent": "agent-1",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "sms: explicit client wins": {
+        "outcome": {
+            "status": "sent",
+            "messageId": "m-new"
+        },
+        "calls": [
+            {
+                "adapter": "sms",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hallo",
+                    "context": {
+                        "agent": "agent-1",
+                        "clientId": "cl-explicit"
+                    }
+                }
+            }
+        ]
+    },
+    "sms: no client anywhere": {
+        "outcome": {
+            "status": "sent",
+            "messageId": "m-new"
+        },
+        "calls": [
+            {
+                "adapter": "sms",
+                "args": {
+                    "contact": {
+                        "uuid": "c-2",
+                        "phoneNumber": "+31622222222"
+                    },
+                    "body": "hallo",
+                    "context": {
+                        "agent": "agent-1",
+                        "clientId": ""
+                    }
+                }
+            }
+        ]
+    },
+    "sms: reply with a pinned vendor": {
+        "outcome": {
+            "status": "sent",
+            "messageId": "m-new"
+        },
+        "calls": [
+            {
+                "adapter": "sms",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hallo",
+                    "providerHint": "cmcom",
+                    "context": {
+                        "agent": "agent-1",
+                        "clientId": "cl-contact",
+                        "inReplyTo": "in-1"
+                    }
+                }
+            }
+        ]
+    },
+    "sms: template fields are not passed": {
+        "outcome": {
+            "status": "failed"
+        },
+        "calls": [
+            {
+                "adapter": "sms",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hallo",
+                    "context": {
+                        "agent": "agent-1",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "sms: consent missing": {
+        "outcome": {
+            "status": "consent-missing"
+        },
+        "calls": [
+            {
+                "adapter": "sms",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hallo",
+                    "context": {
+                        "agent": "agent-1",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "sms: budget exceeded": {
+        "outcome": {
+            "status": "budget-exceeded"
+        },
+        "calls": [
+            {
+                "adapter": "sms",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hallo",
+                    "context": {
+                        "agent": "agent-1",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "sms: no provider": {
+        "outcome": {
+            "status": "no-provider"
+        },
+        "calls": [
+            {
+                "adapter": "sms",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hallo",
+                    "context": {
+                        "agent": "agent-1",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "sms: sent without a message id": {
+        "outcome": {
+            "status": "sent",
+            "messageId": ""
+        },
+        "calls": [
+            {
+                "adapter": "sms",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hallo",
+                    "context": {
+                        "agent": "agent-1",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "whatsapp: text in the window": {
+        "outcome": {
+            "status": "sent",
+            "messageId": "m-new"
+        },
+        "calls": [
+            {
+                "adapter": "whatsapp",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hoi",
+                    "context": {
+                        "agent": "agent-2",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "whatsapp: hint is not passed, reply kept": {
+        "outcome": {
+            "status": "sent",
+            "messageId": "m-new"
+        },
+        "calls": [
+            {
+                "adapter": "whatsapp",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hoi",
+                    "context": {
+                        "agent": "agent-2",
+                        "clientId": "cl-w",
+                        "inReplyTo": "in-2"
+                    }
+                }
+            }
+        ]
+    },
+    "whatsapp: template with parameters": {
+        "outcome": {
+            "status": "template-invalid",
+            "reason": "templateParameterMismatch"
+        },
+        "calls": [
+            {
+                "adapter": "whatsapp",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "",
+                    "templateId": "tpl-1",
+                    "parameters": [
+                        "Jan",
+                        "12:00"
+                    ],
+                    "context": {
+                        "agent": "agent-2",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "whatsapp: window expired": {
+        "outcome": {
+            "status": "template-required"
+        },
+        "calls": [
+            {
+                "adapter": "whatsapp",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hoi",
+                    "context": {
+                        "agent": "agent-2",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "whatsapp: template not approved": {
+        "outcome": {
+            "status": "template-invalid",
+            "reason": "templateNotApproved"
+        },
+        "calls": [
+            {
+                "adapter": "whatsapp",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hoi",
+                    "context": {
+                        "agent": "agent-2",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "whatsapp: template not found": {
+        "outcome": {
+            "status": "template-invalid",
+            "reason": "templateNotFound"
+        },
+        "calls": [
+            {
+                "adapter": "whatsapp",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "hoi",
+                    "context": {
+                        "agent": "agent-2",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "other channel: nothing is sent": {
+        "outcome": {
+            "status": "unsupported-channel"
+        },
+        "calls": []
+    },
+    "empty channel: nothing is sent": {
+        "outcome": {
+            "status": "unsupported-channel"
+        },
+        "calls": []
+    },
+    "resend: sms text": {
+        "outcome": {
+            "status": "sent",
+            "messageId": "m-new"
+        },
+        "calls": [
+            {
+                "adapter": "sms",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "opnieuw",
+                    "context": {
+                        "agent": "agent-3",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    },
+    "resend: whatsapp template": {
+        "outcome": {
+            "status": "failed"
+        },
+        "calls": [
+            {
+                "adapter": "whatsapp",
+                "args": {
+                    "contact": {
+                        "uuid": "c-2",
+                        "phoneNumber": "+31622222222"
+                    },
+                    "body": "",
+                    "templateId": "tpl-2",
+                    "parameters": [
+                        "1",
+                        "b"
+                    ],
+                    "context": {
+                        "agent": "agent-4",
+                        "clientId": ""
+                    }
+                }
+            }
+        ]
+    },
+    "resend: whatsapp text": {
+        "outcome": {
+            "status": "sent",
+            "messageId": "m-new"
+        },
+        "calls": [
+            {
+                "adapter": "whatsapp",
+                "args": {
+                    "contact": {
+                        "uuid": "c-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "cl-contact"
+                    },
+                    "body": "tekst",
+                    "context": {
+                        "agent": "agent-5",
+                        "clientId": "cl-contact"
+                    }
+                }
+            }
+        ]
+    }
+}

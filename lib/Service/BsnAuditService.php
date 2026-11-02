@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -77,125 +78,103 @@ class BsnAuditService {
 	 * persistent path; callers MUST pass the raw BSN so it can be hashed in-process and
 	 * immediately discarded.
 	 *
-	 * @param string $actor Actor user UID.
-	 * @param string $rawBsn Raw 9-digit BSN (hashed in-process; never stored).
-	 * @param string $verzoekreden Verzoekreden (compliance audit field).
-	 * @param string $purposeBinding Doelbinding (compliance audit field).
-	 * @param string $outcome Outcome enum value (see schema).
-	 * @param string $action Action enum value (default `brp-lookup-uitgevoerd`).
-	 * @param int|null $responseCode HTTP status from HaalCentraal (200, 404, 503).
-	 * @param string|null $haalcentraalCorrelationId Correlation ID for trace.
-	 * @param string|null $linkedRequest UUID of linked Pipelinq verzoek.
-	 * @param string|null $actorRole Role of actor (behandelaar-burgerzaken).
-	 * @param bool $vogScreening VOG-screening flag for Justis.
-	 * @param string|null $bsnHash The subject's ALREADY-COMPUTED hash, for callers
-	 *                             that hold it but cannot reconstruct the raw BSN.
-	 *                             Takes precedence over hashing $rawBsn.
+	 * @param string      $actor  Actor user UID.
+	 * @param LookupAudit $lookup The subject, grounds, outcome and actor role of the lookup.
 	 *
 	 * @return string The UUID of the written audit record (empty string if writing fails).
 	 *
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005-01
 	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) One audit record maps 1:1 to these compliance fields; a DTO would only shift the list.
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)    $vogScreening is an audit fact recorded verbatim on the record, not a behaviour switch.
-	 * @SuppressWarnings(PHPMD.LongVariable)           $haalcentraalCorrelationId mirrors the named-arg caller; renaming breaks the call site.
-	 * @SuppressWarnings(PHPMD.StaticAccess)           BsnValidationService hash/mask are pure stateless helpers.
+	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::mask is a pure stateless helper.
 	 */
-	public function recordLookup(
-		string $actor,
-		string $rawBsn,
-		string $verzoekreden,
-		string $purposeBinding,
-		string $outcome,
-		string $action = 'brp-lookup-executed',
-		?int $responseCode = null,
-		?string $haalcentraalCorrelationId = null,
-		?string $linkedRequest = null,
-		?string $actorRole = null,
-		bool $vogScreening = false,
-		?string $bsnHash = null,
-	): string {
-		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$retainUntil = $now->modify('+' . self::RETENTION_YEARS . ' years');
-
-		$subjectHash = $this->resolveSubjectHash(rawBsn: $rawBsn, bsnHash: $bsnHash);
-
-		$record = [
-			'action' => $action,
-			// A caller that already HOLDS the subject's hash passes it through.
-			// Hashing an empty `$rawBsn` yields sha256("") — the same constant for
-			// every person — which is an audit record that names no data subject.
-			// That is what BrpController::revealAddress produced for every
-			// geheimhouding reveal, because the raw BSN is not reconstructible
-			// there and the persoon already carries its own hash.
-			'bsnHash' => $subjectHash,
-			'actor' => $actor,
-			'actorRole' => $actorRole,
-			'moment' => $now->format(DATE_ATOM),
-			'verzoekreden' => $verzoekreden,
-			'purposeBinding' => $purposeBinding,
-			'outcome' => $outcome,
-			'responseCode' => $responseCode,
-			'ipAddress' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
-			'userAgent' => 'Pipelinq/' . (Application::APP_ID) . ' (Nextcloud)',
-			'haalcentraalCorrelationId' => $haalcentraalCorrelationId,
-			'linkedRequest' => $linkedRequest,
-			'vogScreening' => $vogScreening,
-			'retainUntil' => $retainUntil->format(DATE_ATOM),
-		];
-
-		// Drop nulls — they pollute the audit record.
-		$record = array_filter($record, static fn ($v) => $v !== null);
+	public function recordLookup(string $actor, LookupAudit $lookup): string {
+		$record = $this->auditRecord(actor: $actor, lookup: $lookup);
 
 		// Mask the BSN in logs (REQ-BSN-009-01) — never the raw value.
-		$maskedBsn = BsnValidationService::mask($rawBsn);
+		$logContext = [
+			'action' => $lookup->result->action,
+			'actor' => $actor,
+			'bsn' => BsnValidationService::mask($lookup->subject->rawBsn),
+		];
 
 		try {
-			[$register, $schema] = $this->config();
-			$saved = $this->getObjectService()->saveObject(
-				object: $record,
-				extend: [],
-				register: $register,
-				schema: $schema,
-			);
-
-			$uuid = '';
-			if (is_array($saved) === true) {
-				$uuid = (string)($saved['@self']['id'] ?? $saved['id'] ?? '');
-			} elseif (is_object($saved) === true) {
-				// SaveObject() returns an ObjectEntity whose getUuid() is served by
-				// Entity::__call — method_exists() is FALSE for it, so every AVG/BSN
-				// audit record was written and its handle returned as ''
-				// (pipelinq#807); four callers consume that handle.
-				$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
-			}
-
-			$this->logger->info(
-				'BSN audit record written',
-				[
-					'action' => $action,
-					'actor' => $actor,
-					'bsn' => $maskedBsn,
-					'outcome' => $outcome,
-				]
-			);
+			$uuid = $this->saveRecord(record: $record);
+			$this->logger->info('BSN audit record written', [...$logContext, 'outcome' => $lookup->result->outcome]);
 			return $uuid;
 		} catch (Throwable $e) {
 			// Failing to write the audit record must NOT crash the calling flow — the
 			// outcome is still surfaced through the controller. Log the error with the
 			// masked BSN so postmortems are possible.
-			$this->logger->error(
-				'BSN audit record write failed',
-				[
-					'action' => $action,
-					'actor' => $actor,
-					'bsn' => $maskedBsn,
-					'error' => $e->getMessage(),
-				]
-			);
+			$this->logger->error('BSN audit record write failed', [...$logContext, 'error' => $e->getMessage()]);
 			return '';
-		}//end try
+		}
 	}//end recordLookup()
+
+	/**
+	 * The bsnAuditRecord row for one lookup, without null fields.
+	 *
+	 * @param string      $actor  Actor user UID.
+	 * @param LookupAudit $lookup The lookup.
+	 *
+	 * @return array<string, mixed> The row.
+	 */
+	private function auditRecord(string $actor, LookupAudit $lookup): array {
+		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$retainUntil = $now->modify('+' . self::RETENTION_YEARS . ' years');
+
+		$record = [
+			'action' => $lookup->result->action,
+			'bsnHash' => $this->resolveSubjectHash(rawBsn: $lookup->subject->rawBsn, bsnHash: $lookup->subject->bsnHash),
+			'actor' => $actor,
+			'actorRole' => $lookup->actorRole,
+			'moment' => $now->format(DATE_ATOM),
+			'verzoekreden' => $lookup->reason->verzoekreden,
+			'purposeBinding' => $lookup->reason->purposeBinding,
+			'outcome' => $lookup->result->outcome,
+			'responseCode' => $lookup->result->responseCode,
+			'ipAddress' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
+			'userAgent' => 'Pipelinq/' . (Application::APP_ID) . ' (Nextcloud)',
+			'haalcentraalCorrelationId' => $lookup->result->correlationId,
+			'linkedRequest' => $lookup->reason->linkedRequest,
+			'vogScreening' => $lookup->reason->vogScreening,
+			'retainUntil' => $retainUntil->format(DATE_ATOM),
+		];
+
+		// Drop nulls — they pollute the audit record.
+		return array_filter($record, static fn ($v) => $v !== null);
+	}//end auditRecord()
+
+	/**
+	 * Save an audit row and return its UUID.
+	 *
+	 * @param array<string, mixed> $record The row.
+	 *
+	 * @return string The UUID, or empty when the store returned none.
+	 *
+	 * @throws Throwable When the register is not configured or the save fails.
+	 */
+	private function saveRecord(array $record): string {
+		[$register, $schema] = $this->config();
+		$saved = $this->getObjectService()->saveObject(
+			object: $record,
+			extend: [],
+			register: $register,
+			schema: $schema,
+		);
+
+		if (is_array($saved) === true) {
+			return (string)($saved['@self']['id'] ?? $saved['id'] ?? '');
+		}
+
+		if (is_object($saved) === true) {
+			// SaveObject() returns an ObjectEntity whose getUuid() is served by
+			// Entity::__call — method_exists() is FALSE for it, so the handle is
+			// read through the entity accessor (pipelinq#807).
+			return $this->readEntityValue(entity: $saved, getter: 'getUuid');
+		}
+
+		return '';
+	}//end saveRecord()
 
 	/**
 	 * The hash that identifies the data subject of an audit record.
@@ -218,7 +197,11 @@ class BsnAuditService {
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper — the same
 	 * justification recordLookup() already carries for the call this was extracted from.
 	 */
-	private function resolveSubjectHash(string $rawBsn, ?string $bsnHash): string {
+	private function resolveSubjectHash(
+		#[\SensitiveParameter]
+		string $rawBsn,
+		?string $bsnHash,
+	): string {
 		if ($bsnHash !== null && $bsnHash !== '') {
 			return $bsnHash;
 		}
@@ -243,7 +226,10 @@ class BsnAuditService {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
-	public function pseudonymise(string $rawBsn): int {
+	public function pseudonymise(
+		#[\SensitiveParameter]
+		string $rawBsn,
+	): int {
 		try {
 			[$register, $schema] = $this->config();
 			$oldHash = BsnValidationService::hash($rawBsn);

@@ -2,15 +2,10 @@
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
 	<div class="blast-monitor">
-		<NcButton
-			class="blast-monitor__back"
-			variant="tertiary"
-			:to="{ name: 'Blasts' }">
-			<template #icon>
-				<ArrowLeft :size="18" />
-			</template>
+		<router-link class="blast-monitor__back" :to="{ name: 'Blasts' }">
+			<ArrowLeft :size="16" />
 			{{ t('pipelinq', 'Back to blasts') }}
-		</NcButton>
+		</router-link>
 
 		<header class="blast-monitor__header">
 			<div class="blast-monitor__heading">
@@ -594,12 +589,19 @@ export default {
 	padding: 24px 28px;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 20px;
 }
 
 .blast-monitor__back {
 	align-self: flex-start;
-	margin-inline-start: -12px;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: normal;
+	text-decoration: none;
+	color: var(--color-primary-element);
 }
 
 .blast-monitor__header {
@@ -607,10 +609,17 @@ export default {
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 16px;
+	padding: 4px 0 8px;
+}
+
+.blast-monitor__heading {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
 .blast-monitor__header h1 {
-	margin: 0 0 8px;
+	margin: 0;
 	font-size: 28px;
 	font-weight: 700;
 	line-height: 1.2;
@@ -633,6 +642,8 @@ export default {
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
+	font-size: 14px;
+	line-height: normal;
 	color: var(--color-text-maxcontrast);
 }
 

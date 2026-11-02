@@ -32,12 +32,16 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
+use OCA\Pipelinq\Service\Messaging\MessageContent;
+use OCA\Pipelinq\Service\Messaging\MessageRoute;
 use OCA\Pipelinq\Service\MessagingService;
+use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -57,6 +61,24 @@ use OCP\IUserSession;
  * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004-server-side-send-endpoint
  */
 class MessagingController extends Controller {
+	use ReadsTypedRequestParameters;
+
+	/**
+	 * The request parameters send() reads: name => [type, default].
+	 *
+	 * @var array<string, array{0: string, 1: string|array<int, string>|null}>
+	 */
+	private const SEND_PARAMETERS = [
+		'contactId' => ['string', ''],
+		'channel' => ['string', ''],
+		'body' => ['string', ''],
+		'templateId' => ['?string', null],
+		'parameters' => ['array', []],
+		'providerHint' => ['?string', null],
+		'clientId' => ['string', ''],
+		'inReplyTo' => ['string', ''],
+	];
+
 	/**
 	 * Constructor.
 	 *
@@ -81,30 +103,25 @@ class MessagingController extends Controller {
 	/**
 	 * Send an outbound SMS / WhatsApp message (REQ-OM-004).
 	 *
-	 * @param string $contactId Contact/client UUID.
-	 * @param string $channel `sms` or `whatsapp`.
-	 * @param string $body Free-text body (or empty for a template send).
-	 * @param string|null $templateId Approved template UUID (whatsapp) or null.
-	 * @param array<int, string> $parameters Positional template parameters.
-	 * @param string|null $providerHint Optional pinned vendor.
-	 * @param string $clientId Linked client UUID (audit), or empty.
-	 * @param string $inReplyTo The contact's inbound message this answers, or empty.
+	 * Request parameters: `contactId`, the contact/client UUID; `channel`,
+	 * `sms` or `whatsapp`; `body`, free text (empty for a template send);
+	 * `templateId`, an approved template UUID (whatsapp) or null;
+	 * `parameters`, the positional template parameters (a list);
+	 * `providerHint`, an optional pinned vendor; `clientId`, the linked
+	 * client UUID (audit) or empty; `inReplyTo`, the contact's inbound
+	 * message this answers, or empty. All but `parameters` are strings.
 	 *
-	 * @return JSONResponse The sanitised outcome envelope.
+	 * @return Response The sanitised outcome envelope, or a bare 400 when a parameter has the wrong type.
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004-server-side-send-endpoint
 	 */
 	#[NoAdminRequired]
-	public function send(
-		string $contactId = '',
-		string $channel = '',
-		string $body = '',
-		?string $templateId = null,
-		array $parameters = [],
-		?string $providerHint = null,
-		string $clientId = '',
-		string $inReplyTo = '',
-	): JSONResponse {
+	public function send(): Response {
+		$send = $this->typedRequestParameters(spec: self::SEND_PARAMETERS);
+		if ($send === null) {
+			return new Response(Http::STATUS_BAD_REQUEST);
+		}
+
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
@@ -116,27 +133,21 @@ class MessagingController extends Controller {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
-		if ($channel !== 'sms' && $channel !== 'whatsapp') {
+		if ($send['channel'] !== 'sms' && $send['channel'] !== 'whatsapp') {
 			return new JSONResponse(['status' => 'invalid-channel'], Http::STATUS_BAD_REQUEST);
 		}
 
 		// Per-object guard (no-admin-idor): the caller must be able to load
 		// the contact via the register RBAC before any adapter is invoked.
-		$contact = $this->messagingService->loadContact(contactId: $contactId);
+		$contact = $this->messagingService->loadContact(contactId: $send['contactId']);
 		if ($contact === null) {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
 		$outcome = $this->messagingService->send(
-			contact: $contact,
-			channel: $channel,
-			body: $body,
-			templateId: $templateId,
-			parameters: $parameters,
-			providerHint: $providerHint,
-			actor: $user->getUID(),
-			clientId: $clientId,
-			inReplyTo: $inReplyTo
+			route: new MessageRoute(contact: $contact, providerHint: $send['providerHint'], clientId: $send['clientId'], inReplyTo: $send['inReplyTo']),
+			content: new MessageContent(channel: $send['channel'], body: $send['body'], templateId: $send['templateId'], parameters: $send['parameters']),
+			actor: $user->getUID()
 		);
 
 		return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string)$outcome['status']));

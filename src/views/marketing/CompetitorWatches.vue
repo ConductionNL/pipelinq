@@ -59,61 +59,47 @@
 				class="competitors__section"
 				data-testid="competitors-watches">
 				<h3 v-if="!embedded">{{ t('pipelinq', 'Watches') }}</h3>
-				<div class="competitors__scroll">
-					<table class="competitors__table">
-						<thead>
-							<tr>
-								<th scope="col">
-									{{ t('pipelinq', 'Competitor') }}
-								</th>
-								<th scope="col">{{ t('pipelinq', 'Watching') }}</th>
-								<th scope="col">{{ t('pipelinq', 'How often') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Last run') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Outcome') }}</th>
-								<th scope="col" />
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="watch in watches" :key="idOf(watch)">
-								<td>{{ competitorName(watch) }}</td>
-								<td>
-									<span class="competitors__kind">{{
-										kindLabel(watch.kind)
-									}}</span>
-									<span v-if="!embedded" class="competitors__target">{{
-										watch.target
-									}}</span>
-								</td>
-								<td>{{ scheduleLabel(watch.schedule) }}</td>
-								<td>
-									{{
-										watch.lastRunAt
-											? formatWhen(watch.lastRunAt)
-											: t('pipelinq', 'Never')
-									}}
-								</td>
-								<td>
-									<CnStatusBadge
-										:variant="outcomeVariant(watch)"
-										:label="outcomeLabel(watch)" />
-									<span
-										v-if="watch.lastReason"
-										class="competitors__reason">
-										{{ watch.lastReason }}
-									</span>
-								</td>
-								<td>
-									<NcButton
-										variant="secondary"
-										:disabled="running === idOf(watch)"
-										@click="run(watch)">
-										{{ t('pipelinq', 'Run now') }}
-									</NcButton>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+				<CnDataTable
+					class="competitors__table"
+					data-testid="competitors-watches-table"
+					framed
+					filterable
+					localHeaders
+					:columns="watchColumns"
+					:rows="watchRows"
+					rowKey="rowKey">
+					<template #column-kindText="{ row: watch }">
+						<span class="competitors__kind">{{ watch.kindText }}</span>
+						<span v-if="!embedded" class="competitors__target">{{
+							watch.target
+						}}</span>
+					</template>
+					<template #column-lastRunAt="{ row: watch }">
+						{{
+							watch.lastRunAt
+								? formatWhen(watch.lastRunAt)
+								: t('pipelinq', 'Never')
+						}}
+					</template>
+					<template #column-outcomeText="{ row: watch }">
+						<CnStatusBadge
+							:variant="outcomeVariant(watch)"
+							:label="outcomeLabel(watch)" />
+						<span
+							v-if="watch.lastReason"
+							class="competitors__reason">
+							{{ watch.lastReason }}
+						</span>
+					</template>
+					<template #column-run="{ row: watch }">
+						<NcButton
+							variant="secondary"
+							:disabled="running === idOf(watch)"
+							@click="run(watch)">
+							{{ t('pipelinq', 'Run now') }}
+						</NcButton>
+					</template>
+				</CnDataTable>
 			</section>
 
 			<p
@@ -171,7 +157,7 @@
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnDataTable, CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
@@ -187,6 +173,7 @@ export default {
 	name: 'CompetitorWatches',
 	components: {
 		AccountGroupOutline,
+		CnDataTable,
 		CnStatusBadge,
 		NcButton,
 		NcEmptyContent,
@@ -216,6 +203,43 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The watch columns: every data column sorts and filters the rows the
+		 * section holds, as board PqZoekinzicht draws the heads; cells wrap.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		watchColumns() {
+			const column = (key, label, extra = {}) => ({ key, label, sortable: true, cellClass: 'cn-cell--wrap', ...extra })
+			return [
+				column('competitorText', this.t('pipelinq', 'Competitor')),
+				column('kindText', this.t('pipelinq', 'Watching')),
+				column('scheduleText', this.t('pipelinq', 'How often')),
+				column('lastRunAt', this.t('pipelinq', 'Last run'), { type: 'date-time' }),
+				column('outcomeText', this.t('pipelinq', 'Outcome')),
+				{ key: 'run', label: '', sortable: false, filterable: false },
+			]
+		},
+
+		/**
+		 * The watches with the words the table shows, so a head sorts and
+		 * filters on what the reader sees.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		watchRows() {
+			return this.watches.map((watch) => ({
+				...watch,
+				rowKey: this.idOf(watch),
+				competitorText: this.competitorName(watch),
+				kindText: this.kindLabel(watch.kind),
+				scheduleText: this.scheduleLabel(watch.schedule),
+				outcomeText: this.outcomeLabel(watch),
+			}))
+		},
+
 		/**
 		 * The newest event in one sentence, as the search insight page sums
 		 * up what changed.
@@ -435,28 +459,6 @@ export default {
 	margin-bottom: 32px;
 }
 
-.competitors__scroll {
-	overflow-x: auto;
-}
-
-.competitors__table {
-	width: 100%;
-	border-collapse: collapse;
-
-	th,
-	td {
-		padding: 8px 12px;
-		white-space: normal;
-		border-bottom: 1px solid var(--color-border);
-		text-align: start;
-		vertical-align: top;
-	}
-
-	th {
-		font-weight: bold;
-	}
-}
-
 .competitors__kind {
 	display: block;
 	color: var(--color-text-maxcontrast);
@@ -533,41 +535,13 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-/* On the search insight page the watches are one bordered card table, as
-   board PqZoekinzicht draws it. */
+/* On the search insight page the watches sit flush in the section card, as
+   board PqZoekinzicht draws them. */
 .competitors--embedded {
 	padding: 0;
 
 	.competitors__section {
 		margin-bottom: 0;
-	}
-
-	.competitors__scroll {
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-	}
-
-	.competitors__table {
-		font-size: 14px;
-		line-height: 1.2;
-
-		th,
-		td {
-			padding: 12px 18px;
-			vertical-align: middle;
-		}
-
-		th {
-			padding-block: 10px;
-			border-bottom: 0;
-			background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
-			font-weight: 600;
-			color: var(--color-text-maxcontrast);
-		}
-
-		tbody tr:last-child td {
-			border-bottom: 0;
-		}
 	}
 }
 </style>

@@ -273,6 +273,8 @@
 						"title": "Distribution over tiers",
 						"content": {
 							"framed": true,
+							"sortable": true,
+							"filterable": true,
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/loyalty/reporting/@workspace.programme/tiers",
 								"responsePath": "tiers"
@@ -318,7 +320,8 @@
 							}
 						],
 						"content": {
-							"plain": true,
+							"dividers": false,
+							"gap": 14,
 							"sections": [
 								{
 									"widgetId": "loyalty-tier-bars"

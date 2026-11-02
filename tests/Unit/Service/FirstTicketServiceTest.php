@@ -35,6 +35,8 @@ use Psr\Log\LoggerInterface;
  * tickets never count.
  *
  * @covers \OCA\Pipelinq\Service\FirstTicketService
+ * @uses   \OCA\Pipelinq\Util\SerialisedToArray
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  */
 class FirstTicketServiceTest extends TestCase {
 	/**

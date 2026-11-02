@@ -37,6 +37,7 @@ use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\CampaignLinkDecorator;
 use OCA\Pipelinq\Service\CampaignPerformanceService;
+use OCA\Pipelinq\Service\CampaignSiteTraffic;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Service\SegmentService;
@@ -312,13 +313,15 @@ class BlastControllerTest extends TestCase {
 			userSession: $this->userSession,
 			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			performanceService: new CampaignPerformanceService(
-				container: $container,
-				appConfig: $appConfig,
 				time: $time,
 				blastService: $blastService,
 				attributionService: $attributionService,
-				decorator: new CampaignLinkDecorator($appConfig),
-				logger: $logger,
+				traffic: new CampaignSiteTraffic(
+					container: $container,
+					appConfig: $appConfig,
+					decorator: new CampaignLinkDecorator(appConfig: $appConfig),
+					logger: $logger,
+				),
 			),
 		);
 	}//end buildController()

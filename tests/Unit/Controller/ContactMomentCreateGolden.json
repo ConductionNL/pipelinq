@@ -1,0 +1,250 @@
+{
+    "every field": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "cm-1",
+            "title": "Called back"
+        },
+        "trace": [
+            {
+                "create": {
+                    "hostId": "case-1",
+                    "payload": {
+                        "title": "Called back",
+                        "channel": "phone",
+                        "direction": "outbound",
+                        "outcome": "resolved",
+                        "summary": "All good",
+                        "occurredAt": "2026-10-01T09:00:00Z",
+                        "client": "client-9"
+                    }
+                }
+            }
+        ]
+    },
+    "host only": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "cm-1",
+            "title": ""
+        },
+        "trace": [
+            {
+                "create": {
+                    "hostId": "case-1",
+                    "payload": {
+                        "title": "",
+                        "channel": "",
+                        "direction": "",
+                        "outcome": "",
+                        "summary": "",
+                        "occurredAt": "",
+                        "client": ""
+                    }
+                }
+            }
+        ]
+    },
+    "no host": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "null host": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "empty host": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "cm-1",
+            "title": "x"
+        },
+        "trace": [
+            {
+                "create": {
+                    "hostId": "",
+                    "payload": {
+                        "title": "x",
+                        "channel": "",
+                        "direction": "",
+                        "outcome": "",
+                        "summary": "",
+                        "occurredAt": "",
+                        "client": ""
+                    }
+                }
+            }
+        ]
+    },
+    "null optional values": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "cm-1",
+            "title": ""
+        },
+        "trace": [
+            {
+                "create": {
+                    "hostId": "case-1",
+                    "payload": {
+                        "title": "",
+                        "channel": "",
+                        "direction": "",
+                        "outcome": "",
+                        "summary": "",
+                        "occurredAt": "",
+                        "client": ""
+                    }
+                }
+            }
+        ]
+    },
+    "empty optional values": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "cm-1",
+            "title": ""
+        },
+        "trace": [
+            {
+                "create": {
+                    "hostId": "case-1",
+                    "payload": {
+                        "title": "",
+                        "channel": "",
+                        "direction": "",
+                        "outcome": "",
+                        "summary": "",
+                        "occurredAt": "",
+                        "client": ""
+                    }
+                }
+            }
+        ]
+    },
+    "integer host": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "integer title": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "boolean outcome": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "array client": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "float summary": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "unknown parameters": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "cm-1",
+            "title": ""
+        },
+        "trace": [
+            {
+                "create": {
+                    "hostId": "case-1",
+                    "payload": {
+                        "title": "",
+                        "channel": "mail",
+                        "direction": "",
+                        "outcome": "",
+                        "summary": "",
+                        "occurredAt": "",
+                        "client": ""
+                    }
+                }
+            }
+        ]
+    },
+    "provider refuses": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "You cannot write to this case."
+        },
+        "trace": [
+            {
+                "create": {
+                    "hostId": "case-1",
+                    "payload": {
+                        "title": "Called back",
+                        "channel": "phone",
+                        "direction": "outbound",
+                        "outcome": "resolved",
+                        "summary": "All good",
+                        "occurredAt": "2026-10-01T09:00:00Z",
+                        "client": "client-9"
+                    }
+                }
+            }
+        ]
+    },
+    "provider answers without status": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "id": "cm-2"
+        },
+        "trace": [
+            {
+                "create": {
+                    "hostId": "case-1",
+                    "payload": {
+                        "title": "Called back",
+                        "channel": "phone",
+                        "direction": "outbound",
+                        "outcome": "resolved",
+                        "summary": "All good",
+                        "occurredAt": "2026-10-01T09:00:00Z",
+                        "client": "client-9"
+                    }
+                }
+            }
+        ]
+    },
+    "provider answers a text status": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "error": "gone"
+        },
+        "trace": [
+            {
+                "create": {
+                    "hostId": "case-1",
+                    "payload": {
+                        "title": "Called back",
+                        "channel": "phone",
+                        "direction": "outbound",
+                        "outcome": "resolved",
+                        "summary": "All good",
+                        "occurredAt": "2026-10-01T09:00:00Z",
+                        "client": "client-9"
+                    }
+                }
+            }
+        ]
+    }
+}

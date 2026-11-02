@@ -1,0 +1,88 @@
+{
+    "delivery id by slug": {
+        "fromEmail": "news@example.test",
+        "fromName": "The Newsroom",
+        "replyTo": "reply@example.test",
+        "toEmail": "y@example.test",
+        "subject": "Hello y@example.test",
+        "html": "<p>Dear y@example.test</p>",
+        "text": "Dear y@example.test",
+        "headers": [],
+        "deliveryId": "d-3"
+    },
+    "delivery id from id": {
+        "fromEmail": "news@example.test",
+        "fromName": "The Newsroom",
+        "replyTo": "reply@example.test",
+        "toEmail": "x@example.test",
+        "subject": "Hello x@example.test",
+        "html": "<p>Dear x@example.test</p>",
+        "text": "Dear x@example.test",
+        "headers": [],
+        "deliveryId": "d-2"
+    },
+    "empty template": {
+        "fromEmail": "",
+        "fromName": "",
+        "replyTo": "",
+        "toEmail": "",
+        "subject": "",
+        "html": "",
+        "text": "",
+        "headers": [],
+        "deliveryId": "d-4"
+    },
+    "full": {
+        "fromEmail": "news@example.test",
+        "fromName": "The Newsroom",
+        "replyTo": "reply@example.test",
+        "toEmail": "user@example.test",
+        "subject": "Hello user@example.test",
+        "html": "<p>Dear user@example.test</p>",
+        "text": "Dear user@example.test",
+        "headers": {
+            "List-Unsubscribe": "<https://example.test/u/1>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+        },
+        "deliveryId": "d-1"
+    },
+    "no reply-to": {
+        "fromEmail": "news@example.test",
+        "fromName": "The Newsroom",
+        "replyTo": "",
+        "toEmail": "user@example.test",
+        "subject": "Hello user@example.test",
+        "html": "<p>Dear user@example.test</p>",
+        "text": "Dear user@example.test",
+        "headers": {
+            "List-Unsubscribe": "<https://example.test/u/1>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+        },
+        "deliveryId": "d-1"
+    },
+    "no sender name": {
+        "fromEmail": "news@example.test",
+        "fromName": "",
+        "replyTo": "reply@example.test",
+        "toEmail": "user@example.test",
+        "subject": "Hello user@example.test",
+        "html": "<p>Dear user@example.test</p>",
+        "text": "Dear user@example.test",
+        "headers": {
+            "List-Unsubscribe": "<https://example.test/u/1>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+        },
+        "deliveryId": "d-1"
+    },
+    "no unsubscribe link": {
+        "fromEmail": "news@example.test",
+        "fromName": "The Newsroom",
+        "replyTo": "reply@example.test",
+        "toEmail": "user@example.test",
+        "subject": "Hello user@example.test",
+        "html": "<p>Dear user@example.test</p>",
+        "text": "Dear user@example.test",
+        "headers": [],
+        "deliveryId": "d-1"
+    }
+}

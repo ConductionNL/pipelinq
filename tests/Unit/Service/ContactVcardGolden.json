@@ -1,0 +1,695 @@
+{
+    "sync client": {
+        "result": "uid-new",
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "registers.resolve",
+                "args": [
+                    "contact"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.find",
+                "args": [
+                    "o-1",
+                    [],
+                    false,
+                    "reg-contact",
+                    "sch-client"
+                ]
+            },
+            {
+                "call": "builder.buildProperties",
+                "args": [
+                    {
+                        "id": "o-1",
+                        "name": "Acme",
+                        "email": "info@acme.example"
+                    },
+                    "client"
+                ]
+            },
+            {
+                "call": "writer.writeToAddressBook",
+                "args": [
+                    {
+                        "FN": "Acme",
+                        "KIND": "client"
+                    },
+                    {
+                        "id": "o-1",
+                        "name": "Acme",
+                        "email": "info@acme.example"
+                    },
+                    "client"
+                ]
+            }
+        ]
+    },
+    "sync contact": {
+        "result": "uid-new",
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "registers.resolve",
+                "args": [
+                    "contact"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "objects.find",
+                "args": [
+                    "o-2",
+                    [],
+                    false,
+                    "reg-contact",
+                    "sch-contact"
+                ]
+            },
+            {
+                "call": "builder.buildProperties",
+                "args": [
+                    {
+                        "id": "o-1",
+                        "name": "Acme",
+                        "email": "info@acme.example"
+                    },
+                    "contact"
+                ]
+            },
+            {
+                "call": "writer.writeToAddressBook",
+                "args": [
+                    {
+                        "FN": "Acme",
+                        "KIND": "contact"
+                    },
+                    {
+                        "id": "o-1",
+                        "name": "Acme",
+                        "email": "info@acme.example"
+                    },
+                    "contact"
+                ]
+            }
+        ]
+    },
+    "sync, contacts disabled": {
+        "result": null,
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "logger.debug",
+                "args": [
+                    "Pipelinq: Contacts sync skipped -- IManager not available",
+                    []
+                ]
+            }
+        ]
+    },
+    "sync, unknown type": {
+        "result": null,
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "logger.warning",
+                "args": [
+                    "ContactVcardService: invalid objectType",
+                    {
+                        "objectType": "lead"
+                    }
+                ]
+            }
+        ]
+    },
+    "sync, type with a key in it": {
+        "result": null,
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "logger.warning",
+                "args": [
+                    "ContactVcardService: invalid objectType",
+                    {
+                        "objectType": "client_schema"
+                    }
+                ]
+            }
+        ]
+    },
+    "sync, no register": {
+        "result": null,
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "registers.resolve",
+                "args": [
+                    "contact"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "logger.warning",
+                "args": [
+                    "Pipelinq: Cannot sync -- register or schema not configured",
+                    []
+                ]
+            }
+        ]
+    },
+    "sync, no schema": {
+        "result": null,
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "registers.resolve",
+                "args": [
+                    "contact"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "logger.warning",
+                "args": [
+                    "Pipelinq: Cannot sync -- register or schema not configured",
+                    []
+                ]
+            }
+        ]
+    },
+    "sync, not found": {
+        "result": "uid-new",
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "registers.resolve",
+                "args": [
+                    "contact"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.find",
+                "args": [
+                    "o-1",
+                    [],
+                    false,
+                    "reg-contact",
+                    "sch-client"
+                ]
+            },
+            {
+                "call": "builder.buildProperties",
+                "args": [
+                    [],
+                    "client"
+                ]
+            },
+            {
+                "call": "writer.writeToAddressBook",
+                "args": [
+                    {
+                        "FN": "",
+                        "KIND": "client"
+                    },
+                    [],
+                    "client"
+                ]
+            }
+        ]
+    },
+    "sync, find throws": {
+        "result": null,
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "registers.resolve",
+                "args": [
+                    "contact"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.find",
+                "args": [
+                    "o-1",
+                    [],
+                    false,
+                    "reg-contact",
+                    "sch-client"
+                ]
+            },
+            {
+                "call": "logger.error",
+                "args": [
+                    "Pipelinq: Failed to fetch object for sync",
+                    {
+                        "exception": "register down"
+                    }
+                ]
+            }
+        ]
+    },
+    "sync, writer fails": {
+        "result": null,
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "registers.resolve",
+                "args": [
+                    "contact"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.find",
+                "args": [
+                    "o-1",
+                    [],
+                    false,
+                    "reg-contact",
+                    "sch-client"
+                ]
+            },
+            {
+                "call": "builder.buildProperties",
+                "args": [
+                    {
+                        "id": "o-1",
+                        "name": "Acme",
+                        "email": "info@acme.example"
+                    },
+                    "client"
+                ]
+            },
+            {
+                "call": "writer.writeToAddressBook",
+                "args": [
+                    {
+                        "FN": "Acme",
+                        "KIND": "client"
+                    },
+                    {
+                        "id": "o-1",
+                        "name": "Acme",
+                        "email": "info@acme.example"
+                    },
+                    "client"
+                ]
+            }
+        ]
+    },
+    "provision, new organisation": {
+        "result": {
+            "contactsUid": "uid-new",
+            "name": "Acme",
+            "email": "info@acme.example",
+            "phone": "+31 20 123"
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "contacts.search",
+                "args": [
+                    "info@acme.example",
+                    [
+                        "EMAIL",
+                        "UID"
+                    ],
+                    {
+                        "limit": 1
+                    }
+                ]
+            },
+            {
+                "call": "contacts.search",
+                "args": [
+                    "Acme",
+                    [
+                        "ORG",
+                        "UID"
+                    ],
+                    {
+                        "limit": 1
+                    }
+                ]
+            },
+            {
+                "call": "builder.buildProperties",
+                "args": [
+                    {
+                        "name": "Acme",
+                        "type": "organization",
+                        "email": "info@acme.example",
+                        "phone": "+31 20 123"
+                    },
+                    "client"
+                ]
+            },
+            {
+                "call": "writer.writeVcard",
+                "args": [
+                    {
+                        "FN": "Acme",
+                        "KIND": "client"
+                    }
+                ]
+            }
+        ]
+    },
+    "provision, email match": {
+        "result": {
+            "contactsUid": "uid-mail",
+            "name": "Acme",
+            "email": "info@acme.example",
+            "phone": "+31 20 123"
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "contacts.search",
+                "args": [
+                    "info@acme.example",
+                    [
+                        "EMAIL",
+                        "UID"
+                    ],
+                    {
+                        "limit": 1
+                    }
+                ]
+            }
+        ]
+    },
+    "provision, org match": {
+        "result": {
+            "contactsUid": "uid-org",
+            "name": "Acme",
+            "email": "info@acme.example",
+            "phone": "+31 20 123"
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "contacts.search",
+                "args": [
+                    "info@acme.example",
+                    [
+                        "EMAIL",
+                        "UID"
+                    ],
+                    {
+                        "limit": 1
+                    }
+                ]
+            },
+            {
+                "call": "contacts.search",
+                "args": [
+                    "Acme",
+                    [
+                        "ORG",
+                        "UID"
+                    ],
+                    {
+                        "limit": 1
+                    }
+                ]
+            }
+        ]
+    },
+    "provision, search throws": {
+        "result": {
+            "contactsUid": "uid-new",
+            "name": "Acme",
+            "email": "info@acme.example",
+            "phone": "+31 20 123"
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "contacts.search",
+                "args": [
+                    "info@acme.example",
+                    [
+                        "EMAIL",
+                        "UID"
+                    ],
+                    {
+                        "limit": 1
+                    }
+                ]
+            },
+            {
+                "call": "logger.warning",
+                "args": [
+                    "Pipelinq: contact match search failed",
+                    {
+                        "term": "info@acme.example",
+                        "exception": "search down"
+                    }
+                ]
+            },
+            {
+                "call": "contacts.search",
+                "args": [
+                    "Acme",
+                    [
+                        "ORG",
+                        "UID"
+                    ],
+                    {
+                        "limit": 1
+                    }
+                ]
+            },
+            {
+                "call": "builder.buildProperties",
+                "args": [
+                    {
+                        "name": "Acme",
+                        "type": "organization",
+                        "email": "info@acme.example",
+                        "phone": "+31 20 123"
+                    },
+                    "client"
+                ]
+            },
+            {
+                "call": "writer.writeVcard",
+                "args": [
+                    {
+                        "FN": "Acme",
+                        "KIND": "client"
+                    }
+                ]
+            }
+        ]
+    },
+    "provision, person without email": {
+        "result": {
+            "contactsUid": "uid-new",
+            "name": "Jan",
+            "email": "",
+            "phone": ""
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "builder.buildProperties",
+                "args": [
+                    {
+                        "name": "Jan",
+                        "type": "person"
+                    },
+                    "client"
+                ]
+            },
+            {
+                "call": "writer.writeVcard",
+                "args": [
+                    {
+                        "FN": "Jan",
+                        "KIND": "client"
+                    }
+                ]
+            }
+        ]
+    },
+    "provision, unknown type": {
+        "result": null,
+        "calls": [
+            {
+                "call": "logger.warning",
+                "args": [
+                    "ContactVcardService: invalid objectType for provisioning",
+                    {
+                        "objectType": "lead"
+                    }
+                ]
+            }
+        ]
+    },
+    "provision, contacts disabled": {
+        "result": null,
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "logger.warning",
+                "args": [
+                    "Pipelinq: cannot provision contact -- Contacts (IManager) not available",
+                    []
+                ]
+            }
+        ]
+    },
+    "provision, writer fails": {
+        "result": null,
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "contacts.search",
+                "args": [
+                    "info@acme.example",
+                    [
+                        "EMAIL",
+                        "UID"
+                    ],
+                    {
+                        "limit": 1
+                    }
+                ]
+            },
+            {
+                "call": "contacts.search",
+                "args": [
+                    "Acme",
+                    [
+                        "ORG",
+                        "UID"
+                    ],
+                    {
+                        "limit": 1
+                    }
+                ]
+            },
+            {
+                "call": "builder.buildProperties",
+                "args": [
+                    {
+                        "name": "Acme",
+                        "type": "organization",
+                        "email": "info@acme.example",
+                        "phone": "+31 20 123"
+                    },
+                    "client"
+                ]
+            },
+            {
+                "call": "writer.writeVcard",
+                "args": [
+                    {
+                        "FN": "Acme",
+                        "KIND": "client"
+                    }
+                ]
+            }
+        ]
+    }
+}

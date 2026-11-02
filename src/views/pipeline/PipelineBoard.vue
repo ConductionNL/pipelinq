@@ -2326,7 +2326,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
-	padding: 0 2px;
+	padding: 0;
 	border: 0;
 	border-radius: 0;
 	line-height: normal;
@@ -2373,6 +2373,14 @@ export default {
 	margin-top: 0;
 	color: var(--color-main-text);
 	font-weight: 700;
+}
+
+/* The total is a button: the server's button rule gives it a 34px height and
+   a 3px margin, which stood it 11px under the stage name (board 2px). */
+.cn-look-board .column-value.column-value {
+	min-height: 0;
+	margin: 0;
+	line-height: normal;
 }
 
 .cn-look-board .column-probability {

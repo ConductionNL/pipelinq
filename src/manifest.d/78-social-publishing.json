@@ -87,7 +87,6 @@
         ],
         "showTitle": true,
         "showTitleIcon": false,
-        "rowTitle": "plain",
         "rowRoute": "SocialPostDetail",
         "showViewAction": false,
         "countText": "{shown} of {total} posts · newest first",

@@ -36,9 +36,12 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Integration\ContactMomentLeafProvider;
 use OCA\Pipelinq\Service\ContactMomentFilingService;
+use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 
 /**
@@ -47,6 +50,25 @@ use OCP\IRequest;
  * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
 class ContactMomentLeafController extends Controller {
+	use ReadsTypedRequestParameters;
+
+	/**
+	 * The request parameters create() reads: name => [type, default]. The
+	 * host id is required.
+	 *
+	 * @var array<string, array{0: string, 1: string|null}>
+	 */
+	private const CREATE_PARAMETERS = [
+		'hostId' => ['string', null],
+		'title' => ['string', ''],
+		'channel' => ['string', ''],
+		'direction' => ['string', ''],
+		'outcome' => ['?string', null],
+		'summary' => ['?string', null],
+		'occurredAt' => ['?string', null],
+		'client' => ['?string', null],
+	];
+
 	/**
 	 * Constructor.
 	 *
@@ -92,41 +114,28 @@ class ContactMomentLeafController extends Controller {
 	/**
 	 * Append one contact moment to a host object.
 	 *
-	 * @param string $hostId The host object's uuid.
-	 * @param string $title The subject of the contact moment.
-	 * @param string $channel The channel it ran over.
-	 * @param string $direction inbound, outbound or internal.
-	 * @param string|null $outcome Optional disposition.
-	 * @param string|null $summary Optional free text.
-	 * @param string|null $occurredAt Optional instant; defaults to now.
-	 * @param string|null $client The party this contact moment is with.
+	 * Request parameters: `hostId`, the host object's uuid (required);
+	 * `title`, the subject; `channel`, the channel it ran over; `direction`,
+	 * inbound, outbound or internal; and the optional `outcome`, `summary`,
+	 * `occurredAt` (defaults to now) and `client`, the party it is with. All
+	 * are strings.
 	 *
-	 * @return JSONResponse The created row, or the provider's refusal.
+	 * @return Response The created row, the provider's refusal, or a bare 400 when a parameter is missing or not a string.
 	 *
 	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	#[NoAdminRequired]
-	public function create(
-		string $hostId,
-		string $title = '',
-		string $channel = '',
-		string $direction = '',
-		?string $outcome = null,
-		?string $summary = null,
-		?string $occurredAt = null,
-		?string $client = null,
-	): JSONResponse {
+	public function create(): Response {
+		$payload = $this->typedRequestParameters(spec: self::CREATE_PARAMETERS);
+		if ($payload === null) {
+			return new Response(Http::STATUS_BAD_REQUEST);
+		}
+
+		$hostId = $payload['hostId'];
+		unset($payload['hostId']);
 		$result = $this->provider->create(
 			hostId: $hostId,
-			payload: [
-				'title' => $title,
-				'channel' => $channel,
-				'direction' => $direction,
-				'outcome' => ($outcome ?? ''),
-				'summary' => ($summary ?? ''),
-				'occurredAt' => ($occurredAt ?? ''),
-				'client' => ($client ?? ''),
-			],
+			payload: array_map(static fn (?string $value): string => ($value ?? ''), $payload),
 		);
 
 		return $this->respond(result: $result);

@@ -1,0 +1,846 @@
+{
+    "status": {
+        "result": {
+            "writeBack": true,
+            "linked": 4,
+            "addressBook": "Contacts",
+            "lastRun": null
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "writer.newCardAddressBookName",
+                "args": []
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_write_back",
+                    "1"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-client"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-contact"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run"
+                ]
+            }
+        ]
+    },
+    "status with a last run and write-back off": {
+        "result": {
+            "writeBack": false,
+            "linked": 4,
+            "addressBook": "Contacts",
+            "lastRun": {
+                "at": "x",
+                "updated": 2
+            }
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "writer.newCardAddressBookName",
+                "args": []
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_write_back",
+                    "1"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-client"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-contact"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run"
+                ]
+            }
+        ]
+    },
+    "status, broken last run": {
+        "result": {
+            "writeBack": true,
+            "linked": 4,
+            "addressBook": "Contacts",
+            "lastRun": null
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "writer.newCardAddressBookName",
+                "args": []
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_write_back",
+                    "1"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-client"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-contact"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run"
+                ]
+            }
+        ]
+    },
+    "status, contacts disabled": {
+        "result": {
+            "writeBack": true,
+            "linked": 4,
+            "addressBook": "",
+            "lastRun": null
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_write_back",
+                    "1"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-client"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-contact"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run"
+                ]
+            }
+        ]
+    },
+    "status, no register": {
+        "result": {
+            "writeBack": true,
+            "linked": 0,
+            "addressBook": "Contacts",
+            "lastRun": null
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "writer.newCardAddressBookName",
+                "args": []
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_write_back",
+                    "1"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run"
+                ]
+            }
+        ]
+    },
+    "status, no contact schema": {
+        "result": {
+            "writeBack": true,
+            "linked": 3,
+            "addressBook": "Contacts",
+            "lastRun": null
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "writer.newCardAddressBookName",
+                "args": []
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_write_back",
+                    "1"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-client"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run"
+                ]
+            }
+        ]
+    },
+    "status, client read throws": {
+        "result": {
+            "writeBack": true,
+            "linked": 1,
+            "addressBook": "Contacts",
+            "lastRun": null
+        },
+        "calls": [
+            {
+                "call": "contacts.isEnabled",
+                "args": []
+            },
+            {
+                "call": "writer.newCardAddressBookName",
+                "args": []
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_write_back",
+                    "1"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-client"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "logger.warning",
+                "args": [
+                    "Pipelinq: linked records not read",
+                    {
+                        "exception": "register down"
+                    }
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-contact"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "config.getUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run"
+                ]
+            }
+        ]
+    },
+    "run": {
+        "result": {
+            "at": "2026-11-02T10:00:00Z",
+            "updated": 2,
+            "failed": [
+                {
+                    "name": "Beta"
+                },
+                {
+                    "name": ""
+                }
+            ]
+        },
+        "calls": [
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-client"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-contact"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "sync.syncToContacts",
+                "args": [
+                    "client",
+                    "c-1"
+                ]
+            },
+            {
+                "call": "sync.syncToContacts",
+                "args": [
+                    "client",
+                    "c-2"
+                ]
+            },
+            {
+                "call": "sync.syncToContacts",
+                "args": [
+                    "client",
+                    ""
+                ]
+            },
+            {
+                "call": "sync.syncToContacts",
+                "args": [
+                    "contact",
+                    "p-1"
+                ]
+            },
+            {
+                "call": "logger.warning",
+                "args": [
+                    "Pipelinq: a linked record was not written back",
+                    {
+                        "exception": "contacts down"
+                    }
+                ]
+            },
+            {
+                "call": "config.setUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run",
+                    "{\"at\":\"2026-11-02T10:00:00Z\",\"updated\":2,\"failed\":[{\"name\":\"Beta\"},{\"name\":\"\"}]}"
+                ]
+            }
+        ]
+    },
+    "run, nothing linked": {
+        "result": {
+            "at": "2026-11-02T10:00:00Z",
+            "updated": 0,
+            "failed": []
+        },
+        "calls": [
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-client"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-contact"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "config.setUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run",
+                    "{\"at\":\"2026-11-02T10:00:00Z\",\"updated\":0,\"failed\":[]}"
+                ]
+            }
+        ]
+    },
+    "run, no register": {
+        "result": {
+            "at": "2026-11-02T10:00:00Z",
+            "updated": 0,
+            "failed": []
+        },
+        "calls": [
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "config.setUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run",
+                    "{\"at\":\"2026-11-02T10:00:00Z\",\"updated\":0,\"failed\":[]}"
+                ]
+            }
+        ]
+    },
+    "run, contact read throws": {
+        "result": {
+            "at": "2026-11-02T10:00:00Z",
+            "updated": 2,
+            "failed": [
+                {
+                    "name": "Beta"
+                }
+            ]
+        },
+        "calls": [
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "register"
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "client_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-client"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "appConfig.getValueString",
+                "args": [
+                    "pipelinq",
+                    "contact_schema"
+                ]
+            },
+            {
+                "call": "objects.findAll",
+                "args": [
+                    {
+                        "filters": {
+                            "@self": {
+                                "register": "reg-1",
+                                "schema": "sch-contact"
+                            }
+                        },
+                        "limit": 500
+                    }
+                ]
+            },
+            {
+                "call": "logger.warning",
+                "args": [
+                    "Pipelinq: linked records not read",
+                    {
+                        "exception": "register down"
+                    }
+                ]
+            },
+            {
+                "call": "sync.syncToContacts",
+                "args": [
+                    "client",
+                    "c-1"
+                ]
+            },
+            {
+                "call": "sync.syncToContacts",
+                "args": [
+                    "client",
+                    "c-2"
+                ]
+            },
+            {
+                "call": "sync.syncToContacts",
+                "args": [
+                    "client",
+                    ""
+                ]
+            },
+            {
+                "call": "config.setUserValue",
+                "args": [
+                    "u-1",
+                    "pipelinq",
+                    "contacts_sync_last_run",
+                    "{\"at\":\"2026-11-02T10:00:00Z\",\"updated\":2,\"failed\":[{\"name\":\"Beta\"}]}"
+                ]
+            }
+        ]
+    }
+}
