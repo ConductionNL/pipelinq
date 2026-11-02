@@ -48,6 +48,7 @@ use RuntimeException;
  *
  * @covers \OCA\Pipelinq\Service\ContactVcardService
  * @covers \OCA\Pipelinq\Service\ContactObjectReader
+ * @covers \OCA\Pipelinq\Util\ResultToArray
  *
  * @spec openspec/specs/contacts-sync/spec.md
  */
