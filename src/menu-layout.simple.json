@@ -1674,6 +1674,8 @@
 								"field": "occurredAt",
 								"dir": "desc"
 							},
+							"sortable": true,
+							"filterable": true,
 							"columns": [
 								{
 									"key": "title",
@@ -4160,7 +4162,10 @@
 								"url": "/apps/pipelinq/api/routing/team-load",
 								"responsePath": "results"
 							},
-							"avatar": "{displayName}",
+							"avatar": {
+								"text": "{displayName}",
+								"size": 32
+							},
 							"title": "{displayName}",
 							"meta": "{isAvailable}",
 							"valueLabels": {

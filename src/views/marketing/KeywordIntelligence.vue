@@ -104,61 +104,34 @@
 						)
 					}}
 				</p>
-				<div v-else class="keyword-intel__scroll">
-					<table class="keyword-intel__table">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Query') }}</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Position') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Impressions') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'CTR') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Behind by') }}
-								</th>
-								<th scope="col" />
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="row in strikingDistance" :key="row.query">
-								<td>{{ row.query }}</td>
-								<td class="keyword-intel__num">
-									{{ row.position }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ row.impressions }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ percent(row.ctr) }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ shortfall(row) }}
-								</td>
-								<td>
-									<NcButton
-										v-if="
-											!isConfirmed(row.query, confirmedTerms)
-										"
-										variant="tertiary"
-										:title="addTargetHint"
-										@click="
-											openConfirm(row, 'striking-distance')
-										">
-										{{ t('pipelinq', 'Add as target') }}
-									</NcButton>
-									<span v-else class="keyword-intel__taken">
-										{{ t('pipelinq', 'Already a target') }}
-									</span>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+				<CnDataTable
+					v-else
+					data-testid="keyword-intel-striking-table"
+					framed
+					filterable
+					localHeaders
+					:columns="strikingColumns"
+					:rows="strikingDistance"
+					rowKey="query">
+					<template #column-ctr="{ row }">
+						{{ percent(row.ctr) }}
+					</template>
+					<template #column-shortfall="{ row }">
+						{{ shortfall(row) }}
+					</template>
+					<template #column-target="{ row }">
+						<NcButton
+							v-if="!isConfirmed(row.query, confirmedTerms)"
+							variant="tertiary"
+							:title="addTargetHint"
+							@click="openConfirm(row, 'striking-distance')">
+							{{ t('pipelinq', 'Add as target') }}
+						</NcButton>
+						<span v-else class="keyword-intel__taken">
+							{{ t('pipelinq', 'Already a target') }}
+						</span>
+					</template>
+				</CnDataTable>
 			</section>
 
 			<section
@@ -301,44 +274,25 @@
 						)
 					}}
 				</p>
-				<div v-else class="keyword-intel__scroll">
-					<table class="keyword-intel__table">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Query') }}</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Impressions') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Position') }}
-								</th>
-								<th scope="col" />
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="row in gaps" :key="row.query">
-								<td>{{ row.query }}</td>
-								<td class="keyword-intel__num">
-									{{ row.impressions }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ row.position }}
-								</td>
-								<td>
-									<NcButton
-										v-if="
-											!isConfirmed(row.query, confirmedTerms)
-										"
-										variant="tertiary"
-										:title="addTargetHint"
-										@click="openConfirm(row, 'content-gap')">
-										{{ t('pipelinq', 'Add as target') }}
-									</NcButton>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+				<CnDataTable
+					v-else
+					data-testid="keyword-intel-gaps-table"
+					framed
+					filterable
+					localHeaders
+					:columns="gapColumns"
+					:rows="gaps"
+					rowKey="query">
+					<template #column-target="{ row }">
+						<NcButton
+							v-if="!isConfirmed(row.query, confirmedTerms)"
+							variant="tertiary"
+							:title="addTargetHint"
+							@click="openConfirm(row, 'content-gap')">
+							{{ t('pipelinq', 'Add as target') }}
+						</NcButton>
+					</template>
+				</CnDataTable>
 			</section>
 		</template>
 
@@ -356,6 +310,7 @@
 </template>
 
 <script>
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -383,6 +338,7 @@ const DAY = 24 * 60 * 60 * 1000
 export default {
 	name: 'KeywordIntelligence',
 	components: {
+		CnDataTable,
 		KeyVariant,
 		KeywordTargetConfirmModal,
 		NcButton,
@@ -434,6 +390,40 @@ export default {
 		 */
 		addTargetHint() {
 			return this.t('pipelinq', 'Save this search as a keyword to work on')
+		},
+
+		/**
+		 * The "one push from page one" columns: every data column sorts and
+		 * filters the rows the section holds, as board PqZoekinzicht draws the
+		 * heads; the confirm column carries no head controls.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		strikingColumns() {
+			return [
+				{ key: 'query', label: this.t('pipelinq', 'Query'), sortable: true },
+				this.numberColumn('position', this.t('pipelinq', 'Position')),
+				this.numberColumn('impressions', this.t('pipelinq', 'Impressions')),
+				this.numberColumn('ctr', this.t('pipelinq', 'CTR')),
+				this.numberColumn('shortfall', this.t('pipelinq', 'Behind by')),
+				{ key: 'target', label: '', sortable: false, filterable: false },
+			]
+		},
+
+		/**
+		 * The "nothing of ours answers this" columns, as `strikingColumns`.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		gapColumns() {
+			return [
+				{ key: 'query', label: this.t('pipelinq', 'Query'), sortable: true },
+				this.numberColumn('impressions', this.t('pipelinq', 'Impressions')),
+				this.numberColumn('position', this.t('pipelinq', 'Position')),
+				{ key: 'target', label: '', sortable: false, filterable: false },
+			]
 		},
 
 		/**
@@ -496,6 +486,18 @@ export default {
 		bucketRange,
 		isConfirmed,
 		crawlNotice,
+
+		/**
+		 * A right-aligned number column that sorts and filters as a number.
+		 *
+		 * @param {string} key The row field.
+		 * @param {string} label The head label.
+		 * @return {object} The column.
+		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		numberColumn(key, label) {
+			return { key, label, type: 'number', sortable: true, class: 'keyword-intel__num', cellClass: 'keyword-intel__num' }
+		},
 
 		/**
 		 * GET /api/marketing/keyword-proposals for the chosen window. One
@@ -663,7 +665,8 @@ export default {
 	}
 }
 
-.keyword-intel__num {
+.keyword-intel__num,
+:deep(.keyword-intel__num) {
 	text-align: end;
 }
 
