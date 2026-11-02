@@ -38,6 +38,7 @@ use Throwable;
  * @covers \OCA\Pipelinq\Util\PayloadToArray
  * @covers \OCA\Pipelinq\Util\SerialisedToArray
  * @covers \OCA\Pipelinq\Util\SerialisedPayload
+ * @covers \OCA\Pipelinq\Util\NullablePayloadToArray
  */
 class PayloadToArrayGoldenTest extends TestCase {
 
@@ -56,6 +57,17 @@ class PayloadToArrayGoldenTest extends TestCase {
 		\OCA\Pipelinq\Service\Egress\ConnectorEgress::class,
 		\OCA\Pipelinq\Service\SearchConsole\SearchQueryReportService::class,
 		\OCA\Pipelinq\Service\ShillinqStockReader::class,
+		\OCA\Pipelinq\Service\AnalyticsService::class,
+		\OCA\Pipelinq\Service\ForecastExportService::class,
+		\OCA\Pipelinq\Service\ForecastOverrideService::class,
+		\OCA\Pipelinq\Service\ForecastService::class,
+		\OCA\Pipelinq\Service\QuotaService::class,
+		\OCA\Pipelinq\Service\RapportageService::class,
+		\OCA\Pipelinq\Service\WorklistService::class,
+		\OCA\Pipelinq\Service\FirstTicketService::class,
+		\OCA\Pipelinq\BackgroundJob\ReminderDispatchJob::class,
+		\OCA\Pipelinq\Service\AvailabilityService::class,
+		\OCA\Pipelinq\Service\WalkInQueueService::class,
 	];
 
 	/**
@@ -221,6 +233,23 @@ class PayloadToArrayGoldenTest extends TestCase {
 	}//end cases()
 
 	/**
+	 * An array key without the class name PHP puts in a cast object's
+	 * private or protected property key, which depends on the file path.
+	 *
+	 * @param int|string $key The key.
+	 *
+	 * @return int|string
+	 */
+	private static function encodeKey(int|string $key): int|string {
+		if (is_string($key) === true && str_starts_with($key, "\0") === true) {
+			$parts = explode("\0", $key);
+			return 'non-public:' . end($parts);
+		}
+
+		return $key;
+	}//end encodeKey()
+
+	/**
 	 * A result in a JSON-safe, type-preserving form.
 	 *
 	 * @param mixed $value The value.
@@ -231,7 +260,7 @@ class PayloadToArrayGoldenTest extends TestCase {
 		if (is_array($value) === true) {
 			$out = [];
 			foreach ($value as $key => $item) {
-				$out[] = ['key' => $key, 'value' => self::encode(value: $item)];
+				$out[] = ['key' => self::encodeKey(key: $key), 'value' => self::encode(value: $item)];
 			}
 
 			return ['array' => $out];

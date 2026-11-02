@@ -37,11 +37,12 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Cross-module analytics summary service.
@@ -59,6 +60,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Reads the stores and the forecast target of every KPI it aggregates.
  */
 class AnalyticsService {
+	use PayloadToArray;
+
 	/**
 	 * Allowed period selectors (ADR-018, REQ-KB360-021).
 	 *
@@ -164,7 +167,7 @@ class AnalyticsService {
 	private function findTickets(string $ticketType): array {
 		$objects = [];
 		foreach ($this->ticketService->findByType(ticketType: $ticketType) as $result) {
-			$objects[] = $this->toArray(object: $result);
+			$objects[] = $this->toArray(value: $result);
 		}
 
 		return $objects;
@@ -209,40 +212,11 @@ class AnalyticsService {
 
 		$objects = [];
 		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
+			$objects[] = $this->toArray(value: $result);
 		}
 
 		return $objects;
 	}//end findObjects()
-
-	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity / array / unknown payload.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via DI container.

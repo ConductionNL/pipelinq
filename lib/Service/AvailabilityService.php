@@ -29,12 +29,13 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Compute per-resource per-day availability as 15-minute-aligned free blocks.
@@ -60,6 +61,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class AvailabilityService {
+	use NullablePayloadToArray;
+
 	/**
 	 * Slot alignment in minutes.
 	 *
@@ -1160,43 +1163,6 @@ class AvailabilityService {
 
 		return '';
 	}//end idOf()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

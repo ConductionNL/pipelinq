@@ -46,13 +46,14 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Worklist\WorkBuckets;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * "My work" worklist aggregation service.
@@ -69,6 +70,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * union/overdue/sort rules; the complexity is the mirrored spec, not accidental.
  */
 class WorklistService {
+	use PayloadToArray;
+
 	/**
 	 * Priority sort ranks — lower sorts first (MyWorkWidget.vue:43).
 	 *
@@ -616,7 +619,7 @@ class WorklistService {
 	 */
 	private function clientName(string $clientId): string {
 		try {
-			$client = $this->toArray(object: $this->getObjectService()->find($clientId));
+			$client = $this->toArray(value: $this->getObjectService()->find($clientId));
 		} catch (\Throwable $e) {
 			return '';
 		}
@@ -844,7 +847,7 @@ class WorklistService {
 
 		$objects = [];
 		foreach ($results as $result) {
-			$objects[] = $this->toArray(object: $result);
+			$objects[] = $this->toArray(value: $result);
 		}
 
 		return $objects;
@@ -898,40 +901,11 @@ class WorklistService {
 
 		$objects = [];
 		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
+			$objects[] = $this->toArray(value: $result);
 		}
 
 		return $objects;
 	}//end findObjects()
-
-	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity / array / unknown payload.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via DI container.
