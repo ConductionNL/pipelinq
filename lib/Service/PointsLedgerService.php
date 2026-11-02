@@ -32,6 +32,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Loyalty\LedgerMovement;
+use OCA\Pipelinq\Service\Loyalty\LedgerOrigin;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -98,13 +100,8 @@ class PointsLedgerService {
 		}
 
 		return $this->appendAndUpdate(
-			accountId: $accountId,
-			type: 'credit',
-			signedCount: $amount,
-			ruleId: $ruleId,
-			sourceDocument: $sourceDocument,
-			processedBy: $processedBy,
-			lifetimeDelta: $amount
+			movement: new LedgerMovement(accountId: $accountId, type: 'credit', signedCount: $amount, lifetimeDelta: $amount),
+			origin: new LedgerOrigin(ruleId: $ruleId, sourceDocument: $sourceDocument, processedBy: $processedBy)
 		);
 	}//end creditPoints()
 
@@ -146,13 +143,8 @@ class PointsLedgerService {
 		$sourceDocument['redemptionId'] = $redemptionId;
 
 		return $this->appendAndUpdate(
-			accountId: $accountId,
-			type: 'debit',
-			signedCount: -$amount,
-			ruleId: null,
-			sourceDocument: $sourceDocument,
-			processedBy: $processedBy,
-			lifetimeDelta: 0
+			movement: new LedgerMovement(accountId: $accountId, type: 'debit', signedCount: -$amount, lifetimeDelta: 0),
+			origin: new LedgerOrigin(ruleId: null, sourceDocument: $sourceDocument, processedBy: $processedBy)
 		);
 	}//end debitPoints()
 
@@ -173,13 +165,8 @@ class PointsLedgerService {
 		}
 
 		return $this->appendAndUpdate(
-			accountId: $accountId,
-			type: 'expiry',
-			signedCount: -$amount,
-			ruleId: null,
-			sourceDocument: ['expiryPolicyRef' => $reason],
-			processedBy: 'system:expiry-batch',
-			lifetimeDelta: 0
+			movement: new LedgerMovement(accountId: $accountId, type: 'expiry', signedCount: -$amount, lifetimeDelta: 0),
+			origin: new LedgerOrigin(ruleId: null, sourceDocument: ['expiryPolicyRef' => $reason], processedBy: 'system:expiry-batch')
 		);
 	}//end expirePoints()
 
@@ -200,13 +187,8 @@ class PointsLedgerService {
 		}
 
 		return $this->appendAndUpdate(
-			accountId: $accountId,
-			type: 'adjustment',
-			signedCount: $delta,
-			ruleId: null,
-			sourceDocument: ['reason' => $reason],
-			processedBy: $processedBy,
-			lifetimeDelta: max(0, $delta)
+			movement: new LedgerMovement(accountId: $accountId, type: 'adjustment', signedCount: $delta, lifetimeDelta: max(0, $delta)),
+			origin: new LedgerOrigin(ruleId: null, sourceDocument: ['reason' => $reason], processedBy: $processedBy)
 		);
 	}//end adjustPoints()
 
@@ -232,13 +214,12 @@ class PointsLedgerService {
 		}
 
 		return $this->appendAndUpdate(
-			accountId: $accountId,
-			type: 'refund',
-			signedCount: $amount,
-			ruleId: null,
-			sourceDocument: ['redemptionId' => $redemptionId, 'reason' => 'redemption cancelled'],
-			processedBy: $processedBy,
-			lifetimeDelta: 0
+			movement: new LedgerMovement(accountId: $accountId, type: 'refund', signedCount: $amount, lifetimeDelta: 0),
+			origin: new LedgerOrigin(
+				ruleId: null,
+				sourceDocument: ['redemptionId' => $redemptionId, 'reason' => 'redemption cancelled'],
+				processedBy: $processedBy
+			)
 		);
 	}//end refundPoints()
 
@@ -407,65 +388,59 @@ class PointsLedgerService {
 	 * roll back the ledger (ledger is the source of truth — denormalised
 	 * balance can be recomputed via getAccountBalance).
 	 *
-	 * @param string $accountId The account UUID.
-	 * @param string $type One of credit/debit/expiry/adjustment/refund.
-	 * @param int $signedCount Signed delta.
-	 * @param ?string $ruleId Optional PointsRule UUID.
-	 * @param array<string, mixed> $sourceDocument Source linkage.
-	 * @param string $processedBy Processor identifier.
-	 * @param int $lifetimeDelta Positive contribution to lifetimePoints (credits only).
+	 * @param LedgerMovement $movement The account, type, signed count and lifetime contribution.
+	 * @param LedgerOrigin   $origin   The rule, source document and processor.
 	 *
 	 * @return array<string, mixed> The ledger entry.
 	 */
-	private function appendAndUpdate(
-		string $accountId,
-		string $type,
-		int $signedCount,
-		?string $ruleId,
-		array $sourceDocument,
-		string $processedBy,
-		int $lifetimeDelta,
-	): array {
-		$account = $this->accountService->getAccount(accountId: $accountId);
+	private function appendAndUpdate(LedgerMovement $movement, LedgerOrigin $origin): array {
+		$account = $this->accountService->getAccount(accountId: $movement->accountId);
 		if ($account === null) {
 			throw new RuntimeException('Account not found.');
 		}
 
-		$currentBalance = (int)($account['currentBalance'] ?? 0);
-		$newBalance = $currentBalance + $signedCount;
-		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-
 		$entry = [
-			'accountId' => $accountId,
+			'accountId' => $movement->accountId,
 			'customerId' => $account['customerId'] ?? null,
-			'type' => $type,
-			'count' => $signedCount,
-			'balanceAfter' => $newBalance,
-			'sourceDocument' => $sourceDocument,
-			'ruleId' => $ruleId,
-			'timestamp' => $now,
-			'processedBy' => $processedBy,
+			'type' => $movement->type,
+			'count' => $movement->signedCount,
+			'balanceAfter' => (int)($account['currentBalance'] ?? 0) + $movement->signedCount,
+			'sourceDocument' => $origin->sourceDocument,
+			'ruleId' => $origin->ruleId,
+			'timestamp' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c'),
+			'processedBy' => $origin->processedBy,
 		];
 
 		$saved = $this->persist(payload: $entry);
+		$this->updateBalance(movement: $movement, entry: $entry);
 
+		return $saved;
+	}//end appendAndUpdate()
+
+	/**
+	 * Set the account's balance to the entry's balance after; a failure is logged, the entry stays.
+	 *
+	 * @param LedgerMovement       $movement The movement, for its account and lifetime contribution.
+	 * @param array<string, mixed> $entry    The saved ledger entry, for its balance after and timestamp.
+	 *
+	 * @return void
+	 */
+	private function updateBalance(LedgerMovement $movement, array $entry): void {
 		try {
 			$this->accountService->updateBalances(
-				accountId: $accountId,
-				newCurrentBalance: $newBalance,
-				lifetimeDelta: $lifetimeDelta,
-				lastActivityDate: $now
+				accountId: $movement->accountId,
+				newCurrentBalance: $entry['balanceAfter'],
+				lifetimeDelta: $movement->lifetimeDelta,
+				lastActivityDate: $entry['timestamp']
 			);
 		} catch (\Throwable $e) {
 			// Ledger is source of truth; log inconsistency for reconciliation.
 			$this->logger->error(
 				'Pipelinq: account balance denorm update failed; ledger entry retained',
-				['accountId' => $accountId, 'exception' => $e->getMessage()]
+				['accountId' => $movement->accountId, 'exception' => $e->getMessage()]
 			);
 		}
-
-		return $saved;
-	}//end appendAndUpdate()
+	}//end updateBalance()
 
 	/**
 	 * Persist a ledger entry (always create, never update — immutable).
