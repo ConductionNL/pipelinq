@@ -48,12 +48,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
+use OCA\Pipelinq\Service\Demo\DemoSeedContext;
+use OCA\Pipelinq\Service\Demo\DemoSeedTarget;
 use OCA\Pipelinq\Service\Demo\DemoSeedValues;
-use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Service\Demo\DemoSeedWriter;
 
 /**
  * Idempotent demo-data seeding + removal against OpenRegister.
@@ -74,7 +73,7 @@ class DemoSeedService {
 	 *
 	 * @var string
 	 */
-	private const TICKET_SCHEMA_KEY = 'ticket_schema';
+	private const TICKET_SCHEMA_KEY = DemoSeedContext::TICKET_SCHEMA_KEY;
 
 	/**
 	 * Reference fields a reseed re-points on an existing demo object.
@@ -181,22 +180,16 @@ class DemoSeedService {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig $appConfig App config (register/schema ids).
-	 * @param ContainerInterface $container Container for the OpenRegister ObjectService.
-	 * @param ContactVcardService $contactVcardService Contact-first identity provisioning (client.contactsUid).
-	 * @param TicketService $ticketService Unified ticket resolver + write path.
+	 * @param DemoSeedContext     $context         Register, schemas, store and seed definitions.
+	 * @param DemoSeedWriter      $writer          Contact-first identity and the one write path.
 	 * @param DemoMarketingSeeder $marketingSeeder Journeys, social and Search Console demo data.
-	 * @param DemoSeedValues $values Placeholder and reference resolution.
-	 * @param LoggerInterface $logger Logger.
+	 * @param DemoSeedValues      $values          Placeholder and reference resolution.
 	 */
 	public function __construct(
-		private readonly IAppConfig $appConfig,
-		private readonly ContainerInterface $container,
-		private readonly ContactVcardService $contactVcardService,
-		private readonly TicketService $ticketService,
+		private readonly DemoSeedContext $context,
+		private readonly DemoSeedWriter $writer,
 		private readonly DemoMarketingSeeder $marketingSeeder,
 		private readonly DemoSeedValues $values,
-		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
 
@@ -294,6 +287,7 @@ class DemoSeedService {
 			$created[$section] = 0;
 			$skipped[$section] = 0;
 			$relinked[$section] = 0;
+			$target = new DemoSeedTarget(objectService: $objectService, registerId: $registerId, schemaId: $schemaIds[$schemaKey], ticketType: $ticketType);
 
 			// One scan per schema: value => [uuid, ...] index for idempotency,
 			// plus the scanned rows by uuid for the relink check.
@@ -322,8 +316,7 @@ class DemoSeedService {
 					$uuids[$section . ':' . $definition['key']] = $existingUuid;
 					$skipped[$section]++;
 					$didRelink = $this->relinkExisting(
-						objectService: $objectService,
-						target: ['register' => $registerId, 'schema' => $schemaIds[$schemaKey], 'ticketType' => $ticketType],
+						target: $target,
 						existing: ($rows[$existingUuid] ?? []),
 						data: $data,
 						uuid: $existingUuid,
@@ -348,13 +341,7 @@ class DemoSeedService {
 					}
 				}
 
-				$saved = $this->saveSeedObject(
-					objectService: $objectService,
-					registerId: $registerId,
-					schemaId: $schemaIds[$schemaKey],
-					data: $data,
-					ticketType: $ticketType,
-				);
+				$saved = $this->writer->save(target: $target, data: $data);
 
 				$uuids[$section . ':' . $definition['key']] = (string)$saved->getUuid();
 				$created[$section]++;
@@ -378,8 +365,7 @@ class DemoSeedService {
 	 * run resolved a value for them. Everything else the user changed on the
 	 * demo object stays as it is.
 	 *
-	 * @param object $objectService The OpenRegister object service.
-	 * @param array{register: string, schema: string, ticketType: string|null} $target Where the object lives.
+	 * @param DemoSeedTarget $target Where the object lives.
 	 * @param array<string, mixed> $existing The stored object, as scanned.
 	 * @param array<string, mixed> $data The resolved seed payload.
 	 * @param string $uuid The stored object's uuid.
@@ -388,7 +374,27 @@ class DemoSeedService {
 	 *
 	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-reseed-re-links-demo-leads-to-the-new-pipeline-req-raf-010
 	 */
-	private function relinkExisting(object $objectService, array $target, array $existing, array $data, string $uuid): bool {
+	private function relinkExisting(DemoSeedTarget $target, array $existing, array $data, string $uuid): bool {
+		$patch = $this->relinkPatch(existing: $existing, data: $data);
+		if ($patch === [] || $existing === []) {
+			return false;
+		}
+
+		$payload = $existing;
+		unset($payload['@self']);
+		$this->writer->save(target: $target, data: array_merge($payload, $patch), uuid: $uuid);
+		return true;
+	}//end relinkExisting()
+
+	/**
+	 * The reference fields this run resolved that differ on the stored object.
+	 *
+	 * @param array<string, mixed> $existing The stored object, as scanned.
+	 * @param array<string, mixed> $data     The resolved seed payload.
+	 *
+	 * @return array<string, string>
+	 */
+	private function relinkPatch(array $existing, array $data): array {
 		$patch = [];
 		foreach (self::RELINK_FIELDS as $field) {
 			$wanted = (string)($data[$field] ?? '');
@@ -397,22 +403,8 @@ class DemoSeedService {
 			}
 		}
 
-		if ($patch === [] || $existing === []) {
-			return false;
-		}
-
-		$payload = $existing;
-		unset($payload['@self']);
-		$payload = array_merge($payload, $patch);
-
-		if ($target['ticketType'] !== null) {
-			$this->ticketService->save(ticketType: $target['ticketType'], payload: $payload, uuid: $uuid);
-			return true;
-		}
-
-		$objectService->saveObject($payload, [], $target['register'], $target['schema'], $uuid);
-		return true;
-	}//end relinkExisting()
+		return $patch;
+	}//end relinkPatch()
 
 	/**
 	 * Remove exactly the seeded demo set (lookup-field exact match, [Demo] prefix guarded).
@@ -484,46 +476,6 @@ class DemoSeedService {
 	}//end remove()
 
 	/**
-	 * Persist one seeded demo object and return the saved entity.
-	 *
-	 * Ticket sections write the unified schema through TicketService, which
-	 * forces the `ticketType` discriminator on; every other section writes the
-	 * section's own schema directly. Exactly one write happens per call.
-	 *
-	 * @param object $objectService The OpenRegister object service.
-	 * @param string $registerId The register to write into.
-	 * @param string $schemaId The schema for this section.
-	 * @param array<string, mixed> $data The object payload.
-	 * @param string|null $ticketType The ticket discriminator, or null for a plain write.
-	 *
-	 * @return object The saved entity.
-	 *
-	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
-	 */
-	private function saveSeedObject(
-		object $objectService,
-		string $registerId,
-		string $schemaId,
-		array $data,
-		?string $ticketType,
-	): object {
-		if ($ticketType !== null) {
-			return $this->ticketService->save(
-				ticketType: $ticketType,
-				payload: $data,
-			);
-		}
-
-		return $objectService->saveObject(
-			$data,
-			[],
-			$registerId,
-			$schemaId,
-			null
-		);
-	}//end saveSeedObject()
-
-	/**
 	 * Resolve the ObjectService, register id, schema ids and seed definitions.
 	 *
 	 * @return array{0: object, 1: string, 2: array<string, string>, 3: array<string, mixed>}|null
@@ -531,68 +483,14 @@ class DemoSeedService {
 	 *         file is unreadable.
 	 */
 	private function resolveContext(): ?array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($registerId === '') {
+		$context = $this->context->resolve(schemaKeys: array_values(array_unique(array_column(self::SECTIONS, 0))));
+		if ($context === null) {
 			return null;
 		}
 
-		$schemaIds = [];
-		foreach (self::SECTIONS as [$schemaKey]) {
-			if (isset($schemaIds[$schemaKey]) === true) {
-				continue;
-			}
-
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-			if ($schemaKey === self::TICKET_SCHEMA_KEY) {
-				// The ticket schema has one resolution point (TicketService).
-				$schemaId = $this->ticketService->getSchemaId();
-			}
-
-			if ($schemaId === '') {
-				return null;
-			}
-
-			$schemaIds[$schemaKey] = $schemaId;
-		}
-
-		$definitions = $this->loadDefinitions();
-		if ($definitions === null) {
-			return null;
-		}
-
-		$definitions = $this->mapDefinitionsToTickets(definitions: $definitions);
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			$this->logger->error('Pipelinq demo seed: OpenRegister ObjectService unavailable', ['exception' => $e->getMessage()]);
-			return null;
-		}
-
-		return [$objectService, $registerId, $schemaIds, $definitions];
+		$context[3] = $this->mapDefinitionsToTickets(definitions: $context[3]);
+		return $context;
 	}//end resolveContext()
-
-	/**
-	 * Load and decode lib/Settings/demo_seed_data.json.
-	 *
-	 * @return array<string, mixed>|null Null when missing or invalid. Most sections are
-	 *                                   lists of definitions; `social` and `search` are maps.
-	 */
-	private function loadDefinitions(): ?array {
-		$path = dirname(__DIR__) . '/Settings/demo_seed_data.json';
-		if (is_readable($path) === false) {
-			$this->logger->error('Pipelinq demo seed: demo_seed_data.json missing', ['path' => $path]);
-			return null;
-		}
-
-		$decoded = json_decode((string)file_get_contents($path), true);
-		if (is_array($decoded) === false || $decoded === []) {
-			$this->logger->error('Pipelinq demo seed: demo_seed_data.json invalid JSON', ['path' => $path]);
-			return null;
-		}
-
-		return $decoded;
-	}//end loadDefinitions()
 
 	/**
 	 * Scan a schema once and index it by exact lookup-field value.
@@ -764,18 +662,7 @@ class DemoSeedService {
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	private function withProvisionedIdentity(array $data, string $objectType): ?array {
-		$provision = $this->contactVcardService->provisionContactFromForm(
-			form: $data,
-			objectType: $objectType
-		);
-
-		if ($provision === null) {
-			return null;
-		}
-
-		$data['contactsUid'] = $provision['contactsUid'];
-
-		return $data;
+		return $this->writer->withIdentity(data: $data, objectType: $objectType);
 	}//end withProvisionedIdentity()
 
 	/**
