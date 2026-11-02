@@ -102,6 +102,8 @@ class ClientBusinessReaderTest extends TestCase {
 		$shillinqReader = $this->createMock(originalClassName: ShillinqInvoiceReader::class);
 		$shillinqReader->method('isAvailable')->willReturn($shillinq);
 		$shillinqReader->method('invoicesFor')->willReturn($invoices);
+		$shillinqReader->method('withCallerRights')->willReturnSelf();
+		$shillinqReader->method('callerMayRead')->willReturn($shillinq);
 		$l10n = $this->createMock(originalClassName: IL10N::class);
 		$l10n->method('t')->willReturnCallback(fn (string $text, array $params = []): string => vsprintf($text, $params));
 		$l10n->method('n')->willReturnCallback(

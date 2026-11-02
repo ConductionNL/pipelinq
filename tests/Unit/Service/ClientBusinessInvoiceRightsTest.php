@@ -90,7 +90,15 @@ class ClientBusinessInvoiceRightsTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function find(int|string $id, ?array $_extend = [], bool $files = false, mixed $register = null, mixed $schema = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function find(
+				int|string $id,
+				?array $_extend=[],
+				bool $files=false,
+				mixed $register=null,
+				mixed $schema=null,
+				bool $_rbac=true,
+				bool $_multitenancy=true
+			): array {
 				return ['type' => 'person', 'shillinqOrganisationRef' => 'deb-1'];
 			}
 
@@ -206,9 +214,9 @@ class ClientBusinessInvoiceRightsTest extends TestCase {
 			'OCA\OpenRegister\Db\RegisterMapper'     => $registers,
 			'OCA\OpenRegister\Db\SchemaMapper'       => $schemas,
 		];
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(fn (string $id): object => $services[$id]);
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$invoices = new class ($container, $logger) extends ShillinqInvoiceReader {
 			/**
 			 * Shillinq is installed.
@@ -220,12 +228,12 @@ class ClientBusinessInvoiceRightsTest extends TestCase {
 			}
 		};
 
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$keys = ['register' => 'pipelinq', 'client_schema' => 'client'];
 		$config->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => $keys[$key] ?? $default
 		);
-		$l10n = $this->createMock(IL10N::class);
+		$l10n = $this->createMock(originalClassName: IL10N::class);
 		$l10n->method('t')->willReturnCallback(fn (string $text, array $params = []): string => vsprintf($text, $params));
 		$l10n->method('n')->willReturnCallback(
 			function (string $one, string $many, int $count, array $params = []): string {
@@ -243,11 +251,11 @@ class ClientBusinessInvoiceRightsTest extends TestCase {
 			container: $container,
 			invoices: $invoices,
 			l10n: $l10n,
-			urlGenerator: $this->createMock(IURLGenerator::class),
+			urlGenerator: $this->createMock(originalClassName: IURLGenerator::class),
 			logger: $logger
 		);
 
-		return new ClientBusinessController($this->createMock(IRequest::class), $reader);
+		return new ClientBusinessController(request: $this->createMock(originalClassName: IRequest::class), reader: $reader);
 	}//end endpoint()
 
 	/**
@@ -266,10 +274,10 @@ class ClientBusinessInvoiceRightsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAReaderWithoutInvoiceRightsGetsNoInvoiceSentence(): void {
-		$data = $this->endpoint(mayRead: false, visible: [])->index('c1')->getData();
+		$data = $this->endpoint(mayRead: false, visible: [])->index(id: 'c1')->getData();
 
-		$this->assertSame('', $data['invoicesLine']);
-		$this->assertSame([], $this->invoiceReads());
+		$this->assertSame(expected: '', actual: $data['invoicesLine']);
+		$this->assertSame(expected: [], actual: $this->invoiceReads());
 	}//end testAReaderWithoutInvoiceRightsGetsNoInvoiceSentence()
 
 	/**
@@ -280,10 +288,10 @@ class ClientBusinessInvoiceRightsTest extends TestCase {
 	public function testAReaderWithInvoiceRightsCountsWhatTheyMaySee(): void {
 		$visible = [['id' => 'i1', 'lifecycleState' => 'overdue'], ['id' => 'i2', 'lifecycleState' => 'paid']];
 
-		$data = $this->endpoint(mayRead: true, visible: $visible)->index('c1')->getData();
+		$data = $this->endpoint(mayRead: true, visible: $visible)->index(id: 'c1')->getData();
 
-		$this->assertSame('2 invoices, 1 open.', $data['invoicesLine']);
-		$this->assertSame([['schema' => 'ARInvoice', '_rbac' => true, '_multitenancy' => true]], $this->invoiceReads());
+		$this->assertSame(expected: '2 invoices, 1 open.', actual: $data['invoicesLine']);
+		$this->assertSame(expected: [['schema' => 'ARInvoice', '_rbac' => true, '_multitenancy' => true]], actual: $this->invoiceReads());
 	}//end testAReaderWithInvoiceRightsCountsWhatTheyMaySee()
 
 	/**
@@ -292,9 +300,9 @@ class ClientBusinessInvoiceRightsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAReaderWithInvoiceRightsAndNoInvoicesReadsNone(): void {
-		$data = $this->endpoint(mayRead: true, visible: [])->index('c1')->getData();
+		$data = $this->endpoint(mayRead: true, visible: [])->index(id: 'c1')->getData();
 
-		$this->assertSame('No invoices for this resident.', $data['invoicesLine']);
+		$this->assertSame(expected: 'No invoices for this resident.', actual: $data['invoicesLine']);
 	}//end testAReaderWithInvoiceRightsAndNoInvoicesReadsNone()
 
 	/**
@@ -303,9 +311,9 @@ class ClientBusinessInvoiceRightsTest extends TestCase {
 	 * @return void
 	 */
 	public function testARightThatCannotBeCheckedLeavesTheSentenceOut(): void {
-		$data = $this->endpoint(mayRead: null, visible: [['id' => 'i1', 'lifecycleState' => 'sent']])->index('c1')->getData();
+		$data = $this->endpoint(mayRead: null, visible: [['id' => 'i1', 'lifecycleState' => 'sent']])->index(id: 'c1')->getData();
 
-		$this->assertSame('', $data['invoicesLine']);
-		$this->assertSame([], $this->invoiceReads());
+		$this->assertSame(expected: '', actual: $data['invoicesLine']);
+		$this->assertSame(expected: [], actual: $this->invoiceReads());
 	}//end testARightThatCannotBeCheckedLeavesTheSentenceOut()
 }//end class
