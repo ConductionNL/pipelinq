@@ -22,6 +22,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing\Transport;
 
 use OCA\Pipelinq\Service\Marketing\Transport\InstanceMailerTransport;
+use OCA\Pipelinq\Service\Marketing\Transport\MailAddressing;
+use OCA\Pipelinq\Service\Marketing\Transport\MailContent;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use OCP\Mail\IMailer;
 use OCP\Mail\IMessage;
@@ -77,13 +79,17 @@ class InstanceMailerTransportTest extends TestCase {
 
 		$transport = new InstanceMailerTransport($this->mailer, $this->logger);
 		$mail = new RenderedMail(
-			fromEmail: 'noreply@example.test',
-			fromName: 'Pipelinq',
-			replyTo: '',
-			toEmail: 'user@example.test',
-			subject: 'Hi',
-			html: '<p>hi</p>',
-			text: 'hi',
+			addressing: new MailAddressing(
+				fromEmail: 'noreply@example.test',
+				fromName: 'Pipelinq',
+				replyTo: '',
+				toEmail: 'user@example.test',
+			),
+			content: new MailContent(
+				subject: 'Hi',
+				html: '<p>hi</p>',
+				text: 'hi',
+			),
 			headers: [],
 			deliveryId: 'd-1',
 		);
@@ -104,7 +110,21 @@ class InstanceMailerTransportTest extends TestCase {
 		$this->mailer->method('send')->willReturn(['user@example.test']);
 
 		$transport = new InstanceMailerTransport($this->mailer, $this->logger);
-		$mail = new RenderedMail('noreply@example.test', 'Pipelinq', '', 'user@example.test', 'Hi', '<p>hi</p>', 'hi', [], 'd-2');
+		$mail = new RenderedMail(
+			addressing: new MailAddressing(
+				fromEmail: 'noreply@example.test',
+				fromName: 'Pipelinq',
+				replyTo: '',
+				toEmail: 'user@example.test',
+			),
+			content: new MailContent(
+				subject: 'Hi',
+				html: '<p>hi</p>',
+				text: 'hi',
+			),
+			headers: [],
+			deliveryId: 'd-2',
+		);
 
 		$result = $transport->send($mail);
 
@@ -141,15 +161,19 @@ class InstanceMailerTransportTest extends TestCase {
 
 		$transport = new InstanceMailerTransport($this->mailer, $this->logger);
 		$mail = new RenderedMail(
-			'noreply@example.test',
-			'Pipelinq',
-			'',
-			'user@example.test',
-			'Hi',
-			'<p>hi</p>',
-			'hi',
-			['X-Test-Header' => 'test-value'],
-			'd-3',
+			addressing: new MailAddressing(
+				fromEmail: 'noreply@example.test',
+				fromName: 'Pipelinq',
+				replyTo: '',
+				toEmail: 'user@example.test',
+			),
+			content: new MailContent(
+				subject: 'Hi',
+				html: '<p>hi</p>',
+				text: 'hi',
+			),
+			headers: ['X-Test-Header' => 'test-value'],
+			deliveryId: 'd-3',
 		);
 
 		$result = $transport->send($mail);
@@ -172,15 +196,19 @@ class InstanceMailerTransportTest extends TestCase {
 
 		$transport = new InstanceMailerTransport($this->mailer, $this->logger);
 		$mail = new RenderedMail(
-			'noreply@example.test',
-			'Pipelinq',
-			'',
-			'user@example.test',
-			'Hi',
-			'<p>hi</p>',
-			'hi',
-			['List-Unsubscribe' => '<mailto:unsub@example.test>'],
-			'd-4',
+			addressing: new MailAddressing(
+				fromEmail: 'noreply@example.test',
+				fromName: 'Pipelinq',
+				replyTo: '',
+				toEmail: 'user@example.test',
+			),
+			content: new MailContent(
+				subject: 'Hi',
+				html: '<p>hi</p>',
+				text: 'hi',
+			),
+			headers: ['List-Unsubscribe' => '<mailto:unsub@example.test>'],
+			deliveryId: 'd-4',
 		);
 
 		$result = $transport->send($mail);
