@@ -687,7 +687,19 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "sms",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "business: send as text": {
         "result": false,
@@ -711,7 +723,19 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "whatsapp",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "latestState: send as text": {
         "result": "unknown",
@@ -735,17 +759,26 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "sms",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "marketing decide: send as text": {
         "result": {
             "send": false,
-            "code": "allowed",
-            "reason": "",
-            "unsubscribe": {
-                "url": "https://integriq.example/u/tok",
-                "oneClickUrl": "https://integriq.example/u/tok/one-click"
-            }
+            "code": "authority-unavailable",
+            "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+            "unsubscribe": null
         },
         "questions": [
             {
@@ -768,7 +801,19 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "marketing",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "canSend: send as int": {
         "result": false,
@@ -792,7 +837,19 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "sms",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "business: send as int": {
         "result": false,
@@ -816,7 +873,19 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "whatsapp",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "latestState: send as int": {
         "result": "unknown",
@@ -840,13 +909,25 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "sms",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "marketing decide: send as int": {
         "result": {
             "send": false,
-            "code": "allowed",
-            "reason": "",
+            "code": "authority-unavailable",
+            "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
             "unsubscribe": null
         },
         "questions": [
@@ -870,7 +951,19 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "marketing",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "canSend: send null": {
         "result": false,
@@ -894,7 +987,19 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "sms",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "business: send null": {
         "result": false,
@@ -918,7 +1023,19 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "whatsapp",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "latestState: send null": {
         "result": "unknown",
@@ -942,13 +1059,25 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "sms",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "marketing decide: send null": {
         "result": {
             "send": false,
-            "code": "allowed",
-            "reason": "",
+            "code": "authority-unavailable",
+            "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
             "unsubscribe": null
         },
         "questions": [
@@ -972,7 +1101,19 @@
         ],
         "changes": [],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "marketing",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "canSend: odd types": {
         "result": true,
@@ -2647,12 +2788,9 @@
             },
             "contact-3": {
                 "send": false,
-                "code": "allowed",
-                "reason": "",
-                "unsubscribe": {
-                    "url": "https://integriq.example/u/tok",
-                    "oneClickUrl": "https://integriq.example/u/tok/one-click"
-                }
+                "code": "authority-unavailable",
+                "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+                "unsubscribe": null
             }
         },
         "questions": [
@@ -2700,6 +2838,17 @@
                 "message": "ContactAddressLookup: not found in client",
                 "context": {
                     "contactId": "contact-missing"
+                }
+            },
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "marketing",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
                 }
             }
         ]
@@ -3112,7 +3261,19 @@
             }
         ],
         "written": [],
-        "logs": []
+        "logs": [
+            {
+                "level": "warning",
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "sms",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
     },
     "controller consent: contact unknown": {
         "result": {
