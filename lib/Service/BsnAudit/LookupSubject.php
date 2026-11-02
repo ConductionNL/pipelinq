@@ -41,6 +41,7 @@ class LookupSubject {
 	 * @return void
 	 */
 	public function __construct(
+		#[\SensitiveParameter]
 		public readonly string $rawBsn,
 		public readonly ?string $bsnHash = null,
 	) {

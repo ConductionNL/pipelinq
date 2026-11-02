@@ -181,7 +181,10 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 	 * call. Pending in pipelinq#764.
 	 * @spec openspec/specs/berichtenbox/spec.md
 	 */
-	public function checkMailbox(string $bsn): BerichtenboxResult {
+	public function checkMailbox(
+		#[\SensitiveParameter]
+		string $bsn,
+	): BerichtenboxResult {
 		$reference = 'bbk-mbox-log-' . bin2hex(random_bytes(6));
 		$this->logger->info(
 			'Pipelinq Berichtenbox checkMailbox deferred (no outbound connector bound)',

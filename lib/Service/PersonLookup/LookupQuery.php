@@ -45,6 +45,7 @@ class LookupQuery {
 	 * @return void
 	 */
 	public function __construct(
+		#[\SensitiveParameter]
 		public readonly string $rawBsn,
 		public readonly LookupReason $reason,
 		public readonly string $basis,
