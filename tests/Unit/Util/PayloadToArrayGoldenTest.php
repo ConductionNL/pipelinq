@@ -294,7 +294,7 @@ class PayloadToArrayGoldenTest extends TestCase {
 		}
 
 		$golden = json_decode((string) file_get_contents(self::GOLDEN), true);
-		$this->assertArrayHasKey($key, $golden);
-		$this->assertSame($golden[$key], $actual);
+		$this->assertArrayHasKey(key: $key, array: $golden);
+		$this->assertSame(expected: $golden[$key], actual: $actual);
 	}//end testToArrayMatchesTheGolden()
 }//end class
