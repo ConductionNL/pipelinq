@@ -32,6 +32,7 @@ use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Service\Sla\MergesBreachEvents;
 use OCA\Pipelinq\Service\SlaEngineService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\EventDispatcher\Event;
@@ -73,6 +74,7 @@ use Throwable;
  * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
 class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
+	use MergesBreachEvents;
 
 	/**
 	 * Identifies this listener's entries in the deferral job.
@@ -262,41 +264,16 @@ class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return array<string, mixed> Updated slaStatus.
 	 */
-	private function applyEscalations(
-		array $slaStatus,
-		string $type,
-		string $uuid,
-		array $policy,
-	): array {
+	private function applyEscalations(array $slaStatus, string $type, string $uuid, array $policy): array {
 		if (($slaStatus['pausedAt'] ?? null) !== null) {
 			return $slaStatus;
 		}
 
 		$alreadyFired = (int)($slaStatus['currentEscalationLevel'] ?? 0);
-		$matchType = $type;
-		if ($type === 'complaint') {
-			$matchType = 'complaint';
-		}
-
-		$result = $this->engine->executeEscalations(
-			$policy,
-			$matchType,
-			$uuid,
-			$slaStatus['targets'],
-			$slaStatus['targets'],
-			$alreadyFired,
-		);
+		$targets = $slaStatus['targets'];
+		$result = $this->engine->executeEscalations($policy, $type, $uuid, $targets, $targets, $alreadyFired);
 		if ($result['eventIds'] !== []) {
-			foreach ($slaStatus['targets'] as $idx => $target) {
-				$slaStatus['targets'][$idx]['breachEventIds'] = array_values(
-					array_unique(
-						array_merge(
-							(array)($target['breachEventIds'] ?? []),
-							$result['eventIds']
-						)
-					)
-				);
-			}
+			$slaStatus['targets'] = $this->withBreachEvents(targets: $slaStatus['targets'], eventIds: $result['eventIds']);
 		}
 
 		$slaStatus['currentEscalationLevel'] = $result['level'];

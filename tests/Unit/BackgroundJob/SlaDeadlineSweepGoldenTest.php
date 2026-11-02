@@ -51,6 +51,7 @@ use Throwable;
  * @covers \OCA\Pipelinq\Service\Sla\SlaSweepRun
  * @covers \OCA\Pipelinq\Service\Sla\SlaSweepSurface
  * @covers \OCA\Pipelinq\Service\Sla\SlaSweptObject
+ * @covers \OCA\Pipelinq\Service\Sla\MergesBreachEvents
  */
 class SlaDeadlineSweepGoldenTest extends TestCase {
 

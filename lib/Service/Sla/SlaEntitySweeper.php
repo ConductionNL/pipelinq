@@ -43,6 +43,8 @@ use Throwable;
  * @spec openspec/specs/klachtenregistratie/spec.md#Background-Job-for-SLA-Monitoring
  */
 class SlaEntitySweeper {
+	use MergesBreachEvents;
+
 	private const BATCH_SIZE = 100;
 
 	/**
@@ -313,17 +315,7 @@ class SlaEntitySweeper {
 	 */
 	private function mergeEscalation(array $slaStatus, array $result): array {
 		$slaStatus['currentEscalationLevel'] = $result['level'];
-		foreach ($slaStatus['targets'] as $idx => $target) {
-			$slaStatus['targets'][$idx]['breachEventIds'] = array_values(
-				array_unique(
-					array_merge(
-						(array) ($target['breachEventIds'] ?? []),
-						$result['eventIds']
-					)
-				)
-			);
-		}
-
+		$slaStatus['targets']                = $this->withBreachEvents(targets: $slaStatus['targets'], eventIds: $result['eventIds']);
 		return $slaStatus;
 	}//end mergeEscalation()
 
