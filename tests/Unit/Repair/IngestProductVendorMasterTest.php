@@ -373,14 +373,15 @@ class IngestProductVendorMasterTest extends TestCase {
 	/**
 	 * Every save names the register, the schema and, for an update, the
 	 * object, the way OpenRegister's saveObject takes them: a new product,
-	 * its productId fix-up, a filled existing product, its source record and
-	 * a new supplier.
+	 * its productId fix-up, a filled existing product, a new and a filled
+	 * existing supplier, and each one's source record.
 	 *
 	 * @return void
 	 */
 	public function testEverySaveGoesToTheConfiguredRegisterAndSchema(): void {
 		$os = new FakeIngestObjectService();
 		$os->store['p-existing'] = ['id' => 'p-existing', 'productId' => 'p-existing', 'sku' => 'SKU-2', 'gtin' => ''];
+		$os->store['sup-1'] = ['id' => 'sup-1', 'contactsUid' => 'pvm-' . md5('Bouw BV87654321'), 'displayName' => 'Bouw BV', 'category' => ''];
 		$repair = $this->makeRepair(os: $os, sourceRecordSchema: 'src-schema');
 
 		$maps = $repair->ingest(
@@ -389,7 +390,10 @@ class IngestProductVendorMasterTest extends TestCase {
 					['ref' => 'p-new', 'id' => 'p-new', 'sku' => 'SKU-1', 'name' => 'Bolt'],
 					['ref' => 'p-old', 'id' => 'p-old', 'sku' => 'SKU-2', 'gtin' => '99999'],
 				],
-				'vendors' => [['ref' => 'v-1', 'id' => 'v-1', 'name' => 'Acme', 'kvkNumber' => '12345678']],
+				'vendors' => [
+					['ref' => 'v-1', 'id' => 'v-1', 'name' => 'Acme', 'kvkNumber' => '12345678'],
+					['ref' => 'v-2', 'id' => 'v-2', 'name' => 'Bouw BV', 'kvkNumber' => '87654321', 'category' => 'goods'],
+				],
 			]
 		);
 
@@ -402,10 +406,14 @@ class IngestProductVendorMasterTest extends TestCase {
 				['register' => 'reg-1', 'schema' => 'prod-schema', 'uuid' => 'p-existing'],
 				['register' => 'reg-1', 'schema' => 'src-schema', 'uuid' => null],
 				['register' => 'reg-1', 'schema' => 'supp-schema', 'uuid' => null],
+				['register' => 'reg-1', 'schema' => 'src-schema', 'uuid' => null],
+				['register' => 'reg-1', 'schema' => 'supp-schema', 'uuid' => 'sup-1'],
+				['register' => 'reg-1', 'schema' => 'src-schema', 'uuid' => null],
 			],
 			actual: $os->saves
 		);
 		$this->assertSame(expected: '99999', actual: $os->store['p-existing']['gtin']);
 		$this->assertSame(expected: 'obj-1', actual: $os->store['obj-1']['productId']);
+		$this->assertSame(expected: 'goods', actual: $os->store['sup-1']['category']);
 	}//end testEverySaveGoesToTheConfiguredRegisterAndSchema()
 }//end class

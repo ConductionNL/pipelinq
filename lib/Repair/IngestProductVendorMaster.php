@@ -307,10 +307,10 @@ class IngestProductVendorMaster implements IRepairStep {
 				$updates = $this->buildProductFillPayload(existing: $existing, shillinqSource: $shillinqProduct);
 				if (empty($updates) === false) {
 					$objectService->saveObject(
-						$registerId,
-						$schemaId,
-						array_merge($existing, $updates),
-						$existing['id'] ?? null
+						object: array_merge($existing, $updates),
+						register: $registerId,
+						schema: $schemaId,
+						uuid: $existing['id'] ?? null
 					);
 				}
 
@@ -325,7 +325,7 @@ class IngestProductVendorMaster implements IRepairStep {
 
 			// Create: map shillinq fields onto the extended product schema.
 			$newProduct = $this->mapShillinqProductToSchema(shillinqProduct: $shillinqProduct);
-			$created = $objectService->saveObject($registerId, $schemaId, $newProduct, null);
+			$created = $objectService->saveObject(object: $newProduct, register: $registerId, schema: $schemaId, uuid: null);
 			$createdArr = (array)$created;
 			if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {
 				$createdArr = $created->jsonSerialize();
@@ -336,7 +336,7 @@ class IngestProductVendorMaster implements IRepairStep {
 			// Ensure productId == object UUID (REQ-PVM-002).
 			if (isset($createdArr['id']) === true && ($createdArr['productId'] ?? null) !== $createdArr['id']) {
 				$createdArr['productId'] = $createdArr['id'];
-				$objectService->saveObject($registerId, $schemaId, $createdArr, $createdArr['id']);
+				$objectService->saveObject(object: $createdArr, register: $registerId, schema: $schemaId, uuid: $createdArr['id']);
 				$productId = $createdArr['id'];
 			}
 
@@ -468,10 +468,10 @@ class IngestProductVendorMaster implements IRepairStep {
 			$updates = $this->buildSupplierFillPayload(existing: $existingSupplier, shillinqSource: $shillinqVendor);
 			if (empty($updates) === false) {
 				$objectService->saveObject(
-					$registerId,
-					$schemaId,
-					array_merge($existingSupplier, $updates),
-					$existingSupplier['id'] ?? null
+					object: array_merge($existingSupplier, $updates),
+					register: $registerId,
+					schema: $schemaId,
+					uuid: $existingSupplier['id'] ?? null
 				);
 			}
 
@@ -481,7 +481,7 @@ class IngestProductVendorMaster implements IRepairStep {
 		// Create new supplier commercial profile.
 		$newSupplier = $this->mapShillinqVendorToSchema(shillinqVendor: $shillinqVendor);
 		$newSupplier['contactsUid'] = $contactsUid;
-		$objectService->saveObject($registerId, $schemaId, $newSupplier, null);
+		$objectService->saveObject(object: $newSupplier, register: $registerId, schema: $schemaId, uuid: null);
 	}//end upsertSupplier()
 
 	/**
@@ -682,7 +682,12 @@ class IngestProductVendorMaster implements IRepairStep {
 		$now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
 		try {
-			$objectService->saveObject($registerId, $sourceRecordSchemaId, $link->toRecord(now: $now), null);
+			$objectService->saveObject(
+				object: $link->toRecord(now: $now),
+				register: $registerId,
+				schema: $sourceRecordSchemaId,
+				uuid: null
+			);
 		} catch (\Throwable $e) {
 			// Provenance write failure is non-fatal.
 			$this->logger->warning(
