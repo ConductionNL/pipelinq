@@ -42,6 +42,7 @@ use ReflectionMethod;
  * @covers \OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener
  * @uses   \OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage
  * @uses   \OCA\Pipelinq\Service\Berichtenbox\MessageOptions
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  */
 class BerichtenboxZaakStatusListenerQueueTest extends TestCase {
 	/**

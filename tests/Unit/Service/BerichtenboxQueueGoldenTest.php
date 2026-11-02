@@ -58,6 +58,7 @@ use Throwable;
  * @uses   \OCA\Pipelinq\Service\DutchHolidayCalendar
  * @covers \OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage
  * @covers \OCA\Pipelinq\Service\Berichtenbox\MessageOptions
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  *
  * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
  */
