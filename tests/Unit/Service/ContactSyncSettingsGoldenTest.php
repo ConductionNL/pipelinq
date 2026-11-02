@@ -46,6 +46,7 @@ use RuntimeException;
  * rewrite the file, then run once more without it.
  *
  * @covers \OCA\Pipelinq\Service\ContactSyncSettingsService
+ * @covers \OCA\Pipelinq\Service\LinkedContactRecords
  *
  * @spec openspec/specs/contacts-sync/spec.md
  */
