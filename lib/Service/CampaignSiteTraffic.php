@@ -33,13 +33,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * The configured portal, the blast's campaign slug, and the campaign's
@@ -177,7 +175,7 @@ class CampaignSiteTraffic {
 			return [];
 		}
 
-		$dayAfter = (new DateTimeImmutable($window['to'], new DateTimeZone('UTC')))->modify('+1 day')->format('Y-m-d');
+		$dayAfter = (new DateTimeImmutable($window['to'] . ' UTC'))->modify('+1 day')->format('Y-m-d');
 		$filters  = [
 			'register' => self::PORTALIQ_REGISTER,
 			'schema'   => self::DAILY_SCHEMA,
@@ -224,7 +222,7 @@ class CampaignSiteTraffic {
 	private function pageRows(object $objectService, array $config): array {
 		try {
 			$page = $objectService->findAll(config: $config, _rbac: false, _multitenancy: false);
-		} catch (Throwable $e) {
+		} catch (\Throwable $e) {
 			$portal = (string) ($config['filters']['portal'] ?? '');
 			$this->logger->warning('CampaignPerformanceService: reading portalTrafficDaily failed', ['portal' => $portal, 'exception' => $e->getMessage()]);
 			return [];
@@ -353,7 +351,7 @@ class CampaignSiteTraffic {
 	private function objectService(): ?object {
 		try {
 			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
+		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'CampaignPerformanceService: OpenRegister unavailable',
 				['exception' => $e->getMessage()]
