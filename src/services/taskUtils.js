@@ -87,6 +87,15 @@ export function getTaskPriorityLabel(priority) {
 }
 
 /**
+ * The badge colour per task priority.
+ */
+const TASK_PRIORITY_COLORS = {
+	high: 'var(--color-error)',
+	normal: 'var(--color-text-maxcontrast)',
+	low: 'var(--color-text-lighter)',
+}
+
+/**
  * Get the color for a task priority badge.
  *
  * @param {string} priority The task priority key.
@@ -94,16 +103,10 @@ export function getTaskPriorityLabel(priority) {
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-49
  */
 export function getTaskPriorityColor(priority) {
-	switch (priority) {
-		case 'high':
-			return 'var(--color-error)'
-		case 'normal':
-			return 'var(--color-text-maxcontrast)'
-		case 'low':
-			return 'var(--color-text-lighter)'
-		default:
-			return 'var(--color-text-maxcontrast)'
+	if (typeof priority === 'string' && Object.hasOwn(TASK_PRIORITY_COLORS, priority)) {
+		return TASK_PRIORITY_COLORS[priority]
 	}
+	return 'var(--color-text-maxcontrast)'
 }
 
 /**
