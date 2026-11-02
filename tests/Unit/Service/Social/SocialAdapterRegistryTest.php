@@ -32,9 +32,11 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Social;
 use OCA\OpenRegister\Service\Credential\ProviderCatalogue;
 use OCA\Pipelinq\Service\Social\BlueskyAdapter;
 use OCA\Pipelinq\Service\Social\FacebookPageAdapter;
+use OCA\Pipelinq\Service\Social\IndependentNetworkAdapters;
 use OCA\Pipelinq\Service\Social\InstagramBusinessAdapter;
 use OCA\Pipelinq\Service\Social\LinkedInAdapter;
 use OCA\Pipelinq\Service\Social\MastodonAdapter;
+use OCA\Pipelinq\Service\Social\MetaNetworkAdapters;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
 use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
 use OCA\Pipelinq\Service\Social\ThreadsAdapter;
@@ -87,14 +89,18 @@ class SocialAdapterRegistryTest extends TestCase {
 		$gateway = new SocialBrokerGateway($container, $this->createMock(LoggerInterface::class));
 
 		return new SocialAdapterRegistry(
-			$gateway,
-			new MastodonAdapter($gateway),
-			new BlueskyAdapter($gateway),
-			new LinkedInAdapter($gateway),
-			new XAdapter($gateway),
-			new FacebookPageAdapter($gateway),
-			new InstagramBusinessAdapter($gateway),
-			new ThreadsAdapter($gateway),
+			gateway: $gateway,
+			independent: new IndependentNetworkAdapters(
+				mastodon: new MastodonAdapter($gateway),
+				bluesky: new BlueskyAdapter($gateway),
+				linkedin: new LinkedInAdapter($gateway),
+				xNetwork: new XAdapter($gateway),
+			),
+			meta: new MetaNetworkAdapters(
+				facebook: new FacebookPageAdapter($gateway),
+				instagram: new InstagramBusinessAdapter($gateway),
+				threads: new ThreadsAdapter($gateway),
+			),
 		);
 	}
 
