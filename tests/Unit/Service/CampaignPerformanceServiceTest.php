@@ -37,6 +37,7 @@ use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\CampaignLinkDecorator;
 use OCA\Pipelinq\Service\CampaignPerformanceService;
+use OCA\Pipelinq\Service\CampaignSiteTraffic;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -130,15 +131,17 @@ class CampaignPerformanceServiceTest extends TestCase {
 			}
 		);
 
-		return new class ($installed, $container, $appConfig, $time, $blastService, $attribution, new CampaignLinkDecorator($appConfig), $this->createMock(LoggerInterface::class)) extends CampaignPerformanceService {
+		$traffic = new class ($installed, $container, $appConfig, new CampaignLinkDecorator($appConfig), $this->createMock(LoggerInterface::class)) extends CampaignSiteTraffic {
 			public function __construct(private bool $installed, ...$args) {
 				parent::__construct(...$args);
 			}//end __construct()
 
-			protected function isPortaliqInstalled(): bool {
+			public function isPortaliqInstalled(): bool {
 				return $this->installed;
 			}//end isPortaliqInstalled()
 		};
+
+		return new CampaignPerformanceService(time: $time, blastService: $blastService, attributionService: $attribution, traffic: $traffic);
 	}//end build()
 
 	/**
