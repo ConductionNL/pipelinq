@@ -60,29 +60,18 @@ class SocialAdapterRegistry {
 	 * Every adapter is injected rather than constructed here, so a test can
 	 * hand in a fake gateway and the container owns the wiring.
 	 *
-	 * @param SocialBrokerGateway $gateway The brokered egress seam.
-	 * @param MastodonAdapter $mastodon Mastodon.
-	 * @param BlueskyAdapter $bluesky Bluesky.
-	 * @param LinkedInAdapter $linkedin LinkedIn, member and organisation.
-	 * @param XAdapter $xNetwork X.
-	 * @param FacebookPageAdapter $facebook A Facebook page.
-	 * @param InstagramBusinessAdapter $instagram An Instagram business account.
-	 * @param ThreadsAdapter $threads Threads.
+	 * @param SocialBrokerGateway        $gateway     The brokered egress seam.
+	 * @param IndependentNetworkAdapters $independent Mastodon, Bluesky, LinkedIn and X.
+	 * @param MetaNetworkAdapters        $meta        Facebook, Instagram and Threads.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly SocialBrokerGateway $gateway,
-		MastodonAdapter $mastodon,
-		BlueskyAdapter $bluesky,
-		LinkedInAdapter $linkedin,
-		XAdapter $xNetwork,
-		FacebookPageAdapter $facebook,
-		InstagramBusinessAdapter $instagram,
-		ThreadsAdapter $threads,
+		IndependentNetworkAdapters $independent,
+		MetaNetworkAdapters $meta,
 	) {
-		$all = [$mastodon, $bluesky, $linkedin, $xNetwork, $facebook, $instagram, $threads];
-		foreach ($all as $adapter) {
+		foreach ([...$independent->all(), ...$meta->all()] as $adapter) {
 			$this->adapters[$adapter->network()] = $adapter;
 		}
 	}//end __construct()

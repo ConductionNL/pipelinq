@@ -48,7 +48,7 @@ class PayloadToArrayGoldenTest extends TestCase {
 		\OCA\Pipelinq\BackgroundJob\BlastSendJob::class,
 		\OCA\Pipelinq\BackgroundJob\WebhookProcessorJob::class,
 		\OCA\Pipelinq\Service\AttributionService::class,
-		\OCA\Pipelinq\Service\CampaignPerformanceService::class,
+		\OCA\Pipelinq\Service\CampaignSiteTraffic::class,
 		\OCA\Pipelinq\Service\ChannelProviderRepository::class,
 		\OCA\Pipelinq\Service\Marketing\ListObjectStore::class,
 		\OCA\Pipelinq\Service\SegmentService::class,
