@@ -201,8 +201,8 @@ class CampaignSiteTraffic {
 		$offset = 0;
 		while ($offset < self::MAX_ROWS) {
 			$page = $this->pageRows(objectService: $objectService, config: ['filters' => $filters, 'limit' => self::PAGE, 'offset' => $offset]);
-			$rows = array_merge($rows, ($page ?? []));
-			if ($page === null || count($page) < self::PAGE) {
+			$rows = array_merge($rows, $page);
+			if (count($page) < self::PAGE) {
 				break;
 			}
 
@@ -213,24 +213,25 @@ class CampaignSiteTraffic {
 	}//end pages()
 
 	/**
-	 * One page as plain rows, or null when the read failed or answered no list.
+	 * One page as plain rows; empty when the read failed or answered no list,
+	 * which also ends the paging.
 	 *
 	 * @param object               $objectService The OpenRegister object service.
 	 * @param array<string, mixed> $config        The findAll() query.
 	 *
-	 * @return array<int, array<string, mixed>>|null
+	 * @return array<int, array<string, mixed>>
 	 */
-	private function pageRows(object $objectService, array $config): ?array {
+	private function pageRows(object $objectService, array $config): array {
 		try {
 			$page = $objectService->findAll(config: $config, _rbac: false, _multitenancy: false);
 		} catch (Throwable $e) {
 			$portal = (string) ($config['filters']['portal'] ?? '');
 			$this->logger->warning('CampaignPerformanceService: reading portalTrafficDaily failed', ['portal' => $portal, 'exception' => $e->getMessage()]);
-			return null;
+			return [];
 		}
 
 		if (is_iterable($page) === false) {
-			return null;
+			return [];
 		}
 
 		return $this->plainRows(page: $page);

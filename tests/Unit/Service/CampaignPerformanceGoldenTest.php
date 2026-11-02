@@ -34,6 +34,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use stdClass;
 
 /**
  * Runs forBlast() over scripted blasts, windows and portal rollups and
@@ -108,6 +109,8 @@ class CampaignPerformanceGoldenTest extends TestCase {
 			),
 			'created date fallback'      => array_merge($base, ['blast' => ['uuid' => 'b4', 'name' => 'Winter', 'createdAt' => '2026-07-01T00:00:00Z']]),
 			'no blast dates'             => array_merge($base, ['blast' => ['uuid' => 'b5', 'name' => 'Undated']]),
+			'window just over a year'    => array_merge($base, ['from' => '2025-01-01', 'to' => '2026-01-15']),
+			'padded blast name'          => array_merge($base, ['blast' => array_merge($blast, ['name' => ' Spring newsletter 2026 '])]),
 		];
 	}//end definitions()
 
@@ -138,6 +141,8 @@ class CampaignPerformanceGoldenTest extends TestCase {
 					['campaign' => 'spring-newsletter-2026', 'source' => 'newsletter', 'medium' => 'email', 'sessions' => 7],
 					['campaign' => 'SPRING NEWSLETTER 2026', 'source' => 'newsletter', 'medium' => 'email', 'sessions' => 3, 'pageViews' => 9],
 					['campaign' => 'other', 'source' => 'x', 'medium' => 'y', 'sessions' => 50],
+					['source' => 'no-campaign', 'medium' => 'x', 'sessions' => 6],
+					new stdClass(),
 					'not an array',
 				],
 			],
@@ -145,7 +150,7 @@ class CampaignPerformanceGoldenTest extends TestCase {
 				'date'      => '2026-09-02',
 				'campaigns' => [
 					['campaign' => 'spring-newsletter-2026', 'source' => 'social', 'medium' => 'cpc', 'sessions' => 12, 'formSubmits' => 2],
-					['campaign' => 'Spring Newsletter 2026', 'source' => 'newsletter', 'medium' => 'email', 'sessions' => 2],
+					['campaign' => 'Spring Newsletter 2026', 'source' => 'newsletter', 'medium' => 'email', 'sessions' => 2, 'formSubmits' => 3],
 					['campaign' => 'spring-newsletter-2026', 'sessions' => 1],
 				],
 			],
