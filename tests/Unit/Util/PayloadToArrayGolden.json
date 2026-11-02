@@ -139,7 +139,7 @@
     "OCA\\Pipelinq\\BackgroundJob\\ReminderDispatchJob / getObject array": {
         "array": [
             {
-                "key": "\u0000class@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:138$ca\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "array": [
                         {
@@ -156,7 +156,7 @@
     "OCA\\Pipelinq\\BackgroundJob\\ReminderDispatchJob / getObject string": {
         "array": [
             {
-                "key": "\u0000class@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:138$ca\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "string": "g"
                 }
@@ -208,7 +208,7 @@
     "OCA\\Pipelinq\\BackgroundJob\\ReminderDispatchJob / jsonSerialize null": {
         "array": [
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:112$c9\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "NULL": null
                 }
@@ -218,7 +218,7 @@
     "OCA\\Pipelinq\\BackgroundJob\\ReminderDispatchJob / jsonSerialize string": {
         "array": [
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:112$c9\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "string": "text"
                 }
@@ -228,13 +228,13 @@
     "OCA\\Pipelinq\\BackgroundJob\\ReminderDispatchJob / jsonSerialize string, getObject array": {
         "array": [
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:165$cb\u0000serialised",
+                "key": "non-public:serialised",
                 "value": {
                     "string": "text"
                 }
             },
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:165$cb\u0000payload",
+                "key": "non-public:payload",
                 "value": {
                     "array": [
                         {
@@ -329,7 +329,7 @@
     "OCA\\Pipelinq\\BackgroundJob\\ReminderDispatchJob / toArray method string": {
         "array": [
             {
-                "key": "\u0000class@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:201$cc\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "string": "t"
                 }
@@ -738,7 +738,7 @@
     "OCA\\Pipelinq\\Service\\AvailabilityService / getObject array": {
         "array": [
             {
-                "key": "\u0000class@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:138$ca\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "array": [
                         {
@@ -755,7 +755,7 @@
     "OCA\\Pipelinq\\Service\\AvailabilityService / getObject string": {
         "array": [
             {
-                "key": "\u0000class@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:138$ca\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "string": "g"
                 }
@@ -807,7 +807,7 @@
     "OCA\\Pipelinq\\Service\\AvailabilityService / jsonSerialize null": {
         "array": [
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:112$c9\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "NULL": null
                 }
@@ -817,7 +817,7 @@
     "OCA\\Pipelinq\\Service\\AvailabilityService / jsonSerialize string": {
         "array": [
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:112$c9\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "string": "text"
                 }
@@ -827,13 +827,13 @@
     "OCA\\Pipelinq\\Service\\AvailabilityService / jsonSerialize string, getObject array": {
         "array": [
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:165$cb\u0000serialised",
+                "key": "non-public:serialised",
                 "value": {
                     "string": "text"
                 }
             },
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:165$cb\u0000payload",
+                "key": "non-public:payload",
                 "value": {
                     "array": [
                         {
@@ -928,7 +928,7 @@
     "OCA\\Pipelinq\\Service\\AvailabilityService / toArray method string": {
         "array": [
             {
-                "key": "\u0000class@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:201$cc\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "string": "t"
                 }
@@ -2853,7 +2853,7 @@
     "OCA\\Pipelinq\\Service\\WalkInQueueService / getObject array": {
         "array": [
             {
-                "key": "\u0000class@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:138$ca\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "array": [
                         {
@@ -2870,7 +2870,7 @@
     "OCA\\Pipelinq\\Service\\WalkInQueueService / getObject string": {
         "array": [
             {
-                "key": "\u0000class@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:138$ca\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "string": "g"
                 }
@@ -2922,7 +2922,7 @@
     "OCA\\Pipelinq\\Service\\WalkInQueueService / jsonSerialize null": {
         "array": [
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:112$c9\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "NULL": null
                 }
@@ -2932,7 +2932,7 @@
     "OCA\\Pipelinq\\Service\\WalkInQueueService / jsonSerialize string": {
         "array": [
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:112$c9\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "string": "text"
                 }
@@ -2942,13 +2942,13 @@
     "OCA\\Pipelinq\\Service\\WalkInQueueService / jsonSerialize string, getObject array": {
         "array": [
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:165$cb\u0000serialised",
+                "key": "non-public:serialised",
                 "value": {
                     "string": "text"
                 }
             },
             {
-                "key": "\u0000JsonSerializable@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:165$cb\u0000payload",
+                "key": "non-public:payload",
                 "value": {
                     "array": [
                         {
@@ -3043,7 +3043,7 @@
     "OCA\\Pipelinq\\Service\\WalkInQueueService / toArray method string": {
         "array": [
             {
-                "key": "\u0000class@anonymous\u0000/home/rubenlinde/sig-lanes/pq11-pipelinq/wt-pr2/tests/Unit/Util/PayloadToArrayGoldenTest.php:201$cc\u0000value",
+                "key": "non-public:value",
                 "value": {
                     "string": "t"
                 }
