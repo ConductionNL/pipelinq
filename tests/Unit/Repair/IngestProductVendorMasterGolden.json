@@ -1,0 +1,1661 @@
+{
+    "new product": {
+        "returned": {
+            "products": {
+                "P-1": "new-1"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "barcode": "871",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": ""
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "id": "new-1",
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": "new-1"
+                    },
+                    "new-1"
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "new-1",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "new product keeps its productId": {
+        "returned": {
+            "products": {
+                "P-1": "new-1"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "barcode": "871",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": ""
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "new-1",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "new product without object id": {
+        "returned": {
+            "products": {
+                "P-1": ""
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "barcode": "871",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": ""
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "existing product by sku": {
+        "returned": {
+            "products": {
+                "P-1": "prod-9"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "prod-9",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "existing product by barcode": {
+        "returned": {
+            "products": {
+                "P-1": "obj-b"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "barcode": "871",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "obj-b",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "existing product without ids": {
+        "returned": {
+            "products": {
+                "P-1": ""
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "product with an integer id": {
+        "returned": {
+            "products": {
+                "42": "new-1"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "S",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "sku": "S",
+                        "productId": ""
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "id": "new-1",
+                        "sku": "S",
+                        "productId": "new-1"
+                    },
+                    "new-1"
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:42",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "42",
+                        "entityType": "product",
+                        "currentMasterEntity": "new-1",
+                        "rawAttributes": {
+                            "id": 42,
+                            "sku": "S"
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "product with a null id": {
+        "returned": {
+            "products": {
+                "R": "new-1"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "S",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "sku": "S",
+                        "productId": ""
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "id": "new-1",
+                        "sku": "S",
+                        "productId": "new-1"
+                    },
+                    "new-1"
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "",
+                        "entityType": "product",
+                        "currentMasterEntity": "new-1",
+                        "rawAttributes": {
+                            "id": null,
+                            "ref": "R",
+                            "sku": "S"
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "product without id or ref": {
+        "returned": {
+            "products": [],
+            "vendors": []
+        },
+        "trace": [
+            {
+                "log": "warning",
+                "message": "PVM ingest: skipping product with no ref",
+                "context": {
+                    "sku": "S"
+                }
+            }
+        ]
+    },
+    "product, no source record schema": {
+        "returned": {
+            "products": {
+                "P-1": "new-1"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "barcode": "871",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": ""
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "id": "new-1",
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": "new-1"
+                    },
+                    "new-1"
+                ]
+            }
+        ]
+    },
+    "product, source record save throws": {
+        "returned": {
+            "products": {
+                "P-1": "new-1"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "barcode": "871",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": ""
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "id": "new-1",
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": "new-1"
+                    },
+                    "new-1"
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "new-1",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            },
+            {
+                "log": "warning",
+                "message": "PVM ingest: sourceRecord write failed",
+                "context": {
+                    "nativeId": "sp-1",
+                    "exception": "save failed for schema-src"
+                }
+            }
+        ]
+    },
+    "product, product save throws": {
+        "returned": {
+            "products": [],
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "barcode": "871",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": ""
+                    },
+                    null
+                ]
+            },
+            {
+                "log": "error",
+                "message": "PVM ingest: product ingest failed",
+                "context": {
+                    "sku": "SKU-1",
+                    "exception": "save failed for schema-product"
+                }
+            }
+        ]
+    },
+    "product, not configured": {
+        "returned": {
+            "products": [],
+            "vendors": []
+        },
+        "trace": [
+            {
+                "log": "warning",
+                "message": "PVM ingest: product register/schema not configured",
+                "context": []
+            }
+        ]
+    },
+    "new vendor, contact found": {
+        "returned": {
+            "products": [],
+            "vendors": {
+                "V-1": "uid-acme"
+            }
+        },
+        "trace": [
+            {
+                "contacts.search": [
+                    "123",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "uid-acme",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-supplier",
+                    {
+                        "displayName": "Acme",
+                        "category": "goods",
+                        "status": "active",
+                        "termsOfTrade": {
+                            "paymentTermDays": 30
+                        },
+                        "contactsUid": "uid-acme"
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-vendors:sv-1",
+                        "sourceSystem": "shillinq-vendors",
+                        "nativeId": "sv-1",
+                        "entityType": "vendor",
+                        "currentMasterEntity": "uid-acme",
+                        "rawAttributes": {
+                            "id": "sv-1",
+                            "ref": "V-1",
+                            "name": "Acme",
+                            "kvkNumber": "123",
+                            "email": "a@acme.test",
+                            "iban": "NL01",
+                            "paymentTermDays": 30
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "new vendor, contact by email": {
+        "returned": {
+            "products": [],
+            "vendors": {
+                "V-1": "uid-mail"
+            }
+        },
+        "trace": [
+            {
+                "contacts.search": [
+                    "123",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "contacts.search": [
+                    "a@acme.test",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "uid-mail",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-supplier",
+                    {
+                        "displayName": "Acme",
+                        "category": "goods",
+                        "status": "active",
+                        "termsOfTrade": {
+                            "paymentTermDays": 30
+                        },
+                        "contactsUid": "uid-mail"
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-vendors:sv-1",
+                        "sourceSystem": "shillinq-vendors",
+                        "nativeId": "sv-1",
+                        "entityType": "vendor",
+                        "currentMasterEntity": "uid-mail",
+                        "rawAttributes": {
+                            "id": "sv-1",
+                            "ref": "V-1",
+                            "name": "Acme",
+                            "kvkNumber": "123",
+                            "email": "a@acme.test",
+                            "iban": "NL01",
+                            "paymentTermDays": 30
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "new vendor, contact created": {
+        "returned": {
+            "products": [],
+            "vendors": {
+                "V-1": "uid-new"
+            }
+        },
+        "trace": [
+            {
+                "contacts.search": [
+                    "123",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "contacts.search": [
+                    "a@acme.test",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "syncToContacts": [
+                    "contact",
+                    "pvm-ingest-<uniqid>"
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "uid-new",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-supplier",
+                    {
+                        "displayName": "Acme",
+                        "category": "goods",
+                        "status": "active",
+                        "termsOfTrade": {
+                            "paymentTermDays": 30
+                        },
+                        "contactsUid": "uid-new"
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-vendors:sv-1",
+                        "sourceSystem": "shillinq-vendors",
+                        "nativeId": "sv-1",
+                        "entityType": "vendor",
+                        "currentMasterEntity": "uid-new",
+                        "rawAttributes": {
+                            "id": "sv-1",
+                            "ref": "V-1",
+                            "name": "Acme",
+                            "kvkNumber": "123",
+                            "email": "a@acme.test",
+                            "iban": "NL01",
+                            "paymentTermDays": 30
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "new vendor, generated uid": {
+        "returned": {
+            "products": [],
+            "vendors": {
+                "V-1": "pvm-02c88e70e627130ca0eddb2b5d91df85"
+            }
+        },
+        "trace": [
+            {
+                "contacts.search": [
+                    "123",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "contacts.search": [
+                    "a@acme.test",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "syncToContacts": [
+                    "contact",
+                    "pvm-ingest-<uniqid>"
+                ]
+            },
+            {
+                "log": "info",
+                "message": "PVM ingest: using generated contactsUid (no Contacts write)",
+                "context": {
+                    "uid": "pvm-02c88e70e627130ca0eddb2b5d91df85",
+                    "vendor": "Acme"
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "pvm-02c88e70e627130ca0eddb2b5d91df85",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-supplier",
+                    {
+                        "displayName": "Acme",
+                        "category": "goods",
+                        "status": "active",
+                        "termsOfTrade": {
+                            "paymentTermDays": 30
+                        },
+                        "contactsUid": "pvm-02c88e70e627130ca0eddb2b5d91df85"
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-vendors:sv-1",
+                        "sourceSystem": "shillinq-vendors",
+                        "nativeId": "sv-1",
+                        "entityType": "vendor",
+                        "currentMasterEntity": "pvm-02c88e70e627130ca0eddb2b5d91df85",
+                        "rawAttributes": {
+                            "id": "sv-1",
+                            "ref": "V-1",
+                            "name": "Acme",
+                            "kvkNumber": "123",
+                            "email": "a@acme.test",
+                            "iban": "NL01",
+                            "paymentTermDays": 30
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "existing vendor": {
+        "returned": {
+            "products": [],
+            "vendors": {
+                "V-1": "uid-acme"
+            }
+        },
+        "trace": [
+            {
+                "contacts.search": [
+                    "123",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "uid-acme",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-vendors:sv-1",
+                        "sourceSystem": "shillinq-vendors",
+                        "nativeId": "sv-1",
+                        "entityType": "vendor",
+                        "currentMasterEntity": "uid-acme",
+                        "rawAttributes": {
+                            "id": "sv-1",
+                            "ref": "V-1",
+                            "name": "Acme",
+                            "kvkNumber": "123",
+                            "email": "a@acme.test",
+                            "iban": "NL01",
+                            "paymentTermDays": 30
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "vendor with an integer id": {
+        "returned": {
+            "products": [],
+            "vendors": {
+                "7": "u7"
+            }
+        },
+        "trace": [
+            {
+                "contacts.search": [
+                    "s@x",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "u7",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-supplier",
+                    {
+                        "displayName": "Seven",
+                        "category": "goods",
+                        "status": "active",
+                        "contactsUid": "u7"
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-vendors:7",
+                        "sourceSystem": "shillinq-vendors",
+                        "nativeId": "7",
+                        "entityType": "vendor",
+                        "currentMasterEntity": "u7",
+                        "rawAttributes": {
+                            "id": 7,
+                            "name": "Seven",
+                            "email": "s@x"
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "vendor, no source record schema": {
+        "returned": {
+            "products": [],
+            "vendors": {
+                "V-1": "uid-acme"
+            }
+        },
+        "trace": [
+            {
+                "contacts.search": [
+                    "123",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "uid-acme",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-supplier",
+                    {
+                        "displayName": "Acme",
+                        "category": "goods",
+                        "status": "active",
+                        "termsOfTrade": {
+                            "paymentTermDays": 30
+                        },
+                        "contactsUid": "uid-acme"
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "vendor, source record save throws": {
+        "returned": {
+            "products": [],
+            "vendors": {
+                "V-1": "uid-acme"
+            }
+        },
+        "trace": [
+            {
+                "contacts.search": [
+                    "123",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "uid-acme",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-supplier",
+                    {
+                        "displayName": "Acme",
+                        "category": "goods",
+                        "status": "active",
+                        "termsOfTrade": {
+                            "paymentTermDays": 30
+                        },
+                        "contactsUid": "uid-acme"
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-vendors:sv-1",
+                        "sourceSystem": "shillinq-vendors",
+                        "nativeId": "sv-1",
+                        "entityType": "vendor",
+                        "currentMasterEntity": "uid-acme",
+                        "rawAttributes": {
+                            "id": "sv-1",
+                            "ref": "V-1",
+                            "name": "Acme",
+                            "kvkNumber": "123",
+                            "email": "a@acme.test",
+                            "iban": "NL01",
+                            "paymentTermDays": 30
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            },
+            {
+                "log": "warning",
+                "message": "PVM ingest: sourceRecord write failed",
+                "context": {
+                    "nativeId": "sv-1",
+                    "exception": "save failed for schema-src"
+                }
+            }
+        ]
+    },
+    "vendor, contacts unavailable": {
+        "returned": {
+            "products": [],
+            "vendors": []
+        },
+        "trace": [
+            {
+                "log": "warning",
+                "message": "PVM ingest: Contacts IManager not available",
+                "context": []
+            },
+            {
+                "log": "warning",
+                "message": "PVM ingest: could not resolve/create contact",
+                "context": {
+                    "vendor": "Acme"
+                }
+            }
+        ]
+    },
+    "both lists": {
+        "returned": {
+            "products": {
+                "P-1": "new-1",
+                "sp-2": "new-4"
+            },
+            "vendors": {
+                "V-1": "uid-acme"
+            }
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "barcode": "871",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": ""
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "id": "new-1",
+                        "name": "Widget",
+                        "sku": "SKU-1",
+                        "barcode": "871",
+                        "productId": "new-1"
+                    },
+                    "new-1"
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "new-1",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-2",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "sku": "SKU-2",
+                        "productId": ""
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-product",
+                    {
+                        "id": "new-4",
+                        "sku": "SKU-2",
+                        "productId": "new-4"
+                    },
+                    "new-4"
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-products:sp-2",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-2",
+                        "entityType": "product",
+                        "currentMasterEntity": "new-4",
+                        "rawAttributes": {
+                            "id": "sp-2",
+                            "sku": "SKU-2"
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            },
+            {
+                "contacts.search": [
+                    "123",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "uid-acme",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-supplier",
+                    {
+                        "displayName": "Acme",
+                        "category": "goods",
+                        "status": "active",
+                        "termsOfTrade": {
+                            "paymentTermDays": 30
+                        },
+                        "contactsUid": "uid-acme"
+                    },
+                    null
+                ]
+            },
+            {
+                "saveObject": [
+                    "reg-1",
+                    "schema-src",
+                    {
+                        "sourceRecordId": "shillinq-vendors:sv-1",
+                        "sourceSystem": "shillinq-vendors",
+                        "nativeId": "sv-1",
+                        "entityType": "vendor",
+                        "currentMasterEntity": "uid-acme",
+                        "rawAttributes": {
+                            "id": "sv-1",
+                            "ref": "V-1",
+                            "name": "Acme",
+                            "kvkNumber": "123",
+                            "email": "a@acme.test",
+                            "iban": "NL01",
+                            "paymentTermDays": 30
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "empty export": {
+        "returned": {
+            "products": [],
+            "vendors": []
+        },
+        "trace": []
+    }
+}
