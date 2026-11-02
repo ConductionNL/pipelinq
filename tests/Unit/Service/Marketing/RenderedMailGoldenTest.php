@@ -44,6 +44,9 @@ use ReflectionMethod;
  *
  * @covers \OCA\Pipelinq\Service\Marketing\MailTransportService
  * @covers \OCA\Pipelinq\Service\Marketing\Transport\RenderedMail
+ * @covers \OCA\Pipelinq\Service\Marketing\Transport\MailAddressing
+ * @covers \OCA\Pipelinq\Service\Marketing\Transport\MailContent
+ * @uses   \OCA\Pipelinq\Service\ConnectorSourceRegister
  * @uses   \OCA\Pipelinq\Service\ArticleService
  * @uses   \OCA\Pipelinq\Service\Marketing\ListObjectStore
  * @uses   \OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer
