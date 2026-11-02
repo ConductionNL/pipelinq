@@ -29,8 +29,8 @@ the triage:
 3. Remove group is an icon. The board writes it out.
 4. A segment stored as a bare condition, or as a list of conditions, opens
    without a group, so the editor shows no Add buttons at all.
-5. `POST /api/segments` has no privilege check, while every other segment
-   endpoint has one.
+5. Every segment endpoint, `POST /api/segments` included, requires the same
+   privilege.
 6. Every preview and every send loads the whole audience and walks the tree
    in PHP. OpenRegister cannot answer an OR across properties, so it cannot
    take that work over yet.

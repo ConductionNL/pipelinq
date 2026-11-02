@@ -12,7 +12,7 @@ Lines are at pipelinq `development` d3bba71, openregister `development`
 | Preview | `POST /api/segments/preview`, debounced 400 ms (`SegmentBuilder.vue:63`) | validates, then counts |
 | Engine | `lib/Service/SegmentService.php` | `validateNode()` (`:1538`) and `evaluateNode()` recurse over AND, OR, NOT and leaves; `nodeType()` (`:1860`) treats anything without a known `type` as a leaf |
 | Count | `countMatchingEntities()` (`:994`) over `loadEntitiesForType()` (`:2092`) | `ObjectService::findAll()` with no limit, then the tree per object in PHP |
-| Access | `lib/Controller/SegmentController.php` | list, show, preview, update, size, members and compliance call `ObjectOwnerAccessPolicy::isPrivileged()`; `create()` (`:131`) does not |
+| Access | `lib/Controller/SegmentController.php` | list, show, preview, update, size, members and compliance call `ObjectOwnerAccessPolicy::isPrivileged()` |
 | nc-vue | `CnConditionListEditor` | flat field, operator, value rows, all ANDed |
 
 ## D1: the data shape stays
@@ -138,8 +138,7 @@ shows who is in it.
 
 - Create, preview, update and refresh require `isPrivileged()`: membership
   of `admin`, `sales`, or the group named in the app config `crm_group`.
-- `create()` gets that check, before the service call. Today any signed-in
-  user can create a segment and read its estimate from the response.
+- `create()` makes the same check, before the service call.
 - Any privileged user may edit any segment. Segments are shared team
   assets; `createdBy` records who made it and is never taken from the
   request.
