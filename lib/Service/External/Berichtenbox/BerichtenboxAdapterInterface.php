@@ -120,7 +120,7 @@ interface BerichtenboxAdapterInterface {
 	 * @return BerichtenboxResult The mailbox-status outcome.
 	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
-	public function checkMailbox(string $bsn): BerichtenboxResult;
+	public function checkMailbox(#[\SensitiveParameter] string $bsn): BerichtenboxResult;
 
 	/**
 	 * Whether the adapter is dormant — i.e. wired but not contacting

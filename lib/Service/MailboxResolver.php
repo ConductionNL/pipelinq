@@ -80,7 +80,7 @@ class MailboxResolver {
 	 * @throws RuntimeException On configuration error.
 	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
-	public function resolve(string $bsn, string $tenantId): array {
+	public function resolve(#[\SensitiveParameter] string $bsn, string $tenantId): array {
 		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);
 		$cached = $this->lookupCache(bsnHash: $bsnHash);
 		if ($cached !== null) {

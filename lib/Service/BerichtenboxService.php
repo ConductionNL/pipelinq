@@ -443,7 +443,7 @@ class BerichtenboxService {
 	 * @return int Number of rows shredded across all schemas.
 	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
-	public function cryptoShred(string $bsn, string $tenantId): int {
+	public function cryptoShred(#[\SensitiveParameter] string $bsn, string $tenantId): int {
 		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);
 		// Shred key = 32 random bytes never persisted; we simply wipe the
 		// bsn ciphertext to a random opaque blob that cannot be decrypted.
@@ -518,7 +518,7 @@ class BerichtenboxService {
 	private function dispatchToBerichtenbox(
 		array $message,
 		string $messageId,
-		string $bsnPlain,
+		#[\SensitiveParameter] string $bsnPlain,
 		string $bodyHash,
 	): void {
 		// Fail closed when the tenant's PKI-overheid material is missing.

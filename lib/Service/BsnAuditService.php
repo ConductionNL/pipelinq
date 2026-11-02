@@ -197,7 +197,7 @@ class BsnAuditService {
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper — the same
 	 * justification recordLookup() already carries for the call this was extracted from.
 	 */
-	private function resolveSubjectHash(string $rawBsn, ?string $bsnHash): string {
+	private function resolveSubjectHash(#[\SensitiveParameter] string $rawBsn, ?string $bsnHash): string {
 		if ($bsnHash !== null && $bsnHash !== '') {
 			return $bsnHash;
 		}
@@ -222,7 +222,7 @@ class BsnAuditService {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
-	public function pseudonymise(string $rawBsn): int {
+	public function pseudonymise(#[\SensitiveParameter] string $rawBsn): int {
 		try {
 			[$register, $schema] = $this->config();
 			$oldHash = BsnValidationService::hash($rawBsn);

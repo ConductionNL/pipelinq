@@ -122,7 +122,7 @@ class EncryptionService {
 	 *
 	 * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
 	 */
-	public function encrypt(string $plaintext, string $tenantId): string {
+	public function encrypt(#[\SensitiveParameter] string $plaintext, string $tenantId): string {
 		$key = $this->getEncryptionKey(tenantId: $tenantId);
 		$initVector = random_bytes(self::IV_BYTES);
 		$tag = '';
@@ -198,7 +198,7 @@ class EncryptionService {
 	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
 	 *   exercised through the features that call it
 	 */
-	public function hashBsn(string $plaintext, string $tenantId): string {
+	public function hashBsn(#[\SensitiveParameter] string $plaintext, string $tenantId): string {
 		$hmacKey = $this->getHmacKey(tenantId: $tenantId);
 		return hash_hmac('sha256', $plaintext, $hmacKey);
 	}//end hashBsn()
@@ -214,7 +214,7 @@ class EncryptionService {
 	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
 	 *   exercised through the features that call it
 	 */
-	public function bsnEquals(string $candidate, string $hash, string $tenantId): bool {
+	public function bsnEquals(#[\SensitiveParameter] string $candidate, string $hash, string $tenantId): bool {
 		return hash_equals($hash, $this->hashBsn(plaintext: $candidate, tenantId: $tenantId));
 	}//end bsnEquals()
 

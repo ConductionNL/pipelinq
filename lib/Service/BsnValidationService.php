@@ -63,7 +63,7 @@ class BsnValidationService {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-02
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-03
 	 */
-	public function validate(string $bsnInput): array {
+	public function validate(#[\SensitiveParameter] string $bsnInput): array {
 		// 1. Length / character check (REQ-BSN-001-03 — short-circuits 11-proef).
 		if (strlen($bsnInput) !== 9 || ctype_digit($bsnInput) === false) {
 			return [
@@ -115,7 +115,7 @@ class BsnValidationService {
 	 *
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
-	public static function mask(string $bsnInput): string {
+	public static function mask(#[\SensitiveParameter] string $bsnInput): string {
 		$length = strlen($bsnInput);
 		if ($length === 0) {
 			return '';
@@ -144,7 +144,7 @@ class BsnValidationService {
 	 *
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
-	public static function hash(string $bsnInput): string {
+	public static function hash(#[\SensitiveParameter] string $bsnInput): string {
 		return hash('sha256', $bsnInput);
 	}//end hash()
 }//end class
