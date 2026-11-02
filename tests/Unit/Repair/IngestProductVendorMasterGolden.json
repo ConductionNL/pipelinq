@@ -51,7 +51,13 @@
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
                     "new-1"
                 ]
@@ -433,7 +439,13 @@
                     {
                         "id": "new-1",
                         "sku": "S",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
                     "new-1"
                 ]
@@ -502,7 +514,13 @@
                     {
                         "id": "new-1",
                         "sku": "S",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
                     "new-1"
                 ]
@@ -602,7 +620,13 @@
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
                     "new-1"
                 ]
@@ -661,7 +685,13 @@
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
                     "new-1"
                 ]
@@ -1487,7 +1517,13 @@
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
                     "new-1"
                 ]
@@ -1550,7 +1586,13 @@
                     {
                         "id": "new-4",
                         "sku": "SKU-2",
-                        "productId": "new-4"
+                        "productId": "new-4",
+                        "@self": {
+                            "id": "new-4",
+                            "name": "new-4",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
                     "new-4"
                 ]

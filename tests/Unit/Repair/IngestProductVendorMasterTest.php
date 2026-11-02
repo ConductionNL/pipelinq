@@ -33,10 +33,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\Pipelinq\Repair\IngestProductVendorMaster;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
+use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -51,6 +55,13 @@ class FakeIngestObjectService {
 	 * @var array<string, array<string,mixed>>
 	 */
 	public array $store = [];
+
+	/**
+	 * Where each save went: register, schema and uuid.
+	 *
+	 * @var array<int, array<string,mixed>>
+	 */
+	public array $saves = [];
 
 	/**
 	 * Auto-increment id counter.
@@ -95,26 +106,67 @@ class FakeIngestObjectService {
 	}//end findAll()
 
 	/**
-	 * Create (id === null) or update an object.
+	 * Create (uuid null) or update an object, as OpenRegister's
+	 * ObjectService::saveObject does: same parameters, and the saved object
+	 * comes back as an ObjectEntity.
 	 *
-	 * @param string $register Ignored.
-	 * @param string $schema Ignored.
-	 * @param array<string,mixed> $data The object data.
-	 * @param string|null $id Existing id, or null to create.
+	 * @param array<string,mixed>|ObjectEntity $object The object data.
+	 * @param array<int,string>|null $extend Unused.
+	 * @param Register|string|int|null $register The register.
+	 * @param Schema|string|int|null $schema The schema.
+	 * @param string|null $uuid The object to update, or null to create.
+	 * @param bool $_rbac Unused.
+	 * @param bool $_multitenancy Unused.
+	 * @param bool $silent Unused.
+	 * @param bool $_validation Unused.
+	 * @param array<string,mixed>|null $uploadedFiles Unused.
+	 * @param IUser|null $currentUser Unused.
+	 * @param bool $failIfExists Unused.
+	 * @param bool $_unowned Unused.
+	 * @param bool $_dedupOverride Unused.
 	 *
-	 * @return array<string,mixed> The stored object.
+	 * @return ObjectEntity The stored object.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
-	public function saveObject(string $register, string $schema, array $data, ?string $id = null): array {
-		if ($id === null || $id === '') {
-			$this->seq++;
-			$id = 'obj-' . $this->seq;
-			$data['id'] = $id;
-		} else {
-			$data['id'] = $id;
+	public function saveObject(
+		array|ObjectEntity $object,
+		?array $extend=[],
+		Register|string|int|null $register=null,
+		Schema|string|int|null $schema=null,
+		?string $uuid=null,
+		bool $_rbac=true,
+		bool $_multitenancy=true,
+		bool $silent=false,
+		bool $_validation=true,
+		?array $uploadedFiles=null,
+		?IUser $currentUser=null,
+		bool $failIfExists=false,
+		bool $_unowned=false,
+		bool $_dedupOverride=false,
+	): ObjectEntity {
+		$this->saves[] = ['register' => $register, 'schema' => $schema, 'uuid' => $uuid];
+		$data = $object;
+		if ($object instanceof ObjectEntity) {
+			$data = $object->getObject();
 		}
 
-		$this->store[$id] = $data;
-		return $data;
+		if ($uuid === null || $uuid === '') {
+			$this->seq++;
+			$uuid = 'obj-' . $this->seq;
+		}
+
+		$data['id'] = $uuid;
+		$this->store[$uuid] = $data;
+
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setRegister((string)$register);
+		$entity->setSchema((string)$schema);
+		$entity->setObject($data);
+		return $entity;
 	}//end saveObject()
 }//end class
 
@@ -152,19 +204,20 @@ class IngestProductVendorMasterTest extends TestCase {
 	/**
 	 * Build the repair step wired to in-memory fakes.
 	 *
-	 * @param FakeIngestObjectService $os The fake object service.
+	 * @param FakeIngestObjectService $os                 The fake object service.
+	 * @param string                  $sourceRecordSchema The source record schema, '' for none.
 	 *
 	 * @return IngestProductVendorMaster
 	 */
-	private function makeRepair(FakeIngestObjectService $os): IngestProductVendorMaster {
+	private function makeRepair(FakeIngestObjectService $os, string $sourceRecordSchema = ''): IngestProductVendorMaster {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
-			static function (string $app, string $key, string $default = '') {
+			static function (string $app, string $key, string $default = '') use ($sourceRecordSchema) {
 				$vals = [
 					'register' => 'reg-1',
 					'product_schema' => 'prod-schema',
 					'supplier_schema' => 'supp-schema',
-					'sourceRecord_schema' => '',
+					'sourceRecord_schema' => $sourceRecordSchema,
 				];
 				return $vals[$key] ?? $default;
 			}
@@ -316,4 +369,43 @@ class IngestProductVendorMasterTest extends TestCase {
 		$this->assertArrayNotHasKey('paymentMethod', $supplier);
 		$this->assertArrayNotHasKey('creditLimit', $supplier);
 	}//end testIngestCreatesSupplierAndKeepsFinancialFieldsOff()
+
+	/**
+	 * Every save names the register, the schema and, for an update, the
+	 * object, the way OpenRegister's saveObject takes them: a new product,
+	 * its productId fix-up, a filled existing product, its source record and
+	 * a new supplier.
+	 *
+	 * @return void
+	 */
+	public function testEverySaveGoesToTheConfiguredRegisterAndSchema(): void {
+		$os = new FakeIngestObjectService();
+		$os->store['p-existing'] = ['id' => 'p-existing', 'productId' => 'p-existing', 'sku' => 'SKU-2', 'gtin' => ''];
+		$repair = $this->makeRepair(os: $os, sourceRecordSchema: 'src-schema');
+
+		$maps = $repair->ingest(
+			[
+				'products' => [
+					['ref' => 'p-new', 'id' => 'p-new', 'sku' => 'SKU-1', 'name' => 'Bolt'],
+					['ref' => 'p-old', 'id' => 'p-old', 'sku' => 'SKU-2', 'gtin' => '99999'],
+				],
+				'vendors' => [['ref' => 'v-1', 'id' => 'v-1', 'name' => 'Acme', 'kvkNumber' => '12345678']],
+			]
+		);
+
+		$this->assertSame(expected: ['p-new' => 'obj-1', 'p-old' => 'p-existing'], actual: $maps['products']);
+		$this->assertSame(
+			expected: [
+				['register' => 'reg-1', 'schema' => 'prod-schema', 'uuid' => null],
+				['register' => 'reg-1', 'schema' => 'prod-schema', 'uuid' => 'obj-1'],
+				['register' => 'reg-1', 'schema' => 'src-schema', 'uuid' => null],
+				['register' => 'reg-1', 'schema' => 'prod-schema', 'uuid' => 'p-existing'],
+				['register' => 'reg-1', 'schema' => 'src-schema', 'uuid' => null],
+				['register' => 'reg-1', 'schema' => 'supp-schema', 'uuid' => null],
+			],
+			actual: $os->saves
+		);
+		$this->assertSame(expected: '99999', actual: $os->store['p-existing']['gtin']);
+		$this->assertSame(expected: 'obj-1', actual: $os->store['obj-1']['productId']);
+	}//end testEverySaveGoesToTheConfiguredRegisterAndSchema()
 }//end class
