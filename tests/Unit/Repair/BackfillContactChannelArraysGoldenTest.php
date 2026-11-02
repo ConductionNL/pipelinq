@@ -43,6 +43,7 @@ use RuntimeException;
  *
  * @covers \OCA\Pipelinq\Repair\BackfillContactChannelArrays
  * @covers \OCA\Pipelinq\Repair\Support\SchemaWriteTarget
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  *
  * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
  */
