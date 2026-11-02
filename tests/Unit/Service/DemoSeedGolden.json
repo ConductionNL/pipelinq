@@ -519,6 +519,601 @@
             }
         ]
     },
+    "remove, messy rows": {
+        "result": {
+            "returned": {
+                "success": true,
+                "removed": {
+                    "journeys": 5,
+                    "contracts": 4,
+                    "tasks": 5,
+                    "contactmomenten": 0,
+                    "complaints": 3,
+                    "requests": 10,
+                    "leads": 8,
+                    "products": 5,
+                    "pipelines": 4,
+                    "contacts": 6,
+                    "clients": 7
+                },
+                "retained": {
+                    "contracts": 0,
+                    "tasks": 0,
+                    "contactmomenten": 0,
+                    "complaints": 0,
+                    "requests": 0,
+                    "leads": 0,
+                    "products": 0,
+                    "pipelines": 0,
+                    "contacts": 0,
+                    "clients": 0
+                }
+            }
+        },
+        "events": [
+            {
+                "call": "marketing.remove",
+                "args": {
+                    "sections": [
+                        "_comment",
+                        "_coverageNote",
+                        "clients",
+                        "contacts",
+                        "pipelines",
+                        "products",
+                        "leads",
+                        "requests",
+                        "complaints",
+                        "contactmomenten",
+                        "contracts",
+                        "tasks",
+                        "_journeysNote",
+                        "journeys",
+                        "_socialNote",
+                        "social",
+                        "_searchNote",
+                        "search"
+                    ]
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contract_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contracts-0",
+                    "register": "reg",
+                    "schema": "contract_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contracts-0-duplicate",
+                    "register": "reg",
+                    "schema": "contract_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contracts-0-by-uuid",
+                    "register": "reg",
+                    "schema": "contract_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contracts-1",
+                    "register": "reg",
+                    "schema": "contract_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "task_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "tasks-0",
+                    "register": "reg",
+                    "schema": "task_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "tasks-0-duplicate",
+                    "register": "reg",
+                    "schema": "task_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "tasks-0-by-uuid",
+                    "register": "reg",
+                    "schema": "task_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "tasks-1",
+                    "register": "reg",
+                    "schema": "task_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "tasks-2",
+                    "register": "reg",
+                    "schema": "task_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "complaints-0",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "complaints-1",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "complaints-2",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-0",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-0-duplicate",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-0-by-uuid",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-1",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-2",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-3",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-4",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-5",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-6",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "requests-7",
+                    "register": "reg",
+                    "schema": "ticket-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "lead_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-0",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-0-duplicate",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-0-by-uuid",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-1",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-2",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-3",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-4",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "leads-5",
+                    "register": "reg",
+                    "schema": "lead_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "product_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "products-0",
+                    "register": "reg",
+                    "schema": "product_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "products-0-duplicate",
+                    "register": "reg",
+                    "schema": "product_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "products-0-by-uuid",
+                    "register": "reg",
+                    "schema": "product_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "products-1",
+                    "register": "reg",
+                    "schema": "product_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "products-2",
+                    "register": "reg",
+                    "schema": "product_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "pipeline_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "pipelines-0",
+                    "register": "reg",
+                    "schema": "pipeline_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "pipelines-0-duplicate",
+                    "register": "reg",
+                    "schema": "pipeline_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "pipelines-0-by-uuid",
+                    "register": "reg",
+                    "schema": "pipeline_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "pipelines-1",
+                    "register": "reg",
+                    "schema": "pipeline_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contact_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contacts-0",
+                    "register": "reg",
+                    "schema": "contact_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contacts-0-duplicate",
+                    "register": "reg",
+                    "schema": "contact_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contacts-0-by-uuid",
+                    "register": "reg",
+                    "schema": "contact_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contacts-1",
+                    "register": "reg",
+                    "schema": "contact_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contacts-2",
+                    "register": "reg",
+                    "schema": "contact_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "contacts-3",
+                    "register": "reg",
+                    "schema": "contact_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-0",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-0-duplicate",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-0-by-uuid",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-1",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-2",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-3",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "clients-4",
+                    "register": "reg",
+                    "schema": "client_schema-id"
+                }
+            }
+        ]
+    },
     "remove, no register": {
         "result": {
             "returned": {
@@ -1945,6 +2540,617 @@
         ]
     },
     "seed over existing": {
+        "result": {
+            "returned": {
+                "success": true,
+                "created": {
+                    "clients": 0,
+                    "contacts": 0,
+                    "pipelines": 0,
+                    "products": 0,
+                    "leads": 0,
+                    "requests": 0,
+                    "complaints": 0,
+                    "contactmomenten": 12,
+                    "tasks": 0,
+                    "contracts": 0,
+                    "journeys": 5
+                },
+                "skipped": {
+                    "clients": 5,
+                    "contacts": 4,
+                    "pipelines": 2,
+                    "products": 3,
+                    "leads": 6,
+                    "requests": 8,
+                    "complaints": 3,
+                    "contactmomenten": 0,
+                    "tasks": 3,
+                    "contracts": 2,
+                    "journeys": 0
+                },
+                "relinked": {
+                    "clients": 0,
+                    "contacts": 0,
+                    "pipelines": 0,
+                    "products": 0,
+                    "leads": 3,
+                    "requests": 8,
+                    "complaints": 0,
+                    "contactmomenten": 0,
+                    "tasks": 0,
+                    "contracts": 0
+                }
+            }
+        },
+        "events": [
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "client_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contact_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "pipeline_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "product_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "lead_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "id": "leads-1",
+                        "title": "[Demo] Koffieabonnement kantoor",
+                        "ticketType": null,
+                        "pipeline": "pipelines-0",
+                        "note": "kept"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": "leads-1"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "id": "leads-3",
+                        "title": "[Demo] Catering jaarcontract",
+                        "ticketType": null,
+                        "pipeline": "pipelines-0",
+                        "note": "kept"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": "leads-3"
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "id": "leads-5",
+                        "title": "[Demo] Kassasysteem upgrade verloren",
+                        "ticketType": null,
+                        "pipeline": "pipelines-0",
+                        "note": "kept"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "lead_schema-id",
+                    "uuid": "leads-5"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-0",
+                        "title": "[Demo] Parkeervergunning aanvragen",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-0"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-1",
+                        "title": "[Demo] Offerte onderhoudscontract",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-1"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-2",
+                        "title": "[Demo] Verhuizing doorgeven",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-2"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-3",
+                        "title": "[Demo] Melding kapotte lantaarnpaal",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-3"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-4",
+                        "title": "[Demo] Subsidieaanvraag buurtfeest",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-4"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-5",
+                        "title": "[Demo] Klacht over afhandeling",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-5"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-6",
+                        "title": "[Demo] Verzoek kapvergunning afgewezen",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-6"
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "request",
+                    "payload": {
+                        "id": "requests-7",
+                        "title": "[Demo] Bezwaar omgezet naar zaak",
+                        "ticketType": "request",
+                        "pipeline": "pipelines-1",
+                        "note": "kept"
+                    },
+                    "uuid": "requests-7"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ticket-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "handled",
+                        "duration": "00:06",
+                        "title": "[Demo] Telefonische vraag parkeervergunning",
+                        "description": "Demo contactmoment: caller asked about permit processing time.",
+                        "occurredAt": "@datetime:-1",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-2",
+                        "parentTicket": "requests-0"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "email",
+                        "outcome": "followUpAction",
+                        "title": "[Demo] E-mail offerteaanvraag ontvangen",
+                        "description": "Demo contactmoment: quotation request received by email.",
+                        "occurredAt": "@datetime:-2",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "clients-0",
+                        "parentTicket": "requests-1"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "handled",
+                        "duration": "00:09",
+                        "title": "[Demo] Verhuizing telefonisch doorgegeven",
+                        "description": "Demo contactmoment: change of address reported by phone.",
+                        "occurredAt": "@datetime:-4",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-3",
+                        "parentTicket": "requests-2"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "balie",
+                        "outcome": "followUpAction",
+                        "title": "[Demo] Melding lantaarnpaal aan balie",
+                        "description": "Demo contactmoment: street light reported at the desk.",
+                        "occurredAt": "@datetime:-3",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "clients-1",
+                        "parentTicket": "requests-3"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "chat",
+                        "outcome": "handled",
+                        "title": "[Demo] Chat over subsidievoorwaarden",
+                        "description": "Demo contactmoment: chat about subsidy conditions.",
+                        "occurredAt": "@datetime:-11",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-4",
+                        "parentTicket": "requests-4"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "resolved",
+                        "duration": "00:18",
+                        "title": "[Demo] Klacht besproken en opgelost",
+                        "description": "Demo contactmoment: complaint discussed and resolved.",
+                        "occurredAt": "@datetime:-14",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-2",
+                        "parentTicket": "requests-5"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "outbound",
+                        "channel": "brief",
+                        "outcome": "handled",
+                        "title": "[Demo] Brief met afwijzing verstuurd",
+                        "description": "Demo contactmoment: rejection letter sent.",
+                        "occurredAt": "@datetime:-19",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-3",
+                        "parentTicket": "requests-6"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "referred",
+                        "duration": "00:12",
+                        "title": "[Demo] Doorverwezen naar zaakafhandeling",
+                        "description": "Demo contactmoment: referred to case handling.",
+                        "occurredAt": "@datetime:-24",
+                        "status": "closed",
+                        "ticketType": "interaction",
+                        "client": "clients-1",
+                        "parentTicket": "requests-7"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "social",
+                        "outcome": "handled",
+                        "title": "[Demo] Social media vraag openingstijden",
+                        "description": "Demo contactmoment: opening hours question via social media.",
+                        "occurredAt": "@datetime:-6",
+                        "status": "resolved",
+                        "ticketType": "interaction",
+                        "client": "clients-0"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "telefoon",
+                        "outcome": "callbackRequest",
+                        "duration": "00:03",
+                        "title": "[Demo] Terugbelverzoek ingepland",
+                        "description": "Demo contactmoment: callback scheduled for tomorrow.",
+                        "occurredAt": "@datetime:-1",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "clients-4"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "inbound",
+                        "channel": "chat",
+                        "outcome": "transferred",
+                        "title": "[Demo] Chatgesprek doorverbonden",
+                        "description": "Demo contactmoment: chat transferred to second line.",
+                        "occurredAt": "@datetime:-8",
+                        "status": "closed",
+                        "ticketType": "interaction",
+                        "client": "clients-2"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "tickets.save",
+                "args": {
+                    "ticketType": "interaction",
+                    "payload": {
+                        "direction": "outbound",
+                        "channel": "email",
+                        "outcome": "followUpAction",
+                        "title": "[Demo] E-mail met vervolgafspraak",
+                        "description": "Demo contactmoment: follow-up appointment confirmed by email.",
+                        "occurredAt": "@datetime:-5",
+                        "status": "in_progress",
+                        "ticketType": "interaction",
+                        "client": "clients-1"
+                    },
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "task_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "contract_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "marketing.seed",
+                "args": {
+                    "uuids": {
+                        "clients:bakkerij": "clients-0",
+                        "clients:gemeente": "clients-1",
+                        "clients:jansen": "clients-2",
+                        "clients:devries": "clients-3",
+                        "clients:elharrak": "clients-4",
+                        "contacts:contact-bakker": "contacts-0",
+                        "contacts:contact-mulder": "contacts-1",
+                        "contacts:contact-kcc": "contacts-2",
+                        "contacts:contact-inkoop": "contacts-3",
+                        "pipelines:pipeline-sales": "pipelines-0",
+                        "pipelines:pipeline-service": "pipelines-1",
+                        "products:product-koffie": "products-0",
+                        "products:product-broodje": "products-1",
+                        "products:product-advies": "products-2",
+                        "leads:lead-website": "leads-0",
+                        "leads:lead-koffie": "leads-1",
+                        "leads:lead-intranet": "leads-2",
+                        "leads:lead-catering": "leads-3",
+                        "leads:lead-won": "leads-4",
+                        "leads:lead-lost": "leads-5",
+                        "requests:req-parkeer": "requests-0",
+                        "requests:req-offerte": "requests-1",
+                        "requests:req-verhuizing": "requests-2",
+                        "requests:req-kapot": "requests-3",
+                        "requests:req-subsidie": "requests-4",
+                        "requests:req-klacht": "requests-5",
+                        "requests:req-afgewezen": "requests-6",
+                        "requests:req-zaak": "requests-7",
+                        "complaints:klacht-afval": "complaints-0",
+                        "complaints:klacht-wachttijd": "complaints-1",
+                        "complaints:klacht-factuur": "complaints-2",
+                        "contactmomenten:cm-1": "ticket-20",
+                        "contactmomenten:cm-2": "ticket-21",
+                        "contactmomenten:cm-3": "ticket-22",
+                        "contactmomenten:cm-4": "ticket-23",
+                        "contactmomenten:cm-5": "ticket-24",
+                        "contactmomenten:cm-6": "ticket-25",
+                        "contactmomenten:cm-7": "ticket-26",
+                        "contactmomenten:cm-8": "ticket-27",
+                        "contactmomenten:cm-9": "ticket-28",
+                        "contactmomenten:cm-10": "ticket-29",
+                        "contactmomenten:cm-11": "ticket-30",
+                        "contactmomenten:cm-12": "ticket-31",
+                        "tasks:task-terugbel": "tasks-0",
+                        "tasks:task-opvolg": "tasks-1",
+                        "tasks:task-info": "tasks-2",
+                        "contracts:contract-support": "contracts-0",
+                        "contracts:contract-hosting": "contracts-1"
+                    }
+                }
+            }
+        ]
+    },
+    "seed over messy rows": {
         "result": {
             "returned": {
                 "success": true,

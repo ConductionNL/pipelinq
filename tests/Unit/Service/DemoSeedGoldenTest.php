@@ -97,6 +97,8 @@ class DemoSeedGoldenTest extends TestCase {
 			'remove'                     => array_merge($base, ['action' => 'remove', 'stored' => 'existing']),
 			'remove, delete fails'       => array_merge($base, ['action' => 'remove', 'stored' => 'failing']),
 			'remove, no register'        => array_merge($base, ['action' => 'remove', 'register' => '']),
+			'remove, messy rows'         => array_merge($base, ['action' => 'remove', 'stored' => 'messy']),
+			'seed over messy rows'       => array_merge($base, ['stored' => 'messy']),
 		];
 	}//end definitions()
 
@@ -180,6 +182,17 @@ class DemoSeedGoldenTest extends TestCase {
 
 		if ($script === 'failing' && $schemaId === 'contract_schema-id') {
 			$rows[0]['id'] = 'fails';
+		}
+
+		if ($script === 'messy' && $rows !== []) {
+			$first = $rows[0];
+			$byUuid = $first;
+			unset($byUuid['id']);
+			$byUuid['uuid'] = $first['id'] . '-by-uuid';
+			$rows[] = ['id' => $first['id'] . '-duplicate'] + $first;
+			$rows[] = $byUuid;
+			$rows[] = array_merge($first, ['id' => $first['id'] . '-blank', array_keys($first)[1] => '']);
+			array_unshift($rows, ['id' => '', 'uuid' => ''] + $first);
 		}
 
 		return $rows;
