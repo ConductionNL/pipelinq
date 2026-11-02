@@ -29,6 +29,7 @@ use OCA\Pipelinq\Service\Competitor\PageWatchReader;
 use OCA\Pipelinq\Service\Competitor\RelevanceScorer;
 use OCA\Pipelinq\Service\Competitor\SearchWatchReader;
 use OCA\Pipelinq\Service\Competitor\SitemapWatchReader;
+use OCA\Pipelinq\Service\Competitor\UrlWatchReaders;
 use OCA\Pipelinq\Service\Competitor\WatchEventStore;
 use OCA\Pipelinq\Service\Competitor\WatchReaders;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
@@ -174,6 +175,7 @@ class ConnectorEgressTest extends TestCase {
 			SearchWatchReader::class,
 			RelevanceScorer::class,
 			WatchEventStore::class,
+			UrlWatchReaders::class,
 			WatchReaders::class,
 			CompetitorWatchService::class,
 			ConnectionAuditService::class,

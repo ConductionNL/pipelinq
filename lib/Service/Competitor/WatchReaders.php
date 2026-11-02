@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service\Competitor;
 use OCA\Pipelinq\Service\Egress\EgressResult;
 
 /**
- * The five watch readers behind one dispatch on the watch's kind.
+ * Every watch reader behind one dispatch on the watch's kind.
  *
  * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
  *
@@ -40,22 +40,16 @@ class WatchReaders {
 	/**
 	 * Constructor.
 	 *
-	 * @param FeedWatchReader $feeds The RSS and Atom reader.
-	 * @param SitemapWatchReader $sitemaps The sitemap reader.
-	 * @param PageWatchReader $pages The page-fragment reader.
+	 * @param UrlWatchReaders $urls The feed, sitemap and page readers.
 	 * @param FediverseWatchReader $fediverse The Mastodon and Bluesky reader.
 	 * @param SearchWatchReader $searches The hermiq web-search reader.
-	 * @param WatchEventStore $events The events a sitemap watch compares against.
 	 *
 	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
 	 */
 	public function __construct(
-		private FeedWatchReader $feeds,
-		private SitemapWatchReader $sitemaps,
-		private PageWatchReader $pages,
+		private UrlWatchReaders $urls,
 		private FediverseWatchReader $fediverse,
 		private SearchWatchReader $searches,
-		private WatchEventStore $events,
 	) {
 	}//end __construct()
 
@@ -74,19 +68,7 @@ class WatchReaders {
 		$sourceId = trim((string)($watch['connectorSourceId'] ?? ''));
 
 		return match ((string)($watch['kind'] ?? '')) {
-			'rss' => $this->feeds->read(url: $target, sourceId: $sourceId),
-			'sitemap' => $this->sitemaps->read(
-				url: $target,
-				previous: $this->events->seenLocations(watch: $watch),
-				sourceId: $sourceId
-			),
-			'page' => $this->pages->read(
-				url: $target,
-				selector: trim((string)($watch['selector'] ?? '')),
-				fingerprint: trim((string)($watch['fingerprint'] ?? '')),
-				lineFingerprints: array_map('strval', (array)($watch['lineFingerprints'] ?? [])),
-				sourceId: $sourceId
-			),
+			'rss', 'sitemap', 'page' => $this->urls->read(watch: $watch),
 			'fediverse' => $this->fediverse->read(handle: $target, sourceId: $sourceId),
 			'search' => $this->searches->read(query: $target, actingUserId: $actingUserId),
 			default => WatchOutcome::failed(

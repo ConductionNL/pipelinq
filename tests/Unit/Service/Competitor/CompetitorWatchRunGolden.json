@@ -383,8 +383,8 @@
                     "slug-competitorWatch",
                     {
                         "kind": "fediverse",
-                        "target": "@rival@mastodon.example",
-                        "connectorSourceId": "src-f",
+                        "target": " @rival@mastodon.example ",
+                        "connectorSourceId": " src-f ",
                         "lastRunAt": "2026-01-01T00:00:00Z",
                         "lastOutcome": "ok",
                         "lastReason": ""
@@ -465,7 +465,7 @@
                     "slug-competitorWatch",
                     {
                         "kind": "search",
-                        "target": "rival crm",
+                        "target": " rival crm ",
                         "lastRunAt": "2026-01-01T00:00:00Z",
                         "lastOutcome": "ok",
                         "lastReason": ""
@@ -1399,8 +1399,8 @@
                     "slug-competitorWatch",
                     {
                         "kind": "fediverse",
-                        "target": "@rival@mastodon.example",
-                        "connectorSourceId": "src-f",
+                        "target": " @rival@mastodon.example ",
+                        "connectorSourceId": " src-f ",
                         "lastRunAt": "2026-01-01T00:00:00Z",
                         "lastOutcome": "ok",
                         "lastReason": ""
@@ -1490,7 +1490,7 @@
                     "slug-competitorWatch",
                     {
                         "kind": "search",
-                        "target": "rival crm",
+                        "target": " rival crm ",
                         "lastRunAt": "2026-01-01T00:00:00Z",
                         "lastOutcome": "ok",
                         "lastReason": ""

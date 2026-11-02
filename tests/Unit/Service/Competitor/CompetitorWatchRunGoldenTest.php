@@ -47,6 +47,7 @@ use RuntimeException;
  * rewrite the file, then run once more without it.
  *
  * @covers \OCA\Pipelinq\Service\Competitor\CompetitorWatchService
+ * @covers \OCA\Pipelinq\Service\Competitor\UrlWatchReaders
  * @covers \OCA\Pipelinq\Service\Competitor\WatchEventStore
  * @covers \OCA\Pipelinq\Service\Competitor\WatchReaders
  * @uses   \OCA\Pipelinq\Service\Competitor\WatchOutcome
@@ -106,8 +107,8 @@ class CompetitorWatchRunGoldenTest extends TestCase {
 			['uuid' => 'w-map', 'kind' => 'sitemap', 'target' => 'https://rival.example/sitemap.xml', 'schedule' => 'hourly', '@self' => ['x' => 1]],
 			['id' => 'w-recent', 'kind' => 'rss', 'target' => 'https://x.example', 'lastRunAt' => $hourAgo],
 			['id' => 'w-page', 'kind' => 'page', 'target' => 'https://rival.example/prices', 'selector' => ' .price ', 'fingerprint' => ' fp-0 ', 'lineFingerprints' => [1, 'b']],
-			['id' => 'w-fedi', 'kind' => 'fediverse', 'target' => '@rival@mastodon.example', 'connectorSourceId' => 'src-f'],
-			['id' => 'w-search', 'kind' => 'search', 'target' => 'rival crm'],
+			['id' => 'w-fedi', 'kind' => 'fediverse', 'target' => ' @rival@mastodon.example ', 'connectorSourceId' => ' src-f '],
+			['id' => 'w-search', 'kind' => 'search', 'target' => ' rival crm '],
 			['id' => 'w-odd', 'kind' => 'carrier-pigeon', 'target' => 'roof'],
 			['id' => 'w-throw', 'kind' => 'rss', 'target' => 'https://down.example/feed'],
 			['id' => 'w-fail', 'kind' => 'page', 'target' => 'https://gone.example'],
