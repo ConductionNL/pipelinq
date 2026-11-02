@@ -23,6 +23,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCA\Pipelinq\Service\ContactSyncSettingsService;
 use OCA\Pipelinq\Service\ContactVcardWriterService;
+use OCA\Pipelinq\Service\LinkedContactRecords;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -78,14 +79,15 @@ class ContactSyncSettingsServiceTest extends TestCase {
 		);
 		$writer = $this->createConfiguredMock(ContactVcardWriterService::class, ['newCardAddressBookName' => 'Pipelinq CRM']);
 
+		$logger = $this->createMock(LoggerInterface::class);
+
 		return new ContactSyncSettingsService(
 			$config,
-			$appConfig,
 			$contacts,
 			$sync,
 			$writer,
-			$objects,
-			$this->createMock(LoggerInterface::class),
+			new LinkedContactRecords($appConfig, $objects, $logger),
+			$logger,
 		);
 	}//end service()
 
