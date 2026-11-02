@@ -110,7 +110,7 @@ describe('competitor watches', () => {
 			resolve(__dirname, '../../src/views/marketing/CompetitorWatches.vue'),
 			'utf8',
 		)
-		const table = source.match(/\.competitors__table \{[\s\S]*?\n\}/)[0]
-		expect(table).toMatch(/white-space: normal/)
+		const columns = source.match(/watchColumns\(\) \{[\s\S]*?\n\t\t\},/)[0]
+		expect(columns).toMatch(/cellClass: 'cn-cell--wrap'/)
 	})
 })
