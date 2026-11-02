@@ -319,7 +319,7 @@ class BlastControllerTest extends TestCase {
 				traffic: new CampaignSiteTraffic(
 					container: $container,
 					appConfig: $appConfig,
-					decorator: new CampaignLinkDecorator($appConfig),
+					decorator: new CampaignLinkDecorator(appConfig: $appConfig),
 					logger: $logger,
 				),
 			),

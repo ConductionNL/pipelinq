@@ -131,11 +131,22 @@ class CampaignPerformanceServiceTest extends TestCase {
 			}
 		);
 
-		$traffic = new class ($installed, $container, $appConfig, new CampaignLinkDecorator($appConfig), $this->createMock(LoggerInterface::class)) extends CampaignSiteTraffic {
+		$decorator = new CampaignLinkDecorator(appConfig: $appConfig);
+		$logger    = $this->createMock(originalClassName: LoggerInterface::class);
+		$traffic   = new class ($installed, $container, $appConfig, $decorator, $logger) extends CampaignSiteTraffic {
+			/**
+			 * @param bool  $installed What the Portaliq probe answers.
+			 * @param mixed ...$args   The parent's arguments.
+			 */
 			public function __construct(private bool $installed, ...$args) {
 				parent::__construct(...$args);
 			}//end __construct()
 
+			/**
+			 * The scripted Portaliq probe.
+			 *
+			 * @return bool
+			 */
 			public function isPortaliqInstalled(): bool {
 				return $this->installed;
 			}//end isPortaliqInstalled()
