@@ -230,10 +230,6 @@ class SlaEntitySweeper {
 			$this->checkComplaintDeadline(object: $object, now: $surface->run->now);
 		}
 
-		if ($object->activeSlaStatus() === null) {
-			return false;
-		}
-
 		return $this->applyPolicy(surface: $surface, object: $object);
 	}//end escalateEntity()
 
@@ -261,15 +257,19 @@ class SlaEntitySweeper {
 	 * Re-evaluate an object's targets under its policy, then escalate.
 	 *
 	 * @param SlaSweepSurface $surface The surface.
-	 * @param SlaSweptObject  $object  An object with an active slaStatus.
+	 * @param SlaSweptObject  $object  The object.
 	 *
 	 * @return bool True when an escalation fired.
 	 *
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	private function applyPolicy(SlaSweepSurface $surface, SlaSweptObject $object): bool {
-		$slaStatus = (array) $object->activeSlaStatus();
-		$policy    = $surface->run->policyFor(slaStatus: $slaStatus);
+		$slaStatus = $object->activeSlaStatus();
+		if ($slaStatus === null) {
+			return false;
+		}
+
+		$policy = $surface->run->policyFor(slaStatus: $slaStatus);
 		if ($policy === null) {
 			return false;
 		}
