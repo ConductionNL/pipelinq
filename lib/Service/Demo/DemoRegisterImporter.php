@@ -36,12 +36,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Demo;
 
-use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\ConfigurationService;
-use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\AppInfo\Application;
-use OCP\App\IAppManager;
-use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -51,13 +47,6 @@ use Psr\Log\LoggerInterface;
  */
 class DemoRegisterImporter {
 	/**
-	 * App-relative path to the example records descriptor.
-	 *
-	 * @var string
-	 */
-	private const DESCRIPTOR = '/lib/Settings/pipelinq_example_register.json';
-
-	/**
 	 * Configuration identity for the example import, never the app id.
 	 *
 	 * @var string
@@ -65,34 +54,21 @@ class DemoRegisterImporter {
 	public const CONFIG_APP_ID = Application::APP_ID . '.demo';
 
 	/**
-	 * Fields that name a record, checked in order, to confirm a slug match.
-	 *
-	 * @var array<int, string>
-	 */
-	private const LABEL_FIELDS = ['name', 'title', 'label', 'displayName', 'reference', 'subject', 'code'];
-
-	/**
 	 * Constructor.
 	 *
 	 * OpenRegister's services are injected, not looked up (ADR-083): pipelinq
 	 * requires OpenRegister, and only the setup and occ paths construct this class.
 	 *
-	 * @param IAppManager          $appManager           Resolves this app's path and version.
-	 * @param IAppConfig           $appConfig            Holds the provisioned register id.
-	 * @param ConfigurationService $configurationService Imports the descriptor and removes recorded imports.
-	 * @param SchemaMapper         $schemaMapper         Resolves a schema slug to its id.
-	 * @param ObjectService        $objectService        Finds and deletes stored records.
-	 * @param LoggerInterface      $logger               Records what was imported or removed.
-	 * @param DemoUserFields       $userFields           Points user fields at existing users.
+	 * @param DemoRecordsDescriptor $descriptor           Reads the example records descriptor.
+	 * @param ConfigurationService  $configurationService Imports the descriptor and removes recorded imports.
+	 * @param DemoRecordSweeper     $sweeper              Removes stored records that still match the descriptor.
+	 * @param LoggerInterface       $logger               Records what was imported or removed.
 	 */
 	public function __construct(
-		private readonly IAppManager $appManager,
-		private readonly IAppConfig $appConfig,
+		private readonly DemoRecordsDescriptor $descriptor,
 		private readonly ConfigurationService $configurationService,
-		private readonly SchemaMapper $schemaMapper,
-		private readonly ObjectService $objectService,
+		private readonly DemoRecordSweeper $sweeper,
 		private readonly LoggerInterface $logger,
-		private readonly DemoUserFields $userFields,
 	) {
 	}//end __construct()
 
@@ -104,28 +80,20 @@ class DemoRegisterImporter {
 	 * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function import(): array {
-		$data = $this->loadDescriptor();
+		$data = $this->descriptor->forImport();
 		if ($data === null) {
 			return ['imported' => 0, 'skipped' => 0];
 		}
 
-		$data['components']['objects'] = $this->userFields->withRealUsers(objects: $data['components']['objects']);
-
-		$result = $this->configurationService->importFromApp(
-			appId: self::CONFIG_APP_ID,
-			data: $data,
-			version: $this->appManager->getAppVersion(Application::APP_ID),
-			force: true
-		);
-
-		$skipped = (array)($result['skipped'] ?? []);
+		$version = $this->descriptor->appVersion();
+		$result  = $this->configurationService->importFromApp(appId: self::CONFIG_APP_ID, data: $data, version: $version, force: true);
+		$skipped = (array) ($result['skipped'] ?? []);
 		$summary = [
-			'imported' => count((array)($result['objects'] ?? [])),
-			'skipped'  => (int)($skipped['objects'] ?? 0) + (int)($skipped['seedObjects'] ?? 0),
+			'imported' => count((array) ($result['objects'] ?? [])),
+			'skipped'  => (int) ($skipped['objects'] ?? 0) + (int) ($skipped['seedObjects'] ?? 0),
 		];
 
 		$this->logger->info('Pipelinq example records imported', $summary);
-
 		return $summary;
 	}//end import()
 
@@ -143,126 +111,33 @@ class DemoRegisterImporter {
 	 * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function remove(): array {
-		$summary = ['removed' => 0, 'retained' => 0];
-
-		if (method_exists($this->configurationService, 'softDeleteAppImports') === true) {
-			$jobs = $this->configurationService->softDeleteAppImports(self::CONFIG_APP_ID);
-			$summary['removed'] += (int)($jobs['softDeleted'] ?? 0);
-		}
-
-		$data = $this->loadDescriptor();
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($data === null || $registerId === '') {
+		$summary = ['removed' => $this->softDeleteImports(), 'retained' => 0];
+		$data    = $this->descriptor->load();
+		if ($data === null) {
 			return $summary;
 		}
 
-		$bySchema = [];
-		foreach ($data['components']['objects'] as $object) {
-			$bySchema[(string)$object['@self']['schema']][(string)$object['@self']['slug']] = $object;
+		$found = $this->sweeper->removeMatching(objects: $data['components']['objects']);
+		if ($found === null) {
+			return $summary;
 		}
 
-		foreach ($bySchema as $schemaSlug => $wanted) {
-			$counts = $this->removeFromSchema(registerId: $registerId, schemaSlug: $schemaSlug, wanted: $wanted);
-			$summary['removed'] += $counts['removed'];
-			$summary['retained'] += $counts['retained'];
-		}
-
+		$summary = ['removed' => $summary['removed'] + $found['removed'], 'retained' => $found['retained']];
 		$this->logger->info('Pipelinq example records removed', $summary);
-
 		return $summary;
 	}//end remove()
 
 	/**
-	 * Delete the records of one schema whose slug and name match the descriptor.
+	 * Soft-delete the imports OpenRegister recorded, on an OpenRegister that can.
 	 *
-	 * @param string                              $registerId The pipelinq register id.
-	 * @param string                              $schemaSlug The schema the records belong to.
-	 * @param array<string, array<string, mixed>> $wanted     Descriptor records keyed by slug.
-	 *
-	 * @return array{removed: int, retained: int}
+	 * @return int How many records were soft-deleted.
 	 */
-	private function removeFromSchema(string $registerId, string $schemaSlug, array $wanted): array {
-		$counts = ['removed' => 0, 'retained' => 0];
-
-		try {
-			$schema = $this->schemaMapper->find($schemaSlug, _rbac: false, _multitenancy: false);
-		} catch (\Throwable $e) {
-			// A schema this instance never had holds none of these records.
-			return $counts;
+	private function softDeleteImports(): int {
+		if (method_exists($this->configurationService, 'softDeleteAppImports') === false) {
+			return 0;
 		}
 
-		$rows = $this->objectService->findAll(
-			[
-				'filters' => ['register' => $registerId, 'schema' => (string)$schema->getId()],
-				'limit'   => 5000,
-			]
-		);
-
-		foreach ((array)$rows as $row) {
-			$data = $row;
-			if ($row instanceof \JsonSerializable === true) {
-				$data = $row->jsonSerialize();
-			}
-
-			$slug = (string)($data['@self']['slug'] ?? '');
-			if (isset($wanted[$slug]) === false || $this->sameLabel(found: $data, wanted: $wanted[$slug]) === false) {
-				continue;
-			}
-
-			try {
-				$this->objectService->deleteObject((string)$data['id'], $registerId, (string)$schema->getId());
-				$counts['removed']++;
-			} catch (\Throwable $e) {
-				if (str_contains($e->getMessage(), 'SCHEMA_ARCHIVAL_IMMUTABLE') === false) {
-					throw $e;
-				}
-
-				// Append-only schema: the row expires through the retention cron.
-				$counts['retained']++;
-			}
-		}//end foreach
-
-		return $counts;
-	}//end removeFromSchema()
-
-	/**
-	 * Whether a found record still carries the descriptor's name.
-	 *
-	 * A record without any naming field matches on slug alone.
-	 *
-	 * @param array<string, mixed> $found  The stored record.
-	 * @param array<string, mixed> $wanted The descriptor record.
-	 *
-	 * @return bool True when the first naming field the descriptor sets is unchanged.
-	 */
-	private function sameLabel(array $found, array $wanted): bool {
-		foreach (self::LABEL_FIELDS as $field) {
-			if (isset($wanted[$field]) === true && is_scalar($wanted[$field]) === true) {
-				return (string)($found[$field] ?? '') === (string)$wanted[$field];
-			}
-		}
-
-		return true;
-	}//end sameLabel()
-
-	/**
-	 * Read the descriptor, or null when it is missing or unreadable.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function loadDescriptor(): ?array {
-		$path = $this->appManager->getAppPath(Application::APP_ID) . self::DESCRIPTOR;
-		if (is_readable($path) === false) {
-			$this->logger->error('Pipelinq example records descriptor missing', ['path' => $path]);
-			return null;
-		}
-
-		$data = json_decode((string)file_get_contents($path), true);
-		if (is_array($data) === false || is_array($data['components']['objects'] ?? null) === false) {
-			$this->logger->error('Pipelinq example records descriptor invalid', ['path' => $path]);
-			return null;
-		}
-
-		return $data;
-	}//end loadDescriptor()
+		$jobs = $this->configurationService->softDeleteAppImports(self::CONFIG_APP_ID);
+		return (int) ($jobs['softDeleted'] ?? 0);
+	}//end softDeleteImports()
 }//end class

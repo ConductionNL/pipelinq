@@ -21,6 +21,8 @@ use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Pipelinq\Service\Demo\DemoRecordSweeper;
+use OCA\Pipelinq\Service\Demo\DemoRecordsDescriptor;
 use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCP\App\IAppManager;
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
@@ -34,6 +36,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * @covers \OCA\Pipelinq\Service\Demo\DemoRegisterImporter
+ * @covers \OCA\Pipelinq\Service\Demo\DemoRecordsDescriptor
+ * @covers \OCA\Pipelinq\Service\Demo\DemoRecordSweeper
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
  * @uses   \OCA\Pipelinq\Service\Demo\DemoUserFields
  */
@@ -136,18 +140,18 @@ class DemoRegisterImporterTest extends TestCase {
 			}
 		);
 
+		$logger     = $this->createMock(originalClassName: LoggerInterface::class);
+		$userFields = new DemoUserFields(
+			userSession: $this->userSession(uid: $actingUid),
+			userManager: $this->userManager(),
+			configLoader: new ConfigFileLoaderService(appManager: $appManager),
+		);
+
 		return new DemoRegisterImporter(
-			appManager: $appManager,
-			appConfig: $appConfig,
+			descriptor: new DemoRecordsDescriptor(appManager: $appManager, userFields: $userFields, logger: $logger),
 			configurationService: $configuration,
-			schemaMapper: $schemaMapper,
-			objectService: $objectService,
-			logger: $this->createMock(LoggerInterface::class),
-			userFields: new DemoUserFields(
-				userSession: $this->userSession(uid: $actingUid),
-				userManager: $this->userManager(),
-				configLoader: new ConfigFileLoaderService($appManager),
-			),
+			sweeper: new DemoRecordSweeper(appConfig: $appConfig, schemaMapper: $schemaMapper, objectService: $objectService),
+			logger: $logger,
 		);
 	}//end importer()
 
