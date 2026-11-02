@@ -55,7 +55,7 @@ class XWikiControllerTest extends TestCase {
 		$service = $this->createMock(XWikiService::class);
 		$service->expects($this->once())
 			->method('search')
-			->with('paspoort', 'Kennisbank', ['a', 'b'], 5, 0)
+			->with('paspoort', ['space' => 'Kennisbank', 'tags' => ['a', 'b'], 'limit' => 5, 'offset' => 0])
 			->willReturn(['results' => [['id' => '1', 'title' => 'Paspoort']], 'total' => 1, 'limit' => 5, 'offset' => 0]);
 
 		$controller = new XWikiController($request, $service, $this->createMock(LoggerInterface::class));

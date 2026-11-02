@@ -122,7 +122,7 @@ class XWikiServiceTest extends TestCase {
 	 */
 	public function testSearchUnconfiguredReturnsEmpty(): void {
 		$service = $this->makeService('');
-		$result = $service->search('q', null, [], 5, 0);
+		$result = $service->search(query: 'q', filter: ['limit' => 5]);
 
 		$this->assertSame([], $result['results']);
 		$this->assertSame(0, $result['total']);
@@ -314,7 +314,7 @@ class XWikiServiceTest extends TestCase {
 		// Direct URL is empty → if the OR path were NOT taken, the result would
 		// be the empty envelope. A non-empty result proves OR-first was used.
 		$service = $this->makeService('', $this->makeRespondingClientService(200, $body));
-		$result = $service->search('paspoort', null, [], 5, 0);
+		$result = $service->search(query: 'paspoort', filter: ['limit' => 5]);
 
 		$this->assertCount(1, $result['results']);
 		$this->assertSame('Paspoort', $result['results'][0]['title']);
@@ -344,7 +344,7 @@ class XWikiServiceTest extends TestCase {
 			]
 		);
 		$service = $this->makeService('', $this->makeRespondingClientService(200, $body));
-		$result = $service->search('q', 'Kennisbank', [], 10, 0);
+		$result = $service->search(query: 'q', filter: ['space' => 'Kennisbank']);
 
 		$this->assertCount(1, $result['results']);
 		$this->assertSame('Kennisbank', $result['results'][0]['space']);
@@ -365,7 +365,7 @@ class XWikiServiceTest extends TestCase {
 		// Default makeService injects a throwing client (simulates OR 503 / absent)
 		// AND an empty direct URL → empty envelope via the legacy fallback path.
 		$service = $this->makeService('');
-		$result = $service->search('q', null, [], 7, 0);
+		$result = $service->search(query: 'q', filter: ['limit' => 7]);
 
 		$this->assertSame([], $result['results']);
 		$this->assertSame(0, $result['total']);
@@ -382,7 +382,7 @@ class XWikiServiceTest extends TestCase {
 	 */
 	public function testSearchFallsBackOnNon200(): void {
 		$service = $this->makeService('', $this->makeRespondingClientService(503, '{"error":"x","details":{"cause":"upstream-service-down"}}'));
-		$result = $service->search('q', null, [], 5, 0);
+		$result = $service->search(query: 'q', filter: ['limit' => 5]);
 
 		// Direct URL empty → fallback yields empty envelope, no fatal.
 		$this->assertSame([], $result['results']);

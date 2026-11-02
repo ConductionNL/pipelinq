@@ -97,23 +97,18 @@ class XWikiService {
 	 * Search xWiki pages.
 	 *
 	 * @param string $query Full-text query, may be empty.
-	 * @param string|null $space Optional space filter.
-	 * @param array $tags Optional list of tags to filter on (best-effort
-	 *                    client-side filter — xWiki REST search has no
-	 *                    generic tag filter).
-	 * @param int $limit Max results (1..100).
-	 * @param int $offset Pagination offset (>=0).
+	 * @param array<string, mixed> $filter Optional `space` (string|null), `tags` (list of tags to filter
+	 *                                     on; a best-effort client-side filter, xWiki REST search has no
+	 *                                     generic tag filter), `limit` (1..100, default 10) and `offset`
+	 *                                     (>=0, default 0).
 	 *
 	 * @return array<string, mixed> {results: array, total: int, limit: int, offset: int}
 	 *
 	 * @spec openspec/specs/xwiki-proxy/spec.md
 	 */
-	public function search(string $query, ?string $space = null, array $tags = [], int $limit = 10, int $offset = 0): array {
-		$limit = max(1, min(100, $limit));
-		$offset = max(0, $offset);
-
-		$cacheKey = $this->makeCacheKey(bucket: 'search', parts: [$query, $space ?? '', implode(',', $tags), $limit, $offset]);
-		$cached = $this->fromCache(key: $cacheKey);
+	public function search(string $query, array $filter = []): array {
+		$request = $this->searchRequest(query: $query, filter: $filter);
+		$cached = $this->fromCache(key: $request['cacheKey']);
 		if ($cached !== null) {
 			return $cached;
 		}
@@ -122,36 +117,70 @@ class XWikiService {
 		// OpenConnector-routed xWiki search so the consumer never holds a direct
 		// xWiki URL. When OR signals the `xwiki` source is not usable yet
 		// (openconnector-down / -source-missing / upstream-service-down) we fall
-		// back to the legacy SettingsManager/direct-URL path below so configured
-		// envs keep working until an operator enables the OR source. The
-		// post-fetch space/tags filters + caching are shared by both paths.
-		$orResults = $this->searchViaOpenRegister(query: $query, limit: $limit, offset: $offset);
-		if ($orResults !== null) {
-			return $this->finishSearch(results: $orResults, space: $space, tags: $tags, limit: $limit, offset: $offset, cacheKey: $cacheKey);
+		// back to the legacy SettingsManager/direct-URL path so configured envs
+		// keep working until an operator enables the OR source. The post-fetch
+		// space/tags filters + caching are shared by both paths.
+		$results = $this->searchViaOpenRegister(request: $request);
+		if ($results === null) {
+			$results = $this->searchDirect(request: $request);
 		}
 
+		if ($results === null) {
+			return $this->emptyResult(limit: $request['limit'], offset: $request['offset']);
+		}
+
+		return $this->finishSearch(results: $results, request: $request);
+	}//end search()
+
+	/**
+	 * The normalised search request: query, space, tags, the clamped limit
+	 * and offset, and the cache key they make.
+	 *
+	 * @param string $query Full-text query.
+	 * @param array<string, mixed> $filter The filter (see search()).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function searchRequest(string $query, array $filter): array {
+		$request = [
+			'query' => $query,
+			'space' => ($filter['space'] ?? null),
+			'tags' => ($filter['tags'] ?? []),
+			'limit' => max(1, min(100, (int)($filter['limit'] ?? 10))),
+			'offset' => max(0, (int)($filter['offset'] ?? 0)),
+		];
+		$parts = [$query, $request['space'] ?? '', implode(',', $request['tags']), $request['limit'], $request['offset']];
+		$request['cacheKey'] = $this->makeCacheKey(bucket: 'search', parts: $parts);
+		return $request;
+	}//end searchRequest()
+
+	/**
+	 * Search xWiki directly through the base URL of the xWiki app.
+	 *
+	 * @param array<string, mixed> $request The normalised search request (see search()).
+	 *
+	 * @return array<int, array<string, mixed>>|null Result rows, or null when no base URL is known.
+	 */
+	private function searchDirect(array $request): ?array {
 		$base = $this->getBaseUrl();
 		if ($base === '') {
-			return $this->emptyResult(limit: $limit, offset: $offset);
+			return null;
 		}
 
 		$params = [
-			'q' => $query,
-			'number' => $limit,
-			'start' => $offset,
+			'q' => $request['query'],
+			'number' => $request['limit'],
+			'start' => $request['offset'],
 			'media' => 'xml',
 		];
-		if ($space !== null && $space !== '') {
+		if ($request['space'] !== null && $request['space'] !== '') {
 			$params['scope'] = 'name,content,title';
 			$params['wikis'] = 'xwiki';
 		}
 
-		$url = $base . '/rest/wikis/query?' . http_build_query($params);
-		$xml = $this->fetchXml(url: $url);
-		$results = $this->parseSearchResults(xml: $xml);
-
-		return $this->finishSearch(results: $results, space: $space, tags: $tags, limit: $limit, offset: $offset, cacheKey: $cacheKey);
-	}//end search()
+		$xml = $this->fetchXml(url: $base . '/rest/wikis/query?' . http_build_query($params));
+		return $this->parseSearchResults(xml: $xml);
+	}//end searchDirect()
 
 	/**
 	 * Apply the shared space/tags client-side filter, slice to the limit, wrap
@@ -161,49 +190,52 @@ class XWikiService {
 	 * shape + post-filter semantics stay identical regardless of source.
 	 *
 	 * @param array<int,array<string,mixed>> $results Raw normalised result rows.
-	 * @param string|null $space Optional space filter.
-	 * @param array<int,string> $tags Optional tag filter.
-	 * @param int $limit Max results.
-	 * @param int $offset Pagination offset.
-	 * @param string $cacheKey Cache key to store under.
+	 * @param array<string, mixed> $request The normalised search request (see search()).
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/xwiki-proxy/spec.md
 	 */
-	private function finishSearch(array $results, ?string $space, array $tags, int $limit, int $offset, string $cacheKey): array {
+	private function finishSearch(array $results, array $request): array {
+		$space = $request['space'];
 		if ($space !== null && $space !== '') {
 			$results = array_values(array_filter($results, static fn (array $item): bool => ($item['space'] ?? '') === $space));
 		}
 
+		$tags = $request['tags'];
 		if (count($tags) > 0) {
-			$results = array_values(
-				array_filter(
-					$results,
-					static function (array $item) use ($tags): bool {
-						$itemTags = $item['tags'] ?? [];
-						foreach ($tags as $tag) {
-							if (in_array($tag, $itemTags, true) === true) {
-								return true;
-							}
-						}
-
-						return false;
-					}
-				)
-			);
+			$results = array_values(array_filter($results, fn (array $item): bool => $this->hasAnyTag(item: $item, tags: $tags)));
 		}
 
 		$payload = [
-			'results' => array_slice($results, 0, $limit),
+			'results' => array_slice($results, 0, $request['limit']),
 			'total' => count($results),
-			'limit' => $limit,
-			'offset' => $offset,
+			'limit' => $request['limit'],
+			'offset' => $request['offset'],
 		];
 
-		$this->toCache(key: $cacheKey, value: $payload);
+		$this->toCache(key: $request['cacheKey'], value: $payload);
 		return $payload;
 	}//end finishSearch()
+
+	/**
+	 * Whether a result row carries at least one of the tags (strict comparison).
+	 *
+	 * @param array<string, mixed> $item The result row.
+	 * @param array<int, string> $tags The tags asked for.
+	 *
+	 * @return bool
+	 */
+	private function hasAnyTag(array $item, array $tags): bool {
+		$itemTags = $item['tags'] ?? [];
+		foreach ($tags as $tag) {
+			if (in_array($tag, $itemTags, true) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end hasAnyTag()
 
 	/**
 	 * Search xWiki via OpenRegister's OpenConnector-routed endpoint (ADR-022).
@@ -218,16 +250,14 @@ class XWikiService {
 	 * shape (`{id|reference,title,space,url,...}`) is mapped to the widget shape
 	 * (`{id,title,space,modified,url,tags}`).
 	 *
-	 * @param string $query Full-text query.
-	 * @param int $limit Max results.
-	 * @param int $offset Pagination offset.
+	 * @param array<string, mixed> $request The normalised search request (see search()).
 	 *
 	 * @return array<int,array<string,mixed>>|null Normalised rows, or null to fall back.
 	 *
 	 * @spec openspec/specs/xwiki-proxy/spec.md
 	 */
-	private function searchViaOpenRegister(string $query, int $limit, int $offset): ?array {
-		$params = http_build_query(['q' => $query, 'limit' => $limit, 'offset' => $offset]);
+	private function searchViaOpenRegister(array $request): ?array {
+		$params = http_build_query(['q' => $request['query'], 'limit' => $request['limit'], 'offset' => $request['offset']]);
 		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/xwiki/search?' . $params);
 
 		try {
