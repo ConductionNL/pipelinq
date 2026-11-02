@@ -30,6 +30,8 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Reads the sweep's configuration: the register, the sweep interval, the
@@ -68,6 +70,7 @@ class SlaSweepSource {
 	 * @param TicketService      $ticketService Resolver for the unified ticket schema.
 	 * @param IAppConfig         $appConfig     App config.
 	 * @param ContainerInterface $container     DI container (OR ObjectService).
+	 * @param LoggerInterface    $logger        PSR logger.
 	 *
 	 * @return void
 	 */
@@ -75,6 +78,7 @@ class SlaSweepSource {
 		private TicketService $ticketService,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
+		private LoggerInterface $logger,
 	) {
 	}//end __construct()
 
@@ -107,14 +111,19 @@ class SlaSweepSource {
 	}//end interval()
 
 	/**
-	 * The OpenRegister ObjectService.
+	 * The OpenRegister ObjectService, or null (logged) when OpenRegister is unavailable.
 	 *
-	 * @return object
+	 * @return object|null
 	 *
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
-	public function objectService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	public function objectService(): ?object {
+		try {
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		} catch (Throwable $e) {
+			$this->logger->warning('SlaDeadlineSweepJob: ObjectService unavailable', ['error' => $e->getMessage()]);
+			return null;
+		}
 	}//end objectService()
 
 	/**

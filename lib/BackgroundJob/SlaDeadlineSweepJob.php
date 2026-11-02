@@ -107,7 +107,7 @@ class SlaDeadlineSweepJob extends TimedJob {
 			return null;
 		}
 
-		$objectService = $this->objectService();
+		$objectService = $this->source->objectService();
 		if ($objectService === null) {
 			return null;
 		}
@@ -147,23 +147,6 @@ class SlaDeadlineSweepJob extends TimedJob {
 
 		return $register;
 	}//end register()
-
-	/**
-	 * The OpenRegister ObjectService, or null (logged) when it is unavailable.
-	 *
-	 * @return object|null
-	 */
-	private function objectService(): ?object {
-		try {
-			return $this->source->objectService();
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SlaDeadlineSweepJob: ObjectService unavailable',
-				['error' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end objectService()
 
 	/**
 	 * The active policies by identity, or null (logged) when they cannot be read.

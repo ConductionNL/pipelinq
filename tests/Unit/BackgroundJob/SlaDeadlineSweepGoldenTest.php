@@ -505,7 +505,7 @@ class SlaDeadlineSweepGoldenTest extends TestCase {
 	private function makeJob(array $c): SlaDeadlineSweepJob {
 		return new SlaDeadlineSweepJob(
 			time: $c['time'],
-			source: new SlaSweepSource(ticketService: $c['ticketService'], appConfig: $c['appConfig'], container: $c['container']),
+			source: new SlaSweepSource(ticketService: $c['ticketService'], appConfig: $c['appConfig'], container: $c['container'], logger: $c['logger']),
 			sweeper: new SlaEntitySweeper(engine: $c['engine'], complaintSla: $c['complaintSla'], logger: $c['logger']),
 			logger: $c['logger'],
 		);
