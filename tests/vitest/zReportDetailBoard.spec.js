@@ -78,10 +78,11 @@ describe('Z report page', () => {
 		expect(history.content.excludeActions).toEqual(['read'])
 	})
 
-	it('draws Dagtotaal, Btw and Transacties as three stat tiles off the report (pl3 item 5)', () => {
+	it('draws Dagtotaal, Btw and Transacties as three stat cards off the report, the card title the only label (pl3 item 5, DqZaak "Termijn")', () => {
 		const tiles = ['z-day-total', 'z-day-tax', 'z-day-count'].map(widget)
 		expect(tiles.map((tile) => tile.type)).toEqual(['stat', 'stat', 'stat'])
-		expect(tiles.map((tile) => nl[tile.content.label])).toEqual(['Dagtotaal', 'Btw', 'Transacties'])
+		expect(tiles.map((tile) => nl[tile.title])).toEqual(['Dagtotaal', 'Btw', 'Transacties'])
+		expect(tiles.every((tile) => !('label' in tile.content))).toBe(true)
 		expect(tiles.map((tile) => tile.content.objectField)).toEqual(['total', 'totalTax', 'transactionCount'])
 		expect(tiles[0].content.format).toEqual({ style: 'currency', currency: '@config.currency', decimals: 2 })
 		expect(tiles[1].content.format).toEqual({ style: 'currency', currency: '@config.currency', decimals: 2 })

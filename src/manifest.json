@@ -1952,6 +1952,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"pagination": { "limit": 8 },
 				"sortKey": "name",
 				"sortOrder": "asc",
 				"createModal": "ClientCreateDialog",
@@ -4598,6 +4599,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"pagination": { "limit": 5 },
 				"createOverride": "createContactContactAware",
 				"fieldOverrides": {
 					"name": {
@@ -7672,6 +7674,7 @@
 				"showDeleteAction": false,
 				"selectable": true,
 				"rowRoute": "CashShiftDetail",
+				"actions": [{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "CashShiftDetail" }],
 				"emptyText": "No shifts found",
 				"columns": [{ "key": "reference", "label": "Shift", "template": "Shift {floatAt|date}, {drawer}" }, "drawer", { "key": "operator", "formatter": "userDisplayName" }, { "key": "floatAmount", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }, { "key": "status", "widget": "badge", "widgetProps": { "colorMap": { "open": "success", "closed": "warning", "reconciled": "default" } } }, "floatAt", "closedAt"],
 				"headerActions": [
@@ -8461,7 +8464,6 @@
 						"type": "stat",
 						"title": "Day total",
 						"content": {
-							"label": "Day total",
 							"objectField": "total",
 							"format": {
 								"style": "currency",
@@ -8475,7 +8477,6 @@
 						"type": "stat",
 						"title": "VAT",
 						"content": {
-							"label": "VAT",
 							"objectField": "totalTax",
 							"format": {
 								"style": "currency",
@@ -8489,7 +8490,6 @@
 						"type": "stat",
 						"title": "Transactions",
 						"content": {
-							"label": "Transactions",
 							"objectField": "transactionCount"
 						}
 					},
