@@ -1523,7 +1523,8 @@
 				"editTitle": "Edit ticket",
 				"editEyebrow": "Edit · {reference}",
 				"editSubtitle": "{reference} · {ticketType}",
-				"editConfirmLabel": "Save changes"
+				"editConfirmLabel": "Save changes",
+				"editFootnote": "You do not change the status here: it moves through the ticket's steps, Answer the customer, Complete or Reject, so every change is checked."
 			},
 			"configPatch": {
 				"bodyWidgets": {
