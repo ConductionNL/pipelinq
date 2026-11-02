@@ -34,6 +34,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
+use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
 use OCA\Pipelinq\Service\BerichtenboxService;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
@@ -133,16 +135,20 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			}
 
 			$this->berichtenbox->queueOutboundMessage(
-				caseId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
-				interactionId: (string)($newData['interactionId'] ?? null),
-				status: $newStatus,
-				bsn: $bsn,
-				templateOverride: null,
-				extraVariables: [
-					'caseType' => (string)($newData['caseType'] ?? ''),
-					'language' => (string)($newData['language'] ?? 'nl'),
-				],
-				attachments: ($newData['attachments'] ?? [])
+				message: new CaseStatusMessage(
+					caseId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
+					interactionId: (string)($newData['interactionId'] ?? null),
+					status: $newStatus,
+					bsn: $bsn
+				),
+				options: new MessageOptions(
+					templateOverride: null,
+					extraVariables: [
+						'caseType' => (string)($newData['caseType'] ?? ''),
+						'language' => (string)($newData['language'] ?? 'nl'),
+					],
+					attachments: ($newData['attachments'] ?? [])
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
