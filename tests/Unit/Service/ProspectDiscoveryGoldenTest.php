@@ -185,7 +185,10 @@ class ProspectDiscoveryGoldenTest extends TestCase {
 		$scoring = $this->createMock(originalClassName: ProspectScoringService::class);
 		$scoring->method('scoreAll')->willReturnCallback(
 			function (array $prospects, array $criteria): array {
-				$this->recordCall(call: 'scoreAll', args: ['keys' => array_keys($prospects), 'kvkNumbers' => array_column($prospects, 'kvkNumber'), 'criteria' => $criteria]);
+				$this->recordCall(
+					call: 'scoreAll',
+					args: ['keys' => array_keys($prospects), 'kvkNumbers' => array_column($prospects, 'kvkNumber'), 'criteria' => $criteria]
+				);
 				foreach ($prospects as $i => $prospect) {
 					$prospects[$i]['score'] = (int) $prospect['kvkNumber'];
 				}
