@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -35,6 +36,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/dashboard/spec.md
  */
 class FirstTicketService {
+	use SerialisedToArray;
+
 	/**
 	 * The ticket types a handler is assigned.
 	 *
@@ -85,7 +88,7 @@ class FirstTicketService {
 		$tickets = [];
 		foreach (self::TICKET_TYPES as $ticketType) {
 			foreach ($this->ticketService->findByType(ticketType: $ticketType, extraFilters: ['assignee' => $userId], limit: self::FETCH_LIMIT) as $result) {
-				$ticket = $this->toArray(object: $result);
+				$ticket = $this->toArray(value: $result);
 				if (in_array((string) ($ticket['status'] ?? ''), WorklistService::TERMINAL_TICKET_STATUSES, true) === false) {
 					$tickets[] = $ticket;
 				}
@@ -215,7 +218,7 @@ class FirstTicketService {
 			return '';
 		}
 
-		return (string) ($this->toArray(object: $client)['name'] ?? '');
+		return (string) ($this->toArray(value: $client)['name'] ?? '');
 	}//end clientName()
 
 	/**
@@ -237,26 +240,4 @@ class FirstTicketService {
 
 		return $stamp;
 	}//end timestamp()
-
-	/**
-	 * An OpenRegister entity or array as an array.
-	 *
-	 * @param mixed $object The entity.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$data = $object->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class
