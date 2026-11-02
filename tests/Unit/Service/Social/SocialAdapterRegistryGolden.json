@@ -1,0 +1,107 @@
+{
+    "missing": [],
+    "readiness": {
+        "mastodon": {
+            "state": "state-of-mastodon",
+            "reason": "reason-of-mastodon"
+        },
+        "bluesky": {
+            "state": "state-of-bluesky",
+            "reason": "reason-of-bluesky"
+        },
+        "linkedin": {
+            "state": "state-of-linkedin",
+            "reason": "reason-of-linkedin"
+        },
+        "x": {
+            "state": "state-of-x",
+            "reason": "reason-of-x"
+        },
+        "facebook": {
+            "state": "state-of-meta-graph",
+            "reason": "reason-of-meta-graph"
+        },
+        "instagram": {
+            "state": "state-of-meta-graph",
+            "reason": "reason-of-meta-graph"
+        },
+        "threads": {
+            "state": "state-of-",
+            "reason": "reason-of-"
+        }
+    },
+    "networks": {
+        "mastodon|": {
+            "adapter": "OCA\\Pipelinq\\Service\\Social\\MastodonAdapter",
+            "provider": "mastodon",
+            "readiness": {
+                "state": "state-of-mastodon",
+                "reason": "reason-of-mastodon"
+            }
+        },
+        "bluesky|": {
+            "adapter": "OCA\\Pipelinq\\Service\\Social\\BlueskyAdapter",
+            "provider": "bluesky",
+            "readiness": {
+                "state": "state-of-bluesky",
+                "reason": "reason-of-bluesky"
+            }
+        },
+        "linkedin|": {
+            "adapter": "OCA\\Pipelinq\\Service\\Social\\LinkedInAdapter",
+            "provider": "linkedin",
+            "readiness": {
+                "state": "state-of-linkedin",
+                "reason": "reason-of-linkedin"
+            }
+        },
+        "x|": {
+            "adapter": "OCA\\Pipelinq\\Service\\Social\\XAdapter",
+            "provider": "x",
+            "readiness": {
+                "state": "state-of-x",
+                "reason": "reason-of-x"
+            }
+        },
+        "facebook|": {
+            "adapter": "OCA\\Pipelinq\\Service\\Social\\FacebookPageAdapter",
+            "provider": "meta-graph",
+            "readiness": {
+                "state": "state-of-meta-graph",
+                "reason": "reason-of-meta-graph"
+            }
+        },
+        "instagram|": {
+            "adapter": "OCA\\Pipelinq\\Service\\Social\\InstagramBusinessAdapter",
+            "provider": "meta-graph",
+            "readiness": {
+                "state": "state-of-meta-graph",
+                "reason": "reason-of-meta-graph"
+            }
+        },
+        "threads|": {
+            "adapter": "OCA\\Pipelinq\\Service\\Social\\ThreadsAdapter",
+            "provider": "",
+            "readiness": {
+                "state": "state-of-",
+                "reason": "reason-of-"
+            }
+        },
+        "myspace|": {
+            "adapter": null,
+            "provider": "",
+            "readiness": {
+                "state": "not_configured",
+                "reason": "Pipelinq does not know this network."
+            }
+        },
+        "|": {
+            "adapter": null,
+            "provider": "",
+            "readiness": {
+                "state": "not_configured",
+                "reason": "Pipelinq does not know this network."
+            }
+        }
+    }
+}
