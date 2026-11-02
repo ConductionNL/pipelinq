@@ -108,7 +108,13 @@ class PointsLedgerOperationIdTest extends TestCase {
 
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null): ObjectEntity {
+			function (
+				array $object,
+				?array $extend=[],
+				string|int|null $register=null,
+				string|int|null $schema=null,
+				?string $uuid=null
+			): ObjectEntity {
 				$id = 'entry-' . (count($this->entries) + 1);
 				$this->entries[$id] = $object;
 				return $this->entity(uuid: $id);
@@ -125,7 +131,14 @@ class PointsLedgerOperationIdTest extends TestCase {
 				unset($filters['register'], $filters['schema']);
 				$found = [];
 				foreach ($this->entries as $id => $entry) {
-					if (array_intersect_key($entry, $filters) == $filters && count(array_intersect_key($entry, $filters)) === count($filters)) {
+					$matches = true;
+					foreach ($filters as $field => $value) {
+						if (array_key_exists($field, $entry) === false || $entry[$field] !== $value) {
+							$matches = false;
+						}
+					}
+
+					if ($matches === true) {
 						$found[] = $this->entity(uuid: $id);
 					}
 				}
@@ -231,7 +244,7 @@ class PointsLedgerOperationIdTest extends TestCase {
 
 		try {
 			$this->credit(ledger: $ledger, id: 'pos:TX-1001', amount: 60);
-			$this->fail('A reused operation id with another amount must be refused.');
+			$this->fail(message: 'A reused operation id with another amount must be refused.');
 		} catch (RuntimeException $e) {
 			$this->assertStringContainsString(needle: 'pos:TX-1001', haystack: $e->getMessage());
 		}
@@ -251,7 +264,7 @@ class PointsLedgerOperationIdTest extends TestCase {
 		$ledger = $this->service()->forOperation(operationId: 'op-1');
 		$ledger->expirePoints(accountId: 'anna', amount: 10, reason: 'inactivity-expiry');
 
-		$this->expectException(RuntimeException::class);
+		$this->expectException(exception: RuntimeException::class);
 		try {
 			$ledger->adjustPoints(accountId: 'anna', delta: -10, reason: 'correction', processedBy: 'carol');
 		} finally {
@@ -319,11 +332,16 @@ class PointsLedgerOperationIdTest extends TestCase {
 	public function testEveryMovementTakesAnId(): void {
 		$ledger = $this->service();
 		$calls = [
-			'credit' => fn () => $ledger->forOperation(operationId: 'op-credit')->creditPoints(accountId: 'anna', amount: 5, ruleId: null, sourceDocument: [], processedBy: 'p'),
-			'debit' => fn () => $ledger->forOperation(operationId: 'op-debit')->debitPoints(accountId: 'anna', amount: 5, redemptionId: 'r', sourceDocument: [], processedBy: 'p'),
-			'expiry' => fn () => $ledger->forOperation(operationId: 'op-expiry')->expirePoints(accountId: 'anna', amount: 5, reason: 'x'),
-			'adjustment' => fn () => $ledger->forOperation(operationId: 'op-adjustment')->adjustPoints(accountId: 'anna', delta: 5, reason: 'x', processedBy: 'p'),
-			'refund' => fn () => $ledger->forOperation(operationId: 'op-refund')->refundPoints(accountId: 'anna', amount: 5, redemptionId: 'r', processedBy: 'p'),
+			'credit' => fn () => $ledger->forOperation(operationId: 'op-credit')
+				->creditPoints(accountId: 'anna', amount: 5, ruleId: null, sourceDocument: [], processedBy: 'p'),
+			'debit' => fn () => $ledger->forOperation(operationId: 'op-debit')
+				->debitPoints(accountId: 'anna', amount: 5, redemptionId: 'r', sourceDocument: [], processedBy: 'p'),
+			'expiry' => fn () => $ledger->forOperation(operationId: 'op-expiry')
+				->expirePoints(accountId: 'anna', amount: 5, reason: 'x'),
+			'adjustment' => fn () => $ledger->forOperation(operationId: 'op-adjustment')
+				->adjustPoints(accountId: 'anna', delta: 5, reason: 'x', processedBy: 'p'),
+			'refund' => fn () => $ledger->forOperation(operationId: 'op-refund')
+				->refundPoints(accountId: 'anna', amount: 5, redemptionId: 'r', processedBy: 'p'),
 		];
 
 		foreach ($calls as $type => $call) {
@@ -354,7 +372,7 @@ class PointsLedgerOperationIdTest extends TestCase {
 
 		try {
 			$this->credit(ledger: $ledger, id: 'pos:TX-1001');
-			$this->fail('A movement whose id cannot be checked must not be written.');
+			$this->fail(message: 'A movement whose id cannot be checked must not be written.');
 		} catch (RuntimeException $e) {
 			$this->assertStringContainsString(needle: 'pos:TX-1001', haystack: $e->getMessage());
 		}

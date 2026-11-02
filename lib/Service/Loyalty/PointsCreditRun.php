@@ -75,4 +75,21 @@ class PointsCreditRun {
 	public function processedBy(): string {
 		return (string)($this->transaction['posTerminalId'] ?? 'system');
 	}//end processedBy()
+
+	/**
+	 * The ledger operation id of this credit: the POS transaction, so a
+	 * resent transaction is credited once; '' without a transaction id.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/loyalty-ledger-operation-id/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
+	 */
+	public function operationId(): string {
+		$transactionId = (string)($this->transaction['posTransactionId'] ?? '');
+		if ($transactionId === '') {
+			return '';
+		}
+
+		return 'pos:'.$transactionId;
+	}//end operationId()
 }//end class

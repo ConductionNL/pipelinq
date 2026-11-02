@@ -81,7 +81,7 @@ class LoyaltyPaymentService {
 			throw new RuntimeException('The programme gives points no value.');
 		}
 
-		$this->ledgerService->debitPoints(
+		$this->ledgerService->forOperation(operationId: 'pos-payment:'.$posTransactionId)->debitPoints(
 			accountId: $accountId,
 			amount: $points,
 			redemptionId: $posTransactionId,
