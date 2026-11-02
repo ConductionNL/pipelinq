@@ -38,6 +38,8 @@ use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\InstanceMailerTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\MailAccountTransport;
+use OCA\Pipelinq\Service\Marketing\Transport\MailAddressing;
+use OCA\Pipelinq\Service\Marketing\Transport\MailContent;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use OCA\Pipelinq\Service\Marketing\Transport\SendResult;
 use OCA\Pipelinq\Service\UnsubscribeMail;
@@ -320,16 +322,20 @@ class MailTransportService {
 		}
 
 		return new RenderedMail(
-			fromEmail: (string)($template['senderEmail'] ?? ''),
-			fromName: (string)($template['senderName'] ?? ''),
-			replyTo: (string)($template['replyTo'] ?? ''),
-			toEmail: (string)($delivery['email'] ?? ''),
-			subject: strtr((string)($template['subject'] ?? ''), $tokens),
-			html: $html,
-			text: $this->addressRenderer->render(
-				body: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_TEXT), $tokens),
-				footerOverride: $footer,
-				format: ArticleService::FORMAT_TEXT,
+			addressing: new MailAddressing(
+				fromEmail: (string)($template['senderEmail'] ?? ''),
+				fromName: (string)($template['senderName'] ?? ''),
+				replyTo: (string)($template['replyTo'] ?? ''),
+				toEmail: (string)($delivery['email'] ?? ''),
+			),
+			content: new MailContent(
+				subject: strtr((string)($template['subject'] ?? ''), $tokens),
+				html: $html,
+				text: $this->addressRenderer->render(
+					body: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_TEXT), $tokens),
+					footerOverride: $footer,
+					format: ArticleService::FORMAT_TEXT,
+				),
 			),
 			headers: $headers,
 			deliveryId: $deliveryId,
