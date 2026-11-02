@@ -71,7 +71,10 @@ class BrpCacheService {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
-	public function get(#[\SensitiveParameter] string $rawBsn): ?array {
+	public function get(
+		#[\SensitiveParameter]
+		string $rawBsn,
+	): ?array {
 		try {
 			[$register, $schema] = $this->config();
 			$hash = BsnValidationService::hash($rawBsn);
@@ -168,7 +171,10 @@ class BrpCacheService {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
-	public function invalidate(#[\SensitiveParameter] string $rawBsn): int {
+	public function invalidate(
+		#[\SensitiveParameter]
+		string $rawBsn,
+	): int {
 		try {
 			[$register, $schema] = $this->config();
 			$hash = BsnValidationService::hash($rawBsn);

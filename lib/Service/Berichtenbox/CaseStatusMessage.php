@@ -47,7 +47,8 @@ class CaseStatusMessage {
 		public readonly string $caseId,
 		public readonly ?string $interactionId,
 		public readonly string $status,
-		#[\SensitiveParameter] public readonly string $bsn,
+		#[\SensitiveParameter]
+		public readonly string $bsn,
 	) {
 	}//end __construct()
 

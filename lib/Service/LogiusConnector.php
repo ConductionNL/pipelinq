@@ -421,7 +421,10 @@ class LogiusConnector {
 	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
 	 *   exercised through the features that call it
 	 */
-	public function checkMailboxExists(#[\SensitiveParameter] string $bsn): bool {
+	public function checkMailboxExists(
+		#[\SensitiveParameter]
+		string $bsn,
+	): bool {
 		$baseUrl = $this->appConfig->getValueString(
 			Application::APP_ID,
 			self::CONFIG_BASE_URL,
