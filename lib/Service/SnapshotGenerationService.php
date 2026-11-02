@@ -306,26 +306,33 @@ class SnapshotGenerationService {
 	 */
 	private function snapshotRecord(SnapshotRun $run, SnapshotNode $node): array {
 		$quota = $this->quotaFacts(run: $run, node: $node);
-
-		return [
-			'period_id' => $run->periodId,
-			'as_of_date' => $run->asOfDate,
-			'owner_id' => $node->ownerId,
-			'level' => $node->level,
-			'commit_amount' => $node->totals['commit_amount'],
-			'best_case_amount' => $node->totals['best_case_amount'],
-			'pipeline_amount' => $node->totals['pipeline_amount'],
-			'closed_won_amount' => $node->totals['closed_won_amount'],
+		$owner = ['period_id' => $run->periodId, 'as_of_date' => $run->asOfDate, 'owner_id' => $node->ownerId, 'level' => $node->level];
+		$state = [
 			'quota_amount' => $quota['quota_amount'],
 			'currency' => $run->currency,
 			'deal_snapshot_ids' => [],
 			'partial' => ($node->missing !== []),
 			'missing_reps' => $node->missing,
-			'days_remaining' => $quota['days_remaining'],
-			'period_closed' => $quota['period_closed'],
-			'at_risk' => $quota['at_risk'],
 		];
+
+		return array_merge($owner, $this->amounts(node: $node), $state, array_diff_key($quota, ['quota_amount' => true]));
 	}//end snapshotRecord()
+
+	/**
+	 * The four forecast amounts of a node, in record order.
+	 *
+	 * @param SnapshotNode $node The owner, level and amounts.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function amounts(SnapshotNode $node): array {
+		return [
+			'commit_amount' => $node->totals['commit_amount'],
+			'best_case_amount' => $node->totals['best_case_amount'],
+			'pipeline_amount' => $node->totals['pipeline_amount'],
+			'closed_won_amount' => $node->totals['closed_won_amount'],
+		];
+	}//end amounts()
 
 	/**
 	 * The quota, the days left, whether the period is closed and whether the owner is at risk.
@@ -340,18 +347,32 @@ class SnapshotGenerationService {
 		$reference = new DateTimeImmutable($run->asOfDate);
 		$daysRemaining = $this->period->daysRemaining(periodId: $run->periodId, now: $reference);
 		$periodClosed = $this->period->isClosed(periodId: $run->periodId, now: $reference);
+		$atRisk = $this->atRisk(node: $node, limits: ['quota' => $quota, 'daysRemaining' => $daysRemaining]);
+
+		return ['quota_amount' => $quota, 'days_remaining' => $daysRemaining, 'period_closed' => $periodClosed, 'at_risk' => $atRisk];
+	}//end quotaFacts()
+
+	/**
+	 * Whether the owner's projected attainment puts its quota at risk; never
+	 * without a positive quota.
+	 *
+	 * @param SnapshotNode                                     $node   The owner and amounts.
+	 * @param array{quota: float|null, daysRemaining: int}     $limits The quota and the days left.
+	 *
+	 * @return bool
+	 */
+	private function atRisk(SnapshotNode $node, array $limits): bool {
 		$projected = $this->quotaService->projectedAttainment(
 			closedWon: (float)$node->totals['closed_won_amount'],
 			commit: (float)$node->totals['commit_amount'],
 			bestCase: (float)$node->totals['best_case_amount']
 		);
-		$atRisk = false;
-		if ($quota !== null && $quota > 0) {
-			$atRisk = $this->quotaService->isAtRisk(projected: $projected, quota: $quota, daysRemaining: $daysRemaining);
+		if ($limits['quota'] === null || $limits['quota'] <= 0) {
+			return false;
 		}
 
-		return ['quota_amount' => $quota, 'days_remaining' => $daysRemaining, 'period_closed' => $periodClosed, 'at_risk' => $atRisk];
-	}//end quotaFacts()
+		return $this->quotaService->isAtRisk(projected: $projected, quota: $limits['quota'], daysRemaining: $limits['daysRemaining']);
+	}//end atRisk()
 
 	/**
 	 * Resolve the rep/team/division hierarchy from NC groups + config.
