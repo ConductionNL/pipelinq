@@ -1,0 +1,1585 @@
+{
+    "run due, no identity": {
+        "result": {
+            "watches": 7,
+            "events": 4,
+            "failures": {
+                "w-odd": "This watch has no kind that can be read.",
+                "w-throw": "feed host is down",
+                "w-fail": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"
+            }
+        },
+        "calls": [
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-competitorWatch",
+                    []
+                ]
+            },
+            {
+                "call": "reader.feeds",
+                "args": [
+                    "https://rival.example/feed",
+                    "src-1"
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/post-1",
+                        "title": "One"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-rss",
+                        "url": "https://rival.example/post-1"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-rss",
+                        "url": "https://rival.example/post-1",
+                        "seenAt": "2025-11-01T00:00:00Z",
+                        "competitorId": "c-1",
+                        "kind": "rss",
+                        "title": "One",
+                        "diffSummary": "",
+                        "sourceStamp": "",
+                        "relevanceScore": 8,
+                        "scoredFor": null
+                    },
+                    "e-4"
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/post-2",
+                        "summary": "Two"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-rss",
+                        "url": "https://rival.example/post-2"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "c-1",
+                        "watchId": "w-rss",
+                        "kind": "rss",
+                        "title": "https://rival.example/post-2",
+                        "url": "https://rival.example/post-2",
+                        "diffSummary": "Two",
+                        "sourceStamp": "",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 8,
+                        "scoredFor": null
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "title": "no url"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "rss",
+                        "target": " https://rival.example/feed ",
+                        "connectorSourceId": " src-1 ",
+                        "competitorId": "c-1",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-rss"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-map"
+                    }
+                ]
+            },
+            {
+                "call": "reader.sitemaps",
+                "args": [
+                    "https://rival.example/sitemap.xml",
+                    {
+                        "https://rival.example/a": "2026-01-01",
+                        "https://rival.example/b": ""
+                    },
+                    ""
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/c",
+                        "stamp": "s-c"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-map",
+                        "url": "https://rival.example/c"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "",
+                        "watchId": "w-map",
+                        "kind": "sitemap",
+                        "title": "https://rival.example/c",
+                        "url": "https://rival.example/c",
+                        "diffSummary": "",
+                        "sourceStamp": "s-c",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 3,
+                        "scoredFor": null
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "sitemap",
+                        "target": "https://rival.example/sitemap.xml",
+                        "schedule": "hourly",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-map"
+                ]
+            },
+            {
+                "call": "reader.pages",
+                "args": [
+                    "https://rival.example/prices",
+                    ".price",
+                    "fp-0",
+                    [
+                        "1",
+                        "b"
+                    ],
+                    ""
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/prices",
+                        "summary": "changed"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-page",
+                        "url": "https://rival.example/prices"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "",
+                        "watchId": "w-page",
+                        "kind": "page",
+                        "title": "https://rival.example/prices",
+                        "url": "https://rival.example/prices",
+                        "diffSummary": "changed",
+                        "sourceStamp": "",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 8,
+                        "scoredFor": null
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "page",
+                        "target": "https://rival.example/prices",
+                        "selector": " .price ",
+                        "fingerprint": "fp-1",
+                        "lineFingerprints": [
+                            "l1"
+                        ],
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-page"
+                ]
+            },
+            {
+                "call": "reader.fediverse",
+                "args": [
+                    "@rival@mastodon.example",
+                    "src-f"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "fediverse",
+                        "target": " @rival@mastodon.example ",
+                        "connectorSourceId": " src-f ",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-fedi"
+                ]
+            },
+            {
+                "call": "reader.searches",
+                "args": [
+                    "rival crm",
+                    null
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://news.example/rival",
+                        "title": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-search",
+                        "url": "https://news.example/rival"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "",
+                        "watchId": "w-search",
+                        "kind": "search",
+                        "title": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+                        "url": "https://news.example/rival",
+                        "diffSummary": "",
+                        "sourceStamp": "",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 6,
+                        "scoredFor": null
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "search",
+                        "target": " rival crm ",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-search"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "carrier-pigeon",
+                        "target": "roof",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "not_configured",
+                        "lastReason": "This watch has no kind that can be read."
+                    },
+                    "w-odd"
+                ]
+            },
+            {
+                "call": "reader.feeds",
+                "args": [
+                    "https://down.example/feed",
+                    ""
+                ]
+            },
+            {
+                "call": "logger.warning",
+                "args": [
+                    "CompetitorWatchService: a watch threw",
+                    {
+                        "watchId": "w-throw",
+                        "exception": "feed host is down"
+                    }
+                ]
+            },
+            {
+                "call": "reader.pages",
+                "args": [
+                    "https://gone.example",
+                    "",
+                    "",
+                    [],
+                    ""
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "page",
+                        "target": "https://gone.example",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "not_found",
+                        "lastReason": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"
+                    },
+                    "w-fail"
+                ]
+            }
+        ]
+    },
+    "run due, limit two, acting user": {
+        "result": {
+            "watches": 2,
+            "events": 2,
+            "failures": []
+        },
+        "calls": [
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-competitorWatch",
+                    []
+                ]
+            },
+            {
+                "call": "reader.feeds",
+                "args": [
+                    "https://rival.example/feed",
+                    "src-1"
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/post-1",
+                        "title": "One"
+                    },
+                    "admin"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-rss",
+                        "url": "https://rival.example/post-1"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-rss",
+                        "url": "https://rival.example/post-1",
+                        "seenAt": "2025-11-01T00:00:00Z",
+                        "competitorId": "c-1",
+                        "kind": "rss",
+                        "title": "One",
+                        "diffSummary": "",
+                        "sourceStamp": "",
+                        "relevanceScore": 8,
+                        "scoredFor": "admin"
+                    },
+                    "e-4"
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/post-2",
+                        "summary": "Two"
+                    },
+                    "admin"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-rss",
+                        "url": "https://rival.example/post-2"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "c-1",
+                        "watchId": "w-rss",
+                        "kind": "rss",
+                        "title": "https://rival.example/post-2",
+                        "url": "https://rival.example/post-2",
+                        "diffSummary": "Two",
+                        "sourceStamp": "",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 8,
+                        "scoredFor": "admin"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "title": "no url"
+                    },
+                    "admin"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "rss",
+                        "target": " https://rival.example/feed ",
+                        "connectorSourceId": " src-1 ",
+                        "competitorId": "c-1",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-rss"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-map"
+                    }
+                ]
+            },
+            {
+                "call": "reader.sitemaps",
+                "args": [
+                    "https://rival.example/sitemap.xml",
+                    {
+                        "https://rival.example/a": "2026-01-01",
+                        "https://rival.example/b": ""
+                    },
+                    ""
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/c",
+                        "stamp": "s-c"
+                    },
+                    "admin"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-map",
+                        "url": "https://rival.example/c"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "",
+                        "watchId": "w-map",
+                        "kind": "sitemap",
+                        "title": "https://rival.example/c",
+                        "url": "https://rival.example/c",
+                        "diffSummary": "",
+                        "sourceStamp": "s-c",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 3,
+                        "scoredFor": "admin"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "sitemap",
+                        "target": "https://rival.example/sitemap.xml",
+                        "schedule": "hourly",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-map"
+                ]
+            }
+        ]
+    },
+    "due now, limit three": {
+        "result": [
+            {
+                "id": "w-rss",
+                "kind": "rss",
+                "target": " https://rival.example/feed ",
+                "connectorSourceId": " src-1 ",
+                "competitorId": "c-1"
+            },
+            {
+                "uuid": "w-map",
+                "kind": "sitemap",
+                "target": "https://rival.example/sitemap.xml",
+                "schedule": "hourly",
+                "@self": {
+                    "x": 1
+                }
+            },
+            {
+                "id": "w-page",
+                "kind": "page",
+                "target": "https://rival.example/prices",
+                "selector": " .price ",
+                "fingerprint": " fp-0 ",
+                "lineFingerprints": [
+                    1,
+                    "b"
+                ]
+            }
+        ],
+        "calls": [
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-competitorWatch",
+                    []
+                ]
+            }
+        ]
+    },
+    "run one sitemap without id": {
+        "result": {
+            "outcome": "ok",
+            "reason": "",
+            "events": 0
+        },
+        "calls": [
+            {
+                "call": "reader.sitemaps",
+                "args": [
+                    "https://rival.example/sitemap.xml",
+                    [],
+                    ""
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/c",
+                        "stamp": "s-c"
+                    },
+                    null
+                ]
+            }
+        ]
+    },
+    "run one without kind": {
+        "result": {
+            "outcome": "not_configured",
+            "reason": "This watch has no kind that can be read.",
+            "events": 0
+        },
+        "calls": [
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "target": "x",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "not_configured",
+                        "lastReason": "This watch has no kind that can be read."
+                    },
+                    "w-none"
+                ]
+            }
+        ]
+    },
+    "run one w-rss": {
+        "result": {
+            "outcome": "ok",
+            "reason": "",
+            "events": 1
+        },
+        "calls": [
+            {
+                "call": "reader.feeds",
+                "args": [
+                    "https://rival.example/feed",
+                    "src-1"
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/post-1",
+                        "title": "One"
+                    },
+                    "u-7"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-rss",
+                        "url": "https://rival.example/post-1"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-rss",
+                        "url": "https://rival.example/post-1",
+                        "seenAt": "2025-11-01T00:00:00Z",
+                        "competitorId": "c-1",
+                        "kind": "rss",
+                        "title": "One",
+                        "diffSummary": "",
+                        "sourceStamp": "",
+                        "relevanceScore": 8,
+                        "scoredFor": "u-7"
+                    },
+                    "e-4"
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/post-2",
+                        "summary": "Two"
+                    },
+                    "u-7"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-rss",
+                        "url": "https://rival.example/post-2"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "c-1",
+                        "watchId": "w-rss",
+                        "kind": "rss",
+                        "title": "https://rival.example/post-2",
+                        "url": "https://rival.example/post-2",
+                        "diffSummary": "Two",
+                        "sourceStamp": "",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 8,
+                        "scoredFor": "u-7"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "title": "no url"
+                    },
+                    "u-7"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "rss",
+                        "target": " https://rival.example/feed ",
+                        "connectorSourceId": " src-1 ",
+                        "competitorId": "c-1",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-rss"
+                ]
+            }
+        ]
+    },
+    "run one w-map": {
+        "result": {
+            "outcome": "ok",
+            "reason": "",
+            "events": 1
+        },
+        "calls": [
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-map"
+                    }
+                ]
+            },
+            {
+                "call": "reader.sitemaps",
+                "args": [
+                    "https://rival.example/sitemap.xml",
+                    {
+                        "https://rival.example/a": "2026-01-01",
+                        "https://rival.example/b": ""
+                    },
+                    ""
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/c",
+                        "stamp": "s-c"
+                    },
+                    "u-7"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-map",
+                        "url": "https://rival.example/c"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "",
+                        "watchId": "w-map",
+                        "kind": "sitemap",
+                        "title": "https://rival.example/c",
+                        "url": "https://rival.example/c",
+                        "diffSummary": "",
+                        "sourceStamp": "s-c",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 3,
+                        "scoredFor": "u-7"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "sitemap",
+                        "target": "https://rival.example/sitemap.xml",
+                        "schedule": "hourly",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-map"
+                ]
+            }
+        ]
+    },
+    "run one w-recent": {
+        "result": {
+            "outcome": "ok",
+            "reason": "",
+            "events": 1
+        },
+        "calls": [
+            {
+                "call": "reader.feeds",
+                "args": [
+                    "https://x.example",
+                    ""
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://default.example/reader.feeds"
+                    },
+                    "u-7"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-recent",
+                        "url": "https://default.example/reader.feeds"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "",
+                        "watchId": "w-recent",
+                        "kind": "rss",
+                        "title": "https://default.example/reader.feeds",
+                        "url": "https://default.example/reader.feeds",
+                        "diffSummary": "",
+                        "sourceStamp": "",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 6,
+                        "scoredFor": "u-7"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "rss",
+                        "target": "https://x.example",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-recent"
+                ]
+            }
+        ]
+    },
+    "run one w-page": {
+        "result": {
+            "outcome": "ok",
+            "reason": "",
+            "events": 1
+        },
+        "calls": [
+            {
+                "call": "reader.pages",
+                "args": [
+                    "https://rival.example/prices",
+                    ".price",
+                    "fp-0",
+                    [
+                        "1",
+                        "b"
+                    ],
+                    ""
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://rival.example/prices",
+                        "summary": "changed"
+                    },
+                    "u-7"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-page",
+                        "url": "https://rival.example/prices"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "",
+                        "watchId": "w-page",
+                        "kind": "page",
+                        "title": "https://rival.example/prices",
+                        "url": "https://rival.example/prices",
+                        "diffSummary": "changed",
+                        "sourceStamp": "",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 8,
+                        "scoredFor": "u-7"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "page",
+                        "target": "https://rival.example/prices",
+                        "selector": " .price ",
+                        "fingerprint": "fp-1",
+                        "lineFingerprints": [
+                            "l1"
+                        ],
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-page"
+                ]
+            }
+        ]
+    },
+    "run one w-fedi": {
+        "result": {
+            "outcome": "ok",
+            "reason": "",
+            "events": 0
+        },
+        "calls": [
+            {
+                "call": "reader.fediverse",
+                "args": [
+                    "@rival@mastodon.example",
+                    "src-f"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "fediverse",
+                        "target": " @rival@mastodon.example ",
+                        "connectorSourceId": " src-f ",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-fedi"
+                ]
+            }
+        ]
+    },
+    "run one w-search": {
+        "result": {
+            "outcome": "ok",
+            "reason": "",
+            "events": 1
+        },
+        "calls": [
+            {
+                "call": "reader.searches",
+                "args": [
+                    "rival crm",
+                    "u-7"
+                ]
+            },
+            {
+                "call": "scorer.fieldsFor",
+                "args": [
+                    {
+                        "url": "https://news.example/rival",
+                        "title": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+                    },
+                    "u-7"
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.findAll",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "watchId": "w-search",
+                        "url": "https://news.example/rival"
+                    }
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "watchEvent_schema",
+                    "watchEvent"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-watchEvent",
+                    {
+                        "competitorId": "",
+                        "watchId": "w-search",
+                        "kind": "search",
+                        "title": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+                        "url": "https://news.example/rival",
+                        "diffSummary": "",
+                        "sourceStamp": "",
+                        "seenAt": "2026-01-01T00:00:00Z",
+                        "relevanceScore": 6,
+                        "scoredFor": "u-7"
+                    },
+                    null
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "search",
+                        "target": " rival crm ",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "ok",
+                        "lastReason": ""
+                    },
+                    "w-search"
+                ]
+            }
+        ]
+    },
+    "run one w-odd": {
+        "result": {
+            "outcome": "not_configured",
+            "reason": "This watch has no kind that can be read.",
+            "events": 0
+        },
+        "calls": [
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "carrier-pigeon",
+                        "target": "roof",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "not_configured",
+                        "lastReason": "This watch has no kind that can be read."
+                    },
+                    "w-odd"
+                ]
+            }
+        ]
+    },
+    "run one w-throw": {
+        "error": "RuntimeException: feed host is down",
+        "calls": [
+            {
+                "call": "reader.feeds",
+                "args": [
+                    "https://down.example/feed",
+                    ""
+                ]
+            }
+        ]
+    },
+    "run one w-fail": {
+        "result": {
+            "outcome": "not_found",
+            "reason": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+            "events": 0
+        },
+        "calls": [
+            {
+                "call": "reader.pages",
+                "args": [
+                    "https://gone.example",
+                    "",
+                    "",
+                    [],
+                    ""
+                ]
+            },
+            {
+                "call": "store.schemaSlug",
+                "args": [
+                    "competitorWatch_schema",
+                    "competitorWatch"
+                ]
+            },
+            {
+                "call": "store.save",
+                "args": [
+                    "slug-competitorWatch",
+                    {
+                        "kind": "page",
+                        "target": "https://gone.example",
+                        "lastRunAt": "2026-01-01T00:00:00Z",
+                        "lastOutcome": "not_found",
+                        "lastReason": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"
+                    },
+                    "w-fail"
+                ]
+            }
+        ]
+    }
+}

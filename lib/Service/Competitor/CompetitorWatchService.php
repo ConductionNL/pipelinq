@@ -38,7 +38,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Competitor;
 
-use OCA\Pipelinq\Service\Egress\EgressResult;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
@@ -48,19 +47,6 @@ use Throwable;
  * Runs the competitor watches that are due.
  *
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) This class is the
- *  dispatcher over the five watch readers, and a dispatcher over five
- *  things depends on five things. Each reader is independently testable
- *  and none of them knows about the others; hiding them behind a registry
- *  would move the same five dependencies one file along and cost the
- *  match expression that makes the dispatch readable.
- * @SuppressWarnings(PHPMD.ExcessiveParameterList) Same reason: five
- *  readers, the scorer, the event store, the register access, a clock and
- *  a logger. Every one of them is injected so it can be replaced in a
- *  test, which is what makes the watch pass assertable without a network.
- * @SuppressWarnings(PHPMD.StaticAccess) `WatchOutcome`'s named
- *  constructors, on the same grounds as the readers themselves.
  */
 class CompetitorWatchService {
 
@@ -108,11 +94,7 @@ class CompetitorWatchService {
 	 * Constructor.
 	 *
 	 * @param ListObjectStore $store Register-scoped object access.
-	 * @param FeedWatchReader $feeds The RSS and Atom reader.
-	 * @param SitemapWatchReader $sitemaps The sitemap reader.
-	 * @param PageWatchReader $pages The page-fragment reader.
-	 * @param FediverseWatchReader $fediverse The Mastodon and Bluesky reader.
-	 * @param SearchWatchReader $searches The hermiq web-search reader.
+	 * @param WatchReaders $readers The reader for each watch kind.
 	 * @param RelevanceScorer $scorer Relevance, or nothing.
 	 * @param WatchEventStore $events The idempotent event writer.
 	 * @param ITimeFactory $time Time factory for the due calculation.
@@ -122,11 +104,7 @@ class CompetitorWatchService {
 	 */
 	public function __construct(
 		private ListObjectStore $store,
-		private FeedWatchReader $feeds,
-		private SitemapWatchReader $sitemaps,
-		private PageWatchReader $pages,
-		private FediverseWatchReader $fediverse,
-		private SearchWatchReader $searches,
+		private WatchReaders $readers,
 		private RelevanceScorer $scorer,
 		private WatchEventStore $events,
 		private ITimeFactory $time,
@@ -285,7 +263,7 @@ class CompetitorWatchService {
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public function runOne(array $watch, ?string $actingUserId = null): array {
-		$outcome = $this->readOne(watch: $watch, actingUserId: $actingUserId);
+		$outcome = $this->readers->read(watch: $watch, actingUserId: $actingUserId);
 		$created = 0;
 		foreach ($outcome->items as $item) {
 			$stored = $this->events->upsert(
@@ -302,67 +280,6 @@ class CompetitorWatchService {
 
 		return ['outcome' => $outcome->outcome, 'reason' => $outcome->reason, 'events' => $created];
 	}//end runOne()
-
-	/**
-	 * Dispatch one watch to its reader.
-	 *
-	 * @param array<string, mixed> $watch The watch.
-	 * @param string|null $actingUserId The identity the run acts as.
-	 *
-	 * @return WatchOutcome
-	 */
-	private function readOne(array $watch, ?string $actingUserId): WatchOutcome {
-		$target = trim((string)($watch['target'] ?? ''));
-		$sourceId = trim((string)($watch['connectorSourceId'] ?? ''));
-
-		return match ((string)($watch['kind'] ?? '')) {
-			'rss' => $this->feeds->read(url: $target, sourceId: $sourceId),
-			'sitemap' => $this->sitemaps->read(
-				url: $target,
-				previous: $this->seenLocations(watch: $watch),
-				sourceId: $sourceId
-			),
-			'page' => $this->pages->read(
-				url: $target,
-				selector: trim((string)($watch['selector'] ?? '')),
-				fingerprint: trim((string)($watch['fingerprint'] ?? '')),
-				lineFingerprints: array_map('strval', (array)($watch['lineFingerprints'] ?? [])),
-				sourceId: $sourceId
-			),
-			'fediverse' => $this->fediverse->read(handle: $target, sourceId: $sourceId),
-			'search' => $this->searches->read(query: $target, actingUserId: $actingUserId),
-			default => WatchOutcome::failed(
-				outcome: EgressResult::NOT_CONFIGURED,
-				reason: 'This watch has no kind that can be read.'
-			),
-		};
-	}//end readOne()
-
-	/**
-	 * The sitemap locations this watch already recorded, rebuilt from its own
-	 * events rather than from a blob on the watch, so a competitor with ten
-	 * thousand pages does not turn one object into a store of its own.
-	 *
-	 * @param array<string, mixed> $watch The watch.
-	 *
-	 * @return array<string, string> Location to stamp.
-	 */
-	private function seenLocations(array $watch): array {
-		$watchId = $this->store->idOf(payload: $watch);
-		if ($watchId === '') {
-			return [];
-		}
-
-		$out = [];
-		foreach ($this->events->all(filters: ['watchId' => $watchId]) as $event) {
-			$url = trim((string)($event['url'] ?? ''));
-			if ($url !== '') {
-				$out[$url] = trim((string)($event['sourceStamp'] ?? ''));
-			}
-		}
-
-		return $out;
-	}//end seenLocations()
 
 	/**
 	 * Record what this run did on the watch itself, so the page can say when
