@@ -45,6 +45,7 @@ use Throwable;
  * @covers \OCA\Pipelinq\Service\LoyaltyEngineService
  * @covers \OCA\Pipelinq\Service\Loyalty\PointsCreditRun
  * @covers \OCA\Pipelinq\Service\Loyalty\PointsGrant
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
