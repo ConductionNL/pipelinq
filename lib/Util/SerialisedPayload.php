@@ -43,11 +43,13 @@ trait SerialisedPayload {
 			return $value;
 		}
 
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
+		if (is_object($value) === false || method_exists($value, 'jsonSerialize') === false) {
+			return null;
+		}
+
+		$serialised = $value->jsonSerialize();
+		if (is_array($serialised) === true) {
+			return $serialised;
 		}
 
 		return null;

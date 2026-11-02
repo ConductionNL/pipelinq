@@ -46,11 +46,13 @@ trait PayloadToArray {
 			return $serialised;
 		}
 
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
+		if (is_object($value) === false || method_exists($value, 'getObject') === false) {
+			return [];
+		}
+
+		$payload = $value->getObject();
+		if (is_array($payload) === true) {
+			return $payload;
 		}
 
 		return [];
