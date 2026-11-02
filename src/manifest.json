@@ -8461,7 +8461,6 @@
 						"type": "stat",
 						"title": "Day total",
 						"content": {
-							"label": "Day total",
 							"objectField": "total",
 							"format": {
 								"style": "currency",
@@ -8475,7 +8474,6 @@
 						"type": "stat",
 						"title": "VAT",
 						"content": {
-							"label": "VAT",
 							"objectField": "totalTax",
 							"format": {
 								"style": "currency",
@@ -8489,7 +8487,6 @@
 						"type": "stat",
 						"title": "Transactions",
 						"content": {
-							"label": "Transactions",
 							"objectField": "transactionCount"
 						}
 					},
