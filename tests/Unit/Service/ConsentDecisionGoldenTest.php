@@ -59,6 +59,7 @@ if (class_exists('OCA\\Integriq\\Event\\ConsentDecisionGoldenNotAnEvent') === fa
  * @covers \OCA\Pipelinq\Service\IntegriqConsentClient
  * @covers \OCA\Pipelinq\Service\ConsentService
  * @covers \OCA\Pipelinq\Service\IntegriqMarketingConsent
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  * @uses   \OCA\Pipelinq\Controller\MessagingController
  * @uses   \OCA\Pipelinq\Service\Consent\ConsentAsk
  * @uses   \OCA\Pipelinq\Service\Consent\ConsentQuestion
