@@ -7,6 +7,14 @@
         },
         "trace": []
     },
+    "index empty uid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
     "index agent": {
         "class": "OCP\\AppFramework\\Http\\JSONResponse",
         "status": 200,
@@ -175,6 +183,14 @@
         ]
     },
     "create no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "create empty uid": {
         "class": "OCP\\AppFramework\\Http\\JSONResponse",
         "status": 401,
         "data": {
@@ -409,6 +425,14 @@
         },
         "trace": []
     },
+    "pending empty uid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
     "pending agent": {
         "class": "OCP\\AppFramework\\Http\\JSONResponse",
         "status": 200,
@@ -604,6 +628,14 @@
         },
         "trace": []
     },
+    "show empty uid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
     "show own": {
         "class": "OCP\\AppFramework\\Http\\JSONResponse",
         "status": 200,
@@ -737,6 +769,24 @@
         ]
     },
     "update no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Not authorized"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    ""
+                ]
+            }
+        ]
+    },
+    "update empty uid": {
         "class": "OCP\\AppFramework\\Http\\JSONResponse",
         "status": 403,
         "data": {
@@ -920,6 +970,24 @@
         ]
     },
     "destroy no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Not authorized"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    ""
+                ]
+            }
+        ]
+    },
+    "destroy empty uid": {
         "class": "OCP\\AppFramework\\Http\\JSONResponse",
         "status": 403,
         "data": {

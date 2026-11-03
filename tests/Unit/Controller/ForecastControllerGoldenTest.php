@@ -64,12 +64,18 @@ class ForecastControllerGoldenTest extends TestCase {
 	private array $trace = [];
 
 	/**
+	 * Why the out-of-range limit cases answer 200, kept in the golden file beside them.
+	 */
+	private const LIMIT_NOTE = 'snapshots reads limit from the request: outside 1..200 it is clamped and answered 200. '
+		.'This replaces the 400 that Nextcloud 34 and 35 gave a typed int $limit outside 1..500 (accepted behaviour change).';
+
+	/**
 	 * Run every case and compare it with the golden file.
 	 *
 	 * @return void
 	 */
 	public function testGolden(): void {
-		$actual = [];
+		$actual = ['_note limit range' => self::LIMIT_NOTE];
 		foreach ($this->cases() as $name => $case) {
 			$actual[$name] = $this->runCase(case: $case);
 		}
@@ -116,6 +122,9 @@ class ForecastControllerGoldenTest extends TestCase {
 			'read int limit'                  => ['action' => 'snapshots', 'params' => $read + ['limit' => 25, 'offset' => 50]],
 			'read limit 200'                  => ['action' => 'snapshots', 'params' => $read + ['limit' => '200']],
 			'read limit 201'                  => ['action' => 'snapshots', 'params' => $read + ['limit' => '201']],
+			'read limit 500'                  => ['action' => 'snapshots', 'params' => $read + ['limit' => '500']],
+			'read limit 501'                  => ['action' => 'snapshots', 'params' => $read + ['limit' => '501']],
+			'read negative limit'             => ['action' => 'snapshots', 'params' => $read + ['limit' => '-1']],
 			'read array limit'                => ['action' => 'snapshots', 'params' => $read + ['limit' => ['5']]],
 			'read csv'                        => ['action' => 'snapshots', 'params' => $read + ['format' => 'csv']],
 			'read CSV upper'                  => ['action' => 'snapshots', 'params' => $read + ['format' => 'CSV']],
