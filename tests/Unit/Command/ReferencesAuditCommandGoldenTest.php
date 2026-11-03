@@ -37,6 +37,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * run once more without it.
  *
  * @covers \OCA\Pipelinq\Command\ReferencesAuditCommand
+ * @covers \OCA\Pipelinq\Command\ReferencesAuditRun
  */
 class ReferencesAuditCommandGoldenTest extends TestCase {
 	use ComparesGolden;
