@@ -43,6 +43,9 @@ use RuntimeException;
  * more without it.
  *
  * @covers \OCA\Pipelinq\Repair\InitSlaStatus
+ * @uses   \OCA\Pipelinq\Service\Sla\SlaSweepRun
+ * @uses   \OCA\Pipelinq\Service\Sla\SlaSweepSource
+ * @uses   \OCA\Pipelinq\Service\Sla\SlaSweepSurface
  */
 class InitSlaStatusGoldenTest extends TestCase {
 	use ComparesGolden;
