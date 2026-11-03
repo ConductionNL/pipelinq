@@ -1274,7 +1274,7 @@
 			"title": "Operational overview",
 			"_note": "The operational overview as its board draws it (PqOperationeel, round 12): the period is a segmented control under the header, Refresh, New client and New lead stand in the header, the seven counts carry no icon and say what they hold in a caption, the three charts share one row, and the lists and cards pair up two by two as the board orders them. Every widget the page had stays; the survey response rate the board does not draw sits last.",
 			"config": {
-				"showRefresh": true,
+				"showRefresh": false,
 				"widgetShowRefresh": false,
 				"headerActions": [
 					{
