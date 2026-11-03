@@ -295,10 +295,12 @@ class IngestProductVendorMaster implements IRepairStep {
 			// Match on sku first, then barcode.
 			$existing = $this->findProductBySku(
 				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $schemaId,
-				sku: (string)($shillinqProduct['sku'] ?? ''),
-				barcode: (string)($shillinqProduct['barcode'] ?? ''),
+				lookup: [
+					'register' => $registerId,
+					'schema' => $schemaId,
+					'sku' => (string)($shillinqProduct['sku'] ?? ''),
+					'barcode' => (string)($shillinqProduct['barcode'] ?? ''),
+				],
 			);
 
 			if ($existing !== null) {
@@ -701,48 +703,58 @@ class IngestProductVendorMaster implements IRepairStep {
 	}//end writeSourceRecord()
 
 	/**
-	 * Find an existing pipelinq product by sku or barcode.
+	 * Find an existing pipelinq product by sku, then by barcode.
 	 *
-	 * @param mixed $objectService The OR ObjectService.
-	 * @param string $registerId Register ID.
-	 * @param string $schemaId Schema ID.
-	 * @param string $sku SKU to match.
-	 * @param string $barcode Barcode to match.
+	 * @param mixed                                                           $objectService The OR ObjectService.
+	 * @param array{register: string, schema: string, sku: string, barcode: string} $lookup        Where to look and what to match.
 	 *
 	 * @return array<string,mixed>|null The first matching product, or null.
 	 */
-	private function findProductBySku(
-		mixed $objectService,
-		string $registerId,
-		string $schemaId,
-		string $sku,
-		string $barcode,
-	): ?array {
-		foreach (array_filter(['sku' => $sku, 'barcode' => $barcode]) as $field => $value) {
-			$results = $objectService->findAll(
-				config: [
-					'filters' => [
-						$field => $value,
-						'register' => $registerId,
-						'schema' => $schemaId,
-					],
-					'limit' => 1,
-					'offset' => 0,
-				]
+	private function findProductBySku(mixed $objectService, array $lookup): ?array {
+		foreach (array_filter(['sku' => $lookup['sku'], 'barcode' => $lookup['barcode']]) as $field => $value) {
+			$found = $this->firstProduct(
+				objectService: $objectService,
+				filters: [$field => $value, 'register' => $lookup['register'], 'schema' => $lookup['schema']]
 			);
-
-			if (empty($results) === false) {
-				$first = reset($results);
-				if (is_object($first) === true && method_exists($first, 'jsonSerialize') === true) {
-					return $first->jsonSerialize();
-				}
-
-				return (array)$first;
+			if ($found !== null) {
+				return $found;
 			}
-		}//end foreach
+		}
 
 		return null;
 	}//end findProductBySku()
+
+	/**
+	 * The first product a filter set finds, as an array.
+	 *
+	 * @param mixed                $objectService The OR ObjectService.
+	 * @param array<string, mixed> $filters       The findAll filters.
+	 *
+	 * @return array<string,mixed>|null The first product, or null when none matches.
+	 */
+	private function firstProduct(mixed $objectService, array $filters): ?array {
+		$results = $objectService->findAll(config: ['filters' => $filters, 'limit' => 1, 'offset' => 0]);
+		if (empty($results) === true) {
+			return null;
+		}
+
+		return self::rowArray(row: reset($results));
+	}//end firstProduct()
+
+	/**
+	 * A found row as an array: serialised when it is an entity, cast otherwise.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function rowArray(mixed $row): array {
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			return $row->jsonSerialize();
+		}
+
+		return (array)$row;
+	}//end rowArray()
 
 	/**
 	 * Find an existing pipelinq supplier by contactsUid.
