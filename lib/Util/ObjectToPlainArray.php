@@ -38,11 +38,15 @@ trait ObjectToPlainArray {
 	 * @spec exclude result-shape plumbing shared by register reads, no behavioural spec surface.
 	 */
 	private function objectToPlainArray(object $object): array {
-		$array = null;
-		if (method_exists($object, 'toArray') === true) {
-			$array = $object->toArray();
+		if (method_exists($object, 'toArray') === false) {
+			return (array) $object;
 		}
 
-		return is_array($array) === true ? $array : (array) $object;
+		$array = $object->toArray();
+		if (is_array($array) === true) {
+			return $array;
+		}
+
+		return (array) $object;
 	}//end objectToPlainArray()
 }//end trait
