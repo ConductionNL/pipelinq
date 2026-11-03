@@ -1,4 +1,4 @@
 # Screens
 
-- PqLead https://identity.conduction.nl/screens/board?id=pipelinq/PqLead
-- PqVerkoopoverzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqVerkoopoverzicht
+- pipelinq/PqLead lead https://identity.conduction.nl/screens/board?id=pipelinq/PqLead
+- pipelinq/PqVerkoopoverzicht verkoopoverzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqVerkoopoverzicht

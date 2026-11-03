@@ -1,5 +1,5 @@
 # Screens
 
-- PqKlant https://identity.conduction.nl/screens/board?id=pipelinq/PqKlant
-- PqCampagne https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagne
-- PqCampagnes https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagnes
+- pipelinq/PqKlant inwoner https://identity.conduction.nl/screens/board?id=pipelinq/PqKlant
+- pipelinq/PqCampagne campagne https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagne
+- pipelinq/PqCampagnes campagnes https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagnes

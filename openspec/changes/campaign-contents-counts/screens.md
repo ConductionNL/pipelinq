@@ -1,3 +1,3 @@
 # Screens
 
-- PqCampagne https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagne
+- pipelinq/PqCampagne campagne https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagne

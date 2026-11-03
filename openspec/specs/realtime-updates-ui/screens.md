@@ -1,4 +1,4 @@
 # Screens
 
-- PqPipeline https://identity.conduction.nl/screens/board?id=pipelinq/PqPipeline
-- PqMijnWerkIndelen https://identity.conduction.nl/screens/board?id=pipelinq/PqMijnWerkIndelen
+- pipelinq/PqPipeline pijplijn, bord per fase https://identity.conduction.nl/screens/board?id=pipelinq/PqPipeline
+- pipelinq/PqMijnWerkIndelen mijn werk indelen https://identity.conduction.nl/screens/board?id=pipelinq/PqMijnWerkIndelen

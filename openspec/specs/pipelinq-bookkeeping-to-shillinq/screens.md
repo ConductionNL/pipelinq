@@ -1,4 +1,4 @@
 # Screens
 
-- PqZRapport https://identity.conduction.nl/screens/board?id=pipelinq/PqZRapport
-- PqZRapporten https://identity.conduction.nl/screens/board?id=pipelinq/PqZRapporten
+- pipelinq/PqZRapport Z-rapport https://identity.conduction.nl/screens/board?id=pipelinq/PqZRapport
+- pipelinq/PqZRapporten Z-rapporten https://identity.conduction.nl/screens/board?id=pipelinq/PqZRapporten

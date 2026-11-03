@@ -1,4 +1,4 @@
 # Screens: screen-pop-incoming-call
 
-- PqInkomendGesprek https://identity.conduction.nl/screens/board?id=pipelinq/PqInkomendGesprek
-- PqGesprekAfronden https://identity.conduction.nl/screens/board?id=pipelinq/PqGesprekAfronden
+- pipelinq/PqInkomendGesprek inkomend gesprek https://identity.conduction.nl/screens/board?id=pipelinq/PqInkomendGesprek
+- pipelinq/PqGesprekAfronden gespreksuitkomst https://identity.conduction.nl/screens/board?id=pipelinq/PqGesprekAfronden

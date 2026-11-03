@@ -1,5 +1,5 @@
 # Screens
 
-- PqKlant https://identity.conduction.nl/screens/board?id=pipelinq/PqKlant
-- PqOrganisatie https://identity.conduction.nl/screens/board?id=pipelinq/PqOrganisatie
-- PqWerkplekKlant https://identity.conduction.nl/screens/board?id=pipelinq/PqWerkplekKlant
+- pipelinq/PqKlant inwoner https://identity.conduction.nl/screens/board?id=pipelinq/PqKlant
+- pipelinq/PqOrganisatie organisatie https://identity.conduction.nl/screens/board?id=pipelinq/PqOrganisatie
+- pipelinq/PqWerkplekKlant dashboard met een klant aan de lijn https://identity.conduction.nl/screens/board?id=pipelinq/PqWerkplekKlant
