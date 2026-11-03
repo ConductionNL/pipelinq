@@ -41,7 +41,7 @@ With no `registry_url` configured, the store surface SHALL report
 `not_configured`, render the app's built-in templates, and make no outbound
 request.
 
-A local-only card grid is a Templates page. It may only be labelled "Store"
+A local-only card grid is a Templates page. It may only be labelled "Marketplace"
 because the registry path exists and is merely unconfigured.
 
 #### Scenario: An unconfigured instance stays offline
@@ -143,8 +143,9 @@ is not.
 
 ### Requirement: REQ-PLQ-STORE-006 The menu entry names the concept
 
-The store menu entry SHALL be labelled `Store` and render the `StoreOutline`
-icon, in the footer section between Documentation and Reports.
+The store menu entry SHALL be labelled `Marketplace`, in Dutch "Marktplaats", and
+render the `StoreOutline` icon, in the footer section between Documentation and
+Reports.
 
 The icon SHALL be registered in `src/icons.js`. An unregistered name renders NO
 icon in the navigation rather than a fallback glyph, so the entry would ship
@@ -153,7 +154,7 @@ blank.
 #### Scenario: The entry carries the Tier A glyph
 
 - **GIVEN** the pipelinq manifest
-- **THEN** the entry labelled `Store` MUST declare `icon: "StoreOutline"`
+- **THEN** the entry labelled `Marketplace` MUST declare `icon: "StoreOutline"`
 - **AND** it MUST sit in the `footer` section with an order between
   Documentation and Reports
 

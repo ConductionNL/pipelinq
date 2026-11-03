@@ -165,7 +165,9 @@ My work SHALL show a "Saved views" panel, as on board `PqMijnWerk`, listing the 
 
 **Feature tier**: Enterprise
 
-The user SHALL be able to hide and reorder the sections of My work ("Your week so far", "Saved views", the work list, "Upcoming meetings", "Recent activity") from a layout panel, stored per user through `/api/settings/user`. "Reset to default" MUST restore the order of board `PqMijnWerk`. The work list itself MUST NOT be hideable. No board draws the layout panel yet.
+`pipelinq/PqMijnWerkIndelen` draws this panel.
+
+The user SHALL be able to hide and reorder the sections of My work ("Your week so far", "Saved views", the work list, "Upcoming meetings", "Recent activity") from a layout panel, stored per user through `/api/settings/user`. "Terug naar de standaardindeling" MUST restore the order of board `PqMijnWerk`. The work list itself MUST NOT be hideable. No board draws the layout panel yet.
 
 #### Scenario: Hide a section
 - **GIVEN** the agent opens the layout panel
@@ -179,7 +181,7 @@ The user SHALL be able to hide and reorder the sections of My work ("Your week s
 
 #### Scenario: Back to the default
 - **GIVEN** the agent changed the layout
-- **WHEN** the agent chooses "Reset to default"
+- **WHEN** the agent chooses "Terug naar de standaardindeling"
 - **THEN** every section is visible again in the board's order
 
 ### Requirement: Phone view keeps headers and filters in reach (REQ-MW-170)
