@@ -124,6 +124,13 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 	private array $trace = [];
 
 	/**
+	 * What the current case's doubles answer, by method name, instead of a neutral value.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $answers = [];
+
+	/**
 	 * The controllers, one data set each.
 	 *
 	 * @return array<string, array{0: string}>
@@ -191,6 +198,36 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 	}//end testUnprivilegedCallerIsRefusedBeforeAnythingElse()
 
 	/**
+	 * Each write that names its actor gets the session user, whatever the request says.
+	 *
+	 * @return void
+	 */
+	public function testSessionUserReachesEveryWriteThatNamesItsActor(): void {
+		$row = ['id' => 'row-1'];
+		$cases = [
+			['CompetitorWatchController', 'run', [], ['watch' => $row], 'runOne'],
+			['ContractController', 'create', ['title' => 't', 'clientRef' => 'c'], [], 'save'],
+			['CtiController', 'clickToDial', ['targetNumber' => '+31612345678', 'extension' => '100'], [], 'originateCall'],
+			['JourneyController', 'setStatus', ['status' => 'active'], [], 'setStatus'],
+			['JourneyController', 'create', ['name' => 'n'], [], 'save'],
+			['MessagingController', 'resend', [], ['loadMessage' => $row, 'loadContact' => $row], 'resend'],
+			['MessagingController', 'consent', ['channel' => 'sms', 'action' => 'opt-in', 'evidence' => 'e', 'legalBasis' => 'l'], ['loadContact' => $row], 'recordOptIn'],
+		];
+		foreach ($cases as [$controller, $action, $params, $answers, $write]) {
+			$this->answers = $answers;
+			$this->runCase(controller: $controller, action: $action, uid: self::PRIVILEGED_USER, params: $params);
+			$this->answers = [];
+
+			$calls = array_filter(
+				$this->trace,
+				static fn (array $call): bool => str_ends_with((string)array_key_first($call), '::'.$write)
+			);
+			$this->assertCount(1, $calls, $controller.'::'.$action);
+			$this->assertStringContainsString(self::PRIVILEGED_USER, (string)json_encode($calls), $controller.'::'.$action);
+		}
+	}//end testSessionUserReachesEveryWriteThatNamesItsActor()
+
+	/**
 	 * The guarded actions that are public.
 	 *
 	 * @param string $controller The controller's short name.
@@ -226,13 +263,14 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 	 * @param string      $controller The controller's short name.
 	 * @param string      $action     The action.
 	 * @param string|null $uid        The session user, or null for no session.
+	 * @param array<string, mixed> $params Request parameters that replace the samples.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function runCase(string $controller, string $action, ?string $uid): array {
+	private function runCase(string $controller, string $action, ?string $uid, array $params = []): array {
 		$this->trace = [];
 		$class = 'OCA\\Pipelinq\\Controller\\'.$controller;
-		$params = ($this->sampleParameters(class: $class, action: $action) + self::FORGED);
+		$params = ($params + $this->sampleParameters(class: $class, action: $action) + self::FORGED);
 
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
@@ -343,6 +381,10 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 					$this->trace[] = [$method->getDeclaringClass()->getShortName().'::'.$method->getName() => $this->recordedArguments(method: $method, args: $args)];
 					if ($method->getName() === 'isPrivileged') {
 						return $args[0] === self::PRIVILEGED_USER;
+					}
+
+					if (array_key_exists($method->getName(), $this->answers) === true) {
+						return $this->answers[$method->getName()];
 					}
 
 					return $this->neutral(type: $method->getReturnType(), self: $double);
