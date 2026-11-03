@@ -554,21 +554,16 @@ class AvailabilityService {
 			date: $date,
 			serviceDurationMinutes: $duration
 		);
-		$expiresAt = $this->isoOffsetSeconds(seconds: self::CACHE_TTL_SECONDS);
-		$this->persistCacheEntry(
-			resourceId: $resourceId,
-			date: $date,
-			freeBlocks: $free,
-			generatedAt: $nowIso,
-			expiresAt: $expiresAt
-		);
-
-		return [
+		$entry = [
+			'resourceId' => $resourceId,
+			'date' => $date,
 			'freeBlocks' => $free,
 			'generatedAt' => $nowIso,
-			'expiresAt' => $expiresAt,
-			'stale' => false,
+			'expiresAt' => $this->isoOffsetSeconds(seconds: self::CACHE_TTL_SECONDS),
 		];
+		$this->persistCacheEntry(entry: $entry);
+
+		return array_diff_key($entry, ['resourceId' => true, 'date' => true]) + ['stale' => false];
 	}//end getOrComputeCache()
 
 	/**
@@ -827,38 +822,21 @@ class AvailabilityService {
 	/**
 	 * Persist (create or update) an AvailabilityCache row.
 	 *
-	 * @param string $resourceId Resource UUID/slug.
-	 * @param string $date ISO date `YYYY-MM-DD`.
-	 * @param array<int, array{startTime: string, endTime: string, durationMinutes: int}> $freeBlocks Free blocks.
-	 * @param string $generatedAt ISO timestamp.
-	 * @param string $expiresAt ISO timestamp.
+	 * @param array<string, mixed> $entry The row: resource UUID/slug (`resourceId`), ISO date `YYYY-MM-DD` (`date`),
+	 *                                    free blocks, and the ISO generation and expiry timestamps.
 	 *
 	 * @return void
 	 */
-	private function persistCacheEntry(
-		string $resourceId,
-		string $date,
-		array $freeBlocks,
-		string $generatedAt,
-		string $expiresAt,
-	): void {
+	private function persistCacheEntry(array $entry): void {
 		$register = $this->registerId();
 		$schema = $this->schemaId(key: self::AVAILABILITY_CACHE_SCHEMA_KEY);
 		if ($register === '' || $schema === '') {
 			return;
 		}
 
-		$payload = [
-			'resourceId' => $resourceId,
-			'date' => $date,
-			'freeBlocks' => $freeBlocks,
-			'generatedAt' => $generatedAt,
-			'expiresAt' => $expiresAt,
-		];
-
 		try {
 			$this->getObjectService()->saveObject(
-				object: $payload,
+				object: $entry,
 				extend: [],
 				register: $register,
 				schema: $schema,
@@ -867,7 +845,7 @@ class AvailabilityService {
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: availability cache write failed',
-				['resource' => $resourceId, 'date' => $date]
+				['resource' => $entry['resourceId'], 'date' => $entry['date']]
 			);
 		}
 	}//end persistCacheEntry()
