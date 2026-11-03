@@ -172,7 +172,7 @@
 					},
 					{
 						"id": "Store",
-						"label": "Store",
+						"label": "Marketplace",
 						"description": "Apps and extensions that work with pipelinq.",
 						"icon": "StoreOutline",
 						"category": "about",
