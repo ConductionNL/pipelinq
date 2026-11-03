@@ -11,9 +11,9 @@
  * @spec openspec/changes/client-page-as-the-relation-boards/specs/client-detail/spec.md#requirement-the-warnings-and-the-ways-to-reach-the-client-are-one-card
  */
 
+import { flushPromises, mount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@conduction/nextcloud-vue', () => ({ CnDetailCard: { props: ['title'], template: '<div class="stub-card"><slot /></div>' } }))
