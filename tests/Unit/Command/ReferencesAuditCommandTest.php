@@ -36,6 +36,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * test below pins one refusal.
  *
  * @covers \OCA\Pipelinq\Command\ReferencesAuditCommand
+ * @covers \OCA\Pipelinq\Command\ReferencesAuditRun
  */
 class ReferencesAuditCommandTest extends TestCase {
 	/**
