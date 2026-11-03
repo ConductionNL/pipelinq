@@ -405,16 +405,28 @@ class ScheduledTaskService {
 	}//end updateScheduledTask()
 
 	/**
-	 * Delete a scheduled task.
+	 * Delete a scheduled task: only a task the configured register and schema
+	 * hold, by the uuid that read found.
 	 *
 	 * @param string $id The task UUID.
 	 *
 	 * @return void
 	 *
+	 * @throws RuntimeException When the task is not found or cannot be deleted.
+	 *
 	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
 	 */
 	public function deleteScheduledTask(string $id): void {
-		$this->store->objects()->deleteObject($id);
+		$task = $this->getScheduledTask(id: $id);
+		$uuid = (string)($task['id'] ?? '');
+		if ($uuid === '') {
+			throw new RuntimeException('Task not found');
+		}
+
+		[$registerId, $schemaId] = $this->store->location();
+		if ($this->store->objects()->deleteObject($uuid, $registerId, $schemaId) === false) {
+			throw new RuntimeException('Task could not be deleted');
+		}
 	}//end deleteScheduledTask()
 
 	/**
