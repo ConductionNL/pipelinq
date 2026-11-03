@@ -47,6 +47,7 @@ use Throwable;
  * once more without it.
  *
  * @covers \OCA\Pipelinq\Controller\SchedulesController
+ * @covers \OCA\Pipelinq\Lifecycle\SessionUser
  */
 class SchedulesControllerGoldenTest extends TestCase {
 	use ComparesGolden;
