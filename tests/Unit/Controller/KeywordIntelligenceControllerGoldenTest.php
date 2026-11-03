@@ -108,6 +108,7 @@ class KeywordIntelligenceControllerGoldenTest extends TestCase {
 			'proposals floor text'          => ['action' => 'proposals', 'floor' => 'many'],
 			'proposals floor high'          => ['action' => 'proposals', 'floor' => '100000'],
 			'proposals crawled pages'       => ['action' => 'proposals', 'crawled' => true],
+			'proposals crawled low floor'   => ['action' => 'proposals', 'crawled' => true, 'floor' => '5'],
 			'proposals array from'          => ['action' => 'proposals', 'params' => ['from' => ['x']]],
 			'proposals integer to'          => ['action' => 'proposals', 'params' => ['to' => 20260801]],
 			'proposals no session array'    => ['action' => 'proposals', 'params' => ['property' => ['x']], 'user' => null],
