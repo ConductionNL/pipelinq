@@ -55,7 +55,7 @@ async function openForecast(page: Page) {
 	await expect(page).toHaveURL(/\/forecast/, { timeout: 10000 })
 }
 
-// @e2e openspec/specs/forecast-roll-up-and-categories/spec.md#forecast-page
+// @e2e openspec/specs/forecast-roll-up-and-categories/spec.md
 test('Forecast: opens from the reports page and shows the forecast surface', async ({
 	page,
 }) => {
@@ -72,7 +72,7 @@ test('Forecast: opens from the reports page and shows the forecast surface', asy
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/specs/forecast-roll-up-and-categories/spec.md#forecast-export
+// @e2e openspec/specs/forecast-roll-up-and-categories/spec.md
 test('Forecast: exposes the Export CSV action', async ({ page }) => {
 	await openForecast(page)
 

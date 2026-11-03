@@ -22,9 +22,9 @@ describe('client number and source', () => {
 		expect(schema.properties.source.type).toBe('string')
 	})
 
-	it('shows both on the identity card', () => {
+	it('shows both in the side column', () => {
 		const page = read('src/manifest.json').pages.find((p) => p.id === 'ClientDetail')
-		const identity = page.config.widgets.find((w) => w.id === 'client-identity')
-		expect(identity.content.include).toEqual(expect.arrayContaining(['customerNumber', 'source']))
+		const paths = page.config.sideColumn.flatMap((card) => (card.content?.fields || []).map((field) => field.path))
+		expect(paths).toEqual(expect.arrayContaining(['customerNumber', 'source']))
 	})
 })
