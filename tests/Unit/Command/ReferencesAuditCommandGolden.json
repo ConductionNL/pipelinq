@@ -3,9 +3,10 @@
         "exit": 1,
         "output": [
             "  dangling  s-dangling -> o-gone",
+            "  dangling  s-blank-owner -> o-blank",
             "  ambiguous s-ambiguous contractNumber=C-3 matches 2 owners",
             "",
-            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 0 written",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 2 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 0 written",
             "Re-run with the write option to fill in the 5 unambiguous match(es).",
             ""
         ],
@@ -40,9 +41,10 @@
         "exit": 1,
         "output": [
             "  dangling  s-dangling -> o-gone",
+            "  dangling  s-blank-owner -> o-blank",
             "  ambiguous s-ambiguous contractNumber=C-3 matches 2 owners",
             "",
-            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 5 written",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 2 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 5 written",
             ""
         ],
         "calls": [
@@ -137,8 +139,8 @@
         "output": [
             "  dangling  s-dangling -> o-gone",
             "",
-            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 2 backfillable, 0 ambiguous, 3 unmatched, 0 written",
-            "Re-run with the write option to fill in the 2 unambiguous match(es).",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 4 backfillable, 0 ambiguous, 2 unmatched, 0 written",
+            "Re-run with the write option to fill in the 4 unambiguous match(es).",
             ""
         ],
         "calls": [
@@ -173,7 +175,7 @@
         "output": [
             "  dangling  s-dangling -> o-gone",
             "",
-            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 2 backfillable, 0 ambiguous, 3 unmatched, 2 written",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 4 backfillable, 0 ambiguous, 2 unmatched, 4 written",
             ""
         ],
         "calls": [
@@ -203,6 +205,18 @@
             },
             {
                 "patchObject": [
+                    "s-spaces",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
                     "s-backfill",
                     {
                         "contract": "o-1"
@@ -215,9 +229,21 @@
             },
             {
                 "patchObject": [
-                    "s-trim",
+                    "s-ambiguous",
                     {
-                        "contract": "o-2"
+                        "contract": "o-3b"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "",
+                    {
+                        "contract": "o-1"
                     },
                     "pipelinq",
                     "salesContract",
@@ -299,7 +325,7 @@
         "exit": 0,
         "output": [
             "",
-            "salesContract.contract -> shillinq.Contract via contractNumber: 2 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 3 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
             ""
         ],
         "calls": [
@@ -333,7 +359,7 @@
         "exit": 0,
         "output": [
             "",
-            "salesContract.contract -> shillinq.Contract via contractNumber: 2 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 3 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
             ""
         ],
         "calls": [
@@ -368,7 +394,7 @@
         "output": [
             "shillinq is not readable (shillinq is not installed). Nothing can be resolved or backfilled; reporting presence only.",
             "",
-            "salesContract.contract -> shillinq.Contract via contractNumber: 2 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 3 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
             ""
         ],
         "calls": [
@@ -403,7 +429,7 @@
         "output": [
             "shillinq is not readable (shillinq is not installed). Nothing can be resolved or backfilled; reporting presence only.",
             "",
-            "salesContract.contract -> shillinq.Contract via contractNumber: 2 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 3 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
             ""
         ],
         "calls": [
@@ -495,9 +521,10 @@
         "exit": 1,
         "output": [
             "  dangling  s-dangling -> o-gone",
+            "  dangling  s-blank-owner -> o-blank",
             "  ambiguous s-ambiguous contractNumber=C-3 matches 2 owners",
             "",
-            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 0 written",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 2 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 0 written",
             "Re-run with the write option to fill in the 5 unambiguous match(es).",
             ""
         ],
@@ -532,6 +559,7 @@
         "exit": 1,
         "output": [
             "  dangling  s-dangling -> o-gone",
+            "  dangling  s-blank-owner -> o-blank",
             "  write failed s-spaces: locked: s-spaces",
             "  write failed s-backfill: locked: s-backfill",
             "  write failed s-trim: locked: s-trim",
@@ -539,7 +567,7 @@
             "  write failed : locked: ",
             "  write failed s-noid-owner: locked: s-noid-owner",
             "",
-            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 0 written",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 2 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 0 written",
             ""
         ],
         "calls": [

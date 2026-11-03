@@ -82,6 +82,7 @@ class ReferencesAuditCommandGoldenTest extends TestCase {
 		$satellites = [
 			['id' => 's-set', 'contract' => 'o-1', 'contractNumber' => 'C-1'],
 			['id' => 's-dangling', 'contract' => 'o-gone'],
+			['id' => 's-blank-owner', 'contract' => 'o-blank'],
 			['id' => 's-spaces', 'contract' => '  ', 'contractNumber' => 'C-1'],
 			['id' => 's-backfill', 'contractNumber' => 'C-1'],
 			['id' => 's-trim', 'contractNumber' => 'C-2'],
