@@ -295,12 +295,7 @@ class IngestProductVendorMaster implements IRepairStep {
 			// Match on sku first, then barcode.
 			$existing = $this->findProductBySku(
 				objectService: $objectService,
-				lookup: [
-					'register' => $registerId,
-					'schema' => $schemaId,
-					'sku' => (string)($shillinqProduct['sku'] ?? ''),
-					'barcode' => (string)($shillinqProduct['barcode'] ?? ''),
-				],
+				lookup: ['register' => $registerId, 'schema' => $schemaId, 'product' => $shillinqProduct]
 			);
 
 			if ($existing !== null) {
@@ -705,13 +700,15 @@ class IngestProductVendorMaster implements IRepairStep {
 	/**
 	 * Find an existing pipelinq product by sku, then by barcode.
 	 *
-	 * @param mixed                                                           $objectService The OR ObjectService.
-	 * @param array{register: string, schema: string, sku: string, barcode: string} $lookup        Where to look and what to match.
+	 * @param mixed                                                              $objectService The OR ObjectService.
+	 * @param array{register: string, schema: string, product: array<string, mixed>} $lookup        Where to look, and the shillinq product to match.
 	 *
 	 * @return array<string,mixed>|null The first matching product, or null.
 	 */
 	private function findProductBySku(mixed $objectService, array $lookup): ?array {
-		foreach (array_filter(['sku' => $lookup['sku'], 'barcode' => $lookup['barcode']]) as $field => $value) {
+		$product = $lookup['product'];
+		$keys = ['sku' => (string)($product['sku'] ?? ''), 'barcode' => (string)($product['barcode'] ?? '')];
+		foreach (array_filter($keys) as $field => $value) {
 			$found = $this->firstProduct(
 				objectService: $objectService,
 				filters: [$field => $value, 'register' => $lookup['register'], 'schema' => $lookup['schema']]
