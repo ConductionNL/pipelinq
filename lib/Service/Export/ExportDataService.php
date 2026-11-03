@@ -160,13 +160,8 @@ class ExportDataService extends AbstractExportService {
 			throw new OCSBadRequestException('Watermark column is required for incremental mode.');
 		}
 
-		$rows = $this->fetchRows(
-			schemaKey: $schemaKey,
-			mode: (string)$mode,
-			watermarkColumn: $watermark,
-			watermarkFrom: $watermarkFrom,
-			rowCap: $rowCap
-		);
+		$scan = ['mode' => (string)$mode, 'watermarkColumn' => $watermark, 'watermarkFrom' => $watermarkFrom, 'rowCap' => $rowCap];
+		$rows = $this->fetchRows(schemaKey: $schemaKey, scan: $scan);
 
 		$watermarkTo = null;
 		if ($mode === 'incremental' && $watermark !== '') {
@@ -549,38 +544,21 @@ class ExportDataService extends AbstractExportService {
 	 * Paging avoids loading an entire large schema into memory at once.
 	 *
 	 * @param string $schemaKey The schema config key.
-	 * @param string $mode full|incremental.
-	 * @param string $watermarkColumn The watermark column (incremental).
-	 * @param string|null $watermarkFrom The previous run's watermarkTo.
-	 * @param int|null $rowCap Optional row cap (test run).
+	 * @param array{mode: string, watermarkColumn: string, watermarkFrom: string|null, rowCap: int|null} $scan The scan.
+	 *        The mode (full|incremental), the watermark column and the previous run's
+	 *        watermarkTo (incremental), and an optional row cap (test run).
 	 *
 	 * @return array<int, array<string, mixed>> The extracted rows.
 	 */
-	private function fetchRows(
-		string $schemaKey,
-		string $mode,
-		string $watermarkColumn,
-		?string $watermarkFrom,
-		?int $rowCap,
-	): array {
+	private function fetchRows(string $schemaKey, array $scan): array {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+		$filters = array_replace(['register' => $register, 'schema' => $schema], $this->watermarkFilter(scan: $scan));
 
 		$rows = [];
 		$offset = 0;
 		do {
-			$filters = ['register' => $register, 'schema' => $schema];
-			$config = [
-				'filters' => $filters,
-				'limit' => self::PAGE_SIZE,
-				'offset' => $offset,
-			];
-
-			if ($mode === 'incremental' && $watermarkColumn !== '' && $watermarkFrom !== null && $watermarkFrom !== '') {
-				$config['filters'][$watermarkColumn] = ['>' => $watermarkFrom];
-			}
-
 			try {
-				$page = $this->getObjectService()->findAll(config: $config);
+				$page = $this->getObjectService()->findAll(config: ['filters' => $filters, 'limit' => self::PAGE_SIZE, 'offset' => $offset]);
 			} catch (\Throwable $e) {
 				break;
 			}
@@ -588,7 +566,7 @@ class ExportDataService extends AbstractExportService {
 			$page = ($page ?? []);
 			foreach ($page as $object) {
 				$rows[] = $this->toArray(object: $object);
-				if ($rowCap !== null && count($rows) >= $rowCap) {
+				if ($scan['rowCap'] !== null && count($rows) >= $scan['rowCap']) {
 					return $rows;
 				}
 			}
@@ -598,6 +576,23 @@ class ExportDataService extends AbstractExportService {
 
 		return $rows;
 	}//end fetchRows()
+
+	/**
+	 * The server-side `watermarkColumn > watermarkFrom` filter of an
+	 * incremental scan, or none.
+	 *
+	 * @param array{mode: string, watermarkColumn: string, watermarkFrom: string|null, rowCap: int|null} $scan The scan (see fetchRows()).
+	 *
+	 * @return array<string, array<string, string>>
+	 */
+	private function watermarkFilter(array $scan): array {
+		$from = (string)$scan['watermarkFrom'];
+		if ($scan['mode'] !== 'incremental' || $scan['watermarkColumn'] === '' || $from === '') {
+			return [];
+		}
+
+		return [$scan['watermarkColumn'] => ['>' => $from]];
+	}//end watermarkFilter()
 
 	/**
 	 * Union of all column names present across the rows (insertion order).
