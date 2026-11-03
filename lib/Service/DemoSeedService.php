@@ -277,78 +277,117 @@ class DemoSeedService {
 
 		[$objectService, $registerId, $schemaIds, $definitions] = $context;
 
-		$created = [];
-		$skipped = [];
-		$relinked = [];
-		// Maps section-local keys (e.g. clientKey "bakkerij") to saved uuids.
-		$uuids = [];
-
+		// `uuids` maps section-local keys (e.g. clientKey "bakkerij") to saved uuids.
+		$run = ['created' => [], 'skipped' => [], 'relinked' => [], 'uuids' => []];
 		foreach (self::SECTIONS as $section => [$schemaKey, $lookupField, $ticketType]) {
-			$created[$section] = 0;
-			$skipped[$section] = 0;
-			$relinked[$section] = 0;
 			$target = new DemoSeedTarget(objectService: $objectService, registerId: $registerId, schemaId: $schemaIds[$schemaKey], ticketType: $ticketType);
+			$run = $this->seedSection(
+				section: ['name' => $section, 'lookupField' => $lookupField, 'target' => $target, 'definitions' => ($definitions[$section] ?? [])],
+				run: $run
+			);
+			if (isset($run['failure']) === true) {
+				return $run['failure'];
+			}
+		}
 
-			// One scan per schema: value => [uuid, ...] index for idempotency,
-			// plus the scanned rows by uuid for the relink check.
-			['index' => $index, 'rows' => $rows] = $this->buildLookupIndex(target: $target, lookupField: $lookupField);
-
-			foreach (($definitions[$section] ?? []) as $definition) {
-				$data = $this->values->resolvePlaceholders(data: $definition['data']);
-				$data = $this->linkReferences(
-					data: $data,
-					definition: $definition,
-					uuids: $uuids,
-					ticketType: $ticketType,
-				);
-
-				$existingUuid = $index[(string)$data[$lookupField]][0] ?? null;
-
-				if ($existingUuid !== null) {
-					$uuids[$section . ':' . $definition['key']] = $existingUuid;
-					$skipped[$section]++;
-					$didRelink = $this->relinkExisting(
-						target: $target,
-						existing: ($rows[$existingUuid] ?? []),
-						data: $data,
-						uuid: $existingUuid,
-					);
-					if ($didRelink === true) {
-						$relinked[$section]++;
-					}
-
-					continue;
-				}
-
-				$identityType = (self::CONTACT_FIRST_SECTIONS[$section] ?? null);
-				if ($identityType !== null) {
-					$data = $this->withProvisionedIdentity(data: $data, objectType: $identityType);
-					if ($data === null) {
-						return [
-							'success' => false,
-							'message' => 'Nextcloud Contacts is unavailable — cannot provision demo ' . $identityType . ' identities.',
-							'created' => $created,
-							'skipped' => $skipped,
-						];
-					}
-				}
-
-				$saved = $this->writer->save(target: $target, data: $data);
-
-				$uuids[$section . ':' . $definition['key']] = (string)$saved->getUuid();
-				$created[$section]++;
-			}//end foreach
-		}//end foreach
-
-		$marketing = $this->marketingSeeder->seed(definitions: $definitions, uuids: $uuids);
+		$marketing = $this->marketingSeeder->seed(definitions: $definitions, uuids: $run['uuids']);
 
 		return [
 			'success' => true,
-			'created' => array_merge($created, $marketing['created']),
-			'skipped' => array_merge($skipped, $marketing['skipped']),
-			'relinked' => $relinked,
+			'created' => array_merge($run['created'], $marketing['created']),
+			'skipped' => array_merge($run['skipped'], $marketing['skipped']),
+			'relinked' => $run['relinked'],
 		];
 	}//end seed()
+
+	/**
+	 * Seed one section: one scan of its schema (value => [uuid, ...] for
+	 * idempotency, plus the scanned rows by uuid for the relink check), then
+	 * every definition.
+	 *
+	 * @param array<string, mixed> $section The section's name, lookup field, target and definitions.
+	 * @param array<string, array<string, mixed>> $run The counts per section and the uuids so far.
+	 *
+	 * @return array<string, mixed> The run, with a `failure` answer when the section could not be seeded.
+	 */
+	private function seedSection(array $section, array $run): array {
+		$name = $section['name'];
+		$run['created'][$name] = 0;
+		$run['skipped'][$name] = 0;
+		$run['relinked'][$name] = 0;
+		$section += $this->buildLookupIndex(target: $section['target'], lookupField: $section['lookupField']);
+
+		foreach ($section['definitions'] as $definition) {
+			$run = $this->seedDefinition(definition: $definition, scope: ['section' => $section, 'run' => $run]);
+			if (isset($run['failure']) === true) {
+				return $run;
+			}
+		}
+
+		return $run;
+	}//end seedSection()
+
+	/**
+	 * Seed one definition: reuse (and relink) the demo object that already
+	 * exists, or create it, provisioning its contact-first identity first.
+	 *
+	 * @param array<string, mixed> $definition The seed definition.
+	 * @param array<string, array<string, mixed>> $scope The section (with its index and rows) and the run.
+	 *
+	 * @return array<string, mixed> The run, with a `failure` answer when Contacts is unavailable.
+	 */
+	private function seedDefinition(array $definition, array $scope): array {
+		['section' => $section, 'run' => $run] = $scope;
+		$name = $section['name'];
+		$target = $section['target'];
+		$data = $this->values->resolvePlaceholders(data: $definition['data']);
+		$data = $this->linkReferences(data: $data, definition: $definition, uuids: $run['uuids'], ticketType: $target->ticketType);
+
+		$existingUuid = $section['index'][(string)$data[$section['lookupField']]][0] ?? null;
+		if ($existingUuid !== null) {
+			return $this->reuseExisting(found: ['uuid' => $existingUuid, 'key' => $definition['key'], 'data' => $data], scope: $scope);
+		}
+
+		$identityType = (self::CONTACT_FIRST_SECTIONS[$name] ?? null);
+		if ($identityType !== null) {
+			$data = $this->withProvisionedIdentity(data: $data, objectType: $identityType);
+			if ($data === null) {
+				$run['failure'] = [
+					'success' => false,
+					'message' => 'Nextcloud Contacts is unavailable — cannot provision demo ' . $identityType . ' identities.',
+					'created' => $run['created'],
+					'skipped' => $run['skipped'],
+				];
+				return $run;
+			}
+		}
+
+		$saved = $this->writer->save(target: $target, data: $data);
+		$run['uuids'][$name . ':' . $definition['key']] = (string)$saved->getUuid();
+		$run['created'][$name]++;
+		return $run;
+	}//end seedDefinition()
+
+	/**
+	 * Count an existing demo object as skipped, remember its uuid, and relink it.
+	 *
+	 * @param array<string, mixed> $found The stored object's uuid, the definition key and the resolved payload.
+	 * @param array<string, array<string, mixed>> $scope The section (with its index and rows) and the run.
+	 *
+	 * @return array<string, mixed> The run.
+	 */
+	private function reuseExisting(array $found, array $scope): array {
+		['section' => $section, 'run' => $run] = $scope;
+		$name = $section['name'];
+		$run['uuids'][$name . ':' . $found['key']] = $found['uuid'];
+		$run['skipped'][$name]++;
+		$existing = ($section['rows'][$found['uuid']] ?? []);
+		if ($this->relinkExisting(target: $section['target'], existing: $existing, data: $found['data'], uuid: $found['uuid']) === true) {
+			$run['relinked'][$name]++;
+		}
+
+		return $run;
+	}//end reuseExisting()
 
 	/**
 	 * Re-point an existing demo object's references at this run's objects.
