@@ -291,15 +291,7 @@ class DemoSeedService {
 
 			// One scan per schema: value => [uuid, ...] index for idempotency,
 			// plus the scanned rows by uuid for the relink check.
-			$rows = [];
-			$index = $this->buildLookupIndex(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $schemaIds[$schemaKey],
-				lookupField: $lookupField,
-				ticketType: $ticketType,
-				rows: $rows,
-			);
+			['index' => $index, 'rows' => $rows] = $this->buildLookupIndex(target: $target, lookupField: $lookupField);
 
 			foreach (($definitions[$section] ?? []) as $definition) {
 				$data = $this->values->resolvePlaceholders(data: $definition['data']);
@@ -440,13 +432,8 @@ class DemoSeedService {
 
 			// One scan per schema: value => [uuid, ...] index. Multiple uuids
 			// per value guard against duplicates from historic runs.
-			$index = $this->buildLookupIndex(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $schemaIds[$schemaKey],
-				lookupField: $lookupField,
-				ticketType: $ticketType,
-			);
+			$target = new DemoSeedTarget(objectService: $objectService, registerId: $registerId, schemaId: $schemaIds[$schemaKey], ticketType: $ticketType);
+			$index = $this->buildLookupIndex(target: $target, lookupField: $lookupField)['index'];
 
 			foreach (($definitions[$section] ?? []) as $definition) {
 				$lookupValue = (string)($definition['data'][$lookupField] ?? '');
@@ -501,60 +488,68 @@ class DemoSeedService {
 	 * and a false negative here would break idempotency. For the same reason
 	 * the `ticketType` narrowing is applied in PHP over the scanned rows.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $registerId Register id.
-	 * @param string $schemaId Schema id.
+	 * @param DemoSeedTarget $target The store, register, schema and ticket subtype (null for own-schema sections).
 	 * @param string $lookupField Field used as the stable demo identifier.
-	 * @param string|null $ticketType Ticket subtype to narrow on, or null for own-schema sections.
-	 * @param array<string, array<string, mixed>>|null $rows Receives the scanned rows by uuid.
 	 *
-	 * @return array<string, array<int, string>> Map of lookup value => uuids.
+	 * @return array{index: array<string, array<int, string>>, rows: array<string, array<string, mixed>>}
+	 *         Map of lookup value => uuids, and the scanned rows by uuid.
 	 */
-	private function buildLookupIndex(
-		object $objectService,
-		string $registerId,
-		string $schemaId,
-		string $lookupField,
-		?string $ticketType = null,
-		?array &$rows = null,
-	): array {
-		$existing = $objectService->findAll(
+	private function buildLookupIndex(DemoSeedTarget $target, string $lookupField): array {
+		$existing = $target->objectService->findAll(
 			[
 				'filters' => [
-					'register' => $registerId,
-					'schema' => $schemaId,
+					'register' => $target->registerId,
+					'schema' => $target->schemaId,
 				],
 				'limit' => 2000,
 			]
 		);
 
-		if (is_array($existing) === false) {
-			return [];
-		}
-
 		$index = [];
-		foreach ($existing as $row) {
-			$data = $this->rowToArray(row: $row);
-			if ($data === null) {
-				continue;
-			}
-
-			if ($ticketType !== null && ($data['ticketType'] ?? null) !== $ticketType) {
-				continue;
-			}
-
-			$value = (string)($data[$lookupField] ?? '');
-			$uuid = (string)($data['id'] ?? ($data['uuid'] ?? ''));
-			if ($value === '' || $uuid === '') {
-				continue;
-			}
-
-			$index[$value][] = $uuid;
-			$rows[$uuid] = $data;
+		$rows = [];
+		if (is_array($existing) === false) {
+			return ['index' => $index, 'rows' => $rows];
 		}
 
-		return $index;
+		$lookup = ['field' => $lookupField, 'ticketType' => $target->ticketType];
+		foreach ($existing as $row) {
+			$entry = $this->lookupEntry(row: $row, lookup: $lookup);
+			if ($entry !== null) {
+				$index[$entry['value']][] = $entry['uuid'];
+				$rows[$entry['uuid']] = $entry['data'];
+			}
+		}
+
+		return ['index' => $index, 'rows' => $rows];
 	}//end buildLookupIndex()
+
+	/**
+	 * The lookup value, uuid and data of one scanned row, or null when the row
+	 * is unreadable, of another ticket subtype, or lacks a value or a uuid.
+	 *
+	 * @param mixed $row The scanned row.
+	 * @param array{field: string, ticketType: string|null} $lookup The lookup field and the ticket subtype.
+	 *
+	 * @return array{value: string, uuid: string, data: array<string, mixed>}|null
+	 */
+	private function lookupEntry(mixed $row, array $lookup): ?array {
+		$data = $this->rowToArray(row: $row);
+		if ($data === null) {
+			return null;
+		}
+
+		if ($lookup['ticketType'] !== null && ($data['ticketType'] ?? null) !== $lookup['ticketType']) {
+			return null;
+		}
+
+		$value = (string)($data[$lookup['field']] ?? '');
+		$uuid = (string)($data['id'] ?? ($data['uuid'] ?? ''));
+		if ($value === '' || $uuid === '') {
+			return null;
+		}
+
+		return ['value' => $value, 'uuid' => $uuid, 'data' => $data];
+	}//end lookupEntry()
 
 	/**
 	 * Rewrite the ticket sections of the seed definitions onto ticket fields.

@@ -90,7 +90,7 @@ class XWikiController extends Controller {
 				$tags = array_values(array_filter(array_map('trim', explode(',', $tagsR)), static fn ($t) => $t !== ''));
 			}
 
-			$result = $this->xwiki->search($query, $space, $tags, $limit, $offset);
+			$result = $this->xwiki->search(query: $query, filter: ['space' => $space, 'tags' => $tags, 'limit' => $limit, 'offset' => $offset]);
 			return new JSONResponse($result);
 		} catch (Throwable $e) {
 			$this->logger->warning('xWiki search proxy failed', ['exception' => $e]);
