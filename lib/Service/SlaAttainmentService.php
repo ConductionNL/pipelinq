@@ -94,7 +94,7 @@ class SlaAttainmentService {
 		}
 
 		[$start, $end] = $this->resolveBucketRange(bucket: $bucket, params: $params);
-		$events = $this->loadBreachEventsInRange(start: $start, end: $end);
+		$events = $this->loadBreachEventsInRange(range: [$start, $end]);
 		$policyFilter = (string)($params['policy'] ?? '');
 
 		// Met objects and breach events are grouped from the same tracked
@@ -306,14 +306,13 @@ class SlaAttainmentService {
 	 * @spec exclude phpmd mechanical refactor
 	 */
 	public function resolveBucketRange(string $bucket, array $params): array {
-		$tz = new DateTimeZone('UTC');
-		$now = new DateTimeImmutable('now', $tz);
+		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
 		return match ($bucket) {
-			'day' => $this->resolveDayRange(now: $now, tz: $tz, params: $params),
-			'week' => $this->resolveWeekRange(now: $now, tz: $tz, params: $params),
-			'month' => $this->resolveMonthRange(now: $now, tz: $tz, params: $params),
-			'quarter' => $this->resolveQuarterRange(now: $now, tz: $tz, params: $params),
+			'day' => $this->resolveDayRange(now: $now, params: $params),
+			'week' => $this->resolveWeekRange(now: $now, params: $params),
+			'month' => $this->resolveMonthRange(now: $now, params: $params),
+			'quarter' => $this->resolveQuarterRange(now: $now, params: $params),
 			default => throw new InvalidArgumentException('invalidBucket'),
 		};
 	}//end resolveBucketRange()
@@ -321,15 +320,14 @@ class SlaAttainmentService {
 	/**
 	 * Resolve the (start, end) range for the "day" bucket.
 	 *
-	 * @param DateTimeImmutable $now Current instant.
-	 * @param DateTimeZone $tz Working timezone.
+	 * @param DateTimeImmutable $now Current instant, in the working timezone.
 	 * @param array<string, mixed> $params Filter parameters.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
 	 *
 	 * @throws InvalidArgumentException On an invalid date value.
 	 */
-	private function resolveDayRange(DateTimeImmutable $now, DateTimeZone $tz, array $params): array {
+	private function resolveDayRange(DateTimeImmutable $now, array $params): array {
 		// An empty/missing date defaults to today so a declarative
 		// dashboard can drive the bucket select alone (no client-side
 		// date math); an explicitly supplied value must still be valid.
@@ -340,22 +338,21 @@ class SlaAttainmentService {
 			throw new InvalidArgumentException('invalidDate');
 		}
 
-		$start = new DateTimeImmutable($date . ' 00:00:00', $tz);
+		$start = new DateTimeImmutable($date . ' 00:00:00', $now->getTimezone());
 		return [$start, $start->modify('+1 day')];
 	}//end resolveDayRange()
 
 	/**
 	 * Resolve the (start, end) range for the "week" bucket.
 	 *
-	 * @param DateTimeImmutable $now Current instant.
-	 * @param DateTimeZone $tz Working timezone.
+	 * @param DateTimeImmutable $now Current instant, in the working timezone.
 	 * @param array<string, mixed> $params Filter parameters.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
 	 *
 	 * @throws InvalidArgumentException On an invalid week value.
 	 */
-	private function resolveWeekRange(DateTimeImmutable $now, DateTimeZone $tz, array $params): array {
+	private function resolveWeekRange(DateTimeImmutable $now, array $params): array {
 		$week = (string)($params['week'] ?? '');
 		if ($week === '') {
 			$week = $now->format('o-\WW');
@@ -365,7 +362,7 @@ class SlaAttainmentService {
 			throw new InvalidArgumentException('invalidWeek');
 		}
 
-		$start = (new DateTimeImmutable('now', $tz))
+		$start = (new DateTimeImmutable('now', $now->getTimezone()))
 			->setISODate((int)$matches[1], (int)$matches[2])
 			->setTime(0, 0);
 		return [$start, $start->modify('+7 days')];
@@ -374,15 +371,14 @@ class SlaAttainmentService {
 	/**
 	 * Resolve the (start, end) range for the "month" bucket.
 	 *
-	 * @param DateTimeImmutable $now Current instant.
-	 * @param DateTimeZone $tz Working timezone.
+	 * @param DateTimeImmutable $now Current instant, in the working timezone.
 	 * @param array<string, mixed> $params Filter parameters.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
 	 *
 	 * @throws InvalidArgumentException On an invalid month value.
 	 */
-	private function resolveMonthRange(DateTimeImmutable $now, DateTimeZone $tz, array $params): array {
+	private function resolveMonthRange(DateTimeImmutable $now, array $params): array {
 		$month = (string)($params['month'] ?? '');
 		if ($month === '') {
 			$month = $now->format('Y-m');
@@ -392,22 +388,21 @@ class SlaAttainmentService {
 			throw new InvalidArgumentException('invalidMonth');
 		}
 
-		$start = new DateTimeImmutable($month . '-01 00:00:00', $tz);
+		$start = new DateTimeImmutable($month . '-01 00:00:00', $now->getTimezone());
 		return [$start, $start->modify('+1 month')];
 	}//end resolveMonthRange()
 
 	/**
 	 * Resolve the (start, end) range for the "quarter" bucket.
 	 *
-	 * @param DateTimeImmutable $now Current instant.
-	 * @param DateTimeZone $tz Working timezone.
+	 * @param DateTimeImmutable $now Current instant, in the working timezone.
 	 * @param array<string, mixed> $params Filter parameters.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
 	 *
 	 * @throws InvalidArgumentException On an invalid quarter value.
 	 */
-	private function resolveQuarterRange(DateTimeImmutable $now, DateTimeZone $tz, array $params): array {
+	private function resolveQuarterRange(DateTimeImmutable $now, array $params): array {
 		$quarter = (string)($params['quarter'] ?? '');
 		if ($quarter === '') {
 			$quarter = sprintf('%s-Q%d', $now->format('Y'), (int)ceil(((int)$now->format('n')) / 3));
@@ -418,19 +413,18 @@ class SlaAttainmentService {
 		}
 
 		$month = (((int)$matches[2] - 1) * 3) + 1;
-		$start = new DateTimeImmutable(sprintf('%s-%02d-01 00:00:00', $matches[1], $month), $tz);
+		$start = new DateTimeImmutable(sprintf('%s-%02d-01 00:00:00', $matches[1], $month), $now->getTimezone());
 		return [$start, $start->modify('+3 months')];
 	}//end resolveQuarterRange()
 
 	/**
 	 * Load breach-event records whose breachedAt is in the time range.
 	 *
-	 * @param DateTimeInterface $start Start instant.
-	 * @param DateTimeInterface $end End instant (exclusive).
+	 * @param array{0: DateTimeInterface, 1: DateTimeInterface} $range Start instant and end instant (exclusive).
 	 *
 	 * @return array<int, array<string, mixed>> Events.
 	 */
-	private function loadBreachEventsInRange(DateTimeInterface $start, DateTimeInterface $end): array {
+	private function loadBreachEventsInRange(array $range): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_breach_event_schema', '');
 		if ($register === '' || $schema === '') {
@@ -475,7 +469,7 @@ class SlaAttainmentService {
 
 		$events = [];
 		foreach ((array)$rows as $row) {
-			$event = $this->parseBreachEventRow(row: $row, start: $start, end: $end);
+			$event = $this->parseBreachEventRow(row: $row, range: $range);
 			if ($event !== null) {
 				$events[] = $event;
 			}
@@ -488,12 +482,11 @@ class SlaAttainmentService {
 	 * Parse and range-filter a single breach-event row.
 	 *
 	 * @param mixed $row Raw row.
-	 * @param DateTimeInterface $start Start instant.
-	 * @param DateTimeInterface $end End instant (exclusive).
+	 * @param array{0: DateTimeInterface, 1: DateTimeInterface} $range Start instant and end instant (exclusive).
 	 *
 	 * @return array<string, mixed>|null The normalised event, or null when out of range/unparsable.
 	 */
-	private function parseBreachEventRow(mixed $row, DateTimeInterface $start, DateTimeInterface $end): ?array {
+	private function parseBreachEventRow(mixed $row, array $range): ?array {
 		$array = $this->normalise(row: $row);
 		$when = $array['breachedAt'] ?? '';
 		if ($when === '') {
@@ -506,7 +499,7 @@ class SlaAttainmentService {
 			return null;
 		}
 
-		if ($instant < $start || $instant >= $end) {
+		if ($instant < $range[0] || $instant >= $range[1]) {
 			return null;
 		}
 
@@ -627,31 +620,22 @@ class SlaAttainmentService {
 			return [];
 		}
 
-		return $this->fetchTrackedObjectRows(objectService: $objectService, register: $register, schemaId: $schemaId);
+		return $this->fetchTrackedObjectRows(objectService: $objectService, filters: ['register' => $register, 'schema' => $schemaId]);
 	}//end findConfiguredObjects()
 
 	/**
 	 * Fetch tracked-object rows for a schema, tolerating findAll failures.
 	 *
 	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $register The register identifier.
-	 * @param string $schemaId The schema identifier.
+	 * @param array{register: string, schema: string} $filters The register and schema identifiers.
 	 *
 	 * @return array<int, mixed>
 	 */
-	private function fetchTrackedObjectRows(object $objectService, string $register, string $schemaId): array {
+	private function fetchTrackedObjectRows(object $objectService, array $filters): array {
 		try {
 			// Same shape as loadBreachEventsInRange(): register/schema belong
 			// inside `filters`, or the query resolves no context and returns [].
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schemaId,
-					],
-					'limit' => 5000,
-				]
-			);
+			$rows = $objectService->findAll(config: ['filters' => $filters, 'limit' => 5000]);
 		} catch (Throwable $e) {
 			return [];
 		}
