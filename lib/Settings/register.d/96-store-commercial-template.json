@@ -27,14 +27,17 @@
             "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
           },
           "title": {
+            "description": "The name of the item in the store.",
             "type": "string",
             "title": "Title"
           },
           "description": {
+            "description": "What the item sets up, shown on its card in the store.",
             "type": "string",
             "title": "Description"
           },
           "kind": {
+            "description": "What the item installs: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector.",
             "type": "string",
             "title": "Kind",
             "enum": [
@@ -56,6 +59,7 @@
             }
           },
           "category": {
+            "description": "The store category the item is listed under.",
             "type": "string",
             "title": "Category"
           },
@@ -65,6 +69,7 @@
             "description": "The item's current version; a newer one than the installed version is an update."
           },
           "publisher": {
+            "description": "Who published the item.",
             "type": "string",
             "title": "Publisher"
           },
@@ -81,9 +86,13 @@
               "type": "object",
               "properties": {
                 "schema": {
+                  "title": "Schema",
+                  "description": "The slug of the schema the object is written to.",
                   "type": "string"
                 },
                 "object": {
+                  "title": "Object",
+                  "description": "The configuration object installing the item writes.",
                   "type": "object"
                 }
               }
