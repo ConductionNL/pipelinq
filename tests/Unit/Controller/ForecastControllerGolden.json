@@ -1,0 +1,1042 @@
+{
+    "read no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Unauthenticated."
+        },
+        "trace": []
+    },
+    "read no period": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "A valid period and level are required."
+        },
+        "trace": []
+    },
+    "read no level": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "A valid period and level are required."
+        },
+        "trace": []
+    },
+    "read unknown level": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "A valid period and level are required."
+        },
+        "trace": []
+    },
+    "read upper-case level": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "A valid period and level are required."
+        },
+        "trace": []
+    },
+    "read denied": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "You may not read forecasts at this scope."
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "rep-bob",
+                    "team",
+                    "rep-x"
+                ]
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: forecast read denied",
+                    {
+                        "uid": "rep-bob",
+                        "level": "team",
+                        "ownerId": "rep-x"
+                    }
+                ]
+            }
+        ]
+    },
+    "read team json": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 50,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    50,
+                    0
+                ]
+            }
+        ]
+    },
+    "read rep with owner": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 50,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "rep",
+                    "rep-bob"
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "P",
+                    "rep",
+                    "rep-bob",
+                    50,
+                    0
+                ]
+            }
+        ]
+    },
+    "read division": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 50,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "division",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "P",
+                    "division",
+                    null,
+                    50,
+                    0
+                ]
+            }
+        ]
+    },
+    "read company clamps": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 200,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "company",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "P",
+                    "company",
+                    null,
+                    200,
+                    0
+                ]
+            }
+        ]
+    },
+    "read zero limit": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 1,
+            "offset": 3
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    1,
+                    3
+                ]
+            }
+        ]
+    },
+    "read text limit": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 1,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    1,
+                    0
+                ]
+            }
+        ]
+    },
+    "read float limit": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 12,
+            "offset": 4
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    12,
+                    4
+                ]
+            }
+        ]
+    },
+    "read int limit": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 25,
+            "offset": 50
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    25,
+                    50
+                ]
+            }
+        ]
+    },
+    "read limit 200": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 200,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    200,
+                    0
+                ]
+            }
+        ]
+    },
+    "read limit 201": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 200,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    200,
+                    0
+                ]
+            }
+        ]
+    },
+    "read array limit": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 1,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    1,
+                    0
+                ]
+            }
+        ]
+    },
+    "read csv": {
+        "class": "OCP\\AppFramework\\Http\\DataDownloadResponse",
+        "status": 200,
+        "body": "owner_id,commit\nrep-bob,1000.5\n",
+        "headers": {
+            "Content-Disposition": "attachment; filename=forecast-FY26-Q1-team.csv",
+            "Content-Type": "text/csv; charset=UTF-8"
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    50,
+                    0
+                ]
+            },
+            {
+                "toCsv": [
+                    {
+                        "owner_id": "rep-bob",
+                        "commit": 1000.5
+                    }
+                ]
+            }
+        ]
+    },
+    "read CSV upper": {
+        "class": "OCP\\AppFramework\\Http\\DataDownloadResponse",
+        "status": 200,
+        "body": "owner_id,commit\nrep-bob,1000.5\n",
+        "headers": {
+            "Content-Disposition": "attachment; filename=forecast-FY26-Q1-team.csv",
+            "Content-Type": "text/csv; charset=UTF-8"
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    50,
+                    0
+                ]
+            },
+            {
+                "toCsv": [
+                    {
+                        "owner_id": "rep-bob",
+                        "commit": 1000.5
+                    }
+                ]
+            }
+        ]
+    },
+    "read xml format": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 50,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    50,
+                    0
+                ]
+            }
+        ]
+    },
+    "read empty owner": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 50,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    ""
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    "",
+                    50,
+                    0
+                ]
+            }
+        ]
+    },
+    "read null owner": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 50,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    50,
+                    0
+                ]
+            }
+        ]
+    },
+    "read array period": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "read array level": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "read array owner": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "read array format": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "read integer period": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "read boolean owner": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "read no session array period": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "create no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Unauthenticated."
+        },
+        "trace": []
+    },
+    "create denied": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "You may not override forecasts at this scope."
+        },
+        "trace": [
+            {
+                "canOverride": [
+                    "rep-bob",
+                    "team"
+                ]
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: forecast override denied",
+                    {
+                        "uid": "rep-bob",
+                        "level": "team"
+                    }
+                ]
+            }
+        ]
+    },
+    "create denied company": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "You may not override forecasts at this scope."
+        },
+        "trace": [
+            {
+                "canOverride": [
+                    "manager",
+                    "company"
+                ]
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: forecast override denied",
+                    {
+                        "uid": "manager",
+                        "level": "company"
+                    }
+                ]
+            }
+        ]
+    },
+    "create invalid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "Amount must be a number."
+        },
+        "trace": [
+            {
+                "canOverride": [
+                    "manager",
+                    "team"
+                ]
+            },
+            {
+                "validatePayload": {
+                    "period_id": "FY26-Q1",
+                    "override_owner_id": "rep-bob",
+                    "level": "team",
+                    "category": "best_case",
+                    "override_amount": "1250.50",
+                    "reason": "Signed"
+                }
+            }
+        ]
+    },
+    "create defaults": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "ov-new",
+            "period_id": "",
+            "override_owner_id": "",
+            "level": "team",
+            "category": "commit",
+            "override_amount": null,
+            "reason": ""
+        },
+        "trace": [
+            {
+                "canOverride": [
+                    "manager",
+                    "team"
+                ]
+            },
+            {
+                "validatePayload": {
+                    "period_id": "",
+                    "override_owner_id": "",
+                    "level": "team",
+                    "category": "commit",
+                    "override_amount": null,
+                    "reason": ""
+                }
+            },
+            {
+                "createOverride": [
+                    {
+                        "period_id": "",
+                        "override_owner_id": "",
+                        "level": "team",
+                        "category": "commit",
+                        "override_amount": null,
+                        "reason": ""
+                    },
+                    "manager"
+                ]
+            }
+        ]
+    },
+    "create ok": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "ov-new",
+            "period_id": "FY26-Q1",
+            "override_owner_id": "rep-bob",
+            "level": "team",
+            "category": "best_case",
+            "override_amount": "1250.50",
+            "reason": "Signed"
+        },
+        "trace": [
+            {
+                "canOverride": [
+                    "manager",
+                    "team"
+                ]
+            },
+            {
+                "validatePayload": {
+                    "period_id": "FY26-Q1",
+                    "override_owner_id": "rep-bob",
+                    "level": "team",
+                    "category": "best_case",
+                    "override_amount": "1250.50",
+                    "reason": "Signed"
+                }
+            },
+            {
+                "createOverride": [
+                    {
+                        "period_id": "FY26-Q1",
+                        "override_owner_id": "rep-bob",
+                        "level": "team",
+                        "category": "best_case",
+                        "override_amount": "1250.50",
+                        "reason": "Signed"
+                    },
+                    "manager"
+                ]
+            }
+        ]
+    },
+    "create store fails": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 500,
+        "data": {
+            "error": "Could not create the override."
+        },
+        "trace": [
+            {
+                "canOverride": [
+                    "manager",
+                    "team"
+                ]
+            },
+            {
+                "validatePayload": {
+                    "period_id": "FY26-Q1",
+                    "override_owner_id": "rep-bob",
+                    "level": "team",
+                    "category": "best_case",
+                    "override_amount": "1250.50",
+                    "reason": "Signed"
+                }
+            },
+            {
+                "createOverride": [
+                    {
+                        "period_id": "FY26-Q1",
+                        "override_owner_id": "rep-bob",
+                        "level": "team",
+                        "category": "best_case",
+                        "override_amount": "1250.50",
+                        "reason": "Signed"
+                    },
+                    "manager"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "Pipelinq: failed to create forecast override",
+                    {
+                        "exception": "db down: secret detail"
+                    }
+                ]
+            }
+        ]
+    },
+    "create no level": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "ov-new",
+            "period_id": "",
+            "override_owner_id": "",
+            "level": "",
+            "category": "commit",
+            "override_amount": null,
+            "reason": ""
+        },
+        "trace": [
+            {
+                "canOverride": [
+                    "manager",
+                    ""
+                ]
+            },
+            {
+                "validatePayload": {
+                    "period_id": "",
+                    "override_owner_id": "",
+                    "level": "",
+                    "category": "commit",
+                    "override_amount": null,
+                    "reason": ""
+                }
+            },
+            {
+                "createOverride": [
+                    {
+                        "period_id": "",
+                        "override_owner_id": "",
+                        "level": "",
+                        "category": "commit",
+                        "override_amount": null,
+                        "reason": ""
+                    },
+                    "manager"
+                ]
+            }
+        ]
+    },
+    "delete no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Unauthenticated."
+        },
+        "trace": []
+    },
+    "delete missing": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "error": "Override not found."
+        },
+        "trace": [
+            {
+                "getOverride": "ov-missing"
+            }
+        ]
+    },
+    "delete denied": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "You may not delete this override."
+        },
+        "trace": [
+            {
+                "getOverride": "ov-1"
+            },
+            {
+                "canOverride": [
+                    "rep-bob",
+                    "team"
+                ]
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: forecast override delete denied",
+                    {
+                        "uid": "rep-bob",
+                        "id": "ov-1"
+                    }
+                ]
+            }
+        ]
+    },
+    "delete stored company denied": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "You may not delete this override."
+        },
+        "trace": [
+            {
+                "getOverride": "ov-company"
+            },
+            {
+                "canOverride": [
+                    "manager",
+                    "company"
+                ]
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: forecast override delete denied",
+                    {
+                        "uid": "manager",
+                        "id": "ov-company"
+                    }
+                ]
+            }
+        ]
+    },
+    "delete no stored level": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "deleted": true
+        },
+        "trace": [
+            {
+                "getOverride": "ov-nolevel"
+            },
+            {
+                "canOverride": [
+                    "manager",
+                    ""
+                ]
+            },
+            {
+                "deleteOverride": "ov-nolevel"
+            }
+        ]
+    },
+    "delete ok": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "deleted": true
+        },
+        "trace": [
+            {
+                "getOverride": "ov-1"
+            },
+            {
+                "canOverride": [
+                    "manager",
+                    "team"
+                ]
+            },
+            {
+                "deleteOverride": "ov-1"
+            }
+        ]
+    },
+    "delete fails": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 500,
+        "data": {
+            "error": "Could not delete the override."
+        },
+        "trace": [
+            {
+                "getOverride": "ov-1"
+            },
+            {
+                "canOverride": [
+                    "manager",
+                    "team"
+                ]
+            },
+            {
+                "deleteOverride": "ov-1"
+            }
+        ]
+    },
+    "delete array id": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    }
+}
