@@ -2425,6 +2425,11 @@
 								"gridHeight": 4,
 								"sizeToContent": true
 							}
+						],
+						"gridColumnWeights": [
+							{ "span": 4, "weight": 352 },
+							{ "span": 4, "weight": 435 },
+							{ "span": 4, "weight": 352 }
 						]
 					}
 				],
