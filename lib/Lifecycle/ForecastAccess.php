@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Lifecycle;
 
 use OCA\Pipelinq\Service\ForecastSnapshotQuery;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -61,11 +62,11 @@ class ForecastAccess {
 	 */
 	public function actingUserId(): string {
 		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
+		if ($user instanceof IUser) {
+			return $user->getUID();
 		}
 
-		return $user->getUID();
+		return '';
 	}//end actingUserId()
 
 	/**
