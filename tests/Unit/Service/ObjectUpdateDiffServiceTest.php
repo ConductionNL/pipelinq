@@ -62,12 +62,15 @@ class ObjectUpdateDiffServiceTest extends TestCase {
 			->with('lead', 'Deal', '123', 'user2');
 
 		$this->service->dispatchAssigneeChangeIfNeeded(
-			['assignee' => 'user1'],
-			'lead',
-			'Deal',
-			'123',
-			'user2',
-			$this->dispatcher
+			change: [
+				'new' => [],
+				'old' => ['assignee' => 'user1'],
+				'entityType' => 'lead',
+				'title' => 'Deal',
+				'objectId' => '123',
+				'assignee' => 'user2',
+			],
+			dispatcher: $this->dispatcher
 		);
 	}//end testAssigneeChangeDispatches()
 
@@ -81,12 +84,15 @@ class ObjectUpdateDiffServiceTest extends TestCase {
 			->method('dispatchAssigneeChange');
 
 		$this->service->dispatchAssigneeChangeIfNeeded(
-			['assignee' => 'user1'],
-			'lead',
-			'Deal',
-			'123',
-			'user1',
-			$this->dispatcher
+			change: [
+				'new' => [],
+				'old' => ['assignee' => 'user1'],
+				'entityType' => 'lead',
+				'title' => 'Deal',
+				'objectId' => '123',
+				'assignee' => 'user1',
+			],
+			dispatcher: $this->dispatcher
 		);
 	}//end testSameAssigneeNoDispatch()
 
@@ -100,12 +106,15 @@ class ObjectUpdateDiffServiceTest extends TestCase {
 			->method('dispatchAssigneeChange');
 
 		$this->service->dispatchAssigneeChangeIfNeeded(
-			['assignee' => 'user1'],
-			'lead',
-			'Deal',
-			'123',
-			'',
-			$this->dispatcher
+			change: [
+				'new' => [],
+				'old' => ['assignee' => 'user1'],
+				'entityType' => 'lead',
+				'title' => 'Deal',
+				'objectId' => '123',
+				'assignee' => '',
+			],
+			dispatcher: $this->dispatcher
 		);
 	}//end testEmptyAssigneeNoDispatch()
 
@@ -120,12 +129,15 @@ class ObjectUpdateDiffServiceTest extends TestCase {
 			->with('Deal', '123', 'Negotiation', 'user1');
 
 		$this->service->dispatchStageChangeIfNeeded(
-			['stage' => 'Negotiation'],
-			['stage' => 'New'],
-			'Deal',
-			'123',
-			'user1',
-			$this->dispatcher
+			change: [
+				'new' => ['stage' => 'Negotiation'],
+				'old' => ['stage' => 'New'],
+				'entityType' => 'lead',
+				'title' => 'Deal',
+				'objectId' => '123',
+				'assignee' => 'user1',
+			],
+			dispatcher: $this->dispatcher
 		);
 	}//end testStageChangeDispatchesRegular()
 
@@ -140,12 +152,15 @@ class ObjectUpdateDiffServiceTest extends TestCase {
 			->with('Deal', '50000', '123', 'user1');
 
 		$this->service->dispatchStageChangeIfNeeded(
-			['stage' => 'Won', 'value' => '50000'],
-			['stage' => 'Negotiation'],
-			'Deal',
-			'123',
-			'user1',
-			$this->dispatcher
+			change: [
+				'new' => ['stage' => 'Won', 'value' => '50000'],
+				'old' => ['stage' => 'Negotiation'],
+				'entityType' => 'lead',
+				'title' => 'Deal',
+				'objectId' => '123',
+				'assignee' => 'user1',
+			],
+			dispatcher: $this->dispatcher
 		);
 	}//end testStageWonDispatchesDealWon()
 
@@ -160,12 +175,15 @@ class ObjectUpdateDiffServiceTest extends TestCase {
 			->with('Deal', '123', 'user1');
 
 		$this->service->dispatchStageChangeIfNeeded(
-			['stage' => 'Lost'],
-			['stage' => 'Negotiation'],
-			'Deal',
-			'123',
-			'user1',
-			$this->dispatcher
+			change: [
+				'new' => ['stage' => 'Lost'],
+				'old' => ['stage' => 'Negotiation'],
+				'entityType' => 'lead',
+				'title' => 'Deal',
+				'objectId' => '123',
+				'assignee' => 'user1',
+			],
+			dispatcher: $this->dispatcher
 		);
 	}//end testStageLostDispatchesDealLost()
 
@@ -179,12 +197,15 @@ class ObjectUpdateDiffServiceTest extends TestCase {
 			->method('dispatchStageChange');
 
 		$this->service->dispatchStageChangeIfNeeded(
-			['stage' => 'New'],
-			['stage' => 'New'],
-			'Deal',
-			'123',
-			'user1',
-			$this->dispatcher
+			change: [
+				'new' => ['stage' => 'New'],
+				'old' => ['stage' => 'New'],
+				'entityType' => 'lead',
+				'title' => 'Deal',
+				'objectId' => '123',
+				'assignee' => 'user1',
+			],
+			dispatcher: $this->dispatcher
 		);
 	}//end testSameStageNoDispatch()
 
@@ -199,12 +220,15 @@ class ObjectUpdateDiffServiceTest extends TestCase {
 			->with('Request', '456', 'completed', 'user1');
 
 		$this->service->dispatchStatusChangeIfNeeded(
-			['status' => 'completed'],
-			['status' => 'new'],
-			'Request',
-			'456',
-			'user1',
-			$this->dispatcher
+			change: [
+				'new' => ['status' => 'completed'],
+				'old' => ['status' => 'new'],
+				'entityType' => 'lead',
+				'title' => 'Request',
+				'objectId' => '456',
+				'assignee' => 'user1',
+			],
+			dispatcher: $this->dispatcher
 		);
 	}//end testStatusChangeDispatches()
 
@@ -218,12 +242,15 @@ class ObjectUpdateDiffServiceTest extends TestCase {
 			->method('dispatchStatusChange');
 
 		$this->service->dispatchStatusChangeIfNeeded(
-			['status' => 'new'],
-			['status' => 'new'],
-			'Request',
-			'456',
-			'user1',
-			$this->dispatcher
+			change: [
+				'new' => ['status' => 'new'],
+				'old' => ['status' => 'new'],
+				'entityType' => 'lead',
+				'title' => 'Request',
+				'objectId' => '456',
+				'assignee' => 'user1',
+			],
+			dispatcher: $this->dispatcher
 		);
 	}//end testSameStatusNoDispatch()
 }//end class

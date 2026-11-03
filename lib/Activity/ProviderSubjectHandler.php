@@ -32,19 +32,9 @@ use OCP\Activity\IEvent;
  */
 class ProviderSubjectHandler {
 	/**
-	 * Simple subject map: subject => [parsedKey, richKey].
-	 *
-	 * @var array<string, array{string, string}>
-	 */
-	private const SIMPLE_SUBJECTS = [
-		'lead_created' => ['Lead created: %s', 'Lead created: {title}'],
-		'lead_assigned' => ['Lead assigned: %s', 'Lead assigned: {title}'],
-		'request_created' => ['Request created: %s', 'Request created: {title}'],
-		'lead_lost' => ['Deal lost: %s', 'Deal lost: {title}'],
-	];
-
-	/**
 	 * Apply subject text and rich parameters to the event based on its subject type.
+	 *
+	 * An unknown subject leaves the event as it is.
 	 *
 	 * @param IEvent $event The event to modify.
 	 * @param object $l The l10n translator.
@@ -56,142 +46,80 @@ class ProviderSubjectHandler {
 	 */
 	public function applySubjectText(IEvent $event, object $l, array $params): void {
 		$title = $params['title'] ?? '';
-		$richParams = $this->buildRichParams(
-			event: $event,
-			title: $title
-		);
+		$richParams = $this->buildRichParams(event: $event, title: $title);
 
-		$subject = $event->getSubject();
-
-		if (isset(self::SIMPLE_SUBJECTS[$subject]) === true) {
-			$this->applySimpleSubject(
-				event: $event,
-				l: $l,
-				parsedKey: self::SIMPLE_SUBJECTS[$subject][0],
-				richKey: self::SIMPLE_SUBJECTS[$subject][1],
-				title: $title,
-				richParams: $richParams
-			);
+		$texts = $this->subjectTexts(subject: $event->getSubject(), context: ['l' => $l, 'params' => $params, 'title' => $title]);
+		if ($texts === null) {
 			return;
 		}
 
-		if ($subject === 'lead_stage_changed') {
-			$this->applyStageChangedSubject(
-				event: $event,
-				l: $l,
-				title: $title,
-				stage: ($params['stage'] ?? ''),
-				richParams: $richParams
-			);
-			return;
-		}
-
-		if ($subject === 'request_status_changed') {
-			$this->applyStatusChangedSubject(
-				event: $event,
-				l: $l,
-				title: $title,
-				status: ($params['status'] ?? ''),
-				richParams: $richParams
-			);
-			return;
-		}
-
-		if ($subject === 'lead_won') {
-			$value = $params['value'] ?? '';
-			$event->setParsedSubject($l->t('Deal won: %1$s (EUR %2$s)', [$title, $value]));
-			$event->setRichSubject(
-				subject: $l->t('Deal won: {title} (EUR %1$s)', [$value]),
-				parameters: $richParams
-			);
-			return;
-		}
-
-		if ($subject === 'note_added') {
-			$this->applyNoteAddedSubject(
-				event: $event,
-				l: $l,
-				title: $title,
-				entityType: ($params['entityType'] ?? 'item'),
-				richParams: $richParams
-			);
-		}
+		$event->setParsedSubject($texts[0]);
+		$event->setRichSubject(subject: $texts[1], parameters: $richParams);
 	}//end applySubjectText()
 
 	/**
-	 * Apply stage changed subject text.
+	 * The parsed and the rich subject of a known subject, or null.
 	 *
-	 * @param IEvent $event The event.
-	 * @param object $l The l10n translator.
-	 * @param string $title The entity title.
-	 * @param string $stage The new stage name.
-	 * @param array $richParams The rich parameters.
+	 * @param string $subject The event subject.
+	 * @param array<string, mixed> $context The translator (`l`), the subject parameters and the title.
 	 *
-	 * @return void
+	 * @return array{0: string, 1: string}|null
 	 */
-	private function applyStageChangedSubject(
-		IEvent $event,
-		object $l,
-		string $title,
-		string $stage,
-		array $richParams,
-	): void {
-		$event->setParsedSubject($l->t('Lead %1$s moved to %2$s', [$title, $stage]));
-		$event->setRichSubject(
-			subject: $l->t('{title} moved to %1$s', [$stage]),
-			parameters: $richParams
-		);
-	}//end applyStageChangedSubject()
+	private function subjectTexts(string $subject, array $context): ?array {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		return match ($subject) {
+			'lead_created' => [$l->t('Lead created: %s', [$title]), $l->t('Lead created: {title}')],
+			'lead_assigned' => [$l->t('Lead assigned: %s', [$title]), $l->t('Lead assigned: {title}')],
+			'request_created' => [$l->t('Request created: %s', [$title]), $l->t('Request created: {title}')],
+			'lead_lost' => [$l->t('Deal lost: %s', [$title]), $l->t('Deal lost: {title}')],
+			'lead_stage_changed' => $this->changeTexts(subject: $subject, context: $context),
+			'request_status_changed' => $this->changeTexts(subject: $subject, context: $context),
+			'note_added' => $this->changeTexts(subject: $subject, context: $context),
+			'lead_won' => [
+				$l->t('Deal won: %1$s (EUR %2$s)', [$title, $params['value'] ?? '']),
+				$l->t('Deal won: {title} (EUR %1$s)', [$params['value'] ?? '']),
+			],
+			default => null,
+		};
+	}//end subjectTexts()
 
 	/**
-	 * Apply status changed subject text.
+	 * The texts of a stage change, a status change or a new note; the stage,
+	 * status and entity type must be strings.
 	 *
-	 * @param IEvent $event The event.
-	 * @param object $l The l10n translator.
-	 * @param string $title The entity title.
-	 * @param string $status The new status name.
-	 * @param array $richParams The rich parameters.
+	 * @param string $subject The event subject.
+	 * @param array<string, mixed> $context The translator (`l`), the subject parameters and the title.
 	 *
-	 * @return void
+	 * @return array{0: string, 1: string}
 	 */
-	private function applyStatusChangedSubject(
-		IEvent $event,
-		object $l,
-		string $title,
-		string $status,
-		array $richParams,
-	): void {
-		$event->setParsedSubject($l->t('Request %1$s: %2$s', [$title, $status]));
-		$event->setRichSubject(
-			subject: $l->t('{title}: %1$s', [$status]),
-			parameters: $richParams
-		);
-	}//end applyStatusChangedSubject()
+	private function changeTexts(string $subject, array $context): array {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		if ($subject === 'lead_stage_changed') {
+			$stage = $this->stringParam(params: $params, key: 'stage');
+			return [$l->t('Lead %1$s moved to %2$s', [$title, $stage]), $l->t('{title} moved to %1$s', [$stage])];
+		}
+
+		if ($subject === 'request_status_changed') {
+			$status = $this->stringParam(params: $params, key: 'status');
+			return [$l->t('Request %1$s: %2$s', [$title, $status]), $l->t('{title}: %1$s', [$status])];
+		}
+
+		$entityType = $this->stringParam(params: ($params + ['entityType' => 'item']), key: 'entityType');
+		return [$l->t('New note on %1$s: %2$s', [$entityType, $title]), $l->t('New note on %1$s: {title}', [$entityType])];
+	}//end changeTexts()
 
 	/**
-	 * Apply note added subject text.
+	 * A subject parameter that must be a string ('' when absent); any other
+	 * type fails the return type.
 	 *
-	 * @param IEvent $event The event.
-	 * @param object $l The l10n translator.
-	 * @param string $title The entity title.
-	 * @param string $entityType The entity type.
-	 * @param array $richParams The rich parameters.
+	 * @param array<string, mixed> $params The subject parameters.
+	 * @param string $key The parameter name.
 	 *
-	 * @return void
+	 * @return string
 	 */
-	private function applyNoteAddedSubject(
-		IEvent $event,
-		object $l,
-		string $title,
-		string $entityType,
-		array $richParams,
-	): void {
-		$event->setParsedSubject($l->t('New note on %1$s: %2$s', [$entityType, $title]));
-		$event->setRichSubject(
-			subject: $l->t('New note on %1$s: {title}', [$entityType]),
-			parameters: $richParams
-		);
-	}//end applyNoteAddedSubject()
+	private function stringParam(array $params, string $key): string {
+		return $params[$key] ?? '';
+	}//end stringParam()
 
 	/**
 	 * Build rich parameters for an event.
@@ -210,31 +138,4 @@ class ProviderSubjectHandler {
 			],
 		];
 	}//end buildRichParams()
-
-	/**
-	 * Apply a simple parsed and rich subject to the event.
-	 *
-	 * @param IEvent $event The event.
-	 * @param object $l The l10n translator.
-	 * @param string $parsedKey The parsed subject translation key.
-	 * @param string $richKey The rich subject translation key.
-	 * @param string $title The entity title.
-	 * @param array $richParams The rich parameters.
-	 *
-	 * @return void
-	 */
-	private function applySimpleSubject(
-		IEvent $event,
-		object $l,
-		string $parsedKey,
-		string $richKey,
-		string $title,
-		array $richParams,
-	): void {
-		$event->setParsedSubject($l->t($parsedKey, [$title]));
-		$event->setRichSubject(
-			subject: $l->t($richKey),
-			parameters: $richParams
-		);
-	}//end applySimpleSubject()
 }//end class
