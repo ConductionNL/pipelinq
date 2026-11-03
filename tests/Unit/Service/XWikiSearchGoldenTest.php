@@ -48,6 +48,7 @@ use RuntimeException;
  *
  * @covers \OCA\Pipelinq\Service\XWikiService
  * @covers \OCA\Pipelinq\Controller\XWikiController
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  *
  * @spec openspec/specs/xwiki-proxy/spec.md
  */
