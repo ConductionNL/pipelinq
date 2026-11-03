@@ -65,7 +65,7 @@ async function gotoExportJobs(page: Page) {
 	await dismissSupportDialog(page)
 }
 
-// @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-ui-shell
+// @e2e openspec/specs/bi-export-and-data-warehouse-sink/spec.md
 test('BI export jobs: ExportJobs mounts from the sidebar with its index chrome', async ({
 	page,
 }) => {
@@ -75,7 +75,7 @@ test('BI export jobs: ExportJobs mounts from the sidebar with its index chrome',
 	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible()
 })
 
-// @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-ui-list
+// @e2e openspec/specs/bi-export-and-data-warehouse-sink/spec.md
 test('BI export jobs: jobs surface renders without a registration error', async ({
 	page,
 }) => {

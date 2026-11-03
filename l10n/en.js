@@ -9430,7 +9430,19 @@ OC.L10N.register(
         "Parent organisation of": "Parent organisation of",
         "Subsidiary of": "Subsidiary of",
         "Mentor of": "Mentor of",
-        "Mentee of": "Mentee of"
+        "Mentee of": "Mentee of",
+        "A note on the tariff, such as when it applies.": "A note on the tariff, such as when it applies.",
+        "The amount in euros.": "The amount in euros.",
+        "The configuration object installing the item writes.": "The configuration object installing the item writes.",
+        "The day the tariff applies from.": "The day the tariff applies from.",
+        "The name of the item in the store.": "The name of the item in the store.",
+        "The rate each foreign currency was converted at in this run: currency code to rate, source (override, shillinq, manual, none), shillinq origin, rate date and stale flag.": "The rate each foreign currency was converted at in this run: currency code to rate, source (override, shillinq, manual, none), shillinq origin, rate date and stale flag.",
+        "The slug of the schema the object is written to.": "The slug of the schema the object is written to.",
+        "The store category the item is listed under.": "The store category the item is listed under.",
+        "What the item installs: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector.": "What the item installs: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector.",
+        "What the item sets up, shown on its card in the store.": "What the item sets up, shown on its card in the store.",
+        "What the tariff is called, such as the rate of a fee regulation.": "What the tariff is called, such as the rate of a fee regulation.",
+        "Who published the item.": "Who published the item."
     },
     "nplurals=2; plural=(n != 1);"
 )

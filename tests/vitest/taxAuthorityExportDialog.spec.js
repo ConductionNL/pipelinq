@@ -43,6 +43,8 @@ describe('the tax authority export dialog', () => {
 		const wrapper = mount(TaxAuthorityExportDialog, { global: { mocks: { t: globalThis.t } } })
 		await wrapper.find('[data-variant="primary"]').trigger('click')
 		await flushPromises()
+		// Under a loaded runner the download can still be under way after one tick.
+		await vi.waitFor(() => expect(wrapper.emitted('close')).toHaveLength(1))
 
 		expect(globalThis.fetch.mock.calls[0][0]).toMatch(/\/apps\/pipelinq\/api\/kassakoppeling\/audit\/export\?from=\d{4}-\d{2}-\d{2}&to=\d{4}-\d{2}-\d{2}&format=xml$/)
 		expect(showSuccess).toHaveBeenCalledWith('Tax authority export downloaded.')
