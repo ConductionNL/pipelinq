@@ -50,6 +50,9 @@ use Throwable;
  * once more without it.
  *
  * @covers \OCA\Pipelinq\Service\ScheduledTaskService
+ * @covers \OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskDeadlines
+ * @covers \OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskRights
+ * @covers \OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskStore
  */
 class ScheduledTaskServiceGoldenTest extends TestCase {
 	use ComparesGolden;
