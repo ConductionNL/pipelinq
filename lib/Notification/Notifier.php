@@ -37,6 +37,30 @@ use OCP\Notification\UnknownNotificationException;
  */
 class Notifier implements INotifier {
 	/**
+	 * The handler group of every subject this notifier renders.
+	 *
+	 * @var array<string, string>
+	 */
+	private const SUBJECT_GROUPS = [
+		'lead_assigned' => 'assignment',
+		'request_assigned' => 'assignment',
+		'task_assigned' => 'assignment',
+		'task_reassigned' => 'assignment',
+		'lead_lost' => 'assignment',
+		'task_completed' => 'task',
+		'task_expired' => 'task',
+		'lead_stage_changed' => 'change',
+		'request_status_changed' => 'change',
+		'note_added' => 'change',
+		'lead_won' => 'change',
+		'forecast_snapshot_partial_failure' => 'system',
+		'wip_sync_failed' => 'system',
+		'billing_handoff_failed' => 'system',
+		'social_share_requested' => 'social',
+		'social_relink_needed' => 'social',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IFactory $l10nFactory The l10n factory.
@@ -116,193 +140,24 @@ class Notifier implements INotifier {
 	 * @return void
 	 *
 	 * @throws UnknownNotificationException If the subject is not recognized.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) — switch handles all notification types
 	 */
 	private function applyNotificationSubject(INotification $notification, object $l, array $params): void {
 		$title = $params['title'] ?? '';
-		$richParams = $this->buildRichParams(
-			notification: $notification,
-			title: $title
-		);
+		$context = [
+			'l' => $l,
+			'params' => $params,
+			'title' => $title,
+			'richParams' => $this->buildRichParams(notification: $notification, title: $title),
+		];
 
-		switch ($notification->getSubject()) {
-			case 'lead_assigned':
-				$this->applySimpleSubject(
-					notification: $notification,
-					l: $l,
-					parsedKey: 'Lead assigned: %s',
-					richKey: 'Lead assigned: {title}',
-					title: $title,
-					richParams: $richParams
-				);
-				break;
-
-			case 'request_assigned':
-				$this->applySimpleSubject(
-					notification: $notification,
-					l: $l,
-					parsedKey: 'Request assigned: %s',
-					richKey: 'Request assigned: {title}',
-					title: $title,
-					richParams: $richParams
-				);
-				break;
-
-			case 'task_assigned':
-				$this->applySimpleSubject(
-					notification: $notification,
-					l: $l,
-					parsedKey: 'Task assigned: %s',
-					richKey: 'Task assigned: {title}',
-					title: $title,
-					richParams: $richParams
-				);
-				break;
-
-			case 'task_completed':
-				$resultText = $params['resultText'] ?? '';
-				$notification->setParsedSubject($l->t('Task completed: %1$s (%2$s)', [$title, $resultText]));
-				$notification->setRichSubject(
-					subject: $l->t('Task completed: {title}'),
-					parameters: $richParams
-				);
-				break;
-
-			case 'task_reassigned':
-				$this->applySimpleSubject(
-					notification: $notification,
-					l: $l,
-					parsedKey: 'Task reassigned to you: %s',
-					richKey: 'Task reassigned to you: {title}',
-					title: $title,
-					richParams: $richParams
-				);
-				break;
-
-			case 'task_expired':
-				$deadline = $params['deadline'] ?? '';
-				$notification->setParsedSubject($l->t('Task expired: %1$s (deadline: %2$s)', [$title, $deadline]));
-				$notification->setRichSubject(
-					subject: $l->t('Task expired: {title}'),
-					parameters: $richParams
-				);
-				break;
-
-			case 'lead_stage_changed':
-				$stage = $params['stage'] ?? '';
-				$notification->setParsedSubject($l->t('Lead %1$s moved to %2$s', [$title, $stage]));
-				$notification->setRichSubject(
-					subject: $l->t('{title} moved to %1$s', [$stage]),
-					parameters: $richParams
-				);
-				break;
-
-			case 'request_status_changed':
-				$status = $params['status'] ?? '';
-				$notification->setParsedSubject($l->t('Request %1$s: %2$s', [$title, $status]));
-				$notification->setRichSubject(
-					subject: $l->t('{title}: %1$s', [$status]),
-					parameters: $richParams
-				);
-				break;
-
-			case 'note_added':
-				$entityType = $params['entityType'] ?? 'item';
-				$notification->setParsedSubject($l->t('New note on %1$s: %2$s', [$entityType, $title]));
-				$notification->setRichSubject(
-					subject: $l->t('New note on %1$s: {title}', [$entityType]),
-					parameters: $richParams
-				);
-				break;
-
-			case 'lead_won':
-				$value = $params['value'] ?? '';
-				$notification->setParsedSubject($l->t('Deal won: %1$s (EUR %2$s)', [$title, $value]));
-				$notification->setRichSubject(
-					subject: $l->t('Deal won: {title} (EUR %1$s)', [$value]),
-					parameters: $richParams
-				);
-				break;
-
-			case 'lead_lost':
-				$this->applySimpleSubject(
-					notification: $notification,
-					l: $l,
-					parsedKey: 'Deal lost: %s',
-					richKey: 'Deal lost: {title}',
-					title: $title,
-					richParams: $richParams
-				);
-				break;
-
-			case 'forecast_snapshot_partial_failure':
-				$period = (string)($params['period'] ?? '');
-				$errors = (string)($params['errors'] ?? '');
-				$notification->setParsedSubject(
-					$l->t('Forecast snapshot job: partial failure for %1$s', [$period])
-				);
-				$notification->setParsedMessage(
-					$l->t('Some forecast snapshots could not be generated: %1$s', [$errors])
-				);
-				break;
-
-			case 'wip_sync_failed':
-				$title = (string)($params['title'] ?? '');
-				$notification->setParsedSubject(
-					$l->t('WIP sync failed for time entry %1$s', [$title])
-				);
-				$notification->setRichSubject(
-					$l->t('WIP sync failed for time entry {title}'),
-					$this->buildRichParams(notification: $notification, title: $title)
-				);
-				break;
-
-			case 'billing_handoff_failed':
-				$batchId = (string)($params['batchId'] ?? '');
-				$notification->setParsedSubject(
-					$l->t('Billing handoff failed for %1$s', [$title])
-				);
-				$notification->setParsedMessage(
-					$l->t('The shillinq time-intake batch %1$s could not be delivered. Re-send it from the client\'s billing section.', [$batchId])
-				);
-				$notification->setRichSubject(
-					$l->t('Billing handoff failed for {title}'),
-					$richParams
-				);
-				break;
-
-			case 'social_share_requested':
-				$handle = (string)($params['handle'] ?? '');
-				$notification->setParsedSubject(
-					$l->t('Please share this post on %1$s', [$handle])
-				);
-				$notification->setParsedMessage(
-					$l->t(
-						'The text is ready for you. Copy it, open the network and post it, '
-						. 'then confirm in Pipelinq that you did. No application may post to '
-						. 'this account for you.'
-					)
-				);
-				break;
-
-			case 'social_relink_needed':
-				$handle = (string)($params['handle'] ?? '');
-				$notification->setParsedSubject(
-					$l->t('Reconnect your %1$s account', [$handle])
-				);
-				$notification->setParsedMessage(
-					$l->t(
-						'The connection to this account has ended, so posts to it are not '
-						. 'going out. Reconnect it in Social accounts and the scheduled posts '
-						. 'go out again.'
-					)
-				);
-				break;
-
-			default:
-				throw new UnknownNotificationException();
-		}//end switch
+		match (self::SUBJECT_GROUPS[$notification->getSubject()] ?? null) {
+			'assignment' => $this->applyAssignmentSubject(notification: $notification, context: $context),
+			'task' => $this->applyTaskSubject(notification: $notification, context: $context),
+			'change' => $this->applyChangeSubject(notification: $notification, context: $context),
+			'system' => $this->applySystemSubject(notification: $notification, context: $context),
+			'social' => $this->applySocialSubject(notification: $notification, context: $context),
+			default => throw new UnknownNotificationException(),
+		};
 	}//end applyNotificationSubject()
 
 	/**
@@ -324,29 +179,144 @@ class Notifier implements INotifier {
 	}//end buildRichParams()
 
 	/**
-	 * Apply a simple parsed and rich subject to a notification.
+	 * An item assigned, reassigned or lost: the title in both subjects.
 	 *
 	 * @param INotification $notification The notification.
-	 * @param object $l The l10n translator.
-	 * @param string $parsedKey The parsed subject translation key.
-	 * @param string $richKey The rich subject translation key.
-	 * @param string $title The entity title.
-	 * @param array $richParams The rich parameters.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
 	 *
 	 * @return void
 	 */
-	private function applySimpleSubject(
-		INotification $notification,
-		object $l,
-		string $parsedKey,
-		string $richKey,
-		string $title,
-		array $richParams,
-	): void {
-		$notification->setParsedSubject($l->t($parsedKey, [$title]));
-		$notification->setRichSubject(
-			subject: $l->t($richKey),
-			parameters: $richParams
+	private function applyAssignmentSubject(INotification $notification, array $context): void {
+		$l = $context['l'];
+		$title = $context['title'];
+		[$parsed, $rich] = match ($notification->getSubject()) {
+			'lead_assigned' => [$l->t('Lead assigned: %s', [$title]), $l->t('Lead assigned: {title}')],
+			'request_assigned' => [$l->t('Request assigned: %s', [$title]), $l->t('Request assigned: {title}')],
+			'task_assigned' => [$l->t('Task assigned: %s', [$title]), $l->t('Task assigned: {title}')],
+			'task_reassigned' => [$l->t('Task reassigned to you: %s', [$title]), $l->t('Task reassigned to you: {title}')],
+			default => [$l->t('Deal lost: %s', [$title]), $l->t('Deal lost: {title}')],
+		};
+
+		$notification->setParsedSubject($parsed);
+		$notification->setRichSubject(subject: $rich, parameters: $context['richParams']);
+	}//end applyAssignmentSubject()
+
+	/**
+	 * A task completed (with its result) or expired (with its deadline).
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 */
+	private function applyTaskSubject(INotification $notification, array $context): void {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		if ($notification->getSubject() === 'task_completed') {
+			$notification->setParsedSubject($l->t('Task completed: %1$s (%2$s)', [$title, $params['resultText'] ?? '']));
+			$notification->setRichSubject(subject: $l->t('Task completed: {title}'), parameters: $context['richParams']);
+			return;
+		}
+
+		$notification->setParsedSubject($l->t('Task expired: %1$s (deadline: %2$s)', [$title, $params['deadline'] ?? '']));
+		$notification->setRichSubject(subject: $l->t('Task expired: {title}'), parameters: $context['richParams']);
+	}//end applyTaskSubject()
+
+	/**
+	 * A lead moved stage or was won, a request changed status, a note was added.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 */
+	private function applyChangeSubject(INotification $notification, array $context): void {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		[$parsed, $rich] = match ($notification->getSubject()) {
+			'lead_stage_changed' => [
+				$l->t('Lead %1$s moved to %2$s', [$title, $params['stage'] ?? '']),
+				$l->t('{title} moved to %1$s', [$params['stage'] ?? '']),
+			],
+			'request_status_changed' => [
+				$l->t('Request %1$s: %2$s', [$title, $params['status'] ?? '']),
+				$l->t('{title}: %1$s', [$params['status'] ?? '']),
+			],
+			'note_added' => [
+				$l->t('New note on %1$s: %2$s', [$params['entityType'] ?? 'item', $title]),
+				$l->t('New note on %1$s: {title}', [$params['entityType'] ?? 'item']),
+			],
+			default => [
+				$l->t('Deal won: %1$s (EUR %2$s)', [$title, $params['value'] ?? '']),
+				$l->t('Deal won: {title} (EUR %1$s)', [$params['value'] ?? '']),
+			],
+		};
+
+		$notification->setParsedSubject($parsed);
+		$notification->setRichSubject(subject: $rich, parameters: $context['richParams']);
+	}//end applyChangeSubject()
+
+	/**
+	 * A background job reporting a failure: forecast snapshots, WIP sync, billing handoff.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 */
+	private function applySystemSubject(INotification $notification, array $context): void {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		$subject = $notification->getSubject();
+		if ($subject === 'forecast_snapshot_partial_failure') {
+			$notification->setParsedSubject($l->t('Forecast snapshot job: partial failure for %1$s', [(string)($params['period'] ?? '')]));
+			$notification->setParsedMessage($l->t('Some forecast snapshots could not be generated: %1$s', [(string)($params['errors'] ?? '')]));
+			return;
+		}
+
+		if ($subject === 'wip_sync_failed') {
+			$title = (string)($params['title'] ?? '');
+			$notification->setParsedSubject($l->t('WIP sync failed for time entry %1$s', [$title]));
+			$richParams = $this->buildRichParams(notification: $notification, title: $title);
+			$notification->setRichSubject($l->t('WIP sync failed for time entry {title}'), $richParams);
+			return;
+		}
+
+		$batchId = (string)($params['batchId'] ?? '');
+		$notification->setParsedSubject($l->t('Billing handoff failed for %1$s', [$title]));
+		$notification->setParsedMessage(
+			$l->t('The shillinq time-intake batch %1$s could not be delivered. Re-send it from the client\'s billing section.', [$batchId])
 		);
-	}//end applySimpleSubject()
+		$notification->setRichSubject($l->t('Billing handoff failed for {title}'), $context['richParams']);
+	}//end applySystemSubject()
+
+	/**
+	 * A social post to share by hand, or an account to reconnect.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 */
+	private function applySocialSubject(INotification $notification, array $context): void {
+		$l = $context['l'];
+		$handle = (string)($context['params']['handle'] ?? '');
+		if ($notification->getSubject() === 'social_share_requested') {
+			$notification->setParsedSubject($l->t('Please share this post on %1$s', [$handle]));
+			$notification->setParsedMessage(
+				$l->t(
+					'The text is ready for you. Copy it, open the network and post it, '
+					. 'then confirm in Pipelinq that you did. No application may post to '
+					. 'this account for you.'
+				)
+			);
+			return;
+		}
+
+		$notification->setParsedSubject($l->t('Reconnect your %1$s account', [$handle]));
+		$notification->setParsedMessage(
+			$l->t(
+				'The connection to this account has ended, so posts to it are not '
+				. 'going out. Reconnect it in Social accounts and the scheduled posts '
+				. 'go out again.'
+			)
+		);
+	}//end applySocialSubject()
 }//end class

@@ -52,6 +52,13 @@ class ExportSchedulerJob extends TimedJob {
 	private const INTERVAL = 60;
 
 	/**
+	 * How far back a tick looks for a missed minute, in seconds.
+	 *
+	 * @var int
+	 */
+	private const CATCH_UP_WINDOW = 86400;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory (required by TimedJob).
@@ -83,7 +90,7 @@ class ExportSchedulerJob extends TimedJob {
 	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
 	 */
 	protected function run(mixed $argument): void {
-		$now = new DateTimeImmutable();
+		$now = (new DateTimeImmutable())->setTimestamp($this->time->getTime());
 
 		try {
 			$jobs = $this->jobs->listJobs();
@@ -99,7 +106,7 @@ class ExportSchedulerJob extends TimedJob {
 			}
 
 			$cron = (string)($job['scheduleCron'] ?? '');
-			if ($this->cron->isDue(expression: $cron, when: $now) === false) {
+			if ($this->isDueSinceLastTick(cron: $cron, now: $now) === false) {
 				continue;
 			}
 
@@ -119,6 +126,32 @@ class ExportSchedulerJob extends TimedJob {
 			$this->logger->info('ExportSchedulerJob: enqueued export runs', ['count' => $enqueued]);
 		}
 	}//end run()
+
+	/**
+	 * Whether the schedule fired in a minute since the previous tick.
+	 *
+	 * Cron does not always tick every minute, so matching only the current
+	 * minute misses a schedule whose minute fell between two ticks. Each
+	 * tick therefore covers the minutes after the previous tick up to now
+	 * (at most CATCH_UP_WINDOW back), and enqueues one run however many of
+	 * them matched. Without a previous tick only the current minute counts,
+	 * so a new job does not fire for its whole history.
+	 *
+	 * @param string $cron The job's cron expression.
+	 * @param DateTimeImmutable $now The current tick.
+	 *
+	 * @return bool
+	 */
+	private function isDueSinceLastTick(string $cron, DateTimeImmutable $now): bool {
+		$previous = $this->getLastRun();
+		if ($previous <= 0 || $previous >= $now->getTimestamp()) {
+			return $this->cron->isDue(expression: $cron, when: $now);
+		}
+
+		$since = $now->setTimestamp(max($previous, ($now->getTimestamp() - self::CATCH_UP_WINDOW)));
+		$next = $this->cron->nextRunAfter(expression: $cron, from: $since, horizonDays: 2);
+		return $next !== null && $next <= $now;
+	}//end isDueSinceLastTick()
 
 	/**
 	 * Resolve the incremental watermark start from the last succeeded run.

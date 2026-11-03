@@ -1,0 +1,1174 @@
+{
+    "or plain": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "woo"
+                    ]
+                },
+                {
+                    "id": "Kennisbank.C",
+                    "title": "Kennisbank.C",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": []
+                },
+                {
+                    "id": "",
+                    "title": "D",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "rijbewijs"
+                    ]
+                }
+            ],
+            "total": 4,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:75cfd452ac15c7ef19f817882d6ace0897c431ee"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=paspoort&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:75cfd452ac15c7ef19f817882d6ace0897c431ee",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"woo\"]},{\"id\":\"Kennisbank.C\",\"title\":\"Kennisbank.C\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[]},{\"id\":\"\",\"title\":\"D\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"rijbewijs\"]}],\"total\":4,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "or space": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                },
+                {
+                    "id": "Kennisbank.C",
+                    "title": "Kennisbank.C",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": []
+                },
+                {
+                    "id": "",
+                    "title": "D",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "rijbewijs"
+                    ]
+                }
+            ],
+            "total": 3,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:dc3affecac838ac37967cc4905a7adcd0c953182"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:dc3affecac838ac37967cc4905a7adcd0c953182",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]},{\"id\":\"Kennisbank.C\",\"title\":\"Kennisbank.C\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[]},{\"id\":\"\",\"title\":\"D\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"rijbewijs\"]}],\"total\":3,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "or tags": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "woo"
+                    ]
+                },
+                {
+                    "id": "",
+                    "title": "D",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "rijbewijs"
+                    ]
+                }
+            ],
+            "total": 3,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:b8c11e6f19ff975d568053edcc48ba75851dc95f"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:b8c11e6f19ff975d568053edcc48ba75851dc95f",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"woo\"]},{\"id\":\"\",\"title\":\"D\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"rijbewijs\"]}],\"total\":3,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "or space and tags": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                }
+            ],
+            "total": 1,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:b59213ad900914f025d584afa7c63b39d132f3e9"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:b59213ad900914f025d584afa7c63b39d132f3e9",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]}],\"total\":1,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "or limit and offset": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "woo"
+                    ]
+                }
+            ],
+            "total": 4,
+            "limit": 2,
+            "offset": 3
+        },
+        "calls": [
+            {
+                "cacheGet": "search:aee45c7f150ffbaf2260c6a84704c1ef507cd4f2"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=2&offset=3",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:aee45c7f150ffbaf2260c6a84704c1ef507cd4f2",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"woo\"]}],\"total\":4,\"limit\":2,\"offset\":3}",
+                "ttl": 300
+            }
+        ]
+    },
+    "or limit clamped high": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "woo"
+                    ]
+                },
+                {
+                    "id": "Kennisbank.C",
+                    "title": "Kennisbank.C",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": []
+                },
+                {
+                    "id": "",
+                    "title": "D",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "rijbewijs"
+                    ]
+                }
+            ],
+            "total": 4,
+            "limit": 100,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:b8bbceed739d2a11ada23533616cb1fac89c5119"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=100&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:b8bbceed739d2a11ada23533616cb1fac89c5119",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"woo\"]},{\"id\":\"Kennisbank.C\",\"title\":\"Kennisbank.C\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[]},{\"id\":\"\",\"title\":\"D\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"rijbewijs\"]}],\"total\":4,\"limit\":100,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "or limit clamped low": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                }
+            ],
+            "total": 4,
+            "limit": 1,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:9e2db648a444057c185ae17930f5296af73bba10"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=1&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:9e2db648a444057c185ae17930f5296af73bba10",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]}],\"total\":4,\"limit\":1,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "or empty space ignored": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "woo"
+                    ]
+                },
+                {
+                    "id": "Kennisbank.C",
+                    "title": "Kennisbank.C",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": []
+                },
+                {
+                    "id": "",
+                    "title": "D",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "rijbewijs"
+                    ]
+                }
+            ],
+            "total": 4,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"woo\"]},{\"id\":\"Kennisbank.C\",\"title\":\"Kennisbank.C\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[]},{\"id\":\"\",\"title\":\"D\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"rijbewijs\"]}],\"total\":4,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "or no results key": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://wiki/a",
+                    "tags": []
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": []
+                }
+            ],
+            "total": 2,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "get": "http://wiki/rest/wikis/query?q=x&number=10&start=0&media=xml",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "Accept": "application/xml"
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/wiki\\/a\",\"tags\":[]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[]}],\"total\":2,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "or results not a list": {
+        "response": {
+            "results": [],
+            "total": 0,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            }
+        ]
+    },
+    "or bad json": {
+        "response": {
+            "results": [],
+            "total": 0,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            }
+        ]
+    },
+    "or 503 then direct": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://wiki/a",
+                    "tags": []
+                }
+            ],
+            "total": 1,
+            "limit": 1,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:ec1e0190c82549e223fa878578a1787fe11f0c2f"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=woo&limit=1&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "get": "http://wiki/rest/wikis/query?q=woo&number=1&start=0&media=xml&scope=name%2Ccontent%2Ctitle&wikis=xwiki",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "Accept": "application/xml"
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:ec1e0190c82549e223fa878578a1787fe11f0c2f",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/wiki\\/a\",\"tags\":[]}],\"total\":1,\"limit\":1,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "or throws then direct": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://wiki/a",
+                    "tags": []
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": []
+                }
+            ],
+            "total": 2,
+            "limit": 10,
+            "offset": 5
+        },
+        "calls": [
+            {
+                "cacheGet": "search:1f755a055580a44c731fe0d42a15515d9019ba4d"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=woo&limit=10&offset=5",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "get": "http://wiki/rest/wikis/query?q=woo&number=10&start=5&media=xml",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "Accept": "application/xml"
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:1f755a055580a44c731fe0d42a15515d9019ba4d",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/wiki\\/a\",\"tags\":[]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[]}],\"total\":2,\"limit\":10,\"offset\":5}",
+                "ttl": 300
+            }
+        ]
+    },
+    "direct tags filter all": {
+        "response": {
+            "results": [],
+            "total": 0,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:cca7c9ab07109b3ed385c7a73023c60c04951c96"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=woo&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "get": "http://wiki/rest/wikis/query?q=woo&number=10&start=0&media=xml",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "Accept": "application/xml"
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:cca7c9ab07109b3ed385c7a73023c60c04951c96",
+                "value": "{\"results\":[],\"total\":0,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "direct fetch throws": {
+        "response": {
+            "results": [],
+            "total": 0,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:19bc92aec5698e095a0e0a036f9130b8e9f680b3"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=woo&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "get": "http://wiki/rest/wikis/query?q=woo&number=10&start=0&media=xml",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "Accept": "application/xml"
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:19bc92aec5698e095a0e0a036f9130b8e9f680b3",
+                "value": "{\"results\":[],\"total\":0,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "direct bad xml": {
+        "response": {
+            "results": [],
+            "total": 0,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:19bc92aec5698e095a0e0a036f9130b8e9f680b3"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=woo&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "get": "http://wiki/rest/wikis/query?q=woo&number=10&start=0&media=xml",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "Accept": "application/xml"
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:19bc92aec5698e095a0e0a036f9130b8e9f680b3",
+                "value": "{\"results\":[],\"total\":0,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "no direct base": {
+        "response": {
+            "results": [],
+            "total": 0,
+            "limit": 4,
+            "offset": 2
+        },
+        "calls": [
+            {
+                "cacheGet": "search:8acec7e5bbaf326922e56b597b20bf9042d9c0e9"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=woo&limit=4&offset=2",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            }
+        ]
+    },
+    "cache hit string": {
+        "response": {
+            "results": [],
+            "total": 9,
+            "limit": 1,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33"
+            }
+        ]
+    },
+    "cache hit array": {
+        "response": {
+            "results": [],
+            "total": 8
+        },
+        "calls": [
+            {
+                "cacheGet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33"
+            }
+        ]
+    },
+    "cache bad string": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "woo"
+                    ]
+                },
+                {
+                    "id": "Kennisbank.C",
+                    "title": "Kennisbank.C",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": []
+                },
+                {
+                    "id": "",
+                    "title": "D",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "rijbewijs"
+                    ]
+                }
+            ],
+            "total": 4,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"woo\"]},{\"id\":\"Kennisbank.C\",\"title\":\"Kennisbank.C\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[]},{\"id\":\"\",\"title\":\"D\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"rijbewijs\"]}],\"total\":4,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "missing query": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "woo"
+                    ]
+                },
+                {
+                    "id": "Kennisbank.C",
+                    "title": "Kennisbank.C",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": []
+                },
+                {
+                    "id": "",
+                    "title": "D",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "rijbewijs"
+                    ]
+                }
+            ],
+            "total": 4,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:28f501aeff0fe741ddf2be9005217ef5b6cb2d8c"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:28f501aeff0fe741ddf2be9005217ef5b6cb2d8c",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"woo\"]},{\"id\":\"Kennisbank.C\",\"title\":\"Kennisbank.C\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[]},{\"id\":\"\",\"title\":\"D\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"rijbewijs\"]}],\"total\":4,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "space not a string": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "woo"
+                    ]
+                },
+                {
+                    "id": "Kennisbank.C",
+                    "title": "Kennisbank.C",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": []
+                },
+                {
+                    "id": "",
+                    "title": "D",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "rijbewijs"
+                    ]
+                }
+            ],
+            "total": 4,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"woo\"]},{\"id\":\"Kennisbank.C\",\"title\":\"Kennisbank.C\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[]},{\"id\":\"\",\"title\":\"D\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"rijbewijs\"]}],\"total\":4,\"limit\":10,\"offset\":0}",
+                "ttl": 300
+            }
+        ]
+    },
+    "cache ttl from config": {
+        "response": {
+            "results": [
+                {
+                    "id": "Kennisbank.A",
+                    "title": "A",
+                    "space": "Kennisbank",
+                    "modified": "2026-01-01",
+                    "url": "http://x/a",
+                    "tags": [
+                        "woo",
+                        "paspoort"
+                    ]
+                },
+                {
+                    "id": "Other.B",
+                    "title": "Other.B",
+                    "space": "Other",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "woo"
+                    ]
+                },
+                {
+                    "id": "Kennisbank.C",
+                    "title": "Kennisbank.C",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": []
+                },
+                {
+                    "id": "",
+                    "title": "D",
+                    "space": "Kennisbank",
+                    "modified": "",
+                    "url": "",
+                    "tags": [
+                        "rijbewijs"
+                    ]
+                }
+            ],
+            "total": 4,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "cacheGet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33"
+            },
+            {
+                "get": "https://cloud.example/apps/openregister/api/integrations/xwiki/search?q=x&limit=10&offset=0",
+                "options": {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            },
+            {
+                "cacheSet": "search:a8228dd551c9e0ca75f468e384ce17bd1560fb33",
+                "value": "{\"results\":[{\"id\":\"Kennisbank.A\",\"title\":\"A\",\"space\":\"Kennisbank\",\"modified\":\"2026-01-01\",\"url\":\"http:\\/\\/x\\/a\",\"tags\":[\"woo\",\"paspoort\"]},{\"id\":\"Other.B\",\"title\":\"Other.B\",\"space\":\"Other\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"woo\"]},{\"id\":\"Kennisbank.C\",\"title\":\"Kennisbank.C\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[]},{\"id\":\"\",\"title\":\"D\",\"space\":\"Kennisbank\",\"modified\":\"\",\"url\":\"\",\"tags\":[\"rijbewijs\"]}],\"total\":4,\"limit\":10,\"offset\":0}",
+                "ttl": 42
+            }
+        ]
+    }
+}

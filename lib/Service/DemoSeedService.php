@@ -277,86 +277,117 @@ class DemoSeedService {
 
 		[$objectService, $registerId, $schemaIds, $definitions] = $context;
 
-		$created = [];
-		$skipped = [];
-		$relinked = [];
-		// Maps section-local keys (e.g. clientKey "bakkerij") to saved uuids.
-		$uuids = [];
-
+		// `uuids` maps section-local keys (e.g. clientKey "bakkerij") to saved uuids.
+		$run = ['created' => [], 'skipped' => [], 'relinked' => [], 'uuids' => []];
 		foreach (self::SECTIONS as $section => [$schemaKey, $lookupField, $ticketType]) {
-			$created[$section] = 0;
-			$skipped[$section] = 0;
-			$relinked[$section] = 0;
 			$target = new DemoSeedTarget(objectService: $objectService, registerId: $registerId, schemaId: $schemaIds[$schemaKey], ticketType: $ticketType);
-
-			// One scan per schema: value => [uuid, ...] index for idempotency,
-			// plus the scanned rows by uuid for the relink check.
-			$rows = [];
-			$index = $this->buildLookupIndex(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $schemaIds[$schemaKey],
-				lookupField: $lookupField,
-				ticketType: $ticketType,
-				rows: $rows,
+			$run = $this->seedSection(
+				section: ['name' => $section, 'lookupField' => $lookupField, 'target' => $target, 'definitions' => ($definitions[$section] ?? [])],
+				run: $run
 			);
+			if (isset($run['failure']) === true) {
+				return $run['failure'];
+			}
+		}
 
-			foreach (($definitions[$section] ?? []) as $definition) {
-				$data = $this->values->resolvePlaceholders(data: $definition['data']);
-				$data = $this->linkReferences(
-					data: $data,
-					definition: $definition,
-					uuids: $uuids,
-					ticketType: $ticketType,
-				);
-
-				$existingUuid = $index[(string)$data[$lookupField]][0] ?? null;
-
-				if ($existingUuid !== null) {
-					$uuids[$section . ':' . $definition['key']] = $existingUuid;
-					$skipped[$section]++;
-					$didRelink = $this->relinkExisting(
-						target: $target,
-						existing: ($rows[$existingUuid] ?? []),
-						data: $data,
-						uuid: $existingUuid,
-					);
-					if ($didRelink === true) {
-						$relinked[$section]++;
-					}
-
-					continue;
-				}
-
-				$identityType = (self::CONTACT_FIRST_SECTIONS[$section] ?? null);
-				if ($identityType !== null) {
-					$data = $this->withProvisionedIdentity(data: $data, objectType: $identityType);
-					if ($data === null) {
-						return [
-							'success' => false,
-							'message' => 'Nextcloud Contacts is unavailable — cannot provision demo ' . $identityType . ' identities.',
-							'created' => $created,
-							'skipped' => $skipped,
-						];
-					}
-				}
-
-				$saved = $this->writer->save(target: $target, data: $data);
-
-				$uuids[$section . ':' . $definition['key']] = (string)$saved->getUuid();
-				$created[$section]++;
-			}//end foreach
-		}//end foreach
-
-		$marketing = $this->marketingSeeder->seed(definitions: $definitions, uuids: $uuids);
+		$marketing = $this->marketingSeeder->seed(definitions: $definitions, uuids: $run['uuids']);
 
 		return [
 			'success' => true,
-			'created' => array_merge($created, $marketing['created']),
-			'skipped' => array_merge($skipped, $marketing['skipped']),
-			'relinked' => $relinked,
+			'created' => array_merge($run['created'], $marketing['created']),
+			'skipped' => array_merge($run['skipped'], $marketing['skipped']),
+			'relinked' => $run['relinked'],
 		];
 	}//end seed()
+
+	/**
+	 * Seed one section: one scan of its schema (value => [uuid, ...] for
+	 * idempotency, plus the scanned rows by uuid for the relink check), then
+	 * every definition.
+	 *
+	 * @param array<string, mixed> $section The section's name, lookup field, target and definitions.
+	 * @param array<string, array<string, mixed>> $run The counts per section and the uuids so far.
+	 *
+	 * @return array<string, mixed> The run, with a `failure` answer when the section could not be seeded.
+	 */
+	private function seedSection(array $section, array $run): array {
+		$name = $section['name'];
+		$run['created'][$name] = 0;
+		$run['skipped'][$name] = 0;
+		$run['relinked'][$name] = 0;
+		$section += $this->buildLookupIndex(target: $section['target'], lookupField: $section['lookupField']);
+
+		foreach ($section['definitions'] as $definition) {
+			$run = $this->seedDefinition(definition: $definition, scope: ['section' => $section, 'run' => $run]);
+			if (isset($run['failure']) === true) {
+				return $run;
+			}
+		}
+
+		return $run;
+	}//end seedSection()
+
+	/**
+	 * Seed one definition: reuse (and relink) the demo object that already
+	 * exists, or create it, provisioning its contact-first identity first.
+	 *
+	 * @param array<string, mixed> $definition The seed definition.
+	 * @param array<string, array<string, mixed>> $scope The section (with its index and rows) and the run.
+	 *
+	 * @return array<string, mixed> The run, with a `failure` answer when Contacts is unavailable.
+	 */
+	private function seedDefinition(array $definition, array $scope): array {
+		['section' => $section, 'run' => $run] = $scope;
+		$name = $section['name'];
+		$target = $section['target'];
+		$data = $this->values->resolvePlaceholders(data: $definition['data']);
+		$data = $this->linkReferences(data: $data, definition: $definition, uuids: $run['uuids'], ticketType: $target->ticketType);
+
+		$existingUuid = $section['index'][(string)$data[$section['lookupField']]][0] ?? null;
+		if ($existingUuid !== null) {
+			return $this->reuseExisting(found: ['uuid' => $existingUuid, 'key' => $definition['key'], 'data' => $data], scope: $scope);
+		}
+
+		$identityType = (self::CONTACT_FIRST_SECTIONS[$name] ?? null);
+		if ($identityType !== null) {
+			$data = $this->withProvisionedIdentity(data: $data, objectType: $identityType);
+			if ($data === null) {
+				$run['failure'] = [
+					'success' => false,
+					'message' => 'Nextcloud Contacts is unavailable — cannot provision demo ' . $identityType . ' identities.',
+					'created' => $run['created'],
+					'skipped' => $run['skipped'],
+				];
+				return $run;
+			}
+		}
+
+		$saved = $this->writer->save(target: $target, data: $data);
+		$run['uuids'][$name . ':' . $definition['key']] = (string)$saved->getUuid();
+		$run['created'][$name]++;
+		return $run;
+	}//end seedDefinition()
+
+	/**
+	 * Count an existing demo object as skipped, remember its uuid, and relink it.
+	 *
+	 * @param array<string, mixed> $found The stored object's uuid, the definition key and the resolved payload.
+	 * @param array<string, array<string, mixed>> $scope The section (with its index and rows) and the run.
+	 *
+	 * @return array<string, mixed> The run.
+	 */
+	private function reuseExisting(array $found, array $scope): array {
+		['section' => $section, 'run' => $run] = $scope;
+		$name = $section['name'];
+		$run['uuids'][$name . ':' . $found['key']] = $found['uuid'];
+		$run['skipped'][$name]++;
+		$existing = ($section['rows'][$found['uuid']] ?? []);
+		if ($this->relinkExisting(target: $section['target'], existing: $existing, data: $found['data'], uuid: $found['uuid']) === true) {
+			$run['relinked'][$name]++;
+		}
+
+		return $run;
+	}//end reuseExisting()
 
 	/**
 	 * Re-point an existing demo object's references at this run's objects.
@@ -440,13 +471,8 @@ class DemoSeedService {
 
 			// One scan per schema: value => [uuid, ...] index. Multiple uuids
 			// per value guard against duplicates from historic runs.
-			$index = $this->buildLookupIndex(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $schemaIds[$schemaKey],
-				lookupField: $lookupField,
-				ticketType: $ticketType,
-			);
+			$target = new DemoSeedTarget(objectService: $objectService, registerId: $registerId, schemaId: $schemaIds[$schemaKey], ticketType: $ticketType);
+			$index = $this->buildLookupIndex(target: $target, lookupField: $lookupField)['index'];
 
 			foreach (($definitions[$section] ?? []) as $definition) {
 				$lookupValue = (string)($definition['data'][$lookupField] ?? '');
@@ -501,60 +527,68 @@ class DemoSeedService {
 	 * and a false negative here would break idempotency. For the same reason
 	 * the `ticketType` narrowing is applied in PHP over the scanned rows.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $registerId Register id.
-	 * @param string $schemaId Schema id.
+	 * @param DemoSeedTarget $target The store, register, schema and ticket subtype (null for own-schema sections).
 	 * @param string $lookupField Field used as the stable demo identifier.
-	 * @param string|null $ticketType Ticket subtype to narrow on, or null for own-schema sections.
-	 * @param array<string, array<string, mixed>>|null $rows Receives the scanned rows by uuid.
 	 *
-	 * @return array<string, array<int, string>> Map of lookup value => uuids.
+	 * @return array{index: array<string, array<int, string>>, rows: array<string, array<string, mixed>>}
+	 *         Map of lookup value => uuids, and the scanned rows by uuid.
 	 */
-	private function buildLookupIndex(
-		object $objectService,
-		string $registerId,
-		string $schemaId,
-		string $lookupField,
-		?string $ticketType = null,
-		?array &$rows = null,
-	): array {
-		$existing = $objectService->findAll(
+	private function buildLookupIndex(DemoSeedTarget $target, string $lookupField): array {
+		$existing = $target->objectService->findAll(
 			[
 				'filters' => [
-					'register' => $registerId,
-					'schema' => $schemaId,
+					'register' => $target->registerId,
+					'schema' => $target->schemaId,
 				],
 				'limit' => 2000,
 			]
 		);
 
-		if (is_array($existing) === false) {
-			return [];
-		}
-
 		$index = [];
-		foreach ($existing as $row) {
-			$data = $this->rowToArray(row: $row);
-			if ($data === null) {
-				continue;
-			}
-
-			if ($ticketType !== null && ($data['ticketType'] ?? null) !== $ticketType) {
-				continue;
-			}
-
-			$value = (string)($data[$lookupField] ?? '');
-			$uuid = (string)($data['id'] ?? ($data['uuid'] ?? ''));
-			if ($value === '' || $uuid === '') {
-				continue;
-			}
-
-			$index[$value][] = $uuid;
-			$rows[$uuid] = $data;
+		$rows = [];
+		if (is_array($existing) === false) {
+			return ['index' => $index, 'rows' => $rows];
 		}
 
-		return $index;
+		$lookup = ['field' => $lookupField, 'ticketType' => $target->ticketType];
+		foreach ($existing as $row) {
+			$entry = $this->lookupEntry(row: $row, lookup: $lookup);
+			if ($entry !== null) {
+				$index[$entry['value']][] = $entry['uuid'];
+				$rows[$entry['uuid']] = $entry['data'];
+			}
+		}
+
+		return ['index' => $index, 'rows' => $rows];
 	}//end buildLookupIndex()
+
+	/**
+	 * The lookup value, uuid and data of one scanned row, or null when the row
+	 * is unreadable, of another ticket subtype, or lacks a value or a uuid.
+	 *
+	 * @param mixed $row The scanned row.
+	 * @param array{field: string, ticketType: string|null} $lookup The lookup field and the ticket subtype.
+	 *
+	 * @return array{value: string, uuid: string, data: array<string, mixed>}|null
+	 */
+	private function lookupEntry(mixed $row, array $lookup): ?array {
+		$data = $this->rowToArray(row: $row);
+		if ($data === null) {
+			return null;
+		}
+
+		if ($lookup['ticketType'] !== null && ($data['ticketType'] ?? null) !== $lookup['ticketType']) {
+			return null;
+		}
+
+		$value = (string)($data[$lookup['field']] ?? '');
+		$uuid = (string)($data['id'] ?? ($data['uuid'] ?? ''));
+		if ($value === '' || $uuid === '') {
+			return null;
+		}
+
+		return ['value' => $value, 'uuid' => $uuid, 'data' => $data];
+	}//end lookupEntry()
 
 	/**
 	 * Rewrite the ticket sections of the seed definitions onto ticket fields.
