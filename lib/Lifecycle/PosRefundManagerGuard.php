@@ -38,6 +38,7 @@ namespace OCA\Pipelinq\Lifecycle;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -55,6 +56,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
  */
 class PosRefundManagerGuard implements LifecycleGuardInterface {
+	use CastingPayloadToArray;
+
 	/**
 	 * A one-cent tolerance applied to the over-refund cap so floating-point
 	 * rounding can never wrongly reject a legitimate full-quantity refund.
@@ -229,33 +232,4 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 
 		return round($sum, 2);
 	}//end sumCompletedRefunds()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 }//end class

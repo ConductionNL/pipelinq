@@ -103,6 +103,20 @@ use Throwable;
  * @covers \OCA\Pipelinq\Service\WalkInQueueService
  * @covers \OCA\Pipelinq\Service\WebhookProcessorService
  * @covers \OCA\Pipelinq\Service\WhatsAppAdapter
+ * @covers \OCA\Pipelinq\Service\Portal\AbstractPortalReadFacade
+ * @covers \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @covers \OCA\Pipelinq\Util\ObjectToPlainArray
+ * @covers \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @covers \OCA\Pipelinq\Util\EntityIdOf
+ * @covers \OCA\Pipelinq\Util\EntityPayload
+ * @covers \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @covers \OCA\Pipelinq\Util\NullableRowIdOf
+ * @covers \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @covers \OCA\Pipelinq\Util\PayloadToArray
+ * @covers \OCA\Pipelinq\Util\RowIdOf
+ * @covers \OCA\Pipelinq\Util\RowIdentity
+ * @covers \OCA\Pipelinq\Util\SerialisedPayload
+ * @covers \OCA\Pipelinq\Util\SerialisedToArray
  */
 class RowHelpersGoldenTest extends TestCase {
 	use ComparesGolden;
@@ -191,6 +205,7 @@ class RowHelpersGoldenTest extends TestCase {
 		['OCA\\Pipelinq\\Service\\WalkInQueueService', 'OCA\\Pipelinq\\Service\\WalkInQueueService', 'idOf'],
 		['OCA\\Pipelinq\\Service\\WebhookProcessorService', 'OCA\\Pipelinq\\Service\\WebhookProcessorService', 'toArray'],
 		['OCA\\Pipelinq\\Service\\WhatsAppAdapter', 'OCA\\Pipelinq\\Service\\WhatsAppAdapter', 'toArray'],
+		['OCA\\Pipelinq\\Service\\Portal\\AbstractPortalReadFacade', 'OCA\\Pipelinq\\Service\\Portal\\PortalContractService', 'objectId'],
 	];
 
 	/**
@@ -202,7 +217,7 @@ class RowHelpersGoldenTest extends TestCase {
 		$actual = [];
 		foreach (self::HELPERS as [$declaring, $subject, $helper]) {
 			$reflection = new ReflectionClass($subject);
-			$method = new ReflectionMethod($subject, $helper);
+			$method = new ReflectionMethod($subject, (method_exists($subject, $helper) === true ? $helper : 'toArray'));
 			$instance = $reflection->newInstanceWithoutConstructor();
 			$outcomes = [];
 			foreach ($this->inputs(method: $method) as $name => $input) {
@@ -254,6 +269,8 @@ class RowHelpersGoldenTest extends TestCase {
 			'self id'          => ['@self' => ['id' => 'self-id'], 'id' => 'top-id'],
 			'self uuid'        => ['@self' => ['uuid' => 'self-uuid'], 'uuid' => 'top-uuid'],
 			'self both'        => ['@self' => ['uuid' => 'self-uuid', 'id' => 'self-id']],
+			'self int id'      => ['@self' => ['id' => 42]],
+			'self int uuid'    => ['@self' => ['uuid' => 42]],
 			'self empty'       => ['@self' => [], 'id' => 'top-id'],
 			'self empty id'    => ['@self' => ['id' => ''], 'id' => 'top-id'],
 			'self null id'     => ['@self' => ['id' => null, 'uuid' => 'self-uuid']],

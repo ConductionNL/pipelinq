@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service\Cti;
 
 use OCA\Pipelinq\Service\CtiService;
 use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Util\SerialisedToArray;
 
 /**
  * Finds the inbound call that is still open on an agent's line.
@@ -38,6 +39,8 @@ use OCA\Pipelinq\Service\TicketService;
  * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
  */
 class IncomingCallFinder {
+	use SerialisedToArray;
+
 	/**
 	 * A call older than this is not "incoming" any more, whatever its record
 	 * says: an `ended` event that never arrived must not keep a card open.
@@ -113,7 +116,7 @@ class IncomingCallFinder {
 		$newest = null;
 		$newestStart = 0;
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->toArray(value: $row);
 			$started = strtotime((string)($data['started_at'] ?? ''));
 			if ($started === false || $this->isOpenCallOf(data: $data, userId: $userId) === false) {
 				continue;
@@ -160,26 +163,4 @@ class IncomingCallFinder {
 
 		return (string)($data['ended_at'] ?? '') === '';
 	}//end isOpenCallOf()
-
-	/**
-	 * A row as a plain array.
-	 *
-	 * @param mixed $row An OpenRegister entity or an array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$value = $row->jsonSerialize();
-			if (is_array($value) === true) {
-				return $value;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

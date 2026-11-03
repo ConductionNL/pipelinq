@@ -34,6 +34,7 @@ use OCA\Pipelinq\Service\Provider\WhatsAppMessage;
 use OCA\Pipelinq\Service\Provider\WhatsAppProviderAttempt;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -73,6 +74,7 @@ use Throwable;
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WhatsAppAdapter {
+	use PayloadToArray;
 	use WritesAsMessagingAccount;
 
 	/**
@@ -1403,35 +1405,6 @@ class WhatsAppAdapter {
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OR entity to an array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Extract a UUID / id / slug from a payload.

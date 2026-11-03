@@ -34,6 +34,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Loyalty\LedgerMovement;
 use OCA\Pipelinq\Service\Loyalty\LedgerOrigin;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -55,6 +56,8 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *  the append-and-update core five times.
  */
 class PointsLedgerService {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -463,7 +466,7 @@ class PointsLedgerService {
 			uuid: null
 		);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end persist()
 
 	/**
@@ -490,35 +493,6 @@ class PointsLedgerService {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Normalise OR entity/array to a plain array.
-	 *
-	 * @param mixed $object The OR entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

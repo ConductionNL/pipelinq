@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Util\RowIdentity;
+
 /**
  * Base class for per-customer scoped read facades.
  *
@@ -38,6 +40,8 @@ namespace OCA\Pipelinq\Service\Portal;
  *   audit are all unspecified
  */
 abstract class AbstractPortalReadFacade {
+	use RowIdentity;
+
 	/**
 	 * Constructor.
 	 *
@@ -202,19 +206,6 @@ abstract class AbstractPortalReadFacade {
 	 * @return string|null The id, or null.
 	 */
 	protected function objectId(array $object): ?string {
-		$self = ($object['@self'] ?? []);
-		if (is_array($self) === true) {
-			$id = ($self['id'] ?? $self['uuid'] ?? null);
-			if ($id !== null) {
-				return (string)$id;
-			}
-		}
-
-		$id = ($object['id'] ?? $object['uuid'] ?? null);
-		if ($id === null) {
-			return null;
-		}
-
-		return (string)$id;
+		return $this->rowIdentity(row: $object);
 	}//end objectId()
 }//end class

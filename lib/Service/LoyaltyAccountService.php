@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -41,6 +42,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 class LoyaltyAccountService {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -135,7 +138,7 @@ class LoyaltyAccountService {
 			return null;
 		}
 
-		return $this->toArray(object: $object);
+		return $this->toArray(value: $object);
 	}//end getAccount()
 
 	/**
@@ -208,7 +211,7 @@ class LoyaltyAccountService {
 			return null;
 		}
 
-		return $this->toArray(object: reset($result));
+		return $this->toArray(value: reset($result));
 	}//end findAccountByKlantAndProgramme()
 
 	/**
@@ -375,7 +378,7 @@ class LoyaltyAccountService {
 			uuid: $uuid
 		);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end persist()
 
 	/**
@@ -405,35 +408,6 @@ class LoyaltyAccountService {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Normalise OR entity/array to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

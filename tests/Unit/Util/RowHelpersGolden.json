@@ -11,6 +11,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -59,6 +61,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -142,6 +154,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -190,6 +204,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -308,6 +332,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -433,6 +467,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -538,6 +582,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -629,6 +683,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -697,6 +753,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -804,6 +870,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -870,6 +946,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -938,6 +1016,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -1053,6 +1141,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -1156,6 +1254,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -1281,6 +1389,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -1404,6 +1522,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -1495,6 +1623,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -1543,6 +1673,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -1663,6 +1803,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -1774,6 +1924,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -1889,6 +2049,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -1970,6 +2140,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -2018,6 +2190,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -2125,6 +2307,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -2198,6 +2390,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -2266,6 +2460,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -2381,6 +2585,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -2484,6 +2698,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -2609,6 +2833,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -2712,6 +2946,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -2819,6 +3063,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -2915,6 +3169,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -3022,6 +3286,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -3118,6 +3392,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -3225,6 +3509,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -3298,6 +3592,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -3346,6 +3642,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -3429,6 +3735,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -3477,6 +3785,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -3595,6 +3913,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -3720,6 +4048,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -3823,6 +4161,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -3948,6 +4296,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -4046,6 +4404,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -4142,6 +4510,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -4249,6 +4627,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -4352,6 +4740,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -4459,6 +4857,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -4562,6 +4970,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -4669,6 +5087,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -4772,6 +5200,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -4879,6 +5317,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -4982,6 +5430,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -5089,6 +5547,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -5180,6 +5648,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -5198,6 +5668,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -5246,6 +5718,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -5339,6 +5821,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -5387,6 +5871,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -5512,6 +6006,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -5635,6 +6139,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -5746,6 +6260,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -5871,6 +6395,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -5992,6 +6526,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -6117,6 +6661,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -6238,6 +6792,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -6363,6 +6927,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -6484,6 +7058,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -6609,6 +7193,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -6714,6 +7308,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -6810,6 +7414,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -6917,6 +7531,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -7020,6 +7644,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -7127,6 +7761,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -7232,6 +7876,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -7323,6 +7977,8 @@
         "self id": "self-id",
         "self uuid": "self-uuid",
         "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
         "self empty": "top-id",
         "self empty id": "",
         "self null id": "self-uuid",
@@ -7391,6 +8047,16 @@
             "@self": {
                 "uuid": "self-uuid",
                 "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
             }
         },
         "self empty": {
@@ -7498,6 +8164,16 @@
                 "id": "self-id"
             }
         },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
         "self empty": {
             "@self": [],
             "id": "top-id"
@@ -7558,5 +8234,25 @@
         "int": [],
         "zero": [],
         "false": []
+    },
+    "OCA\\Pipelinq\\Service\\Portal\\AbstractPortalReadFacade::objectId": {
+        "empty row": null,
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": null
     }
 }

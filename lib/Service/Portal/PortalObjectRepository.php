@@ -46,6 +46,8 @@ namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SettingsLoadService;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -64,6 +66,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   audit are all unspecified
  */
 class PortalObjectRepository {
+	use CastingPayloadToArray;
+	use NullableRowIdOf {
+		idOf as public;
+	}
+
 	/**
 	 * App-config key holding the separate portal register id.
 	 *
@@ -304,69 +311,6 @@ class PortalObjectRepository {
 	public function requireWritable(): void {
 		$this->serviceAccount->require();
 	}//end requireWritable()
-
-	/**
-	 * Extract the stable id/uuid from a normalised portal object array.
-	 *
-	 * @param array<string, mixed> $object The object array.
-	 *
-	 * @return string|null The id, or null when absent.
-	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
-	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
-	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
-	 *   audit are all unspecified
-	 */
-	public function idOf(array $object): ?string {
-		if (isset($object['@self']) === true && is_array($object['@self']) === true) {
-			$self = $object['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($object['id']) === true) {
-			return (string)$object['id'];
-		}
-
-		if (isset($object['uuid']) === true) {
-			return (string)$object['uuid'];
-		}
-
-		return null;
-	}//end idOf()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

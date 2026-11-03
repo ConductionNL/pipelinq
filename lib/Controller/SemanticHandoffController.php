@@ -35,6 +35,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SemanticHandoffService;
 use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -77,6 +78,8 @@ use Throwable;
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class SemanticHandoffController extends Controller {
+	use PayloadToArray;
+
 	/**
 	 * Canonical semantic kind URIs.
 	 */
@@ -651,35 +654,6 @@ class SemanticHandoffController extends Controller {
 
 		return $service;
 	}//end objectService()
-
-	/**
-	 * Normalise an OR entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * The pipelinq register slug (app-config overridable).
