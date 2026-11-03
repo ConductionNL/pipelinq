@@ -1,3 +1,3 @@
 # Screens
 
-- PqBeheer https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheer
+- pipelinq/PqBeheer beheer https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheer

@@ -1,4 +1,4 @@
 # Screens
 
-- PqWachtrij https://identity.conduction.nl/screens/board?id=pipelinq/PqWachtrij
-- PqTickets https://identity.conduction.nl/screens/board?id=pipelinq/PqTickets
+- pipelinq/PqWachtrij wachtrij https://identity.conduction.nl/screens/board?id=pipelinq/PqWachtrij
+- pipelinq/PqTickets vragen en meldingen https://identity.conduction.nl/screens/board?id=pipelinq/PqTickets

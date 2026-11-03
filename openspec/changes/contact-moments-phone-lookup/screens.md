@@ -1,3 +1,3 @@
 # Screens
 
-- PqInkomendGesprek https://identity.conduction.nl/screens/board?id=pipelinq/PqInkomendGesprek
+- pipelinq/PqInkomendGesprek inkomend gesprek https://identity.conduction.nl/screens/board?id=pipelinq/PqInkomendGesprek
