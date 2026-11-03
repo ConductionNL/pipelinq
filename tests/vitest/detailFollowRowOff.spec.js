@@ -6,7 +6,11 @@
  * header, as PqTicket does not. The simple profile turns it off on those
  * pages; the full profile keeps it.
  *
+ * Boards PqKlant, PqOrganisatie and PqContactpersoon draw none either, as
+ * DqContact and DqOrganisatie: the client and contact person pages too.
+ *
  * @spec openspec/changes/detail-follow-row-off/specs/detail-pages/spec.md#requirement-simple-detail-pages-draw-no-follow-row
+ * @spec openspec/changes/client-contact-follow-row-off/specs/detail-pages/spec.md#requirement-simple-client-and-contact-pages-draw-no-follow-row
  */
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
 import fs from 'fs'
@@ -32,5 +36,16 @@ describe('detail pages without a follow row (PqTaak, PqZRapport, PqSocialBericht
 
 	it.each(['TaskDetail', 'ZReportDetail', 'SocialPostDetail'])('%s keeps its follow row in the full profile', (id) => {
 		expect(configOf(full, id).follow).not.toBe(false)
+	})
+})
+
+describe('client and contact person pages without a follow row (PqKlant, PqOrganisatie, PqContactpersoon)', () => {
+	it.each(['ClientDetail', 'ContactDetail'])('%s draws no follow row in the simple profile', (id) => {
+		expect(configOf(simple, id).follow).toBe(false)
+	})
+
+	it.each(['ClientDetail', 'ContactDetail'])('%s keeps its follow row and its schema in the full profile', (id) => {
+		expect(configOf(full, id).follow).not.toBe(false)
+		expect(configOf(simple, id).schema).toBe(configOf(full, id).schema)
 	})
 })
