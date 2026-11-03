@@ -42,6 +42,9 @@ use Throwable;
  *
  * @covers \OCA\Pipelinq\Service\Zgw\ZtcClient
  * @covers \OCA\Pipelinq\Service\Zgw\ZtcLookup
+ * @uses   \OCA\Pipelinq\Service\Zgw\BesluittypeNotInCatalogusException
+ * @uses   \OCA\Pipelinq\Service\Zgw\ZaaktypeNotInCatalogusException
+ * @uses   \OCA\Pipelinq\Service\Zgw\ZgwResourceNotFoundException
  *
  * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-004
  */
