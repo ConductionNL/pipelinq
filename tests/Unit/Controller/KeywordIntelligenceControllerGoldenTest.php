@@ -48,6 +48,9 @@ use UnexpectedValueException;
  * it, then run once more without it.
  *
  * @covers \OCA\Pipelinq\Controller\KeywordIntelligenceController
+ * @covers \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
+ * @covers \OCA\Pipelinq\Service\Search\KeywordProposals
+ * @covers \OCA\Pipelinq\Util\ReadsTypedRequestParameters
  * @uses   \OCA\Pipelinq\Service\Search\KeywordAnalysisService
  */
 class KeywordIntelligenceControllerGoldenTest extends TestCase {
