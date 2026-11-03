@@ -36,7 +36,7 @@ import {
 /** EAN-13 carried by the seeded "[Demo] Koffie zwart" product. */
 const SEEDED_BARCODE = '8714100000017'
 
-// @e2e openspec/specs/pos-barcode-scan/spec.md#barcode-lookup-page
+// @e2e openspec/specs/pos-barcode-scan/spec.md
 test('Barcode lookup: the Products index is the barcode surface and declares the column', async ({
 	page,
 }) => {
@@ -62,7 +62,7 @@ test('Barcode lookup: the Products index is the barcode surface and declares the
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/specs/pos-barcode-scan/spec.md#barcode-lookup-input
+// @e2e openspec/specs/pos-barcode-scan/spec.md
 test('Barcode lookup: a seeded product shows its EAN on the row', async ({
 	page,
 }) => {

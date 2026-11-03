@@ -8,7 +8,7 @@
  * when there are none, and the call, mail and directions links drawn as
  * buttons with a verb.
  *
- * @spec openspec/changes/client-page-as-the-relation-boards/specs/client-detail/spec.md#requirement-the-warnings-and-the-ways-to-reach-the-client-are-one-card
+ * @spec openspec/changes/client-page-as-the-relation-boards/specs/client-detail/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

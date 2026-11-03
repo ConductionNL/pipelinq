@@ -47,7 +47,7 @@ async function openLoyaltyReporting(page: Page) {
 	await expect(page).toHaveURL(/\/loyalty\/reporting/, { timeout: 10000 })
 }
 
-// @e2e openspec/specs/loyalty-program/spec.md#loyalty-reporting-page
+// @e2e openspec/specs/loyalty-program/spec.md
 test('Loyalty: opens from the reports page and shows the reporting surface', async ({
 	page,
 }) => {
@@ -64,7 +64,7 @@ test('Loyalty: opens from the reports page and shows the reporting surface', asy
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/specs/loyalty-program/spec.md#loyalty-reporting-content
+// @e2e openspec/specs/loyalty-program/spec.md
 test('Loyalty: reporting content area renders below the heading', async ({
 	page,
 }) => {
